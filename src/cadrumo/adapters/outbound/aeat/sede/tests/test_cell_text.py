@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._adapter_utils import cell_text
+from ..adapter_utils import cell_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

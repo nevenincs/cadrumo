@@ -36,8 +36,8 @@ from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.transactions.models import TransactionCatalogue
 
-from .test_ledger_payment_withholding import _YEAR, _payroll_payment, _request
-from .test_withholding_monthly_filer_capture import _professional_request, _received_professional_invoice
+from .test_ledger_payment_withholding import YEAR, ledger_payment_withholding_request, payroll_payment
+from .test_withholding_monthly_filer_capture import professional_request, received_professional_invoice
 
 pytestmark = [
     pytest.mark.integration,
@@ -64,16 +64,16 @@ class _SourceCapture:
 def _source_capture(objects: SecureObjectRepository, source_kind: _SourceKind) -> _SourceCapture:
     if source_kind is BindingSourceKind.PAYABLE_INVOICE:
         invoices = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
-        invoice = _received_professional_invoice()
+        invoice = received_professional_invoice()
         invoices.save(build_invoice_catalogue((invoice,)))
         loaded_invoices, revision_id = invoices.load_revisioned()
         invoice = loaded_invoices.invoices[invoice.invoice_id]
         capture = build_invoice_withholding_capture(
             invoice,
             catalogue_revision_id=revision_id,
-            request=_professional_request(invoice),
-            applicable_year=_YEAR,
-            cadence=quarterly_filer_cadence(_YEAR),
+            request=professional_request(invoice),
+            applicable_year=YEAR,
+            cadence=quarterly_filer_cadence(YEAR),
         )
 
         def edit_invoice() -> None:
@@ -83,16 +83,16 @@ def _source_capture(objects: SecureObjectRepository, source_kind: _SourceKind) -
         edit = edit_invoice
     else:
         transactions = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
-        transaction = _payroll_payment()
+        transaction = payroll_payment()
         transactions.save(TransactionCatalogue.from_transactions((transaction,)))
         loaded_transactions, revision_id = transactions.load_revisioned()
         transaction = loaded_transactions.transactions[transaction.transaction_id]
         capture = build_ledger_payment_withholding_capture(
             transaction,
             catalogue_revision_id=revision_id,
-            request=_request(transaction),
-            applicable_year=_YEAR,
-            cadence=quarterly_filer_cadence(_YEAR),
+            request=ledger_payment_withholding_request(transaction),
+            applicable_year=YEAR,
+            cadence=quarterly_filer_cadence(YEAR),
         )
 
         def edit_transaction() -> None:
@@ -131,7 +131,7 @@ def test_source_guarded_capture_reopens_both_projections_and_replays_after_sourc
         source = _source_capture(profile.repository, source_kind)
         producer, _ = _workflow(profile.repository, source)
         result = producer.capture(
-            source.command, cadence=quarterly_filer_cadence(_YEAR), source_catalogue_revision_id=source.revision_id
+            source.command, cadence=quarterly_filer_cadence(YEAR), source_catalogue_revision_id=source.revision_id
         )
         assert result is not None and not result.mutation.replayed
         assert source.current_revision() == source.revision_id
@@ -159,7 +159,7 @@ def test_source_guarded_capture_reopens_both_projections_and_replays_after_sourc
         fresh_revision = source.current_revision()
         assert fresh_revision is not None and fresh_revision != source.revision_id
         replay = reopened.capture(
-            source.command, cadence=quarterly_filer_cadence(_YEAR), source_catalogue_revision_id=fresh_revision
+            source.command, cadence=quarterly_filer_cadence(YEAR), source_catalogue_revision_id=fresh_revision
         )
         assert replay is not None and replay.mutation.replayed
         assert replay.mutation.baseline == result.mutation.baseline
@@ -196,7 +196,7 @@ def test_source_edit_after_assertion_preparation_refuses_every_withholding_write
         monkeypatch.setattr(profile.repository, "apply_batch", apply_batch)
         with pytest.raises(WithholdingObservationMutationError) as raised:
             producer.capture(
-                source.command, cadence=quarterly_filer_cadence(_YEAR), source_catalogue_revision_id=source.revision_id
+                source.command, cadence=quarterly_filer_cadence(YEAR), source_catalogue_revision_id=source.revision_id
             )
         assert raced
         assert raised.value.refusal_code == "source_revision_changed"
@@ -219,7 +219,7 @@ def test_source_edit_after_assertion_preparation_refuses_every_withholding_write
             == ()
         )
         fresh_result = producer.capture(
-            source.command, cadence=quarterly_filer_cadence(_YEAR), source_catalogue_revision_id=fresh_revision
+            source.command, cadence=quarterly_filer_cadence(YEAR), source_catalogue_revision_id=fresh_revision
         )
         assert fresh_result is not None and not fresh_result.mutation.replayed
         assert len(reopened.load_window(source.scope).entries) == 2

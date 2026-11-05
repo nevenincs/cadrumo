@@ -41,7 +41,7 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
 from cadrumo.adapters.persistence.storage.master_key.bucket_session import BucketSession
 from cadrumo.adapters.persistence.storage.master_key.login_throttle import login_throttle_path, record_login_failure
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.evidence.profile_legal_hold import LegalHoldCaseAuthority
@@ -56,7 +56,7 @@ from cadrumo.application.user_profile.login_session import (
 from cadrumo.application.user_profile.profile_record_repository import close_active_profile_record_session
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.bucket_pointer import read_pointer
-from cadrumo.core.time.clock import now as _now
+from cadrumo.core.time.clock import now
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -88,7 +88,7 @@ def _register_with_a_live_process_secret(storage_root: Path) -> tuple[UUID, Buck
     a process holding the target's DEK -- without entangling this proof with
     the inventory's treatment of transient database sidecars.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     outcome = register_profile_with_credentials(
         label=_LABEL,
         passphrase=_CREDENTIAL_INPUT,
@@ -143,7 +143,7 @@ def test_destroying_a_profile_clears_its_durable_failed_login_backoff(tmp_path: 
     the identity for attempts made against a profile that no longer exists,
     and no surface would ever explain the wait.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         try:
             outcome = register_profile_with_credentials(
@@ -154,7 +154,7 @@ def test_destroying_a_profile_clears_its_durable_failed_login_backoff(tmp_path: 
             )
             profile_id = UUID(outcome.profile_id)
             _authorise_clear_hold(storage_root, profile_id)
-            record_login_failure(storage_root=storage_root, bucket_id=outcome.profile_id, now=_now())
+            record_login_failure(storage_root=storage_root, bucket_id=outcome.profile_id, now=now())
             throttle_path = login_throttle_path(storage_root=storage_root, bucket_id=outcome.profile_id)
             assert throttle_path.is_file(), "the backoff must exist, or its removal proves nothing"
 

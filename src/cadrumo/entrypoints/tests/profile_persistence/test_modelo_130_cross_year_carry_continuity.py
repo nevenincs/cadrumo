@@ -47,7 +47,7 @@ from cadrumo.adapters.persistence.profile.tests.m130_source_support import (
     seed_m130_income_transaction,
 )
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -71,8 +71,7 @@ from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
 )
 from ....domain.modelos.calculation_revision import CalculationRevision
-from ....domain.user_profile.values import ProfileSetupState
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import ProfileSetupState, create_user_profile_record
 from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
 from .general_iva_profile_facts_support import general_iva_profile_facts
 from .observation_seeding_support import save_stamped_observation
@@ -145,7 +144,7 @@ _Q1_INPUTS: dict[CasillaId, Decimal] = {
 
 def _seed_ready_profile() -> None:
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_PROFILE_ID,
             facts=general_iva_profile_facts(
@@ -154,7 +153,7 @@ def _seed_ready_profile() -> None:
             ),
             created_at=_CLOCK,
             updated_at=_CLOCK,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 

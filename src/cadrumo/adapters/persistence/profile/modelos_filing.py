@@ -45,7 +45,7 @@ from ....domain.modelos.filing_record import ModeloRecordCatalogue
 from ....domain.modelos.filing_repository import ModeloRecordPersistenceError
 from ..storage.runtime_repository import secure_object_repository_for_bucket
 from ..storage.secure_object_namespaces import MODELO_FILING_RECORD_CATALOGUE_NAMESPACE
-from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
+from .secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from collections.abc import Callable

@@ -33,18 +33,18 @@ from ...domain.user_profile.plantilla_media import PlantillaMediaState
 from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from .registered_executor_payload_context import PayloadBuilder, PayloadContext, PayloadResult
 from .registered_executor_scenario_constants import (
-    _CREDENTIAL_INPUT,
-    _OPERATOR_SCOPE_PORTS,
-    _ROTATED_CREDENTIAL_INPUT,
+    CREDENTIAL_INPUT,
+    OPERATOR_SCOPE_PORTS,
+    ROTATED_CREDENTIAL_INPUT,
 )
-from .registered_executor_seeding_support import _profile_baseline, _seeded_repeatable_row
+from .registered_executor_seeding_support import profile_baseline, seeded_repeatable_row
 
 
 def _baselined(ctx: PayloadContext) -> dict[str, object]:
     """Start a manager write from the stored record's compare-and-swap coordinates."""
     return {
         "profile_id": ctx.profile_id,
-        **_profile_baseline(ctx.profile_id, decode_context=ctx.decode_context),
+        **profile_baseline(ctx.profile_id, decode_context=ctx.decode_context),
     }
 
 
@@ -53,17 +53,17 @@ def _auth_local_read(ctx: PayloadContext) -> PayloadResult:
 
 
 def _auth_profile_login(ctx: PayloadContext) -> PayloadResult:
-    return ctx.request(ctx.raw_profile_subject, {"profile_id": ctx.profile_id}, _CREDENTIAL_INPUT.encode())
+    return ctx.request(ctx.raw_profile_subject, {"profile_id": ctx.profile_id}, CREDENTIAL_INPUT.encode())
 
 
 def _auth_profile_passphrase_rotate(ctx: PayloadContext) -> PayloadResult:
     secret = (
         '{"current_passphrase":"'
-        + _CREDENTIAL_INPUT
+        + CREDENTIAL_INPUT
         + '","new_passphrase":"'
-        + _ROTATED_CREDENTIAL_INPUT
+        + ROTATED_CREDENTIAL_INPUT
         + '","new_passphrase_confirmation":"'
-        + _ROTATED_CREDENTIAL_INPUT
+        + ROTATED_CREDENTIAL_INPUT
         + '"}'
     ).encode()
     return ctx.request(ctx.raw_profile_subject, {"profile_id": ctx.profile_id}, secret)
@@ -73,7 +73,7 @@ def _auth_credential_save(ctx: PayloadContext) -> PayloadResult:
     return ctx.request(
         ctx.profile_subject,
         {"provider": "clave_permanente"},
-        json.dumps({"password": _CREDENTIAL_INPUT}).encode(),
+        json.dumps({"password": CREDENTIAL_INPUT}).encode(),
     )
 
 
@@ -97,7 +97,7 @@ def _auth_certificate(ctx: PayloadContext) -> PayloadResult:
             name=source_name,
             certificate_path=source_path,
             operation=ctx.operation,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
         )
     values: dict[str, object] = {"profile_id": ctx.profile_id}
     if ctx.definition_id not in {"auth.certificate.source.list", "auth.certificate.source.check"}:
@@ -105,14 +105,14 @@ def _auth_certificate(ctx: PayloadContext) -> PayloadResult:
     if ctx.definition_id == "auth.certificate.source.register":
         values["certificate_path"] = source_path
     if ctx.definition_id == "auth.certificate.secret.set":
-        secret = _CREDENTIAL_INPUT.encode()
+        secret = CREDENTIAL_INPUT.encode()
     elif ctx.definition_id == "auth.certificate.secret.remove":
         set_operator_certificate_source_secret(
             name=source_name,
-            secret=SecretStr(_CREDENTIAL_INPUT),
+            secret=SecretStr(CREDENTIAL_INPUT),
             certificate_secret_backend_factory=build_certificate_secret_backend,
             operation=ctx.operation,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
         )
     return ctx.request(ctx.raw_profile_subject, values, secret)
 
@@ -229,7 +229,7 @@ def _user_profile_repeatable_row_mutation(ctx: PayloadContext) -> PayloadResult:
 
 
 def _user_profile_repeatable_row_existing(ctx: PayloadContext) -> PayloadResult:
-    row_key, baseline = _seeded_repeatable_row(
+    row_key, baseline = seeded_repeatable_row(
         ctx.profile_id, operation=ctx.operation, decode_context=ctx.decode_context
     )
     values: dict[str, object] = {
@@ -251,7 +251,7 @@ def _user_profile_bundle_export(ctx: PayloadContext) -> PayloadResult:
             "destination": ctx.tmp_path / "profile.bundle",
             "purpose": ProfileBundleExportPurpose.PORTABLE_TRANSFER,
         },
-        _CREDENTIAL_INPUT.encode(),
+        CREDENTIAL_INPUT.encode(),
     )
 
 
@@ -304,7 +304,7 @@ def _user_profile_censo_preview(ctx: PayloadContext) -> PayloadResult:
 def _user_profile_recovery_status(ctx: PayloadContext) -> PayloadResult:
     enroll_profile_recovery(
         profile_id=ctx.profile_id,
-        current_passphrase=_CREDENTIAL_INPUT,
+        current_passphrase=CREDENTIAL_INPUT,
         recovery_handover=lambda enrollment: enrollment.recovery_key.code,
     )
     return ctx.request(ctx.profile_subject, {"profile_id": ctx.profile_id})

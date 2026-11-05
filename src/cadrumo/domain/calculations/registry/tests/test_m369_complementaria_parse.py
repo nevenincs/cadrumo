@@ -3,7 +3,7 @@
 import pytest
 
 from ..errors import RegistryValidationError
-from ..export_parse import _parse_field_value
+from ..export_parse import parse_field_value
 from ..fixed_width_codec import render_fixed_width_export_field
 from .published_authority import published_snapshot
 
@@ -27,7 +27,7 @@ def _marker_fields():
 @pytest.mark.parametrize("wire", [" ", "C"])
 def test_m369_complementaria_readback_preserves_the_exact_marker(wire: str):
     for field in _marker_fields():
-        parsed = _parse_field_value(field, wire)
+        parsed = parse_field_value(field, wire)
         assert parsed == wire
         assert render_fixed_width_export_field(field, parsed) == wire
 
@@ -36,4 +36,4 @@ def test_m369_complementaria_readback_preserves_the_exact_marker(wire: str):
 def test_m369_complementaria_readback_refuses_tokens_outside_the_official_wire_grammar(wire: str):
     for field in _marker_fields():
         with pytest.raises(RegistryValidationError, match="exactly its presence marker or one ASCII space"):
-            _parse_field_value(field, wire)
+            parse_field_value(field, wire)

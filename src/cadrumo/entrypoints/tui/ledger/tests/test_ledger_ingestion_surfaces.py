@@ -59,7 +59,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _INVOICE_ID = "c" * 64
 
 
-class _InvoiceDoor:
+class InvoiceDoor:
     def __init__(self, *, refuse: bool = False) -> None:
         self.entries: list[LedgerInvoiceEntryV1] = []
         self._refuse = refuse
@@ -84,7 +84,7 @@ class _InvoiceDoor:
         )
 
 
-def _invoice_screen(door: _InvoiceDoor) -> LedgerInvoiceEntryScreen:
+def _invoice_screen(door: InvoiceDoor) -> LedgerInvoiceEntryScreen:
     return LedgerInvoiceEntryScreen(
         LedgerWorkspaceController(
             ledger_context(),
@@ -101,7 +101,7 @@ def _fill(screen: LedgerInvoiceEntryScreen, **values: str) -> None:
 
 @pytest.mark.asyncio
 async def test_invoice_entry_names_every_unreadable_field_and_writes_nothing() -> None:
-    door = _InvoiceDoor()
+    door = InvoiceDoor()
     screen = _invoice_screen(door)
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(100, 80)) as pilot:
@@ -119,7 +119,7 @@ async def test_invoice_entry_names_every_unreadable_field_and_writes_nothing() -
 
 @pytest.mark.asyncio
 async def test_invoice_entry_records_only_the_reviewed_entry() -> None:
-    door = _InvoiceDoor()
+    door = InvoiceDoor()
     screen = _invoice_screen(door)
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(100, 80)) as pilot:
@@ -161,7 +161,7 @@ async def test_invoice_entry_records_only_the_reviewed_entry() -> None:
 @pytest.mark.asyncio
 async def test_invoice_entry_preserves_explicit_iva_treatment_for_linked_income() -> None:
     """The issued document's tax treatment reaches the shared invoice writer."""
-    door = _InvoiceDoor()
+    door = InvoiceDoor()
     screen = _invoice_screen(door)
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(100, 80)) as pilot:
@@ -195,7 +195,7 @@ async def test_invoice_entry_preserves_explicit_iva_treatment_for_linked_income(
 
 @pytest.mark.asyncio
 async def test_invoice_writer_refusal_is_shown_as_the_application_says_it() -> None:
-    screen = _invoice_screen(_InvoiceDoor(refuse=True))
+    screen = _invoice_screen(InvoiceDoor(refuse=True))
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(100, 80)) as pilot:
             await settle(pilot)
@@ -210,7 +210,7 @@ async def test_invoice_writer_refusal_is_shown_as_the_application_says_it() -> N
             assert "application.invoices" not in refusal
 
 
-class _EvidenceDoor:
+class EvidenceDoor:
     def __init__(self, *, expire_on_confirm: bool = False) -> None:
         self.expire_on_confirm = expire_on_confirm
         self.full_projection: InvoiceDraftProjectionV1 | None = None
@@ -273,7 +273,7 @@ class _EvidenceDoor:
         )
 
 
-def _evidence_screen(door: _EvidenceDoor, refreshes: list[int]) -> LedgerEvidenceScreen:
+def _evidence_screen(door: EvidenceDoor, refreshes: list[int]) -> LedgerEvidenceScreen:
     projection = ledger_projection()
 
     def refresh() -> LedgerWorkspaceRefreshV1:
@@ -298,7 +298,7 @@ def _evidence_screen(door: _EvidenceDoor, refreshes: list[int]) -> LedgerEvidenc
 
 @pytest.mark.asyncio
 async def test_evidence_is_added_and_listed() -> None:
-    door = _EvidenceDoor()
+    door = EvidenceDoor()
     refreshes: list[int] = []
     screen = _evidence_screen(door, refreshes)
     with override_settings(cadrumo_output_language="en"):
@@ -343,7 +343,7 @@ async def test_evidence_is_added_and_listed() -> None:
             assert refreshes == [1, 1]
 
 
-class _RefusedRecordsDoor(_EvidenceDoor):
+class _RefusedRecordsDoor(EvidenceDoor):
     def __init__(self, refusal: RefusalError) -> None:
         super().__init__()
         self.refusal = refusal
@@ -369,7 +369,7 @@ async def test_a_refused_records_load_is_said_on_the_screen() -> None:
 
 @pytest.mark.asyncio
 async def test_confirm_eligibility_is_limited_to_the_currently_reviewed_record() -> None:
-    door = _EvidenceDoor()
+    door = EvidenceDoor()
     first = LedgerEvidenceRecordRowV1(
         evidence_id="8747cbf318cf0adb",
         media_kind="pdf",
@@ -416,7 +416,7 @@ async def test_confirm_eligibility_is_limited_to_the_currently_reviewed_record()
 
 @pytest.mark.asyncio
 async def test_session_expiry_clears_full_draft_and_record_rows() -> None:
-    door = _EvidenceDoor(expire_on_confirm=True)
+    door = EvidenceDoor(expire_on_confirm=True)
     door.full_projection = InvoiceDraftProjectionV1(supplier_name="private full evidence draft")
     door.records.append(
         LedgerEvidenceRecordRowV1(
@@ -456,7 +456,7 @@ async def test_session_expiry_clears_full_draft_and_record_rows() -> None:
 @pytest.mark.asyncio
 async def test_runtime_evidence_route_needs_no_attachment_review_inventory() -> None:
     projection = ledger_projection()
-    door = _EvidenceDoor()
+    door = EvidenceDoor()
     action = ledger_evidence_action()
     factory = ledger_screen_factory(
         projection,
@@ -476,7 +476,7 @@ async def test_runtime_evidence_route_needs_no_attachment_review_inventory() -> 
             assert not tuple(screen.query("#ledger-evidence"))
 
 
-class _ExclusionDoor:
+class ExclusionDoor:
     def __init__(self) -> None:
         self.calls: list[LedgerExclusionSubmissionV1] = []
 
@@ -490,7 +490,7 @@ class _ExclusionDoor:
 @pytest.mark.asyncio
 async def test_exclude_names_the_entry_withdraws_on_escape_and_writes_once_on_confirm() -> None:
     projection = ledger_projection()
-    door = _ExclusionDoor()
+    door = ExclusionDoor()
     refreshes: list[int] = []
 
     def refresh() -> LedgerWorkspaceRefreshV1:
@@ -580,7 +580,7 @@ async def test_an_exclusion_result_for_another_entry_is_refused() -> None:
 
 @pytest.mark.asyncio
 async def test_an_exclusion_of_an_entry_the_review_queue_does_not_list_is_refused_before_the_door() -> None:
-    door = _ExclusionDoor()
+    door = ExclusionDoor()
     projection = ledger_projection()
     first, other = projection.review_transaction_ids
     controller = LedgerWorkspaceController(
@@ -602,6 +602,6 @@ def test_exclude_is_not_offered_without_the_classify_authority() -> None:
     controller = LedgerWorkspaceController(
         ledger_context(),
         ledger_projection(),
-        LedgerWorkspaceInjection(review_action=ledger_review_action(), exclusion_submitter=_ExclusionDoor()),
+        LedgerWorkspaceInjection(review_action=ledger_review_action(), exclusion_submitter=ExclusionDoor()),
     )
     assert not controller.can_exclude()

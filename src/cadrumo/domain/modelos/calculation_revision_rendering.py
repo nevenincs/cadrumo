@@ -63,7 +63,7 @@ def _complete_registry_value(value: object) -> object:
     return value
 
 
-def _retain_registry_schema_fields(value: object, *, predecessor: bool = False) -> None:
+def retain_registry_schema_fields(value: object, *, predecessor: bool = False) -> None:
     """Retain every declared field in a private copy of the registry serialization schema."""
     if is_object_dict(value):
         if value.get("type") == "model":
@@ -75,24 +75,24 @@ def _retain_registry_schema_fields(value: object, *, predecessor: bool = False) 
             value.pop("serialization_exclude", None)
             value.pop("serialization_exclude_if", None)
         for item in value.values():
-            _retain_registry_schema_fields(item, predecessor=predecessor)
+            retain_registry_schema_fields(item, predecessor=predecessor)
     elif is_object_list_or_tuple(value):
         for item in value:
-            _retain_registry_schema_fields(item, predecessor=predecessor)
+            retain_registry_schema_fields(item, predecessor=predecessor)
 
 
-def _compile_registry_serializer() -> SchemaSerializer:
+def compile_registry_serializer() -> SchemaSerializer:
     """Compile a complete serializer from an independent copy of the current public schema."""
     adapter = TypeAdapter(RegistrySnapshot)
     adapter.rebuild()
     schema = deepcopy(adapter.core_schema)
-    _retain_registry_schema_fields(schema)
+    retain_registry_schema_fields(schema)
     # The original prebuilt serializers omit presentation fields. Reusing them
     # here would silently discard the modifications on this schema copy.
     return SchemaSerializer(schema, _use_prebuilt=False)
 
 
-class _RegistrySerializerMemo:
+class RegistrySerializerMemo:
     """Hold the complete serializer of the schema :class:`RegistrySnapshot` currently declares.
 
     The serializer is derived from the declared model alone and retains no
@@ -111,18 +111,18 @@ class _RegistrySerializerMemo:
         """Return the serializer of the current schema, compiling it on a change."""
         serializer = self._serializer
         if serializer is None or self._compiled_for is not RegistrySnapshot.__pydantic_core_schema__:
-            serializer = _compile_registry_serializer()
+            serializer = compile_registry_serializer()
             self._compiled_for = RegistrySnapshot.__pydantic_core_schema__
             self._serializer = serializer
         return serializer
 
 
-_REGISTRY_SERIALIZER = _RegistrySerializerMemo()
+REGISTRY_SERIALIZER = RegistrySerializerMemo()
 
 
-def _registry_payload(snapshot: RegistrySnapshot) -> dict[str, object]:
+def registry_payload(snapshot: RegistrySnapshot) -> dict[str, object]:
     return _STRING_MAPPING_ADAPTER.validate_python(
-        _REGISTRY_SERIALIZER.serializer().to_python(snapshot, mode="json", by_alias=False, exclude_computed_fields=True)
+        REGISTRY_SERIALIZER.serializer().to_python(snapshot, mode="json", by_alias=False, exclude_computed_fields=True)
     )
 
 
@@ -153,7 +153,7 @@ class _SnapshotDigests:
     rendering_digests: dict[_RenderingDigestKey, str] = field(default_factory=dict)
 
 
-class _VerifiedRegistryMemo:
+class VerifiedRegistryMemo:
     """Reuse the validation of saved registry snapshot bytes that were already validated.
 
     Every saved calculation revision embeds the complete public registry
@@ -291,7 +291,7 @@ _MAX_RENDERING_DIGESTS_PER_SNAPSHOT = 4
 #: About 175 MiB resident: a validated snapshot occupies roughly 5.5 times its
 #: saved JSON. This covers a year of quarterly and annual returns; one
 #: catalogue read already holds all of its snapshots at once.
-_VERIFIED_REGISTRY = _VerifiedRegistryMemo(max_payload_bytes=32 * 1024 * 1024)
+VERIFIED_REGISTRY = VerifiedRegistryMemo(max_payload_bytes=32 * 1024 * 1024)
 
 
 class SavedRenderingLabel(BaseModel):
@@ -361,7 +361,7 @@ class CalculationRenderingSnapshot(BaseModel):
             context[MODELO_REVISION_IDS_CONTEXT] = frozenset(identifiers)
         if info.mode == "json":
             payload = _SAVED_JSON_ADAPTER.dump_json(value)
-            return _VERIFIED_REGISTRY.validated(
+            return VERIFIED_REGISTRY.validated(
                 payload,
                 context=context,
                 validate=lambda: RegistrySnapshot.model_validate_json(payload, context=context),
@@ -373,7 +373,7 @@ class CalculationRenderingSnapshot(BaseModel):
         """Persist excluded localization/schema fields required to decode original geometry."""
         if info.mode == "python":
             return _STRING_MAPPING_ADAPTER.validate_python(_complete_registry_value(value))
-        return _registry_payload(value)
+        return registry_payload(value)
 
     @model_validator(mode="after")
     def _registry_digest_matches(self) -> Self:
@@ -415,7 +415,7 @@ class CalculationRenderingSnapshot(BaseModel):
 
 
 def _registry_digest(snapshot: RegistrySnapshot) -> str:
-    return _VERIFIED_REGISTRY.registry_digest(snapshot, lambda: content_hash_hex(snapshot.model_dump(mode="json")))
+    return VERIFIED_REGISTRY.registry_digest(snapshot, lambda: content_hash_hex(snapshot.model_dump(mode="json")))
 
 
 def _rendering_digest(
@@ -423,7 +423,7 @@ def _rendering_digest(
     labels: tuple[SavedRenderingLabel, ...],
     directory_ids: tuple[RevisionId, ...] | None,
 ) -> str:
-    return _VERIFIED_REGISTRY.rendering_digest(
+    return VERIFIED_REGISTRY.rendering_digest(
         snapshot,
         labels,
         directory_ids,
@@ -437,7 +437,7 @@ def _rendering_payload(
     directory_ids: tuple[RevisionId, ...] | None,
 ) -> dict[str, object]:
     payload: dict[str, object] = {
-        "registry": _registry_payload(snapshot),
+        "registry": registry_payload(snapshot),
         "labels": [label.model_dump(mode="json") for label in labels],
     }
     if directory_ids is not None:

@@ -25,9 +25,8 @@ from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.buckets.event_repository import emit_bucket_event
 
 from .evidence_test_support import pdf_file
-from .evidence_test_support import secure_objects as _secure_objects
 
-__all__ = ["_secure_objects", "pdf_file"]
+__all__ = ["pdf_file"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

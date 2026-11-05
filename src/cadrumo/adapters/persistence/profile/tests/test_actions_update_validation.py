@@ -22,13 +22,9 @@ from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from .ledger_action_persistence_support import (
-    BUCKET_ID as _BUCKET_ID,
-)
-from .ledger_action_persistence_support import (
+    BUCKET_ID,
     persist_verified_revision_citing_transaction,
-)
-from .ledger_action_persistence_support import (
-    repositories as _repositories,
+    repositories,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -38,16 +34,16 @@ def test_update_manual_transaction_refuses_finalized_modelo_reference(
     secure_objects: SecureObjectRepository,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     ) as ports:
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 5, 2),
                 amount=Decimal("25.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -66,7 +62,7 @@ def test_update_manual_transaction_refuses_finalized_modelo_reference(
     with (
         pytest.raises(TransactionValidationError, match="finalized modelo"),
         ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             objects=secure_objects,
             bucket_event_repository=event_repository,
             calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
@@ -77,7 +73,7 @@ def test_update_manual_transaction_refuses_finalized_modelo_reference(
         update_manual_transaction(
             transaction_id=created.ref.transaction_id,
             command=ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 5, 2),
                 amount=Decimal("35.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -89,7 +85,7 @@ def test_update_manual_transaction_refuses_finalized_modelo_reference(
         )
 
     assert tuple(transaction_repository.load().transactions) == (created.ref.transaction_id,)
-    assert [event.event_type for event in event_repository.load().for_bucket(_BUCKET_ID)] == [
+    assert [event.event_type for event in event_repository.load().for_bucket(BUCKET_ID)] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED,
     ]
 
@@ -97,17 +93,17 @@ def test_update_manual_transaction_refuses_finalized_modelo_reference(
 def test_update_manual_transaction_rejects_usage_ratio_drift_without_event_or_save(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     category = SpendingCategory.from_registry("arrendamiento_vivienda_afecto")
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     ) as ports:
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 5, 1),
                 amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -122,7 +118,7 @@ def test_update_manual_transaction_rejects_usage_ratio_drift_without_event_or_sa
     with (
         pytest.raises(TransactionValidationError, match="does not match"),
         ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             objects=secure_objects,
             bucket_event_repository=event_repository,
             transaction_repository=transaction_repository,
@@ -132,7 +128,7 @@ def test_update_manual_transaction_rejects_usage_ratio_drift_without_event_or_sa
         update_manual_transaction(
             transaction_id=created.ref.transaction_id,
             command=ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 5, 1),
                 amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -148,21 +144,21 @@ def test_update_manual_transaction_rejects_usage_ratio_drift_without_event_or_sa
 
     reloaded = transaction_repository.load()
     assert tuple(reloaded.transactions) == (created.ref.transaction_id,)
-    events = event_repository.load().for_bucket(_BUCKET_ID)
+    events = event_repository.load().for_bucket(BUCKET_ID)
     assert [event.event_type for event in events] == [BucketEventType.LEDGER_TRANSACTION_CREATED]
 
 
 def test_update_manual_transaction_rejects_provenance_only_correction(secure_objects: SecureObjectRepository) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     ) as ports:
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 5, 1),
                 amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -176,7 +172,7 @@ def test_update_manual_transaction_rejects_provenance_only_correction(secure_obj
     with (
         pytest.raises(TransactionValidationError, match="must change at least one ledger field"),
         ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             objects=secure_objects,
             bucket_event_repository=event_repository,
             transaction_repository=transaction_repository,
@@ -185,7 +181,7 @@ def test_update_manual_transaction_rejects_provenance_only_correction(secure_obj
         update_manual_transaction(
             transaction_id=created.ref.transaction_id,
             command=ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 5, 1),
                 amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -206,17 +202,17 @@ def test_update_manual_transaction_accepts_a_home_office_degree_of_use_bound_to_
     the two facts directly would refuse the row; the reference binds them
     through the category's IRPF rule instead.
     """
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     category = SpendingCategory.from_registry("suministros_home_office_luz")
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     ) as ports:
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 5, 1),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -228,7 +224,7 @@ def test_update_manual_transaction_accepts_a_home_office_degree_of_use_bound_to_
         )
 
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         bucket_event_repository=event_repository,
         transaction_repository=transaction_repository,
@@ -237,7 +233,7 @@ def test_update_manual_transaction_accepts_a_home_office_degree_of_use_bound_to_
         updated = update_manual_transaction(
             transaction_id=created.ref.transaction_id,
             command=ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 5, 1),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,

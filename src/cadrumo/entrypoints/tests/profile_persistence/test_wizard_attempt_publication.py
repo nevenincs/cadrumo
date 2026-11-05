@@ -41,11 +41,11 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import RegistryValidationError
 from .file_flow_test_support import calculation_ports_for_test
 from .test_work_missing_input_publication import (
-    _PROFILE_ID,
-    _REQUIRED_MANUAL_BINDING,
-    _YEAR,
-    _profile,
-    _work_and_repositories,
+    PROFILE_ID,
+    REQUIRED_MANUAL_BINDING,
+    YEAR,
+    work_and_repositories,
+    work_missing_input_publication_profile,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -100,7 +100,7 @@ def _real_request(unit_id: str, *, binding_values: dict[str, str]) -> OperationR
         definition_id=MODELO_WORK_WIZARD_ATTEMPT_OPERATION_DEFINITION_ID,
         subject_ref=unit_id,
         payload=ModeloWorkWizardAttemptRequest(
-            profile_id=UUID(_PROFILE_ID),
+            profile_id=UUID(PROFILE_ID),
             output_language=OutputLanguage.CA,
             calculation=ModeloWorkCalculateRequest(
                 work_unit_id=unit_id,
@@ -124,7 +124,7 @@ def _attempt_executor(
 ) -> Generator[ModeloWorkWizardAttemptExecutor]:
     """Bind the attempt executor to the test repositories' real calculation ports."""
     with calculation_ports_for_test(
-        bucket_id=_PROFILE_ID,
+        bucket_id=PROFILE_ID,
         work_unit_repository=work_repo,
         calculation_repository=revision_repo,
         bucket_event_repository=event_repo,
@@ -138,14 +138,14 @@ def _attempt_executor(
 def test_real_missing_input_attempt_persists_encrypted_needs_input_without_revision(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
-        _profile()
-        snapshot = operation.snapshot("100", filing_year=_YEAR, period="0A")
-        unit, work_repo, revision_repo, event_repo = _work_and_repositories(operation)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=PROFILE_ID) as profile:
+        work_missing_input_publication_profile()
+        snapshot = operation.snapshot("100", filing_year=YEAR, period="0A")
+        unit, work_repo, revision_repo, event_repo = work_and_repositories(operation)
         binding_values: dict[str, str] = {
             str(binding.id): "0"
             for binding in snapshot.revision.bindings
-            if binding.source is BindingSourceKind.MANUAL_INPUT and binding.id != _REQUIRED_MANUAL_BINDING
+            if binding.source is BindingSourceKind.MANUAL_INPUT and binding.id != REQUIRED_MANUAL_BINDING
         }
         request = _real_request(unit.work_unit_id, binding_values=binding_values)
         operands = operation_secure_reference_repository(objects=profile.repository)
@@ -159,7 +159,7 @@ def test_real_missing_input_attempt_persists_encrypted_needs_input_without_revis
             )
         result = asyncio.run(operands.resolve(reference, ModeloWorkWizardAttemptProjection))
         assert result.outcome.kind == "needs_input"
-        assert _REQUIRED_MANUAL_BINDING not in binding_values
+        assert REQUIRED_MANUAL_BINDING not in binding_values
         assert result.outcome.step.key not in binding_values
         declared = next(
             row
@@ -169,7 +169,7 @@ def test_real_missing_input_attempt_persists_encrypted_needs_input_without_revis
         assert result.outcome.step.legal_refs == tuple(declared.legal_refs)
         assert result.outcome.step.source_refs == tuple(declared.source_refs)
         assert result.outcome.step.legal_refs and result.outcome.step.source_refs
-        assert result.profile_id == UUID(_PROFILE_ID)
+        assert result.profile_id == UUID(PROFILE_ID)
         assert result.output_language is OutputLanguage.CA
         assert events.effects == [OperationEffect.UNKNOWN]
         assert revision_repo.load().revisions == {}
@@ -180,11 +180,11 @@ def test_real_missing_input_attempt_persists_encrypted_needs_input_without_revis
 def test_real_calculated_attempt_keeps_ordinary_public_result_and_updated_effect(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
-        _profile()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=PROFILE_ID) as profile:
+        work_missing_input_publication_profile()
         period = Period.from_year_and_code(2025, "2T")
         snapshot = operation.snapshot("123", filing_year=2025, period="2T")
-        unit, work_repo, revision_repo, event_repo = _work_and_repositories(
+        unit, work_repo, revision_repo, event_repo = work_and_repositories(
             operation, modelo="123", period=period, revision_id=snapshot.revision.id
         )
         request = _real_request(unit.work_unit_id, binding_values={})
@@ -210,11 +210,11 @@ def test_real_calculated_attempt_keeps_ordinary_public_result_and_updated_effect
 def test_postpublication_same_tag_does_not_persist_needs_input(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, operation: PinnedAuthorityOperation
 ) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
-        _profile()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=PROFILE_ID) as profile:
+        work_missing_input_publication_profile()
         period = Period.from_year_and_code(2025, "2T")
         snapshot = operation.snapshot("123", filing_year=2025, period="2T")
-        unit, work_repo, revision_repo, event_repo = _work_and_repositories(
+        unit, work_repo, revision_repo, event_repo = work_and_repositories(
             operation, modelo="123", period=period, revision_id=snapshot.revision.id
         )
 
@@ -222,7 +222,7 @@ def test_postpublication_same_tag_does_not_persist_needs_input(
             raise RegistryValidationError(
                 "injected post-publication diagnostic failure",
                 translated_message="errors.calc.binding_value_missing",
-                context={"binding_id": _REQUIRED_MANUAL_BINDING},
+                context={"binding_id": REQUIRED_MANUAL_BINDING},
             )
 
         monkeypatch.setattr(calculate_input, "modelo_202_modality_for_record", fail_after_publication)

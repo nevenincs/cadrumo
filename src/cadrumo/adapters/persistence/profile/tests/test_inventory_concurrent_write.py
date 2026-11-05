@@ -35,7 +35,7 @@ from .....domain.contribuyente.inventory.records import (
 from .....domain.contribuyente.inventory.valuation import compute_inventory_valuation
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..inventory import InventoryLedgerRepository
-from ._inventory_acquisition_fixture import acquisition_for
+from .inventory_acquisition_fixture import acquisition_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

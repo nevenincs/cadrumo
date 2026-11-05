@@ -20,7 +20,7 @@ from ...application.ledger.evidence_ingestion_contracts import (
 )
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.iva.schema import InvoiceKind
-from ._ledger_support import ledger_validation_bad
+from .ledger_support import ledger_validation_bad
 
 
 def run_ledger_evidence_batch(

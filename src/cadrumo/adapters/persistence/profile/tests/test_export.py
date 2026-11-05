@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests.modelo_export_support import isolated_backend
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 __all__ = ["isolated_backend"]
 from pydantic import ValidationError
@@ -29,17 +29,11 @@ from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support impo
     modelo_export_ports_for_test,
 )
 from cadrumo.adapters.persistence.profile.tests.modelo_export_support import (
-    _M130_RENDIMIENTO_NETO_CASILLA,
-    _casilla_id_from_payload,
-)
-from cadrumo.adapters.persistence.profile.tests.modelo_export_support import (
-    export_taxpayer_profile as _profile,
-)
-from cadrumo.adapters.persistence.profile.tests.modelo_export_support import (
-    seed_profile as _seed_profile,
-)
-from cadrumo.adapters.persistence.profile.tests.modelo_export_support import (
-    seed_revision as _seed_revision,
+    M130_RENDIMIENTO_NETO_CASILLA,
+    casilla_id_from_payload,
+    export_taxpayer_profile,
+    seed_profile,
+    seed_revision,
 )
 from cadrumo.application.filing.export import export_layout_renderability_reason
 from cadrumo.application.modelo.action_errors import (
@@ -91,7 +85,7 @@ def test_export_result_json_surfaces_casilla_provenance(tmp_path: Path) -> None:
         bucket_event_id="event-1",
         casilla_provenance=(
             ModeloCasillaProvenance(
-                casilla_id=_M130_RENDIMIENTO_NETO_CASILLA,
+                casilla_id=M130_RENDIMIENTO_NETO_CASILLA,
                 legal_refs=("ley-35-2006:art-101",),
                 source_refs=("aeat-modelo-130-manual-2026",),
             ),
@@ -108,7 +102,7 @@ def test_export_result_json_surfaces_casilla_provenance(tmp_path: Path) -> None:
     assert "CSV cotejo" in payload["official_evidence_message"]
     assert "official_evidence_next_action" not in payload
     [provenance] = payload["casilla_provenance"]
-    assert _casilla_id_from_payload(provenance["casilla_id"]) == _M130_RENDIMIENTO_NETO_CASILLA
+    assert casilla_id_from_payload(provenance["casilla_id"]) == M130_RENDIMIENTO_NETO_CASILLA
     assert provenance["formula_id"] is None
     assert provenance["legal_refs"] == ["ley-35-2006:art-101"]
     assert provenance["source_refs"] == ["aeat-modelo-130-manual-2026"]
@@ -175,7 +169,7 @@ def test_export_refuses_when_no_active_bucket(
 ) -> None:
     """Without an active profile bucket the service cannot scope the
     MODELO_EXPORTED event and must refuse cleanly."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         with pytest.raises(ModeloExportNoActiveBucketError) as exc_info, override_settings(cadrumo_active_profile=None):
             export_modelo_revision(
                 ModeloExportCommand(
@@ -183,7 +177,7 @@ def test_export_refuses_when_no_active_bucket(
                     output_path=tmp_path / "out.txt",
                     actor="operator",
                 ),
-                workflow_profile=_profile(),
+                workflow_profile=export_taxpayer_profile(),
                 export_ports=empty_modelo_export_ports_for_test(),
                 operation=_authority_operation_for_test,
             )
@@ -197,8 +191,8 @@ def test_export_refuses_unknown_revision(
 ) -> None:
     """An addressed calculation revision id that is not in the
     catalogue surfaces as CalculationRevisionNotFoundError."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        _seed_profile()
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        seed_profile()
 
         with pytest.raises(CalculationRevisionNotFoundError) as exc_info:
             export_modelo_revision(
@@ -207,7 +201,7 @@ def test_export_refuses_unknown_revision(
                     output_path=tmp_path / "out.txt",
                     actor="operator",
                 ),
-                workflow_profile=_profile(),
+                workflow_profile=export_taxpayer_profile(),
                 export_ports=modelo_export_ports_for_test(),
                 operation=_authority_operation_for_test,
             )
@@ -224,9 +218,9 @@ def test_export_refuses_borrador_revision(
 
     The export artefact must reflect a revision the operator has
     already verified, not a work-in-progress."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        bucket_id = _seed_profile()
-        _, calc_rev_id = _seed_revision(bucket_id=bucket_id, state=CalculationRevisionState.BORRADOR)
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        bucket_id = seed_profile()
+        _, calc_rev_id = seed_revision(bucket_id=bucket_id, state=CalculationRevisionState.BORRADOR)
 
         with pytest.raises(CalculationRevisionStateError) as exc_info:
             export_modelo_revision(
@@ -235,7 +229,7 @@ def test_export_refuses_borrador_revision(
                     output_path=tmp_path / "out.txt",
                     actor="operator",
                 ),
-                workflow_profile=_profile(),
+                workflow_profile=export_taxpayer_profile(),
                 export_ports=modelo_export_ports_for_test(),
                 operation=_authority_operation_for_test,
             )
@@ -251,9 +245,9 @@ def test_export_refuses_persisted_registry_revision_divergence(
     tmp_path: Path,
 ) -> None:
     """Export cannot replay stored values against a different registry schema."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        bucket_id = _seed_profile()
-        _, calc_rev_id = _seed_revision(bucket_id=bucket_id, state=CalculationRevisionState.BORRADOR)
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        bucket_id = seed_profile()
+        _, calc_rev_id = seed_revision(bucket_id=bucket_id, state=CalculationRevisionState.BORRADOR)
         repository = CalculationRevisionCatalogueRepository()
         revision = repository.load().get(calc_rev_id)
         assert revision is not None
@@ -275,7 +269,7 @@ def test_export_refuses_persisted_registry_revision_divergence(
                     output_path=tmp_path / "out.txt",
                     actor="operator",
                 ),
-                workflow_profile=_profile(),
+                workflow_profile=export_taxpayer_profile(),
                 export_ports=modelo_export_ports_for_test(),
                 operation=_authority_operation_for_test,
             )
@@ -285,9 +279,9 @@ def test_export_reaches_modelo_100_xml_dictionary_path_before_later_readiness_ga
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        bucket_id = _seed_profile()
-        _, calc_rev_id = _seed_revision(
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        bucket_id = seed_profile()
+        _, calc_rev_id = seed_revision(
             bucket_id=bucket_id,
             state=CalculationRevisionState.VERIFICADO_COMPLETO,
             modelo="100",
@@ -303,7 +297,7 @@ def test_export_reaches_modelo_100_xml_dictionary_path_before_later_readiness_ga
                     output_path=out,
                     actor="operator",
                 ),
-                workflow_profile=_profile(),
+                workflow_profile=export_taxpayer_profile(),
                 export_ports=modelo_export_ports_for_test(),
                 operation=_authority_operation_for_test,
             )
@@ -323,10 +317,10 @@ def test_export_refuses_cross_bucket_revision(
     is refused. Allowing the service to emit the MODELO_EXPORTED
     event into a foreign bucket would let any caller pollute another
     operator's history."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        _seed_profile()
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        seed_profile()
         foreign_bucket_id = "other-bucket-7" * 4
-        _, calc_rev_id = _seed_revision(
+        _, calc_rev_id = seed_revision(
             bucket_id=foreign_bucket_id,
             state=CalculationRevisionState.VERIFICADO_COMPLETO,
         )
@@ -338,7 +332,7 @@ def test_export_refuses_cross_bucket_revision(
                     output_path=tmp_path / "out.txt",
                     actor="operator",
                 ),
-                workflow_profile=_profile(),
+                workflow_profile=export_taxpayer_profile(),
                 export_ports=modelo_export_ports_for_test(),
                 operation=_authority_operation_for_test,
             )
@@ -351,9 +345,9 @@ def test_m303_export_refuses_revision_missing_filing_evidence(
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        bucket_id = _seed_profile()
-        _, calc_rev_id = _seed_revision(
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        bucket_id = seed_profile()
+        _, calc_rev_id = seed_revision(
             bucket_id=bucket_id,
             state=CalculationRevisionState.VERIFICADO_COMPLETO,
             modelo="303",
@@ -369,7 +363,7 @@ def test_m303_export_refuses_revision_missing_filing_evidence(
                     output_path=output,
                     actor="operator",
                 ),
-                workflow_profile=_profile(),
+                workflow_profile=export_taxpayer_profile(),
                 export_ports=modelo_export_ports_for_test(),
                 operation=_authority_operation_for_test,
             )

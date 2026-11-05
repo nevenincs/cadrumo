@@ -4,7 +4,7 @@ import pytest
 import typer
 
 from ....application.modelo.edit_apply_row_contracts import Modelo184MemberRowWireV1, Modelo349RectificacionRowWireV1
-from .._modelo_cli_support import parse_calculation_wire_row_spec
+from ..modelo_cli_support import parse_calculation_wire_row_spec
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

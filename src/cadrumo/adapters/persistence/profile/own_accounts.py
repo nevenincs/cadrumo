@@ -27,7 +27,7 @@ from ....core.logging import get_logger
 from ....domain.transactions.own_accounts import OwnAccountRegister, OwnAccountRegisterError
 from ..storage.secure_object_namespaces import LEDGER_OWN_ACCOUNTS_NAMESPACE
 from ..storage.sql.secure_objects import SecureObjectRepository
-from ._secure_model_document import (
+from .secure_model_document import (
     ProfileBareModelSecurePersistence,
     resolve_profile_secure_object_repository,
 )

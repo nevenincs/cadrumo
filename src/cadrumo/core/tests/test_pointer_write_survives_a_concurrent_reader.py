@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ..bucket_pointer import BucketPointer, _open_pointer_descriptor, pointer_path, read_pointer, write_pointer
+from ..bucket_pointer import BucketPointer, open_pointer_descriptor, pointer_path, read_pointer, write_pointer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -51,7 +51,7 @@ def test_a_reader_finishes_its_open_pointer_snapshot_during_a_profile_switch(tmp
     previous = BucketPointer.selected(bucket_id="0" * 32, transition_revision=1)
     replacement = BucketPointer.absent(transition_revision=2)
     write_pointer(tmp_path, previous)
-    descriptor = _open_pointer_descriptor(pointer_path(tmp_path))
+    descriptor = open_pointer_descriptor(pointer_path(tmp_path))
     try:
         write_pointer(tmp_path, replacement)
         assert os.read(descriptor, 1024) == previous.to_toml().encode("utf-8")

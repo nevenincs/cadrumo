@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field, NonNegativeInt
 
 from .....core.classification.policies import SensitivityClass
 from .....core.identity.digest import ContentDigest
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.models import STRICT_FROZEN_CONFIG
 
 _HASHED_KEY_BYTES = hashlib.sha256().digest_size
 """The size of the keyed natural-identifier hash a secure object is stored under."""
@@ -30,7 +30,7 @@ _HASHED_KEY_BYTES = hashlib.sha256().digest_size
 class SecureObjectRecord(BaseModel):
     """One decrypted sensitive object loaded from the SQL backend."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     namespace: str = Field(min_length=1)
     object_key: bytes
@@ -44,7 +44,7 @@ class SecureObjectRecord(BaseModel):
 class SecureObjectMetadata(BaseModel):
     """Row-level metadata for one stored secure object, decryption-free."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     namespace: str = Field(min_length=1)
     classification: str = Field(min_length=1)
@@ -56,7 +56,7 @@ class SecureObjectMetadata(BaseModel):
 class SecureObjectRevisionAssertion(BaseModel):
     """Read-only source revision required by a derived-data write transaction."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     namespace: str = Field(min_length=1)
     object_key: str = Field(min_length=1)
@@ -79,7 +79,7 @@ class SecureObjectDeletion(BaseModel):
     use.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     namespace: str = Field(min_length=1)
     hashed_object_key: bytes = Field(min_length=_HASHED_KEY_BYTES, max_length=_HASHED_KEY_BYTES)
@@ -105,7 +105,7 @@ class SecureObjectUnreadable(BaseModel):
     former never tolerates a tampered or mismatched row.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     namespace: str = Field(min_length=1)
     row_id: NonNegativeInt
@@ -125,7 +125,7 @@ SecureObjectListItem = SecureObjectBatchLoadItem
 class SecureObjectRawRow(BaseModel):
     """One stored row surfaced without classification / version validation or decryption."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     row_id: NonNegativeInt
     namespace: str = Field(min_length=1)
@@ -148,7 +148,7 @@ class SecureObjectRawRow(BaseModel):
 class SecureObjectNamespaceIntegrity(BaseModel):
     """Per-namespace decryptability counts for the integrity diagnostic."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     namespace: str = Field(min_length=1)
     readable: NonNegativeInt
@@ -158,7 +158,7 @@ class SecureObjectNamespaceIntegrity(BaseModel):
 class SecureObjectDecryptabilityRow(BaseModel):
     """Row-level decryptability metadata without plaintext payload disclosure."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     namespace: str = Field(min_length=1)
     row_id: NonNegativeInt

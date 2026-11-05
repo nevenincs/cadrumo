@@ -13,7 +13,7 @@ import pytest
 from .....core.aeat_csv import AEAT_CSV_MAX_LENGTH, is_aeat_csv
 from .....core.config import Settings
 from .....domain.justificante.errors import JustificanteCsvNotFoundError
-from .._extract import _extract_csv
+from ..extract import extract_csv
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -34,7 +34,7 @@ def _footer(csv: str) -> str:
 def test_documented_widths_are_extracted_whole(csv: str) -> None:
     text = _footer(csv)
 
-    assert _extract_csv(text, text, "fixture.pdf") == csv
+    assert extract_csv(text, text, "fixture.pdf") == csv
 
 
 def test_the_extractor_reaches_the_canonical_maximum_width() -> None:
@@ -42,7 +42,7 @@ def test_the_extractor_reaches_the_canonical_maximum_width() -> None:
     assert len(_CSV_32) == AEAT_CSV_MAX_LENGTH
     text = _footer(_CSV_32)
 
-    extracted = _extract_csv(text, text, "fixture.pdf")
+    extracted = extract_csv(text, text, "fixture.pdf")
 
     assert extracted == _CSV_32
     assert is_aeat_csv(extracted)
@@ -52,9 +52,9 @@ def test_the_extractor_reaches_the_canonical_maximum_width() -> None:
 def test_every_label_tier_accepts_the_full_width(label_text: str) -> None:
     text = label_text.format(csv=_CSV_32)
 
-    assert _extract_csv(text, text, "fixture.pdf") == _CSV_32
+    assert extract_csv(text, text, "fixture.pdf") == _CSV_32
 
 
 def test_a_receipt_with_no_csv_still_refuses() -> None:
     with pytest.raises(JustificanteCsvNotFoundError):
-        _extract_csv("no code here", "no code here", "fixture.pdf")
+        extract_csv("no code here", "no code here", "fixture.pdf")

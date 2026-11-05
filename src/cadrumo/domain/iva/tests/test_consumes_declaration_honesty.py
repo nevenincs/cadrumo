@@ -59,8 +59,8 @@ import pytest
 
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from .. import classification
-from .._classification_predicates import matches_nothing
 from ..classification import IvaInvoiceClassificationCriteria, PartyFact
+from ..classification_predicates import matches_nothing
 from ..schema import EUMemberState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

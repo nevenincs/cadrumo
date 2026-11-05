@@ -6,41 +6,33 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from cadrumo_client.commands.errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 
 from ....adapters.outbound.aeat.browser.connectivity import (
-    probe_browser_connectivity as _probe_browser_connectivity,
+    probe_browser_connectivity,
 )
-from ....application.connectivity_probe import probe_connectivity as _probe_connectivity
+from ....application.connectivity_probe import probe_connectivity
 from ....application.diagnostics import (
-    build_config_repair_report as _build_config_repair_report,
-)
-from ....application.diagnostics import (
-    render_config_repair_text as _render_config_repair_text,
+    build_config_repair_report,
+    render_config_repair_text,
 )
 from ....application.diagnostics_repair import (
-    check_secure_object_integrity as _check_secure_object_integrity,
+    check_secure_object_integrity,
+    read_log_tail,
+    run_secure_object_quarantine,
+    run_workflow_progress_reset,
 )
-from ....application.diagnostics_repair import read_log_tail as _read_log_tail
-from ....application.diagnostics_repair import (
-    run_secure_object_quarantine as _run_secure_object_quarantine,
-)
-from ....application.diagnostics_repair import (
-    run_workflow_progress_reset as _run_workflow_progress_reset,
-)
-from ....application.diagnostics_repair_documents import connectivity_document as _connectivity_document
 from ....application.diagnostics_repair_documents import (
-    integrity_objects_document as _integrity_objects_document,
+    connectivity_document,
+    integrity_objects_document,
+    quarantine_document,
+    repair_report_document,
+    reset_progress_document,
 )
-from ....application.diagnostics_repair_documents import quarantine_document as _quarantine_document
-from ....application.diagnostics_repair_documents import repair_report_document as _repair_report_document
-from ....application.diagnostics_repair_documents import (
-    reset_progress_document as _reset_progress_document,
-)
-from ....core.bucket_pointer import resolve_active_bucket_id as _resolve_active_bucket_id
+from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.json_contract import strict_round_trip
 from ..common import emit_envelope, resolve_cli_precondition_action
-from .connectivity_rendering import render_browser_connectivity_text as _render_browser_connectivity_text
+from .connectivity_rendering import render_browser_connectivity_text
 
 if TYPE_CHECKING:
     from ....application.diagnostic_models import SecureObjectIntegrityReport
@@ -55,10 +47,10 @@ def repair(ctx: typer.Context) -> None:
 
     from ..state_projection_support import diagnostics_ports
 
-    report = _build_config_repair_report(ports=diagnostics_ports(ctx))
-    document = _repair_report_document(report, resolve_action=resolve_cli_precondition_action)
+    report = build_config_repair_report(ports=diagnostics_ports(ctx))
+    document = repair_report_document(report, resolve_action=resolve_cli_precondition_action)
     result = strict_round_trip(ConfigRepairResult, document)
-    lines = _render_config_repair_text(report).splitlines()
+    lines = render_config_repair_text(report).splitlines()
     emit_envelope(
         ctx,
         command="config.repair",
@@ -74,7 +66,7 @@ def repair_logs(
     """Show the configured log file path and recent lines."""
     from cadrumo_client.commands.payloads import RepairLogsResult
 
-    tail = _read_log_tail(lines)
+    tail = read_log_tail(lines)
     result = RepairLogsResult(path=tail.path, lines=list(tail.lines))
     emit_envelope(
         ctx,
@@ -121,21 +113,21 @@ def repair_quarantine(
 ) -> None:
     """Move secure-object rows that fail tag verification into quarantine."""
     if not dry_run and not yes:
-        raise _CliRefusedBoundaryError(
+        raise CliRefusedBoundaryError(
             translated_message="cli.config.repair.quarantine_requires_yes",
         )
-    if _resolve_active_bucket_id() is None:
+    if resolve_active_bucket_id() is None:
         _emit_no_active_quarantine(ctx, dry_run=dry_run)
         return
     from cadrumo_client.commands.payloads import RepairQuarantineResult
 
     from ..state_projection_support import diagnostics_ports
 
-    report = _run_secure_object_quarantine(ports=diagnostics_ports(ctx), dry_run=dry_run)
+    report = run_secure_object_quarantine(ports=diagnostics_ports(ctx), dry_run=dry_run)
     emit_envelope(
         ctx,
         command="config.repair.quarantine",
-        result=strict_round_trip(RepairQuarantineResult, _quarantine_document(report, dry_run=dry_run)),
+        result=strict_round_trip(RepairQuarantineResult, quarantine_document(report, dry_run=dry_run)),
         lines=_quarantine_lines(report, dry_run=dry_run),
     )
 
@@ -183,17 +175,17 @@ def repair_reset_progress(
 ) -> None:
     """Clear saved interrupted-command progress after summarising the saved record."""
     if not dry_run and not yes:
-        raise _CliRefusedBoundaryError(translated_message="cli.config.repair.reset_progress_requires_yes")
-    if _resolve_active_bucket_id() is None:
+        raise CliRefusedBoundaryError(translated_message="cli.config.repair.reset_progress_requires_yes")
+    if resolve_active_bucket_id() is None:
         _emit_no_active_reset_progress(ctx)
         return
     from cadrumo_client.commands.payloads import RepairResetProgressResult
 
-    fingerprint = _run_workflow_progress_reset(dry_run=dry_run)
+    fingerprint = run_workflow_progress_reset(dry_run=dry_run)
     emit_envelope(
         ctx,
         command="config.repair.reset_progress",
-        result=strict_round_trip(RepairResetProgressResult, _reset_progress_document(fingerprint, dry_run=dry_run)),
+        result=strict_round_trip(RepairResetProgressResult, reset_progress_document(fingerprint, dry_run=dry_run)),
         lines=_reset_progress_lines(fingerprint, dry_run=dry_run),
     )
 
@@ -207,9 +199,9 @@ def repair_integrity_objects(
 
     from ..state_projection_support import diagnostics_ports
 
-    check = _check_secure_object_integrity(ports=diagnostics_ports(ctx), namespace=namespace)
+    check = check_secure_object_integrity(ports=diagnostics_ports(ctx), namespace=namespace)
     report = check.report
-    result = strict_round_trip(RepairIntegrityObjectsResult, _integrity_objects_document(check))
+    result = strict_round_trip(RepairIntegrityObjectsResult, integrity_objects_document(check))
     emit_envelope(
         ctx,
         command="config.repair.integrity.objects",
@@ -230,13 +222,13 @@ def repair_connectivity(ctx: typer.Context, headless: bool = True) -> None:
     from cadrumo_client.commands.payloads import RepairConnectivityResult
 
     _ = headless
-    report = _probe_connectivity(_probe_browser_connectivity)
-    result = strict_round_trip(RepairConnectivityResult, _connectivity_document(report))
+    report = probe_connectivity(probe_browser_connectivity)
+    result = strict_round_trip(RepairConnectivityResult, connectivity_document(report))
     emit_envelope(
         ctx,
         command="config.repair.connectivity",
         result=result,
-        lines=_render_browser_connectivity_text(report.status).splitlines(),
+        lines=render_browser_connectivity_text(report.status).splitlines(),
     )
 
 

@@ -61,8 +61,7 @@ from ....core.hashing import prefixed_digest
 from ....core.profile_publication import ProfilePublicationKindValue
 from ....core.storage_taxonomy import StorageCategory, StorageCustodyProfile
 from ....core.storage_taxonomy_locations import storage_location
-from ....core.time.clock import now as _utc_now
-from ._kdf_salt import KDF_SALT_BYTES
+from ....core.time.clock import now
 from .bucket.directory_layout import bucket_paths
 from .bucket.export_archive_header import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader
 from .bucket.lockfile import acquire_lock, release_lock
@@ -141,6 +140,7 @@ from .errors import (
     PersistenceError,
     StorageValidationError,
 )
+from .kdf_salt import KDF_SALT_BYTES
 from .master_key.active_session import activate_session, current_active_bucket_session, session_serves_bucket
 from .master_key.bucket_session import BucketSession
 from .master_key.kdf_params import (
@@ -208,7 +208,7 @@ class _PersistenceProfileBucketStorage:
         release_lock(paths)
 
 
-class _PersistenceProfileRecordCrypto:
+class PersistenceProfileRecordCrypto:
     def passphrase_kdf_policy(self) -> ProfilePassphraseKdfPolicy:
         return ProfilePassphraseKdfPolicy(
             version=ARGON2_VERSION,
@@ -610,7 +610,7 @@ class _PersistenceProfileCustody:
         # reach the authenticated profile aggregate.  Importing it at module
         # scope made every consumer of this adapter -- including a pure profile
         # listing -- pay for all of it, so it is loaded only when carry runs.
-        from ._profile_custody_carry import collect_profile_custody_carry
+        from .profile_custody_carry import collect_profile_custody_carry
 
         return collect_profile_custody_carry(
             bucket_id=bucket_id,
@@ -619,7 +619,7 @@ class _PersistenceProfileCustody:
         )
 
     def record_crypto(self) -> ProfileRecordCryptoPort:
-        return _PersistenceProfileRecordCrypto()
+        return PersistenceProfileRecordCrypto()
 
     def create_registration_material(
         self,
@@ -843,7 +843,7 @@ class _PersistenceProfileCustody:
 
     @contextmanager
     def _temporary_session(self, *, profile_id: UUID, dek: bytes, root: Path) -> Generator[None]:
-        instant = _utc_now()
+        instant = now()
         bridge = BucketSession.open_resumed(
             bucket_id=str(profile_id),
             dek=dek,

@@ -150,7 +150,7 @@ class WithholdingObservationWorkflowAdapter:
             entry = expected.get(token)
             if entry is None or entry.retencion != retencion or entry.percepcion != percepcion:
                 raise WithholdingObservationMutationError("projection_integrity_failure")
-        if _entries_digest(head.entries) != head.projection_digest:
+        if entries_digest(head.entries) != head.projection_digest:
             raise WithholdingObservationMutationError("projection_integrity_failure")
 
     def idempotency_replay(self, scope: WithholdingWindowScope, key: str) -> WithholdingIdempotencyReplay | None:
@@ -211,7 +211,7 @@ class WithholdingObservationWorkflowAdapter:
         ):
             raise WithholdingObservationMutationError("unknown_superseded_generation")
         generation = predecessor.generation + 1
-        digest = _entries_digest(successor)
+        digest = entries_digest(successor)
         generation_id = sha256_hex(
             f"{predecessor.baseline.generation_id}:{envelope.command_digest}:{digest}".encode(UTF_8_ENCODING),
         )
@@ -449,7 +449,7 @@ class WithholdingObservationWorkflowAdapter:
         )
 
 
-def _entries_digest(entries: Iterable[WithholdingProjectionEntry]) -> str:
+def entries_digest(entries: Iterable[WithholdingProjectionEntry]) -> str:
     values = sorted(
         (entry.model_dump(mode="json") for entry in entries),
         key=lambda value: withholding_canonical_json(value["identity"]),

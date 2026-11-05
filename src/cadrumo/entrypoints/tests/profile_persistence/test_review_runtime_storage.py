@@ -23,9 +23,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from cadrumo.domain.filing.schema import ModeloDraft
 from cadrumo.domain.submission.models import ModeloDraftStatus
@@ -66,7 +64,7 @@ _MODELO_130_BINDING_INPUTS = {
 
 
 def test_compute_current_approval_basis_refuses_missing_runtime_session(tmp_path: Path) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         schema_provider = build_runtime_schema_provider(
             modelos=("130",), filing_year=_Q1_2026.filing_year, period=_Q1_2026
         )
@@ -90,7 +88,7 @@ def test_compute_current_approval_basis_refuses_missing_runtime_session(tmp_path
 
 
 def test_approval_stale_reasons_reloads_transaction_catalogue_from_runtime_default(tmp_path: Path) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         schema_provider = build_runtime_schema_provider(
             modelos=("130",), filing_year=_Q1_2026.filing_year, period=_Q1_2026
         )

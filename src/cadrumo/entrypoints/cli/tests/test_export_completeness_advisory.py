@@ -19,7 +19,7 @@ from ....application.modelo.export_contracts import ModeloExportResult
 from ....core.config import override_settings
 from ....core.json_contract import NoticeSeverity
 from ....core.period import Period
-from ..modelo_export_commands import _export_notices
+from ..modelo_export_commands import export_notices
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -51,7 +51,7 @@ def _result(
 def test_unverified_export_emits_coverage_advisory(tmp_path: Path) -> None:
     result = _result(completeness_unverified=True, tmp_path=tmp_path)
 
-    notices = _export_notices(result)
+    notices = export_notices(result)
     codes = {notice.code for notice in notices}
 
     assert _ADVISORY_CODE in codes
@@ -65,7 +65,7 @@ def test_unverified_export_emits_coverage_advisory(tmp_path: Path) -> None:
 def test_verified_export_emits_no_coverage_advisory(tmp_path: Path) -> None:
     result = _result(completeness_unverified=False, tmp_path=tmp_path)
 
-    notices = _export_notices(result)
+    notices = export_notices(result)
     codes = {notice.code for notice in notices}
 
     # The default (gate ran, or non-fichero-BOE transport) carries no advisory.
@@ -76,7 +76,7 @@ def test_unverified_domiciliation_cutoff_emits_warning_with_the_tui_wording(tmp_
     result = _result(domiciliation_cutoff_unverified=True, tmp_path=tmp_path)
 
     with override_settings(cadrumo_output_language="en"):
-        notices = _export_notices(result)
+        notices = export_notices(result)
 
     warning = next(notice for notice in notices if notice.code == "modelo.export.domiciliation_cutoff_unverified")
     assert warning.severity is NoticeSeverity.WARNING
@@ -85,6 +85,6 @@ def test_unverified_domiciliation_cutoff_emits_warning_with_the_tui_wording(tmp_
 
 
 def test_known_domiciliation_cutoff_emits_no_cutoff_warning(tmp_path: Path) -> None:
-    notices = _export_notices(_result(tmp_path=tmp_path))
+    notices = export_notices(_result(tmp_path=tmp_path))
 
     assert "modelo.export.domiciliation_cutoff_unverified" not in {notice.code for notice in notices}

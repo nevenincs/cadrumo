@@ -35,7 +35,7 @@ import pytest
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.capsule_record import ProfileRecordSession
@@ -60,7 +60,7 @@ _CREDENTIAL_INPUT = "complete-setup-schema-judgement-passphrase"
 @contextmanager
 def _setup_subject(tmp_path: Path, *, facts: tuple[UserProfileFact, ...]) -> Generator[tuple[Path, str]]:
     """Register a real INCOMPLETE capsule carrying ``facts`` and bind its session."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
             label="Promotion subject",
@@ -83,7 +83,7 @@ def _setup_subject(tmp_path: Path, *, facts: tuple[UserProfileFact, ...]) -> Gen
 
 def _promote(profile_id: str, storage_root: Path):
     """Attempt the promotion using the record's own current CAS coordinates."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     repository = ProfileRecordRepository.for_current_session(
         profile_id, root=storage_root, profile_decode_context=_profile_decode_context_for_test
     )
@@ -97,7 +97,7 @@ def _promote(profile_id: str, storage_root: Path):
 
 def test_complete_setup_refuses_a_record_missing_an_unconditional_required_field(tmp_path: Path) -> None:
     """The literal defect: a record short of required answers became COMPLETE."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with _setup_subject(
         tmp_path,
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
@@ -144,7 +144,7 @@ def test_complete_setup_refuses_a_record_whose_conditional_block_is_unanswered(t
         assert isinstance(issue_codes, tuple)
         assert CONDITIONAL_REQUIRED_FIELD_MISSING_CODE in issue_codes
 
-        _, profile_decode_context = _profile_contexts_for_test()
+        _, profile_decode_context = profile_authority_contexts()
         record = ProfileRecordRepository.for_current_session(
             profile_id,
             root=storage_root,
@@ -159,7 +159,7 @@ def test_complete_setup_promotes_a_record_that_satisfies_the_contract(tmp_path: 
     Without this the refusals above are satisfied by a door that refuses
     everything, which would strand every operator at the end of setup.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with _setup_subject(tmp_path, facts=complete_profile_facts(published_profile_schema())) as (
         storage_root,
         profile_id,

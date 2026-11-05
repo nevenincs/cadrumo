@@ -10,7 +10,7 @@ from cadrumo.application.modelo.work_plazo import ModeloWorkDeadlinePosture
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.tests.published_authority import published_legal_reference
 from cadrumo.domain.deadlines.festivos import DeadlineHolidayCoverage
-from cadrumo.entrypoints.cli._modelo_rendering import _work_unit_deadline_output_from_posture
+from cadrumo.entrypoints.cli.modelo_rendering import work_unit_deadline_output_from_posture
 
 _RECARGO_LEGAL_REF = "ley-58-2003:art-27.2"
 
@@ -22,7 +22,7 @@ def test_overdue_posture_fallback_emits_null_preview_without_rate_wording(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """The real renderer emits a null preview and no displayed-rate warning."""
-    deadline, notices = _work_unit_deadline_output_from_posture(
+    deadline, notices = work_unit_deadline_output_from_posture(
         ModeloWorkDeadlinePosture(
             closes_on=date(2026, 1, 30),
             nominal_closes_on=date(2026, 1, 30),

@@ -15,8 +15,8 @@ from __future__ import annotations
 import pytest
 
 from ....application.live.remote_state_models import BulkFiledDataCaptureReport, FiledCapturePairOutcome
-from .._app_live_rendering import _filed_capture_lines
 from ..app_live_filed_results import FiledCaptureResult
+from ..app_live_rendering import filed_capture_lines
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -103,7 +103,7 @@ def test_text_mode_agrees_with_the_result_field(dry_run: bool) -> None:
         recapture_notices=(),
         dry_run=dry_run,
     )
-    lines = _filed_capture_lines(report, mode="bulk")
+    lines = filed_capture_lines(report, mode="bulk")
 
     emitted = any(line.startswith("dry_run") for line in lines)
     assert emitted is dry_run

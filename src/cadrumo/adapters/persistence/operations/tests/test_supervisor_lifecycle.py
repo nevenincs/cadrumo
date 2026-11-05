@@ -57,7 +57,7 @@ from cadrumo.core.operations import (
 )
 
 from .supervision_support import run_to_settlement
-from .supervisor_test_support import _close_host_over_live_executor, operation_repositories
+from .supervisor_test_support import close_host_over_live_executor, operation_repositories
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -359,7 +359,7 @@ def test_every_terminal_condition_waits_for_owned_file_cleanup_and_preserves_eff
             else:
                 # Closing the host stops the live executor without settling it,
                 # leaving the running record for the explicit receipt below.
-                ready_for_settlement = await _close_host_over_live_executor(supervisor, operation_id, executor.started)
+                ready_for_settlement = await close_host_over_live_executor(supervisor, operation_id, executor.started)
                 assert ready_for_settlement.lifecycle is OperationLifecycle.RUNNING
                 resource = executor.resource
                 assert resource is not None
@@ -460,7 +460,7 @@ def test_cleanup_failure_refuses_terminal_journal_persistence(tmp_path: Path) ->
         async def refuse_terminal_after_cleanup_failure() -> None:
             operation_id = "3" * 64
             await supervisor.submit(_request(subject_ref="subject:cleanup-failure"), operation_id=operation_id)
-            running = await _close_host_over_live_executor(supervisor, operation_id, executor.started)
+            running = await close_host_over_live_executor(supervisor, operation_id, executor.started)
             resource = executor.resource
             assert resource is not None
 

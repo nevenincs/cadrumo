@@ -65,7 +65,7 @@ def _private_identity(descriptor: int) -> tuple[int, int]:
     return metadata.st_dev, metadata.st_ino
 
 
-class _Namespace:
+class Namespace:
     def __init__(self, base: Path) -> None:
         self.base = base
         self.path = base / PRODUCT_IDENTITY.python_package
@@ -120,14 +120,14 @@ class _Namespace:
 
 
 @cache
-def _namespace() -> _Namespace:
+def namespace() -> Namespace:
     value = _user_cache_directory()
     if not (value is not None and value) or not Path(value).is_absolute():
         raise OSError("Darwin user cache query returned no absolute directory")
-    return _Namespace(Path(value).resolve(strict=True))
+    return Namespace(Path(value).resolve(strict=True))
 
 
 def darwin_socket_directory(*, create: bool = False) -> Path:
     """Resolve once, retain handles and refuse replacement; never use an ambient fallback."""
     with _RESOLUTION_LOCK:
-        return _namespace().verify(create=create)
+        return namespace().verify(create=create)

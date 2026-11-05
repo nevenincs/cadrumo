@@ -17,13 +17,13 @@ from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import p
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_record_repository import close_active_profile_record_session
 from cadrumo.core import config as config_module
 from cadrumo.core.config import Settings
-from cadrumo.core.time.clock import now as _now
+from cadrumo.core.time.clock import now
 from cadrumo.tests.process_results import receive_process_result
 
 
@@ -45,7 +45,7 @@ def _close_live_login() -> None:
     close_active_bucket_session()
 
 
-def _child_settings(storage_root: Path) -> tuple[Settings, Token[Settings | None], ExitStack]:
+def child_settings(storage_root: Path) -> tuple[Settings, Token[Settings | None], ExitStack]:
     # Calibration measurement is off for the same reason the session default in
     # `cadrumo/conftest.py` turns it off, and it has to be said again HERE:
     # these children are spawned, so no in-process override reaches them, and
@@ -68,7 +68,7 @@ def _child_settings(storage_root: Path) -> tuple[Settings, Token[Settings | None
     return settings, config_module.settings_override.set(settings), composition
 
 
-def _close_child_login(
+def close_child_login(
     token: Token[Settings | None],
     composition: ExitStack,
 ) -> None:
@@ -92,8 +92,8 @@ def _login_in_separate_process_child(
     Explicit local proof mints no receipt, so ``persist_receipt`` publishes one
     afterwards through the runtime worker's own step, as a persisted sign-in does.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-    settings, token, composition = _child_settings(storage_root)
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
+    settings, token, composition = child_settings(storage_root)
     _ = settings
     try:
         outcome = authenticate_profile_for_invocation(
@@ -117,7 +117,7 @@ def _login_in_separate_process_child(
             }
         )
     finally:
-        _close_child_login(token, composition)
+        close_child_login(token, composition)
 
 
 def _resume_probe_child(
@@ -126,7 +126,7 @@ def _resume_probe_child(
     result_queue: Queue[_ResumeProbeResult],
 ) -> None:
     """Recover one profile's session material with no passphrase, in its own process."""
-    settings, token, composition = _child_settings(storage_root)
+    settings, token, composition = child_settings(storage_root)
     _ = settings
     try:
         material = load_committed_profile_password_material(UUID(profile), root=storage_root)
@@ -135,7 +135,7 @@ def _resume_probe_child(
             profile_id=UUID(profile),
             custody_generation=material.envelope.password_generation,
             dek_epoch=material.envelope.dek_epoch,
-            now=_now(),
+            now=now(),
         )
         result_queue.put(
             {
@@ -145,10 +145,10 @@ def _resume_probe_child(
             }
         )
     finally:
-        _close_child_login(token, composition)
+        close_child_login(token, composition)
 
 
-def _login_in_separate_process(
+def login_in_separate_process(
     storage_root: Path,
     profile: str,
     password: str,
@@ -176,7 +176,7 @@ def _login_in_separate_process(
             child.join(timeout=30)
 
 
-def _probe_resumable_session(storage_root: Path, profile: str) -> _ResumeProbeResult:
+def probe_resumable_session(storage_root: Path, profile: str) -> _ResumeProbeResult:
     """Measure recovered key material from a process that never held the session."""
     context = get_context("spawn")
     result_queue: Queue[_ResumeProbeResult] = Queue(ctx=context)

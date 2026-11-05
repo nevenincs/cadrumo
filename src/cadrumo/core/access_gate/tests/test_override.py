@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from ... import config as _config
+from ... import config
 from ...config import load_settings, override_settings
 from ..errors import AeatLiveReadNotEnabledError, LiveSubmitForbiddenError
 from ..gate import AeatAccessGate
@@ -80,4 +80,4 @@ def test_override_does_not_mutate_os_environ() -> None:
 
 
 # Defensive re-import to surface a circular-import regression early.
-assert _config.override_settings is override_settings
+assert config.override_settings is override_settings

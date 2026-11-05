@@ -26,7 +26,7 @@ from ....core.modelo import Modelo
 from ....core.operations import OperationEffect, OperationTerminalCondition
 from ....core.period import Period
 from ....domain.deadlines.models import ObligationStatus
-from .. import _modelo_work_runs_cli as cli
+from .. import modelo_work_runs_cli as cli
 from .. import operation_workflow_runs as bridge
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -219,11 +219,11 @@ def test_run_presentation_failure_retains_terminal_receipt(
         raise RuntimeError("presentation failure")
 
     if failure_stage == "render":
-        monkeypatch.setattr(cli, "_workflow_run_projection", fail_presentation)
+        monkeypatch.setattr(cli, "workflow_run_projection", fail_presentation)
     else:
         monkeypatch.setattr(
             cli,
-            "_workflow_run_projection",
+            "workflow_run_projection",
             lambda *_args, **_kwargs: SimpleNamespace(
                 modelo="303",
                 period="2025-1T",
@@ -234,7 +234,7 @@ def test_run_presentation_failure_retains_terminal_receipt(
                 action=None,
             ),
         )
-        monkeypatch.setattr(cli, "_render_workflow_step_summary", lambda *_args, **_kwargs: "completed")
+        monkeypatch.setattr(cli, "render_workflow_step_summary", lambda *_args, **_kwargs: "completed")
         monkeypatch.setattr(cli, "emit_envelope", fail_presentation)
 
     handler = getattr(cli, handler_name)
@@ -259,7 +259,7 @@ def test_run_presentation_preserves_typer_exit(
     monkeypatch.setattr(cli, "read_workflow_runs", lambda *_args, **_kwargs: _runs_completion())
     monkeypatch.setattr(
         cli,
-        "_workflow_run_projection",
+        "workflow_run_projection",
         lambda *_args, **_kwargs: SimpleNamespace(
             modelo="303",
             period="2025-1T",
@@ -270,7 +270,7 @@ def test_run_presentation_preserves_typer_exit(
             action=None,
         ),
     )
-    monkeypatch.setattr(cli, "_render_workflow_step_summary", lambda *_args, **_kwargs: "completed")
+    monkeypatch.setattr(cli, "render_workflow_step_summary", lambda *_args, **_kwargs: "completed")
     expected = typer.Exit(code=0)
     monkeypatch.setattr(cli, "emit_envelope", lambda *_args, **_kwargs: (_ for _ in ()).throw(expected))
 

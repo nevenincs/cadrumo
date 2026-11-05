@@ -109,19 +109,19 @@ from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.models import TransactionCatalogue
 from ..adapter_composition_work_ports import build_ledger_evidence_ports
 from .registered_executor_case_support import (
-    _resolve_result_projection,
+    resolve_result_projection,
 )
 from .registered_executor_outcome_context import ExecutorOutcome
 from .registered_executor_result_assertions import (
-    _assert_canonical_bulk_classification_update,
-    _assert_ledger_participation_lookup_result,
-    _assert_ledger_participation_rebuild_result,
-    _assert_ledger_review_projection,
-    _assert_ledger_track_result,
+    assert_canonical_bulk_classification_update,
+    assert_ledger_participation_lookup_result,
+    assert_ledger_participation_rebuild_result,
+    assert_ledger_review_projection,
+    assert_ledger_track_result,
 )
 from .registered_executor_scenario_constants import (
-    _LEDGER_LIST_PRIVATE_FILTER_SENTINEL,
-    _OWN_ACCOUNT_SYNTHETIC_IBAN,
+    LEDGER_LIST_PRIVATE_FILTER_SENTINEL,
+    OWN_ACCOUNT_SYNTHETIC_IBAN,
 )
 
 
@@ -158,9 +158,9 @@ def assert_ledger_own_account_outcome(ctx: ExecutorOutcome) -> None:
     assert result.changed is True
     assert result.own_account_id == "acc-01"
     assert [account.masked_iban for account in result.accounts] == ["ES \u00b7\u00b7\u00b7\u00b7 1332"]
-    assert _OWN_ACCOUNT_SYNTHETIC_IBAN[4:-4] not in result.model_dump_json()
+    assert OWN_ACCOUNT_SYNTHETIC_IBAN[4:-4] not in result.model_dump_json()
     persisted = OwnAccountRepository(bucket_id=str(ctx.profile_id)).load()
-    assert [account.iban for account in persisted.accounts] == [_OWN_ACCOUNT_SYNTHETIC_IBAN]
+    assert [account.iban for account in persisted.accounts] == [OWN_ACCOUNT_SYNTHETIC_IBAN]
 
 
 def assert_ledger_remove_outcome(ctx: ExecutorOutcome) -> None:
@@ -676,7 +676,7 @@ def assert_ledger_list_outcome(ctx: ExecutorOutcome) -> None:
         "ledger list page B",
         "ledger list page C",
     ]
-    assert all(row.group_label == _LEDGER_LIST_PRIVATE_FILTER_SENTINEL for row in selection.rows)
+    assert all(row.group_label == LEDGER_LIST_PRIVATE_FILTER_SENTINEL for row in selection.rows)
     materialization = asyncio.run(
         ctx.driver.services.observation.reader.read_observation(
             ctx.submitted.receipt.operation_id,
@@ -695,7 +695,7 @@ def assert_ledger_list_outcome(ctx: ExecutorOutcome) -> None:
         / f"{ctx.submitted.receipt.operation_id}.json"
     )
     assert journal_file.is_file()
-    assert _LEDGER_LIST_PRIVATE_FILTER_SENTINEL.encode() not in journal_file.read_bytes()
+    assert LEDGER_LIST_PRIVATE_FILTER_SENTINEL.encode() not in journal_file.read_bytes()
 
 
 def assert_ledger_history_outcome(ctx: ExecutorOutcome) -> None:
@@ -727,7 +727,7 @@ def assert_ledger_view_outcome(ctx: ExecutorOutcome) -> None:
 
 def assert_ledger_track_outcome(ctx: ExecutorOutcome) -> None:
     """Check the ledger.track public result and effects."""
-    _assert_ledger_track_result(
+    assert_ledger_track_result(
         ctx.driver,
         ctx.registry,
         profile_id=ctx.profile_id,
@@ -741,7 +741,7 @@ def assert_ledger_track_outcome(ctx: ExecutorOutcome) -> None:
 def assert_ledger_participation_outcome(ctx: ExecutorOutcome) -> None:
     """Check the ledger.participation public result and effects."""
     assert isinstance(ctx.payload, LedgerParticipationRequest)
-    _assert_ledger_participation_lookup_result(
+    assert_ledger_participation_lookup_result(
         ctx.driver,
         ctx.registry,
         profile_id=ctx.profile_id,
@@ -754,7 +754,7 @@ def assert_ledger_participation_outcome(ctx: ExecutorOutcome) -> None:
 def assert_ledger_participation_rebuild_outcome(ctx: ExecutorOutcome) -> None:
     """Check the ledger.participation.rebuild public result and effects."""
     assert isinstance(ctx.payload, LedgerParticipationRebuildRequest)
-    _assert_ledger_participation_rebuild_result(
+    assert_ledger_participation_rebuild_result(
         ctx.driver,
         ctx.registry,
         profile_id=ctx.profile_id,
@@ -766,7 +766,7 @@ def assert_ledger_participation_rebuild_outcome(ctx: ExecutorOutcome) -> None:
 
 def assert_ledger_review_outcome(ctx: ExecutorOutcome) -> None:
     """Check the ledger.review public result and effects."""
-    review = _resolve_result_projection(
+    review = resolve_result_projection(
         ctx.driver,
         ctx.registry,
         definition_id=ctx.definition_id,
@@ -774,7 +774,7 @@ def assert_ledger_review_outcome(ctx: ExecutorOutcome) -> None:
         terminal_revision=ctx.observed.projection.revision,
         projection_type=LedgerReviewProjection,
     )
-    _assert_ledger_review_projection(ctx.payload, review, profile_id=ctx.profile_id)
+    assert_ledger_review_projection(ctx.payload, review, profile_id=ctx.profile_id)
 
 
 def assert_ledger_bulk_classify_outcome(ctx: ExecutorOutcome) -> None:
@@ -822,7 +822,7 @@ def assert_ledger_bulk_classify_outcome(ctx: ExecutorOutcome) -> None:
     after_transaction = transactions_after.get(valid_transaction_id)
     assert before_transaction is not None
     assert after_transaction is not None
-    _assert_canonical_bulk_classification_update(
+    assert_canonical_bulk_classification_update(
         profile_id=ctx.profile_id,
         operation=ctx.operation,
         before=before_transaction,

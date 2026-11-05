@@ -48,7 +48,7 @@ def _modal(pilot: Pilot[None]) -> OperationModal | None:
     return current if isinstance(current, OperationModal) else None
 
 
-async def _ask(pilot: Pilot[None], screen: Screen[None], button_id: str) -> None:
+async def categorisation_review_ask(pilot: Pilot[None], screen: Screen[None], button_id: str) -> None:
     """Ask for a review and wait for its modal; the modal's observer runs until the decision, so workers stay unjoined."""
     screen.query_one(f"#{button_id}", Button).press()
     await settle_until(
@@ -59,7 +59,7 @@ async def _ask(pilot: Pilot[None], screen: Screen[None], button_id: str) -> None
     )
 
 
-async def _decide(pilot: Pilot[None], button_id: str) -> None:
+async def decide(pilot: Pilot[None], button_id: str) -> None:
     """Wait for the modal to offer the decision, then take it."""
 
     def offered() -> bool:
@@ -89,12 +89,12 @@ async def test_applying_a_suggestion_in_the_modal_writes_it() -> None:
     with override_settings(cadrumo_output_language="en"):
         async with WorkspaceHostApp(screen).run_test(size=(120, 50)) as pilot:
             await settle(pilot)
-            await _ask(pilot, screen, "categorisation-review-ask")
+            await categorisation_review_ask(pilot, screen, "categorisation-review-ask")
             request = door.controllers[0].request
             assert request.transaction_id == LEDGER_TX_A
             assert request.origin is LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY
             assert profile.ledger.entries[LEDGER_TX_A].business_classification != "BUSINESS"
-            await _decide(pilot, "btn-operation-apply")
+            await decide(pilot, "btn-operation-apply")
             assert door.results[0].outcome == "classified"
             assert profile.ledger.entries[LEDGER_TX_A].business_classification == BusinessClassification.BUSINESS.value
             assert text(screen, "#categorisation-outcome") == tr(
@@ -111,8 +111,8 @@ async def test_rejecting_a_suggestion_in_the_modal_writes_nothing() -> None:
     with override_settings(cadrumo_output_language="en"):
         async with WorkspaceHostApp(screen).run_test(size=(120, 50)) as pilot:
             await settle(pilot)
-            await _ask(pilot, screen, "categorisation-review-ask")
-            await _decide(pilot, "btn-operation-reject")
+            await categorisation_review_ask(pilot, screen, "categorisation-review-ask")
+            await decide(pilot, "btn-operation-reject")
             assert door.results[0].outcome == "rejected"
             assert profile.ledger.entries[LEDGER_TX_A] == before
             assert text(screen, "#categorisation-outcome") == tr("tui.ledger.categorisation.review.rejected")
@@ -142,9 +142,9 @@ async def test_a_suggested_split_applied_in_the_modal_is_reported() -> None:
     with override_settings(cadrumo_output_language="en"):
         async with WorkspaceHostApp(screen).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
-            await _ask(pilot, screen, "categorisation-split-ask")
+            await categorisation_review_ask(pilot, screen, "categorisation-split-ask")
             assert door.controllers[0].request.mode == "split"
-            await _decide(pilot, "btn-operation-apply")
+            await decide(pilot, "btn-operation-apply")
             assert door.results[0].outcome == "split"
             assert text(screen, "#categorisation-outcome") == tr("tui.ledger.categorisation.review.split", count=2)
 
@@ -197,7 +197,7 @@ async def _apply_then_lose_access(
     pilot: Pilot[None], screen: ReviewingCategorisationScreen, ask: str = "categorisation-review-ask"
 ) -> None:
     """Apply the suggestion, let the modal lose access to the operation, then close it."""
-    await _ask(pilot, screen, ask)
+    await categorisation_review_ask(pilot, screen, ask)
     modal = _modal(pilot)
     assert modal is not None
     apply = modal.query_one("#btn-operation-apply", Button)
@@ -279,7 +279,7 @@ async def test_a_review_whose_modal_loses_access_after_apply_is_unknown_until_th
                 assert refreshes.calls == 2
             assert text(screen, "#ledger-flow-status") == tr("tui.ledger.flow.outcome_unknown")
             assert not screen.review_awaits_reread
-            await _ask(pilot, screen, "categorisation-review-ask")
+            await categorisation_review_ask(pilot, screen, "categorisation-review-ask")
             assert len(door.controllers) == 2
             await _end_observation(pilot)
 
@@ -388,7 +388,7 @@ async def test_a_reread_after_an_unknown_suggested_split_survives_a_refresh_aske
             assert refreshes.calls == 1
             assert text(screen, "#ledger-flow-status") == tr("tui.ledger.categorisation.saved")
             assert not screen.review_awaits_reread
-            await _ask(pilot, screen, "categorisation-split-ask")
+            await categorisation_review_ask(pilot, screen, "categorisation-split-ask")
             await _end_observation(pilot)
 
 

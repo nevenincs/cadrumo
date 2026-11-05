@@ -36,11 +36,11 @@ from ..errors import (
 )
 from ..models import LLMRequest
 from ..providers.base import ProviderCompletion
-from ._client_process_state import _fresh_client_process_state
+from .client_process_state import fresh_client_process_state
 from .model_run_support import serving_agent
 from .scripted_adapter_support import COMPLETION_TEXT, ScriptedAdapter, provider_request
 
-__all__ = ["_fresh_client_process_state"]
+__all__ = ["fresh_client_process_state"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 

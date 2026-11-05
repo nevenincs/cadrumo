@@ -34,11 +34,11 @@ import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....tests.inventory import FIXTURES_DIR
-from ._verification_chain_support import (
-    _COMPUTED_CASILLAS_M111,
-    _calculate_engine_values_from_inputs,
-    _decimal_inputs_from_extracted_values,
-    _parse_extracted_declaracion_values,
+from .verification_chain_support import (
+    COMPUTED_CASILLAS_M111,
+    calculate_engine_values_from_inputs,
+    decimal_inputs_from_extracted_values,
+    parse_extracted_declaracion_values,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
@@ -125,7 +125,7 @@ def test_verification_chain_m111_parses_each_committed_render(
         f"parse-fidelity anchor and asserts no arithmetic over its redacted amounts."
     )
 
-    extracted = _parse_extracted_declaracion_values(modelo="111", fixture_stem=pdf_stem, year=year, period=period)
+    extracted = parse_extracted_declaracion_values(modelo="111", fixture_stem=pdf_stem, year=year, period=period)
 
     assert frozenset(extracted) == expected_extracted_casillas, (
         f"PARSER-GAP [{pdf_stem}]: extracted casilla set drifted.\n"
@@ -136,8 +136,8 @@ def test_verification_chain_m111_parses_each_committed_render(
     # The parsed casilla ids must be ones the engine accepts as inputs: this is
     # the parse -> engine seam, and it is verified without asserting anything
     # about the placeholder amounts that flow through it.
-    inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_COMPUTED_CASILLAS_M111)
-    engine_values = _calculate_engine_values_from_inputs(
+    inputs = decimal_inputs_from_extracted_values(extracted, excluding=COMPUTED_CASILLAS_M111)
+    engine_values = calculate_engine_values_from_inputs(
         modelo="111",
         year=year,
         period=period,
@@ -172,7 +172,7 @@ def test_verification_chain_m111_aggregates_the_epigrafes_the_orden_names() -> N
     declares. A registry formula that dropped casilla 24, or added a casilla the
     órden does not list, diverges and fails.
     """
-    engine_values = _calculate_engine_values_from_inputs(
+    engine_values = calculate_engine_values_from_inputs(
         modelo="111",
         year=2024,
         period="1T",

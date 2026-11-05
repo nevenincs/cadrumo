@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 
 from .....domain.currency.errors import ExchangeRateProviderError
-from ..ecb_provider import LOOKBACK_DAYS, EcbReferenceRateProvider, _observation_url, _parse_observations
+from ..ecb_provider import LOOKBACK_DAYS, EcbReferenceRateProvider, observation_url, parse_observations
 from .recorded_ecb_rates import recorded_ecb_answers, recorded_ecb_fetch, recorded_ecb_rate_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -17,7 +17,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 def _recorded_pair() -> tuple[str, date]:
     """Return one (currency, date) whose window the recording holds with an observation."""
     for url, body in sorted(recorded_ecb_answers().items()):
-        if _parse_observations(body):
+        if parse_observations(body):
             currency = url.split("/EXR/D.", 1)[1].split(".", 1)[0]
             end = date.fromisoformat(url.split("endPeriod=", 1)[1].split("&", 1)[0])
             return currency, end
@@ -36,7 +36,7 @@ def test_a_recorded_window_converts_through_the_real_provider() -> None:
 def test_an_unrecorded_date_refuses_instead_of_borrowing_a_neighbour() -> None:
     currency, rate_date = _recorded_pair()
     unrecorded = rate_date + timedelta(days=1)
-    assert _observation_url(currency, unrecorded - timedelta(days=LOOKBACK_DAYS), unrecorded) not in (
+    assert observation_url(currency, unrecorded - timedelta(days=LOOKBACK_DAYS), unrecorded) not in (
         recorded_ecb_answers()
     ), "the probe date must fall outside the recording for this refusal to mean anything"
 

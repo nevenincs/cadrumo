@@ -34,7 +34,7 @@ from ..directory_scan import DirectoryEntryKind, scan_directory
 from ..redaction.rules import redact_for_cli_output, redact_for_log
 from .redaction_span_recovery import recover_replaced_spans
 from .test_redaction_population_coverage import (
-    _admitting_authority,
+    admitting_authority,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("authority_operation")]
@@ -119,7 +119,7 @@ def test_no_recorded_operator_line_is_rewritten_unless_it_carries_an_identity() 
             if emitted == line:
                 continue
             for span in recover_replaced_spans(line, emitted):
-                if span in redacted_tokens or bool(_admitting_authority(span)):
+                if span in redacted_tokens or bool(admitting_authority(span)):
                     redacted_tokens.add(span)
                     continue
                 violations.append(f"{funnel_name}: {line!r} -> {emitted!r} (hashed {span!r})")

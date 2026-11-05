@@ -26,8 +26,7 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
 from ....core.resources.bundled_data import bundled_path
@@ -117,7 +116,7 @@ def test_every_declared_rule_is_grounded_and_every_row_grounds_a_rule() -> None:
     investigated the next time a rule is added.
     """
     declared = _declared_rule_ids()
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         grounded = frozenset(_rules(operation=operation))
 
     assert declared - grounded == frozenset(), "classification rules ship with no provision behind their placement"
@@ -130,7 +129,7 @@ def test_every_cited_provision_resolves_in_the_legal_catalogue() -> None:
     flow = (bundled_path() / "registry/aeat/legal/iva-flow.toml").read_text(encoding="utf-8", errors="replace")
     defined = catalogue + flow
 
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         for rule in _rules(operation=operation).values():
             for reference in rule.legal_references:
                 assert f'[legal."{reference}"]' in defined, (
@@ -145,7 +144,7 @@ def test_the_establishing_provision_is_one_the_row_actually_reads() -> None:
     and the exclusion is asserted rather than assumed, so this case cannot quietly
     become vacuous if every row were one day exempted.
     """
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         grounded = [rule for rule in _rules(operation=operation).values() if not rule.legal_basis_exempt]
 
     assert grounded, "every row is legal-basis exempt; this case would pass over an ungrounded table"
@@ -232,7 +231,7 @@ def test_a_domestic_rule_is_silent_on_the_nature(rule_id: str) -> None:
     the axis eager and refuse invoices for a distinction their own treatment
     ignores.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert (
             place_of_supply_rule(
                 rule_id,
@@ -251,7 +250,7 @@ def test_the_cross_border_branches_are_where_the_fork_appears() -> None:
     cross-border rule fixes goods and at least one fixes services, and no
     domestic rule fixes anything.
     """
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         rules = _rules(operation=operation)
         cross_border = {rule_id: rule for rule_id, rule in rules.items() if rule_id not in _DOMESTIC_RULE_IDS}
         fixed = {rule.supply_nature for rule in cross_border.values()}
@@ -275,7 +274,7 @@ def test_a_row_fixing_goods_rests_on_an_article_the_statute_writes_for_goods() -
     goods_placement = "ley-37-1992:art-68"
     services_placement = {"ley-37-1992:art-69", "ley-37-1992:art-70"}
 
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         for rule in _rules(operation=operation).values():
             if rule.supply_nature is SupplyNature.GOODS:
                 assert (
@@ -295,7 +294,7 @@ def test_the_union_scheme_article_never_fixes_the_nature_on_its_own() -> None:
     rules that ride it must fix the nature on a placement article instead.
     """
     union_scheme = "ley-37-1992:art-163-unvicies"
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         riders = [rule for rule in _rules(operation=operation).values() if union_scheme in rule.legal_references]
 
     assert riders, "no rule cites the Union scheme; this guard would pass vacuously"
@@ -337,7 +336,7 @@ def test_the_kind_prose_does_not_attribute_a_nature_to_the_union_scheme_article(
     """
     from ..classification import resolve_transaction_kind_catalogue
 
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         doc = resolve_transaction_kind_catalogue(_ON, operation=operation).union_scheme_semantics
     assert doc, "the kind vocabulary lost its Union scheme prose; this guard would pass vacuously"
 
@@ -363,7 +362,7 @@ def test_the_kind_prose_does_not_attribute_a_nature_to_the_union_scheme_article(
 
 def test_an_ungrounded_rule_refuses_rather_than_returning_a_default() -> None:
     """Refusal is the contract: a placement with no provision is not answerable."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from ..errors import IvaCatalogueError
 
         with pytest.raises(IvaCatalogueError, match="not grounded"):

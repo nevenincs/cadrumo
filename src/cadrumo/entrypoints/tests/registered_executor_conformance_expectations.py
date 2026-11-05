@@ -37,7 +37,7 @@ from .conformance_family_contract import RegisteredExecutorConformanceCase
 from .production_operation_registry import production_operation_registry
 
 
-def _registered_definition_ids() -> tuple[str, ...]:
+def registered_definition_ids() -> tuple[str, ...]:
     """Every definition the production registry actually composes.
 
     The matrix is parametrised from this rather than from a hand-listed
@@ -52,7 +52,7 @@ def _registered_definition_ids() -> tuple[str, ...]:
     return tuple(sorted(definition.definition_id for definition in production_operation_registry().definitions))
 
 
-def _expectations_owned_once(
+def expectations_owned_once(
     cases: Iterable[RegisteredExecutorConformanceCase],
 ) -> Mapping[str, RegisteredExecutorConformanceCase]:
     """Key scenarios by definition id, refusing a second scenario for the same operation."""
@@ -64,7 +64,7 @@ def _expectations_owned_once(
     return expectations
 
 
-_EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_owned_once(
+EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = expectations_owned_once(
     (
         *(case for family in CONFORMANCE_FAMILIES for case in family.cases),
         *(

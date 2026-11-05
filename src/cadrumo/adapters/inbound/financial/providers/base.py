@@ -66,8 +66,8 @@ from .....core.decimal.grammar import (
     european_thousands_reading_is_ambiguous,
 )
 from .....core.errors.hierarchy import CadrumoError, CoreValidationError
-from .....core.hashing import sha256_hex as _sha256_hex
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.hashing import sha256_hex
+from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.parsing.codes import normalise_iso_4217_currency
 from .....core.tabular import coerce_cell_text
 from .....core.text_fold import fold_diacritics
@@ -79,7 +79,7 @@ from .....domain.transactions.raw_transaction import RawProvenance, RawTransacti
 # (PDF, XLSX, CSV) for a full fiscal year are well under 10 MiB; this 64 MiB
 # cap rejects oversized inputs (including XLSX zip-bomb payloads) before
 # they reach openpyxl / pdfplumber / the csv reader.
-_MAX_SOURCE_BYTES = 64 * 1024 * 1024
+MAX_SOURCE_BYTES = 64 * 1024 * 1024
 
 #: Allowed values for :attr:`FinancialProvider.verification_source`.
 CorpusVerificationSource = Literal[
@@ -192,7 +192,7 @@ class ProviderValidation(BaseModel):
             verdict states why.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     is_valid: bool
     warnings: tuple[str, ...] = ()
@@ -210,11 +210,11 @@ class ProviderValidation(BaseModel):
 #: taken without touching the filesystem, because a relative path names a
 #: different file once the process changes directory.
 def _resolved_source_path(path: Path) -> Path:
-    return _resolved_absolute_source_path(os.path.abspath(path))
+    return resolved_absolute_source_path(os.path.abspath(path))
 
 
 @lru_cache(maxsize=256)
-def _resolved_absolute_source_path(absolute_path: str) -> Path:
+def resolved_absolute_source_path(absolute_path: str) -> Path:
     return Path(absolute_path).resolve()
 
 
@@ -240,13 +240,13 @@ def require_admissible_source(path: Path) -> Path:
             context={"path": str(resolved)},
         )
     size = resolved.stat().st_size
-    if size > _MAX_SOURCE_BYTES:
+    if size > MAX_SOURCE_BYTES:
         raise InvalidFinancialSourceError(
             translated_message="errors.financial.source_file_too_large",
             context={
                 "path": str(resolved),
                 "size_bytes": size,
-                "max_bytes": _MAX_SOURCE_BYTES,
+                "max_bytes": MAX_SOURCE_BYTES,
             },
         )
     return resolved
@@ -388,7 +388,7 @@ class FinancialProvider(ABC):
     @staticmethod
     def _compute_sha256(source_bytes: bytes) -> str:
         """Return the lowercase SHA-256 digest of the source bytes."""
-        return _sha256_hex(source_bytes)
+        return sha256_hex(source_bytes)
 
     def build_provenance(
         self,
@@ -834,7 +834,7 @@ class ParsedLedgerRow(BaseModel):
             "fecha operacion" column dates the movement and never lands here.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     raw: RawTransaction
     direction: TransactionDirection

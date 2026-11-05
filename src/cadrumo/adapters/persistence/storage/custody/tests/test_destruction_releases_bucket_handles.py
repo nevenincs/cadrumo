@@ -85,7 +85,7 @@ def test_the_release_helper_is_bucket_scoped() -> None:
     """
     from .. import capsule
 
-    source = inspect.getsource(capsule._release_bucket_file_handles)
+    source = inspect.getsource(capsule.release_bucket_file_handles)
 
     assert "dispose_engines_for_bucket" in source
     assert "str(profile_id)" in source

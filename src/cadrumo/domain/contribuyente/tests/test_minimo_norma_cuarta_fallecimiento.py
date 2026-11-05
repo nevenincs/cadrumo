@@ -25,7 +25,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import Publi
 from ..descendant import DescendantInfo
 from ..family_fact_context import FamilyFactResolutionContext
 from ..family_profile import RentaFamilyProfile
-from ._registry_thresholds import (
+from .registry_thresholds import (
     registry_birth_order_amounts,
     registry_fallecimiento_amount,
     registry_menor_tres_supplement,

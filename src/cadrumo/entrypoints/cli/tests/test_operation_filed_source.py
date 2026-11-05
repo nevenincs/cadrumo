@@ -26,9 +26,9 @@ from ....core.period import Period
 from .. import app_live_commands as handler
 from .. import operation_filed_source as bridge
 from .. import operation_profile_operation as profile_operation
-from .._profile_authentication_gate import _uses_profile_connection
 from ..app_live_filed_results import FiledCaptureSourcesResult
 from ..command_specs import COMMAND_GRAPH
+from ..profile_authentication_gate import profile_authentication_gate_uses_profile_connection
 from .filed_capture_projection_support import confirmed_reconciliation, incomplete_receipt_notice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -228,4 +228,4 @@ def test_source_capture_cli_emits_existing_metrics_reconciliations_and_notices(
 def test_source_pull_always_uses_runtime_profile_admission() -> None:
     spec = COMMAND_GRAPH.node("app_live_filed_pull_sources").spec
 
-    assert _uses_profile_connection(spec, {})
+    assert profile_authentication_gate_uses_profile_connection(spec, {})

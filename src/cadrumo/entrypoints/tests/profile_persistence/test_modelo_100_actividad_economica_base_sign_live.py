@@ -39,9 +39,9 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.entrypoints.tests.profile_persistence.m130_m100_annual_support import BUCKET_ID, seed_prior_year_m100
 from cadrumo.entrypoints.tests.profile_persistence.test_e2e_ledger_m130_quarters_to_m100_annual import (
-    _EXPECTED_M100_ACTIVITY_NET,
-    _calculate_m100_annual,
-    _persist_autonoma_style_ledger,
+    EXPECTED_M100_ACTIVITY_NET,
+    calculate_m100_annual,
+    persist_autonoma_style_ledger,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -63,17 +63,17 @@ def test_positive_actividad_economica_income_yields_non_negative_base_imponible(
     negative base imponible general."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         secure_objects: SecureObjectRepository = profile.repository
-        _persist_autonoma_style_ledger(secure_objects)
+        persist_autonoma_style_ledger(secure_objects)
         seed_prior_year_m100(secure_objects)
 
-        annual = _calculate_m100_annual(secure_objects)
+        annual = calculate_m100_annual(secure_objects)
         casilla_values = annual.casilla_values
 
         # The rendimiento neto is the positive activity result the ledger drives.
         rendimiento_neto = Decimal(casilla_values[_RENDIMIENTO_NETO])
-        assert rendimiento_neto == _EXPECTED_M100_ACTIVITY_NET, (
+        assert rendimiento_neto == EXPECTED_M100_ACTIVITY_NET, (
             f"actividad-economica rendimiento neto (0224) must be the positive net "
-            f"{_EXPECTED_M100_ACTIVITY_NET}; got {rendimiento_neto}"
+            f"{EXPECTED_M100_ACTIVITY_NET}; got {rendimiento_neto}"
         )
 
         # Sign invariant: every node from income to base imponible general
@@ -94,7 +94,7 @@ def test_positive_actividad_economica_income_yields_non_negative_base_imponible(
         # The base imponible general carries the positive activity net through
         # (no other income/reduction in this pure actividad-economica persona).
         base_imponible = Decimal(casilla_values[_BASE_IMPONIBLE_GENERAL])
-        assert base_imponible == _EXPECTED_M100_ACTIVITY_NET, (
+        assert base_imponible == EXPECTED_M100_ACTIVITY_NET, (
             f"base imponible general (0435) must carry the positive activity net "
-            f"{_EXPECTED_M100_ACTIVITY_NET}; got {base_imponible}"
+            f"{EXPECTED_M100_ACTIVITY_NET}; got {base_imponible}"
         )

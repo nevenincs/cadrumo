@@ -33,10 +33,10 @@ from ..client import LLMClient, LLMRetryPolicy
 from ..consent import EvidenceConsentToken
 from ..errors import LLMConsentError, LLMError
 from ..models import LLMRequest
-from ._client_process_state import _fresh_client_process_state
+from .client_process_state import fresh_client_process_state
 from .model_run_support import ON_HOST_LANE, RecordingModelRuns, serving_agent
 
-__all__ = ["_fresh_client_process_state"]
+__all__ = ["fresh_client_process_state"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

@@ -29,8 +29,7 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.errors.hierarchy import InternalInvariantError
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.iva.classification import require_iva_territorial_scope
 
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
@@ -47,7 +46,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 @pytest.fixture(autouse=True)
 def authority_operation() -> Iterator[PinnedAuthorityOperation]:
     """Validate every ledger row inside one generation-pinned authority operation."""
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         yield operation
 
 
@@ -86,7 +85,7 @@ def test_a_third_country_establishment_is_recordable_at_all() -> None:
     it is that the stored value RESOLVES to a third country, which is what a
     gate downstream has to be able to ask.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         transaction = _transaction(counterparty_country="US")
 
         assert transaction.counterparty_country == "US"
@@ -157,7 +156,7 @@ def test_the_four_ways_a_row_can_fail_to_name_a_third_country_stay_distinct(
     test.
     ``None`` is an unrecorded fact. Only ``US`` may license export treatment.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         transaction = _transaction(counterparty_country=country)
 
         assert transaction.counterparty_country == country
@@ -189,7 +188,7 @@ def test_the_stored_country_survives_a_strict_json_round_trip() -> None:
     A field that validates and then does not persist would leave the gate
     reading ``None`` again on every reload -- the same blank, one layer down.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         original = _transaction(counterparty_country="US")
 
         restored = Transaction.model_validate_json(original.model_dump_json())

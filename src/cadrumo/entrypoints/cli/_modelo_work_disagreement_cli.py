@@ -24,13 +24,13 @@ from ...application.modelo.selectors import ModeloCalculationRevisionSelector
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language as active_output_language
 from ...core.i18n.render import tr
-from ._modelo_work_disagreement_payloads import (
+from .common import bad, emit_envelope
+from .modelo_work_disagreement_payloads import (
     DisagreementResolutionPayload,
     WorkAcceptDisagreementResult,
     WorkDisagreementsResult,
     WorkRevokeDisagreementResult,
 )
-from .common import bad, emit_envelope
 from .operation_modelo_credit_resolution import (
     accept_credit_resolution,
     list_credit_resolutions,

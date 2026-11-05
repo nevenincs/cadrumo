@@ -33,7 +33,7 @@ from textual.widgets import Button, Input, Static
 
 from ....adapters.persistence.storage.custody.recovery import PROFILE_CUSTODY_RECOVERY_FILENAME
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from ....adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
@@ -221,7 +221,7 @@ async def test_typing_credentials_and_pressing_create_makes_a_live_profile(tmp_p
         # real Argon2id, sentinel proof, and session publication without making
         # an inbound-surface test depend on persistence-owned record types.
         profile_id = str(app.outcome.profile_id)
-        _, profile_decode_context = _profile_contexts_for_test()
+        _, profile_decode_context = profile_authority_contexts()
         reset_test_profile_session()
         authenticated = authenticate_profile_for_invocation(
             name=profile_id,

@@ -42,25 +42,21 @@ from .....domain.calculations.registry.remote_state_guard import RemoteStateGuar
 # of a Modelo 100 revision fails loudly if that check is unregistered, so
 # the M100 routing referential-integrity gate runs on this declarations path.
 from .....domain.calculations.registry.schema import RegistrySnapshot
-from .._html import parse_html
-from .._playwright import BrowserContext, Locator, Page, Playwright, PlaywrightError
 from ..browser.factory import opened_browser_page, shared_playwright_runtime
 from ..browser.profile import Profile
-from ._adapter_utils import assert_read_landing
-from ._auth_state import storage_state_for_session
-from ._browser_constants import (
-    PLAYWRIGHT_WAIT_NETWORKIDLE as _WAIT_NETWORKIDLE,
-)
-from ._browser_constants import (
+from ..html import parse_html
+from ..playwright import BrowserContext, Locator, Page, Playwright, PlaywrightError
+from .adapter_utils import assert_read_landing
+from .auth_state import storage_state_for_session
+from .browser_constants import (
+    PLAYWRIGHT_WAIT_NETWORKIDLE,
     navigation_timeout_ms,
 )
-from ._declarations_diagnostics import (
-    declarations_page_shape_context as _declarations_page_shape_context,
+from .declarations_diagnostics import (
+    declarations_page_shape_context,
+    declarations_page_shape_context_from_page,
 )
-from ._declarations_diagnostics import (
-    declarations_page_shape_context_from_page as _declarations_page_shape_context_from_page,
-)
-from ._declarations_fetch import (
+from .declarations_fetch import (
     READ_GUARD_POLICY,
     SEDE_BASE,
     assert_declarations_read_browser_action,
@@ -69,11 +65,11 @@ from ._declarations_fetch import (
     get_buscar_settle_ms,
     get_form_interaction_timeout_ms,
 )
-from ._declarations_listbox import _has_class, _parse_listbox, _parse_presented_at
+from .declarations_listbox import has_class, parse_listbox, parse_presented_at
 from .declarations_observations import (
     FiledDeclaracionArtefactSink,
-    _read_guard_policy_from_snapshot,
-    _registry_snapshot_for_declaration,
+    read_guard_policy_from_snapshot,
+    registry_snapshot_for_declaration,
 )
 from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from .schema import (
@@ -92,7 +88,7 @@ log = get_logger(__name__)
 
 
 EXTERNAL = Settings.external_constants()
-_LISTING_URL = f"{SEDE_BASE}{EXTERNAL.aeat.sede_paths.declarations_listing}"
+LISTING_URL = f"{SEDE_BASE}{EXTERNAL.aeat.sede_paths.declarations_listing}"
 
 
 _DECLARATIONS_LISTING_PATH_PREFIX = EXTERNAL.aeat.sede_paths.declarations_listing.removesuffix("/index.zul")
@@ -118,8 +114,8 @@ _DECLARATIONS_READ_PATH_PREFIXES: tuple[str, ...] = (_DECLARATIONS_LISTING_PATH_
 #
 # Codes are not digits-only: the capture offers ATF, BSS, DT2, FCV, RIB, VEG and
 # 14A alongside the numeric ones.
-_MODELO_OPTION_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<modelo>[0-9A-Z]{2,8})\s*-")
-_EJERCICIO_OPTION_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<ejercicio>[0-9]{4})$")
+MODELO_OPTION_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<modelo>[0-9A-Z]{2,8})\s*-")
+EJERCICIO_OPTION_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<ejercicio>[0-9]{4})$")
 
 
 def assert_declarations_read_landing(
@@ -194,7 +190,7 @@ async def shared_playwright(
         yield pw
 
 
-def _register_rows_from_snapshot(
+def register_rows_from_snapshot(
     html: str,
     *,
     modelo: str,
@@ -215,7 +211,7 @@ def _register_rows_from_snapshot(
         SedeParseError: When the rendered row count falls short of the record
             total the grid's pager label declares.
     """
-    page = _parse_listbox(html, modelo=modelo, ejercicio=ejercicio)
+    page = parse_listbox(html, modelo=modelo, ejercicio=ejercicio)
     if page.truncated:
         raise SedeParseError(
             # Kept short and fact-first: the bulk sweep bounds a failure row's
@@ -233,7 +229,7 @@ def _register_rows_from_snapshot(
     return page.rows
 
 
-def _combobox_option_texts(html: str) -> tuple[str, ...]:
+def combobox_option_texts(html: str) -> tuple[str, ...]:
     """Return every rendered combobox option text in one register-page snapshot.
 
     ZK keeps combobox popups in the DOM whether or not they are open, so a
@@ -255,7 +251,7 @@ def _combobox_option_texts(html: str) -> tuple[str, ...]:
         ) from exc
     return tuple(
         text
-        for option in soup.find_all(class_=_has_class("z-comboitem-text"))
+        for option in soup.find_all(class_=has_class("z-comboitem-text"))
         for text in (option.get_text(" ", strip=True),)
         if text
     )
@@ -280,8 +276,8 @@ def filed_register_modelo_options(html: str) -> tuple[str, ...]:
             would turn a shape change into a silently empty history.
     """
     codes_list: list[str] = []
-    for text in _combobox_option_texts(html):
-        match = _MODELO_OPTION_RE.match(text)
+    for text in combobox_option_texts(html):
+        match = MODELO_OPTION_RE.match(text)
         if match is None:
             continue
         modelo = match.group("modelo")
@@ -311,8 +307,8 @@ def filed_register_ejercicio_options(html: str) -> tuple[int, ...]:
     """
     years = {
         int(match.group("ejercicio"))
-        for text in _combobox_option_texts(html)
-        for match in (_EJERCICIO_OPTION_RE.match(text),)
+        for text in combobox_option_texts(html)
+        for match in (EJERCICIO_OPTION_RE.match(text),)
         if match is not None
     }
     return tuple(
@@ -370,8 +366,8 @@ async def discover_filed_declaration_availability(
         log.info("discover_filed_declaration_availability: register offers %d modelo option(s)", len(modelos))
         for modelo in modelos:
             try:
-                if not await _select_combobox_value(
-                    page, label_text="Modelo (*)", option_pattern=_MODELO_OPTION_RE, option_match=modelo
+                if not await select_combobox_value(
+                    page, label_text="Modelo (*)", option_pattern=MODELO_OPTION_RE, option_match=modelo
                 ):
                     log.info(
                         "discover_filed_declaration_availability: modelo option vanished between reads modelo=%s",
@@ -415,14 +411,14 @@ class DeclaracionesRegisterSession:
             SedeParseError: When the grid declares more records than it rendered,
                 per :func:`_register_rows_from_snapshot`.
         """
-        if not await _drive_search(self._page, modelo=modelo, ejercicio=ejercicio):
+        if not await drive_search(self._page, modelo=modelo, ejercicio=ejercicio):
             log.info(
                 "DeclaracionesRegisterSession.walk: ejercicio unavailable modelo=%s ejercicio=%d",
                 modelo,
                 ejercicio,
             )
             return ()
-        results = _register_rows_from_snapshot(await self._page.content(), modelo=modelo, ejercicio=ejercicio)
+        results = register_rows_from_snapshot(await self._page.content(), modelo=modelo, ejercicio=ejercicio)
         log.info(
             "DeclaracionesRegisterSession.walk: found %d declaration(s) modelo=%s ejercicio=%d",
             len(results),
@@ -433,16 +429,16 @@ class DeclaracionesRegisterSession:
 
     async def capture_justificante(self, declaration: ExpedientesDeclaration) -> tuple[FiledDeclaracionArtefact, bytes]:
         """Read the selected register row's receipt without requiring calculation extraction."""
-        snapshot = _registry_snapshot_for_declaration(declaration, operation=self._operation)
-        read_policy = _read_guard_policy_from_snapshot(snapshot)
-        if not await _drive_search(
+        snapshot = registry_snapshot_for_declaration(declaration, operation=self._operation)
+        read_policy = read_guard_policy_from_snapshot(snapshot)
+        if not await drive_search(
             self._page,
             modelo=declaration.modelo,
             ejercicio=declaration.ejercicio,
             read_policy=read_policy,
         ):
             raise SedeNavigationError("AEAT declarations register no longer offers the selected filing year")
-        current = _register_rows_from_snapshot(
+        current = register_rows_from_snapshot(
             await self._page.content(),
             modelo=declaration.modelo,
             ejercicio=declaration.ejercicio,
@@ -456,7 +452,7 @@ class DeclaracionesRegisterSession:
             raise SedeNavigationError("AEAT declarations register no longer exposes the selected period's receipt")
         return await capture_row_pdf_artefact(
             context=self._context,
-            row_locator=_row_locator_for_expediente(self._page, expediente_id=selected.expediente_id),
+            row_locator=row_locator_for_expediente(self._page, expediente_id=selected.expediente_id),
             declaration=selected,
             cell_index=selected.justificante_cell_index,
             kind="justificante_pdf",
@@ -483,12 +479,12 @@ class DeclaracionesRegisterSession:
                 "AeatSession.identity_nif is empty; cannot bind live filing observation",
                 translated_message=tr("adapters.sede.errors.empty_identity_nif"),
             )
-        snapshot = registry_snapshot or _registry_snapshot_for_declaration(
+        snapshot = registry_snapshot or registry_snapshot_for_declaration(
             declaration,
             operation=self._operation,
         )
-        read_policy = _read_guard_policy_from_snapshot(snapshot)
-        if not await _drive_search(
+        read_policy = read_guard_policy_from_snapshot(snapshot)
+        if not await drive_search(
             self._page,
             modelo=declaration.modelo,
             ejercicio=declaration.ejercicio,
@@ -499,7 +495,7 @@ class DeclaracionesRegisterSession:
                 f"for modelo {declaration.modelo}",
                 translated_message=tr("adapters.sede.errors.ejercicio_unavailable"),
             )
-        row_locator = _row_locator_for_expediente(
+        row_locator = row_locator_for_expediente(
             self._page,
             expediente_id=declaration.expediente_id,
         )
@@ -636,14 +632,14 @@ async def walk_declarations_register(
         page,
         _context,
     ):
-        if not await _drive_search(page, modelo=modelo, ejercicio=ejercicio):
+        if not await drive_search(page, modelo=modelo, ejercicio=ejercicio):
             log.info(
                 "walk_declarations_register: ejercicio unavailable modelo=%s ejercicio=%d",
                 modelo,
                 ejercicio,
             )
             return ()
-        results = _register_rows_from_snapshot(await page.content(), modelo=modelo, ejercicio=ejercicio)
+        results = register_rows_from_snapshot(await page.content(), modelo=modelo, ejercicio=ejercicio)
     log.info(
         "walk_declarations_register: found %d declaration(s) modelo=%s ejercicio=%d",
         len(results),
@@ -653,7 +649,7 @@ async def walk_declarations_register(
     return results
 
 
-async def _drive_search(
+async def drive_search(
     page: Page,
     *,
     modelo: str,
@@ -669,10 +665,10 @@ async def _drive_search(
     """
     await _open_register_form(page, modelo=modelo, ejercicio=ejercicio, read_policy=read_policy)
 
-    if not await _select_combobox_value(
+    if not await select_combobox_value(
         page,
         label_text="Modelo (*)",
-        option_pattern=_MODELO_OPTION_RE,
+        option_pattern=MODELO_OPTION_RE,
         option_match=modelo,
         read_policy=read_policy,
     ):
@@ -680,17 +676,17 @@ async def _drive_search(
             f"AEAT declarations register does not offer modelo {modelo!r}",
             translated_message=tr("adapters.sede.errors.modelo_unavailable"),
             failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
-            context=await _declarations_page_shape_context_from_page(
+            context=await declarations_page_shape_context_from_page(
                 page,
                 stage="modelo_option_missing",
                 modelo=modelo,
                 ejercicio=ejercicio,
             ),
         )
-    if not await _select_combobox_value(
+    if not await select_combobox_value(
         page,
         label_text="Ejercicio (*)",
-        option_pattern=_EJERCICIO_OPTION_RE,
+        option_pattern=EJERCICIO_OPTION_RE,
         option_match=str(ejercicio),
         read_policy=read_policy,
     ):
@@ -710,7 +706,7 @@ async def _drive_search(
             f"clicking Buscar failed: {exc}",
             translated_message="adapters.sede.errors.playwright_buscar_click_failed",
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
-            context=await _declarations_page_shape_context_from_page(
+            context=await declarations_page_shape_context_from_page(
                 page,
                 stage="buscar_click",
                 modelo=modelo,
@@ -727,7 +723,7 @@ async def _drive_search(
         "declarations register search completed modelo=%s ejercicio=%d shape=%s",
         modelo,
         ejercicio,
-        _declarations_page_shape_context(
+        declarations_page_shape_context(
             await page.content(),
             landing_url=getattr(page, "url", "") or "",
             stage="post_buscar",
@@ -761,18 +757,18 @@ async def _open_register_form(
             than the register, or the form does not render its Modelo label.
     """
     try:
-        assert_declarations_read_http("GET", _LISTING_URL, policy=read_policy)
+        assert_declarations_read_http("GET", LISTING_URL, policy=read_policy)
         await page.goto(
-            _LISTING_URL,
-            wait_until=_WAIT_NETWORKIDLE,
+            LISTING_URL,
+            wait_until=PLAYWRIGHT_WAIT_NETWORKIDLE,
             timeout=navigation_timeout_ms(),
         )
     except PlaywrightError as exc:
         raise SedeNavigationError(
-            f"goto {_LISTING_URL!r} failed: {exc}",
+            f"goto {LISTING_URL!r} failed: {exc}",
             translated_message=tr("adapters.sede.errors.listing_nav_failed"),
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
-            context=await _declarations_page_shape_context_from_page(
+            context=await declarations_page_shape_context_from_page(
                 page,
                 stage="listing_goto",
                 modelo=modelo,
@@ -793,7 +789,7 @@ async def _open_register_form(
             "session likely expired — run `cadrumo-runtime config auth test` and retry",
             translated_message=tr("adapters.sede.errors.session_expired_nav_failed"),
             failure_mode=SedeFailureMode.SESSION_ENDED,
-            context=await _declarations_page_shape_context_from_page(
+            context=await declarations_page_shape_context_from_page(
                 page,
                 stage="listing_final_url",
                 modelo=modelo,
@@ -814,7 +810,7 @@ async def _open_register_form(
             "session likely expired or AEAT served a maintenance page",
             translated_message=tr("adapters.sede.errors.form_render_timeout"),
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
-            context=await _declarations_page_shape_context_from_page(
+            context=await declarations_page_shape_context_from_page(
                 page,
                 stage="form_render",
                 modelo=modelo,
@@ -851,7 +847,7 @@ async def _open_combobox(
     await page.wait_for_timeout(400)
 
 
-async def _select_combobox_value(
+async def select_combobox_value(
     page: Page,
     *,
     label_text: str,
@@ -940,7 +936,7 @@ async def _continue_alert_modal(
         await page.wait_for_timeout(500)
 
 
-def _row_locator_for_expediente(page: Page, *, expediente_id: str) -> Locator:
+def row_locator_for_expediente(page: Page, *, expediente_id: str) -> Locator:
     """Return a Playwright locator pointing at the listitem whose ``Expediente`` cell text equals ``expediente_id``.
 
     The match is anchored rather than a substring. This locator scopes every
@@ -962,8 +958,8 @@ def _row_locator_for_expediente(page: Page, *, expediente_id: str) -> Locator:
 
 __all__ = [
     "DeclaracionesRegisterSession",
-    "_parse_presented_at",
     "open_declarations_register",
+    "parse_presented_at",
     "shared_playwright",
     "walk_declarations_register",
 ]

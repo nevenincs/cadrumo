@@ -118,7 +118,7 @@ class LedgerRouteV1:
 #: Which read body each area opens. Only the screens are declared here; the
 #: destination each area resolves to comes from the canonical pairing, so this
 #: catalogue cannot disagree with the controller about where an area leads.
-_SCREEN_BY_AREA: Final[dict[LedgerWorkspaceArea, LedgerInternalScreenFactoryV1]] = {
+SCREEN_BY_AREA: Final[dict[LedgerWorkspaceArea, LedgerInternalScreenFactoryV1]] = {
     LedgerWorkspaceArea.OVERVIEW: LedgerOverviewScreen,
     LedgerWorkspaceArea.ENTRIES: LedgerEntriesScreen,
     LedgerWorkspaceArea.REVIEW: LedgerReviewScreen,
@@ -129,7 +129,7 @@ _SCREEN_BY_AREA: Final[dict[LedgerWorkspaceArea, LedgerInternalScreenFactoryV1]]
 }
 
 LEDGER_ROUTES: Final[tuple[LedgerRouteV1, ...]] = tuple(
-    LedgerRouteV1(destination, area, _SCREEN_BY_AREA[area]) for area, destination in LEDGER_DESTINATION_BY_AREA.items()
+    LedgerRouteV1(destination, area, SCREEN_BY_AREA[area]) for area, destination in LEDGER_DESTINATION_BY_AREA.items()
 )
 _ROUTES_BY_ID: Final = {route.destination: route for route in LEDGER_ROUTES}
 
@@ -148,7 +148,7 @@ def _require_total_routes() -> None:
         raise ValueError("Ledger routes must cover the internal destination catalogue exactly once")
     if tuple(route.area for route in LEDGER_ROUTES) != tuple(LedgerWorkspaceArea):
         raise ValueError("Ledger routes must preserve canonical workspace area order")
-    if frozenset(_SCREEN_BY_AREA) != frozenset(LedgerWorkspaceArea):
+    if frozenset(SCREEN_BY_AREA) != frozenset(LedgerWorkspaceArea):
         raise ValueError("Ledger routes must name a read body for every workspace area")
 
 

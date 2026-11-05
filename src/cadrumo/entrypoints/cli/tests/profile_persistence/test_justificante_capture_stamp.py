@@ -29,12 +29,12 @@ from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind
 from cadrumo.domain.user_profile.values import UserProfileFact
-from cadrumo.entrypoints.cli.tests.profile_persistence._justificante_reconcile_support import (
+from cadrumo.entrypoints.cli.tests.profile_persistence.justificante_reconcile_support import (
     MODELO_130_FIXTURE,
-    _active_bucket_id,
-    _persist_capture,
-    _seed_unverified_filing,
-    _seed_work_unit,
+    active_bucket_id,
+    persist_capture,
+    seed_unverified_filing,
+    seed_work_unit,
 )
 
 isolated_backend = active_profile_isolated_backend_fixture(profile_overrides={"identity.tax_id": "00000000T"})
@@ -69,7 +69,7 @@ def _current_filing(*, filing_year: int = 2026, period: str = "1T"):
         ModeloRecordCatalogueRepository()
         .load()
         .current_for(
-            bucket_id=_active_bucket_id(),
+            bucket_id=active_bucket_id(),
             modelo="130",
             filing_year=filing_year,
             period=Period.from_year_and_code(filing_year, period),
@@ -84,9 +84,9 @@ def test_a_receipt_without_comparable_totals_does_not_confirm_a_pending_filing()
     cannot be compared with the local figures. The receipt is registered, the
     pending filing stays unconfirmed, and the reconciliation is recorded.
     """
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
-    _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
-    snapshot = _persist_capture(
+    work_unit_id = seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
+    snapshot = persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
         modelo=Modelo("130").value,
         filing_year=2026,
@@ -107,7 +107,7 @@ def test_a_receipt_without_comparable_totals_does_not_confirm_a_pending_filing()
     events = (
         BucketEventHistoryRepository()
         .load()
-        .for_bucket(_active_bucket_id(), event_types=(BucketEventType.MODELO_FILING_RECONCILED,))
+        .for_bucket(active_bucket_id(), event_types=(BucketEventType.MODELO_FILING_RECONCILED,))
     )
     assert [
         (event.payload["outcome"], event.payload["notice_count"], event.payload["notice_codes_sha256"])
@@ -119,8 +119,8 @@ def test_a_receipt_without_comparable_totals_does_not_confirm_a_pending_filing()
 
 def test_stamp_keeps_existing_matching_aeat_evidence_without_rewriting_event() -> None:
     """An incomparable repeated receipt preserves prior evidence and registers metadata."""
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
-    existing = _seed_unverified_filing(
+    work_unit_id = seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    existing = seed_unverified_filing(
         work_unit_id=work_unit_id,
         modelo="130",
         filing_year=2026,
@@ -132,7 +132,7 @@ def test_stamp_keeps_existing_matching_aeat_evidence_without_rewriting_event() -
             imported_at=datetime(2026, 4, 18, 9, 30, tzinfo=UTC),
         ),
     )
-    snapshot = _persist_capture(
+    snapshot = persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
         modelo=Modelo("130").value,
         filing_year=2026,
@@ -155,7 +155,7 @@ def test_stamp_keeps_existing_matching_aeat_evidence_without_rewriting_event() -
     assert stamped.external_evidence.kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
     assert stamped.external_evidence.reference_id == "ABCD1234EFGH5678"
     assert JustificanteRepository().load("ABCD1234EFGH5678") is not None
-    bucket_id = _active_bucket_id()
+    bucket_id = active_bucket_id()
     events = (
         BucketEventHistoryRepository()
         .load()
@@ -166,8 +166,8 @@ def test_stamp_keeps_existing_matching_aeat_evidence_without_rewriting_event() -
 
 def test_stamp_refuses_to_overwrite_existing_different_aeat_evidence() -> None:
     """Direct live capture must not replace a different official evidence reference."""
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
-    _seed_unverified_filing(
+    work_unit_id = seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    seed_unverified_filing(
         work_unit_id=work_unit_id,
         modelo="130",
         filing_year=2026,
@@ -179,7 +179,7 @@ def test_stamp_refuses_to_overwrite_existing_different_aeat_evidence() -> None:
             imported_at=datetime(2026, 4, 18, 9, 30, tzinfo=UTC),
         ),
     )
-    snapshot = _persist_capture(
+    snapshot = persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
         modelo=Modelo("130").value,
         filing_year=2026,
@@ -197,7 +197,7 @@ def test_stamp_refuses_to_overwrite_existing_different_aeat_evidence() -> None:
         ModeloRecordCatalogueRepository()
         .load()
         .current_for(
-            bucket_id=_active_bucket_id(),
+            bucket_id=active_bucket_id(),
             modelo="130",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
@@ -211,9 +211,9 @@ def test_stamp_refuses_to_overwrite_existing_different_aeat_evidence() -> None:
 
 def test_stamp_refuses_when_snapshot_csv_disagrees_with_parsed_receipt() -> None:
     """Snapshot metadata cannot replace the CSV parsed from the official receipt bytes."""
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
-    _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
-    snapshot = _persist_capture(
+    work_unit_id = seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
+    snapshot = persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
         modelo=Modelo("130").value,
         filing_year=2026,
@@ -232,7 +232,7 @@ def test_stamp_refuses_when_snapshot_csv_disagrees_with_parsed_receipt() -> None
         ModeloRecordCatalogueRepository()
         .load()
         .current_for(
-            bucket_id=_active_bucket_id(),
+            bucket_id=active_bucket_id(),
             modelo="130",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
@@ -251,9 +251,9 @@ def test_a_capture_whose_expediente_is_not_the_receipt_presentation_id_reaches_r
     mismatch. The capture reaches the reconciliation, which records the
     expediente it was given.
     """
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
-    _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
-    captured = _persist_capture(
+    work_unit_id = seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
+    captured = persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
         modelo=Modelo("130").value,
         filing_year=2026,
@@ -274,16 +274,16 @@ def test_a_capture_whose_expediente_is_not_the_receipt_presentation_id_reaches_r
     events = (
         BucketEventHistoryRepository()
         .load()
-        .for_bucket(_active_bucket_id(), event_types=(BucketEventType.MODELO_FILING_RECONCILED,))
+        .for_bucket(active_bucket_id(), event_types=(BucketEventType.MODELO_FILING_RECONCILED,))
     )
     assert [event.payload["aeat_expediente_id"] for event in events] == ["13020260410DIFFERENTIDENT"]
 
 
 def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_modelo() -> None:
     """A capture cannot stamp a filing when the parsed receipt targets another modelo."""
-    work_unit_id = _seed_work_unit(modelo="303", filing_year=2026, period="1T")
-    _seed_unverified_filing(work_unit_id=work_unit_id, modelo="303", filing_year=2026, period="1T")
-    snapshot = _persist_capture(
+    work_unit_id = seed_work_unit(modelo="303", filing_year=2026, period="1T")
+    seed_unverified_filing(work_unit_id=work_unit_id, modelo="303", filing_year=2026, period="1T")
+    snapshot = persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
         modelo="303",
         filing_year=2026,
@@ -301,7 +301,7 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_modelo() -> Non
         ModeloRecordCatalogueRepository()
         .load()
         .current_for(
-            bucket_id=_active_bucket_id(),
+            bucket_id=active_bucket_id(),
             modelo="303",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
@@ -314,9 +314,9 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_modelo() -> Non
 
 def test_stamp_refuses_non_active_live_capture_snapshot() -> None:
     """Only the current ACTIVE live capture may become filing evidence."""
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
-    _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
-    active_snapshot = _persist_capture(
+    work_unit_id = seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
+    active_snapshot = persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
         modelo=Modelo("130").value,
         filing_year=2026,
@@ -343,7 +343,7 @@ def test_stamp_refuses_non_active_live_capture_snapshot() -> None:
         ModeloRecordCatalogueRepository()
         .load()
         .current_for(
-            bucket_id=_active_bucket_id(),
+            bucket_id=active_bucket_id(),
             modelo="130",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
@@ -356,9 +356,9 @@ def test_stamp_refuses_non_active_live_capture_snapshot() -> None:
 
 def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_year() -> None:
     """A capture cannot stamp a filing when the parsed receipt targets another year."""
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2025, period="1T")
-    _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2025, period="1T")
-    snapshot = _persist_capture(
+    work_unit_id = seed_work_unit(modelo="130", filing_year=2025, period="1T")
+    seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2025, period="1T")
+    snapshot = persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
         modelo=Modelo("130").value,
         filing_year=2025,
@@ -376,7 +376,7 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_year() -> None:
         ModeloRecordCatalogueRepository()
         .load()
         .current_for(
-            bucket_id=_active_bucket_id(),
+            bucket_id=active_bucket_id(),
             modelo="130",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "1T"),
@@ -389,9 +389,9 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_year() -> None:
 
 def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_period() -> None:
     """A capture cannot stamp a filing when the parsed receipt targets another period."""
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="2T")
-    _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="2T")
-    snapshot = _persist_capture(
+    work_unit_id = seed_work_unit(modelo="130", filing_year=2026, period="2T")
+    seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="2T")
+    snapshot = persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
         modelo=Modelo("130").value,
         filing_year=2026,
@@ -409,7 +409,7 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_period() -> Non
         ModeloRecordCatalogueRepository()
         .load()
         .current_for(
-            bucket_id=_active_bucket_id(),
+            bucket_id=active_bucket_id(),
             modelo="130",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "2T"),
@@ -425,9 +425,9 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_profile_tax_id() -> No
     set_active_test_profile_facts(
         (UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
-    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
-    _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
-    snapshot = _persist_capture(
+    work_unit_id = seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
+    snapshot = persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
         modelo=Modelo("130").value,
         filing_year=2026,
@@ -445,7 +445,7 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_profile_tax_id() -> No
         ModeloRecordCatalogueRepository()
         .load()
         .current_for(
-            bucket_id=_active_bucket_id(),
+            bucket_id=active_bucket_id(),
             modelo="130",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
@@ -458,8 +458,8 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_profile_tax_id() -> No
 
 def test_stamp_refuses_when_no_current_filing_exists() -> None:
     """Stamping refuses when the captured period has no filing record yet."""
-    _seed_work_unit(modelo="130", filing_year=2026, period="1T")
-    snapshot = _persist_capture(
+    seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    snapshot = persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
         modelo=Modelo("130").value,
         filing_year=2026,

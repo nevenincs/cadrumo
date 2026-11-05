@@ -179,7 +179,7 @@ def test_the_validator_closure_is_rooted_at_the_snapshot_validator_and_determini
         snapshot_module.__name__,
         *(
             importlib.util.resolve_name(name, snapshot_module.__package__ or "")
-            for name in snapshot_module._CROSS_DOMAIN_CHECK_MODULES
+            for name in snapshot_module.CROSS_DOMAIN_CHECK_MODULES
         ),
     }
 
@@ -193,7 +193,7 @@ def test_the_validator_closure_is_rooted_at_the_snapshot_validator_and_determini
 
 def test_a_cached_closure_equals_a_fresh_computation(closure: tuple[ValidatorSource, ...]) -> None:
     warm = snapshot_validator_closure()
-    snapshot_proof_module._import_statements_cache.clear()
+    snapshot_proof_module.import_statements_cache.clear()
     fresh = snapshot_validator_closure()
 
     assert warm == closure
@@ -203,7 +203,7 @@ def test_a_cached_closure_equals_a_fresh_computation(closure: tuple[ValidatorSou
 
 def test_parsed_import_statements_follow_the_source_digest() -> None:
     module = "cadrumo.domain.calculations.registry.snapshot_proof_cache_probe"
-    parse = snapshot_proof_module._parsed_import_statements
+    parse = snapshot_proof_module.parsed_import_statements
     relative = b"from . import alpha"
     absolute = b"import cadrumo.beta"
     first = parse(module, relative, "a" * 64)
@@ -220,7 +220,7 @@ def test_a_module_source_is_located_where_the_import_system_finds_it(closure: tu
 
         assert spec is not None
         assert spec.origin is not None
-        assert snapshot_proof_module._module_origin(source.module) == spec.origin
+        assert snapshot_proof_module.module_origin(source.module) == spec.origin
 
 
 def test_the_running_validator_matches_its_own_closure(closure: tuple[ValidatorSource, ...]) -> None:
@@ -289,7 +289,7 @@ def test_a_proof_key_keeps_a_concrete_event_and_the_symbolic_event_selector(
 
 
 def test_the_cross_check_registry_is_ordered_by_assembly_stage() -> None:
-    stages = [check.stage for check in snapshot_module._SNAPSHOT_CROSS_CHECKS]
+    stages = [check.stage for check in snapshot_module.SNAPSHOT_CROSS_CHECKS]
     ladder = list(type(stages[0]))
 
     assert [ladder.index(stage) for stage in stages] == sorted(ladder.index(stage) for stage in stages)
@@ -430,7 +430,7 @@ class _OneModeloOperation:
         if self._ungraded is not None and period == self._ungraded[0]:
             built = self._ungraded[1]
             ungraded_revision = built.revision.model_copy(update={"authority_grade": None})
-            snapshot_module._check_snapshot_authority_grade(built.modelo, ungraded_revision, requested_grade=grade)
+            snapshot_module.check_snapshot_authority_grade(built.modelo, ungraded_revision, requested_grade=grade)
         return self._operation.build_unretained_snapshot(
             modelo_id, filing_year=filing_year, period=period, grade=grade, governed_facts=governed_facts
         )

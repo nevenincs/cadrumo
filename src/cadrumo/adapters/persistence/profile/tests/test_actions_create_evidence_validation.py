@@ -23,32 +23,26 @@ from cadrumo.domain.transactions.errors import TransactionValidationError
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
-    BUCKET_ID as _BUCKET_ID,
-)
-from .ledger_action_persistence_support import (
-    OTHER_BUCKET_ID as _OTHER_BUCKET_ID,
-)
-from .ledger_action_persistence_support import (
+    BUCKET_ID,
+    OTHER_BUCKET_ID,
     purchase_invoice,
-)
-from .ledger_action_persistence_support import (
-    repositories as _repositories,
+    repositories,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 def _seed_evidence_free_transaction(secure_objects: SecureObjectRepository, *, idempotency_key: str) -> str:
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     ) as ports:
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 5, 1),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -62,14 +56,14 @@ def _seed_evidence_free_transaction(secure_objects: SecureObjectRepository, *, i
 
 
 def test_create_manual_transaction_rejects_missing_purchase_evidence(secure_objects: SecureObjectRepository) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
     invoice_repository.save(InvoiceCatalogue())
 
     with (
         pytest.raises(TransactionValidationError, match="purchase_invoice_evidence_id"),
         ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             objects=secure_objects,
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
@@ -78,7 +72,7 @@ def test_create_manual_transaction_rejects_missing_purchase_evidence(secure_obje
     ):
         create_manual_transaction(
             ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 5, 2),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -94,13 +88,13 @@ def test_create_manual_transaction_rejects_missing_purchase_evidence(secure_obje
 
 
 def test_create_manual_transaction_rejects_missing_attachment_manifest(secure_objects: SecureObjectRepository) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     objects = secure_objects
 
     with (
         pytest.raises(TransactionValidationError, match="attachment_ids"),
         ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             objects=secure_objects,
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
@@ -109,7 +103,7 @@ def test_create_manual_transaction_rejects_missing_attachment_manifest(secure_ob
     ):
         create_manual_transaction(
             ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 5, 2),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -127,15 +121,15 @@ def test_create_manual_transaction_rejects_missing_attachment_manifest(secure_ob
 def test_create_manual_transaction_rejects_purchase_evidence_from_other_bucket(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
-    other_bucket_invoice = purchase_invoice().model_copy(update={"bucket_id": _OTHER_BUCKET_ID})
+    other_bucket_invoice = purchase_invoice().model_copy(update={"bucket_id": OTHER_BUCKET_ID})
     invoice_repository.save(build_invoice_catalogue((other_bucket_invoice,)))
 
     with (
         pytest.raises(TransactionValidationError, match="command bucket"),
         ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             objects=secure_objects,
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
@@ -144,7 +138,7 @@ def test_create_manual_transaction_rejects_purchase_evidence_from_other_bucket(
     ):
         create_manual_transaction(
             ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 5, 2),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -160,7 +154,7 @@ def test_create_manual_transaction_rejects_purchase_evidence_from_other_bucket(
 
 
 def test_create_manual_transaction_rejects_attachment_from_other_bucket(secure_objects: SecureObjectRepository) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     objects = secure_objects
     store = AttachmentStore(objects=objects)
     body = b"%PDF-1.4\nother bucket evidence\n%%EOF"
@@ -175,7 +169,7 @@ def test_create_manual_transaction_rejects_attachment_from_other_bucket(secure_o
             mime_type="application/pdf",
             bytes_size=len(body),
             captured_at=datetime(2026, 5, 4, 9, 0, tzinfo=UTC),
-            bucket_id=_OTHER_BUCKET_ID,
+            bucket_id=OTHER_BUCKET_ID,
             captured_by="operator-B",
             source_command="aeat app ledger attach",
         ),
@@ -184,7 +178,7 @@ def test_create_manual_transaction_rejects_attachment_from_other_bucket(secure_o
     with (
         pytest.raises(TransactionValidationError, match="command bucket"),
         ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             objects=secure_objects,
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
@@ -193,7 +187,7 @@ def test_create_manual_transaction_rejects_attachment_from_other_bucket(secure_o
     ):
         create_manual_transaction(
             ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 5, 2),
                 amount=Decimal("121.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -217,7 +211,7 @@ def test_create_manual_transaction_rejects_attachment_from_other_bucket(secure_o
 
 
 def test_attach_rejects_missing_purchase_evidence(secure_objects: SecureObjectRepository) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
     invoice_repository.save(InvoiceCatalogue())
     transaction_id = _seed_evidence_free_transaction(secure_objects, idempotency_key="attach-missing-evidence")
@@ -225,7 +219,7 @@ def test_attach_rejects_missing_purchase_evidence(secure_objects: SecureObjectRe
     with (
         pytest.raises(TransactionValidationError, match="purchase_invoice_evidence_id"),
         ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             objects=secure_objects,
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
@@ -233,7 +227,7 @@ def test_attach_rejects_missing_purchase_evidence(secure_objects: SecureObjectRe
         ) as ports,
     ):
         attach_manual_transaction_evidence(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=transaction_id,
             purchase_invoice_evidence_id="missing-purchase-evidence",
             actor="operator-B",
@@ -247,16 +241,16 @@ def test_attach_rejects_missing_purchase_evidence(secure_objects: SecureObjectRe
 
 
 def test_attach_rejects_purchase_evidence_from_other_bucket(secure_objects: SecureObjectRepository) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
-    other_bucket_invoice = purchase_invoice().model_copy(update={"bucket_id": _OTHER_BUCKET_ID})
+    other_bucket_invoice = purchase_invoice().model_copy(update={"bucket_id": OTHER_BUCKET_ID})
     invoice_repository.save(build_invoice_catalogue((other_bucket_invoice,)))
     transaction_id = _seed_evidence_free_transaction(secure_objects, idempotency_key="attach-cross-bucket-evidence")
 
     with (
         pytest.raises(TransactionValidationError, match="command bucket"),
         ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             objects=secure_objects,
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
@@ -264,7 +258,7 @@ def test_attach_rejects_purchase_evidence_from_other_bucket(secure_objects: Secu
         ) as ports,
     ):
         attach_manual_transaction_evidence(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=transaction_id,
             purchase_invoice_evidence_id=other_bucket_invoice.invoice_id,
             actor="operator-B",
@@ -278,13 +272,13 @@ def test_attach_rejects_purchase_evidence_from_other_bucket(secure_objects: Secu
 
 
 def test_attach_rejects_missing_attachment_manifest(secure_objects: SecureObjectRepository) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     transaction_id = _seed_evidence_free_transaction(secure_objects, idempotency_key="attach-missing-attachment")
 
     with (
         pytest.raises(TransactionValidationError, match="attachment_ids"),
         ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             objects=secure_objects,
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
@@ -292,7 +286,7 @@ def test_attach_rejects_missing_attachment_manifest(secure_objects: SecureObject
         ) as ports,
     ):
         attach_manual_transaction_evidence(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=transaction_id,
             attachment_ids=("a" * 64,),
             actor="operator-B",
@@ -306,7 +300,7 @@ def test_attach_rejects_missing_attachment_manifest(secure_objects: SecureObject
 
 
 def test_attach_rejects_attachment_from_other_bucket(secure_objects: SecureObjectRepository) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     store = AttachmentStore(objects=secure_objects)
     body = b"%PDF-1.4\nother bucket evidence\n%%EOF"
     attachment_id = store.put_bytes(body)
@@ -320,7 +314,7 @@ def test_attach_rejects_attachment_from_other_bucket(secure_objects: SecureObjec
             mime_type="application/pdf",
             bytes_size=len(body),
             captured_at=datetime(2026, 5, 4, 9, 0, tzinfo=UTC),
-            bucket_id=_OTHER_BUCKET_ID,
+            bucket_id=OTHER_BUCKET_ID,
             captured_by="operator-B",
             source_command="aeat app ledger attach",
         ),
@@ -330,7 +324,7 @@ def test_attach_rejects_attachment_from_other_bucket(secure_objects: SecureObjec
     with (
         pytest.raises(TransactionValidationError, match="command bucket"),
         ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             objects=secure_objects,
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
@@ -338,7 +332,7 @@ def test_attach_rejects_attachment_from_other_bucket(secure_objects: SecureObjec
         ) as ports,
     ):
         attach_manual_transaction_evidence(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=transaction_id,
             attachment_ids=(attachment_id,),
             actor="operator-B",

@@ -458,7 +458,7 @@ def _calendar_available(
     return True
 
 
-def _project_scheduled_window(
+def project_scheduled_window(
     operation: PinnedAuthorityOperation,
     *,
     modelo: str,
@@ -528,7 +528,7 @@ def _project_scheduled_window(
     )
 
 
-def _scheduled_coordinate(
+def scheduled_coordinate(
     operation: PinnedAuthorityOperation,
     *,
     modelo: str,
@@ -586,11 +586,11 @@ def _unauthored_row(
         return None
     if not period.has_date_span():
         return None
-    scheduled = _scheduled_coordinate(operation, modelo=modelo, filing_year=filing_year, token=token)
+    scheduled = scheduled_coordinate(operation, modelo=modelo, filing_year=filing_year, token=token)
     if scheduled is None:
         return None
     metadata, schedule = scheduled
-    resolution = _project_scheduled_window(operation, modelo=modelo, period=period, schedule=schedule, calendars=())
+    resolution = project_scheduled_window(operation, modelo=modelo, period=period, schedule=schedule, calendars=())
     if resolution is None:
         return None
     return ProjectedWindowRow(modelo=modelo, revision=metadata, resolution=resolution)

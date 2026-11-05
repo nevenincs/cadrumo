@@ -56,7 +56,7 @@ from cadrumo.core.operations import (
 )
 
 from .supervision_support import run_to_settlement
-from .supervisor_test_support import _capabilities, operation_repositories
+from .supervisor_test_support import operation_repositories, supervisor_capabilities
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -208,7 +208,7 @@ def _definition(executor: PhaseGatedProcessExecutor) -> OperationDefinition:
         ),
         phase_codes=_PHASES,
         interaction_kinds=frozenset(),
-        capabilities=_capabilities(
+        capabilities=supervisor_capabilities(
             cancellation=OperationCancellation.COOPERATIVE,
             owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK, OperationOwnedResource.PROCESS}),
             permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.PARTIAL, OperationEffect.UNKNOWN}),

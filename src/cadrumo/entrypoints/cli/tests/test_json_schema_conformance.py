@@ -58,7 +58,7 @@ _FORBIDDEN_NOTICE_FIELD_NAMES: Final = frozenset(
 _STRUCTURED_ANSWER_FIELDS: Final = frozenset({("ledger.invoice.match", "suggestions")})
 
 
-def _is_forbidden_notice_field(name: str) -> bool:
+def is_forbidden_notice_field(name: str) -> bool:
     """Return True when ``name`` is a bespoke notice/advisory result field."""
     return name in _FORBIDDEN_NOTICE_FIELD_NAMES or name.endswith("_advisory") or name.endswith("_advisories")
 
@@ -103,7 +103,7 @@ def test_no_result_schema_carries_a_bespoke_notice_field() -> None:
         bespoke = sorted(
             name
             for name in fields
-            if _is_forbidden_notice_field(name) and (identity, name) not in _STRUCTURED_ANSWER_FIELDS
+            if is_forbidden_notice_field(name) and (identity, name) not in _STRUCTURED_ANSWER_FIELDS
         )
         if bespoke:
             offenders.append(f"{identity} ({getattr(model, '__name__', model)}): {bespoke}")

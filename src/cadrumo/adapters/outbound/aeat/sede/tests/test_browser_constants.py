@@ -11,7 +11,7 @@ from __future__ import annotations
 import pytest
 
 from ......core.config import load_settings, override_settings
-from .._browser_constants import default_viewport, navigation_timeout_ms, selector_probe_timeout_ms
+from ..browser_constants import default_viewport, navigation_timeout_ms, selector_probe_timeout_ms
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

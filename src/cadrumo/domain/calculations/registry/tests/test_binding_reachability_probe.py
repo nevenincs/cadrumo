@@ -31,11 +31,11 @@ from ....iva.schema import (
     IvaLedgerObservationRole,
     IvaRateKind,
 )
-from .._ledger_binding_resolution import casilla_target_matcher
+from ..ledger_binding_resolution import casilla_target_matcher
 from ..ledger_iva_bindings import (
     LedgerIvaProvider,
-    _iva_build_matcher,
-    _iva_reachability_probe,
+    iva_build_matcher,
+    iva_reachability_probe,
 )
 from ..ledger_renta_gastos_pago_fraccionado_bindings import LedgerRentaGastosPagoFraccionadoProvider
 
@@ -67,7 +67,7 @@ def test_a_reachable_iva_selector_passes_the_probe() -> None:
     Without it, a probe that refused every selector would satisfy the
     mutation proof below while blocking every real binding in the registry.
     """
-    _iva_reachability_probe(_iva_selector())
+    iva_reachability_probe(_iva_selector())
 
 
 def test_iva_selector_refuses_an_implicit_observation_role() -> None:
@@ -86,7 +86,7 @@ def test_iva_selector_refuses_an_implicit_observation_role() -> None:
 
 def test_iva_selector_role_policy_isolates_operation_information_from_settlement() -> None:
     """The real matcher rejects a role mutation while keeping the affiliation unchanged."""
-    matcher = _iva_build_matcher(
+    matcher = iva_build_matcher(
         _iva_selector(
             cash_accounting_treatments=(IvaCashAccountingTreatment("supplier_regime"),),
             observation_roles=(IvaLedgerObservationRole.OPERATION_INFORMATIONAL,),

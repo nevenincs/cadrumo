@@ -46,23 +46,23 @@ from cadrumo.domain.invoices.decomposition import decompose_invoice
 from cadrumo.domain.iva.schema import IvaCategory
 
 from .....domain.iva.schema import InvoiceKind
-from ._invoice_confirmation_test_support import (
-    _BUCKET_ID,
-    _EVIDENCE_CORPUS,
+from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from .invoice_confirmation_test_support import (
+    BUCKET_ID,
+    EVIDENCE_CORPUS,
     InvoiceAuthorityFixture,
-    _make_svc,
     invoice_confirmation_kwargs,
     isolated_settings,
+    make_svc,
     secure_objects,
 )
-from ._invoice_confirmation_test_support import runtime_profile as runtime_profile
-from ._invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
-from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from .invoice_confirmation_test_support import runtime_profile as runtime_profile
+from .invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_filer_profile"]
 
-_CORPUS = _EVIDENCE_CORPUS
+_CORPUS = EVIDENCE_CORPUS
 
 # Single rate, 21% on a 2026 invoice date, no recargo: the ordinary case.
 _PLAIN_RATED = _CORPUS / "facturae_32_series_and_parties_invoice.xml"
@@ -83,15 +83,15 @@ def _confirm(
     """Confirm *fixture* with no operator overrides at all."""
     source = tmp_path / fixture.name
     source.write_bytes(fixture.read_bytes())
-    svc = _make_svc(isolated_settings, secure_objects)
-    record = svc.add(bucket_id=_BUCKET_ID, source_path=source).record
+    svc = make_svc(isolated_settings, secure_objects)
+    record = svc.add(bucket_id=BUCKET_ID, source_path=source).record
     return confirm_invoice_draft_from_evidence(
         counterparty_country="ES",
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         evidence_id=record.evidence_id,
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=authority),
+        **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=authority),
     )
 
 

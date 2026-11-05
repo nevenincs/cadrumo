@@ -10,20 +10,20 @@ import pytest
 from cadrumo_client.commands.shared_contracts import TranslationKey
 from cadrumo_client.commands.spec import CommandSpec
 
-from .._app_ledger_command_spec_support import (
-    _EVIDENCE_ACTOR_OPTION,
-    _EVIDENCE_TRANSACTION_ID_ARGUMENT,
-    _GROUP_INVOCATION,
-    _LEAF_INVOCATION,
-    _LEDGER_ACTOR_OPTION,
-    _MERGE_REASON_OPTION,
-    _NO_RESULT_SCHEMA,
-    _OPTIONAL_PERIOD_OPTION,
-    _OPTIONAL_YEAR_OPTION,
+from ..app_ledger_command_spec_support import (
+    EVIDENCE_ACTOR_OPTION,
+    EVIDENCE_TRANSACTION_ID_ARGUMENT,
+    GROUP_INVOCATION,
+    LEAF_INVOCATION,
+    LEDGER_ACTOR_OPTION,
+    MERGE_REASON_OPTION,
+    NO_RESULT_SCHEMA,
+    OPTIONAL_PERIOD_OPTION,
+    OPTIONAL_YEAR_OPTION,
 )
-from .._app_ledger_lifecycle_command_specs import LEDGER_LIFECYCLE_COMMAND_SPECS
-from .._app_ledger_management_command_specs import LEDGER_MANAGEMENT_COMMAND_SPECS
-from .._app_ledger_operations_command_specs import LEDGER_OPERATIONS_COMMAND_SPECS
+from ..app_ledger_lifecycle_command_specs import LEDGER_LIFECYCLE_COMMAND_SPECS
+from ..app_ledger_management_command_specs import LEDGER_MANAGEMENT_COMMAND_SPECS
+from ..app_ledger_operations_command_specs import LEDGER_OPERATIONS_COMMAND_SPECS
 from ..command_specs import COMMAND_GRAPH
 from .ledger_command_spec_matrix import (
     DEFAULT_CONSTRAINT,
@@ -612,8 +612,8 @@ def test_shared_ledger_construction_contracts_are_exact_and_reused() -> None:
         management["app_ledger_prorrata"],
         management["app_ledger_ratios"],
     ):
-        assert spec.invocation is _GROUP_INVOCATION
-        assert spec.result_schema is _NO_RESULT_SCHEMA
+        assert spec.invocation is GROUP_INVOCATION
+        assert spec.result_schema is NO_RESULT_SCHEMA
 
     for spec in (
         *(spec for spec in LEDGER_OPERATIONS_COMMAND_SPECS if spec.kind.value == "leaf"),
@@ -623,39 +623,39 @@ def test_shared_ledger_construction_contracts_are_exact_and_reused() -> None:
         management["app_ledger_merge"],
         management["app_ledger_preflight"],
     ):
-        assert spec.invocation is _LEAF_INVOCATION
+        assert spec.invocation is LEAF_INVOCATION
 
-    assert operations["app_ledger_exclude"].parameters[0] is _EVIDENCE_TRANSACTION_ID_ARGUMENT
-    assert operations["app_ledger_exclude"].parameters[-1] is _EVIDENCE_ACTOR_OPTION
-    assert operations["app_ledger_export"].parameters[-1] is _LEDGER_ACTOR_OPTION
+    assert operations["app_ledger_exclude"].parameters[0] is EVIDENCE_TRANSACTION_ID_ARGUMENT
+    assert operations["app_ledger_exclude"].parameters[-1] is EVIDENCE_ACTOR_OPTION
+    assert operations["app_ledger_export"].parameters[-1] is LEDGER_ACTOR_OPTION
     for key in ("app_ledger_remove", "app_ledger_reset", "app_ledger_restore", "app_ledger_stash", "app_ledger_update"):
-        assert {spec.key: spec for spec in LEDGER_LIFECYCLE_COMMAND_SPECS}[key].parameters[-1] is _LEDGER_ACTOR_OPTION
-    assert management["app_ledger_merge"].parameters[1] is _MERGE_REASON_OPTION
+        assert {spec.key: spec for spec in LEDGER_LIFECYCLE_COMMAND_SPECS}[key].parameters[-1] is LEDGER_ACTOR_OPTION
+    assert management["app_ledger_merge"].parameters[1] is MERGE_REASON_OPTION
     assert {spec.key: spec for spec in LEDGER_LIFECYCLE_COMMAND_SPECS}["app_ledger_split"].parameters[
         6
-    ] is _MERGE_REASON_OPTION
+    ] is MERGE_REASON_OPTION
     for spec, positions in (
         (operations["app_ledger_export"], (3, 4)),
         (management["app_ledger_list"], (1, 2)),
     ):
-        assert spec.parameters[positions[0]] is _OPTIONAL_PERIOD_OPTION
-        assert spec.parameters[positions[1]] is _OPTIONAL_YEAR_OPTION
+        assert spec.parameters[positions[0]] is OPTIONAL_PERIOD_OPTION
+        assert spec.parameters[positions[1]] is OPTIONAL_YEAR_OPTION
     # Import filters rows by the period, so it reuses the shared contracts and
     # replaces only the help text that describes what the scope does.
     import_period, import_year = operations["app_ledger_import"].parameters[6:8]
-    assert import_period == replace(_OPTIONAL_PERIOD_OPTION, help_key=TranslationKey("cli.ledger.import.period_help"))
-    assert import_year == replace(_OPTIONAL_YEAR_OPTION, help_key=TranslationKey("cli.ledger.import.year_help"))
+    assert import_period == replace(OPTIONAL_PERIOD_OPTION, help_key=TranslationKey("cli.ledger.import.period_help"))
+    assert import_year == replace(OPTIONAL_YEAR_OPTION, help_key=TranslationKey("cli.ledger.import.year_help"))
 
     assert (
         tuple(
             (name, parameter_contract(parameter))
             for name, parameter in (
-                ("evidence_transaction_id", _EVIDENCE_TRANSACTION_ID_ARGUMENT),
-                ("evidence_actor", _EVIDENCE_ACTOR_OPTION),
-                ("ledger_actor", _LEDGER_ACTOR_OPTION),
-                ("merge_reason", _MERGE_REASON_OPTION),
-                ("optional_period", _OPTIONAL_PERIOD_OPTION),
-                ("optional_year", _OPTIONAL_YEAR_OPTION),
+                ("evidence_transaction_id", EVIDENCE_TRANSACTION_ID_ARGUMENT),
+                ("evidence_actor", EVIDENCE_ACTOR_OPTION),
+                ("ledger_actor", LEDGER_ACTOR_OPTION),
+                ("merge_reason", MERGE_REASON_OPTION),
+                ("optional_period", OPTIONAL_PERIOD_OPTION),
+                ("optional_year", OPTIONAL_YEAR_OPTION),
             )
         )
         == _EXPECTED_SHARED_PARAMETERS

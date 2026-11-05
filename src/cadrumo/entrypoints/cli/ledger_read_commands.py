@@ -5,7 +5,7 @@ and read :class:`BucketEventHistoryRepository` events for history and
 review-derived filters.
 
 List and view commands delegate row projection to
-:func:`~cadrumo.entrypoints.cli._ledger_list.project_ledger_list` and emit typed
+:func:`~cadrumo.entrypoints.cli.ledger_list.project_ledger_list` and emit typed
 payloads such as :class:`~cadrumo.entrypoints.cli.ledger_results.LedgerViewResult`
 and :class:`~cadrumo.entrypoints.cli.ledger_participation_results.LedgerTrackResult`.
 """
@@ -46,8 +46,8 @@ def ledger_llm_diagnostics(
     from .common import bad, emit_envelope
     from .operation_ledger_llm_diagnostics import read_ledger_llm_diagnostics_for_cli
 
-    since_date = _parse_iso_date(since, "--since")
-    until_date = _parse_iso_date(until, "--until")
+    since_date = parse_iso_date(since, "--since")
+    until_date = parse_iso_date(until, "--until")
     threshold = coerce_decimal_strict(low_confidence_below)
     if not is_unit_proportion(threshold):
         raise bad(tr("cli.ledger.llm_diagnostics.threshold_range"))
@@ -106,7 +106,7 @@ def _llm_usage_provider_payload(row: LlmUsageCostProviderMetrics) -> dict[str, o
 
 
 def _llm_confidence_provider_payload(row: LlmConfidenceProviderMetrics) -> dict[str, object]:
-    from ._decimal_parsing import optional_decimal_text
+    from .decimal_parsing import optional_decimal_text
 
     return {
         "provider": row.provider,
@@ -123,7 +123,7 @@ def _llm_confidence_provider_payload(row: LlmConfidenceProviderMetrics) -> dict[
 def _llm_diagnostics_lines_and_notices(report: LlmDiagnosticsReport) -> tuple[list[str], list[Notice]]:
     from ...core.i18n.render import tr
     from ...core.json_contract import Notice, NoticeSeverity
-    from ._decimal_parsing import optional_decimal_text
+    from .decimal_parsing import optional_decimal_text
 
     lines = [
         f"{row.provider}\tcalls={row.calls}\tcache_hits={row.cache_hits}"
@@ -147,12 +147,12 @@ def _llm_diagnostics_lines_and_notices(report: LlmDiagnosticsReport) -> tuple[li
     return [*lines, notice.message], [notice]
 
 
-def _parse_iso_date(value: str | None, option: str) -> date | None:
+def parse_iso_date(value: str | None, option: str) -> date | None:
     if value is None:
         return None
-    from ._date_parsing import _parse_iso_date as _parse_required_iso_date
+    from .date_parsing import parse_iso_date
 
-    return _parse_required_iso_date(
+    return parse_iso_date(
         value,
         label=option,
         translation_key="cli.ledger.llm_diagnostics.bad_date",
@@ -283,11 +283,11 @@ def ledger_check(
     from .common import emit_envelope
     from .ledger_diagnostic_results import LedgerCheckResult, LedgerLinkInconsistencyPayload
     from .operation_ledger_check import read_ledger_check_for_cli
-    from .period_parsing import _optional_canonical_period
+    from .period_parsing import optional_canonical_period
 
     check = read_ledger_check_for_cli(
         ctx,
-        period=_optional_canonical_period(period, year=year),
+        period=optional_canonical_period(period, year=year),
         bucket_id_option=bucket_id_option,
     ).to_check()
     link_rows = [
@@ -337,9 +337,9 @@ def ledger_preflight(ctx: typer.Context, period: str, year: int) -> None:
     from ...core.json_contract import Notice, NoticeSeverity
     from .common import emit_envelope
     from .operation_ledger_preflight import read_ledger_preflight_for_cli
-    from .period_parsing import _canonical_period
+    from .period_parsing import period_parsing_canonical_period
 
-    canonical = _canonical_period(period, year=year)
+    canonical = period_parsing_canonical_period(period, year=year)
     report = read_ledger_preflight_for_cli(ctx, period=canonical).to_report()
     payload = report.model_dump(mode="json")
     lines = [
@@ -422,12 +422,12 @@ def ledger_list(
     hide_llm_rejected: bool = False,
     account: str | None = None,
 ) -> None:
-    """List bucket-scoped ledger rows through :func:`~cadrumo.entrypoints.cli._ledger_list.project_ledger_list`."""
+    """List bucket-scoped ledger rows through :func:`~cadrumo.entrypoints.cli.ledger_list.project_ledger_list`."""
     from ...application.review.errors import FilterParseError
     from ...application.review.filter import LedgerReviewFilterSpec
-    from ._ledger_list import project_ledger_list
-    from ._ledger_support import ledger_cli_no_recovery
     from .common import emit_envelope
+    from .ledger_list import project_ledger_list
+    from .ledger_support import ledger_cli_no_recovery
     from .operation_ledger_list import read_ledger_list_for_cli
 
     resolved_filters = list(filters)
@@ -558,9 +558,9 @@ def ledger_status(ctx: typer.Context, period: str | None = None, year: int | Non
     from ...core.json_contract import strict_round_trip
     from .common import active_profile_label, emit_envelope
     from .operation_ledger_status import read_ledger_status_for_cli
-    from .period_parsing import _optional_canonical_period
+    from .period_parsing import optional_canonical_period
 
-    projection = read_ledger_status_for_cli(ctx, period=_optional_canonical_period(period, year=year))
+    projection = read_ledger_status_for_cli(ctx, period=optional_canonical_period(period, year=year))
     report = projection.to_report()
     lines = [
         f"{tr('cli.ledger.labels.profile')}\t{active_profile_label() or '<none>'}",

@@ -27,9 +27,9 @@ from ....application.live.expedientes_capture_operation import (
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .. import app_live_expedientes_commands as handler
 from .. import operation_expedientes_capture as bridge
-from .._profile_authentication_gate import _uses_profile_connection
 from ..app_live_expedientes_results import ExpedientesCaptureResult
 from ..command_specs import COMMAND_GRAPH
+from ..profile_authentication_gate import profile_authentication_gate_uses_profile_connection
 from .operation_bridge_support import bind_profile_submission
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -279,4 +279,4 @@ def test_pull_keeps_single_and_bulk_cli_payloads_and_lines(monkeypatch: pytest.M
 def test_pull_uses_runtime_profile_authentication_admission() -> None:
     spec = COMMAND_GRAPH.node("app_live_expedientes_pull").spec
 
-    assert _uses_profile_connection(spec, {})
+    assert profile_authentication_gate_uses_profile_connection(spec, {})

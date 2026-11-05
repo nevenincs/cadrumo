@@ -73,7 +73,7 @@ def count_cross_checks(monkeypatch: pytest.MonkeyPatch) -> list[int]:
     The returned list holds one counter per registry entry, in registry
     order. The wrapper replaces the registry for the test's duration only.
     """
-    registry = snapshot_module._SNAPSHOT_CROSS_CHECKS
+    registry = snapshot_module.SNAPSHOT_CROSS_CHECKS
     counts = [0] * len(registry)
 
     def counted(index: int, run: Callable[..., None]) -> Callable[..., None]:
@@ -85,7 +85,7 @@ def count_cross_checks(monkeypatch: pytest.MonkeyPatch) -> list[int]:
 
     monkeypatch.setattr(
         snapshot_module,
-        "_SNAPSHOT_CROSS_CHECKS",
+        "SNAPSHOT_CROSS_CHECKS",
         tuple(replace(check, run=counted(index, check.run)) for index, check in enumerate(registry)),
     )
     return counts

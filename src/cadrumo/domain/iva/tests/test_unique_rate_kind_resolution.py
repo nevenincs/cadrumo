@@ -9,8 +9,8 @@ import pytest
 
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ..lookup import (
-    _select_unique_rate_kind,
     rate_kinds_for_declared_rate,
+    select_unique_rate_kind,
     unique_rate_kind_for_declared_rate,
 )
 from ..rates import load_iva_rate_table
@@ -103,4 +103,4 @@ def test_private_cardinality_rule_selects_only_one_distinct_tier(
     expected: IvaRateKind | None,
 ) -> None:
     """Exercise the pure cardinality guard without inventing authority rows."""
-    assert _select_unique_rate_kind(matches) == expected
+    assert select_unique_rate_kind(matches) == expected

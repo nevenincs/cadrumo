@@ -29,9 +29,9 @@ from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import lookup_translation, tr
 from ....core.profile_session import ProfileSessionRefusalReason
-from .._profile_authentication_gate import _preflight_sources, _uses_profile_connection
 from ..command_specs import COMMAND_GRAPH
 from ..errors import render_error_payload
+from ..profile_authentication_gate import preflight_sources, profile_authentication_gate_uses_profile_connection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -42,8 +42,8 @@ def _leaf(identity: str):
 
 def test_censo_file_preview_keeps_local_profile_admission_and_apply_uses_runtime() -> None:
     spec = COMMAND_GRAPH.node("config_profile_censo_import").spec
-    assert not _uses_profile_connection(spec, {"apply": False})
-    assert _uses_profile_connection(spec, {"apply": True})
+    assert not profile_authentication_gate_uses_profile_connection(spec, {"apply": False})
+    assert profile_authentication_gate_uses_profile_connection(spec, {"apply": True})
 
 
 @pytest.mark.parametrize(
@@ -69,7 +69,7 @@ def test_cross_scope_stdin_identity_collision_refuses_before_any_read(
 ) -> None:
 
     with pytest.raises(CliRefusedBoundaryError) as caught:
-        _preflight_sources(root=root, leaf=leaf)
+        preflight_sources(root=root, leaf=leaf)
 
     assert caught.value.translated_message is not None
     assert caught.value.translated_message.endswith("profile_secrets_stdin_collision")
@@ -79,14 +79,14 @@ def test_cross_scope_same_descriptor_refuses_but_distinct_descriptors_pass() -> 
     root = ProfileSecretSelection(ProfileSecretChannel.FILE_DESCRIPTOR, descriptor=7)
 
     with pytest.raises(CliRefusedBoundaryError) as caught:
-        _preflight_sources(
+        preflight_sources(
             root=root,
             leaf=MachineSecretSelection(MachineSecretChannel.FILE_DESCRIPTOR, descriptor=7),
         )
     assert caught.value.translated_message is not None
     assert caught.value.translated_message.endswith("profile_secrets_fd_collision")
 
-    _preflight_sources(
+    preflight_sources(
         root=root,
         leaf=MachineSecretSelection(MachineSecretChannel.FILE_DESCRIPTOR, descriptor=8),
     )
@@ -118,7 +118,7 @@ def test_every_resume_refusal_reason_has_an_operator_diagnostic() -> None:
 def test_root_profile_authentication_diagnostics_are_localised(language: OutputLanguage) -> None:
     with override_settings(cadrumo_output_language=language):
         with pytest.raises(CliRefusedBoundaryError) as caught:
-            _preflight_sources(
+            preflight_sources(
                 root=ProfileSecretSelection(ProfileSecretChannel.STDIN),
                 leaf=MachineSecretSelection(MachineSecretChannel.STDIN),
             )

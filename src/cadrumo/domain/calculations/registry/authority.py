@@ -1116,18 +1116,18 @@ class IndexedRegistryAuthority:
 
 
 _bundled_indexed_authority_lock = RLock()
-_bundled_indexed_authority: IndexedRegistryAuthority | None = None
+authority_bundled_indexed_authority: IndexedRegistryAuthority | None = None
 
 
 def bundled_indexed_authority() -> IndexedRegistryAuthority:
     """Return the process-shared descriptor-following indexed authority owner."""
-    global _bundled_indexed_authority
+    global authority_bundled_indexed_authority
     with _bundled_indexed_authority_lock:
-        if _bundled_indexed_authority is None:
-            _bundled_indexed_authority = IndexedRegistryAuthority(
+        if authority_bundled_indexed_authority is None:
+            authority_bundled_indexed_authority = IndexedRegistryAuthority(
                 authority_location.bundled_authority_descriptor_path()
             )
-        return _bundled_indexed_authority
+        return authority_bundled_indexed_authority
 
 
 def release_bundled_indexed_authority() -> bool:
@@ -1148,14 +1148,14 @@ def release_bundled_indexed_authority() -> bool:
     Returns:
         Whether the process holds no shared owner afterwards.
     """
-    global _bundled_indexed_authority
+    global authority_bundled_indexed_authority
     with _bundled_indexed_authority_lock:
-        if _bundled_indexed_authority is None:
+        if authority_bundled_indexed_authority is None:
             return True
         try:
-            _bundled_indexed_authority.close()
+            authority_bundled_indexed_authority.close()
         except AuthorityStoreError as refusal:
             _LOGGER.warning("the shared registry authority stayed open: %s", str(refusal))
             return False
-        _bundled_indexed_authority = None
+        authority_bundled_indexed_authority = None
         return True

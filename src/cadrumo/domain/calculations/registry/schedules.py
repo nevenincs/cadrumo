@@ -25,13 +25,13 @@ __all__ = [
     "profile_condition_matches",
 ]
 
-_IVA_REGIME_PATH: Final[str] = "iva.regime"
+IVA_REGIME_PATH: Final[str] = "iva.regime"
 _IRPF_ESTIMATION_REGIME_PATH: Final[str] = "irpf.estimation_regime"
-_TAXPAYER_ENTITY_TYPE_PATH: Final[str] = "taxpayer.entity_type"
+TAXPAYER_ENTITY_TYPE_PATH: Final[str] = "taxpayer.entity_type"
 _PROFILE_ATTRIBUTE_FACTS: Final[dict[str, tuple[str, bool]]] = {
-    _IVA_REGIME_PATH: ("iva_regime", True),
+    IVA_REGIME_PATH: ("iva_regime", True),
     _IRPF_ESTIMATION_REGIME_PATH: ("irpf_estimation_regime", True),
-    _TAXPAYER_ENTITY_TYPE_PATH: ("entity_type", False),
+    TAXPAYER_ENTITY_TYPE_PATH: ("entity_type", False),
 }
 
 
@@ -103,7 +103,7 @@ def profile_condition_matches(
     profile_facts: Mapping[str, object] | object,
 ) -> bool:
     """Return whether one declared predicate matches the supplied profile facts."""
-    observed = _resolve_profile_fact(profile_facts, condition.field)
+    observed = resolve_profile_fact(profile_facts, condition.field)
     if condition.op == ProfilePredicateOp.EQUALS:
         return observed == condition.value
     if condition.op == ProfilePredicateOp.NOT_EQUALS:
@@ -164,7 +164,7 @@ def _resolve_profile_fact_path(profile_facts: object, field: str) -> object:
     return current
 
 
-def _resolve_profile_fact(profile_facts: object, field: str) -> object:
+def resolve_profile_fact(profile_facts: object, field: str) -> object:
     """Resolve one declared schedule predicate against mapping or profile facts."""
     found, observed = _resolve_direct_profile_fact(profile_facts, field)
     if found:

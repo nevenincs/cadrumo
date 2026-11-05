@@ -31,9 +31,9 @@ Bucket archives have a strict versioned header and exactly two ordered members. 
 
 ## Profile-custody filesystem
 
-Capsule data paths are validated under both POSIX and Windows interpretations, entry count and file size are capped, and writes create files exclusively without following links. In-place capsule-file replacement compares the authenticated old-byte digest, writes a same-directory staged file, renames it, and fsyncs the directory. Filesystem record CAS routines have platform-specific anchored implementations and fail closed where the required atomic primitive is unavailable. Portable path and bounded data inventory (`src/cadrumo/adapters/persistence/storage/custody/_capsule_data.py`) Authenticated-byte compare-and-swap (`src/cadrumo/adapters/persistence/storage/custody/_capsule_data.py`) Cross-platform local-record CAS (`src/cadrumo/adapters/persistence/storage/custody/_filesystem_records.py`)
+Capsule data paths are validated under both POSIX and Windows interpretations, entry count and file size are capped, and writes create files exclusively without following links. In-place capsule-file replacement compares the authenticated old-byte digest, writes a same-directory staged file, renames it, and fsyncs the directory. Filesystem record CAS routines have platform-specific anchored implementations and fail closed where the required atomic primitive is unavailable. Portable path and bounded data inventory (`src/cadrumo/adapters/persistence/storage/custody/capsule_data.py`) Authenticated-byte compare-and-swap (`src/cadrumo/adapters/persistence/storage/custody/capsule_data.py`) Cross-platform local-record CAS (`src/cadrumo/adapters/persistence/storage/custody/filesystem_records.py`)
 
-The capsule inventory walks without following links/reparse points and bounds entry count, individual files, and total size. It hashes ordinary custody records by path and bytes, but deliberately excludes SQLite WAL/SHM and the holder lockfile, and covers the database only by path. The source documents why: closing a connection checkpoints WAL contents and makes raw database bytes vary without logical writes. The explicit remaining limitation is that database rows written between deletion preflight and execution do not change the inventory digest; nothing in this adapter catches that change. This scope boundary should be considered wherever the digest is used as a destructive-operation precondition. Inventory coverage contract (`src/cadrumo/adapters/persistence/storage/custody/_inventory.py`) Digest projection (`src/cadrumo/adapters/persistence/storage/custody/_inventory.py`)
+The capsule inventory walks without following links/reparse points and bounds entry count, individual files, and total size. It hashes ordinary custody records by path and bytes, but deliberately excludes SQLite WAL/SHM and the holder lockfile, and covers the database only by path. The source documents why: closing a connection checkpoints WAL contents and makes raw database bytes vary without logical writes. The explicit remaining limitation is that database rows written between deletion preflight and execution do not change the inventory digest; nothing in this adapter catches that change. This scope boundary should be considered wherever the digest is used as a destructive-operation precondition. Inventory coverage contract (`src/cadrumo/adapters/persistence/storage/custody/inventory.py`) Digest projection (`src/cadrumo/adapters/persistence/storage/custody/inventory.py`)
 
 ## Assessment and limits
 
@@ -63,8 +63,8 @@ All 24 assigned files were read in full across pages 1–9.
 - aes_gcm.py (71 lines) (`src/cadrumo/adapters/persistence/storage/crypto/aes_gcm.py`)
 - encrypted_columns.py (192 lines) (`src/cadrumo/adapters/persistence/storage/crypto/encrypted_columns.py`)
 - custody/__init__.py (6 lines) (`src/cadrumo/adapters/persistence/storage/custody/__init__.py`)
-- _capsule_data.py (235 lines) (`src/cadrumo/adapters/persistence/storage/custody/_capsule_data.py`)
-- _capsule_filesystem.py (319 lines) (`src/cadrumo/adapters/persistence/storage/custody/_capsule_filesystem.py`)
-- _filesystem_records.py (498 lines) (`src/cadrumo/adapters/persistence/storage/custody/_filesystem_records.py`)
-- _inventory.py (400 lines) (`src/cadrumo/adapters/persistence/storage/custody/_inventory.py`)
+- _capsule_data.py (235 lines) (`src/cadrumo/adapters/persistence/storage/custody/capsule_data.py`)
+- _capsule_filesystem.py (319 lines) (`src/cadrumo/adapters/persistence/storage/custody/capsule_filesystem.py`)
+- _filesystem_records.py (498 lines) (`src/cadrumo/adapters/persistence/storage/custody/filesystem_records.py`)
+- _inventory.py (400 lines) (`src/cadrumo/adapters/persistence/storage/custody/inventory.py`)
 <!-- /preserved:article -->

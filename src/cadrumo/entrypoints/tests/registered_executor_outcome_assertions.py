@@ -145,16 +145,16 @@ from .prorrata_bienes_operation_test_support import (
 from .prorrata_operation_test_support import read_prorrata_operation_conformance_register
 from .recipient_operation_test_support import assert_recipient_operation_conformance_result
 from .registered_executor_case_support import (
+    ExecutionDriver,
     OperationRuntimeCloseWitness,
-    _ExecutionDriver,
-    _judge_family_outcome,
-    _resolve_result_projection,
+    judge_family_outcome,
+    resolve_result_projection,
 )
 from .registered_executor_outcome_context import ExecutorOutcome
 from .registered_executor_outcome_ledger import LEDGER_OUTCOME_ASSERTIONS
 from .registered_executor_outcome_modelo import MODELO_OUTCOME_ASSERTIONS
 from .registered_executor_scenario_constants import (
-    _CREDENTIAL_INPUT,
+    CREDENTIAL_INPUT,
 )
 
 
@@ -453,11 +453,11 @@ def assert_auth_credential_save_outcome(ctx: ExecutorOutcome) -> None:
     result = ctx.resolve(AuthCredentialSaveResult)
     assert isinstance(result, AuthCredentialSaveResult)
     assert result.saved and result.provider == "clave_permanente"
-    assert _CREDENTIAL_INPUT not in result.model_dump_json()
+    assert CREDENTIAL_INPUT not in result.model_dump_json()
     stored = build_certificate_secret_backend(bucket_id=str(ctx.profile_id), settings=load_settings()).get(
         CLAVE_PERMANENTE_PASSWORD_SECRET_NAME
     )
-    assert stored is not None and stored.get_secret_value() == _CREDENTIAL_INPUT
+    assert stored is not None and stored.get_secret_value() == CREDENTIAL_INPUT
 
 
 def _assert_certificate_source_outcome(ctx: ExecutorOutcome, document: dict[str, Any]) -> None:
@@ -487,7 +487,7 @@ def _assert_certificate_secret_outcome(ctx: ExecutorOutcome, document: dict[str,
         "supervisor-certificate"
     )
     if ctx.case.definition_id == "auth.certificate.secret.set":
-        assert stored is not None and stored.get_secret_value() == _CREDENTIAL_INPUT
+        assert stored is not None and stored.get_secret_value() == CREDENTIAL_INPUT
     else:
         assert stored is None
         assert document["result"]["removed"] is True
@@ -539,7 +539,7 @@ def assert_certificate_or_ratios_outcome(ctx: ExecutorOutcome) -> None:
     result = ctx.resolve(ctx.registry.lookup_public_schema_binding(contract.result_schema).model_type)
     document = result.model_dump(mode="json")
     assert document["profile_id"] == str(ctx.profile_id)
-    assert _CREDENTIAL_INPUT not in result.model_dump_json()
+    assert CREDENTIAL_INPUT not in result.model_dump_json()
     for prefix, assertion in _CERTIFICATE_OR_RATIOS_ASSERTIONS:
         if ctx.case.definition_id.startswith(prefix):
             assertion(ctx, document)
@@ -587,7 +587,7 @@ def _assert_overview_status_read(ctx: ExecutorOutcome, result) -> None:
         )
         assert period_observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
         assert period_observed.projection.effect is OperationEffect.NONE
-        period_result = _resolve_result_projection(
+        period_result = resolve_result_projection(
             ctx.driver,
             ctx.registry,
             definition_id=ctx.case.definition_id,
@@ -716,7 +716,7 @@ _DEFINITION_ASSERTIONS: dict[str, Callable[[ExecutorOutcome], None]] = {
 }
 
 
-def _assert_registered_executor_conformance_outcome(
+def assert_registered_executor_conformance_outcome(
     asset_before: Any,
     asset_repository: Any,
     attachment_case: Any,
@@ -727,7 +727,7 @@ def _assert_registered_executor_conformance_outcome(
     certificate_state_before: Any,
     definition_id: str,
     definition: OperationDefinition,
-    driver: _ExecutionDriver,
+    driver: ExecutionDriver,
     evidence_case: Any,
     family_preparation: Any,
     followup_case: Any,
@@ -777,7 +777,7 @@ def _assert_registered_executor_conformance_outcome(
         case.expected_refusal_ref,
         observed.projection.refusal_ref,
     )
-    _judge_family_outcome(
+    judge_family_outcome(
         family_preparation,
         driver=driver,
         registry=registry,

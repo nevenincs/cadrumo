@@ -26,7 +26,7 @@ from ....core.config import override_settings
 from ....core.json_contract import ResolvedActionReference, ResolvedNoticeAction, ResolvedPreconditionAction
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....domain.iva.schema import InvoiceKind
-from ..ledger_evidence_batch_commands import _batch_payload, _batch_text_lines, _run_notices
+from ..ledger_evidence_batch_commands import batch_payload, batch_text_lines, run_notices
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -94,40 +94,40 @@ def test_a_deferred_run_reports_distinctly_from_a_failed_one() -> None:
     assert deferred.any_deferred is True
     assert deferred.any_failed is False
 
-    codes = {notice.code for notice in _run_notices(deferred)}
+    codes = {notice.code for notice in run_notices(deferred)}
     assert codes == {"ledger.evidence.batch.work_deferred"}
-    deferred_notice = _run_notices(deferred)[0]
+    deferred_notice = run_notices(deferred)[0]
     assert isinstance(deferred_notice.action, ResolvedPreconditionAction)
     assert deferred_notice.action.failed_condition_id == _RUNTIME_REACHABLE
     assert deferred_notice.context == {"paused": "1"}
 
-    pause_payload = _batch_payload(deferred, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
+    pause_payload = batch_payload(deferred, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
     assert pause_payload.inference_pause is not None
     assert pause_payload.inference_pause.facts == _PAUSE.facts
     assert pause_payload.inference_pause.precondition_action.failed_condition_id == _RUNTIME_REACHABLE
 
     with override_settings(cadrumo_output_language="en"):
-        lines = _batch_text_lines(deferred, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
+        lines = batch_text_lines(deferred, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
     assert any(line.startswith("paused\t") for line in lines)
     assert not any(line.startswith("paused.facts.") for line in lines)
     # The pause keeps its typed action record.
     assert any(line.startswith("paused.precondition_action.failed_condition_id\t") for line in lines)
 
     failed = BatchRunResult(items=(_refused_row("broken.pdf"),))
-    assert {notice.code for notice in _run_notices(failed)} == {"ledger.evidence.batch.items_refused"}
+    assert {notice.code for notice in run_notices(failed)} == {"ledger.evidence.batch.items_refused"}
 
     both = BatchRunResult(
         items=(_paused_row("scan.pdf"), _refused_row("broken.pdf")),
         inference_pause=_PAUSE,
     )
-    assert {notice.code for notice in _run_notices(both)} == {
+    assert {notice.code for notice in run_notices(both)} == {
         "ledger.evidence.batch.items_refused",
         "ledger.evidence.batch.work_deferred",
     }
 
 
 def test_pending_review_resolves_the_review_queue_action() -> None:
-    notices = _run_notices(BatchRunResult(items=(_pending_review_row("review.pdf"),)))
+    notices = run_notices(BatchRunResult(items=(_pending_review_row("review.pdf"),)))
 
     (notice,) = notices
     assert notice.code == "ledger.evidence.batch.pending_review"
@@ -155,7 +155,7 @@ def test_an_unreadable_source_counts_as_a_failure_without_becoming_an_item() -> 
         ),
     )
     assert run.any_failed is True
-    notices = _run_notices(run)
+    notices = run_notices(run)
     assert [notice.code for notice in notices] == ["ledger.evidence.batch.items_refused"]
     refusal_context = notices[0].context
     assert refusal_context == {"refused": "0", "unresolved": "1"}
@@ -189,7 +189,7 @@ def test_a_degraded_draft_keeps_its_status_and_is_reported_on_every_surface() ->
     assert run.any_failed is False
     assert run.summary["ingested"] == 1
 
-    payload = _batch_payload(run, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
+    payload = batch_payload(run, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
     rows = {row.source_name: row for row in payload.items}
     degraded = rows["ticket.pdf"].label_reading_fallback
     assert degraded is not None
@@ -199,12 +199,12 @@ def test_a_degraded_draft_keeps_its_status_and_is_reported_on_every_surface() ->
     assert degraded.failed_condition_id == "llm.agent.model_run_completed"
     assert rows["clean.pdf"].label_reading_fallback is None
 
-    notices = {notice.code: notice for notice in _run_notices(run)}
+    notices = {notice.code: notice for notice in run_notices(run)}
     warning = notices["ledger.evidence.batch.label_reading_degraded"]
     assert warning.severity.value == "warning"
     assert warning.context == {"label_reading_degraded": "1", "reasons": "load_headroom_refused"}
 
-    lines = _batch_text_lines(run, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
+    lines = batch_text_lines(run, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
     assert (
         "label_reading\tticket.pdf\tload_headroom_refused\tllm.agent.model_run_completed\tcurrency,supplier_name"
         in lines
@@ -212,10 +212,10 @@ def test_a_degraded_draft_keeps_its_status_and_is_reported_on_every_surface() ->
     assert not any(line.startswith("label_reading\tclean.pdf") for line in lines)
 
     clean = BatchRunResult(items=(_pending_review_row("clean.pdf"),))
-    assert "ledger.evidence.batch.label_reading_degraded" not in {notice.code for notice in _run_notices(clean)}
+    assert "ledger.evidence.batch.label_reading_degraded" not in {notice.code for notice in run_notices(clean)}
     assert not any(
         line.startswith("label_reading\t")
-        for line in _batch_text_lines(clean, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
+        for line in batch_text_lines(clean, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
     )
 
 
@@ -223,8 +223,8 @@ def test_an_already_ingested_degraded_draft_is_still_reported() -> None:
     """A re-run reports the stored draft as it is: a no-op, and still degraded."""
     run = BatchRunResult(items=(_degraded_row("ticket.pdf", status="no_op"),))
 
-    payload = _batch_payload(run, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
+    payload = batch_payload(run, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
     (row,) = payload.items
     assert row.status == "no_op"
     assert row.label_reading_fallback is not None
-    assert "ledger.evidence.batch.label_reading_degraded" in {notice.code for notice in _run_notices(run)}
+    assert "ledger.evidence.batch.label_reading_degraded" in {notice.code for notice in run_notices(run)}

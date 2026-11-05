@@ -15,14 +15,14 @@ from ....core.i18n.render import tr
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _LEDGER_WORK = (
-    "cadrumo.entrypoints.cli._ledger_support",
-    "cadrumo.entrypoints.cli._ledger_list",
+    "cadrumo.entrypoints.cli.ledger_support",
+    "cadrumo.entrypoints.cli.ledger_list",
     "cadrumo.entrypoints.ledger_action_composition",
 )
 _ECB_ADAPTER = "cadrumo.adapters.outbound.fx.ecb_provider"
 _SQL_PROFILE_STORAGE = (
     "cadrumo.adapters.persistence.profile.buckets",
-    "cadrumo.adapters.persistence.profile._secure_enveloped_document",
+    "cadrumo.adapters.persistence.profile.secure_enveloped_document",
     "cadrumo.adapters.persistence.storage.sql.secure_objects",
 )
 _WATCHED = (*_LEDGER_WORK, _ECB_ADAPTER, *_SQL_PROFILE_STORAGE)

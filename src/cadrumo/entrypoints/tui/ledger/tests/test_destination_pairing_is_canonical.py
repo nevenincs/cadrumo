@@ -31,7 +31,7 @@ import pytest
 from .....application.ledger.workspace import LedgerWorkspaceArea
 from ...destination_alias import closed_destination_ids
 from ..models import LEDGER_DESTINATION_BY_AREA, LedgerDestinationIdV1
-from ..routes import _SCREEN_BY_AREA, LEDGER_ROUTES, LedgerUnavailableScreen, resolve_ledger_screen
+from ..routes import LEDGER_ROUTES, SCREEN_BY_AREA, LedgerUnavailableScreen, resolve_ledger_screen
 from .workspace_fixtures import ledger_controller, ledger_projection
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -163,5 +163,5 @@ def test_the_controller_reads_the_canonical_pairing_rather_than_a_copy() -> None
 
 def test_every_area_has_exactly_one_callable_body() -> None:
     """The executable catalogue itself proves body coverage without a status list."""
-    assert frozenset(_SCREEN_BY_AREA) == frozenset(LedgerWorkspaceArea)
+    assert frozenset(SCREEN_BY_AREA) == frozenset(LedgerWorkspaceArea)
     assert all(callable(route.factory) for route in LEDGER_ROUTES)

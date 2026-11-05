@@ -13,7 +13,7 @@ from .....domain.currency.models import CurrencyNormalizationStatus, EurRateLook
 from .....domain.currency.service import CurrencyNormalizationService
 from .....tests.ecb_stub import ecb_csv_fetch
 from .. import ecb_provider
-from ..ecb_provider import EcbReferenceRateProvider, _observation_url, default_ecb_rate_provider
+from ..ecb_provider import EcbReferenceRateProvider, default_ecb_rate_provider, observation_url
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -92,7 +92,7 @@ def test_date_outside_the_lookback_window_is_a_missing_rate(
 
 @pytest.mark.parametrize("currency", ("usd", " usd "))
 def test_observation_url_normalises_currency_before_constructing_the_ecb_path(currency: str) -> None:
-    assert _observation_url(currency, date(2025, 3, 1), date(2025, 3, 14)) == (
+    assert observation_url(currency, date(2025, 3, 1), date(2025, 3, 14)) == (
         "https://data-api.ecb.europa.eu/service/data/EXR/D.USD.EUR.SP00.A"
         "?startPeriod=2025-03-01&endPeriod=2025-03-14&format=csvdata"
     )
@@ -101,7 +101,7 @@ def test_observation_url_normalises_currency_before_constructing_the_ecb_path(cu
 @pytest.mark.parametrize("currency", ("USD/../../EVIL", "USD?evil=1", "US D", "US", "USDD"))
 def test_observation_url_refuses_malformed_currency_before_constructing_the_ecb_path(currency: str) -> None:
     with pytest.raises(ExchangeRateProviderError, match="three-letter ISO 4217 code"):
-        _observation_url(currency, date(2025, 3, 1), date(2025, 3, 14))
+        observation_url(currency, date(2025, 3, 1), date(2025, 3, 14))
 
 
 def _transport_that_must_not_be_reached(url: str) -> str:
@@ -157,8 +157,8 @@ def test_the_live_transport_reports_an_unpublished_series_as_none(
 
     monkeypatch.setattr(httpx, "Client", scripted_client)
 
-    url = _observation_url("XYZ", date(2025, 3, 1), date(2025, 3, 14))
-    assert ecb_provider._https_fetch(url) == outcome
+    url = observation_url("XYZ", date(2025, 3, 1), date(2025, 3, 14))
+    assert ecb_provider.https_fetch(url) == outcome
 
 
 def test_the_live_transport_still_raises_on_a_server_fault(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -170,7 +170,7 @@ def test_the_live_transport_still_raises_on_a_server_fault(monkeypatch: pytest.M
     monkeypatch.setattr(httpx, "Client", scripted_client)
 
     with pytest.raises(ExchangeRateProviderError):
-        ecb_provider._https_fetch(_observation_url("USD", date(2025, 3, 1), date(2025, 3, 14)))
+        ecb_provider.https_fetch(observation_url("USD", date(2025, 3, 1), date(2025, 3, 14)))
 
 
 def test_default_provider_is_cached() -> None:

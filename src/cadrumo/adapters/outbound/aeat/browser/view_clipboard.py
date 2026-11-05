@@ -20,7 +20,7 @@ from cadrumo_client.contracts.view_stream import (
     ViewClipboardSelection,
 )
 
-from .._playwright import Page, PlaywrightError
+from ..playwright import Page, PlaywrightError
 
 if TYPE_CHECKING:
     from playwright.async_api import Frame, JSHandle

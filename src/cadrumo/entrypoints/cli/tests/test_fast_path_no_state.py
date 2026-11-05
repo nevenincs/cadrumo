@@ -34,7 +34,7 @@ from ....core.product_identity import PRODUCT_IDENTITY
 from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_location
 from .cli_runner import invoke_cached_cli
-from .sessionless_root_fixtures import _sessionless_root
+from .sessionless_root_fixtures import sessionless_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -48,7 +48,7 @@ if TYPE_CHECKING:
 _FAST_PATH_BUDGET_MS = 200.0
 
 
-__all__ = ["_sessionless_root"]
+__all__ = ["sessionless_root"]
 
 
 def _warm() -> None:
@@ -72,7 +72,7 @@ def _fastest_ms(args: list[str], *, runs: int = 5) -> tuple[float, Result]:
     return best, result
 
 
-def test_version_completes_under_budget_on_clean_root(_sessionless_root: Path) -> None:
+def test_version_completes_under_budget_on_clean_root(sessionless_root: Path) -> None:
     """``aeat --version`` returns inside the fast-path budget."""
 
     _warm()
@@ -82,7 +82,7 @@ def test_version_completes_under_budget_on_clean_root(_sessionless_root: Path) -
     assert elapsed_ms < _FAST_PATH_BUDGET_MS, f"--version took {elapsed_ms:.1f}ms (budget {_FAST_PATH_BUDGET_MS}ms)"
 
 
-def test_help_completes_under_budget_on_clean_root(_sessionless_root: Path) -> None:
+def test_help_completes_under_budget_on_clean_root(sessionless_root: Path) -> None:
     """``aeat --help`` returns inside the fast-path budget."""
 
     _warm()
@@ -91,7 +91,7 @@ def test_help_completes_under_budget_on_clean_root(_sessionless_root: Path) -> N
     assert elapsed_ms < _FAST_PATH_BUDGET_MS, f"--help took {elapsed_ms:.1f}ms (budget {_FAST_PATH_BUDGET_MS}ms)"
 
 
-def test_version_does_not_provision_storage(_sessionless_root: Path) -> None:
+def test_version_does_not_provision_storage(sessionless_root: Path) -> None:
     """``aeat --version`` writes nothing under the storage root.
 
     A registry parse or a state read would create a database file, a
@@ -102,17 +102,17 @@ def test_version_does_not_provision_storage(_sessionless_root: Path) -> None:
     _warm()
     result = invoke_cached_cli(["--version"])
     assert result.exit_code == 0, result.output
-    assert not (_sessionless_root / storage_location(StorageCategory.BUCKETS).relative_path()).exists()
-    assert not pointer_path(_sessionless_root).exists()
-    assert not any(iter_directory(_sessionless_root, pattern="*.db", recursive=True))
+    assert not (sessionless_root / storage_location(StorageCategory.BUCKETS).relative_path()).exists()
+    assert not pointer_path(sessionless_root).exists()
+    assert not any(iter_directory(sessionless_root, pattern="*.db", recursive=True))
 
 
-def test_help_does_not_provision_storage(_sessionless_root: Path) -> None:
+def test_help_does_not_provision_storage(sessionless_root: Path) -> None:
     """``aeat --help`` writes nothing under the storage root."""
 
     _warm()
     result = invoke_cached_cli(["--help"])
     assert result.exit_code == 0, result.output
-    assert not (_sessionless_root / storage_location(StorageCategory.BUCKETS).relative_path()).exists()
-    assert not pointer_path(_sessionless_root).exists()
-    assert not any(iter_directory(_sessionless_root, pattern="*.db", recursive=True))
+    assert not (sessionless_root / storage_location(StorageCategory.BUCKETS).relative_path()).exists()
+    assert not pointer_path(sessionless_root).exists()
+    assert not any(iter_directory(sessionless_root, pattern="*.db", recursive=True))

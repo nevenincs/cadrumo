@@ -13,7 +13,7 @@ from ..formula_runtime import RegistryCalculationResult, calculate_registry_snap
 from ..ids import BindingId
 from ..relations import RegistryFoldRequirement, relation_prefill_bindings_for_period, relation_source_requirements
 from ..schema import ModeloRevision, RegistrySnapshot
-from ._cross_dependency_calculation_support import _observations_from_requirements
+from .cross_dependency_calculation_support import observations_from_requirements
 from .modelo_100_registry_support import neutral_binding_values
 from .relation_fixture import resolve_relation_values_from_observations
 
@@ -60,7 +60,7 @@ def _relation_observed_value(requirement: RegistryFoldRequirement, period_index:
 
 def _calculate_historical_m100(snapshot: RegistrySnapshot, *, year: int) -> RegistryCalculationResult:
     requirements = relation_source_requirements(snapshot.revision, filing_year=year, period="0A")
-    observations = _observations_from_requirements(requirements, _relation_observed_value)
+    observations = observations_from_requirements(requirements, _relation_observed_value)
     relation_values = resolve_relation_values_from_observations(
         snapshot.revision,
         observations,

@@ -29,18 +29,18 @@ from ..calculation_revision_m303_evidence import (
 )
 from ..calculation_revision_m303_handoff import FilingInstanceEvidence, M303FilingInstanceEvidence
 from ..calculation_revision_sources import CalculationSourceRef
-from ._calculation_revision_test_support import (
-    _INPUT_CASILLA_001,
-    _OUTPUT_CASILLA_002,
-    _PAGOS_RELATION,
-    _PIN_INPUT_CASILLA_01,
-    _PIN_INPUT_CASILLA_02,
-    _PIN_INPUT_CASILLA_03,
-    _PIN_OUTPUT_CASILLA_04,
-    _PIN_OUTPUT_CASILLA_07,
-    _PIN_OUTPUT_CASILLA_19,
-    _CommonRevisionIdArgs,
-    _general_m303_filing_evidence,
+from .calculation_revision_test_support import (
+    INPUT_CASILLA_001,
+    OUTPUT_CASILLA_002,
+    PAGOS_RELATION,
+    PIN_INPUT_CASILLA_01,
+    PIN_INPUT_CASILLA_02,
+    PIN_INPUT_CASILLA_03,
+    PIN_OUTPUT_CASILLA_04,
+    PIN_OUTPUT_CASILLA_07,
+    PIN_OUTPUT_CASILLA_19,
+    CommonRevisionIdArgs,
+    general_m303_filing_evidence,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
@@ -54,7 +54,7 @@ _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
 
 
 def test_m303_filing_evidence_requires_an_explicit_nullable_insolvency_fact() -> None:
-    evidence = _general_m303_filing_evidence(Period.from_year_and_code(2026, "1T"))
+    evidence = general_m303_filing_evidence(Period.from_year_and_code(2026, "1T"))
     payload = evidence.model_dump(mode="python")
     del payload["insolvency"]
 
@@ -95,9 +95,9 @@ def test_m303_exonerado_390_evidence_preserves_shape_refusal_precedence() -> Non
 def _base_id() -> str:
     return derive_calculation_revision_id(
         work_unit_id="a" * 64,
-        input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
+        input_values_by_casilla_id={INPUT_CASILLA_001: "10.00"},
         binding_overrides={},
-        casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+        casilla_values={OUTPUT_CASILLA_002: Decimal("15.00")},
         filing_instance_evidence=None,
         source_provenance=(),
     )
@@ -299,9 +299,9 @@ def test_calculation_revision_refuses_non_utc_lifecycle_instants(
         "work_unit_id": "a" * 64,
         "registry_snapshot_ref": _REGISTRY_SNAPSHOT_REF,
         "state": state,
-        "input_values_by_casilla_id": {_INPUT_CASILLA_001: "10.00"},
+        "input_values_by_casilla_id": {INPUT_CASILLA_001: "10.00"},
         "binding_overrides": {},
-        "casilla_values": {_OUTPUT_CASILLA_002: Decimal("15.00")},
+        "casilla_values": {OUTPUT_CASILLA_002: Decimal("15.00")},
         "created_at": utc_created_at,
         "updated_at": utc_created_at,
     }
@@ -327,15 +327,15 @@ def test_revision_id_changes_with_immutable_m303_filing_instance_evidence() -> N
     def revision_id_for(evidence: FilingInstanceEvidence) -> str:
         return derive_calculation_revision_id(
             work_unit_id="a" * 64,
-            input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
+            input_values_by_casilla_id={INPUT_CASILLA_001: "10.00"},
             binding_overrides={},
-            casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+            casilla_values={OUTPUT_CASILLA_002: Decimal("15.00")},
             filing_instance_evidence=evidence,
             source_provenance=(),
         )
 
     period = Period.from_year_and_code(2026, "1T")
-    joint_m303 = _general_m303_filing_evidence(period)
+    joint_m303 = general_m303_filing_evidence(period)
     joint = FilingInstanceEvidence(m303=joint_m303)
     insolvent = FilingInstanceEvidence(
         m303=joint_m303.model_copy(
@@ -355,7 +355,7 @@ def test_revision_id_changes_with_immutable_m303_filing_instance_evidence() -> N
     reference = FilingEvidenceReference(reference="test:revision-id:exonerado-activity")
 
     def annual_evidence(codigo_actividad: str) -> FilingInstanceEvidence:
-        annual_m303 = _general_m303_filing_evidence(Period.from_year_and_code(2026, "4T"))
+        annual_m303 = general_m303_filing_evidence(Period.from_year_and_code(2026, "4T"))
         return FilingInstanceEvidence(
             m303=annual_m303.model_copy(
                 update={
@@ -562,18 +562,18 @@ def test_revision_id_pinned_against_fully_populated_fixture() -> None:
     derived = derive_calculation_revision_id(
         work_unit_id="b" * 64,
         input_values_by_casilla_id={
-            _PIN_INPUT_CASILLA_01: "1000.00",
-            _PIN_INPUT_CASILLA_02: "250.00",
-            _PIN_INPUT_CASILLA_03: "50.00",
+            PIN_INPUT_CASILLA_01: "1000.00",
+            PIN_INPUT_CASILLA_02: "250.00",
+            PIN_INPUT_CASILLA_03: "50.00",
         },
         binding_overrides={
             "previous_year_net_income": "13000.00",
             "profile.iva_regime": "GENERAL",
         },
         casilla_values={
-            _PIN_OUTPUT_CASILLA_04: Decimal("1300.00"),
-            _PIN_OUTPUT_CASILLA_07: Decimal("-50.50"),
-            _PIN_OUTPUT_CASILLA_19: Decimal("200.25"),
+            PIN_OUTPUT_CASILLA_04: Decimal("1300.00"),
+            PIN_OUTPUT_CASILLA_07: Decimal("-50.50"),
+            PIN_OUTPUT_CASILLA_19: Decimal("200.25"),
         },
         source_transaction_ids=("a" * 64, "c" * 64),
         borrador_snapshot_id="borrador-2026-q1-snapshot",
@@ -608,19 +608,19 @@ def test_revision_id_pinned_across_every_optional_branch() -> None:
     derived = derive_calculation_revision_id(
         work_unit_id="b" * 64,
         input_values_by_casilla_id={
-            _PIN_INPUT_CASILLA_01: "1000.00",
-            _PIN_INPUT_CASILLA_02: "250.00",
+            PIN_INPUT_CASILLA_01: "1000.00",
+            PIN_INPUT_CASILLA_02: "250.00",
         },
         binding_overrides={
             "previous_year_net_income": "13000.00",
             "profile.iva_regime": "GENERAL",
         },
         casilla_values={
-            _PIN_OUTPUT_CASILLA_04: Decimal("1300.00"),
-            _PIN_OUTPUT_CASILLA_19: Decimal("200.25"),
+            PIN_OUTPUT_CASILLA_04: Decimal("1300.00"),
+            PIN_OUTPUT_CASILLA_19: Decimal("200.25"),
         },
         row_binding_values={"iva.aggregation": {"2": "5.00", "1": "3.00"}},
-        relation_overrides={_PAGOS_RELATION: "42.00"},
+        relation_overrides={PAGOS_RELATION: "42.00"},
         source_transaction_ids=("a" * 64, "c" * 64),
         m210_official_tipo_renta_code="01",
         m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
@@ -643,17 +643,17 @@ def test_revision_id_changes_when_input_casilla_value_changes() -> None:
     """A different input_values_by_casilla_id must produce a different id."""
     id_a = derive_calculation_revision_id(
         work_unit_id="a" * 64,
-        input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
+        input_values_by_casilla_id={INPUT_CASILLA_001: "10.00"},
         binding_overrides={},
-        casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+        casilla_values={OUTPUT_CASILLA_002: Decimal("15.00")},
         filing_instance_evidence=None,
         source_provenance=(),
     )
     id_b = derive_calculation_revision_id(
         work_unit_id="a" * 64,
-        input_values_by_casilla_id={_INPUT_CASILLA_001: "99.00"},
+        input_values_by_casilla_id={INPUT_CASILLA_001: "99.00"},
         binding_overrides={},
-        casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+        casilla_values={OUTPUT_CASILLA_002: Decimal("15.00")},
         filing_instance_evidence=None,
         source_provenance=(),
     )
@@ -664,17 +664,17 @@ def test_revision_id_changes_when_output_casilla_value_changes() -> None:
     """A different casilla_values mapping must produce a different id."""
     id_a = derive_calculation_revision_id(
         work_unit_id="a" * 64,
-        input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
+        input_values_by_casilla_id={INPUT_CASILLA_001: "10.00"},
         binding_overrides={},
-        casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+        casilla_values={OUTPUT_CASILLA_002: Decimal("15.00")},
         filing_instance_evidence=None,
         source_provenance=(),
     )
     id_b = derive_calculation_revision_id(
         work_unit_id="a" * 64,
-        input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
+        input_values_by_casilla_id={INPUT_CASILLA_001: "10.00"},
         binding_overrides={},
-        casilla_values={_OUTPUT_CASILLA_002: Decimal("16.00")},
+        casilla_values={OUTPUT_CASILLA_002: Decimal("16.00")},
         filing_instance_evidence=None,
         source_provenance=(),
     )
@@ -685,17 +685,17 @@ def test_revision_id_changes_when_work_unit_id_changes() -> None:
     """A different parent work_unit_id must produce a different id."""
     id_a = derive_calculation_revision_id(
         work_unit_id="a" * 64,
-        input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
+        input_values_by_casilla_id={INPUT_CASILLA_001: "10.00"},
         binding_overrides={},
-        casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+        casilla_values={OUTPUT_CASILLA_002: Decimal("15.00")},
         filing_instance_evidence=None,
         source_provenance=(),
     )
     id_b = derive_calculation_revision_id(
         work_unit_id="b" * 64,
-        input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
+        input_values_by_casilla_id={INPUT_CASILLA_001: "10.00"},
         binding_overrides={},
-        casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+        casilla_values={OUTPUT_CASILLA_002: Decimal("15.00")},
         filing_instance_evidence=None,
         source_provenance=(),
     )
@@ -724,7 +724,7 @@ def test_revision_id_canonicalizes_complete_source_provenance_and_refuses_identi
         parent_source_ref=None,
         fingerprint="sha256:" + "b" * 64,
     )
-    common: _CommonRevisionIdArgs = {
+    common: CommonRevisionIdArgs = {
         "work_unit_id": "a" * 64,
         "input_values_by_casilla_id": {},
         "binding_overrides": {},

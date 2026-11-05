@@ -17,7 +17,7 @@ from pydantic import ValidationError
 
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...core.logging import get_logger
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now as clock_utc_now
 from .classification_origin import ClassificationOrigin, with_classification_origin
 from .enums import BusinessClassification
 from .errors import TransactionCatalogueError, TransactionNotFoundError
@@ -101,7 +101,7 @@ def set_classification(
 
     """
     transaction = _require_transaction(catalogue, transaction_id)
-    now = _utc_now()
+    now = clock_utc_now()
     normalised_reason = reason.strip()
     # Strip classified_by here so the idempotence signature below matches the
     # value the model will store (the field validator also strips, so a raw

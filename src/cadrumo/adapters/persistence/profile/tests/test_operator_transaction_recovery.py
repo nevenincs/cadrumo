@@ -22,9 +22,9 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 from cadrumo.adapters.persistence.storage.bucket.directory_layout import bucket_paths
 from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.adapters.persistence.storage.errors import RepositoryError
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    open_test_profile_session,
+    profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_profile_storage_root,
@@ -57,7 +57,7 @@ from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import load_settings
 from cadrumo.domain.buckets.event import BucketEvent, BucketEventType
 from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _certificate_indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
@@ -75,7 +75,7 @@ _STARTED_AT = datetime(2026, 7, 16, 17, 0, tzinfo=UTC)
 
 
 def _create_profile(*, provider: str) -> None:
-    with _certificate_indexed_authority_for_test().operation() as _profile_authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _profile_authority_operation_for_test:
         assert profile_keys(_profile_authority_operation_for_test)
     with open_test_profile_session(_BUCKET_ID):
         register_minimal_profile(profile_id=_BUCKET_ID)
@@ -296,7 +296,7 @@ def test_certificate_secret_set_event_failure_resumes_original_set_once(
 ) -> None:
     """A failed event commit preserves SET classification and a secret-free intent."""
     with (
-        _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test,
+        bundled_indexed_authority().operation() as _certificate_authority_operation_for_test,
         isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
     ):
         certificate_path = tmp_path / "operator.p12"
@@ -394,7 +394,7 @@ def test_certificate_secret_rotation_event_failure_resumes_original_rotation_onc
 ) -> None:
     """A failed event commit cannot reclassify a rotation as another mutation."""
     with (
-        _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test,
+        bundled_indexed_authority().operation() as _certificate_authority_operation_for_test,
         isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
     ):
         certificate_path = tmp_path / "operator.p12"
@@ -459,7 +459,7 @@ def test_certificate_secret_remove_event_failure_reports_original_removal_once(
 ) -> None:
     """A failed event commit resumes an already-completed removal truthfully."""
     with (
-        _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test,
+        bundled_indexed_authority().operation() as _certificate_authority_operation_for_test,
         isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
     ):
         certificate_path = tmp_path / "operator.p12"
@@ -595,7 +595,7 @@ def test_reset_write_failure_resumes_real_cleanup_and_emits_effects_once(
 ) -> None:
     """Secrets, sessions, and locks remain truthfully accounted after retry."""
     with (
-        _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test,
+        bundled_indexed_authority().operation() as _certificate_authority_operation_for_test,
         isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
     ):
         cert_path = tmp_path / "operator.p12"
@@ -695,7 +695,7 @@ def test_pending_cleanup_refuses_new_auth_configuration_source_and_secret_writes
 ) -> None:
     """Pending cleanup owns auth custody until the matching reset resumes."""
     with (
-        _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test,
+        bundled_indexed_authority().operation() as _certificate_authority_operation_for_test,
         isolated_profile_storage_root(tmp_path=tmp_path),
     ):
         old_path = tmp_path / "old.p12"
@@ -770,7 +770,7 @@ async def test_pending_cleanup_refuses_central_live_session_writer(
             _seed_cleanup_intent(operation_kind=AuthCleanupOperationKind.RESET)
 
             with pytest.raises(AuthCleanupInProgressError):
-                _profile_create_context_for_test, profile_decode_context_for_test = _profile_contexts_for_test()
+                _profile_create_context_for_test, profile_decode_context_for_test = profile_authority_contexts()
                 await ensure_authenticated_aeat_session(
                     load_settings(),
                     certificate_secret_backend_factory=build_certificate_secret_backend,
@@ -822,7 +822,7 @@ def test_failed_reset_serializes_and_refuses_concurrent_central_session_writer(
             missing custody long before it could meet the cleanup intent this
             test is about.
             """
-            _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+            _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
             with open_test_profile_session(_BUCKET_ID):
                 writer_started.set()
                 asyncio.run(

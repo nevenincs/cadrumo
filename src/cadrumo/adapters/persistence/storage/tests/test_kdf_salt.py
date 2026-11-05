@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from .._kdf_salt import KDF_SALT_BYTES, decode_kdf_salt, encode_kdf_salt, require_kdf_salt_length
 from ..errors import StorageValidationError
+from ..kdf_salt import KDF_SALT_BYTES, decode_kdf_salt, encode_kdf_salt, require_kdf_salt_length
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

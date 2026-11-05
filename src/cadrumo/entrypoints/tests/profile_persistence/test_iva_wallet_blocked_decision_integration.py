@@ -42,18 +42,18 @@ from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 from cadrumo.entrypoints.tests.profile_persistence.iva_wallet_engine_support import (
-    _DECIDED_AT,
-    _TARGET_PERIOD,
-    _TARGET_YEAR,
-    _TAXPAYER_NIF,
-    _modelo_303_engine_inputs,
-    _period,
-    _secure_backend,
-    _snapshot_303,
-    _store_operator_profile,
-    _store_prior_303_compensation,
-    _work_unit_repositories_with_modelo_303_work_unit,
+    DECIDED_AT,
+    TARGET_PERIOD,
+    TARGET_YEAR,
+    TAXPAYER_NIF,
+    modelo_303_engine_inputs,
+    period,
+    secure_backend,
+    snapshot_303,
+    store_operator_profile,
+    store_prior_303_compensation,
     wallet_observation,
+    work_unit_repositories_with_modelo_303_work_unit,
 )
 from cadrumo.entrypoints.tests.profile_persistence.m303_annual_ledger_support import (
     M303_LEDGER_CUOTA,
@@ -155,7 +155,7 @@ def _assert_blocked_wallet_decision_refuses_real_modelo_303_calculation(
     expected_divergence: str,
 ) -> None:
     with bundled_indexed_authority().operation() as operation:
-        work_unit, work_repo, calc_repo, _event_repo = _work_unit_repositories_with_modelo_303_work_unit(
+        work_unit, work_repo, calc_repo, _event_repo = work_unit_repositories_with_modelo_303_work_unit(
             snapshot,
             operation=operation,
         )
@@ -176,11 +176,11 @@ def _assert_blocked_wallet_decision_refuses_real_modelo_303_calculation(
             work_unit.work_unit_id,
             actor="operator",
             casilla_inputs={},
-            binding_values=_modelo_303_engine_inputs(),
+            binding_values=modelo_303_engine_inputs(),
             iva_compensation_decision=decision,
             filing_period_date=date(2026, 6, 30),
             work_unit_repository=work_repo,
-            clock=_DECIDED_AT,
+            clock=DECIDED_AT,
             filing_instance_evidence=filing_instance_evidence,
         )
     assert len(calc_repo.load()) == 0
@@ -196,25 +196,25 @@ def _blocked_wallet_decision(
 ) -> tuple[RegistrySnapshot, IvaCompensationReconciliationDecision]:
     observation_repo = CalculationObservationRepository()
     if prior_amount is not None:
-        _store_prior_303_compensation(observation_repo, amount=prior_amount)
-    snapshot = _snapshot_303()
+        store_prior_303_compensation(observation_repo, amount=prior_amount)
+    snapshot = snapshot_303()
     wallet = (
-        wallet_observation(pending=wallet_amount, captured_at=_DECIDED_AT - timedelta(days=wallet_age_days))
+        wallet_observation(pending=wallet_amount, captured_at=DECIDED_AT - timedelta(days=wallet_age_days))
         if wallet_amount is not None
         else None
     )
     local_recurrence, prefill_report = _extract_modelo_303_local_iva_compensation_recurrence(
         snapshot,
         repository=observation_repo,
-        captured_at=_DECIDED_AT,
+        captured_at=DECIDED_AT,
         iva_history_repository=IvaCompensationHistoryRepository(),
     )
     report = _reconcile_modelo_303_iva_compensation(
         snapshot,
-        taxpayer_nif=_TAXPAYER_NIF,
+        taxpayer_nif=TAXPAYER_NIF,
         wallet=wallet,
         repository=observation_repo,
-        decided_at=_DECIDED_AT,
+        decided_at=DECIDED_AT,
         max_wallet_age_days=max_wallet_age_days,
         local_recurrence=local_recurrence,
         prefill_report=prefill_report,
@@ -224,23 +224,23 @@ def _blocked_wallet_decision(
 
 
 def test_unpersisted_wallet_decision_cannot_feed_modelo_303_engine(tmp_path: Path) -> None:
-    with _secure_backend(tmp_path):
-        _store_operator_profile()
+    with secure_backend(tmp_path):
+        store_operator_profile()
         observation_repo = CalculationObservationRepository()
-        _store_prior_303_compensation(observation_repo, amount=Decimal("1200.00"))
-        snapshot = _snapshot_303()
+        store_prior_303_compensation(observation_repo, amount=Decimal("1200.00"))
+        snapshot = snapshot_303()
         local_recurrence, prefill_report = _extract_modelo_303_local_iva_compensation_recurrence(
             snapshot,
             repository=observation_repo,
-            captured_at=_DECIDED_AT,
+            captured_at=DECIDED_AT,
             iva_history_repository=IvaCompensationHistoryRepository(),
         )
         report = _reconcile_modelo_303_iva_compensation(
             snapshot,
-            taxpayer_nif=_TAXPAYER_NIF,
+            taxpayer_nif=TAXPAYER_NIF,
             wallet=wallet_observation(pending=Decimal("1200.00")),
             repository=observation_repo,
-            decided_at=_DECIDED_AT,
+            decided_at=DECIDED_AT,
             max_wallet_age_days=DEFAULT_MAX_WALLET_AGE_DAYS,
             persist=False,
             local_recurrence=local_recurrence,
@@ -248,14 +248,14 @@ def test_unpersisted_wallet_decision_cannot_feed_modelo_303_engine(tmp_path: Pat
         )
         assert (
             IvaWalletDecisionRepository().load_decision(
-                _TAXPAYER_NIF,
-                _period(_TARGET_YEAR, _TARGET_PERIOD),
+                TAXPAYER_NIF,
+                period(TARGET_YEAR, TARGET_PERIOD),
             )
             is None
         )
 
         with bundled_indexed_authority().operation() as operation:
-            work_unit, work_repo, calc_repo, _event_repo = _work_unit_repositories_with_modelo_303_work_unit(
+            work_unit, work_repo, calc_repo, _event_repo = work_unit_repositories_with_modelo_303_work_unit(
                 snapshot,
                 operation=operation,
             )
@@ -271,11 +271,11 @@ def test_unpersisted_wallet_decision_cannot_feed_modelo_303_engine(tmp_path: Pat
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
-                binding_values=_modelo_303_engine_inputs(),
+                binding_values=modelo_303_engine_inputs(),
                 iva_compensation_decision=report.decision,
                 filing_period_date=date(2026, 6, 30),
                 work_unit_repository=work_repo,
-                clock=_DECIDED_AT,
+                clock=DECIDED_AT,
                 filing_instance_evidence=filing_instance_evidence,
             )
         assert exc_info.value.translated_message == "application.modelo.errors.iva_wallet_not_seeded"
@@ -310,8 +310,8 @@ def test_blocked_wallet_divergence_refuses_real_modelo_303_calculation_before_pe
     expected_divergence: str,
     expected_selected_authority: str | None,
 ) -> None:
-    with _secure_backend(tmp_path):
-        _store_operator_profile()
+    with secure_backend(tmp_path):
+        store_operator_profile()
         snapshot, decision = _blocked_wallet_decision(
             prior_amount=prior_amount,
             wallet_amount=wallet_amount,
@@ -332,23 +332,23 @@ def test_blocked_wallet_divergence_refuses_real_modelo_303_calculation_before_pe
 
 
 def test_persisted_blocked_wallet_decision_is_replayed_by_modelo_303_calculation(tmp_path: Path) -> None:
-    with _secure_backend(tmp_path):
-        _store_operator_profile()
+    with secure_backend(tmp_path):
+        store_operator_profile()
         observation_repo = CalculationObservationRepository()
-        _store_prior_303_compensation(observation_repo, amount=Decimal("800.00"))
-        snapshot = _snapshot_303()
+        store_prior_303_compensation(observation_repo, amount=Decimal("800.00"))
+        snapshot = snapshot_303()
         local_recurrence, prefill_report = _extract_modelo_303_local_iva_compensation_recurrence(
             snapshot,
             repository=observation_repo,
-            captured_at=_DECIDED_AT,
+            captured_at=DECIDED_AT,
             iva_history_repository=IvaCompensationHistoryRepository(),
         )
         report = _reconcile_modelo_303_iva_compensation(
             snapshot,
-            taxpayer_nif=_TAXPAYER_NIF,
+            taxpayer_nif=TAXPAYER_NIF,
             wallet=wallet_observation(pending=Decimal("1200.00")),
             repository=observation_repo,
-            decided_at=_DECIDED_AT,
+            decided_at=DECIDED_AT,
             max_wallet_age_days=DEFAULT_MAX_WALLET_AGE_DAYS,
             local_recurrence=local_recurrence,
             prefill_report=prefill_report,
@@ -357,7 +357,7 @@ def test_persisted_blocked_wallet_decision_is_replayed_by_modelo_303_calculation
         assert report.decision.blocked is True
 
         with bundled_indexed_authority().operation() as operation:
-            work_unit, work_repo, calc_repo, _event_repo = _work_unit_repositories_with_modelo_303_work_unit(
+            work_unit, work_repo, calc_repo, _event_repo = work_unit_repositories_with_modelo_303_work_unit(
                 snapshot,
                 operation=operation,
             )
@@ -376,11 +376,11 @@ def test_persisted_blocked_wallet_decision_is_replayed_by_modelo_303_calculation
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
-                binding_values=_modelo_303_engine_inputs(),
+                binding_values=modelo_303_engine_inputs(),
                 iva_compensation_decision=None,
                 filing_period_date=date(2026, 6, 30),
                 work_unit_repository=work_repo,
-                clock=_DECIDED_AT,
+                clock=DECIDED_AT,
                 filing_instance_evidence=filing_instance_evidence,
             )
         assert len(calc_repo.load()) == 0

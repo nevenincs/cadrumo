@@ -54,8 +54,7 @@ from .....core.operator_action_enums import NoRecoveryOutcome
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
 from .....core.time.clock import now
-from .._playwright import PlaywrightError, PlaywrightTimeoutError
-from ._site_health_probe import probe_response
+from ..playwright import PlaywrightError, PlaywrightTimeoutError
 from .errors import (
     BrowserError,
     BrowserFailureMode,
@@ -65,6 +64,7 @@ from .errors import (
 )
 from .evasion import EvasionStrategy, PlaywrightStealthEvasion
 from .profile import Profile
+from .site_health_probe import probe_response
 from .site_health_records import (
     SiteHealthEvidence,
     SiteHealthStatus,

@@ -40,9 +40,9 @@ from cadrumo.domain.modelos.calculation_revision import (
 )
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.entrypoints.tests.profile_persistence.m303_annual_ledger_support import (
-    _BUCKET_ID,
-    _YEAR,
+    BUCKET_ID,
     PRORRATA_QUARTER_FACTS,
+    YEAR,
     persist_year_of_invoices,
 )
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
@@ -220,7 +220,7 @@ def test_a_revision_saved_with_the_unresolved_44_as_zero_still_loads_unchanged(
         },
         operation=operation,
     )
-    snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period="4T")
+    snapshot = published_authority_operation().snapshot("303", filing_year=YEAR, period="4T")
     casilla_44 = next(casilla for casilla in snapshot.revision.casillas if casilla.id == CASILLA_44)
     stored_zero = current.model_copy(
         update={
@@ -244,7 +244,7 @@ def test_a_revision_saved_with_the_unresolved_44_as_zero_still_loads_unchanged(
     cr_repo.save(
         catalogue.model_copy(update={"revisions": {**catalogue.revisions, legacy.calculation_revision_id: legacy}})
     )
-    wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    wu_repo = WorkUnitCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
     current_unit = wu_repo.load().get(work_unit.work_unit_id)
     assert current_unit is not None
     wu_repo.save(
@@ -273,7 +273,7 @@ def test_a_revision_saved_with_the_unresolved_44_as_zero_still_loads_unchanged(
                 filing_repo=ModeloRecordCatalogueRepository(objects=secure_objects),
                 verification_repo=VerificationReportCatalogueRepository(objects=secure_objects),
                 event_repo=BucketEventHistoryRepository(objects=secure_objects),
-                tx_repo=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+                tx_repo=TransactionCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects),
             ),
             actor="operator",
             workflow_profile=workflow_profile(),
@@ -330,7 +330,7 @@ def test_a_register_prorrata_percentage_is_a_governed_source_and_raises_no_tier_
 
     # The annual summary of a general-regime filer declares the simplified-regime
     # boxes, which their resolver settles as not applying rather than as zero.
-    annual_bindings = published_authority_operation().snapshot("390", filing_year=_YEAR, period="0A").revision.bindings
+    annual_bindings = published_authority_operation().snapshot("390", filing_year=YEAR, period="0A").revision.bindings
     assert any(
         binding.source is BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY for binding in annual_bindings
     )

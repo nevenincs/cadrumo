@@ -44,7 +44,7 @@ from ....core.type_guards import is_object_mapping
 from .bienes_inversion_regularizacion_bindings import BienesInversionRegularizacionProvider
 from .binding_provider_registration import registration_for, validator_for
 from .binding_selector_utils import provider_member
-from .binding_targets import bound_casilla_binding_ids as _bound_casilla_binding_ids
+from .binding_targets import bound_casilla_binding_ids
 from .bindings_previous_filing import PreviousFilingProvider
 from .casilla_membership import text_family_casilla_ids
 from .errors import RegistryValidationError
@@ -301,7 +301,7 @@ def resolve_bound_casilla_binding_value(
     legal only if they agree exactly; otherwise accepting either one would
     silently over- or under-declare the downstream calculation.
     """
-    binding_ids = _bound_casilla_binding_ids(casilla)
+    binding_ids = bound_casilla_binding_ids(casilla)
     present = tuple((binding_id, facts[binding_id]) for binding_id in binding_ids if binding_id in facts)
     if not present:
         return None, ()
@@ -510,7 +510,7 @@ def _declared_source_casilla_ids(
     return ()
 
 
-def _refuse_undeclared_source_narrowing(binding: BindingDefinition, coordinate: str) -> None:
+def refuse_undeclared_source_narrowing(binding: BindingDefinition, coordinate: str) -> None:
     """Refuse a family whose registration names a source coordinate the narrow does not handle.
 
     Reaching here means the registration table and these accessors disagree: the
@@ -555,7 +555,7 @@ def binding_source_casilla_ids(binding: BindingDefinition) -> tuple[CasillaId, .
             return provider.source_casilla_ids
         case _:
             if registration_for(binding.source).names_source_casilla:
-                _refuse_undeclared_source_narrowing(binding, "source casilla")
+                refuse_undeclared_source_narrowing(binding, "source casilla")
             return ()
 
 
@@ -583,7 +583,7 @@ def binding_source_modelo(binding: BindingDefinition) -> ModeloId | None:
             return provider.source_modelo
         case _:
             if registration_for(binding.source).names_source_modelo:
-                _refuse_undeclared_source_narrowing(binding, "source modelo")
+                refuse_undeclared_source_narrowing(binding, "source modelo")
             return None
 
 

@@ -50,10 +50,10 @@ import pytest
 from .....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from .....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from .....tests.inventory import FIXTURES_DIR
-from .._detect import detect_template_revision
-from .._parsers.pdfplumber_backend import extract_pages_text
+from ..detect import detect_template_revision
 from ..errors import DeclaracionParseError
-from ..parser import _extract_tax_id, parse_declaracion
+from ..parser import extract_tax_id, parse_declaracion
+from ..parsers.pdfplumber_backend import extract_pages_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
@@ -148,7 +148,7 @@ def test_extracts_the_tax_id_from_the_english_render_receipt() -> None:
     """
     modelo, stem, _year, _period = _ENGLISH_RENDER
 
-    assert _extract_tax_id(_parser_text(modelo, stem)) == declared_tax_id(modelo, stem)
+    assert extract_tax_id(_parser_text(modelo, stem)) == declared_tax_id(modelo, stem)
 
 
 def test_english_render_below_the_supported_floor_is_refused() -> None:
@@ -171,7 +171,7 @@ def test_english_render_below_the_supported_floor_is_refused() -> None:
 @pytest.mark.parametrize("tax_id", ("12345678A", "X1234567A", "B12345678"))
 def test_extract_tax_id_refuses_shape_only_identifiers_with_invalid_checksums(tax_id: str) -> None:
     with pytest.raises(DeclaracionParseError):
-        _extract_tax_id(f"NIF Presentador: {tax_id}")
+        extract_tax_id(f"NIF Presentador: {tax_id}")
 
 
 @pytest.mark.parametrize(("modelo", "stem", "year", "period"), _SPANISH_RENDERS)
@@ -193,7 +193,7 @@ def test_both_renders_yield_the_same_tax_id() -> None:
     english_modelo, english_stem, _english_year, _english_period = _ENGLISH_RENDER
     spanish_modelo, spanish_stem, spanish_year, spanish_period = _SPANISH_RENDERS[0]
 
-    english_tax_id = _extract_tax_id(_parser_text(english_modelo, english_stem))
+    english_tax_id = extract_tax_id(_parser_text(english_modelo, english_stem))
     spanish = parse_declaracion(
         _fixture(spanish_modelo, spanish_stem),
         modelo_override=spanish_modelo,
@@ -222,7 +222,7 @@ def test_extracts_across_render_and_layout_combinations(label: str, text: str) -
     traversal of column-split layouts — whether the value precedes or follows
     it. All four combinations describe the same printed field.
     """
-    assert _extract_tax_id(text) == "12345678Z", label
+    assert extract_tax_id(text) == "12345678Z", label
 
 
 def test_detects_the_header_stamp_on_the_english_render() -> None:
@@ -282,4 +282,4 @@ def test_refuses_values_that_are_not_a_tax_id(label: str, text: str) -> None:
     wrong-but-plausible id is a silent data-integrity failure.
     """
     with pytest.raises(DeclaracionParseError):
-        _extract_tax_id(text)
+        extract_tax_id(text)

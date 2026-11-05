@@ -50,9 +50,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 
 from ..classification import CustomerTaxStatus, IvaInvoiceClassificationCriteria, PartyFact, TransactionKind
@@ -68,13 +66,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 @pytest.fixture
 def operation() -> Iterator[PinnedAuthorityOperation]:
     """Lease the bundled generation, which carries the IVA runtime catalogues."""
-    with _indexed_authority_for_test().operation() as pinned:
+    with bundled_indexed_authority().operation() as pinned:
         yield pinned
 
 
 @pytest.fixture(scope="module", autouse=True)
 def _registry_authority_scope() -> Iterator[None]:
-    with _indexed_authority_for_test().operation():
+    with bundled_indexed_authority().operation():
         yield
 
 
@@ -110,7 +108,7 @@ class TestTheSupplyExemptionFollowsTheAcquirersRegistration:
         box and omitting it from the declaración recapitulativa the exemption is
         conditioned on.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             result = classify_with_registry_rules(
                 _criteria(
                     customer_residency=IvaTerritorialScope.from_registry("third_country"),
@@ -130,7 +128,7 @@ class TestTheSupplyExemptionFollowsTheAcquirersRegistration:
         communicated a NIF-IVA was zero-rated on a condition the statute makes
         explicit and nobody had checked.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             result = classify_with_registry_rules(_criteria(), operation=_authority_operation_for_test)
 
             assert result.category != IvaCategory("intra_community_supply")
@@ -138,7 +136,7 @@ class TestTheSupplyExemptionFollowsTheAcquirersRegistration:
 
     def test_a_spanish_identification_is_not_another_member_state(self) -> None:
         """The statute names Spain as the excluded State: "distinto del Reino de España"."""
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             result = classify_with_registry_rules(
                 _criteria(customer_identification_state=EUMemberState.from_registry("es")),
                 operation=_authority_operation_for_test,
@@ -152,7 +150,7 @@ class TestTheAcquisitionFollowsTheSuppliersRegistration:
     """The received leg, mirrored: the transmitting party's identifying State."""
 
     def test_a_supplier_identified_elsewhere_reverse_charges_though_established_outside_the_union(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             result = classify_with_registry_rules(
                 _criteria(
                     issuer_residency=IvaTerritorialScope.from_registry("third_country"),
@@ -167,7 +165,7 @@ class TestTheAcquisitionFollowsTheSuppliersRegistration:
             assert result.requires_reverse_charge is True
 
     def test_a_supplier_with_no_identification_is_never_an_intra_community_acquisition(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             result = classify_with_registry_rules(
                 _criteria(
                     issuer_residency=IvaTerritorialScope.from_registry("eu_member"),
@@ -194,7 +192,7 @@ class TestTheServiceRowsReadTheIdentificationTheyDeclare:
     """
 
     def test_an_outbound_service_with_no_counterparty_identification_does_not_place(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             result = classify_with_registry_rules(
                 _criteria(kind=TransactionKind("services_general")), operation=_authority_operation_for_test
             )
@@ -202,7 +200,7 @@ class TestTheServiceRowsReadTheIdentificationTheyDeclare:
             assert result.matched_rule_id == _R99
 
     def test_an_outbound_service_places_once_the_counterparty_is_identified(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             result = classify_with_registry_rules(
                 _criteria(
                     kind=TransactionKind("services_general"),
@@ -215,7 +213,7 @@ class TestTheServiceRowsReadTheIdentificationTheyDeclare:
             assert result.category == IvaCategory("domestic_not_subject")
 
     def test_an_inbound_service_with_no_supplier_identification_does_not_place(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             result = classify_with_registry_rules(
                 _criteria(
                     issuer_residency=IvaTerritorialScope.from_registry("eu_member"),
@@ -229,7 +227,7 @@ class TestTheServiceRowsReadTheIdentificationTheyDeclare:
             assert result.matched_rule_id == _R99
 
     def test_an_inbound_service_places_once_the_supplier_is_identified(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             result = classify_with_registry_rules(
                 _criteria(
                     issuer_residency=IvaTerritorialScope.from_registry("eu_member"),
@@ -300,7 +298,7 @@ class TestEveryRowDeclaringTheIdentificationTurnsOnIt:
         overrides: dict[str, object],
         identification_field: str,
     ) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             with_identification = classify_with_registry_rules(
                 _criteria(**overrides), operation=_authority_operation_for_test
             )
@@ -342,7 +340,7 @@ _SPANISH_IVA = "ESB12345674"
 
 def test_a_spanish_iva_number_now_states_its_identification() -> None:
     """The measured gap: the filer's own side was only ever assertable."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert identification_state_for_printed_tax_identifier(
             _SPANISH_IVA, operation=_authority_operation_for_test
         ) == EUMemberState.from_registry("es")
@@ -355,7 +353,7 @@ def test_a_spanish_iva_number_now_states_its_identification() -> None:
 )
 def test_the_printed_spelling_does_not_change_the_identification(printed: str) -> None:
     """An issuer prints the same number several ways; it is one identification."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert identification_state_for_printed_tax_identifier(
             printed, operation=_authority_operation_for_test
         ) == EUMemberState.from_registry("es")
@@ -369,7 +367,7 @@ def test_stating_an_identification_states_no_establishment() -> None:
     and established elsewhere. So a Spanish prefix must reach the identification
     axis without opening the postal rung behind it.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert identification_state_for_printed_tax_identifier(
             _SPANISH_IVA, operation=_authority_operation_for_test
         ) == EUMemberState.from_registry("es")
@@ -383,7 +381,7 @@ def test_a_bare_spanish_identifier_still_states_nothing() -> None:
     Spanish identification would manufacture the fact from its own silence --
     and that silence is the ordinary shape of a domestic invoice.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert (
             identification_state_for_printed_tax_identifier(_SPANISH_CIF, operation=_authority_operation_for_test)
             is None
@@ -403,13 +401,13 @@ def test_an_es_prefix_over_a_body_that_fails_the_checksum_states_nothing(printed
     identification. The AEAT control letter is what makes the reading answer
     only where a real number was printed.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert identification_state_for_printed_tax_identifier(printed, operation=_authority_operation_for_test) is None
 
 
 def test_the_sibling_prefixes_are_unaffected() -> None:
     """Adding ES must not disturb the vocabulary it could not join."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert identification_state_for_printed_tax_identifier(
             "DE811234567", operation=_authority_operation_for_test
         ) == EUMemberState.from_registry("de")
@@ -424,7 +422,7 @@ def test_the_checksum_is_what_admits_the_spanish_number() -> None:
     exists to refuse, and a suite asserting only that valid numbers pass would
     not distinguish the two.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
 
         def _prefix_alone(printed: str) -> bool:
             return printed.upper().startswith("ES")

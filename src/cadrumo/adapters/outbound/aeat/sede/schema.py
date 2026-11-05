@@ -70,7 +70,7 @@ from .....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from .....core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST, FilingYear
 from .....core.identity.aeat_expediente import AeatExpedienteId
 from .....core.identity.digest import ContentDigest
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.period import Period
 from .....core.time.utc import UtcInstant
@@ -89,7 +89,7 @@ class FiledDeclaracionArtefact(BaseModel):
     remains in BOE, AEAT instructions, manuals, and registry definitions.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     kind: Literal["register_row", "submitted_file", "declaration_pdf", "justificante_pdf"]
     source_url: AnyHttpUrl
@@ -110,7 +110,7 @@ class ObservedCasillaValue(BaseModel):
     the conversion succeeds on text that merely looks numeric.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
     value: str = Field(min_length=1, max_length=4096)
@@ -177,7 +177,7 @@ class ObservedCasillaSkip(BaseModel):
     which field was skipped without disclosing what it holds.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
     label: str = Field(min_length=1, max_length=512)
@@ -200,7 +200,7 @@ class IvaCompensationWalletRow(BaseModel):
     reserved for a richer AEAT view that itemises the movement columns.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     generation_year: FilingYear
     generation_period: Period
@@ -220,7 +220,7 @@ class IvaCompensationWalletObservation(BaseModel):
     decision for Modelo 303 casilla `110`.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     taxpayer_nif: str = Field(min_length=1, max_length=32)
     authenticated_identity: str = Field(min_length=1, max_length=32)
@@ -257,7 +257,7 @@ class FiledDeclarationAvailability(BaseModel):
             before historical ones.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str = Field(min_length=1, max_length=16)
     ejercicios: tuple[int, ...] = ()
@@ -293,7 +293,7 @@ class FiledDeclarationAvailabilityReport(BaseModel):
             :attr:`~core.filed_history_discovery_signal.FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS`.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     items: tuple[FiledDeclarationAvailability, ...] = ()
     discovered_at: UtcInstant
@@ -330,7 +330,7 @@ class FiledDeclaracionObservation(BaseModel):
     read -- never that it was blank.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str = Field(min_length=1, max_length=16)
     ejercicio: FilingYear

@@ -19,7 +19,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.config import override_settings
-from ..review_commands import _queue_lines
+from ..review_commands import queue_lines
 from .clean_install_fixtures import clean_install
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -32,9 +32,9 @@ def _rendered(language: str | None) -> str:
     with no override applied.
     """
     if language is None:
-        return "\n".join(_queue_lines(()))
+        return "\n".join(queue_lines(()))
     with override_settings(cadrumo_output_language=language):
-        return "\n".join(_queue_lines(()))
+        return "\n".join(queue_lines(()))
 
 
 __all__ = ["clean_install"]

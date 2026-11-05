@@ -99,9 +99,9 @@ def evidence_batch(
     emit_envelope(
         ctx,
         command="ledger.evidence.batch",
-        result=_batch_payload(run, bucket_id=bucket_id, direction=kind),
-        lines=_batch_text_lines(run, bucket_id=bucket_id, direction=kind),
-        notices=_run_notices(run),
+        result=batch_payload(run, bucket_id=bucket_id, direction=kind),
+        lines=batch_text_lines(run, bucket_id=bucket_id, direction=kind),
+        notices=run_notices(run),
     )
     if run.any_failed:
         raise typer.Exit(code=1)
@@ -150,7 +150,7 @@ def _string_keyed_payload(value: object) -> dict[str, object]:
     return payload
 
 
-def _batch_payload(run: BatchRunResult, *, bucket_id: str, direction: InvoiceKind) -> EvidenceBatchResult:
+def batch_payload(run: BatchRunResult, *, bucket_id: str, direction: InvoiceKind) -> EvidenceBatchResult:
     """Project the run onto its wire schema from the run's own dump.
 
     Built by re-validating the engine's serialisation rather than by copying
@@ -220,7 +220,7 @@ def _item_notice(item: BatchItemResult) -> Notice:
     )
 
 
-def _run_notices(run: BatchRunResult) -> list[Notice]:
+def run_notices(run: BatchRunResult) -> list[Notice]:
     """Return the run-level notices, one per distinct outcome class.
 
     Refusal, deferral and pending review are three different things an operator
@@ -349,7 +349,7 @@ def _refusal_lines(verdict: PreconditionVerdict | None) -> list[str]:
     return lines
 
 
-def _batch_text_lines(run: BatchRunResult, *, bucket_id: str, direction: InvoiceKind) -> list[str]:
+def batch_text_lines(run: BatchRunResult, *, bucket_id: str, direction: InvoiceKind) -> list[str]:
     """Return the closing text block: the tally, then every row needing attention.
 
     The per-item progress already streamed, so this does not repeat the clean
@@ -386,7 +386,7 @@ def _batch_text_lines(run: BatchRunResult, *, bucket_id: str, direction: Invoice
     _append_batch_pause_lines(run, lines)
     lines.append(f"any_failed\t{run.any_failed}")
     lines.append(f"any_deferred\t{run.any_deferred}")
-    lines.extend(_notice_line(notice) for notice in _run_notices(run))
+    lines.extend(_notice_line(notice) for notice in run_notices(run))
     return lines
 
 

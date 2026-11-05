@@ -89,7 +89,7 @@ class CandidateFactAuthority:
         return resolved
 
 
-_VALIDATING_GOVERNED_FACTS: ContextVar[GovernedFactSource | None] = ContextVar(
+VALIDATING_GOVERNED_FACTS: ContextVar[GovernedFactSource | None] = ContextVar(
     "validating_governed_facts",
     default=None,
 )
@@ -98,16 +98,16 @@ _VALIDATING_GOVERNED_FACTS: ContextVar[GovernedFactSource | None] = ContextVar(
 @contextmanager
 def validating_governed_facts(authority: GovernedFactSource) -> Generator[None]:
     """Scope registry validation to the governed facts it is validating."""
-    token = _VALIDATING_GOVERNED_FACTS.set(authority)
+    token = VALIDATING_GOVERNED_FACTS.set(authority)
     try:
         yield
     finally:
-        _VALIDATING_GOVERNED_FACTS.reset(token)
+        VALIDATING_GOVERNED_FACTS.reset(token)
 
 
 def governed_facts_in_scope() -> GovernedFactSource | None:
     """Return the facts of the validation in progress, or ``None`` outside one."""
-    return _VALIDATING_GOVERNED_FACTS.get()
+    return VALIDATING_GOVERNED_FACTS.get()
 
 
 def require_governed_fact_authority(authority: GovernedFactSource | None, *, subject: str) -> GovernedFactSource:

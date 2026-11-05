@@ -28,17 +28,11 @@ from .ids import LegalRefId, RevisionId, SourceRefId
 from .m303_orden_constants import (
     EXTRACTOR_VERSION,
     M303_2022_ORDEN_SOURCE_REF,
+    validate_2022_annual_orden_coordinate,
+    validate_generated_source_axis_shape,
+    validate_generated_source_counts,
     validate_percentage_shape,
     validate_seasonal_index_shape,
-)
-from .m303_orden_constants import (
-    validate_2022_annual_orden_coordinate as _validate_2022_annual_orden_coordinate,
-)
-from .m303_orden_constants import (
-    validate_generated_source_axis_shape as _validate_generated_source_axis_shape,
-)
-from .m303_orden_constants import (
-    validate_generated_source_counts as _validate_generated_source_counts,
 )
 from .schema_base import RegistryModel, RegistrySourceKind
 from .schema_references import LegalReference, SourceReference, TemporalSupportEnvelope
@@ -93,8 +87,8 @@ class M303AnnualOrdenGeneratedSource(RegistryModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _is_the_exact_supported_annual_quota_shape(self) -> M303AnnualOrdenGeneratedSource:
-        _validate_generated_source_counts(self)
-        _validate_generated_source_axis_shape(self)
+        validate_generated_source_counts(self)
+        validate_generated_source_axis_shape(self)
         return self
 
 
@@ -196,7 +190,7 @@ def _validate_projection_axis_shape(projection: M303AnnualOrdenProjection) -> No
     )
     reduction = projection.lorca_reduction
     if projection.source_ref == M303_2022_ORDEN_SOURCE_REF:
-        _validate_2022_annual_orden_coordinate(
+        validate_2022_annual_orden_coordinate(
             source_ref=projection.source_ref,
             source_content_digest=projection.source_content_digest,
             scope="projection",
@@ -321,7 +315,7 @@ def _validate_snapshot_source_authority(snapshot: M303AnnualOrdenSnapshot) -> No
         "annual Orden snapshot agricultural refusal must retain its exact source reference",
     )
     if snapshot.source_ref == M303_2022_ORDEN_SOURCE_REF:
-        _validate_2022_annual_orden_coordinate(
+        validate_2022_annual_orden_coordinate(
             source_ref=snapshot.source_ref,
             source_content_digest=snapshot.source_content_digest,
             scope="snapshot",
@@ -388,7 +382,7 @@ def _validate_regimen_simplificado_coordinate(snapshot: M303RegimenSimplificadoS
         "M303 regimen simplificado snapshot agricultural refusal must retain its resolved record-design source",
     )
     if snapshot.orden.source_ref == M303_2022_ORDEN_SOURCE_REF:
-        _validate_2022_annual_orden_coordinate(
+        validate_2022_annual_orden_coordinate(
             source_ref=snapshot.orden.source_ref,
             source_content_digest=snapshot.orden.source_content_digest,
             scope="resolved snapshot",

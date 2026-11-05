@@ -58,8 +58,8 @@ from ...browser.tests.real_http_boundary import (
 from ...browser.tests.view_page_support import RecordingViewSink, until
 from ...browser.view_presentation import interrupts_assisted_login
 from .. import session_store
-from .._clave_provider_common import default_sede_target_url
 from ..clave_movil import ClaveMovilAuthProvider
+from ..clave_provider_common import default_sede_target_url
 from .view_session_support import (
     CERTIFICATE_NIF,
     CERTIFICATE_SECRET_BACKEND_FACTORY,

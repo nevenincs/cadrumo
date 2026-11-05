@@ -52,8 +52,8 @@ from ...domain.contribuyente.inventory.records import (
     MovementKind,
     ValuationMethod,
 )
-from ._decimal_wire import bounded_decimal_wire_validator
-from ._wire_scalars import IsoDateText, enum_value_validator
+from .decimal_wire import bounded_decimal_wire_validator
+from .wire_scalars import IsoDateText, enum_value_validator
 
 # The inventory transport is built by dumping the canonical InventoryLedger to
 # JSON and re-validating the mapping, so every field below stays a string on
@@ -85,7 +85,7 @@ def _validate_inventory_schema_version(value: str) -> str:
 _InventorySchemaVersion = Annotated[str, AfterValidator(_validate_inventory_schema_version)]
 
 if TYPE_CHECKING:
-    from ...application.inventory.service import InventoryValuationPreviewResult as _AppInventoryValuationPreviewResult
+    from ...application.inventory.service import InventoryValuationPreviewResult
 
 # ---------------------------------------------------------------------------
 # P07 — Inventory sub-app
@@ -329,7 +329,7 @@ class InventoryValuationPreviewPayload(OutputSchema):
         return value
 
     @classmethod
-    def from_result(cls, result: _AppInventoryValuationPreviewResult) -> InventoryValuationPreviewPayload:
+    def from_result(cls, result: InventoryValuationPreviewResult) -> InventoryValuationPreviewPayload:
         """Flatten the application preview wrapper into this CLI envelope.
 
         The wrapper carries an inner ``preview`` plus ``bucket_event_ids``;

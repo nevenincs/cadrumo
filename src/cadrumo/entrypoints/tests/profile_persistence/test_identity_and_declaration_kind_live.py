@@ -24,7 +24,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -47,8 +47,7 @@ from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
 )
 from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
 from .general_iva_profile_facts_support import renta_single_taxpayer_facts
 from .observation_seeding_support import save_stamped_observation
@@ -95,7 +94,7 @@ def bucket_id() -> str:
 
 def _seed_profile(*identity: UserProfileFact) -> None:
     """Seed a single natural-person taxpayer whose facts cover Modelo 100's calculation bindings."""
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
@@ -107,7 +106,7 @@ def _seed_profile(*identity: UserProfileFact) -> None:
         ),
         created_at=_T0,
         updated_at=_T0,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 

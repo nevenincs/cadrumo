@@ -49,19 +49,19 @@ from cadrumo.domain.iva.errors import IvaRateNotFoundError
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 from .....domain.iva.schema import InvoiceKind
-from ._invoice_confirmation_test_support import (
-    _BUCKET_ID,
+from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from .invoice_confirmation_test_support import (
+    BUCKET_ID,
     InvoiceAuthorityFixture,
-    _make_svc,
     invoice_confirmation_kwargs,
     invoice_draft_extraction_kwargs,
     isolated_settings,
+    make_svc,
     secure_objects,
     serving_a_loopback_reader,
 )
-from ._invoice_confirmation_test_support import runtime_profile as runtime_profile
-from ._invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
-from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from .invoice_confirmation_test_support import runtime_profile as runtime_profile
+from .invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_filer_profile"]
@@ -176,10 +176,10 @@ def _direction_attestations(
     direction finding is answered; any other finding still refuses.
     """
     draft = extract_invoice_draft_from_evidence(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         evidence_id=evidence_id,
         settings=isolated_settings,
-        **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=authority),
+        **invoice_draft_extraction_kwargs(bucket_id=BUCKET_ID, authority=authority),
     )
     return tuple(
         FindingResolution(
@@ -203,11 +203,11 @@ def _confirm(
 ):
     pdf_path = tmp_path / filename
     pdf_path.write_bytes(text_pdf_bytes(lines))
-    svc = _make_svc(isolated_settings, secure_objects)
-    record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+    svc = make_svc(isolated_settings, secure_objects)
+    record = svc.add(bucket_id=BUCKET_ID, source_path=pdf_path).record
     return confirm_invoice_draft_from_evidence(
         counterparty_country="ES",
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         evidence_id=record.evidence_id,
         counterparty_name="Energia Peninsular SL",
@@ -217,7 +217,7 @@ def _confirm(
             isolated_settings=isolated_settings,
             authority=authority,
         ),
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=authority),
+        **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=authority),
     )
 
 

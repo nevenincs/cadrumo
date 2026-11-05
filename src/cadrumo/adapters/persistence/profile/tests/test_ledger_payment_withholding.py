@@ -53,7 +53,7 @@ def _supported_years() -> tuple[int, ...]:
     return support.years
 
 
-_YEAR = _supported_years()[0]
+YEAR = _supported_years()[0]
 
 # One synthetic May payslip of the support floor: 2500.00 gross, 15% IRPF (375.00), and the
 # employee's 6.35% Social Security share (158.75) also withheld by the payer,
@@ -62,13 +62,13 @@ _GROSS = Decimal("2500.00")
 _IRPF = Decimal("375.00")
 _EMPLOYEE_SOCIAL_SECURITY = Decimal("158.75")
 _NET = _GROSS - _IRPF - _EMPLOYEE_SOCIAL_SECURITY
-_PAID_ON = date(_YEAR, 5, 30)
+_PAID_ON = date(YEAR, 5, 30)
 _EMPLOYEE_NIF = "11111111H"
 
 
-def _payroll_payment(
+def payroll_payment(
     *,
-    provider_id: str = f"payroll-{_YEAR}-05",
+    provider_id: str = f"payroll-{YEAR}-05",
     amount: Decimal = _NET,
     booked_date: date = _PAID_ON,
     direction: TransactionDirection = TransactionDirection.OUTGOING,
@@ -108,24 +108,26 @@ def _annual_detail(transaction: Transaction, *, paid_on: date = _PAID_ON) -> Wit
     )
 
 
-def _request(transaction: Transaction, **update: object) -> LedgerPaymentWithholdingEvidenceRequest:
+def ledger_payment_withholding_request(
+    transaction: Transaction, **update: object
+) -> LedgerPaymentWithholdingEvidenceRequest:
     payload: dict[str, object] = {
         "transaction_id": transaction.transaction_id,
         "scheme": RetencionScheme("rendimientos_trabajo"),
         "recipient_tax_status": WithholdingRecipientTaxStatus.RESIDENT,
         "recipient_tax_regime": WithholdingRecipientTaxRegime.IRPF,
-        "payment_event_id": f"payroll-payment-{_YEAR}-05",
-        "allocation_id": f"payroll-allocation-{_YEAR}-05",
+        "payment_event_id": f"payroll-payment-{YEAR}-05",
+        "allocation_id": f"payroll-allocation-{YEAR}-05",
         "gross_base": _GROSS,
         "withholding_amount": _IRPF,
         "net_settlement": _NET,
-        "idempotency_key": f"payroll-capture-{_YEAR}-05",
+        "idempotency_key": f"payroll-capture-{YEAR}-05",
         "modelo_190_detail": _annual_detail(transaction),
     }
     return LedgerPaymentWithholdingEvidenceRequest.model_validate(payload | update)
 
 
-def _refusal(transaction: Transaction, request: LedgerPaymentWithholdingEvidenceRequest, *, year: int = _YEAR) -> str:
+def _refusal(transaction: Transaction, request: LedgerPaymentWithholdingEvidenceRequest, *, year: int = YEAR) -> str:
     with pytest.raises(LedgerPaymentWithholdingEvidenceError) as exc_info:
         build_ledger_payment_withholding_capture(
             transaction,
@@ -140,12 +142,12 @@ def _refusal(transaction: Transaction, request: LedgerPaymentWithholdingEvidence
 @pytest.mark.parametrize("year", _supported_years())
 def test_a_payment_in_any_supported_year_captures_for_its_own_quarter(year: int) -> None:
     """Recognition rests on provisions in force across the envelope, so no supported year refuses."""
-    transaction = _payroll_payment(booked_date=date(year, 5, 30))
+    transaction = payroll_payment(booked_date=date(year, 5, 30))
 
     capture = build_ledger_payment_withholding_capture(
         transaction,
         catalogue_revision_id="a" * 64,
-        request=_request(transaction),
+        request=ledger_payment_withholding_request(transaction),
         applicable_year=year,
         cadence=quarterly_filer_cadence(year),
     )
@@ -156,19 +158,19 @@ def test_a_payment_in_any_supported_year_captures_for_its_own_quarter(year: int)
 
 def test_ledger_payment_builds_a_work_income_capture_for_its_quarter() -> None:
     """The paying transaction supplies source identity and the dated payment; the terms are declared."""
-    transaction = _payroll_payment()
+    transaction = payroll_payment()
 
     capture = build_ledger_payment_withholding_capture(
         transaction,
         catalogue_revision_id="a" * 64,
-        request=_request(transaction),
-        applicable_year=_YEAR,
-        cadence=quarterly_filer_cadence(_YEAR),
+        request=ledger_payment_withholding_request(transaction),
+        applicable_year=YEAR,
+        cadence=quarterly_filer_cadence(YEAR),
     )
 
     command = capture.command
     assert capture.scope.modelo == "111"
-    assert capture.scope.period == Period.from_year_and_code(_YEAR, "2T")
+    assert capture.scope.period == Period.from_year_and_code(YEAR, "2T")
     assert capture.catalogue_read_revision_id == "a" * 64
     assert command.source_kind is BindingSourceKind.LEDGER_TRANSACTION
     assert command.source_object_id == transaction.transaction_id
@@ -183,33 +185,33 @@ def test_ledger_payment_builds_a_work_income_capture_for_its_quarter() -> None:
     payment = command.recognition_evidence.payment_or_satisfaction
     assert payment is not None
     assert payment.occurred_on == _PAID_ON
-    assert payment.event_id == f"payroll-payment-{_YEAR}-05"
+    assert payment.event_id == f"payroll-payment-{YEAR}-05"
     assert command.recognition_evidence.income_kind is WithholdingIncomeKind.WORK
 
 
 def test_source_revision_is_stable_across_unrelated_catalogue_revisions() -> None:
     """Another ledger write cannot strand this payment behind a false liability conflict."""
-    transaction = _payroll_payment()
+    transaction = payroll_payment()
     first = build_ledger_payment_withholding_capture(
         transaction,
         catalogue_revision_id="a" * 64,
-        request=_request(transaction),
-        applicable_year=_YEAR,
-        cadence=quarterly_filer_cadence(_YEAR),
+        request=ledger_payment_withholding_request(transaction),
+        applicable_year=YEAR,
+        cadence=quarterly_filer_cadence(YEAR),
     )
     later = build_ledger_payment_withholding_capture(
         transaction,
         catalogue_revision_id="b" * 64,
-        request=_request(transaction),
-        applicable_year=_YEAR,
-        cadence=quarterly_filer_cadence(_YEAR),
+        request=ledger_payment_withholding_request(transaction),
+        applicable_year=YEAR,
+        cadence=quarterly_filer_cadence(YEAR),
     )
     corrected = build_ledger_payment_withholding_capture(
         transaction,
         catalogue_revision_id="b" * 64,
-        request=_request(transaction, gross_base=Decimal("2400.00")),
-        applicable_year=_YEAR,
-        cadence=quarterly_filer_cadence(_YEAR),
+        request=ledger_payment_withholding_request(transaction, gross_base=Decimal("2400.00")),
+        applicable_year=YEAR,
+        cadence=quarterly_filer_cadence(YEAR),
     )
 
     assert first.command.source_revision_id == later.command.source_revision_id
@@ -219,13 +221,13 @@ def test_source_revision_is_stable_across_unrelated_catalogue_revisions() -> Non
 def test_settlement_below_gross_less_withholding_is_accepted_and_equality_too() -> None:
     """Employee deductions other than IRPF may lower the net, and an equal net is also valid."""
     exact_net = _GROSS - _IRPF
-    transaction = _payroll_payment(provider_id="payroll-exact", amount=exact_net)
+    transaction = payroll_payment(provider_id="payroll-exact", amount=exact_net)
     capture = build_ledger_payment_withholding_capture(
         transaction,
         catalogue_revision_id="a" * 64,
-        request=_request(transaction, net_settlement=exact_net),
-        applicable_year=_YEAR,
-        cadence=quarterly_filer_cadence(_YEAR),
+        request=ledger_payment_withholding_request(transaction, net_settlement=exact_net),
+        applicable_year=YEAR,
+        cadence=quarterly_filer_cadence(YEAR),
     )
 
     assert capture.command.settlement_amount == Decimal("2125.00")
@@ -235,48 +237,48 @@ def test_settlement_below_gross_less_withholding_is_accepted_and_equality_too() 
     ("make_transaction", "request_update", "year", "code"),
     (
         (
-            partial(_payroll_payment, direction=TransactionDirection.INCOMING),
+            partial(payroll_payment, direction=TransactionDirection.INCOMING),
             {},
-            _YEAR,
+            YEAR,
             "transaction_not_outgoing_payment",
         ),
         (
-            partial(_payroll_payment, direction=TransactionDirection.INTERNAL_TRANSFER),
+            partial(payroll_payment, direction=TransactionDirection.INTERNAL_TRANSFER),
             {},
-            _YEAR,
+            YEAR,
             "transaction_not_outgoing_payment",
         ),
         (
-            partial(_payroll_payment, lifecycle_state=TransactionLifecycleState.ARCHIVED),
+            partial(payroll_payment, lifecycle_state=TransactionLifecycleState.ARCHIVED),
             {},
-            _YEAR,
+            YEAR,
             "transaction_not_active",
         ),
-        (partial(_payroll_payment, currency="USD"), {}, _YEAR, "payment_eur_amount_unavailable"),
-        (partial(_payroll_payment, currency="USD", value_in_eur=_NET), {}, _YEAR, "payment_currency_not_eur"),
-        (_payroll_payment, {"withholding_amount": Decimal("2500.01")}, _YEAR, "withholding_exceeds_gross_base"),
-        (_payroll_payment, {"net_settlement": Decimal("2125.01")}, _YEAR, "settlement_exceeds_gross_less_withholding"),
-        (partial(_payroll_payment, amount=Decimal("1966.24")), {}, _YEAR, "paid_amount_settlement_mismatch"),
+        (partial(payroll_payment, currency="USD"), {}, YEAR, "payment_eur_amount_unavailable"),
+        (partial(payroll_payment, currency="USD", value_in_eur=_NET), {}, YEAR, "payment_currency_not_eur"),
+        (payroll_payment, {"withholding_amount": Decimal("2500.01")}, YEAR, "withholding_exceeds_gross_base"),
+        (payroll_payment, {"net_settlement": Decimal("2125.01")}, YEAR, "settlement_exceeds_gross_less_withholding"),
+        (partial(payroll_payment, amount=Decimal("1966.24")), {}, YEAR, "paid_amount_settlement_mismatch"),
         (
-            _payroll_payment,
+            payroll_payment,
             {"recipient_tax_status": WithholdingRecipientTaxStatus.NONRESIDENT},
-            _YEAR,
+            YEAR,
             "recipient_nonresident",
         ),
         (
-            _payroll_payment,
+            payroll_payment,
             {"recipient_tax_status": WithholdingRecipientTaxStatus.UNKNOWN},
-            _YEAR,
+            YEAR,
             "recipient_residence_unknown",
         ),
-        (_payroll_payment, {"recipient_tax_regime": WithholdingRecipientTaxRegime.IRNR}, _YEAR, "irnr_unsupported"),
+        (payroll_payment, {"recipient_tax_regime": WithholdingRecipientTaxRegime.IRNR}, YEAR, "irnr_unsupported"),
         (
-            _payroll_payment,
+            payroll_payment,
             {"recipient_tax_regime": WithholdingRecipientTaxRegime.UNKNOWN},
-            _YEAR,
+            YEAR,
             "unknown_recipient_tax_regime",
         ),
-        (partial(_payroll_payment, booked_date=date(_YEAR + 1, 1, 5)), {}, _YEAR, "payment_outside_applicable_year"),
+        (partial(payroll_payment, booked_date=date(YEAR + 1, 1, 5)), {}, YEAR, "payment_outside_applicable_year"),
     ),
 )
 def test_capture_refuses_before_any_command_exists(
@@ -288,21 +290,21 @@ def test_capture_refuses_before_any_command_exists(
     """Each unprovable payment or recipient fact refuses with its own stable code."""
     transaction = make_transaction()
 
-    assert _refusal(transaction, _request(transaction, **request_update), year=year) == code
+    assert _refusal(transaction, ledger_payment_withholding_request(transaction, **request_update), year=year) == code
 
 
 def test_request_for_another_transaction_is_refused() -> None:
     """A request cannot borrow a different payment's date or amount."""
-    transaction = _payroll_payment()
-    other = _payroll_payment(provider_id="payroll-other")
+    transaction = payroll_payment()
+    other = payroll_payment(provider_id="payroll-other")
 
-    assert _refusal(transaction, _request(other)) == "transaction_identity_mismatch"
+    assert _refusal(transaction, ledger_payment_withholding_request(other)) == "transaction_identity_mismatch"
 
 
 def test_unknown_transaction_id_is_refused_by_the_catalogue_lookup() -> None:
     """An id the catalogue does not hold is a refusal, never an empty capture."""
-    held = _payroll_payment()
-    missing = _payroll_payment(provider_id="payroll-never-stored")
+    held = payroll_payment()
+    missing = payroll_payment(provider_id="payroll-never-stored")
     catalogue = TransactionCatalogue.from_transactions([held])
 
     assert resolve_ledger_payment_transaction(catalogue, held.transaction_id) == held
@@ -321,10 +323,10 @@ def test_unknown_transaction_id_is_refused_by_the_catalogue_lookup() -> None:
 )
 def test_request_refuses_income_a_ledger_payment_cannot_prove(income_kind: WithholdingIncomeKind) -> None:
     """A bank payment is never evidence for professional, rent or fund income."""
-    transaction = _payroll_payment()
+    transaction = payroll_payment()
 
     with pytest.raises(ValidationError, match="work or ordinary movable capital income only"):
-        _request(transaction, income_kind=income_kind)
+        ledger_payment_withholding_request(transaction, income_kind=income_kind)
 
 
 @pytest.mark.parametrize(
@@ -343,21 +345,21 @@ def test_payroll_request_refuses_capital_evidence_and_requires_its_annual_detail
     message: str,
 ) -> None:
     """Work income keeps its single perceptor source and its paid-or-satisfied timing."""
-    transaction = _payroll_payment()
+    transaction = payroll_payment()
 
     with pytest.raises(ValidationError, match=message):
-        _request(transaction, **request_update)
+        ledger_payment_withholding_request(transaction, **request_update)
 
 
 def test_payroll_source_revision_keeps_its_liability_fact_set() -> None:
     """Capital support must not re-key payroll captures already stored against this revision."""
-    transaction = _payroll_payment()
+    transaction = payroll_payment()
     capture = build_ledger_payment_withholding_capture(
         transaction,
         catalogue_revision_id="a" * 64,
-        request=_request(transaction),
-        applicable_year=_YEAR,
-        cadence=quarterly_filer_cadence(_YEAR),
+        request=ledger_payment_withholding_request(transaction),
+        applicable_year=YEAR,
+        cadence=quarterly_filer_cadence(YEAR),
     )
 
     assert capture.command.source_revision_id == content_hash_hex(
@@ -376,8 +378,10 @@ def test_payroll_source_revision_keeps_its_liability_fact_set() -> None:
 
 def test_request_refuses_a_caller_authored_recognition_date() -> None:
     """The transport carries the payment reference, never a derived filing coordinate."""
-    transaction = _payroll_payment()
-    payload = _request(transaction).model_dump(mode="json") | {"recognized_on": _PAID_ON.isoformat()}
+    transaction = payroll_payment()
+    payload = ledger_payment_withholding_request(transaction).model_dump(mode="json") | {
+        "recognized_on": _PAID_ON.isoformat()
+    }
 
     with pytest.raises(ValidationError, match="recognized_on"):
         LedgerPaymentWithholdingEvidenceRequest.model_validate_json(json.dumps(payload))
@@ -400,13 +404,13 @@ def _producer(objects: object) -> WithholdingProducer:
 
 def test_captured_payment_projects_a_work_retencion_and_its_annual_row(tmp_path: Path) -> None:
     """The shared producer stores one 111 retención and one 190 percepción for the payment."""
-    transaction = _payroll_payment()
+    transaction = payroll_payment()
     capture = build_ledger_payment_withholding_capture(
         transaction,
         catalogue_revision_id="a" * 64,
-        request=_request(transaction),
-        applicable_year=_YEAR,
-        cadence=quarterly_filer_cadence(_YEAR),
+        request=ledger_payment_withholding_request(transaction),
+        applicable_year=YEAR,
+        cadence=quarterly_filer_cadence(YEAR),
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
@@ -417,10 +421,10 @@ def test_captured_payment_projects_a_work_retencion_and_its_annual_row(tmp_path:
             capture.command, cadence=quarterly_filer_cadence_for(capture.command)
         )
         retenciones = RetencionObservationRepositoryAdapter(objects=profile.repository).load_observations(
-            "111", Period.from_year_and_code(_YEAR, "2T")
+            "111", Period.from_year_and_code(YEAR, "2T")
         )
         annual = PercepcionObservationRepositoryAdapter(objects=profile.repository).load_annual_source_observations(
-            "111", _YEAR
+            "111", YEAR
         )
 
     assert result is not None
@@ -436,25 +440,25 @@ def test_captured_payment_projects_a_work_retencion_and_its_annual_row(tmp_path:
     assert (stored.taxable_base, stored.retencion_amount, stored.accrued_on) == (_GROSS, _IRPF, _PAID_ON.isoformat())
     assert len(annual) == 1
     assert annual[0].clave == RetencionClave.from_registry("A")
-    assert annual[0].source_allocation_id == f"payroll-allocation-{_YEAR}-05"
+    assert annual[0].source_allocation_id == f"payroll-allocation-{YEAR}-05"
 
 
 def test_non_work_scheme_is_refused_by_the_shared_producer(tmp_path: Path) -> None:
     """The producer, not this builder, owns the scheme-to-income table."""
-    transaction = _payroll_payment()
+    transaction = payroll_payment()
     capture = build_ledger_payment_withholding_capture(
         transaction,
         catalogue_revision_id="a" * 64,
-        request=_request(transaction, scheme=RetencionScheme("actividades_profesionales")),
-        applicable_year=_YEAR,
-        cadence=quarterly_filer_cadence(_YEAR),
+        request=ledger_payment_withholding_request(transaction, scheme=RetencionScheme("actividades_profesionales")),
+        applicable_year=YEAR,
+        cadence=quarterly_filer_cadence(YEAR),
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         with pytest.raises(WithholdingProducerError) as exc_info:
             _producer(profile.repository).capture(capture.command, cadence=quarterly_filer_cadence_for(capture.command))
         stored = RetencionObservationRepositoryAdapter(objects=profile.repository).load_observations(
-            "111", Period.from_year_and_code(_YEAR, "2T")
+            "111", Period.from_year_and_code(YEAR, "2T")
         )
 
     assert exc_info.value.refusal_code == "scheme_income_kind_mismatch"

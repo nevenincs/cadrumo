@@ -15,7 +15,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -41,8 +41,7 @@ from ....domain.calculations.registry.tests.authored_editions import newest_auth
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.contribuyente.inventory.records import InventoryLedgerDocument
 from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ...adapter_composition_work_ports import build_calculation_action_ports
 from .general_iva_profile_facts_support import renta_single_taxpayer_facts
 from .observation_seeding_support import save_stamped_observation
@@ -75,7 +74,7 @@ def bucket_id() -> str:
 
 
 def _seed_taxpayer_with_an_activity(secure_objects: SecureObjectRepository) -> None:
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
@@ -91,7 +90,7 @@ def _seed_taxpayer_with_an_activity(secure_objects: SecureObjectRepository) -> N
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 

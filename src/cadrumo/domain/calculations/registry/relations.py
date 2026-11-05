@@ -227,7 +227,7 @@ def relation_prefill_bindings_for_period(
     )
 
 
-def _fold_op(binding: BindingDefinition) -> RelationAggregationOp:
+def relations_fold_op(binding: BindingDefinition) -> RelationAggregationOp:
     """Return the observation-fold op a relation-prefill binding declares."""
     declared = binding_aggregation_op(binding)
     fold = _FOLD_OPS.get(declared)
@@ -297,7 +297,7 @@ def _group_fold_requirements(
                 f"relation_prefill binding {binding.id!r} source modelo {provider.source_modelo!r} "
                 "has no dependency classification",
             )
-        fold_op = _fold_op(binding)
+        fold_op = relations_fold_op(binding)
         for source_year, source_periods in _anchors_by_source_year(provider, filing_year=filing_year, period=period):
             key = (
                 provider.source_modelo,
@@ -342,7 +342,7 @@ def _validate_relation_prefill_invariants(binding: BindingDefinition) -> None:
     provider = binding.provider
     if not isinstance(provider, RelationPrefillProvider):
         raise RegistryValidationError(f"binding {binding.id!r} does not carry a relation_prefill provider")
-    _fold_source_casillas(binding, provider, _fold_op(binding))
+    _fold_source_casillas(binding, provider, relations_fold_op(binding))
 
 
 def validate_relation_prefill_fold_arity(binding: BindingDefinition) -> list[str]:

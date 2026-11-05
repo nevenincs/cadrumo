@@ -20,7 +20,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
-from ...adapters.outbound.aeat.auth import session_store as _session_store
+from ...adapters.outbound.aeat.auth import session_store
 from ...adapters.outbound.aeat.sede.errors import ExpedienteNotFoundError
 from ...adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
 from ...adapters.outbound.google import session_store as google_session_store
@@ -88,41 +88,41 @@ from ...domain.transactions.models import TransactionCatalogue
 from ...domain.usage_ratios.model import UsageRatioProfile
 from ...tests.log_records import delivered_text
 from ..adapter_composition_ports import build_borrador_100_snapshot_repository
-from ._runtime_attached_repositories_support import (
-    _BUCKET_A_ATTACHMENT_PAYLOAD,
-    _BUCKET_A_ID,
-    _BUCKET_B_ATTACHMENT_PAYLOAD,
-    _BUCKET_B_ID,
-    _WALLET_SUBJECT_ID,
-    _active_runtime,
-    _borrador_snapshot,
-    _bucket_event,
-    _calculation_catalogue,
-    _filing_record_catalogue,
-    _google_records,
-    _hex,
-    _history,
-    _inventory_ledger,
-    _invoice,
-    _iva_state,
-    _iva_wallet_decision,
-    _justificante,
-    _llm_request,
-    _llm_response,
-    _modelo_draft,
-    _save_auth_diagnostic,
-    _save_diagnostic_probe_row,
-    _sede_artefact,
-    _session,
-    _storage_state,
-    _submission,
-    _transaction,
-    _usage_profile,
-    _usage_record,
-    _verification_catalogue,
-    _work_unit,
-    _workflow_run,
-    _workflow_state,
+from .runtime_attached_repositories_support import (
+    BUCKET_A_ATTACHMENT_PAYLOAD,
+    BUCKET_A_ID,
+    BUCKET_B_ATTACHMENT_PAYLOAD,
+    BUCKET_B_ID,
+    WALLET_SUBJECT_ID,
+    active_runtime,
+    borrador_snapshot,
+    bucket_event,
+    calculation_catalogue,
+    filing_record_catalogue,
+    google_records,
+    history,
+    inventory_ledger,
+    invoice,
+    iva_state,
+    iva_wallet_decision,
+    justificante,
+    llm_request,
+    llm_response,
+    modelo_draft,
+    runtime_attached_repositories_hex,
+    runtime_attached_repositories_transaction,
+    save_auth_diagnostic,
+    save_diagnostic_probe_row,
+    sede_artefact,
+    session,
+    storage_state,
+    submission,
+    usage_profile,
+    usage_record,
+    verification_catalogue,
+    work_unit,
+    workflow_run,
+    workflow_state,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
@@ -185,9 +185,9 @@ _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
     ),
     (
         "auth_apoderado",
-        lambda: build_apoderado_config_repository(bucket_id=_BUCKET_A_ID, settings=load_settings()),
+        lambda: build_apoderado_config_repository(bucket_id=BUCKET_A_ID, settings=load_settings()),
     ),
-    ("auth_session", lambda: _session_store.load(Path("/profile/active/aeat-session"))),
+    ("auth_session", lambda: session_store.load(Path("/profile/active/aeat-session"))),
     ("google_oauth_token", lambda: google_session_store.load_token("operator-google")),
     ("google_oauth_metadata", lambda: google_session_store.load_metadata("operator-google")),
     ("google_drive_config", lambda: google_session_store.load_drive_config("operator-google")),
@@ -213,27 +213,27 @@ _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
         lambda: FiledDeclaracionObservationStore(Path("sede-cache")).load_observation(Path("observation")),
     ),
     ("attachment", lambda: AttachmentStore().read_bytes("a" * 64)),
-    ("transactions", lambda: TransactionCatalogueRepository(bucket_id=_BUCKET_A_ID).load()),
+    ("transactions", lambda: TransactionCatalogueRepository(bucket_id=BUCKET_A_ID).load()),
     ("invoices", lambda: InvoiceCatalogueRepository().load()),
-    ("filing_drafts", lambda: ModeloDraftRepository(bucket_id=_BUCKET_A_ID).load("d" * 64)),
+    ("filing_drafts", lambda: ModeloDraftRepository(bucket_id=BUCKET_A_ID).load("d" * 64)),
     ("submission", lambda: SubmissionRepository().list_submission_ids()),
     ("justificante", lambda: tuple(sorted(JustificanteRepository().iter_ids()))),
     (
         "filing_history",
         lambda: ModeloHistoryRepository(
             ports=FilingHistoryPorts(
-                repository=FilingHistoryRepositoryAdapter(objects=secure_object_repository_for_bucket(_BUCKET_A_ID)),
-                bucket_id=_BUCKET_A_ID,
+                repository=FilingHistoryRepositoryAdapter(objects=secure_object_repository_for_bucket(BUCKET_A_ID)),
+                bucket_id=BUCKET_A_ID,
             ),
         ).list_modelos(),
     ),
-    ("modelo_work_units", lambda: WorkUnitCatalogueRepository(bucket_id=_BUCKET_A_ID).load()),
-    ("modelo_calculation_revisions", lambda: CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_A_ID).load()),
-    ("modelo_filing_records", lambda: ModeloRecordCatalogueRepository(bucket_id=_BUCKET_A_ID).load()),
-    ("modelo_verification_reports", lambda: VerificationReportCatalogueRepository(bucket_id=_BUCKET_A_ID).load()),
+    ("modelo_work_units", lambda: WorkUnitCatalogueRepository(bucket_id=BUCKET_A_ID).load()),
+    ("modelo_calculation_revisions", lambda: CalculationRevisionCatalogueRepository(bucket_id=BUCKET_A_ID).load()),
+    ("modelo_filing_records", lambda: ModeloRecordCatalogueRepository(bucket_id=BUCKET_A_ID).load()),
+    ("modelo_verification_reports", lambda: VerificationReportCatalogueRepository(bucket_id=BUCKET_A_ID).load()),
     (
         "calculation_observations",
-        lambda: CalculationObservationRepository(bucket_id=_BUCKET_A_ID).load_observation(
+        lambda: CalculationObservationRepository(bucket_id=BUCKET_A_ID).load_observation(
             "303",
             Period.from_year_and_code(2026, "1T"),
         ),
@@ -242,14 +242,14 @@ _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
     (
         "iva_wallet_decision_history",
         lambda: load_decision_history(
-            IvaWalletDecisionRepository(), _WALLET_SUBJECT_ID, Period.from_year_and_code(2026, "2T")
+            IvaWalletDecisionRepository(), WALLET_SUBJECT_ID, Period.from_year_and_code(2026, "2T")
         ),
     ),
-    ("iva_compensation_history", lambda: IvaCompensationHistoryRepository(bucket_id=_BUCKET_A_ID).list_periods()),
-    ("usage_ratios", lambda: _load_usage_ratios_for_test(bucket_id=_BUCKET_A_ID)),
+    ("iva_compensation_history", lambda: IvaCompensationHistoryRepository(bucket_id=BUCKET_A_ID).list_periods()),
+    ("usage_ratios", lambda: _load_usage_ratios_for_test(bucket_id=BUCKET_A_ID)),
     (
         "borrador_100_snapshot",
-        lambda: build_borrador_100_snapshot_repository(bucket_id=_BUCKET_A_ID).list_snapshots(),
+        lambda: build_borrador_100_snapshot_repository(bucket_id=BUCKET_A_ID).list_snapshots(),
     ),
     ("profile_inventory", lambda: InventoryLedgerRepository().load()),
 )
@@ -265,7 +265,7 @@ def test_current_runtime_defaults_refuse_missing_session(tmp_path: Path) -> None
     """
     for case_name, operation in _RUNTIME_DEFAULT_REFUSAL_CASES:
         with (
-            override_settings(cadrumo_storage_root=tmp_path / case_name, cadrumo_active_profile=_BUCKET_A_ID),
+            override_settings(cadrumo_storage_root=tmp_path / case_name, cadrumo_active_profile=BUCKET_A_ID),
             pytest.raises((StorageValidationError, AuthDiagnosticPersistenceError)) as raised,
         ):
             operation()
@@ -279,8 +279,8 @@ def test_current_runtime_defaults_refuse_route_session_mismatch(tmp_path: Path) 
     """A session serving another bucket refuses with the mismatch code, not the absence one."""
     for case_name, operation in _RUNTIME_DEFAULT_REFUSAL_CASES:
         with (
-            override_settings(cadrumo_storage_root=tmp_path / case_name, cadrumo_active_profile=_BUCKET_A_ID),
-            activate_session(_session(_BUCKET_B_ID)),
+            override_settings(cadrumo_storage_root=tmp_path / case_name, cadrumo_active_profile=BUCKET_A_ID),
+            activate_session(session(BUCKET_B_ID)),
             pytest.raises((StorageValidationError, AuthDiagnosticPersistenceError)) as raised,
         ):
             operation()
@@ -304,7 +304,7 @@ def test_diagnostics_secure_object_total_degrades_on_missing_session(
 ) -> None:
     caplog.set_level("DEBUG", logger="cadrumo.application.diagnostics")
 
-    with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_A_ID):
+    with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=BUCKET_A_ID):
         # Pin the precondition through the typed refusal the probe swallows.
         # The degrade log renders the error's translation key, which is shared
         # by every unready state, so asserting on the log alone would not
@@ -328,8 +328,8 @@ def test_diagnostics_secure_object_total_degrades_on_route_session_mismatch(
     caplog.set_level("DEBUG", logger="cadrumo.application.diagnostics")
 
     with (
-        override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_A_ID),
-        activate_session(_session(_BUCKET_B_ID)),
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=BUCKET_A_ID),
+        activate_session(session(BUCKET_B_ID)),
     ):
         # See the sibling above: the route mismatch is what must be shown to
         # have caused the degrade, and only the typed code discriminates it.
@@ -346,15 +346,15 @@ def test_diagnostics_secure_object_total_degrades_on_route_session_mismatch(
 
 
 def test_workflow_state_default_isolates_active_profile_writes(tmp_path: Path) -> None:
-    with _active_runtime(tmp_path, _BUCKET_A_ID):
-        WorkflowStateRepository().save(_workflow_state(_BUCKET_A_ID))
+    with active_runtime(tmp_path, BUCKET_A_ID):
+        WorkflowStateRepository().save(workflow_state(BUCKET_A_ID))
 
-    with _active_runtime(tmp_path, _BUCKET_B_ID):
+    with active_runtime(tmp_path, BUCKET_B_ID):
         assert WorkflowStateRepository().load().invoice_reviews == {}
-        WorkflowStateRepository().save(_workflow_state(_BUCKET_B_ID))
+        WorkflowStateRepository().save(workflow_state(BUCKET_B_ID))
         assert WorkflowStateRepository().load().ledger_reviews == {}
 
-    with _active_runtime(tmp_path, _BUCKET_A_ID):
+    with active_runtime(tmp_path, BUCKET_A_ID):
         loaded = WorkflowStateRepository().load()
 
     assert loaded.invoice_reviews == {}
@@ -364,123 +364,126 @@ def test_workflow_state_default_isolates_active_profile_writes(tmp_path: Path) -
 def test_auth_session_store_default_isolates_active_profile_writes(tmp_path: Path) -> None:
     logical_path = Path("/profile/active/aeat-session")
 
-    with _active_runtime(tmp_path, _BUCKET_A_ID):
-        _session_store.save(
+    with active_runtime(tmp_path, BUCKET_A_ID):
+        session_store.save(
             logical_path,
-            storage_state=_storage_state(_BUCKET_A_ID),
-            metadata={"profile": _BUCKET_A_ID},
+            storage_state=storage_state(BUCKET_A_ID),
+            metadata={"profile": BUCKET_A_ID},
         )
 
-    with _active_runtime(tmp_path, _BUCKET_B_ID):
-        assert _session_store.load(logical_path) is None
-        _session_store.save(
+    with active_runtime(tmp_path, BUCKET_B_ID):
+        assert session_store.load(logical_path) is None
+        session_store.save(
             logical_path,
-            storage_state=_storage_state(_BUCKET_B_ID),
-            metadata={"profile": _BUCKET_B_ID},
+            storage_state=storage_state(BUCKET_B_ID),
+            metadata={"profile": BUCKET_B_ID},
         )
 
-    with _active_runtime(tmp_path, _BUCKET_A_ID):
-        loaded = _session_store.load(logical_path)
+    with active_runtime(tmp_path, BUCKET_A_ID):
+        loaded = session_store.load(logical_path)
 
     assert loaded is not None
-    assert loaded.metadata == {"profile": _BUCKET_A_ID}
+    assert loaded.metadata == {"profile": BUCKET_A_ID}
     cookies = loaded.storage_state["cookies"]
     assert isinstance(cookies, list)
     first_cookie = cookies[0]
     assert isinstance(first_cookie, dict)
-    assert first_cookie["value"] == _BUCKET_A_ID
+    assert first_cookie["value"] == BUCKET_A_ID
 
 
 def test_transaction_repository_default_isolates_bucket_writes(tmp_path: Path) -> None:
-    with _active_runtime(tmp_path, _BUCKET_A_ID):
-        repo = TransactionCatalogueRepository(bucket_id=_BUCKET_A_ID)
-        repo.save(TransactionCatalogue.from_transactions((_transaction(_BUCKET_A_ID),)))
+    with active_runtime(tmp_path, BUCKET_A_ID):
+        repo = TransactionCatalogueRepository(bucket_id=BUCKET_A_ID)
+        repo.save(TransactionCatalogue.from_transactions((runtime_attached_repositories_transaction(BUCKET_A_ID),)))
 
-    with _active_runtime(tmp_path, _BUCKET_B_ID):
-        repo = TransactionCatalogueRepository(bucket_id=_BUCKET_B_ID)
+    with active_runtime(tmp_path, BUCKET_B_ID):
+        repo = TransactionCatalogueRepository(bucket_id=BUCKET_B_ID)
         assert len(repo.load().transactions) == 0
-        repo.save(TransactionCatalogue.from_transactions((_transaction(_BUCKET_B_ID),)))
+        repo.save(TransactionCatalogue.from_transactions((runtime_attached_repositories_transaction(BUCKET_B_ID),)))
 
-    with _active_runtime(tmp_path, _BUCKET_A_ID):
-        loaded = TransactionCatalogueRepository(bucket_id=_BUCKET_A_ID).load()
+    with active_runtime(tmp_path, BUCKET_A_ID):
+        loaded = TransactionCatalogueRepository(bucket_id=BUCKET_A_ID).load()
 
     assert len(loaded.transactions) == 1
     transaction = next(iter(loaded.transactions.values()))
-    assert transaction.raw.description == f"runtime attached repository {_BUCKET_A_ID}"
+    assert transaction.raw.description == f"runtime attached repository {BUCKET_A_ID}"
 
 
 def test_attachment_store_default_isolates_active_profile_writes(tmp_path: Path) -> None:
-    with _active_runtime(tmp_path, _BUCKET_A_ID):
-        digest_a = AttachmentStore().put_bytes(_BUCKET_A_ATTACHMENT_PAYLOAD)
+    with active_runtime(tmp_path, BUCKET_A_ID):
+        digest_a = AttachmentStore().put_bytes(BUCKET_A_ATTACHMENT_PAYLOAD)
 
-    with _active_runtime(tmp_path, _BUCKET_B_ID):
+    with active_runtime(tmp_path, BUCKET_B_ID):
         with pytest.raises(AttachmentNotFoundError):
             AttachmentStore().read_bytes(digest_a)
-        digest_b = AttachmentStore().put_bytes(_BUCKET_B_ATTACHMENT_PAYLOAD)
-        assert AttachmentStore().read_bytes(digest_b) == _BUCKET_B_ATTACHMENT_PAYLOAD
+        digest_b = AttachmentStore().put_bytes(BUCKET_B_ATTACHMENT_PAYLOAD)
+        assert AttachmentStore().read_bytes(digest_b) == BUCKET_B_ATTACHMENT_PAYLOAD
 
-    with _active_runtime(tmp_path, _BUCKET_A_ID):
-        assert AttachmentStore().read_bytes(digest_a) == _BUCKET_A_ATTACHMENT_PAYLOAD
+    with active_runtime(tmp_path, BUCKET_A_ID):
+        assert AttachmentStore().read_bytes(digest_a) == BUCKET_A_ATTACHMENT_PAYLOAD
         with pytest.raises(AttachmentNotFoundError):
             AttachmentStore().read_bytes(digest_b)
 
 
 def test_event_and_workflow_run_defaults_isolate_active_profile_writes(tmp_path: Path) -> None:
-    event_a = _bucket_event(_BUCKET_A_ID)
-    event_b = _bucket_event(_BUCKET_B_ID)
+    event_a = bucket_event(BUCKET_A_ID)
+    event_b = bucket_event(BUCKET_B_ID)
 
-    with _active_runtime(tmp_path, _BUCKET_A_ID):
+    with active_runtime(tmp_path, BUCKET_A_ID):
         BucketEventHistoryRepository().save(BucketEventHistoryCatalogue(events={event_a.event_id: event_a}))
-        WorkflowRunRepository().save(_workflow_run(_BUCKET_A_ID), runs_dir=tmp_path / "runs-a")
+        WorkflowRunRepository().save(workflow_run(BUCKET_A_ID), runs_dir=tmp_path / "runs-a")
 
-    with _active_runtime(tmp_path, _BUCKET_B_ID):
+    with active_runtime(tmp_path, BUCKET_B_ID):
         assert BucketEventHistoryRepository().load().events == {}
         assert WorkflowRunRepository().list() == ()
         BucketEventHistoryRepository().save(BucketEventHistoryCatalogue(events={event_b.event_id: event_b}))
-        WorkflowRunRepository().save(_workflow_run(_BUCKET_B_ID), runs_dir=tmp_path / "runs-b")
+        WorkflowRunRepository().save(workflow_run(BUCKET_B_ID), runs_dir=tmp_path / "runs-b")
 
-    with _active_runtime(tmp_path, _BUCKET_A_ID):
+    with active_runtime(tmp_path, BUCKET_A_ID):
         events = BucketEventHistoryRepository().load().events
         runs = WorkflowRunRepository().list()
 
     assert tuple(events) == (event_a.event_id,)
     assert [(run.run_id, run.summary_locale_key) for run in runs] == [
-        (_hex(f"workflow-run-{_BUCKET_A_ID}")[:16], "application.workflow.results.completed")
+        (
+            runtime_attached_repositories_hex(f"workflow-run-{BUCKET_A_ID}")[:16],
+            "application.workflow.results.completed",
+        )
     ]
 
 
 def test_domain_repository_defaults_isolate_active_profile_writes(tmp_path: Path) -> None:
-    draft_a = _modelo_draft(_BUCKET_A_ID)
-    draft_b = _modelo_draft(_BUCKET_B_ID)
-    submission_a = _submission(_BUCKET_A_ID)
-    submission_b = _submission(_BUCKET_B_ID)
-    justificante_a = _justificante(tmp_path, _BUCKET_A_ID)
-    justificante_b = _justificante(tmp_path, _BUCKET_B_ID)
+    draft_a = modelo_draft(BUCKET_A_ID)
+    draft_b = modelo_draft(BUCKET_B_ID)
+    submission_a = submission(BUCKET_A_ID)
+    submission_b = submission(BUCKET_B_ID)
+    justificante_a = justificante(tmp_path, BUCKET_A_ID)
+    justificante_b = justificante(tmp_path, BUCKET_B_ID)
 
-    with _active_runtime(tmp_path, _BUCKET_A_ID):
-        InvoiceCatalogueRepository().save(build_invoice_catalogue((_invoice(_BUCKET_A_ID),)))
-        ModeloDraftRepository(bucket_id=_BUCKET_A_ID).save(draft_a)
+    with active_runtime(tmp_path, BUCKET_A_ID):
+        InvoiceCatalogueRepository().save(build_invoice_catalogue((invoice(BUCKET_A_ID),)))
+        ModeloDraftRepository(bucket_id=BUCKET_A_ID).save(draft_a)
         SubmissionRepository().save(submission_a)
         JustificanteRepository().save(justificante_a)
 
-    with _active_runtime(tmp_path, _BUCKET_B_ID):
+    with active_runtime(tmp_path, BUCKET_B_ID):
         assert InvoiceCatalogueRepository().load().invoices == {}
-        assert ModeloDraftRepository(bucket_id=_BUCKET_B_ID).load(draft_a.draft_id) is None
+        assert ModeloDraftRepository(bucket_id=BUCKET_B_ID).load(draft_a.draft_id) is None
         assert SubmissionRepository().list_submission_ids() == ()
         assert tuple(sorted(JustificanteRepository().iter_ids())) == ()
-        InvoiceCatalogueRepository().save(build_invoice_catalogue((_invoice(_BUCKET_B_ID),)))
-        ModeloDraftRepository(bucket_id=_BUCKET_B_ID).save(draft_b)
+        InvoiceCatalogueRepository().save(build_invoice_catalogue((invoice(BUCKET_B_ID),)))
+        ModeloDraftRepository(bucket_id=BUCKET_B_ID).save(draft_b)
         SubmissionRepository().save(submission_b)
         JustificanteRepository().save(justificante_b)
 
-    with _active_runtime(tmp_path, _BUCKET_A_ID):
+    with active_runtime(tmp_path, BUCKET_A_ID):
         invoices = InvoiceCatalogueRepository().load().invoices
-        loaded_draft_a = ModeloDraftRepository(bucket_id=_BUCKET_A_ID).load(draft_a.draft_id)
-        loaded_draft_b = ModeloDraftRepository(bucket_id=_BUCKET_A_ID).load(draft_b.draft_id)
+        loaded_draft_a = ModeloDraftRepository(bucket_id=BUCKET_A_ID).load(draft_a.draft_id)
+        loaded_draft_b = ModeloDraftRepository(bucket_id=BUCKET_A_ID).load(draft_b.draft_id)
         submissions = SubmissionRepository().list_submission_ids()
         csvs = tuple(sorted(JustificanteRepository().iter_ids()))
 
-    assert tuple(invoice.invoice_number for invoice in invoices.values()) == (f"INV-{_BUCKET_A_ID.upper()}",)
+    assert tuple(invoice.invoice_number for invoice in invoices.values()) == (f"INV-{BUCKET_A_ID.upper()}",)
     assert loaded_draft_a == draft_a
     assert loaded_draft_b is None
     assert submissions == (submission_a.submission_id,)
@@ -488,40 +491,40 @@ def test_domain_repository_defaults_isolate_active_profile_writes(tmp_path: Path
 
 
 def test_modelo_catalogue_defaults_isolate_bucket_writes(tmp_path: Path) -> None:
-    work_a = _work_unit(_BUCKET_A_ID, _BUCKET_A_ID)
-    work_b = _work_unit(_BUCKET_B_ID, _BUCKET_B_ID)
-    calc_a = _calculation_catalogue(_BUCKET_A_ID)
-    calc_b = _calculation_catalogue(_BUCKET_B_ID)
-    filing_a = _filing_record_catalogue(_BUCKET_A_ID, _BUCKET_A_ID)
-    filing_b = _filing_record_catalogue(_BUCKET_B_ID, _BUCKET_B_ID)
-    verification_a = _verification_catalogue(_BUCKET_A_ID)
-    verification_b = _verification_catalogue(_BUCKET_B_ID)
+    work_a = work_unit(BUCKET_A_ID, BUCKET_A_ID)
+    work_b = work_unit(BUCKET_B_ID, BUCKET_B_ID)
+    calc_a = calculation_catalogue(BUCKET_A_ID)
+    calc_b = calculation_catalogue(BUCKET_B_ID)
+    filing_a = filing_record_catalogue(BUCKET_A_ID, BUCKET_A_ID)
+    filing_b = filing_record_catalogue(BUCKET_B_ID, BUCKET_B_ID)
+    verification_a = verification_catalogue(BUCKET_A_ID)
+    verification_b = verification_catalogue(BUCKET_B_ID)
 
-    with _active_runtime(tmp_path, _BUCKET_A_ID):
-        WorkUnitCatalogueRepository(bucket_id=_BUCKET_A_ID).save(
+    with active_runtime(tmp_path, BUCKET_A_ID):
+        WorkUnitCatalogueRepository(bucket_id=BUCKET_A_ID).save(
             WorkUnitCatalogue(work_units={work_a.work_unit_id: work_a}),
         )
-        CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_A_ID).save(calc_a)
-        ModeloRecordCatalogueRepository(bucket_id=_BUCKET_A_ID).save(filing_a)
-        VerificationReportCatalogueRepository(bucket_id=_BUCKET_A_ID).save(verification_a)
+        CalculationRevisionCatalogueRepository(bucket_id=BUCKET_A_ID).save(calc_a)
+        ModeloRecordCatalogueRepository(bucket_id=BUCKET_A_ID).save(filing_a)
+        VerificationReportCatalogueRepository(bucket_id=BUCKET_A_ID).save(verification_a)
 
-    with _active_runtime(tmp_path, _BUCKET_B_ID):
-        assert WorkUnitCatalogueRepository(bucket_id=_BUCKET_B_ID).load().work_units == {}
-        assert CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_B_ID).load().revisions == {}
-        assert ModeloRecordCatalogueRepository(bucket_id=_BUCKET_B_ID).load().records == {}
-        assert VerificationReportCatalogueRepository(bucket_id=_BUCKET_B_ID).load().reports == {}
-        WorkUnitCatalogueRepository(bucket_id=_BUCKET_B_ID).save(
+    with active_runtime(tmp_path, BUCKET_B_ID):
+        assert WorkUnitCatalogueRepository(bucket_id=BUCKET_B_ID).load().work_units == {}
+        assert CalculationRevisionCatalogueRepository(bucket_id=BUCKET_B_ID).load().revisions == {}
+        assert ModeloRecordCatalogueRepository(bucket_id=BUCKET_B_ID).load().records == {}
+        assert VerificationReportCatalogueRepository(bucket_id=BUCKET_B_ID).load().reports == {}
+        WorkUnitCatalogueRepository(bucket_id=BUCKET_B_ID).save(
             WorkUnitCatalogue(work_units={work_b.work_unit_id: work_b}),
         )
-        CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_B_ID).save(calc_b)
-        ModeloRecordCatalogueRepository(bucket_id=_BUCKET_B_ID).save(filing_b)
-        VerificationReportCatalogueRepository(bucket_id=_BUCKET_B_ID).save(verification_b)
+        CalculationRevisionCatalogueRepository(bucket_id=BUCKET_B_ID).save(calc_b)
+        ModeloRecordCatalogueRepository(bucket_id=BUCKET_B_ID).save(filing_b)
+        VerificationReportCatalogueRepository(bucket_id=BUCKET_B_ID).save(verification_b)
 
-    with _active_runtime(tmp_path, _BUCKET_A_ID):
-        work_loaded = WorkUnitCatalogueRepository(bucket_id=_BUCKET_A_ID).load().work_units
-        calc_loaded = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_A_ID).load().revisions
-        filing_loaded = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_A_ID).load().records
-        verification_loaded = VerificationReportCatalogueRepository(bucket_id=_BUCKET_A_ID).load().reports
+    with active_runtime(tmp_path, BUCKET_A_ID):
+        work_loaded = WorkUnitCatalogueRepository(bucket_id=BUCKET_A_ID).load().work_units
+        calc_loaded = CalculationRevisionCatalogueRepository(bucket_id=BUCKET_A_ID).load().revisions
+        filing_loaded = ModeloRecordCatalogueRepository(bucket_id=BUCKET_A_ID).load().records
+        verification_loaded = VerificationReportCatalogueRepository(bucket_id=BUCKET_A_ID).load().reports
 
     assert tuple(work_loaded) == (work_a.work_unit_id,)
     assert tuple(calc_loaded) == tuple(calc_a.revisions)
@@ -552,23 +555,23 @@ def _payable_m303_observation(period: str) -> RegistryModeloObservation:
 def test_application_repository_defaults_isolate_active_profile_writes(tmp_path: Path) -> None:
     observation_a = _payable_m303_observation("1T")
     observation_b = _payable_m303_observation("2T")
-    history_a = _history(_BUCKET_A_ID)
-    history_b = _history(_BUCKET_B_ID)
-    decision_a = _iva_wallet_decision(_BUCKET_A_ID, target_period="2T")
-    decision_b = _iva_wallet_decision(_BUCKET_B_ID, target_period="3T")
-    usage_a = _usage_profile(SpendingCategory.from_registry("suministros_home_office_luz"), "0.21")
-    usage_b = _usage_profile(SpendingCategory.from_registry("arrendamiento_vivienda_afecto"), "0.60")
+    history_a = history(BUCKET_A_ID)
+    history_b = history(BUCKET_B_ID)
+    decision_a = iva_wallet_decision(BUCKET_A_ID, target_period="2T")
+    decision_b = iva_wallet_decision(BUCKET_B_ID, target_period="3T")
+    usage_a = usage_profile(SpendingCategory.from_registry("suministros_home_office_luz"), "0.21")
+    usage_b = usage_profile(SpendingCategory.from_registry("arrendamiento_vivienda_afecto"), "0.60")
 
-    with _active_runtime(tmp_path, _BUCKET_A_ID):
+    with active_runtime(tmp_path, BUCKET_A_ID):
         ModeloHistoryRepository(
             ports=FilingHistoryPorts(
-                repository=FilingHistoryRepositoryAdapter(objects=secure_object_repository_for_bucket(_BUCKET_A_ID)),
-                bucket_id=_BUCKET_A_ID,
+                repository=FilingHistoryRepositoryAdapter(objects=secure_object_repository_for_bucket(BUCKET_A_ID)),
+                bucket_id=BUCKET_A_ID,
             ),
         ).save(history_a)
         # Ingress normalizes the observation (derived carry casillas), so the
         # prepared envelope, not the raw input, is what a reload must return.
-        envelope_a = CalculationObservationRepository(bucket_id=_BUCKET_A_ID).prepare_observation_envelope(
+        envelope_a = CalculationObservationRepository(bucket_id=BUCKET_A_ID).prepare_observation_envelope(
             observation_a,
             source_kind="app_filing",
             stamped_revision_id=str(published_snapshot("303", filing_year=2026, period="1T").revision.id),
@@ -578,25 +581,23 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
                 provenance_locator="runtime-attached-local-filing:2026:1T",
             ),
         )
-        CalculationObservationRepository(bucket_id=_BUCKET_A_ID).save(envelope_a)
+        CalculationObservationRepository(bucket_id=BUCKET_A_ID).save(envelope_a)
         IvaWalletDecisionRepository().save_decision(decision_a)
-        IvaCompensationHistoryRepository(bucket_id=_BUCKET_A_ID).save_period(_iva_state(_BUCKET_A_ID))
-        save_usage_ratios_with_secure_object_writes(usage_a, (), bucket_id=_BUCKET_A_ID)
+        IvaCompensationHistoryRepository(bucket_id=BUCKET_A_ID).save_period(iva_state(BUCKET_A_ID))
+        save_usage_ratios_with_secure_object_writes(usage_a, (), bucket_id=BUCKET_A_ID)
 
-    with _active_runtime(tmp_path, _BUCKET_B_ID):
+    with active_runtime(tmp_path, BUCKET_B_ID):
         assert (
             ModeloHistoryRepository(
                 ports=FilingHistoryPorts(
-                    repository=FilingHistoryRepositoryAdapter(
-                        objects=secure_object_repository_for_bucket(_BUCKET_B_ID)
-                    ),
-                    bucket_id=_BUCKET_B_ID,
+                    repository=FilingHistoryRepositoryAdapter(objects=secure_object_repository_for_bucket(BUCKET_B_ID)),
+                    bucket_id=BUCKET_B_ID,
                 ),
             ).list_modelos()
             == ()
         )
         assert (
-            CalculationObservationRepository(bucket_id=_BUCKET_B_ID).load_observation(
+            CalculationObservationRepository(bucket_id=BUCKET_B_ID).load_observation(
                 "303",
                 Period.from_year_and_code(2026, "1T"),
             )
@@ -605,20 +606,20 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
         assert IvaWalletDecisionRepository().list_decisions() == ()
         assert (
             load_decision_history(
-                IvaWalletDecisionRepository(), _WALLET_SUBJECT_ID, Period.from_year_and_code(2026, "2T")
+                IvaWalletDecisionRepository(), WALLET_SUBJECT_ID, Period.from_year_and_code(2026, "2T")
             )
             == ()
         )
-        assert IvaCompensationHistoryRepository(bucket_id=_BUCKET_B_ID).list_periods() == ()
-        assert _load_usage_ratios_for_test(bucket_id=_BUCKET_B_ID) == UsageRatioProfile()
+        assert IvaCompensationHistoryRepository(bucket_id=BUCKET_B_ID).list_periods() == ()
+        assert _load_usage_ratios_for_test(bucket_id=BUCKET_B_ID) == UsageRatioProfile()
         ModeloHistoryRepository(
             ports=FilingHistoryPorts(
-                repository=FilingHistoryRepositoryAdapter(objects=secure_object_repository_for_bucket(_BUCKET_B_ID)),
-                bucket_id=_BUCKET_B_ID,
+                repository=FilingHistoryRepositoryAdapter(objects=secure_object_repository_for_bucket(BUCKET_B_ID)),
+                bucket_id=BUCKET_B_ID,
             ),
         ).save(history_b)
-        CalculationObservationRepository(bucket_id=_BUCKET_B_ID).save(
-            CalculationObservationRepository(bucket_id=_BUCKET_B_ID).prepare_observation_envelope(
+        CalculationObservationRepository(bucket_id=BUCKET_B_ID).save(
+            CalculationObservationRepository(bucket_id=BUCKET_B_ID).prepare_observation_envelope(
                 observation_b,
                 source_kind="app_filing",
                 stamped_revision_id=str(published_snapshot("303", filing_year=2026, period="2T").revision.id),
@@ -630,25 +631,25 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
             )
         )
         IvaWalletDecisionRepository().save_decision(decision_b)
-        IvaCompensationHistoryRepository(bucket_id=_BUCKET_B_ID).save_period(_iva_state(_BUCKET_B_ID))
-        save_usage_ratios_with_secure_object_writes(usage_b, (), bucket_id=_BUCKET_B_ID)
+        IvaCompensationHistoryRepository(bucket_id=BUCKET_B_ID).save_period(iva_state(BUCKET_B_ID))
+        save_usage_ratios_with_secure_object_writes(usage_b, (), bucket_id=BUCKET_B_ID)
 
-    with _active_runtime(tmp_path, _BUCKET_A_ID):
+    with active_runtime(tmp_path, BUCKET_A_ID):
         modelo_ids = ModeloHistoryRepository(
             ports=FilingHistoryPorts(
-                repository=FilingHistoryRepositoryAdapter(objects=secure_object_repository_for_bucket(_BUCKET_A_ID)),
-                bucket_id=_BUCKET_A_ID,
+                repository=FilingHistoryRepositoryAdapter(objects=secure_object_repository_for_bucket(BUCKET_A_ID)),
+                bucket_id=BUCKET_A_ID,
             ),
         ).list_modelos()
-        observed = CalculationObservationRepository(bucket_id=_BUCKET_A_ID).load_observation(
+        observed = CalculationObservationRepository(bucket_id=BUCKET_A_ID).load_observation(
             "303",
             Period.from_year_and_code(2026, "1T"),
         )
         wallet_repo = IvaWalletDecisionRepository()
         decisions = wallet_repo.list_decisions()
-        decision_history = load_decision_history(wallet_repo, _WALLET_SUBJECT_ID, Period.from_year_and_code(2026, "2T"))
-        iva_periods = IvaCompensationHistoryRepository(bucket_id=_BUCKET_A_ID).list_periods()
-        usage = _load_usage_ratios_for_test(bucket_id=_BUCKET_A_ID)
+        decision_history = load_decision_history(wallet_repo, WALLET_SUBJECT_ID, Period.from_year_and_code(2026, "2T"))
+        iva_periods = IvaCompensationHistoryRepository(bucket_id=BUCKET_A_ID).list_periods()
+        usage = _load_usage_ratios_for_test(bucket_id=BUCKET_A_ID)
 
     assert modelo_ids == ("303",)
     assert observed is not None
@@ -660,86 +661,86 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
 
 
 def test_runtime_default_surfaces_isolate_active_profile_writes(tmp_path: Path) -> None:
-    with _active_runtime(tmp_path, _BUCKET_A_ID):
-        build_borrador_100_snapshot_repository(bucket_id=_BUCKET_A_ID).save(_borrador_snapshot(_BUCKET_A_ID))
-        _save_auth_diagnostic(_BUCKET_A_ID)
-        _save_diagnostic_probe_row(_BUCKET_A_ID)
+    with active_runtime(tmp_path, BUCKET_A_ID):
+        build_borrador_100_snapshot_repository(bucket_id=BUCKET_A_ID).save(borrador_snapshot(BUCKET_A_ID))
+        save_auth_diagnostic(BUCKET_A_ID)
+        save_diagnostic_probe_row(BUCKET_A_ID)
 
-    with _active_runtime(tmp_path, _BUCKET_B_ID):
-        assert build_borrador_100_snapshot_repository(bucket_id=_BUCKET_B_ID).list_snapshots() == ()
+    with active_runtime(tmp_path, BUCKET_B_ID):
+        assert build_borrador_100_snapshot_repository(bucket_id=BUCKET_B_ID).list_snapshots() == ()
         assert list_auth_diagnostics(persistence=build_auth_diagnostic_persistence()).row_count == 0
         assert preview_quarantine_unreadable_secure_objects(ports=_diagnostics_ports()).namespaces == ()
-        build_borrador_100_snapshot_repository(bucket_id=_BUCKET_B_ID).save(_borrador_snapshot(_BUCKET_B_ID))
-        _save_auth_diagnostic(_BUCKET_B_ID)
-        _save_diagnostic_probe_row(_BUCKET_B_ID)
+        build_borrador_100_snapshot_repository(bucket_id=BUCKET_B_ID).save(borrador_snapshot(BUCKET_B_ID))
+        save_auth_diagnostic(BUCKET_B_ID)
+        save_diagnostic_probe_row(BUCKET_B_ID)
 
-    with _active_runtime(tmp_path, _BUCKET_A_ID):
-        snapshots = build_borrador_100_snapshot_repository(bucket_id=_BUCKET_A_ID).list_snapshots()
+    with active_runtime(tmp_path, BUCKET_A_ID):
+        snapshots = build_borrador_100_snapshot_repository(bucket_id=BUCKET_A_ID).list_snapshots()
         auth_report = list_auth_diagnostics(persistence=build_auth_diagnostic_persistence())
         diagnostic_report = preview_quarantine_unreadable_secure_objects(ports=_diagnostics_ports())
 
-    assert tuple(snapshot.snapshot_id for snapshot in snapshots) == (_borrador_snapshot(_BUCKET_A_ID).snapshot_id,)
+    assert tuple(snapshot.snapshot_id for snapshot in snapshots) == (borrador_snapshot(BUCKET_A_ID).snapshot_id,)
     assert auth_report.row_count == 1
-    assert tuple(row.diagnostic_id for row in auth_report.rows) == (f"diagnostic-{_BUCKET_A_ID}",)
+    assert tuple(row.diagnostic_id for row in auth_report.rows) == (f"diagnostic-{BUCKET_A_ID}",)
     assert LLM_USAGE_NAMESPACE.namespace in tuple(item.namespace for item in diagnostic_report.namespaces)
 
 
 def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Path) -> None:
-    google_a = _google_records(_BUCKET_A_ID)
-    google_b = _google_records(_BUCKET_B_ID)
+    google_a = google_records(BUCKET_A_ID)
+    google_b = google_records(BUCKET_B_ID)
     cache = LLMCache(root_dir=tmp_path / "llm-cache")
     usage = UsageRecorder(root_dir=tmp_path / "llm-usage")
-    request = _llm_request()
-    artefact_a, body_a = _sede_artefact(_BUCKET_A_ID)
-    artefact_b, body_b = _sede_artefact(_BUCKET_B_ID)
+    request = llm_request()
+    artefact_a, body_a = sede_artefact(BUCKET_A_ID)
+    artefact_b, body_b = sede_artefact(BUCKET_B_ID)
 
-    with _active_runtime(tmp_path, _BUCKET_A_ID):
-        google_session_records.save_token(_BUCKET_A_ID, google_a[0])
-        google_session_records.save_metadata(_BUCKET_A_ID, google_a[1])
-        google_session_records.save_drive_config(_BUCKET_A_ID, google_a[2])
-        cache.write(request, _llm_response(_BUCKET_A_ID))
-        usage.record(_usage_record(_BUCKET_A_ID))
+    with active_runtime(tmp_path, BUCKET_A_ID):
+        google_session_records.save_token(BUCKET_A_ID, google_a[0])
+        google_session_records.save_metadata(BUCKET_A_ID, google_a[1])
+        google_session_records.save_drive_config(BUCKET_A_ID, google_a[2])
+        cache.write(request, llm_response(BUCKET_A_ID))
+        usage.record(usage_record(BUCKET_A_ID))
         InventoryLedgerRepository().save(
-            InventoryLedgerDocument(ledgers=(_inventory_ledger(_BUCKET_A_ID),)),
+            InventoryLedgerDocument(ledgers=(inventory_ledger(BUCKET_A_ID),)),
         )
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
         stored_a = store.persist_artefact(
             ("303", 2026, Period.from_year_and_code(2026, "1T"), "202610013522456T"), artefact_a, body_a
         )
 
-    with _active_runtime(tmp_path, _BUCKET_B_ID):
-        assert google_session_store.load_token(_BUCKET_B_ID) is None
+    with active_runtime(tmp_path, BUCKET_B_ID):
+        assert google_session_store.load_token(BUCKET_B_ID) is None
         assert cache.read(request, LLMProvider.AGENT, "gpt-test") is None
         assert usage.load_records() == ()
         assert InventoryLedgerRepository().load().ledgers == ()
         with pytest.raises(ExpedienteNotFoundError):
             FiledDeclaracionObservationStore(tmp_path / "sede-cache").load_artefact(stored_a.storage_ref or "")
-        google_session_records.save_token(_BUCKET_B_ID, google_b[0])
-        google_session_records.save_metadata(_BUCKET_B_ID, google_b[1])
-        google_session_records.save_drive_config(_BUCKET_B_ID, google_b[2])
-        cache.write(request, _llm_response(_BUCKET_B_ID))
-        usage.record(_usage_record(_BUCKET_B_ID))
+        google_session_records.save_token(BUCKET_B_ID, google_b[0])
+        google_session_records.save_metadata(BUCKET_B_ID, google_b[1])
+        google_session_records.save_drive_config(BUCKET_B_ID, google_b[2])
+        cache.write(request, llm_response(BUCKET_B_ID))
+        usage.record(usage_record(BUCKET_B_ID))
         InventoryLedgerRepository().save(
-            InventoryLedgerDocument(ledgers=(_inventory_ledger(_BUCKET_B_ID),)),
+            InventoryLedgerDocument(ledgers=(inventory_ledger(BUCKET_B_ID),)),
         )
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
         store.persist_artefact(
             ("303", 2026, Period.from_year_and_code(2026, "2T"), "202610013522457T"), artefact_b, body_b
         )
 
-    with _active_runtime(tmp_path, _BUCKET_A_ID):
+    with active_runtime(tmp_path, BUCKET_A_ID):
         cached = cache.read(request, LLMProvider.AGENT, "gpt-test")
         usage_records = usage.load_records()
         inventory = InventoryLedgerRepository().load().ledgers
         loaded_body = FiledDeclaracionObservationStore(tmp_path / "sede-cache").load_artefact(
             stored_a.storage_ref or "",
         )
-        assert google_session_store.load_token(_BUCKET_A_ID) == google_a[0]
-        assert google_session_store.load_metadata(_BUCKET_A_ID) == google_a[1]
-        assert google_session_store.load_drive_config(_BUCKET_A_ID) == google_a[2]
+        assert google_session_store.load_token(BUCKET_A_ID) == google_a[0]
+        assert google_session_store.load_metadata(BUCKET_A_ID) == google_a[1]
+        assert google_session_store.load_drive_config(BUCKET_A_ID) == google_a[2]
 
     assert cached is not None
-    assert cached.text == f"runtime attached response {_BUCKET_A_ID}"
-    assert tuple(record.request_id for record in usage_records) == (f"request-{_BUCKET_A_ID}",)
-    assert tuple(ledger.actividad_id for ledger in inventory) == (f"retail-{_BUCKET_A_ID}",)
+    assert cached.text == f"runtime attached response {BUCKET_A_ID}"
+    assert tuple(record.request_id for record in usage_records) == (f"request-{BUCKET_A_ID}",)
+    assert tuple(ledger.actividad_id for ledger in inventory) == (f"retail-{BUCKET_A_ID}",)
     assert loaded_body == body_a

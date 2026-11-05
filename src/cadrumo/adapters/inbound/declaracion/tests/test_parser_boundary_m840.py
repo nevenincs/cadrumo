@@ -6,20 +6,20 @@ import pytest
 
 from .....core.casilla_id import CasillaId
 from ..parser import parse_declaracion
-from ._parser_boundary_casillas import (
-    _M840_EJERCICIO_CASILLA,
-    _M840_TIPO_DECLARACION_CASILLA,
+from .parser_boundary_casillas import (
+    M840_EJERCICIO_CASILLA,
+    M840_TIPO_DECLARACION_CASILLA,
 )
-from ._parser_boundary_support import (
-    _MODELO_840_SYNTHETIC_FIXTURE,
-    _expected_period,
+from .parser_boundary_support import (
+    MODELO_840_SYNTHETIC_FIXTURE,
+    expected_period,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 _M840_EXPECTED_VALUES: dict[CasillaId, str] = {
-    _M840_EJERCICIO_CASILLA: "2024",
-    _M840_TIPO_DECLARACION_CASILLA: "Alta",
+    M840_EJERCICIO_CASILLA: "2024",
+    M840_TIPO_DECLARACION_CASILLA: "Alta",
 }
 
 
@@ -35,14 +35,14 @@ def test_parser_extracts_modelo_840_synthetic_fixture_targets() -> None:
     "15Declaracion de:" with sanitized values on the same line.
     """
     filing = parse_declaracion(
-        _MODELO_840_SYNTHETIC_FIXTURE,
+        MODELO_840_SYNTHETIC_FIXTURE,
         modelo_override="840",
         año_override=2024,
         period_override="0A",
     )
 
     assert filing.modelo == "840"
-    assert filing.period == _expected_period(2024, "0A")
+    assert filing.period == expected_period(2024, "0A")
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "840"

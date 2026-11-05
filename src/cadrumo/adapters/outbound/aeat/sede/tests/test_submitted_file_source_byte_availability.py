@@ -31,11 +31,11 @@ from ..declarations_observations import (
 )
 from ..errors import SedeParseError
 from ..schema import FiledDeclaracionArtefact
-from ._declarations_support import (
-    _DECLARATIONS_LISTING_URL,
-    _SUBMITTED_FILE_100_2023_0A,
-    _filed_observation,
-    _submitted_file_payload,
+from .declarations_support import (
+    DECLARATIONS_LISTING_URL,
+    SUBMITTED_FILE_100_2023_0A,
+    filed_observation,
+    submitted_file_payload,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -62,7 +62,7 @@ def _declaration(modelo: str, ejercicio: int, period_code: str, expediente_id: s
 def _artefact(body: bytes) -> FiledDeclaracionArtefact:
     return FiledDeclaracionArtefact(
         kind="submitted_file",
-        source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
+        source_url=AnyHttpUrl(DECLARATIONS_LISTING_URL),
         content_type="application/octet-stream",
         byte_count=len(body),
         sha256=hashlib.sha256(body).hexdigest(),
@@ -118,7 +118,7 @@ def test_record_design_citations_survive_into_registry_observations(
     assert cited_casillas
 
     registry_observation = registry_observation_from_filed_declaration(
-        _filed_observation(
+        filed_observation(
             modelo=modelo,
             ejercicio=ejercicio,
             period=period_code,
@@ -155,7 +155,7 @@ def test_xml_dictionary_classified_without_bytes_refuses_the_read(operation: Pin
     published = operation.snapshot("100", filing_year=2023, period="0A")
     dictionary_id = str(resolve_export_layout(published).layout.dictionary_source_ref)
     snapshot = _with_source_kind(published, dictionary_id, RegistrySourceKind.RECORD_DESIGN)
-    body = _submitted_file_payload(_SUBMITTED_FILE_100_2023_0A)
+    body = submitted_file_payload(SUBMITTED_FILE_100_2023_0A)
 
     with pytest.raises(SedeParseError) as refusal:
         observed_casillas_from_submitted_file(

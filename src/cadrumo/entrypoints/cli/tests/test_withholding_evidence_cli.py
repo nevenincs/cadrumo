@@ -155,10 +155,10 @@ def test_cli_evidence_shape_refuses_a_caller_authored_recognition_date() -> None
 
 def test_capital_cli_evidence_derives_the_123_exigibility_period_without_a_payment() -> None:
     """The public request carries evidence, never a caller-selected 123 quarter."""
-    from ..modelo_aggregate_commands import _parse_typed_cli_observations
+    from ..modelo_aggregate_commands import parse_typed_cli_observations
 
     invoice = _invoice()
-    parsed = _parse_typed_cli_observations(
+    parsed = parse_typed_cli_observations(
         [_capital_request(invoice).model_dump_json()],
         model=InvoiceWithholdingEvidenceRequest,
         flag="--received-invoice-retencion",
@@ -193,13 +193,13 @@ def test_capital_cli_evidence_refuses_partial_underlying_events(
     message: str,
 ) -> None:
     """A CLI payload cannot create an event identity without its legal date."""
-    from ..modelo_aggregate_commands import _parse_typed_cli_observations
+    from ..modelo_aggregate_commands import parse_typed_cli_observations
 
     invoice = _invoice()
     payload = json.loads(_capital_request(invoice).model_dump_json()) | update
 
     with pytest.raises(typer.BadParameter, match=message) as exc_info:
-        _parse_typed_cli_observations(
+        parse_typed_cli_observations(
             [json.dumps(payload)],
             model=InvoiceWithholdingEvidenceRequest,
             flag="--received-invoice-retencion",
@@ -226,8 +226,8 @@ def test_modelo_aggregate_keeps_capital_out_of_the_raw_mutation_path() -> None:
 
     assert "123" in modelo_aggregate_commands.periodic_withholding_modelos()
     with pytest.raises(typer.BadParameter):
-        modelo_aggregate_commands._refuse_m123_invoice("123", ["{}"])
-    modelo_aggregate_commands._refuse_m123_invoice("111", ["{}"])
+        modelo_aggregate_commands.refuse_m123_invoice("123", ["{}"])
+    modelo_aggregate_commands.refuse_m123_invoice("111", ["{}"])
 
 
 def test_rent_cli_evidence_refuses_missing_property_detail() -> None:

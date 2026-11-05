@@ -14,7 +14,7 @@ from pydantic import ValidationError
 
 from ...export_field_kind import CasillaFieldKind
 from ..errors import RegistryValidationError
-from ..export_parse import _filing_envelope_body, parse_export_payload
+from ..export_parse import filing_envelope_body, parse_export_payload
 from ..schema_base import CasillaDataType
 from ..schema_exports import (
     ExportFieldDefinition,
@@ -89,10 +89,10 @@ def test_m232_source_declared_crlf_is_the_only_accepted_trailing_marker() -> Non
     declaration = FilingEnvelopeDefinition.model_validate(values)
     prefix = b"<T232020160A0000>" + b" " * (328 - 17)
     closer = b"</T232020160A0000>"
-    assert _filing_envelope_body(declaration, prefix + closer + b"\r\n") == (328, prefix)
+    assert filing_envelope_body(declaration, prefix + closer + b"\r\n") == (328, prefix)
     for tail in (b"", b"\r", b"\n", b"\r\n\r\n", b"\r\n\n"):
         with pytest.raises(RegistryValidationError):
-            _filing_envelope_body(declaration, prefix + closer + tail)
+            filing_envelope_body(declaration, prefix + closer + tail)
 
     values.update(
         source_ref="aeat-dr-232-2018",
@@ -100,10 +100,10 @@ def test_m232_source_declared_crlf_is_the_only_accepted_trailing_marker() -> Non
         record_terminator=None,
     )
     unterminated = FilingEnvelopeDefinition.model_validate(values)
-    assert _filing_envelope_body(unterminated, prefix + closer) == (328, prefix)
+    assert filing_envelope_body(unterminated, prefix + closer) == (328, prefix)
     for tail in (b"\r", b"\n", b"\r\n", b"\r\n\r\n"):
         with pytest.raises(RegistryValidationError, match="undeclared trailing record terminator"):
-            _filing_envelope_body(unterminated, prefix + closer + tail)
+            filing_envelope_body(unterminated, prefix + closer + tail)
 
     record = ExportRecordDefinition(
         id="source-proof-body",

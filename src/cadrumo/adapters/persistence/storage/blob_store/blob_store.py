@@ -43,12 +43,11 @@ from pydantic import BaseModel, Field, NonNegativeInt, ValidationError
 from .....core.atomic_write import atomic_write_bytes
 from .....core.classification.policies import AtRestTreatment, SensitivityClass, default_policy_for
 from .....core.directory_scan import scan_directory
-from .....core.external_constants import BINARY_MIME_TYPE
-from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
-from .....core.hashing import sha256_hex as _sha256_hex
+from .....core.external_constants import BINARY_MIME_TYPE, UTF_8_ENCODING
+from .....core.hashing import sha256_hex
 from .....core.identity.digest import ContentDigest
 from .....core.logging import get_logger
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.time.clock import now
 from ..crypto.aead import EncryptedBlob, decrypt_record, encrypt_record
 from ..crypto.aes_gcm import KEY_SIZE
@@ -109,7 +108,7 @@ class BlobManifest(BaseModel):
             plaintext blobs.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     sha256_plaintext_hex: ContentDigest
     sha256_ciphertext_hex: ContentDigest | None = None
@@ -132,14 +131,14 @@ class BlobReference(BaseModel):
             ciphertext); the get path uses this to find the file.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     sha256_plaintext_hex: ContentDigest
     classification: SensitivityClass
 
 
 def _hex_digest(data: bytes) -> str:
-    return _sha256_hex(data)
+    return sha256_hex(data)
 
 
 def _path_log_marker(path: Path) -> str:
@@ -147,7 +146,7 @@ def _path_log_marker(path: Path) -> str:
         resolved = path.expanduser().resolve(strict=False)
     except OSError:
         resolved = path.absolute()
-    return _hex_digest(str(resolved).encode(_UTF_8_ENCODING))[:16]
+    return _hex_digest(str(resolved).encode(UTF_8_ENCODING))[:16]
 
 
 def _blob_not_found_error(message: str, *, object_kind: str) -> BlobNotFoundError:
@@ -615,7 +614,7 @@ class EncryptedBlobStore:
                 # so it applies to this surface exactly as to a direct read.
                 try:
                     envelope = Envelope[BlobManifest].model_validate_json(
-                        manifest_path.read_text(encoding=_UTF_8_ENCODING),
+                        manifest_path.read_text(encoding=UTF_8_ENCODING),
                     )
                 except (OSError, ValueError, ValidationError) as exc:
                     _log.warning(

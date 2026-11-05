@@ -3,12 +3,12 @@ from __future__ import annotations
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from ._verification_chain_support import (
-    _COMPUTED_CASILLAS_M115,
-    _assert_engine_closure_matches_extracted_decimal,
-    _calculate_engine_values_from_inputs,
-    _decimal_inputs_from_extracted_values,
-    _parse_extracted_declaracion_values,
+from .verification_chain_support import (
+    COMPUTED_CASILLAS_M115,
+    assert_engine_closure_matches_extracted_decimal,
+    calculate_engine_values_from_inputs,
+    decimal_inputs_from_extracted_values,
+    parse_extracted_declaracion_values,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
@@ -55,15 +55,15 @@ def test_verification_chain_m115_engine_recomputes_resultado() -> None:
     own printed values. Not an
     AEAT-verified verdict — see FIXTURE, NOT ORACLE above.
     """
-    extracted = _parse_extracted_declaracion_values(modelo="115", fixture_stem="2024-1T", year=2024, period="1T")
+    extracted = parse_extracted_declaracion_values(modelo="115", fixture_stem="2024-1T", year=2024, period="1T")
 
     for required_id in _M115_REQUIRED_CASILLAS:
         assert required_id in extracted, (
             f"PARSER-GAP [M115/2024-1T]: casilla {required_id!r} not extracted.\n  got: {sorted(extracted)}"
         )
 
-    inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_COMPUTED_CASILLAS_M115)
-    engine_values = _calculate_engine_values_from_inputs(
+    inputs = decimal_inputs_from_extracted_values(extracted, excluding=COMPUTED_CASILLAS_M115)
+    engine_values = calculate_engine_values_from_inputs(
         modelo="115",
         year=2024,
         period="1T",
@@ -72,7 +72,7 @@ def test_verification_chain_m115_engine_recomputes_resultado() -> None:
     )
 
     for closure_id in _M115_CLOSURE_CASILLAS:
-        _assert_engine_closure_matches_extracted_decimal(
+        assert_engine_closure_matches_extracted_decimal(
             label="M115/2024-1T",
             engine_values=engine_values,
             extracted=extracted,

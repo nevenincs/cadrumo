@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING, Final
 
 import typer
 
-from cadrumo_client.commands.output import activate_subcommand_output_language as _activate_subcommand_output_language
+from cadrumo_client.commands.output import activate_subcommand_output_language
 
 from ....application.operator_actions.models import ActionReference
 from ....application.storage_management.documents import (
@@ -42,7 +42,7 @@ from ..common import emit_envelope, resolve_notice_action
 if TYPE_CHECKING:
     from ....application.storage_management.models import StorageAreaInventoryReport
 
-from ....core.external_constants import OutputLanguage as _OutputLanguage
+from ....core.external_constants import OutputLanguage
 
 _ROOT_ENV_VAR: Final[str] = "CADRUMO_STORAGE_ROOT"
 """Environment variable an operator sets to point the tree somewhere else.
@@ -54,10 +54,10 @@ operator the one control that does relocate, having refused to do it for them.
 
 def config_storage_list(
     ctx: typer.Context,
-    output_language: _OutputLanguage | None = None,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Report every declared location, its resolved path, and what it holds."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from ....application.storage_management.service import collect_storage_area_inventory
 
     report = collect_storage_area_inventory()
@@ -77,10 +77,10 @@ def config_storage_list(
 def config_storage_view(
     ctx: typer.Context,
     area: StorageArea,
-    output_language: _OutputLanguage | None = None,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Report one declared location in full."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from ....application.storage_management.service import collect_storage_area_inventory
 
     report = collect_storage_area_inventory()
@@ -102,10 +102,10 @@ def config_storage_view(
 
 def config_storage_check(
     ctx: typer.Context,
-    output_language: _OutputLanguage | None = None,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Verify the tree on disk against its declaration, repairing nothing."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from ....application.storage_management.service import inspect_storage_tree
 
     report = inspect_storage_tree()
@@ -165,10 +165,10 @@ def config_storage_check(
 
 def config_storage_init(
     ctx: typer.Context,
-    output_language: _OutputLanguage | None = None,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Materialise the declared tree, preserving everything already in it."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from ....application.storage_management.service import materialise_storage_tree
 
     report = materialise_storage_tree()
@@ -200,7 +200,7 @@ def config_storage_reclaim(
     ctx: typer.Context,
     area: StorageArea,
     confirmed: bool = False,
-    output_language: _OutputLanguage | None = None,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Delete an area's regenerable contents after the derived preflight.
 
@@ -209,7 +209,7 @@ def config_storage_reclaim(
     error boundary naming the resolved path, the entries left untouched, and the
     declared lifecycle that forbade the delete.
     """
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from ....application.storage_management.service import reclaim_storage_area
 
     report = reclaim_storage_area(area, confirmed=confirmed)

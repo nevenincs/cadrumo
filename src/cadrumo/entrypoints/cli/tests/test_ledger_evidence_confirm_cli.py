@@ -21,7 +21,7 @@ from ....core.field_origin import FieldOrigin
 from ....domain.invoices.enums import PaymentStatus
 from ....domain.iva.schema import InvoiceKind
 from ..ledger_business_payloads import EvidenceConfirmResult
-from ..ledger_evidence_commands import _evidence_confirm_payload, _require_exact_evidence_reference
+from ..ledger_evidence_commands import evidence_confirm_payload, require_exact_evidence_reference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -37,7 +37,7 @@ def _public_decimal(value: str) -> PublicDecimal:
     return PublicDecimal(decimal=value)
 
 
-def _projection() -> LedgerEvidenceConfirmProjection:
+def ledger_evidence_confirm_cli_projection() -> LedgerEvidenceConfirmProjection:
     """Build a strict canonical read projection with both provenance views."""
     extracted = FieldProvenanceProjectionV1(
         field="invoice_number",
@@ -125,14 +125,14 @@ def test_confirm_preflight_requires_exactly_one_reference(
     attachment_id: str | None,
 ) -> None:
     with pytest.raises(typer.BadParameter):
-        _require_exact_evidence_reference(evidence_id, attachment_id)
+        require_exact_evidence_reference(evidence_id, attachment_id)
 
 
 def test_confirm_payload_keeps_canonical_invoice_review_digests_and_provenance() -> None:
-    projection = _projection()
+    projection = ledger_evidence_confirm_cli_projection()
 
     result = EvidenceConfirmResult.model_validate(
-        _evidence_confirm_payload(bucket_id=str(_PROFILE), projection=projection),
+        evidence_confirm_payload(bucket_id=str(_PROFILE), projection=projection),
     )
 
     assert result.evidence_id == _EVIDENCE_ID

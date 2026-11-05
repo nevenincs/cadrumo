@@ -9,12 +9,12 @@ from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_va
 from ....core.decimal.constants import MONEY_ZERO
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_year import FilingYear
-from ....core.hashing import content_hash_hex as _content_hash_hex
+from ....core.hashing import content_hash_hex
 from ....core.identity.digest import ContentDigest
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.time.utc import UtcInstant
 from ...buckets.event import BUCKET_ACTOR_LABEL_MAX_LENGTH
-from ...identifiers import canonical_decimal_string as _canonical_decimal_string
+from ...identifiers import canonical_decimal_string
 from .closing_foundations import (
     InventoryClosingAuthority,
     InventoryClosingDecisionEvidence,
@@ -29,7 +29,7 @@ from .closing_foundations import (
 class InventoryClosingAuthorityDecision(BaseModel):
     """Explicit evidenced choice between movement and physical closing authority."""
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     decision_id: str = Field(min_length=1, max_length=128)
     actividad_id: str = Field(min_length=1)
@@ -72,7 +72,7 @@ class InventoryClosingAuthorityDecision(BaseModel):
     @property
     def fingerprint(self) -> ContentDigest:
         """Return canonical tamper-sensitive decision identity."""
-        return _content_hash_hex(
+        return content_hash_hex(
             {
                 "fingerprint_schema_version": "1",
                 "decision_id": self.decision_id,
@@ -100,7 +100,7 @@ class InventoryClosingAuthorityDecision(BaseModel):
 class PriorAuthoritativeClosingLink(BaseModel):
     """Continuity link from the immediately prior authoritative closing."""
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     actividad_id: str = Field(min_length=1)
     current_filing_year: int = Field(ge=1)
@@ -154,12 +154,12 @@ class PriorAuthoritativeClosingLink(BaseModel):
     @property
     def fingerprint(self) -> ContentDigest:
         """Return current-link identity including the opening-side coordinate."""
-        return _content_hash_hex(
+        return content_hash_hex(
             {
                 "fingerprint_schema_version": "1",
                 "prior_authoritative_closing_fingerprint": self.prior_authoritative_closing_fingerprint,
                 "current_filing_year": self.current_filing_year,
-                "current_opening_value": _canonical_decimal_string(self.current_opening_value),
+                "current_opening_value": canonical_decimal_string(self.current_opening_value),
             },
         )
 
@@ -167,7 +167,7 @@ class PriorAuthoritativeClosingLink(BaseModel):
 class InventoryClosingConflictDiagnostic(BaseModel):
     """Retained conflict between movement-derived and physical closing values."""
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     actividad_id: str = Field(min_length=1)
     filing_year: FilingYear
@@ -185,7 +185,7 @@ class InventoryClosingConflictDiagnostic(BaseModel):
 class InventoryClosingResolution(BaseModel):
     """Auditable authoritative closing resolution with retained conflict."""
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     actividad_id: str = Field(min_length=1)
     filing_year: FilingYear
@@ -259,7 +259,7 @@ def _validate_resolution_conflict(
 class InventoryClosingAuthorityRecord(BaseModel):
     """Ledger-owned immutable inputs for one closing-authority resolution."""
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     decision: InventoryClosingAuthorityDecision
     physical_observation: PhysicalClosingObservation | None = None
@@ -284,7 +284,7 @@ class InventoryClosingAuthorityRecord(BaseModel):
     @property
     def fingerprint(self) -> ContentDigest:
         """Return canonical identity for the complete persisted authority input set."""
-        return _content_hash_hex(
+        return content_hash_hex(
             {
                 "fingerprint_schema_version": "1",
                 "decision_fingerprint": self.decision.fingerprint,

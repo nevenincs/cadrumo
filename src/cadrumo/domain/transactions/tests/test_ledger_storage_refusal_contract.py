@@ -34,7 +34,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.errors.error_codes import get_registered_error_code
-from .. import repository as _repository_module
+from .. import repository
 from ..errors import LedgerNoActiveBucketError, LedgerStorageError
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..repository import transaction_index_object_key, transaction_object_key
@@ -54,15 +54,15 @@ _EXPECTED_RAISING_FUNCTIONS = frozenset(
     },
 )
 
-assert _repository_module.__file__ is not None
-_REPOSITORY_SOURCE = Path(_repository_module.__file__)
+assert repository.__file__ is not None
+_REPOSITORY_SOURCE = Path(repository.__file__)
 
 
 class TestTheStatedKeyIsTheRegisteredKey:
     """The module constant is the class's own registered key, not a restatement."""
 
     def test_module_constant_equals_the_registered_key(self) -> None:
-        module_key = vars(_repository_module)["_LEDGER_STORAGE_MESSAGE_KEY"]
+        module_key = vars(repository)["_LEDGER_STORAGE_MESSAGE_KEY"]
         assert get_registered_error_code(LedgerStorageError).message_key == module_key
 
     def test_the_registered_code_is_the_ledger_storage_code(self) -> None:

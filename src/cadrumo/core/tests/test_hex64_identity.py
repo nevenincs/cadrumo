@@ -38,7 +38,7 @@ import pytest
 from pydantic import ValidationError
 
 from ...tests.fixtures.identity_holder import single_field_holder
-from .. import identity as _identity_package
+from .. import identity
 from ..hex import Hex64Str
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -86,7 +86,7 @@ def _public_identity_modules() -> tuple[str, ...]:
     return tuple(
         sorted(
             f".{module_info.name}"
-            for module_info in pkgutil.iter_modules(_identity_package.__path__)
+            for module_info in pkgutil.iter_modules(identity.__path__)
             if not module_info.name.startswith("_") and module_info.name != "tests"
         )
     )

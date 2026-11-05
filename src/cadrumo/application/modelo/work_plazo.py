@@ -18,7 +18,7 @@ See Also:
         Nominal and business-day close dates of the plazo voluntario.
     :func:`cadrumo.domain.deadlines.recargo.build_recovery_for_overdue`:
         Resolves the Art. 27 LGT recargo band for overdue filing.
-    :func:`cadrumo.entrypoints.cli._modelo_rendering.work_deadline_output_from_posture`:
+    :func:`cadrumo.entrypoints.cli.modelo_rendering.work_deadline_output_from_posture`:
         Projects this summary onto JSON payloads and warning notices.
 """
 
@@ -218,7 +218,7 @@ def modelo_work_deadline_posture(
         close is unknown and the reference date is past its nominal close.
 
     See Also:
-        :func:`cadrumo.entrypoints.cli._modelo_rendering._work_unit_deadline_output_from_posture`:
+        :func:`cadrumo.entrypoints.cli.modelo_rendering.work_unit_deadline_output_from_posture`:
             Converts the summary into operator-facing payloads and notices.
     """
     from ...domain.deadlines.errors import DeadlineValidationError

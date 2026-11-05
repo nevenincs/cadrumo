@@ -21,19 +21,19 @@ from decimal import Decimal
 import pytest
 
 from .....core.money.rounding import round_to_cents
-from ._modelo_131_modulos_engine_support import (
-    _AUTOSERVICIO_647_2,
-    _CAFES_ESPECIAL_673_1,
-    _CASQUERIAS_642_6,
-    _DESPACHOS_PAN_644_2,
-    _HUEVOS_AVES_642_5,
-    _MASAS_FRITAS_644_6,
-    _OTROS_CAFES_673_2,
-    _PASTELERIA_644_3,
-    _PESCADOS_643_1,
-    _assert_fase1_previo_matches_orden_coefficients,
-    _assert_fase4_reduccion_general,
-    _run_modulos_engine,
+from .modelo_131_modulos_engine_support import (
+    AUTOSERVICIO_647_2,
+    CAFES_ESPECIAL_673_1,
+    CASQUERIAS_642_6,
+    DESPACHOS_PAN_644_2,
+    HUEVOS_AVES_642_5,
+    MASAS_FRITAS_644_6,
+    OTROS_CAFES_673_2,
+    PASTELERIA_644_3,
+    PESCADOS_643_1,
+    assert_fase1_previo_matches_orden_coefficients,
+    assert_fase4_reduccion_general,
+    run_modulos_engine,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -44,18 +44,18 @@ class TestCafesEspecial6731EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 5 metros longitud de barra.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = run_modulos_engine(
             "673.1",
             modulo_1=Decimal("1"),
             modulo_5=Decimal("5"),
         )
         expected_previo = round_to_cents(
-            Decimal("1") * _CAFES_ESPECIAL_673_1[1] + Decimal("5") * _CAFES_ESPECIAL_673_1[5],
+            Decimal("1") * CAFES_ESPECIAL_673_1[1] + Decimal("5") * CAFES_ESPECIAL_673_1[5],
         )
         assert previo == expected_previo == Decimal("5914.40")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
+        assert_fase4_reduccion_general(
             "673.1",
             modulo_1=Decimal("1"),
             modulo_5=Decimal("5"),
@@ -90,7 +90,7 @@ class TestCafesEspecial6731EstimacionObjetiva:
         (shared ``_expected_modulos`` helper, cross-checked against the
         Orden's own tabled cuantía/índice constants).
         """
-        previo, minorado, _modulos, _actividad = _run_modulos_engine(
+        previo, minorado, _modulos, _actividad = run_modulos_engine(
             "673.1",
             modulo_1=Decimal("3.66"),
             modulo_2=Decimal("1.00"),
@@ -134,7 +134,7 @@ class TestCafesEspecial6731EstimacionObjetiva:
         exceso chain compose correctly once the operator supplies the
         amortization figure.
         """
-        previo, minorado, modulos, _actividad = _run_modulos_engine(
+        previo, minorado, modulos, _actividad = run_modulos_engine(
             "673.1",
             modulo_1=Decimal("3.66"),
             modulo_2=Decimal("1.00"),
@@ -162,49 +162,49 @@ class TestCafesEspecial6731EstimacionObjetiva:
 _FASE_1_CASES = [
     pytest.param(
         "673.2",
-        _OTROS_CAFES_673_2,
+        OTROS_CAFES_673_2,
         {1: Decimal("1"), 2: Decimal("1"), 4: Decimal("3")},
         Decimal("13416.02"),
         id="673.2-otros-cafes-y-bares",
     ),
     pytest.param(
         "642.5",
-        _HUEVOS_AVES_642_5,
+        HUEVOS_AVES_642_5,
         {1: Decimal("1"), 4: Decimal("20")},
         Decimal("3923.96"),
         id="642.5-comercio-al-por-menor-de-huevos-aves-conejos-caza",
     ),
     pytest.param(
         "643.1",
-        _PESCADOS_643_1,
+        PESCADOS_643_1,
         {1: Decimal("1"), 2: Decimal("1")},
         Decimal("17119.61"),
         id="643.1-comercio-al-por-menor-de-pescados",
     ),
     pytest.param(
         "644.2",
-        _DESPACHOS_PAN_644_2,
+        DESPACHOS_PAN_644_2,
         {1: Decimal("1"), 3: Decimal("1")},
         Decimal("20401.19"),
         id="644.2-despachos-de-pan-panes-especiales-y-bolleria",
     ),
     pytest.param(
         "644.3",
-        _PASTELERIA_644_3,
+        PASTELERIA_644_3,
         {1: Decimal("1"), 4: Decimal("20")},
         Decimal("7237.09"),
         id="644.3-comercio-al-por-menor-de-pasteleria-bolleria-y-confiteria",
     ),
     pytest.param(
         "644.6",
-        _MASAS_FRITAS_644_6,
+        MASAS_FRITAS_644_6,
         {1: Decimal("1"), 2: Decimal("1")},
         Decimal("9107.78"),
         id="644.6-comercio-al-por-menor-de-masas-fritas",
     ),
     pytest.param(
         "647.2",
-        _AUTOSERVICIO_647_2,
+        AUTOSERVICIO_647_2,
         {1: Decimal("1"), 3: Decimal("30")},
         Decimal("2488.10"),
         id="647.2-comercio-al-por-menor-de-alimentacion-en-autoservicio",
@@ -231,7 +231,7 @@ def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(
     modulos: dict[int, Decimal],
     expected_previo: Decimal,
 ) -> None:
-    _assert_fase1_previo_matches_orden_coefficients(epigrafe, table, modulos, expected_previo)
+    assert_fase1_previo_matches_orden_coefficients(epigrafe, table, modulos, expected_previo)
 
 
 @pytest.mark.parametrize(("epigrafe", "modulos"), _FASE_4_CASES)
@@ -239,7 +239,7 @@ def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(
     epigrafe: str,
     modulos: dict[int, Decimal],
 ) -> None:
-    _assert_fase4_reduccion_general(epigrafe, **{f"modulo_{idx}": units for idx, units in modulos.items()})
+    assert_fase4_reduccion_general(epigrafe, **{f"modulo_{idx}": units for idx, units in modulos.items()})
 
 
 class TestCasquerias6426EstimacionObjetiva:
@@ -247,18 +247,18 @@ class TestCasquerias6426EstimacionObjetiva:
 
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal no asalariado, 30 m2 superficie local no independiente.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = run_modulos_engine(
             "642.6",
             modulo_2=Decimal("1"),
             modulo_4=Decimal("30"),
         )
         expected_previo = round_to_cents(
-            Decimal("1") * _CASQUERIAS_642_6[2] + Decimal("30") * _CASQUERIAS_642_6[4],
+            Decimal("1") * CASQUERIAS_642_6[2] + Decimal("30") * CASQUERIAS_642_6[4],
         )
         assert previo == expected_previo == Decimal("13176.54")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
+        assert_fase4_reduccion_general(
             "642.6",
             modulo_2=Decimal("1"),
             modulo_4=Decimal("30"),

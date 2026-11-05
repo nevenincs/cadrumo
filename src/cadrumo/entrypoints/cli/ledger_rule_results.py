@@ -31,7 +31,7 @@ from ...domain.transactions.classification_rule import (
     RulePriority,
 )
 from ...domain.transactions.enums import BusinessClassification
-from ._decimal_wire import DecimalWireText
+from .decimal_wire import DecimalWireText
 
 
 class ClassificationRulePayload(OutputSchema):

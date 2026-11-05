@@ -12,7 +12,7 @@ import json
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunMediaKind, ModelRunRefusalCode
 
 from ....adapters.outbound.llm.tests.model_run_support import TEXT_ONLY_LANE, serving_agent
@@ -74,7 +74,7 @@ def _classification_json() -> str:
 
 def _classify(evidence: ResolvedEvidence):
     settings = load_settings()
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return classify_with_evidence(
             vision_transaction("ev-1"),
             evidence,

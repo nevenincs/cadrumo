@@ -17,10 +17,8 @@ __all__ = ["isolated_backend"]
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.modelo_export_support import (
-    _M130_INPUT_CASILLA,
-)
-from cadrumo.adapters.persistence.profile.tests.modelo_export_support import (
-    seed_profile as _seed_profile,
+    M130_INPUT_CASILLA,
+    seed_profile,
 )
 from cadrumo.application.modelo.selectors import ModeloCalculationRevisionSelectorStateError, select_exportable_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
@@ -41,7 +39,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def test_exportable_selector_refuses_verified_fallback_when_current_draft_conflicts(
     isolated_backend: None, *, operation: PinnedAuthorityOperation
 ) -> None:
-    bucket_id = _seed_profile()
+    bucket_id = seed_profile()
     work_repo = WorkUnitCatalogueRepository()
     calc_repo = CalculationRevisionCatalogueRepository()
     work_unit = create_work_unit(
@@ -59,17 +57,17 @@ def test_exportable_selector_refuses_verified_fallback_when_current_draft_confli
     )
     verified_id = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
-        input_values_by_casilla_id={_M130_INPUT_CASILLA: "10"},
+        input_values_by_casilla_id={M130_INPUT_CASILLA: "10"},
         binding_overrides={},
-        casilla_values={_M130_INPUT_CASILLA: Decimal("10")},
+        casilla_values={M130_INPUT_CASILLA: Decimal("10")},
         filing_instance_evidence=None,
         source_provenance=(),
     )
     draft_id = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
-        input_values_by_casilla_id={_M130_INPUT_CASILLA: "20"},
+        input_values_by_casilla_id={M130_INPUT_CASILLA: "20"},
         binding_overrides={},
-        casilla_values={_M130_INPUT_CASILLA: Decimal("20")},
+        casilla_values={M130_INPUT_CASILLA: Decimal("20")},
         filing_instance_evidence=None,
         source_provenance=(),
     )
@@ -83,13 +81,13 @@ def test_exportable_selector_refuses_verified_fallback_when_current_draft_confli
             period=work_unit.period.registry_token,
         ),
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        input_values_by_casilla_id={_M130_INPUT_CASILLA: "10"},
-        casilla_values={_M130_INPUT_CASILLA: Decimal("10")},
+        input_values_by_casilla_id={M130_INPUT_CASILLA: "10"},
+        casilla_values={M130_INPUT_CASILLA: Decimal("10")},
         observations=registry_grounded_observations(
             modelo="130",
             filing_year=2026,
             period="1T",
-            casilla_values={_M130_INPUT_CASILLA: Decimal("10")},
+            casilla_values={M130_INPUT_CASILLA: Decimal("10")},
         ),
         created_at=datetime(2026, 6, 4, 10, 1, tzinfo=UTC),
         updated_at=datetime(2026, 6, 4, 10, 1, tzinfo=UTC),
@@ -108,13 +106,13 @@ def test_exportable_selector_refuses_verified_fallback_when_current_draft_confli
             period=work_unit.period.registry_token,
         ),
         state=CalculationRevisionState.BORRADOR,
-        input_values_by_casilla_id={_M130_INPUT_CASILLA: "20"},
-        casilla_values={_M130_INPUT_CASILLA: Decimal("20")},
+        input_values_by_casilla_id={M130_INPUT_CASILLA: "20"},
+        casilla_values={M130_INPUT_CASILLA: Decimal("20")},
         observations=registry_grounded_observations(
             modelo="130",
             filing_year=2026,
             period="1T",
-            casilla_values={_M130_INPUT_CASILLA: Decimal("20")},
+            casilla_values={M130_INPUT_CASILLA: Decimal("20")},
         ),
         created_at=datetime(2026, 6, 4, 10, 2, tzinfo=UTC),
         updated_at=datetime(2026, 6, 4, 10, 2, tzinfo=UTC),

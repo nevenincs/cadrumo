@@ -9,7 +9,7 @@ from typing import cast
 
 import pytest
 
-import cadrumo_client.commands.suggestions as _suggestions
+import cadrumo_client.commands.suggestions as suggestions
 from cadrumo_client.commands.compiler import refuse_declared_live_write
 from cadrumo_client.commands.spec import ExecutionPolicySpec
 from cadrumo_client.contracts.command_ports import (
@@ -22,7 +22,7 @@ from cadrumo_client.contracts.command_ports import (
 
 from ....core.access_gate.errors import LiveSubmitForbiddenError
 from ....core.errors.error_codes import get_registered_error_code
-from .._command_policy import (
+from ..command_policy import (
     CommandExecutionPolicy,
 )
 
@@ -32,8 +32,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 def test_callback_policy_attachment_authority_is_physically_absent() -> None:
     cli_root = Path(__file__).parents[1]
     policy_source = (cli_root / "_command_policy.py").read_text(encoding="utf-8")
-    assert _suggestions.__file__ is not None
-    suggestions_path = Path(_suggestions.__file__)
+    assert suggestions.__file__ is not None
+    suggestions_path = Path(suggestions.__file__)
     suggestions_source = suggestions_path.read_text(encoding="utf-8")
     forbidden = {"command_execution_policy", "execution_policy_for"}
     violations: list[str] = []

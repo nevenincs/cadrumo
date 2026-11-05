@@ -28,7 +28,7 @@ from pathlib import Path
 
 from ..core.directory_scan import scan_directory
 
-_STEM = "cadrumo-pytest-"
+STEM = "cadrumo-pytest-"
 
 SETTINGS_STEM = "cadrumo-settings-"
 """Prefix for the temporary storage roots ``env_scope`` mints per call.
@@ -87,7 +87,7 @@ bound. That is not left to reviewer memory: a gate discovers every
 finalized at its own call site.
 """
 
-_SWEPT_STEMS = (_STEM, SETTINGS_STEM, AUTHORITY_SNAPSHOT_STEM, *SWEPT_SCRATCH_STEMS)
+_SWEPT_STEMS = (STEM, SETTINGS_STEM, AUTHORITY_SNAPSHOT_STEM, *SWEPT_SCRATCH_STEMS)
 """Every prefix the staleness sweep reclaims.
 
 The first two families leak by the same mechanism -- a process that is killed
@@ -100,7 +100,7 @@ structurally cannot. :data:`SWEPT_SCRATCH_STEMS` extends the same reclaim to
 the scratch families that carry no owner in their names.
 """
 
-_STALE_AFTER_SECONDS = 24 * 60 * 60
+STALE_AFTER_SECONDS = 24 * 60 * 60
 """Generous staleness threshold for a sibling root: long enough to never
 race a slow CI run or a long-idle interactive session sharing the same
 temp directory, short enough that crashed/killed prior invocations do not
@@ -116,7 +116,7 @@ it (see :data:`_ABANDONED_AFTER_SECONDS`); the ``cadrumo-settings-``
 family, whose names carry no owner, has only this one.
 """
 
-_ABANDONED_AFTER_SECONDS = 10 * 60
+ABANDONED_AFTER_SECONDS = 10 * 60
 """Grace period applied only AFTER the owning process is confirmed gone.
 
 A ``cadrumo-pytest-<pid>`` directory names its owner in its own filename,
@@ -225,7 +225,7 @@ def _windows_process_is_live(pid: int) -> bool:
 
 def _owning_pid(sibling: Path, stem: str) -> int | None:
     """Return the PID encoded in ``sibling``'s name, or ``None`` if it carries none."""
-    if stem not in {_STEM, AUTHORITY_SNAPSHOT_STEM}:
+    if stem not in {STEM, AUTHORITY_SNAPSHOT_STEM}:
         return None
     suffix = sibling.name[len(stem) :]
     if not suffix.isdigit():
@@ -250,9 +250,9 @@ def _is_reclaimable(sibling: Path, stem: str, reference: float) -> bool:
     liveness answer exists, and never widens what the first alone would take.
     """
     age = reference - sibling.stat().st_mtime
-    if age > _STALE_AFTER_SECONDS:
+    if age > STALE_AFTER_SECONDS:
         return True
-    if age <= _ABANDONED_AFTER_SECONDS:
+    if age <= ABANDONED_AFTER_SECONDS:
         return False
     pid = _owning_pid(sibling, stem)
     return pid is not None and not process_is_live(pid)
@@ -320,7 +320,7 @@ it, which survives whenever that removal is interrupted. Both carry the same
 ``.lock`` file naming the same kind of owner, so both reclaim under one rule.
 """
 
-_LOCK_NAME = ".lock"
+LOCK_NAME = ".lock"
 """pytest's per-numbered-directory lock file (``_pytest.pathlib.get_lock_path``).
 
 Created once with ``O_EXCL`` at directory creation, holding the owning
@@ -359,7 +359,7 @@ def _numbered_dir_owner_pid(directory: Path) -> int | None:
     pytest creates the numbered directory and writes the lock in two separate
     steps and a directory observed between them has no lock yet.
     """
-    lock = directory / _LOCK_NAME
+    lock = directory / LOCK_NAME
     try:
         if not lock.is_file():
             return None
@@ -397,9 +397,9 @@ def _numbered_dir_is_reclaimable(directory: Path, reference: float) -> bool:
     approximating, and answers it in minutes instead of days.
     """
     age = reference - directory.stat().st_mtime
-    if age > _STALE_AFTER_SECONDS:
+    if age > STALE_AFTER_SECONDS:
         return True
-    if age <= _ABANDONED_AFTER_SECONDS:
+    if age <= ABANDONED_AFTER_SECONDS:
         return False
     pid = _numbered_dir_owner_pid(directory)
     return pid is not None and not process_is_live(pid)
@@ -469,7 +469,7 @@ def collection_storage_root() -> Path:
     (keyed on the current PID), so concurrent pytest invocations, including
     parallel delegated clients sharing this worktree, never collide.
     """
-    return Path(tempfile.gettempdir()) / f"{_STEM}{os.getpid()}"
+    return Path(tempfile.gettempdir()) / f"{STEM}{os.getpid()}"
 
 
 def authority_snapshot_root() -> Path:
@@ -522,7 +522,7 @@ def _unlink_components() -> None:
     _LINKED_COMPONENTS.clear()
 
 
-def _release_log_handlers_under(root: Path) -> None:
+def release_log_handlers_under(root: Path) -> None:
     """Close and detach any root-logger file handler writing under ``root``.
 
     ``configure_logging`` (``cadrumo.core.logging``) attaches a
@@ -608,7 +608,7 @@ def register_collection_storage_root_cleanup(root: Path) -> None:
 
     def _cleanup() -> None:
         _unlink_components()
-        _release_log_handlers_under(root)
+        release_log_handlers_under(root)
         shutil.rmtree(root, ignore_errors=True)
         shutil.rmtree(authority_snapshot_root(), ignore_errors=True)
         sweep_stale_roots(root.parent, exclude=root)

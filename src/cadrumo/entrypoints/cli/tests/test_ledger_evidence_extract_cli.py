@@ -26,9 +26,9 @@ from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.operations import OperationEffect
 from ..ledger_evidence_commands import (
-    _evidence_extract_lines,
-    _evidence_extract_payload,
-    _require_exact_evidence_reference,
+    evidence_extract_lines,
+    evidence_extract_payload,
+    require_exact_evidence_reference,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -103,14 +103,14 @@ def test_extract_preflight_requires_exactly_one_reference(
     attachment_id: str | None,
 ) -> None:
     with pytest.raises(typer.BadParameter):
-        _require_exact_evidence_reference(evidence_id, attachment_id)
+        require_exact_evidence_reference(evidence_id, attachment_id)
 
 
 def test_extract_payload_keeps_full_structured_draft_and_both_review_addresses() -> None:
     projection = _projection()
 
     result = EvidenceExtractResult.model_validate_json(
-        json.dumps(_evidence_extract_payload(bucket_id=str(_PROFILE), projection=projection)),
+        json.dumps(evidence_extract_payload(bucket_id=str(_PROFILE), projection=projection)),
     )
 
     assert result.evidence_id == _EVIDENCE_ID
@@ -129,7 +129,7 @@ def test_extract_payload_keeps_full_structured_draft_and_both_review_addresses()
     assert result.facturae_invoice_class is not None
     assert result.facturae_invoice_class.source_code == "OO"
 
-    lines = _evidence_extract_lines(str(_PROFILE), projection)
+    lines = evidence_extract_lines(str(_PROFILE), projection)
     assert f"source_sha256\t{_SOURCE_SHA256}" in lines
     assert f"draft_review_sha256\t{_DRAFT_SHA256}" in lines
     assert "consent_audit_effect\tnone" in lines

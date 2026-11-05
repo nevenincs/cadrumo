@@ -88,7 +88,7 @@ from pydantic_core import core_schema
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST, FourDigitYear
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.money.rounding import round_to_cents as _round_to_cents
+from ...core.money.rounding import round_to_cents
 from ...core.percentage import Percentage
 from ...core.registry_token import StrictRegistryToken
 from .errors import ProrrataInputError
@@ -719,7 +719,7 @@ def compute_regularizacion_prorrata_particionada(
     """
     deduccion_definitiva = sum(
         (
-            _round_to_cents(particion.cuotas_soportadas_deducibles * particion.prorrata_definitiva_pct / Decimal("100"))
+            round_to_cents(particion.cuotas_soportadas_deducibles * particion.prorrata_definitiva_pct / Decimal("100"))
             for particion in particiones
         ),
         Decimal("0"),

@@ -60,16 +60,16 @@ from ..runtime_graph import expression_binding_refs
 from ..schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
 from ..schema_catalogues import RegistryCatalogues
 from ..withholding_bindings import WithholdingObservation, resolve_withholding_binding_values
-from ._cross_dependency_calculation_support import (
-    _casilla_inputs,
-    _grounded_observations,
-    _observations_from_requirements,
+from .authored_editions import authored_revisions_where
+from .cross_dependency_calculation_support import (
+    casilla_inputs,
+    grounded_observations,
+    observations_from_requirements,
     source_editions_calculate,
 )
-from ._registry_filing_date_support import registry_filing_date
-from .authored_editions import authored_revisions_where
 from .modelo_100_registry_support import M100_NO_DESCENDANT_MATERNIDAD_BINDINGS
 from .published_authority import PublishedGovernedFactSource, published_supported_filing_years
+from .registry_filing_date_support import registry_filing_date
 from .relation_fixture import resolve_relation_values_from_observations
 from .withholding_observation_defaults import zero_incapacity_and_foral_fields
 
@@ -419,7 +419,7 @@ def _assert_relations_resolve_from_observations(
 ) -> None:
     """Drive the relation-source -> observation -> resolution roundtrip and assert closure."""
     requirements = relation_source_requirements(revision, filing_year=filing_year, period=period)
-    observations = _observations_from_requirements(
+    observations = observations_from_requirements(
         requirements,
         lambda _requirement, period_index: Decimal(period_index + 1),
         target_modelo=target_modelo,
@@ -531,7 +531,7 @@ def test_annual_summary_cross_dependency_calculation_resolves_quarterly_filings(
     snapshot = registry_snapshot(modelo, filing_year, "0A")
     source_values = source_values_factory()
     requirements = relation_source_requirements(snapshot.revision, filing_year=filing_year, period="0A")
-    observations = _observations_from_requirements(
+    observations = observations_from_requirements(
         requirements,
         lambda requirement, period_index: source_values[requirement.source_casilla_ids[0]][period_index],
     )
@@ -611,7 +611,7 @@ def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings(
 
     snapshot = registry_snapshot("190", _M190_RELATION_YEAR, "0A")
     requirements = relation_source_requirements(snapshot.revision, filing_year=_M190_RELATION_YEAR, period="0A")
-    observations = _observations_from_requirements(
+    observations = observations_from_requirements(
         requirements,
         lambda requirement, period_index: _m190_fixture_relation_source_value(
             requirement,
@@ -694,7 +694,7 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
 ) -> None:
     snapshot = registry_snapshot("100", 2025, "0A")
     requirements = relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
-    observations = _observations_from_requirements(requirements, _renta_relation_observed_value)
+    observations = observations_from_requirements(requirements, _renta_relation_observed_value)
 
     relation_values = resolve_relation_values_from_observations(
         snapshot.revision,
@@ -770,12 +770,12 @@ def test_a_filed_modelo_184_does_not_fill_the_member_share_casilla_1577(
 
     requirements = relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
     assert all(requirement.source_modelo != "184" for requirement in requirements)
-    observations = _observations_from_requirements(requirements, _renta_relation_observed_value)
+    observations = observations_from_requirements(requirements, _renta_relation_observed_value)
     m184_entity_filing = RegistryModeloObservation(
         modelo="184",
         filing_year=2025,
         period="0A",
-        observations=_grounded_observations(
+        observations=grounded_observations(
             modelo="184",
             filing_year=2025,
             period="0A",
@@ -856,16 +856,16 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
         "4T": Decimal("1800"),
     }
     for period, inputs in {
-        "1T": _casilla_inputs(
+        "1T": casilla_inputs(
             {"01": Decimal("10000"), "gastos-deducibles-previos": Decimal("3000"), "06": Decimal("100")}
         ),
-        "2T": _casilla_inputs(
+        "2T": casilla_inputs(
             {"01": Decimal("16000"), "gastos-deducibles-previos": Decimal("6000"), "06": Decimal("250")}
         ),
-        "3T": _casilla_inputs(
+        "3T": casilla_inputs(
             {"01": Decimal("22000"), "gastos-deducibles-previos": Decimal("9000"), "06": Decimal("450")}
         ),
-        "4T": _casilla_inputs(
+        "4T": casilla_inputs(
             {"01": Decimal("28000"), "gastos-deducibles-previos": Decimal("12000"), "06": Decimal("650")}
         ),
     }.items():
@@ -884,7 +884,7 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
 
     snapshot = registry_snapshot("100", filing_year, "0A")
     requirements = relation_source_requirements(snapshot.revision, filing_year=filing_year, period="0A")
-    observations = _observations_from_requirements(
+    observations = observations_from_requirements(
         requirements,
         lambda requirement, period_index: _renta_relation_observed_value_from_modelo_130_results(
             requirement,
@@ -985,7 +985,7 @@ def test_modelo_100_m131_pagos_fraccionados_cumulative_wires_to_casilla_0604(
     m131_quarterly_amounts = (Decimal("450"), Decimal("450"), Decimal("450"), Decimal("450"))
     m130_quarterly_amounts = (Decimal("100"), Decimal("200"), Decimal("300"), Decimal("400"))
 
-    observations = _observations_from_requirements(
+    observations = observations_from_requirements(
         requirements,
         lambda requirement, period_index: _renta_quarterly_relation_observed_value(
             requirement,
@@ -1046,7 +1046,7 @@ def test_modelo_100_m131_pagos_fraccionados_anti_tautology_proportional_change(
     requirements = relation_source_requirements(snapshot.revision, filing_year=filing_year, period="0A")
 
     def _resolve_0604_relations(m131_quarterly: Decimal) -> Decimal:
-        obs = _observations_from_requirements(
+        obs = observations_from_requirements(
             requirements,
             lambda requirement, period_index: _renta_quarterly_relation_observed_value(
                 requirement,
@@ -1077,7 +1077,7 @@ assert _SUPPORTED_YEARS is not None
         (
             _SUPPORTED_YEARS.floor + 1,
             _SUPPORTED_YEARS.floor,
-            _casilla_inputs(
+            casilla_inputs(
                 {
                     "0224": Decimal("4000"),
                     "1479": Decimal("2000"),
@@ -1090,7 +1090,7 @@ assert _SUPPORTED_YEARS is not None
         (
             _SUPPORTED_YEARS.horizon,
             _SUPPORTED_YEARS.horizon - 1,
-            _casilla_inputs(
+            casilla_inputs(
                 {
                     "0224": Decimal("5000"),
                     "1479": Decimal("2000"),
@@ -1125,7 +1125,7 @@ def test_modelo_130_resolves_previous_year_modelo_100_filed_casillas_into_bindin
                 modelo="100",
                 filing_year=source_year,
                 period="0A",
-                observations=_grounded_observations(
+                observations=grounded_observations(
                     modelo="100",
                     filing_year=source_year,
                     period="0A",
@@ -1145,11 +1145,11 @@ def test_modelo_100_source_below_the_supported_floor_cannot_be_grounded_for_carr
     support = published_supported_filing_years()
     assert support is not None
     with pytest.raises(FilingYearOutsideSupportEnvelopeError):
-        _grounded_observations(
+        grounded_observations(
             modelo="100",
             filing_year=support.floor - 1,
             period="0A",
-            casilla_values=_casilla_inputs({"0224": Decimal("4000")}),
+            casilla_values=casilla_inputs({"0224": Decimal("4000")}),
         )
 
 

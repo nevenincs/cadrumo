@@ -18,12 +18,10 @@ from uuid import UUID
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     identity_seeded_custody_envelope,
-)
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from .....core.bucket_pointer import BucketPointer, write_pointer
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
@@ -52,7 +50,7 @@ def build_envelope() -> ProfileCustodyEnvelope:
 
 def publish_capsule_and_pointer(root: Path) -> None:
     """Publish one complete capsule at *root* and point the active selector at it."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     from .....application.user_profile.capsule_record import ProfileRecordSession
     from .....application.user_profile.lifecycle import ProfileCapsuleLifecycle
 
@@ -67,7 +65,7 @@ def publish_capsule_and_pointer(root: Path) -> None:
             password_envelope=envelope,
             sentinel=create_profile_custody_sentinel(envelope=envelope, dek=DEK),
             data_files={},
-            initial_record=_create_profile_record_for_test(
+            initial_record=create_user_profile_record(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=PROFILE_ID,
                 facts=READY_FACTS,

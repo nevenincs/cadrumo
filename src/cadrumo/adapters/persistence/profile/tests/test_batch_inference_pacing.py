@@ -35,7 +35,7 @@ from ..purchase_invoice_evidence import (
     LedgerEvidenceAttachmentIngestor,
     LedgerEvidenceRepositoryAdapter,
 )
-from ._invoice_confirmation_test_support import _invoice_draft_extraction_ports, serving_a_loopback_reader
+from .invoice_confirmation_test_support import invoice_draft_extraction_ports, serving_a_loopback_reader
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -113,7 +113,7 @@ def _run(profile: TestRuntimeProfile, folder: Path) -> BatchRunResult:
             direction=InvoiceKind.RECEIVED,
             settings=profile.settings,
             evidence_ports=evidence_ports,
-            extraction_ports=_invoice_draft_extraction_ports(evidence_ports=evidence_ports, operation=operation),
+            extraction_ports=invoice_draft_extraction_ports(evidence_ports=evidence_ports, operation=operation),
             operation=operation,
             legends=legends,
         )

@@ -15,7 +15,7 @@ import pytest
 import yaml
 
 from ...navigation import TUI_DESTINATION_CATALOGUE
-from ...search import _DESTINATION_HELP_LOCALE_KEYS, _DESTINATION_LOCALE_KEYS
+from ...search import DESTINATION_HELP_LOCALE_KEYS, DESTINATION_LOCALE_KEYS
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -58,8 +58,8 @@ def _expected_keys() -> tuple[str, ...]:
     for descriptor in TUI_DESTINATION_CATALOGUE:
         if descriptor.destination in _NEW_DESTINATIONS:
             keys.add(descriptor.label_key)
-            keys.add(_DESTINATION_LOCALE_KEYS[descriptor.destination])
-            keys.add(_DESTINATION_HELP_LOCALE_KEYS[descriptor.destination])
+            keys.add(DESTINATION_LOCALE_KEYS[descriptor.destination])
+            keys.add(DESTINATION_HELP_LOCALE_KEYS[descriptor.destination])
     return tuple(sorted(keys))
 
 

@@ -12,7 +12,7 @@ from .....core.base64_codec import b64_decode, b64_encode
 from .....core.logging import get_logger
 from .....core.profile_session import KeychainUnavailability
 from ..errors import KeyringUnavailableError, StorageValidationError
-from . import acceleration_receipt_crypto as _crypto
+from . import acceleration_receipt_crypto
 from .macos_login_keychain import noninteractive_keychain_access
 
 _log = get_logger(__name__)
@@ -70,7 +70,7 @@ class _NoninteractiveKeyring:
             self.backend.delete_password(service_name, username)
 
 
-def _keyring() -> tuple[_ProfileSessionKeyring, type[BaseException], type[BaseException]]:
+def acceleration_keychain_keyring() -> tuple[_ProfileSessionKeyring, type[BaseException], type[BaseException]]:
     """Return the direct OS-keychain capability without master/provider reuse."""
     try:
         import keyring
@@ -130,7 +130,7 @@ def probe_profile_session_keychain() -> KeychainUnavailability | None:
     fact behind a sign-in that was not persisted or cannot be followed.
     """
     try:
-        keyring, _keyring_error, _password_delete_error = _keyring()
+        keyring, _keyring_error, _password_delete_error = acceleration_keychain_keyring()
         keyring.get_password(PROFILE_SESSION_KEYCHAIN_SERVICE, _KEYCHAIN_PROBE_ACCOUNT)
     except Exception as exc:
         return keychain_unavailability(exc)
@@ -144,9 +144,11 @@ def _keychain_account(*, profile_id: UUID, session_id: UUID) -> str:
 
 def store_acceleration_secret(*, profile_id: UUID, session_id: UUID, session_key: bytes) -> None:
     """Store and round-trip verify one fresh session key under its UUID pair."""
-    if len(session_key) != _crypto.PROFILE_SESSION_KEY_BYTES:
-        raise StorageValidationError(f"session_key must be exactly {_crypto.PROFILE_SESSION_KEY_BYTES} bytes")
-    keyring, keyring_error, _password_delete_error = _keyring()
+    if len(session_key) != acceleration_receipt_crypto.PROFILE_SESSION_KEY_BYTES:
+        raise StorageValidationError(
+            f"session_key must be exactly {acceleration_receipt_crypto.PROFILE_SESSION_KEY_BYTES} bytes"
+        )
+    keyring, keyring_error, _password_delete_error = acceleration_keychain_keyring()
     account = _keychain_account(profile_id=profile_id, session_id=session_id)
     encoded = b64_encode(session_key)
     try:
@@ -173,7 +175,7 @@ def read_acceleration_secret(*, profile_id: UUID, session_id: UUID) -> bytes | N
         KeyringUnavailableError: When the keychain cannot answer.
         ValueError: When the stored entry is not one encoded session key.
     """
-    keyring, keyring_error, _password_delete_error = _keyring()
+    keyring, keyring_error, _password_delete_error = acceleration_keychain_keyring()
     account = _keychain_account(profile_id=profile_id, session_id=session_id)
     try:
         stored = keyring.get_password(PROFILE_SESSION_KEYCHAIN_SERVICE, account)
@@ -192,7 +194,7 @@ def read_acceleration_secret(*, profile_id: UUID, session_id: UUID) -> bytes | N
         key = b64_decode(stored)
     except (ValueError, binascii.Error) as exc:
         raise ValueError("profile-session keychain entry is not base64") from exc
-    if len(key) != _crypto.PROFILE_SESSION_KEY_BYTES:
+    if len(key) != acceleration_receipt_crypto.PROFILE_SESSION_KEY_BYTES:
         raise ValueError("profile-session keychain entry has the wrong length")
     return key
 
@@ -224,7 +226,7 @@ def _delete_keychain_entry(
     session_id: UUID,
 ) -> None:
     """Delete and independently confirm one exact UUID-pair account."""
-    keyring, keyring_error, password_delete_error = _keyring()
+    keyring, keyring_error, password_delete_error = acceleration_keychain_keyring()
     account = _keychain_account(profile_id=profile_id, session_id=session_id)
     present = _read_keychain_entry_for_deletion(
         keyring,

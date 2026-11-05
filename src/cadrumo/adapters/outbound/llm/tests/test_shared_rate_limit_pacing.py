@@ -24,7 +24,7 @@ from .....tests.fixtures.settings import EnvFileFreeSettings
 from .. import client as client_module
 from ..client import LLMClient, LLMRetryPolicy
 from ..errors import LLMRateLimitError
-from ._client_process_state import reset_client_process_state
+from .client_process_state import reset_client_process_state
 from .scripted_adapter_support import COMPLETION_TEXT, ScriptedAdapter, provider_request
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -79,7 +79,7 @@ def test_a_rate_limit_on_one_item_paces_the_next_item(tmp_path: Path) -> None:
     with pytest.raises(LLMRateLimitError):
         _dispatch(client, first, "first item")
 
-    assert client_module._PROVIDER_PACING.remaining_s(LLMProvider.AGENT) > 0, "the shared window was never armed"
+    assert client_module.PROVIDER_PACING.remaining_s(LLMProvider.AGENT) > 0, "the shared window was never armed"
 
     assert _dispatch(client, second, "second item") == COMPLETION_TEXT
     gap = second.arrived_at[0] - first.arrived_at[0]
@@ -101,7 +101,7 @@ def test_without_a_rate_limit_the_second_item_is_not_delayed(tmp_path: Path, mon
     gate = LLMClient._await_shared_pacing
 
     async def recording_gate(provider: LLMProvider, policy: LLMRetryPolicy) -> None:
-        observed_windows.append(client_module._PROVIDER_PACING.remaining_s(provider))
+        observed_windows.append(client_module.PROVIDER_PACING.remaining_s(provider))
         await gate(provider, policy)
 
     monkeypatch.setattr(LLMClient, "_await_shared_pacing", staticmethod(recording_gate))
@@ -110,7 +110,7 @@ def test_without_a_rate_limit_the_second_item_is_not_delayed(tmp_path: Path, mon
     _dispatch(client, _answering(), "second item")
 
     assert observed_windows == [0.0, 0.0], f"an unlimited run still asked its dispatches to wait: {observed_windows}"
-    assert client_module._PROVIDER_PACING.remaining_s(LLMProvider.AGENT) == 0
+    assert client_module.PROVIDER_PACING.remaining_s(LLMProvider.AGENT) == 0
 
 
 def test_the_window_is_shared_across_clients(tmp_path: Path) -> None:
@@ -140,7 +140,7 @@ def test_a_limit_discovered_on_the_last_attempt_still_paces_the_run(tmp_path: Pa
     with pytest.raises(LLMRateLimitError):
         _dispatch(_client(tmp_path, attempts=1), _rate_limited(), "only attempt")
 
-    assert client_module._PROVIDER_PACING.remaining_s(LLMProvider.AGENT) > 0
+    assert client_module.PROVIDER_PACING.remaining_s(LLMProvider.AGENT) > 0
 
 
 def test_the_shared_wait_is_bounded_by_the_retry_budget(tmp_path: Path) -> None:

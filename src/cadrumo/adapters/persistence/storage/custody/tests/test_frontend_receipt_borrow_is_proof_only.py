@@ -82,7 +82,9 @@ class _RecordingKeyring:
 @pytest.fixture
 def keychain(monkeypatch: pytest.MonkeyPatch) -> _RecordingKeyring:
     store = _RecordingKeyring()
-    monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (store, _KeyringError, _KeyringError))
+    monkeypatch.setattr(
+        acceleration_keychain, "acceleration_keychain_keyring", lambda: (store, _KeyringError, _KeyringError)
+    )
     return store
 
 
@@ -111,7 +113,7 @@ def _snapshot(directory: Path) -> dict[str, bytes]:
 def _corrupt_ciphertext(root: Path, profile_id: UUID, record: PersistedProfileSession) -> None:
     flipped = bytes([record.ciphertext[0] ^ 0xFF]) + record.ciphertext[1:]
     path = receipt.profile_session_path(storage_root=root, profile_id=profile_id)
-    receipt._write_acceleration_receipt(
+    receipt.write_acceleration_receipt(
         storage_root=root,
         profile_id=profile_id,
         record=record.model_copy(update={"ciphertext": flipped}),
@@ -280,10 +282,10 @@ def test_an_interrupted_key_swap_is_left_by_the_borrow_and_settled_by_the_runtim
     profile_id = uuid4()
     sign_in, record = _mint(tmp_path, profile_id)
     path = receipt.profile_session_path(storage_root=tmp_path, profile_id=profile_id)
-    journal = receipt._profile_session_retirement_path(storage_root=tmp_path, profile_id=profile_id)
+    journal = receipt.profile_session_retirement_path(storage_root=tmp_path, profile_id=profile_id)
     # A first mint that died after publishing, before clearing its journal.
     journal.write_bytes(
-        receipt._pending_retirement_bytes(profile_id=profile_id, predecessor=None, successor=path.read_bytes())
+        receipt.pending_retirement_bytes(profile_id=profile_id, predecessor=None, successor=path.read_bytes())
     )
     files = _snapshot(path.parent)
 
@@ -352,7 +354,7 @@ def test_the_probe_reports_a_missing_backend(monkeypatch: pytest.MonkeyPatch) ->
     def no_backend() -> None:
         raise KeyringUnavailableError("none", unavailability=KeychainUnavailability.NO_BACKEND)
 
-    monkeypatch.setattr(acceleration_keychain, "_keyring", no_backend)
+    monkeypatch.setattr(acceleration_keychain, "acceleration_keychain_keyring", no_backend)
     assert acceleration_keychain.probe_profile_session_keychain() is KeychainUnavailability.NO_BACKEND
 
 

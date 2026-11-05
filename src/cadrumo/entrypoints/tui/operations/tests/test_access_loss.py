@@ -47,9 +47,9 @@ from ..modal import OperationModal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_OPERATION_ID = "a" * 64
+OPERATION_ID = "a" * 64
 _INTERACTION_ID = "b" * 64
-_NOW = datetime(2026, 9, 27, tzinfo=UTC)
+NOW = datetime(2026, 9, 27, tzinfo=UTC)
 
 
 class _SafeReview(BaseModel):
@@ -67,7 +67,7 @@ def _observation() -> OperationObservationSuccessV1:
     assert contract.review_projection_schema is not None
     assert contract.interaction_response_schema is not None
     reference = OperationReviewProjectionReferenceV1(
-        operation_id=_OPERATION_ID,
+        operation_id=OPERATION_ID,
         interaction_id=_INTERACTION_ID,
         revision=4,
         review_projection_schema=contract.review_projection_schema,
@@ -75,7 +75,7 @@ def _observation() -> OperationObservationSuccessV1:
         expires_at=None,
     )
     pending = OperationReviewAvailableInteractionV1(
-        operation_id=_OPERATION_ID,
+        operation_id=OPERATION_ID,
         interaction_id=_INTERACTION_ID,
         revision=4,
         presentation_code="operation.review.ready",
@@ -84,7 +84,7 @@ def _observation() -> OperationObservationSuccessV1:
         review_reference=reference,
     )
     projection = OperationPublicProjectionV1(
-        operation_id=_OPERATION_ID,
+        operation_id=OPERATION_ID,
         definition_id=contract.definition_id,
         subject_ref="profile:active",
         revision=4,
@@ -95,8 +95,8 @@ def _observation() -> OperationObservationSuccessV1:
         terminal_condition=None,
         effect=OperationEffect.NONE,
         phase_code="operation.review.ready",
-        started_at=_NOW,
-        updated_at=_NOW,
+        started_at=NOW,
+        updated_at=NOW,
         progress=None,
         close_policy=contract.close_policy,
         cancellation=contract.cancellation,
@@ -112,7 +112,7 @@ def _observation() -> OperationObservationSuccessV1:
         diagnostic_ref=None,
     )
     page = OperationPublicEventPageV1(
-        operation_id=_OPERATION_ID,
+        operation_id=OPERATION_ID,
         anchor_cursor=1,
         requested_cursor=0,
         status=OperationReplayStatus.PAGE,
@@ -120,7 +120,7 @@ def _observation() -> OperationObservationSuccessV1:
             OperationPublicPhaseEventV1(
                 revision=4,
                 sequence=1,
-                timestamp=_NOW,
+                timestamp=NOW,
                 code="operation.review.ready",
                 phase_code="operation.review.ready",
             ),
@@ -141,7 +141,7 @@ class _Control:
     async def inspect(self) -> OperationResponseControlSuccessV1:
         self.inspect_count += 1
         return OperationResponseControlSuccessV1(
-            operation_id=_OPERATION_ID,
+            operation_id=OPERATION_ID,
             interaction_id=_INTERACTION_ID,
             revision=4,
             available=bool(self.permitted),
@@ -170,7 +170,7 @@ class _Cued:
         self.armed = False
 
 
-class _Controller:
+class Controller:
     def __init__(self, *, failing_action: str) -> None:
         self.failing_action = failing_action
         self.observation = _observation()
@@ -182,14 +182,14 @@ class _Controller:
 
     @property
     def operation_id(self) -> str:
-        return _OPERATION_ID
+        return OPERATION_ID
 
     @property
     def actor_ref(self) -> str:
         return "operator:access-loss"
 
     async def start(self) -> str:
-        return _OPERATION_ID
+        return OPERATION_ID
 
     def operation_changes(self) -> _Cued:
         return _Cued()
@@ -208,7 +208,7 @@ class _Controller:
         return OperationObservationSuccessV1(
             projection=projection,
             event_page=OperationPublicEventPageV1(
-                operation_id=_OPERATION_ID,
+                operation_id=OPERATION_ID,
                 anchor_cursor=1,
                 requested_cursor=1,
                 status=OperationReplayStatus.CAUGHT_UP,
@@ -241,8 +241,8 @@ class _Controller:
         raise FrontendRefusedError("profile_session_expired")
 
 
-class _Host(App[None]):
-    def __init__(self, controller: _Controller) -> None:
+class Host(App[None]):
+    def __init__(self, controller: Controller) -> None:
         super().__init__()
         self.controller = controller
         self.closed = asyncio.Event()
@@ -260,8 +260,8 @@ class _Host(App[None]):
 @pytest.mark.parametrize("failing_action", ["observe", "transport", "cancel", "detach", "apply", "reject"])
 def test_runtime_loss_erases_rendered_private_state_and_leaves_only_close(failing_action: str) -> None:
     async def run() -> None:
-        controller = _Controller(failing_action=failing_action)
-        host = _Host(controller)
+        controller = Controller(failing_action=failing_action)
+        host = Host(controller)
         async with host.run_test(size=(100, 40)) as pilot:
             await settle_until(
                 pilot,
@@ -297,7 +297,7 @@ def test_runtime_loss_erases_rendered_private_state_and_leaves_only_close(failin
 
 def test_cached_review_controls_reinspect_permission_without_rebinding() -> None:
     async def run() -> None:
-        controller = _Controller(failing_action="observe")
+        controller = Controller(failing_action="observe")
         projection = controller.observation.projection
         first = await resolve_modal_interaction_state(controller, projection, BaseModel)
         assert isinstance(first, OperationModalReviewInteractionV1)

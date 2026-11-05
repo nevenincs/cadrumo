@@ -33,19 +33,11 @@ from cadrumo.entrypoints.ledger_action_composition import compose_ledger_import_
 
 from ....adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from ....adapters.persistence.profile.tests.ledger_action_persistence_support import (
-    BUCKET_ID as _BUCKET_ID,
-)
-from ....adapters.persistence.profile.tests.ledger_action_persistence_support import (
-    OTHER_BUCKET_ID as _OTHER_BUCKET_ID,
-)
-from ....adapters.persistence.profile.tests.ledger_action_persistence_support import (
-    create_manual_row as _create_manual_row,
-)
-from ....adapters.persistence.profile.tests.ledger_action_persistence_support import (
+    BUCKET_ID,
+    OTHER_BUCKET_ID,
+    create_manual_row,
     parsed_import_transaction,
-)
-from ....adapters.persistence.profile.tests.ledger_action_persistence_support import (
-    repositories as _repositories,
+    repositories,
 )
 from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
 
@@ -72,7 +64,7 @@ def _ledger_ports(
     transaction_repository: TransactionCatalogueRepository,
     event_repository: BucketEventHistoryRepository,
     *,
-    bucket_id: str = _BUCKET_ID,
+    bucket_id: str = BUCKET_ID,
 ) -> Generator[LedgerActionPorts]:
     """Yield canonical ledger action ports over the isolated repositories."""
     with ledger_ports_for_test(
@@ -84,7 +76,7 @@ def _ledger_ports(
         yield ports
 
 
-def _created_event_count(event_repository: BucketEventHistoryRepository, *, bucket_id: str = _BUCKET_ID) -> int:
+def _created_event_count(event_repository: BucketEventHistoryRepository, *, bucket_id: str = BUCKET_ID) -> int:
     return sum(
         1
         for event in event_repository.load().for_bucket(bucket_id)
@@ -103,7 +95,7 @@ def _add(
     booked_date: date = _DEFAULT_BOOKED_DATE,
     occurred_at: datetime = _DEFAULT_OCCURRED_AT,
     direction: TransactionDirection = TransactionDirection.OUTGOING,
-    bucket_id: str = _BUCKET_ID,
+    bucket_id: str = BUCKET_ID,
 ):
     with _ledger_ports(objects, transaction_repository, event_repository, bucket_id=bucket_id) as ports:
         return create_manual_transaction(
@@ -122,7 +114,7 @@ def _add(
 
 def test_retried_keyed_add_is_guarded_noop(secure_objects: SecureObjectRepository) -> None:
     """Same key + identical content on retry: one row, one event, created_at unchanged, no-op signal."""
-    repo, events, first = _create_manual_row(secure_objects, description="cash sale", idempotency_key="k-001")
+    repo, events, first = create_manual_row(secure_objects, description="cash sale", idempotency_key="k-001")
     first_tx = repo.load().get(first.ref.transaction_id)
     assert first_tx is not None
     first_created_at = first_tx.created_at
@@ -143,7 +135,7 @@ def test_retried_keyed_add_is_guarded_noop(secure_objects: SecureObjectRepositor
 
 def test_keyed_add_three_retries_still_one_row_one_event(secure_objects: SecureObjectRepository) -> None:
     """3+ retries of an identical keyed add collapse to exactly one row and one creation event."""
-    repo, events, first = _create_manual_row(secure_objects, description="cash sale", idempotency_key="k-002")
+    repo, events, first = create_manual_row(secure_objects, description="cash sale", idempotency_key="k-002")
     for minute in (31, 32, 33):
         outcome = _add(
             secure_objects,
@@ -166,8 +158,8 @@ def test_interleaved_retry_through_fresh_repo_is_noop(secure_objects: SecureObje
     the committed catalogue, so the second add reads the first's row and writes
     nothing rather than tearing a double-write.
     """
-    repo, events, first = _create_manual_row(secure_objects, description="cash sale", idempotency_key="k-003")
-    fresh_repo, fresh_events = _repositories(secure_objects)
+    repo, events, first = create_manual_row(secure_objects, description="cash sale", idempotency_key="k-003")
+    fresh_repo, fresh_events = repositories(secure_objects)
     second = _add(
         secure_objects,
         fresh_repo,
@@ -183,7 +175,7 @@ def test_interleaved_retry_through_fresh_repo_is_noop(secure_objects: SecureObje
 
 def test_same_key_different_content_raises_conflict(secure_objects: SecureObjectRepository) -> None:
     """Reusing a key for a different movement is a conflict refusal, never a silent overwrite."""
-    repo, events, _ = _create_manual_row(secure_objects, description="cash sale", idempotency_key="k-004")
+    repo, events, _ = create_manual_row(secure_objects, description="cash sale", idempotency_key="k-004")
     with pytest.raises(TransactionValidationError):
         _add(
             secure_objects,
@@ -205,9 +197,9 @@ def test_same_key_differing_only_in_recargo_raises_conflict(secure_objects: Secu
     the recargo de equivalencia surcharge, or a retry that changes only the
     recargo would no-op and drop the new surcharge value.
     """
-    repo, events = _repositories(secure_objects)
+    repo, events = repositories(secure_objects)
     base: _ManualTransactionBaseArgs = {
-        "bucket_id": _BUCKET_ID,
+        "bucket_id": BUCKET_ID,
         "booked_date": _DEFAULT_BOOKED_DATE,
         "amount": _DEFAULT_AMOUNT,
         "direction": TransactionDirection.OUTGOING,
@@ -234,9 +226,9 @@ def test_same_key_differing_only_in_source_jurisdiction_raises_conflict(
     secure_objects: SecureObjectRepository,
 ) -> None:
     """A same-key add differing ONLY in source_jurisdiction is a conflict, never a silent no-op."""
-    repo, events = _repositories(secure_objects)
+    repo, events = repositories(secure_objects)
     base: _ManualTransactionBaseArgs = {
-        "bucket_id": _BUCKET_ID,
+        "bucket_id": BUCKET_ID,
         "booked_date": _DEFAULT_BOOKED_DATE,
         "amount": _DEFAULT_AMOUNT,
         "direction": TransactionDirection.OUTGOING,
@@ -269,9 +261,9 @@ def test_same_key_differing_only_in_investment_asset_id_raises_conflict(
     a retry adding the link must not be absorbed into it, or the register
     identity the operator supplied is dropped.
     """
-    repo, events = _repositories(secure_objects)
+    repo, events = repositories(secure_objects)
     base: _ManualTransactionBaseArgs = {
-        "bucket_id": _BUCKET_ID,
+        "bucket_id": BUCKET_ID,
         "booked_date": _DEFAULT_BOOKED_DATE,
         "amount": _DEFAULT_AMOUNT,
         "direction": TransactionDirection.OUTGOING,
@@ -317,9 +309,9 @@ def test_same_key_differing_only_in_classified_by_override_raises_conflict(
     classifier provenance — the failure mode
     ``aeat-cli-contract`` forbids.
     """
-    repo, events = _repositories(secure_objects)
+    repo, events = repositories(secure_objects)
     base: _ManualTransactionBaseArgs = {
-        "bucket_id": _BUCKET_ID,
+        "bucket_id": BUCKET_ID,
         "booked_date": _DEFAULT_BOOKED_DATE,
         "amount": _DEFAULT_AMOUNT,
         "direction": TransactionDirection.OUTGOING,
@@ -367,9 +359,9 @@ def test_same_key_repeating_the_same_classified_by_override_is_a_noop(
     Anti-tautology companion to the conflict case above: the projection must
     discriminate a CHANGED override, not refuse every classified retry.
     """
-    repo, events = _repositories(secure_objects)
+    repo, events = repositories(secure_objects)
     base: _ManualTransactionBaseArgs = {
-        "bucket_id": _BUCKET_ID,
+        "bucket_id": BUCKET_ID,
         "booked_date": _DEFAULT_BOOKED_DATE,
         "amount": _DEFAULT_AMOUNT,
         "direction": TransactionDirection.OUTGOING,
@@ -404,7 +396,7 @@ def test_same_key_repeating_the_same_classified_by_override_is_a_noop(
 
 def test_deliberate_duplicate_via_distinct_keys_two_rows(secure_objects: SecureObjectRepository) -> None:
     """Two genuinely-distinct movements with identical content but distinct keys both persist."""
-    repo, events, first = _create_manual_row(secure_objects, description="retainer", idempotency_key="dup-A")
+    repo, events, first = create_manual_row(secure_objects, description="retainer", idempotency_key="dup-A")
     second = _add(secure_objects, repo, events, description="retainer", idempotency_key="dup-B")
     assert first.ref.transaction_id != second.ref.transaction_id
     assert set(repo.load().transactions) == {first.ref.transaction_id, second.ref.transaction_id}
@@ -413,7 +405,7 @@ def test_deliberate_duplicate_via_distinct_keys_two_rows(secure_objects: SecureO
 
 def test_keyless_identical_same_day_movements_both_persist(secure_objects: SecureObjectRepository) -> None:
     """The keyless path is append-only: two identical same-day cash movements both persist."""
-    repo, events = _repositories(secure_objects)
+    repo, events = repositories(secure_objects)
     first = _add(
         secure_objects,
         repo,
@@ -436,9 +428,9 @@ def test_keyless_identical_same_day_movements_both_persist(secure_objects: Secur
 
 def test_same_key_across_two_buckets_yields_two_distinct_rows(secure_objects: SecureObjectRepository) -> None:
     """A reused idempotency key in a different bucket is a distinct row (bucket-scoped id), no false no-op."""
-    repo_a, _events_a, first = _create_manual_row(secure_objects, description="cash sale", idempotency_key="shared")
-    repo_b, events_b = _repositories(secure_objects, bucket_id=_OTHER_BUCKET_ID)
-    second = _add(secure_objects, repo_b, events_b, idempotency_key="shared", bucket_id=_OTHER_BUCKET_ID)
+    repo_a, _events_a, first = create_manual_row(secure_objects, description="cash sale", idempotency_key="shared")
+    repo_b, events_b = repositories(secure_objects, bucket_id=OTHER_BUCKET_ID)
+    second = _add(secure_objects, repo_b, events_b, idempotency_key="shared", bucket_id=OTHER_BUCKET_ID)
     assert first.ref.transaction_id != second.ref.transaction_id
     assert second.bucket_event_ids != ()
     assert tuple(repo_a.load().transactions) == (first.ref.transaction_id,)
@@ -447,7 +439,7 @@ def test_same_key_across_two_buckets_yields_two_distinct_rows(secure_objects: Se
 
 def test_zero_amount_add_is_refused_not_silently_deduped(secure_objects: SecureObjectRepository) -> None:
     """A zero-amount manual add is refused at the command boundary, never silently created or deduped."""
-    repo, events = _repositories(secure_objects)
+    repo, events = repositories(secure_objects)
     with pytest.raises(ValidationError, match="non-zero"):
         _add(secure_objects, repo, events, amount=Decimal("0"), description="zero correction", idempotency_key="z-1")
     assert len(repo.load().transactions) == 0
@@ -455,7 +447,7 @@ def test_zero_amount_add_is_refused_not_silently_deduped(secure_objects: SecureO
 
 def test_keyed_retry_is_clock_free_across_boundary_timestamps(secure_objects: SecureObjectRepository) -> None:
     """The keyed id is clock-free: a retry at a boundary timestamp still resolves to the no-op."""
-    repo, events, first = _create_manual_row(
+    repo, events, first = create_manual_row(
         secure_objects,
         description="cash sale",
         idempotency_key="bound-1",
@@ -483,7 +475,7 @@ def test_manual_row_carries_content_fingerprint_surviving_reload(secure_objects:
     constant — a different movement yields a different fingerprint, so a dropped
     or content-independent fingerprint would surface as an inequality here.
     """
-    repo, _events, created = _create_manual_row(secure_objects, description="cash sale", idempotency_key="fp-1")
+    repo, _events, created = create_manual_row(secure_objects, description="cash sale", idempotency_key="fp-1")
     original = repo.load().get(created.ref.transaction_id)
     assert original is not None
     assert original.import_fingerprint is not None
@@ -492,21 +484,21 @@ def test_manual_row_carries_content_fingerprint_surviving_reload(secure_objects:
 
     # Strict save->load equality across a fresh repository reading the same store:
     # every field, the non-default import_fingerprint included, roundtrips exactly.
-    fresh_repo, _fresh_events = _repositories(secure_objects)
+    fresh_repo, _fresh_events = repositories(secure_objects)
     reloaded = fresh_repo.load().get(created.ref.transaction_id)
     assert reloaded is not None
     assert reloaded == original
 
     # Anti-tautology: the fingerprint is content-derived, not a constant. A row
     # with different content produces a different fingerprint.
-    other_repo, other_events = _repositories(secure_objects, bucket_id=_OTHER_BUCKET_ID)
+    other_repo, other_events = repositories(secure_objects, bucket_id=OTHER_BUCKET_ID)
     other = _add(
         secure_objects,
         other_repo,
         other_events,
         description="a different movement",
         amount=Decimal("77.00"),
-        bucket_id=_OTHER_BUCKET_ID,
+        bucket_id=OTHER_BUCKET_ID,
     )
     other_row = other_repo.load().get(other.ref.transaction_id)
     assert other_row is not None
@@ -516,7 +508,7 @@ def test_manual_row_carries_content_fingerprint_surviving_reload(secure_objects:
 
 def test_import_recognises_a_prior_manual_movement(secure_objects: SecureObjectRepository) -> None:
     """A movement entered manually is recognised by a later import of the same movement (no reduplication)."""
-    repo, events, manual = _create_manual_row(
+    repo, events, manual = create_manual_row(
         secure_objects,
         description="provider import row",
         idempotency_key="m-1",
@@ -524,7 +516,7 @@ def test_import_recognises_a_prior_manual_movement(secure_objects: SecureObjectR
         booked_date=date(2026, 5, 1),
     )
     outcome = import_ledger_transactions(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         parsed_rows=(parsed_import_transaction(),),
         ports=compose_ledger_import_ports(),
         transaction_repository=repo,

@@ -21,7 +21,7 @@ from cadrumo.adapters.persistence.profile.filing_drafts import ModeloDraftReposi
 from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.submission.models import ModeloDraftStatus
 from cadrumo.entrypoints.adapter_composition_ports import build_draft_review_ports
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
@@ -122,7 +122,7 @@ def test_a_freshly_approved_draft_is_not_immediately_stale(repos: Repos) -> None
     an aged-out approval the moment anyone opens the queue, and a permanent
     high-severity row that is always wrong is worse than no row at all.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from cadrumo.application.review.source_adapters import reviewed_against_current_state
 
         wu_repo, cr_repo, _, vr_repo, bv_repo = repos

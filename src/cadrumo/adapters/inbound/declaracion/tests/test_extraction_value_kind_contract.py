@@ -39,7 +39,7 @@ import pytest
 
 from .....core.casilla_id import validated_casilla_id
 from .....domain.calculations.registry.schema_extraction import ExtractionTargetDefinition, ExtractionValueKind
-from ..parser import _classify_target
+from ..parser import classify_target
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -59,7 +59,7 @@ def _target(value_kind: Literal["amount", "text", "enum"]) -> ExtractionTargetDe
 
 
 def _classify(value_kind: Literal["amount", "text", "enum"]):
-    return _classify_target(
+    return classify_target(
         _target(value_kind),
         pages=_PAGES,
         pages_words=None,

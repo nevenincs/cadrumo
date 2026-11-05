@@ -44,8 +44,8 @@ from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_location
 from ..storage.errors import RepositoryError
 from ..storage.master_key.login_handover_journal import handover_journal_path
-from ._journal_validation import OperationJournalRecord, validate_advance, validate_lease
 from .financial_journal_purge import FinancialEditJournalPurgeRefusedError, purge_legacy_financial_edit_journal
+from .journal_validation import OperationJournalRecord, validate_advance, validate_lease
 from .lease import OperationLeaseStorage
 
 
@@ -107,7 +107,7 @@ def observation_materialization_from_record(
     )
 
 
-class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
+class SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
     """Synchronous atomic substrate specialized to persisted operation snapshots."""
 
     def __init__(self, *, storage_root: Path) -> None:
@@ -410,7 +410,7 @@ class OperationJournalRepository(OperationJournal, OperationEventStream, Operati
 
     def __init__(self, *, storage_root: Path) -> None:
         """Bind the repository to the configured secure storage root."""
-        self._repository = _SnapshotJournalRepository(storage_root=storage_root)
+        self._repository = SnapshotJournalRepository(storage_root=storage_root)
 
     @override
     async def load(self, operation_id: str) -> OperationPersistedSnapshot:

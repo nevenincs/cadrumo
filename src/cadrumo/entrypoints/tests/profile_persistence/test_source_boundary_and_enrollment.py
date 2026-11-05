@@ -77,10 +77,9 @@ from cadrumo.domain.foreign_assets.valuation import M720ValuationEvent
 from cadrumo.domain.modelos.row_models import Modelo184MemberRow
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
 from ....adapters.persistence.profile.tests.foreign_asset_authoring import declare_foreign_asset, register_asset
@@ -155,26 +154,26 @@ _ATTRIBUTION_PROFILE_FACTS = (
 
 def _seed_ready_profile(*, bucket_id: str = _BUCKET_ID) -> None:
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=_READY_PROFILE_FACTS,
             created_at=_T0,
             updated_at=_T0,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 
 
 def _seed_attribution_entity_profile(*, bucket_id: str = _BUCKET_ID) -> None:
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=_ATTRIBUTION_PROFILE_FACTS,
             created_at=_T0,
             updated_at=_T0,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 
@@ -354,9 +353,9 @@ def test_s08_atribucion_member_missing_base_refuses_and_never_calculates_a_zero(
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
-        profile_context = _profile_creation_context_for_test()
+        profile_context = profile_creation_context_for_test()
         seed_test_profile_record(
-            _create_profile_record_for_test(
+            create_user_profile_record(
                 context=profile_context,
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET_ID,
@@ -369,7 +368,7 @@ def test_s08_atribucion_member_missing_base_refuses_and_never_calculates_a_zero(
         work_unit = _seed(wu_repo, modelo="184", filing_year=2026, period="0A", revision_id="2025-y-siguientes")
 
         seed_test_profile_record(
-            _create_profile_record_for_test(
+            create_user_profile_record(
                 context=profile_context,
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET_ID,

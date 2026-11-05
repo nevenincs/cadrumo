@@ -17,11 +17,11 @@ from ......core.field_role import FieldRole
 from ......core.tabular import NormalizedTable
 from ......domain.transactions.enums import TransactionDirection
 from ......tests.inventory import FIXTURES_DIR
-from .._mapped_tabular import MappedTabularProvider, default_tabular_mapping_resolver
-from .._tabular_projection import ColumnRoleMapping
 from ..base import InvalidFinancialSourceError
 from ..csv import CsvProvider
-from ..detection import _ordered_candidates, detect_provider
+from ..detection import detect_provider, ordered_candidates
+from ..mapped_tabular import MappedTabularProvider, default_tabular_mapping_resolver
+from ..tabular_projection import ColumnRoleMapping
 from .tabular_export_support import write_unknown_header_export
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -85,7 +85,7 @@ def test_mapping_lane_is_last_for_every_source_shape(unknown_export: Path) -> No
         _KNOWN_BANK_FIXTURE,
     )
     for path in shapes:
-        candidates = _ordered_candidates(path)
+        candidates = ordered_candidates(path)
         assert isinstance(candidates[-1], MappedTabularProvider), path.name
         mapped_positions = [
             index for index, provider in enumerate(candidates) if isinstance(provider, MappedTabularProvider)
@@ -126,7 +126,7 @@ def test_the_known_bank_export_matches_before_the_mapping_lane_is_reached() -> N
     the lane's and this reddens, whether or not the lane's resolver could have
     answered.
     """
-    candidates = _ordered_candidates(_KNOWN_BANK_FIXTURE)
+    candidates = ordered_candidates(_KNOWN_BANK_FIXTURE)
     lane_index = next(index for index, provider in enumerate(candidates) if isinstance(provider, MappedTabularProvider))
     matched_index = next(
         (index for index, provider in enumerate(candidates) if provider.validate_source(_KNOWN_BANK_FIXTURE).is_valid),
@@ -156,13 +156,13 @@ def test_the_mapping_lane_can_read_the_known_bank_fixture_when_it_can_map() -> N
 
 def test_unknown_format_fixture_is_refused_by_every_exact_provider(unknown_export: Path) -> None:
     """No exact provider claims the unknown export — the precondition for reaching the lane."""
-    for provider in _ordered_candidates(unknown_export)[:-1]:
+    for provider in ordered_candidates(unknown_export)[:-1]:
         assert not provider.validate_source(unknown_export).is_valid, provider.name
 
 
 def test_unknown_format_fixture_reaches_the_mapping_lane(unknown_export: Path) -> None:
     """Detection consults the lane for the unknown export, and it imports under a mapping."""
-    candidates = _ordered_candidates(unknown_export)
+    candidates = ordered_candidates(unknown_export)
     assert isinstance(candidates[-1], MappedTabularProvider)
 
     lane = MappedTabularProvider(mapping_resolver=_resolver(_NEOBANK_ROLES))

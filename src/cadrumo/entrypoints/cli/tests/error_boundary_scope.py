@@ -6,7 +6,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from contextvars import Token
 
-from ..errors import _BOUNDARY_SUSPENDED
+from ..errors import BOUNDARY_SUSPENDED
 
 
 @contextmanager
@@ -23,8 +23,8 @@ def suspend_error_boundary() -> Generator[None]:
         ``None``. The context's only purpose is the side effect on the internal
         flag.
     """
-    token: Token[bool] = _BOUNDARY_SUSPENDED.set(True)
+    token: Token[bool] = BOUNDARY_SUSPENDED.set(True)
     try:
         yield
     finally:
-        _BOUNDARY_SUSPENDED.reset(token)
+        BOUNDARY_SUSPENDED.reset(token)

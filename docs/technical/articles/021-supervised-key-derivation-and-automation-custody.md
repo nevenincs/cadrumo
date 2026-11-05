@@ -13,11 +13,11 @@ This chunk contains 24 custody modules for supervised password/recovery KDF work
 
 ## Supervised password and recovery KDF
 
-Each wrap or unwrap starts a fresh child process with a small framed-JSON protocol, strict operation-specific fields, bounded 8 KiB frames, canonical base64, and a fixed Argon2id parameter grid. Password input is re-assessed against the profile-password policy; recovery secrets are transported exactly without password rewriting. AEAD binds the wrapped DEK to caller-provided associated data, and only a correctly sized 32-byte DEK is accepted. Unsupported parameter combinations and malformed inputs fail through a typed refusal path. KDF wire validation (`src/cadrumo/adapters/persistence/storage/custody/_kdf_records.py`) Worker operation dispatch and wrap/unwrap (`src/cadrumo/adapters/persistence/storage/custody/_kdf_worker.py`) Exact password codec (`src/cadrumo/adapters/persistence/storage/custody/_profile_password_codec.py`)
+Each wrap or unwrap starts a fresh child process with a small framed-JSON protocol, strict operation-specific fields, bounded 8 KiB frames, canonical base64, and a fixed Argon2id parameter grid. Password input is re-assessed against the profile-password policy; recovery secrets are transported exactly without password rewriting. AEAD binds the wrapped DEK to caller-provided associated data, and only a correctly sized 32-byte DEK is accepted. Unsupported parameter combinations and malformed inputs fail through a typed refusal path. KDF wire validation (`src/cadrumo/adapters/persistence/storage/custody/kdf_records.py`) Worker operation dispatch and wrap/unwrap (`src/cadrumo/adapters/persistence/storage/custody/kdf_worker.py`) Exact password codec (`src/cadrumo/adapters/persistence/storage/custody/profile_password_codec.py`)
 
-Before sending any secret, the supervisor requires a child readiness frame and validates platform, neutral working directory, environment-key allowlist, and inherited descriptors. POSIX uses a new process group, a sanitized environment, explicit descriptor passing, and CPU, address-space, file-size, core, and open-file limits. Windows uses a Job Object with CPU, memory, active-process, and kill-on-close limits and checks that the worker is inside the job. A timeout or malformed exchange terminates the worker tree; there is no in-process fallback. Process launch and environment (`src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py`) POSIX resource setup (`src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py`) Readiness identity verification (`src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_identity.py`) Windows Job Object limits (`src/cadrumo/adapters/persistence/storage/custody/_kdf_windows_job.py`)
+Before sending any secret, the supervisor requires a child readiness frame and validates platform, neutral working directory, environment-key allowlist, and inherited descriptors. POSIX uses a new process group, a sanitized environment, explicit descriptor passing, and CPU, address-space, file-size, core, and open-file limits. Windows uses a Job Object with CPU, memory, active-process, and kill-on-close limits and checks that the worker is inside the job. A timeout or malformed exchange terminates the worker tree; there is no in-process fallback. Process launch and environment (`src/cadrumo/adapters/persistence/storage/custody/kdf_process.py`) POSIX resource setup (`src/cadrumo/adapters/persistence/storage/custody/kdf_process.py`) Readiness identity verification (`src/cadrumo/adapters/persistence/storage/custody/kdf_worker_identity.py`) Windows Job Object limits (`src/cadrumo/adapters/persistence/storage/custody/kdf_windows_job.py`)
 
-One attestation detail merits a narrow check: POSIX readiness reports `max_processes` from a constant, but `apply_posix_worker_limits` does not set a process-count limit. The current worker source does not spawn subprocesses, so this observation alone does not show an exploitable process escape; confirm the invariant is intentional or make the reported limit reflect an enforced boundary. Attested limits (`src/cadrumo/adapters/persistence/storage/custody/_kdf_attestation.py`) Actual POSIX rlimits (`src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py`)
+One attestation detail merits a narrow check: POSIX readiness reports `max_processes` from a constant, but `apply_posix_worker_limits` does not set a process-count limit. The current worker source does not spawn subprocesses, so this observation alone does not show an exploitable process escape; confirm the invariant is intentional or make the reported limit reflect an enforced boundary. Attested limits (`src/cadrumo/adapters/persistence/storage/custody/kdf_attestation.py`) Actual POSIX rlimits (`src/cadrumo/adapters/persistence/storage/custody/kdf_process.py`)
 
 ## Human profile acceleration receipt
 
@@ -41,19 +41,19 @@ The strongest properties are split-knowledge session storage, metadata-authentic
 
 All 24 assigned files were read in full across pages 1–9.
 
-- _kdf_attestation.py (109 lines) (`src/cadrumo/adapters/persistence/storage/custody/_kdf_attestation.py`)
-- _kdf_codec.py (172 lines) (`src/cadrumo/adapters/persistence/storage/custody/_kdf_codec.py`)
-- _kdf_operations.py (58 lines) (`src/cadrumo/adapters/persistence/storage/custody/_kdf_operations.py`)
-- _kdf_process.py (175 lines) (`src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py`)
-- _kdf_records.py (166 lines) (`src/cadrumo/adapters/persistence/storage/custody/_kdf_records.py`)
-- _kdf_refusals.py (22 lines) (`src/cadrumo/adapters/persistence/storage/custody/_kdf_refusals.py`)
-- _kdf_windows_job.py (207 lines) (`src/cadrumo/adapters/persistence/storage/custody/_kdf_windows_job.py`)
-- _kdf_worker.py (224 lines) (`src/cadrumo/adapters/persistence/storage/custody/_kdf_worker.py`)
-- _kdf_worker_identity.py (82 lines) (`src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_identity.py`)
-- _kdf_worker_limits.py (19 lines) (`src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_limits.py`)
-- _kdf_worker_supervision.py (296 lines) (`src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py`)
-- _profile_password_codec.py (39 lines) (`src/cadrumo/adapters/persistence/storage/custody/_profile_password_codec.py`)
-- _recovery_secret_codec.py (34 lines) (`src/cadrumo/adapters/persistence/storage/custody/_recovery_secret_codec.py`)
+- _kdf_attestation.py (109 lines) (`src/cadrumo/adapters/persistence/storage/custody/kdf_attestation.py`)
+- _kdf_codec.py (172 lines) (`src/cadrumo/adapters/persistence/storage/custody/kdf_codec.py`)
+- _kdf_operations.py (58 lines) (`src/cadrumo/adapters/persistence/storage/custody/kdf_operations.py`)
+- _kdf_process.py (175 lines) (`src/cadrumo/adapters/persistence/storage/custody/kdf_process.py`)
+- _kdf_records.py (166 lines) (`src/cadrumo/adapters/persistence/storage/custody/kdf_records.py`)
+- _kdf_refusals.py (22 lines) (`src/cadrumo/adapters/persistence/storage/custody/kdf_refusals.py`)
+- _kdf_windows_job.py (207 lines) (`src/cadrumo/adapters/persistence/storage/custody/kdf_windows_job.py`)
+- _kdf_worker.py (224 lines) (`src/cadrumo/adapters/persistence/storage/custody/kdf_worker.py`)
+- _kdf_worker_identity.py (82 lines) (`src/cadrumo/adapters/persistence/storage/custody/kdf_worker_identity.py`)
+- _kdf_worker_limits.py (19 lines) (`src/cadrumo/adapters/persistence/storage/custody/kdf_worker_limits.py`)
+- _kdf_worker_supervision.py (296 lines) (`src/cadrumo/adapters/persistence/storage/custody/kdf_worker_supervision.py`)
+- _profile_password_codec.py (39 lines) (`src/cadrumo/adapters/persistence/storage/custody/profile_password_codec.py`)
+- _recovery_secret_codec.py (34 lines) (`src/cadrumo/adapters/persistence/storage/custody/recovery_secret_codec.py`)
 - acceleration_receipt.py (1,331 lines) (`src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py`)
 - acceleration_receipt_crypto.py (224 lines) (`src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt_crypto.py`)
 - automation_client_credentials.py (355 lines) (`src/cadrumo/adapters/persistence/storage/custody/automation_client_credentials.py`)

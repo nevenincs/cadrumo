@@ -27,7 +27,7 @@ from ..labels import (
     profile_section_title,
     profile_section_title_key,
 )
-from ._schema_loader_fixtures import module_scoped_schema
+from .schema_loader_fixtures import module_scoped_schema
 
 __all__ = ["module_scoped_schema"]
 

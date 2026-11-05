@@ -20,12 +20,12 @@ from ...application.modelo.projection_operation import (
 )
 from ...core.i18n.render import tr
 from ...core.output_rendering import jsonable_output_payload
-from ._modelo_cli_support import (
+from .common import active_bucket_id_or_refuse, emit_envelope
+from .modelo_cli_support import (
     bad_parameter_from_localized_context,
     parse_binding_override,
     parse_casilla_override,
 )
-from .common import active_bucket_id_or_refuse, emit_envelope
 from .modelo_query_results import (
     CasillaObservationPayload,
     CompareSectionPayload,
@@ -68,17 +68,17 @@ def _delta_row_payload(row: CompareDeltaRowProjection) -> DeltaRowPayload:
         casilla_id=row.casilla_id,
         label=row.label,
         section=row.section,
-        year_a_value=_decimal_wire(Decimal(row.year_a_value)),
-        year_b_value=_decimal_wire(Decimal(row.year_b_value)),
-        delta=_decimal_wire(Decimal(row.delta)),
-        pct_change=_decimal_wire(Decimal(row.pct_change)) if row.pct_change is not None else None,
+        year_a_value=decimal_wire(Decimal(row.year_a_value)),
+        year_b_value=decimal_wire(Decimal(row.year_b_value)),
+        delta=decimal_wire(Decimal(row.delta)),
+        pct_change=decimal_wire(Decimal(row.pct_change)) if row.pct_change is not None else None,
         formula_id=row.formula_id,
         legal_refs=tuple(row.legal_refs),
         source_refs=tuple(row.source_refs),
     )
 
 
-def _decimal_wire(value: Decimal) -> str:
+def decimal_wire(value: Decimal) -> str:
     """Render a Decimal through the CLI's canonical JSON normalization authority."""
     rendered = jsonable_output_payload(value)
     if not isinstance(rendered, str):
@@ -95,15 +95,15 @@ def _project_result_payload(service_result: ModeloProjectOperationProjection) ->
         quarters_available=list(service_result.quarters_available),
         is_extrapolated=service_result.is_extrapolated,
         m130_accumulated=M130AccumulatedPayload(
-            ingresos=_decimal_wire(Decimal(service_result.m130_accumulated.ingresos)),
-            gastos=_decimal_wire(Decimal(service_result.m130_accumulated.gastos)),
-            rendimiento_neto=_decimal_wire(Decimal(service_result.m130_accumulated.rendimiento_neto)),
-            pagos_fraccionados=_decimal_wire(Decimal(service_result.m130_accumulated.pagos_fraccionados)),
+            ingresos=decimal_wire(Decimal(service_result.m130_accumulated.ingresos)),
+            gastos=decimal_wire(Decimal(service_result.m130_accumulated.gastos)),
+            rendimiento_neto=decimal_wire(Decimal(service_result.m130_accumulated.rendimiento_neto)),
+            pagos_fraccionados=decimal_wire(Decimal(service_result.m130_accumulated.pagos_fraccionados)),
         ),
         casilla_observations=[
             CasillaObservationPayload(
                 casilla_id=entry.casilla_id,
-                value=_decimal_wire(Decimal(entry.value)),
+                value=decimal_wire(Decimal(entry.value)),
                 formula_id=entry.formula_id,
                 legal_refs=tuple(entry.legal_refs),
                 source_refs=tuple(entry.source_refs),
@@ -111,13 +111,13 @@ def _project_result_payload(service_result: ModeloProjectOperationProjection) ->
             for entry in service_result.casilla_observations
         ],
         m100_projection=M100ProjectionPayload(
-            base_liquidable_general=_decimal_wire(Decimal(service_result.m100_projection.base_liquidable_general)),
-            pagos_fraccionados=_decimal_wire(Decimal(service_result.m100_projection.pagos_fraccionados)),
-            cuota_integra_estatal=_decimal_wire(Decimal(service_result.m100_projection.cuota_integra_estatal)),
-            cuota_integra_autonomica=_decimal_wire(Decimal(service_result.m100_projection.cuota_integra_autonomica)),
-            cuota_liquida_estatal=_decimal_wire(Decimal(service_result.m100_projection.cuota_liquida_estatal)),
-            cuota_liquida_autonomica=_decimal_wire(Decimal(service_result.m100_projection.cuota_liquida_autonomica)),
-            cuota_resultante=_decimal_wire(Decimal(service_result.m100_projection.cuota_resultante)),
+            base_liquidable_general=decimal_wire(Decimal(service_result.m100_projection.base_liquidable_general)),
+            pagos_fraccionados=decimal_wire(Decimal(service_result.m100_projection.pagos_fraccionados)),
+            cuota_integra_estatal=decimal_wire(Decimal(service_result.m100_projection.cuota_integra_estatal)),
+            cuota_integra_autonomica=decimal_wire(Decimal(service_result.m100_projection.cuota_integra_autonomica)),
+            cuota_liquida_estatal=decimal_wire(Decimal(service_result.m100_projection.cuota_liquida_estatal)),
+            cuota_liquida_autonomica=decimal_wire(Decimal(service_result.m100_projection.cuota_liquida_autonomica)),
+            cuota_resultante=decimal_wire(Decimal(service_result.m100_projection.cuota_resultante)),
         ),
         unresolved_bindings=[
             UnresolvedBindingPayload.from_projection(row) for row in service_result.unresolved_bindings

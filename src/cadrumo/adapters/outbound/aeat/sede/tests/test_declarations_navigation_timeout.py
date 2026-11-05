@@ -18,8 +18,8 @@ from playwright.async_api import Route, async_playwright
 
 from ......core.config import override_settings
 from ......tests.aeat_literal_fixtures import SEDE_LOGIN_WALL_URL_FIXTURE
-from ..._playwright import PlaywrightTimeoutError
-from ..declarations import _LISTING_URL, _drive_search
+from ...playwright import PlaywrightTimeoutError
+from ..declarations import LISTING_URL, drive_search
 from ..errors import SedeFailureMode, SedeNavigationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -43,7 +43,7 @@ async def test_navigation_timeout_raises_typed_navigation_error() -> None:
                 override_settings(cadrumo_browser_navigation_timeout_ms=50),
                 pytest.raises(SedeNavigationError) as exc_info,
             ):
-                await _drive_search(page, modelo="100", ejercicio=2022)
+                await drive_search(page, modelo="100", ejercicio=2022)
         finally:
             await browser.close()
 
@@ -58,7 +58,7 @@ async def test_navigation_timeout_raises_typed_navigation_error() -> None:
 
 async def _redirect_listing_to_login_wall(route: Route) -> None:
     """Serve the register listing as AEAT does once the session is gone: a redirect to its login wall."""
-    if route.request.url == _LISTING_URL:
+    if route.request.url == LISTING_URL:
         await route.fulfill(status=302, headers={"Location": SEDE_LOGIN_WALL_URL_FIXTURE})
         return
     await route.fulfill(status=200, content_type="text/html", body="<html><body>Identificate</body></html>")
@@ -73,7 +73,7 @@ async def test_login_wall_redirect_is_reported_as_an_ended_session() -> None:
             page = await browser.new_page()
             await page.route("**/*", _redirect_listing_to_login_wall)
             with pytest.raises(SedeNavigationError) as exc_info:
-                await _drive_search(page, modelo="100", ejercicio=2022)
+                await drive_search(page, modelo="100", ejercicio=2022)
         finally:
             await browser.close()
 

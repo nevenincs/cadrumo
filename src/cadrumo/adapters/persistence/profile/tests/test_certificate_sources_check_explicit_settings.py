@@ -49,27 +49,27 @@ from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.bucket_pointer import BucketPointer, write_pointer
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _certificate_indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from cadrumo.tests.certificates import CERTIFICATE_BUNDLE_INPUT, build_pkcs12_bundle
 
 from .certificate_sources_check_support import (
-    _BUCKET_B,
-    _BUCKET_ID,
-    _MISSING_BUCKET,
-    _NOW,
-    _OPERATOR_PROBE_PORTS,
-    _OPERATOR_SCOPE_PORTS,
-    _PROFILE_LABEL,
-    _PROFILE_LABEL_B,
+    BUCKET_B,
+    BUCKET_ID,
     CERTIFICATE_BUNDLE_INPUT_B,
-    _register_operator_profile,
+    MISSING_BUCKET,
+    NOW,
+    OPERATOR_PROBE_PORTS,
+    OPERATOR_SCOPE_PORTS,
+    PROFILE_LABEL,
+    PROFILE_LABEL_B,
+    register_operator_profile,
 )
 from .certificate_sources_check_support import (
-    _isolated_backend as _isolated_backend,
+    isolated_backend as isolated_backend,
 )
 from .certificate_sources_check_support import (
-    _manages_storage_roots as _manages_storage_roots,
+    manages_storage_roots as manages_storage_roots,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
@@ -77,17 +77,17 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 def test_explicit_settings_second_root_uses_its_own_cached_secret_store(
     certificate_secret_backend_factory: InMemoryCertificateSecretBackendFactory,
-    _manages_storage_roots: None,
+    manages_storage_roots: None,
     tmp_path: Path,
 ) -> None:
     """Initializing root A first cannot redirect root B certificate secrets into A."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
         root_a_fixture = tmp_path / "route-a"
         with (
             isolated_profile_storage_root(tmp_path=root_a_fixture),
-            open_test_profile_session(_BUCKET_ID),
+            open_test_profile_session(BUCKET_ID),
         ):
-            _register_operator_profile()
+            register_operator_profile()
             now = datetime.now(UTC)
             cert_a = build_pkcs12_bundle(
                 tmp_path,
@@ -99,33 +99,33 @@ def test_explicit_settings_second_root_uses_its_own_cached_secret_store(
             register_operator_certificate_source(
                 name="selected",
                 certificate_path=cert_a,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
             set_operator_certificate_source_secret(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 name="selected",
                 secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
             select_operator_certificate_source(
                 name="selected",
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
             configure_operator_auth(
-                AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+                AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a, operator_scope_ports=OPERATOR_SCOPE_PORTS
             )
             settings_a = load_settings()
 
         root_b_fixture = tmp_path / "route-b"
         with (
             isolated_profile_storage_root(tmp_path=root_b_fixture),
-            open_test_profile_session(_BUCKET_B),
+            open_test_profile_session(BUCKET_B),
         ):
             register_minimal_profile(
-                profile_id=_BUCKET_B,
+                profile_id=BUCKET_B,
                 display_name="gestor-route-b",
             )
             cert_b = build_pkcs12_bundle(
@@ -139,7 +139,7 @@ def test_explicit_settings_second_root_uses_its_own_cached_secret_store(
             register_operator_certificate_source(
                 name="selected",
                 certificate_path=cert_b,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
             settings_b = load_settings()
@@ -147,35 +147,35 @@ def test_explicit_settings_second_root_uses_its_own_cached_secret_store(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 name="selected",
                 secret=SecretStr(CERTIFICATE_BUNDLE_INPUT_B),
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
             select_operator_certificate_source(
                 name="selected",
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
             configure_operator_auth(
                 AuthProviderKind.CERTIFICATE.value,
                 certificate_path=cert_b,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
             )
             credentials_b = resolve_active_certificate_credentials(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 settings=settings_b,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
             )
             provider_b = select_provider(
                 AuthProviderKind.CERTIFICATE,
                 settings=settings_b,
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
             ).describe()
             operator_test_b = run_operator_auth_test(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 settings=settings_b,
-                operator_probe_ports=_OPERATOR_PROBE_PORTS,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_probe_ports=OPERATOR_PROBE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
             )
 
         assert settings_a.cadrumo_storage_root != settings_b.cadrumo_storage_root
@@ -189,7 +189,7 @@ def test_explicit_settings_second_root_uses_its_own_cached_secret_store(
 
 def test_explicit_settings_same_bucket_id_uses_target_root_and_restores_ambient_session(
     certificate_secret_backend_factory: InMemoryCertificateSecretBackendFactory,
-    _manages_storage_roots: None,
+    manages_storage_roots: None,
     tmp_path: Path,
 ) -> None:
     """A matching UUID cannot reuse key material from a different storage root.
@@ -209,14 +209,14 @@ def test_explicit_settings_same_bucket_id_uses_target_root_and_restores_ambient_
     and a silent "nothing found" would be indistinguishable from "inspected
     and found nothing" when nothing was inspected at all.
     """
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
         now = datetime.now(UTC)
         root_b_fixture = tmp_path / "same-id-route-b"
         with (
             isolated_profile_storage_root(tmp_path=root_b_fixture),
-            open_test_profile_session(_BUCKET_ID),
+            open_test_profile_session(BUCKET_ID),
         ):
-            _register_operator_profile()
+            register_operator_profile()
             cert_b = build_pkcs12_bundle(
                 tmp_path,
                 not_valid_before=now - timedelta(days=1),
@@ -228,32 +228,32 @@ def test_explicit_settings_same_bucket_id_uses_target_root_and_restores_ambient_
             register_operator_certificate_source(
                 name="selected",
                 certificate_path=cert_b,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
             set_operator_certificate_source_secret(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 name="selected",
                 secret=SecretStr(CERTIFICATE_BUNDLE_INPUT_B),
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
             select_operator_certificate_source(
                 name="selected",
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
             configure_operator_auth(
-                AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+                AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b, operator_scope_ports=OPERATOR_SCOPE_PORTS
             )
             settings_b = load_settings()
 
         root_a_fixture = tmp_path / "same-id-route-a"
         with (
             isolated_profile_storage_root(tmp_path=root_a_fixture),
-            open_test_profile_session(_BUCKET_ID),
+            open_test_profile_session(BUCKET_ID),
         ):
-            _register_operator_profile()
+            register_operator_profile()
             cert_a = build_pkcs12_bundle(
                 tmp_path,
                 not_valid_before=now - timedelta(days=1),
@@ -264,40 +264,40 @@ def test_explicit_settings_same_bucket_id_uses_target_root_and_restores_ambient_
             register_operator_certificate_source(
                 name="selected",
                 certificate_path=cert_a,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
             set_operator_certificate_source_secret(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 name="selected",
                 secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
             select_operator_certificate_source(
                 name="selected",
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
             configure_operator_auth(
-                AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+                AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a, operator_scope_ports=OPERATOR_SCOPE_PORTS
             )
-            configure_operator_auth(AuthProviderKind.CLAVE_MOVIL.value, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+            configure_operator_auth(AuthProviderKind.CLAVE_MOVIL.value, operator_scope_ports=OPERATOR_SCOPE_PORTS)
 
-            ambient_before = _OPERATOR_SCOPE_PORTS.session.current()
+            ambient_before = OPERATOR_SCOPE_PORTS.session.current()
             assert ambient_before is not None
-            assert ambient_before.bucket_id == _BUCKET_ID
+            assert ambient_before.bucket_id == BUCKET_ID
 
             degraded_credentials = resolve_active_certificate_credentials(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 settings=settings_b,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
             )
             degraded_provider = select_provider(
                 AuthProviderKind.CERTIFICATE,
                 settings=settings_b,
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
             ).describe()
 
             assert degraded_credentials.certificate_path is None
@@ -310,33 +310,33 @@ def test_explicit_settings_same_bucket_id_uses_target_root_and_restores_ambient_
                 lambda: check_operator_certificate_sources(
                     certificate_secret_backend_factory=certificate_secret_backend_factory,
                     settings=settings_b,
-                    operator_probe_ports=_OPERATOR_PROBE_PORTS,
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    operator_probe_ports=OPERATOR_PROBE_PORTS,
+                    operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 ),
                 lambda: run_operator_auth_test(
                     certificate_secret_backend_factory=certificate_secret_backend_factory,
                     settings=settings_b,
-                    operator_probe_ports=_OPERATOR_PROBE_PORTS,
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    operator_probe_ports=OPERATOR_PROBE_PORTS,
+                    operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 ),
                 lambda: build_live_auth_preflight_report(
                     certificate_secret_backend_factory=certificate_secret_backend_factory,
                     settings=settings_b,
-                    operator_probe_ports=_OPERATOR_PROBE_PORTS,
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    operator_probe_ports=OPERATOR_PROBE_PORTS,
+                    operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 ),
             ):
                 with pytest.raises(AuthOperationRequiresCustodySessionError) as raised:
                     verdict_operation()
                 context = raised.value.context
                 assert context is not None
-                assert context["bucket_id"] == _BUCKET_ID
+                assert context["bucket_id"] == BUCKET_ID
                 assert root_b_fixture.name in str(context["storage_root"])
                 assert root_a_fixture.name not in str(context["storage_root"])
 
-            ambient_after = _OPERATOR_SCOPE_PORTS.session.current()
+            ambient_after = OPERATOR_SCOPE_PORTS.session.current()
             assert ambient_after == ambient_before
-            assert ambient_after.bucket_id == _BUCKET_ID
+            assert ambient_after.bucket_id == BUCKET_ID
             assert cert_a.exists()
             assert cert_b.exists()
 
@@ -346,8 +346,8 @@ def test_preloaded_state_never_combines_its_certificate_path_with_another_bucket
     tmp_path: Path,
 ) -> None:
     """A retained state snapshot has no authority to read a later bucket's secret."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
-        _register_operator_profile()
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
+        register_operator_profile()
         now = datetime.now(UTC)
         cert_a = build_pkcs12_bundle(
             tmp_path,
@@ -360,23 +360,23 @@ def test_preloaded_state_never_combines_its_certificate_path_with_another_bucket
         register_operator_certificate_source(
             name="selected",
             certificate_path=cert_a,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         set_operator_certificate_source_secret(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             name="selected",
             secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         select_operator_certificate_source(
             name="selected",
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         configure_operator_auth(
-            AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+            AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a, operator_scope_ports=OPERATOR_SCOPE_PORTS
         )
         workflow_state_repository().update(
             lambda state: update_auth(
@@ -388,9 +388,9 @@ def test_preloaded_state_never_combines_its_certificate_path_with_another_bucket
         retained_state_a = workflow_state_repository().load()
         assert retained_state_a.auth.authenticated_at is not None
 
-        with open_test_profile_session(_BUCKET_B):
+        with open_test_profile_session(BUCKET_B):
             register_minimal_profile(
-                profile_id=_BUCKET_B,
+                profile_id=BUCKET_B,
                 display_name="gestor-retained-state-b",
             )
             cert_b = build_pkcs12_bundle(
@@ -404,26 +404,26 @@ def test_preloaded_state_never_combines_its_certificate_path_with_another_bucket
             register_operator_certificate_source(
                 name="selected",
                 certificate_path=cert_b,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
             set_operator_certificate_source_secret(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 name="selected",
                 secret=SecretStr(CERTIFICATE_BUNDLE_INPUT_B),
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
             select_operator_certificate_source(
                 name="selected",
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
             configure_operator_auth(
-                AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+                AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b, operator_scope_ports=OPERATOR_SCOPE_PORTS
             )
 
-        with open_test_profile_session(_BUCKET_B):
+        with open_test_profile_session(BUCKET_B):
             projected_credentials = project_active_certificate_credentials(
                 retained_state_a,
                 settings=load_settings(),
@@ -432,11 +432,11 @@ def test_preloaded_state_never_combines_its_certificate_path_with_another_bucket
                 state=retained_state_a,
                 requested_provider=AuthProviderKind.CERTIFICATE.value,
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
-                operator_probe_ports=_OPERATOR_PROBE_PORTS,
+                operator_probe_ports=OPERATOR_PROBE_PORTS,
                 probe_live_backend=True,
                 include_workspace_summary=False,
                 include_pending_obligations=False,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
             )
 
         assert projected_credentials.certificate_path == cert_a
@@ -451,8 +451,8 @@ def test_resolved_credential_snapshot_survives_an_intervening_source_selection(
     certificate_secret_backend_factory: InMemoryCertificateSecretBackendFactory,
     tmp_path: Path,
 ) -> None:
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
-        _register_operator_profile()
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
+        register_operator_profile()
         now = datetime.now(UTC)
         cert_a = build_pkcs12_bundle(
             tmp_path,
@@ -473,50 +473,50 @@ def test_resolved_credential_snapshot_survives_an_intervening_source_selection(
         register_operator_certificate_source(
             name="source-a",
             certificate_path=cert_a,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         set_operator_certificate_source_secret(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             name="source-a",
             secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         select_operator_certificate_source(
             name="source-a",
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         configure_operator_auth(
-            AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+            AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a, operator_scope_ports=OPERATOR_SCOPE_PORTS
         )
         snapshot_a = resolve_active_certificate_credentials(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
         )
 
         register_operator_certificate_source(
             name="source-b",
             certificate_path=cert_b,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         set_operator_certificate_source_secret(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             name="source-b",
             secret=SecretStr(CERTIFICATE_BUNDLE_INPUT_B),
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         select_operator_certificate_source(
             name="source-b",
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         snapshot_b = resolve_active_certificate_credentials(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
         )
 
         probe_a = probe_provider_credentials(
@@ -524,14 +524,14 @@ def test_resolved_credential_snapshot_survives_an_intervening_source_selection(
             str(snapshot_a.certificate_path or ""),
             settings=load_settings(),
             certificate_credentials=snapshot_a,
-            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            operator_probe_ports=OPERATOR_PROBE_PORTS,
         )
         probe_b = probe_provider_credentials(
             AuthProviderKind.CERTIFICATE.value,
             str(snapshot_b.certificate_path or ""),
             settings=load_settings(),
             certificate_credentials=snapshot_b,
-            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            operator_probe_ports=OPERATOR_PROBE_PORTS,
         )
 
         assert snapshot_a.source_name == "source-a"
@@ -546,8 +546,8 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
     certificate_secret_backend_factory: InMemoryCertificateSecretBackendFactory,
     tmp_path: Path,
 ) -> None:
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
-        _register_operator_profile()
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
+        register_operator_profile()
         now = datetime.now(UTC)
         cert_a = build_pkcs12_bundle(
             tmp_path,
@@ -560,25 +560,25 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
         register_operator_certificate_source(
             name="selected",
             certificate_path=cert_a,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         set_operator_certificate_source_secret(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             name="selected",
             secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         select_operator_certificate_source(
             name="selected",
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         configure_operator_auth(
-            AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+            AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a, operator_scope_ports=OPERATOR_SCOPE_PORTS
         )
-        session_captured_at = _NOW
+        session_captured_at = NOW
         session_a_path = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
         session_store.save(
             session_a_path,
@@ -591,10 +591,10 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
             },
         )
 
-        with open_test_profile_session(_BUCKET_B):
+        with open_test_profile_session(BUCKET_B):
             register_minimal_profile(
-                profile_id=_BUCKET_B,
-                display_name=_PROFILE_LABEL_B,
+                profile_id=BUCKET_B,
+                display_name=PROFILE_LABEL_B,
             )
             cert_b = build_pkcs12_bundle(
                 tmp_path,
@@ -607,23 +607,23 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
             register_operator_certificate_source(
                 name="selected",
                 certificate_path=cert_b,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
             set_operator_certificate_source_secret(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 name="selected",
                 secret=SecretStr(CERTIFICATE_BUNDLE_INPUT_B),
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
             select_operator_certificate_source(
                 name="selected",
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
             configure_operator_auth(
-                AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+                AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b, operator_scope_ports=OPERATOR_SCOPE_PORTS
             )
             session_b_path = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
             session_store.save(
@@ -640,35 +640,35 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
         settings = load_settings()
         write_pointer(
             settings.cadrumo_storage_root,
-            BucketPointer.selected(bucket_id=_BUCKET_ID, transition_revision=1),
+            BucketPointer.selected(bucket_id=BUCKET_ID, transition_revision=1),
         )
         with override_settings(cadrumo_active_profile=None):
             with active_auth_projection_span(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 requested_provider=AuthProviderKind.CERTIFICATE.value,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
             ) as snapshot:
-                assert snapshot.bucket_id == _BUCKET_ID
+                assert snapshot.bucket_id == BUCKET_ID
                 assert snapshot.state is not None
                 assert snapshot.certificate_credentials is not None
                 write_pointer(
                     settings.cadrumo_storage_root,
-                    BucketPointer.selected(bucket_id=_BUCKET_B, transition_revision=2),
+                    BucketPointer.selected(bucket_id=BUCKET_B, transition_revision=2),
                 )
                 state_after_pointer_change = workflow_state_repository().load()
                 credentials_after_pointer_change = resolve_active_certificate_credentials(
                     certificate_secret_backend_factory=certificate_secret_backend_factory,
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 )
                 projection_after_pointer_change = build_operator_state_projection(
                     auth_snapshot=snapshot,
                     requested_provider=AuthProviderKind.CERTIFICATE.value,
                     certificate_secret_backend_factory=certificate_secret_backend_factory,
-                    operator_probe_ports=_OPERATOR_PROBE_PORTS,
+                    operator_probe_ports=OPERATOR_PROBE_PORTS,
                     probe_live_backend=True,
                     include_workspace_summary=False,
                     include_pending_obligations=False,
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 )
                 session_after_pointer_change = load_persisted_session(
                     load_settings(),
@@ -677,21 +677,21 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
                 operator_test_after_pointer_change = run_operator_auth_test(
                     AuthProviderKind.CERTIFICATE.value,
                     certificate_secret_backend_factory=certificate_secret_backend_factory,
-                    operator_probe_ports=_OPERATOR_PROBE_PORTS,
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    operator_probe_ports=OPERATOR_PROBE_PORTS,
+                    operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 )
                 preflight_after_pointer_change = build_live_auth_preflight_report(
                     AuthProviderKind.CERTIFICATE.value,
                     certificate_secret_backend_factory=certificate_secret_backend_factory,
-                    operator_probe_ports=_OPERATOR_PROBE_PORTS,
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    operator_probe_ports=OPERATOR_PROBE_PORTS,
+                    operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 )
 
                 assert state_after_pointer_change.auth.certificate_path == str(cert_a)
                 assert credentials_after_pointer_change.certificate_path == cert_a
                 assert credentials_after_pointer_change.password is not None
                 assert credentials_after_pointer_change.password.get_secret_value() == CERTIFICATE_BUNDLE_INPUT
-                assert projection_after_pointer_change.active_profile.profile_id == _BUCKET_ID
+                assert projection_after_pointer_change.active_profile.profile_id == BUCKET_ID
                 assert projection_after_pointer_change.auth.certificate_path == str(cert_a)
                 assert projection_after_pointer_change.auth.available is True
                 assert session_after_pointer_change is not None
@@ -701,11 +701,11 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
                 # UUID. The immutable id is asserted above on the projection, which
                 # is where it lives; here the label is the identity, and naming
                 # bucket B's label explicitly keeps the pinning claim unambiguous.
-                assert operator_test_after_pointer_change.active_profile == _PROFILE_LABEL
-                assert operator_test_after_pointer_change.active_profile != _PROFILE_LABEL_B
+                assert operator_test_after_pointer_change.active_profile == PROFILE_LABEL
+                assert operator_test_after_pointer_change.active_profile != PROFILE_LABEL_B
                 assert operator_test_after_pointer_change.certificate_path == str(cert_a)
                 assert operator_test_after_pointer_change.persisted_session_present is True
-                assert preflight_after_pointer_change.active_profile == _PROFILE_LABEL
+                assert preflight_after_pointer_change.active_profile == PROFILE_LABEL
                 assert preflight_after_pointer_change.certificate_path_configured is True
                 assert preflight_after_pointer_change.persisted_session_present is True
 
@@ -714,12 +714,12 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
             # keeps the route pointer-driven rather than letting the session
             # helper's own override answer the question under test.
             with (
-                open_test_profile_session(_BUCKET_B),
+                open_test_profile_session(BUCKET_B),
                 override_settings(cadrumo_active_profile=None),
             ):
                 credentials_after_span = resolve_active_certificate_credentials(
                     certificate_secret_backend_factory=certificate_secret_backend_factory,
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 )
                 session_after_span = load_persisted_session(load_settings(), AuthProviderKind.CERTIFICATE)
             assert credentials_after_span.certificate_path == cert_b
@@ -740,8 +740,8 @@ def test_explicit_settings_provider_resolution_uses_target_bucket_and_restores_a
     call is asserted first: naming bucket B in Settings resolves B's material
     or nothing -- never bucket A's, whichever session happens to be ambient.
     """
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
-        _register_operator_profile()
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
+        register_operator_profile()
         now = datetime.now(UTC)
         cert_a = build_pkcs12_bundle(
             tmp_path,
@@ -754,28 +754,28 @@ def test_explicit_settings_provider_resolution_uses_target_bucket_and_restores_a
             name="selected",
             certificate_path=cert_a,
             friendly_name="bucket-a",
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         set_operator_certificate_source_secret(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             name="selected",
             secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         select_operator_certificate_source(
             name="selected",
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         configure_operator_auth(
-            AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+            AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a, operator_scope_ports=OPERATOR_SCOPE_PORTS
         )
 
-        with open_test_profile_session(_BUCKET_B):
+        with open_test_profile_session(BUCKET_B):
             register_minimal_profile(
-                profile_id=_BUCKET_B,
+                profile_id=BUCKET_B,
                 display_name="gestor-cert-b",
             )
             cert_b = build_pkcs12_bundle(
@@ -790,60 +790,60 @@ def test_explicit_settings_provider_resolution_uses_target_bucket_and_restores_a
                 name="selected",
                 certificate_path=cert_b,
                 friendly_name="bucket-b",
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
             set_operator_certificate_source_secret(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 name="selected",
                 secret=SecretStr(CERTIFICATE_BUNDLE_INPUT_B),
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
             select_operator_certificate_source(
                 name="selected",
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 operation=_certificate_authority_operation_for_test,
             )
             configure_operator_auth(
-                AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+                AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b, operator_scope_ports=OPERATOR_SCOPE_PORTS
             )
 
-        ambient_before = _OPERATOR_SCOPE_PORTS.session.current()
+        ambient_before = OPERATOR_SCOPE_PORTS.session.current()
         assert ambient_before is not None
-        assert ambient_before.bucket_id == _BUCKET_ID
-        with override_settings(cadrumo_active_profile=_BUCKET_B) as settings_b:
+        assert ambient_before.bucket_id == BUCKET_ID
+        with override_settings(cadrumo_active_profile=BUCKET_B) as settings_b:
             pass
 
         unauthenticated = resolve_active_certificate_credentials(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             settings=settings_b,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
         )
         assert unauthenticated.certificate_path is None
         assert unauthenticated.password is None
         assert unauthenticated.source_name is None
 
-        with open_test_profile_session(_BUCKET_B):
+        with open_test_profile_session(BUCKET_B):
             credentials = resolve_active_certificate_credentials(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 settings=settings_b,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
             )
             provider_description = select_provider(
                 AuthProviderKind.CERTIFICATE,
                 settings=settings_b,
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
             ).describe()
             check_report = check_operator_certificate_sources(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
                 settings=settings_b,
-                operator_probe_ports=_OPERATOR_PROBE_PORTS,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_probe_ports=OPERATOR_PROBE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
             )
 
-        ambient_after = _OPERATOR_SCOPE_PORTS.session.current()
+        ambient_after = OPERATOR_SCOPE_PORTS.session.current()
         assert credentials.source_name == "selected"
         assert credentials.certificate_path == cert_b
         assert credentials.password is not None
@@ -868,7 +868,7 @@ def test_unreadable_explicit_settings_target_fails_closed_without_global_fallbac
     empty credential. Neither path may reach for the perfectly valid global
     password sitting in Settings.
     """
-    _register_operator_profile()
+    register_operator_profile()
     now = datetime.now(UTC)
     global_path = build_pkcs12_bundle(
         tmp_path,
@@ -878,7 +878,7 @@ def test_unreadable_explicit_settings_target_fails_closed_without_global_fallbac
         subject_cn="global-must-not-leak",
     )
     with override_settings(
-        cadrumo_active_profile=_MISSING_BUCKET,
+        cadrumo_active_profile=MISSING_BUCKET,
         cadrumo_certificate_path=global_path,
         cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
     ) as missing_settings:
@@ -887,13 +887,13 @@ def test_unreadable_explicit_settings_target_fails_closed_without_global_fallbac
     credentials = resolve_active_certificate_credentials(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         settings=missing_settings,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        operator_scope_ports=OPERATOR_SCOPE_PORTS,
     )
     provider_description = select_provider(
         AuthProviderKind.CERTIFICATE,
         settings=missing_settings,
         certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        operator_scope_ports=OPERATOR_SCOPE_PORTS,
     ).describe()
 
     assert credentials.certificate_path is None
@@ -908,12 +908,12 @@ def test_unreadable_explicit_settings_target_fails_closed_without_global_fallbac
         check_operator_certificate_sources(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             settings=missing_settings,
-            operator_probe_ports=_OPERATOR_PROBE_PORTS,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_probe_ports=OPERATOR_PROBE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
         )
     context = raised_verdict.value.context
     assert context is not None
-    assert context["bucket_id"] == _MISSING_BUCKET
+    assert context["bucket_id"] == MISSING_BUCKET
 
 
 def test_login_refuses_selected_missing_file_before_unrelated_valid_global_certificate(
@@ -921,8 +921,8 @@ def test_login_refuses_selected_missing_file_before_unrelated_valid_global_certi
     tmp_path: Path,
 ) -> None:
     """Public login applies the selected source path before its local precondition."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
-        _register_operator_profile()
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
+        register_operator_profile()
         now = datetime.now(UTC)
         selected_path = build_pkcs12_bundle(
             tmp_path,
@@ -941,18 +941,18 @@ def test_login_refuses_selected_missing_file_before_unrelated_valid_global_certi
         register_operator_certificate_source(
             name="selected",
             certificate_path=selected_path,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         select_operator_certificate_source(
             name="selected",
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         configure_operator_auth(
             AuthProviderKind.CERTIFICATE.value,
             certificate_path=selected_path,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
         )
         selected_path.unlink()
 
@@ -969,8 +969,8 @@ def test_login_refuses_selected_missing_file_before_unrelated_valid_global_certi
                     AuthProviderKind.CERTIFICATE.value,
                     certificate_secret_backend_factory=certificate_secret_backend_factory,
                     browser_session_factory=default_browser_session_factory,
-                    operator_probe_ports=_OPERATOR_PROBE_PORTS,
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    operator_probe_ports=OPERATOR_PROBE_PORTS,
+                    operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 ),
             )
 
@@ -985,8 +985,8 @@ def test_check_named_source_without_secret_never_inherits_a_valid_global_passwor
     tmp_path: Path,
 ) -> None:
     """A named source without a bound secret fails closed even when the global password would open it."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
-        _register_operator_profile()
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
+        register_operator_profile()
         now = datetime.now(UTC)
         cert_path = build_pkcs12_bundle(
             tmp_path,
@@ -998,20 +998,20 @@ def test_check_named_source_without_secret_never_inherits_a_valid_global_passwor
         register_operator_certificate_source(
             name="personal",
             certificate_path=cert_path,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         select_operator_certificate_source(
             name="personal",
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
 
         with override_settings(cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_INPUT)):
             report = check_operator_certificate_sources(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
-                operator_probe_ports=_OPERATOR_PROBE_PORTS,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_probe_ports=OPERATOR_PROBE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
             )
 
         assert len(report.entries) == 1
@@ -1024,8 +1024,8 @@ def test_check_named_source_fails_closed_when_secure_storage_cannot_be_read(
     tmp_path: Path,
 ) -> None:
     """A real corrupt secure-storage index cannot redirect a named source to the valid global password."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
-        _register_operator_profile()
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
+        register_operator_profile()
         now = datetime.now(UTC)
         cert_path = build_pkcs12_bundle(
             tmp_path,
@@ -1037,27 +1037,27 @@ def test_check_named_source_fails_closed_when_secure_storage_cannot_be_read(
         register_operator_certificate_source(
             name="personal",
             certificate_path=cert_path,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         set_operator_certificate_source_secret(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             name="personal",
             secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         select_operator_certificate_source(
             name="personal",
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         certificate_secret_backend_factory.make_unreadable()
         with override_settings(cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_INPUT)):
             report = check_operator_certificate_sources(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
-                operator_probe_ports=_OPERATOR_PROBE_PORTS,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_probe_ports=OPERATOR_PROBE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
             )
 
         assert len(report.entries) == 1

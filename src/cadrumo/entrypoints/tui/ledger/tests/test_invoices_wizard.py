@@ -62,7 +62,7 @@ async def _press(pilot: Pilot[None], screen: LedgerInvoiceWizardScreen, button_i
     await settle(pilot)
 
 
-async def _fill_and_review(pilot: Pilot[None], screen: LedgerInvoiceWizardScreen) -> None:
+async def fill_and_review(pilot: Pilot[None], screen: LedgerInvoiceWizardScreen) -> None:
     cast("Select[str]", screen.query_one("#ledger-invoices-wizard-kind", Select)).value = InvoiceKind.ISSUED.value
     for name, value in _TYPED.items():
         screen.query_one(f"#ledger-invoices-wizard-{name.replace('_', '-')}", Input).value = value
@@ -86,7 +86,7 @@ async def test_the_wizard_moves_step_by_step_and_records_exactly_the_reviewed_re
         await _press(pilot, screen, "ledger-invoices-wizard-previous")
         assert _visible_step(screen) == ["ledger-invoices-wizard-step-counterparty"]
 
-        await _fill_and_review(pilot, screen)
+        await fill_and_review(pilot, screen)
         assert screen.flow_state is LedgerFlowState.CONFIRMING
         assert door.requests == []
         assert _visible_step(screen) == []
@@ -124,7 +124,7 @@ async def test_field_refusals_are_listed_and_correcting_reopens_at_the_first_ref
     screen.back_area = LedgerWorkspaceArea.OVERVIEW
     async with ReplacingHostApp(screen).run_test(size=(120, 50)) as pilot:
         await settle(pilot)
-        await _fill_and_review(pilot, screen)
+        await fill_and_review(pilot, screen)
         await _press(pilot, screen, "ledger-invoices-wizard-confirm")
         assert screen.flow_state is LedgerFlowState.FAILED
         assert _text(screen, "#ledger-flow-status") == tr("tui.ledger.invoices.wizard.refused")
@@ -150,7 +150,7 @@ async def test_a_typed_door_refusal_is_shown_and_cancelling_writes_nothing() -> 
     screen = _screen(door)
     async with ScreenHostApp[None](screen).run_test(size=(120, 50)) as pilot:
         await settle(pilot)
-        await _fill_and_review(pilot, screen)
+        await fill_and_review(pilot, screen)
         await _press(pilot, screen, "ledger-invoices-wizard-confirm")
         assert screen.flow_state is LedgerFlowState.FAILED
         assert _text(screen, "#ledger-refusal") == door_refusal_text(refusal)
@@ -159,7 +159,7 @@ async def test_a_typed_door_refusal_is_shown_and_cancelling_writes_nothing() -> 
     cancelled = _screen(cancelled_door)
     async with ScreenHostApp[None](cancelled).run_test(size=(120, 50)) as pilot:
         await settle(pilot)
-        await _fill_and_review(pilot, cancelled)
+        await fill_and_review(pilot, cancelled)
         await _press(pilot, cancelled, "ledger-invoices-wizard-cancel")
         assert cancelled.flow_state is LedgerFlowState.CANCELLED
         assert _text(cancelled, "#ledger-flow-status") == tr("tui.ledger.invoices.wizard.cancelled")
@@ -188,7 +188,7 @@ async def test_the_wizard_door_runs_only_in_a_worker() -> None:
     screen = _screen(door)
     async with ScreenHostApp[None](screen).run_test(size=(120, 50)) as pilot:
         await settle(pilot)
-        await _fill_and_review(pilot, screen)
+        await fill_and_review(pilot, screen)
         await _press(pilot, screen, "ledger-invoices-wizard-confirm")
     assert door.in_worker == [True]
 

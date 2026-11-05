@@ -213,7 +213,7 @@ def test_command_emits_existing_report_and_notice_from_registered_result(
 
     assert len(envelopes) == 1
     envelope = envelopes[0]
-    expected_result, expected_lines = handler._filed_pull_all_result_and_lines(_report())
+    expected_result, expected_lines = handler.filed_pull_all_result_and_lines(_report())
     assert envelope["command"] == "app.live.filed.pull_all"
     assert envelope["result"] == expected_result
     lines = envelope["lines"]
@@ -272,7 +272,7 @@ def test_history_unvisited_pair_is_not_an_empty_answer_and_extra_actual_counts_s
     read = _read()
     assert read.report.captured_count == 2 and read.report.reached_count == 2
     assert read.report.genuinely_empty_pairs == ()
-    result, lines = handler._filed_pull_all_result_and_lines(read.report)
+    result, lines = handler.filed_pull_all_result_and_lines(read.report)
     assert result.pair_count == 2
     assert result.empty_count == 0
     assert result.pairs[-1].walk_attempted is False and result.pairs[-1].walk_completed is False

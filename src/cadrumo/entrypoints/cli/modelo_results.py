@@ -84,19 +84,19 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
 )
-from ._decimal_wire import DecimalWireText
-from ._filing_chain_payloads import (
+from .decimal_wire import DecimalWireText
+from .filing_chain_payloads import (
     AeatRegisterRefPayload,
     FilingReconciliationPayload,
     ObservationLayersPayload,
 )
-from ._modelo_revision_payload_parts import (
+from .modelo_query_results import UnresolvedFindingsFields
+from .modelo_revision_payload_parts import (
     CalculationRevisionProjectionFields,
     DetailRowPayload,
     ObservationPayload,
     SourceProvenancePayload,
 )
-from .modelo_query_results import UnresolvedFindingsFields
 
 if TYPE_CHECKING:
     pass
@@ -271,7 +271,7 @@ class CrossPeriodDependencyRequirementPayload(OutputSchema):
     ``legal_refs`` and ``source_refs`` are carried unbounded (no
     ``min_length=1`` restated) because the sole construction site,
     ``_dependency_inventory_item_payload`` in
-    :mod:`~cadrumo.entrypoints.cli._modelo_work_verification_cli`, builds this
+    :mod:`~cadrumo.entrypoints.cli.modelo_work_verification_cli`, builds this
     payload field-by-field from an already-validated
     ``CrossPeriodDependencyRequirement`` instance, whose own ``Field(min_length=1)``
     on both fields already guarantees non-emptiness; no path builds this payload

@@ -39,7 +39,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.tests.process_results import receive_process_result
 
@@ -77,7 +77,7 @@ def _register_in_sibling(tmp_path_text: str, barrier: Barrier, results: Queue[tu
         bundled_indexed_authority().operation(),
         composed_profile_persistence_ports(),
     ):
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+        _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
         barrier.wait()
         try:
             outcome = register_profile_with_credentials(

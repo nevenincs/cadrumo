@@ -72,7 +72,7 @@ def _configuration_validation_verdict(
     )
 
 
-def _parse_kind(raw: str) -> ProviderKind:
+def parse_kind(raw: str) -> ProviderKind:
     cleaned = raw.strip().lower()
     if not cleaned:
         raise OutboundStorageValidationError(
@@ -214,7 +214,7 @@ def get_storage_provider(
             is not a live folder this application created.
     """
     settings_resolved = settings if settings is not None else load_settings()
-    kind = _parse_kind(settings_resolved.cadrumo_storage_provider_kind)
+    kind = parse_kind(settings_resolved.cadrumo_storage_provider_kind)
     resolved_profile = _resolve_profile()
     if profile is not None and profile != resolved_profile:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
@@ -256,7 +256,7 @@ def _google_storage_provider(
 
     from ...persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
     from ..google.artifact_receipt_store import GoogleArtifactReceiptStore
-    from ._google_drive import GoogleDriveProvider
+    from .google_drive import GoogleDriveProvider
 
     root_folder_id = resolve_required_drive_root_folder_id(profile=profile)
     receipts = GoogleArtifactReceiptStore(

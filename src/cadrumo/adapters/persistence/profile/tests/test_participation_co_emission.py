@@ -31,7 +31,7 @@ from cadrumo.application.modelo.filing_revision_persistence import persist_filed
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import ResultDisposition
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.casilla_membership import casillas_by_id
 from cadrumo.domain.calculations.registry.iva_compensation_annual_partition_bindings import (
@@ -60,22 +60,22 @@ from .filing_report_support import seed_filing_gate_report
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET_ID = "5fb44bbf-c0c5-4701-b2a9-d4d521e66fb5"  # was 'modelo-participation-co-emission'
-_T0 = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
+BUCKET_ID = "5fb44bbf-c0c5-4701-b2a9-d4d521e66fb5"  # was 'modelo-participation-co-emission'
+T0 = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
 
 
 def _hex(seed: str) -> str:
     return (seed * 64)[:64]
 
 
-_TX_A = _hex("a")
-_TX_B = _hex("b")
+TX_A = _hex("a")
+TX_B = _hex("b")
 # The Modelo 303 result casilla: a filed observation must name a casilla the
 # selected registry revision declares, and its value states the disposition.
 _M303_RESULT_CASILLA: CasillaId = M303_COMPENSATION_RESULTADO_CASILLA
 #: A synthetic, checksum-valid NIF: a local M303 filing projects its IVA
 #: compensation history, and so its settlement snapshot, under the taxpayer.
-_TAXPAYER_NIF = "12345678Z"
+TAXPAYER_NIF = "12345678Z"
 
 
 def _iva_wallet_repositories() -> tuple[CalculationObservationRepository, IvaCompensationHistoryRepository]:
@@ -87,7 +87,7 @@ def _iva_wallet_repositories() -> tuple[CalculationObservationRepository, IvaCom
     )
 
 
-def _seed_borrador(
+def seed_borrador(
     *,
     cr_repo: CalculationRevisionCatalogueRepository,
     wu_repo: WorkUnitCatalogueRepository,
@@ -97,7 +97,7 @@ def _seed_borrador(
     revision_id_seed = str(snapshot.revision.id)
     revision_casillas = casillas_by_id(snapshot.revision)
     work_unit_id = derive_work_unit_id(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         modelo="303",
         filing_year=2024,
         period=Period.from_year_and_code(2024, "2T"),
@@ -105,18 +105,18 @@ def _seed_borrador(
     )
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         modelo=ModeloCode("303"),
         filing_year=2024,
         period=Period.from_year_and_code(2024, "2T"),
         revision_id=revision_id_seed,
         name="303-2024-2T",
-        created_at=_T0,
-        updated_at=_T0,
+        created_at=T0,
+        updated_at=T0,
     )
     wu_repo.save(upsert_work_unit(wu_repo.load(), work_unit))
 
-    source_transaction_ids = (_TX_A, _TX_B)
+    source_transaction_ids = (TX_A, TX_B)
     input_values_by_casilla_id = {_M303_RESULT_CASILLA: "1000.00"}
     # The settlement snapshot every local M303 filing persists reads the final
     # result and the compensation operands; with no prior credit both are zero.
@@ -157,8 +157,8 @@ def _seed_borrador(
             )
             for casilla_id, value in casilla_values.items()
         ),
-        created_at=_T0,
-        updated_at=_T0,
+        created_at=T0,
+        updated_at=T0,
         filing_instance_evidence=None,
         source_provenance=(),
     )
@@ -166,7 +166,7 @@ def _seed_borrador(
     return revision, work_unit
 
 
-def _seed_verified_participation(
+def seed_verified_participation(
     *,
     target: CalculationRevision,
     work_unit: WorkUnit,
@@ -208,19 +208,19 @@ def _seed_verified_participation(
 
 def test_verify_then_file_co_emits_participation_for_every_source_transaction(tmp_path: Path) -> None:
     """Verify then file a revision; the participation index records both transactions."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-            cr_repo = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
-            wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID)
-            fr_repo = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID)
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
+            cr_repo = CalculationRevisionCatalogueRepository(bucket_id=BUCKET_ID)
+            wu_repo = WorkUnitCatalogueRepository(bucket_id=BUCKET_ID)
+            fr_repo = ModeloRecordCatalogueRepository(bucket_id=BUCKET_ID)
             bv_repo = _bucket_event_repository()
-            participation_repo = TransactionParticipationIndexRepository(bucket_id=_BUCKET_ID)
+            participation_repo = TransactionParticipationIndexRepository(bucket_id=BUCKET_ID)
 
-            revision, work_unit = _seed_borrador(cr_repo=cr_repo, wu_repo=wu_repo)
+            revision, work_unit = seed_borrador(cr_repo=cr_repo, wu_repo=wu_repo)
 
             # --- VERIFY (co-emits VERIFICADO_COMPLETO participations) ---
-            verified_at = _T0 + timedelta(hours=3)
-            _seed_verified_participation(
+            verified_at = T0 + timedelta(hours=3)
+            seed_verified_participation(
                 target=revision,
                 actor="aeat.cli.modelo.verify",
                 now=verified_at,
@@ -229,8 +229,8 @@ def test_verify_then_file_co_emits_participation_for_every_source_transaction(tm
                 participation_index_repository=participation_repo,
             )
 
-            index_a = participation_repo.load(_TX_A)
-            index_b = participation_repo.load(_TX_B)
+            index_a = participation_repo.load(TX_A)
+            index_b = participation_repo.load(TX_B)
             assert len(index_a.participations) == 1
             assert len(index_b.participations) == 1
             verified_entry = index_a.participations[0]
@@ -247,11 +247,11 @@ def test_verify_then_file_co_emits_participation_for_every_source_transaction(tm
             assert verified_revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
 
             filed_at = verified_at + timedelta(hours=1)
-            verification_repo = VerificationReportCatalogueRepository(bucket_id=_BUCKET_ID)
+            verification_repo = VerificationReportCatalogueRepository(bucket_id=BUCKET_ID)
             report_id = seed_filing_gate_report(verified_revision, verification_repo)
             _, filing_baseline_revision_id = fr_repo.load_revisioned()
             calculation_observation_repository, iva_compensation_history_repository = _iva_wallet_repositories()
-            prorrata_repository = ProrrataRegisterRepository(bucket_id=_BUCKET_ID)
+            prorrata_repository = ProrrataRegisterRepository(bucket_id=BUCKET_ID)
             filing_record = persist_filed_revision(
                 target=verified_revision,
                 approved_verification_report_id=report_id,
@@ -272,17 +272,17 @@ def test_verify_then_file_co_emits_participation_for_every_source_transaction(tm
                 prorrata_register_repository=prorrata_repository,
                 # The seeded result is a positive amount due, so the filing is an ingreso.
                 result_disposition=ResultDisposition.INGRESO,
-                taxpayer_nif=_TAXPAYER_NIF,
+                taxpayer_nif=TAXPAYER_NIF,
                 operation=_authority_operation_for_test,
             )
 
-            filed_index_a = participation_repo.load(_TX_A)
-            filed_index_b = participation_repo.load(_TX_B)
+            filed_index_a = participation_repo.load(TX_A)
+            filed_index_b = participation_repo.load(TX_B)
 
             # --- write-guard live-scan correctness is unchanged by the index ---
             blockers = blocking_modelo_references(
-                bucket_id=_BUCKET_ID,
-                transaction_ids=(_TX_A,),
+                bucket_id=BUCKET_ID,
+                transaction_ids=(TX_A,),
                 work_unit_repository=wu_repo,
                 calculation_repository=cr_repo,
             )

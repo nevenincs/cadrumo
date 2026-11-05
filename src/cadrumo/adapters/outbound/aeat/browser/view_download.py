@@ -10,7 +10,7 @@ from cadrumo_client.contracts.view_stream import ViewStreamSink
 from cadrumo_client.contracts.view_transfer import ViewDownloadOutcome, ViewTransferCancel, ViewTransferDirection
 
 from .....core.logging import get_logger
-from .._playwright import PlaywrightError
+from ..playwright import PlaywrightError
 
 if TYPE_CHECKING:
     from playwright.async_api import Download

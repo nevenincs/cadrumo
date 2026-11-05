@@ -69,7 +69,7 @@ from .....application.foreign_asset_thresholds import foreign_asset_declaration_
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.foreign_asset_obligation import ForeignAssetObligationGroup
 from .....core.period import Period
-from .....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from .....domain.calculations.registry.errors import RegistryValidationError
 from .....domain.calculations.registry.tests.registry_observations import (
@@ -79,12 +79,12 @@ from .....domain.modelos.verification_report import ModeloVerificationFindingKin
 from ...storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ..calculation_observations import CalculationObservationRepository
 from ..iva_compensation_history import IvaCompensationHistoryRepository
-from ._multi_year_roundtrip_support import assert_omitted_casilla_is_detected, assert_two_ejercicio_round_trip
-from ._observation_lookup_support import find_observation, save_app_filing_observation, saved_two_ejercicios
 from .cross_period_clean_state_support import (
     BUCKET_ID as CLEAN_STATE_BUCKET_ID,
 )
 from .cross_period_clean_state_support import evaluate_clean_state
+from .multi_year_roundtrip_support import assert_omitted_casilla_is_detected, assert_two_ejercicio_round_trip
+from .observation_lookup_support import find_observation, save_app_filing_observation, saved_two_ejercicios
 from .published_authority_support import published_authority_operation
 from .relation_prefill_support import empty_profile_read_ports
 
@@ -104,7 +104,7 @@ _CONTEXT_LABEL = "720-bienes-extranjero-prior-year-asset-baseline-two-annual-cyc
 
 #: Initial declaration threshold per RD 1065/2007 art. 2.1 (registry parameter
 #: ``modelo-720-asset-declaration-threshold-eur`` = €50,000).
-with _indexed_authority_for_test().operation() as _module_authority_operation_for_test:
+with bundled_indexed_authority().operation() as _module_authority_operation_for_test:
     _M720_THRESHOLDS = foreign_asset_declaration_thresholds(
         modelo=_MODELO,
         filing_year=_YEAR_N_PLUS_1,
@@ -548,7 +548,7 @@ def test_previous_filing_baseline_drives_redeclaration_advisory_for_omitted_grow
     obs_n = _year_n_observation_with_explicit_inmuebles_zero()
     assert obs_n.casilla_values[_INMUEBLES_VALORACION_CASILLA] == _INMUEBLES_N
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repo = CalculationObservationRepository()
@@ -574,7 +574,7 @@ def test_previous_filing_baseline_drives_redeclaration_advisory_for_omitted_grow
     assert {item.dependency_treatment for item in report.prefilled} == {"factual_evidence"}
 
     prior_baseline = _prior_baseline_observation_from_bindings(dict(report.binding_values))
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         findings = modelo_720_redeclaration_advisory_findings(
             prior_observation=prior_baseline,
             current_observation=_year_n_plus_1_advisory_observation(),
@@ -619,7 +619,7 @@ def test_previous_filing_baselines_do_not_cross_taxpayer_buckets(tmp_path: Path)
     }
 
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime,
     ):
         primary_repository = CalculationObservationRepository(objects=runtime.primary.repository)
@@ -675,7 +675,7 @@ def test_previous_filing_baseline_does_not_invent_absent_inmuebles_zero(tmp_path
         snapshot_n1 = published_authority_operation().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
 
         with (
-            _indexed_authority_for_test().operation() as _authority_operation_for_test,
+            bundled_indexed_authority().operation() as _authority_operation_for_test,
             pytest.raises(RegistryValidationError, match="inmuebles\\.valoracion"),
         ):
             resolve_bindings_from_local_store(
@@ -698,7 +698,7 @@ def _prior_year_baseline_consumer_outcome(
         repository = CalculationObservationRepository()
         if prior_observation is not None:
             save_app_filing_observation(repository, prior_observation, captured_at=_CLOCK_N)
-        with _indexed_authority_for_test().operation() as operation:
+        with bundled_indexed_authority().operation() as operation:
             resolution = PreviousFilingSourceResolver(
                 repository=repository,
                 registry_snapshot=snapshot,
@@ -777,7 +777,7 @@ def test_absent_prior_year_filing_stays_unresolved_and_blocking_while_explicit_z
 
 
 def test_redeclaration_advisory_is_silent_when_required_group_is_declared_or_delta_is_below_threshold() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert (
             modelo_720_redeclaration_advisory_findings(
                 prior_observation=_year_n_advisory_observation(),

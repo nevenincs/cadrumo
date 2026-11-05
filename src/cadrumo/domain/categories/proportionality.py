@@ -49,7 +49,7 @@ def _require_translatable_text(value: tr, field_name: str) -> None:
         raise CategoryValidationError(f"{field_name} must contain authoritative Spanish text")
 
 
-def _authoritative_citation_origins() -> frozenset[str]:
+def authoritative_citation_origins() -> frozenset[str]:
     """Return the registered domains a category citation may cite.
 
     Derived from the canonical
@@ -223,7 +223,7 @@ class CategoryCitation(_ProportionalityStrictFrozenModel):
         canonical :class:`core.external_constants.AeatDomainSection` registry
         rather than against hostname literals restated in this module.
         """
-        accepted = _authoritative_citation_origins()
+        accepted = authoritative_citation_origins()
         host = (value.host or "").lower()
         scheme = value.scheme.lower()
         if scheme != _CITATION_SCHEME or not _host_is_authoritative(host, accepted):

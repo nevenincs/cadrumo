@@ -36,13 +36,13 @@ from ..descendant_facts import (
 from ..errors import ProfileValidationError
 from ..family_fact_context import FamilyFactResolutionContext
 from ..family_profile import RentaFamilyProfile
-from ._registry_thresholds import (
+from .family_counts import descendientes_eligible_minimum, descendientes_menores_3_year_end
+from .registry_thresholds import (
     registry_birth_order_amounts,
     registry_fallecimiento_amount,
     registry_menor_tres_supplement,
     registry_thresholds,
 )
-from .family_counts import descendientes_eligible_minimum, descendientes_menores_3_year_end
 from .under_three import is_eligible_menor_tres
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

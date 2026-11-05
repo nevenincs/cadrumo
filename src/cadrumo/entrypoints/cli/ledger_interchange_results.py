@@ -28,8 +28,7 @@ from ...core.period import Period
 from ...core.text_bounds import NonEmptyStr
 
 if TYPE_CHECKING:
-    from ...application.ledger.models import LedgerExportResult as _AppLedgerExportResult
-    from ...application.ledger.models import LedgerSourceImportResult as _AppLedgerSourceImportResult
+    from ...application.ledger.models import LedgerExportResult, LedgerSourceImportResult
 
 
 class LedgerImportTransactionRefPayload(OutputSchema):
@@ -197,7 +196,7 @@ class LedgerExportPayload(OutputSchema):
     output_path: str
 
     @classmethod
-    def from_result(cls, result: _AppLedgerExportResult, *, output_path: str) -> LedgerExportPayload:
+    def from_result(cls, result: LedgerExportResult, *, output_path: str) -> LedgerExportPayload:
         """Project the application export result into this CLI envelope.
 
         The raw ``payload`` bytes are excluded — the JSON envelope carries
@@ -244,7 +243,7 @@ class LedgerImportPayload(OutputSchema):
     diagnostics: list[LedgerImportDiagnosticPayload] = []
 
     @classmethod
-    def from_result(cls, result: _AppLedgerSourceImportResult) -> LedgerImportPayload:
+    def from_result(cls, result: LedgerSourceImportResult) -> LedgerImportPayload:
         """Project the application import result into this CLI envelope.
 
         ``model_dump(mode="json")`` coerces the typed members (typed-ids, nested

@@ -23,8 +23,7 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.verification_report import VerificationCompletenessStatus
 from cadrumo.entrypoints.adapter_composition_work_ports import build_filing_action_ports
 from cadrumo.entrypoints.tests.filing_record_read_support import persisted_verification_reports
@@ -119,7 +118,7 @@ def test_identical_nongranting_verify_retry_collapses_to_one_report(
     repos: Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Two identical-outcome non-granting verifies at different clocks → one report."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         _wu_repo, _cr_repo, _, _vr_repo, _bv_repo = repos
         revision = _seed_nongranting_revision(repos, operation=operation)
 
@@ -172,7 +171,7 @@ def test_distinct_outcome_verify_produces_a_distinct_report(
     repos: Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A verify whose outcome differs (different actor) → a distinct report, not a collapse."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         _wu_repo, _cr_repo, _, _vr_repo, _bv_repo = repos
         revision = _seed_nongranting_revision(repos, operation=operation)
 

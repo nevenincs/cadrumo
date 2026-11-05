@@ -25,7 +25,7 @@ import asyncio
 import pytest
 from playwright.async_api import async_playwright
 
-from ..declarations import _row_locator_for_expediente
+from ..declarations import row_locator_for_expediente
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -59,7 +59,7 @@ async def _matched_row_ids(expediente_id: str) -> list[str]:
         try:
             page = await browser.new_page()
             await page.set_content(_PAGE_CONTENT)
-            locator = _row_locator_for_expediente(page, expediente_id=expediente_id)
+            locator = row_locator_for_expediente(page, expediente_id=expediente_id)
             return [await locator.nth(index).get_attribute("id") or "" for index in range(await locator.count())]
         finally:
             await browser.close()

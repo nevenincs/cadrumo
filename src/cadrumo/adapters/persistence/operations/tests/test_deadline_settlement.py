@@ -62,7 +62,7 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import (
 )
 
 from .supervision_support import run_to_settlement
-from .supervisor_test_support import _capabilities, operation_repositories
+from .supervisor_test_support import operation_repositories, supervisor_capabilities
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -202,7 +202,7 @@ def _definition(executor: HeldExecutor) -> OperationDefinition:
         ),
         phase_codes=(_PHASE,),
         interaction_kinds=frozenset(),
-        capabilities=_capabilities(
+        capabilities=supervisor_capabilities(
             cancellation=OperationCancellation.COOPERATIVE,
             deadline=OperationDeadline.COOPERATIVE,
             owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK}),

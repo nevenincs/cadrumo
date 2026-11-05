@@ -16,7 +16,7 @@ from .....application.storage.calc_sheets.records import (
     TabName,
 )
 from ...workbook.calc_sheets_xlsx import materialize_export_plan
-from .._calc_sheets_apply_formatting import build_cell_constraint_requests
+from ..calc_sheets_apply_formatting import build_cell_constraint_requests
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

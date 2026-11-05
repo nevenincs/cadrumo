@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core.classification.policies import SensitivityClass
 from ....core.errors.hierarchy import pydantic_validation_boundary
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.models import STRICT_FROZEN_CONFIG
 from .errors import NamespaceRegistryError
 from .namespace_taxonomy import (
     StorageCustodyDisposition,
@@ -56,7 +56,7 @@ def is_former_product_namespace(namespace: str) -> bool:
 class SecureObjectNamespaceDefinition(BaseModel):
     """Contract for one encrypted SQL secure-object namespace."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     key: str = Field(min_length=1)
     namespace: str = Field(min_length=1, max_length=128)

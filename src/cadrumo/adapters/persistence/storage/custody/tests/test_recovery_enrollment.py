@@ -20,7 +20,7 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.adapters.persistence.storage.master_key.login_throttle import login_throttle_path
 from cadrumo.adapters.persistence.storage.recovery_key import canonical_recovery_code
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from cadrumo.application.user_profile.custody_ports import (
@@ -226,7 +226,7 @@ def test_revocation_removes_the_wrapper_and_is_idempotent(tmp_path: Path) -> Non
         assert again.changed is False
 
         # A revoked code is dead: the reset door no longer has a wrapper to prove it against.
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+        _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
         with pytest.raises(ProfileRecoveryError) as refused:
             reset_profile_passphrase_with_recovery(
                 profile_id=profile_id,
@@ -277,7 +277,7 @@ def test_status_reflects_the_committed_wrapper_without_any_secret(tmp_path: Path
 
 def test_the_recovery_code_replaces_a_forgotten_passphrase_and_keeps_the_dek_epoch(tmp_path: Path) -> None:
     """The whole point of enrolment: the new passphrase opens the records, the old one no longer does."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with _registered(tmp_path) as (_, profile_id):
         code = _enroll(profile_id)
         reset_test_profile_session()
@@ -325,7 +325,7 @@ def test_the_recovery_code_replaces_a_forgotten_passphrase_and_keeps_the_dek_epo
 
 def test_the_same_code_resets_again_after_a_reset(tmp_path: Path) -> None:
     """Reset retains enrolment, so the code stays good for the next forgotten passphrase too."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     third = "recovery-enrollment-third-operator-secret"
     with _registered(tmp_path) as (_, profile_id):
         code = _enroll(profile_id)
@@ -344,7 +344,7 @@ def test_the_same_code_resets_again_after_a_reset(tmp_path: Path) -> None:
 
 
 def test_a_wrong_code_refuses_non_oracularly_and_leaves_the_envelope_untouched(tmp_path: Path) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with _registered(tmp_path) as (storage_root, profile_id):
         code = _enroll(profile_id)
         reset_test_profile_session()
@@ -382,7 +382,7 @@ def test_a_wrong_code_refuses_non_oracularly_and_leaves_the_envelope_untouched(t
 
 
 def test_reset_refuses_a_profile_that_never_enrolled(tmp_path: Path) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with _registered(tmp_path) as (storage_root, profile_id):
         reset_test_profile_session()
         before = _storage_snapshot(storage_root)
@@ -401,7 +401,7 @@ def test_reset_refuses_a_profile_that_never_enrolled(tmp_path: Path) -> None:
 
 
 def test_reset_checks_the_new_passphrase_and_its_confirmation_before_any_proof(tmp_path: Path) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with _registered(tmp_path) as (storage_root, profile_id):
         code = _enroll(profile_id)
         reset_test_profile_session()
@@ -441,7 +441,7 @@ def test_reset_checks_the_new_passphrase_and_its_confirmation_before_any_proof(t
 
 def test_an_ordinary_rotation_after_enrolment_keeps_the_code_working(tmp_path: Path) -> None:
     """Rotation preserves the DEK epoch, so the wrapper enrolled before it still proves the same key."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     third = "recovery-enrollment-post-rotation-operator-secret"
     with _registered(tmp_path) as (_, profile_id):
         code = _enroll(profile_id)
@@ -484,7 +484,7 @@ def test_prepared_reset_cannot_replay_or_retire_sessions_before_valid_proof(
     from cadrumo.core.time.clock import now
     from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
-    _, decode = _profile_contexts_for_test()
+    _, decode = profile_authority_contexts()
     with _registered(tmp_path) as (_, profile_id):
         code = _enroll(profile_id)
         reset_test_profile_session()

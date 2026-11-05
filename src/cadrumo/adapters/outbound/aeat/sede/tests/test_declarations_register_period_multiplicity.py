@@ -34,8 +34,8 @@ from collections import Counter
 import pytest
 
 from ......tests.inventory import FIXTURES_DIR
-from .._declarations_listbox import _parse_listbox
-from ..declarations import _register_rows_from_snapshot
+from ..declarations import register_rows_from_snapshot
+from ..declarations_listbox import parse_listbox
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -70,7 +70,7 @@ def test_register_parse_surfaces_every_filing_of_a_duplicated_period() -> None:
     """
     html = _fixture_html(_DUPLICATED_PERIOD_FIXTURE)
 
-    rows = _register_rows_from_snapshot(html, modelo=_MODELO, ejercicio=_EJERCICIO)
+    rows = register_rows_from_snapshot(html, modelo=_MODELO, ejercicio=_EJERCICIO)
 
     assert len(rows) == _fixture_rendered_rows(html), (
         "the register read dropped or duplicated rows relative to the fixture's own markup"
@@ -108,7 +108,7 @@ def test_register_parse_carries_the_request_type_signal_on_every_row() -> None:
     """
     html = _fixture_html(_DUPLICATED_PERIOD_FIXTURE)
 
-    rows = _register_rows_from_snapshot(html, modelo=_MODELO, ejercicio=_EJERCICIO)
+    rows = register_rows_from_snapshot(html, modelo=_MODELO, ejercicio=_EJERCICIO)
 
     assert all(row.tipo_solicitud for row in rows), "the register parse dropped the request-type cell"
     rows_per_period = Counter(row.period for row in rows)
@@ -144,8 +144,8 @@ def test_empty_register_grid_reads_as_a_complete_answer_not_a_short_one() -> Non
         flags=re.DOTALL,
     ), "the no-results sentence moved inside a z-listitem, which is the inline sentinel shape, not this one"
 
-    page = _parse_listbox(html, modelo=_MODELO, ejercicio=_EJERCICIO)
-    rows = _register_rows_from_snapshot(html, modelo=_MODELO, ejercicio=_EJERCICIO)
+    page = parse_listbox(html, modelo=_MODELO, ejercicio=_EJERCICIO)
+    rows = register_rows_from_snapshot(html, modelo=_MODELO, ejercicio=_EJERCICIO)
 
     assert page.rows == ()
     assert page.declared_total is None

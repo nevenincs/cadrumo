@@ -119,7 +119,9 @@ def test_a_delayed_resume_cannot_sign_out_a_newly_selected_profile(
 ) -> None:
     """Finish A's receipt proof after B's handover, without letting A revoke B."""
     store = InMemoryKeyring()
-    monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (store, KeyringError, PasswordDeleteError))
+    monkeypatch.setattr(
+        acceleration_keychain, "acceleration_keychain_keyring", lambda: (store, KeyringError, PasswordDeleteError)
+    )
     entered, release = Event(), Event()
     owners: list[RuntimeProfileConnections] = []
     original = RuntimeProfileConnections._finish_login

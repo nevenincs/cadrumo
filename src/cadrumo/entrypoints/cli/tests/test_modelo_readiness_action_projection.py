@@ -14,7 +14,7 @@ from ....application.user_profile.commands import ProfilePreflightRequirement
 from ....core.aggregation import BindingSourceKind
 from ....core.i18n.render import tr
 from ....core.period import Period
-from ..modelo_readiness_commands import _readiness_result
+from ..modelo_readiness_commands import modelo_readiness_commands_readiness_result
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -78,7 +78,7 @@ def test_readiness_payload_preserves_facts_without_selecting_actions() -> None:
         ready=False,
     )
 
-    payload = _readiness_result(
+    payload = modelo_readiness_commands_readiness_result(
         report,
         authority_generation="a" * 64,
         modelo="303",

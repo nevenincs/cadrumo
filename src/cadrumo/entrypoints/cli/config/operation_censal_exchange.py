@@ -19,7 +19,7 @@ def _require_session(client: FrontendClient, session_id: UUID) -> None:
         raise RefusalError(RefusalCode.CONNECTION_CLOSED)
 
 
-def _exchange(
+def exchange(
     client: FrontendClient,
     session_id: UUID,
     request: OperationRequest,

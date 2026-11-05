@@ -6,21 +6,21 @@ import pytest
 
 from ....core.json_contract import NoticeSeverity
 from ..ledger_business_payloads import EvidenceConfirmResult
-from ..ledger_evidence_commands import _evidence_confirm_notices, _evidence_confirm_payload
-from .test_ledger_evidence_confirm_cli import _projection as _confirm_projection
+from ..ledger_evidence_commands import evidence_confirm_notices, evidence_confirm_payload
+from .test_ledger_evidence_confirm_cli import ledger_evidence_confirm_cli_projection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def test_an_existing_confirmation_is_presented_as_an_informational_no_op() -> None:
-    original = _confirm_projection()
+    original = ledger_evidence_confirm_cli_projection()
     confirmation = original.confirmation.model_copy(update={"created": False})
     replay = original.model_copy(update={"confirmation": confirmation})
 
     result = EvidenceConfirmResult.model_validate(
-        _evidence_confirm_payload(bucket_id=str(replay.profile_id), projection=replay),
+        evidence_confirm_payload(bucket_id=str(replay.profile_id), projection=replay),
     )
-    notices = _evidence_confirm_notices(confirmation)
+    notices = evidence_confirm_notices(confirmation)
     already_exists = next(notice for notice in notices if notice.code == "ledger.evidence.confirm.already_exists")
 
     assert result.created is False

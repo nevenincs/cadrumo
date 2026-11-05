@@ -41,8 +41,7 @@ from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.logging import get_logger
 from .....domain.transactions.raw_transaction import SourceFormat
-from ...pdf.redaction import INPUT_PDF_SOURCE_LABEL as _INPUT_PDF_SOURCE_LABEL
-from ._statement_grounding import GroundedStatement, StatementPageText
+from ...pdf.redaction import INPUT_PDF_SOURCE_LABEL
 from .base import (
     FinancialProvider,
     FinancialProviderError,
@@ -54,6 +53,7 @@ from .base import (
     synthesize_transaction_id,
 )
 from .statement_grounding import ground_statement
+from .statement_grounding_support import GroundedStatement, StatementPageText
 
 __all__ = ["PdfStatementProvider"]
 
@@ -272,13 +272,13 @@ def _extract_page_texts(source_bytes: bytes) -> tuple[str, ...]:
     except Exception as exc:
         _logger.debug(
             "pdf_statement_provider: failed to parse PDF file %s: %s",
-            _INPUT_PDF_SOURCE_LABEL,
+            INPUT_PDF_SOURCE_LABEL,
             type(exc).__name__,
         )
         raise InvalidFinancialSourceError(
-            f"could not parse PDF file: {_INPUT_PDF_SOURCE_LABEL}",
+            f"could not parse PDF file: {INPUT_PDF_SOURCE_LABEL}",
             translated_message="adapters.inbound.financial.providers.pdf_statement.errors.parse_failed",
-            context={"source": _INPUT_PDF_SOURCE_LABEL},
+            context={"source": INPUT_PDF_SOURCE_LABEL},
         ) from exc
     if not pages:
         raise InvalidFinancialSourceError("PDF file contains no pages")

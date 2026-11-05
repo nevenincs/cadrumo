@@ -22,7 +22,7 @@ from ....adapters.persistence.storage.master_key.bucket_session import BucketSes
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....adapters.persistence.storage.tests.secure_sql import dev_test_database_password, isolated_runtime_profile
 from ....core.config import override_settings
-from ._registry_cli_support import _BUCKET_ID, _clear_cli_env, _set_cli_env
+from .registry_cli_support import BUCKET_ID, clear_cli_env, set_cli_env
 
 _SESSION_OPENED_AT = datetime(2099, 5, 28, 15, 55, tzinfo=UTC)
 
@@ -30,8 +30,8 @@ _SESSION_OPENED_AT = datetime(2099, 5, 28, 15, 55, tzinfo=UTC)
 @pytest.fixture(scope="module", autouse=True)
 def _isolated_registry_cli_backend(tmp_path_factory: pytest.TempPathFactory) -> Iterator[None]:
     tmp_path = tmp_path_factory.mktemp("registry-cli")
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
-        _set_cli_env(
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as runtime:
+        set_cli_env(
             {
                 "CADRUMO_STORAGE_ROOT": str(runtime.storage_root),
                 "CADRUMO_ACTIVE_PROFILE": runtime.bucket_id,
@@ -40,7 +40,7 @@ def _isolated_registry_cli_backend(tmp_path_factory: pytest.TempPathFactory) -> 
             },
         )
         yield
-    _clear_cli_env()
+    clear_cli_env()
 
 
 @pytest.fixture(autouse=True)
@@ -48,14 +48,14 @@ def _isolated_secure_backend(tmp_path: Path) -> Iterator[None]:
     """Point encrypted SQL runtime at a per-test active bucket."""
 
     with (
-        override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=_BUCKET_ID) as settings,
+        override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=BUCKET_ID) as settings,
         activate_session(_session()),
     ):
         dispose_engine(settings)
         # A bucket exists only once its profile capsule is published: opening an
         # engine against a bare session now refuses rather than materialising a
         # directory for a profile that was never registered.
-        register_minimal_profile(profile_id=_BUCKET_ID)
+        register_minimal_profile(profile_id=BUCKET_ID)
         try:
             yield
         finally:
@@ -64,7 +64,7 @@ def _isolated_secure_backend(tmp_path: Path) -> Iterator[None]:
 
 def _session() -> BucketSession:
     return BucketSession.open_resumed(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         dek=b"d" * 32,
         idle_minutes=15,
         opened_at=_SESSION_OPENED_AT,

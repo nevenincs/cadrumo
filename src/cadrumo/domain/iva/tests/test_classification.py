@@ -13,7 +13,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.iva.schema import IvaRateKind
 
 from ...calculations.registry.eu_member_state_catalogue import require_eu_member_state
@@ -253,7 +253,7 @@ _CLASSIFICATION_CASES = (
 
 
 def test_classification_rule_cases() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         for (
             case_id,
             overrides,
@@ -275,7 +275,7 @@ def test_classification_rule_cases() -> None:
 
 def test_r03_electronics_b2c_does_not_trigger_reverse_charge() -> None:
     """Electronics RC requires B2B; a B2C consumer falls through to R05."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         result = classify_with_registry_rules(
             _criteria(
                 kind=TransactionKind("electronics_reverse_charge"),
@@ -288,7 +288,7 @@ def test_r03_electronics_b2c_does_not_trigger_reverse_charge() -> None:
 
 def test_classify_iva_is_deterministic() -> None:
     """Same criteria ⇒ same rule + same category across N invocations."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         criteria = _criteria()
         first = classify_with_registry_rules(criteria, operation=_authority_operation_for_test)
         for _ in range(20):
@@ -321,7 +321,7 @@ def test_eu_member_residency_does_not_require_an_identification_state() -> None:
 
 def test_es_to_es_domestic_criteria_require_rate_tier() -> None:
     """ES-to-ES domestic GOODS / SERVICES criteria without rate_tier are refused at classification."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         criteria = IvaInvoiceClassificationCriteria(
             transaction_date=date(2025, 6, 15),
             issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
@@ -337,7 +337,7 @@ def test_es_to_es_domestic_criteria_require_rate_tier() -> None:
 
 def test_es_to_es_reverse_charge_kind_does_not_require_rate_tier() -> None:
     """RC-kind transactions route through R01-R03, not R05 — rate_tier optional."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         # Should NOT raise: construction RC routes to DOMESTIC_REVERSE_CHARGE.
         criteria = IvaInvoiceClassificationCriteria(
             transaction_date=date(2025, 6, 15),
@@ -354,7 +354,7 @@ def test_es_to_es_reverse_charge_kind_does_not_require_rate_tier() -> None:
 
 def test_es_to_es_immovable_property_does_not_require_rate_tier() -> None:
     """Immovable property routes to DOMESTIC_EXEMPT (R04) — rate_tier not needed."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         criteria = IvaInvoiceClassificationCriteria(
             transaction_date=date(2025, 6, 15),
             issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
@@ -370,7 +370,7 @@ def test_es_to_es_immovable_property_does_not_require_rate_tier() -> None:
 
 def test_cross_border_criteria_do_not_require_rate_tier() -> None:
     """Non-ES-to-ES criteria never require rate_tier (classifier resolves it from substrate)."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         # Should NOT raise: ES->DE intra-community supply doesn't need rate_tier.
         criteria = IvaInvoiceClassificationCriteria(
             transaction_date=date(2025, 6, 15),
@@ -397,7 +397,7 @@ def test_classification_rate_resolution_uses_transaction_date() -> None:
     -- pick by transaction date -- and survives any later correction to either
     window's edges.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         earlier = classify_with_registry_rules(
             _criteria(transaction_date=date(2024, 6, 15), rate_tier=IvaRateKind("general")),
             operation=_authority_operation_for_test,
@@ -418,7 +418,7 @@ def test_classification_rate_resolution_uses_transaction_date() -> None:
 
 def test_classification_rate_resolution_returns_none_for_export() -> None:
     """Exports carry no domestic rate; rate is None."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         result = classify_with_registry_rules(
             _criteria(
                 customer_residency=IvaTerritorialScope.from_registry("third_country"),

@@ -18,7 +18,7 @@ from ....application.modelo.dependency_operation import (
     ModeloDependencySnapshot,
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition
-from .. import _modelo_work_verification_cli as handler
+from .. import modelo_work_verification_cli as handler
 from .. import operation_modelo_dependencies as bridge
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

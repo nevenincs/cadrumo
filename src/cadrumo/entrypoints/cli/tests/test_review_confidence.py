@@ -8,7 +8,7 @@ import pytest
 import typer
 
 from ....core.config import override_settings
-from ..review_commands import _resolve_confidence_threshold
+from ..review_commands import resolve_confidence_threshold
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -25,7 +25,7 @@ _REJECTED_THRESHOLDS = (1.5, -0.1, 2.0)
 def test_resolve_confidence_threshold_accepts_none_and_in_range_values() -> None:
     failures: list[str] = []
     for value, expected in _ACCEPTED_THRESHOLDS:
-        actual = _resolve_confidence_threshold(value)
+        actual = resolve_confidence_threshold(value)
         if actual != expected:
             failures.append(f"{value!r}: expected {expected!r}, got {actual!r}")
 
@@ -37,7 +37,7 @@ def test_resolve_confidence_threshold_rejects_out_of_range_naming_bounds() -> No
     for value in _REJECTED_THRESHOLDS:
         with override_settings(cadrumo_output_language="en"):
             try:
-                _resolve_confidence_threshold(value)
+                resolve_confidence_threshold(value)
             except typer.BadParameter as exc:
                 message = str(exc)
             else:

@@ -17,14 +17,14 @@ import pytest
 from ......core.hashing import sha256_hex
 from ......tests.inventory import FIXTURES_DIR
 from ......tests.xls_fixtures import xls_workbook_bytes
-from ..base import _MAX_SOURCE_BYTES, FinancialProvider, InvalidFinancialSourceError
+from ..base import MAX_SOURCE_BYTES, FinancialProvider, InvalidFinancialSourceError
 from ..detection import detect_provider
 from ..ofx import OfxProvider
 from ..pdf_statement import PdfStatementProvider
 from ..xls import XlsProvider
 from ..xlsx import XlsxProvider
 from .statement_reader_support import LinePatternStatementReader
-from .test_xls import _xlsx_cell_values
+from .test_xls import xlsx_cell_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -76,7 +76,7 @@ def test_detection_refuses_an_oversized_source_before_any_provider_probe(tmp_pat
     """An over-ceiling source is refused as too large instead of probed as unrecognised."""
     oversized = tmp_path / "statement.bin"
     with oversized.open("wb") as handle:
-        handle.truncate(_MAX_SOURCE_BYTES + 1)
+        handle.truncate(MAX_SOURCE_BYTES + 1)
 
     with pytest.raises(InvalidFinancialSourceError) as refusal:
         detect_provider(oversized)
@@ -108,7 +108,7 @@ def _xlsx() -> tuple[FinancialProvider, bytes]:
 
 
 def _xls() -> tuple[FinancialProvider, bytes]:
-    payload = xls_workbook_bytes(_xlsx_cell_values(_FIXTURES / "synthetic-transactions.xlsx"))
+    payload = xls_workbook_bytes(xlsx_cell_values(_FIXTURES / "synthetic-transactions.xlsx"))
     return _XlsFromBytes(payload), payload
 
 

@@ -33,7 +33,7 @@ from ..ledger_business_payloads import (
     InventoryListResult,
     InventoryMovementAddResult,
 )
-from ..operation_ledger_inventory import _ledger_payload_json
+from ..operation_ledger_inventory import ledger_payload_json
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -57,7 +57,7 @@ def _ledger() -> InventoryLedgerProjection:
 
 def test_cli_payload_excludes_advisories_without_mutating_the_worker_projection() -> None:
     ledger = _ledger()
-    payload = InventoryInspectResult.model_validate_json(_ledger_payload_json(ledger))
+    payload = InventoryInspectResult.model_validate_json(ledger_payload_json(ledger))
     assert ledger.advisories
     assert "advisories" not in payload.model_dump()
     assert payload.opening_stock == "100.00"
@@ -78,7 +78,7 @@ def test_inventory_list_bridge_separates_row_state_from_its_worker_advisories(mo
         projection=InventoryListProjection(profile_id=UUID(_PROFILE), rows=(row,)),
         effect=OperationEffect.NONE,
     )
-    monkeypatch.setattr(bridge, "_run", lambda *_args, **_kwargs: completion)
+    monkeypatch.setattr(bridge, "run", lambda *_args, **_kwargs: completion)
     monkeypatch.setattr(bridge, "require_active_bucket_id", lambda: _PROFILE)
     observed, payload = bridge.read_inventory_catalogue(typer.Context(TyperCommand("inventory")))
     assert observed.projection.rows[0].advisories == ledger.advisories
@@ -86,7 +86,7 @@ def test_inventory_list_bridge_separates_row_state_from_its_worker_advisories(mo
 
 
 def test_a_ledger_without_worker_advisories_emits_no_warning() -> None:
-    assert commands._inventory_notices(_ledger().model_copy(update={"advisories": ()})) == []
+    assert commands.inventory_notices(_ledger().model_copy(update={"advisories": ()})) == []
 
 
 @pytest.mark.parametrize("format_name", ["json", "text"])
@@ -107,13 +107,13 @@ def test_inventory_handlers_emit_the_worker_warning_with_activity_and_year(
     payloads = {
         "list": InventoryListResult(
             bucket_id=_PROFILE,
-            rows=[InventoryInspectResult.model_validate_json(_ledger_payload_json(ledger)).model_dump(mode="json")],
+            rows=[InventoryInspectResult.model_validate_json(ledger_payload_json(ledger)).model_dump(mode="json")],
             count=1,
         ),
-        "create": InventoryCreateResult.model_validate_json(_ledger_payload_json(ledger)),
-        "movement": InventoryMovementAddResult.model_validate_json(_ledger_payload_json(ledger)),
-        "change": InventoryLedgerChangeResult.model_validate_json(_ledger_payload_json(ledger, outcome="applied")),
-        "inspect": InventoryInspectResult.model_validate_json(_ledger_payload_json(ledger)),
+        "create": InventoryCreateResult.model_validate_json(ledger_payload_json(ledger)),
+        "movement": InventoryMovementAddResult.model_validate_json(ledger_payload_json(ledger)),
+        "change": InventoryLedgerChangeResult.model_validate_json(ledger_payload_json(ledger, outcome="applied")),
+        "inspect": InventoryInspectResult.model_validate_json(ledger_payload_json(ledger)),
     }
     bridge = {
         "list": "read_inventory_catalogue",
@@ -125,7 +125,7 @@ def test_inventory_handlers_emit_the_worker_warning_with_activity_and_year(
     monkeypatch.setattr(commands, bridge, lambda *_args, **_kwargs: (completion, payloads[operation]))
     monkeypatch.setattr(commands, "_inventory_bucket_id", lambda: _PROFILE)
     monkeypatch.setattr(common, "active_profile_label", lambda: None)
-    monkeypatch.setattr(common, "_is_metadata_invocation", lambda _ctx: False)
+    monkeypatch.setattr(common, "common_is_metadata_invocation", lambda _ctx: False)
     monkeypatch.setattr(
         "cadrumo.application.operator_output.sandbox_notice.sandbox_notice_for_active_bucket", lambda: None
     )
@@ -138,7 +138,7 @@ def test_inventory_handlers_emit_the_worker_warning_with_activity_and_year(
         elif operation == "movement":
             commands.inventory_movement_add(ctx, "act-1", 2026, "move-1", "2026-01-01", MovementKind.PURCHASE, "1")
         elif operation == "change":
-            commands._emit_ledger_change(
+            commands.emit_ledger_change(
                 ctx,
                 command="ledger.inventory.restore",
                 request=InventoryRestoreRequest(

@@ -19,7 +19,7 @@ from ...tests.ledger_corpus_support import (
     invoke_corpus_cli,
     write_corpus_xlsx_mirror,
 )
-from .ledger_cli import list_ledger_rows_via_cli as _list_rows
+from .ledger_cli import list_ledger_rows_via_cli
 from .profile_world_fixtures import recorded_fx_isolated_backend
 
 __all__ = ["recorded_fx_isolated_backend"]
@@ -43,7 +43,7 @@ def test_export_each_format(tmp_path: Path, fmt: str, invoke_cli: Callable[..., 
 def test_export_csv_is_refused_by_raw_bank_import_provider(tmp_path: Path, invoke_cli: Callable[..., Result]) -> None:
     """Canonical ledger CSV exports are not raw bank statements."""
     import_ledger_corpus(invoke_cli=invoke_cli)
-    before = len(_list_rows())
+    before = len(list_ledger_rows_via_cli())
     out = tmp_path / "ledger-export.csv"
     exported = invoke_corpus_cli(
         ["app", "ledger", "export", "--output", str(out), "--export-format", "csv"], invoke_cli=invoke_cli
@@ -57,7 +57,7 @@ def test_export_csv_is_refused_by_raw_bank_import_provider(tmp_path: Path, invok
     )
     assert reimported.exit_code != 0, reimported.output
     assert json.loads(reimported.output)["error"]["code"] == "ERROR_TRANSACTION_VALIDATION", reimported.output
-    assert len(_list_rows()) == before, reimported.output
+    assert len(list_ledger_rows_via_cli()) == before, reimported.output
 
 
 def test_xlsx_import_is_id_for_id_parity_with_csv(tmp_path: Path, invoke_cli: Callable[..., Result]) -> None:
@@ -79,7 +79,7 @@ def test_xlsx_import_is_id_for_id_parity_with_csv(tmp_path: Path, invoke_cli: Ca
         invoke_cli=invoke_cli,
     )
     assert xlsx_res.exit_code == 0, xlsx_res.output
-    xlsx_ids = {r["transaction_id"] for r in _list_rows()}
+    xlsx_ids = {r["transaction_id"] for r in list_ledger_rows_via_cli()}
     assert xlsx_ids == csv_ids, (len(xlsx_ids), len(csv_ids))
 
 
@@ -87,7 +87,7 @@ def test_cross_format_reimport_dedups_by_fingerprint(tmp_path: Path, invoke_cli:
     """Re-importing the same rows in a different format adds nothing."""
     csv_path = LEDGER_CORPUS_ROOT / "bbva-business-eur.csv"
     invoke_corpus_cli(["app", "ledger", "import", "--file", str(csv_path), "--provider", "csv"], invoke_cli=invoke_cli)
-    before = len(_list_rows())
+    before = len(list_ledger_rows_via_cli())
     assert before > 40
     xlsx_path = tmp_path / "bbva.xlsx"
     write_corpus_xlsx_mirror(csv_path, xlsx_path)
@@ -97,7 +97,7 @@ def test_cross_format_reimport_dedups_by_fingerprint(tmp_path: Path, invoke_cli:
     )
     assert reimport.exit_code == 0, reimport.output
     # Cross-format re-import of identical rows dedups to zero new rows.
-    assert len(_list_rows()) == before
+    assert len(list_ledger_rows_via_cli()) == before
 
 
 def test_ofx_provider_imports_real_transactions(invoke_cli: Callable[..., Result]) -> None:
@@ -108,7 +108,7 @@ def test_ofx_provider_imports_real_transactions(invoke_cli: Callable[..., Result
         invoke_cli=invoke_cli,
     )
     assert ofx_res.exit_code == 0, ofx_res.output
-    assert len(_list_rows()) > 0
+    assert len(list_ledger_rows_via_cli()) > 0
 
 
 def test_the_retired_bank_named_pdf_token_is_refused(invoke_cli: Callable[..., Result]) -> None:
@@ -119,13 +119,13 @@ def test_the_retired_bank_named_pdf_token_is_refused(invoke_cli: Callable[..., R
         invoke_cli=invoke_cli,
     )
     assert refused.exit_code != 0
-    assert len(_list_rows()) == 0
+    assert len(list_ledger_rows_via_cli()) == 0
 
 
 def test_jsonl_export_roundtrips_back_through_import(tmp_path: Path, invoke_cli: Callable[..., Result]) -> None:
     """Exporting JSONL and re-importing preserves the active row set."""
     import_bbva_corpus_account(invoke_cli=invoke_cli)
-    before = len(_list_rows())
+    before = len(list_ledger_rows_via_cli())
     out = tmp_path / "ledger.jsonl"
     exported = invoke_corpus_cli(
         ["app", "ledger", "export", "--output", str(out), "--export-format", "jsonl"], invoke_cli=invoke_cli
@@ -140,13 +140,13 @@ def test_jsonl_export_roundtrips_back_through_import(tmp_path: Path, invoke_cli:
     )
     assert reimported.exit_code != 0, reimported.output
     assert json.loads(reimported.output)["error"]["code"] == "ERROR_TRANSACTION_VALIDATION", reimported.output
-    assert len(_list_rows()) == before
+    assert len(list_ledger_rows_via_cli()) == before
 
 
 def test_jsonl_export_rows_match_ledger_readback_and_digest(tmp_path: Path, invoke_cli: Callable[..., Result]) -> None:
     """The exported bytes retain the canonical ledger meaning and row identity."""
     import_bbva_corpus_account(invoke_cli=invoke_cli)
-    readback = {str(row["transaction_id"]): row for row in _list_rows()}
+    readback = {str(row["transaction_id"]): row for row in list_ledger_rows_via_cli()}
     assert len(readback) > 40
 
     out = tmp_path / "canonical-ledger.jsonl"

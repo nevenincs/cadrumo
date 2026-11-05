@@ -28,13 +28,12 @@ from cadrumo.adapters.persistence.tests.runtime_profile_fixture import (
     bucket_scoped_runtime_profile_fixture,
 )
 from cadrumo.application.user_profile.usage_ratio_resolution import resolve_effective_usage_ratios
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.categories.spending_category import SpendingCategory
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 
 from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
@@ -53,14 +52,14 @@ def _store_profile(**facts: str) -> None:
     actually stores.
     """
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             profile_id=_BUCKET_ID,
             setup_state=ProfileSetupState.COMPLETE,
             facts=tuple(
                 UserProfileFact(path=path, value=Decimal(value) if path.startswith("vivienda_office.") else value)
                 for path, value in facts.items()
             ),
-            context=_profile_creation_context_for_test(),
+            context=leased_profile_create_context(),
         ),
     )
 
@@ -72,7 +71,7 @@ def test_a_declared_dwelling_area_produces_the_suministros_ratio(_runtime_profil
     of the utility bill. Before this resolver the same profile produced no ratio at
     all and the deduction was zero.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         _store_profile(
             **{"vivienda_office.office_m2": "20", "vivienda_office.total_m2": "100"},
         )
@@ -95,7 +94,7 @@ def test_the_ownership_costs_take_the_raw_proportion(_runtime_profile: object) -
     proportion itself. Asserting both keeps the statutory factor from being applied
     where no provision establishes it.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         _store_profile(
             **{"vivienda_office.office_m2": "20", "vivienda_office.total_m2": "100"},
         )
@@ -117,7 +116,7 @@ def test_no_declared_area_resolves_to_nothing_rather_than_a_guess(_runtime_profi
     invented. The categories stay ineligible, which is the honest outcome: the
     registry cannot know how much of a home is an office.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         _store_profile(**{"identity.tax_id": "X1234567L"})
 
         ratios = resolve_effective_usage_ratios(
@@ -132,7 +131,7 @@ def test_no_declared_area_resolves_to_nothing_rather_than_a_guess(_runtime_profi
 
 def test_an_absent_profile_resolves_to_nothing(_runtime_profile: object) -> None:
     """SUPPORTING. A bucket with no profile must not raise on the calculate path."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert (
             resolve_effective_usage_ratios(
                 bucket_id=_BUCKET_ID,

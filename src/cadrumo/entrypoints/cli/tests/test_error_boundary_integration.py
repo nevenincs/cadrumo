@@ -27,7 +27,7 @@ import json
 import pytest
 
 from ....core.errors.error_codes import ErrorCategory, get_error_exit_code, get_registered_error_code
-from .._log_levels import LogLevelResolutionError
+from ..log_levels import LogLevelResolutionError
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

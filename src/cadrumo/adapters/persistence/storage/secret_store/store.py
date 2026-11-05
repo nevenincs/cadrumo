@@ -39,7 +39,7 @@ from .....core.identity.digest import ContentDigest
 from .....core.keyed_digest import keyed_digest_bytes
 from .....core.locks import exclusive_file_lock
 from .....core.logging import get_logger
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.time.clock import now
 from .....core.time.utc import validate_utc_aware
 from ..blob_store.blob_store import BlobReference, EncryptedBlobStore
@@ -53,9 +53,7 @@ from ..errors import (
     SecretAlreadyExistsError,
     SecretNotFoundError,
     StorageValidationError,
-)
-from ..errors import (
-    storage_validation_error as _storage_validation_error,
+    storage_validation_error,
 )
 from ..master_key.active_session import get_active_master_key
 from ..storage_path_definitions import (
@@ -132,7 +130,7 @@ class SecretRecord(BaseModel):
             retention policy.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     key: str = Field(min_length=1, max_length=512)
     value: bytes = Field(min_length=0)
@@ -150,7 +148,7 @@ class SecretRecord(BaseModel):
         try:
             return validate_utc_aware(value)
         except CoreValidationError as exc:
-            error = _storage_validation_error(str(exc))
+            error = storage_validation_error(str(exc))
             # Pydantic's callback contract consumes builtin validation errors;
             # preserve the registered storage refusal as the cause.
             raise ValueError(str(error)) from error
@@ -164,7 +162,7 @@ class SecretRecord(BaseModel):
             raise ValueError(str(exc)) from exc
 
 
-class _SecretIndexEntry(BaseModel):
+class SecretIndexEntry(BaseModel):
     """One row in the JSON-backed secret index.
 
     Attributes:
@@ -181,7 +179,7 @@ class _SecretIndexEntry(BaseModel):
         classification: The record's sensitivity class.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     digest_hex: ContentDigest
     blob_sha256_plaintext_hex: ContentDigest
@@ -217,10 +215,10 @@ class _SecretIndex(BaseModel):
         entries: Map of digest hex string to :class:`_SecretIndexEntry`.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: int = Field(ge=1)
-    entries: dict[str, _SecretIndexEntry] = Field(default_factory=dict)
+    entries: dict[str, SecretIndexEntry] = Field(default_factory=dict)
 
 
 class SecretStore:
@@ -323,7 +321,7 @@ class SecretStore:
         try:
             index = _SecretIndex.model_validate_json(index_path.read_text(encoding=UTF_8_ENCODING))
         except (OSError, ValidationError, ValueError) as exc:
-            raise _storage_validation_error("secret-store index is malformed or unreadable") from exc
+            raise storage_validation_error("secret-store index is malformed or unreadable") from exc
         # The field documented itself as a forward-compatibility marker, but
         # this comparison used to be absent -- an index claiming any version
         # was accepted and every read and mutation proceeded against it. A
@@ -338,7 +336,7 @@ class SecretStore:
             )
         drifted = sorted(key for key, entry in index.entries.items() if entry.digest_hex != key)
         if drifted:
-            raise _storage_validation_error(
+            raise storage_validation_error(
                 f"secret-store index entries disagree with their own lookup digest: {drifted}",
             )
         return index
@@ -456,10 +454,10 @@ class SecretStore:
         digest: str,
         record: SecretRecord,
         blob_ref: BlobReference,
-        existing: _SecretIndexEntry | None,
+        existing: SecretIndexEntry | None,
     ) -> BlobReference:
         """Commit index ownership and compensate if that commit fails."""
-        index.entries[digest] = _SecretIndexEntry(
+        index.entries[digest] = SecretIndexEntry(
             digest_hex=digest,
             blob_sha256_plaintext_hex=blob_ref.sha256_plaintext_hex,
             classification=record.classification,
@@ -489,7 +487,7 @@ class SecretStore:
 
     def _retire_replaced_blob(
         self,
-        existing: _SecretIndexEntry | None,
+        existing: SecretIndexEntry | None,
         blob_ref: BlobReference,
     ) -> None:
         """Remove the old payload after the replacement index is durable."""
@@ -562,7 +560,7 @@ class SecretStore:
         # must agree with.
         record = envelope.payload
         if entry.classification is not record.classification or envelope.classification is not record.classification:
-            raise _storage_validation_error(
+            raise storage_validation_error(
                 "secret-store classification disagreement between index, envelope, and record",
             )
         # The index binds a lookup digest to a blob reference, but nothing bound
@@ -574,7 +572,7 @@ class SecretStore:
         # statement is the one the writer sealed and an index editor cannot reach,
         # so it is what the lookup must agree with.
         if record.key != key:
-            raise _storage_validation_error(
+            raise storage_validation_error(
                 "secret-store record does not carry the key it was addressed by",
             )
         return record

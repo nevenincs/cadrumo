@@ -67,7 +67,7 @@ def _catalogue_slice[RecordT](catalogue: Mapping[str, RecordT], record_ids: set[
 # Derived from the requirement declaration rather than restated beside it: the
 # modules installed here and the checks the validator demands are the same set
 # by construction, so neither can be moved without the other.
-_CROSS_DOMAIN_CHECK_MODULES: tuple[str, ...] = (
+CROSS_DOMAIN_CHECK_MODULES: tuple[str, ...] = (
     "...renta.first_slice_routing_integrity",
     "...renta.retenciones_routing_integrity",
     "...modelos.perceptor_clave_scope",
@@ -77,7 +77,7 @@ _cross_domain_checks_installed = False
 
 def cross_domain_check_modules() -> tuple[str, ...]:
     """Name the modules whose import installs the cross-domain checks the validator demands."""
-    return _CROSS_DOMAIN_CHECK_MODULES
+    return CROSS_DOMAIN_CHECK_MODULES
 
 
 def _install_cross_domain_snapshot_checks() -> None:
@@ -96,7 +96,7 @@ def _install_cross_domain_snapshot_checks() -> None:
     global _cross_domain_checks_installed
     if _cross_domain_checks_installed:
         return
-    for module_name in _CROSS_DOMAIN_CHECK_MODULES:
+    for module_name in CROSS_DOMAIN_CHECK_MODULES:
         # Module names are controlled by the hard-coded tuple above.
         importlib.import_module(module_name, package=__package__)  # nosemgrep
     _cross_domain_checks_installed = True
@@ -128,7 +128,7 @@ def _validate_snapshot_authority_selection(
     *,
     grade: RegistryAuthorityGrade,
 ) -> None:
-    _check_snapshot_authority_grade(modelo, revision, requested_grade=grade)
+    check_snapshot_authority_grade(modelo, revision, requested_grade=grade)
     if grade is RegistryAuthorityGrade.FILING:
         _check_snapshot_revision_review_status(modelo, revision)
     legal_applicability_failures = validate_orden_aplicabilidad(
@@ -284,7 +284,7 @@ def _id_references_step(context: _SnapshotCheckContext) -> None:
 # reference closure and the snapshot model's own validators) are not here and
 # always run. A check added to assembly belongs here, so the set a proof skips
 # can never drift from the set a proof was made by.
-_SNAPSHOT_CROSS_CHECKS: tuple[_SnapshotCrossCheck, ...] = (
+SNAPSHOT_CROSS_CHECKS: tuple[_SnapshotCrossCheck, ...] = (
     _SnapshotCrossCheck(_SnapshotCheckStage.REQUEST, _install_cross_domain_checks_step),
     _SnapshotCrossCheck(_SnapshotCheckStage.SELECTED, _authority_selection_step),
     _SnapshotCrossCheck(_SnapshotCheckStage.MATERIALIZED, _export_record_families_step),
@@ -303,7 +303,7 @@ def _run_snapshot_cross_checks(
 ) -> None:
     if proof is not None:
         return
-    for check in _SNAPSHOT_CROSS_CHECKS:
+    for check in SNAPSHOT_CROSS_CHECKS:
         if check.stage is stage:
             check.run(context)
 
@@ -452,7 +452,7 @@ def _require_matching_proof(
         )
 
 
-def _check_snapshot_authority_grade(
+def check_snapshot_authority_grade(
     modelo: ModeloDefinition,
     revision: ModeloRevision,
     *,
@@ -793,7 +793,7 @@ def check_revision_scoped_legal_windows(
         )
 
 
-def _historical_carrier_admits(
+def historical_carrier_admits(
     reference: LegalReference,
     carried_spans: tuple[tuple[date, date | None, str], ...],
 ) -> bool:
@@ -842,7 +842,7 @@ def _legal_window_failure(
     """Return the existing refusal detail for one out-of-window legal ref."""
     if legal_window_covers_devengo(revision, reference):
         return None
-    if reference.kind in SUBSTANTIVE_LAW_KINDS and _historical_carrier_admits(reference, carried_spans):
+    if reference.kind in SUBSTANTIVE_LAW_KINDS and historical_carrier_admits(reference, carried_spans):
         return None
     if reference.kind not in SUBSTANTIVE_LAW_KINDS:
         return _procedural_legal_window_failure(

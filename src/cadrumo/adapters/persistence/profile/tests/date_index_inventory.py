@@ -9,7 +9,7 @@ from ..transaction_date_projection import IndexedTransactionDates
 from ..transactions import TransactionCatalogueRepository
 
 
-def _all_date_index_rows(self: TransactionCatalogueRepository) -> dict[str, IndexedTransactionDates]:
+def all_date_index_rows(self: TransactionCatalogueRepository) -> dict[str, IndexedTransactionDates]:
     """Return every ``{transaction_id: routing dates}`` this bucket's date index records."""
     with self._objects.guarded_session_scope() as session:
         rows = session.execute(

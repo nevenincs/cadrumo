@@ -55,7 +55,7 @@ _BARE_EXCEPTION_BASES = tuple(
 _PERMITTED_BUILTIN_ROOTS = frozenset(
     {
         "cadrumo.core.errors.hierarchy.CadrumoError",
-        "cadrumo.adapters.outbound.aeat._playwright.PlaywrightError",
+        "cadrumo.adapters.outbound.aeat.playwright.PlaywrightError",
     }
 )
 

@@ -51,11 +51,11 @@ from ...domain.user_profile.values import UserProfileFact
 from ..ledger_action_composition import compose_ledger_action_ports
 from . import modelo_operation_test_support
 from .registered_executor_payload_context import PayloadBuilder, PayloadContext, PayloadResult
-from .registered_executor_scenario_constants import _OWN_ACCOUNT_SYNTHETIC_IBAN
+from .registered_executor_scenario_constants import OWN_ACCOUNT_SYNTHETIC_IBAN
 from .registered_executor_seeding_support import (
-    _seeded_modelo_filing_record,
-    _workflow_result,
     seeded_modelo_edit_submission,
+    seeded_modelo_filing_record,
+    workflow_result,
 )
 
 
@@ -273,12 +273,12 @@ def _modelo_edit_apply_prerequisite(ctx: PayloadContext) -> PayloadResult:
 
 
 def _modelo_filing_record_reader(ctx: PayloadContext) -> PayloadResult:
-    filing_record_id, _casilla_id = _seeded_modelo_filing_record(ctx.profile_id, operation=ctx.operation)
+    filing_record_id, _casilla_id = seeded_modelo_filing_record(ctx.profile_id, operation=ctx.operation)
     return ctx.request(ctx.profile_subject, {"profile_id": ctx.profile_id, "filing_record_id": filing_record_id})
 
 
 def _modelo_filing_record_list(ctx: PayloadContext) -> PayloadResult:
-    _seeded_modelo_filing_record(ctx.profile_id, operation=ctx.operation)
+    seeded_modelo_filing_record(ctx.profile_id, operation=ctx.operation)
     return ctx.request(ctx.profile_subject, {"profile_id": ctx.profile_id})
 
 
@@ -369,7 +369,7 @@ def _workflow_run_read(ctx: PayloadContext) -> PayloadResult:
     run_id = "a" * 16
     period = Period.from_year_and_code(2025, "1T")
     WorkflowRunRepository().save(
-        _workflow_result(
+        workflow_result(
             run_id,
             modelo="303",
             period=period,
@@ -435,7 +435,7 @@ def _workflow_run_list(ctx: PayloadContext) -> PayloadResult:
     first_period = Period.from_year_and_code(2025, "1T")
     second_period = Period.from_year_and_code(2025, "2T")
     WorkflowRunRepository().save(
-        _workflow_result(
+        workflow_result(
             "a" * 16,
             modelo="303",
             period=first_period,
@@ -443,7 +443,7 @@ def _workflow_run_list(ctx: PayloadContext) -> PayloadResult:
         )
     )
     WorkflowRunRepository().save(
-        _workflow_result(
+        workflow_result(
             "b" * 16,
             modelo="130",
             period=second_period,
@@ -463,7 +463,7 @@ def _workflow_resume_context(ctx: PayloadContext) -> PayloadResult:
     assert unit is not None
     run_id = "c" * 16
     WorkflowRunRepository().save(
-        _workflow_result(
+        workflow_result(
             run_id,
             modelo=unit.modelo,
             period=unit.period,
@@ -573,7 +573,7 @@ def _modelo_m360_solicitud(ctx: PayloadContext) -> PayloadResult:
                 ),
             ).model_dump(),
             "representante_account": Modelo360RepresentanteAccountInput(
-                iban=_OWN_ACCOUNT_SYNTHETIC_IBAN, swift_bic="CAIXESBBXXX"
+                iban=OWN_ACCOUNT_SYNTHETIC_IBAN, swift_bic="CAIXESBBXXX"
             ),
         },
     )
@@ -634,7 +634,7 @@ def _modelo_work_file(ctx: PayloadContext) -> PayloadResult:
 
 
 def _modelo_work_amend(ctx: PayloadContext) -> PayloadResult:
-    filing_record_id, casilla_id = _seeded_modelo_filing_record(ctx.profile_id, operation=ctx.operation)
+    filing_record_id, casilla_id = seeded_modelo_filing_record(ctx.profile_id, operation=ctx.operation)
     # The subject is the work unit that owns the filed record: the
     # access resolver reads that unit from the stored filing and
     # refuses any other subject.

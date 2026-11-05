@@ -27,9 +27,9 @@ from __future__ import annotations
 import pytest
 from textual.widgets import Button, Input, OptionList
 
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    load_test_profile_record,
+    profile_authority_contexts,
 )
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
 from ....application.user_profile.overview import (
@@ -72,7 +72,7 @@ def _live_overview():
     with bundled_indexed_authority().operation():
         publish_manager_subject_session(label=_LABEL, passphrase=_CREDENTIAL_INPUT)
         record = load_test_profile_record(require_active_bucket_id())
-        return build_profile_overview(record, label=_LABEL, schema=_profile_contexts_for_test()[1].schema)
+        return build_profile_overview(record, label=_LABEL, schema=profile_authority_contexts()[1].schema)
 
 
 def _persist(
@@ -84,7 +84,7 @@ def _persist(
     """The production write door, so an edit here travels the real path."""
     # Building the overview validates facts against registry authority; lease it here, on whatever thread runs this.
     with bundled_indexed_authority().operation():
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+        _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
         publish_manager_subject_session(label=_LABEL, passphrase=_CREDENTIAL_INPUT)
         record = apply_manager_profile_field_mutation(
             profile_id=require_active_bucket_id(),
@@ -94,7 +94,7 @@ def _persist(
             expected_content_digest=expected_content_digest,
             profile_decode_context=_profile_decode_context_for_test,
         )
-        return build_profile_overview(record, label=_LABEL, schema=_profile_contexts_for_test()[1].schema)
+        return build_profile_overview(record, label=_LABEL, schema=profile_authority_contexts()[1].schema)
 
 
 def _stored() -> dict[str, object | None]:

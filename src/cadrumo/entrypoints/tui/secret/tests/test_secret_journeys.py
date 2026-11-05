@@ -20,7 +20,7 @@ from textual.containers import Vertical
 from textual.widgets import Button, Input, Static
 
 from .....adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from .....adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
@@ -53,7 +53,7 @@ def _enroll() -> UUID:
     """Enroll one profile. Caller must already hold an isolated storage root."""
     # Registration validates facts against registry authority, so it runs under a real lease.
     with bundled_indexed_authority().operation():
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+        _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
         enrolled = register_profile_with_credentials(
             label=_LABEL,
             passphrase=_CURRENT_CREDENTIAL_INPUT,
@@ -71,7 +71,7 @@ def _rotate(profile_id: UUID, current: str, new: str, confirm: str) -> Passphras
     registration: a refusal arrives as typed presentation data, never as an
     exception the screen has to recognise.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     try:
         outcome = rotate_profile_passphrase(
             profile_id=profile_id,
@@ -163,7 +163,7 @@ async def test_a_wrong_current_passphrase_refuses_and_never_rotates(tmp_path: Pa
         assert app.outcome is None
 
         # The old passphrase must still open the profile: no rotation occurred.
-        _, profile_decode_context = _profile_contexts_for_test()
+        _, profile_decode_context = profile_authority_contexts()
         authenticate_profile_for_invocation(
             name=str(profile_id),
             passphrase_callback=lambda: _CURRENT_CREDENTIAL_INPUT,
@@ -238,7 +238,7 @@ async def test_a_completed_rotation_opens_under_the_new_passphrase_only(tmp_path
         assert app.outcome is not None
         assert app.outcome.password_generation == 2
 
-        _, profile_decode_context = _profile_contexts_for_test()
+        _, profile_decode_context = profile_authority_contexts()
         authenticate_profile_for_invocation(
             name=str(profile_id),
             passphrase_callback=lambda: _NEW_CREDENTIAL_INPUT,
@@ -299,7 +299,7 @@ async def test_abandoning_the_screen_leaves_no_outcome_and_never_touches_storage
 
         assert app.outcome is None
 
-        _, profile_decode_context = _profile_contexts_for_test()
+        _, profile_decode_context = profile_authority_contexts()
         authenticate_profile_for_invocation(
             name=str(profile_id),
             passphrase_callback=lambda: _CURRENT_CREDENTIAL_INPUT,

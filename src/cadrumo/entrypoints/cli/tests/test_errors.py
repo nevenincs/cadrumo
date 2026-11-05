@@ -27,7 +27,7 @@ from collections.abc import Callable
 
 import pytest
 
-from ..errors import _is_memoised_wrapper, command_error_boundary
+from ..errors import command_error_boundary, is_memoised_wrapper
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -43,23 +43,23 @@ def test_is_memoised_wrapper_narrows_callable() -> None:
     def plain_func() -> int:
         return 1
 
-    assert _is_memoised_wrapper(plain_func) is True
+    assert is_memoised_wrapper(plain_func) is True
 
     class _CallableClass:
         def __call__(self) -> int:
             return 2
 
-    assert _is_memoised_wrapper(_CallableClass()) is True
-    assert _is_memoised_wrapper(lambda: None) is True
+    assert is_memoised_wrapper(_CallableClass()) is True
+    assert is_memoised_wrapper(lambda: None) is True
 
 
 def test_is_memoised_wrapper_rejects_non_callable() -> None:
     """``_is_memoised_wrapper`` returns False for non-callable objects."""
 
-    assert _is_memoised_wrapper(42) is False
-    assert _is_memoised_wrapper("string") is False
-    assert _is_memoised_wrapper(None) is False
-    assert _is_memoised_wrapper(object()) is False
+    assert is_memoised_wrapper(42) is False
+    assert is_memoised_wrapper("string") is False
+    assert is_memoised_wrapper(None) is False
+    assert is_memoised_wrapper(object()) is False
 
 
 def test_command_error_boundary_memoised_wrapper_returns_same_object() -> None:

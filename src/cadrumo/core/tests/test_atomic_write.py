@@ -790,7 +790,7 @@ def test_staged_publication_reservation_refuses_a_pre_existing_staging_file(tmp_
 
     reserved.write_bytes(b"PLANTED")
     with (
-        scoped_attribute(atomic_write, "_hardened_staging_path", lambda _path: reserved),
+        scoped_attribute(atomic_write, "hardened_staging_path", lambda _path: reserved),
         pytest.raises(FileExistsError),
         hardened_staged_publication(target),
     ):
@@ -911,7 +911,7 @@ def test_staged_publication_falls_back_to_os_replace_only_for_unsupported_rename
         replace_calls += 1
         real_replace(source, destination)
 
-    monkeypatch.setattr(atomic_write, "_windows_rename_staged_handle", unsupported_rename)
+    monkeypatch.setattr(atomic_write, "windows_rename_staged_handle", unsupported_rename)
     monkeypatch.setattr(os, "replace", count_replace)
     with hardened_staged_publication(target) as staged:
         staged.path.write_bytes(b"new-record")
@@ -939,8 +939,8 @@ def test_pre_rs1_windows_uses_canonical_replace_for_a_noncontended_publication(
     def unsupported_api_was_called(_handle: int, _target_path: Path) -> None:
         pytest.fail("FileRenameInfoEx must not run before its Windows 10 RS1 API floor")
 
-    monkeypatch.setattr(atomic_write, "_windows_file_rename_info_ex_supported_by_os", unavailable_on_this_os)
-    monkeypatch.setattr(atomic_write, "_windows_rename_staged_handle", unsupported_api_was_called)
+    monkeypatch.setattr(atomic_write, "windows_file_rename_info_ex_supported_by_os", unavailable_on_this_os)
+    monkeypatch.setattr(atomic_write, "windows_rename_staged_handle", unsupported_api_was_called)
     with hardened_staged_publication(target) as staged:
         staged.path.write_bytes(b"new-record")
         staged.publish_with_open_readers()
@@ -1027,7 +1027,7 @@ def test_invalid_parameter_from_file_rename_does_not_fallback_to_os_replace(
         replace_calls += 1
         real_replace(source, destination)
 
-    monkeypatch.setattr(atomic_write, "_windows_rename_staged_handle", invalid_parameter)
+    monkeypatch.setattr(atomic_write, "windows_rename_staged_handle", invalid_parameter)
     monkeypatch.setattr(os, "replace", count_replace)
     with hardened_staged_publication(target) as staged:
         staged.path.write_bytes(b"new-record")

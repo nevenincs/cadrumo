@@ -28,7 +28,7 @@ from .....core.errors.error_codes import build_error_envelope
 from .....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from .....core.period import Period
-from .....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.binding_temporal import FilingYearOffset
 from .....domain.calculations.registry.bindings import (
     RegistryModeloObservation,
@@ -82,7 +82,7 @@ def _snapshot(modelo: str, filing_year: int, period: str) -> RegistrySnapshot:
 def test_m130_first_year_activity_start_prefills_prior_year_m100_as_no_prior_obligation(
     tmp_path: Path,
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         with isolated_runtime_profile(tmp_path=tmp_path):
             snapshot = _snapshot("130", 2026, "1T")
             empty_report = resolve_bindings_from_local_store(
@@ -206,7 +206,7 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
     annual reconciliation casillas equal the ledger-derived annual totals.
     """
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path) as profile,
     ):
         quarterly_observations = {
@@ -360,7 +360,7 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
 def test_modelo_303_local_iva_recurrence_preserves_filed_history_source_kind(
     tmp_path: Path,
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         with isolated_runtime_profile(tmp_path=tmp_path):
             iva_history_repository = IvaCompensationHistoryRepository()
             iva_history_repository.save_period(
@@ -428,7 +428,7 @@ def test_iva_history_observation_refuses_missing_registry_casilla_provenance() -
 
 
 def test_iva_history_observation_only_claims_formula_provenance_for_exact_casilla_projection() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         state = IvaCompensationPeriodState(
             provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
             taxpayer_nif="12345678Z",

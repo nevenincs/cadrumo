@@ -17,14 +17,14 @@ from pydantic import BaseModel
 
 from ...core.hashing import sha256_hex
 from ...core.identity.hex_ids import InvoiceId, SnapshotId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import UtcInstant
 
 
 class InvoiceRowFingerprint(BaseModel):
     """The digest of one in-scope invoice's calculation facts."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     invoice_id: InvoiceId
     fingerprint: SnapshotId
@@ -46,7 +46,7 @@ class InvoiceFingerprintSnapshot(BaseModel):
             is only comparable under its own version.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     rows: tuple[InvoiceRowFingerprint, ...] = ()
     snapshot_fingerprint: SnapshotId
@@ -57,7 +57,7 @@ class InvoiceFingerprintSnapshot(BaseModel):
 class InvoiceFingerprintVerdict(BaseModel):
     """How a stored invoice fingerprint compares with the catalogue now."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     changed: tuple[InvoiceId, ...] = ()
     removed: tuple[InvoiceId, ...] = ()

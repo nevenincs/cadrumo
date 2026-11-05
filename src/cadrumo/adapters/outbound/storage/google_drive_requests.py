@@ -9,7 +9,6 @@ from ....core.google_http_error import google_http_status, google_quota_marker
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.type_guards import is_object_dict, is_object_list, is_object_mapping, is_str_keyed_dict
 from ..google.drive_entries import OWNERSHIP_KEY, OWNERSHIP_VALUE
-from ._google_drive_metadata import DriveStoragePreconditionCondition, drive_external_verdict
 from .errors import (
     OutboundStorageConflictError,
     OutboundStorageError,
@@ -19,6 +18,7 @@ from .errors import (
     OutboundStorageQuotaError,
     OutboundStorageUnavailableError,
 )
+from .google_drive_metadata import DriveStoragePreconditionCondition, drive_external_verdict
 
 _STATUS_CODE_END = 600
 """One past the last status code HTTP defines."""

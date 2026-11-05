@@ -22,9 +22,9 @@ from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....domain.justificante.errors import JustificanteParseError
 from ....domain.justificante.schema import Justificante, JustificanteParserBackend
-from ..pdf.redaction import INPUT_PDF_SOURCE_LABEL as _INPUT_PDF_SOURCE_LABEL
-from ._extract import extract_justificante, extract_justificante_from_digest
-from ._parsers.text_extraction import extract_text, extract_text_from_bytes
+from ..pdf.redaction import INPUT_PDF_SOURCE_LABEL
+from .extract import extract_justificante, extract_justificante_from_digest
+from .parsers.text_extraction import extract_text, extract_text_from_bytes
 
 _logger = get_logger(__name__)
 
@@ -59,8 +59,8 @@ def parse_justificante(
     pdf_path = Path(pdf_path)
     if not pdf_path.is_file():
         raise JustificanteParseError(
-            f"justificante PDF not found: {_INPUT_PDF_SOURCE_LABEL}",
-            context={"path": _INPUT_PDF_SOURCE_LABEL},
+            f"justificante PDF not found: {INPUT_PDF_SOURCE_LABEL}",
+            context={"path": INPUT_PDF_SOURCE_LABEL},
             translated_message="adapters.inbound.justificante.errors.parse_failed",
             missing=("source_pdf",),
         )
@@ -147,8 +147,8 @@ def _mentions_source_path(
 def _redacted_parse_error(exc: JustificanteParseError) -> JustificanteParseError:
     """Return a redacted copy of ``exc`` preserving its structured attributes."""
     return type(exc)(
-        f"justificante PDF parse failed: {_INPUT_PDF_SOURCE_LABEL}",
-        context={"path": _INPUT_PDF_SOURCE_LABEL},
+        f"justificante PDF parse failed: {INPUT_PDF_SOURCE_LABEL}",
+        context={"path": INPUT_PDF_SOURCE_LABEL},
         translated_message="adapters.inbound.justificante.errors.parse_failed",
         missing=exc.missing,
         malformed=exc.malformed,

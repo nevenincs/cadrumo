@@ -22,9 +22,9 @@ from ....core.config import (
     settings_for_active_profile_bucket,
 )
 from ....core.config_support import StorageRouteClassification, StorageRouteKind
-from ....core.time.clock import now as _utc_now
+from ....core.time.clock import now as clock_utc_now
 from .errors import (
-    storage_validation_error as _storage_validation_error,
+    storage_validation_error,
 )
 from .master_key.active_session import current_active_bucket_session, session_serves_bucket
 from .namespace_registry import STORAGE_NAMESPACE_REGISTRY
@@ -43,9 +43,9 @@ if TYPE_CHECKING:
     from .sql.secure_objects import SecureObjectRepository
 
 from ....core.identity.bucket import BucketId
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.models import STRICT_FROZEN_CONFIG
 
-_SYNTHETIC_SESSION_BUCKET_IDS = frozenset({"ephemeral"})
+SYNTHETIC_SESSION_BUCKET_IDS = frozenset({"ephemeral"})
 
 
 class StorageRuntime(BaseModel):
@@ -56,7 +56,7 @@ class StorageRuntime(BaseModel):
     profile UUIDs, database URLs, database paths, or storage-root paths.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     route_kind: StorageRouteKind
     route_attached_to_active_bucket: bool
@@ -107,7 +107,7 @@ class StorageRuntime(BaseModel):
         active = current_active_bucket_session()
         if active is None:
             raise runtime_not_ready_error(StorageRuntimeReadinessCode.NO_ACTIVE_SESSION)
-        now = _utc_now()
+        now = clock_utc_now()
         if active.sealed:
             raise runtime_not_ready_error(StorageRuntimeReadinessCode.SESSION_SEALED)
         if active.is_expired(now):
@@ -115,7 +115,7 @@ class StorageRuntime(BaseModel):
         bucket_id = self.bucket_id
         if bucket_id is None:
             raise runtime_not_ready_error(StorageRuntimeReadinessCode.ROUTE_NOT_ACTIVE_BUCKET)
-        if active.bucket_id not in _SYNTHETIC_SESSION_BUCKET_IDS and not session_serves_bucket(active, bucket_id):
+        if active.bucket_id not in SYNTHETIC_SESSION_BUCKET_IDS and not session_serves_bucket(active, bucket_id):
             raise runtime_not_ready_error(StorageRuntimeReadinessCode.SESSION_CHANGED)
         return active, bucket_id
 
@@ -150,7 +150,7 @@ def _route_readiness_issues(
     """Return route issues after the active-session issues have been evaluated."""
     if route.kind is not StorageRouteKind.ACTIVE_BUCKET_DATABASE:
         return [readiness_issue(code=StorageRuntimeReadinessCode.ROUTE_NOT_ACTIVE_BUCKET)]
-    if active is None or active.bucket_id in _SYNTHETIC_SESSION_BUCKET_IDS:
+    if active is None or active.bucket_id in SYNTHETIC_SESSION_BUCKET_IDS:
         return []
     if route.bucket_id != active.bucket_id:
         return [readiness_issue(code=StorageRuntimeReadinessCode.ROUTE_BUCKET_MISMATCH)]
@@ -165,7 +165,7 @@ def inspect_storage_runtime(
     """Return the current profile-bound secure-storage :class:`StorageRuntime` state."""
     resolved = settings or load_settings()
     route = classify_storage_route(resolved)
-    checked_at = now or _utc_now()
+    checked_at = now or clock_utc_now()
     active = current_active_bucket_session()
     session, session_issues = _active_session_projection(active, checked_at)
     issues = [*session_issues, *_route_readiness_issues(route, active)]
@@ -201,7 +201,7 @@ def inspect_bucket_storage_runtime(
     """
     trimmed = bucket_id.strip()
     if not trimmed:
-        raise _storage_validation_error("bucket_id must not be blank")
+        raise storage_validation_error("bucket_id must not be blank")
     resolved = settings or load_settings()
     current_route = classify_storage_route(resolved)
     if (

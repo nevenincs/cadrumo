@@ -25,7 +25,7 @@ from ....application.operations.persistence.events import (
 from ....application.operations.persistence.journal import OperationPersistedSnapshot
 from ....core.hashing import reject_duplicate_json_members, reject_json_constant, sha256_hex
 from ..storage.errors import RepositoryError
-from ._journal_validation import OperationJournalRecord
+from .journal_validation import OperationJournalRecord
 
 _JSON_OBJECT = TypeAdapter(dict[str, JsonValue])
 _PURGED_REQUEST = '{"manual_edit_values_purged":true}'

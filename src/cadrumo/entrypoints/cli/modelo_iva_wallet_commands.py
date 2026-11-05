@@ -18,7 +18,7 @@ from .operation_modelo_iva_wallet_override import read_modelo_iva_wallet_overrid
 from .operation_modelo_iva_wallet_seed import read_modelo_iva_wallet_seed_for_cli
 
 
-def _wallet_amount(amount: str) -> Decimal:
+def wallet_amount(amount: str) -> Decimal:
     """Validate a hand-typed M303 carry-forward balance against the canonical grammar.
 
     All three mutating wallet verbs (``seed``, ``correct``, ``override``) declare
@@ -79,7 +79,7 @@ def iva_wallet_seed_cmd(ctx: typer.Context, filing_year: int, period: str, amoun
                 "cli.app.modelo.iva_wallet.seed_confirm_required",
             )
         )
-    seed_amount = _wallet_amount(amount)
+    seed_amount = wallet_amount(amount)
     filing_period = Period.from_year_and_code(filing_year, period)
     read = read_modelo_iva_wallet_seed_for_cli(
         ctx,
@@ -124,7 +124,7 @@ def iva_wallet_correct_cmd(
                 "cli.app.modelo.iva_wallet.correct_reason_required",
             )
         )
-    correct_amount = _wallet_amount(amount)
+    correct_amount = wallet_amount(amount)
     filing_period = Period.from_year_and_code(filing_year, period)
     read = read_modelo_iva_wallet_correction_for_cli(
         ctx,
@@ -187,7 +187,7 @@ def iva_wallet_override_cmd(
                 "cli.app.modelo.iva_wallet.override_evidence_locator_required",
             )
         )
-    override_amount = _wallet_amount(amount)
+    override_amount = wallet_amount(amount)
     filing_period = Period.from_year_and_code(filing_year, period)
     read = read_modelo_iva_wallet_override_for_cli(
         ctx,

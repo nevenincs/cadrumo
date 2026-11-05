@@ -13,7 +13,7 @@ import pytest
 from textual.widgets import Button, Checkbox, DataTable, Input, OptionList, Static
 
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from ....application.user_profile.overview import build_profile_overview
 from ....application.user_profile.profile_record_repository import ProfileRecordRepository
@@ -31,7 +31,7 @@ from ..profile.setup_journey import ProfileSetupStage
 from .manager_pilot import wait_until_settled
 from .manager_subject_profile import registered_manager_subject
 from .settling import settle, settle_until
-from .test_manager_screen import _CREDENTIAL_INPUT, _live_overview, _persist
+from .test_manager_screen import CREDENTIAL_INPUT, live_overview, persist
 
 pytestmark = [
     pytest.mark.integration,
@@ -46,7 +46,7 @@ _SYNTHETIC_NIF = "12345678Z"
 def _complete_setup():
     """The repository completion door the installed session binds."""
     with bundled_indexed_authority().operation() as operation:
-        _create_context, decode_context = _profile_contexts_for_test()
+        _create_context, decode_context = profile_authority_contexts()
         profile_id = require_active_bucket_id()
         profiles = ProfileRecordRepository.for_current_session(profile_id, profile_decode_context=decode_context)
         current = profiles.load(profile_id)
@@ -138,8 +138,8 @@ async def _reach_required(app: ProfileManagerScreen, pilot) -> None:
 @pytest.mark.asyncio
 async def test_previous_keeps_saved_answers_and_incomplete_review_returns_to_required(tmp_path) -> None:
     """Navigation never clears a saved fact or bypasses the required-answer gate."""
-    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=_CREDENTIAL_INPUT):
-        app = ProfileManagerScreen(_live_overview(), persist=_persist, complete_setup=_complete_setup)
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        app = ProfileManagerScreen(live_overview(), persist=persist, complete_setup=_complete_setup)
         async with ScreenHostApp(app).run_test(size=(80, 24)) as pilot:
             await _reach_required(app, pilot)
             await pilot.click("#onboarding-continue")
@@ -162,15 +162,15 @@ async def test_previous_keeps_saved_answers_and_incomplete_review_returns_to_req
             await settle(pilot)
             assert app._setup_stage is ProfileSetupStage.REQUIRED
             assert app._field_by_key[path].value == value
-            assert _live_overview().missing_required == app.overview.missing_required
+            assert live_overview().missing_required == app.overview.missing_required
             pilot.app.exit(None)
 
 
 @pytest.mark.asyncio
 async def test_a_blank_required_answer_can_be_corrected_without_losing_the_question(tmp_path) -> None:
     """A refused blank stays in the editor and a subsequent valid answer is saved."""
-    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=_CREDENTIAL_INPUT):
-        app = ProfileManagerScreen(_live_overview(), persist=_persist, complete_setup=_complete_setup)
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        app = ProfileManagerScreen(live_overview(), persist=persist, complete_setup=_complete_setup)
         async with ScreenHostApp(app).run_test(size=(80, 24)) as pilot:
             await _reach_required(app, pilot)
             await pilot.click("#onboarding-continue")
@@ -181,23 +181,23 @@ async def test_a_blank_required_answer_can_be_corrected_without_losing_the_quest
             await pilot.click("#btn-edit-save")
             await settle(pilot)
             assert app.app.screen is dialog
-            assert path in _live_overview().missing_required
+            assert path in live_overview().missing_required
             assert str(dialog.query_one("#edit-refusal", Static).content)
             assert str(dialog.query_one("#edit-requirement", Static).content) == tr("flows.progress.required")
             await _answer(app, pilot)
-            assert path not in _live_overview().missing_required
+            assert path not in live_overview().missing_required
             pilot.app.exit(None)
 
 
 @pytest.mark.asyncio
 async def test_an_unfinished_profile_opens_on_only_its_required_answers(tmp_path) -> None:
     """The walk asks for what setup requires and folds every other section away."""
-    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=_CREDENTIAL_INPUT):
-        overview = _live_overview()
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        overview = live_overview()
         assert overview.setup_state is ProfileSetupState.INCOMPLETE
         assert overview.missing_required, "the fixture must owe required answers, or this proves nothing"
 
-        app = ProfileManagerScreen(overview, persist=_persist, complete_setup=_complete_setup)
+        app = ProfileManagerScreen(overview, persist=persist, complete_setup=_complete_setup)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
             assert app._setup_stage is ProfileSetupStage.OVERVIEW
@@ -226,9 +226,9 @@ async def test_an_unfinished_profile_opens_on_only_its_required_answers(tmp_path
 @pytest.mark.parametrize("size", [(80, 24), (160, 60)])
 async def test_continue_walks_every_required_answer_then_finishes_setup(tmp_path, size) -> None:
     """Pressing Continue and answering each question is enough to finish setup."""
-    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=_CREDENTIAL_INPUT):
-        overview = _live_overview()
-        app = ProfileManagerScreen(overview, persist=_persist, complete_setup=_complete_setup)
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        overview = live_overview()
+        app = ProfileManagerScreen(overview, persist=persist, complete_setup=_complete_setup)
         async with ScreenHostApp(app).run_test(size=size) as pilot:
             await settle(pilot)
             await _reach_required(app, pilot)
@@ -291,7 +291,7 @@ async def test_continue_walks_every_required_answer_then_finishes_setup(tmp_path
             pilot.app.exit(None)
 
         with bundled_indexed_authority().operation():
-            _create_context, decode_context = _profile_contexts_for_test()
+            _create_context, decode_context = profile_authority_contexts()
             profile_id = require_active_bucket_id()
             stored = ProfileRecordRepository.for_current_session(
                 profile_id, profile_decode_context=decode_context
@@ -302,8 +302,8 @@ async def test_continue_walks_every_required_answer_then_finishes_setup(tmp_path
 @pytest.mark.asyncio
 async def test_cancelling_a_question_stops_the_walk(tmp_path) -> None:
     """Escape leaves the walk; nothing reopens until Continue is pressed again."""
-    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=_CREDENTIAL_INPUT):
-        app = ProfileManagerScreen(_live_overview(), persist=_persist, complete_setup=_complete_setup)
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        app = ProfileManagerScreen(live_overview(), persist=persist, complete_setup=_complete_setup)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
             await _reach_required(app, pilot)
@@ -320,9 +320,9 @@ async def test_cancelling_a_question_stops_the_walk(tmp_path) -> None:
 @pytest.mark.asyncio
 async def test_search_narrows_the_page_and_says_when_nothing_matches(tmp_path) -> None:
     """A search shows the sections it matches, open, and names an empty result."""
-    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=_CREDENTIAL_INPUT):
-        overview = _live_overview()
-        app = ProfileManagerScreen(overview, persist=_persist, complete_setup=_complete_setup)
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        overview = live_overview()
+        app = ProfileManagerScreen(overview, persist=persist, complete_setup=_complete_setup)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
             await _reach_required(app, pilot)
@@ -348,9 +348,9 @@ async def test_search_narrows_the_page_and_says_when_nothing_matches(tmp_path) -
 @pytest.mark.asyncio
 async def test_a_finished_profile_opens_without_the_walk(tmp_path) -> None:
     """Setup that is already complete shows the plain profile page, every field in reach."""
-    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=_CREDENTIAL_INPUT):
-        overview = _live_overview()
-        app = ProfileManagerScreen(overview, persist=_persist)
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        overview = live_overview()
+        app = ProfileManagerScreen(overview, persist=persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
             assert not app.query("#manager-onboarding")
@@ -362,9 +362,9 @@ async def test_a_finished_profile_opens_without_the_walk(tmp_path) -> None:
 @pytest.mark.asyncio
 async def test_a_choice_question_offers_words_and_refuses_an_empty_save(tmp_path) -> None:
     """Choices read as labels, and Save with nothing picked asks for a pick instead of cancelling."""
-    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=_CREDENTIAL_INPUT):
-        overview = _live_overview()
-        app = ProfileManagerScreen(overview, persist=_persist, complete_setup=_complete_setup)
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        overview = live_overview()
+        app = ProfileManagerScreen(overview, persist=persist, complete_setup=_complete_setup)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
             await _reach_required(app, pilot)
@@ -399,9 +399,9 @@ async def test_a_choice_question_offers_words_and_refuses_an_empty_save(tmp_path
 @pytest.mark.asyncio
 async def test_every_setup_question_explains_itself_and_the_page_explains_the_cursor_row(tmp_path) -> None:
     """Each question shows the setup wizard's copy as its help; so does the page."""
-    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=_CREDENTIAL_INPUT):
-        overview = _live_overview()
-        app = ProfileManagerScreen(overview, persist=_persist, complete_setup=_complete_setup)
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        overview = live_overview()
+        app = ProfileManagerScreen(overview, persist=persist, complete_setup=_complete_setup)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
             await _reach_required(app, pilot)

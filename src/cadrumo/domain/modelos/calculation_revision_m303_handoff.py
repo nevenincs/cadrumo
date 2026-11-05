@@ -28,7 +28,7 @@ from ..calculations.registry.ids import RevisionId
 from ..calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
 from ..calculations.registry.schema_references import RegistrySnapshotRef
 from ..filing_evidence import FilingEvidenceReference
-from ..identifiers import canonical_decimal_string as _canonical_decimal
+from ..identifiers import canonical_decimal_string
 from ..iva.refund_eligibility import is_last_filing_period_of_year
 from ..iva.regimen_simplificado_rows import (
     ActividadNoAgricolaSimplificado,
@@ -312,7 +312,7 @@ def _m303_regimen_simplificado_annual_summary_handoff_payload(
         "values": tuple(
             {
                 "casilla_id": casilla_id,
-                "value": _canonical_decimal(handoff.values[casilla_id]),
+                "value": canonical_decimal_string(handoff.values[casilla_id]),
             }
             for casilla_id in sorted(handoff.values, key=str)
         ),

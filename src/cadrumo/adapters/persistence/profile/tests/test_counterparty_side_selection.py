@@ -48,18 +48,18 @@ from cadrumo.core.config import Settings
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 from .....domain.iva.schema import InvoiceKind
-from ._invoice_confirmation_test_support import (
-    _BUCKET_ID,
+from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from .invoice_confirmation_test_support import (
+    BUCKET_ID,
     InvoiceAuthorityFixture,
-    _make_svc,
     invoice_confirmation_kwargs,
     isolated_settings,
+    make_svc,
     secure_objects,
     seed_filer_profile,
     serving_a_loopback_reader,
 )
-from ._invoice_confirmation_test_support import runtime_profile as runtime_profile
-from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from .invoice_confirmation_test_support import runtime_profile as runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects"]
@@ -161,7 +161,7 @@ def _stored_evidence(
 ) -> str:
     pdf_path = tmp_path / name
     pdf_path.write_bytes(text_pdf_bytes(lines))
-    record = _make_svc(settings, objects).add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+    record = make_svc(settings, objects).add(bucket_id=BUCKET_ID, source_path=pdf_path).record
     return record.evidence_id
 
 
@@ -203,12 +203,12 @@ def test_an_issued_document_records_the_billed_party_not_the_issuer(
 
     confirmation = confirm_invoice_draft_from_evidence(
         counterparty_country="ES",
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         kind=InvoiceKind.ISSUED,
         evidence_id=evidence_id,
         counterparty_name="Cliente Ejemplo SL",
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
+        **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=invoice_authority),
     )
 
     assert confirmation.invoice.counterparty_tax_id == _BILLED_NIF
@@ -234,12 +234,12 @@ def test_a_received_document_records_the_issuing_party(
 
     confirmation = confirm_invoice_draft_from_evidence(
         counterparty_country="ES",
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         evidence_id=evidence_id,
         counterparty_name="Acme Suministros SL",
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
+        **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=invoice_authority),
     )
 
     assert confirmation.invoice.counterparty_tax_id == _ISSUER_CIF
@@ -274,12 +274,12 @@ def test_an_issued_document_with_no_billed_party_read_refuses_rather_than_substi
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
         confirm_invoice_draft_from_evidence(
             counterparty_country="ES",
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             kind=InvoiceKind.ISSUED,
             evidence_id=evidence_id,
             counterparty_name="Cliente Ejemplo SL",
             settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
+            **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=invoice_authority),
         )
 
     verdict = raised.value.terminal_precondition_verdict
@@ -308,13 +308,13 @@ def test_an_operator_override_supplies_the_counterparty_the_reader_could_not(
 
     confirmation = confirm_invoice_draft_from_evidence(
         counterparty_country="ES",
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         kind=InvoiceKind.ISSUED,
         evidence_id=evidence_id,
         counterparty_name="Cliente Ejemplo SL",
         counterparty_tax_id=_BILLED_NIF,
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
+        **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=invoice_authority),
     )
 
     assert confirmation.invoice.counterparty_tax_id == _BILLED_NIF

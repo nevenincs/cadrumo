@@ -42,7 +42,7 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.money.rounding import round_to_cents
 from ..formula_runtime import calculate_registry_snapshot
 from ..temporal import select_revision
-from ._modelo_131_modulos_engine_support import excess_adjusted_modulos, progressive_bracket_coefficient
+from .modelo_131_modulos_engine_support import excess_adjusted_modulos, progressive_bracket_coefficient
 from .published_authority import published_legal_reference, published_snapshot
 from .registry_tree import bundled_registry_tree
 

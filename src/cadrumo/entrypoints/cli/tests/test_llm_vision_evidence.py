@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 
 from ....adapters.outbound.llm.tests.model_run_support import serving_agent
@@ -173,7 +173,7 @@ def test_a_refused_vision_lookup_reaches_the_operator_as_a_typed_reader_refusal(
     )
     ports = compose_ledger_llm(bucket_id=profile.bucket_id, settings=profile.settings).ports
     with (
-        _indexed_authority_for_test().operation() as operation,
+        bundled_indexed_authority().operation() as operation,
         serving_agent(lookup_refusal=code) as service,
         pytest.raises(PurchaseInvoiceEvidenceReaderError) as raised,
     ):

@@ -19,19 +19,19 @@ import pytest
 from .....tests.inventory import FIXTURES_DIR
 from ..errors import DeclaracionParseError
 from ..parser import parse_declaracion
-from ._parser_boundary_m130_support import (
-    _M130_CORPUS_GROUND_TRUTH,
-    _M130_CORPUS_IDS,
-    _M130_CORPUS_PARAMS,
-    _M130_UNSUPPORTED_CORPUS_IDS,
-    _M130_UNSUPPORTED_CORPUS_PARAMS,
+from .parser_boundary_m130_support import (
+    M130_CORPUS_GROUND_TRUTH,
+    M130_CORPUS_IDS,
+    M130_CORPUS_PARAMS,
+    M130_UNSUPPORTED_CORPUS_IDS,
+    M130_UNSUPPORTED_CORPUS_PARAMS,
 )
-from ._parser_boundary_support import _expected_period
+from .parser_boundary_support import expected_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 
-@pytest.mark.parametrize("pdf_stem,year,period", _M130_CORPUS_PARAMS, ids=_M130_CORPUS_IDS)
+@pytest.mark.parametrize("pdf_stem,year,period", M130_CORPUS_PARAMS, ids=M130_CORPUS_IDS)
 def test_parser_extracts_modelo_130_casillas_from_corpus(pdf_stem: str, year: int, period: str) -> None:
     """Round-trip all M130 corpus PDFs through the production bbox_anchored profile.
 
@@ -40,7 +40,7 @@ def test_parser_extracts_modelo_130_casillas_from_corpus(pdf_stem: str, year: in
             Parser-resolved modelo/year/revision coordinate stamped onto each
             returned observation.
     """
-    expected = _M130_CORPUS_GROUND_TRUTH[pdf_stem]
+    expected = M130_CORPUS_GROUND_TRUTH[pdf_stem]
     pdf_path = FIXTURES_DIR / "justificantes" / "130" / f"{pdf_stem}.pdf"
 
     filing = parse_declaracion(
@@ -51,7 +51,7 @@ def test_parser_extracts_modelo_130_casillas_from_corpus(pdf_stem: str, year: in
     )
 
     assert filing.modelo == "130", f"{pdf_stem}: expected modelo='130', got {filing.modelo!r}"
-    assert filing.period == _expected_period(year, period), (
+    assert filing.period == expected_period(year, period), (
         f"{pdf_stem}: expected period={period!r}, got {filing.period!r}"
     )
     assert filing.tax_id == "Y0000001S", f"{pdf_stem}: expected tax_id='Y0000001S', got {filing.tax_id!r}"
@@ -65,7 +65,7 @@ def test_parser_extracts_modelo_130_casillas_from_corpus(pdf_stem: str, year: in
     )
 
 
-@pytest.mark.parametrize("pdf_stem,year,period", _M130_UNSUPPORTED_CORPUS_PARAMS, ids=_M130_UNSUPPORTED_CORPUS_IDS)
+@pytest.mark.parametrize("pdf_stem,year,period", M130_UNSUPPORTED_CORPUS_PARAMS, ids=M130_UNSUPPORTED_CORPUS_IDS)
 def test_parser_refuses_modelo_130_corpus_below_the_supported_floor(pdf_stem: str, year: int, period: str) -> None:
     """A render for a year outside the support envelope is refused, never resolved."""
     pdf_path = FIXTURES_DIR / "justificantes" / "130" / f"{pdf_stem}.pdf"

@@ -17,8 +17,7 @@ from cadrumo.application.aggregation.withholding_recognition import (
 # Importing the wizard catalogue + persistence modules triggers
 # register_wizard_catalogue() at import time, exactly as the production CLI
 # startup does.
-from cadrumo.application.wizard import catalogue as _wizard_catalogue
-from cadrumo.application.wizard import persistence as _wizard_persistence
+from cadrumo.application.wizard import catalogue, persistence
 from cadrumo.core.aggregation import RetencionClave
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.domain.calculations.registry.temporal import select_revision
@@ -31,7 +30,7 @@ from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 from .cli_fixture_worlds import cli_world_provider, invoke_joined_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
 
-_WIZARD_REGISTRATION_MODULES = (_wizard_catalogue, _wizard_persistence)
+_WIZARD_REGISTRATION_MODULES = (catalogue, persistence)
 _M111_PROFESSIONAL_NIF = "B12345674"
 _M111_PROFESSIONAL_NAME = "Asesoria Profesional SL"
 _M111_PAID_ON = date(2025, 1, 15)

@@ -27,12 +27,12 @@ from cadrumo.application.invoices.catalogue_intake_contracts import (
     InvoiceImportRowFailure,
 )
 from cadrumo.entrypoints.cli.ledger_business_invoice_commands import (
-    _invoice_import_all_refused_report,
-    _invoice_import_mapping_reports,
-    _invoice_import_payload,
-    _invoice_import_refusal_lines,
-    _invoice_import_summary_lines,
-    _invoice_import_unmapped_report,
+    invoice_import_all_refused_report,
+    invoice_import_mapping_reports,
+    invoice_import_payload,
+    invoice_import_refusal_lines,
+    invoice_import_summary_lines,
+    invoice_import_unmapped_report,
 )
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result, unwrap_envelope_notices
 
@@ -91,7 +91,7 @@ def test_import_presenter_preserves_partial_row_facts_and_mapping_notes() -> Non
         mapping_reasons=("column 8 legacy_tag: role was not applied",),
     )
 
-    assert _invoice_import_payload(projection) == {
+    assert invoice_import_payload(projection) == {
         "bucket_id": str(_PROFILE_ID),
         "rows": 2,
         "created": 1,
@@ -99,24 +99,24 @@ def test_import_presenter_preserves_partial_row_facts_and_mapping_notes() -> Non
         "refused": [{"row_number": 3, "field": "invoice_number", "reason": "required field is missing or blank"}],
         "created_invoice_ids": [_INVOICE_ID],
     }
-    assert _invoice_import_summary_lines(str(_PROFILE_ID), projection) == [
+    assert invoice_import_summary_lines(str(_PROFILE_ID), projection) == [
         f"bucket\t{_PROFILE_ID}",
         "rows\t2",
         "created\t1",
         "skipped_duplicate\t0",
         "refused\t1",
     ]
-    assert _invoice_import_refusal_lines(projection) == [
+    assert invoice_import_refusal_lines(projection) == [
         "  refused\trow=3\tfield=invoice_number\treason=required field is missing or blank"
     ]
 
-    unmapped = _invoice_import_unmapped_report(projection.unmapped_column_headers)
+    unmapped = invoice_import_unmapped_report(projection.unmapped_column_headers)
     assert unmapped is not None
     assert unmapped[0] == "unmapped_columns\tlegacy_tag"
     assert unmapped[1].code == "ledger.invoice.catalogue.import.unmapped_columns"
     assert unmapped[1].context == {"columns": "legacy_tag", "count": "1"}
 
-    mapping_lines, mapping_notices = _invoice_import_mapping_reports(projection.mapping_reasons)
+    mapping_lines, mapping_notices = invoice_import_mapping_reports(projection.mapping_reasons)
     assert mapping_lines == ["mapping_note\tcolumn 8 legacy_tag: role was not applied"]
     assert len(mapping_notices) == 1
     assert mapping_notices[0].code == "ledger.invoice.catalogue.import.column_role_not_applied"
@@ -125,7 +125,7 @@ def test_import_presenter_preserves_partial_row_facts_and_mapping_notes() -> Non
 @pytest.mark.unit
 def test_all_refused_import_uses_warning_notice_and_only_refused_rows() -> None:
     all_refused = _projection(rows=1, created=0, refused=(_ROW_FAILURE,))
-    report = _invoice_import_all_refused_report(all_refused)
+    report = invoice_import_all_refused_report(all_refused)
     assert report is not None
     message, notice = report
     assert message
@@ -133,10 +133,10 @@ def test_all_refused_import_uses_warning_notice_and_only_refused_rows() -> None:
     assert notice.context == {"rows": "1", "refused": "1"}
 
     duplicate_only = _projection(rows=1, created=0, skipped_duplicate=1)
-    assert _invoice_import_all_refused_report(duplicate_only) is None
+    assert invoice_import_all_refused_report(duplicate_only) is None
 
     repeated_mixed_book = _projection(rows=2, created=0, skipped_duplicate=1, refused=(_ROW_FAILURE,))
-    assert _invoice_import_all_refused_report(repeated_mixed_book) is None
+    assert invoice_import_all_refused_report(repeated_mixed_book) is None
 
 
 @pytest.mark.unit

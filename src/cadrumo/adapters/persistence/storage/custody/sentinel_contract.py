@@ -10,20 +10,18 @@ from uuid import UUID
 from pydantic import BaseModel, ValidationError, field_validator, model_validator
 
 from .....core.errors.hierarchy import pydantic_validation_boundary
-from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import reject_duplicate_json_members, reject_json_constant
 from .....core.identity.profile import canonical_profile_bucket_id
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.models import STRICT_FROZEN_CONFIG
 from ..crypto.aead import EncryptedBlob, decrypt_record
 from ..crypto.aes_gcm import GCM_TAG_SIZE, NONCE_SIZE
-from ._kdf_codec import (
-    canonical_frame_bytes as _canonical_frame_bytes,
-)
-from ._kdf_codec import (
-    decode_canonical_b64 as _decode_canonical_b64,
-)
-from ._kdf_records import DEK_EPOCH_BYTES
 from .errors import ProfileCustodyRecordError
+from .kdf_codec import (
+    canonical_frame_bytes,
+    decode_canonical_b64,
+)
+from .kdf_records import DEK_EPOCH_BYTES
 from .records import ProfileCustodyEnvelope
 
 _PROFILE_CUSTODY_DATA_FORMAT_VERSION: Final = 1
@@ -41,7 +39,7 @@ def profile_custody_sentinel_aad(envelope: ProfileCustodyEnvelope) -> bytes:
 
 def profile_custody_sentinel_aad_for(*, profile_id: UUID, dek_epoch: str) -> bytes:
     """Derive sentinel AAD from the immutable custody identity alone."""
-    return _canonical_frame_bytes(
+    return canonical_frame_bytes(
         {
             "data_format_version": _PROFILE_CUSTODY_DATA_FORMAT_VERSION,
             "dek_epoch": dek_epoch,
@@ -60,7 +58,7 @@ def profile_custody_sentinel_plaintext(
     data_format_version: Literal[1] = 1,
 ) -> bytes:
     """Derive the non-caller-selectable sentinel plaintext for one DEK epoch."""
-    return _canonical_frame_bytes(
+    return canonical_frame_bytes(
         {
             "data_format_version": data_format_version,
             "dek_epoch": dek_epoch,
@@ -76,7 +74,7 @@ def profile_custody_sentinel_plaintext(
 class ProfileCustodySentinelRecord(BaseModel):
     """Strict proof input consumed before a custody transaction can publish it."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: Literal[1]
     product: Literal["cadrumo"]
@@ -92,34 +90,34 @@ class ProfileCustodySentinelRecord(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _validate_epoch(cls, value: str) -> str:
-        _decode_canonical_b64(value, field_name="dek_epoch", expected_bytes=DEK_EPOCH_BYTES)
+        decode_canonical_b64(value, field_name="dek_epoch", expected_bytes=DEK_EPOCH_BYTES)
         return value
 
     @field_validator("nonce_b64")
     @classmethod
     @pydantic_validation_boundary
     def _validate_nonce(cls, value: str) -> str:
-        _decode_canonical_b64(value, field_name="nonce_b64", expected_bytes=NONCE_SIZE)
+        decode_canonical_b64(value, field_name="nonce_b64", expected_bytes=NONCE_SIZE)
         return value
 
     @field_validator("tag_b64")
     @classmethod
     @pydantic_validation_boundary
     def _validate_tag(cls, value: str) -> str:
-        _decode_canonical_b64(value, field_name="tag_b64", expected_bytes=GCM_TAG_SIZE)
+        decode_canonical_b64(value, field_name="tag_b64", expected_bytes=GCM_TAG_SIZE)
         return value
 
     @field_validator("ciphertext_b64")
     @classmethod
     @pydantic_validation_boundary
     def _validate_ciphertext(cls, value: str) -> str:
-        _decode_canonical_b64(value, field_name="ciphertext_b64", expected_bytes=None)
+        decode_canonical_b64(value, field_name="ciphertext_b64", expected_bytes=None)
         return value
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _verify_exact_proof_shape(self) -> ProfileCustodySentinelRecord:
-        ciphertext = _decode_canonical_b64(
+        ciphertext = decode_canonical_b64(
             self.ciphertext_b64,
             field_name="ciphertext_b64",
             expected_bytes=None,
@@ -136,29 +134,29 @@ class ProfileCustodySentinelRecord(BaseModel):
     def encrypted_blob(self) -> EncryptedBlob:
         """Return the format-neutral AEAD representation after strict validation."""
         return EncryptedBlob(
-            nonce=_decode_canonical_b64(self.nonce_b64, field_name="nonce_b64", expected_bytes=NONCE_SIZE),
+            nonce=decode_canonical_b64(self.nonce_b64, field_name="nonce_b64", expected_bytes=NONCE_SIZE),
             ciphertext=(
-                _decode_canonical_b64(self.ciphertext_b64, field_name="ciphertext_b64", expected_bytes=None)
-                + _decode_canonical_b64(self.tag_b64, field_name="tag_b64", expected_bytes=GCM_TAG_SIZE)
+                decode_canonical_b64(self.ciphertext_b64, field_name="ciphertext_b64", expected_bytes=None)
+                + decode_canonical_b64(self.tag_b64, field_name="tag_b64", expected_bytes=GCM_TAG_SIZE)
             ),
         )
 
     def canonical_json_bytes(self) -> bytes:
         """Return the unique strict transport representation for a custody transaction."""
-        return _canonical_frame_bytes(cast(dict[str, object], self.model_dump(mode="json")))
+        return canonical_frame_bytes(cast(dict[str, object], self.model_dump(mode="json")))
 
 
 def parse_profile_custody_sentinel_record(value: bytes) -> ProfileCustodySentinelRecord:
     """Parse one canonical sentinel record without creating or publishing it."""
     try:
-        decoded = value.decode(_UTF_8_ENCODING, errors="strict")
+        decoded = value.decode(UTF_8_ENCODING, errors="strict")
         parsed = json.loads(
             decoded, object_pairs_hook=reject_duplicate_json_members, parse_constant=reject_json_constant
         )
         if not isinstance(parsed, dict):
             raise ValueError("profile custody sentinel must be an object")
         payload = cast("dict[str, object]", parsed)
-        record = ProfileCustodySentinelRecord.model_validate_json(_canonical_frame_bytes(payload))
+        record = ProfileCustodySentinelRecord.model_validate_json(canonical_frame_bytes(payload))
         if record.canonical_json_bytes() != value:
             raise ValueError("profile custody sentinel is not canonical")
         return record

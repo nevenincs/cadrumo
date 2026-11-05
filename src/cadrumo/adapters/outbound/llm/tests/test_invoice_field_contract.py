@@ -31,9 +31,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from cadrumo.domain.calculations.registry.tests.legal_text import legal_text_match, spanish_date
 from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
@@ -43,7 +41,7 @@ from .....core.field_origin import FieldOrigin
 from .....core.period import Period
 from .....domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from .....domain.invoices.enums import iva_rate_percentage, resolve_iva_rate_slot
-from .....domain.iva import lookup as _iva_lookup_module
+from .....domain.iva import lookup
 from .....domain.iva.components import registry_category_projection
 from .....domain.iva.errors import IvaRateNotFoundError
 from .....domain.iva.rates import load_iva_rate_table
@@ -59,8 +57,8 @@ from ..invoice_field_contract import (
     role_evidence_key_for_field,
 )
 from ..invoice_field_grounding import (
-    _NUMERIC_GROUNDING_BY_FORM,
-    _TEXT_GROUNDING_BY_FORM,
+    NUMERIC_GROUNDING_BY_FORM,
+    TEXT_GROUNDING_BY_FORM,
     ExtractedFieldAnchors,
     ExtractedInvoiceFields,
     ExtractedInvoiceResponse,
@@ -102,7 +100,7 @@ class TestCompiledEnumerationsComeFromTheRegistry:
         self, period: Period, *, operation: PinnedAuthorityOperation
     ) -> None:
         """Asserted on two periods whose law differs, so one hardcoded tuple cannot satisfy both."""
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             compiled = build_invoice_extraction_prompt(period=period, operation=operation)
 
             expected_rates = {
@@ -195,7 +193,7 @@ class TestTheAntiDriftGateBitesInBothDirections:
         )
         planted = Decimal("13.5")
         assert planted not in baseline.iva_rate_pcts, "pick a percentage the registry does not already carry"
-        original = _iva_lookup_module.coexisting_tier_rates
+        original = lookup.coexisting_tier_rates
 
         def with_planted_rate(
             member_state: EUMemberState,
@@ -206,13 +204,13 @@ class TestTheAntiDriftGateBitesInBothDirections:
         ) -> tuple[IvaRateRecord, ...]:
             rates = original(member_state, kind, on_date, operation=operation)
             try:
-                anchor = _iva_lookup_module.lookup_rate(member_state, kind, on_date, operation=operation)
+                anchor = lookup.lookup_rate(member_state, kind, on_date, operation=operation)
             except IvaRateNotFoundError:
                 return rates
             return (*rates, anchor.model_copy(update={"pct": planted}))
 
         # Patch the lookup the authority resolver reads.
-        with scoped_attribute(_iva_lookup_module, "coexisting_tier_rates", with_planted_rate):
+        with scoped_attribute(lookup, "coexisting_tier_rates", with_planted_rate):
             after = build_invoice_extraction_prompt(
                 period=Period.from_year_and_code(carried_year, "2T"), operation=operation
             )
@@ -353,8 +351,8 @@ class TestContractParityAcrossBothDerivations:
 
     def test_every_declared_form_has_exactly_one_grounding_validator(self) -> None:
         """The two typed tables cover the form enum exactly and without overlap."""
-        text_forms = set(_TEXT_GROUNDING_BY_FORM)
-        numeric_forms = set(_NUMERIC_GROUNDING_BY_FORM)
+        text_forms = set(TEXT_GROUNDING_BY_FORM)
+        numeric_forms = set(NUMERIC_GROUNDING_BY_FORM)
         declared_forms = {contract.form for contract in INVOICE_FIELD_CONTRACTS}
 
         assert not text_forms & numeric_forms

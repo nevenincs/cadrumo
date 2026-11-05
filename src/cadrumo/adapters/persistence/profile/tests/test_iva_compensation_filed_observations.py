@@ -12,11 +12,11 @@ from cadrumo.adapters.outbound.aeat.sede.schema import ObservedCasillaValue
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.tests.iva_compensation_history_support import (
-    _M303_POSTERIOR_CASILLA,
-    _M303_RESULTADO_CASILLA,
-    _TAXPAYER_REF,
-    _filed_303_compensation_observation,
-    _filed_observation,
+    M303_POSTERIOR_CASILLA,
+    M303_RESULTADO_CASILLA,
+    TAXPAYER_REF,
+    filed_303_compensation_observation,
+    filed_observation,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.errors import IvaCompensationModeloError
@@ -34,9 +34,7 @@ from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
@@ -63,7 +61,7 @@ def _history_state_from_filed_observation(observation: object, *, operation: Pin
 
     if not isinstance(observation, FiledDeclaracionObservation):
         raise AssertionError("test requires a filed declaration observation")
-    resultado = next(casilla for casilla in observation.casillas if casilla.casilla_id == _M303_RESULTADO_CASILLA)
+    resultado = next(casilla for casilla in observation.casillas if casilla.casilla_id == M303_RESULTADO_CASILLA)
     result = resultado.decimal_value()
     code = "C" if result < 0 else "I" if result > 0 else "N"
     envelope = CalculationObservationRepository().prepare_observation_envelope(
@@ -111,24 +109,24 @@ def test_three_year_filed_history_repository_projects_compensation_lots(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_HISTORY_BUCKET_ID):
         repository = IvaCompensationHistoryRepository()
         observations = (
-            _filed_303_compensation_observation(
+            filed_303_compensation_observation(
                 filing_year=2024,
                 period="4T",
                 resultado=Decimal("-100.00"),
             ),
-            _filed_303_compensation_observation(
+            filed_303_compensation_observation(
                 filing_year=2025,
                 period="2T",
                 resultado=Decimal("25.00"),
                 applied=Decimal("40.00"),
                 posterior=Decimal("60.00"),
             ),
-            _filed_303_compensation_observation(
+            filed_303_compensation_observation(
                 filing_year=2025,
                 period="4T",
                 resultado=Decimal("-75.00"),
             ),
-            _filed_303_compensation_observation(
+            filed_303_compensation_observation(
                 filing_year=2026,
                 period="1T",
                 resultado=Decimal("10.00"),
@@ -212,7 +210,7 @@ def test_a_filing_with_no_posterior_casilla_still_carries_the_credit_it_generate
     carry, which over-taxes the taxpayer one period later -- the direction
     nothing else in the chain watches.
     """
-    observation = _filed_303_compensation_observation(
+    observation = filed_303_compensation_observation(
         filing_year=2025,
         period="4T",
         resultado=Decimal("-100.00"),
@@ -220,7 +218,7 @@ def test_a_filing_with_no_posterior_casilla_still_carries_the_credit_it_generate
     without_posterior = observation.model_copy(
         update={
             "casillas": tuple(
-                casilla for casilla in observation.casillas if casilla.casilla_id != _M303_POSTERIOR_CASILLA
+                casilla for casilla in observation.casillas if casilla.casilla_id != M303_POSTERIOR_CASILLA
             ),
         },
     )
@@ -234,8 +232,8 @@ def test_a_filing_with_no_posterior_casilla_still_carries_the_credit_it_generate
 
 
 def test_iva_compensation_history_refuses_a_non_303_envelope() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        observation = _filed_observation(modelo="130")
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        observation = filed_observation(modelo="130")
         envelope = CalculationObservationRepository().prepare_observation_envelope(
             registry_grounded_modelo_observation(
                 modelo=observation.modelo,
@@ -287,11 +285,11 @@ def test_iva_compensation_refuses_a_casilla_whose_declared_kind_is_not_numeric(
     IVA balances between filings: the day a revision adds a text casilla, the
     refusal must already exist rather than a wrong balance moving silently.
     """
-    observation = _filed_observation(modelo="303").model_copy(
+    observation = filed_observation(modelo="303").model_copy(
         update={
             "casillas": (
                 ObservedCasillaValue(
-                    casilla_id=_M303_RESULTADO_CASILLA,
+                    casilla_id=M303_RESULTADO_CASILLA,
                     value="15",
                     value_kind=CasillaValueKind.TEXT,
                     source_artefact_kind="submitted_file",
@@ -305,16 +303,16 @@ def test_iva_compensation_refuses_a_casilla_whose_declared_kind_is_not_numeric(
     with pytest.raises(SedeError) as excinfo:
         _history_state_from_filed_observation(observation, operation=operation)
 
-    assert str(_M303_RESULTADO_CASILLA) in str(excinfo.value)
+    assert str(M303_RESULTADO_CASILLA) in str(excinfo.value)
 
 
 def test_seed_iva_compensation_period_raises_localized_conflict_error(tmp_path: Path) -> None:
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CONFLICT_BUCKET_ID),
     ):
         seed_iva_compensation_period(
-            taxpayer_nif=_TAXPAYER_REF,
+            taxpayer_nif=TAXPAYER_REF,
             period=Period.from_year_and_code(2024, "2T"),
             amount=Decimal("100.00"),
             repository=IvaCompensationHistoryRepository(),
@@ -323,7 +321,7 @@ def test_seed_iva_compensation_period_raises_localized_conflict_error(tmp_path: 
 
         with pytest.raises(IvaCompensationSeedConflictError) as excinfo:
             seed_iva_compensation_period(
-                taxpayer_nif=_TAXPAYER_REF,
+                taxpayer_nif=TAXPAYER_REF,
                 period=Period.from_year_and_code(2024, "2T"),
                 amount=Decimal("50.00"),
                 repository=IvaCompensationHistoryRepository(),

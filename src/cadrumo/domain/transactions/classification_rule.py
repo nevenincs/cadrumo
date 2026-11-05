@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hashing import sha256_hex
 from ...core.identity.digest import ContentDigest
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.pattern_search_worker import PATTERN_COMPILE_FAILURES, PATTERN_FLAGS
 from ...core.time.clock import now
 from ...core.time.utc import UtcInstant
@@ -70,7 +70,7 @@ class LedgerClassificationRule(BaseModel):
     wins; ties broken by ``created_at`` ascending (earliest rule wins).
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     rule_id: ContentDigest
     description_pattern: RuleDescriptionPattern

@@ -38,7 +38,7 @@ from cadrumo.adapters.persistence.profile.recipient_replay_guard import (
 )
 from cadrumo.adapters.persistence.storage.errors import DecryptionError
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
-    MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE as _NAMESPACE,
+    MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE,
 )
 from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
 from cadrumo.adapters.persistence.storage.sql.session import session_scope
@@ -111,7 +111,9 @@ def test_ledger_is_never_stored_as_plaintext(tmp_path: Path) -> None:
 
         with session_scope(profile.repository._engine) as session:
             row = session.execute(
-                select(SecureObjectRow).where(SecureObjectRow.namespace == _NAMESPACE.namespace),
+                select(SecureObjectRow).where(
+                    SecureObjectRow.namespace == MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE.namespace
+                ),
             ).scalar_one()
             ciphertext_bytes = bytes(row.payload)
 
@@ -235,12 +237,14 @@ def test_load_raises_on_corrupted_ciphertext(tmp_path: Path) -> None:
 
         with session_scope(profile.repository._engine) as session:
             row = session.execute(
-                select(SecureObjectRow).where(SecureObjectRow.namespace == _NAMESPACE.namespace),
+                select(SecureObjectRow).where(
+                    SecureObjectRow.namespace == MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE.namespace
+                ),
             ).scalar_one()
             corrupted_payload = bytes(row.payload)[:-1] + bytes([bytes(row.payload)[-1] ^ 0xFF])
             session.execute(
                 update(SecureObjectRow)
-                .where(SecureObjectRow.namespace == _NAMESPACE.namespace)
+                .where(SecureObjectRow.namespace == MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE.namespace)
                 .values(payload=corrupted_payload),
             )
 

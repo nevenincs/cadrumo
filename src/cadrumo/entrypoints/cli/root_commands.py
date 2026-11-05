@@ -15,8 +15,9 @@ from uuid import UUID
 import typer
 
 from ...core.output_rendering import OutputFormat
-from ._log_levels import resolve_log_level
-from ._root_support import (
+from .common import RequestedCliLeaf, preserve_requested_cli_leaf
+from .log_levels import resolve_log_level
+from .root_support import (
     activate_profile_override,
     emit_bare_invocation_and_exit,
     emit_root_help_and_exit,
@@ -24,7 +25,6 @@ from ._root_support import (
     is_introspection_only_invocation,
     normalize_root_active_profile,
 )
-from .common import RequestedCliLeaf, preserve_requested_cli_leaf
 
 
 def root_command(

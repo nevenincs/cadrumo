@@ -36,5 +36,7 @@ class HumanKeyring:
 def human_keyring(monkeypatch: pytest.MonkeyPatch) -> HumanKeyring:
     """Compose the real receipt crypto/filesystem with a controlled store."""
     keyring = HumanKeyring()
-    monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (keyring, KeyringError, KeyringError))
+    monkeypatch.setattr(
+        acceleration_keychain, "acceleration_keychain_keyring", lambda: (keyring, KeyringError, KeyringError)
+    )
     return keyring

@@ -45,7 +45,7 @@ from ..descendant_maternity import art_81_1_maternity_relations
 from ..family_fact_context import FamilyFactResolutionContext
 from ..family_profile import RentaFamilyProfile
 from ..meses_trabajo import parse_meses_trabajo
-from ._registry_thresholds import registry_thresholds
+from .registry_thresholds import registry_thresholds
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -54,7 +54,7 @@ _PROFILE_TAX_ID = "00000000T"
 _CLOCK = datetime(2025, 4, 15, tzinfo=UTC)
 
 
-def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> WorkUnit:
+def seed_work_unit(*, modelo: str, filing_year: int, period: str) -> WorkUnit:
     return seed_active_work_unit(
         modelo=modelo,
         filing_year=filing_year,
@@ -63,12 +63,12 @@ def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> WorkUnit:
     )
 
 
-def _persist_filed_revision(work_unit: WorkUnit, *, total_ingresar: Decimal) -> None:
+def reconcile_value_comparison_persist_filed_revision(work_unit: WorkUnit, *, total_ingresar: Decimal) -> None:
     """Persist a filed Modelo 131 revision whose casilla 15 carries ``total_ingresar``."""
     persist_filed_revision(work_unit, casilla_values={"15": total_ingresar}, clock=_CLOCK)
 
 
-def _receipt_for_m131(*, total_ingresar: Decimal):
+def receipt_for_m131(*, total_ingresar: Decimal):
     """A Modelo 131 / 2024 1T receipt derived from the real parsed 130 fixture."""
     parsed = parse_justificante(MODELO_130_FIXTURE)
     return parsed.model_copy(
@@ -100,10 +100,10 @@ def _reconcile(
 
 
 def test_filed_total_matching_computed_result_reconciles_clean(operation: PinnedAuthorityOperation) -> None:
-    work_unit = _seed_work_unit(modelo="131", filing_year=2024, period="1T")
-    _persist_filed_revision(work_unit, total_ingresar=Decimal("500.00"))
+    work_unit = seed_work_unit(modelo="131", filing_year=2024, period="1T")
+    reconcile_value_comparison_persist_filed_revision(work_unit, total_ingresar=Decimal("500.00"))
 
-    report = _reconcile(work_unit, _receipt_for_m131(total_ingresar=Decimal("500.00")), operation=operation)
+    report = _reconcile(work_unit, receipt_for_m131(total_ingresar=Decimal("500.00")), operation=operation)
 
     assert report.verdict is ModeloReconciliationVerdict.MATCHES
     assert not report.diffs
@@ -115,10 +115,10 @@ def test_filed_amount_divergence_is_caught_as_typed_total_diff(operation: Pinned
     """A filed amount that differs from the computed result is CAUGHT and
     represented as a typed ``total`` diff with legal grounding — not a silent
     identity ``matches``, and not merely a count."""
-    work_unit = _seed_work_unit(modelo="131", filing_year=2024, period="1T")
-    _persist_filed_revision(work_unit, total_ingresar=Decimal("500.00"))
+    work_unit = seed_work_unit(modelo="131", filing_year=2024, period="1T")
+    reconcile_value_comparison_persist_filed_revision(work_unit, total_ingresar=Decimal("500.00"))
 
-    report = _reconcile(work_unit, _receipt_for_m131(total_ingresar=Decimal("999.99")), operation=operation)
+    report = _reconcile(work_unit, receipt_for_m131(total_ingresar=Decimal("999.99")), operation=operation)
 
     assert report.verdict is ModeloReconciliationVerdict.MISMATCHES
     total_diffs = [d for d in report.diffs if d.diff_kind is ModeloReconciliationDiffKind.TOTAL]
@@ -134,19 +134,19 @@ def test_filed_amount_divergence_is_caught_as_typed_total_diff(operation: Pinned
 
 def test_divergence_within_tolerance_does_not_flag(operation: PinnedAuthorityOperation) -> None:
     """The registry tolerance (0.01) is honoured: a one-cent gap is clean."""
-    work_unit = _seed_work_unit(modelo="131", filing_year=2024, period="1T")
-    _persist_filed_revision(work_unit, total_ingresar=Decimal("500.00"))
+    work_unit = seed_work_unit(modelo="131", filing_year=2024, period="1T")
+    reconcile_value_comparison_persist_filed_revision(work_unit, total_ingresar=Decimal("500.00"))
 
-    report = _reconcile(work_unit, _receipt_for_m131(total_ingresar=Decimal("500.01")), operation=operation)
+    report = _reconcile(work_unit, receipt_for_m131(total_ingresar=Decimal("500.01")), operation=operation)
 
     assert report.verdict is ModeloReconciliationVerdict.MATCHES
     assert not report.diffs
 
 
 def test_no_persisted_revision_surfaces_advisory_not_false_green(operation: PinnedAuthorityOperation) -> None:
-    work_unit = _seed_work_unit(modelo="131", filing_year=2024, period="1T")
+    work_unit = seed_work_unit(modelo="131", filing_year=2024, period="1T")
     # No revision persisted.
-    report = _reconcile(work_unit, _receipt_for_m131(total_ingresar=Decimal("500.00")), operation=operation)
+    report = _reconcile(work_unit, receipt_for_m131(total_ingresar=Decimal("500.00")), operation=operation)
 
     assert report.verdict is ModeloReconciliationVerdict.MATCHES
     codes = {a.code for a in report.advisories}
@@ -158,7 +158,7 @@ def test_no_persisted_revision_surfaces_advisory_not_false_green(operation: Pinn
 def test_undeclared_total_map_modelo_surfaces_advisory(operation: PinnedAuthorityOperation) -> None:
     """Modelo 130 declares no reconciliation_total_casilla_ids: the filed total
     is disclosed as not reconciled, never silently passed."""
-    work_unit = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    work_unit = seed_work_unit(modelo="130", filing_year=2026, period="1T")
 
     receipt = parse_justificante(MODELO_130_FIXTURE).model_copy(update={"tax_id": _PROFILE_TAX_ID})
     report = _reconcile(work_unit, receipt, operation=operation)
@@ -168,9 +168,9 @@ def test_undeclared_total_map_modelo_surfaces_advisory(operation: PinnedAuthorit
 
 
 def test_history_persists_which_total_diverged_not_just_a_count(operation: PinnedAuthorityOperation) -> None:
-    work_unit = _seed_work_unit(modelo="131", filing_year=2024, period="1T")
-    _persist_filed_revision(work_unit, total_ingresar=Decimal("500.00"))
-    _reconcile(work_unit, _receipt_for_m131(total_ingresar=Decimal("999.99")), operation=operation)
+    work_unit = seed_work_unit(modelo="131", filing_year=2024, period="1T")
+    reconcile_value_comparison_persist_filed_revision(work_unit, total_ingresar=Decimal("500.00"))
+    _reconcile(work_unit, receipt_for_m131(total_ingresar=Decimal("999.99")), operation=operation)
 
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()

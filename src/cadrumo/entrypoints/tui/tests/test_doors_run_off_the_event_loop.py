@@ -43,7 +43,7 @@ from ..ledger.workspace_injection import LedgerWorkspaceInjection
 from ..root_binding import RootBindingV1
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from .settling import settle
-from .test_app import _account_factories, _catalogue
+from .test_app import account_factories, catalogue
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -86,17 +86,17 @@ async def test_the_root_opens_and_returns_home_without_reading_on_the_loop() -> 
 
     def refresh_catalogue():
         boundary.enter("refresh_catalogue")
-        return _catalogue([])
+        return catalogue([])
 
     def load_root() -> RootBindingV1:
         boundary.enter("load_root")
         return RootBindingV1(
-            destination_catalogue=_catalogue([]),
+            destination_catalogue=catalogue([]),
             refresh_home=refresh_home,
             workbench_search_service=WorkbenchSearchService(()),
             refresh_workbench_search=refresh_search,
             refresh_destination_catalogue=refresh_catalogue,
-            account_factories=_account_factories(),
+            account_factories=account_factories(),
             read_account_session=None,
         )
 

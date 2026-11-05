@@ -25,28 +25,27 @@ from ......core.config import Settings
 from ......core.remote_authority import canonical_remote_hostname
 from ..clave_movil import ClaveMovilAuthProvider
 from ..clave_permanente import ClavePermanenteAuthProvider
-from ._clave_movil_support import _DOMAINS, _aeat_url
-from ._clave_movil_support import _settings_for as _movil_settings_for
-from ._clave_permanente_support import _settings_for as _permanente_settings_for
+from .clave_movil_support import DOMAINS, aeat_url, clave_movil_settings_for
+from .clave_permanente_support import clave_permanente_settings_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 EXTERNAL = Settings.external_constants()
 _TARGET_PATH = EXTERNAL.aeat.sede_paths.expedientes_resumen
 _HOST_SUFFIX = EXTERNAL.aeat.domains.host_suffix
-_HONEST_LANDING = _aeat_url(_DOMAINS.www6, _TARGET_PATH)
-_WWW6_HOST = _DOMAINS.www6.removeprefix("https://")
+_HONEST_LANDING = aeat_url(DOMAINS.www6, _TARGET_PATH)
+_WWW6_HOST = DOMAINS.www6.removeprefix("https://")
 
 
 def _movil(tmp_path: Path) -> ClaveMovilAuthProvider:
     """Build the real Móvil provider; the predicate under test reaches no browser."""
-    return ClaveMovilAuthProvider(_movil_settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z"))
+    return ClaveMovilAuthProvider(clave_movil_settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z"))
 
 
 def _permanente(tmp_path: Path) -> ClavePermanenteAuthProvider:
     """Build the real Permanente provider; the predicate under test reaches no browser."""
     return ClavePermanenteAuthProvider(
-        _permanente_settings_for(
+        clave_permanente_settings_for(
             tmp_path,
             CADRUMO_CLAVE_PERMANENTE_DNI_NIE="12345678Z",
             CADRUMO_CLAVE_PERMANENTE_PASSWORD="unused-by-this-predicate",

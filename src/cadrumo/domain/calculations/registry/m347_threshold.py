@@ -164,7 +164,7 @@ class M347DeclarableSet:
         return (party_tax_id, self.buckets.bucket_of(clave).token) in self.unconditional_nonpositive
 
 
-def _resolve_m347_floor_fact(
+def resolve_m347_floor_fact(
     fact_id: str,
     *,
     effective_date: date,
@@ -280,7 +280,7 @@ def _bucket(
             floor_fact=None,
             reading_unsettled=reading_unsettled,
         )
-    floor_fact = _resolve_m347_floor_fact(
+    floor_fact = resolve_m347_floor_fact(
         required_mapping_entry(entries, f"{prefix}floor_fact", subject=_M347_THRESHOLD_BUCKETS_SUBJECT),
         effective_date=effective_date,
         authority=authority,

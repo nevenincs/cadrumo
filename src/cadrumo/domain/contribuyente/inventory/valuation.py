@@ -15,13 +15,13 @@ from typing import Literal
 from pydantic import ValidationError
 
 from ....core.decimal.constants import MONEY_ZERO
-from ....core.hashing import content_hash_hex as _content_hash_hex
+from ....core.hashing import content_hash_hex
 from ....core.identity.digest import ContentDigest
-from ....core.money.rounding import round_to_cents as _quantize
+from ....core.money.rounding import round_to_cents
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.inventory_anexo_d_applicability import inventory_anexo_d_applies
-from ...identifiers import canonical_decimal_string as _canonical_decimal_string
-from ._anexo_d_records import InventoryAnexoDResult, resolve_inventory_authoritative_closing
+from ...identifiers import canonical_decimal_string
+from .anexo_d_records import InventoryAnexoDResult, resolve_inventory_authoritative_closing
 from .closing_authority_records import (
     InventoryClosingAuthorityRecord,
     InventoryClosingConflictDiagnostic,
@@ -79,18 +79,18 @@ class InventoryAnexoDDerivation:
 
 def _inventory_projection_source_fingerprint(ledger: InventoryLedger) -> ContentDigest:
     """Hash canonical economic identities without exposing retained source facts."""
-    return _content_hash_hex(
+    return content_hash_hex(
         {
             "fingerprint_schema_version": "1",
             "actividad_id": ledger.actividad_id,
             "filing_year": ledger.year,
             "valuation_method": ledger.valuation_method.value,
-            "opening_stock": _canonical_decimal_string(ledger.opening_stock),
+            "opening_stock": canonical_decimal_string(ledger.opening_stock),
             "opening_layers": [
                 {
                     "sku": layer.sku,
-                    "quantity": _canonical_decimal_string(layer.quantity),
-                    "unit_cost": _canonical_decimal_string(layer.unit_cost),
+                    "quantity": canonical_decimal_string(layer.quantity),
+                    "unit_cost": canonical_decimal_string(layer.unit_cost),
                     "source_movement_id": layer.source_movement_id,
                 }
                 for layer in sorted(
@@ -104,18 +104,18 @@ def _inventory_projection_source_fingerprint(ledger: InventoryLedger) -> Content
                     "movement_date": movement.movement_date.isoformat(),
                     "kind": movement.kind.value,
                     "sku": movement.sku,
-                    "quantity": _canonical_decimal_string(movement.quantity),
+                    "quantity": canonical_decimal_string(movement.quantity),
                     "unit_cost": (
-                        _canonical_decimal_string(movement.unit_cost) if movement.unit_cost is not None else None
+                        canonical_decimal_string(movement.unit_cost) if movement.unit_cost is not None else None
                     ),
                     "taxable_base": (
-                        _canonical_decimal_string(movement.taxable_base) if movement.taxable_base is not None else None
+                        canonical_decimal_string(movement.taxable_base) if movement.taxable_base is not None else None
                     ),
-                    "iva_rate": _canonical_decimal_string(movement.iva_rate),
+                    "iva_rate": canonical_decimal_string(movement.iva_rate),
                     "iva_amount": (
-                        _canonical_decimal_string(movement.iva_amount) if movement.iva_amount is not None else None
+                        canonical_decimal_string(movement.iva_amount) if movement.iva_amount is not None else None
                     ),
-                    "deductible_iva_ratio": _canonical_decimal_string(movement.deductible_iva_ratio),
+                    "deductible_iva_ratio": canonical_decimal_string(movement.deductible_iva_ratio),
                     "schema_version": movement.schema_version,
                     "acquisition_fingerprint": (
                         inventory_acquisition_fingerprint(movement) if movement.kind is MovementKind.PURCHASE else None
@@ -192,7 +192,7 @@ def _complete_acquisition_summary(
     purchases = tuple(movement for movement in _sorted_movements(ledger) if movement.kind is MovementKind.PURCHASE)
     if any(movement.acquisition_cost is None for movement in purchases):
         raise InventoryLedgerError("inventory projection requires complete acquisition cost for every purchase")
-    acquisition_total = _quantize(
+    acquisition_total = round_to_cents(
         sum(
             (movement.acquisition_cost.total_acquisition_cost for movement in purchases if movement.acquisition_cost),
             MONEY_ZERO,
@@ -210,8 +210,8 @@ def derive_inventory_anexo_d_values(ledger: InventoryLedger) -> InventoryAnexoDD
     valuation = compute_inventory_valuation(validated)
     if acquisition_total != valuation.purchase_value:
         raise InventoryLedgerError("complete acquisition totals do not match inventory valuation purchase authority")
-    opening = _quantize(ledger.opening_stock)
-    signed_variation = _quantize(resolution.authoritative_value - opening)
+    opening = round_to_cents(ledger.opening_stock)
+    signed_variation = round_to_cents(resolution.authoritative_value - opening)
     return InventoryAnexoDDerivation(
         source_ledger=validated,
         source_ledger_fingerprint=_inventory_projection_source_fingerprint(validated),
@@ -302,9 +302,9 @@ def _compute_fifo(ledger: InventoryLedger) -> InventoryValuationResult:
     closing = layers_value(layers)
     return InventoryValuationResult(
         closing_layers=tuple(layers),
-        closing_value=_quantize(closing),
-        cogs_value=_quantize(cogs_value),
-        purchase_value=_quantize(purchase_value),
+        closing_value=round_to_cents(closing),
+        cogs_value=round_to_cents(cogs_value),
+        purchase_value=round_to_cents(purchase_value),
     )
 
 
@@ -319,9 +319,9 @@ def _compute_weighted_average(ledger: InventoryLedger) -> InventoryValuationResu
     layers = _weighted_average_layers(ledger, pools)
     return InventoryValuationResult(
         closing_layers=layers,
-        closing_value=_quantize(sum((quantity_value[1] for quantity_value in pools.values()), MONEY_ZERO)),
-        cogs_value=_quantize(cogs_value),
-        purchase_value=_quantize(purchase_value),
+        closing_value=round_to_cents(sum((quantity_value[1] for quantity_value in pools.values()), MONEY_ZERO)),
+        cogs_value=round_to_cents(cogs_value),
+        purchase_value=round_to_cents(purchase_value),
     )
 
 
@@ -479,19 +479,19 @@ def inventory_acquisition_fingerprint(movement: MovementRecord) -> ContentDigest
         "movement_date": movement.movement_date.isoformat(),
         "kind": movement.kind.value,
         "sku": movement.sku,
-        "quantity": _canonical_decimal_string(movement.quantity),
-        "consideration_excluding_iva": _canonical_decimal_string(acquisition.consideration_excluding_iva),
-        "consideration_iva_amount": _canonical_decimal_string(acquisition.consideration_iva_amount),
-        "consideration_deductible_iva_ratio": _canonical_decimal_string(
+        "quantity": canonical_decimal_string(movement.quantity),
+        "consideration_excluding_iva": canonical_decimal_string(acquisition.consideration_excluding_iva),
+        "consideration_iva_amount": canonical_decimal_string(acquisition.consideration_iva_amount),
+        "consideration_deductible_iva_ratio": canonical_decimal_string(
             acquisition.consideration_deductible_iva_ratio,
         ),
         "components": [
             {
                 "component_id": item.component_id,
                 "kind": item.kind.value,
-                "taxable_base": _canonical_decimal_string(item.taxable_base),
-                "iva_amount": _canonical_decimal_string(item.iva_amount),
-                "deductible_iva_ratio": _canonical_decimal_string(item.deductible_iva_ratio),
+                "taxable_base": canonical_decimal_string(item.taxable_base),
+                "iva_amount": canonical_decimal_string(item.iva_amount),
+                "deductible_iva_ratio": canonical_decimal_string(item.deductible_iva_ratio),
                 "evidence_references": sorted(ref.reference for ref in item.evidence_references),
             }
             for item in sorted(acquisition.attributable_cost_components, key=lambda value: value.component_id)
@@ -506,12 +506,12 @@ def inventory_acquisition_fingerprint(movement: MovementRecord) -> ContentDigest
         ],
         "completeness": acquisition.completeness.model_dump(mode="json"),
         "totals": {
-            "directly_attributable_cost_total": _canonical_decimal_string(
+            "directly_attributable_cost_total": canonical_decimal_string(
                 acquisition.directly_attributable_cost_total,
             ),
-            "nonrecoverable_iva_included": _canonical_decimal_string(acquisition.nonrecoverable_iva_included),
-            "recoverable_iva_excluded": _canonical_decimal_string(acquisition.recoverable_iva_excluded),
-            "total_acquisition_cost": _canonical_decimal_string(acquisition.total_acquisition_cost),
+            "nonrecoverable_iva_included": canonical_decimal_string(acquisition.nonrecoverable_iva_included),
+            "recoverable_iva_excluded": canonical_decimal_string(acquisition.recoverable_iva_excluded),
+            "total_acquisition_cost": canonical_decimal_string(acquisition.total_acquisition_cost),
         },
     }
-    return _content_hash_hex(payload)
+    return content_hash_hex(payload)

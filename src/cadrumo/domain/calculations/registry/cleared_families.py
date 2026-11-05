@@ -33,8 +33,7 @@ from pydantic import BeforeValidator, Field, field_validator
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.type_guards import is_object_collection, is_object_mapping
 from .errors import RegistryValidationError
-from .keyed_families import CASILLAS_FAMILY
-from .keyed_families import KEYED_FAMILY_SPECS as _CANONICAL_KEYED_FAMILY_SPECS
+from .keyed_families import CASILLAS_FAMILY, KEYED_FAMILY_SPECS
 from .schema_base import RegistryModel, coerce_enum_member
 
 __all__ = (
@@ -53,7 +52,7 @@ __all__ = (
 #: read this declaration; a clearance naming them would validate while the merge
 #: still carried every row. The set is projected from the domain-owned policy
 #: table so the authored claim and the merge stay closed on one vocabulary.
-CLEARABLE_FAMILIES: Final[frozenset[str]] = frozenset(spec.section for spec in _CANONICAL_KEYED_FAMILY_SPECS)
+CLEARABLE_FAMILIES: Final[frozenset[str]] = frozenset(spec.section for spec in KEYED_FAMILY_SPECS)
 
 
 def cleared_family_names(declarations: object) -> frozenset[str]:

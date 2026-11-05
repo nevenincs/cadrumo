@@ -36,9 +36,7 @@ from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.period import Period
 from .....domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from .....domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
@@ -229,7 +227,7 @@ def test_public_carry_reads_match_shared_gate_for_resolvable_source(
     tmp_path: Path, case: str, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Binding-prefill and cross-period readers expose the shared R2 decision."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         if case == "matching":
             stamp = _law_revision_id()
             expected = False
@@ -254,7 +252,7 @@ def test_public_carry_reads_match_shared_gate_for_resolvable_source(
 
 def test_shared_gate_refuses_unresolvable_source() -> None:
     """A source context the registry cannot resolve is refused, not carried."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert (
             revision_carry_outcome(
                 RegistrySnapshotRef(

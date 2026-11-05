@@ -55,7 +55,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -73,8 +73,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation,
 from ....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_RESULTADO_CASILLA,
 )
-from ....domain.user_profile.values import ProfileSetupState
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import ProfileSetupState, create_user_profile_record
 from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
 from .general_iva_profile_facts_support import general_iva_profile_facts
 from .observation_seeding_support import save_local_m303_compensacion_filings
@@ -224,7 +223,7 @@ def _seed_m303_quarters(*, obs_repo: CalculationObservationRepository) -> None:
 
 def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=general_iva_profile_facts(
@@ -234,7 +233,7 @@ def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:
             ),
             created_at=_T0,
             updated_at=_T0,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 

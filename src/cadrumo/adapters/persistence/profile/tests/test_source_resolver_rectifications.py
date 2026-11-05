@@ -41,16 +41,18 @@ from cadrumo.domain.modelos.calculation_revision import (
 from cadrumo.domain.modelos.row_models import Modelo349OperadorRow, Modelo349RectificacionRow
 
 from .source_resolver_test_support import (
-    _BUCKET_ID,
-    _domestic_invoice,
-    _InMemoryCatalogueReader,
-    _invoice,
-    _m347_2026_context,
-    _modelo_revision,
-    _public_resolution,
-    _unsettled_reading_refs,
+    BUCKET_ID,
+    InMemoryCatalogueReader,
+    domestic_invoice,
+    m347_2026_context,
+    modelo_revision,
+    public_resolution,
+    source_resolver_invoice,
+    unsettled_reading_refs,
 )
-from .source_resolver_test_support import _generation_pinned_authority as _generation_pinned_authority
+from .source_resolver_test_support import (
+    generation_pinned_authority as generation_pinned_authority,
+)
 from .source_resolver_test_support import secure_profile as secure_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -71,8 +73,8 @@ def _rectificativa(invoice: Invoice, *, of: str) -> Invoice:
 
 
 def _supply(number: str, *, issued_at: date, base: str, operator: str = _DE_OPERATOR) -> Invoice:
-    return _invoice(
-        bucket_id=_BUCKET_ID,
+    return source_resolver_invoice(
+        bucket_id=BUCKET_ID,
         invoice_number=number,
         issued_at=issued_at,
         counterparty_tax_id=operator,
@@ -83,11 +85,11 @@ def _supply(number: str, *, issued_at: date, base: str, operator: str = _DE_OPER
 
 def _m349_context(period: str) -> CalculationSourceContext:
     return CalculationSourceContext(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         modelo="349",
         filing_year=2026,
         period=Period.from_year_and_code(2026, period),
-        revision=_modelo_revision("349", "2020-y-siguientes"),
+        revision=modelo_revision("349", "2020-y-siguientes"),
     )
 
 
@@ -132,7 +134,7 @@ def _m349_resolution(
 ) -> CalculationSourceResolution:
     return InvoiceCatalogueSourceResolver(
         ports=InvoiceSourceResolverPorts(
-            catalogue_reader=_InMemoryCatalogueReader(invoices),
+            catalogue_reader=InMemoryCatalogueReader(invoices),
             m349_filed_declarations=filed,
         ),
     ).resolve(_m349_context(period))
@@ -298,8 +300,8 @@ def test_m349_correction_above_the_declared_base_refuses() -> None:
 def _sale(number: str, *, issued_at: date, gross: str) -> Invoice:
     gross_total = Decimal(gross)
     base_total = (gross_total / Decimal("1.21")).quantize(Decimal("0.01"))
-    return _domestic_invoice(
-        bucket_id=_BUCKET_ID,
+    return domestic_invoice(
+        bucket_id=BUCKET_ID,
         kind=InvoiceKind.ISSUED,
         invoice_number=number,
         issued_at=issued_at,
@@ -332,7 +334,7 @@ def test_m347_suplido_does_not_count_towards_the_floor(secure_profile: TestRunti
     en nombre y por cuenta del cliente". 2,000 + 420 IVA + 700 suplido is 2,420, below 3,005.06, so no record.
     """
     invoice = _with_suplido(
-        _domestic_invoice(
+        domestic_invoice(
             bucket_id=secure_profile.bucket_id,
             kind=InvoiceKind.ISSUED,
             invoice_number="S-1",
@@ -345,7 +347,7 @@ def test_m347_suplido_does_not_count_towards_the_floor(secure_profile: TestRunti
         "700.00",
     )
 
-    resolution = _public_resolution((invoice,), context=_m347_2026_context(secure_profile.bucket_id))
+    resolution = public_resolution((invoice,), context=m347_2026_context(secure_profile.bucket_id))
 
     assert resolution.binding_values[_M347_COUNT] == Decimal("0")
     assert resolution.row_binding_values == {}
@@ -354,7 +356,7 @@ def test_m347_suplido_does_not_count_towards_the_floor(secure_profile: TestRunti
 def test_m347_declares_the_cuota_and_recargo_without_the_suplido(secure_profile: TestRuntimeProfile) -> None:
     """Art. 34.2.a keeps "las cuotas y recargos": 3,000 + 630 IVA + 156 recargo + 500 suplido declares 3,786."""
     invoice = _with_suplido(
-        _domestic_invoice(
+        domestic_invoice(
             bucket_id=secure_profile.bucket_id,
             kind=InvoiceKind.ISSUED,
             invoice_number="S-2",
@@ -367,7 +369,7 @@ def test_m347_declares_the_cuota_and_recargo_without_the_suplido(secure_profile:
         "500.00",
     )
 
-    resolution = _public_resolution((invoice,), context=_m347_2026_context(secure_profile.bucket_id))
+    resolution = public_resolution((invoice,), context=m347_2026_context(secure_profile.bucket_id))
 
     assert _record_total(resolution) == Decimal("3786.00")
     assert resolution.binding_values[_M347_TOTAL] == Decimal("3786.00")
@@ -390,11 +392,11 @@ def test_m347_earlier_year_correction_is_declared_in_the_total_but_not_held_agai
         of="F-2025",
     )
 
-    resolution = _public_resolution((earlier, sale, credit), context=_m347_2026_context(bucket_id))
+    resolution = public_resolution((earlier, sale, credit), context=m347_2026_context(bucket_id))
 
     assert resolution.binding_values[_M347_COUNT] == Decimal("1")
     assert _record_total(resolution) == Decimal("2000.00")
-    assert _unsettled_reading_refs(resolution) == []
+    assert unsettled_reading_refs(resolution) == []
 
 
 def test_m347_earlier_year_correction_can_take_the_record_negative(secure_profile: TestRuntimeProfile) -> None:
@@ -407,7 +409,7 @@ def test_m347_earlier_year_correction_can_take_the_record_negative(secure_profil
         of="F-2025",
     )
 
-    resolution = _public_resolution((earlier, sale, credit), context=_m347_2026_context(bucket_id))
+    resolution = public_resolution((earlier, sale, credit), context=m347_2026_context(bucket_id))
 
     assert _record_total(resolution) == Decimal("-900.00")
     assert resolution.binding_values[_M347_TOTAL] == Decimal("-900.00")
@@ -422,10 +424,10 @@ def test_m347_same_year_full_correction_is_left_out_as_settled(secure_profile: T
         of="F-2026",
     )
 
-    resolution = _public_resolution((sale, credit), context=_m347_2026_context(bucket_id))
+    resolution = public_resolution((sale, credit), context=m347_2026_context(bucket_id))
 
     assert resolution.binding_values[_M347_COUNT] == Decimal("0")
-    assert _unsettled_reading_refs(resolution) == []
+    assert unsettled_reading_refs(resolution) == []
 
 
 def test_m347_upward_correction_stays_a_disclosed_reduction_because_no_field_records_its_direction(
@@ -443,7 +445,7 @@ def test_m347_upward_correction_stays_a_disclosed_reduction_because_no_field_rec
         of="F-2026",
     )
 
-    resolution = _public_resolution((sale, raise_), context=_m347_2026_context(bucket_id))
+    resolution = public_resolution((sale, raise_), context=m347_2026_context(bucket_id))
 
     assert resolution.binding_values[_M347_COUNT] == Decimal("0")
     advisory = next(
@@ -464,10 +466,10 @@ def test_m347_earlier_year_correction_below_the_floor_is_disclosed(secure_profil
         of="F-2025",
     )
 
-    resolution = _public_resolution((earlier, credit), context=_m347_2026_context(bucket_id))
+    resolution = public_resolution((earlier, credit), context=m347_2026_context(bucket_id))
 
     assert resolution.binding_values[_M347_COUNT] == Decimal("0")
-    assert _unsettled_reading_refs(resolution) == ["m347-threshold-bucket:earlier-year-modification-left-out"]
+    assert unsettled_reading_refs(resolution) == ["m347-threshold-bucket:earlier-year-modification-left-out"]
 
 
 class _CalculationRepository:

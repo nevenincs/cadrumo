@@ -529,7 +529,7 @@ def _grounded_currency(raw: str | None) -> str | None:
         return None
 
 
-_TEXT_GROUNDING_BY_FORM: Mapping[InvoiceFieldForm, Callable[[str | None], str | None]] = {
+TEXT_GROUNDING_BY_FORM: Mapping[InvoiceFieldForm, Callable[[str | None], str | None]] = {
     InvoiceFieldForm.TAX_IDENTIFIER: _grounded_tax_id,
     InvoiceFieldForm.FREE_TEXT: _grounded_free_text,
     InvoiceFieldForm.CALENDAR_DATE: _grounded_date,
@@ -537,7 +537,7 @@ _TEXT_GROUNDING_BY_FORM: Mapping[InvoiceFieldForm, Callable[[str | None], str | 
 }
 """Validators for the declared forms whose grounded value stays a string."""
 
-_NUMERIC_GROUNDING_BY_FORM: Mapping[InvoiceFieldForm, Callable[[str | None, str | None], Decimal | None]] = {
+NUMERIC_GROUNDING_BY_FORM: Mapping[InvoiceFieldForm, Callable[[str | None, str | None], Decimal | None]] = {
     InvoiceFieldForm.MONETARY_AMOUNT: _grounded_money,
     InvoiceFieldForm.PERCENTAGE_RATE: _grounded_percentage,
 }
@@ -559,7 +559,7 @@ def _ground_text(raw: str | None, field_name: str) -> str | None:
         KeyError: When the field's declared form has no string-valued validator,
             which is a declaration error the parity gate exists to catch.
     """
-    return _TEXT_GROUNDING_BY_FORM[contract_for_field(field_name).form](raw)
+    return TEXT_GROUNDING_BY_FORM[contract_for_field(field_name).form](raw)
 
 
 def _ground_numeric(raw: str | None, field_name: str, currency_unit: str | None = None) -> Decimal | None:
@@ -573,7 +573,7 @@ def _ground_numeric(raw: str | None, field_name: str, currency_unit: str | None 
         KeyError: When the field's declared form has no numeric validator, which
             is a declaration error the parity gate exists to catch.
     """
-    return _NUMERIC_GROUNDING_BY_FORM[contract_for_field(field_name).form](raw, currency_unit)
+    return NUMERIC_GROUNDING_BY_FORM[contract_for_field(field_name).form](raw, currency_unit)
 
 
 def _read_provenance(

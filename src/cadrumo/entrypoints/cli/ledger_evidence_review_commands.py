@@ -38,8 +38,8 @@ from ...core.draft_discrepancy import DraftDiscrepancyKind
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.iva.establishment import StatedCountryCodeStatus
-from ._evidence_field_notices import label_reading_fallback_notices
 from .common import bad, emit_envelope, resolve_notice_action
+from .evidence_field_notices import label_reading_fallback_notices
 from .ledger_business_payloads import (
     EvidenceReviewBlockerPayload,
     EvidenceReviewFieldPayload,

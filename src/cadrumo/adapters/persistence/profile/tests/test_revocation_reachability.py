@@ -31,7 +31,7 @@ from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.bucket_pointer import BucketPointer, write_pointer
 from cadrumo.core.config import load_settings
 from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _certificate_indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 
 # The subject is whether a custody session is open, so the real session probe answers it.
@@ -54,7 +54,7 @@ def test_reachability_answers_both_ways_and_an_open_session_removes_the_out_of_b
     certificate_secret_backend_factory: InMemoryCertificateSecretBackendFactory,
     tmp_path: Path,
 ) -> None:
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
         from cadrumo.application.auth.certificate_source_operations import (
             register_operator_certificate_source,
             set_operator_certificate_source_secret,

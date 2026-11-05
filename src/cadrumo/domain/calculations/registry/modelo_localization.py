@@ -12,8 +12,8 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n.render import MissingTranslationError, lookup_translation
 from ....core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ....core.type_guards import is_object_mapping
-from ._toml_helpers import as_toml_table as _as_toml_table
 from .ids import RevisionId
+from .toml_helpers import as_toml_table
 
 
 class ModeloLocalizationFieldKind(StrEnum):
@@ -190,7 +190,7 @@ def _localised_casilla_aliases(
         return None
     aliases: list[dict[str, object]] = []
     for alias_index, raw_alias in enumerate(aliases_array):
-        alias = _as_toml_table(raw_alias)
+        alias = as_toml_table(raw_alias)
         if alias is None:
             aliases.append(_passthrough_localization_row(raw_alias))
             continue
@@ -208,9 +208,9 @@ def _localised_casilla_aliases(
     return tuple(aliases)
 
 
-def _localised_casilla(raw_casilla: object, *, modelo_id: str, revision_id: RevisionId) -> dict[str, object]:
+def localised_casilla(raw_casilla: object, *, modelo_id: str, revision_id: RevisionId) -> dict[str, object]:
     """Return one casilla with its derived locale keys attached."""
-    casilla = _as_toml_table(raw_casilla)
+    casilla = as_toml_table(raw_casilla)
     if casilla is None:
         return _passthrough_localization_row(raw_casilla)
     casilla_id = casilla.get("id")
@@ -234,7 +234,7 @@ def _localised_casilla(raw_casilla: object, *, modelo_id: str, revision_id: Revi
 
 def _localised_construct(raw_construct: object, *, modelo_id: str, revision_id: RevisionId) -> dict[str, object]:
     """Return one construct with its derived locale key attached."""
-    construct = _as_toml_table(raw_construct)
+    construct = as_toml_table(raw_construct)
     if construct is None:
         return _passthrough_localization_row(raw_construct)
     construct_id = construct.get("id")
@@ -271,8 +271,7 @@ def enroll_revision_localization(
     raw_casillas = as_toml_array(raw_revision.get("casillas"))
     if raw_casillas is not None:
         payload["casillas"] = tuple(
-            _localised_casilla(raw_casilla, modelo_id=modelo_id, revision_id=revision_id)
-            for raw_casilla in raw_casillas
+            localised_casilla(raw_casilla, modelo_id=modelo_id, revision_id=revision_id) for raw_casilla in raw_casillas
         )
     raw_constructs = as_toml_array(raw_revision.get("constructs"))
     if raw_constructs is not None:
@@ -357,7 +356,7 @@ def _served_modelo_localization(
     second time to obtain what the selection had just discarded -- one wasted
     catalogue read per resolved text, which is every label in the registry.
     """
-    read = _catalogue_lookup if lookup is None else lookup
+    read = catalogue_lookup if lookup is None else lookup
     spanish_tier: int | None = None
     spanish_value: str | None = None
     for index, key in enumerate(keys):
@@ -379,7 +378,7 @@ type LocalizationLookup = Callable[[str, str], str | None]
 """Read one authored value as ``lookup(key, locale)``; ``None`` means no text."""
 
 
-def _catalogue_lookup(key: str, locale: str) -> str | None:
+def catalogue_lookup(key: str, locale: str) -> str | None:
     return lookup_translation(key, locale=locale)
 
 

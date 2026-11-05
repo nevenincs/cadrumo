@@ -205,7 +205,7 @@ _M100_DECLARED: Final[frozenset[ResultDisposition]] = frozenset(
 #: absent from this table and from :data:`_FIXED_DISPOSITION` derive ``None``; the
 #: application resolver refuses one whose layout declares the header and records
 #: no disposition for the rest.
-_DISPOSITION_SPEC: dict[str, _DispositionSpec] = {
+DISPOSITION_SPEC: dict[str, _DispositionSpec] = {
     # IVA: credit is a compensar (C). Result casilla 71 "Resultado final".
     Modelo("303"): _DispositionSpec(
         negative=ResultDisposition.COMPENSACION,
@@ -372,13 +372,13 @@ def result_disposition_declares(modelo: str, disposition: ResultDisposition) -> 
     fixed = _FIXED_DISPOSITION.get(modelo)
     if fixed is not None:
         return disposition is fixed
-    spec = _DISPOSITION_SPEC.get(modelo)
+    spec = DISPOSITION_SPEC.get(modelo)
     return spec is not None and disposition in spec.declared
 
 
 def has_result_disposition_spec(modelo: str) -> bool:
     """Return whether ``modelo`` derives its disposition from a result amount."""
-    return modelo in _DISPOSITION_SPEC
+    return modelo in DISPOSITION_SPEC
 
 
 def fixed_result_disposition(modelo: str) -> ResultDisposition | None:
@@ -395,7 +395,7 @@ def result_disposition_for_amount(modelo: str, result: Decimal, *, period: Perio
       which cannot go sub-zero in practice).
     - ``== 0`` → the modelo's zero code (``N``).
     """
-    spec = _DISPOSITION_SPEC[modelo]
+    spec = DISPOSITION_SPEC[modelo]
     if result > 0:
         return ResultDisposition.INGRESO
     if result < 0:

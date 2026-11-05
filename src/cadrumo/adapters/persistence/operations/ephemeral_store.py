@@ -59,8 +59,8 @@ from ....core.identity.digest import ContentDigest
 from ....core.operations import OperationLifecycle
 from ....core.time.utc import validate_utc_aware
 from ..storage.errors import RepositoryError
-from ._journal_validation import OperationJournalRecord, validate_advance, validate_lease
 from .journal import OperationReplayRequest, observation_materialization_from_record, replay_page_from_record
+from .journal_validation import OperationJournalRecord, validate_advance, validate_lease
 
 EPHEMERAL_SETTLED_RETENTION = 256
 """How many settled ephemeral operations stay readable before the oldest is forgotten."""

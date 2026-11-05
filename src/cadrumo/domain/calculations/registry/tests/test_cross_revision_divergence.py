@@ -16,7 +16,7 @@ import pytest
 from ..revision_order import revisions_overlap
 from ..schema import ModeloRevision
 from ..schema_references import PeriodSelector
-from ._referential_integrity_support import (
+from .referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
     minimal_application_link,

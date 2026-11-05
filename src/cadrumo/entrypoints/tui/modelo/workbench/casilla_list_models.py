@@ -166,7 +166,7 @@ type Density = Literal["comfortable", "compact"]
 
 
 @dataclass(frozen=True, slots=True)
-class _Measures:
+class Measures:
     """The widest box number, label, value and origin words among the fields shown, in cells."""
 
     box: int = 1
@@ -176,7 +176,7 @@ class _Measures:
 
 
 @dataclass(frozen=True, slots=True)
-class _Columns:
+class Columns:
     """The cells each column gets at one width; ``label`` is an unindented field's."""
 
     box: int
@@ -187,7 +187,7 @@ class _Columns:
 
 
 @dataclass(frozen=True, slots=True)
-class _TableRow:
+class TableRow:
     """One grid row drawn as a line of its table: where its cells are and what its label reads."""
 
     geometry: TableGeometry

@@ -47,7 +47,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -62,7 +62,7 @@ from ....application.tests.operator_scope_fakes import (
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import IVARegime
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import create_user_profile_record
 from .file_flow_test_support import calculation_ports_for_test
 from .observation_seeding_support import save_stamped_observation
 
@@ -161,7 +161,7 @@ def _source_casilla_id(binding: BindingDefinition) -> CasillaId:
 def _secure_backend(tmp_path: Path) -> Generator[None]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         seed_test_profile_record(
-            _create_profile_record_for_test(
+            create_user_profile_record(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET_ID,
                 facts=(
@@ -177,7 +177,7 @@ def _secure_backend(tmp_path: Path) -> Generator[None]:
                 ),
                 created_at=_CLOCK_N,
                 updated_at=_CLOCK_N,
-                context=_profile_creation_context_for_test(),
+                context=profile_creation_context_for_test(),
             ),
         )
         yield

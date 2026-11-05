@@ -8,13 +8,13 @@ from __future__ import annotations
 
 import typer
 
-from cadrumo_client.commands.output import activate_subcommand_output_language as _activate_subcommand_output_language
+from cadrumo_client.commands.output import activate_subcommand_output_language
 
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
-from ._decimal_parsing import parse_decimal_amount
-from ._ledger_support import ledger_cli_no_recovery
 from .common import bad, emit_envelope
+from .decimal_parsing import parse_decimal_amount
+from .ledger_support import ledger_cli_no_recovery
 from .operation_ledger_ratios import list_eligible_ratios, list_ratios, set_ratio, unset_ratio, validate_ratios
 
 
@@ -37,7 +37,7 @@ def ratios_list(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """List every per-category proportional-deduction override stored on the active bucket."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from ...domain.usage_ratios.errors import CensoRatioMismatchError
     from .ledger_ratios_results import RatiosListResult, RatiosRowPayload
 
@@ -76,7 +76,7 @@ def ratios_set(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Set or replace one per-category usage-ratio override on the active bucket."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from ...domain.usage_ratios.model import validate_usage_ratio_bound
     from .ledger_ratios_results import RatiosSetResult
 
@@ -104,7 +104,7 @@ def ratios_unset(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Clear one per-category usage-ratio override from the active bucket."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from .ledger_ratios_results import RatiosUnsetResult
 
     completion = unset_ratio(ctx, category=category)
@@ -132,7 +132,7 @@ def ratios_eligible(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """List every ``SpendingCategory`` that may carry a per-category proportional-deduction override."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from .ledger_ratios_results import RatiosEligibleResult, RatiosEligibleRowPayload
 
     completion = list_eligible_ratios(ctx, year=_resolved_ratio_year(year))
@@ -170,7 +170,7 @@ def ratios_validate(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Validate per-category usage-ratio overrides against eligibility and bound rules without mutating state."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from .ledger_ratios_results import RatiosValidateFindingPayload, RatiosValidateResult
 
     completion = validate_ratios(ctx)

@@ -24,7 +24,7 @@ from ..calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_project
 from ..calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
 from ..calculations.row_coordinate import index_unique_row_coordinates
 from ..calculations.row_source_identity import RowBindingKey, RowSourceIdentity
-from ..identifiers import canonical_decimal_string as _canonical_decimal
+from ..identifiers import canonical_decimal_string
 from .calculation_revision_m303_handoff import FilingInstanceEvidence, M303RegimenSimplificadoAnnualSummaryHandoff
 from .calculation_revision_operator_layer import OPERATOR_LAYER_IDENTITY_KEY, CalculationOperatorLayer
 from .calculation_screen_stamp import SCREEN_STAMP_IDENTITY_KEY
@@ -63,7 +63,7 @@ def _validated_relation_id(value: object, *, surface: str) -> RelationId:
         raise ModeloValidationError(f"{surface} contains non-canonical relation id {value!r}") from exc
 
 
-def _detail_row_amount_text(value: Decimal) -> str:
+def detail_row_amount_text(value: Decimal) -> str:
     """Spell one detail-row amount for the identity payload.
 
     Non-zero amounts keep ``str(value.normalize())``, scientific notation included,
@@ -82,12 +82,12 @@ def _detail_row_payload(row: ModeloDetailRow) -> dict[str, object]:
         for month in row.cotizaciones:
             d[f"month_{month.month:02d}_status"] = month.status
             d[f"month_{month.month:02d}_amount"] = (
-                None if month.amount is None else _detail_row_amount_text(month.amount)
+                None if month.amount is None else detail_row_amount_text(month.amount)
             )
         return dict(sorted(d.items()))
     for field_name, field_value in row.model_dump().items():
         if isinstance(field_value, Decimal):
-            d[field_name] = _detail_row_amount_text(field_value)
+            d[field_name] = detail_row_amount_text(field_value)
         else:
             d[field_name] = str(field_value)
     return dict(sorted(d.items()))
@@ -192,7 +192,7 @@ def canonical_row_source_identities(
 def canonical_row_casilla_values(value: Mapping[RowCasillaKey, Decimal]) -> list[dict[str, object]]:
     """Return row casilla values as canonically sorted, JSON-shaped rows."""
     return [
-        {"casilla_id": casilla_id, "row_index": row_index, "value": _canonical_decimal(amount)}
+        {"casilla_id": casilla_id, "row_index": row_index, "value": canonical_decimal_string(amount)}
         for (casilla_id, row_index), amount in sorted(value.items())
     ]
 
@@ -316,7 +316,7 @@ def _borrador_revision_id_payload(
     return parts
 
 
-def _source_issues_revision_id_payload(
+def source_issues_revision_id_payload(
     source_issues: Sequence[CalculationSourceIssue],
 ) -> dict[str, object]:
     """Build the optional unresolved-source-issue payload key."""
@@ -542,7 +542,7 @@ def derive_calculation_revision_id_from_identity_inputs(
         _borrador_revision_id_payload(borrador_snapshot_id, bindings_sourced_from_borrador),
     )
     payload.update(_detail_rows_revision_id_payload(detail_rows))
-    payload.update(_source_issues_revision_id_payload(source_issues))
+    payload.update(source_issues_revision_id_payload(source_issues))
     payload.update(_source_provenance_revision_id_payload(source_provenance))
     payload.update(_filing_instance_evidence_revision_id_payload(filing_instance_evidence))
     payload.update(
@@ -584,7 +584,7 @@ def outputs_for_hash_from_mapping(casilla_values: Mapping[CasillaId, Decimal]) -
     """
     return dict(
         sorted(
-            (_validated_casilla_id(k, surface="casilla_values"), _canonical_decimal(v))
+            (_validated_casilla_id(k, surface="casilla_values"), canonical_decimal_string(v))
             for k, v in casilla_values.items()
         ),
     )

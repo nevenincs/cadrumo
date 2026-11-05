@@ -42,21 +42,21 @@ def operation() -> Iterator[PinnedAuthorityOperation]:
 @pytest.fixture(autouse=True)
 def _empty_index() -> Iterator[None]:
     """Each test starts from an empty index and leaves the process one."""
-    deadline_engine._DEADLINE_WINDOW_INDEX.clear()
+    deadline_engine.DEADLINE_WINDOW_INDEX.clear()
     yield
-    deadline_engine._DEADLINE_WINDOW_INDEX.clear()
+    deadline_engine.DEADLINE_WINDOW_INDEX.clear()
 
 
 @pytest.fixture
 def projections(monkeypatch: pytest.MonkeyPatch) -> list[tuple[AuthorityGenerationPin, int]]:
     projected: list[tuple[AuthorityGenerationPin, int]] = []
-    project = deadline_engine._project_deadline_windows
+    project = deadline_engine.project_deadline_windows
 
     def counting(operation: Any, year: int) -> Any:
         projected.append((operation.pin(), year))
         return project(operation, year)
 
-    monkeypatch.setattr(deadline_engine, "_project_deadline_windows", counting)
+    monkeypatch.setattr(deadline_engine, "project_deadline_windows", counting)
     return projected
 
 
@@ -106,14 +106,14 @@ def test_the_index_stays_bounded(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     empty = deadline_engine.DeadlineWindowYearIndex(dated=(), projected={}, close_unknown=())
-    monkeypatch.setattr(deadline_engine, "_project_deadline_windows", lambda operation, year: empty)
-    for index in range(deadline_engine._DEADLINE_WINDOW_INDEX_LIMIT + 2):
+    monkeypatch.setattr(deadline_engine, "project_deadline_windows", lambda operation, year: empty)
+    for index in range(deadline_engine.DEADLINE_WINDOW_INDEX_LIMIT + 2):
         generation = AuthorityGenerationPin(logical_generation=f"{index:064x}", reader_incarnation="c" * 64)
         repinned = _RepinnedOperation(operation=operation, generation=generation)
         # CAST-RATIONALE-REPINNED-OPERATION: as above; only the identity varies.
         indexed_deadline_window_year(cast("PinnedAuthorityOperation", repinned), _YEAR)
 
-    assert len(deadline_engine._DEADLINE_WINDOW_INDEX) == deadline_engine._DEADLINE_WINDOW_INDEX_LIMIT
+    assert len(deadline_engine.DEADLINE_WINDOW_INDEX) == deadline_engine.DEADLINE_WINDOW_INDEX_LIMIT
 
 
 def _hydrating_projection(operation: PinnedAuthorityOperation, year: int) -> set[tuple[str, str, object]]:
@@ -174,7 +174,7 @@ def test_projection_hydrates_no_revision(operation: PinnedAuthorityOperation) ->
 
     # CAST-RATIONALE-COUNTING-OPERATION: the wrapper delegates every attribute
     # to the leased operation and only records hydration, the axis under test.
-    projected = deadline_engine._project_deadline_windows(cast("PinnedAuthorityOperation", counting), _YEAR)
+    projected = deadline_engine.project_deadline_windows(cast("PinnedAuthorityOperation", counting), _YEAR)
 
     assert projected, "the bundled generation must carry deadline windows, or a zero count proves nothing"
     assert counting.hydrated == []

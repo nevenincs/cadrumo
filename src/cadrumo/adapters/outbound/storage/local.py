@@ -32,9 +32,6 @@ from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryO
 from ....core.paths import is_windows_long_path_error
 from ....core.time.clock import now
 from ....core.time.utc import validate_utc_aware
-from ._integrity import verify_content_hash, verify_payload_byte_length
-from ._key_validation import assert_admissible_object_key_hmac
-from ._object_name import build_provider_object_name, provider_object_hmac_prefix, sanitize_provider_object_label
 from .errors import (
     OutboundStorageConflictError,
     OutboundStorageIntegrityError,
@@ -44,6 +41,9 @@ from .errors import (
     OutboundStorageValidationError,
     StorageCorruptionError,
 )
+from .integrity import verify_content_hash, verify_payload_byte_length
+from .key_validation import assert_admissible_object_key_hmac
+from .object_name import build_provider_object_name, provider_object_hmac_prefix, sanitize_provider_object_label
 from .records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport
 
 _logger = get_logger(__name__)
@@ -53,7 +53,7 @@ SIDECAR_EXTENSION = ".meta.json"
 _PROBE_NAMESPACE = "_probe"
 
 
-def _local_failure_verdict(
+def local_failure_verdict(
     condition_id: str,
     *,
     facts: Mapping[str, str | int | bool],
@@ -68,13 +68,13 @@ def _local_failure_verdict(
     )
 
 
-def _validate_namespace(namespace: str) -> str:
+def validate_namespace(namespace: str) -> str:
     cleaned = namespace.strip()
     if not cleaned:
         raise OutboundStorageValidationError(
             "namespace must not be blank",
             translated_message="adapters.outbound.storage.local.errors.namespace_blank",
-            precondition_verdict=_local_failure_verdict(
+            precondition_verdict=local_failure_verdict(
                 "storage.local.namespace.valid",
                 facts={"backend": "local", "field": "namespace", "valid": False},
                 outcome=NoRecoveryOutcome.OPERATOR_DECISION,
@@ -85,7 +85,7 @@ def _validate_namespace(namespace: str) -> str:
             f"namespace {namespace!r} contains forbidden characters",
             context={"namespace": namespace},
             translated_message="adapters.outbound.storage.local.errors.namespace_forbidden_characters",
-            precondition_verdict=_local_failure_verdict(
+            precondition_verdict=local_failure_verdict(
                 "storage.local.namespace.valid",
                 facts={"backend": "local", "field": "namespace", "valid": False},
                 outcome=NoRecoveryOutcome.OPERATOR_DECISION,
@@ -99,7 +99,7 @@ def _validate_hmac(object_key_hmac: str) -> str:
     return assert_admissible_object_key_hmac(object_key_hmac, backend="local")
 
 
-def _sidecar_filename(object_key_hmac: str, label: str) -> str:
+def sidecar_filename(object_key_hmac: str, label: str) -> str:
     return build_provider_object_name(object_key_hmac, label, extension=SIDECAR_EXTENSION)
 
 
@@ -110,7 +110,7 @@ def _parse_sidecar_byte_length(value: object) -> int:
             f"sidecar byte_length has unexpected type: {type(value)!r}",
             context={"actual_type": repr(type(value))},
             translated_message="adapters.outbound.storage.local.errors.byte_length_invalid",
-            precondition_verdict=_local_failure_verdict(
+            precondition_verdict=local_failure_verdict(
                 "storage.local.sidecar.byte_length_valid", facts={"field": "byte_length", "valid": False}
             ),
         )
@@ -121,7 +121,7 @@ def _parse_sidecar_byte_length(value: object) -> int:
             f"sidecar byte_length is not an integer: {value!r}",
             context={"actual_value": str(value)},
             translated_message="adapters.outbound.storage.local.errors.byte_length_invalid",
-            precondition_verdict=_local_failure_verdict(
+            precondition_verdict=local_failure_verdict(
                 "storage.local.sidecar.byte_length_valid", facts={"field": "byte_length", "valid": False}
             ),
         ) from None
@@ -130,7 +130,7 @@ def _parse_sidecar_byte_length(value: object) -> int:
             f"sidecar byte_length must not be negative: {byte_length}",
             context={"actual_value": str(byte_length)},
             translated_message="adapters.outbound.storage.local.errors.byte_length_invalid",
-            precondition_verdict=_local_failure_verdict(
+            precondition_verdict=local_failure_verdict(
                 "storage.local.sidecar.byte_length_valid", facts={"field": "byte_length", "valid": False}
             ),
         )
@@ -156,7 +156,7 @@ def _parse_sidecar_written_at(value: object) -> datetime:
             f"sidecar written_at is absent or not a string: {value!r}",
             context={"actual_value": repr(value)},
             translated_message="adapters.outbound.storage.local.errors.written_at_invalid",
-            precondition_verdict=_local_failure_verdict(
+            precondition_verdict=local_failure_verdict(
                 "storage.local.sidecar.written_at_valid", facts={"field": "written_at", "valid": False}
             ),
         )
@@ -167,7 +167,7 @@ def _parse_sidecar_written_at(value: object) -> datetime:
             f"sidecar written_at is not an ISO-8601 instant: {value!r}",
             context={"actual_value": value},
             translated_message="adapters.outbound.storage.local.errors.written_at_invalid",
-            precondition_verdict=_local_failure_verdict(
+            precondition_verdict=local_failure_verdict(
                 "storage.local.sidecar.written_at_valid", facts={"field": "written_at", "valid": False}
             ),
         ) from None
@@ -178,7 +178,7 @@ def _parse_sidecar_written_at(value: object) -> datetime:
             f"sidecar written_at carries no timezone: {value!r}",
             context={"actual_value": value},
             translated_message="adapters.outbound.storage.local.errors.written_at_invalid",
-            precondition_verdict=_local_failure_verdict(
+            precondition_verdict=local_failure_verdict(
                 "storage.local.sidecar.written_at_valid", facts={"field": "written_at", "valid": False}
             ),
         ) from None
@@ -192,14 +192,14 @@ def _validate_put_arguments(
     label: str,
 ) -> tuple[str, str, str]:
     """Normalize and validate the caller-controlled values for ``put``."""
-    namespace_clean = _validate_namespace(namespace)
+    namespace_clean = validate_namespace(namespace)
     hmac_clean = _validate_hmac(object_key_hmac)
     label_clean = sanitize_provider_object_label(label)
     if not content_hash.strip():
         raise OutboundStorageValidationError(
             "content_hash must not be blank",
             translated_message="adapters.outbound.storage.local.errors.content_hash_blank",
-            precondition_verdict=_local_failure_verdict(
+            precondition_verdict=local_failure_verdict(
                 "storage.local.content_hash.present",
                 facts={"backend": "local", "field": "content_hash", "valid": False},
                 outcome=NoRecoveryOutcome.OPERATOR_DECISION,
@@ -234,7 +234,7 @@ def _write_put_payload(
             f"cannot write object payload to {target_path}: {exc}",
             context={"path": str(target_path)},
             translated_message="adapters.outbound.storage.local.errors.payload_write_permission",
-            precondition_verdict=_local_failure_verdict(
+            precondition_verdict=local_failure_verdict(
                 "storage.local.payload.writable", facts={"operation": "put", "writable": False}
             ),
         ) from None
@@ -244,7 +244,7 @@ def _write_put_payload(
                 f"cannot write object payload to {target_path}: path exceeds the Windows MAX_PATH ceiling ({exc})",
                 context={"path": str(target_path)},
                 translated_message="adapters.outbound.storage.local.errors.payload_write_path_too_long",
-                precondition_verdict=_local_failure_verdict(
+                precondition_verdict=local_failure_verdict(
                     "storage.local.path.within_limit", facts={"operation": "put_payload", "within_limit": False}
                 ),
             ) from None
@@ -252,7 +252,7 @@ def _write_put_payload(
             f"failed to commit object payload to {target_path}: {exc}",
             context={"path": str(target_path)},
             translated_message="adapters.outbound.storage.local.errors.payload_commit_failed",
-            precondition_verdict=_local_failure_verdict(
+            precondition_verdict=local_failure_verdict(
                 "storage.local.payload.commit_succeeded",
                 facts={"operation": "put", "committed": False},
                 outcome=NoRecoveryOutcome.OPERATOR_DECISION,
@@ -294,7 +294,7 @@ def _write_put_sidecar(
                 f"cannot write sidecar {sidecar_path}: path exceeds the Windows MAX_PATH ceiling ({exc})",
                 context={"path": str(sidecar_path)},
                 translated_message="adapters.outbound.storage.local.errors.sidecar_write_path_too_long",
-                precondition_verdict=_local_failure_verdict(
+                precondition_verdict=local_failure_verdict(
                     "storage.local.path.within_limit", facts={"operation": "put_sidecar", "within_limit": False}
                 ),
             ) from None
@@ -302,7 +302,7 @@ def _write_put_sidecar(
             f"failed to write sidecar {sidecar_path}: {exc}",
             context={"path": str(sidecar_path)},
             translated_message="adapters.outbound.storage.local.errors.sidecar_write_failed",
-            precondition_verdict=_local_failure_verdict(
+            precondition_verdict=local_failure_verdict(
                 "storage.local.sidecar.writable", facts={"operation": "put_sidecar", "writable": False}
             ),
         ) from None
@@ -342,7 +342,7 @@ class LocalFileSystemProvider:
                 f"cannot create namespace directory {target}: {exc}",
                 context={"namespace": namespace, "path": str(target)},
                 translated_message="adapters.outbound.storage.local.errors.namespace_create_permission",
-                precondition_verdict=_local_failure_verdict(
+                precondition_verdict=local_failure_verdict(
                     "storage.local.namespace.writable", facts={"operation": "create_namespace"}
                 ),
             ) from None
@@ -352,7 +352,7 @@ class LocalFileSystemProvider:
                     f"cannot create namespace directory {target}: path exceeds the Windows MAX_PATH ceiling ({exc})",
                     context={"namespace": namespace, "path": str(target)},
                     translated_message="adapters.outbound.storage.local.errors.namespace_create_path_too_long",
-                    precondition_verdict=_local_failure_verdict(
+                    precondition_verdict=local_failure_verdict(
                         "storage.local.path.within_limit", facts={"operation": "create_namespace"}
                     ),
                 ) from None
@@ -396,7 +396,7 @@ class LocalFileSystemProvider:
                         "sidecar_object_key_hmac": repr(sidecar_hmac),
                         "sidecar_path": str(sidecar_path),
                     },
-                    precondition_verdict=_local_failure_verdict(
+                    precondition_verdict=local_failure_verdict(
                         "storage.local.sidecar.identity_matches",
                         facts={"operation": "resolve_object", "prefix_collision": True},
                     ),
@@ -412,7 +412,7 @@ class LocalFileSystemProvider:
                 f"sidecar {sidecar_path} is unreadable or malformed: {exc}",
                 context={"sidecar_path": str(sidecar_path)},
                 translated_message="adapters.outbound.storage.local.errors.sidecar_malformed",
-                precondition_verdict=_local_failure_verdict(
+                precondition_verdict=local_failure_verdict(
                     "storage.local.sidecar.schema_valid", facts={"sidecar_valid": False}
                 ),
             ) from None
@@ -421,7 +421,7 @@ class LocalFileSystemProvider:
                 f"sidecar {sidecar_path} is not a JSON object",
                 context={"sidecar_path": str(sidecar_path)},
                 translated_message="adapters.outbound.storage.local.errors.sidecar_not_object",
-                precondition_verdict=_local_failure_verdict(
+                precondition_verdict=local_failure_verdict(
                     "storage.local.sidecar.schema_valid", facts={"sidecar_valid": False}
                 ),
             )
@@ -476,7 +476,7 @@ class LocalFileSystemProvider:
         target_name = build_provider_object_name(hmac_clean, label_clean, extension=_FILE_EXTENSION)
         stale_pair = _stale_put_pair(existing_path, target_name)
         target_path = namespace_dir / target_name
-        sidecar_path = namespace_dir / _sidecar_filename(hmac_clean, label_clean)
+        sidecar_path = namespace_dir / sidecar_filename(hmac_clean, label_clean)
 
         _write_put_payload(target_path, payload, batch)
 
@@ -529,7 +529,7 @@ class LocalFileSystemProvider:
             :class:`OutboundStorageValidationError`: When ``namespace`` or
                 ``object_key_hmac`` fail format checks.
         """
-        namespace_clean = _validate_namespace(namespace)
+        namespace_clean = validate_namespace(namespace)
         hmac_clean = _validate_hmac(object_key_hmac)
 
         target_path = self._resolve_object_path(namespace_clean, hmac_clean)
@@ -538,7 +538,7 @@ class LocalFileSystemProvider:
                 f"object {hmac_clean!r} not found in namespace {namespace_clean!r}",
                 context={"namespace": namespace_clean, "object_key_hmac": hmac_clean},
                 translated_message="adapters.outbound.storage.local.errors.object_not_found",
-                precondition_verdict=_local_failure_verdict(
+                precondition_verdict=local_failure_verdict(
                     "storage.local.object.present",
                     facts={"operation": "get", "object_present": False},
                     outcome=NoRecoveryOutcome.OPERATOR_DECISION,
@@ -550,7 +550,7 @@ class LocalFileSystemProvider:
                 f"object {target_path.name} has no sidecar; storage corrupt",
                 context={"path": str(target_path)},
                 translated_message="adapters.outbound.storage.local.errors.sidecar_missing",
-                precondition_verdict=_local_failure_verdict(
+                precondition_verdict=local_failure_verdict(
                     "storage.local.sidecar.present", facts={"operation": "get", "sidecar_present": False}
                 ),
             )
@@ -563,7 +563,7 @@ class LocalFileSystemProvider:
                 f"cannot read object payload from {target_path}: {exc}",
                 context={"path": str(target_path)},
                 translated_message="adapters.outbound.storage.local.errors.payload_read_permission",
-                precondition_verdict=_local_failure_verdict(
+                precondition_verdict=local_failure_verdict(
                     "storage.local.payload.readable", facts={"operation": "get", "readable": False}
                 ),
             ) from None
@@ -582,7 +582,7 @@ class LocalFileSystemProvider:
                 f"sidecar {sidecar_path} carries no content_hash; storage corrupt",
                 context={"sidecar_path": str(sidecar_path), "path": str(target_path)},
                 translated_message="adapters.outbound.storage.local.errors.sidecar_malformed",
-                precondition_verdict=_local_failure_verdict(
+                precondition_verdict=local_failure_verdict(
                     "storage.local.sidecar.digest_present", facts={"operation": "get", "content_hash_present": False}
                 ),
             )
@@ -654,7 +654,7 @@ class LocalFileSystemProvider:
             :class:`OutboundStorageValidationError`: When ``namespace`` or
                 ``object_key_hmac`` fail format checks.
         """
-        namespace_clean = _validate_namespace(namespace)
+        namespace_clean = validate_namespace(namespace)
         hmac_clean = _validate_hmac(object_key_hmac)
 
         target_path = self._resolve_object_path(namespace_clean, hmac_clean)
@@ -671,7 +671,7 @@ class LocalFileSystemProvider:
                     f"cannot read sidecar {sidecar_path} before deleting object {target_path}: {exc}",
                     context={"path": str(target_path), "sidecar_path": str(sidecar_path)},
                     translated_message="adapters.outbound.storage.local.errors.object_delete_permission",
-                    precondition_verdict=_local_failure_verdict(
+                    precondition_verdict=local_failure_verdict(
                         "storage.local.sidecar.readable", facts={"operation": "delete", "readable": False}
                     ),
                 ) from None
@@ -683,7 +683,7 @@ class LocalFileSystemProvider:
                 f"cannot delete sidecar {sidecar_path}: {exc}",
                 context={"path": str(target_path), "sidecar_path": str(sidecar_path)},
                 translated_message="adapters.outbound.storage.local.errors.object_delete_permission",
-                precondition_verdict=_local_failure_verdict(
+                precondition_verdict=local_failure_verdict(
                     "storage.local.sidecar.deletable", facts={"operation": "delete", "deletable": False}
                 ),
             ) from None
@@ -696,7 +696,7 @@ class LocalFileSystemProvider:
                 f"cannot delete object {target_path}: {exc}",
                 context={"path": str(target_path), "sidecar_path": str(sidecar_path)},
                 translated_message="adapters.outbound.storage.local.errors.object_delete_permission",
-                precondition_verdict=_local_failure_verdict(
+                precondition_verdict=local_failure_verdict(
                     "storage.local.payload.deletable", facts={"operation": "delete", "deletable": False}
                 ),
             ) from None
@@ -758,14 +758,14 @@ class LocalFileSystemProvider:
             :class:`OutboundStorageValidationError`: When ``namespace`` fails
                 format checks.
         """
-        namespace_clean = _validate_namespace(namespace)
+        namespace_clean = validate_namespace(namespace)
         namespace_dir = self._root / namespace_clean
         if not namespace_dir.is_dir():
             raise OutboundStorageNotFoundError(
                 f"namespace {namespace_clean!r} does not exist",
                 context={"namespace": namespace_clean},
                 translated_message="adapters.outbound.storage.local.errors.namespace_not_found",
-                precondition_verdict=_local_failure_verdict(
+                precondition_verdict=local_failure_verdict(
                     "storage.local.namespace.present",
                     facts={"operation": "iter_objects", "namespace_present": False},
                     outcome=NoRecoveryOutcome.OPERATOR_DECISION,

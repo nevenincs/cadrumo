@@ -5,7 +5,7 @@ from __future__ import annotations
 from pydantic import BaseModel, model_validator
 
 from ....core.errors.hierarchy import pydantic_validation_boundary
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.storage_taxonomy import StorageCustodyProfile
 from .errors import NamespaceRegistryError
 from .namespace_taxonomy import CUSTODY_PROFILE_DISPOSITIONS
@@ -16,7 +16,7 @@ from .storage_path_definitions import StoragePathDefinition
 class StorageHierarchyRegistry(BaseModel):
     """Registry carrying the known secure-storage hierarchy contracts."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     namespaces: tuple[SecureObjectNamespaceDefinition, ...]
     paths: tuple[StoragePathDefinition, ...]

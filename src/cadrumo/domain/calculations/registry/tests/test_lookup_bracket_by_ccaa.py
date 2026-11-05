@@ -17,7 +17,7 @@ from pydantic import ValidationError
 
 from ..errors import RegistryValidationError
 from ..schema_formula import BracketEntry, FormulaExpression, ParameterDefinition
-from .formula_runtime_support import evaluate as _evaluate
+from .formula_runtime_support import evaluate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -123,12 +123,12 @@ def test_lookup_bracket_by_ccaa_dispatches_to_madrid_when_residence_is_madrid() 
         cataluna_param.id: cataluna_param,
     }
 
-    madrid_result = _evaluate(
+    madrid_result = evaluate(
         _dispatch_expression(base),
         parameters=parameters,
         enum_bindings={"renta-profile-tax-residence-ccaa": "madrid"},
     )
-    cataluna_result = _evaluate(
+    cataluna_result = evaluate(
         _dispatch_expression(base),
         parameters=parameters,
         enum_bindings={"renta-profile-tax-residence-ccaa": "cataluna"},
@@ -167,7 +167,7 @@ def test_lookup_bracket_by_ccaa_dispatches_to_cataluna_when_residence_is_catalun
         cataluna_param.id: cataluna_param,
     }
 
-    cataluna_result = _evaluate(
+    cataluna_result = evaluate(
         _dispatch_expression(base),
         parameters=parameters,
         enum_bindings={"renta-profile-tax-residence-ccaa": "cataluna"},
@@ -180,7 +180,7 @@ def test_lookup_bracket_by_ccaa_dispatches_to_cataluna_when_residence_is_catalun
     assert cataluna_result == cataluna_bracket.fixed_addition + expected_marginal
 
     # Cataluña rate > Madrid rate — Cataluña result must be higher.
-    madrid_result = _evaluate(
+    madrid_result = evaluate(
         _dispatch_expression(base),
         parameters=parameters,
         enum_bindings={"renta-profile-tax-residence-ccaa": "madrid"},
@@ -204,7 +204,7 @@ def test_lookup_bracket_by_ccaa_dispatches_with_entry_array_table() -> None:
     }
     enum_bindings = {"renta-profile-tax-residence-ccaa": "madrid"}
 
-    dict_form_result = _evaluate(
+    dict_form_result = evaluate(
         _dispatch_expression(base),
         parameters=parameters,
         enum_bindings=enum_bindings,
@@ -225,7 +225,7 @@ def test_lookup_bracket_by_ccaa_dispatches_with_entry_array_table() -> None:
             ),
         },
     )
-    entry_array_result = _evaluate(
+    entry_array_result = evaluate(
         entry_array_expression,
         parameters=parameters,
         enum_bindings=enum_bindings,
@@ -265,7 +265,7 @@ def test_lookup_bracket_by_ccaa_raises_on_missing_dispatch_key() -> None:
     enum_bindings = {"renta-profile-tax-residence-ccaa": "andalucia"}
 
     with pytest.raises(RegistryValidationError, match="missing CCAA 'andalucia'"):
-        _evaluate(expression, parameters=parameters, enum_bindings=enum_bindings)
+        evaluate(expression, parameters=parameters, enum_bindings=enum_bindings)
 
 
 def test_lookup_bracket_by_ccaa_raises_when_dispatched_parameter_is_not_bracket_table() -> None:
@@ -301,7 +301,7 @@ def test_lookup_bracket_by_ccaa_raises_when_dispatched_parameter_is_not_bracket_
     enum_bindings = {"renta-profile-tax-residence-ccaa": "madrid"}
 
     with pytest.raises(RegistryValidationError, match="must declare data_type='bracket_table'"):
-        _evaluate(expression, parameters=parameters, enum_bindings=enum_bindings)
+        evaluate(expression, parameters=parameters, enum_bindings=enum_bindings)
 
 
 def test_lookup_bracket_by_ccaa_raises_when_enum_binding_is_unset() -> None:
@@ -314,4 +314,4 @@ def test_lookup_bracket_by_ccaa_raises_when_enum_binding_is_unset() -> None:
     enum_bindings: dict[str, str] = {}
 
     with pytest.raises(RegistryValidationError, match="has no supplied value"):
-        _evaluate(expression, parameters=parameters, enum_bindings=enum_bindings)
+        evaluate(expression, parameters=parameters, enum_bindings=enum_bindings)

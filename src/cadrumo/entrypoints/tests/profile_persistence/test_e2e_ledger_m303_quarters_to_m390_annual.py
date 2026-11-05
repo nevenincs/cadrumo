@@ -89,11 +89,11 @@ from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import TransactionCatalogue
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 from cadrumo.entrypoints.tests.profile_persistence.m303_annual_ledger_support import (
-    _BUCKET_ID,
-    _YEAR,
+    BUCKET_ID,
     IRENE_ANNUAL_EXPECTED,
     IRENE_QUARTER_FACTS,
     LAURA_ANNUAL_EXPECTED,
+    YEAR,
     persist_year_of_invoices,
     product_software_identity,
 )
@@ -156,9 +156,9 @@ def test_first_activity_2026_m303_calculates_linked_invoices_without_joint_retur
             }
         },
     )
-    invoice_ports = build_catalogue_creation_ports(bucket_id=_BUCKET_ID)
+    invoice_ports = build_catalogue_creation_ports(bucket_id=BUCKET_ID)
     issued = build_catalogue_invoice(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         kind=InvoiceKind.ISSUED,
         counterparty_name="Cliente de prueba SL",
         counterparty_tax_id="A58818501",
@@ -172,7 +172,7 @@ def test_first_activity_2026_m303_calculates_linked_invoices_without_joint_retur
     )
     invoices = InvoiceCatalogueRepository(objects=secure_objects)
     invoices.save(build_invoice_catalogue((*invoices.load().invoices.values(), issued)))
-    ledger = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    ledger = TransactionCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
     ledger.save(
         TransactionCatalogue.from_transactions(
             tuple(
@@ -186,13 +186,13 @@ def test_first_activity_2026_m303_calculates_linked_invoices_without_joint_retur
     period = Period.from_year_and_code(2026, "1T")
     snapshot = operation.snapshot("303", filing_year=2026, period="1T")
     work = create_work_unit(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         modelo="303",
         filing_year=2026,
         period=period,
         revision_id=snapshot.revision.id,
         ports=WorkLifecyclePorts(
-            work_unit_repository=WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+            work_unit_repository=WorkUnitCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects),
             bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
         ),
         clock=datetime(2026, 4, 1, tzinfo=UTC),
@@ -212,7 +212,7 @@ def test_first_activity_2026_m303_calculates_linked_invoices_without_joint_retur
             borrador_snapshot_id=None,
             filing_instance_evidence=evidence,
         ),
-        ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+        ports=build_calculation_action_ports(bucket_id=BUCKET_ID, operation=operation),
     )
     public = calculation_public_result(result, operation=operation)
     assert result.revision_published is True
@@ -252,7 +252,7 @@ def test_calculation_persists_the_selected_precedence_value_and_its_disagreement
     work, _revision = calculate_m303_quarter_revision(secure_objects, period="1T", operation=operation)
     calculation = calculate_modelo_revision_with_trusted_mesh_sources(
         work.work_unit_id,
-        ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+        ports=build_calculation_action_ports(bucket_id=BUCKET_ID, operation=operation),
         actor="operator",
         casilla_inputs={},
         backend_binding_values={binding: Decimal("100.00")},
@@ -301,12 +301,12 @@ def test_persisted_m303_ledger_revision_verifies_and_exports(
     """Persona-like persisted ledger input verifies under the live revision and exports its fichero."""
     store_profile(secure_objects)
     stored = persist_year_of_invoices(secure_objects)
-    wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    wu_repo = WorkUnitCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     filing_repo = ModeloRecordCatalogueRepository(objects=secure_objects)
     vr_repo = VerificationReportCatalogueRepository(objects=secure_objects)
     event_repo = BucketEventHistoryRepository(objects=secure_objects)
-    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
 
     _work_unit, revision = calculate_m303_quarter_revision(secure_objects, period="1T", operation=operation)
     assert Decimal(revision.casilla_values[DEVENGADA_TOTAL]) == stored["1T"]["devengada"]
@@ -340,7 +340,7 @@ def test_persisted_m303_ledger_revision_verifies_and_exports(
     assert verified.ledger_filing_snapshot is not None
     assert verified.ledger_filing_evidence is not None
 
-    output_path = tmp_path / f"modelo-303-{_YEAR}-1T.boe"
+    output_path = tmp_path / f"modelo-303-{YEAR}-1T.boe"
     with bundled_indexed_authority().operation() as operation:
         export_modelo_revision(
             ModeloExportCommand(
@@ -352,7 +352,7 @@ def test_persisted_m303_ledger_revision_verifies_and_exports(
             workflow_profile=workflow_profile(),
             export_ports=modelo_export_ports_for_test(
                 product_software_identity=product_software_identity(),
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 taxpayer_tax_id=TAX_ID,
                 secure_objects=secure_objects,
                 work_unit=wu_repo,
@@ -386,14 +386,14 @@ def test_irene_sl_local_m303_files_support_m390_verify_and_annual_export(
         facts_by_period=IRENE_QUARTER_FACTS,
     )
     workflow_profile = ireneworkflow_profile()
-    wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    wu_repo = WorkUnitCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     filing_repo = ModeloRecordCatalogueRepository(objects=secure_objects)
     verification_repo = VerificationReportCatalogueRepository(objects=secure_objects)
     event_repo = BucketEventHistoryRepository(objects=secure_objects)
     observation_repo = CalculationObservationRepository(objects=secure_objects)
     wallet_repo = IvaWalletDecisionRepository(objects=secure_objects)
-    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
 
     computed: ComputedM303CasillasByPeriod = {}
     for period in QUARTER_ORDER:
@@ -510,7 +510,7 @@ def test_irene_sl_local_m303_files_support_m390_verify_and_annual_export(
             workflow_profile=workflow_profile,
             export_ports=modelo_export_ports_for_test(
                 product_software_identity=product_software_identity(),
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 taxpayer_tax_id=IRENE_TAX_ID,
                 secure_objects=secure_objects,
                 work_unit=wu_repo,

@@ -45,8 +45,8 @@ from ..categories.proportionality import (
 from ..categories.spending_category import SpendingCategory, SpendingCategoryFamily, family_for
 from ..categories.spending_category_catalogue import require_spending_category, resolve_spending_category_catalogue
 from ..contribuyente.ccaa import CCAA
-from ._first_slice_routing import resolve_first_slice_expense_routing
 from .errors import RentaValidationError
+from .first_slice_routing import resolve_first_slice_expense_routing
 
 EUR_CURRENCY: Literal["EUR"] = "EUR"
 
@@ -565,7 +565,7 @@ def _evaluate_statutory_cap_rule(
     context: RentaDeductibilityContext,
     deductible_basis: Decimal,
 ) -> _RentaDeductibilityDecision:
-    cap_applied = _resolve_statutory_cap(rule=rule, context=context)
+    cap_applied = resolve_statutory_cap(rule=rule, context=context)
     if cap_applied is None:
         return _refused("missing statutory cap context")
     deductible_amount = min(deductible_basis, cap_applied)
@@ -771,7 +771,7 @@ def build_renta_deductible_expense_observation(
     )
 
 
-def _resolve_statutory_cap(
+def resolve_statutory_cap(
     *,
     rule: ProportionalityRule,
     context: RentaDeductibilityContext,
@@ -984,9 +984,9 @@ def _statutory_cap_group(
         return None
     one_day = context.model_copy(update={"statutory_cap_days": None})
     if rule.statutory_cap_eur_per_day is not None or any(variant.is_per_day for variant in rule.statutory_cap_variants):
-        daily = _resolve_statutory_cap(rule=rule, context=one_day)
+        daily = resolve_statutory_cap(rule=rule, context=one_day)
         return None if daily is None else ((claim.category.value, claim.incurred_on), daily)
-    annual = _resolve_statutory_cap(rule=rule, context=context)
+    annual = resolve_statutory_cap(rule=rule, context=context)
     return None if annual is None else ((claim.category.value, claim.imputed_on.year), annual)
 
 

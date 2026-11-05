@@ -57,7 +57,7 @@ from cadrumo.core.document_shape import DocumentShape
 from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.core.field_origin import FieldOrigin
 from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from cadrumo.domain.calculations.registry.iva_category_catalogue import (
     registry_category_projection,
@@ -87,7 +87,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 def registry_legends() -> tuple[RegimeLegend, ...]:
     """Resolve the registry vocabulary on one pinned authority lease."""
     period = default_invoice_extraction_period()
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return resolve_regime_legends(operation=operation, effective_date=period.end_date)
 
 
@@ -170,7 +170,7 @@ def serve(secure_object_test_profile: TestRuntimeProfile) -> Iterator[object]:
                 ports=text_layer_reader_ports(evidence, text_layer_ports=_TEXT_LAYER_PORTS, operation=operation),
             )
 
-        with _indexed_authority_for_test().operation() as operation:
+        with bundled_indexed_authority().operation() as operation:
             legends = resolve_regime_legends(
                 operation=operation,
                 effective_date=default_invoice_extraction_period().end_date,

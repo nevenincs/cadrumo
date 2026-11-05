@@ -16,19 +16,19 @@ from uuid import uuid4
 
 from .....core.descriptor_write import write_all
 from .....core.windows_contention import is_windows_contention
-from ._capsule_filesystem import (
-    windows_mark_handle_for_deletion as _windows_mark_handle_for_deletion,
+from .capsule_filesystem import (
+    windows_mark_handle_for_deletion,
 )
 from .errors import ProfileCustodyLockContendedError, ProfileCustodyPathAbsentError, ProfileCustodyRecordError
 from .filesystem_primitives import (
     ProfileCustodyPasswordReadOperation,
+    anchor_directory,
     ensure_profile_custody_local_directory,
+    posix_directory_fd,
     shared_directory_anchors,
+    windows_create_file_api,
+    windows_file_information_type,
 )
-from .filesystem_primitives import anchor_directory as _anchor_directory
-from .filesystem_primitives import posix_directory_fd as _posix_directory_fd
-from .filesystem_primitives import windows_create_file_api as _windows_create_file_api
-from .filesystem_primitives import windows_file_information_type as _windows_file_information_type
 
 PROFILE_CUSTODY_DATA_MAX_ENTRIES: Final = 1024
 PROFILE_CUSTODY_DATA_FILE_MAX_BYTES: Final = 64 * 1024 * 1024
@@ -154,7 +154,7 @@ def _profile_custody_posix_lock(path: Path, *, timeout_seconds: float) -> Genera
     ):
         raise ProfileCustodyRecordError("local custody flock support is unavailable")
 
-    with _posix_directory_fd(path.parent) as parent_fd:
+    with posix_directory_fd(path.parent) as parent_fd:
         try:
             descriptor = os.open(
                 path.name,
@@ -184,12 +184,12 @@ def _profile_custody_posix_lock(path: Path, *, timeout_seconds: float) -> Genera
 
 @contextmanager
 def _profile_custody_windows_lock(path: Path, *, timeout_seconds: float) -> Generator[None]:
-    ctypes, wintypes, kernel32, create_file = _windows_create_file_api()
-    file_information_type = _windows_file_information_type()
+    ctypes, wintypes, kernel32, create_file = windows_create_file_api()
+    file_information_type = windows_file_information_type()
     invalid_handle = wintypes.HANDLE(-1).value
     deadline = time.monotonic() + timeout_seconds
     with ExitStack() as anchors:
-        _anchor_directory(anchors, path.parent, final_access=0x80000000)
+        anchor_directory(anchors, path.parent, final_access=0x80000000)
         while True:
             handle = create_file(
                 str(path),
@@ -248,7 +248,7 @@ def _read_regular_file(
 ) -> bytes | None:
     _record_read_operation(trace, "open", path)
     if os.name != "nt":
-        with _posix_directory_fd(path.parent) as parent_fd:
+        with posix_directory_fd(path.parent) as parent_fd:
             return _read_regular_file_open(
                 path,
                 maximum_bytes=maximum_bytes,
@@ -257,7 +257,7 @@ def _read_regular_file(
                 missing_ok=missing_ok,
             )
     with ExitStack() as anchors:
-        _anchor_directory(anchors, path.parent, final_access=0x80000000)
+        anchor_directory(anchors, path.parent, final_access=0x80000000)
         with _windows_regular_file_anchor(path, missing_ok=missing_ok) as present:
             if not present:
                 return None
@@ -293,7 +293,7 @@ def write_profile_custody_local_record(path: Path, payload: bytes, *, publish_on
 
 def _write_posix_profile_custody_local_record(path: Path, payload: bytes, *, publish_once: bool) -> None:
     """Write one local record below the pinned POSIX parent directory."""
-    with _posix_directory_fd(path.parent) as parent_fd:
+    with posix_directory_fd(path.parent) as parent_fd:
         temporary_name = f".{path.name}.{os.getpid()}.{uuid4().hex}.tmp"
         descriptor = _posix_open_exclusive_file(parent_fd, temporary_name)
         try:
@@ -320,7 +320,7 @@ def _write_posix_profile_custody_local_record(path: Path, payload: bytes, *, pub
 def _write_windows_profile_custody_local_record(path: Path, payload: bytes, *, publish_once: bool) -> None:
     """Write one local record below the pinned Windows parent directory."""
     with ExitStack() as anchors:
-        _anchor_directory(anchors, path.parent, final_access=0x80000000)
+        anchor_directory(anchors, path.parent, final_access=0x80000000)
         if publish_once:
             _write_windows_local_record_once(path, payload)
             return
@@ -386,9 +386,9 @@ def compare_and_replace_profile_custody_local_record(
     maximum_bytes: int,
 ) -> None:
     """Atomically replace a local custody record through the transition engine."""
-    from . import _filesystem_records
+    from . import filesystem_records
 
-    _filesystem_records.compare_and_replace_profile_custody_local_record(
+    filesystem_records.compare_and_replace_profile_custody_local_record(
         path,
         expected=expected,
         replacement=replacement,
@@ -404,9 +404,9 @@ def compare_and_replace_same_or_predecessor_profile_custody_local_record(
     maximum_bytes: int,
 ) -> None:
     """Publish a current custody record only from its exact predecessor."""
-    from . import _filesystem_records
+    from . import filesystem_records
 
-    _filesystem_records.compare_and_replace_same_or_predecessor_profile_custody_local_record(
+    filesystem_records.compare_and_replace_same_or_predecessor_profile_custody_local_record(
         path,
         current=current,
         predecessor=predecessor,
@@ -421,9 +421,9 @@ def compare_and_clear_profile_custody_local_record(
     maximum_bytes: int,
 ) -> None:
     """Remove a local custody record only when its anchored bytes still match."""
-    from . import _filesystem_records
+    from . import filesystem_records
 
-    _filesystem_records.compare_and_clear_profile_custody_local_record(
+    filesystem_records.compare_and_clear_profile_custody_local_record(
         path,
         expected=expected,
         maximum_bytes=maximum_bytes,
@@ -529,7 +529,7 @@ def clear_profile_custody_local_record(path: Path) -> None:
 
 def _clear_posix_profile_custody_local_record(path: Path) -> None:
     """Clear one local record after verifying its identity below a POSIX parent."""
-    with _posix_directory_fd(path.parent) as parent_fd:
+    with posix_directory_fd(path.parent) as parent_fd:
         descriptor = _open_posix_record_for_clear(path, parent_fd=parent_fd)
         if descriptor is None:
             return
@@ -570,9 +570,9 @@ def _verify_posix_record_for_clear(path: Path, *, parent_fd: int, descriptor: in
 def _clear_windows_profile_custody_local_record(path: Path) -> None:
     """Clear one local record through a verified Windows leaf handle."""
     with ExitStack() as anchors:
-        _anchor_directory(anchors, path.parent, final_access=0x80000000)
-        ctypes, wintypes, kernel32, create_file = _windows_create_file_api()
-        file_information_type = _windows_file_information_type()
+        anchor_directory(anchors, path.parent, final_access=0x80000000)
+        ctypes, wintypes, kernel32, create_file = windows_create_file_api()
+        file_information_type = windows_file_information_type()
         handle = create_file(
             str(path),
             0x80000000 | 0x00010000,  # GENERIC_READ | DELETE
@@ -592,7 +592,7 @@ def _clear_windows_profile_custody_local_record(path: Path) -> None:
                 raise ProfileCustodyRecordError("local custody record identity cannot be verified before clear")
             if info.dwFileAttributes & 0x400 or info.dwFileAttributes & 0x10:
                 raise ProfileCustodyRecordError("local custody record must not be a reparse point or directory")
-            _windows_mark_handle_for_deletion(int(handle))
+            windows_mark_handle_for_deletion(int(handle))
         finally:
             kernel32.CloseHandle(handle)
 
@@ -693,8 +693,8 @@ def _read_regular_file_fd(
 @contextmanager
 def _windows_regular_file_anchor(path: Path, *, missing_ok: bool = False):
     """Reject a final reparse point, then lock the verified leaf against replacement."""
-    ctypes, wintypes, kernel32, create_file = _windows_create_file_api()
-    file_information_type = _windows_file_information_type()
+    ctypes, wintypes, kernel32, create_file = windows_create_file_api()
+    file_information_type = windows_file_information_type()
     handle = create_file(str(path), 0, 0x00000001 | 0x00000002, None, 3, 0x00200000, None)
     if handle == wintypes.HANDLE(-1).value:
         if missing_ok and ctypes.get_last_error() in {2, 3}:
@@ -717,7 +717,7 @@ def _lexists(path: Path, *, trace: list[ProfileCustodyPasswordReadOperation] | N
     if os.name == "nt":
         return os.path.lexists(path)
     try:
-        with _posix_directory_fd(path.parent) as parent_fd:
+        with posix_directory_fd(path.parent) as parent_fd:
             os.stat(path.name, dir_fd=parent_fd, follow_symlinks=False)
     except (FileNotFoundError, ProfileCustodyPathAbsentError):
         return False

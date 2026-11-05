@@ -23,14 +23,16 @@ from cadrumo.domain.modelos.row_models import Modelo349OperadorRow
 
 from .....domain.iva.schema import InvoiceKind
 from .source_resolver_test_support import (
-    _BUCKET_ID,
-    _clave_probe_invoice,
-    _invoice,
-    _m349_resolution,
-    _public_m349_claves,
-    _public_resolution,
+    BUCKET_ID,
+    clave_probe_invoice,
+    m349_resolution,
+    public_m349_claves,
+    public_resolution,
+    source_resolver_invoice,
 )
-from .source_resolver_test_support import _generation_pinned_authority as _generation_pinned_authority
+from .source_resolver_test_support import (
+    generation_pinned_authority as generation_pinned_authority,
+)
 from .source_resolver_test_support import secure_profile as secure_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -47,8 +49,8 @@ def test_converted_foreign_invoice_projects_its_euro_value_not_its_face_value(
     """
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
     gbp_rate = Decimal("1") / Decimal("0.84183")
-    converted = _invoice(
-        bucket_id=_BUCKET_ID,
+    converted = source_resolver_invoice(
+        bucket_id=BUCKET_ID,
         invoice_number="F-2026-010",
         issued_at=date(2026, 1, 15),
         counterparty_tax_id="DE123456789",
@@ -60,7 +62,7 @@ def test_converted_foreign_invoice_projects_its_euro_value_not_its_face_value(
         fx_rate_source=ECB_RATE_SOURCE_ID,
     )
     repository.save(build_invoice_catalogue((converted,)))
-    resolution = _m349_resolution(repository)
+    resolution = m349_resolution(repository)
 
     expected_eur = (Decimal("1000.00") * gbp_rate).quantize(Decimal("0.01"))
     assert expected_eur == Decimal("1187.89")
@@ -78,8 +80,8 @@ def test_unconverted_foreign_invoice_is_withheld_from_projection(
     ledger's ``is_non_eur_without_conversion`` gate.
     """
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
-    unconverted = _invoice(
-        bucket_id=_BUCKET_ID,
+    unconverted = source_resolver_invoice(
+        bucket_id=BUCKET_ID,
         invoice_number="F-2026-011",
         issued_at=date(2026, 1, 15),
         counterparty_tax_id="DE123456789",
@@ -88,7 +90,7 @@ def test_unconverted_foreign_invoice_is_withheld_from_projection(
         currency="GBP",
     )
     repository.save(build_invoice_catalogue((unconverted,)))
-    resolution = _m349_resolution(repository)
+    resolution = m349_resolution(repository)
 
     # No operator counted, and no importe declared from the foreign face value.
     assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("0")
@@ -108,15 +110,15 @@ def test_a_service_category_alone_resolves_its_m349_clave() -> None:
     Asserted on both directions and against the goods claves, because filing a
     service as E or A would report it as an entrega/adquisición de bienes.
     """
-    issued = _clave_probe_invoice(InvoiceKind.ISSUED, IvaCategory("intra_community_service_supply"))
-    received = _clave_probe_invoice(
+    issued = clave_probe_invoice(InvoiceKind.ISSUED, IvaCategory("intra_community_service_supply"))
+    received = clave_probe_invoice(
         InvoiceKind.RECEIVED,
         IvaCategory("intra_community_service_acquisition_reverse_charge"),
     )
 
     assert issued.operation_type is None
     assert received.operation_type is None
-    assert set(_public_m349_claves((issued, received))) == {"S", "I"}
+    assert set(public_m349_claves((issued, received))) == {"S", "I"}
 
 
 def test_a_service_category_on_its_impossible_side_resolves_no_clave() -> None:
@@ -126,16 +128,16 @@ def test_a_service_category_on_its_impossible_side_resolves_no_clave() -> None:
     issued one, describes an operation that does not arise. Resolving a clave
     for it would file a fabricated row, so the branch must decline.
     """
-    wrong_way_supply = _clave_probe_invoice(
+    wrong_way_supply = clave_probe_invoice(
         InvoiceKind.RECEIVED,
         IvaCategory("intra_community_service_supply"),
     )
-    wrong_way_acquisition = _clave_probe_invoice(
+    wrong_way_acquisition = clave_probe_invoice(
         InvoiceKind.ISSUED,
         IvaCategory("intra_community_service_acquisition_reverse_charge"),
     )
 
-    assert _public_m349_claves((wrong_way_supply, wrong_way_acquisition)) == ()
+    assert public_m349_claves((wrong_way_supply, wrong_way_acquisition)) == ()
 
 
 def test_an_explicit_operation_type_resolves_a_clave_without_any_iva_category() -> None:
@@ -152,8 +154,8 @@ def test_an_explicit_operation_type_resolves_a_clave_without_any_iva_category() 
     justification is void and the guard must be re-decided rather than
     re-explained.
     """
-    invoice = _invoice(
-        bucket_id=_BUCKET_ID,
+    invoice = source_resolver_invoice(
+        bucket_id=BUCKET_ID,
         kind=InvoiceKind.ISSUED,
         invoice_number="EXPLICIT-CLAVE-001",
         issued_at=date(2026, 2, 1),
@@ -164,7 +166,7 @@ def test_an_explicit_operation_type_resolves_a_clave_without_any_iva_category() 
     ).model_copy(update={"iva_category": None, "operation_type": IntracomOperationType.E})
 
     assert invoice.iva_category is None
-    assert _public_m349_claves((invoice,)) == ("E",)
+    assert public_m349_claves((invoice,)) == ("E",)
 
 
 def test_the_intra_community_service_categories_exist_and_map_to_their_claves() -> None:
@@ -175,8 +177,8 @@ def test_the_intra_community_service_categories_exist_and_map_to_their_claves() 
     own clave -- kept distinct from the goods claves, because a service
     declared as an entrega would be filed as an entrega de bienes.
     """
-    supply = _invoice(
-        bucket_id=_BUCKET_ID,
+    supply = source_resolver_invoice(
+        bucket_id=BUCKET_ID,
         kind=InvoiceKind.ISSUED,
         invoice_number="SERV-S-001",
         issued_at=date(2026, 2, 1),
@@ -185,8 +187,8 @@ def test_the_intra_community_service_categories_exist_and_map_to_their_claves() 
         base_total=Decimal("100.00"),
         iva_category=IvaCategory("intra_community_service_supply"),
     )
-    acquisition = _invoice(
-        bucket_id=_BUCKET_ID,
+    acquisition = source_resolver_invoice(
+        bucket_id=BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         invoice_number="SERV-I-001",
         issued_at=date(2026, 2, 1),
@@ -196,7 +198,7 @@ def test_the_intra_community_service_categories_exist_and_map_to_their_claves() 
         iva_category=IvaCategory("intra_community_service_acquisition_reverse_charge"),
     )
 
-    assert set(_public_m349_claves((supply, acquisition))) == {"S", "I"}
+    assert set(public_m349_claves((supply, acquisition))) == {"S", "I"}
 
 
 def _ic_supply_without_operation_type() -> Invoice:
@@ -205,8 +207,8 @@ def _ic_supply_without_operation_type() -> Invoice:
     The ambiguous record: the resolver must pick a clave, and nothing on the
     invoice says whether the goods were previously imported.
     """
-    return _invoice(
-        bucket_id=_BUCKET_ID,
+    return source_resolver_invoice(
+        bucket_id=BUCKET_ID,
         invoice_number="IC-SUPPLY-001",
         issued_at=date(2026, 1, 15),
         counterparty_tax_id="DE123456789",
@@ -217,8 +219,8 @@ def _ic_supply_without_operation_type() -> Invoice:
 
 def _third_country_import() -> Invoice:
     """An importation in the same bucket -- the fact that makes M/H possible."""
-    return _invoice(
-        bucket_id=_BUCKET_ID,
+    return source_resolver_invoice(
+        bucket_id=BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         invoice_number="IMPORT-001",
         issued_at=date(2026, 1, 10),
@@ -248,7 +250,7 @@ def test_an_inferred_entrega_clave_is_disclosed_when_the_bucket_also_holds_an_im
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
     repository.save(build_invoice_catalogue((_ic_supply_without_operation_type(), _third_country_import())))
 
-    resolution = _m349_resolution(repository)
+    resolution = m349_resolution(repository)
 
     assert _inferred_clave_reasons(resolution) == [M349_CLAVE_INFERRED_REASON]
     advisory = next(d for d in resolution.diagnostics if d.reason == M349_CLAVE_INFERRED_REASON)
@@ -281,7 +283,7 @@ def test_the_same_supply_is_silent_when_the_taxpayer_never_imports(
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
     repository.save(build_invoice_catalogue((_ic_supply_without_operation_type(),)))
 
-    assert _inferred_clave_reasons(_m349_resolution(repository)) == []
+    assert _inferred_clave_reasons(m349_resolution(repository)) == []
 
 
 def test_a_stated_operation_type_is_never_disclosed_as_inferred(
@@ -300,7 +302,7 @@ def test_a_stated_operation_type_is_never_disclosed_as_inferred(
     )
     repository.save(build_invoice_catalogue((stated, _third_country_import())))
 
-    assert _inferred_clave_reasons(_m349_resolution(repository)) == []
+    assert _inferred_clave_reasons(m349_resolution(repository)) == []
 
 
 def test_an_unconverted_foreign_invoice_is_excluded_but_reported(
@@ -321,8 +323,8 @@ def test_an_unconverted_foreign_invoice_is_excluded_but_reported(
     contradiction or by silence.
     """
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
-    unconverted = _invoice(
-        bucket_id=_BUCKET_ID,
+    unconverted = source_resolver_invoice(
+        bucket_id=BUCKET_ID,
         invoice_number="F-2026-012",
         issued_at=date(2026, 1, 15),
         counterparty_tax_id="DE123456789",
@@ -331,7 +333,7 @@ def test_an_unconverted_foreign_invoice_is_excluded_but_reported(
         currency="GBP",
     )
     repository.save(build_invoice_catalogue((unconverted,)))
-    resolution = _m349_resolution(repository)
+    resolution = m349_resolution(repository)
 
     assert resolution.diagnostics, (
         "the invoice was withheld from Modelo 349 with no advisory: the operator "
@@ -389,7 +391,7 @@ def test_m349_declarable_facts_are_reachable_on_the_canonical_path(
         "party_legal_name": "Servizi SRL",
     }
 
-    canonical = _invoice(
+    canonical = source_resolver_invoice(
         bucket_id=secure_profile.bucket_id,
         kind=InvoiceKind.RECEIVED,
         invoice_number="IT-SERV-2026-001",
@@ -400,7 +402,7 @@ def test_m349_declarable_facts_are_reachable_on_the_canonical_path(
         base_total=Decimal("3000.00"),
         iva_category=IvaCategory("intra_community_service_acquisition_reverse_charge"),
     )
-    resolution = _public_resolution((canonical,), context=context)
+    resolution = public_resolution((canonical,), context=context)
     rows = [row for row in resolution.detail_rows if isinstance(row, Modelo349OperadorRow)]
     assert len(rows) == 1
     row = rows[0]
@@ -442,7 +444,7 @@ def test_canonical_invoice_refuses_the_tax_id_country_mismatch_slim_permits(
     # Matched on the message, not merely on the exception type: the point is
     # that the COUNTRY/TAX-ID coupling fired, not that some validator did.
     with pytest.raises(ValidationError, match="DE"):
-        _invoice(
+        source_resolver_invoice(
             bucket_id=secure_profile.bucket_id,
             kind=InvoiceKind.RECEIVED,
             invoice_number="IT-SERV-2026-002",

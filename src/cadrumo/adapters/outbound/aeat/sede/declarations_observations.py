@@ -29,7 +29,7 @@ from .....core.casilla_id import CasillaId
 from .....core.casilla_value_kind import CasillaValueKind
 from .....core.config import Settings
 from .....core.export_layout_format import ExportLayoutFormat
-from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
+from .....core.external_constants import JSON_MIME_TYPE
 from .....core.hashing import canonical_json_bytes, sha256_hex
 from .....core.i18n.render import tr
 from .....core.modelo import Modelo
@@ -87,22 +87,22 @@ if TYPE_CHECKING:
 
 __all__ = [
     "FiledDeclaracionArtefactSink",
-    "_declaration_pdf_extraction_profile_provisional",
-    "_observed_casillas_from_declaration_pdf",
-    "_read_guard_policy_from_snapshot",
-    "_register_row_artefact",
-    "_registry_snapshot_for_declaration",
-    "_store_artefact",
-    "_submitted_file_coverage_for_casillas",
     "_submitted_file_extraction_coverage",
-    "_submitted_file_layout_refusal",
-    "_verify_submitted_file_context",
-    "_with_derived_303_compensation_available_observation",
+    "declaration_pdf_extraction_profile_provisional",
     "non_numeric_observed_casillas",
+    "observed_casillas_from_declaration_pdf",
     "observed_casillas_from_submitted_file",
     "observed_filing_kind_marker_from_submitted_file",
     "published_layout_source_payloads",
+    "read_guard_policy_from_snapshot",
+    "register_row_artefact",
     "registry_observation_from_filed_declaration",
+    "registry_snapshot_for_declaration",
+    "store_artefact",
+    "submitted_file_coverage_for_casillas",
+    "submitted_file_layout_refusal",
+    "verify_submitted_file_context",
+    "with_derived_303_compensation_available_observation",
 ]
 
 EXTERNAL = Settings.external_constants()
@@ -128,7 +128,7 @@ type FiledDeclaracionArtefactSink = Callable[
 ]
 
 
-def _register_row_artefact(
+def register_row_artefact(
     declaration: ExpedientesDeclaration,
     *,
     source_url: AnyHttpUrl,
@@ -139,7 +139,7 @@ def _register_row_artefact(
         FiledDeclaracionArtefact(
             kind="register_row",
             source_url=source_url,
-            content_type=_JSON_MIME_TYPE,
+            content_type=JSON_MIME_TYPE,
             byte_count=len(payload),
             sha256=sha256_hex(payload),
             captured_at=captured_at,
@@ -148,7 +148,7 @@ def _register_row_artefact(
     )
 
 
-def _store_artefact(
+def store_artefact(
     artefact_sink: FiledDeclaracionArtefactSink | None,
     *,
     observation_key: tuple[str, int, Period, str],
@@ -160,7 +160,7 @@ def _store_artefact(
     return artefact_sink(observation_key, artefact, body)
 
 
-def _registry_snapshot_for_declaration(
+def registry_snapshot_for_declaration(
     declaration: ExpedientesDeclaration,
     *,
     operation: PinnedAuthorityOperation,
@@ -199,7 +199,7 @@ def published_layout_source_payloads(
     return {source_id: operation.source_evidence(source_id).payload for source_id in source_ids}
 
 
-def _read_guard_policy_from_snapshot(snapshot: RegistrySnapshot) -> RemoteStateGuardPolicy:
+def read_guard_policy_from_snapshot(snapshot: RegistrySnapshot) -> RemoteStateGuardPolicy:
     listing_host = urlsplit(_LISTING_URL).hostname
     if listing_host is None:
         raise RegistryValidationError(f"invalid declarations listing URL: {_LISTING_URL!r}")
@@ -220,7 +220,7 @@ def _read_guard_policy_from_snapshot(snapshot: RegistrySnapshot) -> RemoteStateG
     )
 
 
-def _observed_value_kind(value: object) -> CasillaValueKind:
+def observed_value_kind(value: object) -> CasillaValueKind:
     """Classify an already-parsed casilla value by how a reader should treat it.
 
     This is the same dispatch :func:`_observed_value_token` makes when it decides
@@ -266,7 +266,7 @@ def _observed_value_token(casilla: ParsedExportFieldValue) -> str:
     the faithful reading there, and the raw token is the faithful reading only
     where the parser's own conversion discards the artefact's spelling.
     """
-    if _observed_value_kind(casilla.value) is CasillaValueKind.BOOLEAN:
+    if observed_value_kind(casilla.value) is CasillaValueKind.BOOLEAN:
         return casilla.raw
     return str(casilla.value)
 
@@ -411,13 +411,13 @@ def observed_casillas_from_submitted_file(
             source_payloads=published_layout_source_payloads(snapshot=snapshot, operation=operation),
         )
     except RegistryValidationError as exc:
-        raise _submitted_file_layout_refusal(
+        raise submitted_file_layout_refusal(
             snapshot=snapshot,
             declaration=declaration,
             artefact=artefact,
             reason=str(exc),
         ) from exc
-    _verify_submitted_file_context(resolved.fields_by_id, parsed.fields, declaration=declaration)
+    verify_submitted_file_context(resolved.fields_by_id, parsed.fields, declaration=declaration)
     row_casilla_ids = row_binding_casilla_ids_by_field(snapshot.revision, resolved.layout)
     observations: list[ObservedCasillaValue] = []
     for casilla in parsed.fields:
@@ -428,7 +428,7 @@ def observed_casillas_from_submitted_file(
             ObservedCasillaValue(
                 casilla_id=casilla_id,
                 value=_observed_value_token(casilla),
-                value_kind=_observed_value_kind(casilla.value),
+                value_kind=observed_value_kind(casilla.value),
                 source_artefact_kind="submitted_file",
                 source_locator=casilla.source_locator,
                 confidence=1.0,
@@ -439,7 +439,7 @@ def observed_casillas_from_submitted_file(
     return tuple(observations)
 
 
-def _submitted_file_layout_refusal(
+def submitted_file_layout_refusal(
     *,
     snapshot: RegistrySnapshot,
     declaration: ExpedientesDeclaration,
@@ -493,7 +493,7 @@ def _submitted_file_extraction_coverage(
     return len(observed_casillas.intersection(expected)) / len(expected) if expected else 0.0
 
 
-def _submitted_file_coverage_for_casillas(
+def submitted_file_coverage_for_casillas(
     *,
     snapshot: RegistrySnapshot,
     body: bytes,
@@ -533,7 +533,7 @@ def _submitted_file_coverage_for_casillas(
     )
 
 
-def _declaration_pdf_extraction_profile_provisional(snapshot: RegistrySnapshot) -> bool:
+def declaration_pdf_extraction_profile_provisional(snapshot: RegistrySnapshot) -> bool:
     """Report whether any ``declaracion_pdf`` profile in ``snapshot`` is unconfirmed.
 
     A profile with ``provisional_pending_specimen = true`` has its
@@ -554,7 +554,7 @@ def _declaration_pdf_extraction_profile_provisional(snapshot: RegistrySnapshot) 
     )
 
 
-def _observed_casillas_from_declaration_pdf(
+def observed_casillas_from_declaration_pdf(
     *,
     snapshot: RegistrySnapshot,
     declaration: ExpedientesDeclaration,
@@ -597,7 +597,7 @@ def _observed_casillas_from_declaration_pdf(
             ObservedCasillaValue(
                 casilla_id=casilla.casilla_id,
                 value=str(casilla.printed_value),
-                value_kind=_observed_value_kind(casilla.printed_value),
+                value_kind=observed_value_kind(casilla.printed_value),
                 source_artefact_kind="declaration_pdf",
                 source_locator=f"page:{casilla.source_page}:casilla:{casilla.casilla_id}",
                 confidence=casilla.extraction_confidence,
@@ -617,7 +617,7 @@ def _observed_casillas_from_declaration_pdf(
     return tuple(observations)
 
 
-def _verify_submitted_file_context(
+def verify_submitted_file_context(
     fields_by_id: Mapping[str, ExportFieldDefinition],
     parsed_fields: tuple[ParsedExportFieldValue, ...],
     *,
@@ -884,7 +884,7 @@ def _m303_compensation_source_metadata(
     )
 
 
-def _with_derived_303_compensation_available_observation(
+def with_derived_303_compensation_available_observation(
     observation: FiledDeclaracionObservation,
     *,
     operation: PinnedAuthorityOperation,
@@ -922,7 +922,7 @@ def _with_derived_303_compensation_available_observation(
     derived = ObservedCasillaValue(
         casilla_id=target_id,
         value=str(derivation.available),
-        value_kind=_observed_value_kind(derivation.available),
+        value_kind=observed_value_kind(derivation.available),
         source_artefact_kind=source_artefact_kind,
         source_locator=source_locator,
         confidence=1.0,

@@ -17,15 +17,15 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from ....application.ledger.filer_establishment import FILER_TAX_ID_FACT_PATH, resolve_filer_territorial_scope
 from ....application.ledger.preconditions import LedgerPreconditionCondition
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ..common import cli_policy_refusal_projection
@@ -35,12 +35,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 def test_filer_setup_refusal_reaches_the_shared_cli_projection_intact() -> None:
     """The shared boundary sees the original condition, facts, and outcome."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        profile = _create_profile_record_for_test(
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        profile = create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id="11111111-1111-4111-8111-111111111111",
             facts=(UserProfileFact(path=FILER_TAX_ID_FACT_PATH, value="X1234567L"),),
-            context=_profile_creation_context_for_test(),
+            context=leased_profile_create_context(),
         )
 
         with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:

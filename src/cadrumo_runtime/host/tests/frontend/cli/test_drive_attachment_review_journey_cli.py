@@ -13,10 +13,10 @@ from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
 from cadrumo.domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 
-from .ledger_ux_support import _invoke, _open_bucket_session
+from .ledger_ux_support import _invoke, open_bucket_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-__all__ = ["_open_bucket_session"]
+__all__ = ["open_bucket_session"]
 
 _FACTURAE = files("cadrumo.application.ledger.tests") / "_evidence_corpus" / "facturae_32_recargo_invoice.xml"
 _DRIVE_FILE_ID = "1AbcDEfgHIjkLMnoPQRstuVWxyz12345"

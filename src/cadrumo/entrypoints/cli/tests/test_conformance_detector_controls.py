@@ -37,8 +37,8 @@ from __future__ import annotations
 import pytest
 
 from .live_command_validation import validate_cited_command
-from .test_documented_command_conformance import _cited_commands
-from .test_json_schema_conformance import _is_forbidden_notice_field
+from .test_documented_command_conformance import cited_commands
+from .test_json_schema_conformance import is_forbidden_notice_field
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -57,7 +57,7 @@ def _fenced(command: str) -> str:
 
 def _violations_for(command: str) -> list[str]:
     """Return the documented-command gate's verdict on one cited invocation."""
-    cited = _cited_commands(_fenced(command))
+    cited = cited_commands(_fenced(command))
     assert cited, (
         f"the citation producer emitted nothing for {command!r}, so the control below would assert over an "
         "empty list and hold vacuously. The doc parser, not the detector, is what broke."
@@ -112,7 +112,7 @@ def test_the_dead_subcommand_detector_flags_a_verb_the_group_does_not_expose() -
 )
 def test_the_bespoke_notice_detector_flags_a_smuggled_diagnostic_field(field_name: str) -> None:
     """Each name the standard forbids on a result schema must be reported."""
-    assert _is_forbidden_notice_field(field_name), (
+    assert is_forbidden_notice_field(field_name), (
         f"{field_name!r} is a bespoke diagnostic field the notice standard forbids on a result schema, "
         "but the detector does not report it, so a schema regrowing it would pass the conformance gate"
     )
@@ -127,7 +127,7 @@ def test_the_bespoke_notice_detector_flags_the_suffix_smuggling_shape(field_name
     name. The suffix rule is what makes the check general, so it is controlled
     separately from the literal set above.
     """
-    assert _is_forbidden_notice_field(field_name)
+    assert is_forbidden_notice_field(field_name)
 
 
 @pytest.mark.parametrize("field_name", ["findings", "warnings", "next_due", "next_action", "notices", "result"])
@@ -140,7 +140,7 @@ def test_the_bespoke_notice_detector_leaves_primary_result_data_alone(field_name
     would be over-firing on exactly the payloads the standard permits, and the
     firing controls above cannot distinguish that from a correct detector.
     """
-    assert not _is_forbidden_notice_field(field_name), (
+    assert not is_forbidden_notice_field(field_name), (
         f"{field_name!r} is primary result data the notice standard explicitly allows, but the detector "
         "reports it as a bespoke diagnostic; the conformance gate would red on a conformant schema"
     )

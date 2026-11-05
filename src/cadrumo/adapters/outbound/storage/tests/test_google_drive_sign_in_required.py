@@ -19,7 +19,7 @@ from ...google.tests.token_endpoint_server import (
     credentials_needing_refresh,
     token_endpoint,
 )
-from .._google_drive import GoogleDriveProvider
+from ..google_drive import GoogleDriveProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

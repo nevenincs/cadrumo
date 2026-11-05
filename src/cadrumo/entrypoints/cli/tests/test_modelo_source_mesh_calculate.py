@@ -18,7 +18,7 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from cadrumo.application.aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
 from cadrumo.application.aggregation.retenciones import Modelo180PropertyEvidence, Modelo180StructuredAddress
@@ -41,8 +41,7 @@ from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.iva.schema import EUMemberState, IvaCategory
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import TransactionCatalogue
-from cadrumo.tests.cli_envelope import unwrap_envelope_notices
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
 from .cli_fixture_worlds import RegisteredCliProfile, cli_world_provider, invoke_joined_cli
 from .ordinary_m303_scenarios import joint_return_options
@@ -53,7 +52,7 @@ from .source_mesh_calculate_transactions import (
     m100_activity_income_transaction,
 )
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["isolated_cli_backend"]
 
 # Seeded rows and stored records decode against registry facts, so the test
 # body holds the same authority lease a CLI invocation holds. Every command runs
@@ -168,7 +167,7 @@ def _create_work_unit(profile: RegisteredCliProfile, *, modelo: str, year: int, 
         period,
     )
     assert result.exit_code == 0, result.output
-    payload = STR_KEYED_MAPPING_ADAPTER.validate_python(_payload(result.output))
+    payload = STR_KEYED_MAPPING_ADAPTER.validate_python(unwrap_schema_envelope(result.output))
     work_unit_id = payload["work_unit_id"]
     assert isinstance(work_unit_id, str)
     return {"work_unit_id": work_unit_id}
@@ -215,7 +214,7 @@ def _capture_m115_invoice_withholding(profile: RegisteredCliProfile) -> None:
         "--iva-category", "domestic_general",
     )  # fmt: skip
     assert created.exit_code == 0, created.output
-    invoice_id = _payload(created.output)["invoice_id"]
+    invoice_id = unwrap_schema_envelope(created.output)["invoice_id"]
     assert isinstance(invoice_id, str) and invoice_id, created.output
 
     request = InvoiceWithholdingEvidenceRequest(
@@ -315,7 +314,7 @@ def test_work_calculate_modelo_115_uses_retenciones_aggregation_observation(tmp_
             "04=0",
         )
     assert calculated.exit_code == 0, calculated.output
-    casilla_values = _payload(calculated.output)["casilla_values"]
+    casilla_values = unwrap_schema_envelope(calculated.output)["casilla_values"]
     assert Decimal(casilla_values["01"]) == Decimal("1")
     assert Decimal(casilla_values["02"]) == Decimal("2700.00")
     assert Decimal(casilla_values["03"]) == Decimal("513.00")
@@ -338,19 +337,19 @@ def test_reusing_a_verified_calculation_keeps_the_newer_draft_current(tmp_path: 
         )
         original = _cli(profile, *calculate, "--casilla", "04=0")
         assert original.exit_code == 0, original.output
-        original_id = str(_payload(original.output)["calculation_revision_id"])
+        original_id = str(unwrap_schema_envelope(original.output)["calculation_revision_id"])
         verified = _cli(profile, "--format", "json", "app", "modelo", "work", "verify", original_id)
         assert verified.exit_code == 0, verified.output
-        assert _payload(verified.output)["granted_verificado_completo"] is True
+        assert unwrap_schema_envelope(verified.output)["granted_verificado_completo"] is True
 
         changed = _cli(profile, *calculate, "--casilla", "04=1")
         assert changed.exit_code == 0, changed.output
-        changed_id = str(_payload(changed.output)["calculation_revision_id"])
+        changed_id = str(unwrap_schema_envelope(changed.output)["calculation_revision_id"])
         assert changed_id != original_id
 
         repeated = _cli(profile, *calculate, "--casilla", "04=0")
         assert repeated.exit_code == 0, repeated.output
-        result = _payload(repeated.output)
+        result = unwrap_schema_envelope(repeated.output)
         assert result["calculation_revision_id"] == original_id
         assert result["state"] == "verificado_completo"
         notice = next(
@@ -367,7 +366,7 @@ def test_reusing_a_verified_calculation_keeps_the_newer_draft_current(tmp_path: 
         assert result["saved_confirmation"] == notice["message"]
         status = _cli(profile, "--format", "json", "app", "modelo", "work", "status", str(work_unit["work_unit_id"]))
         assert status.exit_code == 0, status.output
-        assert _payload(status.output)["current_calculation_revision_id"] == changed_id
+        assert unwrap_schema_envelope(status.output)["current_calculation_revision_id"] == changed_id
 
 
 def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses(
@@ -419,7 +418,7 @@ def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses(
             "2024",
         )
         assert work_unit.exit_code == 0, work_unit.output
-        work_unit_payload = _payload(work_unit.output)
+        work_unit_payload = unwrap_schema_envelope(work_unit.output)
         with _opened_profile(profile, authority_operation) as bucket_id:
             _seed_prior_m100_zero_carry()
             TransactionCatalogueRepository(bucket_id=bucket_id).save(
@@ -457,7 +456,7 @@ def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses(
             "renta-modelo-100-estimacion-directa-es-normal=1",
         )
     assert calculated.exit_code == 0, calculated.output
-    casilla_values = _payload(calculated.output)["casilla_values"]
+    casilla_values = unwrap_schema_envelope(calculated.output)["casilla_values"]
 
     assert Decimal(casilla_values["0171"]) == Decimal("12000.00")
     assert Decimal(casilla_values["0180"]) == Decimal("12000.00")
@@ -574,7 +573,7 @@ def test_work_calculate_modelo_115_explicit_no_relevant_payment_attestation_mate
                 str(work_unit["work_unit_id"]),
             )
             assert calculated.exit_code == 0, calculated.output
-            payload = _payload(calculated.output)
+            payload = unwrap_schema_envelope(calculated.output)
             assert Decimal(payload["casilla_values"]["01"]) == Decimal("0")
             assert Decimal(payload["casilla_values"]["02"]) == Decimal("0")
             assert Decimal(payload["casilla_values"]["03"]) == Decimal("0")
@@ -602,7 +601,7 @@ def test_work_calculate_modelo_115_explicit_no_relevant_payment_attestation_mate
                 str(output),
             )
             assert exported.exit_code == 0, exported.output
-            export_payload = _payload(exported.output)
+            export_payload = unwrap_schema_envelope(exported.output)
             assert export_payload["calculation_revision_id"] == calculation_revision_id
             assert export_payload["modelo"] == "115"
             assert output.exists()
@@ -757,7 +756,7 @@ def _assert_observations_command_payload(
     observations_result, revision_id, work_unit, payload, output_observation, input_observation
 ):
     assert observations_result.exit_code == 0, observations_result.output
-    observations_payload = _payload(observations_result.output)
+    observations_payload = unwrap_schema_envelope(observations_result.output)
     assert observations_payload["operation"] == "modelo.work.observations"
     assert observations_payload["calculation_revision_id"] == revision_id
     assert observations_payload["work_unit_id"] == work_unit["work_unit_id"]
@@ -790,7 +789,7 @@ def _assert_wizard_emits_source_mesh_provenance(capsys, native_profile, operatio
 
     from cadrumo.application.modelo.calculate_input import ModeloWorkCalculationServiceResult
     from cadrumo.application.modelo.calculation_operation import calculation_public_result
-    from cadrumo.entrypoints.cli._modelo_work_wizard_cli import _emit_wizard_result
+    from cadrumo.entrypoints.cli.modelo_work_wizard_cli import emit_wizard_result
 
     from .modelo_work_scenarios import load_work_unit_by_id
 
@@ -806,7 +805,7 @@ def _assert_wizard_emits_source_mesh_provenance(capsys, native_profile, operatio
         profile_decode_context=operation.profile_decode_context(),
     )
     wizard_work_unit = load_work_unit_by_id(work_unit_id=work_unit["work_unit_id"])
-    _emit_wizard_result(
+    emit_wizard_result(
         wizard_context,
         calculation_public_result(
             ModeloWorkCalculationServiceResult(revision=persisted, work_unit=wizard_work_unit, revision_published=True),
@@ -815,7 +814,7 @@ def _assert_wizard_emits_source_mesh_provenance(capsys, native_profile, operatio
         (),
         language=OutputLanguage.EN,
     )
-    wizard_payload = _payload(capsys.readouterr().out)
+    wizard_payload = unwrap_schema_envelope(capsys.readouterr().out)
     assert wizard_payload["source_provenance"], "wizard JSON must carry the persisted source-mesh trace"
     assert {row["source_ref"] for row in wizard_payload["source_provenance"]} == {
         source.source_ref for source in persisted.source_provenance
@@ -875,7 +874,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
             *joint_return_options(),
         )
         assert result.exit_code == 0, result.output
-        payload = _payload(result.output)
+        payload = unwrap_schema_envelope(result.output)
         revision_id = payload["calculation_revision_id"]
 
         authenticate_profile_for_invocation(

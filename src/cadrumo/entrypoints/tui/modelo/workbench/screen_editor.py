@@ -24,8 +24,8 @@ from .editor_explanations import affects_text
 from .header import ResultView, result_view
 from .ports import ModeloWorkbenchActionsV1, WorkbenchChangeKind
 from .screen_constants import (
-    _DOCKED_FROM,
-    _FOLLOWING_LINES,
+    DOCKED_FROM,
+    FOLLOWING_LINES,
 )
 from .session import StagedChange, StageRefusal, WorkbenchEditSession
 from .sources import OpenSourceSurface
@@ -55,7 +55,7 @@ class WorkbenchEditorMixin:
         recorded = self.recorded
         form = self.form
         result = self._editor_result(form, recorded)
-        docked = self._height() >= _DOCKED_FROM
+        docked = self._height() >= DOCKED_FROM
         panel = self._editor_panel(entry, actions, card, form, result, recorded, docked)
         self._show_editor(entry, panel, docked)
 
@@ -118,7 +118,7 @@ class WorkbenchEditorMixin:
         self._docked = (entry, panel)
         self.add_class("-editing")
         # The list keeps the rows after the box in view itself, whenever it brings the box in.
-        self.query_one(CasillaList).keep_following(_FOLLOWING_LINES)
+        self.query_one(CasillaList).keep_following(FOLLOWING_LINES)
         removed = None if previous is None else previous[1].remove()
         self.run_worker(self._mount_docked(panel, removed), group="workbench-dock")
 

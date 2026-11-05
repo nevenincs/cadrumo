@@ -56,7 +56,7 @@ def _row_to_payload(row: ReviewQueueRowProjection) -> ReviewQueueRowPayload:
     )
 
 
-def _resolve_confidence_threshold(value: float | None) -> Decimal | None:
+def resolve_confidence_threshold(value: float | None) -> Decimal | None:
     """Validate and lift the ``--confidence-below`` option to a Decimal.
 
     ``classification_confidence`` is a share of one, so a threshold outside
@@ -101,7 +101,7 @@ def review_queue(
 ) -> None:
     """List read-only review queue rows."""
     activate_subcommand_output_language(ctx, output_language)
-    threshold = _resolve_confidence_threshold(confidence_below)
+    threshold = resolve_confidence_threshold(confidence_below)
     request = ReviewQueueReadRequest(
         profile_id=UUID(active_bucket_id_or_refuse()),
         kinds=tuple(kinds),
@@ -119,7 +119,7 @@ def review_queue(
         ctx,
         command="review.queue",
         result=typed_result,
-        lines=_queue_lines(projection.rows, explain=explain),
+        lines=queue_lines(projection.rows, explain=explain),
     )
 
 
@@ -152,7 +152,7 @@ def review_view(
     emit_envelope(ctx, command="review.view", result=typed_result, lines=lines)
 
 
-def _queue_lines(rows: tuple[ReviewQueueRowProjection, ...], *, explain: bool = False) -> list[str]:
+def queue_lines(rows: tuple[ReviewQueueRowProjection, ...], *, explain: bool = False) -> list[str]:
     """Render the review queue as tab-separated text.
 
     When ``explain`` is True, the

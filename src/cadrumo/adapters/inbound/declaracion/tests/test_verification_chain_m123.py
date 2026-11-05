@@ -3,13 +3,13 @@ from __future__ import annotations
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from ._verification_chain_support import (
-    _COMPUTED_CASILLAS_M123_2019,
-    _COMPUTED_CASILLAS_M123_2024,
-    _assert_engine_closure_matches_extracted_decimal,
-    _calculate_engine_values_from_inputs,
-    _decimal_inputs_from_extracted_values,
-    _parse_extracted_declaracion_values,
+from .verification_chain_support import (
+    COMPUTED_CASILLAS_M123_2019,
+    COMPUTED_CASILLAS_M123_2024,
+    assert_engine_closure_matches_extracted_decimal,
+    calculate_engine_values_from_inputs,
+    decimal_inputs_from_extracted_values,
+    parse_extracted_declaracion_values,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
@@ -34,8 +34,8 @@ _M123_2024_CLOSURE_CASILLAS: tuple[CasillaId, ...] = (
 @pytest.mark.parametrize(
     "pdf_stem,year,period,computed_set,closure_ids",
     [
-        ("2023-1T", 2023, "1T", _COMPUTED_CASILLAS_M123_2019, _M123_2019_CLOSURE_CASILLAS),
-        ("2024-1T", 2024, "1T", _COMPUTED_CASILLAS_M123_2024, _M123_2024_CLOSURE_CASILLAS),
+        ("2023-1T", 2023, "1T", COMPUTED_CASILLAS_M123_2019, _M123_2019_CLOSURE_CASILLAS),
+        ("2024-1T", 2024, "1T", COMPUTED_CASILLAS_M123_2024, _M123_2024_CLOSURE_CASILLAS),
     ],
 )
 def test_verification_chain_m123_engine_recomputes_closure_casillas(
@@ -74,9 +74,9 @@ def test_verification_chain_m123_engine_recomputes_closure_casillas(
 
     Verdict: VERIFIED for all closure casillas in both revisions.
     """
-    extracted = _parse_extracted_declaracion_values(modelo="123", fixture_stem=pdf_stem, year=year, period=period)
-    inputs = _decimal_inputs_from_extracted_values(extracted, excluding=computed_set)
-    engine_values = _calculate_engine_values_from_inputs(
+    extracted = parse_extracted_declaracion_values(modelo="123", fixture_stem=pdf_stem, year=year, period=period)
+    inputs = decimal_inputs_from_extracted_values(extracted, excluding=computed_set)
+    engine_values = calculate_engine_values_from_inputs(
         modelo="123",
         year=year,
         period=period,
@@ -87,7 +87,7 @@ def test_verification_chain_m123_engine_recomputes_closure_casillas(
     for closure_id in closure_ids:
         if closure_id not in extracted:
             continue
-        _assert_engine_closure_matches_extracted_decimal(
+        assert_engine_closure_matches_extracted_decimal(
             label=f"M123/{pdf_stem}",
             engine_values=engine_values,
             extracted=extracted,

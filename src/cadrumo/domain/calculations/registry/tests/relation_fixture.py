@@ -14,7 +14,7 @@ from ..observation_fold import (
     fold_pagos_fraccionados_ingresados,
     gather_observed_requirement_values,
 )
-from ..relations import _fold_op, relation_prefill_bindings_for_period, relation_source_requirements
+from ..relations import relation_prefill_bindings_for_period, relation_source_requirements, relations_fold_op
 from ..schema import ModeloRevision
 
 
@@ -120,11 +120,11 @@ def resolve_relation_values(
         if binding.id not in external_outputs:
             raise RegistryValidationError(f"missing relation-prefill value for {binding.id!r}")
         raw_value = external_outputs[binding.id]
-        if _fold_op(binding) is RelationAggregationOp.COPY:
+        if relations_fold_op(binding) is RelationAggregationOp.COPY:
             if not isinstance(raw_value, Decimal):
                 raise RegistryValidationError(f"relation-prefill binding {binding.id!r} copy requires one Decimal")
             resolved[binding.id] = raw_value
-        elif _fold_op(binding) is RelationAggregationOp.SUM:
+        elif relations_fold_op(binding) is RelationAggregationOp.SUM:
             if not isinstance(raw_value, tuple):
                 raise RegistryValidationError(
                     f"relation-prefill binding {binding.id!r} sum requires a tuple of Decimal values",
@@ -133,7 +133,7 @@ def resolve_relation_values(
         else:
             if not isinstance(raw_value, tuple):
                 raise RegistryValidationError(
-                    f"relation-prefill binding {binding.id!r} {_fold_op(binding).value} requires one tuple of "
+                    f"relation-prefill binding {binding.id!r} {relations_fold_op(binding).value} requires one tuple of "
                     "source-casilla values per period",
                 )
             resolved[binding.id] = fold_pagos_fraccionados_ingresados(

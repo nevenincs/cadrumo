@@ -24,38 +24,38 @@ import pytest
 
 from .....tests.inventory import FIXTURES_DIR
 from ..parser import parse_declaracion
-from ._parser_boundary_casillas import (
-    _M303_CASILLA_27,
-    _M303_CASILLA_29,
-    _M303_CASILLA_37,
-    _M303_CASILLA_45,
-    _M303_CASILLA_64,
-    _M303_CASILLA_66,
-    _M303_CASILLA_71,
-    _M303_COMPENSACION_ANTERIORES_CASILLA,
-    _M303_COMPENSACION_APLICADA_CASILLA,
-    _M303_COMPENSACION_POSTERIORES_CASILLA,
-    _M303_RESULTADO_CASILLA,
-    _M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
+from .parser_boundary_casillas import (
+    M303_CASILLA_27,
+    M303_CASILLA_29,
+    M303_CASILLA_37,
+    M303_CASILLA_45,
+    M303_CASILLA_64,
+    M303_CASILLA_66,
+    M303_CASILLA_71,
+    M303_COMPENSACION_ANTERIORES_CASILLA,
+    M303_COMPENSACION_APLICADA_CASILLA,
+    M303_COMPENSACION_POSTERIORES_CASILLA,
+    M303_RESULTADO_CASILLA,
+    M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
 )
-from ._parser_boundary_m303_current_expected import (
-    _M303_2023_2024_EXPECTED,
-    _M303_CASILLA_C46,
-    _M303_CASILLA_C69,
+from .parser_boundary_m303_current_expected import (
+    M303_2023_2024_EXPECTED,
+    M303_CASILLA_C46,
+    M303_CASILLA_C69,
 )
-from ._parser_boundary_m303_support import (
-    _M303_2023_2024_IDS,
-    _M303_2023_2024_PARAMS,
-    _M303_CURRENT_PROFILE_CASILLAS,
+from .parser_boundary_m303_support import (
+    M303_2023_2024_IDS,
+    M303_2023_2024_PARAMS,
+    M303_CURRENT_PROFILE_CASILLAS,
 )
-from ._parser_boundary_support import (
-    _expected_period,
+from .parser_boundary_support import (
+    expected_period,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 
-@pytest.mark.parametrize("pdf_stem,year,period", _M303_2023_2024_PARAMS, ids=_M303_2023_2024_IDS)
+@pytest.mark.parametrize("pdf_stem,year,period", M303_2023_2024_PARAMS, ids=M303_2023_2024_IDS)
 def test_parser_extracts_modelo_303_profile_targets_from_corpus(pdf_stem: str, year: int, period: str) -> None:
     """Round-trip: parse all 8 corpus M303 PDFs and verify casilla coverage.
 
@@ -71,7 +71,7 @@ def test_parser_extracts_modelo_303_profile_targets_from_corpus(pdf_stem: str, y
             Corpus specimen ids and current-profile casilla membership asserted
             at the parser boundary.
     """
-    exp = _M303_2023_2024_EXPECTED[pdf_stem]
+    exp = M303_2023_2024_EXPECTED[pdf_stem]
 
     pdf_path = FIXTURES_DIR / "justificantes" / "303" / f"{pdf_stem}.pdf"
 
@@ -83,32 +83,32 @@ def test_parser_extracts_modelo_303_profile_targets_from_corpus(pdf_stem: str, y
     )
 
     assert filing.modelo == "303"
-    assert filing.period == _expected_period(year, period)
+    assert filing.period == expected_period(year, period)
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "303"
 
     values = {v.casilla_id: v.printed_value for v in filing.values}
 
-    assert set(values.keys()) == _M303_CURRENT_PROFILE_CASILLAS
+    assert set(values.keys()) == M303_CURRENT_PROFILE_CASILLAS
     for casilla_id, value in values.items():
         assert isinstance(value, Decimal), (
             f"{pdf_stem}: casilla {casilla_id!r} expected a Decimal instance, got {value!r}"
         )
 
     # Stable casillas: formula-consistent values derived from _generate.py fixtures.
-    expected_c46 = exp[_M303_CASILLA_C46]
-    expected_c69 = exp[_M303_CASILLA_C69]
+    expected_c46 = exp[M303_CASILLA_C46]
+    expected_c69 = exp[M303_CASILLA_C69]
     stable_expected = {
-        _M303_CASILLA_27: exp[_M303_CASILLA_27],
-        _M303_CASILLA_29: exp[_M303_CASILLA_29],
-        _M303_CASILLA_37: exp[_M303_CASILLA_37],
-        _M303_CASILLA_45: exp[_M303_CASILLA_45],
-        _M303_RESULTADO_REGIMEN_GENERAL_CASILLA: expected_c46,
-        _M303_CASILLA_64: expected_c46,
-        _M303_CASILLA_66: expected_c46,
-        _M303_RESULTADO_CASILLA: expected_c69,
-        _M303_CASILLA_71: expected_c69,
+        M303_CASILLA_27: exp[M303_CASILLA_27],
+        M303_CASILLA_29: exp[M303_CASILLA_29],
+        M303_CASILLA_37: exp[M303_CASILLA_37],
+        M303_CASILLA_45: exp[M303_CASILLA_45],
+        M303_RESULTADO_REGIMEN_GENERAL_CASILLA: expected_c46,
+        M303_CASILLA_64: expected_c46,
+        M303_CASILLA_66: expected_c46,
+        M303_RESULTADO_CASILLA: expected_c69,
+        M303_CASILLA_71: expected_c69,
     }
     for casilla_id, expected_value in stable_expected.items():
         assert values[casilla_id] == expected_value, (
@@ -117,9 +117,9 @@ def test_parser_extracts_modelo_303_profile_targets_from_corpus(pdf_stem: str, y
 
     # Compensation boxes are all 0.00 in synthetic fixtures
     for casilla_id in (
-        _M303_COMPENSACION_ANTERIORES_CASILLA,
-        _M303_COMPENSACION_APLICADA_CASILLA,
-        _M303_COMPENSACION_POSTERIORES_CASILLA,
+        M303_COMPENSACION_ANTERIORES_CASILLA,
+        M303_COMPENSACION_APLICADA_CASILLA,
+        M303_COMPENSACION_POSTERIORES_CASILLA,
     ):
         assert values[casilla_id] == Decimal("0.00"), (
             f"{pdf_stem}: compensation casilla {casilla_id!r} got {values[casilla_id]!r}"

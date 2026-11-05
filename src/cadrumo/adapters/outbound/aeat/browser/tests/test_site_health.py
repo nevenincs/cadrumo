@@ -27,7 +27,7 @@ from ......core.config import Settings
 from ......core.directory_scan import scan_directory
 from ......core.errors.hierarchy import SiteHealthState
 from ......tests.inventory import FIXTURES_DIR
-from .._site_health_parsers import (
+from ..site_health_parsers import (
     evaluate_response,
     parse_mantenimiento_banner,
     parse_rate_limit_response,
@@ -253,11 +253,11 @@ class TestMantenimientoTitleOnlyGuard:
             "<body><p>Welcome to our tax portal. All services are up.</p>"
             "<p>Please log in to continue.</p></body></html>"
         )
-        from .._site_health_parsers import _extract_title, _matches_mantenimiento
+        from ..site_health_parsers import extract_title, matches_mantenimiento
 
         lowered = html.lower()
-        title = _extract_title(html, lowered)
-        hits = _matches_mantenimiento(lowered, title)
+        title = extract_title(html, lowered)
+        hits = matches_mantenimiento(lowered, title)
         assert any(h.startswith("title:") for h in hits)
         assert not any(not h.startswith("title:") for h in hits)
 
@@ -288,12 +288,12 @@ class TestMantenimientoTitleOnlyGuard:
         excludes the title element, so the single piece of evidence is
         counted once.
         """
-        from .._site_health_parsers import _extract_title, _matches_mantenimiento
+        from ..site_health_parsers import extract_title, matches_mantenimiento
 
         html = "<html><head><title>mantenimiento</title></head><body><p>Welcome</p></body></html>"
         lowered = html.lower()
 
-        hits = _matches_mantenimiento(lowered, _extract_title(html, lowered))
+        hits = matches_mantenimiento(lowered, extract_title(html, lowered))
 
         assert hits == ("title:mantenimiento",)
         assert (
@@ -346,14 +346,14 @@ class TestMantenimientoTitleOnlyGuard:
         document's title, so it is scanned as body — otherwise the exclusion
         would be a hole a marker could hide in.
         """
-        from .._site_health_parsers import _body_outside_title
+        from ..site_health_parsers import body_outside_title
 
         html = (
             "<html><head><title>Agencia Tributaria</title></head>"
             "<body><svg><title>mantenimiento</title></svg></body></html>"
         )
 
-        outside = _body_outside_title(html.lower())
+        outside = body_outside_title(html.lower())
 
         assert "agencia tributaria" not in outside
         assert "mantenimiento" in outside

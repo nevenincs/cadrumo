@@ -13,10 +13,10 @@ from ....domain.transactions.enums import (
     split_part_requires_category,
     takes_business_share,
 )
-from ....tests.cli_envelope import unwrap_cli_result as _json
+from ....tests.cli_envelope import unwrap_cli_result
 from ..ledger_results import LedgerEntryOptionsResult
 from .profile_world_fixtures import cli_surface_isolated_backend
-from .scenario_support import _invoke, create_cli_surface_profile
+from .scenario_support import create_cli_surface_profile, invoke
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -27,10 +27,10 @@ __all__ = ["cli_surface_isolated_backend"]
 def test_entry_options_serves_what_each_classification_takes_and_validates_against_its_schema() -> None:
     create_cli_surface_profile(log_in=False)
 
-    result = _invoke(["--format", "json", "app", "ledger", "entry-options"])
+    result = invoke(["--format", "json", "app", "ledger", "entry-options"])
 
     assert result.exit_code == 0, result.output
-    payload = _json(result)
+    payload = unwrap_cli_result(result)
     served = LedgerEntryOptionsResult.model_validate(payload)
     assert [row.classification for row in served.classifications] == [item.value for item in BusinessClassification]
     for row in served.classifications:
@@ -48,7 +48,7 @@ def test_entry_options_serves_what_each_classification_takes_and_validates_again
 def test_entry_options_text_output_lists_each_classification() -> None:
     create_cli_surface_profile(log_in=False)
 
-    result = _invoke(["app", "ledger", "entry-options"])
+    result = invoke(["app", "ledger", "entry-options"])
 
     assert result.exit_code == 0, result.output
     lines = [line for line in result.output.splitlines() if line.startswith("classification\t")]

@@ -39,7 +39,7 @@ from ..iva.errors import IvaRateNotFoundError
 from ..iva.lookup import rate_kinds_for_declared_rate, rate_table_covers, rate_vocabulary_date, resolve_iva_rate
 from ..iva.rates import rate_record_from_fact
 from ..iva.schema import IvaRateKind, spanish_eu_member_state
-from ._validation_pass import answer_once
+from .validation_pass import answer_once
 
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
@@ -121,9 +121,9 @@ class InvoiceOperationDateRole(StrictRegistryToken):
 
 def require_invoice_class(value: object, *, effective_date: date | None = None) -> InvoiceClass:
     """Resolve an invoice-class token through the dated facts authority."""
-    from ..calculations.registry.invoice_legal_classification import require_invoice_class as _require
+    from ..calculations.registry.invoice_legal_classification import require_invoice_class
 
-    return _require(value, effective_date=effective_date)
+    return require_invoice_class(value, effective_date=effective_date)
 
 
 def require_invoice_operation_date_role(
@@ -133,45 +133,45 @@ def require_invoice_operation_date_role(
 ) -> InvoiceOperationDateRole:
     """Resolve an operation-date role through the dated facts authority."""
     from ..calculations.registry.invoice_legal_classification import (
-        require_invoice_operation_date_role as _require,
+        require_invoice_operation_date_role,
     )
 
-    return _require(value, effective_date=effective_date)
+    return require_invoice_operation_date_role(value, effective_date=effective_date)
 
 
 def invoice_class_ordinaria(*, effective_date: date | None = None) -> InvoiceClass:
     """Return the registry-declared ordinary invoice-class token."""
-    from ..calculations.registry.invoice_legal_classification import invoice_class_ordinaria as _token
+    from ..calculations.registry.invoice_legal_classification import invoice_class_ordinaria
 
-    return _token(effective_date=effective_date)
+    return invoice_class_ordinaria(effective_date=effective_date)
 
 
 def invoice_class_simplificada(*, effective_date: date | None = None) -> InvoiceClass:
     """Return the registry-declared simplified invoice-class token."""
-    from ..calculations.registry.invoice_legal_classification import invoice_class_simplificada as _token
+    from ..calculations.registry.invoice_legal_classification import invoice_class_simplificada
 
-    return _token(effective_date=effective_date)
+    return invoice_class_simplificada(effective_date=effective_date)
 
 
 def invoice_class_rectificativa(*, effective_date: date | None = None) -> InvoiceClass:
     """Return the registry-declared corrective invoice-class token."""
-    from ..calculations.registry.invoice_legal_classification import invoice_class_rectificativa as _token
+    from ..calculations.registry.invoice_legal_classification import invoice_class_rectificativa
 
-    return _token(effective_date=effective_date)
+    return invoice_class_rectificativa(effective_date=effective_date)
 
 
 def operation_performed_role(*, effective_date: date | None = None) -> InvoiceOperationDateRole:
     """Return the registry-declared performed-operation date role."""
-    from ..calculations.registry.invoice_legal_classification import operation_performed_role as _token
+    from ..calculations.registry.invoice_legal_classification import operation_performed_role
 
-    return _token(effective_date=effective_date)
+    return operation_performed_role(effective_date=effective_date)
 
 
 def advance_payment_received_role(*, effective_date: date | None = None) -> InvoiceOperationDateRole:
     """Return the registry-declared advance-payment date role."""
-    from ..calculations.registry.invoice_legal_classification import advance_payment_received_role as _token
+    from ..calculations.registry.invoice_legal_classification import advance_payment_received_role
 
-    return _token(effective_date=effective_date)
+    return advance_payment_received_role(effective_date=effective_date)
 
 
 def default_invoice_class(*, effective_date: date | None = None) -> InvoiceClass:

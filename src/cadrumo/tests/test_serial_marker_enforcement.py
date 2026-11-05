@@ -6,7 +6,7 @@ this repository supplied one, so the marker was honoured only by the justfile
 splitting the integration lane into a ``not serial`` parallel pass and a ``-n0``
 serial pass. Every other invocation ran isolation-sensitive tests against a
 run-varying set of co-resident files.
-:func:`cadrumo.tests.marker_hook._hold_serial_items_from_xdist` closes that, and this
+:func:`cadrumo.tests.marker_hook.hold_serial_items_from_xdist` closes that, and this
 module is its proof.
 
 The proof runs a REAL nested pytest over a generated two-test package -- one

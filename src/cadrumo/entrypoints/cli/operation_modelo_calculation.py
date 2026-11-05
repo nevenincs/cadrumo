@@ -33,9 +33,9 @@ from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.modelo_localization import require_modelo_localization
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.modelos.calculation_revision import CalculationRevisionState
-from ._modelo_rendering import casilla_inline_trace, casilla_trace_verbose_line
-from ._modelo_revision_payload_parts import DetailRowPayload, ObservationPayload, SourceProvenancePayload
+from .modelo_rendering import casilla_inline_trace, casilla_trace_verbose_line
 from .modelo_results import CalculationRevisionPayload
+from .modelo_revision_payload_parts import DetailRowPayload, ObservationPayload, SourceProvenancePayload
 from .modelo_revision_rendering import calculation_revision_state_label
 
 #: How long the command waits for one calculation to settle in the profile

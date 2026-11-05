@@ -41,9 +41,9 @@ from ....core.operator_action_enums import (
 )
 from ....core.period import Period
 from ....domain.deadlines.models import ObligationStatus
-from .._action_rendering import resolved_precondition_action_json_cell
-from .._modelo_work_runs_cli import _workflow_run_payload, _workflow_run_tab_line
+from ..action_rendering import resolved_precondition_action_json_cell
 from ..common import resolve_cli_precondition_action
+from ..modelo_work_runs_cli import workflow_run_payload, workflow_run_tab_line
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -170,7 +170,7 @@ def test_work_runs_localizes_only_human_text_and_keeps_one_structural_envelope()
         with override_settings(cadrumo_output_language=language):
             for run in (action_run, health_run):
                 snapshot = WorkflowRunSnapshot.from_run(run)
-                payload = _workflow_run_payload(snapshot)
+                payload = workflow_run_payload(snapshot)
                 row = payload.model_dump(mode="json", exclude_none=False)
                 row["obligation_status"] = payload.obligation.status.value if payload.obligation is not None else None
                 health = payload.site_health_alert
@@ -298,10 +298,10 @@ def test_workflow_action_projection_rejects_binding_provenance_outside_the_catal
 
 def test_workflow_run_text_projects_the_same_canonical_typed_action_dto() -> None:
     """The run table is a text view of the resolved action DTO, not a command rebuild."""
-    payload = _workflow_run_payload(WorkflowRunSnapshot.from_run(_actionable_run()))
+    payload = workflow_run_payload(WorkflowRunSnapshot.from_run(_actionable_run()))
 
     assert payload.action is not None
-    assert _workflow_run_tab_line(payload).rsplit("\t", 1)[-1] == resolved_precondition_action_json_cell(
+    assert workflow_run_tab_line(payload).rsplit("\t", 1)[-1] == resolved_precondition_action_json_cell(
         payload.action,
     )
 

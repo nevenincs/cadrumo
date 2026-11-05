@@ -45,27 +45,27 @@ if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
 
-def _supported_filing_years() -> tuple[int, ...]:
+def supported_filing_years() -> tuple[int, ...]:
     support = published_supported_filing_years()
     assert support is not None, "the published authority declares no supported filing years"
     assert support.years, "the published support envelope admits no filing year"
     return tuple(support.years)
 
 
-_FILING_YEAR = max(_supported_filing_years())
+FILING_YEAR = max(supported_filing_years())
 
 
 _WORKSPACE_PROFILE_ID = "13000000-0000-4000-8000-000000000231"
 
 
-_T0 = datetime(_FILING_YEAR, 6, 5, 9, 0, 0, tzinfo=UTC)
+T0 = datetime(FILING_YEAR, 6, 5, 9, 0, 0, tzinfo=UTC)
 
 
-_LAW_SELECTED_REVISION_ID = "2019-y-siguientes"
+LAW_SELECTED_REVISION_ID = "2019-y-siguientes"
 
 
 def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str) -> None:
-    seed_ready_profile(bucket_id=bucket_id, surnames="Workspace", at=_T0)
+    seed_ready_profile(bucket_id=bucket_id, surnames="Workspace", at=T0)
 
 
 @pytest.fixture
@@ -76,7 +76,7 @@ def workspace_repos(tmp_path: Path) -> Iterator[tuple[str, WorkUnitCatalogueRepo
         yield profile.bucket_id, WorkUnitCatalogueRepository(objects=profile.repository)
 
 
-def _counted_catalogue_reads(monkeypatch: pytest.MonkeyPatch) -> list[WorkUnitCatalogueRepository]:
+def counted_catalogue_reads(monkeypatch: pytest.MonkeyPatch) -> list[WorkUnitCatalogueRepository]:
     """Record each encrypted-SQL catalogue read, which still runs, by any repository from here on."""
     reads: list[WorkUnitCatalogueRepository] = []
     read = WorkUnitCatalogueRepository.load_revisioned
@@ -89,34 +89,34 @@ def _counted_catalogue_reads(monkeypatch: pytest.MonkeyPatch) -> list[WorkUnitCa
     return reads
 
 
-def _seed_work_unit(
+def seed_work_unit(
     repository: WorkUnitCatalogueRepository,
     *,
     bucket_id: str,
-    revision_id: str = _LAW_SELECTED_REVISION_ID,
+    revision_id: str = LAW_SELECTED_REVISION_ID,
     operation: PinnedAuthorityOperation,
 ) -> WorkUnit:
     return create_work_unit(
         bucket_id=bucket_id,
         modelo="130",
-        filing_year=_FILING_YEAR,
-        period=Period.from_year_and_code(_FILING_YEAR, "1T"),
+        filing_year=FILING_YEAR,
+        period=Period.from_year_and_code(FILING_YEAR, "1T"),
         revision_id=revision_id,
         ports=WorkLifecyclePorts(
             work_unit_repository=repository,
             bucket_event_repository=BucketEventHistoryRepository(),
         ),
-        clock=_T0,
+        clock=T0,
         operation=operation,
     )
 
 
-def _visible_target(bucket_id: str, *, revision_id: str | None = None) -> ModeloWorkspaceVisibleFilingTargetV1:
+def visible_target(bucket_id: str, *, revision_id: str | None = None) -> ModeloWorkspaceVisibleFilingTargetV1:
     return ModeloWorkspaceVisibleFilingTargetV1(
         target=ModeloVisibleFilingTarget(
             modelo="130",
-            filing_year=_FILING_YEAR,
-            period=Period.from_year_and_code(_FILING_YEAR, "1T"),
+            filing_year=FILING_YEAR,
+            period=Period.from_year_and_code(FILING_YEAR, "1T"),
             registry_revision_id=revision_id,
             bucket_id=bucket_id,
         ),
@@ -179,7 +179,7 @@ def _exact_target(work_unit: WorkUnit):
     return ModeloExactWorkUnitTarget(work_unit_id=work_unit.work_unit_id, bucket_id=work_unit.bucket_id)
 
 
-def _assemble_static_inspection_pieces(bucket_id: str, repository: WorkUnitCatalogueRepository):
+def assemble_static_inspection_pieces(bucket_id: str, repository: WorkUnitCatalogueRepository):
     """Build every piece needed for schema_facet tests, real captures throughout."""
     from cadrumo.application.modelo.workspace_producers import (
         ModeloWorkspaceFieldManifestPortV1,
@@ -190,7 +190,7 @@ def _assemble_static_inspection_pieces(bucket_id: str, repository: WorkUnitCatal
 
     authority = published_authority_operation()
     work_capture, registry_capture, _axes = capture_modelo_workspace_target_captures(
-        _visible_target(bucket_id),
+        visible_target(bucket_id),
         bucket_id=bucket_id,
         catalogue_repository=repository,
         authority=authority,
@@ -236,11 +236,11 @@ def _assemble_static_inspection_pieces(bucket_id: str, repository: WorkUnitCatal
     return inspection, target, schema_identity, baseline, contributors
 
 
-def _real_303_inspection() -> RegistryRevisionInspection:
-    return _real_inspection("303", filing_year=_FILING_YEAR, period="1T")
+def real_303_inspection() -> RegistryRevisionInspection:
+    return real_inspection("303", filing_year=FILING_YEAR, period="1T")
 
 
-def _real_inspection(modelo: str, *, filing_year: int, period: str) -> RegistryRevisionInspection:
+def real_inspection(modelo: str, *, filing_year: int, period: str) -> RegistryRevisionInspection:
     from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
     authority = published_authority_operation()

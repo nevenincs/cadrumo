@@ -26,7 +26,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hashing import sha256_hex
 from ...core.identity.hex_ids import SnapshotId
 from ...core.identity.transaction_ids import TransactionId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.codes import IsoCurrencyCode
 from ...core.time.utc import UtcInstant
 from ...core.unit_proportion import UnitProportion
@@ -44,7 +44,7 @@ class LedgerRowFingerprint(BaseModel):
             capture helper.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId
     fingerprint: SnapshotId
@@ -72,7 +72,7 @@ class LedgerFilingSnapshot(BaseModel):
             under a wider set and reported stale.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     rows: tuple[LedgerRowFingerprint, ...] = ()
     snapshot_fingerprint: SnapshotId
@@ -116,7 +116,7 @@ class LedgerFilingStalenessVerdict(BaseModel):
             the revision's record and the register now.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     is_stale: bool
     changed: tuple[TransactionId, ...] = ()
@@ -204,7 +204,7 @@ class LedgerEvidenceRow(BaseModel):
     primitive shape.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId
     fingerprint: SnapshotId
@@ -313,7 +313,7 @@ class ManualFactBasisEntry(BaseModel):
     rendered canonical string of the operator-entered value.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
     value: str = Field(min_length=1)
@@ -335,7 +335,7 @@ class LedgerFilingEvidence(BaseModel):
     evidence).
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     snapshot_fingerprint: SnapshotId
     rows: tuple[LedgerEvidenceRow, ...] = ()

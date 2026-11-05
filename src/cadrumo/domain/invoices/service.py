@@ -25,7 +25,7 @@ from ...core.identity.hex_ids import InvoiceId
 from ...core.identity.transaction_ids import TransactionId
 from ...core.invoice_link import LinkInconsistencyDirection
 from ...core.logging import get_logger
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.text_fold import fold_diacritics
 from ..iva.schema import InvoiceKind
 from ..transactions.enums import TransactionDirection
@@ -94,7 +94,7 @@ class ReconciliationSuggestion(BaseModel):
         score: Confidence in the inclusive ``0..1`` range.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     invoice_id: InvoiceId
     transaction_id: TransactionId
@@ -121,7 +121,7 @@ class LinkInconsistency(BaseModel):
             :class:`LinkInconsistencyDirection` member.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     # NOT core.identity.InvoiceId, deliberately: the TRANSACTION_ONLY branch
     # (verify_link_consistency) feeds this from transaction.invoice_id, which

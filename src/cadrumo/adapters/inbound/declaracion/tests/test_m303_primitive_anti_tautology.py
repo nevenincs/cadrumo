@@ -41,13 +41,13 @@ import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.ids import BindingId
-from ._verification_chain_support import (
-    _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
-    _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
-    _M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
-    _M303_STATE_ATTRIBUTION_RATIO_CASILLA,
-    _assert_m303_printed_resultado_regimen_general_arithmetic,
-    _calculate_m303_engine_values_from_inputs,
+from .verification_chain_support import (
+    M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
+    M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
+    M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
+    M303_STATE_ATTRIBUTION_RATIO_CASILLA,
+    assert_m303_printed_resultado_regimen_general_arithmetic,
+    calculate_m303_engine_values_from_inputs,
 )
 
 pytestmark = [
@@ -71,7 +71,7 @@ def _run_engine(inputs: dict[CasillaId, Decimal], year: int, period: str) -> dic
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
     }
-    raw_values = _calculate_m303_engine_values_from_inputs(
+    raw_values = calculate_m303_engine_values_from_inputs(
         inputs=inputs,
         year=year,
         period=period,
@@ -101,11 +101,11 @@ def test_m303_engine_sums_supplied_primitives_not_a_printed_total() -> None:
     primitive = Decimal("21000.00")
     base_inputs: dict[CasillaId, Decimal] = {
         _IVA_REPERCUTIDO_GENERAL_CASILLA: primitive,
-        _M303_STATE_ATTRIBUTION_RATIO_CASILLA: Decimal("100"),
+        M303_STATE_ATTRIBUTION_RATIO_CASILLA: Decimal("100"),
     }
 
     base_values = _run_engine(base_inputs, 2023, "1T")
-    base_devengada = base_values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA]
+    base_devengada = base_values[M303_CUOTA_DEVENGADA_TOTAL_CASILLA]
 
     # A zero baseline would make the delta assertion pass even if the engine
     # ignored the primitive entirely and returned 0 both times.
@@ -119,7 +119,7 @@ def test_m303_engine_sums_supplied_primitives_not_a_printed_total() -> None:
     mutated_inputs = dict(base_inputs)
     mutated_inputs[_IVA_REPERCUTIDO_GENERAL_CASILLA] = primitive + delta
     mutated_values = _run_engine(mutated_inputs, 2023, "1T")
-    mutated_devengada = mutated_values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA]
+    mutated_devengada = mutated_values[M303_CUOTA_DEVENGADA_TOTAL_CASILLA]
 
     assert mutated_devengada - base_devengada == delta, (
         "ANTI-TAUTOLOGY-FAIL: mutating iva.repercutido.general by "
@@ -139,15 +139,15 @@ _PRINTED_46 = _PRINTED_27 - _PRINTED_45
 
 def _printed_m303_totals() -> dict[CasillaId, Decimal]:
     return {
-        _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: _PRINTED_27,
-        _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: _PRINTED_45,
-        _M303_RESULTADO_REGIMEN_GENERAL_CASILLA: _PRINTED_46,
+        M303_CUOTA_DEVENGADA_TOTAL_CASILLA: _PRINTED_27,
+        M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: _PRINTED_45,
+        M303_RESULTADO_REGIMEN_GENERAL_CASILLA: _PRINTED_46,
     }
 
 
 def test_m303_printed_arithmetic_assertion_holds_on_a_consistent_document() -> None:
     """The control: a self-consistent printed triple is accepted."""
-    _assert_m303_printed_resultado_regimen_general_arithmetic(
+    assert_m303_printed_resultado_regimen_general_arithmetic(
         pdf_stem="synthetic-consistent",
         extracted=_printed_m303_totals(),
     )
@@ -156,9 +156,9 @@ def test_m303_printed_arithmetic_assertion_holds_on_a_consistent_document() -> N
 @pytest.mark.parametrize(
     "perturbed_casilla,label",
     [
-        (_M303_CUOTA_DEVENGADA_TOTAL_CASILLA, "box 27"),
-        (_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA, "box 45"),
-        (_M303_RESULTADO_REGIMEN_GENERAL_CASILLA, "box 46"),
+        (M303_CUOTA_DEVENGADA_TOTAL_CASILLA, "box 27"),
+        (M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA, "box 45"),
+        (M303_RESULTADO_REGIMEN_GENERAL_CASILLA, "box 46"),
     ],
 )
 def test_m303_printed_arithmetic_assertion_is_falsifiable(
@@ -177,7 +177,7 @@ def test_m303_printed_arithmetic_assertion_is_falsifiable(
     perturbed[perturbed_casilla] += Decimal("0.01")
 
     with pytest.raises(AssertionError, match="DOCUMENT-INCONSISTENT"):
-        _assert_m303_printed_resultado_regimen_general_arithmetic(
+        assert_m303_printed_resultado_regimen_general_arithmetic(
             pdf_stem=f"synthetic-perturbed-{label.replace(' ', '-')}",
             extracted=perturbed,
         )
@@ -186,10 +186,10 @@ def test_m303_printed_arithmetic_assertion_is_falsifiable(
 def test_m303_printed_arithmetic_assertion_refuses_a_missing_box() -> None:
     """A printed amount absent from the parse is refused, not silently skipped."""
     incomplete = _printed_m303_totals()
-    del incomplete[_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
+    del incomplete[M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
 
     with pytest.raises(AssertionError, match="PARSER-GAP"):
-        _assert_m303_printed_resultado_regimen_general_arithmetic(
+        assert_m303_printed_resultado_regimen_general_arithmetic(
             pdf_stem="synthetic-missing-box-45",
             extracted=incomplete,
         )

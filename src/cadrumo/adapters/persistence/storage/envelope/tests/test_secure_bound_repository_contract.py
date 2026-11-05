@@ -29,7 +29,7 @@ from ...sql.engine import create_engine_from_settings
 from ...sql.orm import Base
 from ...sql.secure_objects import SecureObjectRepository
 from ..secure_bound_repository import SecureBoundRepository
-from ._repository_contract_support import (
+from .repository_contract_support import (
     EXPECTED_CHECK_COUNT,
     SecureRepositoryContractCase,
     assert_secure_repository_contract,

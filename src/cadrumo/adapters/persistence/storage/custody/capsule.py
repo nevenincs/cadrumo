@@ -18,65 +18,31 @@ from .....core.paths import effective_storage_root
 from .....core.profile_publication import ProfilePublicationKindValue
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_location
-from ._capsule_data import (
-    read_password_envelope as _read_password_envelope,
-)
-from ._capsule_data import (
-    read_password_envelope_fd as _read_password_envelope_fd,
-)
-from ._capsule_data import (
-    read_sentinel as _read_sentinel,
-)
-from ._capsule_data import (
-    read_sentinel_fd as _read_sentinel_fd,
-)
-from ._capsule_data import (
-    replace_capsule_file as _replace_capsule_file,
-)
-from ._capsule_data import (
-    validate_data_file_inventory as _validate_data_file_inventory,
-)
-from ._capsule_data import (
-    write_data_files as _write_data_files,
-)
-from ._capsule_data import (
-    write_posix_data_files as _write_posix_data_files,
-)
-from ._capsule_filesystem import (
-    fsync_directory as _fsync_directory,
-)
-from ._capsule_filesystem import (
-    fsync_windows_published_commit as _fsync_windows_published_commit,
-)
-from ._capsule_filesystem import (
-    remove_posix_staging_if_same as _remove_posix_staging_if_same,
-)
-from ._capsule_filesystem import (
-    remove_posix_tree as _remove_posix_tree,
-)
-from ._capsule_filesystem import (
-    remove_windows_unpublished_staging as _remove_windows_unpublished_staging,
-)
-from ._capsule_filesystem import (
-    rename_directory_noreplace as _rename_directory_noreplace,
-)
-from ._capsule_filesystem import (
-    rename_windows_directory_by_handle as _rename_windows_directory_by_handle,
-)
-from ._capsule_filesystem import (
-    windows_stage_snapshot as _windows_stage_snapshot,
-)
-from ._capsule_filesystem import (
-    write_through_windows_publication_fence as _write_through_windows_publication_fence,
-)
-from ._inventory import ProfileCustodyInventory
-from ._inventory import (
-    inventory_profile_custody_capsule as _inventory_profile_custody_capsule,
+from .capsule_data import (
+    read_password_envelope,
+    read_password_envelope_fd,
+    read_sentinel,
+    read_sentinel_fd,
+    replace_capsule_file,
+    validate_data_file_inventory,
+    write_data_files,
+    write_posix_data_files,
 )
 from .capsule_discovery import (
     AnchoredCurrentCapsuleCommit,
     anchored_current_capsule_commits,
     refuse_retired_profile_custody_paths,
+)
+from .capsule_filesystem import (
+    fsync_directory,
+    fsync_windows_published_commit,
+    remove_posix_staging_if_same,
+    remove_posix_tree,
+    remove_windows_unpublished_staging,
+    rename_directory_noreplace,
+    rename_windows_directory_by_handle,
+    windows_stage_snapshot,
+    write_through_windows_publication_fence,
 )
 from .capsule_records import (
     PROFILE_CUSTODY_COMMIT_MAX_BYTES,
@@ -91,37 +57,33 @@ from .capsule_records import (
     ProfileCustodyPasswordMaterial,
     parse_profile_custody_capsule_label,
     parse_profile_custody_commit,
+    parse_profile_custody_deletion_marker,
     validate_publication_identity,
-)
-from .capsule_records import (
-    parse_profile_custody_deletion_marker as _parse_profile_custody_deletion_marker,
 )
 from .errors import ProfileCustodyConcurrentCapsuleChangeError, ProfileCustodyRecordError
 from .filesystem import (
-    lexists as _lexists,
-)
-from .filesystem import (
-    posix_child_exists as _posix_child_exists,
-)
-from .filesystem import (
-    read_regular_file as _read_regular_file,
-)
-from .filesystem import (
-    read_regular_file_fd as _read_regular_file_fd,
+    lexists,
+    posix_child_exists,
+    read_regular_file,
+    read_regular_file_fd,
 )
 from .filesystem_primitives import (
     PROFILE_CUSTODY_COMMIT_FILENAME,
     ProfileCustodyPasswordReadOperation,
+    anchor_directory,
+    ensure_real_directory,
+    posix_directory_fd,
+    posix_mkdir_child_directory,
+    posix_open_child_directory,
+    rename_noreplace_at,
     shared_directory_anchors,
+    write_exclusive_fsynced,
+    write_exclusive_fsynced_fd,
 )
-from .filesystem_primitives import anchor_directory as _anchor_directory
-from .filesystem_primitives import ensure_real_directory as _ensure_real_directory
-from .filesystem_primitives import posix_directory_fd as _posix_directory_fd
-from .filesystem_primitives import posix_mkdir_child_directory as _posix_mkdir_child_directory
-from .filesystem_primitives import posix_open_child_directory as _posix_open_child_directory
-from .filesystem_primitives import rename_noreplace_at as _rename_noreplace_at
-from .filesystem_primitives import write_exclusive_fsynced as _write_exclusive_fsynced
-from .filesystem_primitives import write_exclusive_fsynced_fd as _write_exclusive_fsynced_fd
+from .inventory import (
+    ProfileCustodyInventory,
+    inventory_profile_custody_capsule,
+)
 from .paths import profile_custody_path
 from .records import (
     PROFILE_CUSTODY_ENVELOPE_FILENAME,
@@ -184,7 +146,7 @@ def inventory_committed_profile_custody_capsule(
     capsule_path = recognize_current_profile_capsule(profile_id, settings=settings, root=root)
     if capsule_path is None:
         raise ProfileCustodyRecordError("profile capsule is not committed")
-    return _inventory_profile_custody_capsule(profile_id, capsule_path)
+    return inventory_profile_custody_capsule(profile_id, capsule_path)
 
 
 def write_profile_custody_deletion_marker(
@@ -207,8 +169,8 @@ def write_profile_custody_deletion_marker(
     marker_path = capsule / PROFILE_CUSTODY_DELETION_FILENAME
     if os.path.lexists(marker_path):
         raise ProfileCustodyRecordError("profile capsule already carries a deletion marker")
-    _write_exclusive_fsynced(marker_path, marker.canonical_json_bytes())
-    _fsync_directory(capsule)
+    write_exclusive_fsynced(marker_path, marker.canonical_json_bytes())
+    fsync_directory(capsule)
     return marker
 
 
@@ -240,8 +202,8 @@ def verify_profile_custody_deletion_tombstone(
     if is_link_like(tombstone) or not tombstone.is_dir():
         raise ProfileCustodyRecordError("profile deletion tombstone is unsafe")
     marker_path = tombstone / PROFILE_CUSTODY_DELETION_FILENAME
-    marker = _parse_profile_custody_deletion_marker(
-        _read_regular_file(marker_path, maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES)
+    marker = parse_profile_custody_deletion_marker(
+        read_regular_file(marker_path, maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES)
     )
     if (
         marker.profile_id != profile_id
@@ -249,7 +211,7 @@ def verify_profile_custody_deletion_tombstone(
         or marker.inventory_digest != inventory_digest
     ):
         raise ProfileCustodyRecordError("profile deletion tombstone marker does not bind this transaction")
-    inventory = _inventory_profile_custody_capsule(profile_id, tombstone, ignore_deletion_marker=True)
+    inventory = inventory_profile_custody_capsule(profile_id, tombstone, ignore_deletion_marker=True)
     if inventory.digest != inventory_digest:
         raise ProfileCustodyRecordError("profile deletion tombstone inventory differs from its prepared transaction")
     return tombstone
@@ -267,8 +229,8 @@ def verify_profile_custody_deletion_marker(
     capsule = recognize_current_profile_capsule(profile_id, settings=settings, root=root)
     if capsule is None:
         raise ProfileCustodyRecordError("profile capsule is not committed")
-    marker = _parse_profile_custody_deletion_marker(
-        _read_regular_file(capsule / PROFILE_CUSTODY_DELETION_FILENAME, maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES)
+    marker = parse_profile_custody_deletion_marker(
+        read_regular_file(capsule / PROFILE_CUSTODY_DELETION_FILENAME, maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES)
     )
     if (
         marker.profile_id != profile_id
@@ -276,7 +238,7 @@ def verify_profile_custody_deletion_marker(
         or marker.inventory_digest != inventory_digest
     ):
         raise ProfileCustodyRecordError("profile deletion marker does not bind this transaction")
-    inventory = _inventory_profile_custody_capsule(profile_id, capsule, ignore_deletion_marker=True)
+    inventory = inventory_profile_custody_capsule(profile_id, capsule, ignore_deletion_marker=True)
     if inventory.digest != inventory_digest:
         raise ProfileCustodyRecordError("profile deletion marker inventory differs from its prepared transaction")
     return capsule
@@ -299,7 +261,7 @@ def profile_custody_deletion_path(
     return destination.parent / f".{profile_id}.deleting-{transaction_id}"
 
 
-def _release_bucket_file_handles(profile_id: UUID) -> None:
+def release_bucket_file_handles(profile_id: UUID) -> None:
     """Release this bucket's cached SQLite handles before destroying its directory.
 
     A capsule directory holds the profile's own database, and an engine cached
@@ -337,7 +299,7 @@ def rename_profile_custody_capsule_for_deletion(
     source = recognize_current_profile_capsule(profile_id, settings=settings, root=root)
     if source is None:
         raise ProfileCustodyRecordError("profile capsule is not committed")
-    _release_bucket_file_handles(profile_id)
+    release_bucket_file_handles(profile_id)
     destination = profile_custody_deletion_path(
         profile_id=profile_id,
         transaction_id=transaction_id,
@@ -345,8 +307,8 @@ def rename_profile_custody_capsule_for_deletion(
         root=root,
     )
     if os.name != "nt":
-        with _posix_directory_fd(source.parent) as parent_fd:
-            _rename_noreplace_at(
+        with posix_directory_fd(source.parent) as parent_fd:
+            rename_noreplace_at(
                 source_fd=parent_fd,
                 source_name=source.name,
                 destination_fd=parent_fd,
@@ -355,15 +317,15 @@ def rename_profile_custody_capsule_for_deletion(
             os.fsync(parent_fd)
         return destination
     with ExitStack() as anchors:
-        root_handle = _anchor_directory(anchors, source.parent, final_access=0x80000000)
-        source_handle = _anchor_directory(anchors, source, final_access=0x00010000)
+        root_handle = anchor_directory(anchors, source.parent, final_access=0x80000000)
+        source_handle = anchor_directory(anchors, source, final_access=0x00010000)
         if root_handle is None or source_handle is None:
             raise ProfileCustodyRecordError("profile deletion rename requires Windows identity anchors")
-        _rename_windows_directory_by_handle(source_handle, destination, root_handle=root_handle)
+        rename_windows_directory_by_handle(source_handle, destination, root_handle=root_handle)
         # A deletion tombstone is already a complete committed capsule.  Its
         # durable fence is the existing marker; a no-op MoveFileEx fence is a
         # publication-only operation and fails on some local Windows volumes.
-        _fsync_windows_published_commit(destination)
+        fsync_windows_published_commit(destination)
     return destination
 
 
@@ -375,7 +337,7 @@ def remove_profile_custody_deletion_tombstone(
     root: Path | None = None,
 ) -> None:
     """Remove only a matching transaction tombstone without following links."""
-    _release_bucket_file_handles(profile_id)
+    release_bucket_file_handles(profile_id)
     tombstone = profile_custody_deletion_path(
         profile_id=profile_id,
         transaction_id=transaction_id,
@@ -383,7 +345,7 @@ def remove_profile_custody_deletion_tombstone(
         root=root,
     )
     if os.name != "nt":
-        with _posix_directory_fd(tombstone.parent) as parent_fd:
+        with posix_directory_fd(tombstone.parent) as parent_fd:
             try:
                 metadata = os.stat(tombstone.name, dir_fd=parent_fd, follow_symlinks=False)
             except FileNotFoundError:
@@ -392,16 +354,16 @@ def remove_profile_custody_deletion_tombstone(
                 raise ProfileCustodyRecordError("profile deletion tombstone cannot be inspected") from exc
             if not stat.S_ISDIR(metadata.st_mode):
                 raise ProfileCustodyRecordError("profile deletion tombstone is not a real directory")
-            _remove_posix_tree(parent_fd, tombstone.name)
+            remove_posix_tree(parent_fd, tombstone.name)
             os.fsync(parent_fd)
         return
     with ExitStack() as anchors:
-        _anchor_directory(anchors, tombstone.parent, final_access=0x80000000)
+        anchor_directory(anchors, tombstone.parent, final_access=0x80000000)
         if not os.path.lexists(tombstone):
             return
-        tombstone_handle = _anchor_directory(anchors, tombstone, final_access=0x00010000)
-        snapshot = _windows_stage_snapshot(tombstone)
-        _remove_windows_unpublished_staging(
+        tombstone_handle = anchor_directory(anchors, tombstone, final_access=0x00010000)
+        snapshot = windows_stage_snapshot(tombstone)
+        remove_windows_unpublished_staging(
             tombstone,
             staging_handle=tombstone_handle,
             snapshot=snapshot,
@@ -433,12 +395,12 @@ def publish_profile_custody_capsule(
         password_envelope=password_envelope,
         sentinel=sentinel,
     )
-    _validate_data_file_inventory(data_files)
+    validate_data_file_inventory(data_files)
     destination = profile_custody_path(
         profile_id, StorageCategory.PROFILE_CAPSULE_COMMIT, settings=settings, root=root
     ).parent
     capsules_root = destination.parent
-    _ensure_real_directory(capsules_root)
+    ensure_real_directory(capsules_root)
     if os.name != "nt":
         return _publish_profile_custody_capsule_posix(
             capsules_root=capsules_root,
@@ -464,7 +426,7 @@ def publish_profile_custody_capsule(
     stage_snapshot: dict[str, tuple[int, int, bool]] | None = None
     staging_handle: int | None = None
     with ExitStack() as root_anchors:
-        root_handle = _anchor_directory(root_anchors, capsules_root, final_access=0x80000000)
+        root_handle = anchor_directory(root_anchors, capsules_root, final_access=0x80000000)
         staging_anchors = ExitStack()
         content_anchors = ExitStack()
         try:
@@ -472,31 +434,31 @@ def publish_profile_custody_capsule(
         except OSError as exc:
             raise ProfileCustodyRecordError("profile capsule staging directory cannot be created") from exc
         try:
-            staging_handle = _anchor_directory(staging_anchors, staging, final_access=0x80010000)
+            staging_handle = anchor_directory(staging_anchors, staging, final_access=0x80010000)
             custody_root = staging / "custody"
             data_root = staging / "data"
             custody_root.mkdir(mode=0o700)
             data_root.mkdir(mode=0o700)
-            _anchor_directory(content_anchors, custody_root)
-            _anchor_directory(content_anchors, data_root)
-            _write_exclusive_fsynced(
+            anchor_directory(content_anchors, custody_root)
+            anchor_directory(content_anchors, data_root)
+            write_exclusive_fsynced(
                 custody_root / PROFILE_CUSTODY_ENVELOPE_FILENAME, password_envelope.canonical_json_bytes()
             )
             write_profile_custody_sentinel(data_root / PROFILE_CUSTODY_SENTINEL_FILENAME, sentinel)
-            _write_data_files(data_root, data_files)
+            write_data_files(data_root, data_files)
             if stage_initializer is not None:
                 stage_initializer(staging)
-            _fsync_directory(custody_root)
-            _fsync_directory(data_root)
+            fsync_directory(custody_root)
+            fsync_directory(data_root)
             commit = ProfileCustodyCommit.create(
                 profile_id=profile_id,
                 transaction_id=transaction_id,
                 publication_kind=publication_kind,
                 published_at=published_at,
             )
-            _write_exclusive_fsynced(staging / PROFILE_CUSTODY_COMMIT_FILENAME, commit.canonical_json_bytes())
-            _fsync_directory(staging)
-            stage_snapshot = _windows_stage_snapshot(staging)
+            write_exclusive_fsynced(staging / PROFILE_CUSTODY_COMMIT_FILENAME, commit.canonical_json_bytes())
+            fsync_directory(staging)
+            stage_snapshot = windows_stage_snapshot(staging)
             if stage_only:
                 retained_stage = True
                 return staging
@@ -505,14 +467,14 @@ def publish_profile_custody_capsule(
             # handle's atomic rename, while the stage/root identities remain
             # anchored throughout.
             content_anchors.close()
-            _rename_directory_noreplace(
+            rename_directory_noreplace(
                 staging,
                 destination,
                 root_handle=root_handle,
                 staging_handle=staging_handle,
             )
             staging_anchors.close()
-            _write_through_windows_publication_fence(destination, root_handle=root_handle)
+            write_through_windows_publication_fence(destination, root_handle=root_handle)
             published = True
             return destination
         except OSError as exc:
@@ -520,7 +482,7 @@ def publish_profile_custody_capsule(
         finally:
             content_anchors.close()
             if not published and not retained_stage and stage_snapshot is not None:
-                _remove_windows_unpublished_staging(
+                remove_windows_unpublished_staging(
                     staging,
                     staging_handle=staging_handle,
                     snapshot=stage_snapshot,
@@ -544,26 +506,26 @@ def _publish_profile_custody_capsule_posix(
 ) -> Path:
     """Publish through descriptor-relative POSIX operations only."""
     staging_name = f".{profile_id}.staging-{transaction_id}"
-    with _posix_directory_fd(capsules_root) as root_fd:
+    with posix_directory_fd(capsules_root) as root_fd:
         try:
             os.mkdir(staging_name, mode=0o700, dir_fd=root_fd)
         except FileExistsError as exc:
             raise ProfileCustodyRecordError("profile capsule staging directory already exists") from exc
         except OSError as exc:
             raise ProfileCustodyRecordError("profile capsule staging directory cannot be created") from exc
-        stage_fd = _posix_open_child_directory(root_fd, staging_name)
+        stage_fd = posix_open_child_directory(root_fd, staging_name)
         stage_identity = os.fstat(stage_fd)
         published = False
         retained_stage = False
         try:
-            custody_fd = _posix_mkdir_child_directory(stage_fd, "custody")
-            data_fd = _posix_mkdir_child_directory(stage_fd, "data")
+            custody_fd = posix_mkdir_child_directory(stage_fd, "custody")
+            data_fd = posix_mkdir_child_directory(stage_fd, "data")
             try:
-                _write_exclusive_fsynced_fd(
+                write_exclusive_fsynced_fd(
                     custody_fd, PROFILE_CUSTODY_ENVELOPE_FILENAME, password_envelope.canonical_json_bytes()
                 )
-                _write_exclusive_fsynced_fd(data_fd, PROFILE_CUSTODY_SENTINEL_FILENAME, sentinel.canonical_json_bytes())
-                _write_posix_data_files(data_fd, data_files)
+                write_exclusive_fsynced_fd(data_fd, PROFILE_CUSTODY_SENTINEL_FILENAME, sentinel.canonical_json_bytes())
+                write_posix_data_files(data_fd, data_files)
                 if stage_initializer is not None:
                     stage_initializer(capsules_root / staging_name)
                 os.fsync(custody_fd)
@@ -577,12 +539,12 @@ def _publish_profile_custody_capsule_posix(
                 publication_kind=publication_kind,
                 published_at=published_at,
             )
-            _write_exclusive_fsynced_fd(stage_fd, PROFILE_CUSTODY_COMMIT_FILENAME, commit.canonical_json_bytes())
+            write_exclusive_fsynced_fd(stage_fd, PROFILE_CUSTODY_COMMIT_FILENAME, commit.canonical_json_bytes())
             os.fsync(stage_fd)
             if stage_only:
                 retained_stage = True
                 return capsules_root / staging_name
-            _rename_noreplace_at(
+            rename_noreplace_at(
                 source_fd=root_fd,
                 source_name=staging_name,
                 destination_fd=root_fd,
@@ -596,7 +558,7 @@ def _publish_profile_custody_capsule_posix(
         finally:
             os.close(stage_fd)
             if not published and not retained_stage:
-                _remove_posix_staging_if_same(root_fd, staging_name, stage_identity)
+                remove_posix_staging_if_same(root_fd, staging_name, stage_identity)
 
 
 def inventory_staged_profile_custody_capsule(
@@ -614,11 +576,11 @@ def inventory_staged_profile_custody_capsule(
     if not os.path.lexists(stage) or is_link_like(stage) or not stage.is_dir():
         raise ProfileCustodyRecordError("profile custody transaction stage is absent or unsafe")
     commit = parse_profile_custody_commit(
-        _read_regular_file(stage / PROFILE_CUSTODY_COMMIT_FILENAME, maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES)
+        read_regular_file(stage / PROFILE_CUSTODY_COMMIT_FILENAME, maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES)
     )
     if commit.profile_id != profile_id or commit.transaction_id != transaction_id:
         raise ProfileCustodyRecordError("profile custody transaction stage has another transaction identity")
-    return _inventory_profile_custody_capsule(profile_id, stage)
+    return inventory_profile_custody_capsule(profile_id, stage)
 
 
 def publish_staged_profile_custody_capsule(
@@ -637,19 +599,19 @@ def publish_staged_profile_custody_capsule(
         profile_id=profile_id, transaction_id=transaction_id, settings=settings, root=root
     )
     if os.name != "nt":
-        with _posix_directory_fd(destination.parent) as parent_fd:
-            _rename_noreplace_at(
+        with posix_directory_fd(destination.parent) as parent_fd:
+            rename_noreplace_at(
                 source_fd=parent_fd, source_name=stage.name, destination_fd=parent_fd, destination_name=destination.name
             )
             os.fsync(parent_fd)
         return destination
     with ExitStack() as anchors:
-        root_handle = _anchor_directory(anchors, destination.parent, final_access=0x80000000)
-        stage_handle = _anchor_directory(anchors, stage, final_access=0x00010000)
+        root_handle = anchor_directory(anchors, destination.parent, final_access=0x80000000)
+        stage_handle = anchor_directory(anchors, stage, final_access=0x00010000)
         if root_handle is None or stage_handle is None:
             raise ProfileCustodyRecordError("profile custody staged publication requires Windows identity anchors")
-        _rename_directory_noreplace(stage, destination, root_handle=root_handle, staging_handle=stage_handle)
-        _fsync_windows_published_commit(destination)
+        rename_directory_noreplace(stage, destination, root_handle=root_handle, staging_handle=stage_handle)
+        fsync_windows_published_commit(destination)
     return destination
 
 
@@ -668,14 +630,14 @@ def recognize_current_profile_capsule(
         root=root,
     )
     capsule_path = marker_path.parent
-    if not _lexists(capsule_path, trace=_trace):
+    if not lexists(capsule_path, trace=_trace):
         return None
     if os.name != "nt":
-        with _posix_directory_fd(capsule_path) as capsule_fd:
-            if not _posix_child_exists(capsule_fd, marker_path.name, trace=_trace, display_path=marker_path):
+        with posix_directory_fd(capsule_path) as capsule_fd:
+            if not posix_child_exists(capsule_fd, marker_path.name, trace=_trace, display_path=marker_path):
                 return None
             commit = parse_profile_custody_commit(
-                _read_regular_file_fd(
+                read_regular_file_fd(
                     capsule_fd,
                     marker_path.name,
                     display_path=marker_path,
@@ -687,11 +649,11 @@ def recognize_current_profile_capsule(
             raise ProfileCustodyRecordError("profile capsule commit UUID does not match its directory")
         return capsule_path
     with ExitStack() as anchors:
-        _anchor_directory(anchors, capsule_path)
-        if not _lexists(marker_path, trace=_trace):
+        anchor_directory(anchors, capsule_path)
+        if not lexists(marker_path, trace=_trace):
             return None
         commit = parse_profile_custody_commit(
-            _read_regular_file(marker_path, maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES, trace=_trace)
+            read_regular_file(marker_path, maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES, trace=_trace)
         )
     if commit.profile_id != profile_id:
         raise ProfileCustodyRecordError("profile capsule commit UUID does not match its directory")
@@ -776,7 +738,7 @@ def _current_capsule_commits(
         # because it is the final component of this anchor, so the retired-path
         # scan and the capsule scan reuse it instead of each re-opening it.
         if os.path.lexists(storage_root):
-            _anchor_directory(shared_chain, storage_root, final_access=0x80000000)
+            anchor_directory(shared_chain, storage_root, final_access=0x80000000)
         refuse_retired_profile_custody_paths(capsules_root, keystore_root=keystore_root)
         if not os.path.lexists(capsules_root):
             return ()
@@ -884,9 +846,9 @@ def replace_committed_profile_custody_envelope(
         raise ProfileCustodyRecordError("profile custody rotation requires a committed capsule")
     custody_path = capsule_path / "custody"
     with ExitStack() as anchors:
-        _anchor_directory(anchors, capsule_path)
-        _anchor_directory(anchors, custody_path)
-        committed = _read_password_envelope(custody_path / PROFILE_CUSTODY_ENVELOPE_FILENAME, trace=[])
+        anchor_directory(anchors, capsule_path)
+        anchor_directory(anchors, custody_path)
+        committed = read_password_envelope(custody_path / PROFILE_CUSTODY_ENVELOPE_FILENAME, trace=[])
         try:
             replacement = parse_profile_custody_envelope(payload)
         except (ProfileCustodyRecordError, ValueError, TypeError) as exc:
@@ -907,7 +869,7 @@ def replace_committed_profile_custody_envelope(
             raise ProfileCustodyRecordError(
                 "profile custody rotation envelope does not carry the next password generation",
             )
-        _replace_capsule_file(
+        replace_capsule_file(
             custody_path,
             PROFILE_CUSTODY_ENVELOPE_FILENAME,
             payload,
@@ -945,9 +907,9 @@ def install_committed_profile_custody_recovery_envelope(
         raise ProfileCustodyRecordError("profile recovery enrollment requires a committed capsule")
     custody_path = capsule_path / "custody"
     with ExitStack() as anchors:
-        _anchor_directory(anchors, capsule_path)
-        _anchor_directory(anchors, custody_path)
-        committed = _read_password_envelope(custody_path / PROFILE_CUSTODY_ENVELOPE_FILENAME, trace=[])
+        anchor_directory(anchors, capsule_path)
+        anchor_directory(anchors, custody_path)
+        committed = read_password_envelope(custody_path / PROFILE_CUSTODY_ENVELOPE_FILENAME, trace=[])
         try:
             envelope = parse_profile_custody_recovery_envelope(payload)
         except ProfileCustodyRecordError as exc:
@@ -957,10 +919,10 @@ def install_committed_profile_custody_recovery_envelope(
         if envelope.dek_epoch != committed.dek_epoch:
             raise ProfileCustodyRecordError("profile recovery envelope does not wrap the committed DEK epoch")
         target = custody_path / PROFILE_CUSTODY_RECOVERY_FILENAME
-        if _lexists(target, trace=None):
+        if lexists(target, trace=None):
             raise ProfileCustodyRecordError("profile recovery is already enrolled")
-        _write_exclusive_fsynced(target, payload)
-        _fsync_directory(custody_path)
+        write_exclusive_fsynced(target, payload)
+        fsync_directory(custody_path)
 
 
 def remove_committed_profile_custody_recovery_envelope(
@@ -985,19 +947,19 @@ def remove_committed_profile_custody_recovery_envelope(
         raise ProfileCustodyRecordError("profile recovery revocation requires a committed capsule")
     custody_path = capsule_path / "custody"
     with ExitStack() as anchors:
-        _anchor_directory(anchors, capsule_path)
-        _anchor_directory(anchors, custody_path)
+        anchor_directory(anchors, capsule_path)
+        anchor_directory(anchors, custody_path)
         target = custody_path / PROFILE_CUSTODY_RECOVERY_FILENAME
-        if not _lexists(target, trace=None):
+        if not lexists(target, trace=None):
             raise ProfileCustodyRecordError("profile recovery is not enrolled")
-        existing = _read_regular_file(target, maximum_bytes=PROFILE_CUSTODY_RECOVERY_MAX_BYTES, trace=[])
+        existing = read_regular_file(target, maximum_bytes=PROFILE_CUSTODY_RECOVERY_MAX_BYTES, trace=[])
         if prefixed_digest(existing) != expected_sha256:
             raise ProfileCustodyRecordError("profile recovery compare-and-remove witness is stale")
         try:
             os.unlink(target)
         except OSError as exc:
             raise ProfileCustodyRecordError("profile recovery envelope could not be removed") from exc
-        _fsync_directory(custody_path)
+        fsync_directory(custody_path)
 
 
 @dataclass(frozen=True, slots=True)
@@ -1029,13 +991,13 @@ def load_committed_profile_recovery_material(
     password = load_committed_profile_password_material(profile_id, settings=settings, root=root)
     custody_path = password.capsule_path / "custody"
     with ExitStack() as anchors:
-        _anchor_directory(anchors, password.capsule_path)
-        _anchor_directory(anchors, custody_path)
+        anchor_directory(anchors, password.capsule_path)
+        anchor_directory(anchors, custody_path)
         target = custody_path / PROFILE_CUSTODY_RECOVERY_FILENAME
-        if not _lexists(target, trace=None):
+        if not lexists(target, trace=None):
             raise ProfileCustodyRecordError("profile recovery is not enrolled")
         envelope = parse_profile_custody_recovery_envelope(
-            _read_regular_file(target, maximum_bytes=PROFILE_CUSTODY_RECOVERY_MAX_BYTES, trace=[])
+            read_regular_file(target, maximum_bytes=PROFILE_CUSTODY_RECOVERY_MAX_BYTES, trace=[])
         )
     if envelope.profile_id != profile_id or envelope.dek_epoch != password.envelope.dek_epoch:
         raise ProfileCustodyRecordError("profile recovery envelope does not belong to its committed capsule")
@@ -1083,10 +1045,10 @@ def _load_profile_custody_label_from_verified_capsule(
     """Read the UUID-bound label record after capsule identity verification."""
     label_path = capsule_path / "data" / PROFILE_CUSTODY_LABEL_FILENAME
     if os.name != "nt":
-        with _posix_directory_fd(capsule_path) as capsule_fd:
-            data_fd = _posix_open_child_directory(capsule_fd, "data")
+        with posix_directory_fd(capsule_path) as capsule_fd:
+            data_fd = posix_open_child_directory(capsule_fd, "data")
             try:
-                payload = _read_regular_file_fd(
+                payload = read_regular_file_fd(
                     data_fd,
                     PROFILE_CUSTODY_LABEL_FILENAME,
                     display_path=label_path,
@@ -1097,9 +1059,9 @@ def _load_profile_custody_label_from_verified_capsule(
                 os.close(data_fd)
     else:
         with ExitStack() as anchors:
-            _anchor_directory(anchors, capsule_path)
-            _anchor_directory(anchors, capsule_path / "data")
-            payload = _read_regular_file(label_path, maximum_bytes=PROFILE_CUSTODY_LABEL_MAX_BYTES, trace=[])
+            anchor_directory(anchors, capsule_path)
+            anchor_directory(anchors, capsule_path / "data")
+            payload = read_regular_file(label_path, maximum_bytes=PROFILE_CUSTODY_LABEL_MAX_BYTES, trace=[])
     try:
         label = parse_profile_custody_capsule_label(payload)
     except (ProfileCustodyRecordError, ValueError, TypeError) as exc:
@@ -1119,17 +1081,17 @@ def load_committed_profile_password_material(
     trace: list[ProfileCustodyPasswordReadOperation] = []
     marker_path = profile_custody_path(profile_id, StorageCategory.PROFILE_CAPSULE_COMMIT, settings=settings, root=root)
     capsule_path = marker_path.parent
-    if not _lexists(capsule_path, trace=trace):
+    if not lexists(capsule_path, trace=trace):
         raise ProfileCustodyRecordError("profile capsule is not committed")
     # Recognize and read under the same retained directory identity. Nothing is
     # cached between checks.
     if os.name != "nt":
         with ExitStack() as anchors:
-            capsule_fd = anchors.enter_context(_posix_directory_fd(capsule_path))
-            if not _posix_child_exists(capsule_fd, marker_path.name, trace=trace, display_path=marker_path):
+            capsule_fd = anchors.enter_context(posix_directory_fd(capsule_path))
+            if not posix_child_exists(capsule_fd, marker_path.name, trace=trace, display_path=marker_path):
                 raise ProfileCustodyRecordError("profile capsule is not committed")
             commit = parse_profile_custody_commit(
-                _read_regular_file_fd(
+                read_regular_file_fd(
                     capsule_fd,
                     marker_path.name,
                     display_path=marker_path,
@@ -1139,36 +1101,34 @@ def load_committed_profile_password_material(
             )
             if commit.profile_id != profile_id:
                 raise ProfileCustodyRecordError("profile capsule commit UUID does not match its directory")
-            custody_fd = _posix_open_child_directory(capsule_fd, "custody")
+            custody_fd = posix_open_child_directory(capsule_fd, "custody")
             anchors.callback(os.close, custody_fd)
-            data_fd = _posix_open_child_directory(capsule_fd, "data")
+            data_fd = posix_open_child_directory(capsule_fd, "data")
             anchors.callback(os.close, data_fd)
-            envelope = _read_password_envelope_fd(
+            envelope = read_password_envelope_fd(
                 custody_fd,
                 display_path=capsule_path / "custody" / PROFILE_CUSTODY_ENVELOPE_FILENAME,
                 trace=trace,
             )
-            sentinel = _read_sentinel_fd(
+            sentinel = read_sentinel_fd(
                 data_fd,
                 display_path=capsule_path / "data" / PROFILE_CUSTODY_SENTINEL_FILENAME,
                 trace=trace,
             )
     else:
         with shared_directory_anchors(), ExitStack() as anchors:
-            _anchor_directory(anchors, capsule_path, final_access=0x80000000)
-            if not _lexists(marker_path, trace=trace):
+            anchor_directory(anchors, capsule_path, final_access=0x80000000)
+            if not lexists(marker_path, trace=trace):
                 raise ProfileCustodyRecordError("profile capsule is not committed")
             commit = parse_profile_custody_commit(
-                _read_regular_file(marker_path, maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES, trace=trace)
+                read_regular_file(marker_path, maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES, trace=trace)
             )
             if commit.profile_id != profile_id:
                 raise ProfileCustodyRecordError("profile capsule commit UUID does not match its directory")
-            _anchor_directory(anchors, capsule_path / "custody", final_access=0x80000000)
-            _anchor_directory(anchors, capsule_path / "data", final_access=0x80000000)
-            envelope = _read_password_envelope(
-                capsule_path / "custody" / PROFILE_CUSTODY_ENVELOPE_FILENAME, trace=trace
-            )
-            sentinel = _read_sentinel(capsule_path / "data" / PROFILE_CUSTODY_SENTINEL_FILENAME, trace=trace)
+            anchor_directory(anchors, capsule_path / "custody", final_access=0x80000000)
+            anchor_directory(anchors, capsule_path / "data", final_access=0x80000000)
+            envelope = read_password_envelope(capsule_path / "custody" / PROFILE_CUSTODY_ENVELOPE_FILENAME, trace=trace)
+            sentinel = read_sentinel(capsule_path / "data" / PROFILE_CUSTODY_SENTINEL_FILENAME, trace=trace)
     if envelope.profile_id != profile_id or sentinel.profile_id != profile_id:
         raise ProfileCustodyRecordError("normal password custody identity does not match its committed capsule")
     if sentinel.dek_epoch != envelope.dek_epoch:

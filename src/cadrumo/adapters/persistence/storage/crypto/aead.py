@@ -21,7 +21,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from pydantic import BaseModel, Field
 
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.models import STRICT_FROZEN_CONFIG
 from ..errors import DecryptionError, EncryptionError, KeyDerivationError
 from .aes_gcm import GCM_TAG_SIZE, KEY_SIZE, NONCE_SIZE, open_sealed, seal
 
@@ -46,7 +46,7 @@ class EncryptedBlob(BaseModel):
             truncated.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     nonce: bytes = Field(min_length=NONCE_SIZE, max_length=NONCE_SIZE)
     ciphertext: bytes = Field(min_length=GCM_TAG_SIZE)

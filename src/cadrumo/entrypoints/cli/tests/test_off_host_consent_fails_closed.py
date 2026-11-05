@@ -17,7 +17,7 @@ import yaml
 from ....adapters.outbound.llm.consent import OffHostEvidenceReadOutcome, classify_off_host_evidence_read
 from ....core.config_support import LLMProvider
 from ....core.i18n.render import tr
-from ..ledger_evidence_commands import _OFF_HOST_REFUSAL_LOCALE_KEYS, _validate_extract_consent_options
+from ..ledger_evidence_commands import OFF_HOST_REFUSAL_LOCALE_KEYS, validate_extract_consent_options
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -35,7 +35,7 @@ _NON_REFUSING = frozenset(
 
 def _validate(*, provider: LLMProvider | None, acknowledged: bool, evidence_id: str | None = None) -> None:
     """Validate real request flags without opening any private repository."""
-    _validate_extract_consent_options(
+    validate_extract_consent_options(
         evidence_id=evidence_id,
         off_host_provider=provider,
         acknowledged=acknowledged,
@@ -50,7 +50,7 @@ def test_the_outcomes_partition_the_enum_with_nothing_left_over() -> None:
     which is exactly the condition the refusal guards, and the point at which
     someone has to choose an answer rather than inherit one.
     """
-    covered = frozenset(_OFF_HOST_REFUSAL_LOCALE_KEYS) | _NON_REFUSING
+    covered = frozenset(OFF_HOST_REFUSAL_LOCALE_KEYS) | _NON_REFUSING
 
     assert covered == frozenset(OffHostEvidenceReadOutcome)
 
@@ -62,7 +62,7 @@ def test_no_outcome_is_both_worded_as_a_refusal_and_allowed_to_proceed() -> None
     also given refusal wording, and which branch won would depend on statement
     order rather than on intent.
     """
-    assert not frozenset(_OFF_HOST_REFUSAL_LOCALE_KEYS) & _NON_REFUSING
+    assert not frozenset(OFF_HOST_REFUSAL_LOCALE_KEYS) & _NON_REFUSING
 
 
 def test_neither_flag_supplied_accepts_the_on_host_default() -> None:
@@ -95,7 +95,7 @@ def test_an_incomplete_off_host_request_is_refused(provider: LLMProvider | None,
     with pytest.raises(typer.BadParameter) as raised:
         _validate(provider=provider, acknowledged=acknowledged)
 
-    assert str(raised.value) == tr(_OFF_HOST_REFUSAL_LOCALE_KEYS[outcome])
+    assert str(raised.value) == tr(OFF_HOST_REFUSAL_LOCALE_KEYS[outcome])
 
 
 def test_an_explicit_remote_request_requires_a_stored_evidence_reference() -> None:
@@ -159,7 +159,7 @@ def test_every_worded_refusal_has_copy_in_this_locale(locale: str) -> None:
 
     missing = [
         key
-        for key in _OFF_HOST_REFUSAL_LOCALE_KEYS.values()
+        for key in OFF_HOST_REFUSAL_LOCALE_KEYS.values()
         if not str(evidence.get(key.rsplit(".", 1)[-1], "")).strip()
     ]
 

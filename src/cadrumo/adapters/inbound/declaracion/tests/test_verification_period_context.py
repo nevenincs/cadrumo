@@ -7,7 +7,7 @@ from datetime import date
 import pytest
 
 from .....core.period import PeriodError
-from ._verification_chain_support import _period_to_date
+from .verification_chain_support import period_to_date
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -21,9 +21,9 @@ pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, 
     ),
 )
 def test_verification_period_context_uses_typed_calculation_date(period: str, expected: date) -> None:
-    assert _period_to_date(2026, period) == expected
+    assert period_to_date(2026, period) == expected
 
 
 def test_verification_period_context_rejects_unknown_registry_tokens() -> None:
     with pytest.raises(PeriodError, match="cannot build a period"):
-        _period_to_date(2026, "not-a-period")
+        period_to_date(2026, "not-a-period")

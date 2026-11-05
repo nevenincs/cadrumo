@@ -15,7 +15,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field, NonNegativeInt
 
 from ...core.filing_year import FilingYear, FourDigitYear
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ..calculations.registry.authority import PinnedAuthorityOperation
 from .carry_forward import (
     IvaCompensationCarryForwardLot,
@@ -28,7 +28,7 @@ from .carry_window import resolve_iva_compensation_carry_window_years
 class IvaWalletBalanceReport(BaseModel):
     """Aggregated IVA compensation carry-forward balance as of a reference year."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     as_of_year: FilingYear
     total_balance: Decimal = Field(ge=Decimal("0"))

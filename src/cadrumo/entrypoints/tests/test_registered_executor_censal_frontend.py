@@ -10,7 +10,7 @@ from typing import override
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
@@ -38,7 +38,7 @@ def test_censal_frontend_driver_reviews_one_acquisition_and_rolls_back_rejection
     operation: PinnedAuthorityOperation,
 ) -> None:
     """The public frontend driver answers the encrypted exact proposal once."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     cleanup = OperationRuntimeCloseWitness()
     with conformance_operation_runtime(tmp_path / f"frontend-{apply}", cleanup=cleanup) as (
         _driver,

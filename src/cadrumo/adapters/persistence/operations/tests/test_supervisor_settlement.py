@@ -55,7 +55,7 @@ from cadrumo.core.operations import (
 from .....tests.log_records import delivered_records
 from .supervision_support import run_to_settlement
 from .supervisor_test_support import (
-    _NOW,
+    SUPERVISOR_NOW,
     CancellableResourceExecutor,
     CleanupDeadlineExecutor,
     DeadlineAcknowledgingExecutor,
@@ -66,16 +66,16 @@ from .supervisor_test_support import (
     UnacknowledgedCancellationExecutor,
     UndeclaredPhaseExecutor,
     WaitingExecutor,
-    _admission_supervisor,
-    _capabilities,
-    _close_host_over_live_executor,
-    _failure_logged,
-    _response,
-    _start_and_walk_away,
+    admission_supervisor,
+    close_host_over_live_executor,
+    failure_logged,
     operation_repositories,
     operation_supervisor,
+    start_and_walk_away,
+    supervisor_capabilities,
     supervisor_registry,
     supervisor_request,
+    supervisor_response,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -92,7 +92,7 @@ def test_host_close_cancels_a_detachable_operation_without_false_terminal_artifa
             registry=supervisor_registry(
                 executor_type=CancellableResourceExecutor,
                 build=lambda: executor,
-                capabilities=_capabilities(
+                capabilities=supervisor_capabilities(
                     owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK}),
                 ),
             ),
@@ -130,7 +130,7 @@ def test_host_close_cancels_a_detachable_operation_without_false_terminal_artifa
                     revision=running.revision + 1,
                     condition=OperationTerminalCondition.FAILED,
                     effect=OperationEffect.NONE,
-                    settled_at=_NOW,
+                    settled_at=SUPERVISOR_NOW,
                 ),
             )
             return running, settled
@@ -178,7 +178,7 @@ def test_response_consumption_is_exact_single_use_and_durable_across_supervisor_
             owner_id="1" * 64,
             token="2" * 64,
         )
-        response = _response(intent=intent, operation_id=operation_id, revision=waiting.revision)
+        response = supervisor_response(intent=intent, operation_id=operation_id, revision=waiting.revision)
         if isinstance(response, OperationApplyResponse):
             consumed = asyncio.run(restarted.respond(response))
         else:
@@ -234,7 +234,7 @@ def test_await_terminal_waits_for_a_real_durable_settlement(tmp_path: Path) -> N
                     revision=pending.revision + 1,
                     condition=OperationTerminalCondition.SUCCEEDED,
                     effect=OperationEffect.NONE,
-                    settled_at=_NOW,
+                    settled_at=SUPERVISOR_NOW,
                     result_ref="result:awaited-settlement",
                 ),
             )
@@ -327,7 +327,7 @@ def test_token_mismatch_refuses_interaction_mutation_before_consumption(tmp_path
             owner_id="1" * 64,
             token="4" * 64,
         )
-        response = _response(intent="apply", operation_id=operation_id, revision=waiting.revision)
+        response = supervisor_response(intent="apply", operation_id=operation_id, revision=waiting.revision)
 
         with pytest.raises(ValueError, match="not owned"):
             asyncio.run(intruder.respond(response))
@@ -346,7 +346,7 @@ def test_request_cancel_persists_an_event_free_revision_and_later_terminal_event
         registry = supervisor_registry(
             executor_type=UnacknowledgedCancellationExecutor,
             build=lambda: executor,
-            capabilities=_capabilities(cancellation=OperationCancellation.COOPERATIVE),
+            capabilities=supervisor_capabilities(cancellation=OperationCancellation.COOPERATIVE),
         )
         supervisor = operation_supervisor(
             registry=registry,
@@ -387,7 +387,7 @@ def test_request_cancel_persists_an_event_free_revision_and_later_terminal_event
                     revision=cancellation.revision + 1,
                     condition=OperationTerminalCondition.FAILED,
                     effect=OperationEffect.NONE,
-                    settled_at=_NOW,
+                    settled_at=SUPERVISOR_NOW,
                 ),
             )
         )
@@ -409,7 +409,7 @@ def test_aggregate_deadline_requests_cooperative_stop_before_timed_out_cleanup_s
             registry=supervisor_registry(
                 executor_type=DeadlineAcknowledgingExecutor,
                 build=lambda: executor,
-                capabilities=_capabilities(
+                capabilities=supervisor_capabilities(
                     cancellation=OperationCancellation.COOPERATIVE,
                     deadline=OperationDeadline.COOPERATIVE,
                     owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK}),
@@ -455,7 +455,7 @@ def test_cancelled_terminal_refuses_an_executor_that_stopped_without_acknowledgi
             registry=supervisor_registry(
                 executor_type=UnacknowledgedCancellationExecutor,
                 build=lambda: executor,
-                capabilities=_capabilities(cancellation=OperationCancellation.COOPERATIVE),
+                capabilities=supervisor_capabilities(cancellation=OperationCancellation.COOPERATIVE),
             ),
             journal=journal,
             leases=leases,
@@ -480,7 +480,7 @@ def test_cancelled_terminal_refuses_an_executor_that_stopped_without_acknowledgi
                         revision=stopped.revision + 1,
                         condition=OperationTerminalCondition.CANCELLED,
                         effect=OperationEffect.NONE,
-                        settled_at=_NOW,
+                        settled_at=SUPERVISOR_NOW,
                     ),
                 )
             return await supervisor.inspect(operation_id)
@@ -501,7 +501,7 @@ def test_irreversible_section_allows_request_but_refuses_acknowledgement_until_e
         registry = supervisor_registry(
             executor_type=IrreversibleSectionExecutor,
             build=lambda: executor,
-            capabilities=_capabilities(cancellation=OperationCancellation.COOPERATIVE),
+            capabilities=supervisor_capabilities(cancellation=OperationCancellation.COOPERATIVE),
         )
         supervisor = operation_supervisor(
             registry=registry,
@@ -553,7 +553,7 @@ def test_cleanup_deadline_escalates_to_settling_without_a_false_timeout_terminal
             registry=supervisor_registry(
                 executor_type=CleanupDeadlineExecutor,
                 build=lambda: executor,
-                capabilities=_capabilities(
+                capabilities=supervisor_capabilities(
                     cancellation=OperationCancellation.COOPERATIVE,
                     deadline=OperationDeadline.COOPERATIVE,
                 ),
@@ -603,7 +603,7 @@ def test_settle_refuses_definition_forbidden_effect_before_cleanup_or_journal_mu
             registry=supervisor_registry(
                 executor_type=DeclaredResourceExecutor,
                 build=lambda: executor,
-                capabilities=_capabilities(owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK})),
+                capabilities=supervisor_capabilities(owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK})),
             ),
             journal=journal,
             leases=leases,
@@ -612,7 +612,7 @@ def test_settle_refuses_definition_forbidden_effect_before_cleanup_or_journal_mu
             token="2" * 64,
         )
         operation_id = asyncio.run(supervisor.submit(supervisor_request(), operation_id="3" * 64))
-        running = asyncio.run(_close_host_over_live_executor(supervisor, operation_id, executor.started))
+        running = asyncio.run(close_host_over_live_executor(supervisor, operation_id, executor.started))
 
         assert running.lifecycle is OperationLifecycle.RUNNING
         with pytest.raises(OperationDeclarationError, match="terminal receipt effect is not declared"):
@@ -624,7 +624,7 @@ def test_settle_refuses_definition_forbidden_effect_before_cleanup_or_journal_mu
                         revision=running.revision + 1,
                         condition=OperationTerminalCondition.SUCCEEDED,
                         effect=OperationEffect.UPDATED,
-                        settled_at=_NOW,
+                        settled_at=SUPERVISOR_NOW,
                         result_ref="result:complete",
                     ),
                 )
@@ -641,7 +641,7 @@ def test_start_returns_the_admitted_running_state_while_the_executor_still_works
     release = asyncio.Event()
     executor = WaitingExecutor(started=started, release=release)
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        supervisor, journal = _admission_supervisor(
+        supervisor, journal = admission_supervisor(
             tmp_path, profile.repository, executor_type=WaitingExecutor, build=lambda: executor
         )
 
@@ -667,7 +667,7 @@ def test_start_returns_the_admitted_running_state_while_the_executor_still_works
 def test_settled_raises_the_journal_state_when_the_task_stops_without_settling(tmp_path: Path) -> None:
     """A declaration breach is never settled; the waiter receives the durable state and the cause."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        supervisor, _journal = _admission_supervisor(
+        supervisor, _journal = admission_supervisor(
             tmp_path, profile.repository, executor_type=UndeclaredPhaseExecutor, build=UndeclaredPhaseExecutor
         )
 
@@ -690,10 +690,10 @@ def test_a_task_failure_nobody_awaits_is_logged_and_never_orphaned(
 ) -> None:
     """No 'exception was never retrieved': the supervisor retrieves and logs the failure itself."""
     with caplog.at_level(logging.ERROR):
-        left_running = _start_and_walk_away(tmp_path, caplog)
+        left_running = start_and_walk_away(tmp_path, caplog)
         gc.collect()
 
-    assert _failure_logged(caplog)
+    assert failure_logged(caplog)
     assert left_running.lifecycle is OperationLifecycle.RUNNING
     assert not any("never retrieved" in record.getMessage() for record in delivered_records(caplog))
 
@@ -702,12 +702,12 @@ def test_host_close_asks_a_cancellable_operation_to_stop_and_settles_it(tmp_path
     """A non-detachable operation is cancelled cooperatively within its cleanup window, then settled."""
     executor = DeadlineAcknowledgingExecutor()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        supervisor, journal = _admission_supervisor(
+        supervisor, journal = admission_supervisor(
             tmp_path,
             profile.repository,
             executor_type=DeadlineAcknowledgingExecutor,
             build=lambda: executor,
-            capabilities=_capabilities(
+            capabilities=supervisor_capabilities(
                 cancellation=OperationCancellation.COOPERATIVE,
                 owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK}),
                 close_policy=OperationClosePolicy.REQUEST_CANCEL,

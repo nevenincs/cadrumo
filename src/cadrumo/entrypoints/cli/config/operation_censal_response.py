@@ -27,7 +27,7 @@ from ....application.operations.frontend_requests import (
 from ....application.operations.models import OperationId
 from ....core.hashing import canonical_json_bytes
 from ....core.time.clock import now
-from .operation_censal_exchange import _exchange
+from .operation_censal_exchange import exchange
 
 
 def _require_response_authority(
@@ -53,7 +53,7 @@ def _require_response_authority(
         session_id=session_id,
         management=control_request,
     )
-    control_reply = _exchange(client, session_id, control_wire_request, deadline=deadline)
+    control_reply = exchange(client, session_id, control_wire_request, deadline=deadline)
     if not isinstance(control_reply, OperationManaged) or control_reply.operation_id != operation_id:
         raise RefusalError(RefusalCode.INVALID_FRAME)
     control = _decode_response_control(control_reply.document)
@@ -91,7 +91,7 @@ def _decode_response_mutation(document: dict[str, JsonValue]) -> OperationRespon
         raise RefusalError(RefusalCode.INVALID_FRAME) from None
 
 
-def _respond(
+def respond(
     client: FrontendClient,
     *,
     profile_id: UUID,
@@ -130,7 +130,7 @@ def _respond(
         session_id=session_id,
         management=mutation,
     )
-    mutation_reply = _exchange(client, session_id, mutation_wire_request, deadline=deadline)
+    mutation_reply = exchange(client, session_id, mutation_wire_request, deadline=deadline)
     if not isinstance(mutation_reply, OperationManaged) or mutation_reply.operation_id != operation_id:
         raise RefusalError(RefusalCode.INVALID_FRAME)
     accepted = _decode_response_mutation(mutation_reply.document)

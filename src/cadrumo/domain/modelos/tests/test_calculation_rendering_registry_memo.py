@@ -25,9 +25,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 @pytest.fixture(autouse=True)
 def _fresh_memo(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        rendering, "_VERIFIED_REGISTRY", rendering._VerifiedRegistryMemo(max_payload_bytes=32 * 1024 * 1024)
+        rendering, "VERIFIED_REGISTRY", rendering.VerifiedRegistryMemo(max_payload_bytes=32 * 1024 * 1024)
     )
-    monkeypatch.setattr(rendering, "_REGISTRY_SERIALIZER", rendering._RegistrySerializerMemo())
+    monkeypatch.setattr(rendering, "REGISTRY_SERIALIZER", rendering.RegistrySerializerMemo())
 
 
 @pytest.fixture
@@ -44,7 +44,7 @@ def _saved(operation: PinnedAuthorityOperation) -> str:
 
 
 def _count_compilers(monkeypatch: pytest.MonkeyPatch) -> list[SchemaSerializer]:
-    original = rendering._compile_registry_serializer
+    original = rendering.compile_registry_serializer
     compiled: list[SchemaSerializer] = []
 
     def compile_public_schema() -> SchemaSerializer:
@@ -52,8 +52,8 @@ def _count_compilers(monkeypatch: pytest.MonkeyPatch) -> list[SchemaSerializer]:
         compiled.append(serializer)
         return serializer
 
-    monkeypatch.setattr(rendering, "_compile_registry_serializer", compile_public_schema)
-    monkeypatch.setattr(rendering, "_REGISTRY_SERIALIZER", rendering._RegistrySerializerMemo())
+    monkeypatch.setattr(rendering, "compile_registry_serializer", compile_public_schema)
+    monkeypatch.setattr(rendering, "REGISTRY_SERIALIZER", rendering.RegistrySerializerMemo())
     return compiled
 
 
@@ -95,7 +95,7 @@ def test_a_warm_memo_refuses_the_same_tampering_as_a_cold_read(
     with pytest.raises(ValidationError) as cold:
         _read(tampered)
     monkeypatch.setattr(
-        rendering, "_VERIFIED_REGISTRY", rendering._VerifiedRegistryMemo(max_payload_bytes=32 * 1024 * 1024)
+        rendering, "VERIFIED_REGISTRY", rendering.VerifiedRegistryMemo(max_payload_bytes=32 * 1024 * 1024)
     )
 
     assert _read(saved) == _read(saved)
@@ -171,7 +171,7 @@ def test_a_full_memo_keeps_its_entries_instead_of_evicting_them(
         authority_generation=operation.pin().logical_generation,
     ).model_dump_json()
     budget = len(TypeAdapter(object).dump_json(json.loads(first_saved)["registry_snapshot"]))
-    monkeypatch.setattr(rendering, "_VERIFIED_REGISTRY", rendering._VerifiedRegistryMemo(max_payload_bytes=budget))
+    monkeypatch.setattr(rendering, "VERIFIED_REGISTRY", rendering.VerifiedRegistryMemo(max_payload_bytes=budget))
 
     # A catalogue read walks its revisions in the same order every time.
     passes = [(_read(first_saved).registry_snapshot, _read(second_saved).registry_snapshot) for _ in range(2)]

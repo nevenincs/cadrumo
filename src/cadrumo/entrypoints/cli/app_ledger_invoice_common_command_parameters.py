@@ -14,7 +14,7 @@ from cadrumo_client.commands.shared_contracts import (
 )
 
 from ...application.ledger.operator_input_contracts import INVOICE_CLASS_INPUT
-from ._app_ledger_command_spec_support import _option_from_application_contract
+from .app_ledger_command_spec_support import option_from_application_contract
 
 OPTIONAL_IVA_CATEGORY_OPTION: Final[OptionSpec] = OptionSpec(
     name="iva_category",
@@ -150,7 +150,7 @@ INVOICE_LIFECYCLE_METADATA_OPTIONS: Final[tuple[OptionSpec, ...]] = (
         show_default=True,
         hidden=False,
     ),
-    _option_from_application_contract(INVOICE_CLASS_INPUT, "cli.app.ledger.invoice.invoice_class_help"),
+    option_from_application_contract(INVOICE_CLASS_INPUT, "cli.app.ledger.invoice.invoice_class_help"),
     OptionSpec(
         name="series",
         declarations=("--series",),

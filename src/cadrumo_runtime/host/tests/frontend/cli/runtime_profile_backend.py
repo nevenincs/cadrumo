@@ -160,7 +160,7 @@ def runtime_cli_profile(
 def runtime_profile_backend_fixture(
     *,
     autouse: bool = True,
-    name: str = "_isolated_backend",
+    name: str = "isolated_backend",
     settings_overrides: Mapping[str, object] | Callable[[Path], Mapping[str, object]] | None = None,
     profile_overrides: Mapping[str, str] | None = None,
     display_name: str | None = None,
@@ -300,7 +300,7 @@ def runtime_seeded_profile_backend_fixture(
     settings_overrides: Mapping[str, object] | None = None,
     profile_overrides: Mapping[str, str] | None = None,
     autouse: bool = True,
-    name: str = "_isolated_backend",
+    name: str = "isolated_backend",
     origin_name: str = "_isolated_backend_origin",
 ) -> tuple[Callable[..., Iterator[SealedProfileWorld]], Callable[..., Iterator[None]]]:
     """Build the (origin, per-test) pair of a seed-once world whose commands reach a runtime.

@@ -51,10 +51,10 @@ from ...core.iva_category_resolution import IvaCategoryOutcome
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.iva.schema import InvoiceKind, IvaCategory
 from ...domain.iva.supply_nature import SupplyNature
-from ._date_parsing import _parse_iso_date, _parse_optional_iso_date_str
-from ._decimal_parsing import parse_optional_decimal_amount
-from ._evidence_field_notices import field_degradation_notices, label_reading_fallback_notices
 from .common import active_bucket_id_or_refuse, bad, emit_envelope
+from .date_parsing import parse_iso_date, parse_optional_iso_date_str
+from .decimal_parsing import parse_optional_decimal_amount
+from .evidence_field_notices import field_degradation_notices, label_reading_fallback_notices
 from .ledger_business_payloads import (
     EvidenceAddResult,
     EvidenceConfirmResult,
@@ -124,7 +124,7 @@ def evidence_page(
     max_width: int = EVIDENCE_PAGE_DEFAULT_WIDTH,
 ) -> None:
     """Draw one page of a stored document and write it to ``output`` as a PNG."""
-    _require_exact_evidence_reference(evidence_id, attachment_id)
+    require_exact_evidence_reference(evidence_id, attachment_id)
     read = run_ledger_evidence_page(
         ctx, evidence_id=evidence_id, attachment_id=attachment_id, page=page, max_width=max_width
     )
@@ -196,7 +196,7 @@ def evidence_add(
         source_path=source_path,
         supplier=supplier,
         invoice_number=invoice_number,
-        invoice_date=_parse_optional_iso_date_str(invoice_date, label="invoice-date"),
+        invoice_date=parse_optional_iso_date_str(invoice_date, label="invoice-date"),
         taxable_base=parse_optional_decimal_amount(taxable_base, label="taxable-base", signed=False),
         iva_rate=parse_optional_decimal_amount(iva_rate, label="iva-rate", signed=False),
         iva_amount=parse_optional_decimal_amount(iva_amount, label="iva-amount", signed=False),
@@ -268,7 +268,7 @@ def evidence_update(
     patch = PurchaseInvoiceEvidencePatch(
         supplier=supplier,
         invoice_number=invoice_number,
-        invoice_date=_parse_optional_iso_date_str(invoice_date, label="invoice-date"),
+        invoice_date=parse_optional_iso_date_str(invoice_date, label="invoice-date"),
         taxable_base=parse_optional_decimal_amount(taxable_base, label="taxable-base"),
         iva_rate=parse_optional_decimal_amount(iva_rate, label="iva-rate"),
         iva_amount=parse_optional_decimal_amount(iva_amount, label="iva-amount"),
@@ -300,7 +300,7 @@ def evidence_remove(ctx: typer.Context, evidence_id: str, yes: bool = False) -> 
 
 #: The operator-facing wording for each refusal the shared classifier returns.
 #: The rules are decided in :mod:`~llm.consent`; only the phrasing is CLI-owned.
-_OFF_HOST_REFUSAL_LOCALE_KEYS: dict[OffHostEvidenceReadOutcome, str] = {
+OFF_HOST_REFUSAL_LOCALE_KEYS: dict[OffHostEvidenceReadOutcome, str] = {
     OffHostEvidenceReadOutcome.ACKNOWLEDGEMENT_WITHOUT_PROVIDER: (
         "cli.app.ledger.evidence.extract_acknowledge_without_provider"
     ),
@@ -310,7 +310,7 @@ _OFF_HOST_REFUSAL_LOCALE_KEYS: dict[OffHostEvidenceReadOutcome, str] = {
 }
 
 
-def _validate_extract_consent_options(
+def validate_extract_consent_options(
     *,
     evidence_id: str | None,
     off_host_provider: LLMProvider | None,
@@ -329,7 +329,7 @@ def _validate_extract_consent_options(
     outcome = classify_off_host_evidence_read(provider=off_host_provider, acknowledged=acknowledged)
     if outcome is OffHostEvidenceReadOutcome.ON_HOST_DEFAULT:
         return
-    refusal_key = _OFF_HOST_REFUSAL_LOCALE_KEYS.get(outcome)
+    refusal_key = OFF_HOST_REFUSAL_LOCALE_KEYS.get(outcome)
     if refusal_key is not None:
         raise bad(tr(refusal_key))
     # Only the one consented outcome may reach the request constructor below. The
@@ -344,7 +344,7 @@ def _validate_extract_consent_options(
         raise bad(tr("cli.app.ledger.evidence.extract_off_host_needs_evidence_id"))
 
 
-def _require_exact_evidence_reference(evidence_id: str | None, attachment_id: str | None) -> None:
+def require_exact_evidence_reference(evidence_id: str | None, attachment_id: str | None) -> None:
     """Require exactly one secure evidence reference for a read or confirm."""
     if (evidence_id is None) == (attachment_id is None):
         raise bad(tr("cli.app.ledger.evidence.extract_reference_required"))
@@ -425,7 +425,7 @@ def _draft_payload(draft: InvoiceDraftProjectionV1) -> dict[str, object]:
     return payload
 
 
-def _evidence_extract_payload(
+def evidence_extract_payload(
     *,
     bucket_id: str,
     projection: LedgerEvidenceExtractProjection,
@@ -453,7 +453,7 @@ def _evidence_extract_payload(
     }
 
 
-def _evidence_extract_lines(
+def evidence_extract_lines(
     bucket_id: str,
     projection: LedgerEvidenceExtractProjection,
 ) -> list[str]:
@@ -522,8 +522,8 @@ def evidence_extract(
     acknowledge_off_host: bool = False,
 ) -> None:
     """Submit one evidence extraction and print its source-bound review digests."""
-    _require_exact_evidence_reference(evidence_id, attachment_id)
-    _validate_extract_consent_options(
+    require_exact_evidence_reference(evidence_id, attachment_id)
+    validate_extract_consent_options(
         evidence_id=evidence_id,
         off_host_provider=off_host_provider,
         acknowledged=acknowledge_off_host,
@@ -546,9 +546,9 @@ def evidence_extract(
             ctx,
             command="ledger.evidence.extract",
             result=EvidenceExtractResult.model_validate_json(
-                json.dumps(_evidence_extract_payload(bucket_id=bucket_id, projection=projection)),
+                json.dumps(evidence_extract_payload(bucket_id=bucket_id, projection=projection)),
             ),
-            lines=_evidence_extract_lines(bucket_id, projection),
+            lines=evidence_extract_lines(bucket_id, projection),
             notices=_evidence_extract_notices(reference, projection),
         )
 
@@ -616,7 +616,7 @@ def evidence_confirm(
     resolve: tuple[str, ...] = (),
 ) -> None:
     """Confirm the exact source and draft the operator reviewed during extract."""
-    _require_exact_evidence_reference(evidence_id, attachment_id)
+    require_exact_evidence_reference(evidence_id, attachment_id)
     bucket_id = active_bucket_id_or_refuse()
     profile_id = UUID(bucket_id)
     parsed_resolutions = tuple(parse_finding_resolution(raw) for raw in resolve)
@@ -640,7 +640,7 @@ def evidence_confirm(
         counterparty_tax_id=counterparty_nif,
         counterparty_name=counterparty_name,
         invoice_number=invoice_number,
-        invoice_date=_parse_iso_date(invoice_date, label="invoice-date")
+        invoice_date=parse_iso_date(invoice_date, label="invoice-date")
         if (invoice_date is not None and invoice_date)
         else None,
         taxable_base=_decimal_request_text(taxable_base, label="taxable-base"),
@@ -649,7 +649,7 @@ def evidence_confirm(
         currency=currency,
         iva_category=iva_category.value if iva_category is not None else None,
         operation_type=operation_type,
-        operation_date=_parse_iso_date(operation_date, label="operation-date")
+        operation_date=parse_iso_date(operation_date, label="operation-date")
         if (operation_date is not None and operation_date)
         else None,
         retention_rate=_decimal_request_text(retention_rate, label="retention-rate"),
@@ -671,19 +671,19 @@ def evidence_confirm(
             ctx,
             command="ledger.evidence.confirm",
             result=EvidenceConfirmResult.model_validate(
-                _evidence_confirm_payload(
+                evidence_confirm_payload(
                     bucket_id=bucket_id,
                     projection=projection,
                 ),
             ),
             lines=_evidence_confirm_lines(bucket_id, projection),
-            notices=_evidence_confirm_notices(confirmation),
+            notices=evidence_confirm_notices(confirmation),
         )
 
     _present_registered_evidence_operation(completed, render)
 
 
-def _evidence_confirm_payload(
+def evidence_confirm_payload(
     *,
     bucket_id: str,
     projection: LedgerEvidenceConfirmProjection,
@@ -735,7 +735,7 @@ def _evidence_confirm_payload(
     }
 
 
-def _confirm_resolution_lines(establishment: ConfirmedEstablishmentProjectionV1 | None) -> list[str]:
+def confirm_resolution_lines(establishment: ConfirmedEstablishmentProjectionV1 | None) -> list[str]:
     """Render the category result and every retained review item."""
     if establishment is None:
         return []
@@ -771,11 +771,11 @@ def _evidence_confirm_lines(
         f"issued_at\t{invoice.issued_at.isoformat()}",
         f"grand_total\t{invoice.grand_total.decimal}",
         f"currency\t{invoice.currency}",
-        *_confirm_resolution_lines(confirmation.establishment),
+        *confirm_resolution_lines(confirmation.establishment),
     ]
 
 
-def _resolution_notices(
+def resolution_notices(
     establishment: ConfirmedEstablishmentProjectionV1 | None,
 ) -> list[Notice]:
     """Keep the existing IVA category and establishment review notices."""
@@ -809,7 +809,7 @@ def _resolution_notices(
     return notices
 
 
-def _evidence_confirm_notices(result: InvoiceConfirmationProjectionV1) -> list[Notice]:
+def evidence_confirm_notices(result: InvoiceConfirmationProjectionV1) -> list[Notice]:
     """Project discrepancy, idempotency, draft and IVA-resolution notices."""
     notices: list[Notice] = []
     if result.total_discrepancy is not None:
@@ -849,7 +849,7 @@ def _evidence_confirm_notices(result: InvoiceConfirmationProjectionV1) -> list[N
     # sees why a field they are about to accept was not corroborated.
     notices.extend(field_degradation_notices(_domain_provenance(result.draft)))
     notices.extend(label_reading_fallback_notices(_domain_fallback(result.label_reading_fallback)))
-    notices.extend(_resolution_notices(result.establishment))
+    notices.extend(resolution_notices(result.establishment))
     return notices
 
 

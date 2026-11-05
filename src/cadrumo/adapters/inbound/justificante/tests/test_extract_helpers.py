@@ -21,7 +21,7 @@ from decimal import Decimal
 import pytest
 
 from .....domain.justificante.errors import JustificanteParseError
-from .._extract import _parse_datetime, _parse_decimal, _strip_accents
+from ..extract import parse_datetime, parse_decimal, strip_accents
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -65,7 +65,7 @@ def test_strip_accents_cases() -> None:
     recover the value even when the accent's combining mark is in a
     non-canonical form."""
     for case_id, value, expected in _STRIP_ACCENTS_CASES:
-        assert _strip_accents(value) == expected, case_id
+        assert strip_accents(value) == expected, case_id
 
 
 # ---------------------------------------------------------------------------
@@ -77,15 +77,15 @@ def test_parse_decimal_cases() -> None:
     """When BOTH `,` and `.` are present and `.` is right-most, the
     dot wins as decimal (US-style: 1,234.56)."""
     for case_id, value, expected in _DECIMAL_CASES:
-        assert _parse_decimal(value) == expected, case_id
+        assert parse_decimal(value) == expected, case_id
 
 
 def test_parse_decimal_raises_on_malformed_input_and_preserves_error_shape() -> None:
     with pytest.raises(JustificanteParseError, match="invalid decimal"):
-        _parse_decimal("not-a-number")
+        parse_decimal("not-a-number")
 
     with pytest.raises(JustificanteParseError) as exc_info:
-        _parse_decimal("not-a-number", field="total_a_ingresar")
+        parse_decimal("not-a-number", field="total_a_ingresar")
     exc = exc_info.value
     assert exc.malformed == ("total_a_ingresar",)
     assert exc.missing == ()
@@ -93,7 +93,7 @@ def test_parse_decimal_raises_on_malformed_input_and_preserves_error_shape() -> 
     assert exc.coverage is None
 
     with pytest.raises(JustificanteParseError) as exc_info:
-        _parse_decimal("bad")
+        parse_decimal("bad")
     assert exc_info.value.malformed == ()
 
 
@@ -107,10 +107,10 @@ def test_parse_decimal_refuses_the_ambiguous_thousands_reading() -> None:
     """
     for raw in ("1.234", "45.678", "100.000"):
         with pytest.raises(JustificanteParseError, match="ambiguous thousands"):
-            _parse_decimal(raw)
+            parse_decimal(raw)
 
     with pytest.raises(JustificanteParseError) as exc_info:
-        _parse_decimal("1.234", field="total_a_ingresar")
+        parse_decimal("1.234", field="total_a_ingresar")
     exc = exc_info.value
     assert exc.malformed == ("total_a_ingresar",)
     assert exc.missing == ()
@@ -131,7 +131,7 @@ def test_parse_decimal_ambiguity_guard_stays_narrow() -> None:
         ("-1.234,56", Decimal("-1234.56")),
     )
     for raw, expected in unambiguous:
-        assert _parse_decimal(raw) == expected, raw
+        assert parse_decimal(raw) == expected, raw
 
 
 # ---------------------------------------------------------------------------
@@ -142,15 +142,15 @@ def test_parse_decimal_ambiguity_guard_stays_narrow() -> None:
 def test_parse_datetime_cases() -> None:
     """Annual modelo receipts (100, 190, etc.) use DD-MM-YYYY HH:MM:SS."""
     for case_id, value, expected in _DATETIME_CASES:
-        assert _parse_datetime(value) == expected, case_id
+        assert parse_datetime(value) == expected, case_id
 
 
 def test_parse_datetime_raises_on_unrecognised_format_with_malformed_presented_at() -> None:
     with pytest.raises(JustificanteParseError, match="unrecognised datetime literal"):
-        _parse_datetime("not-a-datetime")
+        parse_datetime("not-a-datetime")
 
     with pytest.raises(JustificanteParseError) as exc_info:
-        _parse_datetime("not-a-datetime")
+        parse_datetime("not-a-datetime")
     exc = exc_info.value
     assert exc.malformed == ("presented_at",)
     assert exc.missing == ()

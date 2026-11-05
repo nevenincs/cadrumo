@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._bootstrap_exempt import BOOTSTRAP_EXEMPT_VERB_PATHS, is_bootstrap_exempt
+from ..bootstrap_exempt import BOOTSTRAP_EXEMPT_VERB_PATHS, is_bootstrap_exempt
 from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

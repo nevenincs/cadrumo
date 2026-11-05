@@ -232,7 +232,7 @@ def stored_state(
 
 
 def declared_subject(
-    driver: conformance._ExecutionDriver, *, definition_id: str, profile_id: UUID, payload: BaseModel
+    driver: conformance.ExecutionDriver, *, definition_id: str, profile_id: UUID, payload: BaseModel
 ) -> str:
     """The subject the definition's own declaration names for ``payload``."""
     reference = driver.services.submission.supervisor.registry.lookup(definition_id).subject_reference
@@ -242,7 +242,7 @@ def declared_subject(
 
 
 def submit(
-    driver: conformance._ExecutionDriver, *, definition_id: str, profile_id: UUID, payload: BaseModel
+    driver: conformance.ExecutionDriver, *, definition_id: str, profile_id: UUID, payload: BaseModel
 ) -> OperationObservationSuccessV1:
     """Run one operation through the real supervisor to where it settles or waits for its review."""
 
@@ -258,7 +258,7 @@ def submit(
 
 
 def review_and_apply(
-    driver: conformance._ExecutionDriver,
+    driver: conformance.ExecutionDriver,
     *,
     definition_id: str,
     profile_id: UUID,
@@ -296,14 +296,14 @@ def succeeded(observed: OperationObservationSuccessV1) -> bool:
 
 
 def resolve_result[ResultT: BaseModel](
-    driver: conformance._ExecutionDriver,
+    driver: conformance.ExecutionDriver,
     registry: OperationRegistry,
     *,
     definition_id: str,
     observed: OperationObservationSuccessV1,
     result_type: type[ResultT],
 ) -> ResultT:
-    return conformance._resolve_result_projection(
+    return conformance.resolve_result_projection(
         driver,
         registry,
         definition_id=definition_id,

@@ -32,7 +32,7 @@ from .....tests.log_records import delivered_text
 from .. import oauth_callback, oauth_flow
 from ..oauth_callback import OAuthCallbackRefusedError, receive_authorization_code, validate_callback
 from ..records import REQUIRED_SCOPES, OAuthToken
-from .test_oauth_flow import _BrowserStandIn, _valid_oauth_client
+from .test_oauth_flow import BrowserStandIn, valid_oauth_client
 from .token_endpoint_server import token_endpoint
 
 if TYPE_CHECKING:
@@ -44,7 +44,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 @pytest.fixture(autouse=True)
 def synthetic_browser_desktop(monkeypatch: pytest.MonkeyPatch) -> None:
     """Callback adversarial tests use a stand-in browser, not the machine's Chrome profile."""
-    monkeypatch.setattr(oauth_callback, "_require_browser_desktop", lambda: None)
+    monkeypatch.setattr(oauth_callback, "require_browser_desktop", lambda: None)
 
 
 _AUTHORITY = "127.0.0.1:49152"
@@ -129,7 +129,7 @@ def test_real_flow_uses_fresh_s256_and_never_logs_callback(
     urls: list[str] = []
     verifiers: list[str] = []
     for _attempt in range(2):
-        browser = _BrowserStandIn("code=synthetic-intercepted-code")
+        browser = BrowserStandIn("code=synthetic-intercepted-code")
         original_open = browser.open
 
         def open_browser(
@@ -141,9 +141,9 @@ def test_real_flow_uses_fresh_s256_and_never_logs_callback(
         monkeypatch.setattr(browser, "open", open_browser)
         monkeypatch.setattr(webbrowser, "get", lambda using=None, selected=browser: selected)
         with token_endpoint(status=200, body={"access_token": "synthetic-access", "expires_in": "3600"}) as endpoint:
-            client = _valid_oauth_client().model_copy(update={"token_uri": endpoint.url})
+            client = valid_oauth_client().model_copy(update={"token_uri": endpoint.url})
             with pytest.raises(GoogleAuthValidationError):
-                oauth_flow._run_local_server(client)
+                oauth_flow.run_local_server(client)
             for visit in browser.visits:
                 visit.join()
             request = endpoint.grant_requests[0]
@@ -176,9 +176,9 @@ def test_requested_scopes_cannot_substitute_for_the_returned_grant(granted: tupl
         token="synthetic-access", refresh_token="synthetic-refresh", scopes=REQUIRED_SCOPES, granted_scopes=granted
     )
     with pytest.raises(GoogleAuthScopeInsufficientError):
-        oauth_flow._oauth_loopback_records(
+        oauth_flow.oauth_loopback_records(
             cast("OAuthCredentials", credentials),
-            _valid_oauth_client(),
+            valid_oauth_client(),
             before_handoff=None,
             acknowledged=None,
             expected_nonce="synthetic-nonce",
@@ -234,19 +234,19 @@ def test_real_google_verifier_and_claim_checks_refuse_invalid_identity(
     }
     credentials = _signed_identity(monkeypatch, signing_key, claims)
     assert (
-        oauth_flow._decode_email_from_id_token(credentials, audience="test-client", expected_nonce="fresh-nonce")
+        oauth_flow.decode_email_from_id_token(credentials, audience="test-client", expected_nonce="fresh-nonce")
         == "synthetic@example.com"
     )
     claims[field] = value
     credentials = _signed_identity(monkeypatch, signing_key, claims)
     with pytest.raises((GoogleAuthNetworkError, GoogleAuthValidationError)):
-        oauth_flow._decode_email_from_id_token(credentials, audience="test-client", expected_nonce="fresh-nonce")
+        oauth_flow.decode_email_from_id_token(credentials, audience="test-client", expected_nonce="fresh-nonce")
 
 
 def test_oauth_failures_and_record_repr_do_not_disclose_credentials() -> None:
     secret = "synthetic-sensitive-provider-response"
     try:
-        oauth_flow._raise_local_server_error(ValueError(secret))
+        oauth_flow.raise_local_server_error(ValueError(secret))
     except GoogleAuthNetworkError as error:
         assert secret not in "".join(traceback.format_exception(error))
         assert secret not in str(error.context)
@@ -273,7 +273,7 @@ def test_identity_with_a_forged_signature_is_refused(monkeypatch: pytest.MonkeyP
     altered = ("A" if signature[0] != "A" else "B") + signature[1:]
     forged = Credentials(token="synthetic-access", id_token=f"{header}.{payload}.{altered}")
     with pytest.raises(GoogleAuthNetworkError):
-        oauth_flow._decode_email_from_id_token(forged, audience="test-client", expected_nonce="fresh-nonce")
+        oauth_flow.decode_email_from_id_token(forged, audience="test-client", expected_nonce="fresh-nonce")
 
 
 def test_complete_authorization_validates_signed_nonce_and_returns_records(
@@ -287,9 +287,9 @@ def test_complete_authorization_validates_signed_nonce_and_returns_records(
         "expires_in": "3600",
         "scope": " ".join(REQUIRED_SCOPES),
     }
-    client = _valid_oauth_client()
+    client = valid_oauth_client()
 
-    class SignedBrowser(_BrowserStandIn):
+    class SignedBrowser(BrowserStandIn):
         @override
         def open(self, url: str, new: int = 0, autoraise: bool = True) -> bool:
             query = parse_qs(urlsplit(url).query)
@@ -314,7 +314,7 @@ def test_complete_authorization_validates_signed_nonce_and_returns_records(
     monkeypatch.setattr(webbrowser, "get", lambda: browser)
     with token_endpoint(status=200, body=body) as endpoint:
         loopback_client = client.model_copy(update={"token_uri": endpoint.url})
-        refresh, _uri, email, scopes = oauth_flow._run_local_server(loopback_client)
+        refresh, _uri, email, scopes = oauth_flow.run_local_server(loopback_client)
         for visit in browser.visits:
             visit.join()
         assert len(endpoint.grant_requests) == 1
@@ -341,12 +341,12 @@ def test_complete_authorization_validates_signed_nonce_and_returns_records(
     ],
 )
 def test_invalid_wire_callback_never_reaches_token_endpoint(monkeypatch: pytest.MonkeyPatch, answer: str) -> None:
-    browser = _BrowserStandIn(answer)
+    browser = BrowserStandIn(answer)
     monkeypatch.setattr(webbrowser, "get", lambda: browser)
     with token_endpoint(status=200, body={"access_token": "must-not-be-requested"}) as endpoint:
-        client = _valid_oauth_client().model_copy(update={"token_uri": endpoint.url})
+        client = valid_oauth_client().model_copy(update={"token_uri": endpoint.url})
         with pytest.raises(GoogleAuthNetworkError):
-            oauth_flow._run_local_server(client)
+            oauth_flow.run_local_server(client)
         for visit in browser.visits:
             visit.join()
         assert endpoint.grant_requests == []

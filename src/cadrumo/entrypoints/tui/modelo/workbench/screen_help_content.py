@@ -23,10 +23,10 @@ from .casilla_list_values import description_text, grid_cell_title, rate_note
 from .editor import read_only_reason
 from .header import result_view
 from .screen_constants import (
-    _FOOTER_PRIORITY,
-    _FRAGMENT_SEPARATOR,
-    _HELP_ONLY_KEYS,
-    _SCREEN_LOCALE_KEYS,
+    FOOTER_PRIORITY,
+    FRAGMENT_SEPARATOR,
+    HELP_ONLY_KEYS,
+    SCREEN_LOCALE_KEYS,
 )
 from .vocabulary import ATTENTION_MARKS, attention_words_key, origin_text
 
@@ -66,12 +66,10 @@ class WorkbenchHelpContentMixin:
 
     def _all_keys_text(self: ModeloWorkbenchScreen) -> str:
         """Every key the help and the legend name; on a declaration recorded as filed, none that would change it."""
-        descriptions = {**self._list_locale_keys(), **_SCREEN_LOCALE_KEYS}
+        descriptions = {**self._list_locale_keys(), **SCREEN_LOCALE_KEYS}
         hidden = self._hidden_keys()
         return " · ".join(
-            self._key_label(key, descriptions[key])
-            for key in (*_FOOTER_PRIORITY, *_HELP_ONLY_KEYS)
-            if key not in hidden
+            self._key_label(key, descriptions[key]) for key in (*FOOTER_PRIORITY, *HELP_ONLY_KEYS) if key not in hidden
         )
 
     def _help_title(self: ModeloWorkbenchScreen, entry: CasillaListEntry) -> str:
@@ -133,7 +131,7 @@ class WorkbenchHelpContentMixin:
         if card.feeds:
             lines.append(tr("workspace.modelo.help.feeds", boxes=", ".join(card.feeds)))
         for quote in card.quotes:
-            quoted = _FRAGMENT_SEPARATOR.join(quote.fragments)
+            quoted = FRAGMENT_SEPARATOR.join(quote.fragments)
             lines.append(tr("workspace.modelo.help.official", source=quote.source, text=quoted))
         if card.legal_basis:
             lines.append(tr("workspace.modelo.help.legal", citations="; ".join(item.text for item in card.legal_basis)))

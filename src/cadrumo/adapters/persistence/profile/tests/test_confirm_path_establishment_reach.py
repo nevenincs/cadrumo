@@ -49,23 +49,23 @@ from cadrumo.application.ledger.establishment_ladder import EstablishmentRung
 from cadrumo.core.config import Settings
 
 from .....domain.iva.schema import InvoiceKind, IvaTerritorialScope
-from ._invoice_confirmation_test_support import (
-    _BUCKET_ID,
-    _EVIDENCE_CORPUS,
+from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from .invoice_confirmation_test_support import (
+    BUCKET_ID,
+    EVIDENCE_CORPUS,
     InvoiceAuthorityFixture,
-    _make_svc,
     invoice_confirmation_kwargs,
     isolated_settings,
+    make_svc,
     secure_objects,
 )
-from ._invoice_confirmation_test_support import runtime_profile as runtime_profile
-from ._invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
-from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from .invoice_confirmation_test_support import runtime_profile as runtime_profile
+from .invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_filer_profile"]
 
-_CORPUS = _EVIDENCE_CORPUS
+_CORPUS = EVIDENCE_CORPUS
 
 # The bundled Facturae specimen. Its SellerParty block already carries the
 # CountryCode and PostCode elements the ladder's two address rungs read, so the
@@ -95,7 +95,7 @@ def _stored(
 ) -> str:
     staged = tmp_path / name
     staged.write_text(xml, encoding="utf-8")
-    return _make_svc(settings, objects).add(bucket_id=_BUCKET_ID, source_path=staged).record.evidence_id
+    return make_svc(settings, objects).add(bucket_id=BUCKET_ID, source_path=staged).record.evidence_id
 
 
 def _facturae_with_seller_in(postal_code: str) -> str:
@@ -146,13 +146,13 @@ def _confirmed(
 ):
     evidence_id = _stored(xml, settings=settings, objects=objects, tmp_path=tmp_path, name=name)
     return confirm_invoice_draft_from_evidence(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         counterparty_country="ES",
         evidence_id=evidence_id,
         counterparty_name=_SELLER_NAME,
         settings=settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=authority),
+        **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=authority),
     )
 
 

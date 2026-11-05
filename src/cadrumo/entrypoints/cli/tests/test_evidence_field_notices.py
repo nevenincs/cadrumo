@@ -32,7 +32,7 @@ from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.json_contract import Notice, NoticeSeverity, derive_status
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-from .._evidence_field_notices import (
+from ..evidence_field_notices import (
     DEGRADED_GROUNDING_OUTCOMES,
     field_degradation_notices,
     label_reading_fallback_notices,

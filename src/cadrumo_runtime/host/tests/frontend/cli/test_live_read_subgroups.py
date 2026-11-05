@@ -20,14 +20,14 @@ from .runtime_profile_backend import runtime_seeded_profile_backend_fixture
 #: copy keeps each test's storage root private, so the cases that persist an
 #: observation or a snapshot still cannot reach the ones that assert a fresh
 #: bucket.
-_live_read_origin, _isolated_backend = runtime_seeded_profile_backend_fixture(
+_live_read_origin, isolated_backend = runtime_seeded_profile_backend_fixture(
     seed=lambda *, invoke_cli: None,
-    name="_isolated_backend",
+    name="isolated_backend",
     origin_name="_live_read_origin",
 )
 
 
-__all__ = ["_isolated_backend", "_live_read_origin"]
+__all__ = ["_live_read_origin", "isolated_backend"]
 
 # INTENTIONAL: integration because it exercises the live-read CLI subgroup wiring and
 # error surfaces locally without contacting AEAT.

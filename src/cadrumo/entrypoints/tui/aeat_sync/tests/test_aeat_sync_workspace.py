@@ -46,17 +46,17 @@ from ..models import (
 from ..notifications_screen import AeatSyncNotificationsScreen
 from ..overview_screen import AeatSyncOverviewScreen
 from ..routes import AEAT_SYNC_ROUTES, resolve_aeat_sync_screen
-from ._aeat_sync_workspace_support import (
-    _AEAT_SYNC_INTENTIONAL_IDENTICAL_HU,
-    _BUCKET_ID,
-    _SUBJECT_KEY,
-    _aeat_sync_catalogue,
-    _contracts,
-    _controller,
-    _projection,
-    _referenced_aeat_sync_keys,
-    _started_operation_controller,
-    _table_text,
+from .aeat_sync_workspace_support import (
+    AEAT_SYNC_INTENTIONAL_IDENTICAL_HU,
+    BUCKET_ID,
+    SUBJECT_KEY,
+    aeat_sync_catalogue,
+    aeat_sync_workspace_contracts,
+    aeat_sync_workspace_controller,
+    aeat_sync_workspace_projection,
+    referenced_aeat_sync_keys,
+    started_operation_controller,
+    table_text,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -74,11 +74,11 @@ async def test_stored_notifications_remain_readable_without_aeat_credentials(
 
     async def handoff(request: AeatSyncOperationRequestV1, /) -> OperationControllerPort:
         requests.append(request)
-        return _started_operation_controller()
+        return started_operation_controller()
 
     door = AeatAuthSetupDoor()
     door.fail_read = readiness_unavailable
-    controller = _controller(
+    controller = aeat_sync_workspace_controller(
         operation_handoff=handoff,
         overview_area=AeatSyncOverviewArea.NOTIFICATIONS,
         action_id="operator.live.notifications.list",
@@ -115,7 +115,7 @@ async def test_sync_screen_exposes_same_auth_editor_and_reloads_saved_readiness(
         raise AssertionError("editing authentication never starts a remote read")
 
     door = AeatAuthSetupDoor()
-    controller = _controller(operation_handoff=handoff)
+    controller = aeat_sync_workspace_controller(operation_handoff=handoff)
     controller.aeat_auth_setup = door
     screen = AeatSyncOverviewScreen(controller)
     async with ScreenHostApp(screen).run_test(size=(120, 65)) as pilot:
@@ -153,29 +153,29 @@ def test_aeat_sync_namespace_matches_all_locales_and_hu_has_only_explicit_invari
     two section headings broke it while translating nothing. It also never
     checked the thing that matters: that the keys the code asks for exist.
     """
-    english = _aeat_sync_catalogue("en")
-    translated = _aeat_sync_catalogue(locale)
+    english = aeat_sync_catalogue("en")
+    translated = aeat_sync_catalogue(locale)
     assert english, "the English aeat_sync namespace is empty"
     assert set(translated) == set(english)
 
-    referenced = _referenced_aeat_sync_keys()
+    referenced = referenced_aeat_sync_keys()
     assert referenced, "no literal aeat_sync keys were found; the scan is broken"
     missing = sorted(key for key in referenced if key not in translated)
     assert not missing, f"{locale} is missing keys the code asks for: {missing}"
     if locale == "hu":
         identical = {key for key, value in translated.items() if value == english[key]}
-        assert identical == _AEAT_SYNC_INTENTIONAL_IDENTICAL_HU
+        assert identical == AEAT_SYNC_INTENTIONAL_IDENTICAL_HU
 
 
 def test_six_routes_are_total_and_locked_projection_refuses_body() -> None:
-    controller = _controller()
+    controller = aeat_sync_workspace_controller()
     assert tuple(route.zone for route in AEAT_SYNC_ROUTES) == tuple(AeatSyncWorkspaceZone)
     assert {route.destination for route in AEAT_SYNC_ROUTES} == closed_destination_ids(AeatSyncDestinationIdV1)
     assert isinstance(
         resolve_aeat_sync_screen(controller, controller.target(AeatSyncWorkspaceZone.OVERVIEW)),
         AeatSyncOverviewScreen,
     )
-    locked = _controller(AeatSyncWorkspaceAvailability.LOCKED)
+    locked = aeat_sync_workspace_controller(AeatSyncWorkspaceAvailability.LOCKED)
     assert not locked.can_open(AeatSyncWorkspaceZone.CENSUS)
     with pytest.raises(ValueError, match="not observable"):
         resolve_aeat_sync_screen(locked, locked.target(AeatSyncWorkspaceZone.CENSUS))
@@ -188,7 +188,7 @@ def test_six_routes_are_total_and_locked_projection_refuses_body() -> None:
 def test_overview_remains_reachable_when_sources_are_unobservable(
     availability: AeatSyncWorkspaceAvailability,
 ) -> None:
-    controller = _controller(availability)
+    controller = aeat_sync_workspace_controller(availability)
     assert isinstance(
         resolve_aeat_sync_screen(controller, controller.target(AeatSyncWorkspaceZone.OVERVIEW)),
         AeatSyncOverviewScreen,
@@ -229,12 +229,12 @@ async def test_all_six_routes_mount_without_firing_a_host_handoff_or_leaking_sco
 
     async def operation(request: AeatSyncOperationRequestV1) -> OperationControllerPort:
         calls.append(request)
-        return _started_operation_controller()
+        return started_operation_controller()
 
     async def document(row: AeatSyncWorkspaceNotificationRowV1) -> None:
         calls.append(row)
 
-    controller = _controller(operation_handoff=operation, notification_document_handoff=document)
+    controller = aeat_sync_workspace_controller(operation_handoff=operation, notification_document_handoff=document)
     for zone in AeatSyncWorkspaceZone:
         screen = resolve_aeat_sync_screen(controller, controller.target(zone))
         async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
@@ -242,7 +242,7 @@ async def test_all_six_routes_mount_without_firing_a_host_handoff_or_leaking_sco
             assert screen.query_one("#aeat-sync-navigation", DataTable).row_count == 6
             assert screen.query_one("#aeat-sync-rows", DataTable).row_count == 1
             rendered = "\n".join(str(widget.render()) for widget in screen.query(Static))
-            assert _SUBJECT_KEY not in rendered
+            assert SUBJECT_KEY not in rendered
     assert calls == []
 
 
@@ -256,11 +256,11 @@ async def test_explicit_overview_operation_invokes_host_once_and_missing_host_re
 
     async def handoff(request: AeatSyncOperationRequestV1) -> OperationControllerPort:
         calls.append(request)
-        controller = _started_operation_controller()
+        controller = started_operation_controller()
         controllers.append(controller)
         return controller
 
-    screen = AeatSyncOverviewScreen(_controller(operation_handoff=handoff))
+    screen = AeatSyncOverviewScreen(aeat_sync_workspace_controller(operation_handoff=handoff))
     presented: list[OperationControllerPort] = []
     monkeypatch.setattr(screen, "_show_operation_modal", presented.append)
     async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
@@ -276,7 +276,7 @@ async def test_explicit_overview_operation_invokes_host_once_and_missing_host_re
         )
     ]
     assert presented == controllers
-    refused = AeatSyncOverviewScreen(_controller())
+    refused = AeatSyncOverviewScreen(aeat_sync_workspace_controller())
     async with ScreenHostApp[None](refused).run_test(size=(100, 30)) as pilot:
         await settle(pilot)
         # Without a host door no control is offered; the refusal is stated instead.
@@ -294,10 +294,10 @@ async def test_language_repaint_preserves_tables_focus_and_consumed_operation(
 
     async def handoff(request: AeatSyncOperationRequestV1) -> OperationControllerPort:
         calls.append(request)
-        return _started_operation_controller()
+        return started_operation_controller()
 
     with override_settings(cadrumo_output_language="en"):
-        screen = AeatSyncOverviewScreen(_controller(operation_handoff=handoff))
+        screen = AeatSyncOverviewScreen(aeat_sync_workspace_controller(operation_handoff=handoff))
         monkeypatch.setattr(screen, "_show_operation_modal", lambda _controller: None)
         async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
             await settle(pilot)
@@ -305,7 +305,7 @@ async def test_language_repaint_preserves_tables_focus_and_consumed_operation(
             rows = screen.query_one("#aeat-sync-rows", DataTable)
             navigation_keys = tuple(item.key.value for item in navigation.ordered_rows)
             row_keys = tuple(item.key.value for item in rows.ordered_rows)
-            assert tr("tui.aeat_sync.column.area", locale="en") in _table_text(navigation)
+            assert tr("tui.aeat_sync.column.area", locale="en") in table_text(navigation)
             button = screen.query_one("#aeat-sync-operation-0", Button)
             assert await pilot.click(button)
             await settle(pilot)
@@ -320,8 +320,8 @@ async def test_language_repaint_preserves_tables_focus_and_consumed_operation(
                 assert screen.query_one("#aeat-sync-rows", DataTable) is rows
                 assert tuple(item.key.value for item in navigation.ordered_rows) == navigation_keys
                 assert tuple(item.key.value for item in rows.ordered_rows) == row_keys
-                assert tr("tui.aeat_sync.column.area", locale="es") in _table_text(navigation)
-                assert tr("tui.aeat_sync.availability.available", locale="es") in _table_text(navigation)
+                assert tr("tui.aeat_sync.column.area", locale="es") in table_text(navigation)
+                assert tr("tui.aeat_sync.availability.available", locale="es") in table_text(navigation)
                 assert screen.app.focused is rows
                 assert screen.query_one("#aeat-sync-operation-0", Button) is button
                 assert button.disabled and len(calls) == 1
@@ -330,7 +330,7 @@ async def test_language_repaint_preserves_tables_focus_and_consumed_operation(
 @pytest.mark.asyncio
 async def test_language_repaint_restates_missing_operation_handoff_refusal() -> None:
     with override_settings(cadrumo_output_language="en"):
-        screen = AeatSyncOverviewScreen(_controller())
+        screen = AeatSyncOverviewScreen(aeat_sync_workspace_controller())
         async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
             await settle(pilot)
             status = screen.query_one("#aeat-sync-status", Static)
@@ -346,13 +346,13 @@ async def test_language_repaint_restates_missing_operation_handoff_refusal() -> 
 async def test_started_filed_pull_handoff_pushes_the_canonical_operation_modal(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    started_controller = _started_operation_controller()
+    started_controller = started_operation_controller()
 
     async def handoff(_request: AeatSyncOperationRequestV1) -> OperationControllerPort:
         return started_controller
 
     screen = AeatSyncOverviewScreen(
-        _controller(
+        aeat_sync_workspace_controller(
             operation_handoff=handoff,
             overview_area=AeatSyncOverviewArea.FILED_DECLARATIONS,
             action_id="operator.live.filed.pull_all",
@@ -377,7 +377,7 @@ async def test_missing_session_contract_is_visible_refusal_and_unread_notificati
     unknown = AeatSyncOverviewScreen(
         AeatSyncWorkspaceController(
             TuiScreenContextV1(destination="workbench.aeat_sync"),
-            _projection(),
+            aeat_sync_workspace_projection(),
         )
     )
     async with ScreenHostApp[None](unknown).run_test(size=(100, 30)) as pilot:
@@ -392,9 +392,9 @@ async def test_missing_session_contract_is_visible_refusal_and_unread_notificati
 
     controller = AeatSyncWorkspaceController(
         TuiScreenContextV1(destination="workbench.aeat_sync"),
-        _projection(unread=True),
+        aeat_sync_workspace_projection(unread=True),
         notification_document_handoff=document,
-        operation_contracts=_contracts(),
+        operation_contracts=aeat_sync_workspace_contracts(),
     )
     screen = AeatSyncNotificationsScreen(controller)
     async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
@@ -407,7 +407,7 @@ async def test_missing_session_contract_is_visible_refusal_and_unread_notificati
 
 
 def test_controller_admits_only_exact_singleton_pairs() -> None:
-    controller = _controller()
+    controller = aeat_sync_workspace_controller()
     action = ActionReference(action_id="operator.profile.edit")
     operation: OperationDefinitionId = "user-profile.censo-review"
     assert controller.admitted_operation((action,), (operation,)) == AeatSyncOperationRequestV1(
@@ -422,8 +422,8 @@ def test_controller_refuses_forged_contract_join_and_catalogue_command() -> None
     """An operation ID alone cannot authorize a different action or command."""
     action = ActionReference(action_id="operator.profile.edit")
     operation: OperationDefinitionId = "user-profile.censo-review"
-    forged_contract = _controller()
-    forged_contract.operation_contracts = _contracts("operator.live.filed.pull")
+    forged_contract = aeat_sync_workspace_controller()
+    forged_contract.operation_contracts = aeat_sync_workspace_contracts("operator.live.filed.pull")
     assert forged_contract.admitted_operation((action,), (operation,)) is None
 
     forged_catalogue = ActionCatalogue(
@@ -436,16 +436,16 @@ def test_controller_refuses_forged_contract_join_and_catalogue_command() -> None
     )
     canonical_guard = AeatSyncWorkspaceController(
         TuiScreenContextV1(destination="workbench.aeat_sync"),
-        _projection(),
+        aeat_sync_workspace_projection(),
         action_catalogue=forged_catalogue,
-        operation_contracts=_contracts(),
+        operation_contracts=aeat_sync_workspace_contracts(),
     )
     assert canonical_guard.admitted_operation((action,), (operation,)) is None
 
 
 @pytest.mark.asyncio
 async def test_successful_operation_refreshes_aeat_sync_off_ui_loop_and_rearms_button() -> None:
-    filed_projection = _projection(
+    filed_projection = aeat_sync_workspace_projection(
         overview_area=AeatSyncOverviewArea.FILED_DECLARATIONS,
         action_id="operator.live.filed.pull_all",
         operation_id="live.filed-history.pull",
@@ -465,7 +465,7 @@ async def test_successful_operation_refreshes_aeat_sync_off_ui_loop_and_rearms_b
         filed_projection,
         operation_handoff=handoff,
         refresh_snapshot=refresh,
-        operation_contracts=_contracts("operator.live.filed.pull_all", "live.filed-history.pull"),
+        operation_contracts=aeat_sync_workspace_contracts("operator.live.filed.pull_all", "live.filed-history.pull"),
     )
     screen = AeatSyncOverviewScreen(controller)
     succeeded = OperationModalSettledOutcomeV1.model_construct(
@@ -494,7 +494,7 @@ async def test_successful_notification_list_projects_capture_times_and_row_count
     """The TUI renders only the registered public summary fields after settlement."""
     captured_at = datetime(2026, 9, 28, 12, 30, tzinfo=UTC)
     result = NotificationsListPublicResultV1(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         count=2,
         rows=(
             NotificationsSnapshotSummaryPublicV1(
@@ -526,7 +526,7 @@ async def test_successful_notification_list_projects_capture_times_and_row_count
         operation=NOTIFICATIONS_LIST_DEFINITION_ID,
     )
     screen = AeatSyncOverviewScreen(
-        _controller(
+        aeat_sync_workspace_controller(
             operation_handoff=handoff,
             overview_area=AeatSyncOverviewArea.NOTIFICATIONS,
             action_id="operator.live.notifications.list",
@@ -557,14 +557,14 @@ async def test_successful_notification_list_projects_capture_times_and_row_count
 
 @pytest.mark.asyncio
 async def test_notification_focus_restores_by_projected_identity_across_refresh_resize_and_child_return() -> None:
-    first = _projection(
+    first = aeat_sync_workspace_projection(
         notification_specs=(
             ("notification-alpha", date(2026, 1, 1)),
             ("notification-beta", date(2026, 1, 2)),
             ("notification-gamma", date(2026, 1, 3)),
         )
     )
-    reordered = _projection(
+    reordered = aeat_sync_workspace_projection(
         notification_specs=(
             ("notification-gamma", date(2026, 1, 1)),
             ("notification-alpha", date(2026, 1, 2)),
@@ -575,7 +575,7 @@ async def test_notification_focus_restores_by_projected_identity_across_refresh_
         AeatSyncWorkspaceController(
             TuiScreenContextV1(destination="workbench.aeat_sync"),
             first,
-            operation_contracts=_contracts(),
+            operation_contracts=aeat_sync_workspace_contracts(),
         )
     )
     app = ScreenHostApp[None](screen)

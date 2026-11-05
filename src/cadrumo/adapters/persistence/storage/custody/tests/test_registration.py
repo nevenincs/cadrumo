@@ -32,7 +32,7 @@ from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyPasswordError
 from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
@@ -69,7 +69,7 @@ def test_operator_passphrase_keys_the_bucket_not_the_ambient_setting(tmp_path: P
     the ambient one does not, is what distinguishes a threaded callback from
     a discarded one.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
             label="Registration Subject",
@@ -104,7 +104,7 @@ def test_registration_creates_an_addressable_profile_with_no_tax_facts(tmp_path:
     refuses outright without an active bucket session, so a successful load
     here means the session the manager needs is already open.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
             label="Minimal Subject",
@@ -144,7 +144,7 @@ def test_registration_records_zero_known_open_legal_cases(tmp_path: Path) -> Non
     fact about a brand-new profile rather than an assumption of clearance,
     exactly the same class of fact already recorded for its filing history.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     from cadrumo.application.evidence.profile_legal_hold import LegalHoldCaseAuthority
     from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 
@@ -170,7 +170,7 @@ def test_registration_records_zero_known_open_legal_cases(tmp_path: Path) -> Non
 
 
 def test_blank_label_is_refused_before_any_bucket_is_created(tmp_path: Path) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         with pytest.raises(ProfileRegistrationError):
             register_profile_with_credentials(
@@ -190,7 +190,7 @@ def test_short_passphrase_is_refused_before_any_bucket_is_created(tmp_path: Path
     directory. Refusing up front is what keeps a failed attempt from leaving
     artefacts the operator has to clear by hand.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         with pytest.raises(ProfileRegistrationError):
             register_profile_with_credentials(
@@ -250,7 +250,7 @@ def test_every_prospective_password_refusal_is_typed_safe_and_creates_nothing(
     context: dict[str, object],
 ) -> None:
     """Every canonical refusal reaches application code before any persisted state."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         before = _storage_snapshot(storage_root)
         with pytest.raises(ProfileRegistrationError) as refused:
@@ -285,7 +285,7 @@ def test_every_prospective_password_refusal_is_typed_safe_and_creates_nothing(
 )
 def test_registration_accepts_scalar_and_byte_boundaries_exactly(tmp_path: Path, candidate: str) -> None:
     """The application accepts both scalar bounds and the 1,024-byte boundary."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = register_profile_with_credentials(
             label=f"Boundary {len(candidate)}",
@@ -299,7 +299,7 @@ def test_registration_accepts_scalar_and_byte_boundaries_exactly(tmp_path: Path,
 
 def test_registration_preserves_composed_and_decomposed_passwords_exactly(tmp_path: Path) -> None:
     """Visually equivalent credentials stay distinct; registration never normalises."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     composed = "\u00e9" * PROFILE_PASSWORD_MIN_SCALARS
     decomposed = "e\u0301" * PROFILE_PASSWORD_MIN_SCALARS
 
@@ -331,7 +331,7 @@ def test_registration_preserves_composed_and_decomposed_passwords_exactly(tmp_pa
 
 
 def test_duplicate_label_is_refused(tmp_path: Path) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(
             label="Same Label",

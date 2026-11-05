@@ -8,7 +8,7 @@ from datetime import datetime
 from .....application.aggregation.retenciones import RetencionObservation
 from .....core.aggregation import AggregationCaptureKind
 from .....core.period import Period
-from ..retencion_observations import RetencionObservationRepositoryAdapter, _translate_storage_failure
+from ..retencion_observations import RetencionObservationRepositoryAdapter, translate_storage_failure
 from .observation_window_authoring import replace_observation_window
 
 
@@ -26,7 +26,7 @@ def save_retencion_observation(
     """Persist one per-perceptor retención observation."""
     if not isinstance(self, RetencionObservationRepositoryAdapter):
         raise TypeError("fixture requires the retencion persistence adapter")
-    _translate_storage_failure(
+    translate_storage_failure(
         "retencion_save_observation",
         lambda: self.save(
             self.build_observation_payload(
@@ -56,7 +56,7 @@ def replace_retencion_observations(
     """Atomically replace the complete per-perceptor observation window."""
     if not isinstance(self, RetencionObservationRepositoryAdapter):
         raise TypeError("fixture requires the retencion persistence adapter")
-    _translate_storage_failure(
+    translate_storage_failure(
         "retencion_replace_observations",
         lambda: replace_observation_window(
             self,

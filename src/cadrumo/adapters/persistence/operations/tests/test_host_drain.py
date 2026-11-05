@@ -19,7 +19,7 @@ from cadrumo.core.operations import OperationLifecycle
 
 from .supervision_support import run_to_settlement
 from .supervisor_test_support import (
-    _NOW,
+    SUPERVISOR_NOW,
     IdleExecutor,
     operation_repositories,
     operation_supervisor,
@@ -75,7 +75,7 @@ def test_composed_drain_has_one_deadline_and_reports_uncontained_work(tmp_path: 
                 operands=operands,
                 owner_id="1" * 64,
                 lease_token_factory=lambda: "2" * 64,
-                clock=lambda: _NOW,
+                clock=lambda: SUPERVISOR_NOW,
                 lease_duration=timedelta(minutes=10),
                 execution_timeout=timedelta(minutes=1),
                 cleanup_timeout=timedelta(minutes=1),
@@ -147,7 +147,7 @@ def test_created_submission_remains_recoverable_and_fences_direct_admission(tmp_
             scope = operation_conflict_scope_reference(
                 definition_id=request.definition_id, subject_ref=request.subject_ref
             )
-            before = await leases.inspect(scope, operation_id, observed_at=_NOW)
+            before = await leases.inspect(scope, operation_id, observed_at=SUPERVISOR_NOW)
             assert before.current is not None
 
             drained = await supervisor.drain(timedelta(milliseconds=40))
@@ -156,7 +156,7 @@ def test_created_submission_remains_recoverable_and_fences_direct_admission(tmp_
             assert not drained.needs_containment
             assert supervisor.in_flight_operation_count() == 1
             assert (await journal.load(operation_id)).lifecycle is OperationLifecycle.CREATED
-            assert (await leases.inspect(scope, operation_id, observed_at=_NOW)).current == before.current
+            assert (await leases.inspect(scope, operation_id, observed_at=SUPERVISOR_NOW)).current == before.current
 
             for admission in (
                 supervisor.start(operation_id),
@@ -193,10 +193,10 @@ def test_operation_count_returns_to_zero_after_durable_settlement(tmp_path: Path
             scope = operation_conflict_scope_reference(
                 definition_id=request.definition_id, subject_ref=request.subject_ref
             )
-            before = await leases.inspect(scope, operation_id, observed_at=_NOW)
+            before = await leases.inspect(scope, operation_id, observed_at=SUPERVISOR_NOW)
             assert supervisor.in_flight_operation_count() == 1
             assert supervisor.in_flight_operation_count() == 1
-            assert await leases.inspect(scope, operation_id, observed_at=_NOW) == before
+            assert await leases.inspect(scope, operation_id, observed_at=SUPERVISOR_NOW) == before
             settled = await run_to_settlement(supervisor, operation_id)
             assert settled.lifecycle is OperationLifecycle.TERMINAL
             assert supervisor.in_flight_operation_count() == 0

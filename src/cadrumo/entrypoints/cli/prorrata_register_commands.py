@@ -57,9 +57,8 @@ from ...core.prorrata_register import (
     SectorDiferenciadoLetra,
 )
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ._decimal_parsing import parse_decimal_amount
-from .common import active_bucket_id_or_refuse as _register_bucket_id
-from .common import emit_envelope
+from .common import active_bucket_id_or_refuse, emit_envelope
+from .decimal_parsing import parse_decimal_amount
 from .operation_ledger_prorrata_register import (
     submit_prorrata_list,
     submit_prorrata_mutation,
@@ -198,14 +197,14 @@ def _invalid_projection_error() -> CliRefusedBoundaryError:
 
 
 def _profile_id() -> UUID:
-    return UUID(_register_bucket_id())
+    return UUID(active_bucket_id_or_refuse())
 
 
 def _decimal_text(value: PublicDecimal | None) -> str | None:
     return format(Decimal(value.decimal), "f") if value is not None else None
 
 
-def _entry_payload(entry: ProrrataEntryProjection) -> ProrrataEntryPayload:
+def entry_payload(entry: ProrrataEntryProjection) -> ProrrataEntryPayload:
     """Map every registered entry field into the established CLI result schema."""
     transition = entry.especial_transition
     return ProrrataEntryPayload(
@@ -331,7 +330,7 @@ def _present_registered_operation[ProjectionT: BaseModel](
 def _entry_from_projection(projection: ProrrataMutationProjection) -> ProrrataEntryPayload:
     if projection.entry is None:
         raise _invalid_projection_error()
-    return _entry_payload(projection.entry)
+    return entry_payload(projection.entry)
 
 
 def _manual_election(
@@ -842,7 +841,7 @@ def prorrata_list(ctx: typer.Context) -> None:
     projection = validate_prorrata_list_completion(completed)
 
     def render() -> None:
-        entries = [_entry_payload(entry) for entry in projection.entries]
+        entries = [entry_payload(entry) for entry in projection.entries]
         sectors = [_sector_payload(definition) for definition in projection.sectors]
         gross_declarations = [_gross_declaration_payload(declaration) for declaration in projection.gross_declarations]
         payload = ProrrataListResult(

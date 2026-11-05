@@ -21,9 +21,6 @@ from cadrumo.application.ledger.evidence_errors import PurchaseInvoiceEvidenceIn
 from cadrumo.application.ledger.evidence_ports import LedgerEvidencePorts
 
 from .evidence_test_support import BUCKET_ID
-from .evidence_test_support import secure_objects as _secure_objects
-
-__all__ = ["_secure_objects"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

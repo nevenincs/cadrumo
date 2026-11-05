@@ -16,21 +16,21 @@ from ..binding_selector_utils import selector_as_dict
 from ..bindings import binding_source_casilla_ids, binding_source_modelo
 from ..runtime_graph import expression_casilla_refs
 from ..schema_input_kind import InputKind
-from ._modelo_303_registry_support import load_modelo_303
 from .modelo_303_registry_constants import (
-    _M303_BIENES_INVERSION_REGULARIZACION_BINDING,
-    _M303_BIENES_INVERSION_REGULARIZACION_CASILLA,
-    _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
-    _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
-    _M303_PRORRATA_REGULARIZACION_BINDING,
-    _M303_PRORRATA_REGULARIZACION_CASILLA,
-    _M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS,
-    _M303_PRORRATA_REGULARIZACION_SOURCE_PERIOD_SELECTION,
-    _WWW1_HOST,
-    _WWW6_HOST,
+    M303_BIENES_INVERSION_REGULARIZACION_BINDING,
+    M303_BIENES_INVERSION_REGULARIZACION_CASILLA,
+    M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
+    M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
     M303_EXPLICIT_RECORD_DESIGN_REVISIONS,
+    M303_PRORRATA_REGULARIZACION_BINDING,
+    M303_PRORRATA_REGULARIZACION_CASILLA,
+    M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS,
+    M303_PRORRATA_REGULARIZACION_SOURCE_PERIOD_SELECTION,
     M303_RECORD_DESIGN_SOURCE_BY_REVISION,
+    WWW1_HOST,
+    WWW6_HOST,
 )
+from .modelo_303_registry_support import load_modelo_303
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -50,8 +50,8 @@ def test_modelo_303_live_cross_references_forbid_writes() -> None:
     assert filed_ref.requires_aeat_authorization is True
     assert set(filed_ref.allowed_methods) == {"GET", "HEAD", "OPTIONS"}
     assert set(filed_ref.allowed_hosts) == {
-        _WWW1_HOST,
-        _WWW6_HOST,
+        WWW1_HOST,
+        WWW6_HOST,
     }
     forbidden = set(filed_ref.forbidden_actions)
     assert {
@@ -271,7 +271,7 @@ def test_modelo_303_bienes_inversion_regularizacion_binding_feeds_casilla_43(
     bindings = {binding.id: binding for binding in revision.bindings}
     casillas = {casilla.id: casilla for casilla in revision.casillas}
 
-    binding = bindings[_M303_BIENES_INVERSION_REGULARIZACION_BINDING]
+    binding = bindings[M303_BIENES_INVERSION_REGULARIZACION_BINDING]
     assert binding.source == BindingSourceKind.BIENES_INVERSION_REGULARIZACION
     assert selector_as_dict(binding) == {
         "source_modelo": "303",
@@ -280,9 +280,9 @@ def test_modelo_303_bienes_inversion_regularizacion_binding_feeds_casilla_43(
     assert binding_source_modelo(binding) == "303"
     assert binding_source_casilla_ids(binding) == ()
 
-    casilla_43 = casillas[_M303_BIENES_INVERSION_REGULARIZACION_CASILLA]
+    casilla_43 = casillas[M303_BIENES_INVERSION_REGULARIZACION_CASILLA]
     assert casilla_43.input_kind is InputKind.BOUND
-    assert casilla_43.binding == _M303_BIENES_INVERSION_REGULARIZACION_BINDING
+    assert casilla_43.binding == M303_BIENES_INVERSION_REGULARIZACION_BINDING
 
 
 @pytest.mark.parametrize("revision_id", ["2022", *M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
@@ -291,18 +291,18 @@ def test_modelo_303_prorrata_regularizacion_binding_feeds_casilla_44(
 ) -> None:
     modelo, _ = load_modelo_303()
     revision = modelo.revisions[revision_id]
-    casilla = {item.id: item for item in revision.casillas}[_M303_PRORRATA_REGULARIZACION_CASILLA]
-    binding = {item.id: item for item in revision.bindings}[_M303_PRORRATA_REGULARIZACION_BINDING]
+    casilla = {item.id: item for item in revision.casillas}[M303_PRORRATA_REGULARIZACION_CASILLA]
+    binding = {item.id: item for item in revision.bindings}[M303_PRORRATA_REGULARIZACION_BINDING]
 
     assert casilla.input_kind is InputKind.BOUND
-    assert casilla.binding == _M303_PRORRATA_REGULARIZACION_BINDING
+    assert casilla.binding == M303_PRORRATA_REGULARIZACION_BINDING
     assert binding.source is BindingSourceKind.PRORRATA_REGULARIZACION
     assert binding_source_modelo(binding) == "303"
-    assert binding_source_casilla_ids(binding) == _M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS
+    assert binding_source_casilla_ids(binding) == M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS
     assert selector_as_dict(binding) == {
         "source_modelo": "303",
-        "source_casilla_ids": _M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS,
-        "source_period_selection": _M303_PRORRATA_REGULARIZACION_SOURCE_PERIOD_SELECTION,
+        "source_casilla_ids": M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS,
+        "source_period_selection": M303_PRORRATA_REGULARIZACION_SOURCE_PERIOD_SELECTION,
         "regularizacion_output": "modelo_303_casilla_44",
     }
     assert binding_aggregation_op(binding) is BindingAggregationOp.SUM
@@ -322,8 +322,8 @@ def test_modelo_303_construct_exposes_prorrata_regularizacion_binding(revision_i
     revision = modelo.revisions[revision_id]
     construct = next(item for item in revision.constructs if item.id == "modelo-303-iva-autoliquidacion")
 
-    assert _M303_PRORRATA_REGULARIZACION_CASILLA in construct.casilla_ids
-    assert _M303_PRORRATA_REGULARIZACION_BINDING in construct.bindings
+    assert M303_PRORRATA_REGULARIZACION_CASILLA in construct.casilla_ids
+    assert M303_PRORRATA_REGULARIZACION_BINDING in construct.bindings
     assert "ley-37-1992:art-105" in construct.legal_refs
 
 
@@ -333,22 +333,22 @@ def test_modelo_303_casilla_44_regularizacion_flows_to_total_deducible(revision_
     revision = modelo.revisions[revision_id]
     refs_by_formula_id = {formula.id: set(expression_casilla_refs(formula.expression)) for formula in revision.formulas}
 
-    assert all(formula.target_casilla_id != _M303_PRORRATA_REGULARIZACION_CASILLA for formula in revision.formulas)
+    assert all(formula.target_casilla_id != M303_PRORRATA_REGULARIZACION_CASILLA for formula in revision.formulas)
     assert all(
-        formula.target_casilla_id != _M303_BIENES_INVERSION_REGULARIZACION_CASILLA for formula in revision.formulas
+        formula.target_casilla_id != M303_BIENES_INVERSION_REGULARIZACION_CASILLA for formula in revision.formulas
     )
 
     cuota_deducible_total = next(
-        formula for formula in revision.formulas if formula.target_casilla_id == _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA
+        formula for formula in revision.formulas if formula.target_casilla_id == M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA
     )
     refs = set(expression_casilla_refs(cuota_deducible_total.expression))
-    assert _M303_BIENES_INVERSION_REGULARIZACION_CASILLA in refs
-    assert _M303_PRORRATA_REGULARIZACION_CASILLA in refs
+    assert M303_BIENES_INVERSION_REGULARIZACION_CASILLA in refs
+    assert M303_PRORRATA_REGULARIZACION_CASILLA in refs
     assert refs_by_formula_id["modelo-303-iva-resultado-regimen-general"] == {
-        _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
-        _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
+        M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
+        M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
     }
 
     if revision_id in M303_EXPLICIT_RECORD_DESIGN_REVISIONS:
         projection = next(formula for formula in revision.formulas if formula.id == "modelo-303-dr303-45-projection")
-        assert projection.expression.casilla_id == _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA
+        assert projection.expression.casilla_id == M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA

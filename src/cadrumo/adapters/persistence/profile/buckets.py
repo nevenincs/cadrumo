@@ -60,7 +60,7 @@ from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, Secur
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.buckets.event_repository import BucketEventHistoryPersistenceError
 from ..storage.secure_object_namespaces import BUCKET_EVENT_HISTORY_NAMESPACE
-from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
+from .secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:
     from collections.abc import Callable

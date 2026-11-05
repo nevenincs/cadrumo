@@ -26,15 +26,15 @@ from cadrumo.tests.audited_process import run_audited_process
 
 from ..core.directory_scan import scan_directory
 from .collection_storage_root import (
-    _ABANDONED_AFTER_SECONDS,
-    _STALE_AFTER_SECONDS,
-    _STEM,
+    ABANDONED_AFTER_SECONDS,
     SETTINGS_STEM,
+    STALE_AFTER_SECONDS,
+    STEM,
     process_is_live,
     sweep_stale_roots,
 )
 from .env_scope import (
-    _SETTINGS_STORAGE_DIRECTORIES,
+    SETTINGS_STORAGE_DIRECTORIES,
     isolated_aeat_env,
     release_settings_storage_directories,
     settings_without_env_file,
@@ -76,7 +76,7 @@ def test_a_minted_root_exists_while_it_is_held() -> None:
 
         assert root.is_dir()
         assert root.name.startswith("cadrumo-settings-")
-        assert _SETTINGS_STORAGE_DIRECTORIES, "the mint must be tracked, or nothing can release it"
+        assert SETTINGS_STORAGE_DIRECTORIES, "the mint must be tracked, or nothing can release it"
 
     release_settings_storage_directories()
 
@@ -92,7 +92,7 @@ def test_release_removes_every_minted_root() -> None:
     release_settings_storage_directories()
 
     assert not any(root.exists() for root in roots), f"still on disk: {[r for r in roots if r.exists()]}"
-    assert not _SETTINGS_STORAGE_DIRECTORIES
+    assert not SETTINGS_STORAGE_DIRECTORIES
 
 
 def test_release_is_safe_to_repeat_and_safe_when_nothing_was_minted() -> None:
@@ -105,7 +105,7 @@ def test_release_is_safe_to_repeat_and_safe_when_nothing_was_minted() -> None:
     release_settings_storage_directories()
     release_settings_storage_directories()
 
-    assert not _SETTINGS_STORAGE_DIRECTORIES
+    assert not SETTINGS_STORAGE_DIRECTORIES
 
 
 def test_a_caller_supplied_root_is_not_minted_or_released(tmp_path: Path) -> None:
@@ -121,7 +121,7 @@ def test_a_caller_supplied_root_is_not_minted_or_released(tmp_path: Path) -> Non
         settings = settings_without_env_file(cadrumo_storage_root=supplied)
 
     assert Path(settings.cadrumo_storage_root) == supplied
-    assert not _SETTINGS_STORAGE_DIRECTORIES, "a supplied root must not be tracked for removal"
+    assert not SETTINGS_STORAGE_DIRECTORIES, "a supplied root must not be tracked for removal"
 
     release_settings_storage_directories()
 
@@ -138,7 +138,7 @@ def test_the_sweep_reclaims_a_stale_per_call_root(tmp_path: Path) -> None:
     """
     stale = tmp_path / f"{SETTINGS_STEM}killed-worker"
     stale.mkdir()
-    _age(stale, _STALE_AFTER_SECONDS + 60)
+    _age(stale, STALE_AFTER_SECONDS + 60)
 
     assert sweep_stale_roots(tmp_path) == 1
     assert not stale.exists()
@@ -167,7 +167,7 @@ def test_the_sweep_ignores_directories_it_does_not_own(tmp_path: Path) -> None:
     """
     foreign = tmp_path / "some-other-tool-workspace"
     foreign.mkdir()
-    _age(foreign, _STALE_AFTER_SECONDS * 30)
+    _age(foreign, STALE_AFTER_SECONDS * 30)
 
     assert sweep_stale_roots(tmp_path) == 0
     assert foreign.is_dir()
@@ -193,10 +193,10 @@ def test_the_sweep_reclaims_a_root_whose_owning_process_is_gone(tmp_path: Path) 
     rather than inferring abandonment from an mtime that says nothing about
     whether anyone is still holding the directory.
     """
-    abandoned = tmp_path / f"{_STEM}{_a_genuinely_dead_pid()}"
+    abandoned = tmp_path / f"{STEM}{_a_genuinely_dead_pid()}"
     abandoned.mkdir()
     (abandoned / "cadrumo.db").write_text("payload the killed worker left", encoding="utf-8")
-    _age(abandoned, _ABANDONED_AFTER_SECONDS + 60)
+    _age(abandoned, ABANDONED_AFTER_SECONDS + 60)
 
     assert sweep_stale_roots(tmp_path) == 1
     assert not abandoned.exists()
@@ -212,10 +212,10 @@ def test_the_sweep_spares_a_root_whose_owning_process_is_still_running(tmp_path:
     alive (this one), and is old enough that the abandonment grace has long
     since elapsed: only the liveness answer can save it.
     """
-    live = tmp_path / f"{_STEM}{os.getpid()}"
+    live = tmp_path / f"{STEM}{os.getpid()}"
     live.mkdir()
     (live / "cadrumo.db").write_text("held by a running session", encoding="utf-8")
-    _age(live, _ABANDONED_AFTER_SECONDS * 6)
+    _age(live, ABANDONED_AFTER_SECONDS * 6)
 
     assert sweep_stale_roots(tmp_path) == 0
     assert (live / "cadrumo.db").read_text(encoding="utf-8") == "held by a running session"
@@ -229,7 +229,7 @@ def test_the_sweep_spares_a_recently_abandoned_root_until_the_grace_elapses(tmp_
     little clock skew. The grace covers both without reintroducing the day-long
     wait.
     """
-    just_gone = tmp_path / f"{_STEM}{_a_genuinely_dead_pid()}"
+    just_gone = tmp_path / f"{STEM}{_a_genuinely_dead_pid()}"
     just_gone.mkdir()
 
     assert sweep_stale_roots(tmp_path) == 0
@@ -243,9 +243,9 @@ def test_the_sweep_spares_the_calling_processs_own_root(tmp_path: Path) -> None:
     exclusion means the caller does not have to depend on that reasoning
     holding for every future family the sweep grows.
     """
-    own = tmp_path / f"{_STEM}{os.getpid()}"
+    own = tmp_path / f"{STEM}{os.getpid()}"
     own.mkdir()
-    _age(own, _STALE_AFTER_SECONDS * 10)
+    _age(own, STALE_AFTER_SECONDS * 10)
     (own / "cadrumo.db").write_text("this session's own store", encoding="utf-8")
 
     assert sweep_stale_roots(tmp_path, exclude=own) == 0
@@ -262,15 +262,15 @@ def test_the_sweep_is_safe_to_run_concurrently(tmp_path: Path) -> None:
     """
     dead_pid = _a_genuinely_dead_pid()
     for index in range(12):
-        abandoned = tmp_path / f"{_STEM}{dead_pid + index * 100000}"
+        abandoned = tmp_path / f"{STEM}{dead_pid + index * 100000}"
         abandoned.mkdir()
         for leaf in range(5):
             (abandoned / f"payload-{leaf}.db").write_text("x" * 2048, encoding="utf-8")
-        _age(abandoned, _ABANDONED_AFTER_SECONDS + 60)
-    live = tmp_path / f"{_STEM}{os.getpid()}"
+        _age(abandoned, ABANDONED_AFTER_SECONDS + 60)
+    live = tmp_path / f"{STEM}{os.getpid()}"
     live.mkdir()
     (live / "cadrumo.db").write_text("held throughout", encoding="utf-8")
-    _age(live, _ABANDONED_AFTER_SECONDS * 6)
+    _age(live, ABANDONED_AFTER_SECONDS * 6)
 
     failures: list[BaseException] = []
 
@@ -287,7 +287,7 @@ def test_the_sweep_is_safe_to_run_concurrently(tmp_path: Path) -> None:
         worker.join()
 
     assert not failures, f"concurrent sweeps raised: {failures}"
-    survivors = scan_directory(tmp_path, pattern=f"{_STEM}*")
+    survivors = scan_directory(tmp_path, pattern=f"{STEM}*")
     assert not [path for path in survivors if path != live]
     assert (live / "cadrumo.db").read_text(encoding="utf-8") == "held throughout"
 
@@ -306,17 +306,17 @@ def test_the_reclaim_runs_at_startup_and_not_only_at_exit(tmp_path: Path) -> Non
     """
     parent = tmp_path / "shared-temp"
     parent.mkdir()
-    abandoned_pytest_root = parent / f"{_STEM}{_a_genuinely_dead_pid()}"
+    abandoned_pytest_root = parent / f"{STEM}{_a_genuinely_dead_pid()}"
     abandoned_pytest_root.mkdir()
     (abandoned_pytest_root / "cadrumo.db").write_text("killed worker's store", encoding="utf-8")
-    _age(abandoned_pytest_root, _ABANDONED_AFTER_SECONDS + 60)
+    _age(abandoned_pytest_root, ABANDONED_AFTER_SECONDS + 60)
     abandoned_settings_root = parent / f"{SETTINGS_STEM}killed-worker"
     abandoned_settings_root.mkdir()
-    _age(abandoned_settings_root, _STALE_AFTER_SECONDS + 60)
-    live_sibling = parent / f"{_STEM}{os.getpid()}"
+    _age(abandoned_settings_root, STALE_AFTER_SECONDS + 60)
+    live_sibling = parent / f"{STEM}{os.getpid()}"
     live_sibling.mkdir()
     (live_sibling / "cadrumo.db").write_text("a concurrent session's store", encoding="utf-8")
-    _age(live_sibling, _ABANDONED_AFTER_SECONDS * 6)
+    _age(live_sibling, ABANDONED_AFTER_SECONDS * 6)
 
     probe = textwrap.dedent(
         f"""
@@ -349,7 +349,7 @@ def test_the_reclaim_runs_at_startup_and_not_only_at_exit(tmp_path: Path) -> Non
     assert (live_sibling / "cadrumo.db").read_text(encoding="utf-8") == "a concurrent session's store", (
         "the startup sweep reclaimed a running session's store"
     )
-    survivors = {path.name for path in scan_directory(parent, pattern=f"{_STEM}*")}
+    survivors = {path.name for path in scan_directory(parent, pattern=f"{STEM}*")}
     assert live_sibling.name in survivors
     assert survivors - {live_sibling.name}, (
         "the child's own root should have been LEFT behind -- it exited without running its "

@@ -48,7 +48,7 @@ from typing import Literal
 import pytest
 
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -77,8 +77,7 @@ from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.user_profile.values import ProfileSetupState
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import ProfileSetupState, create_user_profile_record
 from .file_flow_test_support import calculation_ports_for_test
 from .general_iva_profile_facts_support import general_iva_profile_facts
 
@@ -257,7 +256,7 @@ def _wallet_decision(*, period: str) -> IvaCompensationReconciliationDecision:
 def _store_profile(secure_objects: SecureObjectRepository) -> None:
     """Seed the taxpayer profile the M303 IVA-wallet gate reads (tax_id)."""
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=general_iva_profile_facts(
@@ -266,7 +265,7 @@ def _store_profile(secure_objects: SecureObjectRepository) -> None:
             ),
             created_at=_T0,
             updated_at=_T0,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 

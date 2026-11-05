@@ -11,7 +11,7 @@ from __future__ import annotations
 import pytest
 
 from .....tests.live_gate import requires_live_enabled
-from ..ecb_provider import _https_fetch, _parse_observations
+from ..ecb_provider import https_fetch, parse_observations
 from .recorded_ecb_rates import recorded_ecb_answers
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
@@ -24,9 +24,9 @@ def test_every_recorded_answer_matches_the_live_series() -> None:
 
     drifted: list[str] = []
     for url, body in answers.items():
-        live_body = _https_fetch(url)
+        live_body = https_fetch(url)
         assert live_body is not None, f"the recorded ECB series is no longer published: {url}"
-        if _parse_observations(live_body) != _parse_observations(body):
+        if parse_observations(live_body) != parse_observations(body):
             drifted.append(url)
 
     assert not drifted, f"{len(drifted)} recorded ECB answers no longer match the live series: {drifted[:3]}"

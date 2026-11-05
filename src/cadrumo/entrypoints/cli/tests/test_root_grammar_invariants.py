@@ -15,10 +15,10 @@ import pytest
 
 from ....core.directory_scan import scan_directory
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
-from .profile_world_fixtures import _isolated_state
+from .profile_world_fixtures import isolated_state
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-__all__ = ["_isolated_state"]
+__all__ = ["isolated_state"]
 
 
 def test_root_does_not_register_bare_reconcile_alias() -> None:

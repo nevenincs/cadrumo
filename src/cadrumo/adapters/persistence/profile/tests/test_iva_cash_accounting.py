@@ -21,9 +21,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from cadrumo.domain.iva.schema import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment
 from cadrumo.domain.transactions.enums import TransactionDirection
@@ -60,7 +58,7 @@ def test_repository_backed_projection_matches_the_pure_projection_for_a_cross_qu
     rather than its filing date or it returns an empty Q1 aggregation and
     silently under-declares.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         cash_purchase = cash_accounting_transaction(
             "cross-quarter-devengo",
             direction=TransactionDirection.OUTGOING,

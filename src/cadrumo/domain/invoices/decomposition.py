@@ -56,7 +56,7 @@ from pydantic import BaseModel, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.hex_ids import InvoiceId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ..iva.components import (
     IvaComponentPresence,
     category_bears_taxable_base,
@@ -149,7 +149,7 @@ class InvoiceComponents(BaseModel):
         cash: What the payer transfers -- ``total - retencion``.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     taxable_base: Decimal
     cuota: Decimal
@@ -197,7 +197,7 @@ class InvoiceDecomposition(BaseModel):
         defects: Why the record was excluded, non-empty iff ungrounded.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     invoice_id: InvoiceId
     category: IvaCategory | None

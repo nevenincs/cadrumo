@@ -27,10 +27,10 @@ from ....core.period import Period
 from .. import app_live_commands as handler
 from .. import operation_filed_single as bridge
 from .. import operation_profile_operation as profile_operation
-from .._filing_chain_payloads import filing_reconciliation_notices
-from .._profile_authentication_gate import _uses_profile_connection
 from ..app_live_filed_results import FiledCaptureResult
 from ..command_specs import COMMAND_GRAPH
+from ..filing_chain_payloads import filing_reconciliation_notices
+from ..profile_authentication_gate import profile_authentication_gate_uses_profile_connection
 from .filed_capture_projection_support import confirmed_reconciliation, incomplete_receipt_notice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -163,7 +163,7 @@ def test_single_capture_cli_emits_restored_metrics_and_notices(monkeypatch: pyte
     envelopes: list[dict[str, object]] = []
     monkeypatch.setattr(handler, "emit_envelope", lambda *_args, **kwargs: envelopes.append(kwargs))
 
-    handler._emit_single_filed_pull(
+    handler.emit_single_filed_pull(
         cast(typer.Context, cast(object, None)),
         modelo="303",
         year=2025,
@@ -249,19 +249,19 @@ def test_filing_instance_evidence_notice_renders_after_capture(monkeypatch: pyte
 def test_profile_runtime_admission_covers_single_and_bulk_modes() -> None:
     spec = COMMAND_GRAPH.node("app_live_filed_pull").spec
 
-    assert _uses_profile_connection(
+    assert profile_authentication_gate_uses_profile_connection(
         spec,
         {"modelos": ["303"], "year": 2025, "year_from": None, "year_to": None},
     )
-    assert _uses_profile_connection(
+    assert profile_authentication_gate_uses_profile_connection(
         spec,
         {"modelos": ["303"], "year": 2025, "year_from": 2024, "year_to": 2025},
     )
-    assert _uses_profile_connection(
+    assert profile_authentication_gate_uses_profile_connection(
         spec,
         {"modelos": ["303", "390"], "year": 2025, "year_from": None, "year_to": None},
     )
-    assert _uses_profile_connection(
+    assert profile_authentication_gate_uses_profile_connection(
         spec,
         {"modelos": ["303"], "year": None, "year_from": None, "year_to": None},
     )

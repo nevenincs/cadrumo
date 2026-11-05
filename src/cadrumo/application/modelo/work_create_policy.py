@@ -16,7 +16,7 @@ readiness and registry revision checks before inserting the
 :class:`~WorkUnit`.
 
 See Also:
-    :mod:`cadrumo.entrypoints.cli._modelo_work_lifecycle_cli`:
+    :mod:`cadrumo.entrypoints.cli.modelo_work_lifecycle_cli`:
         Calls these guards from ``app modelo work create``.
     :func:`cadrumo.domain.calculations.registry.applicability.derive_modelo_applicability`:
         Registry-owned modelo applicability classifier used by this guard.
@@ -107,7 +107,7 @@ def modelo_work_create_refusal_locale_key(modelo: str) -> str | None:
     See Also:
         :func:`ceded_autonomic_modelo_locale_key`:
             The domain-owned jurisdiction classifier delegated to here.
-        :mod:`cadrumo.entrypoints.cli._modelo_work_lifecycle_cli`:
+        :mod:`cadrumo.entrypoints.cli.modelo_work_lifecycle_cli`:
             Converts the locale key into a typed CLI refusal.
     """
     return ceded_autonomic_modelo_locale_key(modelo)

@@ -84,47 +84,7 @@ from .schema_revision_validation import (
 )
 from .schema_rounding import RegistryRoundingCodeValue
 from .schema_scalars import (
-    BicString as _BicString,
-)
-from .schema_scalars import (
-    CalendarDate as _CalendarDate,
-)
-from .schema_scalars import (
-    CCAACode as _CCAACode,
-)
-from .schema_scalars import (
-    CountryCode as _CountryCode,
-)
-from .schema_scalars import DecimalValue as _DecimalValue
-from .schema_scalars import (
-    IbanString as _IbanString,
-)
-from .schema_scalars import (
-    ModeloYear as _ModeloYear,
-)
-from .schema_scalars import (
-    MunicipalityCode as _MunicipalityCode,
-)
-from .schema_scalars import (
-    NifIvaString as _NifIvaString,
-)
-from .schema_scalars import (
-    NifString as _NifString,
-)
-from .schema_scalars import (
-    PeriodCode as _PeriodCode,
-)
-from .schema_scalars import (
-    PersonOrEntityName as _PersonOrEntityName,
-)
-from .schema_scalars import (
-    PostalCode as _PostalCode,
-)
-from .schema_scalars import (
-    ProvinceCode as _ProvinceCode,
-)
-from .schema_scalars import (
-    WorkbookCellRefStr as _WorkbookCellRefStr,
+    DecimalValue,
 )
 from .schema_verification import (
     RegistryVerificationPolicy,
@@ -179,8 +139,7 @@ from .schema_base import (
     manifest_only_fields,
     schema_family_fields,
 )
-from .schema_deadlines import DeadlineWindowDefinition as _DeadlineWindowDefinition
-from .schema_deadlines import ModeloScheduleDefinition as _ModeloScheduleDefinition
+from .schema_deadlines import DeadlineWindowDefinition, ModeloScheduleDefinition
 from .schema_exports import ExportLayoutDefinition, ProjectionEndpointDeclaration
 from .schema_extraction import ExtractionProfileDefinition
 from .schema_form_layouts import FormLayoutDefinition
@@ -189,38 +148,20 @@ from .schema_formula import (
     ParameterDefinition,
 )
 from .schema_overrides import (
-    CasillaFieldOverride as _CasillaFieldOverride,
-)
-from .schema_overrides import (
-    CasillaMemberPosition as _CasillaMemberPosition,
-)
-from .schema_overrides import (
-    CasillaMemberRemoval as _CasillaMemberRemoval,
-)
-from .schema_overrides import (
-    FamilyFieldOverride as _FamilyFieldOverride,
-)
-from .schema_overrides import (
-    FamilyMemberPosition as _FamilyMemberPosition,
-)
-from .schema_overrides import (
-    FamilyMemberRemoval as _FamilyMemberRemoval,
-)
-from .schema_overrides import (
-    SchemaFamilyDispositionDeclaration as _SchemaFamilyDispositionDeclaration,
+    CasillaFieldOverride,
+    CasillaMemberPosition,
+    CasillaMemberRemoval,
+    FamilyFieldOverride,
+    FamilyMemberPosition,
+    FamilyMemberRemoval,
+    SchemaFamilyDispositionDeclaration,
 )
 from .schema_references import LegalReference, SourceReference
 from .schema_revision_members import (
-    ApplicabilityRuleDefinition as _ApplicabilityRuleDefinition,
-)
-from .schema_revision_members import (
-    ApplicationLinkDefinition as _ApplicationLinkDefinition,
-)
-from .schema_revision_members import (
-    ConstructDefinition as _ConstructDefinition,
-)
-from .schema_revision_members import (
-    DependencyClassificationDefinition as _DependencyClassificationDefinition,
+    ApplicabilityRuleDefinition,
+    ApplicationLinkDefinition,
+    ConstructDefinition,
+    DependencyClassificationDefinition,
 )
 from .schema_surfaces import (
     CalculationCompletenessManifest,
@@ -232,21 +173,6 @@ from .snapshot_globals import SupportedFilingYearsCatalogue
 
 # Scalar and annotated value types live in ``_schema_scalars``; retaining these
 # assignments keeps the historical ``_schema`` import surface authoritative.
-DecimalValue = _DecimalValue
-NifString = _NifString
-ModeloYear = _ModeloYear
-PeriodCode = _PeriodCode
-CountryCode = _CountryCode
-IbanString = _IbanString
-PersonOrEntityName = _PersonOrEntityName
-NifIvaString = _NifIvaString
-CCAACode = _CCAACode
-ProvinceCode = _ProvinceCode
-PostalCode = _PostalCode
-MunicipalityCode = _MunicipalityCode
-BicString = _BicString
-CalendarDate = _CalendarDate
-WorkbookCellRefStr = _WorkbookCellRefStr
 
 
 class ContinuidadValidationMode(StrEnum):
@@ -589,13 +515,13 @@ class ModeloRevision(RegistryRevisionDeclaration):
             "This is not a legal-continuity declaration."
         ),
     )
-    casilla_overrides: Annotated[tuple[_CasillaFieldOverride, ...], MANIFEST_ONLY] = Field(
+    casilla_overrides: Annotated[tuple[CasillaFieldOverride, ...], MANIFEST_ONLY] = Field(
         default=(), exclude_if=lambda value: not value
     )
-    casilla_removals: Annotated[tuple[_CasillaMemberRemoval, ...], MANIFEST_ONLY] = Field(
+    casilla_removals: Annotated[tuple[CasillaMemberRemoval, ...], MANIFEST_ONLY] = Field(
         default=(), exclude_if=lambda value: not value
     )
-    casilla_positions: Annotated[tuple[_CasillaMemberPosition, ...], MANIFEST_ONLY] = Field(
+    casilla_positions: Annotated[tuple[CasillaMemberPosition, ...], MANIFEST_ONLY] = Field(
         default=(), exclude_if=lambda value: not value
     )
     family_storage_baseline: Annotated[RevisionId | None, MANIFEST_ONLY] = Field(
@@ -607,13 +533,13 @@ class ModeloRevision(RegistryRevisionDeclaration):
         default=(), exclude_if=lambda value: not value
     )
     scoped_families: Annotated[tuple[str, ...], MANIFEST_ONLY] = Field(default=(), exclude_if=lambda value: not value)
-    family_overrides: Annotated[tuple[_FamilyFieldOverride, ...], MANIFEST_ONLY] = Field(
+    family_overrides: Annotated[tuple[FamilyFieldOverride, ...], MANIFEST_ONLY] = Field(
         default=(), exclude_if=lambda value: not value
     )
-    family_removals: Annotated[tuple[_FamilyMemberRemoval, ...], MANIFEST_ONLY] = Field(
+    family_removals: Annotated[tuple[FamilyMemberRemoval, ...], MANIFEST_ONLY] = Field(
         default=(), exclude_if=lambda value: not value
     )
-    family_positions: Annotated[tuple[_FamilyMemberPosition, ...], MANIFEST_ONLY] = Field(
+    family_positions: Annotated[tuple[FamilyMemberPosition, ...], MANIFEST_ONLY] = Field(
         default=(), exclude_if=lambda value: not value
     )
     formulas: Annotated[tuple[FormulaDefinition, ...], SCHEMA_FAMILY] = ()
@@ -626,12 +552,12 @@ class ModeloRevision(RegistryRevisionDeclaration):
     workbook_parity_refs: Annotated[tuple[WorkbookParityReference, ...], SCHEMA_FAMILY] = ()
     verification_expectations: Annotated[tuple[VerificationExpectationDefinition, ...], SCHEMA_FAMILY] = ()
     credit_reconciliation: Annotated[tuple[CreditReconciliationEntry, ...], SCHEMA_FAMILY] = ()
-    application_links: Annotated[tuple[_ApplicationLinkDefinition, ...], SCHEMA_FAMILY] = ()
-    deadline_windows: Annotated[tuple[_DeadlineWindowDefinition, ...], SCHEMA_FAMILY] = ()
-    filing_schedules: Annotated[tuple[_ModeloScheduleDefinition, ...], SCHEMA_FAMILY] = ()
-    constructs: Annotated[tuple[_ConstructDefinition, ...], SCHEMA_FAMILY] = ()
-    dependency_classifications: Annotated[tuple[_DependencyClassificationDefinition, ...], SCHEMA_FAMILY] = ()
-    applicability: Annotated[tuple[_ApplicabilityRuleDefinition, ...], SCHEMA_FAMILY] = ()
+    application_links: Annotated[tuple[ApplicationLinkDefinition, ...], SCHEMA_FAMILY] = ()
+    deadline_windows: Annotated[tuple[DeadlineWindowDefinition, ...], SCHEMA_FAMILY] = ()
+    filing_schedules: Annotated[tuple[ModeloScheduleDefinition, ...], SCHEMA_FAMILY] = ()
+    constructs: Annotated[tuple[ConstructDefinition, ...], SCHEMA_FAMILY] = ()
+    dependency_classifications: Annotated[tuple[DependencyClassificationDefinition, ...], SCHEMA_FAMILY] = ()
+    applicability: Annotated[tuple[ApplicabilityRuleDefinition, ...], SCHEMA_FAMILY] = ()
     completeness_manifest: CalculationCompletenessManifest | None = None
     verification_predicates: Annotated[tuple[VerificationPredicateDefinition, ...], SCHEMA_FAMILY] = ()
     continuidad_validation: ContinuidadValidationModeField = ContinuidadValidationMode.ADVISORY
@@ -647,7 +573,7 @@ class ModeloRevision(RegistryRevisionDeclaration):
         ),
     )
     authority_grade: Annotated[RegistryAuthorityGradeField | None, MANIFEST_ONLY] = None
-    family_dispositions: Annotated[Mapping[str, _SchemaFamilyDispositionDeclaration], MANIFEST_ONLY, FROZEN_MAPPING] = (
+    family_dispositions: Annotated[Mapping[str, SchemaFamilyDispositionDeclaration], MANIFEST_ONLY, FROZEN_MAPPING] = (
         Field(default_factory=dict, validate_default=True)
     )
     family_disposition_removals: Annotated[tuple[str, ...], MANIFEST_ONLY] = Field(
@@ -1037,12 +963,12 @@ class RegistrySnapshot(RegistryModel):
     verification_expectations: Annotated[
         Mapping[VerificationExpectationId, VerificationExpectationDefinition], FROZEN_MAPPING
     ]
-    application_links: Annotated[Mapping[ApplicationLinkId, _ApplicationLinkDefinition], FROZEN_MAPPING]
-    deadline_windows: Annotated[Mapping[DeadlineWindowId, _DeadlineWindowDefinition], FROZEN_MAPPING]
-    filing_schedules: Annotated[Mapping[str, _ModeloScheduleDefinition], FROZEN_MAPPING]
-    constructs: Annotated[Mapping[ConstructId, _ConstructDefinition], FROZEN_MAPPING]
+    application_links: Annotated[Mapping[ApplicationLinkId, ApplicationLinkDefinition], FROZEN_MAPPING]
+    deadline_windows: Annotated[Mapping[DeadlineWindowId, DeadlineWindowDefinition], FROZEN_MAPPING]
+    filing_schedules: Annotated[Mapping[str, ModeloScheduleDefinition], FROZEN_MAPPING]
+    constructs: Annotated[Mapping[ConstructId, ConstructDefinition], FROZEN_MAPPING]
     dependency_classifications: Annotated[
-        Mapping[DependencyClassificationId, _DependencyClassificationDefinition], FROZEN_MAPPING
+        Mapping[DependencyClassificationId, DependencyClassificationDefinition], FROZEN_MAPPING
     ]
     convenio: ConvenioAuthority = Field(default_factory=ConvenioAuthority.empty)
     supplementary_ordenes: Annotated[Mapping[Modelo, M303AnnualOrdenAuthority], FROZEN_MAPPING] = Field(

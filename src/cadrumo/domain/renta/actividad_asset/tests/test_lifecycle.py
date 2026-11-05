@@ -68,7 +68,7 @@ def _ordinary_basis(**overrides: object) -> ActivityAssetBasis:
     return ActivityAssetBasis.model_validate(payload)
 
 
-def _revision(**overrides: object) -> ActivityAssetRevision:
+def lifecycle_revision(**overrides: object) -> ActivityAssetRevision:
     payload: dict[str, object] = {
         "asset_id": "home-office",
         "revision_number": 1,
@@ -110,17 +110,17 @@ def _authority(revision: ActivityAssetRevision, **overrides: object) -> Schedule
 
 
 def test_revision_identity_is_immutable_and_lineage_resolves_without_new_identity() -> None:
-    revision = _revision()
+    revision = lifecycle_revision()
 
-    assert revision.revision_id == _revision().revision_id
+    assert revision.revision_id == lifecycle_revision().revision_id
     assert resolve_current_transaction_id(revision.acquisition, {"a" * 64: "d" * 64}) == "d" * 64
     with pytest.raises(ValidationError):
         revision.asset_id = "other"  # type: ignore[misc]
 
 
 def test_correction_keeps_asset_identity_and_links_to_prior_revision() -> None:
-    original = _revision()
-    correction = _revision(
+    original = lifecycle_revision()
+    correction = lifecycle_revision(
         revision_number=2,
         supersedes_revision_id=original.revision_id,
         basis=_ordinary_basis(),
@@ -133,7 +133,7 @@ def test_correction_keeps_asset_identity_and_links_to_prior_revision() -> None:
 
 def test_initial_unsupported_acquisition_shapes_refuse() -> None:
     with pytest.raises(ValidationError, match="acquisition_shape_not_registerable"):
-        _revision(acquisition_shape=AcquisitionShape.SPLIT_PAYMENT)
+        lifecycle_revision(acquisition_shape=AcquisitionShape.SPLIT_PAYMENT)
 
 
 def test_whole_property_allocation_excludes_land_and_applies_share_and_area_once() -> None:
@@ -150,8 +150,8 @@ def test_ordinary_material_and_intangible_assets_do_not_need_property_facts() ->
         non_deductible_iva=Decimal("0"),
         prior_allocation_provenance="transaction allocation revision 4",
     )
-    material = _revision(basis=ordinary)
-    intangible = _revision(asset_kind=AssetKind.INTANGIBLE, basis=already_allocated)
+    material = lifecycle_revision(basis=ordinary)
+    intangible = lifecycle_revision(asset_kind=AssetKind.INTANGIBLE, basis=already_allocated)
 
     assert ordinary.deductible_basis() == Decimal("800")
     assert already_allocated.deductible_basis() == Decimal("800")
@@ -190,7 +190,7 @@ def test_spousal_property_and_missing_opening_history_fail_closed() -> None:
             ownership_mode=OwnershipMode.SPOUSAL_COMMUNITY,
             ownership_share=None,
         ).deductible_basis()
-    missing = _revision(
+    missing = lifecycle_revision(
         opening_history=OpeningAmortizationHistory(status=OpeningHistoryStatus.MISSING),
     )
     with pytest.raises(ActividadAssetIncompleteError, match="opening"):
@@ -225,15 +225,15 @@ def test_an_opening_year_before_the_in_service_year_is_refused_and_the_in_servic
         )
 
     with pytest.raises(ValidationError, match="opening_year_before_in_service"):
-        _revision(in_service_date=date(2020, 7, 1), opening_history=opening_through(2019))
+        lifecycle_revision(in_service_date=date(2020, 7, 1), opening_history=opening_through(2019))
 
-    accepted = _revision(in_service_date=date(2020, 7, 1), opening_history=opening_through(2020))
+    accepted = lifecycle_revision(in_service_date=date(2020, 7, 1), opening_history=opening_through(2020))
     assert accepted.opening_history.covered_through_tax_year == 2020
 
 
 def test_opening_year_changes_the_revision_identity() -> None:
     def revision_through(year: int) -> ActivityAssetRevision:
-        return _revision(
+        return lifecycle_revision(
             in_service_date=date(2020, 1, 1),
             opening_history=OpeningAmortizationHistory(
                 status=OpeningHistoryStatus.KNOWN,
@@ -246,7 +246,7 @@ def test_opening_year_changes_the_revision_identity() -> None:
 
 
 def test_schedule_distinguishes_material_intangible_and_uses_actual_service_days() -> None:
-    material_revision = _revision(in_service_date=date(2025, 7, 1))
+    material_revision = lifecycle_revision(in_service_date=date(2025, 7, 1))
     material = schedule_charge(
         material_revision,
         _authority(material_revision),
@@ -254,7 +254,7 @@ def test_schedule_distinguishes_material_intangible_and_uses_actual_service_days
         covered_until=date(2026, 1, 1),
         history=_NO_HISTORY,
     )
-    intangible_revision = _revision(
+    intangible_revision = lifecycle_revision(
         asset_kind=AssetKind.INTANGIBLE,
         basis=_ordinary_basis(),
         amortization=_linear_election("intangible-software"),
@@ -274,8 +274,8 @@ def test_schedule_distinguishes_material_intangible_and_uses_actual_service_days
 
 
 def test_rate_applies_to_the_basis_less_residual_value_and_is_capped_at_the_remaining_base() -> None:
-    residual = _revision(residual_value=Decimal("800"))
-    nearly_amortized = _revision(
+    residual = lifecycle_revision(residual_value=Decimal("800"))
+    nearly_amortized = lifecycle_revision(
         residual_value=Decimal("800"),
         opening_history=OpeningAmortizationHistory(
             status=OpeningHistoryStatus.KNOWN,
@@ -307,7 +307,7 @@ def test_rate_applies_to_the_basis_less_residual_value_and_is_capped_at_the_rema
 
 
 def test_contiguous_period_charges_sum_exactly_to_the_annual_figure() -> None:
-    revision = _revision(basis=_ordinary_basis(business_use_share=Decimal("1")))
+    revision = lifecycle_revision(basis=_ordinary_basis(business_use_share=Decimal("1")))
     authority = _authority(revision, annual_rate=Decimal("0.12"))
     quarter_ends = (date(2025, 1, 1), date(2025, 4, 1), date(2025, 7, 1), date(2025, 10, 1), date(2026, 1, 1))
 
@@ -322,7 +322,9 @@ def test_contiguous_period_charges_sum_exactly_to_the_annual_figure() -> None:
 
 
 def test_a_mid_year_start_splits_its_charge_without_a_rounding_gap() -> None:
-    revision = _revision(basis=_ordinary_basis(business_use_share=Decimal("1")), in_service_date=date(2025, 7, 1))
+    revision = lifecycle_revision(
+        basis=_ordinary_basis(business_use_share=Decimal("1")), in_service_date=date(2025, 7, 1)
+    )
     authority = _authority(revision, annual_rate=Decimal("0.12"))
 
     def charged(start: date, end: date) -> Decimal:
@@ -335,8 +337,8 @@ def test_a_mid_year_start_splits_its_charge_without_a_rounding_gap() -> None:
 
 
 def test_an_authority_resolved_for_another_election_is_refused() -> None:
-    revision = _revision()
-    other = _revision(amortization=_linear_election("otro-elemento"))
+    revision = lifecycle_revision()
+    other = lifecycle_revision(amortization=_linear_election("otro-elemento"))
 
     with pytest.raises(ActividadAssetValidationError, match="schedule_authority_election_mismatch"):
         schedule_charge(
@@ -381,7 +383,7 @@ def test_non_deductible_iva_is_a_required_fact_and_zero_is_stated_explicitly() -
 
 
 def test_amortizable_basis_and_the_annual_charge_carry_the_non_deductible_iva() -> None:
-    revision = _revision(
+    revision = lifecycle_revision(
         basis=_ordinary_basis(non_deductible_iva=Decimal("210")),
         residual_value=Decimal("68"),
     )
@@ -401,12 +403,12 @@ def test_amortizable_basis_and_the_annual_charge_carry_the_non_deductible_iva() 
 
 def test_an_unexercised_financial_lease_is_refused_with_its_statutory_route() -> None:
     with pytest.raises(ValidationError, match="financial_lease_unexercised"):
-        _revision(acquisition_shape=AcquisitionShape.FINANCIAL_LEASE_UNEXERCISED)
+        lifecycle_revision(acquisition_shape=AcquisitionShape.FINANCIAL_LEASE_UNEXERCISED)
 
 
 def test_later_afectacion_amortizes_from_in_service_date_on_the_full_acquisition_value() -> None:
     # The element was bought and used privately before 2025-07-01; no private year is deemed amortized.
-    revision = _revision(
+    revision = lifecycle_revision(
         in_service_date=date(2025, 7, 1),
         basis=_ordinary_basis(business_use_share=Decimal("1")),
     )

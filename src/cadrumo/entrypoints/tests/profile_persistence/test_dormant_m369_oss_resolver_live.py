@@ -69,11 +69,11 @@ from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.transactions.date_partition import LedgerDatePartition
 from cadrumo.domain.transactions.models import TransactionCatalogue
-from cadrumo.entrypoints.tests.profile_persistence._dormant_resolver_live_support import (
-    _T0,
-    _T1,
-    _revision,
-    _seed_ready_profile,
+from cadrumo.entrypoints.tests.profile_persistence.dormant_resolver_live_support import (
+    T0,
+    T1,
+    dormant_resolver_live_revision,
+    seed_ready_profile,
 )
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 from cadrumo.entrypoints.tests.profile_persistence.secure_store_baseline import (
@@ -212,7 +212,7 @@ def m369_seeded_profile(tmp_path_factory: pytest.TempPathFactory) -> SeededDurab
     return provision_seeded_profile(
         tmp_path_factory.mktemp("m369-runtime"),
         _M369_BUCKET,
-        lambda profile: _seed_ready_profile(profile.repository, bucket_id=_M369_BUCKET),
+        lambda profile: seed_ready_profile(profile.repository, bucket_id=_M369_BUCKET),
     )
 
 
@@ -233,7 +233,7 @@ def test_m369_oss_resolver_folds_real_candidates_at_mesh_boundary() -> None:
     re-evaluation of a registry formula. The gap proven in the companion test
     below is solely the LIVE-PATH candidate source, not this fold.
     """
-    revision = _revision("369", _M369_REVISION)
+    revision = dormant_resolver_live_revision("369", _M369_REVISION)
     with bundled_indexed_authority().operation():
         candidates = _m369_candidates()
 
@@ -448,7 +448,7 @@ def test_m369_exterior_period_calculate_review_export_e2e(
         ports=WorkLifecyclePorts(
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects)
         ),
-        clock=_T0,
+        clock=T0,
         operation=operation,
     )
     with calculation_ports_for_test(
@@ -472,7 +472,7 @@ def test_m369_exterior_period_calculate_review_export_e2e(
                 for key, value in _EXTERIOR_DECLARANT_BINDINGS.items()
                 if key != "modelo-369-exterior-fichero.2-ejercicio-y-periodo-declaracion-sin-actividad"
             },
-            clock=_T1,
+            clock=T1,
         )
     _assert_exterior_revision(result, work_unit, cr_repo, period_token, operation)
 
@@ -483,7 +483,7 @@ def test_m369_exterior_period_calculate_review_export_e2e(
             verification_repositories=build_test_verification_repository_bundle(),
             actor="m369-exterior-reviewer",
             workflow_profile=workflow_profile(),
-            clock=_T1,
+            clock=T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
         ).report
@@ -574,7 +574,7 @@ def test_m369_exterior_quarter_with_a_rate_change_files_one_row_per_rate(
         ports=WorkLifecyclePorts(
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects)
         ),
-        clock=_T0,
+        clock=T0,
         operation=operation,
     )
     with calculation_ports_for_test(
@@ -596,7 +596,7 @@ def test_m369_exterior_quarter_with_a_rate_change_files_one_row_per_rate(
                 for key, value in _EXTERIOR_DECLARANT_BINDINGS.items()
                 if key != "modelo-369-exterior-fichero.2-ejercicio-y-periodo-declaracion-sin-actividad"
             },
-            clock=_T1,
+            clock=T1,
         )
 
     prefix = "modelo-369-exterior-fichero.3-prestaciones-de-servicios-"
@@ -618,7 +618,7 @@ def test_m369_exterior_quarter_with_a_rate_change_files_one_row_per_rate(
             verification_repositories=build_test_verification_repository_bundle(),
             actor="m369-exterior-reviewer",
             workflow_profile=workflow_profile(),
-            clock=_T1,
+            clock=T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=verification_operation,
         ).report
@@ -684,7 +684,7 @@ def test_m369_exterior_refuses_rate_kind_outside_official_standard_reduced_vocab
     """Exterior never guesses an R/S wire token for an unsupported classification."""
     with pytest.raises(AggregationValidationError) as exc_info, bundled_indexed_authority().operation() as operation:
         oss_ioss_module.detail_binding_values(
-            _revision("369", "esquema-exterior"),
+            dormant_resolver_live_revision("369", "esquema-exterior"),
             (_exterior_row_for_rate_kind(IvaRateKind("zero")),),
             operation=operation,
         )
@@ -698,7 +698,7 @@ def test_m369_exterior_refuses_a_rate_tier_the_destination_state_never_had() -> 
     """Germany has no super-reduced tier at any date, so the row is refused, not an uncaught lookup failure."""
     with pytest.raises(AggregationValidationError) as exc_info, bundled_indexed_authority().operation() as operation:
         oss_ioss_module.detail_binding_values(
-            _revision("369", "esquema-exterior"),
+            dormant_resolver_live_revision("369", "esquema-exterior"),
             (_exterior_row_for_rate_kind(IvaRateKind("super_reduced")),),
             operation=operation,
         )
@@ -721,7 +721,7 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
             database_name="m369-injected.db",
         ) as injected_objects,
     ):
-        _seed_ready_profile(runtime.repository, bucket_id=_M369_BUCKET)
+        seed_ready_profile(runtime.repository, bucket_id=_M369_BUCKET)
         wu_repo = WorkUnitCatalogueRepository(objects=runtime.repository)
         cr_repo = CalculationRevisionCatalogueRepository(objects=runtime.repository)
         tx_repo = TransactionCatalogueRepository(bucket_id=_M369_BUCKET, objects=runtime.repository)
@@ -765,7 +765,7 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
                 work_unit_repository=wu_repo,
                 bucket_event_repository=BucketEventHistoryRepository(objects=runtime.repository),
             ),
-            clock=_T0,
+            clock=T0,
             operation=operation,
         )
         with calculation_ports_for_test(
@@ -779,7 +779,7 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
             result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 ports=_calculation_ports_488,
-                clock=_T1,
+                clock=T1,
             )
 
         assert isinstance(result, BucketAggregationCalculationResult)
@@ -819,7 +819,7 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
                 verification_repositories=verification_repositories,
                 actor="m369-live-operator",
                 workflow_profile=workflow_profile(),
-                clock=_T1,
+                clock=T1,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
             ).report
@@ -847,7 +847,7 @@ def test_m369_oss_projection_follows_the_devengo_date_and_discloses_the_proxy(
     earlier, or an advisory that fired on every invoice, would each satisfy one
     half alone.
     """
-    revision = _revision("369", _M369_REVISION)
+    revision = dormant_resolver_live_revision("369", _M369_REVISION)
     invoice_repo = InvoiceCatalogueRepository(objects=m369_objects)
     invoice_repo.save(
         build_invoice_catalogue(
@@ -927,7 +927,7 @@ def test_m369_unresolved_oss_source_refuses_verification_and_export(
         ports=WorkLifecyclePorts(
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects)
         ),
-        clock=_T0,
+        clock=T0,
         operation=operation,
     )
     with calculation_ports_for_test(
@@ -941,7 +941,7 @@ def test_m369_unresolved_oss_source_refuses_verification_and_export(
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=_calculation_ports_638,
-            clock=_T1,
+            clock=T1,
         )
 
     assert any(
@@ -957,7 +957,7 @@ def test_m369_unresolved_oss_source_refuses_verification_and_export(
             verification_repositories=build_test_verification_repository_bundle(),
             actor="m369-unresolved-operator",
             workflow_profile=workflow_profile(),
-            clock=_T1,
+            clock=T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
         ).report
@@ -1033,7 +1033,7 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
         ports=WorkLifecyclePorts(
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects)
         ),
-        clock=_T0,
+        clock=T0,
         operation=operation,
     )
     with calculation_ports_for_test(
@@ -1047,7 +1047,7 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=_calculation_ports_744,
-            clock=_T1,
+            clock=T1,
         )
 
     assert any(
@@ -1092,7 +1092,7 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
             verification_repositories=build_test_verification_repository_bundle(),
             actor="m369-unrouted-operator",
             workflow_profile=workflow_profile(),
-            clock=_T1,
+            clock=T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
         ).report
@@ -1170,7 +1170,7 @@ def test_m369_zero_valued_oss_invoice_remains_verifiable(
         ports=WorkLifecyclePorts(
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects)
         ),
-        clock=_T0,
+        clock=T0,
         operation=operation,
     )
     with calculation_ports_for_test(
@@ -1184,7 +1184,7 @@ def test_m369_zero_valued_oss_invoice_remains_verifiable(
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=_calculation_ports_878,
-            clock=_T1,
+            clock=T1,
         )
 
     assert not any(
@@ -1202,7 +1202,7 @@ def test_m369_zero_valued_oss_invoice_remains_verifiable(
             verification_repositories=build_test_verification_repository_bundle(),
             actor="m369-zero-operator",
             workflow_profile=workflow_profile(),
-            clock=_T1,
+            clock=T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
         ).report

@@ -128,7 +128,7 @@ def test_contended_diagnostic_io_runs_only_after_exclusive_ownership_ends(
     """A blocked acquisition diagnostic cannot prevent the next real lock owner."""
     target = tmp_path / "resource.json"
     contended, logging_started, release_logging, body_entered = (threading.Event() for _ in range(4))
-    original_try = locks._try_lock
+    original_try = locks.try_lock
     messages: list[tuple[str, tuple[object, ...]]] = []
     body_error = RuntimeError("synthetic protected body failure")
 
@@ -151,7 +151,7 @@ def test_contended_diagnostic_io_runs_only_after_exclusive_ownership_ends(
 
     def contend() -> None:
         if retained_descriptor:
-            fd, lock_path = locks._open_lock_fd(target)
+            fd, lock_path = locks.open_lock_fd(target)
             try:
                 with held_descriptor_lock(fd, lock_path, timeout=10, retry_backoff=0.001):
                     protected_body()
@@ -161,8 +161,8 @@ def test_contended_diagnostic_io_runs_only_after_exclusive_ownership_ends(
             with exclusive_file_lock(target, timeout=10, retry_backoff=0.001):
                 protected_body()
 
-    monkeypatch.setattr(locks, "_try_lock", observed_try)
-    monkeypatch.setattr(locks._log, "debug", blocked_debug)
+    monkeypatch.setattr(locks, "try_lock", observed_try)
+    monkeypatch.setattr(locks.log, "debug", blocked_debug)
     with ThreadPoolExecutor(max_workers=1) as pool:
         try:
             with exclusive_file_lock(target, timeout=0, log_events=False):
@@ -197,9 +197,9 @@ def test_failing_contended_diagnostic_does_not_leak_a_retained_descriptor_lock(
 ) -> None:
     """A logging exception propagates only after the retained descriptor is unlocked."""
     target = tmp_path / "resource.json"
-    fd, lock_path = locks._open_lock_fd(target)
+    fd, lock_path = locks.open_lock_fd(target)
     contended, body_entered = threading.Event(), threading.Event()
-    original_try = locks._try_lock
+    original_try = locks.try_lock
     diagnostic_error = RuntimeError("synthetic diagnostic failure")
 
     def observed_try(candidate: int) -> bool:
@@ -216,8 +216,8 @@ def test_failing_contended_diagnostic_does_not_leak_a_retained_descriptor_lock(
         with held_descriptor_lock(fd, lock_path, timeout=10, retry_backoff=0.001):
             body_entered.set()
 
-    monkeypatch.setattr(locks, "_try_lock", observed_try)
-    monkeypatch.setattr(locks._log, "debug", failed_debug)
+    monkeypatch.setattr(locks, "try_lock", observed_try)
+    monkeypatch.setattr(locks.log, "debug", failed_debug)
     try:
         with ThreadPoolExecutor(max_workers=1) as pool:
             with exclusive_file_lock(target, timeout=0, log_events=False):

@@ -14,7 +14,7 @@ from pydantic import AnyHttpUrl, TypeAdapter
 
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -79,8 +79,7 @@ from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.verification_report import VerificationReport
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -101,7 +100,7 @@ def workflow_profile() -> TaxpayerProfile:
 
 def _store_ready_profile_record(*, activity_start_date: str | None = None) -> None:
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
@@ -128,7 +127,7 @@ def _store_ready_profile_record(*, activity_start_date: str | None = None) -> No
             ),
             created_at=_CLOCK,
             updated_at=_CLOCK,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 

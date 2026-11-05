@@ -20,11 +20,11 @@ from ...application.operator_actions.models import PreconditionVerdict
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.transactions.errors import TransactionValidationError
-from ._ledger_support import ledger_transaction_validation_no_recovery
 from .common import bad, emit_envelope
 from .ledger_interchange_results import LedgerImportPayload
+from .ledger_support import ledger_transaction_validation_no_recovery
 from .operation_ledger_import import import_ledger_sources_for_cli
-from .period_parsing import _optional_canonical_period
+from .period_parsing import optional_canonical_period
 
 
 def _known_import_providers() -> tuple[str, ...]:
@@ -148,7 +148,7 @@ def ledger_import(
 ) -> None:
     """Import statement files through the exact-profile operation registry."""
     normalised_provider = _validate_import_provider(provider)
-    canonical_period = _optional_canonical_period(period, year=year)
+    canonical_period = optional_canonical_period(period, year=year)
     completed = import_ledger_sources_for_cli(
         ctx,
         files=(file,),

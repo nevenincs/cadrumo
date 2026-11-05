@@ -31,7 +31,7 @@ from .providers.xls import XlsProvider
 from .providers.xlsx import XlsxProvider
 
 
-class _FinancialProviderBoundary(FinancialProviderProtocol):
+class FinancialProviderBoundary(FinancialProviderProtocol):
     """Translate one concrete parser to the application provider protocol."""
 
     def __init__(self, provider: FinancialProvider) -> None:
@@ -74,7 +74,7 @@ class FinancialProviderResolverAdapter:
             provider = self._resolve_concrete_provider(provider_id=provider_id, path=path)
         except FinancialProviderError as exc:
             raise _translate_provider_error(exc, operation="resolve", path=path) from exc
-        return None if provider is None else _FinancialProviderBoundary(provider)
+        return None if provider is None else FinancialProviderBoundary(provider)
 
     @staticmethod
     def _resolve_concrete_provider(*, provider_id: str, path: Path) -> FinancialProvider | None:

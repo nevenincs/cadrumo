@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 
 from ..schema import ProfileSchemaDefinition
-from ._schema_loader_fixtures import legal_ids_fixture, module_scoped_schema
+from .schema_loader_fixtures import legal_ids_fixture, module_scoped_schema
 
 __all__ = ["legal_ids_fixture", "module_scoped_schema"]
 

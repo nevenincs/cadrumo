@@ -88,8 +88,8 @@ from .ports import (
 )
 from .screen_confirmation import WorkbenchConfirmationMixin
 from .screen_constants import (
-    _GREETED,
-    _NEXT_KEYS,
+    GREETED,
+    NEXT_KEYS,
 )
 from .screen_editor import WorkbenchEditorMixin
 from .screen_footer import WorkbenchFooterMixin
@@ -423,7 +423,7 @@ class ModeloWorkbenchScreen(
             return
         load = self._load
         if load is None or load.form.calculation_revision_id is None:
-            self._notice(f"{tr('workspace.modelo.export.verify_first')} [{_NEXT_KEYS[ModeloFormNextAction.VERIFY]}]")
+            self._notice(f"{tr('workspace.modelo.export.verify_first')} [{NEXT_KEYS[ModeloFormNextAction.VERIFY]}]")
             return
         if self._session.dirty:
             self._filing_withheld()
@@ -643,9 +643,9 @@ class ModeloWorkbenchScreen(
         what each symbol means.
         """
         app = self.app
-        if app in _GREETED or self.has_class("-short"):
+        if app in GREETED or self.has_class("-short"):
             return
-        _GREETED.add(app)
+        GREETED.add(app)
         notice = self.query_one("#wb-notice", Static)
         if not str(notice.render()):
             notice.update(first_open_text())

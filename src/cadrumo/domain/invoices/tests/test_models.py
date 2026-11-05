@@ -9,7 +9,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from ....core.identity.documents import IdentityError
@@ -35,7 +35,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 @pytest.fixture(autouse=True)
 def _authority_operation() -> Iterator[None]:
     """Validate invoices under the generation-pinned authority production uses."""
-    with _indexed_authority_for_test().operation():
+    with bundled_indexed_authority().operation():
         yield
 
 
@@ -355,7 +355,7 @@ def test_iva_rate_percentage_is_resolved_against_centralized_iva_substrate() -> 
     numeric slot is resolved against :func:`cadrumo.domain.iva.lookup_rate`
     for Spain at a given date.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from ...iva.lookup import lookup_rate
         from ...iva.schema import EUMemberState, IvaRateKind
 

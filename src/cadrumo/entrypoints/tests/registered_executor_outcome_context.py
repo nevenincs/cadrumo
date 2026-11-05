@@ -8,7 +8,7 @@ from typing import Any
 from pydantic import BaseModel
 
 from .registered_executor_case_support import (
-    _resolve_result_projection,
+    resolve_result_projection,
 )
 
 
@@ -56,7 +56,7 @@ class ExecutorOutcome:
 
     def resolve[ProjectionT: BaseModel](self, projection_type: type[ProjectionT]) -> ProjectionT:
         """Resolve one typed public result of the executed operation."""
-        return _resolve_result_projection(
+        return resolve_result_projection(
             self.driver,
             self.registry,
             definition_id=self.case.definition_id,

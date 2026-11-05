@@ -41,7 +41,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -77,8 +77,7 @@ from ....domain.calculations.registry.tests.registry_observations import (
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.user_profile.values import ProfileSetupState
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import ProfileSetupState, create_user_profile_record
 from .file_flow_test_support import calculation_ports_for_test
 from .general_iva_profile_facts_support import general_iva_profile_facts
 from .observation_seeding_support import save_stamped_observation
@@ -154,7 +153,7 @@ def objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 def _seed_ready_profile(objects: SecureObjectRepository) -> None:
     """Persist the M130 natural-person profile required by the work-unit gate."""
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET,
             facts=general_iva_profile_facts(
@@ -163,7 +162,7 @@ def _seed_ready_profile(objects: SecureObjectRepository) -> None:
             ),
             created_at=_T0,
             updated_at=_T0,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 

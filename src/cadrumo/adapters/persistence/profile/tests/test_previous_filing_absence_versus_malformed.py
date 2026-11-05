@@ -28,7 +28,7 @@ from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCom
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
 from cadrumo.core.casilla_id import validated_casilla_id
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -63,7 +63,7 @@ def test_absent_previous_filing_produces_the_same_unsatisfied_result_regardless_
     the required Modelo 100 2024 anchor), so both buckets reach the resolver
     with the identical genuinely-absent condition.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         with isolated_runtime_profile(tmp_path=tmp_path):
             snapshot = _m130_snapshot()
             repository = CalculationObservationRepository()
@@ -96,7 +96,7 @@ def test_absent_previous_filing_produces_the_same_unsatisfied_result_regardless_
 
 def test_a_matched_previous_filing_resolves_from_its_applicable_source_casilla(tmp_path: Path) -> None:
     """The canonical ``y/o`` binding sums whichever applicable M100 source is observed."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         with isolated_runtime_profile(tmp_path=tmp_path):
             snapshot = _m130_snapshot()
             repository = CalculationObservationRepository()
@@ -127,7 +127,7 @@ def test_a_matched_previous_filing_resolves_from_its_applicable_source_casilla(t
 def test_a_matched_previous_filing_with_no_declared_source_casilla_still_refuses(tmp_path: Path) -> None:
     """Optional candidates cannot turn a structurally unrelated observation into a silent zero."""
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         snapshot = _m130_snapshot()

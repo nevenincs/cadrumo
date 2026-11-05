@@ -16,18 +16,18 @@ from cadrumo_client.commands.shared_contracts import (
     ValueContract,
 )
 
-from .._app_ledger_command_spec_support import (
-    _ARCHIVE_REASON_OPTION,
-    _LEDGER_ACTOR_OPTION,
-    _LEDGER_ADD_CATEGORY_ID_OPTION,
-    _LEDGER_USAGE_RATIO_ID_OPTION,
-    _OPTIONAL_PERIOD_OPTION,
-    _OPTIONAL_YEAR_OPTION,
+from ..app_ledger_command_spec_support import (
+    ARCHIVE_REASON_OPTION,
+    LEDGER_ACTOR_OPTION,
+    LEDGER_ADD_CATEGORY_ID_OPTION,
+    LEDGER_USAGE_RATIO_ID_OPTION,
+    OPTIONAL_PERIOD_OPTION,
+    OPTIONAL_YEAR_OPTION,
 )
-from .._app_ledger_foundation_command_specs import LEDGER_FOUNDATION_COMMAND_SPECS
-from .._app_ledger_inventory_analysis_command_specs import LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS
-from .._app_ledger_lifecycle_command_specs import LEDGER_LIFECYCLE_COMMAND_SPECS
-from .._app_ledger_rule_command_specs import LEDGER_RULE_COMMAND_SPECS
+from ..app_ledger_foundation_command_specs import LEDGER_FOUNDATION_COMMAND_SPECS
+from ..app_ledger_inventory_analysis_command_specs import LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS
+from ..app_ledger_lifecycle_command_specs import LEDGER_LIFECYCLE_COMMAND_SPECS
+from ..app_ledger_rule_command_specs import LEDGER_RULE_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -70,12 +70,12 @@ def _fields(option: OptionSpec) -> tuple[object, ...]:
 def test_shared_ledger_parameter_fields_are_complete_and_immutable() -> None:
     """Every shared option retains its full literal CLI contract."""
     expected = {
-        _LEDGER_ADD_CATEGORY_ID_OPTION: _option("category_id", "--category-id", "cli.ledger.add.category_help"),
-        _LEDGER_USAGE_RATIO_ID_OPTION: _option("usage_ratio_id", "--usage-ratio-id", "cli.ledger.add.usage_ratio_help"),
-        _LEDGER_ACTOR_OPTION: _option("actor", "--actor", "cli.ledger.add.actor_help"),
-        _ARCHIVE_REASON_OPTION: _option("reason", "--reason", "cli.ledger.archive.reason_help", default=""),
-        _OPTIONAL_PERIOD_OPTION: _option("period", "--period", "cli.ledger.export.period_help"),
-        _OPTIONAL_YEAR_OPTION: _option("year", "--year", "cli.ledger.check.year_help", annotation="builtins:int"),
+        LEDGER_ADD_CATEGORY_ID_OPTION: _option("category_id", "--category-id", "cli.ledger.add.category_help"),
+        LEDGER_USAGE_RATIO_ID_OPTION: _option("usage_ratio_id", "--usage-ratio-id", "cli.ledger.add.usage_ratio_help"),
+        LEDGER_ACTOR_OPTION: _option("actor", "--actor", "cli.ledger.add.actor_help"),
+        ARCHIVE_REASON_OPTION: _option("reason", "--reason", "cli.ledger.archive.reason_help", default=""),
+        OPTIONAL_PERIOD_OPTION: _option("period", "--period", "cli.ledger.export.period_help"),
+        OPTIONAL_YEAR_OPTION: _option("year", "--year", "cli.ledger.check.year_help", annotation="builtins:int"),
     }
 
     assert tuple(_fields(option) for option in expected) == tuple(_fields(contract) for contract in expected.values())
@@ -163,10 +163,10 @@ def test_common_ledger_parameters_keep_their_full_command_order_and_identity() -
         )
     )
     restore, stash, status = (specs[key] for key in ("app_ledger_restore", "app_ledger_stash", "app_ledger_status"))
-    assert add.parameters[11] is allocate.parameters[2] is _LEDGER_ADD_CATEGORY_ID_OPTION
-    assert add.parameters[23] is allocate.parameters[3] is _LEDGER_USAGE_RATIO_ID_OPTION
+    assert add.parameters[11] is allocate.parameters[2] is LEDGER_ADD_CATEGORY_ID_OPTION
+    assert add.parameters[23] is allocate.parameters[3] is LEDGER_USAGE_RATIO_ID_OPTION
     assert all(
-        parameter is _LEDGER_ACTOR_OPTION
+        parameter is LEDGER_ACTOR_OPTION
         for parameter in (
             add.parameters[31],
             allocate.parameters[5],
@@ -176,9 +176,9 @@ def test_common_ledger_parameters_keep_their_full_command_order_and_identity() -
             stash.parameters[3],
         )
     )
-    assert archive.parameters[1] is restore.parameters[1] is stash.parameters[1] is _ARCHIVE_REASON_OPTION
-    assert status.parameters[0] is _OPTIONAL_PERIOD_OPTION
-    assert check.parameters[2] is status.parameters[1] is _OPTIONAL_YEAR_OPTION
+    assert archive.parameters[1] is restore.parameters[1] is stash.parameters[1] is ARCHIVE_REASON_OPTION
+    assert status.parameters[0] is OPTIONAL_PERIOD_OPTION
+    assert check.parameters[2] is status.parameters[1] is OPTIONAL_YEAR_OPTION
 
 
 def test_domain_specific_scalar_options_remain_distinct() -> None:
@@ -187,13 +187,13 @@ def test_domain_specific_scalar_options_remain_distinct() -> None:
     rule = {spec.key: spec for spec in LEDGER_RULE_COMMAND_SPECS}
     inventory = {spec.key: spec for spec in LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS}
 
-    assert rule["app_ledger_rule_add"].parameters[2] is not _LEDGER_ADD_CATEGORY_ID_OPTION
-    assert rule["app_ledger_rule_add"].parameters[-1] is not _LEDGER_ACTOR_OPTION
+    assert rule["app_ledger_rule_add"].parameters[2] is not LEDGER_ADD_CATEGORY_ID_OPTION
+    assert rule["app_ledger_rule_add"].parameters[-1] is not LEDGER_ACTOR_OPTION
     assert (
         foundation["app_ledger_add"].parameters[11] is not inventory["app_ledger_inventory_movement_add"].parameters[7]
     )
-    assert rule["app_ledger_rule_add"].parameters[2].help_key != _LEDGER_ADD_CATEGORY_ID_OPTION.help_key
-    assert rule["app_ledger_rule_add"].parameters[-1].help_key != _LEDGER_ACTOR_OPTION.help_key
+    assert rule["app_ledger_rule_add"].parameters[2].help_key != LEDGER_ADD_CATEGORY_ID_OPTION.help_key
+    assert rule["app_ledger_rule_add"].parameters[-1].help_key != LEDGER_ACTOR_OPTION.help_key
     assert (
         foundation["app_ledger_add"].parameters[11].help_key
         != inventory["app_ledger_inventory_movement_add"].parameters[7].help_key

@@ -17,13 +17,13 @@ from ..percepciones_observations import (
     PercepcionObservationRepositoryAdapter,
 )
 from ..percepciones_observations import (
-    _translate_storage_failure as translate_percepcion_failure,
+    translate_storage_failure as translate_percepcion_failure,
 )
 from ..retencion_observations import (
     RetencionObservationRepositoryAdapter,
 )
 from ..retencion_observations import (
-    _translate_storage_failure as translate_retencion_failure,
+    translate_storage_failure as translate_retencion_failure,
 )
 
 

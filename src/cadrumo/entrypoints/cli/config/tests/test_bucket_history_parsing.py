@@ -11,9 +11,9 @@ from pydantic import ValidationError
 from .....domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType, derive_bucket_event_id
 from ...profile_history_results import BucketHistoryEventPayload
 from ..profile_history_commands import (
-    _bucket_history_event_payload,
-    _parse_bucket_event_types,
-    _parse_bucket_history_instant,
+    bucket_history_event_payload,
+    parse_bucket_event_types,
+    parse_bucket_history_instant,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -35,7 +35,7 @@ def _event_at(occurred_at: datetime) -> BucketEvent:
 
 
 def test_parse_bucket_event_types_returns_typed_filters() -> None:
-    parsed = _parse_bucket_event_types(
+    parsed = parse_bucket_event_types(
         [
             BucketEventType.LEDGER_TRANSACTION_CREATED.value,
             BucketEventType.MODELO_FILED.value,
@@ -50,7 +50,7 @@ def test_parse_bucket_event_types_returns_typed_filters() -> None:
 
 def test_parse_bucket_event_types_rejects_unknown_value_with_localized_message() -> None:
     with pytest.raises(typer.BadParameter) as exc_info:
-        _parse_bucket_event_types(["not-a-bucket-event"])
+        parse_bucket_event_types(["not-a-bucket-event"])
 
     message = str(exc_info.value)
     assert "not-a-bucket-event" in message
@@ -59,7 +59,7 @@ def test_parse_bucket_event_types_rejects_unknown_value_with_localized_message()
 
 
 def test_parse_bucket_history_instant_normalises_naive_date_to_utc() -> None:
-    parsed = _parse_bucket_history_instant("2026-01-01", flag="--since")
+    parsed = parse_bucket_history_instant("2026-01-01", flag="--since")
 
     assert parsed is not None
     assert parsed.tzinfo is not None
@@ -76,7 +76,7 @@ def test_bucket_history_event_payload_carries_payload_version() -> None:
     """
     event = _event_at(datetime(2026, 1, 15, tzinfo=UTC))
 
-    payload = _bucket_history_event_payload(event)
+    payload = bucket_history_event_payload(event)
 
     assert payload.payload_version == event.payload_version == 1
 

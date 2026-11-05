@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from .....application.auth.protocols import BrowserContextProvisioner
 from .....core.config import Settings
 from .....core.errors.hierarchy import InternalInvariantError
-from .._playwright import BrowserContext, Page
+from ..playwright import BrowserContext, Page
 
 if TYPE_CHECKING:
     from .sede_view import SedeViewPage

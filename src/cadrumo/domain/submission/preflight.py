@@ -24,7 +24,7 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.errors.severity import BaseSeverity
 from ...core.i18n.auth_provider import describe_auth_provider_operator_impact
 from ...core.logging import get_logger
-from ...core.parsing.utils import enum_value as _enum_value
+from ...core.parsing.utils import enum_value
 from .errors import SubmissionPreflightError
 from .models import ModeloDraftStatus
 from .protocols import AuthProviderProbe, DeadlineWindowChecker, ModeloDraftLike
@@ -42,7 +42,7 @@ _PREFLIGHT_AUTH_NOT_READY_LOCALE_KEY = "errors.refused.submission_preflight_auth
 
 def _check_draft_approval(draft: ModeloDraftLike) -> None:
     """Enforce the first gate: only an approved draft may be submitted."""
-    status_value = _enum_value(draft.status)
+    status_value = enum_value(draft.status)
     if status_value != ModeloDraftStatus.APROBADO.value:
         _logger.debug("preflight gate-1 fail: draft status=%s", draft.status)
         if status_value == ModeloDraftStatus.APROBACION_CADUCADA.value:
@@ -140,7 +140,7 @@ def _check_auth_readiness(
             "auth provider is not ready",
             translated_message=_PREFLIGHT_AUTH_NOT_READY_LOCALE_KEY,
             context={
-                "kind": _enum_value(description.kind),
+                "kind": enum_value(description.kind),
                 "configured": description.configured,
                 "available": description.available,
                 "operator_impact": describe_auth_provider_operator_impact(description),

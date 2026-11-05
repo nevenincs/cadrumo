@@ -19,7 +19,7 @@ from cadrumo.application.modelo.local_observation_actions import (
 )
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -32,7 +32,7 @@ def test_operator_manual_m303_carry_policy_refuses_without_persisting(
 ) -> None:
     """M303 has one canonical filing write door; operator-manual rows are refused."""
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path) as profile,
     ):
         repository = CalculationObservationRepository()

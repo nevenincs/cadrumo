@@ -14,7 +14,7 @@ from .casilla_list_models import CasillaListEntry, Density
 from .navigator import checked_boxes, page_counts
 from .page_items import page_items
 from .screen_constants import (
-    _FILTER_ORDER,
+    FILTER_ORDER,
 )
 from .search import SearchMode, WorkbenchSearchPanel, search_entries
 from .sorting import SortOrder, next_order
@@ -40,8 +40,8 @@ class WorkbenchNavigationMixin:
 
     def action_cycle_filter(self: ModeloWorkbenchScreen) -> None:
         """Show all fields, then only what needs attention, then only the filer's own values."""
-        position = _FILTER_ORDER.index(self._filter)
-        self._filter = _FILTER_ORDER[(position + 1) % len(_FILTER_ORDER)]
+        position = FILTER_ORDER.index(self._filter)
+        self._filter = FILTER_ORDER[(position + 1) % len(FILTER_ORDER)]
         self._render_page()
 
     def action_cycle_sort(self: ModeloWorkbenchScreen) -> None:

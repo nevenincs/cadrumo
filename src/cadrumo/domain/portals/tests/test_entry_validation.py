@@ -5,7 +5,7 @@ from typing import TypedDict
 
 import pytest
 
-from .._entries.common import build_entry
+from ..entries.common import build_entry
 from ..errors import PortalValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

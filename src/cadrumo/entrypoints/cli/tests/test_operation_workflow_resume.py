@@ -29,7 +29,7 @@ from ....core.modelo import Modelo
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
 from ....domain.deadlines.models import ObligationStatus
-from .. import _modelo_work_runs_cli as cli
+from .. import modelo_work_runs_cli as cli
 from .. import operation_workflow_resume as bridge
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -153,7 +153,7 @@ def test_resume_presentation_failure_preserves_known_terminal_receipt(monkeypatc
     def fail_presentation(*_args: object, **_kwargs: object) -> None:
         raise RuntimeError("presentation failure")
 
-    monkeypatch.setattr(cli, "_emit_work_resume", fail_presentation)
+    monkeypatch.setattr(cli, "emit_work_resume", fail_presentation)
     with pytest.raises(CliRefusedBoundaryError) as refused:
         cli.work_resume(cast(typer.Context, cast(object, None)))
 
@@ -168,7 +168,7 @@ def test_resume_presentation_reraises_typer_exit(monkeypatch: pytest.MonkeyPatch
     completion = _completion()
     _install_resume(monkeypatch, completion)
     expected = typer.Exit(code=0)
-    monkeypatch.setattr(cli, "_emit_work_resume", lambda *_args, **_kwargs: (_ for _ in ()).throw(expected))
+    monkeypatch.setattr(cli, "emit_work_resume", lambda *_args, **_kwargs: (_ for _ in ()).throw(expected))
 
     with pytest.raises(typer.Exit) as raised:
         cli.work_resume(cast(typer.Context, cast(object, None)))

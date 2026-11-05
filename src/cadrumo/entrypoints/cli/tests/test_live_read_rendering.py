@@ -15,8 +15,8 @@ from cadrumo.application.live.remote_state_models import (
 )
 from cadrumo.core.period import Period
 
-from .._app_live_auth_preflight import _live_auth_preflight_lines
-from ..app_live_iva_commands import _iva_remote_state_capture_lines, _live_iva_outcome_label
+from ..app_live_auth_preflight import live_auth_preflight_lines
+from ..app_live_iva_commands import iva_remote_state_capture_lines, live_iva_outcome_label
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -33,7 +33,7 @@ def test_live_auth_preflight_lines_redact_active_profile_identifier() -> None:
         persisted_session_state="live",
     )
 
-    lines = _live_auth_preflight_lines(report)
+    lines = live_auth_preflight_lines(report)
 
     assert "auth_active_profile=<profile-id>" in lines
     assert "auth_persisted_session_state=live" in lines
@@ -43,12 +43,12 @@ def test_live_auth_preflight_lines_redact_active_profile_identifier() -> None:
 
 def test_every_live_iva_outcome_has_operator_label() -> None:
     for mode in LiveIvaAcquisitionFailureMode:
-        label = _live_iva_outcome_label(mode)
+        label = live_iva_outcome_label(mode)
 
         assert label
         assert "cli.app.live.iva_wallet.acquisition.outcome" not in label
         if mode is not LiveIvaAcquisitionFailureMode.UNKNOWN:
-            assert label != _live_iva_outcome_label(LiveIvaAcquisitionFailureMode.UNKNOWN)
+            assert label != live_iva_outcome_label(LiveIvaAcquisitionFailureMode.UNKNOWN)
 
 
 def test_remote_state_lines_render_auth_and_surface_outcomes_with_labels() -> None:
@@ -91,11 +91,11 @@ def test_remote_state_lines_render_auth_and_surface_outcomes_with_labels() -> No
         ),
     )
 
-    lines = _iva_remote_state_capture_lines(report)
+    lines = iva_remote_state_capture_lines(report)
 
     assert "auth_status=failed" in lines
     assert "auth_outcome=no_clave_prompt" in lines
-    no_prompt_label = _live_iva_outcome_label(LiveIvaAcquisitionFailureMode.NO_CLAVE_PROMPT)
+    no_prompt_label = live_iva_outcome_label(LiveIvaAcquisitionFailureMode.NO_CLAVE_PROMPT)
     assert f"auth_outcome_label={no_prompt_label}" in lines
     assert "filed_history_succeeded=False" in lines
     assert "wallet_succeeded=False" in lines

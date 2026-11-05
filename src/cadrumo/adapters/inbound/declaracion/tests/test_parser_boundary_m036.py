@@ -6,16 +6,16 @@ import pytest
 
 from .....core.casilla_id import CasillaId
 from ..parser import parse_declaracion
-from ._parser_boundary_casillas import _M036_EVENT_KIND_CASILLA
-from ._parser_boundary_support import (
-    _MODELO_036_SYNTHETIC_FIXTURE,
-    _expected_period,
+from .parser_boundary_casillas import M036_EVENT_KIND_CASILLA
+from .parser_boundary_support import (
+    MODELO_036_SYNTHETIC_FIXTURE,
+    expected_period,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 _M036_EXPECTED_VALUES: dict[CasillaId, str] = {
-    _M036_EVENT_KIND_CASILLA: "Alta",
+    M036_EVENT_KIND_CASILLA: "Alta",
 }
 
 
@@ -27,16 +27,16 @@ def test_parser_extracts_modelo_036_synthetic_fixture_targets() -> None:
     that source heading with the enum value on the same line.
     """
     # The fixture is filed under its own ejercicio.
-    year = int(_MODELO_036_SYNTHETIC_FIXTURE.stem.split("-")[0])
+    year = int(MODELO_036_SYNTHETIC_FIXTURE.stem.split("-")[0])
     filing = parse_declaracion(
-        _MODELO_036_SYNTHETIC_FIXTURE,
+        MODELO_036_SYNTHETIC_FIXTURE,
         modelo_override="036",
         año_override=year,
         period_override="alta",
     )
 
     assert filing.modelo == "036"
-    assert filing.period == _expected_period(year, "0A")
+    assert filing.period == expected_period(year, "0A")
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "036"

@@ -57,7 +57,7 @@ def _viewer_html(csv: str, *, origin: str = "") -> str:
 )
 def test_verify_csv_parse_contract(body: str, expected: bool) -> None:
     """Only the exact CSV-bound document iframe satisfies the official contract."""
-    assert verify_module._response_confirms_valid_csv(body, expected_csv=_CSV, final_url=_RESULT_URL) is expected
+    assert verify_module.response_confirms_valid_csv(body, expected_csv=_CSV, final_url=_RESULT_URL) is expected
 
 
 @pytest.mark.parametrize(
@@ -70,7 +70,7 @@ def test_verify_csv_parse_contract(body: str, expected: bool) -> None:
 )
 def test_verify_csv_rejects_wrong_final_surface(final_url: str) -> None:
     """A viewer-shaped body cannot override wrong scheme, host, or route."""
-    assert not verify_module._response_confirms_valid_csv(
+    assert not verify_module.response_confirms_valid_csv(
         _viewer_html(_CSV),
         expected_csv=_CSV,
         final_url=final_url,
@@ -89,7 +89,7 @@ async def test_verify_csv_keeps_borrowed_real_browser_available() -> None:
         second_contexts: list[BrowserContext] = []
         try:
             concrete_session = session
-            assert verify_module._is_verify_browser_session_like(session)
+            assert verify_module.is_verify_browser_session_like(session)
             assert await verify_csv(" abcd1234 ", browser=session) is False
 
             browser = concrete_session._browser
@@ -134,7 +134,7 @@ async def test_verify_csv_closes_self_owned_real_playwright_runtime() -> None:
 
 def test_verify_browser_session_type_guard_rejects_incompatible_object() -> None:
     """The production type guard rejects objects without the session contract."""
-    assert not verify_module._is_verify_browser_session_like(object())
+    assert not verify_module.is_verify_browser_session_like(object())
 
 
 def test_browser_adapter_type_error_round_trips_build_error_envelope() -> None:
@@ -151,7 +151,7 @@ def test_browser_adapter_type_error_round_trips_build_error_envelope() -> None:
 
 def test_verify_csv_guard_rejects_non_read_method() -> None:
     with pytest.raises(RegistryValidationError, match="remote write method"):
-        verify_module._assert_verify_http("POST", verify_module._VERIFY_URL)
+        verify_module.assert_verify_http("POST", verify_module.VERIFY_URL)
 
 
 @pytest.mark.parametrize("method", ["POST", "PUT", "PATCH", "DELETE"])
@@ -164,7 +164,7 @@ def test_verify_guard_refuses_every_write_method(method: str) -> None:
     answer is obtained.
     """
     with pytest.raises(RegistryValidationError, match="remote write method"):
-        verify_module._assert_verify_http(method, verify_module._VERIFY_URL)
+        verify_module.assert_verify_http(method, verify_module.VERIFY_URL)
 
 
 @pytest.mark.parametrize(
@@ -177,4 +177,4 @@ def test_verify_guard_refuses_every_write_method(method: str) -> None:
 def test_verify_guard_refuses_a_host_outside_the_reviewed_surface(url: str) -> None:
     """Only the single reviewed cotejo host is reachable, on a read verb too."""
     with pytest.raises(RegistryValidationError, match="not in allowed read-only hosts"):
-        verify_module._assert_verify_http("GET", url)
+        verify_module.assert_verify_http("GET", url)

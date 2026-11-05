@@ -53,7 +53,7 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.review_package_recipient_encryption import RecipientEncryptionAdapter
 from cadrumo.adapters.persistence.profile.review_package_signing import ReviewPackageSigningKeypairAdapter
-from cadrumo.adapters.persistence.profile.tests._review_package_bytes_support import (
+from cadrumo.adapters.persistence.profile.tests.review_package_bytes_support import (
     build_package_path,
     review_package_revision,
     review_package_work_unit,

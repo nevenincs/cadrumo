@@ -53,13 +53,13 @@ from ..components.widgets import (
 )
 from .aeat_auth_setup import AeatAuthSetupPort, AeatAuthSetupScreen, readiness_text
 from .overview_contracts import (
-    _COMPLETE_SETUP_ACTION,
-    _COMPLETE_SETUP_KEY,
-    _CONTINUE_BUTTON_ID,
-    _LANGUAGE_ACTION,
-    _LANGUAGE_KEY,
-    _REQUIRED_ONLY_ID,
-    _SEARCH_ID,
+    COMPLETE_SETUP_ACTION,
+    COMPLETE_SETUP_KEY,
+    CONTINUE_BUTTON_ID,
+    LANGUAGE_ACTION,
+    LANGUAGE_KEY,
+    REQUIRED_ONLY_ID,
+    SEARCH_ID,
 )
 from .overview_interactions import ProfileOverviewInteractionMixin
 from .overview_rendering import ProfileOverviewRenderingMixin
@@ -172,13 +172,13 @@ class ProfileManagerScreen(
         # written in a class body would be resolved once at import in
         # whichever language the process started in. Both are written by
         # :meth:`_offer_language_in_footer` on every render instead.
-        Binding(_LANGUAGE_KEY, _LANGUAGE_ACTION, "", show=True),
+        Binding(LANGUAGE_KEY, LANGUAGE_ACTION, "", show=True),
         # After the language key, so the footer reads in key order here as it
         # does on every other destination; described by the account chrome.
         Binding("f3", "toggle_appearance", "", show=False),
         # Named on its own button rather than in the footer, which has no
         # room left for it on an eighty-column terminal.
-        Binding(_COMPLETE_SETUP_KEY, _COMPLETE_SETUP_ACTION, "", show=False),
+        Binding(COMPLETE_SETUP_KEY, COMPLETE_SETUP_ACTION, "", show=False),
         Binding("slash", "focus_search", "", show=False),
         Binding("f5", "refresh_profile", "", show=False),
         Binding("q", "quit", "", show=False),
@@ -350,11 +350,11 @@ class ProfileManagerScreen(
                 yield ProgressLine(id="onboarding-progress")
                 with Horizontal(id="onboarding-actions"):
                     yield Button("", id="onboarding-previous", compact=True)
-                    yield Button("", id=_CONTINUE_BUTTON_ID, classes="-primary", compact=True)
+                    yield Button("", id=CONTINUE_BUTTON_ID, classes="-primary", compact=True)
                     yield Static(id="onboarding-step", markup=False)
         with Horizontal(id="manager-tools"):
-            yield Input(id=_SEARCH_ID, compact=True)
-            yield Checkbox("", value=self._required_only, id=_REQUIRED_ONLY_ID, compact=True)
+            yield Input(id=SEARCH_ID, compact=True)
+            yield Checkbox("", value=self._required_only, id=REQUIRED_ONLY_ID, compact=True)
         with ContentScroll(id="manager-body", classes="cadrumo-scroll"), Vertical(classes="cadrumo-column"):
             if self._onboarding:
                 yield Static(id="onboarding-stage-title", markup=False)
@@ -393,7 +393,7 @@ class ProfileManagerScreen(
         install_cadrumo_themes(self.app)
         # The shared theme sizes every Input to the full row, which would push
         # the required-only switch beside the search box off the screen.
-        self.query_one(f"#{_SEARCH_ID}", Input).styles.width = "1fr"
+        self.query_one(f"#{SEARCH_ID}", Input).styles.width = "1fr"
         if self._onboarding:
             for stage in SETUP_STAGES:
                 button = self.query_one(f"#setup-stage-{stage.value}", Button)
@@ -514,7 +514,7 @@ class ProfileManagerScreen(
         if not self.is_attached:
             return
         if self._onboarding:
-            self.query_one(f"#{_CONTINUE_BUTTON_ID}", Button).focus()
+            self.query_one(f"#{CONTINUE_BUTTON_ID}", Button).focus()
         # Whatever took focus while the page was building may have scrolled
         # the body; the page opens at its top.
         body = self.query_one("#manager-body", ContentScroll)
@@ -533,7 +533,7 @@ class ProfileManagerScreen(
     @override
     def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
         """Hide the completion key once there is nothing to complete."""
-        if action == _COMPLETE_SETUP_ACTION:
+        if action == COMPLETE_SETUP_ACTION:
             return self._completion_offered
         return super().check_action(action, parameters)
 

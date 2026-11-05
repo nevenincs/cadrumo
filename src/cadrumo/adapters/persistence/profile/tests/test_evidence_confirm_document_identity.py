@@ -35,18 +35,18 @@ from cadrumo.domain.invoices.duplicates import likely_duplicate_invoice
 from cadrumo.domain.invoices.errors import InvoiceValidationError
 
 from .....domain.iva.schema import InvoiceKind
-from ._invoice_confirmation_test_support import (
-    _BUCKET_ID,
-    _EVIDENCE_CORPUS,
+from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from .invoice_confirmation_test_support import (
+    BUCKET_ID,
+    EVIDENCE_CORPUS,
     InvoiceAuthorityFixture,
-    _make_svc,
     invoice_confirmation_kwargs,
     isolated_settings,
+    make_svc,
     secure_objects,
 )
-from ._invoice_confirmation_test_support import runtime_profile as runtime_profile
-from ._invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
-from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from .invoice_confirmation_test_support import runtime_profile as runtime_profile
+from .invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_filer_profile"]
@@ -54,7 +54,7 @@ __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_fil
 # A structured document, so the reading lane is the deterministic Facturae
 # parser: every re-read resolves the same figures, which is what makes a second
 # confirm a statement about the SAME document rather than a different reading.
-_FIXTURE = _EVIDENCE_CORPUS / "facturae_32_recargo_invoice.xml"
+_FIXTURE = EVIDENCE_CORPUS / "facturae_32_recargo_invoice.xml"
 
 
 def _attach_the_document(
@@ -67,8 +67,8 @@ def _attach_the_document(
     """Store the fixture as real evidence and return its evidence id."""
     source = tmp_path / file_name
     source.write_bytes(_FIXTURE.read_bytes())
-    svc = _make_svc(isolated_settings, secure_objects)
-    return svc.add(bucket_id=_BUCKET_ID, source_path=source).record.evidence_id
+    svc = make_svc(isolated_settings, secure_objects)
+    return svc.add(bucket_id=BUCKET_ID, source_path=source).record.evidence_id
 
 
 def _confirm(
@@ -85,12 +85,12 @@ def _confirm(
 ) -> InvoiceConfirmationResult:
     """Confirm the attached document, optionally restating what the operator saw."""
     return confirm_invoice_draft_from_evidence(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         counterparty_country="ES",
         evidence_id=evidence_id,
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=authority),
+        **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=authority),
         counterparty_name=counterparty_name,
         invoice_number=invoice_number,
         retention_rate=retention_rate,
@@ -377,7 +377,7 @@ def test_the_writer_reports_the_duplicate_the_read_finds_and_still_confirms(
 
     other = tmp_path / "other.xml"
     other.write_bytes(_FIXTURE.read_bytes() + b"\n")
-    other_evidence = _make_svc(isolated_settings, secure_objects).add(bucket_id=_BUCKET_ID, source_path=other)
+    other_evidence = make_svc(isolated_settings, secure_objects).add(bucket_id=BUCKET_ID, source_path=other)
     invoice = first.invoice
     read = likely_duplicate_invoice(
         repository.load().invoices.values(),

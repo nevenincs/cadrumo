@@ -11,7 +11,7 @@ from __future__ import annotations
 from ...application.actividad_asset.history import ActivityAssetHistoryClaimResult
 from ...core.errors.hierarchy import InternalInvariantError
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
-from ._actividad_asset_payloads import ActivityAssetClaimPayload, ActivityAssetInspectionPayload
+from .actividad_asset_payloads import ActivityAssetClaimPayload, ActivityAssetInspectionPayload
 
 
 def inspection_receipt(

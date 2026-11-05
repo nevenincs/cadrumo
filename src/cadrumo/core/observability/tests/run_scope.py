@@ -39,7 +39,7 @@ _log = get_logger(__name__)
 _DEFAULT_INITIAL_STEP = "step-0"
 
 
-def _mint_run_id() -> str:
+def mint_run_id() -> str:
     """Return a fresh 16-character lowercase hex run identifier."""
     return uuid.uuid4().hex[:16]
 
@@ -60,7 +60,7 @@ def _build_initial_context(
     buggy caller from escaping the configured runs directory through
     inputs like ``"../etc"``.
     """
-    effective_run_id = validate_run_id(run_id) if run_id is not None else _mint_run_id()
+    effective_run_id = validate_run_id(run_id) if run_id is not None else mint_run_id()
     # `load_settings()` honours `override_settings`; bare `Settings()`
     # bypasses the context-var so test-side corpus-sha overrides never
     # propagate to the run-context fingerprint.
@@ -119,7 +119,7 @@ def _nested_run_context(
     record_event: Callable[..., object],
 ) -> Generator[RecordedRunContextInfo]:
     """Push and pop one nested step while reusing the outer run metadata."""
-    nested_step = step_id or f"{outer.initial_step_id}.{_mint_run_id()[:8]}"
+    nested_step = step_id or f"{outer.initial_step_id}.{mint_run_id()[:8]}"
     step_token = STEP_CONTEXT_VAR.set(nested_step)
     try:
         record_event(

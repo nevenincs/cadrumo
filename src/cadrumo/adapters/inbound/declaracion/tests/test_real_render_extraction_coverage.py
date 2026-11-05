@@ -96,10 +96,10 @@ import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....tests.inventory import FIXTURES_DIR
-from .._parsers.pdfplumber_backend import extract_pages_text
 from ..errors import DeclaracionParseError
-from ..parser import _extract_profile_values, parse_declaracion
-from ._parser_boundary_support import _filing_year_is_supported, _render_extraction_profile
+from ..parser import extract_profile_values, parse_declaracion
+from ..parsers.pdfplumber_backend import extract_pages_text
+from .parser_boundary_support import filing_year_is_supported, render_extraction_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
@@ -289,7 +289,7 @@ def _declaracion_profile(specimen: _AnnexSpecimen | _ReplacementSpecimen):
     that year, which :func:`test_parser_refuses_reproduced_declaration_below_the_supported_floor`
     asserts at the parser boundary.
     """
-    return _render_extraction_profile(
+    return render_extraction_profile(
         specimen.modelo,
         filing_year=specimen.filing_year,
         period=specimen.period,
@@ -301,7 +301,7 @@ def _extracted_amounts(specimen: _AnnexSpecimen | _ReplacementSpecimen) -> dict[
     """Run the production extraction path; return casilla id to printed value."""
     profile, revision = _declaracion_profile(specimen)
     pages = extract_pages_text(specimen.pdf)
-    values = _extract_profile_values(
+    values = extract_profile_values(
         pages,
         profile,
         revision=revision,
@@ -466,7 +466,7 @@ def test_profile_accepts_the_reproduced_declaration(specimen: _ReplacementSpecim
 
 
 _UNSUPPORTED_REPLACEMENT_SPECIMENS: tuple[_ReplacementSpecimen, ...] = tuple(
-    specimen for specimen in _REPLACEMENT_SPECIMENS if not _filing_year_is_supported(specimen.filing_year)
+    specimen for specimen in _REPLACEMENT_SPECIMENS if not filing_year_is_supported(specimen.filing_year)
 )
 
 

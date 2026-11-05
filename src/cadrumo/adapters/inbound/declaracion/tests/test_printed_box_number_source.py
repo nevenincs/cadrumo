@@ -44,7 +44,7 @@ from .....core.casilla_id import validated_casilla_id
 from .....domain.calculations.registry.schema_extraction import ExtractionProfileDefinition, ExtractionTargetDefinition
 from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..errors import DeclaracionParseError
-from ..parser import _numeric_casilla_anchors
+from ..parser import numeric_casilla_anchors
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -116,7 +116,7 @@ def test_numeric_anchor_is_the_printed_number_not_the_record_design_field(
     revision = _revision(modelo, filing_year, period)
     profile = _numeric_profile(casilla_id)
 
-    anchors = {str(k): v for k, v in _numeric_casilla_anchors(profile, revision).items()}
+    anchors = {str(k): v for k, v in numeric_casilla_anchors(profile, revision).items()}
 
     assert anchors[casilla_id] == printed, (
         f"M{modelo} {casilla_id!r}: numeric_casilla anchors on {anchors[casilla_id]!r}, but the "
@@ -148,7 +148,7 @@ def test_a_casilla_with_no_printed_number_is_refused_rather_than_mis_anchored() 
     )
 
     with pytest.raises(DeclaracionParseError) as excinfo:
-        _numeric_casilla_anchors(profile, stripped)
+        numeric_casilla_anchors(profile, stripped)
 
     message = str(excinfo.value)
     assert "136-144" in message, (

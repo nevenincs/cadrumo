@@ -533,7 +533,7 @@ def test_test_suite_aeat_route_literals_are_centralized_or_declared() -> None:
 
     allowed_files = {
         repo_relative(Path(__file__).resolve()),
-        "src/cadrumo/entrypoints/tests/_runtime_attached_repositories_support.py",
+        "src/cadrumo/entrypoints/tests/runtime_attached_repositories_support.py",
         "src/cadrumo/tests/aeat_literal_fixtures.py",
         # The AEAT locator RECOGNISER: its regex and prefix tuple exist to match
         # external Sede URLs, so the host fragment is the pattern under test

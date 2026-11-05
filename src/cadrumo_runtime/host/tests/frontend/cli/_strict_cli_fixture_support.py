@@ -20,7 +20,7 @@ from .runtime_profile_backend import runtime_profile_backend_fixture
 _DIAGNOSTICS_BUCKET_ID = "22222222-3333-4444-8555-666666666666"
 
 
-@pytest.fixture(name="_isolated_backend")
+@pytest.fixture(name="isolated_backend")
 def diagnostics_isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         override_settings(cadrumo_storage_root=tmp_path, cadrumo_output_language="en"),
@@ -31,7 +31,7 @@ def diagnostics_isolated_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-@pytest.fixture(name="_isolated_backend", autouse=True)
+@pytest.fixture(name="isolated_backend", autouse=True)
 def seeded_runtime_backend(seed_profile: ProfileSeeder) -> Iterator[None]:
     """Register one password-custodied operator profile whose joined runtime admits each command.
 
@@ -47,7 +47,7 @@ def seeded_runtime_backend(seed_profile: ProfileSeeder) -> Iterator[None]:
         dispose_engine()
 
 
-@pytest.fixture(name="_isolated_backend", autouse=True)
+@pytest.fixture(name="isolated_backend", autouse=True)
 def cli_surface_isolated_backend(tmp_path: Path) -> Iterator[None]:
     with isolated_cli_surface_backend(tmp_path):
         yield

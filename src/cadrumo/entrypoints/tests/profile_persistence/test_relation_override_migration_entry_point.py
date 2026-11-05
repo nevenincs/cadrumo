@@ -31,7 +31,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests.override_migration_support import override_migration_catalogue
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 
 from ....adapters.persistence.profile.calculation_revision_override_migration import (
@@ -179,7 +179,7 @@ def test_post_cut_binding_override_is_preserved_unchanged() -> None:
     The join cannot know the key, so the classification falls to the revision's
     own registry snapshot. Getting this wrong refuses the revision forever.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         binding_id = _post_cut_binding_id()
         assert binding_id not in bundled_relation_binding_join()
         stored = _revision(relation_overrides={binding_id: _OVERRIDE_VALUE})

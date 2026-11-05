@@ -27,10 +27,10 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import o
 from cadrumo.application.user_profile.custody_hold_models import ProfileCustodyRetentionOverride
 
 from .test_config_reset import (
-    _OVERRIDE_REASON,
-    _create_profile,
-    _isolated_reset_root,
-    _persist_filing,
+    OVERRIDE_REASON,
+    create_profile,
+    isolated_reset_root,
+    persist_filing,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -40,7 +40,7 @@ _PROFILE_ID = "31313131-3131-4131-8131-313131313131"
 
 def _override(*, retained: int = 1) -> ProfileCustodyRetentionOverride:
     return ProfileCustodyRetentionOverride(
-        reason=_OVERRIDE_REASON,
+        reason=OVERRIDE_REASON,
         approved_at=datetime.now(UTC),
         retained_record_count=retained,
     )
@@ -48,8 +48,8 @@ def _override(*, retained: int = 1) -> ProfileCustodyRetentionOverride:
 
 def _held_profile(root: Path) -> None:
     """Seed one profile carrying a filing, so the retention floor blocks it."""
-    _create_profile(_PROFILE_ID, label="Retention held", tax_id="22222222J")
-    _persist_filing(_PROFILE_ID, filing_year=2025, seed="3")
+    create_profile(_PROFILE_ID, label="Retention held", tax_id="22222222J")
+    persist_filing(_PROFILE_ID, filing_year=2025, seed="3")
 
 
 def _bucket_dir(root: Path) -> Path:
@@ -68,7 +68,7 @@ def test_the_override_clears_a_filing_hold_and_is_recorded_in_the_journal(tmp_pa
     """
     from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 
-    with _isolated_reset_root(tmp_path) as root:
+    with isolated_reset_root(tmp_path) as root:
         _held_profile(root)
         with open_test_profile_session(_PROFILE_ID):
             journal = ProfileCapsuleLifecycle().prepare_delete(
@@ -79,7 +79,7 @@ def test_the_override_clears_a_filing_hold_and_is_recorded_in_the_journal(tmp_pa
         assert journal.hold_assessment is not None
         assert journal.hold_assessment.filing_hold is True
         assert journal.retention_override is not None
-        assert journal.retention_override.reason == _OVERRIDE_REASON
+        assert journal.retention_override.reason == OVERRIDE_REASON
 
 
 def test_an_open_legal_case_still_refuses_with_a_valid_override(tmp_path: Path) -> None:
@@ -94,7 +94,7 @@ def test_an_open_legal_case_still_refuses_with_a_valid_override(tmp_path: Path) 
     from cadrumo.application.user_profile.custody_transactions import ProfileCustodyTransactionRefusalError
     from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 
-    with _isolated_reset_root(tmp_path) as root:
+    with isolated_reset_root(tmp_path) as root:
         _held_profile(root)
         LegalHoldCaseAuthority(root=root).record_open_case_snapshot(
             profile_id=UUID(_PROFILE_ID),
@@ -121,8 +121,8 @@ def test_an_override_is_refused_where_no_filing_hold_blocks(tmp_path: Path) -> N
     from cadrumo.application.user_profile.custody_transactions import ProfileCustodyTransactionRefusalError
     from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 
-    with _isolated_reset_root(tmp_path) as root:
-        _create_profile(_PROFILE_ID, label="No hold", tax_id="22222222J")
+    with isolated_reset_root(tmp_path) as root:
+        create_profile(_PROFILE_ID, label="No hold", tax_id="22222222J")
 
         with open_test_profile_session(_PROFILE_ID), pytest.raises(ProfileCustodyTransactionRefusalError):
             ProfileCapsuleLifecycle().prepare_delete(
@@ -143,7 +143,7 @@ def test_a_legal_case_opened_after_preparation_still_stops_the_execution(tmp_pat
     from cadrumo.application.user_profile.custody_transactions import ProfileCustodyTransactionRefusalError
     from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 
-    with _isolated_reset_root(tmp_path) as root:
+    with isolated_reset_root(tmp_path) as root:
         _held_profile(root)
         with open_test_profile_session(_PROFILE_ID):
             lifecycle = ProfileCapsuleLifecycle()

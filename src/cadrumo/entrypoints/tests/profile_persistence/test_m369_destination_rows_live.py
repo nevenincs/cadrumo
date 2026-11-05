@@ -70,10 +70,10 @@ from cadrumo.domain.modelos.calculation_revision_amendment import (
 from cadrumo.domain.modelos.errors import ModeloExportError
 from cadrumo.domain.modelos.verification_report import VerificationReport
 from cadrumo.domain.modelos.work_unit import WorkUnit
-from cadrumo.entrypoints.tests.profile_persistence._dormant_resolver_live_support import (
-    _T0,
-    _T1,
-    _seed_ready_profile,
+from cadrumo.entrypoints.tests.profile_persistence.dormant_resolver_live_support import (
+    T0,
+    T1,
+    seed_ready_profile,
 )
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 from cadrumo.entrypoints.tests.profile_persistence.secure_store_baseline import (
@@ -176,7 +176,7 @@ def seeded_profile(tmp_path_factory: pytest.TempPathFactory) -> SeededDurablePro
     return provision_seeded_profile(
         tmp_path_factory.mktemp("m369-rows"),
         _BUCKET,
-        lambda profile: _seed_ready_profile(profile.repository, bucket_id=_BUCKET),
+        lambda profile: seed_ready_profile(profile.repository, bucket_id=_BUCKET),
     )
 
 
@@ -261,7 +261,7 @@ def _calculate(
         period=Period.from_year_and_code(_YEAR, scenario.period_code),
         revision_id=scenario.revision_id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=events),
-        clock=_T0,
+        clock=T0,
         operation=operation,
     )
     with calculation_ports_for_test(
@@ -280,7 +280,7 @@ def _calculate(
                 **{f"{scenario.fichero}.{key}": value for key, value in scenario.declarant.items()},
                 **(extra_enums or {}),
             },
-            clock=_T1,
+            clock=T1,
         )
     return result, work_unit
 
@@ -454,7 +454,7 @@ def _verify(result: BucketAggregationCalculationResult) -> VerificationReport:
             verification_repositories=build_test_verification_repository_bundle(),
             actor="m369-rows-reviewer",
             workflow_profile=_profile(),
-            clock=_T1,
+            clock=T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=verification_operation,
         ).report

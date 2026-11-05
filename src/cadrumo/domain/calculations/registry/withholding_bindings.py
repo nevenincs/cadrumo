@@ -135,7 +135,7 @@ while someone maintained both. It is now one declaration and two views of it."""
 _RETENCION_CLAVE_FACT_ID: Final[str] = "m111-m115-m123-withholding-scheme-catalogue"
 
 
-def _retencion_clave_declarations(
+def retencion_clave_declarations(
     effective_date: date,
     *,
     authority: GovernedFactSource | None = None,
@@ -183,7 +183,7 @@ def resolve_retencion_clave(
     if not isinstance(effective_date, date):
         raise RegistryValidationError("retencion clave requires a filing-period date")
 
-    declarations = _retencion_clave_declarations(effective_date, authority=authority)
+    declarations = retencion_clave_declarations(effective_date, authority=authority)
     order = _retencion_clave_order(declarations)
     if value not in order:
         raise RegistryValidationError(f"retencion clave {value!r} is not declared by the selected catalogue")
@@ -842,7 +842,7 @@ def percibido_total(observations: Iterable[WithholdingObservation]) -> Decimal:
     )
 
 
-def _withholding_role_declarations(
+def withholding_role_declarations(
     effective_date: date,
     *,
     authority: GovernedFactSource | None = None,
@@ -996,7 +996,7 @@ def _resolve_scalar_withholding_fact(
         return _grouped_row_sum(selector, observations), role_declarations
     if selector.fact == "retenciones_ingresadas_sum":
         if role_declarations is None:
-            role_declarations = _withholding_role_declarations(revision.valid_from, authority=authority)
+            role_declarations = withholding_role_declarations(revision.valid_from, authority=authority)
         return (
             _retenciones_ingresadas_total(
                 observations,

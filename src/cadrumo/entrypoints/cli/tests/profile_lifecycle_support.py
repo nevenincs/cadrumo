@@ -31,7 +31,7 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.tests.tax_id_fixture import runtime_nif_check_letter
 
 
-def _profile_id_for_label(label: str) -> str:
+def profile_id_for_label(label: str) -> str:
     digest = bytearray(hashlib.sha256(label.encode("utf-8")).digest()[:16])
     digest[6] = (digest[6] & 0x0F) | 0x40
     digest[8] = (digest[8] & 0x3F) | 0x80
@@ -49,7 +49,7 @@ def seed(name: str = "default", *, tax_id: str | None = None) -> None:
     # can resolve the file-backed secure-object repository.
     #
     overrides = {"identity.tax_id": tax_id} if tax_id is not None else None
-    profile_id = _profile_id_for_label(name)
+    profile_id = profile_id_for_label(name)
     with open_test_profile_session(profile_id):
         register_minimal_profile(profile_id=profile_id, display_name=name, overrides=overrides)
 

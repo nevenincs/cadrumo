@@ -14,7 +14,7 @@ from ......application.live.errors import LiveApplicationError
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...auth.clave_movil_support import ClaveMovilApprovalTimeoutError
 from .. import filed_data_capture_port
-from ..filed_data_capture_port import SedeFiledDataCapturePort, _call_adapter
+from ..filed_data_capture_port import SedeFiledDataCapturePort, call_adapter
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -24,7 +24,7 @@ def test_an_unapproved_clave_login_reaches_the_operation_as_itself() -> None:
         raise ClaveMovilApprovalTimeoutError("approval window elapsed")
 
     with pytest.raises(ClaveMovilApprovalTimeoutError):
-        asyncio.run(_call_adapter("open_register", login_times_out))
+        asyncio.run(call_adapter("open_register", login_times_out))
 
 
 def test_opening_the_register_keeps_an_unapproved_clave_login_as_itself(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -53,6 +53,6 @@ def test_a_sede_failure_is_still_translated_into_the_live_vocabulary() -> None:
         raise RuntimeError("synthetic sede failure")
 
     with pytest.raises(LiveApplicationError) as translated:
-        asyncio.run(_call_adapter("open_register", register_breaks))
+        asyncio.run(call_adapter("open_register", register_breaks))
 
     assert isinstance(translated.value.__cause__, RuntimeError)

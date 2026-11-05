@@ -43,7 +43,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -79,10 +79,9 @@ from ....domain.calculations.registry.tests.registry_observations import (
 from ....domain.modelos.filing_kind_evidence import ObservedFilingKind, observed_filing_kind_for_local_revision
 from ....domain.modelos.filing_record import FilingDeclarationKind
 from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from ._fold_in_assertions_support import _assert_distinct_positive
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from .file_flow_test_support import calculation_ports_for_test
+from .fold_in_assertions_support import assert_distinct_positive
 from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -333,7 +332,7 @@ def _seed_prior_year_m100_zero_carry(secure_objects: SecureObjectRepository) -> 
 
 def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
     """Seed the single-taxpayer profile record the annual profile bindings consume."""
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
@@ -359,7 +358,7 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
         ),
         created_at=_T0,
         updated_at=_T0,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 
@@ -467,7 +466,7 @@ def test_credit_casillas_carry_only_perceptor_side_evidence(
     fraccionados, and LIRPF arts. 99 and 101 with RIRPF arts. 80 and 86 for the
     certified salary withholding.
     """
-    assert _assert_distinct_positive(_M130_C19_BY_PERIOD) == _EXPECTED_PAGOS_FRACCIONADOS
+    assert assert_distinct_positive(_M130_C19_BY_PERIOD) == _EXPECTED_PAGOS_FRACCIONADOS
     _seed_pagos_quarters(obs_repo=CalculationObservationRepository())
 
     _assert_credit_oracle(_calculate_m100_annual(secure_objects, operation=operation))

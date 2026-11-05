@@ -49,7 +49,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ..establishment import territorial_scope_for_country
 from ..schema import IvaTerritorialScope
@@ -74,7 +74,7 @@ NEVER_THIRD_COUNTRY = (
 @pytest.mark.parametrize("code", NEVER_THIRD_COUNTRY)
 def test_a_widening_must_not_admit_this_code_as_a_third_country(code: str) -> None:
     """The tripwire. Trivially satisfied today; loud the moment it is not."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(
             code, operation=_authority_operation_for_test
         ) != IvaTerritorialScope.from_registry("third_country")
@@ -91,7 +91,7 @@ def test_a_widening_must_not_admit_this_code_as_a_spanish_scope(code: str) -> No
     sub-national evidence -- the postal code -- is what separates the three
     Spanish territories.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(code, operation=_authority_operation_for_test) not in {
             IvaTerritorialScope.from_registry("es_mainland"),
             IvaTerritorialScope.from_registry("es_canarias"),
@@ -107,7 +107,7 @@ def test_the_guard_would_notice_a_real_third_country() -> None:
     be measuring nothing at all. The control is a catalogued third country, which
     must still reach the scope the cases above forbid.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(
             "US", operation=_authority_operation_for_test
         ) == IvaTerritorialScope.from_registry("third_country")

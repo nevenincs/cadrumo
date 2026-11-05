@@ -15,7 +15,7 @@ import pytest
 from ....tests.log_records import delivered_records
 from ...config import override_settings
 from ...external_constants import DEFAULT_OUTPUT_LANGUAGE, SUPPORTED_OUTPUT_LANGUAGES
-from .. import render as _render
+from .. import render
 from ..render import output_language
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -97,7 +97,7 @@ def test_live_translation_normalises_a_stale_executable_reference() -> None:
     interpolation, so a stale reference supplied as an argument travels the
     real render path and must come back canonical.
     """
-    rendered = _render.tr(
+    rendered = render.tr(
         "cli.config.auth.unknown_provider",
         provider="cadrumo app modelo",
         locale="es",
@@ -115,7 +115,7 @@ def test_locale_load_failure_is_logged_with_traceback(caplog: pytest.LogCaptureF
     """A missing locale file falls back, but leaves a debug traceback."""
 
     with caplog.at_level(logging.DEBUG, logger="cadrumo.core.i18n.render"):
-        rendered = _render._lookup_translation("not-supported-locale", "cli.missing.key", default="fallback")
+        rendered = render.lookup_rendered_translation("not-supported-locale", "cli.missing.key", default="fallback")
 
     assert rendered == "fallback"
     records = [
@@ -142,17 +142,17 @@ def test_profile_language_resolver_returning_an_unsupported_code_falls_back() ->
     settings default instead of asking the renderer for a catalogue that is not
     there.
     """
-    prior_resolver = _render._profile_language_resolver
+    prior_resolver = render.profile_language_resolver
 
     try:
-        _render.register_profile_language_resolver(lambda: "zz")
-        assert _render._active_profile_output_language() is None
+        render.register_profile_language_resolver(lambda: "zz")
+        assert render.active_profile_output_language() is None
 
         supported = next(iter(SUPPORTED_OUTPUT_LANGUAGES))
-        _render.register_profile_language_resolver(lambda: supported)
-        assert _render._active_profile_output_language() == supported
+        render.register_profile_language_resolver(lambda: supported)
+        assert render.active_profile_output_language() == supported
     finally:
-        _render._profile_language_resolver = prior_resolver
+        render.profile_language_resolver = prior_resolver
 
 
 def test_profile_language_resolver_failure_logs_type_not_secret_message(
@@ -160,17 +160,17 @@ def test_profile_language_resolver_failure_logs_type_not_secret_message(
 ) -> None:
     """Resolver exceptions fall back without placing raw exception text in the message."""
 
-    prior_resolver = _render._profile_language_resolver
+    prior_resolver = render.profile_language_resolver
 
     def raising_resolver() -> str | None:
         raise RuntimeError("oauth_refresh_token=abc-secret-xyz")
 
     try:
-        _render.register_profile_language_resolver(raising_resolver)
+        render.register_profile_language_resolver(raising_resolver)
         with caplog.at_level(logging.DEBUG, logger="cadrumo.core.i18n.render"):
-            resolved = _render._active_profile_output_language()
+            resolved = render.active_profile_output_language()
     finally:
-        _render._profile_language_resolver = prior_resolver
+        render.profile_language_resolver = prior_resolver
 
     assert resolved is None
     records = [

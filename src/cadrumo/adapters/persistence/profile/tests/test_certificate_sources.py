@@ -18,7 +18,7 @@ from cadrumo.adapters.persistence.profile.tests.operator_projection_test_support
 )
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import bucket_session_storage_fixture
-from cadrumo.application.auth import certificate_sources as _certificate_sources_module
+from cadrumo.application.auth import certificate_sources
 from cadrumo.application.auth.certificate_source_operations import (
     list_operator_certificate_sources,
     register_operator_certificate_source,
@@ -35,10 +35,10 @@ from cadrumo.application.tests.operator_scope_fakes import (
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.config import Settings
 from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _certificate_indexed_authority_for_test,
+    bundled_indexed_authority as authority_certificate_indexed_authority_for_test,
 )
 from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority as authority_indexed_authority_for_test,
 )
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
@@ -73,7 +73,7 @@ def test_register_two_sources_are_both_enumerable(tmp_path: Path) -> None:
     enumerate every registered source, not only the most recently
     registered one.
     """
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with authority_certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
         _register_operator_profile()
         personal = tmp_path / "personal.p12"
         personal.write_bytes(b"placeholder personal cert")
@@ -111,7 +111,7 @@ def test_select_one_source_activates_it_and_leaves_the_other_inactive(tmp_path: 
     across the registry, and the canonical projection resolves the selected
     record without copying it into the unnamed-credential field.
     """
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with authority_certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
         _register_operator_profile()
         personal = tmp_path / "personal.p12"
         personal.write_bytes(b"placeholder personal cert")
@@ -161,7 +161,7 @@ def test_select_one_source_activates_it_and_leaves_the_other_inactive(tmp_path: 
 
 def test_selecting_a_second_source_switches_the_active_selection(tmp_path: Path) -> None:
     """Selecting a different source moves the active marker, it does not accumulate."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with authority_certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
         _register_operator_profile()
         personal = tmp_path / "personal.p12"
         personal.write_bytes(b"placeholder personal cert")
@@ -199,7 +199,7 @@ def test_selecting_a_second_source_switches_the_active_selection(tmp_path: Path)
 
 def test_selecting_an_unregistered_source_refuses(tmp_path: Path) -> None:
     """Selecting a name that was never registered raises a typed refusal, not a silent no-op."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with authority_certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
         _register_operator_profile()
 
         with pytest.raises(CertificateSourceNotFoundError):
@@ -215,19 +215,19 @@ def test_state_source_refusal_is_the_registered_public_contract() -> None:
     _register_operator_profile()
 
     with pytest.raises(CertificateSourceNotFoundError) as refusal:
-        _certificate_sources_module.select_certificate_source(
+        certificate_sources.select_certificate_source(
             workflow_state_repository().load(),
             name="does-not-exist",
         )
 
     assert type(refusal.value) is CertificateSourceNotFoundError
-    assert _certificate_sources_module.CertificateSourceNotFoundError is CertificateSourceNotFoundError
+    assert certificate_sources.CertificateSourceNotFoundError is CertificateSourceNotFoundError
     assert CertificateSourceNotFoundError.__module__ == "cadrumo.application.auth.operator_results"
 
 
 def test_re_registering_an_existing_name_repoints_its_path(tmp_path: Path) -> None:
     """Re-registering a name updates its path in place rather than erroring or duplicating."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with authority_certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
         _register_operator_profile()
         original = tmp_path / "personal-v1.p12"
         original.write_bytes(b"v1")
@@ -254,7 +254,7 @@ def test_re_registering_an_existing_name_repoints_its_path(tmp_path: Path) -> No
 
 def test_remove_source_clears_registration_and_active_selection(tmp_path: Path) -> None:
     """Removing the active source makes its certificate path unusable."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with authority_certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
         _register_operator_profile()
         personal = tmp_path / "personal.p12"
         personal.write_bytes(b"placeholder personal cert")
@@ -297,7 +297,7 @@ def test_remove_source_clears_registration_and_active_selection(tmp_path: Path) 
 
 def test_remove_unregistered_source_is_a_no_op() -> None:
     """Removing a name that was never registered is a no-op, not an error."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with authority_indexed_authority_for_test().operation() as _authority_operation_for_test:
         _register_operator_profile()
 
         result = remove_operator_certificate_source(
@@ -316,7 +316,7 @@ def test_certificate_source_registry_roundtrips_through_encrypted_workflow_state
     ``workflow_state_repository().load()`` must reproduce every
     registered source and the active selection exactly.
     """
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with authority_certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
         _register_operator_profile()
         personal = tmp_path / "personal.p12"
         personal.write_bytes(b"placeholder personal cert")

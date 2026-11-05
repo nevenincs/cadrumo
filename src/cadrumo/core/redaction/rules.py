@@ -65,18 +65,14 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Final, cast, overload
 from urllib.parse import urlparse
 
-from ..hashing import sha256_hex as _sha256_hex
-from ..iban import IBAN_SHAPE_RE as _IBAN_SHAPE_RE
-from ..iban import iban_mod_97 as _iban_mod_97
-from ..iban import normalise_iban as _normalise_iban
+from ..hashing import sha256_hex
+from ..iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ..type_guards import is_object_dict, is_object_list, is_object_tuple
-from . import patterns as _patterns
+from . import patterns
 from .tax_identity_admission import tax_identity_admission
 
 if TYPE_CHECKING:
-    from ..classification.policies import ClassificationPolicy as _ClassificationPolicy
-    from ..classification.policies import RedactionRule as _RedactionRule
-    from ..classification.policies import SensitivityClass as _SensitivityClass
+    from ..classification.policies import ClassificationPolicy, RedactionRule, SensitivityClass
 
 # The classification policies are pydantic records. Every process imports this
 # module through its logging filters before it has parsed a command, so the
@@ -131,12 +127,12 @@ CLI_OBJECT_KEY_PLACEHOLDER = "<object-key>"
 
 
 def _sha256_prefix(value: str) -> str:
-    digest = _sha256_hex(value.encode("utf-8"))
-    return f"{_patterns.HASH_PLACEHOLDER_PREFIX}{digest[: _patterns.HASH_PLACEHOLDER_HEX_LENGTH]}"
+    digest = sha256_hex(value.encode("utf-8"))
+    return f"{patterns.HASH_PLACEHOLDER_PREFIX}{digest[: patterns.HASH_PLACEHOLDER_HEX_LENGTH]}"
 
 
 def _fingerprint(value: str) -> str:
-    return f"{_patterns.FINGERPRINT_LABEL}{_sha256_prefix(value)}"
+    return f"{patterns.FINGERPRINT_LABEL}{_sha256_prefix(value)}"
 
 
 def carries_redaction_placeholder(value: object) -> bool:
@@ -154,7 +150,7 @@ def carries_redaction_placeholder(value: object) -> bool:
     placeholder is not itself shaped like anything a rule matches.
     """
     if isinstance(value, str):
-        return _patterns.HASH_PLACEHOLDER_RE.search(value) is not None
+        return patterns.HASH_PLACEHOLDER_RE.search(value) is not None
     if is_object_dict(value):
         return any(
             carries_redaction_placeholder(key) or carries_redaction_placeholder(item) for key, item in value.items()
@@ -179,58 +175,57 @@ def _host_only(value: str) -> str:
 
 
 @cache
-def _default_rules() -> Mapping[str, _RedactionRule]:
+def _default_rules() -> Mapping[str, RedactionRule]:
     """Return the frozen registry of named redaction rules."""
-    from ..classification.policies import RedactionRule as _RedactionRule
-    from ..classification.policies import RedactionStrategy as _RedactionStrategy
+    from ..classification.policies import RedactionRule, RedactionStrategy
 
     return MappingProxyType(
         {
-            "nif-hash": _RedactionRule(
+            "nif-hash": RedactionRule(
                 name="nif-hash",
-                pattern=_patterns.NIF_PATTERN,
-                strategy=_RedactionStrategy.SHA256_PREFIX,
+                pattern=patterns.NIF_PATTERN,
+                strategy=RedactionStrategy.SHA256_PREFIX,
             ),
-            "nif-separated-hash": _RedactionRule(
+            "nif-separated-hash": RedactionRule(
                 name="nif-separated-hash",
-                pattern=_patterns.SEPARATED_NIF_PATTERN,
-                strategy=_RedactionStrategy.SHA256_PREFIX_IF_IDENTITY,
+                pattern=patterns.SEPARATED_NIF_PATTERN,
+                strategy=RedactionStrategy.SHA256_PREFIX_IF_IDENTITY,
             ),
-            "cif-hash": _RedactionRule(
+            "cif-hash": RedactionRule(
                 name="cif-hash",
-                pattern=_patterns.CIF_PATTERN,
-                strategy=_RedactionStrategy.SHA256_PREFIX_IF_IDENTITY,
+                pattern=patterns.CIF_PATTERN,
+                strategy=RedactionStrategy.SHA256_PREFIX_IF_IDENTITY,
             ),
-            "nif-iva-hash": _RedactionRule(
+            "nif-iva-hash": RedactionRule(
                 name="nif-iva-hash",
-                pattern=_patterns.NIF_IVA_PATTERN,
-                strategy=_RedactionStrategy.SHA256_PREFIX_IF_NIF_IVA,
+                pattern=patterns.NIF_IVA_PATTERN,
+                strategy=RedactionStrategy.SHA256_PREFIX_IF_NIF_IVA,
             ),
-            "iban-hash": _RedactionRule(
+            "iban-hash": RedactionRule(
                 name="iban-hash",
-                pattern=_patterns.IBAN_PATTERN,
-                strategy=_RedactionStrategy.SHA256_PREFIX_IF_IBAN,
+                pattern=patterns.IBAN_PATTERN,
+                strategy=RedactionStrategy.SHA256_PREFIX_IF_IBAN,
             ),
-            "url-host-only": _RedactionRule(
+            "url-host-only": RedactionRule(
                 name="url-host-only",
-                pattern=_patterns.URL_PATTERN,
-                strategy=_RedactionStrategy.HOST_ONLY,
+                pattern=patterns.URL_PATTERN,
+                strategy=RedactionStrategy.HOST_ONLY,
             ),
-            "token-fingerprint": _RedactionRule(
+            "token-fingerprint": RedactionRule(
                 name="token-fingerprint",
-                pattern=_patterns.BEARER_PATTERN,
-                strategy=_RedactionStrategy.FINGERPRINT,
+                pattern=patterns.BEARER_PATTERN,
+                strategy=RedactionStrategy.FINGERPRINT,
             ),
-            "bearer-token-fingerprint": _RedactionRule(
+            "bearer-token-fingerprint": RedactionRule(
                 name="bearer-token-fingerprint",
-                pattern=_patterns.OPAQUE_BEARER_PATTERN,
-                strategy=_RedactionStrategy.FINGERPRINT,
+                pattern=patterns.OPAQUE_BEARER_PATTERN,
+                strategy=RedactionStrategy.FINGERPRINT,
             ),
         },
     )
 
 
-def default_rules_for(policy: _ClassificationPolicy) -> tuple[_RedactionRule, ...]:
+def default_rules_for(policy: ClassificationPolicy) -> tuple[RedactionRule, ...]:
     """Resolve the rule references on a policy to concrete rule instances.
 
     A name the registry cannot resolve is REFUSED, not skipped. Skipping
@@ -278,7 +273,7 @@ def default_rules_for(policy: _ClassificationPolicy) -> tuple[_RedactionRule, ..
 
 
 @cache
-def default_rules_for_class(sensitivity: _SensitivityClass) -> tuple[_RedactionRule, ...]:
+def default_rules_for_class(sensitivity: SensitivityClass) -> tuple[RedactionRule, ...]:
     """Resolve the default rule set for a sensitivity class.
 
     Convenience wrapper that goes through
@@ -332,7 +327,7 @@ def _uuid_spans(value: str) -> tuple[tuple[int, int], ...]:
     the identity and IBAN arms exempt these spans; a URL or token that merely
     contains a UUID is still redacted whole by its own rule.
     """
-    return tuple(match.span() for match in _patterns.CLI_UUID_PATTERN.finditer(value))
+    return tuple(match.span() for match in patterns.CLI_UUID_PATTERN.finditer(value))
 
 
 def _outside_timestamps(
@@ -399,7 +394,7 @@ def _has_absorbed_nif_iva_word(groups: list[str], bare_prefix: bool) -> bool:
 def _nif_iva_word_group_is_absorbed(index: int, group: str, bare_prefix: bool) -> bool:
     if not group.isalpha():
         return False
-    in_key_position = index == 1 and bare_prefix and len(group) <= _patterns.NIF_IVA_BODY_MAX_LEADING_LETTERS
+    in_key_position = index == 1 and bare_prefix and len(group) <= patterns.NIF_IVA_BODY_MAX_LEADING_LETTERS
     return not in_key_position
 
 
@@ -508,25 +503,25 @@ def _admits_spanish_identity(normalised: str, structurally_shaped: Callable[[obj
     return structurally_shaped(normalised)
 
 
-def _apply_one(rule: _RedactionRule, value: str) -> str:
-    from ..classification.policies import RedactionStrategy as _RedactionStrategy
+def apply_one(rule: RedactionRule, value: str) -> str:
+    from ..classification.policies import RedactionStrategy
 
     pattern = _compiled_rule_pattern(rule.pattern)
     protected = _timestamp_spans(value)
     identity_protected = (*protected, *_uuid_spans(value))
-    if rule.strategy is _RedactionStrategy.ELLIPSIS:
+    if rule.strategy is RedactionStrategy.ELLIPSIS:
         return _pattern_sub(pattern, value, lambda match: "...", protected)
-    if rule.strategy is _RedactionStrategy.SHA256_PREFIX:
+    if rule.strategy is RedactionStrategy.SHA256_PREFIX:
         return _pattern_sub(pattern, value, lambda match: _sha256_prefix(match.group(0)), identity_protected)
-    if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_IDENTITY:
+    if rule.strategy is RedactionStrategy.SHA256_PREFIX_IF_IDENTITY:
         return _apply_identity_rule(pattern, value, identity_protected)
-    if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_NIF_IVA:
+    if rule.strategy is RedactionStrategy.SHA256_PREFIX_IF_NIF_IVA:
         return _apply_nif_iva_rule(pattern, value, identity_protected)
-    if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_IBAN:
+    if rule.strategy is RedactionStrategy.SHA256_PREFIX_IF_IBAN:
         return _apply_iban_rule(pattern, value, identity_protected)
-    if rule.strategy is _RedactionStrategy.HOST_ONLY:
+    if rule.strategy is RedactionStrategy.HOST_ONLY:
         return _pattern_sub(pattern, value, lambda match: _host_only(match.group(0)), protected)
-    if rule.strategy is _RedactionStrategy.FINGERPRINT:
+    if rule.strategy is RedactionStrategy.FINGERPRINT:
         return _pattern_sub(pattern, value, lambda match: _fingerprint(match.group(0)), protected)
     return value  # pragma: no cover - exhaustive enum
 
@@ -612,7 +607,7 @@ def _body_has_absorbed_word(body: str) -> bool:
     # Member-State IVA bodies open with at most two letters. More is a joined
     # ordinary word; the gated scan will re-read the inner token separately.
     leading_letters = len(body) - len(body.lstrip("ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
-    return leading_letters >= _patterns.NIF_IVA_BODY_MAX_LEADING_LETTERS + 1
+    return leading_letters >= patterns.NIF_IVA_BODY_MAX_LEADING_LETTERS + 1
 
 
 def _spanish_nif_iva_replacement(
@@ -646,13 +641,13 @@ def _apply_iban_rule(
 
 
 def _iban_replacement(span: str) -> str | None:
-    canonical = _normalise_iban(span)
-    if _IBAN_SHAPE_RE.match(canonical) and _iban_mod_97(canonical) == 1:
+    canonical = normalise_iban(span)
+    if IBAN_SHAPE_RE.match(canonical) and iban_mod_97(canonical) == 1:
         return _sha256_prefix(span)
     return None
 
 
-def redact(value: str, *, rules: tuple[_RedactionRule, ...]) -> str:
+def redact(value: str, *, rules: tuple[RedactionRule, ...]) -> str:
     """Apply ``rules`` to a flat string in declared order.
 
     Args:
@@ -680,27 +675,27 @@ def redact(value: str, *, rules: tuple[_RedactionRule, ...]) -> str:
         # string for timestamp and UUID spans that nothing would consult.
         if _compiled_rule_pattern(rule.pattern).search(result) is None:
             continue
-        result = _apply_one(rule, result)
+        result = apply_one(rule, result)
     return result
 
 
 @overload
-def redact_structured(value: dict[str, str], *, rules: tuple[_RedactionRule, ...]) -> dict[str, str]: ...
+def redact_structured(value: dict[str, str], *, rules: tuple[RedactionRule, ...]) -> dict[str, str]: ...
 
 
 @overload
-def redact_structured(value: Mapping[str, object], *, rules: tuple[_RedactionRule, ...]) -> Mapping[str, object]: ...
+def redact_structured(value: Mapping[str, object], *, rules: tuple[RedactionRule, ...]) -> Mapping[str, object]: ...
 
 
 @overload
-def redact_structured(value: list[str], *, rules: tuple[_RedactionRule, ...]) -> list[str]: ...
+def redact_structured(value: list[str], *, rules: tuple[RedactionRule, ...]) -> list[str]: ...
 
 
 @overload
-def redact_structured(value: object, *, rules: tuple[_RedactionRule, ...]) -> object: ...
+def redact_structured(value: object, *, rules: tuple[RedactionRule, ...]) -> object: ...
 
 
-def redact_structured(value: object, *, rules: tuple[_RedactionRule, ...]) -> object:
+def redact_structured(value: object, *, rules: tuple[RedactionRule, ...]) -> object:
     """Recursively apply ``rules`` to every string **value** inside a structure.
 
     Walks dicts, lists, and tuples; redacts every string reached as a
@@ -748,7 +743,7 @@ def redact_structured(value: object, *, rules: tuple[_RedactionRule, ...]) -> ob
     if isinstance(value, str):
         result_str = value
         for rule in rules:
-            result_str = _apply_one(rule, result_str)
+            result_str = apply_one(rule, result_str)
         return result_str
     if is_object_dict(value):
         redacted: dict[object, object] = {}
@@ -765,7 +760,7 @@ def redact_structured(value: object, *, rules: tuple[_RedactionRule, ...]) -> ob
 
 #: Every run of characters a sensitivity-set key name cannot contain, collapsed
 #: to the single ``_`` those names separate their words with.
-_REDACTION_KEY_SEPARATOR_RE = re.compile(r"[^a-z0-9]+")
+REDACTION_KEY_SEPARATOR_RE = re.compile(r"[^a-z0-9]+")
 _REDACTION_KEY_CAMEL_BOUNDARY_RE = re.compile(r"([a-z0-9])([A-Z])")
 _REDACTION_KEY_ACRONYM_BOUNDARY_RE = re.compile(r"([A-Z])([A-Z][a-z])")
 
@@ -806,7 +801,7 @@ def _normalise_text_redaction_key(key: str) -> str:
 def _normalise_redaction_key_text(key: str) -> str:
     acronym_split = _REDACTION_KEY_ACRONYM_BOUNDARY_RE.sub(r"\1_\2", key)
     camel_split = _REDACTION_KEY_CAMEL_BOUNDARY_RE.sub(r"\1_\2", acronym_split)
-    return _REDACTION_KEY_SEPARATOR_RE.sub("_", camel_split.casefold()).strip("_")
+    return REDACTION_KEY_SEPARATOR_RE.sub("_", camel_split.casefold()).strip("_")
 
 
 def is_sensitive_redaction_key(
@@ -834,7 +829,7 @@ def is_sensitive_redaction_key(
 
 
 def _is_cli_profile_reference(value: object) -> bool:
-    return isinstance(value, str) and _patterns.CLI_UUID_PATTERN.fullmatch(value.strip()) is not None
+    return isinstance(value, str) and patterns.CLI_UUID_PATTERN.fullmatch(value.strip()) is not None
 
 
 def _cli_placeholder_for_key(
@@ -850,13 +845,13 @@ def _cli_placeholder_for_key(
     # identifier surfaces; object keys (which can embed a NIF / period) and
     # every PII / token / URL pass stay redacted unconditionally.
     if not reveal_identifiers:
-        if normalised in _patterns.CLI_PROFILE_ID_KEYS:
+        if normalised in patterns.CLI_PROFILE_ID_KEYS:
             return CLI_PROFILE_ID_PLACEHOLDER
-        if normalised in _patterns.CLI_PROFILE_REFERENCE_KEYS and _is_cli_profile_reference(value):
+        if normalised in patterns.CLI_PROFILE_REFERENCE_KEYS and _is_cli_profile_reference(value):
             return CLI_PROFILE_ID_PLACEHOLDER
-        if normalised in _patterns.CLI_BUCKET_ID_KEYS:
+        if normalised in patterns.CLI_BUCKET_ID_KEYS:
             return CLI_BUCKET_ID_PLACEHOLDER
-    if normalised in _patterns.CLI_OBJECT_KEY_KEYS:
+    if normalised in patterns.CLI_OBJECT_KEY_KEYS:
         return CLI_OBJECT_KEY_PLACEHOLDER
     return None
 
@@ -872,16 +867,16 @@ def _is_revealed_identifier_key(key: object | None, value: object) -> bool:
     if value is None or value == "":
         return False
     normalised = normalise_redaction_key(key)
-    if normalised in _patterns.CLI_PROFILE_ID_KEYS or normalised in _patterns.CLI_BUCKET_ID_KEYS:
+    if normalised in patterns.CLI_PROFILE_ID_KEYS or normalised in patterns.CLI_BUCKET_ID_KEYS:
         return True
-    return normalised in _patterns.CLI_PROFILE_REFERENCE_KEYS and _is_cli_profile_reference(value)
+    return normalised in patterns.CLI_PROFILE_REFERENCE_KEYS and _is_cli_profile_reference(value)
 
 
 def _is_cli_tabular_header_line(text: str) -> bool:
     cells = text.split("\t")
-    if len(cells) < _patterns.CLI_TABULAR_HEADER_MIN_CELLS:
+    if len(cells) < patterns.CLI_TABULAR_HEADER_MIN_CELLS:
         return False
-    return all(_patterns.CLI_HEADER_CELL_PATTERN.fullmatch(cell) is not None for cell in cells)
+    return all(patterns.CLI_HEADER_CELL_PATTERN.fullmatch(cell) is not None for cell in cells)
 
 
 #: Path segments whose CHILD segment is a custody identity: the capsule
@@ -924,7 +919,7 @@ def _path_segment_is_custody_identity(segments: list[str]) -> bool:
 
 def _sub_cli_uuids(text: str, replace: Callable[[re.Match[str]], str]) -> str:
     """Apply ``replace`` only to UUID matches that identify a profile."""
-    return _patterns.CLI_UUID_PATTERN.sub(
+    return patterns.CLI_UUID_PATTERN.sub(
         lambda match: (
             replace(match) if _cli_uuid_is_custody_identity(text, match.start(), match.end()) else match.group(0)
         ),
@@ -936,7 +931,7 @@ def _sub_cli_uuids(text: str, replace: Callable[[re.Match[str]], str]) -> str:
 #: tokens, currencies, dates -- thousands of times per payload, and every rule
 #: here is a pure function of the text and the reveal flag. Longer strings are
 #: redacted afresh so a rendered report never sits in the cache.
-_CLI_STRING_CACHE_MAX_LENGTH = 512
+CLI_STRING_CACHE_MAX_LENGTH = 512
 _SHEET_ID_SHORTEST_CHARACTERS: Final = 10
 _SHEET_ID_LONGEST_CHARACTERS: Final = 200
 # An identifier outside this span is not one Google minted, so its URL keeps no success exemption.
@@ -956,8 +951,8 @@ def _canonical_google_sheet_id(value: object) -> str | None:
 
 
 def _redact_cli_string(text: str, *, reveal_identifiers: bool = False) -> str:
-    if len(text) > _CLI_STRING_CACHE_MAX_LENGTH:
-        return _redact_cli_string_uncached(text, reveal_identifiers)
+    if len(text) > CLI_STRING_CACHE_MAX_LENGTH:
+        return redact_cli_string_uncached(text, reveal_identifiers)
     return _redact_cli_string_cached(text, reveal_identifiers, cast(Hashable, tax_identity_admission()))
 
 
@@ -976,10 +971,10 @@ def _redact_cli_string_cached(text: str, reveal_identifiers: bool, admission: Ha
     identity gate must not be reused under another.
     """
     del admission
-    return _redact_cli_string_uncached(text, reveal_identifiers)
+    return redact_cli_string_uncached(text, reveal_identifiers)
 
 
-def _redact_cli_string_uncached(text: str, reveal_identifiers: bool) -> str:
+def redact_cli_string_uncached(text: str, reveal_identifiers: bool) -> str:
     # This named success-output line is an artifact locator, not an OAuth URL.
     # Keep the exemption out of the generic log/error URL rule entirely.
     sheet_label = "spreadsheet_url\t"
@@ -993,7 +988,7 @@ def _redact_cli_string_uncached(text: str, reveal_identifiers: bool) -> str:
         redacted = redact_for_log(text)
         if not reveal_identifiers:
             redacted = _sub_cli_uuids(redacted, lambda _match: CLI_PROFILE_ID_PLACEHOLDER)
-        return _patterns.CLI_OBJECT_KEY_TOKEN_PATTERN.sub(CLI_OBJECT_KEY_PLACEHOLDER, redacted)
+        return patterns.CLI_OBJECT_KEY_TOKEN_PATTERN.sub(CLI_OBJECT_KEY_PLACEHOLDER, redacted)
     # Under the reveal opt-out a revealed profile/bucket id is an opaque UUID
     # that must survive the downstream free-text passes verbatim — otherwise the
     # NIF pattern hashes a UUID hex segment (``1470176e`` reads as 7 digits + a
@@ -1014,7 +1009,7 @@ def _redact_cli_string_uncached(text: str, reveal_identifiers: bool) -> str:
             return f"{label}{sep}{sentinel}"
         return f"{label}{sep}{value}"
 
-    redacted = _patterns.CLI_IDENTIFIER_ASSIGNMENT_PATTERN.sub(_substitute_assignment, text)
+    redacted = patterns.CLI_IDENTIFIER_ASSIGNMENT_PATTERN.sub(_substitute_assignment, text)
 
     def _protect_revealed_uuid(match: re.Match[str]) -> str:
         sentinel = f"\x00{len(protected)}\x00"
@@ -1031,7 +1026,7 @@ def _redact_cli_string_uncached(text: str, reveal_identifiers: bool) -> str:
     else:
         redacted = _sub_cli_uuids(redacted, lambda _match: CLI_PROFILE_ID_PLACEHOLDER)
     redacted = redact_for_log(redacted)
-    redacted = _patterns.CLI_OBJECT_KEY_TOKEN_PATTERN.sub(CLI_OBJECT_KEY_PLACEHOLDER, redacted)
+    redacted = patterns.CLI_OBJECT_KEY_TOKEN_PATTERN.sub(CLI_OBJECT_KEY_PLACEHOLDER, redacted)
     for index, original in enumerate(protected):
         redacted = redacted.replace(f"\x00{index}\x00", original)
     return redacted
@@ -1109,7 +1104,7 @@ def _is_public_cli_reference(key: object | None, value: object) -> bool:
     # Control references let the operator carry out the next reviewed action.
     # Their exact field names and canonical UUID shape keep unrelated identity
     # values, invalid references, and free text in the normal redaction path.
-    return key in _patterns.CLI_PUBLIC_CONTROL_UUID_KEYS and _is_cli_profile_reference(value)
+    return key in patterns.CLI_PUBLIC_CONTROL_UUID_KEYS and _is_cli_profile_reference(value)
 
 
 def _unique_mapping_key(candidate: object, existing: Mapping[object, object]) -> object:

@@ -33,7 +33,7 @@ from cadrumo.adapters.outbound.aeat.sede.schema import (
     ObservedCasillaValue,
 )
 from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    registry_snapshot as _registry_snapshot,
+    registry_snapshot,
 )
 from cadrumo.application.live.filed_history_discovery import (
     ExpectedFiledDeclarationGrid,
@@ -52,7 +52,7 @@ from cadrumo.core.casilla_value_kind import CasillaValueKind
 from cadrumo.core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from cadrumo.core.period import Period
 from cadrumo.core.register_scoping_signal import RegisterScopingSignal
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from cadrumo.domain.deadlines.models import TaxpayerProfile
 
@@ -105,7 +105,7 @@ def _autonomo(
     from cadrumo.domain.contribuyente.entity_type import EntityType
     from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
 
-    with _indexed_authority_for_test().operation():
+    with bundled_indexed_authority().operation():
         return TaxpayerProfile(
             tax_id="X1234567L",
             entity_type=EntityType.from_registry("natural_person"),
@@ -182,7 +182,7 @@ def test_a_modelo_the_profile_positively_excludes_is_absent() -> None:
 
 
 def test_every_nominated_modelo_is_one_the_registry_actually_models() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         # This is the invariant behind dropping the registry-unmodeled advisories: a
         # modelo with no registry definition has no declared fact producing its
         # verdict, so nominating it would invent an expectation the taxpayer never
@@ -582,7 +582,7 @@ def _filed_130_observation_for_tests() -> FiledDeclaracionObservation:
                 confidence=1.0,
             ),
         ),
-        registry_snapshot_ref=_registry_snapshot("130", 2026, "1T").snapshot_ref,
+        registry_snapshot_ref=registry_snapshot("130", 2026, "1T").snapshot_ref,
     )
 
 

@@ -13,7 +13,7 @@ from typing import override
 import pypdfium2 as pdfium
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.resources.bundled_data import bundled_path
 from ....core.text_fold import normalise_corpus_text
@@ -106,7 +106,7 @@ def _your_europe_rate_cells(path: Path, country_code: str) -> tuple[str, ...]:
 
 def test_every_shipped_rate_resolves_registry_legal_and_source_evidence() -> None:
     """Loading the real table verifies every referenced catalogue row and corpus hash."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         table = load_iva_rate_table(operation=_authority_operation_for_test)
         rates = tuple(rate for member_rates in table.values() for rate in member_rates)
 
@@ -124,7 +124,7 @@ def test_every_shipped_rate_resolves_registry_legal_and_source_evidence() -> Non
 
 def test_rate_source_registry_identities_use_the_canonical_iva_stem() -> None:
     """The registry and bundled corpus paths must not revive the English tax stem."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         table = load_iva_rate_table(operation=_authority_operation_for_test)
         referenced_source_ids = {
             source_id for member_rates in table.values() for rate in member_rates for source_id in rate.source_refs
@@ -240,7 +240,7 @@ def _prove_against_your_europe(rate: IvaRateRecord, pct: str, texts: _OfficialTe
 
 def test_every_foreign_numerical_rate_occurs_in_its_official_source() -> None:
     """Each foreign percentage is present in its reviewed official source artifact."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         table = load_iva_rate_table(operation=_authority_operation_for_test)
         foreign_rates = tuple(
             rate
@@ -272,7 +272,7 @@ def test_every_foreign_numerical_rate_occurs_in_its_official_source() -> None:
 
 def test_rate_lookup_crosses_each_grounded_change_boundary() -> None:
     """Date lookup switches exactly where the bundled national sources say it does."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert lookup_rate(
             require_eu_member_state("EE"),
             IvaRateKind("general"),

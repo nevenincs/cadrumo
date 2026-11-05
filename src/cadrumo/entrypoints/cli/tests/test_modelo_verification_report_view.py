@@ -36,7 +36,7 @@ def _render_in_every_locale(locale_key: str, message_facts: dict[str, str | int]
         ModeloVerificationFindingKind,
         ModeloVerificationFindingSeverity,
     )
-    from .._modelo_rendering import _render_verification_finding_message
+    from ..modelo_rendering import render_verification_finding_message
 
     finding = ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
@@ -48,7 +48,7 @@ def _render_in_every_locale(locale_key: str, message_facts: dict[str, str | int]
     rendered: dict[str, str] = {}
     for locale in ("en", "es", "ca", "hu"):
         with override_settings(cadrumo_output_language=locale):
-            rendered[locale] = _render_verification_finding_message(finding)
+            rendered[locale] = render_verification_finding_message(finding)
 
     assert len(set(rendered.values())) == len(rendered)
     for message in rendered.values():
@@ -110,8 +110,7 @@ def test_verification_report_lines_preserve_persisted_findings_without_recovery_
         VerificationReport,
         derive_verification_report_id,
     )
-    from .._modelo_rendering import verification_report_lines as _verification_report_lines
-    from .._modelo_rendering import verification_report_payload as _verification_report_payload
+    from ..modelo_rendering import verification_report_lines, verification_report_payload
     from ..modelo_results import VerificationReportListResult, VerificationReportShowResult
 
     run_at = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
@@ -142,7 +141,7 @@ def test_verification_report_lines_preserve_persisted_findings_without_recovery_
         granted_verificado_completo=False,
     )
 
-    lines = _verification_report_lines(report)
+    lines = verification_report_lines(report)
 
     finding_line = next(line for line in lines if line.startswith("finding\t"))
     assert finding_line.endswith("\tnull")
@@ -153,7 +152,7 @@ def test_verification_report_lines_preserve_persisted_findings_without_recovery_
     # report ``view`` and ``list``. Historical facts cannot reconstruct a live
     # recovery action, so the typed payload and its JSON wire shape must retain
     # an explicit null.
-    payload = _verification_report_payload(report)
+    payload = verification_report_payload(report)
     assert payload.findings[0].action is None
     view = VerificationReportShowResult.model_validate(payload.model_dump(mode="python")).model_dump(mode="json")
     listing = VerificationReportListResult(report_count=1, reports=[payload]).model_dump(mode="json")
@@ -178,14 +177,12 @@ def test_verification_report_payload_resolves_the_exact_registry_recovery_verdic
         VerificationReport,
         derive_verification_report_id,
     )
-    from .._action_rendering import resolved_precondition_action_json_cell
-    from .._modelo_rendering import (
-        verification_report_lines as _verification_report_lines,
-    )
-    from .._modelo_rendering import (
-        verification_report_payload as _verification_report_payload,
-    )
+    from ..action_rendering import resolved_precondition_action_json_cell
     from ..common import resolve_cli_precondition_action
+    from ..modelo_rendering import (
+        verification_report_lines,
+        verification_report_payload,
+    )
 
     calculation_revision_id = "e" * 64
     findings = (
@@ -226,12 +223,12 @@ def test_verification_report_payload_resolves_the_exact_registry_recovery_verdic
         finding=findings[0],
         precondition_failure=precondition_failure,
     )
-    payload = _verification_report_payload(report, finding_preconditions=(projection,))
+    payload = verification_report_payload(report, finding_preconditions=(projection,))
     expected_action = resolve_cli_precondition_action(precondition_failure.verdict)
     assert payload.findings[0].action == expected_action
     assert expected_action.action is None
 
-    lines = _verification_report_lines(report, finding_actions=(expected_action,))
+    lines = verification_report_lines(report, finding_actions=(expected_action,))
     finding_line = next(line for line in lines if line.startswith("finding\t"))
     assert finding_line.rsplit("\t", 1)[-1] == resolved_precondition_action_json_cell(expected_action)
     assert '"failed_condition_id"' in finding_line
@@ -248,7 +245,7 @@ def test_verification_report_lines_omits_recovery_when_granted() -> None:
         VerificationReport,
         derive_verification_report_id,
     )
-    from .._modelo_rendering import verification_report_lines as _verification_report_lines
+    from ..modelo_rendering import verification_report_lines
 
     run_at = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
     calc_id = "b" * 64
@@ -268,7 +265,7 @@ def test_verification_report_lines_omits_recovery_when_granted() -> None:
         granted_verificado_completo=True,
     )
 
-    lines = _verification_report_lines(report)
+    lines = verification_report_lines(report)
 
     assert not any("next_action" in line for line in lines)
 
@@ -293,11 +290,9 @@ def test_verification_report_view_exposes_finding_legal_and_source_refs() -> Non
         VerificationReport,
         derive_verification_report_id,
     )
-    from .._modelo_rendering import (
-        verification_report_lines as _verification_report_lines,
-    )
-    from .._modelo_rendering import (
-        verification_report_payload as _verification_report_payload,
+    from ..modelo_rendering import (
+        verification_report_lines,
+        verification_report_payload,
     )
     from ..modelo_results import VerificationReportShowResult
 
@@ -334,7 +329,7 @@ def test_verification_report_view_exposes_finding_legal_and_source_refs() -> Non
     )
 
     # Text transport: the line iterator the view command emits in text mode.
-    lines = _verification_report_lines(report)
+    lines = verification_report_lines(report)
     legal_lines = [line for line in lines if line.startswith("finding_legal_refs\t")]
     source_lines = [line for line in lines if line.startswith("finding_source_refs\t")]
     assert len(legal_lines) == 1
@@ -344,7 +339,7 @@ def test_verification_report_view_exposes_finding_legal_and_source_refs() -> Non
 
     # JSON transport: the exact typed payload the view command validates and
     # surfaces on the envelope's ``result``.
-    payload = _verification_report_payload(report)
+    payload = verification_report_payload(report)
     result = VerificationReportShowResult.model_validate(payload.model_dump(mode="python"))
     dumped = result.model_dump(mode="json")
     finding = dumped["findings"][0]
@@ -368,11 +363,9 @@ def test_verification_report_view_lists_missing_required_casillas() -> None:
         VerificationReport,
         derive_verification_report_id,
     )
-    from .._modelo_rendering import (
-        verification_report_lines as _verification_report_lines,
-    )
-    from .._modelo_rendering import (
-        verification_report_payload as _verification_report_payload,
+    from ..modelo_rendering import (
+        verification_report_lines,
+        verification_report_payload,
     )
     from ..modelo_results import VerificationReportShowResult
 
@@ -397,13 +390,13 @@ def test_verification_report_view_lists_missing_required_casillas() -> None:
     )
 
     # Text transport: one ``missing_casilla_id`` line per id, alongside the count.
-    lines = _verification_report_lines(report)
+    lines = verification_report_lines(report)
     missing_lines = [line for line in lines if line.startswith("missing_casilla_id\t")]
     assert {line.split("\t", 1)[1] for line in missing_lines} == set(missing)
     assert f"missing_required_casilla_id_count\t{len(missing)}" in lines
 
     # JSON transport: the typed payload carries the full list, not just the count.
-    payload = _verification_report_payload(report)
+    payload = verification_report_payload(report)
     result = VerificationReportShowResult.model_validate(payload.model_dump(mode="python"))
     dumped = result.model_dump(mode="json")
     assert dumped["missing_required_casilla_ids"] == list(missing)
@@ -469,7 +462,7 @@ def test_the_projected_completeness_status_is_the_canonical_enum_not_a_free_stri
     verificado-completo is the last place a lookalike should pass.
     """
     from ....domain.modelos.verification_report import VerificationCompletenessStatus
-    from .._modelo_rendering import verification_report_payload
+    from ..modelo_rendering import verification_report_payload
 
     payload = verification_report_payload(_blocked_report())
 
@@ -478,7 +471,7 @@ def test_the_projected_completeness_status_is_the_canonical_enum_not_a_free_stri
 
 def test_a_completeness_status_outside_the_closed_set_is_refused() -> None:
     """Anti-vacuity: the narrowing rejects a value the bare string accepted."""
-    from .._modelo_rendering import verification_report_payload
+    from ..modelo_rendering import verification_report_payload
     from ..modelo_results import (
         VerificationReportPayload,
         VerificationReportShowResult,
@@ -498,7 +491,7 @@ def test_narrowing_the_status_left_the_json_wire_form_untouched() -> None:
     A projection may tighten what it accepts; it may not quietly restate what
     it emits, because a machine consumer is reading the emitted token.
     """
-    from .._modelo_rendering import verification_report_payload
+    from ..modelo_rendering import verification_report_payload
 
     wire = verification_report_payload(_blocked_report()).model_dump(mode="json")
 
@@ -512,7 +505,7 @@ def test_reconciliation_public_report_roundtrip_renders_cli_findings(locale):
     from ....core.config import override_settings
     from ....domain.modelos.verification_report import derive_verification_report_id
     from ...tests.reconciliation_finding_fixtures import reconciliation_findings
-    from .._modelo_rendering import verification_report_lines
+    from ..modelo_rendering import verification_report_lines
 
     original = _blocked_report()
     findings = reconciliation_findings()

@@ -62,7 +62,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 
 from ..adapter_composition_work_ports import build_calculation_action_ports, build_verification_repository_bundle
 from .registered_executor_case_support import OperationRuntimeCloseWitness, conformance_operation_runtime
-from .registered_executor_seeding_support import _seeded_modelo_filing_record
+from .registered_executor_seeding_support import seeded_modelo_filing_record
 from .supervised_operation_rig import operation_access_context
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -261,7 +261,7 @@ def test_amendment_access_uses_exact_filing_source_profile_subject_and_period(
         registry,
         profile_id,
     ):
-        filing_record_id, casilla_id = _seeded_modelo_filing_record(profile_id, operation=operation)
+        filing_record_id, casilla_id = seeded_modelo_filing_record(profile_id, operation=operation)
         filing = ModeloRecordCatalogueRepository().load().get(filing_record_id)
         assert filing is not None
         revision = CalculationRevisionCatalogueRepository().load().get(filing.calculation_revision_id)

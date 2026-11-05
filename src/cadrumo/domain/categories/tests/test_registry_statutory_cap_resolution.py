@@ -21,7 +21,7 @@ from ...calculations.registry.facts.variants import FactSelector
 from ...calculations.registry.schema_base import DateAxis
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..errors import CategoryValidationError
-from ..registry import CATEGORY_PROFILE_FACT_ID, _profile_from_authority_fact, resolve_category_profiles
+from ..registry import CATEGORY_PROFILE_FACT_ID, profile_from_authority_fact, resolve_category_profiles
 from ..spending_category import SpendingCategory
 from ..spending_category_catalogue import require_spending_category
 
@@ -76,7 +76,7 @@ def test_year_referenced_cap_below_the_supported_floor_is_refused(operation: Pin
     below_floor = support.floor - 1
 
     with pytest.raises(RegistryValidationError, match="outside the supported filing years"):
-        _profile_from_authority_fact(fact, operation=operation, year=below_floor)
+        profile_from_authority_fact(fact, operation=operation, year=below_floor)
 
 
 def test_unknown_cap_variant_field_is_refused_not_dropped(operation: PinnedAuthorityOperation) -> None:
@@ -87,7 +87,7 @@ def test_unknown_cap_variant_field_is_refused_not_dropped(operation: PinnedAutho
     )
 
     with pytest.raises(CategoryValidationError, match="unknown cap variant entry"):
-        _profile_from_authority_fact(tampered, operation=operation, year=2026)
+        profile_from_authority_fact(tampered, operation=operation, year=2026)
 
 
 def test_cap_variant_without_an_amount_is_refused(operation: PinnedAuthorityOperation) -> None:
@@ -98,4 +98,4 @@ def test_cap_variant_without_an_amount_is_refused(operation: PinnedAuthorityOper
     )
 
     with pytest.raises(CategoryValidationError, match="declares no amount"):
-        _profile_from_authority_fact(stripped, operation=operation, year=2026)
+        profile_from_authority_fact(stripped, operation=operation, year=2026)

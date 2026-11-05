@@ -55,7 +55,7 @@ async def _press(pilot: Pilot[None], screen: LedgerInvoiceImportScreen, button_i
     await settle(pilot)
 
 
-async def _review(pilot: Pilot[None], screen: LedgerInvoiceImportScreen, path: str = SYNTHETIC_SOURCE_PATH) -> None:
+async def review(pilot: Pilot[None], screen: LedgerInvoiceImportScreen, path: str = SYNTHETIC_SOURCE_PATH) -> None:
     cast("Select[str]", screen.query_one("#ledger-invoices-import-kind", Select)).value = InvoiceKind.ISSUED.value
     screen.query_one("#ledger-invoices-import-path", Input).value = path
     screen.query_one("#ledger-invoices-import-country", Input).value = "es"
@@ -68,7 +68,7 @@ async def test_the_import_is_bound_to_the_reviewed_digest_and_reports_a_partial_
     screen = _screen(door)
     async with ScreenHostApp[None](screen).run_test(size=(120, 50)) as pilot:
         await settle(pilot)
-        await _review(pilot, screen)
+        await review(pilot, screen)
         assert screen.flow_state is LedgerFlowState.CONFIRMING
         assert door.requests == []
         summary = _text(screen, "#ledger-invoices-import-summary")
@@ -109,7 +109,7 @@ async def test_a_whole_or_empty_import_is_named_as_such(outcome: InvoiceImportPr
     screen = _screen(door)
     async with ScreenHostApp[None](screen).run_test(size=(120, 50)) as pilot:
         await settle(pilot)
-        await _review(pilot, screen)
+        await review(pilot, screen)
         await _press(pilot, screen, "ledger-invoices-import-confirm")
         assert _text(screen, "#ledger-flow-status") == tr(headline)
         assert not screen.query_one("#ledger-invoices-import-refused", DataTable).display
@@ -124,7 +124,7 @@ async def test_a_file_that_changed_after_review_is_refused_on_screen() -> None:
     screen = _screen(door)
     async with ScreenHostApp[None](screen).run_test(size=(120, 50)) as pilot:
         await settle(pilot)
-        await _review(pilot, screen)
+        await review(pilot, screen)
         await _press(pilot, screen, "ledger-invoices-import-confirm")
         assert screen.flow_state is LedgerFlowState.FAILED
         assert _text(screen, "#ledger-refusal") == door_refusal_text(refusal)
@@ -141,7 +141,7 @@ async def test_an_unreadable_path_is_refused_before_review_and_a_blank_one_is_as
         await _press(pilot, screen, "ledger-invoices-import-review")
         assert _text(screen, "#ledger-refusal") == tr("tui.ledger.invoices.import.path_required")
         assert door.previews == []
-        await _review(pilot, screen, MISSING_PATH)
+        await review(pilot, screen, MISSING_PATH)
         assert screen.flow_state is LedgerFlowState.EDITING
         assert _text(screen, "#ledger-refusal") == tr(
             "application.invoices.bulk_import.errors.file_read_failed",
@@ -158,7 +158,7 @@ async def test_cancelling_the_reviewed_import_writes_nothing_and_starting_again_
     screen.back_area = LedgerWorkspaceArea.OVERVIEW
     async with ReplacingHostApp(screen).run_test(size=(120, 50)) as pilot:
         await settle(pilot)
-        await _review(pilot, screen)
+        await review(pilot, screen)
         await _press(pilot, screen, "ledger-invoices-import-cancel")
         assert screen.flow_state is LedgerFlowState.CANCELLED
         assert door.requests == []
@@ -203,7 +203,7 @@ async def test_the_import_door_runs_only_in_workers() -> None:
     screen = _screen(door)
     async with ScreenHostApp[None](screen).run_test(size=(120, 50)) as pilot:
         await settle(pilot)
-        await _review(pilot, screen)
+        await review(pilot, screen)
         await _press(pilot, screen, "ledger-invoices-import-confirm")
     assert door.calls == [("preview", True), ("apply", True)]
 
@@ -219,7 +219,7 @@ async def test_the_import_screen_fits_every_supported_terminal(theme: str, size:
         async with app.run_test(size=size) as pilot:
             app.theme = theme
             await settle(pilot)
-            await _review(pilot, screen)
+            await review(pilot, screen)
             await _press(pilot, screen, "ledger-invoices-import-confirm")
             assert geometry_band(app, size[0]) == []
             assert all(table.max_scroll_x == 0 for table in screen.query(DataTable))

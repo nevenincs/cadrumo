@@ -6,8 +6,8 @@ from ....adapters.persistence.storage.tests.active_profile_isolated_backend_fixt
     active_profile_isolated_backend_fixture,
 )
 
-__all__ = ["_ACTIVE_TEST_BUCKET_ID", "_isolated_backend"]
+__all__ = ["_ACTIVE_TEST_BUCKET_ID", "isolated_backend"]
 
 _ACTIVE_TEST_BUCKET_ID = "00000000-0000-4000-8000-000000000000"
 
-_isolated_backend = active_profile_isolated_backend_fixture(bucket_id=_ACTIVE_TEST_BUCKET_ID)
+isolated_backend = active_profile_isolated_backend_fixture(bucket_id=_ACTIVE_TEST_BUCKET_ID)

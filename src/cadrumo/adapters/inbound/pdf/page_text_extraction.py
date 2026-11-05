@@ -32,7 +32,7 @@ from __future__ import annotations
 from io import BytesIO
 from pathlib import Path
 
-from .redaction import INPUT_PDF_SOURCE_LABEL as _INPUT_PDF_SOURCE_LABEL
+from .redaction import INPUT_PDF_SOURCE_LABEL
 
 
 def _pdfplumber_failure_label(exc: Exception) -> str:
@@ -72,7 +72,7 @@ def extract_pages_text_from_path(
             layer).
     """
     if not pdf_path.is_file():
-        raise error_class(f"{not_found_label}: {_INPUT_PDF_SOURCE_LABEL}")
+        raise error_class(f"{not_found_label}: {INPUT_PDF_SOURCE_LABEL}")
     import pdfplumber
 
     try:
@@ -80,10 +80,10 @@ def extract_pages_text_from_path(
             pages = tuple((page.extract_text() or "").strip() for page in pdf.pages)
     except Exception as exc:
         failure = _pdfplumber_failure_label(exc)
-        raise error_class(f"pdfplumber could not open {_INPUT_PDF_SOURCE_LABEL}: {failure}") from exc
+        raise error_class(f"pdfplumber could not open {INPUT_PDF_SOURCE_LABEL}: {failure}") from exc
 
     if not any(pages):
-        raise error_class(f"no text extracted from {_INPUT_PDF_SOURCE_LABEL}; {pdf_label} may be scan-only or XFA")
+        raise error_class(f"no text extracted from {INPUT_PDF_SOURCE_LABEL}; {pdf_label} may be scan-only or XFA")
     return pages
 
 
@@ -161,7 +161,7 @@ def extract_pages_text_concatenated(
         raise
     except Exception as exc:
         failure = _pdfplumber_failure_label(exc)
-        raise error_class(f"pdfplumber failed to open {_INPUT_PDF_SOURCE_LABEL}: {failure}") from exc
+        raise error_class(f"pdfplumber failed to open {INPUT_PDF_SOURCE_LABEL}: {failure}") from exc
 
 
 __all__ = [

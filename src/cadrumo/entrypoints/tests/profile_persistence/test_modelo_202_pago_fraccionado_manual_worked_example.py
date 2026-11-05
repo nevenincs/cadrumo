@@ -111,10 +111,9 @@ from cadrumo.domain.calculations.registry.tests.authored_editions import (
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from cadrumo.domain.period import calculation_filing_date
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
@@ -224,7 +223,7 @@ def _seed_sociedad_m_profile(exercise: int) -> None:
     (clave 03) is the applicable one - matching the manual's scenario, which
     never mentions the art. 40.3 obligation.
     """
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
@@ -247,7 +246,7 @@ def _seed_sociedad_m_profile(exercise: int) -> None:
         ),
         created_at=_profile_instant(exercise),
         updated_at=_profile_instant(exercise),
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 

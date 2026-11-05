@@ -41,8 +41,8 @@ from typing import TYPE_CHECKING
 import typer
 
 from ...core.i18n.render import tr
-from ._decimal_parsing import optional_decimal_text
 from .common import emit_envelope, emit_help_text
+from .decimal_parsing import optional_decimal_text
 from .diagnostics_results import (
     ErrorKindCountPayload,
     ErrorsBreakdownResult,
@@ -63,7 +63,7 @@ if TYPE_CHECKING:
     from ...core.json_contract import Notice
 
 
-def _llm_no_run_data_notice(*, code: str):
+def llm_no_run_data_notice(*, code: str):
     """Return the factual no-run notice with the catalogue-owned classifier action."""
     from ...application.operator_actions.models import ActionReference
     from ...core.json_contract import Notice, NoticeSeverity
@@ -94,12 +94,12 @@ def diagnostics_root(ctx: typer.Context) -> None:
         raise typer.Exit()
 
 
-def _parse_iso_date(value: str | None, option: str) -> _date | None:
+def parse_iso_date(value: str | None, option: str) -> _date | None:
     if value is None:
         return None
-    from ._date_parsing import _parse_iso_date as _parse_required_iso_date
+    from .date_parsing import parse_iso_date
 
-    return _parse_required_iso_date(
+    return parse_iso_date(
         value,
         label=option,
         translation_key="cli.diagnostics.run_health.bad_date",
@@ -187,8 +187,8 @@ def diagnostics_run_health(
     from ...core.json_contract import Notice, NoticeSeverity
     from .operation_diagnostics import read_diagnostics
 
-    since_date = _parse_iso_date(since, "--since")
-    until_date = _parse_iso_date(until, "--until")
+    since_date = parse_iso_date(since, "--since")
+    until_date = parse_iso_date(until, "--until")
 
     projection = read_diagnostics(
         ctx,
@@ -205,7 +205,7 @@ def diagnostics_run_health(
     result = _run_health_result(report=report, since=since_date, until=until_date)
 
     no_run_data_notice = (
-        _llm_no_run_data_notice(code="diagnostics.run_health.no_run_data") if not report.has_run_data else None
+        llm_no_run_data_notice(code="diagnostics.run_health.no_run_data") if not report.has_run_data else None
     )
     lines = _run_health_lines(report=report, no_run_data_notice=no_run_data_notice)
 
@@ -251,8 +251,8 @@ def diagnostics_runs(
 
     from .operation_diagnostics import read_diagnostics
 
-    since_date = _parse_iso_date(since, "--since")
-    until_date = _parse_iso_date(until, "--until")
+    since_date = parse_iso_date(since, "--since")
+    until_date = parse_iso_date(until, "--until")
 
     projection = read_diagnostics(
         ctx,
@@ -288,7 +288,7 @@ def diagnostics_runs(
         has_run_data=bool(rows),
     )
 
-    no_run_data_notice = _llm_no_run_data_notice(code="diagnostics.runs.no_run_data") if not rows else None
+    no_run_data_notice = llm_no_run_data_notice(code="diagnostics.runs.no_run_data") if not rows else None
     lines: list[str] = [
         tr(
             "cli.diagnostics.runs.header",
@@ -321,8 +321,8 @@ def diagnostics_latency(
 
     from .operation_diagnostics import read_diagnostics
 
-    since_date = _parse_iso_date(since, "--since")
-    until_date = _parse_iso_date(until, "--until")
+    since_date = parse_iso_date(since, "--since")
+    until_date = parse_iso_date(until, "--until")
 
     projection = read_diagnostics(
         ctx,
@@ -374,7 +374,7 @@ def diagnostics_latency(
     ]
     notices: list[Notice] = []
     if not report.has_run_data:
-        no_run_data_notice = _llm_no_run_data_notice(code="diagnostics.latency.no_run_data")
+        no_run_data_notice = llm_no_run_data_notice(code="diagnostics.latency.no_run_data")
         lines.append(no_run_data_notice.message)
         notices.append(no_run_data_notice)
     else:
@@ -408,8 +408,8 @@ def diagnostics_errors(
     from ...core.json_contract import Notice, NoticeSeverity
     from .operation_diagnostics import read_diagnostics
 
-    since_date = _parse_iso_date(since, "--since")
-    until_date = _parse_iso_date(until, "--until")
+    since_date = parse_iso_date(since, "--since")
+    until_date = parse_iso_date(until, "--until")
 
     projection = read_diagnostics(
         ctx,
@@ -466,8 +466,8 @@ def diagnostics_llm_usage(
 
     from .operation_diagnostics import read_diagnostics
 
-    since_date = _parse_iso_date(since, "--since")
-    until_date = _parse_iso_date(until, "--until")
+    since_date = parse_iso_date(since, "--since")
+    until_date = parse_iso_date(until, "--until")
 
     projection = read_diagnostics(
         ctx,
@@ -527,7 +527,7 @@ def diagnostics_llm_usage(
     ]
     notices: list[Notice] = []
     if not report.has_run_data:
-        no_run_data_notice = _llm_no_run_data_notice(code="diagnostics.llm_usage.no_run_data")
+        no_run_data_notice = llm_no_run_data_notice(code="diagnostics.llm_usage.no_run_data")
         lines.append(no_run_data_notice.message)
         notices.append(no_run_data_notice)
     else:

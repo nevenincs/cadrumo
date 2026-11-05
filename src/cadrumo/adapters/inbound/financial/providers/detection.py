@@ -14,10 +14,10 @@ from pathlib import Path
 
 from .....core.external_constants import PDF_EXTENSION, XLS_EXTENSION, XLSX_EXTENSION
 from .....core.logging import get_logger
-from ._constants import CSV_EXTENSIONS, OFX_EXTENSIONS
-from ._mapped_tabular import MappedTabularProvider
 from .base import FinancialProvider, require_admissible_source
+from .constants import CSV_EXTENSIONS, OFX_EXTENSIONS
 from .csv import CsvProvider
+from .mapped_tabular import MappedTabularProvider
 from .ofx import OfxProvider
 from .pdf_statement import PdfStatementProvider
 from .xls import XlsProvider
@@ -83,7 +83,7 @@ def detect_provider(path: Path) -> FinancialProvider | None:
             not a regular file, or over the ingest size ceiling.
     """
     require_admissible_source(path)
-    providers = _ordered_candidates(path)
+    providers = ordered_candidates(path)
     blocked_by_reader: FinancialProvider | None = None
     for provider in providers:
         validation = provider.validate_source(path)
@@ -99,7 +99,7 @@ def detect_provider(path: Path) -> FinancialProvider | None:
     return None
 
 
-def _ordered_candidates(path: Path) -> tuple[FinancialProvider, ...]:
+def ordered_candidates(path: Path) -> tuple[FinancialProvider, ...]:
     """Order providers by extension hint and content sniffing, inferred lanes last.
 
     The two inferred lanes are appended after every exact fixed-layout provider

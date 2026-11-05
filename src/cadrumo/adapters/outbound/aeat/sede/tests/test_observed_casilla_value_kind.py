@@ -20,15 +20,15 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ......core.casilla_id import validated_casilla_id
 from ......core.casilla_value_kind import CasillaValueKind
 from ......core.directory_scan import scan_directory
-from ..declarations_observations import _observed_value_kind, non_numeric_observed_casillas
+from ..declarations_observations import non_numeric_observed_casillas, observed_value_kind
 from ..errors import SedeValidationError
 from ..schema import ObservedCasillaSkip, ObservedCasillaValue
-from ._declarations_support import _filed_observation
+from .declarations_support import filed_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -85,11 +85,11 @@ def test_kind_and_token_rules_agree_on_what_a_boolean_is() -> None:
     A value spelled with the artefact's own boolean token while labelled numeric
     is exactly the disagreement the kind exists to prevent.
     """
-    assert _observed_value_kind(True) is CasillaValueKind.BOOLEAN
-    assert _observed_value_kind(False) is CasillaValueKind.BOOLEAN
-    assert _observed_value_kind(Decimal("1")) is CasillaValueKind.NUMERIC
-    assert _observed_value_kind(1) is CasillaValueKind.NUMERIC
-    assert _observed_value_kind("CL SANITIZADA") is CasillaValueKind.TEXT
+    assert observed_value_kind(True) is CasillaValueKind.BOOLEAN
+    assert observed_value_kind(False) is CasillaValueKind.BOOLEAN
+    assert observed_value_kind(Decimal("1")) is CasillaValueKind.NUMERIC
+    assert observed_value_kind(1) is CasillaValueKind.NUMERIC
+    assert observed_value_kind("CL SANITIZADA") is CasillaValueKind.TEXT
 
 
 def _decimal_on_dot_value_sites(tree: ast.AST) -> list[int]:
@@ -121,8 +121,8 @@ def test_skip_row_model_declares_no_value_field() -> None:
 
 def test_skip_query_returns_empty_when_every_casilla_is_numeric() -> None:
     """An all-numeric observation reports nothing, so a caller can trust silence."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        observation = _filed_observation(
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        observation = filed_observation(
             modelo="100",
             ejercicio=2025,
             period="0A",
@@ -134,9 +134,9 @@ def test_skip_query_returns_empty_when_every_casilla_is_numeric() -> None:
 
 def test_skip_query_names_a_text_casilla_without_disclosing_its_value() -> None:
     """The row identifies the casilla and its label, never what it holds."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         filed_address = "CL SANITIZADA 0000 LOCALIDAD"
-        observation = _filed_observation(
+        observation = filed_observation(
             modelo="100",
             ejercicio=2025,
             period="0A",
@@ -155,8 +155,8 @@ def test_skip_query_names_a_text_casilla_without_disclosing_its_value() -> None:
 
 def test_skip_query_reports_a_numeric_casilla_whose_token_will_not_parse() -> None:
     """A numeric casilla with an unreadable token is a distinct, named reason."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        observation = _filed_observation(
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        observation = filed_observation(
             modelo="100",
             ejercicio=2025,
             period="0A",

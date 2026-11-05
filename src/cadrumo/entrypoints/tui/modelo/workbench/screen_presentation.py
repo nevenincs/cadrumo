@@ -31,15 +31,15 @@ from .navigator import NavigatorRow, breadcrumb, checked_boxes, navigator_rows, 
 from .page_items import WorkbenchFilter, page_items, page_of
 from .progress import fit_next_line, next_action_text, stepper_marks, stepper_text
 from .screen_constants import (
-    _CRUMB_SEPARATOR,
-    _DEADLINE_TONE_CLASSES,
-    _EMPTY_LOCALE_KEY,
-    _EMPTY_NEXT_LOCALE_KEY,
-    _FINDINGS_KEY,
-    _GUTTERS,
-    _NAV_MIN_LABEL,
-    _NEXT_GAP,
-    _NEXT_KEYS,
+    CRUMB_SEPARATOR,
+    DEADLINE_TONE_CLASSES,
+    EMPTY_LOCALE_KEY,
+    EMPTY_NEXT_LOCALE_KEY,
+    FINDINGS_KEY,
+    GUTTERS,
+    NAV_MIN_LABEL,
+    NEXT_GAP,
+    NEXT_KEYS,
 )
 from .sorting import SORT_LOCALE_KEYS, SortOrder, sorted_items
 
@@ -60,7 +60,7 @@ class WorkbenchPresentationMixin:
         form = self.form
         if form is None:
             return
-        width = max(self._width() - _GUTTERS, 1)
+        width = max(self._width() - GUTTERS, 1)
         recorded = self.recorded
         deadline = deadline_view(form, self._language, recorded=recorded, width=width)
         identity = fit_identity(form, self._language, deadline, width)
@@ -73,7 +73,7 @@ class WorkbenchPresentationMixin:
         deadline_widget = self.query_one("#wb-deadline", Static)
         deadline_widget.display = deadline is not None
         deadline_widget.update("" if deadline is None else deadline.text)
-        for tone, css_class in _DEADLINE_TONE_CLASSES.items():
+        for tone, css_class in DEADLINE_TONE_CLASSES.items():
             deadline_widget.set_class(deadline is not None and deadline.tone is tone, css_class)
 
     def _render_header_result(self: ModeloWorkbenchScreen, form: ModeloWorkForm, width: int, recorded: bool) -> None:
@@ -139,17 +139,17 @@ class WorkbenchPresentationMixin:
         stepper = stepper_text(progress)
         self.query_one("#wb-stepper", Static).update(stepper)
         self._drawn["stepper"] = stepper_marks(progress)
-        key = _FINDINGS_KEY if progress.findings_lead else _NEXT_KEYS[progress.next_action]
+        key = FINDINGS_KEY if progress.findings_lead else NEXT_KEYS[progress.next_action]
         action = (
             tr("workspace.modelo.apply_prerequisite.next")
             if self._active_apply_prerequisite() is not None
             else next_action_text(progress, self._language)
         )
         self._next_words = f"{action} [{key}]" if key else action
-        width = max(self._width() - _GUTTERS, 1)
+        width = max(self._width() - GUTTERS, 1)
         line = fit_next_line(action, key, width)
         # Beside the stepper when it fits there, else on a line of its own: never wrapped.
-        self.set_class(cell_len(line) > width - cell_len(stepper.plain) - _NEXT_GAP, "-next-below")
+        self.set_class(cell_len(line) > width - cell_len(stepper.plain) - NEXT_GAP, "-next-below")
         next_widget = self.query_one("#wb-next", Static)
         next_widget.update(line)
         next_widget.set_class(progress.next_action is ModeloFormNextAction.CONFIRM, "-confirm")
@@ -167,7 +167,7 @@ class WorkbenchPresentationMixin:
         navigator = self.query_one("#wb-sections", OptionList)
         highlighted = navigator.highlighted
         kept = None if highlighted is None else navigator.get_option_at_index(highlighted).id
-        label_width = max(navigator.scrollable_content_region.width, _NAV_MIN_LABEL)
+        label_width = max(navigator.scrollable_content_region.width, NAV_MIN_LABEL)
         rows = navigator_rows(
             self._pages,
             current=self._page_index,
@@ -213,7 +213,7 @@ class WorkbenchPresentationMixin:
         )
         # The page title line is hidden here, so the crumb names a filter or an order that is not the default.
         for note in self._listing_notes(name_every_filter=False):
-            line.append(f"{_CRUMB_SEPARATOR}{note}")
+            line.append(f"{CRUMB_SEPARATOR}{note}")
         self.query_one("#wb-crumb", Static).update(line)
         self._drawn["navigator"] = marks
 
@@ -248,8 +248,8 @@ class WorkbenchPresentationMixin:
                 index = (self._page_index + step) % count
                 items = page_items(self._pages[index], staged=staged, mode=self._filter)
                 if any(isinstance(item, CasillaListEntry) for item in items):
-                    return tr(_EMPTY_NEXT_LOCALE_KEY, page=self._pages[index].heading.text)
-        return tr(_EMPTY_LOCALE_KEY)
+                    return tr(EMPTY_NEXT_LOCALE_KEY, page=self._pages[index].heading.text)
+        return tr(EMPTY_LOCALE_KEY)
 
     def _render_page(self: ModeloWorkbenchScreen) -> None:
         if not self._pages:

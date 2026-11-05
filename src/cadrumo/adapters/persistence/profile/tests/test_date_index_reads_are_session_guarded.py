@@ -36,7 +36,7 @@ from uuid import uuid4
 
 import pytest
 
-from .....core.time.clock import now as _utc_now
+from .....core.time.clock import now
 from ...storage.errors import StorageValidationError
 from ...storage.master_key.active_session import activate_session
 from ...storage.master_key.bucket_session import BucketSession
@@ -46,7 +46,7 @@ from ..transactions import TransactionCatalogueRepository
 if TYPE_CHECKING:
     from pathlib import Path
 
-from .date_index_inventory import _all_date_index_rows
+from .date_index_inventory import all_date_index_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -55,7 +55,7 @@ _BUCKET_ID = "44444444-4444-4444-8444-444444444444"
 
 def _foreign_session() -> BucketSession:
     """Open a real session serving a DIFFERENT bucket."""
-    _opened_at = _utc_now()
+    _opened_at = now()
     return BucketSession.open_resumed(
         bucket_id=str(uuid4()),
         dek=b"d" * 32,
@@ -77,7 +77,7 @@ def test_the_raw_index_read_refuses_when_the_session_serves_another_bucket(tmp_p
         repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
 
         with activate_session(_foreign_session()), pytest.raises(StorageValidationError) as raised:
-            _all_date_index_rows(repository)
+            all_date_index_rows(repository)
 
     assert raised.value.translated_message == "errors.storage.runtime.not_ready"
 
@@ -92,6 +92,6 @@ def test_the_same_read_succeeds_under_its_own_session(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
 
-        rows = _all_date_index_rows(repository)
+        rows = all_date_index_rows(repository)
 
     assert rows == {}

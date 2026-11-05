@@ -12,7 +12,7 @@ import pytest
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     create_current_profile_session,
 )
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from .....application.state_projection import build_active_profile
 from .....application.user_profile.capsule_record import ProfileRecordSession
@@ -46,7 +46,7 @@ def _ready_profile_session(root: Path) -> ProfileRecordSession:
 
 
 def test_active_profile_health_is_ready_from_one_current_capsule_projection(tmp_path: Path) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         session = _ready_profile_session(tmp_path)
         try:
             with (
@@ -70,7 +70,7 @@ def test_active_profile_health_is_ready_from_one_current_capsule_projection(tmp_
 def test_discovery_only_health_never_probes_private_record_even_when_session_is_live(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         session = _ready_profile_session(tmp_path)
         try:
 
@@ -111,7 +111,7 @@ def test_discovery_only_health_never_probes_private_record_even_when_session_is_
 def test_discovery_only_health_preserves_absent_and_dangling_discovery_without_private_reads(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, selected: bool, expected_status: str
 ) -> None:
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         if selected:
             write_pointer(tmp_path, BucketPointer.selected(bucket_id=PROFILE_ID, transition_revision=1))
 
@@ -140,7 +140,7 @@ def test_discovery_only_health_preserves_absent_and_dangling_discovery_without_p
 
 
 def test_inactive_current_capsule_routes_the_operator_to_login(tmp_path: Path) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         session = _ready_profile_session(tmp_path)
         try:
             with active_profile_pointer_transaction(tmp_path) as pointer_transaction:
@@ -158,7 +158,7 @@ def test_inactive_current_capsule_routes_the_operator_to_login(tmp_path: Path) -
 
 
 def test_empty_storage_routes_the_operator_to_current_registration(tmp_path: Path) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         with override_settings(cadrumo_storage_root=tmp_path / "empty", cadrumo_active_profile=None):
             health = assess_active_profile_health(operation=_authority_operation_for_test)
 
@@ -170,7 +170,7 @@ def test_empty_storage_routes_the_operator_to_current_registration(tmp_path: Pat
 
 
 def test_pointer_to_no_current_capsule_is_repaired_without_creating_a_bucket(tmp_path: Path) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         write_pointer(tmp_path, BucketPointer.selected(bucket_id=PROFILE_ID, transition_revision=1))
         with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None):
             before = assess_active_profile_health(operation=_authority_operation_for_test)
@@ -190,7 +190,7 @@ def test_pointer_to_no_current_capsule_is_repaired_without_creating_a_bucket(tmp
 def test_pointer_to_malformed_current_marker_is_reported_as_capsule_integrity_not_manifest_state(
     tmp_path: Path,
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         marker = tmp_path / _bucket_relative_path(PROFILE_ID, StorageCategory.PROFILE_CAPSULE_COMMIT)
         marker.parent.mkdir(parents=True)
         malformed = b"not a current commit"
@@ -226,7 +226,7 @@ def test_health_observes_current_or_degraded_state_without_provider_or_recovery_
     No test double is involved: readiness uses a real, already-authenticated
     custody session and the cold case intentionally has none.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         ready_root = tmp_path / "ready"
         cold_root = tmp_path / "cold"
         absent_root = tmp_path / "absent"

@@ -6,17 +6,17 @@ import pytest
 
 from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
 
-from .._app_ledger_invoice_intake_command_specs import LEDGER_INVOICE_INTAKE_COMMAND_SPECS
-from .._app_ledger_invoice_lifecycle_command_specs import (
-    _REQUIRED_INVOICE_ID_ARGUMENT,
-    LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS,
-)
 from ..app_ledger_invoice_common_command_parameters import (
     BUSINESS_PREMISES_LEASE_OPTIONS,
     INVOICE_INTAKE_WIZARD_CORE_OPTIONS,
     INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS,
     INVOICE_LIFECYCLE_METADATA_OPTIONS,
     OPTIONAL_IVA_CATEGORY_OPTION,
+)
+from ..app_ledger_invoice_intake_command_specs import LEDGER_INVOICE_INTAKE_COMMAND_SPECS
+from ..app_ledger_invoice_lifecycle_command_specs import (
+    LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS,
+    REQUIRED_INVOICE_ID_ARGUMENT,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -321,7 +321,7 @@ def test_shared_immutable_parameters_preserve_distinct_command_facts() -> None:
     assert type(INVOICE_INTAKE_WIZARD_CORE_OPTIONS) is tuple
     assert type(INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS) is tuple
     assert type(INVOICE_LIFECYCLE_METADATA_OPTIONS) is tuple
-    assert remove.parameters[0] is update.parameters[0] is view.parameters[0] is _REQUIRED_INVOICE_ID_ARGUMENT
+    assert remove.parameters[0] is update.parameters[0] is view.parameters[0] is REQUIRED_INVOICE_ID_ARGUMENT
     assert add.parameters[0] is wizard.parameters[0] is INVOICE_INTAKE_WIZARD_CORE_OPTIONS[0]
     assert add.parameters[4] is not INVOICE_INTAKE_WIZARD_CORE_OPTIONS[4]
     assert all(

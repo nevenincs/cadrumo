@@ -16,7 +16,7 @@ from ....core.time.clock import frozen_clock
 from ...calculations.registry.facts.resolution import GovernedFactQuery, ResolvedGovernedFact
 from ...calculations.registry.governed_fact_scope import validating_governed_facts
 from ...calculations.registry.schema_references import TemporalSupportEnvelope
-from .._validation_pass import answer_once, invoice_validation_pass
+from ..validation_pass import answer_once, invoice_validation_pass
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

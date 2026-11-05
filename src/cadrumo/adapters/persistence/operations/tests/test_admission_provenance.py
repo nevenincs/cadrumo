@@ -24,14 +24,14 @@ from cadrumo.core.hashing import content_hash_hex
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, OperationAccessRequest
 
 from .supervisor_test_support import (
-    _NOW,
+    SUPERVISOR_NOW,
     IdleExecutor,
     SupervisorRequest,
     operation_repositories,
     operation_supervisor,
     supervisor_registry,
 )
-from .test_journal import _claim_lease, _lease, _snapshot
+from .test_journal import claim_lease, journal_lease, journal_snapshot
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -210,7 +210,7 @@ def test_missing_or_corrupt_encrypted_provenance_refuses_stored_invocation(tmp_p
                 object_key=reference,
                 classification=OPERATION_SECURE_REFERENCE_NAMESPACE.sensitivity,
                 schema_version=OPERATION_SECURE_REFERENCE_NAMESPACE.schema_version,
-                written_at=_NOW,
+                written_at=SUPERVISOR_NOW,
                 payload=b'{"substituted":"encrypted-record"}',
             )
 
@@ -227,13 +227,15 @@ def test_journal_transition_cannot_remove_or_substitute_original_provenance_refe
 ) -> None:
     journal = OperationJournalRepository(storage_root=tmp_path)
     original_reference = "e" * 64
-    initial = _snapshot(revision=0, sequence=1).model_copy(
+    initial = journal_snapshot(revision=0, sequence=1).model_copy(
         update={"admission_provenance_reference": original_reference}
     )
-    _claim_lease(tmp_path, _lease())
-    asyncio.run(journal.create(initial, lease=_lease()))
-    altered = _snapshot(revision=1, sequence=2).model_copy(update={"admission_provenance_reference": replacement})
+    claim_lease(tmp_path, journal_lease())
+    asyncio.run(journal.create(initial, lease=journal_lease()))
+    altered = journal_snapshot(revision=1, sequence=2).model_copy(
+        update={"admission_provenance_reference": replacement}
+    )
 
     with pytest.raises(RepositoryError, match="provenance"):
-        asyncio.run(journal.commit(altered, expected_revision=0, lease=_lease()))
+        asyncio.run(journal.commit(altered, expected_revision=0, lease=journal_lease()))
     assert asyncio.run(journal.load(initial.operation_id)) == initial

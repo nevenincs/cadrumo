@@ -26,7 +26,7 @@ from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_year import FilingYear, is_four_digit_year
 from ....core.identity.digest import ContentDigest
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import Period, PeriodError
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ..pdf.extracted_casilla import ExtractedCasilla
@@ -49,7 +49,7 @@ class TemplateRevision(BaseModel):
             ``"explicit_override"`` for caller-supplied values.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str = Field(min_length=1, max_length=16)
     año: FilingYear
@@ -76,7 +76,7 @@ class ExtractionWarning(BaseModel):
             ``"ocr"`` / ``"merged"``.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId | None
     code: str = Field(min_length=1)
@@ -113,7 +113,7 @@ class InboundDeclaracionObservation(BaseModel):
         parsed_at: UTC timestamp at parse completion.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: str = Field(min_length=1, max_length=16)
     ejercicio: str = Field(max_length=16)

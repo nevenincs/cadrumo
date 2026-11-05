@@ -15,7 +15,7 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
@@ -115,11 +115,11 @@ def test_a_language_fact_write_mirrors_the_bucket_hint(isolated_language_state: 
     always found nothing and a chosen language silently reverted to the
     settings default on every pre-login surface.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     from cadrumo.application.user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
     from cadrumo.application.user_profile.language_resolver import resolve_profile_output_language_hint
     from cadrumo.core.bucket_pointer import resolve_active_bucket_id
-    from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH as _LANGUAGE_PATH
+    from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
     from cadrumo.domain.user_profile.values import UserProfileFact
 
     _seed_profile_language("es", profile_id=isolated_language_state)
@@ -128,7 +128,7 @@ def test_a_language_fact_write_mirrors_the_bucket_hint(isolated_language_state: 
 
     apply_profile_fact_changes(
         profile_id=isolated_language_state,
-        changes=(UserProfileFact(path=_LANGUAGE_PATH, value="ca"),),
+        changes=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value="ca"),),
         door=ProfileFactWriteDoor.MANAGER_FIELD,
         profile_decode_context=_profile_decode_context_for_test,
     )
@@ -138,11 +138,11 @@ def test_a_language_fact_write_mirrors_the_bucket_hint(isolated_language_state: 
 
 def test_clearing_the_language_fact_clears_the_hint(isolated_language_state: str) -> None:
     """The control: the two must not disagree about an absence."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     from cadrumo.application.user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
     from cadrumo.application.user_profile.language_resolver import resolve_profile_output_language_hint
     from cadrumo.core.bucket_pointer import resolve_active_bucket_id
-    from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH as _LANGUAGE_PATH
+    from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
     from cadrumo.domain.user_profile.values import UserProfileFact
 
     _seed_profile_language("es", profile_id=isolated_language_state)
@@ -151,7 +151,7 @@ def test_clearing_the_language_fact_clears_the_hint(isolated_language_state: str
 
     apply_profile_fact_changes(
         profile_id=isolated_language_state,
-        changes=(UserProfileFact(path=_LANGUAGE_PATH, value="ca"),),
+        changes=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value="ca"),),
         door=ProfileFactWriteDoor.MANAGER_FIELD,
         profile_decode_context=_profile_decode_context_for_test,
     )
@@ -159,7 +159,7 @@ def test_clearing_the_language_fact_clears_the_hint(isolated_language_state: str
 
     apply_profile_fact_changes(
         profile_id=isolated_language_state,
-        changes=(UserProfileFact(path=_LANGUAGE_PATH, value=None),),
+        changes=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=None),),
         door=ProfileFactWriteDoor.MANAGER_FIELD,
         profile_decode_context=_profile_decode_context_for_test,
     )

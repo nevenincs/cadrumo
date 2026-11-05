@@ -47,7 +47,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -77,13 +77,10 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from ....domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from .file_flow_test_support import calculation_ports_for_test
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -125,7 +122,7 @@ def _seed_first_year_modalidad_cuota_profile() -> None:
     modalidad-cuota filer. ``incn_prior_12_months`` 500.000 <= the
     6.000.000 LIS art. 40.3 threshold -> ART_40_2_OPTIONAL (modalidad cuota).
     """
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
@@ -151,7 +148,7 @@ def _seed_first_year_modalidad_cuota_profile() -> None:
         ),
         created_at=_T0,
         updated_at=_T0,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 
@@ -210,7 +207,7 @@ def test_first_year_modalidad_cuota_m200_calculates_drafts_and_verifies(
     the discriminator against the flag-OFF status quo where it stays unresolved - and
     the resulting draft then verifies end-to-end with no crash.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         # 1) Draft build via the full calculate action.
         result = _calculate_m200(secure_objects, operation=operation)
         values = result.revision.casilla_values

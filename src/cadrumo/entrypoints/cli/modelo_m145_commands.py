@@ -20,7 +20,7 @@ from __future__ import annotations
 import typer
 
 from ...application.modelo.m145_communication_period import M145CommunicationPeriod
-from ._modelo_m145_rendering import emit_m145_export_result, emit_m145_record_result, emit_m145_validation_result
+from .modelo_m145_rendering import emit_m145_export_result, emit_m145_record_result, emit_m145_validation_result
 from .operation_modelo_m145_communication import (
     create_m145_record,
     export_m145_record,

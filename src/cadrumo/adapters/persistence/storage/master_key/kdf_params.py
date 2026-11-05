@@ -39,9 +39,9 @@ from typing import Final, Literal, get_args
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from .....core.errors.hierarchy import pydantic_validation_boundary
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .._kdf_salt import KDF_SALT_BYTES, decode_kdf_salt, encode_kdf_salt, require_kdf_salt_length
+from .....core.models import STRICT_FROZEN_CONFIG
 from ..errors import StorageValidationError
+from ..kdf_salt import KDF_SALT_BYTES, decode_kdf_salt, encode_kdf_salt, require_kdf_salt_length
 
 #: Argon2 version 1.3, the only version this substrate derives under.
 Argon2Version = Literal[19]
@@ -75,7 +75,7 @@ class KdfParams(BaseModel):
     has a single reader and the agreement it enforced is no longer at risk.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     algorithm: Literal["argon2id"]
     version: Argon2Version

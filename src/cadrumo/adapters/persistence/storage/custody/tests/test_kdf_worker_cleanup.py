@@ -17,14 +17,14 @@ from typing import cast
 import pytest
 
 from ......core.config import Settings
-from .. import _kdf_process as process_boundary
-from .. import _kdf_worker_cleanup as cleanup_boundary
-from .. import _kdf_worker_supervision as supervision
-from .._kdf_codec import KDF_FRAME_CONTROL, close_fd
-from .._kdf_operations import KdfOperation
-from .._kdf_windows_job import _WindowsJob
-from .._kdf_worker_supervision import _SupervisedKdfWorker
+from .. import kdf_process as process_boundary
+from .. import kdf_worker_cleanup as cleanup_boundary
+from .. import kdf_worker_supervision as supervision
 from ..errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
+from ..kdf_codec import KDF_FRAME_CONTROL, close_fd
+from ..kdf_operations import KdfOperation
+from ..kdf_windows_job import WindowsJob
+from ..kdf_worker_supervision import SupervisedKdfWorker
 from ..records import ProfileCustodyKdfParameters
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -33,13 +33,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 @pytest.fixture
 def running_worker(
     tmp_path: Path,
-) -> Generator[tuple[_SupervisedKdfWorker, subprocess.Popen[bytes], _WindowsJob | None]]:
+) -> Generator[tuple[SupervisedKdfWorker, subprocess.Popen[bytes], WindowsJob | None]]:
     """Keep independent exact-child ownership even if the regression clears its fields."""
-    worker = _SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=Settings(cadrumo_storage_root=tmp_path))
+    worker = SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=Settings(cadrumo_storage_root=tmp_path))
     terminate = cleanup_boundary._terminate_process_tree
     cleanup = worker._cleanup_neutral_directory
     process: subprocess.Popen[bytes] | None = None
-    job: _WindowsJob | None = None
+    job: WindowsJob | None = None
     try:
         worker.__enter__()
         process = worker._process
@@ -64,8 +64,8 @@ def running_worker(
 
 
 @pytest.fixture
-def partial_worker(tmp_path: Path) -> Generator[_SupervisedKdfWorker]:
-    worker = _SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=Settings(cadrumo_storage_root=tmp_path))
+def partial_worker(tmp_path: Path) -> Generator[SupervisedKdfWorker]:
+    worker = SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=Settings(cadrumo_storage_root=tmp_path))
     request_read, worker._request_fd = os.pipe()
     close_fd(request_read)
     worker._result_fd, result_write = os.pipe()
@@ -78,7 +78,7 @@ def partial_worker(tmp_path: Path) -> Generator[_SupervisedKdfWorker]:
 
 
 def test_partial_no_process_cleanup_closes_descriptors_once_and_can_repeat(
-    partial_worker: _SupervisedKdfWorker, monkeypatch: pytest.MonkeyPatch
+    partial_worker: SupervisedKdfWorker, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     closes: Counter[int] = Counter()
 
@@ -96,7 +96,7 @@ def test_partial_no_process_cleanup_closes_descriptors_once_and_can_repeat(
 
 
 def test_partial_no_process_cleanup_retains_failed_job_but_closes_safe_pipes(
-    partial_worker: _SupervisedKdfWorker,
+    partial_worker: SupervisedKdfWorker,
 ) -> None:
     primary = OSError("synthetic job close failure")
 
@@ -109,7 +109,7 @@ def test_partial_no_process_cleanup_retains_failed_job_but_closes_safe_pipes(
                 raise primary
 
     job = Job()
-    partial_worker._job = cast("_WindowsJob", job)
+    partial_worker._job = cast("WindowsJob", job)
     with pytest.raises(OSError) as escaped:
         partial_worker._close(failed=True)
     assert escaped.value is primary and partial_worker._job is job
@@ -120,7 +120,7 @@ def test_partial_no_process_cleanup_retains_failed_job_but_closes_safe_pipes(
 
 @pytest.mark.parametrize("interrupted", [False, True])
 def test_termination_failure_retains_real_ownership_until_a_later_close(
-    running_worker: tuple[_SupervisedKdfWorker, subprocess.Popen[bytes], _WindowsJob | None],
+    running_worker: tuple[SupervisedKdfWorker, subprocess.Popen[bytes], WindowsJob | None],
     interrupted: bool,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -133,7 +133,7 @@ def test_termination_failure_retains_real_ownership_until_a_later_close(
         else OSError("synthetic termination failure")
     )
 
-    def refuse_termination(_process: subprocess.Popen[bytes], _job: _WindowsJob | None) -> None:
+    def refuse_termination(_process: subprocess.Popen[bytes], _job: WindowsJob | None) -> None:
         raise primary
 
     with monkeypatch.context() as patch:
@@ -155,7 +155,7 @@ def test_termination_failure_retains_real_ownership_until_a_later_close(
 
 
 def test_unconfirmed_existing_termination_attempts_refuse_without_closing_pipes(
-    running_worker: tuple[_SupervisedKdfWorker, subprocess.Popen[bytes], _WindowsJob | None],
+    running_worker: tuple[SupervisedKdfWorker, subprocess.Popen[bytes], WindowsJob | None],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     worker, process, job = running_worker
@@ -163,7 +163,7 @@ def test_unconfirmed_existing_termination_attempts_refuse_without_closing_pipes(
     attempts = 0
     waits: list[float | None] = []
 
-    def unconfirmed_termination(_process: subprocess.Popen[bytes], _job: _WindowsJob | None) -> None:
+    def unconfirmed_termination(_process: subprocess.Popen[bytes], _job: WindowsJob | None) -> None:
         nonlocal attempts
         attempts += 1
 
@@ -209,7 +209,7 @@ _PAUSED_WRITER_CHILD_SOURCE = (
 
 def _launch_paused_writer_child(monkeypatch: pytest.MonkeyPatch) -> None:
     """Make the worker launch a child that answers one frame and then blocks forever."""
-    launch_process = process_boundary._launch_worker_process
+    launch_process = process_boundary.launch_worker_process
 
     def launch(command: list[str], launch_kwargs: dict[str, object]) -> subprocess.Popen[bytes]:
         entry = command.index("-m")
@@ -217,16 +217,16 @@ def _launch_paused_writer_child(monkeypatch: pytest.MonkeyPatch) -> None:
             [*command[:entry], "-c", _PAUSED_WRITER_CHILD_SOURCE, *command[entry + 2 :]], launch_kwargs
         )
 
-    monkeypatch.setattr(process_boundary, "_launch_worker_process", launch)
+    monkeypatch.setattr(process_boundary, "launch_worker_process", launch)
 
 
 class _BlockedReaderCleanup:
     """Drive a real worker whose reader is blocked while cleanup must settle the child first."""
 
-    def __init__(self, worker: _SupervisedKdfWorker) -> None:
+    def __init__(self, worker: SupervisedKdfWorker) -> None:
         self.worker = worker
         self.process: subprocess.Popen[bytes] | None = None
-        self.job: _WindowsJob | None = None
+        self.job: WindowsJob | None = None
         self.result_fd: int | None = None
         self.reader_threads: list[threading.Thread] = []
         self.cleanup_thread: threading.Thread | None = None
@@ -391,7 +391,7 @@ def test_real_blocked_reader_cleanup_settles_child_before_descriptor_close(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     _launch_paused_writer_child(monkeypatch)
-    worker = _SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=Settings(cadrumo_storage_root=tmp_path))
+    worker = SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=Settings(cadrumo_storage_root=tmp_path))
     blocked = _BlockedReaderCleanup(worker)
     try:
         blocked.start_and_pause_child()

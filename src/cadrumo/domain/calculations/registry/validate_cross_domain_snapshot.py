@@ -88,8 +88,8 @@ REQUIRED_CROSS_DOMAIN_CHECK_IDENTITIES: Mapping[str, str] = MappingProxyType(
     },
 )
 
-_CROSS_DOMAIN_SNAPSHOT_CHECKS: list[CrossDomainSnapshotCheck] = []
-_CROSS_DOMAIN_CHECK_IDENTITIES: dict[str, list[CrossDomainSnapshotCheck]] = {}
+CROSS_DOMAIN_SNAPSHOT_CHECKS: list[CrossDomainSnapshotCheck] = []
+CROSS_DOMAIN_CHECK_IDENTITIES: dict[str, list[CrossDomainSnapshotCheck]] = {}
 
 
 def register_cross_domain_snapshot_check(check: CrossDomainSnapshotCheck) -> None:
@@ -106,15 +106,15 @@ def register_cross_domain_snapshot_check(check: CrossDomainSnapshotCheck) -> Non
     peer-domain module re-imported in a fresh interpreter (or under
     test reload) does not stack duplicate checks.
     """
-    if check in _CROSS_DOMAIN_SNAPSHOT_CHECKS:
+    if check in CROSS_DOMAIN_SNAPSHOT_CHECKS:
         return
-    _CROSS_DOMAIN_SNAPSHOT_CHECKS.append(check)
-    _CROSS_DOMAIN_CHECK_IDENTITIES.setdefault(check.__module__, []).append(check)
+    CROSS_DOMAIN_SNAPSHOT_CHECKS.append(check)
+    CROSS_DOMAIN_CHECK_IDENTITIES.setdefault(check.__module__, []).append(check)
 
 
 def registered_cross_domain_check_identities() -> frozenset[str]:
     """Return the owning module of every currently registered check."""
-    return frozenset(_CROSS_DOMAIN_CHECK_IDENTITIES)
+    return frozenset(CROSS_DOMAIN_CHECK_IDENTITIES)
 
 
 def missing_required_cross_domain_check(modelo_id: str, registered_identities: Collection[str]) -> str | None:
@@ -177,7 +177,7 @@ def check_cross_domain_snapshot_routing(
     revision_binding_ids = frozenset(binding.id for binding in snapshot.revision.bindings)
     registered_identities = registered_cross_domain_check_identities()
     missing = missing_required_cross_domain_check(snapshot.modelo.id, registered_identities)
-    if missing is not None and not _CROSS_DOMAIN_SNAPSHOT_CHECKS:
+    if missing is not None and not CROSS_DOMAIN_SNAPSHOT_CHECKS:
         checker.failures.append(
             f"{checker.prefix}: modelo {snapshot.modelo.id} requires the "
             f"cross-domain snapshot check owned by {missing}, but no "
@@ -194,7 +194,7 @@ def check_cross_domain_snapshot_routing(
             "module that no longer registers its check reaches validation as a "
             "silently absent gate, which another domain's check does not cover",
         )
-    for check in _CROSS_DOMAIN_SNAPSHOT_CHECKS:
+    for check in CROSS_DOMAIN_SNAPSHOT_CHECKS:
         for failure in check(
             snapshot.modelo.id,
             casilla_ids,

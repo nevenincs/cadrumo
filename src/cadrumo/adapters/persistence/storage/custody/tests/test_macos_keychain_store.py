@@ -105,7 +105,7 @@ class _MemoryNativeApi:
 def api(monkeypatch: pytest.MonkeyPatch) -> _MemoryNativeApi:
     api = _MemoryNativeApi()
     monkeypatch.setattr(macos_keychain_policy.sys, "platform", "darwin")
-    monkeypatch.setattr(native, "_native_api", lambda: api)
+    monkeypatch.setattr(native, "native_api", lambda: api)
     return api
 
 
@@ -235,7 +235,7 @@ def test_wrong_platform_and_invalid_target_never_open_native_facility(monkeypatc
     def forbidden_api() -> macos_keychain_contracts.KeychainApi:
         pytest.fail("invalid platform/target must not enter the native API")
 
-    monkeypatch.setattr(native, "_native_api", forbidden_api)
+    monkeypatch.setattr(native, "native_api", forbidden_api)
     monkeypatch.setattr(macos_keychain_policy.sys, "platform", "linux")
     with pytest.raises(AutomationCustodyError) as caught:
         native_automation_secret_store(NativeSecretBackend.MACOS_KEYCHAIN)
@@ -347,7 +347,7 @@ def test_acceleration_backend_uses_the_same_verified_noninteractive_scope(
     monkeypatch.setattr(keyring, "get_password", credential_call)
     monkeypatch.setattr(keyring, "set_password", credential_call)
     monkeypatch.setattr(keyring, "delete_password", credential_call)
-    backend, _, _ = acceleration_keychain._keyring()
+    backend, _, _ = acceleration_keychain.acceleration_keychain_keyring()
 
     def call() -> None:
         if action == "read":

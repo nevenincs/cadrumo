@@ -52,20 +52,20 @@ from ..models import (
 from ..notifications_screen import AeatSyncNotificationsScreen
 from ..overview_screen import AeatSyncOverviewScreen
 from ..reconciliation_screen import AeatSyncReconciliationScreen
-from ._aeat_sync_workspace_support import (
-    _BUCKET_ID,
-    _REPRESENTATIVE_KEYS,
-    _SCREEN_CASES,
-    _SUBJECT_KEY,
-    _T1,
-    _T2,
-    _contracts,
-    _controller,
-    _empty_projection,
-    _projection,
-    _ScreenFactory,
-    _started_operation_controller,
-    _table_text,
+from .aeat_sync_workspace_support import (
+    BUCKET_ID,
+    REPRESENTATIVE_KEYS,
+    SCREEN_CASES,
+    SUBJECT_KEY,
+    T1,
+    T2,
+    ScreenFactory,
+    aeat_sync_workspace_contracts,
+    aeat_sync_workspace_controller,
+    aeat_sync_workspace_projection,
+    empty_projection,
+    started_operation_controller,
+    table_text,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -93,10 +93,10 @@ def test_aeat_sync_status_keys_are_present_in_every_supported_locale() -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("locale", ("en", "es", "ca", "hu"))
-@pytest.mark.parametrize("screen_type, heading_key, headings, expected_keys", _SCREEN_CASES)
+@pytest.mark.parametrize("screen_type, heading_key, headings, expected_keys", SCREEN_CASES)
 async def test_every_aeat_sync_screen_is_localized_and_keeps_route_and_row_identities(
     locale: str,
-    screen_type: _ScreenFactory,
+    screen_type: ScreenFactory,
     heading_key: str,
     headings: dict[str, str],
     expected_keys: tuple[str, ...],
@@ -105,7 +105,7 @@ async def test_every_aeat_sync_screen_is_localized_and_keeps_route_and_row_ident
     token = I18N_STRICT_MISSING_KEYS.set(True)
     try:
         with override_settings(cadrumo_output_language=locale):
-            screen = screen_type(_controller())
+            screen = screen_type(aeat_sync_workspace_controller())
             async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
                 await settle(pilot)
                 rendered = "\n".join(str(widget.render()) for widget in screen.query(Static))
@@ -115,10 +115,10 @@ async def test_every_aeat_sync_screen_is_localized_and_keeps_route_and_row_ident
                     assert headings[locale] != headings["en"]
                 table = screen.query_one("#aeat-sync-rows", DataTable)
                 navigation = screen.query_one("#aeat-sync-navigation", DataTable)
-                visible = "\n".join((rendered, _table_text(navigation), _table_text(table)))
+                visible = "\n".join((rendered, table_text(navigation), table_text(table)))
                 assert tr("tui.aeat_sync.column.area", locale=locale) in visible
                 assert tr("tui.aeat_sync.availability.available", locale=locale) in visible
-                for key in _REPRESENTATIVE_KEYS[screen_type]:
+                for key in REPRESENTATIVE_KEYS[screen_type]:
                     translated = tr(key, locale=locale)
                     assert translated != key
                     assert translated in visible
@@ -175,7 +175,7 @@ async def test_operation_failure_and_refusal_copy_is_localized(
     token = I18N_STRICT_MISSING_KEYS.set(True)
     try:
         with override_settings(cadrumo_output_language=locale):
-            failed = AeatSyncOverviewScreen(_controller(operation_handoff=fail))
+            failed = AeatSyncOverviewScreen(aeat_sync_workspace_controller(operation_handoff=fail))
             async with ScreenHostApp[None](failed).run_test(size=(100, 30)) as pilot:
                 await settle(pilot)
                 await pilot.click("#aeat-sync-operation-0")
@@ -185,7 +185,7 @@ async def test_operation_failure_and_refusal_copy_is_localized(
                 assert "protected" not in rendered
                 assert "12345678Z" not in rendered
 
-            refused = AeatSyncOverviewScreen(_controller())
+            refused = AeatSyncOverviewScreen(aeat_sync_workspace_controller())
             async with ScreenHostApp[None](refused).run_test(size=(100, 30)) as pilot:
                 await settle(pilot)
                 assert not refused.query("#aeat-sync-operation-0")
@@ -200,16 +200,16 @@ async def test_every_zone_renders_truthful_empty_or_unobservable_source_state(
     availability: AeatSyncWorkspaceAvailability,
 ) -> None:
     """Known-empty and unknown source states remain visibly distinct in all zones."""
-    projection = _empty_projection(availability)
+    projection = empty_projection(availability)
     controller = AeatSyncWorkspaceController(
         TuiScreenContextV1(destination="workbench.aeat_sync"),
         projection,
-        operation_contracts=_contracts(),
+        operation_contracts=aeat_sync_workspace_contracts(),
     )
     expected_count = (
         0 if availability in {AeatSyncWorkspaceAvailability.AVAILABLE, AeatSyncWorkspaceAvailability.STALE} else None
     )
-    for screen_factory, _heading, _translations, _keys in _SCREEN_CASES:
+    for screen_factory, _heading, _translations, _keys in SCREEN_CASES:
         screen = screen_factory(controller)
         async with ScreenHostApp[None](screen).run_test(size=(80, 24)) as pilot:
             await settle(pilot)
@@ -228,8 +228,8 @@ async def test_every_zone_renders_truthful_empty_or_unobservable_source_state(
 @pytest.mark.parametrize("width", (80, 100, 120))
 async def test_all_routes_have_one_scroll_owner_no_horizontal_overflow_and_reachable_actions(width: int) -> None:
     """The supported widths expose every action through keyboard focus."""
-    for screen_factory, _heading, _translations, _keys in _SCREEN_CASES:
-        screen = screen_factory(_controller())
+    for screen_factory, _heading, _translations, _keys in SCREEN_CASES:
+        screen = screen_factory(aeat_sync_workspace_controller())
         async with ScreenHostApp[None](screen).run_test(size=(width, 24)) as pilot:
             await settle(pilot)
             overflowing = tuple(
@@ -252,7 +252,7 @@ async def test_all_routes_have_one_scroll_owner_no_horizontal_overflow_and_reach
                         reached = True
                         break
                 assert reached
-            nav_text = _table_text(screen.query_one("#aeat-sync-navigation", DataTable))
+            nav_text = table_text(screen.query_one("#aeat-sync-navigation", DataTable))
             assert tr("tui.aeat_sync.availability.available") in nav_text
 
 
@@ -261,16 +261,16 @@ async def test_all_routes_have_one_scroll_owner_no_horizontal_overflow_and_reach
 async def test_census_adoption_is_local_wording_and_no_remote_push_control(locale: str) -> None:
     """Census comparison is local review state, never an invented remote push UI."""
     with override_settings(cadrumo_output_language=locale):
-        projection = _projection(census_status=AeatSyncCensusStatus.ADOPTED)
+        projection = aeat_sync_workspace_projection(census_status=AeatSyncCensusStatus.ADOPTED)
         controller = AeatSyncWorkspaceController(
             TuiScreenContextV1(destination="workbench.aeat_sync"),
             projection,
-            operation_contracts=_contracts(),
+            operation_contracts=aeat_sync_workspace_contracts(),
         )
         census = AeatSyncCensusScreen(controller)
         async with ScreenHostApp[None](census).run_test(size=(80, 24)) as pilot:
             await settle(pilot)
-            visible = _table_text(census.query_one("#aeat-sync-rows", DataTable))
+            visible = table_text(census.query_one("#aeat-sync-rows", DataTable))
             assert tr("tui.aeat_sync.census_status.adopted", locale=locale) in visible
             assert not tuple(census.query(Button))
 
@@ -286,12 +286,12 @@ async def test_filed_pull_all_uses_action_specific_copy_and_exact_one_shot_hando
 
     async def handoff(request: AeatSyncOperationRequestV1) -> OperationControllerPort:
         calls.append(request)
-        return _started_operation_controller()
+        return started_operation_controller()
 
     token = I18N_STRICT_MISSING_KEYS.set(True)
     try:
         with override_settings(cadrumo_output_language=locale):
-            controller = _controller(
+            controller = aeat_sync_workspace_controller(
                 operation_handoff=handoff,
                 overview_area=AeatSyncOverviewArea.FILED_DECLARATIONS,
                 action_id="operator.live.filed.pull_all",
@@ -324,12 +324,12 @@ async def test_overview_actions_use_distinct_localized_census_and_notification_c
     """Census review and notification listing retain their own action copy."""
 
     async def handoff(_request: AeatSyncOperationRequestV1) -> OperationControllerPort:
-        return _started_operation_controller()
+        return started_operation_controller()
 
     token = I18N_STRICT_MISSING_KEYS.set(True)
     try:
         with override_settings(cadrumo_output_language=locale):
-            census = AeatSyncOverviewScreen(_controller(operation_handoff=handoff))
+            census = AeatSyncOverviewScreen(aeat_sync_workspace_controller(operation_handoff=handoff))
             async with ScreenHostApp[None](census).run_test(size=(80, 24)) as pilot:
                 await settle(pilot)
                 label = str(census.query_one("#aeat-sync-operation-0", Button).label)
@@ -337,7 +337,7 @@ async def test_overview_actions_use_distinct_localized_census_and_notification_c
                 assert label != tr("tui.aeat_sync.action.pull_filed_all", locale=locale)
 
             notifications = AeatSyncOverviewScreen(
-                _controller(
+                aeat_sync_workspace_controller(
                     operation_handoff=handoff,
                     overview_area=AeatSyncOverviewArea.NOTIFICATIONS,
                     action_id="operator.live.notifications.list",
@@ -364,8 +364,8 @@ async def test_completing_one_overview_operation_keeps_the_other_action_reachabl
             area=AeatSyncOverviewArea.CENSUS,
             local_state=AeatSyncSourceState.PRESENT,
             aeat_state=AeatSyncSourceState.PRESENT,
-            local_observed_at=_T1,
-            aeat_observed_at=_T2,
+            local_observed_at=T1,
+            aeat_observed_at=T2,
             discrepancy_kind=AeatSyncDiscrepancyKind.NONE,
             supported_actions=(ActionReference(action_id="operator.profile.edit"),),
             supported_operations=("user-profile.censo-review",),
@@ -374,8 +374,8 @@ async def test_completing_one_overview_operation_keeps_the_other_action_reachabl
             area=AeatSyncOverviewArea.FILED_DECLARATIONS,
             local_state=AeatSyncSourceState.PRESENT,
             aeat_state=AeatSyncSourceState.PRESENT,
-            local_observed_at=_T1,
-            aeat_observed_at=_T2,
+            local_observed_at=T1,
+            aeat_observed_at=T2,
             discrepancy_kind=AeatSyncDiscrepancyKind.NONE,
             supported_actions=(ActionReference(action_id="operator.live.filed.pull_all"),),
             supported_operations=("live.filed-history.pull",),
@@ -388,7 +388,7 @@ async def test_completing_one_overview_operation_keeps_the_other_action_reachabl
                 AeatSyncWorkspaceSourceObservationV1(
                     source=source,
                     availability=AeatSyncWorkspaceAvailability.AVAILABLE,
-                    observed_at=_T2,
+                    observed_at=T2,
                     item_count=2 if zone is AeatSyncWorkspaceZone.OVERVIEW else 0,
                 )
                 for source in aeat_sync_workspace_sources(zone)
@@ -397,15 +397,18 @@ async def test_completing_one_overview_operation_keeps_the_other_action_reachabl
         for zone in AeatSyncWorkspaceZone
     )
     contracts = OperationPublicContractSetV1.build(
-        (*_contracts().definitions, *_contracts("operator.live.filed.pull_all", "live.filed-history.pull").definitions)
+        (
+            *aeat_sync_workspace_contracts().definitions,
+            *aeat_sync_workspace_contracts("operator.live.filed.pull_all", "live.filed-history.pull").definitions,
+        )
     )
     projection = project_aeat_sync_workspace(
-        bucket_id=_BUCKET_ID,
-        subject_key=_SUBJECT_KEY,
+        bucket_id=BUCKET_ID,
+        subject_key=SUBJECT_KEY,
         zone_observations=observations,
         action_catalogue=OPERATOR_ACTION_CATALOGUE,
         operation_contracts=contracts,
-        overview=tuple(AeatSyncWorkspaceFactV1(_BUCKET_ID, _SUBJECT_KEY, row) for row in rows),
+        overview=tuple(AeatSyncWorkspaceFactV1(BUCKET_ID, SUBJECT_KEY, row) for row in rows),
     )
     calls: list[AeatSyncOperationRequestV1] = []
 
@@ -413,7 +416,7 @@ async def test_completing_one_overview_operation_keeps_the_other_action_reachabl
         calls.append(request)
         if first_fails and request.action.action_id == "operator.profile.edit":
             raise RuntimeError("C:\\protected\\taxpayer.txt 12345678Z")
-        return _started_operation_controller()
+        return started_operation_controller()
 
     screen = AeatSyncOverviewScreen(
         AeatSyncWorkspaceController(
@@ -483,7 +486,7 @@ async def test_the_census_comparison_shows_both_values_or_neither(width: int) ->
     the thing that tells them to act, and an earlier ordering that ranked the
     raw values above it failed exactly this way.
     """
-    controller = _controller()
+    controller = aeat_sync_workspace_controller()
     screen = AeatSyncCensusScreen(controller)
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(width, 40)) as pilot:
@@ -504,14 +507,14 @@ async def test_the_census_comparison_shows_both_values_or_neither(width: int) ->
     "screen_type",
     [AeatSyncCensusScreen, AeatSyncEvidenceComparisonScreen, AeatSyncReconciliationScreen],
 )
-async def test_every_comparison_surface_shows_both_values_or_neither(screen_type: _ScreenFactory, width: int) -> None:
+async def test_every_comparison_surface_shows_both_values_or_neither(screen_type: ScreenFactory, width: int) -> None:
     """One rule, asserted on all three surfaces that compare two sides.
 
     The column fitter is shared precisely so the rule cannot drift between
     them, and this is what proves the sharing held: a screen that grew its own
     copy and split the pair fails here without touching the others.
     """
-    controller = _controller()
+    controller = aeat_sync_workspace_controller()
     screen = screen_type(controller)
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(width, 40)) as pilot:
@@ -544,7 +547,7 @@ async def test_complete_census_evidence_survives_reopen_and_selected_value_is_re
         identity=CensalObservationIdentity(nif="00000001R", apellidos_y_nombre="Persona Sintética"),
         domicilio_fiscal=CensalObservationAddress(codigo_postal="28001"),
         domicilio_notificacion=CensalObservationAddress(),
-        captured_at=_T2,
+        captured_at=T2,
         source_url=CENSO_SOURCE_URL_FIXTURE,
         consultations=(
             CensalConsultation(
@@ -564,7 +567,9 @@ async def test_complete_census_evidence_survives_reopen_and_selected_value_is_re
             ),
         ),
     )
-    serialized = _projection().model_copy(update={"census_observation": observation}).model_dump_json()
+    serialized = (
+        aeat_sync_workspace_projection().model_copy(update={"census_observation": observation}).model_dump_json()
+    )
     for _ in range(2):
         restored = AeatSyncWorkspaceProjectionV1.model_validate_json(serialized)
         screen = AeatSyncCensusScreen(
@@ -591,7 +596,7 @@ async def test_complete_census_evidence_survives_reopen_and_selected_value_is_re
 
 def test_controller_pairs_the_single_operation_with_its_contract_joined_action() -> None:
     """A row's catalogue-only actions do not hide the operation its contract joins."""
-    controller = _controller(
+    controller = aeat_sync_workspace_controller(
         overview_area=AeatSyncOverviewArea.FILED_DECLARATIONS,
         action_id="operator.live.filed.pull_all",
         operation_id="live.filed-history.pull",
@@ -620,12 +625,15 @@ async def test_reader_projected_filed_history_door_renders_and_hands_off_before_
     from .....application.aeat_sync.workspace_reader import read_local_aeat_sync_workspace_projection
 
     contracts = OperationPublicContractSetV1.build(
-        (*_contracts().definitions, *_contracts("operator.live.filed.pull_all", "live.filed-history.pull").definitions)
+        (
+            *aeat_sync_workspace_contracts().definitions,
+            *aeat_sync_workspace_contracts("operator.live.filed.pull_all", "live.filed-history.pull").definitions,
+        )
     )
     projection = read_local_aeat_sync_workspace_projection(
-        bucket_id=_BUCKET_ID,
-        subject_key=_SUBJECT_KEY,
-        observed_at=_T2,
+        bucket_id=BUCKET_ID,
+        subject_key=SUBJECT_KEY,
+        observed_at=T2,
         filings=(),
         operation_contracts=contracts,
         censo_values={},
@@ -639,7 +647,7 @@ async def test_reader_projected_filed_history_door_renders_and_hands_off_before_
 
     async def handoff(request: AeatSyncOperationRequestV1) -> OperationControllerPort:
         calls.append(request)
-        return _started_operation_controller()
+        return started_operation_controller()
 
     controller = AeatSyncWorkspaceController(
         TuiScreenContextV1(destination="workbench.aeat_sync"),
@@ -675,7 +683,7 @@ async def test_persisted_drift_renders_each_diff_values_and_grounding_without_ov
     from .....application.aeat_sync.tests.reconciliation_fixtures import (
         reconciliation_projection as persisted_projection,
     )
-    from .....application.aeat_sync.tests.reconciliation_fixtures import reconciliation_record as _record
+    from .....application.aeat_sync.tests.reconciliation_fixtures import reconciliation_record
     from .....application.modelo.reconciliation_records import ModeloReconciliationDiff, ModeloReconciliationDiffKind
 
     diff = ModeloReconciliationDiff(
@@ -687,12 +695,12 @@ async def test_persisted_drift_renders_each_diff_values_and_grounding_without_ov
         legal_refs=("ley-37-1992:art-99",),
         source_refs=("aeat-test",),
     )
-    record = _record().model_copy(update={"diffs": (_record().diffs[0], diff)})
+    record = reconciliation_record().model_copy(update={"diffs": (reconciliation_record().diffs[0], diff)})
     projection = AeatSyncWorkspaceProjectionV1.model_validate_json(persisted_projection((record,)).model_dump_json())
     controller = AeatSyncWorkspaceController(
         TuiScreenContextV1(destination="workbench.aeat_sync"),
         projection,
-        operation_contracts=_contracts(),
+        operation_contracts=aeat_sync_workspace_contracts(),
     )
     screen = AeatSyncReconciliationScreen(controller)
     with override_settings(cadrumo_output_language="en"):
@@ -723,13 +731,13 @@ async def test_stored_match_with_advisories_shows_incomplete_comparison() -> Non
     from .....application.aeat_sync.tests.reconciliation_fixtures import (
         reconciliation_projection as persisted_projection,
     )
-    from .....application.aeat_sync.tests.reconciliation_fixtures import reconciliation_record as _record
+    from .....application.aeat_sync.tests.reconciliation_fixtures import reconciliation_record
 
-    projection = persisted_projection((_record(mismatches=False),))
+    projection = persisted_projection((reconciliation_record(mismatches=False),))
     controller = AeatSyncWorkspaceController(
         TuiScreenContextV1(destination="workbench.aeat_sync"),
         projection,
-        operation_contracts=_contracts(),
+        operation_contracts=aeat_sync_workspace_contracts(),
     )
     screen = AeatSyncReconciliationScreen(controller)
     with override_settings(cadrumo_output_language="en"):
@@ -748,21 +756,21 @@ async def test_distinct_comparisons_at_same_address_have_unique_rows_and_histori
     from .....application.aeat_sync.tests.reconciliation_fixtures import (
         reconciliation_projection as persisted_projection,
     )
-    from .....application.aeat_sync.tests.reconciliation_fixtures import reconciliation_record as _record
+    from .....application.aeat_sync.tests.reconciliation_fixtures import reconciliation_record
     from .....application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 
-    first = _record().model_copy(
+    first = reconciliation_record().model_copy(
         update={
             "source_kind": ModeloReconciliationEvidenceKind.DECLARATION,
             "calculation_revision_id": "d" * 64,
         }
     )
-    second = _record(mismatches=False).model_copy(update={"bucket_event_id": "c" * 64})
+    second = reconciliation_record(mismatches=False).model_copy(update={"bucket_event_id": "c" * 64})
     projection = persisted_projection((first, second))
     controller = AeatSyncWorkspaceController(
         TuiScreenContextV1(destination="workbench.aeat_sync"),
         projection,
-        operation_contracts=_contracts(),
+        operation_contracts=aeat_sync_workspace_contracts(),
     )
     screen = AeatSyncReconciliationScreen(controller)
     with override_settings(cadrumo_output_language="en"):

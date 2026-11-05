@@ -35,18 +35,18 @@ from .....domain.iva.schema import InvoiceKind
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from .....domain.transactions.models import Transaction
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ._invoice_confirmation_test_support import (
-    _BUCKET_ID,
-    _EVIDENCE_CORPUS,
+from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from .invoice_confirmation_test_support import (
+    BUCKET_ID,
+    EVIDENCE_CORPUS,
     InvoiceAuthorityFixture,
-    _make_svc,
     invoice_confirmation_kwargs,
     isolated_settings,
+    make_svc,
     secure_objects,
     seed_filer_profile,
 )
-from ._invoice_confirmation_test_support import runtime_profile as runtime_profile
-from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from .invoice_confirmation_test_support import runtime_profile as runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -55,7 +55,7 @@ __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_fil
 # Single-rate on purpose. A multi-rate document has no single domestic category
 # to declare, so it grounds for a different and legitimate reason -- using one
 # here would have tested the multi-rate carve-out rather than the confirm hop.
-_SINGLE_RATE_FIXTURE = _EVIDENCE_CORPUS / "facturae_32_series_and_parties_invoice.xml"
+_SINGLE_RATE_FIXTURE = EVIDENCE_CORPUS / "facturae_32_series_and_parties_invoice.xml"
 # The document's seller party. Confirming it as ISSUED is only honest when the
 # filer is that seller; any other filer is refused before grounding is reached.
 _FIXTURE_SELLER_TAX_ID = "45821337R"
@@ -85,19 +85,19 @@ def _confirm_as_issued(
     """
     source = tmp_path / "facturae_32_series_and_parties_invoice.xml"
     source.write_bytes(_SINGLE_RATE_FIXTURE.read_bytes())
-    svc = _make_svc(isolated_settings, secure_objects)
-    record = svc.add(bucket_id=_BUCKET_ID, source_path=source).record
+    svc = make_svc(isolated_settings, secure_objects)
+    record = svc.add(bucket_id=BUCKET_ID, source_path=source).record
     return confirm_invoice_draft_from_evidence(
         counterparty_country="ES",
         # Supplied because this document states no name. The claim under test is
         # grounding, and an operator-supplied name is the ordinary confirm path,
         # so withholding it would fail on an unrelated precondition.
         counterparty_name="Cliente SL",
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         kind=InvoiceKind.ISSUED,
         evidence_id=record.evidence_id,
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=authority),
+        **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=authority),
     )
 
 
@@ -203,15 +203,15 @@ def test_a_read_retention_makes_the_net_cash_match_the_linked_invoice(
     """
     # The specimen prints its seller with the VAT prefix; the filer's profile holds the NIF.
     source = tmp_path / "facturae_32_retencion_suplidos_invoice.xml"
-    source.write_bytes((_EVIDENCE_CORPUS / source.name).read_bytes())
-    record = _make_svc(isolated_settings, secure_objects).add(bucket_id=_BUCKET_ID, source_path=source).record
+    source.write_bytes((EVIDENCE_CORPUS / source.name).read_bytes())
+    record = make_svc(isolated_settings, secure_objects).add(bucket_id=BUCKET_ID, source_path=source).record
     invoice = confirm_invoice_draft_from_evidence(
         counterparty_country="ES",
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         kind=InvoiceKind.ISSUED,
         evidence_id=record.evidence_id,
         settings=isolated_settings,
-        **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
+        **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=invoice_authority),
     ).invoice
     transaction = Transaction.model_validate(
         {
@@ -248,7 +248,7 @@ def test_a_read_retention_makes_the_net_cash_match_the_linked_invoice(
 
     payload, refusal = sales_invoice_evidence_payload(
         invoices=build_invoice_catalogue((linked_invoice,)),
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         transaction=linked_transaction,
     )
     withheld = income_withheld_amount(linked_transaction, evidence=payload)
@@ -272,16 +272,16 @@ def test_an_issued_document_printing_another_issuer_is_still_refused(
 ) -> None:
     """Stripping the country prefix is not a way past the check: a different NIF stays another issuer."""
     source = tmp_path / "facturae_32_retencion_suplidos_invoice.xml"
-    printed = (_EVIDENCE_CORPUS / source.name).read_text(encoding="utf-8")
+    printed = (EVIDENCE_CORPUS / source.name).read_text(encoding="utf-8")
     source.write_text(printed.replace(f">ES{_FIXTURE_SELLER_TAX_ID}<", ">ESB12345674<", 1), encoding="utf-8")
-    record = _make_svc(isolated_settings, secure_objects).add(bucket_id=_BUCKET_ID, source_path=source).record
+    record = make_svc(isolated_settings, secure_objects).add(bucket_id=BUCKET_ID, source_path=source).record
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError, match="another issuer"):
         confirm_invoice_draft_from_evidence(
             counterparty_country="ES",
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             kind=InvoiceKind.ISSUED,
             evidence_id=record.evidence_id,
             settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=invoice_authority),
+            **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=invoice_authority),
         )

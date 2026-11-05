@@ -7,36 +7,36 @@ import pytest
 from .....tests.inventory import FIXTURES_DIR
 from ..errors import DeclaracionParseError
 from ..parser import parse_declaracion
-from ._parser_boundary_casillas import (
-    _M303_CASILLA_27,
-    _M303_CASILLA_29,
-    _M303_CASILLA_45,
-    _M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
+from .parser_boundary_casillas import (
+    M303_CASILLA_27,
+    M303_CASILLA_29,
+    M303_CASILLA_45,
+    M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
 )
-from ._parser_boundary_m303_support import (
-    _M303_C46_ALIAS,
-    _M303_HISTORICAL_EXPECTED,
-    _M303_HISTORICAL_IDS,
-    _M303_HISTORICAL_PARAMS,
-    _M303_HISTORICAL_PROFILE_CASILLAS,
-    _M303_HISTORICAL_UNSUPPORTED_IDS,
-    _M303_HISTORICAL_UNSUPPORTED_PARAMS,
+from .parser_boundary_m303_support import (
+    M303_C46_ALIAS,
+    M303_HISTORICAL_EXPECTED,
+    M303_HISTORICAL_IDS,
+    M303_HISTORICAL_PARAMS,
+    M303_HISTORICAL_PROFILE_CASILLAS,
+    M303_HISTORICAL_UNSUPPORTED_IDS,
+    M303_HISTORICAL_UNSUPPORTED_PARAMS,
 )
-from ._parser_boundary_support import (
-    _expected_period,
+from .parser_boundary_support import (
+    expected_period,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 
-@pytest.mark.parametrize("pdf_stem,year,period", _M303_HISTORICAL_PARAMS, ids=_M303_HISTORICAL_IDS)
+@pytest.mark.parametrize("pdf_stem,year,period", M303_HISTORICAL_PARAMS, ids=M303_HISTORICAL_IDS)
 def test_parser_extracts_modelo_303_historical_template_profile_targets_from_corpus(
     pdf_stem: str,
     year: int,
     period: str,
 ) -> None:
     """Round-trip all 2021-2022 M303 corpus PDFs from the historical printed template."""
-    expected = _M303_HISTORICAL_EXPECTED[pdf_stem]
+    expected = M303_HISTORICAL_EXPECTED[pdf_stem]
     pdf_path = FIXTURES_DIR / "justificantes" / "303" / f"{pdf_stem}.pdf"
 
     filing = parse_declaracion(
@@ -47,7 +47,7 @@ def test_parser_extracts_modelo_303_historical_template_profile_targets_from_cor
     )
 
     assert filing.modelo == "303"
-    assert filing.period == _expected_period(year, period)
+    assert filing.period == expected_period(year, period)
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "303"
@@ -55,13 +55,13 @@ def test_parser_extracts_modelo_303_historical_template_profile_targets_from_cor
     assert filing.registry_snapshot_ref.modelo_year == year
 
     values = {value.casilla_id: value.printed_value for value in filing.values}
-    assert set(values.keys()) == _M303_HISTORICAL_PROFILE_CASILLAS
+    assert set(values.keys()) == M303_HISTORICAL_PROFILE_CASILLAS
 
     expected_values = {
-        _M303_CASILLA_27: expected[_M303_CASILLA_27],
-        _M303_CASILLA_29: expected[_M303_CASILLA_29],
-        _M303_CASILLA_45: expected[_M303_CASILLA_45],
-        _M303_RESULTADO_REGIMEN_GENERAL_CASILLA: expected[_M303_C46_ALIAS],
+        M303_CASILLA_27: expected[M303_CASILLA_27],
+        M303_CASILLA_29: expected[M303_CASILLA_29],
+        M303_CASILLA_45: expected[M303_CASILLA_45],
+        M303_RESULTADO_REGIMEN_GENERAL_CASILLA: expected[M303_C46_ALIAS],
     }
     for casilla_id, expected_value in expected_values.items():
         assert values[casilla_id] == expected_value, (
@@ -70,7 +70,7 @@ def test_parser_extracts_modelo_303_historical_template_profile_targets_from_cor
 
 
 @pytest.mark.parametrize(
-    "pdf_stem,year,period", _M303_HISTORICAL_UNSUPPORTED_PARAMS, ids=_M303_HISTORICAL_UNSUPPORTED_IDS
+    "pdf_stem,year,period", M303_HISTORICAL_UNSUPPORTED_PARAMS, ids=M303_HISTORICAL_UNSUPPORTED_IDS
 )
 def test_parser_refuses_modelo_303_historical_corpus_below_the_supported_floor(
     pdf_stem: str,

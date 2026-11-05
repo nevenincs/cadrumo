@@ -37,7 +37,7 @@ from ..errors import (
     OutboundStorageValidationError,
     StorageCorruptionError,
 )
-from ..local import LocalFileSystemProvider, _local_failure_verdict
+from ..local import LocalFileSystemProvider, local_failure_verdict
 from ..protocol import StorageProvider
 from ..records import ProviderKind
 
@@ -247,7 +247,7 @@ def test_local_failure_verdict_contracts_are_exact(
 ) -> None:
     error = StorageCorruptionError(
         "local provider refusal",
-        precondition_verdict=_local_failure_verdict(condition_id, facts=facts, outcome=outcome),
+        precondition_verdict=local_failure_verdict(condition_id, facts=facts, outcome=outcome),
     )
 
     _assert_local_verdict(error, condition_id, outcome, facts)

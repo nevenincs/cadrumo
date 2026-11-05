@@ -8,7 +8,7 @@ from typing import Annotated, Final, Literal, TypeIs, cast, get_args
 
 from pydantic import BaseModel, Field, TypeAdapter, model_validator
 
-from . import filing_projection_ref_support as _projection_ref_support
+from . import filing_projection_ref_support
 from .casilla_id import CasillaId
 from .errors.hierarchy import pydantic_validation_boundary
 from .filing_projection_m296 import (
@@ -897,7 +897,7 @@ _FILING_PROJECTION_REF_ADAPTER: TypeAdapter[FilingProjectionRef] = TypeAdapter(F
 #: annotated union rather than restated, so a new member cannot be forgotten
 #: here: ``get_args`` on the Annotated alias yields the union first, whose own
 #: args are the member classes.
-_TYPED_FILING_PROJECTION_REFS: Final[tuple[type, ...]] = _projection_ref_support.validated_type_members(
+_TYPED_FILING_PROJECTION_REFS: Final[tuple[type, ...]] = filing_projection_ref_support.validated_type_members(
     get_args(get_args(FilingProjectionRef)[0]),
 )
 
@@ -942,7 +942,7 @@ def _normalise_filing_projection_ref_payload(value: object) -> dict[str, object]
 
 def _validate_filing_projection_ref_strings(payload: Mapping[str, object]) -> None:
     """Refuse non-string or padded identity tokens before model coercion."""
-    for field_name in _projection_ref_support.STRING_WIRE_FIELDS.intersection(payload):
+    for field_name in filing_projection_ref_support.STRING_WIRE_FIELDS.intersection(payload):
         if type(payload[field_name]) is not str:
             raise ValueError(f"filing projection reference {field_name!r} must be an exact string")
         string_value = cast(str, payload[field_name])

@@ -242,17 +242,15 @@ def test_each_store_prune_reaches_the_canonical_selector() -> None:
     """
     import inspect
 
-    from ....persistence.llm import cache as _cache
-    from ....persistence.llm import run_records as _run_record
-    from ....persistence.llm import usage as _usage
+    from ....persistence.llm import cache, run_records, usage
 
-    for module in (_cache, _usage, _run_record):
+    for module in (cache, usage, run_records):
         assert module.select_retention_removal_keys is select_retention_removal_keys, module.__name__
 
     for source_owner, prune in (
-        (_cache.LLMCache, _cache.LLMCache.prune),
-        (_usage.UsageRecorder, _usage.UsageRecorder.prune),
-        (_run_record.LLMRunRecorder, _run_record.LLMRunRecorder.prune),
+        (cache.LLMCache, cache.LLMCache.prune),
+        (usage.UsageRecorder, usage.UsageRecorder.prune),
+        (run_records.LLMRunRecorder, run_records.LLMRunRecorder.prune),
     ):
         source = inspect.getsource(prune)
         assert "select_retention_removal_keys(" in source, source_owner.__name__

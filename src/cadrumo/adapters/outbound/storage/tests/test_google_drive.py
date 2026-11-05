@@ -20,14 +20,14 @@ from .....core.i18n.render import tr
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....tests.audited_process import run_audited_process
 from .....tests.google_credentials import unused_google_credentials
-from .._google_drive import GoogleDriveProvider
-from .._google_drive_metadata import drive_storage_content_hash
 from ..errors import (
     OutboundStorageConflictError,
     OutboundStorageIntegrityError,
     OutboundStorageNetworkError,
     OutboundStorageValidationError,
 )
+from ..google_drive import GoogleDriveProvider
+from ..google_drive_metadata import drive_storage_content_hash
 from .managed_drive_fixture import current_drive_receipts, drive_files_list_endpoint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -74,7 +74,7 @@ def test_google_drive_explicit_constructor_does_not_build_google_client() -> Non
                 import json
                 import sys
 
-                from cadrumo.adapters.outbound.storage._google_drive import GoogleDriveProvider
+                from cadrumo.adapters.outbound.storage.google_drive import GoogleDriveProvider
 
                 provider = GoogleDriveProvider(
                     credentials=object(),

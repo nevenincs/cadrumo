@@ -43,7 +43,7 @@ class SchemaVocabularyProjections:
     cash_accounting: list[IvaCashAccountingTreatmentCatalogue]
 
 
-_PROJECTIONS: dict[int, SchemaVocabularyProjections] = {}
+PROJECTIONS: dict[int, SchemaVocabularyProjections] = {}
 
 _PROJECTIONS_LOCK = Lock()
 
@@ -51,24 +51,24 @@ _PROJECTIONS_LOCK = Lock()
 def _entry_projections(resolved: ResolvedMappingFact) -> SchemaVocabularyProjections:
     key = id(resolved)
     with _PROJECTIONS_LOCK:
-        cached = _PROJECTIONS.get(key)
+        cached = PROJECTIONS.get(key)
         if cached is not None and cached.owner() is resolved:
             return cached
     entries = string_mapping_entries(resolved, policy=_ENTRIES_POLICY)
 
     def forget(dead: ReferenceType[ResolvedMappingFact]) -> None:
         with _PROJECTIONS_LOCK:
-            current = _PROJECTIONS.get(key)
+            current = PROJECTIONS.get(key)
             if current is not None and current.owner is dead:
-                del _PROJECTIONS[key]
+                del PROJECTIONS[key]
 
     projections = SchemaVocabularyProjections(owner=ref(resolved, forget), entries=entries, cash_accounting=[])
     with _PROJECTIONS_LOCK:
-        _PROJECTIONS[key] = projections
+        PROJECTIONS[key] = projections
     return projections
 
 
-_BY_AUTHORITY: dict[tuple[int, date], tuple[ReferenceType[GovernedFactSource], SchemaVocabularyProjections]] = {}
+BY_AUTHORITY: dict[tuple[int, date], tuple[ReferenceType[GovernedFactSource], SchemaVocabularyProjections]] = {}
 
 _BY_AUTHORITY_LIMIT = 1024
 
@@ -80,24 +80,24 @@ def _resolve_projections(
 ) -> SchemaVocabularyProjections:
     key = (id(authority), effective_date)
     with _PROJECTIONS_LOCK:
-        cached = _BY_AUTHORITY.get(key)
+        cached = BY_AUTHORITY.get(key)
         if cached is not None and cached[0]() is authority:
             return cached[1]
     projections = _resolve_projections_uncached(effective_date=effective_date, authority=authority)
 
     def forget(dead: ReferenceType[GovernedFactSource]) -> None:
         with _PROJECTIONS_LOCK:
-            for stale in [held for held, (owner, _) in _BY_AUTHORITY.items() if owner is dead]:
-                del _BY_AUTHORITY[stale]
+            for stale in [held for held, (owner, _) in BY_AUTHORITY.items() if owner is dead]:
+                del BY_AUTHORITY[stale]
 
     try:
         owner = ref(authority, forget)
     except TypeError:
         return projections
     with _PROJECTIONS_LOCK:
-        if len(_BY_AUTHORITY) >= _BY_AUTHORITY_LIMIT:
-            _BY_AUTHORITY.pop(next(iter(_BY_AUTHORITY)))
-        _BY_AUTHORITY[key] = (owner, projections)
+        if len(BY_AUTHORITY) >= _BY_AUTHORITY_LIMIT:
+            BY_AUTHORITY.pop(next(iter(BY_AUTHORITY)))
+        BY_AUTHORITY[key] = (owner, projections)
     return projections
 
 

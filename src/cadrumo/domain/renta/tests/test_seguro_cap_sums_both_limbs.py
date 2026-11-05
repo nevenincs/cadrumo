@@ -33,7 +33,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from ...categories.registry import load_category_profiles
 from ...categories.spending_category import SpendingCategory
 from ..errors import RentaValidationError
-from ..ledger_expenses import RentaDeductibilityContext, _resolve_statutory_cap
+from ..ledger_expenses import RentaDeductibilityContext, resolve_statutory_cap
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -47,7 +47,7 @@ def _rule(*, operation: PinnedAuthorityOperation):
 
 def _cap(*, operation: PinnedAuthorityOperation, **counts: int) -> Decimal | None:
 
-    return _resolve_statutory_cap(
+    return resolve_statutory_cap(
         rule=_rule(operation=operation),
         context=RentaDeductibilityContext(
             profile_year=2025,
@@ -122,12 +122,12 @@ def test_uncounted_populations_fall_back_to_the_ordinary_limb_not_to_zero(
 
     """
 
-    assert _resolve_statutory_cap(
+    assert resolve_statutory_cap(
         rule=_rule(operation=operation),
         context=RentaDeductibilityContext(profile_year=2025, statutory_cap_person_count=1),
     ) == Decimal("500")
 
-    assert _resolve_statutory_cap(
+    assert resolve_statutory_cap(
         rule=_rule(operation=operation),
         context=RentaDeductibilityContext(profile_year=2025, statutory_cap_person_count=3),
     ) == Decimal("1500")
@@ -137,7 +137,7 @@ def test_a_count_naming_a_variant_the_rule_does_not_declare_is_refused(*, operat
     """DISCRIMINATING: a typo'd variant id would otherwise be silently counted as zero."""
 
     with pytest.raises(RentaValidationError, match="variants the rule does not declare"):
-        _resolve_statutory_cap(
+        resolve_statutory_cap(
             rule=_rule(operation=operation),
             context=RentaDeductibilityContext(
                 profile_year=2025,

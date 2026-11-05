@@ -20,18 +20,14 @@ from ..buckets import BucketEventHistoryRepository
 from ..transactions import TransactionCatalogueRepository
 from .ledger_action_create_support import ledger_ports_for_test
 from .llm_evidence_split_support import (
-    _BUCKET,
-    _NOW,
-    _seed_parent,
-    _seed_received_invoice,
+    BUCKET,
+    NOW,
+    seed_parent,
+    seed_received_invoice,
+    split_subprocess_proposer,
+    two_line_proposal,
 )
 from .llm_evidence_split_support import repositories as repositories
-from .llm_evidence_split_support import (
-    split_subprocess_proposer as _split_subprocess_proposer,
-)
-from .llm_evidence_split_support import (
-    two_line_proposal as _two_line_proposal,
-)
 from .llm_no_evidence_ports_support import NO_EVIDENCE_LLM_PORTS
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
@@ -42,10 +38,10 @@ def _suggest_two_line_split(repository: TransactionCatalogueRepository, tx_id: s
     """Ask the split proposer for its two-line answer on ``tx_id``."""
     with bundled_indexed_authority().operation() as operation:
         return suggest_evidence_split(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             transaction_id=tx_id,
             operation=operation,
-            proposer=_split_subprocess_proposer(response=_two_line_proposal(), operation=operation),
+            proposer=split_subprocess_proposer(response=two_line_proposal(), operation=operation),
             transaction_repository=repository,
             read_evidence=False,
             settings=load_settings(),
@@ -60,17 +56,17 @@ def _apply_split(
     objects: SecureObjectRepository,
 ):
     with ledger_ports_for_test(
-        bucket_id=_BUCKET,
+        bucket_id=BUCKET,
         objects=objects,
         transaction_repository=repository,
         bucket_event_repository=events,
     ) as ports:
         return apply_evidence_split(
             suggestion,
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             source_command="aeat app ledger split --llm --apply",
             ports=ports,
-            occurred_at=_NOW,
+            occurred_at=NOW,
         )
 
 
@@ -80,8 +76,8 @@ def _suggest_and_apply_two_line_split(
     objects: SecureObjectRepository,
 ):
     """Seed an invoice-backed parent, suggest the two-line split and apply it; return the evidence id, parent id and result."""
-    evidence_id = _seed_received_invoice(objects)
-    tx_id = _seed_parent(repository, evidence_id=evidence_id)
+    evidence_id = seed_received_invoice(objects)
+    tx_id = seed_parent(repository, evidence_id=evidence_id)
 
     suggestion = _suggest_two_line_split(repository, tx_id)
     result = _apply_split(suggestion, repository, events, objects)
@@ -95,7 +91,7 @@ def test_apply_splits_parent_and_classifies_children(
 ) -> None:
     repository, events, _objects = repositories
     gross = Decimal("121.00")
-    tx_id = _seed_parent(repository, amount=gross)
+    tx_id = seed_parent(repository, amount=gross)
 
     suggestion = _suggest_two_line_split(repository, tx_id)
     result = _apply_split(suggestion, repository, events, _objects)
@@ -145,7 +141,7 @@ def test_apply_child_numbers_are_registry_derived_not_model(
     operation: PinnedAuthorityOperation,
 ) -> None:
     repository, events, _objects = repositories
-    tx_id = _seed_parent(repository, amount=Decimal("242.00"))
+    tx_id = seed_parent(repository, amount=Decimal("242.00"))
 
     suggestion = _suggest_two_line_split(repository, tx_id)
     result = _apply_split(suggestion, repository, events, _objects)
@@ -201,7 +197,7 @@ def test_split_child_evidence_failure_leaves_everything_unchanged(
     # single save never runs, the parent stays ACTIVE, no child is persisted, and
     # the event history is unchanged.
     repository, events, _objects = repositories
-    tx_id = _seed_parent(repository, evidence_id="nonexistent-evidence-record")
+    tx_id = seed_parent(repository, evidence_id="nonexistent-evidence-record")
     events_before = dict(events.load().events)
 
     suggestion = _suggest_two_line_split(repository, tx_id)
@@ -209,7 +205,7 @@ def test_split_child_evidence_failure_leaves_everything_unchanged(
     with (
         pytest.raises(TransactionValidationError),
         ledger_ports_for_test(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             objects=_objects,
             transaction_repository=repository,
             bucket_event_repository=events,
@@ -217,10 +213,10 @@ def test_split_child_evidence_failure_leaves_everything_unchanged(
     ):
         apply_evidence_split(
             suggestion,
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             source_command="aeat app ledger split --llm --apply",
             ports=ports,
-            occurred_at=_NOW,
+            occurred_at=NOW,
         )
 
     catalogue = repository.load()
@@ -241,7 +237,7 @@ def test_split_child_classification_that_changes_raw_id_is_refused(
     # its siblings, lineage, and the result still name the stale id. The atomic
     # writer must refuse before persisting anything.
     repository, events, _objects = repositories
-    tx_id = _seed_parent(repository, amount=Decimal("121.00"))
+    tx_id = seed_parent(repository, amount=Decimal("121.00"))
     children = (
         SplitChildCommand(amount=Decimal("72.60"), description="child a"),
         SplitChildCommand(amount=Decimal("48.40"), description="child b"),
@@ -257,14 +253,14 @@ def test_split_child_classification_that_changes_raw_id_is_refused(
     with (
         pytest.raises(TransactionValidationError, match="transaction id"),
         ledger_ports_for_test(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             objects=_objects,
             transaction_repository=repository,
             bucket_event_repository=events,
         ) as ports,
     ):
         split_transaction_with_classified_children(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             transaction_id=tx_id,
             children=children,
             child_classifications=classifications,
@@ -272,7 +268,7 @@ def test_split_child_classification_that_changes_raw_id_is_refused(
             actor="operator",
             source_command="aeat app ledger split --llm --apply",
             ports=ports,
-            occurred_at=_NOW,
+            occurred_at=NOW,
         )
 
     catalogue = repository.load()

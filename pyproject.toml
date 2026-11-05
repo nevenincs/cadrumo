@@ -999,7 +999,7 @@ convention = "google"
 # own worker module and integer descriptor handles the supervisor just opened.
 # Nothing user-, environment-, or file-supplied reaches it; Ruff cannot infer
 # that the argv is literal.
-"src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py" = ["S603"]
+"src/cadrumo/adapters/persistence/storage/custody/kdf_process.py" = ["S603"]
 # The pattern search child's argv is the interpreter prefix and this package's own
 # worker module; the patterns and texts travel on its stdin, never its command line.
 "src/cadrumo/core/pattern_search.py" = ["S603"]

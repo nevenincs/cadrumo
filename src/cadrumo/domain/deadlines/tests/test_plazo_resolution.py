@@ -14,7 +14,7 @@ from ...calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_projec
 from ...calculations.registry.schema_deadlines import DeadlineWindowDefinition
 from ...calculations.registry.temporal import RevisionSelectionMetadata
 from ..errors import DeadlineValidationError
-from ..plazo import _resolve_projected_filing_window, resolve_filing_window
+from ..plazo import resolve_filing_window, resolve_projected_filing_window
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
@@ -58,7 +58,7 @@ def test_qualified_resolution_reuses_atomic_coordinate_scope_expansion() -> None
     )
     devolucion = _window("devolucion", resultado_scope=ResultDisposition.DEVOLUCION)
 
-    resolved = _resolve_projected_filing_window(
+    resolved = resolve_projected_filing_window(
         _projection(ingreso_rent, devolucion),
         modelo="210",
         filing_year=_YEAR,
@@ -87,7 +87,7 @@ def test_official_codes_with_a_shared_rate_concept_remain_distinct_coordinates()
     projection = _projection(arrendamiento, arrendamiento_alternativo)
 
     assert (
-        _resolve_projected_filing_window(
+        resolve_projected_filing_window(
             projection,
             modelo="210",
             filing_year=_YEAR,
@@ -98,7 +98,7 @@ def test_official_codes_with_a_shared_rate_concept_remain_distinct_coordinates()
         is arrendamiento
     )
     assert (
-        _resolve_projected_filing_window(
+        resolve_projected_filing_window(
             projection,
             modelo="210",
             filing_year=_YEAR,
@@ -113,7 +113,7 @@ def test_official_codes_with_a_shared_rate_concept_remain_distinct_coordinates()
 def test_unqualified_window_is_the_canonical_wildcard_for_a_typed_request() -> None:
     wildcard = _window("wildcard")
 
-    resolved = _resolve_projected_filing_window(
+    resolved = resolve_projected_filing_window(
         _projection(wildcard),
         modelo="210",
         filing_year=_YEAR,
@@ -130,7 +130,7 @@ def test_ambiguous_atomic_resolution_refuses_instead_of_returning_first() -> Non
     exact = _window("exact", resultado_scope=ResultDisposition.INGRESO, tipo_renta_scope=("01",))
 
     with pytest.raises(DeadlineValidationError, match=r"ambiguous.*wildcard.*exact"):
-        _resolve_projected_filing_window(
+        resolve_projected_filing_window(
             _projection(wildcard, exact),
             modelo="210",
             filing_year=_YEAR,
@@ -145,7 +145,7 @@ def test_qualified_m210_event_work_resolves_the_annual_window_without_synthesizi
     annual = _window("imputadas", tipo_renta_scope=("02",))
 
     assert (
-        _resolve_projected_filing_window(
+        resolve_projected_filing_window(
             _projection(annual),
             modelo="210",
             filing_year=_YEAR,
@@ -163,7 +163,7 @@ def test_qualified_m210_event_to_annual_resolution_refuses_ambiguity() -> None:
     second = _window("second", resultado_scope=ResultDisposition.INGRESO, tipo_renta_scope=("02",))
 
     with pytest.raises(DeadlineValidationError, match=r"ambiguous.*first.*second"):
-        _resolve_projected_filing_window(
+        resolve_projected_filing_window(
             _projection(first, second),
             modelo="210",
             filing_year=_YEAR,
@@ -177,7 +177,7 @@ def test_unqualified_m210_event_resolution_does_not_borrow_an_annual_window() ->
     event_period = Period.from_year_and_code(_YEAR, "EVENT-1")
 
     assert (
-        _resolve_projected_filing_window(
+        resolve_projected_filing_window(
             _projection(_window("annual")),
             modelo="210",
             filing_year=_YEAR,
@@ -193,7 +193,7 @@ def test_none_is_reserved_for_an_exact_absence_without_year_borrowing() -> None:
     exact = _window("exact", resultado_scope=ResultDisposition.INGRESO, tipo_renta_scope=("01",))
 
     assert (
-        _resolve_projected_filing_window(
+        resolve_projected_filing_window(
             _projection(exact),
             modelo="210",
             filing_year=_YEAR + 1,
@@ -204,7 +204,7 @@ def test_none_is_reserved_for_an_exact_absence_without_year_borrowing() -> None:
         is None
     )
     assert (
-        _resolve_projected_filing_window(
+        resolve_projected_filing_window(
             _projection(exact),
             modelo="210",
             filing_year=_YEAR,
@@ -223,7 +223,7 @@ def test_resolution_never_borrows_a_following_or_future_filing_year_window() -> 
     future = _window("future", period=future_period)
 
     assert (
-        _resolve_projected_filing_window(
+        resolve_projected_filing_window(
             _projection(following, future),
             modelo="210",
             filing_year=_YEAR,

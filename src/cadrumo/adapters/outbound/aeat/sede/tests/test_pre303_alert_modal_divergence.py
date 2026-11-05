@@ -44,9 +44,9 @@ import pytest
 from ......application.auth.protocols import BrowserPagePort
 from ......core.config import Settings, load_settings
 from ......tests.log_records import delivered_records
-from ..._playwright import Page
 from ...auth.clave_movil import ClaveMovilAuthProvider
-from ..iva_compensation_wallet import _dismiss_pre303_alert_modal_if_present as _wallet_dismiss
+from ...playwright import Page
+from ..iva_compensation_wallet import dismiss_wallet_pre303_alert_modal_if_present
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -118,7 +118,7 @@ class _ScriptedPage:
     async def click(self, selector: str) -> None:
         self.attempted_selectors.append(selector)
         if not self._click_matches(selector):
-            from ..._playwright import PlaywrightError
+            from ...playwright import PlaywrightError
 
             raise PlaywrightError(f"no element matches {selector!r}")
 
@@ -145,7 +145,7 @@ async def _run_auth(page: _ScriptedPage) -> None:
 async def _run_wallet(page: _ScriptedPage) -> None:
     # Same substitution as the auth path above: the fake implements exactly the
     # members this call touches.
-    await _wallet_dismiss(cast("Page", page))
+    await dismiss_wallet_pre303_alert_modal_if_present(cast("Page", page))
 
 
 def _run(coro_factory: Callable[[], Coroutine[Any, Any, None]]) -> None:

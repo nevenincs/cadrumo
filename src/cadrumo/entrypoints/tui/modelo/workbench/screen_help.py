@@ -27,9 +27,9 @@ from .header import (
 from .issue_scale import blocks_marked
 from .legend import legend_panel, more_text, on_screen_text
 from .screen_constants import (
-    _CLOSE_LOCALE_KEY,
-    _GUTTERS,
-    _NO_BREAK_SPACE,
+    CLOSE_LOCALE_KEY,
+    GUTTERS,
+    NO_BREAK_SPACE,
 )
 from .screen_widgets import SymbolsPanel
 
@@ -131,10 +131,10 @@ class WorkbenchHelpMixin:
         line that holds a no-break space and does not fit is broken only at
         the other spaces. Every other line is left to wrap as it would.
         """
-        width = band.content_region.width or max(self._width() - _GUTTERS, 1)
+        width = band.content_region.width or max(self._width() - GUTTERS, 1)
         shown: list[str] = []
         for line in lines:
-            if _NO_BREAK_SPACE in line and cell_len(line) > width:
+            if NO_BREAK_SPACE in line and cell_len(line) > width:
                 shown.extend(wrap_words(line, width))
             else:
                 shown.append(line)
@@ -159,7 +159,7 @@ class WorkbenchHelpMixin:
                 self.box_marks,
                 others=self.other_marks,
                 keys=self._all_keys_text(),
-                close=self._key_label("escape", _CLOSE_LOCALE_KEY),
+                close=self._key_label("escape", CLOSE_LOCALE_KEY),
             )
             self.query_one("#wb-legend-text", Static).update(text)
         self.set_class(panel_open, "-legend")

@@ -21,9 +21,9 @@ from ....core.external_constants import GOOGLE_DRIVE_FOLDER_MIME_TYPE
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.type_guards import is_str_keyed_dict
 from ..storage.errors import OutboundStorageConflictError, OutboundStorageNotFoundError
-from ._preconditions import google_terminal_refusal
 from .api import RequestRetryPolicy, execute_request
 from .drive_entries import OWNERSHIP_KEY, OWNERSHIP_VALUE
+from .preconditions import google_terminal_refusal
 
 if TYPE_CHECKING:
     from googleapiclient._apis.drive.v3.resources import DriveResource

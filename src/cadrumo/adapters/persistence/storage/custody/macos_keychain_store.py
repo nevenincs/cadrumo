@@ -16,7 +16,7 @@ from .macos_keychain_policy import keychain_refusal, require_keychain_status, re
 from .macos_login_keychain import LoginKeychain
 
 
-def _native_api() -> KeychainApi:
+def native_api() -> KeychainApi:
     try:
         return LoginKeychain()
     except (OSError, AttributeError, ValueError, KeyError):
@@ -33,7 +33,7 @@ class MacOSKeychainAutomationSecretStore:
     def _bound(namespace: str, account: str) -> Generator[tuple[KeychainApi, KeychainItemIdentity]]:
         require_keychain_target(namespace, account)
         try:
-            api = _native_api()
+            api = native_api()
             with api.session() as path:
                 yield api, KeychainItemIdentity(namespace, account, path)
         except (OSError, AttributeError, ValueError, KeyError):

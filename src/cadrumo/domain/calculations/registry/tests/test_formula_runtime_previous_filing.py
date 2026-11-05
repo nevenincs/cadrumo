@@ -19,18 +19,16 @@ from ..bindings_previous_filing import (
 from ..relations import RegistryFoldRequirement, relation_source_requirements
 from ..schema import RegistrySnapshot
 from .formula_runtime_support import (
-    _M100_PAGOS_FRACCIONADOS_CASILLA,
-    _M100_RENDIMIENTO_NETO_ACTIVIDADES_CASILLA,
-    _M100_RESULTADO_AUTOLIQUIDACION_CASILLA,
-    _M100_RETENCIONES_PAGOS_CUENTA_CASILLA,
-    _M115_BASE_CASILLA,
-    _M115_PERCEPTORES_CASILLA,
-    _M115_RETENCIONES_CASILLA,
-    _M130_SALDO_NEGATIVO_CASILLA,
-    _previous_year_net_income_binding,
-)
-from .formula_runtime_support import (
-    PREVIOUS_YEAR_NET_INCOME_BINDING as _PREVIOUS_YEAR_NET_INCOME_BINDING,
+    M100_PAGOS_FRACCIONADOS_CASILLA,
+    M100_RENDIMIENTO_NETO_ACTIVIDADES_CASILLA,
+    M100_RESULTADO_AUTOLIQUIDACION_CASILLA,
+    M100_RETENCIONES_PAGOS_CUENTA_CASILLA,
+    M115_BASE_CASILLA,
+    M115_PERCEPTORES_CASILLA,
+    M115_RETENCIONES_CASILLA,
+    M130_SALDO_NEGATIVO_CASILLA,
+    PREVIOUS_YEAR_NET_INCOME_BINDING,
+    previous_year_net_income_binding,
 )
 from .registry_observations import registry_grounded_modelo_observation
 from .relation_fixture import resolve_relation_values_from_observations
@@ -41,7 +39,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 def test_previous_filing_binding_resolves_from_observed_irpf_casillas(
     committed_modelo_130_snapshot: RegistrySnapshot,
 ) -> None:
-    binding = _previous_year_net_income_binding(committed_modelo_130_snapshot)
+    binding = previous_year_net_income_binding(committed_modelo_130_snapshot)
     source_reference = previous_filing_source_reference(binding)
     source_casilla_ids = source_reference.source_casilla_ids
     observed_values = {casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(source_casilla_ids)}
@@ -61,14 +59,14 @@ def test_previous_filing_binding_resolves_from_observed_irpf_casillas(
         period="1T",
     )
 
-    assert _PREVIOUS_YEAR_NET_INCOME_BINDING in result
-    assert isinstance(result[_PREVIOUS_YEAR_NET_INCOME_BINDING], Decimal)
+    assert PREVIOUS_YEAR_NET_INCOME_BINDING in result
+    assert isinstance(result[PREVIOUS_YEAR_NET_INCOME_BINDING], Decimal)
 
 
 def test_previous_filing_requirements_are_declaredfrom_registry_binding_selector(
     committed_modelo_130_snapshot: RegistrySnapshot,
 ) -> None:
-    binding = _previous_year_net_income_binding(committed_modelo_130_snapshot)
+    binding = previous_year_net_income_binding(committed_modelo_130_snapshot)
     source_reference = previous_filing_source_reference(binding)
 
     requirements = previous_filing_observation_requirements(
@@ -82,7 +80,7 @@ def test_previous_filing_requirements_are_declaredfrom_registry_binding_selector
     assert requirement.source_modelo == source_reference.source_modelo
     assert requirement.filing_year == 2025
     assert requirement.periods == (source_reference.required_periods[0],)
-    assert requirement.binding_ids == (_PREVIOUS_YEAR_NET_INCOME_BINDING,)
+    assert requirement.binding_ids == (PREVIOUS_YEAR_NET_INCOME_BINDING,)
     assert requirement.source_casilla_ids == tuple(sorted(source_reference.source_casilla_ids))
     assert requirement.required_source_casilla_ids == ()
     assert requirement.source_presence_groups == (tuple(source_reference.source_casilla_ids),)
@@ -118,8 +116,8 @@ def test_relation_requirements_cover_all_source_periods_for_annual_summary(
     assert {
         source_casilla_id for requirement in requirements for source_casilla_id in requirement.source_casilla_ids
     } == {
-        _M115_BASE_CASILLA,
-        _M115_RETENCIONES_CASILLA,
+        M115_BASE_CASILLA,
+        M115_RETENCIONES_CASILLA,
     }
     bindings_by_id = {binding.id: binding for binding in committed_modelo_180_snapshot.revision.bindings}
     for requirement in requirements:
@@ -149,9 +147,9 @@ def test_relation_resolves_annual_summary_from_all_source_periods(
             filing_year=2026,
             period=period,
             casilla_values={
-                _M115_PERCEPTORES_CASILLA: Decimal("1"),
-                _M115_BASE_CASILLA: base,
-                _M115_RETENCIONES_CASILLA: retention,
+                M115_PERCEPTORES_CASILLA: Decimal("1"),
+                M115_BASE_CASILLA: base,
+                M115_RETENCIONES_CASILLA: retention,
             },
             grade=RegistryAuthorityGrade.CALCULATION,
         )
@@ -181,7 +179,7 @@ def test_relation_resolves_annual_summary_from_all_source_periods(
 def test_previous_filing_binding_resolves_from_any_registry_declared_applicable_casilla(
     committed_modelo_130_snapshot: RegistrySnapshot,
 ) -> None:
-    binding = _previous_year_net_income_binding(committed_modelo_130_snapshot)
+    binding = previous_year_net_income_binding(committed_modelo_130_snapshot)
     source_reference = previous_filing_source_reference(binding)
     source_casilla_ids = source_reference.source_casilla_ids
 
@@ -270,7 +268,7 @@ def _prior_period_provider(*, within_filing_year: bool) -> PreviousFilingProvide
     """A one-period-back M130 source; ``within_filing_year`` is the zero-year bound."""
     return PreviousFilingProvider(
         source_modelo="130",
-        source_casilla_id=_M130_SALDO_NEGATIVO_CASILLA,
+        source_casilla_id=M130_SALDO_NEGATIVO_CASILLA,
         temporal=TargetPeriodOffset(periods=-1, within_filing_year=within_filing_year),
     )
 
@@ -299,7 +297,7 @@ def _previous_filing_offset_requirements(
     # unbounded; a one-year bound reaches exactly what the unbounded offset does.
     if max_year_delta not in (None, 0, 1):
         raise AssertionError(f"unsupported max_year_delta {max_year_delta!r} for a period offset")
-    binding = _previous_year_net_income_binding(snapshot).model_copy(
+    binding = previous_year_net_income_binding(snapshot).model_copy(
         update={
             "id": "test-previous-filing-offset-requirements",
             "provider": _prior_period_provider(within_filing_year=max_year_delta == 0),
@@ -313,7 +311,7 @@ def _previous_filing_offset_requirements(
 def test_previous_filing_requirements_walker_skips_cap_suppressed_binding(
     committed_modelo_130_snapshot: RegistrySnapshot,
 ) -> None:
-    base_binding = _previous_year_net_income_binding(committed_modelo_130_snapshot)
+    base_binding = previous_year_net_income_binding(committed_modelo_130_snapshot)
     capped_binding = base_binding.model_copy(
         update={
             "id": "test-cap-suppressed-binding",
@@ -353,7 +351,7 @@ def test_previous_filing_requirements_walker_skips_cap_suppressed_binding(
 def test_previous_filing_resolver_skips_cap_suppressed_binding(
     committed_modelo_130_snapshot: RegistrySnapshot,
 ) -> None:
-    base_binding = _previous_year_net_income_binding(committed_modelo_130_snapshot)
+    base_binding = previous_year_net_income_binding(committed_modelo_130_snapshot)
     capped_binding = base_binding.model_copy(
         update={
             "id": "test-cap-suppressed-binding-resolve",
@@ -370,10 +368,10 @@ def test_previous_filing_resolver_skips_cap_suppressed_binding(
         filing_year=2025,
         period="0A",
         casilla_values={
-            _M100_RENDIMIENTO_NETO_ACTIVIDADES_CASILLA: Decimal("1"),
-            _M100_RETENCIONES_PAGOS_CUENTA_CASILLA: Decimal("1"),
-            _M100_PAGOS_FRACCIONADOS_CASILLA: Decimal("1"),
-            _M100_RESULTADO_AUTOLIQUIDACION_CASILLA: Decimal("1"),
+            M100_RENDIMIENTO_NETO_ACTIVIDADES_CASILLA: Decimal("1"),
+            M100_RETENCIONES_PAGOS_CUENTA_CASILLA: Decimal("1"),
+            M100_PAGOS_FRACCIONADOS_CASILLA: Decimal("1"),
+            M100_RESULTADO_AUTOLIQUIDACION_CASILLA: Decimal("1"),
         },
         grade=RegistryAuthorityGrade.CALCULATION,
     )
@@ -386,4 +384,4 @@ def test_previous_filing_resolver_skips_cap_suppressed_binding(
     )
 
     assert "test-cap-suppressed-binding-resolve" not in resolved
-    assert _PREVIOUS_YEAR_NET_INCOME_BINDING in resolved
+    assert PREVIOUS_YEAR_NET_INCOME_BINDING in resolved

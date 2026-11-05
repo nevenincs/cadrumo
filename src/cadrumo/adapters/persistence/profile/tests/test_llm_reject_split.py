@@ -13,9 +13,7 @@ from .....core.config import load_settings
 from .....domain.buckets.event import BucketEventType
 from .....domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from .....domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from .....domain.categories.spending_category import SpendingCategory
 from .....domain.transactions.enums import BusinessClassification, TransactionLifecycleState
@@ -25,17 +23,13 @@ from ..buckets import BucketEventHistoryRepository
 from ..transactions import TransactionCatalogueRepository
 from .ledger_action_create_support import ledger_ports_for_test
 from .llm_evidence_split_support import (
-    _BUCKET,
-    _NOW,
-    _seed_parent,
+    BUCKET,
+    NOW,
+    seed_parent,
+    split_subprocess_proposer,
+    two_line_proposal,
 )
 from .llm_evidence_split_support import repositories as repositories
-from .llm_evidence_split_support import (
-    split_subprocess_proposer as _split_subprocess_proposer,
-)
-from .llm_evidence_split_support import (
-    two_line_proposal as _two_line_proposal,
-)
 from .llm_no_evidence_ports_support import NO_EVIDENCE_LLM_PORTS
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
@@ -58,13 +52,13 @@ def test_reject_split_suggestion_records_kind_split(
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         repository, events, _objects = repositories
-        tx_id = _seed_parent(repository)
+        tx_id = seed_parent(repository)
         suggestion = suggest_evidence_split(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             transaction_id=tx_id,
-            proposer=_split_subprocess_proposer(response=_two_line_proposal(), operation=operation),
+            proposer=split_subprocess_proposer(response=two_line_proposal(), operation=operation),
             transaction_repository=repository,
             read_evidence=False,
             operation=_authority_operation_for_test,
@@ -74,17 +68,17 @@ def test_reject_split_suggestion_records_kind_split(
 
         result = reject_llm_suggestion(
             suggestion,
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             reason="do not split this",
             source_command="aeat app ledger classify --llm --reject",
             transaction_repository=repository,
             bucket_event_repository=events,
-            occurred_at=_NOW,
+            occurred_at=NOW,
         )
 
         assert result.suggestion_kind == "split"
         recorded = events.load().for_bucket(
-            _BUCKET,
+            BUCKET,
             event_types=(BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED,),
         )
         payload = recorded[0].payload
@@ -100,13 +94,13 @@ def test_reject_non_active_transaction_raises(
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         repository, events, _objects = repositories
-        tx_id = _seed_parent(repository, amount=Decimal("121.00"))
+        tx_id = seed_parent(repository, amount=Decimal("121.00"))
         suggestion = suggest_evidence_split(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             transaction_id=tx_id,
-            proposer=_split_subprocess_proposer(response=_two_line_proposal(), operation=operation),
+            proposer=split_subprocess_proposer(response=two_line_proposal(), operation=operation),
             transaction_repository=repository,
             read_evidence=False,
             operation=_authority_operation_for_test,
@@ -114,14 +108,14 @@ def test_reject_non_active_transaction_raises(
             ports=NO_EVIDENCE_LLM_PORTS,
         )
         with ledger_ports_for_test(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             objects=_objects,
             transaction_repository=repository,
             bucket_event_repository=events,
         ) as ports:
             apply_evidence_split(
                 suggestion,
-                bucket_id=_BUCKET,
+                bucket_id=BUCKET,
                 source_command="aeat app ledger split --llm --apply",
                 ports=ports,
             )
@@ -129,7 +123,7 @@ def test_reject_non_active_transaction_raises(
         with pytest.raises(TransactionValidationError, match="active"):
             reject_llm_suggestion(
                 _classification_suggestion(tx_id),
-                bucket_id=_BUCKET,
+                bucket_id=BUCKET,
                 source_command="aeat app ledger classify --llm --reject",
                 transaction_repository=repository,
                 bucket_event_repository=events,

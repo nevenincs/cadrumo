@@ -22,7 +22,7 @@ from ..errors import (
     PortalValidationError,
     UnknownPortalError,
 )
-from ..registry import PORTAL_REGISTRY, _finalise_registry, get_portal, portals_for_modelo
+from ..registry import PORTAL_REGISTRY, finalise_registry, get_portal, portals_for_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -316,7 +316,7 @@ def test_portals_for_malformed_modelo_has_exact_domain_classification() -> None:
 def test_duplicate_portal_registry_entry_has_exact_integrity_classification() -> None:
     duplicate = next(iter(PORTAL_REGISTRY.values()))
     with pytest.raises(PortalIntegrityError) as raised:
-        _finalise_registry((duplicate, duplicate))
+        finalise_registry((duplicate, duplicate))
 
     _assert_exact_domain_failure(
         raised.value,

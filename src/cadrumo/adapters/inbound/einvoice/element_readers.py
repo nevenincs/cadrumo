@@ -14,7 +14,7 @@ from xml.etree.ElementTree import Element
 
 from ....core.decimal.coercion import coerce_decimal
 from ....domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
-from .xml import local_tag_name as _local
+from .xml import local_tag_name
 
 #: Separator between adjacent text nodes in a record's extracted text.
 #:
@@ -31,7 +31,7 @@ from .xml import local_tag_name as _local
 _TEXT_NODE_SEPARATOR = "\x00"
 
 
-def _record_text(root: Element) -> str:
+def record_text(root: Element) -> str:
     """Return every text node in *root*, separated so no two of them merge.
 
     The haystack the anchor check searches. Markup is excluded because a tag name
@@ -48,19 +48,19 @@ def _record_text(root: Element) -> str:
     return _TEXT_NODE_SEPARATOR.join(fragments)
 
 
-def _find_all(root: Element, name: str) -> list[Element]:
+def find_all(root: Element, name: str) -> list[Element]:
     """Return every descendant whose LOCAL name matches, namespace-agnostically."""
-    return [node for node in root.iter() if _local(node.tag) == name]
+    return [node for node in root.iter() if local_tag_name(node.tag) == name]
 
 
-def _first_text(parent: Element, name: str) -> str | None:
+def first_text(parent: Element, name: str) -> str | None:
     for node in parent.iter():
-        if _local(node.tag) == name and (node.text is not None and node.text) and node.text.strip():
+        if local_tag_name(node.tag) == name and (node.text is not None and node.text) and node.text.strip():
             return node.text.strip()
     return None
 
 
-def _direct_child_text(parent: Element, name: str) -> str | None:
+def direct_child_text(parent: Element, name: str) -> str | None:
     """Return the text of *parent*'s own child, never a deeper descendant.
 
     The descendant walk :func:`_first_text` performs is right for a leaf stated
@@ -72,12 +72,12 @@ def _direct_child_text(parent: Element, name: str) -> str | None:
     schema happens to fix their order.
     """
     for node in parent:
-        if _local(node.tag) == name and (node.text is not None and node.text) and node.text.strip():
+        if local_tag_name(node.tag) == name and (node.text is not None and node.text) and node.text.strip():
             return node.text.strip()
     return None
 
 
-def _ubl_party_name(party: Element) -> str | None:
+def ubl_party_name(party: Element) -> str | None:
     """Return a UBL party's name, preferring its registered legal name.
 
     EN16931 maps the party's legal name to ``PartyLegalEntity/RegistrationName``
@@ -85,17 +85,17 @@ def _ubl_party_name(party: Element) -> str | None:
     The legal name is the one a filing reconciles against, so it wins; the
     trading name is the fallback for a document that states only that.
     """
-    registration = _first_text(party, "RegistrationName")
+    registration = first_text(party, "RegistrationName")
     if registration is not None and registration:
         return registration
-    for named in _find_all(party, "PartyName"):
-        found = _direct_child_text(named, "Name")
+    for named in find_all(party, "PartyName"):
+        found = direct_child_text(named, "Name")
         if found is not None and found:
             return found
     return None
 
 
-def _facturae_party_name(party: Element) -> str | None:
+def facturae_party_name(party: Element) -> str | None:
     """Return a Facturae party's stated name, legal entity or natural person.
 
     Facturae states the name in one of two mutually exclusive blocks selected by
@@ -105,11 +105,11 @@ def _facturae_party_name(party: Element) -> str | None:
     display name the document means, because Spanish naming carries both and a
     counterparty recorded under the given name alone is not identifiable.
     """
-    corporate = _first_text(party, "CorporateName")
+    corporate = first_text(party, "CorporateName")
     if corporate is not None and corporate:
         return corporate
-    for individual in _find_all(party, "Individual"):
-        parts = [_direct_child_text(individual, part) for part in ("Name", "FirstSurname", "SecondSurname")]
+    for individual in find_all(party, "Individual"):
+        parts = [direct_child_text(individual, part) for part in ("Name", "FirstSurname", "SecondSurname")]
         joined = " ".join(part for part in parts if (part is not None and part))
         if joined:
             return joined
@@ -126,7 +126,7 @@ def _facturae_party_name(party: Element) -> str | None:
 _FACTURAE_ADDRESS_BLOCKS: Final = ("AddressInSpain", "OverseasAddress")
 
 
-def _facturae_postal_code(party: Element) -> str | None:
+def facturae_postal_code(party: Element) -> str | None:
     """Return a Facturae party's Spanish postal code, or nothing.
 
     Scoped to ``AddressInSpain/PostCode``, the element Facturae dedicates to the
@@ -137,14 +137,14 @@ def _facturae_postal_code(party: Element) -> str | None:
     and costs nothing downstream, because the postal rung is consulted only where
     the country evidence positively named Spain.
     """
-    for address in _find_all(party, "AddressInSpain"):
-        found = _direct_child_text(address, "PostCode")
+    for address in find_all(party, "AddressInSpain"):
+        found = direct_child_text(address, "PostCode")
         if found is not None and found:
             return found
     return None
 
 
-def _facturae_country_code(party: Element) -> tuple[str, str] | None:
+def facturae_country_code(party: Element) -> tuple[str, str] | None:
     """Return ``(address block name, stated country code)``, or nothing.
 
     The country half of the establishment question the postal code answers only
@@ -167,14 +167,14 @@ def _facturae_country_code(party: Element) -> tuple[str, str] | None:
     record does not contain.
     """
     for block in _FACTURAE_ADDRESS_BLOCKS:
-        for address in _find_all(party, block):
-            found = _direct_child_text(address, "CountryCode")
+        for address in find_all(party, block):
+            found = direct_child_text(address, "CountryCode")
             if found is not None and found:
                 return block, found
     return None
 
 
-def _ubl_country_code(party: Element) -> str | None:
+def ubl_country_code(party: Element) -> str | None:
     """Return a UBL party's stated country code (EN16931 BT-40 / BT-55).
 
     UBL carries it in ``cac:PostalAddress/cac:Country/cbc:IdentificationCode``,
@@ -188,41 +188,41 @@ def _ubl_country_code(party: Element) -> str | None:
     other coded values, and a descendant walk would pick whichever the schema
     happened to order first.
     """
-    for address in _find_all(party, "PostalAddress"):
-        for country in _find_all(address, "Country"):
-            found = _direct_child_text(country, "IdentificationCode")
+    for address in find_all(party, "PostalAddress"):
+        for country in find_all(address, "Country"):
+            found = direct_child_text(country, "IdentificationCode")
             if found is not None and found:
                 return found
     return None
 
 
-def _ubl_postal_code(party: Element) -> str | None:
+def ubl_postal_code(party: Element) -> str | None:
     """Return a UBL party's post code (EN16931 BT-38 / BT-53).
 
     UBL carries it in ``cac:PostalAddress/cbc:PostalZone``, its own element, so
     this is a lookup rather than a parse of the address's free-text lines.
     """
-    for address in _find_all(party, "PostalAddress"):
-        found = _direct_child_text(address, "PostalZone")
+    for address in find_all(party, "PostalAddress"):
+        found = direct_child_text(address, "PostalZone")
         if found is not None and found:
             return found
     return None
 
 
-def _cii_postal_code(party: Element) -> str | None:
+def cii_postal_code(party: Element) -> str | None:
     """Return a CII party's post code (EN16931 BT-38 / BT-53).
 
     CII carries it in ``ram:PostalTradeAddress/ram:PostcodeCode``, again its own
     element beside the free-text address lines rather than inside them.
     """
-    for address in _find_all(party, "PostalTradeAddress"):
-        found = _direct_child_text(address, "PostcodeCode")
+    for address in find_all(party, "PostalTradeAddress"):
+        found = direct_child_text(address, "PostcodeCode")
         if found is not None and found:
             return found
     return None
 
 
-def _cii_country_code(party: Element) -> str | None:
+def cii_country_code(party: Element) -> str | None:
     """Return a CII party's stated country code (EN16931 BT-40 / BT-55).
 
     CII carries it in ``ram:PostalTradeAddress/ram:CountryID``, its own element
@@ -238,14 +238,14 @@ def _cii_country_code(party: Element) -> str | None:
     place of establishment -- a value that is usually right and silently wrong
     exactly where a party is registered somewhere it is not established.
     """
-    for address in _find_all(party, "PostalTradeAddress"):
-        found = _direct_child_text(address, "CountryID")
+    for address in find_all(party, "PostalTradeAddress"):
+        found = direct_child_text(address, "CountryID")
         if found is not None and found:
             return found
     return None
 
 
-def _decimal(raw: str | None) -> Decimal | None:
+def decimal(raw: str | None) -> Decimal | None:
     """Parse a fixed-point amount from machine-produced e-invoice XML text.
 
     Routes through the canonical machine-produced-text coercer rather than a
@@ -261,7 +261,7 @@ def _decimal(raw: str | None) -> Decimal | None:
     return coerce_decimal(raw)
 
 
-def _category_for(code: str | None) -> str | None:
+def category_for(code: str | None) -> str | None:
     """Map a stated UNTDID 5305 tax-category code onto an IvaCategory value.
 
     Returns ``None`` when the document states no code, or states one that maps

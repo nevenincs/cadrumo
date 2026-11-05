@@ -22,7 +22,7 @@ from ..calculation_revision import (
     derive_calculation_revision_id,
     derive_calculation_revision_id_from_revision,
 )
-from ..calculation_revision_identity import _source_issues_revision_id_payload
+from ..calculation_revision_identity import source_issues_revision_id_payload
 from ..calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence, CalculationSourceIssue
 from ..errors import ModeloValidationError
 
@@ -54,7 +54,7 @@ def _issue(**changes: object) -> CalculationSourceIssue:
 
 def test_an_issue_that_names_no_box_keeps_the_identity_it_had_before_issues_could_name_one() -> None:
     """The payload of an issue without a box is the five parts it always had, in the order stored."""
-    payload = _source_issues_revision_id_payload((_issue(),))
+    payload = source_issues_revision_id_payload((_issue(),))
 
     assert payload == {
         "source_issues": (("unrouted_observation", "ledger_iva_aggregation", "", "", "a row no binding consumes"),)
@@ -116,7 +116,7 @@ _STORED_CAPPED_REVISION_ID = "a29d3d893331cef3de30443b44fe05f58a95babbddef445e38
 def test_a_capped_issue_stored_without_an_outcome_keeps_its_stored_identity() -> None:
     issue = _capped_issue()
 
-    assert _source_issues_revision_id_payload((issue,)) == {"source_issues": (_STORED_CAPPED_PARTS,)}
+    assert source_issues_revision_id_payload((issue,)) == {"source_issues": (_STORED_CAPPED_PARTS,)}
     assert _revision_id(issue) == _STORED_CAPPED_REVISION_ID
 
 
@@ -126,7 +126,7 @@ def test_a_stated_outcome_joins_the_identity_and_each_outcome_differs() -> None:
     bearing = _revision_id(_capped_issue(value_outcome=BindingValueOutcome.FROM_BEARING_ROWS))
 
     assert len({silent, proven, bearing}) == 3
-    payload = _source_issues_revision_id_payload((_capped_issue(value_outcome=BindingValueOutcome.PROVEN_ZERO),))
+    payload = source_issues_revision_id_payload((_capped_issue(value_outcome=BindingValueOutcome.PROVEN_ZERO),))
     assert payload == {"source_issues": ((*_STORED_CAPPED_PARTS, "value_outcome=proven_zero"),)}
 
 

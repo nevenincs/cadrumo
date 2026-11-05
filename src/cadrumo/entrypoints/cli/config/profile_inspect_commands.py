@@ -17,26 +17,26 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from cadrumo_client.commands.errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
-from cadrumo_client.commands.output import activate_subcommand_output_language as _activate_subcommand_output_language
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 from ....core.errors.hierarchy import InternalInvariantError
-from ....core.external_constants import OutputLanguage as _OutputLanguage
+from ....core.external_constants import OutputLanguage
 from ..common import emit_envelope, no_active_profile_refusal
 from .operation_profile_view import project_profile_validate, project_profile_view
 
 if TYPE_CHECKING:
-    from ....application.workflow.profile_bucket_models import ProfileBucketPointer as _ProfileBucketPointer
+    from ....application.workflow.profile_bucket_models import ProfileBucketPointer
 
 
 def _resolve_show_pointer(
     name: str | None,
     *,
     ctx: typer.Context,
-    resolve_active_profile_pointer: Callable[[], _ProfileBucketPointer | None],
-) -> _ProfileBucketPointer:
+    resolve_active_profile_pointer: Callable[[], ProfileBucketPointer | None],
+) -> ProfileBucketPointer:
     """Resolve the profile ``show`` inspects, by name or the active pointer.
 
     ``show`` is the inspect surface for a current committed capsule. The
@@ -49,7 +49,7 @@ def _resolve_show_pointer(
             raise no_active_profile_refusal()
         return pointer
 
-    from .._profile_authentication_gate import resolved_command_profile_target
+    from ..profile_authentication_gate import resolved_command_profile_target
 
     pointer = resolved_command_profile_target(ctx)
     if pointer is not None:
@@ -60,14 +60,14 @@ def _resolve_show_pointer(
 def config_profile_view(
     ctx: typer.Context,
     name: str | None = None,
-    output_language: _OutputLanguage | None = None,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Render one exact profile view and exit 2 for blocking record issues."""
     from uuid import UUID
 
-    from ._profile_support import resolve_active_profile_pointer
+    from .profile_support import resolve_active_profile_pointer
 
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     pointer = _resolve_show_pointer(name, ctx=ctx, resolve_active_profile_pointer=resolve_active_profile_pointer)
     client = require_profile_client(ctx, expected_profile_id=UUID(str(pointer.bucket_id)))
     try:
@@ -78,7 +78,7 @@ def config_profile_view(
             requested_output_language=output_language,
         )
     except FrontendRefusedError as refusal:
-        raise _CliRefusedBoundaryError(context={"reason": refusal.reason}) from refusal
+        raise CliRefusedBoundaryError(context={"reason": refusal.reason}) from refusal
     emit_envelope(
         ctx,
         command="config.profile.view",
@@ -94,8 +94,8 @@ def _resolve_validate_target_pointer(
     name: str | None,
     *,
     ctx: typer.Context,
-    resolve_active_profile_pointer: Callable[[], _ProfileBucketPointer | None],
-) -> _ProfileBucketPointer:
+    resolve_active_profile_pointer: Callable[[], ProfileBucketPointer | None],
+) -> ProfileBucketPointer:
     """Resolve the profile the validate verb targets, refusing clearly when it cannot.
 
     A named profile resolves through the shared label reader (tombstoned
@@ -107,7 +107,7 @@ def _resolve_validate_target_pointer(
         if pointer is None:
             raise no_active_profile_refusal()
         return pointer
-    from .._profile_authentication_gate import resolved_command_profile_target
+    from ..profile_authentication_gate import resolved_command_profile_target
 
     pointer = resolved_command_profile_target(ctx)
     if pointer is None:
@@ -118,7 +118,7 @@ def _resolve_validate_target_pointer(
 def config_profile_validate(
     ctx: typer.Context,
     name: str | None = None,
-    output_language: _OutputLanguage | None = None,
+    output_language: OutputLanguage | None = None,
 ) -> None:
     """Validate a profile against the loaded schema (defaults to the active profile).
 
@@ -129,9 +129,9 @@ def config_profile_validate(
     """
     from uuid import UUID
 
-    from ._profile_support import resolve_active_profile_pointer
+    from .profile_support import resolve_active_profile_pointer
 
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
 
     pointer = _resolve_validate_target_pointer(
         name,
@@ -147,7 +147,7 @@ def config_profile_validate(
             requested_output_language=output_language,
         )
     except FrontendRefusedError as refusal:
-        raise _CliRefusedBoundaryError(context={"reason": refusal.reason}) from refusal
+        raise CliRefusedBoundaryError(context={"reason": refusal.reason}) from refusal
     emit_envelope(ctx, command="config.profile.validate", result=projected.result, lines=projected.lines)
     if projected.blocking:
         raise typer.Exit(code=2)

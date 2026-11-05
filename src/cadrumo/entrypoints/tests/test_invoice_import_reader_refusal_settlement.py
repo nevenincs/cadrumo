@@ -55,7 +55,7 @@ _READER_REFUSAL_CODE = "REFUSED_LEDGER_IMPORT_READER"
 
 
 def _settle_and_read_detail(
-    driver: conformance._ExecutionDriver, registry: OperationRegistry, profile_id: UUID, book: Path
+    driver: conformance.ExecutionDriver, registry: OperationRegistry, profile_id: UUID, book: Path
 ) -> tuple[OperationObservationSuccessV1, OperationErrorDetailV1]:
     contract = registry.lookup_public_contract(INVOICE_IMPORT_OPERATION_DEFINITION_ID)
 

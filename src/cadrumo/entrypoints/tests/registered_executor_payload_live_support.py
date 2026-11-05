@@ -14,10 +14,10 @@ from ...core.time.clock import now
 from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from .registered_executor_payload_context import PayloadBuilder, PayloadContext, PayloadResult
 from .registered_executor_seeding_support import (
-    _seeded_expedientes_snapshot,
-    _seeded_justificante_snapshot,
-    _seeded_notification_document,
-    _seeded_notifications_snapshot,
+    seeded_expedientes_snapshot,
+    seeded_justificante_snapshot,
+    seeded_notification_document,
+    seeded_notifications_snapshot,
 )
 
 
@@ -90,7 +90,7 @@ def _live_profile_only(ctx: PayloadContext) -> PayloadResult:
 
 
 def _live_justificante_list(ctx: PayloadContext) -> PayloadResult:
-    _seeded_justificante_snapshot(ctx.profile_id)
+    seeded_justificante_snapshot(ctx.profile_id)
     return ctx.request(ctx.profile_subject, {"profile_id": ctx.profile_id})
 
 
@@ -102,37 +102,37 @@ def _live_justificante_capture(ctx: PayloadContext) -> PayloadResult:
 
 
 def _live_justificante_show(ctx: PayloadContext) -> PayloadResult:
-    snapshot = _seeded_justificante_snapshot(ctx.profile_id)
+    snapshot = seeded_justificante_snapshot(ctx.profile_id)
     return ctx.request(ctx.profile_subject, {"profile_id": ctx.profile_id, "snapshot_id": snapshot.snapshot_id})
 
 
 def _live_expedientes_seeded_profile_only(ctx: PayloadContext) -> PayloadResult:
-    _seeded_expedientes_snapshot(ctx.profile_id)
+    seeded_expedientes_snapshot(ctx.profile_id)
     return ctx.request(ctx.profile_subject, {"profile_id": ctx.profile_id})
 
 
 def _live_expedientes_show(ctx: PayloadContext) -> PayloadResult:
-    snapshot = _seeded_expedientes_snapshot(ctx.profile_id)
+    snapshot = seeded_expedientes_snapshot(ctx.profile_id)
     return ctx.request(ctx.profile_subject, {"profile_id": ctx.profile_id, "snapshot_id": snapshot.snapshot_id})
 
 
 def _live_notifications_seeded_profile_only(ctx: PayloadContext) -> PayloadResult:
-    _seeded_notifications_snapshot(ctx.profile_id)
+    seeded_notifications_snapshot(ctx.profile_id)
     return ctx.request(ctx.profile_subject, {"profile_id": ctx.profile_id})
 
 
 def _live_notifications_show(ctx: PayloadContext) -> PayloadResult:
-    snapshot = _seeded_notifications_snapshot(ctx.profile_id)
+    snapshot = seeded_notifications_snapshot(ctx.profile_id)
     return ctx.request(ctx.profile_subject, {"profile_id": ctx.profile_id, "snapshot_id": snapshot.snapshot_id})
 
 
 def _live_notifications_document_view(ctx: PayloadContext) -> PayloadResult:
-    record = _seeded_notification_document(ctx.profile_id)
+    record = seeded_notification_document(ctx.profile_id)
     return ctx.request(ctx.profile_subject, {"profile_id": ctx.profile_id, "certificado_id": record.certificado_id})
 
 
 def _live_notifications_document_history(ctx: PayloadContext) -> PayloadResult:
-    _seeded_notification_document(ctx.profile_id)
+    seeded_notification_document(ctx.profile_id)
     return ctx.request(ctx.profile_subject, {"profile_id": ctx.profile_id})
 
 

@@ -25,9 +25,9 @@ from cadrumo.domain.deadlines.models import IVARegime
 
 from ..errors import RegistryValidationError
 from ..schedules import (
-    _resolve_profile_fact,
     evaluate_profile_conditions,
     profile_condition_matches,
+    resolve_profile_fact,
 )
 from ..schema_live_verification import ProfilePredicateDefinition
 
@@ -130,32 +130,32 @@ def test_profile_condition_includes_requires_one_token_value(value: bool | int |
     ids=("dict-single", "dict-nested", "object-single", "object-nested"),
 )
 def test_resolve_profile_fact_resolves_present_paths(facts: object, field: str, expected: object) -> None:
-    assert _resolve_profile_fact(facts, field) == expected
+    assert resolve_profile_fact(facts, field) == expected
 
 
 def test_resolve_profile_fact_mixes_dict_then_object_traversal() -> None:
     """The walker dispatches per-segment, so a top-level dict can contain
     a nested object whose attribute is then resolved by getattr."""
     facts = {"residence": SimpleNamespace(ccaa="madrid")}
-    assert _resolve_profile_fact(facts, "residence.ccaa") == "madrid"
+    assert resolve_profile_fact(facts, "residence.ccaa") == "madrid"
 
 
 def test_resolve_profile_fact_missing_dict_key_raises() -> None:
     with pytest.raises(RegistryValidationError, match="profile facts missing 'age'"):
-        _resolve_profile_fact({"residence_ccaa": "madrid"}, "age")
+        resolve_profile_fact({"residence_ccaa": "madrid"}, "age")
 
 
 def test_resolve_profile_fact_keeps_missing_fact_refusal_for_mapping_proxy() -> None:
     facts = MappingProxyType({"age": 35})
 
     with pytest.raises(RegistryValidationError, match="profile facts missing 'age'"):
-        _resolve_profile_fact(facts, "age")
+        resolve_profile_fact(facts, "age")
 
 
 def test_resolve_profile_fact_missing_object_attribute_raises() -> None:
     profile = SimpleNamespace(age=35, residence=SimpleNamespace(ccaa="madrid"))
     with pytest.raises(RegistryValidationError, match="profile facts missing 'name'"):
-        _resolve_profile_fact(profile, "name")
+        resolve_profile_fact(profile, "name")
 
 
 @pytest.mark.usefixtures("operation")
@@ -176,7 +176,7 @@ def test_resolve_profile_fact_taxpayer_entity_type_special_case() -> None:
         entity_type=EntityType.from_registry("legal_entity"),
         iva_regime=IVARegime("GENERAL"),
     )
-    result = _resolve_profile_fact(profile, "taxpayer.entity_type")
+    result = resolve_profile_fact(profile, "taxpayer.entity_type")
     assert result == EntityType.from_registry("legal_entity")
 
 

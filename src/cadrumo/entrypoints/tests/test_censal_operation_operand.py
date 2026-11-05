@@ -42,13 +42,12 @@ from cadrumo.application.user_profile.censal_operation import (
     build_censal_operation_definition,
 )
 from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.adapter_composition_ports import build_censal_fetch_port
 from cadrumo.tests.aeat_literal_fixtures import aeat_url
 
 from ...domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
 )
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -92,7 +91,7 @@ def _domicilio(*, notification: bool) -> CensalObservationAddress:
     )
 
 
-def _operand() -> CensalReviewedOperand:
+def censal_operation_operand() -> CensalReviewedOperand:
     observation = CensalObservation(
         identity=CensalObservationIdentity(
             nif="12345678Z",
@@ -117,7 +116,7 @@ def _operand() -> CensalReviewedOperand:
             parse_censal_table(OBLIGATIONS_HTML, kind="obligaciones", source_url=aeat_url("www6", "/consulta")),
         ),
     )
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z", source="manual_cli"),),
         setup_state=ProfileSetupState.COMPLETE,
@@ -125,7 +124,7 @@ def _operand() -> CensalReviewedOperand:
         previous_record_digest="a" * 64,
         created_at=_NOW,
         updated_at=_NOW,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
     return CensalReviewedOperand(
         observation=observation,
@@ -148,7 +147,7 @@ def _operand() -> CensalReviewedOperand:
 
 
 def test_reviewed_operand_strict_serialization_round_trip_and_tamper_refusal() -> None:
-    operand = _operand()
+    operand = censal_operation_operand()
     assert CensalReviewedOperand.model_validate_json(operand.model_dump_json(), strict=True) == operand
 
     changed = operand.model_copy(
@@ -183,7 +182,7 @@ def test_reviewed_operand_strict_serialization_round_trip_and_tamper_refusal() -
 def test_historical_review_preimage_without_consultations_keeps_its_digest() -> None:
     from cadrumo.core.hashing import content_hash_hex
 
-    payload = _operand().model_dump(mode="json", exclude={"proposed_effect_digest"})
+    payload = censal_operation_operand().model_dump(mode="json", exclude={"proposed_effect_digest"})
     del payload["observation"]["consultations"]
     historical_digest = content_hash_hex(payload)
     payload["proposed_effect_digest"] = historical_digest
@@ -193,14 +192,14 @@ def test_historical_review_preimage_without_consultations_keeps_its_digest() -> 
 
 
 def test_consultation_tampering_changes_the_existing_review_digest() -> None:
-    payload = _operand().model_dump(mode="json")
+    payload = censal_operation_operand().model_dump(mode="json")
     payload["observation"]["consultations"][0]["sections"][0]["rows"][0]["cells"][2]["text"] = "CHANGED"
     with pytest.raises(ValidationError, match="proposed-effect digest"):
         CensalReviewedOperand.model_validate_json(json.dumps(payload), strict=True)
 
 
 def test_reviewed_operand_real_secure_reference_round_trip_and_digest_corruption(tmp_path: Path) -> None:
-    operand = _operand()
+    operand = censal_operation_operand()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         objects = profile.repository
         store = operation_secure_reference_repository(objects=objects)
@@ -224,7 +223,7 @@ def test_reviewed_operand_real_secure_reference_round_trip_and_digest_corruption
 
 
 def test_censal_operation_definition_binds_complete_resumable_request() -> None:
-    operand = _operand()
+    operand = censal_operation_operand()
     definition = _test_censal_operation_definition()
     payload = CensalOperationRequest(
         baseline=operand.baseline,

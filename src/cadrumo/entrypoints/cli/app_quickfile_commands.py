@@ -27,14 +27,14 @@ from ...core.payment_election import PaymentElection
 from ...core.period import Period, PeriodError
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
-from ._modelo_cli_support import (
+from .app_quickfile_results import QuickfileResultPayload, quickfile_stage_message
+from .common import emit_envelope, resolve_cli_precondition_action
+from .modelo_cli_support import (
     calculation_overrides,
     parse_work_calculate_wire_specs,
     unsupported_local_work_period_refusal,
 )
-from ._modelo_rendering import verification_report_notices
-from .app_quickfile_results import QuickfileResultPayload, quickfile_stage_message
-from .common import emit_envelope, resolve_cli_precondition_action
+from .modelo_rendering import verification_report_notices
 from .operation_quickfile import run_quickfile
 
 
@@ -202,7 +202,7 @@ def _quickfile_lines(result: QuickfileProjection, *, output_path_display: str) -
 def _quickfile_notices(result: QuickfileProjection) -> list[Notice]:
     """Render safe stage notices and canonical verification finding notices."""
     notices = [
-        _stage_notice(stage)
+        stage_notice(stage)
         for stage in result.stages
         if stage.status not in (QuickfileStageStatus.OK, QuickfileStageStatus.SKIPPED)
     ]
@@ -211,7 +211,7 @@ def _quickfile_notices(result: QuickfileProjection) -> list[Notice]:
     return notices
 
 
-def _stage_notice(stage: QuickfileStageSnapshot) -> Notice:
+def stage_notice(stage: QuickfileStageSnapshot) -> Notice:
     """Project a closed stage result without transporting exception prose/context."""
     stage_name, status = stage.stage.value, stage.status.value
     code = f"quickfile.stage.{stage_name}"

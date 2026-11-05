@@ -13,13 +13,13 @@ This 24-file chunk combines four concrete CLI adapters with most of the declarat
 
 The M303 IVA-wallet group has a read-only balance command and three state-changing commands: seed a carry-forward amount, correct a seeded amount with a reason, and explicitly override the taxpayer carry with both a reason and evidence locator. The mutating commands require `--confirm`; amount strings share a canonical euro grammar with cent precision, avoiding ambiguity such as reading `1.000` as one euro. The balance payload validates nonnegative canonical amounts and lot/year constraints. The override result describes a taxpayer-selected authority and divergence, but its schema explicitly states that this only unblocks calculation; the dependent return still needs official evidence to pass verification. The source does not contact AEAT for the balance query (wallet CLI (`src/cadrumo/entrypoints/cli/_modelo_iva_wallet_cli.py`), wallet payloads (`src/cadrumo/entrypoints/cli/_modelo_iva_wallet_payloads.py`)).
 
-The M036 commands create local declarations for alta, modificación, and baja, and list or view declarations for the active profile. Dates are parsed at the boundary; justificante and note are optional. View translates only the expected missing/ambiguous refusals, and checks their refusal/effect context before presenting the privacy-preserving not-found response. These are records of a declaration the operator says was filed, not a submission operation or independent proof of filing. M145 similarly manages local payer-communication records: create requires at least one casilla assignment, while validate, export, mark-delivered, and mark-locally-completed operate on a persisted communication record. Repeated assignment of the same casilla overwrites the earlier value in the parser's dictionary, so duplicate-key behavior is last-wins at this boundary; downstream intent should not rely on duplicate detection here. The renderers include record state and timestamps, validation issues, and the exported layout, byte length, digest, and rendered payload text (M036 commands (`src/cadrumo/entrypoints/cli/_modelo_m036_cli.py`), M145 parsing (`src/cadrumo/entrypoints/cli/_modelo_m145_parsing.py`), M145 handlers (`src/cadrumo/entrypoints/cli/_modelo_m145_cli.py`), M145 rendering (`src/cadrumo/entrypoints/cli/_modelo_m145_rendering.py`)).
+The M036 commands create local declarations for alta, modificación, and baja, and list or view declarations for the active profile. Dates are parsed at the boundary; justificante and note are optional. View translates only the expected missing/ambiguous refusals, and checks their refusal/effect context before presenting the privacy-preserving not-found response. These are records of a declaration the operator says was filed, not a submission operation or independent proof of filing. M145 similarly manages local payer-communication records: create requires at least one casilla assignment, while validate, export, mark-delivered, and mark-locally-completed operate on a persisted communication record. Repeated assignment of the same casilla overwrites the earlier value in the parser's dictionary, so duplicate-key behavior is last-wins at this boundary; downstream intent should not rely on duplicate detection here. The renderers include record state and timestamps, validation issues, and the exported layout, byte length, digest, and rendered payload text (M036 commands (`src/cadrumo/entrypoints/cli/_modelo_m036_cli.py`), M145 parsing (`src/cadrumo/entrypoints/cli/modelo_m145_parsing.py`), M145 handlers (`src/cadrumo/entrypoints/cli/_modelo_m145_cli.py`), M145 rendering (`src/cadrumo/entrypoints/cli/modelo_m145_rendering.py`)).
 
 The maritime-exemption work preview parses optional annual salary and gross navigation income through the shared decimal parser, applies output-language selection, calls the registered preview bridge, and emits profile facts and casilla observations with legal/source references. A RETMAR warning is rendered through the registered error-message catalogue. The preview's legal pathway and profile extraction stay in the application operation; this CLI layer does not establish tax-law correctness (maritime preview (`src/cadrumo/entrypoints/cli/_modelo_maritime_cli.py`)).
 
 ## Command surface and effects
 
-The command-spec composer groups command declarations for discovery, bindings, aggregate/formulas/support matrix, filing records, verification reports, reconcile, M036, M145, work preview/amend wizard, IVA wallet, and review packages. Shared parameter contracts define common selectors and elections, including work-unit/model/year/period/revision/bucket selection and refund/payment/domiciliation defaults. The policies distinguish metadata and registry reads from calculation and local-state writes. They also mark reconciliation pull as browser/network I/O; export and M145 export as local handoff; review-package signing/encryption/import as profile-bound local writes; and package verification as crypto reads. Feedback encryption has a separate encrypted-facts/file-write route. The package commands declare file input/output loci and primary versus auxiliary paths, which helps identify where confidential material enters or leaves the CLI. These declarations describe the intended effect contract; the cryptographic and browser implementations are outside this chunk (policy declarations (`src/cadrumo/entrypoints/cli/_modelo_nonwork_command_spec_policies.py`), review-package specs (`src/cadrumo/entrypoints/cli/_modelo_nonwork_review_package_command_specs.py`), reconcile specs (`src/cadrumo/entrypoints/cli/_modelo_nonwork_reconcile_command_specs.py`), command composer (`src/cadrumo/entrypoints/cli/_modelo_nonwork_command_specs.py`)).
+The command-spec composer groups command declarations for discovery, bindings, aggregate/formulas/support matrix, filing records, verification reports, reconcile, M036, M145, work preview/amend wizard, IVA wallet, and review packages. Shared parameter contracts define common selectors and elections, including work-unit/model/year/period/revision/bucket selection and refund/payment/domiciliation defaults. The policies distinguish metadata and registry reads from calculation and local-state writes. They also mark reconciliation pull as browser/network I/O; export and M145 export as local handoff; review-package signing/encryption/import as profile-bound local writes; and package verification as crypto reads. Feedback encryption has a separate encrypted-facts/file-write route. The package commands declare file input/output loci and primary versus auxiliary paths, which helps identify where confidential material enters or leaves the CLI. These declarations describe the intended effect contract; the cryptographic and browser implementations are outside this chunk (policy declarations (`src/cadrumo/entrypoints/cli/modelo_nonwork_command_spec_policies.py`), review-package specs (`src/cadrumo/entrypoints/cli/modelo_nonwork_review_package_command_specs.py`), reconcile specs (`src/cadrumo/entrypoints/cli/modelo_nonwork_reconcile_command_specs.py`), command composer (`src/cadrumo/entrypoints/cli/modelo_nonwork_command_specs.py`)).
 
 The filing-record command contracts separate list/view from import and local observation. Import requires an evidence kind and evidence identifier, accepts a primary local file and optional casilla overrides, and distinguishes declared filing kind. `observe-local` has a local-file input, a reason, and an explicit clear option, making it a separate local observation route. Verification reports have list/view commands; M145 export and reconciliation import are modeled as handoffs, while reconcile pull carries browser/network effects. These specifications are useful for surface and data-flow review, but they are not evidence that a selected file is authentic or that a browser pull succeeded.
 
@@ -39,24 +39,24 @@ All 24 assigned files are linked below.
 - `src/cadrumo/entrypoints/cli/_modelo_iva_wallet_payloads.py`
 - `src/cadrumo/entrypoints/cli/_modelo_m036_cli.py`
 - `src/cadrumo/entrypoints/cli/_modelo_m145_cli.py`
-- `src/cadrumo/entrypoints/cli/_modelo_m145_parsing.py`
-- `src/cadrumo/entrypoints/cli/_modelo_m145_rendering.py`
+- `src/cadrumo/entrypoints/cli/modelo_m145_parsing.py`
+- `src/cadrumo/entrypoints/cli/modelo_m145_rendering.py`
 - `src/cadrumo/entrypoints/cli/_modelo_maritime_cli.py`
-- `src/cadrumo/entrypoints/cli/_modelo_nonwork_bindings_command_specs.py`
-- `src/cadrumo/entrypoints/cli/_modelo_nonwork_calculations_command_specs.py`
-- `src/cadrumo/entrypoints/cli/_modelo_nonwork_command_spec_policies.py`
-- `src/cadrumo/entrypoints/cli/_modelo_nonwork_command_specs.py`
-- `src/cadrumo/entrypoints/cli/_modelo_nonwork_common_command_parameters.py`
-- `src/cadrumo/entrypoints/cli/_modelo_nonwork_discovery_command_specs.py`
-- `src/cadrumo/entrypoints/cli/_modelo_nonwork_filing_record_command_specs.py`
-- `src/cadrumo/entrypoints/cli/_modelo_nonwork_groups_command_specs.py`
-- `src/cadrumo/entrypoints/cli/_modelo_nonwork_iva_wallet_command_specs.py`
-- `src/cadrumo/entrypoints/cli/_modelo_nonwork_m036_command_specs.py`
-- `src/cadrumo/entrypoints/cli/_modelo_nonwork_m145_command_specs.py`
-- `src/cadrumo/entrypoints/cli/_modelo_nonwork_reconcile_command_specs.py`
-- `src/cadrumo/entrypoints/cli/_modelo_nonwork_review_package_command_specs.py`
-- `src/cadrumo/entrypoints/cli/_modelo_nonwork_verification_report_command_specs.py`
-- `src/cadrumo/entrypoints/cli/_modelo_nonwork_work_amend_command_specs.py`
-- `src/cadrumo/entrypoints/cli/_modelo_nonwork_work_preview_command_specs.py`
+- `src/cadrumo/entrypoints/cli/modelo_nonwork_bindings_command_specs.py`
+- `src/cadrumo/entrypoints/cli/modelo_nonwork_calculations_command_specs.py`
+- `src/cadrumo/entrypoints/cli/modelo_nonwork_command_spec_policies.py`
+- `src/cadrumo/entrypoints/cli/modelo_nonwork_command_specs.py`
+- `src/cadrumo/entrypoints/cli/modelo_nonwork_common_command_parameters.py`
+- `src/cadrumo/entrypoints/cli/modelo_nonwork_discovery_command_specs.py`
+- `src/cadrumo/entrypoints/cli/modelo_nonwork_filing_record_command_specs.py`
+- `src/cadrumo/entrypoints/cli/modelo_nonwork_groups_command_specs.py`
+- `src/cadrumo/entrypoints/cli/modelo_nonwork_iva_wallet_command_specs.py`
+- `src/cadrumo/entrypoints/cli/modelo_nonwork_m036_command_specs.py`
+- `src/cadrumo/entrypoints/cli/modelo_nonwork_m145_command_specs.py`
+- `src/cadrumo/entrypoints/cli/modelo_nonwork_reconcile_command_specs.py`
+- `src/cadrumo/entrypoints/cli/modelo_nonwork_review_package_command_specs.py`
+- `src/cadrumo/entrypoints/cli/modelo_nonwork_verification_report_command_specs.py`
+- `src/cadrumo/entrypoints/cli/modelo_nonwork_work_amend_command_specs.py`
+- `src/cadrumo/entrypoints/cli/modelo_nonwork_work_preview_command_specs.py`
 - `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
 <!-- /preserved:article -->

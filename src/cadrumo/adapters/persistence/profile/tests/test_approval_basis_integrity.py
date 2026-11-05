@@ -56,9 +56,9 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
 from cadrumo.core.secure_object_write import SecureObjectWrite
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    PinnedAuthorityOperation,
+    bundled_indexed_authority,
 )
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import RevisionId
@@ -344,7 +344,7 @@ def test_real_approval_basis_has_the_shapes_this_module_pins(tmp_path: Path) -> 
     """
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
     ):
         approved = _approve(profile.bucket_id, operation=_authority_operation_for_test)
 
@@ -373,7 +373,7 @@ def test_tampered_review_checksum_is_refused_on_refresh(tmp_path: Path) -> None:
     The probe uses the real encrypted repository: approve, persist, replace only
     the checksum, reload through the production read path, refresh.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
             schema_provider = build_runtime_schema_provider(
                 modelos=("130",),
@@ -412,7 +412,7 @@ def test_untampered_approved_draft_survives_refresh(tmp_path: Path) -> None:
     Without it the tamper test would also pass if refresh simply demoted every
     draft it was handed.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
             schema_provider = build_runtime_schema_provider(
                 modelos=("130",),
@@ -445,7 +445,7 @@ def test_approved_at_is_utc(tmp_path: Path) -> None:
     """The approval instant a real approval stamps is UTC-aware."""
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
     ):
         approved = _approve(profile.bucket_id, operation=_authority_operation_for_test)
 

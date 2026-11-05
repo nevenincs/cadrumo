@@ -14,9 +14,9 @@ from ...core.identity.digest import ContentDigest
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
 from ...core.period import Period, PeriodError
 from ...domain.calculations.registry.ids import RevisionId
-from ._action_rendering import resolved_precondition_action_json_cell
-from ._modelo_cli_support import unsupported_local_work_period_refusal
+from .action_rendering import resolved_precondition_action_json_cell
 from .common import active_bucket_id_or_refuse, emit_envelope, resolve_cli_precondition_action
+from .modelo_cli_support import unsupported_local_work_period_refusal
 from .modelo_query_results import (
     LedgerIssuePayload,
     ModeloReadinessMissingBindingPayload,
@@ -63,7 +63,7 @@ def modelo_readiness(
     )
     report = to_modelo_readiness_report(projection)
     revision_id = report.revision_id
-    readiness_result = _readiness_result(
+    readiness_result = modelo_readiness_commands_readiness_result(
         report,
         authority_generation=projection.authority_generation,
         modelo=modelo,
@@ -103,7 +103,7 @@ def _resolve_readiness_period(*, modelo: str, filing_year: int, period: str | No
         raise
 
 
-def _readiness_result(
+def modelo_readiness_commands_readiness_result(
     report: ProjectionModeloReadiness,
     *,
     authority_generation: ContentDigest,

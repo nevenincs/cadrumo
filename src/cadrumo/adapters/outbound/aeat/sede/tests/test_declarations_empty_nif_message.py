@@ -7,19 +7,19 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ......core.casilla_id import CasillaId, validated_casilla_id
 from ......core.period import Period
 from ......domain.calculations.registry.errors import RegistryValidationError
 from ......domain.calculations.registry.relations import relation_source_requirements
 from ..errors import SedeParseError
-from ._declarations_support import (
-    _filed_observation,
-    _modelo_snapshot,
-    _renta_2025_relation_observations,
-    _resolve_relations_from_observations,
-    _whitespace_nif_session,
+from .declarations_support import (
+    filed_observation,
+    modelo_snapshot,
+    renta_2025_relation_observations,
+    resolve_relations_from_observations,
+    whitespace_nif_session,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -36,9 +36,9 @@ class TestFiledObservationRelations:
     """Verify filed observations can supply registry cross-model relations."""
 
     def test_modelo_100_relation_fixture_covers_registry_source_requirements(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            snapshot = _modelo_snapshot("100", filing_year=2025, period="0A", operation=_authority_operation_for_test)
-            observations = _renta_2025_relation_observations()
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            snapshot = modelo_snapshot("100", filing_year=2025, period="0A", operation=_authority_operation_for_test)
+            observations = renta_2025_relation_observations()
             available = {
                 (observation.modelo, observation.ejercicio, observation.period.registry_token, casilla.casilla_id)
                 for observation in observations
@@ -64,11 +64,11 @@ class TestFiledObservationRelations:
             assert not missing
 
     def test_modelo_100_relations_resolve_from_standardized_filed_observations(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            snapshot = _modelo_snapshot("100", filing_year=2025, period="0A", operation=_authority_operation_for_test)
-            observations = _renta_2025_relation_observations()
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            snapshot = modelo_snapshot("100", filing_year=2025, period="0A", operation=_authority_operation_for_test)
+            observations = renta_2025_relation_observations()
 
-            resolved = _resolve_relations_from_observations(
+            resolved = resolve_relations_from_observations(
                 snapshot.revision,
                 observations,
                 filing_year=2025,
@@ -100,7 +100,7 @@ class TestFiledObservationRelations:
             # The fixture's filed Modelo 184 carries the entity's type-2 attribution
             # total, not the member's share that casilla 1577 declares, so it moves
             # no Modelo 100 relation value.
-            without_m184 = _resolve_relations_from_observations(
+            without_m184 = resolve_relations_from_observations(
                 snapshot.revision,
                 tuple(observation for observation in observations if observation.modelo != "184"),
                 filing_year=2025,
@@ -110,17 +110,17 @@ class TestFiledObservationRelations:
             assert resolved == without_m184
 
     def test_modelo_100_relation_resolution_requires_each_source_period(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            snapshot = _modelo_snapshot("100", filing_year=2025, period="0A", operation=_authority_operation_for_test)
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            snapshot = modelo_snapshot("100", filing_year=2025, period="0A", operation=_authority_operation_for_test)
             missing_period = Period.from_year_and_code(2025, "4T")
             observations = tuple(
                 observation
-                for observation in _renta_2025_relation_observations()
+                for observation in renta_2025_relation_observations()
                 if not (observation.modelo == "131" and observation.period == missing_period)
             )
 
             with pytest.raises(RegistryValidationError, match="expected one observed filing"):
-                _resolve_relations_from_observations(
+                resolve_relations_from_observations(
                     snapshot.revision,
                     observations,
                     filing_year=2025,
@@ -129,10 +129,10 @@ class TestFiledObservationRelations:
                 )
 
     def test_modelo_100_relation_resolution_rejects_duplicate_source_periods(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            snapshot = _modelo_snapshot("100", filing_year=2025, period="0A", operation=_authority_operation_for_test)
-            observations = _renta_2025_relation_observations()
-            duplicate = _filed_observation(
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            snapshot = modelo_snapshot("100", filing_year=2025, period="0A", operation=_authority_operation_for_test)
+            observations = renta_2025_relation_observations()
+            duplicate = filed_observation(
                 modelo="130",
                 ejercicio=2025,
                 period="1T",
@@ -140,7 +140,7 @@ class TestFiledObservationRelations:
             )
 
             with pytest.raises(RegistryValidationError, match="found 2"):
-                _resolve_relations_from_observations(
+                resolve_relations_from_observations(
                     snapshot.revision,
                     (*observations, duplicate),
                     filing_year=2025,
@@ -150,8 +150,8 @@ class TestFiledObservationRelations:
 
     @pytest.mark.parametrize("filing_year", (2022, 2026))
     def test_annual_summary_relations_resolve_from_quarterly_filed_observations(self, filing_year: int) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            snapshot = _modelo_snapshot(
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            snapshot = modelo_snapshot(
                 "180", filing_year=filing_year, period="0A", operation=_authority_operation_for_test
             )
             quarterly_values = {
@@ -177,10 +177,10 @@ class TestFiledObservationRelations:
                 },
             }
 
-            resolved = _resolve_relations_from_observations(
+            resolved = resolve_relations_from_observations(
                 snapshot.revision,
                 tuple(
-                    _filed_observation(
+                    filed_observation(
                         modelo="115",
                         ejercicio=filing_year,
                         period=period,
@@ -201,8 +201,8 @@ class TestFiledObservationRelations:
             }
 
     def test_modelo_193_relations_resolve_from_quarterly_filed_observations(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            snapshot = _modelo_snapshot("193", filing_year=2026, period="0A", operation=_authority_operation_for_test)
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            snapshot = modelo_snapshot("193", filing_year=2026, period="0A", operation=_authority_operation_for_test)
             quarterly_values = {
                 "1T": {
                     _M123_PERCEPTORES_CASILLA: Decimal("5"),
@@ -226,10 +226,10 @@ class TestFiledObservationRelations:
                 },
             }
 
-            resolved = _resolve_relations_from_observations(
+            resolved = resolve_relations_from_observations(
                 snapshot.revision,
                 tuple(
-                    _filed_observation(
+                    filed_observation(
                         modelo="123",
                         ejercicio=2026,
                         period=period,
@@ -250,10 +250,10 @@ class TestFiledObservationRelations:
             }
 
     def test_missing_relation_source_filing_is_rejected(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            snapshot = _modelo_snapshot("180", filing_year=2026, period="0A", operation=_authority_operation_for_test)
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            snapshot = modelo_snapshot("180", filing_year=2026, period="0A", operation=_authority_operation_for_test)
             observations = tuple(
-                _filed_observation(
+                filed_observation(
                     modelo="115",
                     ejercicio=2026,
                     period=period,
@@ -267,7 +267,7 @@ class TestFiledObservationRelations:
             )
 
             with pytest.raises(RegistryValidationError, match="expected one observed filing"):
-                _resolve_relations_from_observations(
+                resolve_relations_from_observations(
                     snapshot.revision,
                     observations,
                     filing_year=2026,
@@ -276,10 +276,10 @@ class TestFiledObservationRelations:
                 )
 
     def test_incomplete_relation_source_observation_is_rejected(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            snapshot = _modelo_snapshot("180", filing_year=2026, period="0A", operation=_authority_operation_for_test)
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            snapshot = modelo_snapshot("180", filing_year=2026, period="0A", operation=_authority_operation_for_test)
             observations = tuple(
-                _filed_observation(
+                filed_observation(
                     modelo="115",
                     ejercicio=2026,
                     period=period,
@@ -294,7 +294,7 @@ class TestFiledObservationRelations:
             )
 
             with pytest.raises(SedeParseError, match="incomplete extraction coverage"):
-                _resolve_relations_from_observations(
+                resolve_relations_from_observations(
                     snapshot.revision,
                     observations,
                     filing_year=2026,
@@ -309,11 +309,11 @@ def test_register_capture_empty_nif_carries_translated_message() -> None:
     from typing import cast
 
     from ......application.live.expedientes_ports import ExpedientesDeclaration
-    from ..._playwright import BrowserContext, Page
+    from ...playwright import BrowserContext, Page
     from ..declarations import DeclaracionesRegisterSession
     from ..errors import SedeNavigationError
 
-    session = _whitespace_nif_session()
+    session = whitespace_nif_session()
     declaration = ExpedientesDeclaration(
         modelo="130",
         ejercicio=2026,
@@ -328,7 +328,7 @@ def test_register_capture_empty_nif_carries_translated_message() -> None:
         declaration_copy_link_text=None,
     )
 
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         register = DeclaracionesRegisterSession(
             session,
             cast(Page, object()),

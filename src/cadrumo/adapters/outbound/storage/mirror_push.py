@@ -288,7 +288,7 @@ _UNMIRRORABLE_NAMESPACE_BLOCKS_NOT_SKIPS = (
 )
 
 
-def _unmirrorable_namespace_reason(namespace: str) -> str | None:
+def unmirrorable_namespace_reason(namespace: str) -> str | None:
     """Return why ``namespace`` must not be mirrored, or ``None`` when it may be.
 
     :meth:`SecureObjectRepository.iter_all_records_raw` deliberately bypasses
@@ -310,10 +310,10 @@ def _unmirrorable_namespace_reason(namespace: str) -> str | None:
         definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_value(namespace)
     except KeyError:
         return f"namespace_unregistered:mirror_preflight:{_UNMIRRORABLE_NAMESPACE_BLOCKS_NOT_SKIPS}"
-    return _mirror_refusal_for_definition(definition)
+    return mirror_refusal_for_definition(definition)
 
 
-def _mirror_refusal_for_definition(definition: SecureObjectNamespaceDefinition) -> str | None:
+def mirror_refusal_for_definition(definition: SecureObjectNamespaceDefinition) -> str | None:
     """Return why ``definition``'s namespace must not be mirrored, or ``None``.
 
     Split from the registry lookup so the decision can be exercised against a
@@ -328,7 +328,7 @@ def _mirror_refusal_for_definition(definition: SecureObjectNamespaceDefinition) 
     return f"remote_mirror_withheld:{policy.value}:{_UNMIRRORABLE_NAMESPACE_BLOCKS_NOT_SKIPS}"
 
 
-def _preflight_mirror_namespaces(
+def preflight_mirror_namespaces(
     *,
     provider: StorageProvider,
     planned_rows_by_namespace: dict[str, list[SecureObjectRawRow]],
@@ -364,7 +364,7 @@ def _preflight_mirror_namespaces(
     failed: list[tuple[str, str]] = []
     degraded: list[tuple[str, str]] = []
     for namespace, rows in planned_rows_by_namespace.items():
-        unmirrorable = _unmirrorable_namespace_reason(namespace)
+        unmirrorable = unmirrorable_namespace_reason(namespace)
         if unmirrorable is not None:
             failed.append((namespace, unmirrorable))
             blocked.add(namespace)
@@ -457,7 +457,7 @@ def _push_mirror_objects(
     )
 
 
-def _push_mirror_manifests(
+def push_mirror_manifests(
     *,
     provider: StorageProvider,
     manifests_by_namespace: dict[str, RemoteMirrorNamespaceManifest],
@@ -544,7 +544,7 @@ def push_secure_object_mirror_rows(
     if dry_run:
         preflight = _MirrorPreflightOutcome(manifests_by_namespace={}, blocked_namespaces=set(), failed=[], degraded=[])
     else:
-        preflight = _preflight_mirror_namespaces(provider=provider, planned_rows_by_namespace=planned_rows_by_ns)
+        preflight = preflight_mirror_namespaces(provider=provider, planned_rows_by_namespace=planned_rows_by_ns)
 
     object_push = _push_mirror_objects(
         provider=provider,
@@ -556,7 +556,7 @@ def push_secure_object_mirror_rows(
     if dry_run:
         manifest_pushed_by_ns: dict[str, int] = {}
     else:
-        manifest_pushed_by_ns = _push_mirror_manifests(
+        manifest_pushed_by_ns = push_mirror_manifests(
             provider=provider,
             manifests_by_namespace=preflight.manifests_by_namespace,
             failed_namespaces=object_push.failed_namespaces,

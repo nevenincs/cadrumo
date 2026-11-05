@@ -17,17 +17,17 @@ from ....core.casilla_id import CasillaId
 from ....core.decimal.constants import ONE, ZERO
 from .errors import RegistryValidationError
 from .formula_runtime_ops import (
-    numeric_casilla_value as _numeric_casilla_value,
-)
-from .formula_runtime_ops import require_casilla_leaf, require_parameter_leaf, text_tolerant_casilla_value
-from .formula_runtime_ops import (
-    resolve_scalar_parameter as _resolve_scalar_parameter,
+    numeric_casilla_value,
+    require_casilla_leaf,
+    require_parameter_leaf,
+    resolve_scalar_parameter,
+    text_tolerant_casilla_value,
 )
 from .ids import ParameterId
 from .schema_formula import FormulaExpression
 
 if TYPE_CHECKING:
-    from .formula_expression import EvalContext as _EvalContext
+    from .formula_expression import EvalContext
 
 
 _DAYS_IN_A_LEAP_YEAR = 366
@@ -50,7 +50,7 @@ class _M100ResolveImputedRentArgs:
 
 def evaluate_m100_resolve_renta_inmobiliaria_imputada(
     expression: FormulaExpression,
-    ctx: _EvalContext,
+    ctx: EvalContext,
 ) -> Decimal:
     """Resolve M100 Art. 85 imputed real-estate income for cadastral-value rows.
 
@@ -64,11 +64,11 @@ def evaluate_m100_resolve_renta_inmobiliaria_imputada(
     op = "m100_resolve_renta_inmobiliaria_imputada"
     args = _m100_resolve_imputed_rent_args(expression)
 
-    catastral_value = _numeric_casilla_value(args.catastral_value_casilla_id, ctx)
-    disposal_days = _numeric_casilla_value(args.disposal_days_casilla_id, ctx)
+    catastral_value = numeric_casilla_value(args.catastral_value_casilla_id, ctx)
+    disposal_days = numeric_casilla_value(args.disposal_days_casilla_id, ctx)
     mixed_use = _m100_boolean_casilla_value(args.mixed_use_flag_casilla_id, ctx, op=op)
-    disposal_percentage = _numeric_casilla_value(args.disposal_percentage_casilla_id, ctx)
-    mixed_use_days = _numeric_casilla_value(args.mixed_use_days_casilla_id, ctx)
+    disposal_percentage = numeric_casilla_value(args.disposal_percentage_casilla_id, ctx)
+    mixed_use_days = numeric_casilla_value(args.mixed_use_days_casilla_id, ctx)
     is_revised = _m100_revised_cadastral_value_flag(args.revised_flag_casilla_id, ctx)
 
     _m100_validate_imputed_rent_non_negative_inputs(
@@ -156,7 +156,7 @@ def _m100_resolve_no_catastral_imputation(
 
 def _m100_resolve_imputed_rent_period(
     args: _M100ResolveImputedRentArgs,
-    ctx: _EvalContext,
+    ctx: EvalContext,
     *,
     op: str,
     disposal_days: Decimal,
@@ -165,7 +165,7 @@ def _m100_resolve_imputed_rent_period(
     mixed_use_days: Decimal,
 ) -> tuple[Decimal, Decimal, Decimal]:
     effective_days = mixed_use_days if mixed_use else disposal_days
-    year_days = _resolve_scalar_parameter(args.year_days_parameter, ctx, op=op)
+    year_days = resolve_scalar_parameter(args.year_days_parameter, ctx, op=op)
     _m100_validate_imputation_days(
         effective_days,
         casilla_id=args.mixed_use_days_casilla_id if mixed_use else args.disposal_days_casilla_id,
@@ -212,13 +212,13 @@ def _m100_validate_imputed_rent_mixed_use_inputs(
 
 def _m100_resolve_imputed_rent_rate(
     args: _M100ResolveImputedRentArgs,
-    ctx: _EvalContext,
+    ctx: EvalContext,
     *,
     op: str,
     is_revised: bool,
 ) -> Decimal:
-    recent_rate = _resolve_scalar_parameter(args.recent_rate_parameter, ctx, op=op)
-    old_rate = _resolve_scalar_parameter(args.old_rate_parameter, ctx, op=op)
+    recent_rate = resolve_scalar_parameter(args.recent_rate_parameter, ctx, op=op)
+    old_rate = resolve_scalar_parameter(args.old_rate_parameter, ctx, op=op)
     return recent_rate if is_revised else old_rate
 
 
@@ -250,7 +250,7 @@ def _m100_resolve_imputed_rent_args(expression: FormulaExpression) -> _M100Resol
     )
 
 
-def _m100_revised_cadastral_value_flag(casilla_id: CasillaId, ctx: _EvalContext) -> bool:
+def _m100_revised_cadastral_value_flag(casilla_id: CasillaId, ctx: EvalContext) -> bool:
     raw_value = ctx.text_values.get(casilla_id, "")
     ctx.operand_refs.append(casilla_id)
     ctx.operand_casilla_refs.append(casilla_id)
@@ -266,8 +266,8 @@ def _m100_revised_cadastral_value_flag(casilla_id: CasillaId, ctx: _EvalContext)
     )
 
 
-def _m100_boolean_casilla_value(casilla_id: CasillaId, ctx: _EvalContext, *, op: str) -> bool:
-    value = _numeric_casilla_value(casilla_id, ctx)
+def _m100_boolean_casilla_value(casilla_id: CasillaId, ctx: EvalContext, *, op: str) -> bool:
+    value = numeric_casilla_value(casilla_id, ctx)
     if value not in {ZERO, ONE}:
         raise RegistryValidationError(
             "M100 Art.85 boolean casilla must be 0 or 1",
@@ -332,7 +332,7 @@ def _m100_resolve_eo_agraria_indices_correctores_args(
 
 def evaluate_m100_resolve_eo_agraria_indices_correctores(
     expression: FormulaExpression,
-    ctx: _EvalContext,
+    ctx: EvalContext,
 ) -> Decimal:
     """Resolve the M100 estimación-objetiva agraria Fase 3ª índices correctores.
 
@@ -366,7 +366,7 @@ def evaluate_m100_resolve_eo_agraria_indices_correctores(
     to a separate producto (casilla 0160) outside the 1539→1548 cascade.
     """
     args = _m100_resolve_eo_agraria_indices_correctores_args(expression)
-    minorado = _numeric_casilla_value(args.minorado_casilla_id, ctx)
+    minorado = numeric_casilla_value(args.minorado_casilla_id, ctx)
     ctx.operand_refs.append(args.minorado_casilla_id)
     ctx.operand_casilla_refs.append(args.minorado_casilla_id)
     if minorado <= ZERO:

@@ -37,7 +37,7 @@ from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
-def _entry(
+def entry(
     *,
     suffix: str,
     retencion: bool,
@@ -130,8 +130,8 @@ def test_append_commits_both_projections_and_exact_replay_is_a_noop(tmp_path: Pa
             mode=WithholdingMutationMode.APPEND,
             idempotency_key="synthetic-append-1",
             entries=(
-                _entry(suffix="one", retencion=True),
-                _entry(suffix="two", retencion=False),
+                entry(suffix="one", retencion=True),
+                entry(suffix="two", retencion=False),
             ),
         )
 
@@ -163,7 +163,7 @@ def test_later_settlement_cannot_create_a_second_recognized_liability(tmp_path: 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         service, _workflow = _service_for(profile.repository)
         scope = WithholdingWindowScope(modelo="123", period=Period.from_year_and_code(2025, "3T"))
-        recognized = _entry(
+        recognized = entry(
             suffix="due",
             retencion=True,
             recognition_event_id="exigibility-1",
@@ -172,7 +172,7 @@ def test_later_settlement_cannot_create_a_second_recognized_liability(tmp_path: 
         recognized = recognized.model_copy(
             update={"identity": recognized.identity.model_copy(update={"settlement_event_id": None})}
         )
-        settled = _entry(
+        settled = entry(
             suffix="settled",
             retencion=True,
             recognition_event_id="exigibility-1",
@@ -210,7 +210,7 @@ def test_stale_replace_refuses_without_partial_projection_change(tmp_path: Path)
                 scope=scope,
                 mode=WithholdingMutationMode.APPEND,
                 idempotency_key="synthetic-append-2",
-                entries=(_entry(suffix="one", retencion=True),),
+                entries=(entry(suffix="one", retencion=True),),
             ),
         )
         assert initial is not None
@@ -219,7 +219,7 @@ def test_stale_replace_refuses_without_partial_projection_change(tmp_path: Path)
                 scope=scope,
                 mode=WithholdingMutationMode.APPEND,
                 idempotency_key="synthetic-append-3",
-                entries=(_entry(suffix="two", retencion=True),),
+                entries=(entry(suffix="two", retencion=True),),
             ),
         )
         with pytest.raises(WithholdingObservationMutationError, match="stale_baseline"):
@@ -229,7 +229,7 @@ def test_stale_replace_refuses_without_partial_projection_change(tmp_path: Path)
                     mode=WithholdingMutationMode.REPLACE,
                     idempotency_key="synthetic-replace-stale",
                     baseline=initial.baseline,
-                    entries=(_entry(suffix="three", retencion=True),),
+                    entries=(entry(suffix="three", retencion=True),),
                 ),
             )
         assert len(service.read_window(scope).entries) == 2
@@ -245,7 +245,7 @@ def test_clear_retains_immutable_generation_history(tmp_path: Path) -> None:
                 scope=scope,
                 mode=WithholdingMutationMode.APPEND,
                 idempotency_key="synthetic-append-4",
-                entries=(_entry(suffix="one", retencion=True),),
+                entries=(entry(suffix="one", retencion=True),),
             ),
         )
         assert initial is not None
@@ -272,7 +272,7 @@ def test_stale_adapter_writer_rolls_back_its_entire_batch(tmp_path: Path) -> Non
                 scope=scope,
                 mode=WithholdingMutationMode.APPEND,
                 idempotency_key="synthetic-append-5",
-                entries=(_entry(suffix="one", retencion=True),),
+                entries=(entry(suffix="one", retencion=True),),
             ),
         )
         assert initial is not None
@@ -281,7 +281,7 @@ def test_stale_adapter_writer_rolls_back_its_entire_batch(tmp_path: Path) -> Non
             scope=scope,
             mode=WithholdingMutationMode.APPEND,
             idempotency_key="synthetic-append-6",
-            entries=(_entry(suffix="two", retencion=True),),
+            entries=(entry(suffix="two", retencion=True),),
         )
         repository.commit_transition(
             predecessor=stale,
@@ -292,7 +292,7 @@ def test_stale_adapter_writer_rolls_back_its_entire_batch(tmp_path: Path) -> Non
             scope=scope,
             mode=WithholdingMutationMode.APPEND,
             idempotency_key="synthetic-append-7",
-            entries=(_entry(suffix="three", retencion=True),),
+            entries=(entry(suffix="three", retencion=True),),
         )
         with pytest.raises(WithholdingObservationMutationError, match="concurrent_write"):
             repository.commit_transition(
@@ -315,7 +315,7 @@ def test_omitted_mutation_and_late_replay_preserve_the_original_generation(tmp_p
             scope=scope,
             mode=WithholdingMutationMode.APPEND,
             idempotency_key="synthetic-append-original",
-            entries=(_entry(suffix="one", retencion=True),),
+            entries=(entry(suffix="one", retencion=True),),
         )
         original = service.apply(first)
         assert original is not None
@@ -327,7 +327,7 @@ def test_omitted_mutation_and_late_replay_preserve_the_original_generation(tmp_p
                 scope=scope,
                 mode=WithholdingMutationMode.APPEND,
                 idempotency_key="synthetic-append-later",
-                entries=(_entry(suffix="two", retencion=True),),
+                entries=(entry(suffix="two", retencion=True),),
             ),
         )
         assert later is not None and later.baseline != original.baseline
@@ -346,7 +346,7 @@ def test_same_key_different_command_and_stale_clear_refuse_without_changes(tmp_p
             scope=scope,
             mode=WithholdingMutationMode.APPEND,
             idempotency_key="synthetic-conflict-key",
-            entries=(_entry(suffix="one", retencion=True),),
+            entries=(entry(suffix="one", retencion=True),),
         )
         initial = service.apply(initial_command)
         assert initial is not None
@@ -354,7 +354,7 @@ def test_same_key_different_command_and_stale_clear_refuse_without_changes(tmp_p
         with pytest.raises(WithholdingObservationMutationError, match="idempotency_conflict"):
             service.apply(
                 initial_command.model_copy(
-                    update={"entries": (_entry(suffix="two", retencion=True),)},
+                    update={"entries": (entry(suffix="two", retencion=True),)},
                 ),
             )
         service.apply(
@@ -362,7 +362,7 @@ def test_same_key_different_command_and_stale_clear_refuse_without_changes(tmp_p
                 scope=scope,
                 mode=WithholdingMutationMode.APPEND,
                 idempotency_key="synthetic-clear-race",
-                entries=(_entry(suffix="three", retencion=True),),
+                entries=(entry(suffix="three", retencion=True),),
             ),
         )
         with pytest.raises(WithholdingObservationMutationError, match="stale_baseline"):
@@ -389,7 +389,7 @@ def test_repeated_same_recipient_scheme_survives_by_composite_identity(tmp_path:
                 scope=scope,
                 mode=WithholdingMutationMode.APPEND,
                 idempotency_key="synthetic-repeated-recipient",
-                entries=(_entry(suffix="one", retencion=True), _entry(suffix="two", retencion=True)),
+                entries=(entry(suffix="one", retencion=True), entry(suffix="two", retencion=True)),
             ),
         )
         assert result is not None
@@ -412,7 +412,7 @@ def test_clear_and_correction_generations_are_queryable(tmp_path: Path) -> None:
                 scope=scope,
                 mode=WithholdingMutationMode.APPEND,
                 idempotency_key="synthetic-correction-origin",
-                entries=(_entry(suffix="one", retencion=True),),
+                entries=(entry(suffix="one", retencion=True),),
             ),
         )
         assert initial is not None
@@ -424,7 +424,7 @@ def test_clear_and_correction_generations_are_queryable(tmp_path: Path) -> None:
                 baseline=initial.baseline,
                 reason="synthetic corrected source revision",
                 supersedes_generation_id=initial.baseline.generation_id,
-                entries=(_entry(suffix="two", retencion=True),),
+                entries=(entry(suffix="two", retencion=True),),
             ),
         )
         assert correction is not None
@@ -454,7 +454,7 @@ def test_distinct_concurrent_appends_converge_after_a_real_head_cas_race(tmp_pat
                 scope=scope,
                 mode=WithholdingMutationMode.APPEND,
                 idempotency_key="synthetic-race-seed",
-                entries=(_entry(suffix="one", retencion=True),),
+                entries=(entry(suffix="one", retencion=True),),
             ),
         )
         assert seed is not None
@@ -462,13 +462,13 @@ def test_distinct_concurrent_appends_converge_after_a_real_head_cas_race(tmp_pat
             scope=scope,
             mode=WithholdingMutationMode.APPEND,
             idempotency_key="synthetic-race-competing",
-            entries=(_entry(suffix="two", retencion=True),),
+            entries=(entry(suffix="two", retencion=True),),
         )
         intended = WithholdingMutationEnvelope(
             scope=scope,
             mode=WithholdingMutationMode.APPEND,
             idempotency_key="synthetic-race-intended",
-            entries=(_entry(suffix="three", retencion=True),),
+            entries=(entry(suffix="three", retencion=True),),
         )
 
         class _InjectingRace:
@@ -527,7 +527,7 @@ def test_same_source_cross_window_guard_rejects_combined_over_allocation(tmp_pat
         service, _workflow = _service_for(profile.repository)
         first_scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(2025, "1T"))
         second_scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(2025, "2T"))
-        first = _entry(
+        first = entry(
             suffix="cross-window-one",
             retencion=True,
             source_object_id="shared-liability",
@@ -535,7 +535,7 @@ def test_same_source_cross_window_guard_rejects_combined_over_allocation(tmp_pat
             liability_withholding="19",
             liability_settlement="100",
         )
-        second = _entry(
+        second = entry(
             suffix="cross-window-two",
             retencion=True,
             source_object_id="shared-liability",
@@ -576,7 +576,7 @@ def test_cross_window_concurrent_guard_cas_retries_then_refuses_over_cap(
             mode=WithholdingMutationMode.APPEND,
             idempotency_key="guard-race-first",
             entries=(
-                _entry(
+                entry(
                     suffix="guard-race-first",
                     retencion=True,
                     source_object_id="guard-race-source",
@@ -591,7 +591,7 @@ def test_cross_window_concurrent_guard_cas_retries_then_refuses_over_cap(
             mode=WithholdingMutationMode.APPEND,
             idempotency_key="guard-race-second",
             entries=(
-                _entry(
+                entry(
                     suffix="guard-race-second",
                     retencion=True,
                     source_object_id="guard-race-source",
@@ -625,7 +625,7 @@ def test_clear_releases_source_capacity_without_erasing_generation_history(tmp_p
         service, _workflow = _service_for(profile.repository)
         first_scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(2025, "1T"))
         second_scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(2025, "2T"))
-        first_entry = _entry(
+        first_entry = entry(
             suffix="capacity-first",
             retencion=True,
             source_object_id="capacity-release-source",
@@ -661,7 +661,7 @@ def test_clear_releases_source_capacity_without_erasing_generation_history(tmp_p
                 mode=WithholdingMutationMode.APPEND,
                 idempotency_key="capacity-reused",
                 entries=(
-                    _entry(
+                    entry(
                         suffix="capacity-second",
                         retencion=True,
                         source_object_id="capacity-release-source",
@@ -687,12 +687,12 @@ def test_conflicting_source_revision_snapshots_refuse_before_any_window_write(tm
                     mode=WithholdingMutationMode.APPEND,
                     idempotency_key="conflicting-snapshots",
                     entries=(
-                        _entry(
+                        entry(
                             suffix="revision-one",
                             retencion=True,
                             source_object_id="revision-conflict-source",
                         ),
-                        _entry(
+                        entry(
                             suffix="revision-two",
                             retencion=True,
                             source_object_id="revision-conflict-source",

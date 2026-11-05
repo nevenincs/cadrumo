@@ -30,9 +30,9 @@ from .....core.logging import get_logger
 from .....core.time.utc import validate_utc_aware
 from ..bucket.errors import BucketLockedError
 from ..crypto.aes_gcm import KEY_SIZE
-from ..custody.zeroise import zeroise as _zeroise
+from ..custody.zeroise import zeroise
 from ..errors import (
-    storage_validation_error as _storage_validation_error,
+    storage_validation_error,
 )
 from .live_sessions import register_live_session
 
@@ -45,7 +45,7 @@ if TYPE_CHECKING:
 #: -- a profile write asks for the route once inside a settings override and
 #: once outside it, alternating -- so the bound is that pair with headroom,
 #: not a general-purpose cache size.
-_ROUTED_SETTINGS_MEMO_SIZE = 4
+ROUTED_SETTINGS_MEMO_SIZE = 4
 _log = get_logger(__name__)
 
 KEY_RELEASE_PHASE_EVENT = "storage_key_release_phase"
@@ -166,16 +166,16 @@ class BucketSession:
                 or the idle deadline outlives the absolute deadline.
         """
         if not bucket_id:
-            raise _storage_validation_error("bucket_id must be non-empty")
+            raise storage_validation_error("bucket_id must be non-empty")
         if idle_minutes <= 0:
-            raise _storage_validation_error("idle_minutes must be a strict positive integer")
+            raise storage_validation_error("idle_minutes must be a strict positive integer")
         if len(dek) != KEY_SIZE:
-            raise _storage_validation_error(f"dek must be exactly {KEY_SIZE} bytes")
+            raise storage_validation_error(f"dek must be exactly {KEY_SIZE} bytes")
         opened_at = validate_utc_aware(opened_at)
         idle_deadline = validate_utc_aware(idle_deadline)
         absolute_deadline = validate_utc_aware(absolute_deadline)
         if idle_deadline > absolute_deadline:
-            raise _storage_validation_error("idle_deadline must not exceed absolute_deadline")
+            raise storage_validation_error("idle_deadline must not exceed absolute_deadline")
         return cls(
             bucket_id=bucket_id,
             dek_buffer=bytearray(dek),
@@ -296,11 +296,11 @@ class BucketSession:
                 window ends before it opens.
         """
         if idle_minutes <= 0:
-            raise _storage_validation_error("idle_minutes must be a strict positive integer")
+            raise storage_validation_error("idle_minutes must be a strict positive integer")
         opened_at = validate_utc_aware(opened_at)
         deadline = validate_utc_aware(deadline)
         if deadline < opened_at:
-            raise _storage_validation_error("deadline must not precede opened_at")
+            raise storage_validation_error("deadline must not precede opened_at")
         with self._window_lock:
             if self._sealed:
                 raise BucketLockedError(bucket_id=self._bucket_id)
@@ -371,7 +371,7 @@ class BucketSession:
         if memoised is not None:
             return memoised
         derived = settings_for_active_profile_bucket(self._bucket_id, source)
-        if len(self._routed_settings) >= _ROUTED_SETTINGS_MEMO_SIZE:
+        if len(self._routed_settings) >= ROUTED_SETTINGS_MEMO_SIZE:
             # Bounded, and evicting the oldest keeps an alternating pair
             # resident rather than letting one arm evict the other.
             self._routed_settings.pop(next(iter(self._routed_settings)))
@@ -447,7 +447,7 @@ class BucketSession:
         if self._sealed:
             return
         with diagnostic_phase(_log, KEY_RELEASE_PHASE_EVENT, "dek_zeroise"):
-            _zeroise(self._dek_buffer)
+            zeroise(self._dek_buffer)
             self._sealed = True
             self._routed_settings.clear()
             self._hmac_subkeys.clear()

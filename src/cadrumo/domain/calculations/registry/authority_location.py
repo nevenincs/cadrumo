@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ....core.resources.bundled_data import bundled_path as _bundled_path
+from ....core.resources.bundled_data import bundled_path
 from .authority_store import AUTHORITY_DESCRIPTOR_FILENAME, AuthorityDescriptor, AuthorityStoreError
 from .errors import AuthorityDescriptorUnavailableError
 
@@ -39,7 +39,7 @@ def bundled_authority_descriptor_path() -> Path:
         if not configured.is_file():
             raise AuthorityDescriptorUnavailableError.for_configured_root(descriptor_path=configured)
         return configured
-    packaged = _bundled_path(*_BUNDLED_AUTHORITY_DESCRIPTOR_PARTS)
+    packaged = bundled_path(*_BUNDLED_AUTHORITY_DESCRIPTOR_PARTS)
     if not packaged.is_file():
         raise AuthorityDescriptorUnavailableError.for_packaged_location(descriptor_path=packaged)
     return packaged

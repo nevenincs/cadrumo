@@ -20,7 +20,7 @@ from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyPasswordError
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import registered_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from cadrumo.application.user_profile.custody_ports import (
@@ -84,7 +84,7 @@ def _enroll(profile_id: UUID) -> str:
 
 def test_the_new_passphrase_opens_the_profile_and_the_old_one_no_longer_does(tmp_path: Path) -> None:
     """The whole point of the verb, proved on both sides of the change."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with _registered(tmp_path) as (_, profile_id):
         rotated = rotate_profile_passphrase(
             profile_id=profile_id,
@@ -113,7 +113,7 @@ def test_the_profile_record_is_still_readable_after_the_change(tmp_path: Path) -
     authenticates under the new password and then cannot read itself. This
     reads the record back through a real login on the new credential.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with _registered(tmp_path) as (_, profile_id):
         # Registration closes its own session, so the profile is locked here;
         # reading the "before" record needs a real login exactly as an
@@ -150,7 +150,7 @@ def test_the_profile_record_is_still_readable_after_the_change(tmp_path: Path) -
 
 def test_the_rotation_is_recorded_in_the_profile_history(tmp_path: Path) -> None:
     """A custody change the operator cannot see afterwards is not auditable."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with _registered(tmp_path) as (_, profile_id):
         reset_test_profile_session()
 
@@ -186,7 +186,7 @@ def test_an_outstanding_recovery_code_still_opens_the_profile_afterwards(tmp_pat
     working, or changing a password silently destroys the only route back
     into the records for someone who later forgets the new one.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
 
     with _registered(tmp_path) as (_, profile_id):
         code = _enroll(profile_id)
@@ -221,7 +221,7 @@ def test_a_rejected_current_passphrase_is_non_oracular_and_changes_nothing(
     current_candidate: str,
 ) -> None:
     """Fail closed: the existing wrapper must survive a refused attempt intact."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with _registered(tmp_path) as (storage_root, profile_id):
         before = _storage_snapshot(storage_root)
 
@@ -244,7 +244,7 @@ def test_a_rejected_current_passphrase_is_non_oracular_and_changes_nothing(
 
 def test_a_mismatched_confirmation_refuses_before_anything_is_read(tmp_path: Path) -> None:
     """The confirmation is checked here too, not only at the surface above."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with _registered(tmp_path) as (_, profile_id):
         before = load_committed_profile_password_material(profile_id).envelope.canonical_json_bytes()
 
@@ -262,7 +262,7 @@ def test_a_mismatched_confirmation_refuses_before_anything_is_read(tmp_path: Pat
 
 def test_a_new_passphrase_below_the_verifier_minimum_refuses(tmp_path: Path) -> None:
     """A rotation must not be a way to install a credential creation would reject."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with _registered(tmp_path) as (_, profile_id):
         with pytest.raises(ProfilePassphraseRotationError):
             rotate_profile_passphrase(
@@ -293,7 +293,7 @@ def test_every_replacement_password_refusal_is_typed_safe_and_changes_nothing(
     reason: ProfilePasswordRefusalReason,
 ) -> None:
     """Prospective refusal precedes locks, unwrap, re-heading and publication."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with _registered(tmp_path) as (storage_root, profile_id):
         before = _storage_snapshot(storage_root)
 
@@ -339,7 +339,7 @@ def test_every_replacement_password_refusal_is_typed_safe_and_changes_nothing(
 )
 def test_rotation_accepts_scalar_and_byte_boundaries_exactly(tmp_path: Path, replacement: str) -> None:
     """Rotation accepts the two scalar boundaries and 1,024 strict UTF-8 bytes."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with _registered(tmp_path) as (_, profile_id):
         rotate_profile_passphrase(
             profile_id=profile_id,
@@ -366,7 +366,7 @@ def test_rotation_preserves_composed_and_decomposed_passwords_exactly(
     equivalent: str,
 ) -> None:
     """Rotation never normalises a replacement credential."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with _registered(tmp_path) as (_, profile_id):
         rotate_profile_passphrase(
             profile_id=profile_id,

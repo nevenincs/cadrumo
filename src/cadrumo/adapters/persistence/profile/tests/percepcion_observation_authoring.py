@@ -8,7 +8,7 @@ from datetime import datetime
 from .....core.aggregation import AggregationCaptureKind
 from .....core.period import Period
 from .....domain.calculations.registry.withholding_bindings import WithholdingObservation
-from ..percepciones_observations import PercepcionObservationRepositoryAdapter, _translate_storage_failure
+from ..percepciones_observations import PercepcionObservationRepositoryAdapter, translate_storage_failure
 from .observation_window_authoring import replace_observation_window
 
 
@@ -26,7 +26,7 @@ def save_percepcion_observation(
     """Persist one per-perceptor-clave observation."""
     if not isinstance(self, PercepcionObservationRepositoryAdapter):
         raise TypeError("fixture requires the percepcion persistence adapter")
-    _translate_storage_failure(
+    translate_storage_failure(
         "percepcion_save_observation",
         lambda: self.save(
             self.build_observation_payload(
@@ -56,7 +56,7 @@ def replace_percepcion_observations(
     """Atomically replace the complete per-perceptor-clave window."""
     if not isinstance(self, PercepcionObservationRepositoryAdapter):
         raise TypeError("fixture requires the percepcion persistence adapter")
-    _translate_storage_failure(
+    translate_storage_failure(
         "percepcion_replace_observations",
         lambda: replace_observation_window(
             self,

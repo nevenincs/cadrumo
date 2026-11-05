@@ -115,7 +115,7 @@ def receive_authorization_code(authorization_url: Callable[[str], str], *, state
     One monotonic deadline covers accept and every read, including slow partial
     headers. Socket ownership ends before the caller exchanges the code.
     """
-    _require_browser_desktop()
+    require_browser_desktop()
     deadline = time.monotonic() + timeout_seconds
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as listener:
         if hasattr(socket, "SO_EXCLUSIVEADDRUSE"):
@@ -149,7 +149,7 @@ def receive_authorization_code(authorization_url: Callable[[str], str], *, state
             return code
 
 
-def _require_browser_desktop() -> None:
+def require_browser_desktop() -> None:
     """Never start the default browser/profile from Windows Session 0 or an unverified desktop."""
     if sys.platform != "win32":
         return

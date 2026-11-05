@@ -19,7 +19,7 @@ from ..navigation import TuiFocusIdentityV1, TuiNavigationTargetV1, TuiScreenCon
 from ..root_binding import RootBindingV1
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from .settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
-from .test_app import MarkerScreen, _account_factories, _catalogue
+from .test_app import MarkerScreen, account_factories, catalogue
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -41,12 +41,12 @@ async def test_failed_initial_root_can_be_retried_with_the_mouse() -> None:
         if calls == 1:
             raise RuntimeError("synthetic transient capture refusal")
         return RootBindingV1(
-            destination_catalogue=_catalogue([]),
+            destination_catalogue=catalogue([]),
             refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
             workbench_search_service=None,
             refresh_workbench_search=None,
             refresh_destination_catalogue=None,
-            account_factories=_account_factories(),
+            account_factories=account_factories(),
             read_account_session=None,
         )
 
@@ -73,7 +73,7 @@ async def test_failed_return_home_offers_keyboard_retry_instead_of_stranding_ope
         return build_home_projection_fixture(HomeFixtureScenario.READY)
 
     app = CadrumoTuiApp(
-        destination_catalogue=_catalogue([]), refresh_home=refresh, account_factories=_account_factories()
+        destination_catalogue=catalogue([]), refresh_home=refresh, account_factories=account_factories()
     )
     async with app.run_test() as pilot:
         await settle(pilot)
@@ -97,7 +97,7 @@ async def test_failed_return_home_offers_keyboard_retry_instead_of_stranding_ope
 @pytest.mark.parametrize("retire", [False, True])
 async def test_delayed_catalogue_cannot_replace_newer_navigation_or_retired_profile(*, retire: bool) -> None:
     started, release = Event(), Event()
-    original, obsolete = _catalogue([]), _catalogue([])
+    original, obsolete = catalogue([]), catalogue([])
 
     def refresh_catalogue():
         started.set()
@@ -150,7 +150,7 @@ async def test_delayed_failed_home_read_cannot_change_a_newer_destination() -> N
             raise RuntimeError("synthetic obsolete read failure")
         return build_home_projection_fixture(HomeFixtureScenario.READY)
 
-    app = CadrumoTuiApp(destination_catalogue=_catalogue([]), refresh_home=refresh)
+    app = CadrumoTuiApp(destination_catalogue=catalogue([]), refresh_home=refresh)
     async with app.run_test() as pilot:
         await settle(pilot)
         app._show_home(None)
@@ -199,12 +199,12 @@ async def test_access_requested_while_the_first_destination_opens_is_not_discard
         opened.append(screen)
         return screen
 
-    factories = _account_factories()
+    factories = account_factories()
     object.__setattr__(factories, "access", open_access)
 
     def load() -> RootBindingV1:
         return RootBindingV1(
-            destination_catalogue=_catalogue([], destination_factory=destination),
+            destination_catalogue=catalogue([], destination_factory=destination),
             refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
             workbench_search_service=None,
             refresh_workbench_search=None,

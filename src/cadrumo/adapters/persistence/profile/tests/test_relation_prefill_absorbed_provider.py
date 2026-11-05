@@ -24,7 +24,7 @@ from .....application.calculations.relation_prefill import (
 from .....core.aggregation import BindingSourceKind
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
-from .....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from .....domain.calculations.registry.bindings import RegistryModeloObservation
 from .....domain.calculations.registry.relation_prefill_bindings import RelationPrefillProvider
@@ -144,7 +144,7 @@ def _resolve_annual_180(repository, snapshot, operation):
 
 
 def test_the_real_resolver_folds_the_quarters_into_the_slot_values(tmp_path: Path) -> None:
-    with _indexed_authority_for_test().operation() as operation, isolated_runtime_profile(tmp_path=tmp_path):
+    with bundled_indexed_authority().operation() as operation, isolated_runtime_profile(tmp_path=tmp_path):
         repository = _seeded_repository()
         snapshot = _snapshot("180", 2026, "0A")
 
@@ -169,7 +169,7 @@ def test_resolved_provenance_names_the_filed_casilla_terminal_origin(tmp_path: P
     audit compare the resolved origin against the binding's authored
     expectation instead of inferring it from the resolver id.
     """
-    with _indexed_authority_for_test().operation() as operation, isolated_runtime_profile(tmp_path=tmp_path):
+    with bundled_indexed_authority().operation() as operation, isolated_runtime_profile(tmp_path=tmp_path):
         repository = _seeded_repository()
         snapshot = _snapshot("180", 2026, "0A")
 
@@ -184,7 +184,7 @@ def test_resolved_provenance_names_the_filed_casilla_terminal_origin(tmp_path: P
 
 
 def test_prefill_values_carry_the_slot_bindings_own_grounding(tmp_path: Path) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         with isolated_runtime_profile(tmp_path=tmp_path):
             repository = _seeded_repository()
             snapshot = _snapshot("180", 2026, "0A")

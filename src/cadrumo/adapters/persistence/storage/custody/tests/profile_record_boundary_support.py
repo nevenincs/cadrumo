@@ -30,13 +30,17 @@ from cadrumo.adapters.persistence.storage.custody.records import (
 )
 from cadrumo.adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.application.user_profile.capsule_record import ProfileRecordSession
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority_artifact import ProfileCreateContext
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import (
+    ProfileSetupState,
+    UserProfileFact,
+    UserProfileRecord,
+    create_user_profile_record,
+)
 
 PROFILE_ID = UUID("3f8b1d42-6c07-4e59-9a13-2b7e5c04d8af")
 DEK = bytes(range(100, 132))
@@ -126,7 +130,7 @@ def populated_facts() -> tuple[UserProfileFact, ...]:
 
 def initial_record() -> UserProfileRecord:
     """Return revision one with every non-lineage defaultable field non-default."""
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         profile_id=str(PROFILE_ID),
         facts=populated_facts(),
         setup_state=ProfileSetupState.INCOMPLETE,
@@ -138,13 +142,13 @@ def initial_record() -> UserProfileRecord:
 
 def _record_create_context() -> ProfileCreateContext:
     """Return the create context paired with the decode context :func:`open_record_session` binds."""
-    create_context, _decode_context = _profile_contexts_for_test()
+    create_context, _decode_context = profile_authority_contexts()
     return create_context
 
 
 def open_record_session() -> ProfileRecordSession:
     """Return the record authority bound to the shared envelope and DEK."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     return ProfileRecordSession.from_envelope(
         envelope=build_envelope(), dek=DEK, profile_decode_context=_profile_decode_context_for_test
     )
@@ -185,7 +189,7 @@ def replacement_record(current: UserProfileRecord) -> UserProfileRecord:
     names a predecessor -- so the only honest way to cover those two fields
     is to drive a real replacement onto the record.
     """
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         profile_id=str(PROFILE_ID),
         facts=populated_facts(),
         setup_state=ProfileSetupState.INCOMPLETE,

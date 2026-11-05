@@ -32,7 +32,7 @@ from cadrumo.application.operations.tests.authority_test_support import unread_a
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 
 from .supervisor_test_support import WaitingExecutor, supervisor_registry
-from .test_journal import _STARTED, _snapshot
+from .test_journal import STARTED, journal_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -44,7 +44,7 @@ def _journal_path(root: Path, operation_id: str) -> Path:
 async def _create(root: Path, operation_id: str, *, terminal: bool = False) -> None:
     """Create one real journal and owner lease through their canonical adapters."""
     journal = OperationJournalRepository(storage_root=root)
-    initial_template = _snapshot(revision=0, sequence=1)
+    initial_template = journal_snapshot(revision=0, sequence=1)
     identity = OperationIdentity(
         operation_id=operation_id, definition_id="test.operation", subject_ref=f"subject:{operation_id[0]}"
     )
@@ -59,14 +59,14 @@ async def _create(root: Path, operation_id: str, *, terminal: bool = False) -> N
         ),
         owner_id="e" * 64,
         token="f" * 64,
-        acquired_at=_STARTED,
-        expires_at=_STARTED + timedelta(hours=1),
+        acquired_at=STARTED,
+        expires_at=STARTED + timedelta(hours=1),
     )
-    acquired = await OperationLeaseFilesystemRepository(storage_root=root).acquire(lease, observed_at=_STARTED)
+    acquired = await OperationLeaseFilesystemRepository(storage_root=root).acquire(lease, observed_at=STARTED)
     assert acquired.disposition is OperationLeaseDisposition.ACQUIRED
     await journal.create(initial, lease=lease)
     if terminal:
-        settled_at = _STARTED + timedelta(minutes=1)
+        settled_at = STARTED + timedelta(minutes=1)
         receipt = OperationTerminalReceipt(
             identity=identity,
             revision=1,
@@ -151,7 +151,7 @@ def test_inventory_pages_include_terminal_and_refused_entries_without_changing_f
             operands=operation_secure_reference_repository(),
             owner_id="1" * 64,
             lease_token_factory=lambda: "2" * 64,
-            clock=lambda: _STARTED,
+            clock=lambda: STARTED,
             lease_duration=timedelta(minutes=10),
             execution_timeout=timedelta(minutes=1),
             cleanup_timeout=timedelta(minutes=1),

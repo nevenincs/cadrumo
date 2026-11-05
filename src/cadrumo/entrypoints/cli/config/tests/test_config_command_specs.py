@@ -13,7 +13,7 @@ from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo_client.commands.graph import CommandSpecGraph
 from cadrumo_client.commands.shared_contracts import DefaultKind, SchemaState
 
-from ..._root_command_specs import ROOT_COMMAND_SPECS
+from ...root_command_specs import ROOT_COMMAND_SPECS
 from ..command_specs import CONFIG_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

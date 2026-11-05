@@ -24,9 +24,9 @@ from .ports import ModeloWorkbenchActionsV1, WorkbenchApplyPrerequisite
 from .progress import WorkbenchProgress, workbench_progress
 from .review import recalculation_risk_text
 from .screen_constants import (
-    _DIALOG_FRAME,
-    _FINDINGS_KEY,
-    _NEXT_KEYS,
+    DIALOG_FRAME,
+    FINDINGS_KEY,
+    NEXT_KEYS,
 )
 from .sources import OpenSourceSurface
 
@@ -93,7 +93,7 @@ class WorkbenchNextStepMixin:
             self._edit_unavailable()
             return
         if self._session.dirty:
-            self._notice(f"{tr('workspace.modelo.calculate.apply_first')} [{_NEXT_KEYS[ModeloFormNextAction.APPLY]}]")
+            self._notice(f"{tr('workspace.modelo.calculate.apply_first')} [{NEXT_KEYS[ModeloFormNextAction.APPLY]}]")
             return
         self._calculate(actions)
 
@@ -116,7 +116,7 @@ class WorkbenchNextStepMixin:
                 message=lambda: recalculation_risk_text(
                     self._unattributed_boxes(form),
                     console=self.app.console,
-                    width=max(self._width() - _DIALOG_FRAME, 1),
+                    width=max(self._width() - DIALOG_FRAME, 1),
                 ),
                 confirm_label=lambda: tr("workspace.modelo.calculate.at_risk_proceed"),
                 cancel_label=lambda: tr("workspace.modelo.calculate.at_risk_cancel"),
@@ -235,7 +235,7 @@ class WorkbenchNextStepMixin:
         line = self._apply_prerequisite_line()
         if line is None:
             return False
-        self._notice(f"{tr('workspace.modelo.apply_prerequisite.notice', box=f'[{line.box}]')} [{_FINDINGS_KEY}]")
+        self._notice(f"{tr('workspace.modelo.apply_prerequisite.notice', box=f'[{line.box}]')} [{FINDINGS_KEY}]")
         self._render_progress()
         return True
 

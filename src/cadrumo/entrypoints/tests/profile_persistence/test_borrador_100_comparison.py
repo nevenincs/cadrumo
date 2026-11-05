@@ -26,7 +26,7 @@ from uuid import UUID
 import pytest
 
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -77,8 +77,7 @@ from ....domain.user_profile.tests.general_regime_facts import (
     GENERAL_REGIME_NATURAL_PERSON_FACTS,
     RENTA_UNMARRIED_TAXPAYER_FACTS,
 )
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.fixtures.borrador.generate import render_borrador_pdf
 from ...adapter_composition_ports import build_borrador_100_snapshot_repository
 from ...live_borrador_operation_composition import build_borrador_100_operation_ports
@@ -246,7 +245,7 @@ def _zero_relation_values(operation: PinnedAuthorityOperation) -> dict[RelationI
 
 def _seed_taxpayer() -> None:
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
@@ -259,7 +258,7 @@ def _seed_taxpayer() -> None:
             ),
             created_at=datetime(2026, 4, 1, tzinfo=UTC),
             updated_at=datetime(2026, 4, 1, tzinfo=UTC),
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 

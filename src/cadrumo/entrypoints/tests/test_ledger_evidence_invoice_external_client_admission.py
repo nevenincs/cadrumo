@@ -101,7 +101,7 @@ def test_evidence_update_records_who_acted_and_returns_the_stored_record_whole_o
         )
 
         assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        result = conformance._resolve_result_projection(
+        result = conformance.resolve_result_projection(
             driver,
             registry,
             definition_id=definition_id,
@@ -139,7 +139,7 @@ def test_a_typed_invoice_entry_records_who_made_it(
         execution_caller_reader=_session_host(definition_id, frontend),
     ) as (driver, registry, profile_id):
         definition = {item.definition_id: item for item in registry.definitions}[definition_id]
-        preparation = conformance._prepare_family_case(
+        preparation = conformance.prepare_family_case(
             definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation
         )
         assert preparation is not None
@@ -150,7 +150,7 @@ def test_a_typed_invoice_entry_records_who_made_it(
         )
 
         assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        outcome = conformance._resolve_result_projection(
+        outcome = conformance.resolve_result_projection(
             driver,
             registry,
             definition_id=definition_id,
@@ -192,7 +192,7 @@ def test_an_extraction_seals_the_full_draft_whichever_frontend_submits_it(
         )
 
         assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        result = conformance._resolve_result_projection(
+        result = conformance.resolve_result_projection(
             driver,
             registry,
             definition_id=definition_id,

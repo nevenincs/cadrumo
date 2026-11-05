@@ -14,7 +14,7 @@ from .....application.storage.calc_sheets.review_workbook import build_review_wo
 from .....application.storage.calc_sheets.tests.review_fixture import review_label, review_snapshot
 from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..api import RequestRetryPolicy
-from ..calc_sheets_apply import _apply_plan_structural_requests, _write_plan_values
+from ..calc_sheets_apply import apply_plan_structural_requests, write_plan_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -64,7 +64,7 @@ def test_formula_looking_text_is_sent_raw_and_numbers_stay_numbers() -> None:
     plan = _review_plan()
     recorder: Any = _Recorder()
 
-    _write_plan_values(execute=recorder, sheets=_sheets(), spreadsheet_id="sheet", plan=plan)
+    write_plan_values(execute=recorder, sheets=_sheets(), spreadsheet_id="sheet", plan=plan)
 
     literal_request, _, _ = recorder.calls[0]
     assert literal_request.body["valueInputOption"] == "RAW"
@@ -82,7 +82,7 @@ def test_only_generated_formulas_use_user_entered_input() -> None:
     assert plan.formula_cells
     recorder: Any = _Recorder()
 
-    _write_plan_values(execute=recorder, sheets=_sheets(), spreadsheet_id="sheet", plan=plan)
+    write_plan_values(execute=recorder, sheets=_sheets(), spreadsheet_id="sheet", plan=plan)
 
     by_input = {
         request.body["valueInputOption"]: request for request, _, _ in recorder.calls if request.kind == "values"
@@ -98,7 +98,7 @@ def test_structural_batch_that_creates_unkeyed_metadata_is_never_transport_retri
     plan = _review_plan()
     recorder: Any = _Recorder()
 
-    _apply_plan_structural_requests(
+    apply_plan_structural_requests(
         execute=recorder,
         sheets=_sheets(),
         spreadsheet_id="sheet",

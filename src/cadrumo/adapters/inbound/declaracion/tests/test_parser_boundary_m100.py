@@ -10,14 +10,14 @@ from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....tests.inventory import FIXTURES_DIR
 from ..errors import DeclaracionParseError
 from ..parser import parse_declaracion
-from ._parser_boundary_m100_support import (
-    _M100_CORPUS_IDS,
-    _M100_CORPUS_PARAMS,
-    _M100_EXPECTED_CASILLAS,
-    _M100_EXPECTED_VALUES_BY_STEM,
+from .parser_boundary_m100_support import (
+    M100_CORPUS_IDS,
+    M100_CORPUS_PARAMS,
+    M100_EXPECTED_CASILLAS,
+    M100_EXPECTED_VALUES_BY_STEM,
 )
-from ._parser_boundary_support import (
-    _expected_period,
+from .parser_boundary_support import (
+    expected_period,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
@@ -25,8 +25,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.use
 
 @pytest.mark.parametrize(
     "pdf_stem,year",
-    _M100_CORPUS_PARAMS,
-    ids=_M100_CORPUS_IDS,
+    M100_CORPUS_PARAMS,
+    ids=M100_CORPUS_IDS,
 )
 def test_parser_extracts_modelo_100_profile_targets_from_corpus(
     pdf_stem: str, year: int, operation: PinnedAuthorityOperation
@@ -74,7 +74,7 @@ def test_parser_extracts_modelo_100_profile_targets_from_corpus(
     )
 
     assert filing.modelo == "100"
-    assert filing.period == _expected_period(year, "0A")
+    assert filing.period == expected_period(year, "0A")
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "100"
@@ -89,7 +89,7 @@ def test_parser_extracts_modelo_100_profile_targets_from_corpus(
     # 0435 (base imponible general) is deferred: the IRPF form prints the line twice
     # (body section + base liquidable section), both identical, so the parser rejects it as
     # ambiguous. It remains a candidate for a future chunk with multiline context anchoring.
-    assert set(values.keys()) == _M100_EXPECTED_CASILLAS
+    assert set(values.keys()) == M100_EXPECTED_CASILLAS
 
     # Ground truth: the label patterns locate the correct body line in the printed form.
     for casilla_id in values:
@@ -98,7 +98,7 @@ def test_parser_extracts_modelo_100_profile_targets_from_corpus(
         )
 
     extracted = {str(casilla_id): value for casilla_id, value in values.items()}
-    expected = {casilla_id: Decimal(amount) for casilla_id, amount in _M100_EXPECTED_VALUES_BY_STEM[pdf_stem].items()}
+    expected = {casilla_id: Decimal(amount) for casilla_id, amount in M100_EXPECTED_VALUES_BY_STEM[pdf_stem].items()}
 
     assert extracted == expected, (
         f"{pdf_stem}: extraction read a different amount than the document prints. "
@@ -124,7 +124,7 @@ def test_the_expected_maps_keep_their_discriminating_power() -> None:
     three, per-casilla distinctness is what catches a test or a fixture reading
     the wrong YEAR.
     """
-    for stem, amounts in _M100_EXPECTED_VALUES_BY_STEM.items():
+    for stem, amounts in M100_EXPECTED_VALUES_BY_STEM.items():
         values = list(amounts.values())
         assert len(set(values)) == len(values), (
             f"{stem}: expected amounts must be pairwise distinct, or the exact-map assertion "
@@ -132,11 +132,11 @@ def test_the_expected_maps_keep_their_discriminating_power() -> None:
             f"{len(values) - len(set(values))} duplicate(s)"
         )
 
-    stems = sorted(_M100_EXPECTED_VALUES_BY_STEM)
-    shared_casillas = set.intersection(*(set(_M100_EXPECTED_VALUES_BY_STEM[stem]) for stem in stems))
+    stems = sorted(M100_EXPECTED_VALUES_BY_STEM)
+    shared_casillas = set.intersection(*(set(M100_EXPECTED_VALUES_BY_STEM[stem]) for stem in stems))
     assert shared_casillas, "the specimens must declare overlapping casillas for this to assert anything"
     for casilla_id in sorted(shared_casillas):
-        per_year = [_M100_EXPECTED_VALUES_BY_STEM[stem][casilla_id] for stem in stems]
+        per_year = [M100_EXPECTED_VALUES_BY_STEM[stem][casilla_id] for stem in stems]
         assert len(set(per_year)) == len(per_year), (
             f"casilla {casilla_id!r} carries the same amount in more than one ejercicio "
             f"({dict(zip(stems, per_year, strict=True))}), so a fixture or test reading the "

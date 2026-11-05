@@ -54,8 +54,8 @@ from ....core.json_contract import Notice
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.errors import TransactionIdPrefixError
-from .. import _ledger_llm_cli as classify
 from .. import ledger_lifecycle_cli as lifecycle
+from .. import ledger_llm_cli as classify
 from .. import operation_ledger_classify as operator_bridge
 from .. import operation_ledger_prefix_read as prefix_read
 

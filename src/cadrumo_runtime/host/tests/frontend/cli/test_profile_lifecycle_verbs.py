@@ -70,7 +70,7 @@ _UPDATED = tr("wizard.commands.status.updated", locale="en")
 
 
 @pytest.fixture(autouse=True)
-def _isolated_backend(profile_storage_root: Path) -> Iterator[Path]:
+def isolated_backend(profile_storage_root: Path) -> Iterator[Path]:
     # open_test_profile_session (called inside seed) resolves the
     # file-backed master-key provider provisioned by this fixture. Sign-in and
     # every profile verb are hosted by the runtime, so the root is served by
@@ -334,7 +334,7 @@ def test_config_login_selects_profile_without_mutating_tax_history() -> None:
 
 
 @pytest.mark.windows_only
-def test_config_profile_view_emits_active_profile_facts(_isolated_backend: Path) -> None:
+def test_config_profile_view_emits_active_profile_facts(isolated_backend: Path) -> None:
     # Selection supplies the target; password proof authorizes its runtime read.
     register_cli_profile(log_in=False, label="operator", facts={"identity.tax_id": "00000000T"})
     result = invoke_protected_profile("operator", "view")
@@ -349,7 +349,7 @@ def test_config_profile_view_emits_active_profile_facts(_isolated_backend: Path)
 
 
 @pytest.mark.windows_only
-def test_config_profile_view_named_profile_includes_canonical_facts(_isolated_backend: Path) -> None:
+def test_config_profile_view_named_profile_includes_canonical_facts(isolated_backend: Path) -> None:
     # A named target is authenticated independently of ambient selection.
     register_cli_profile(log_in=False, label="operator", facts={"identity.tax_id": "00000001R"})
     register_cli_profile(log_in=False, label="spouse", facts={"identity.tax_id": "00000000T"})
@@ -451,7 +451,7 @@ def test_config_profile_view_refuses_a_deleted_profile_by_label_and_uuid() -> No
 
 
 @pytest.mark.windows_only
-def test_config_profile_view_runs_validation_inline(_isolated_backend: Path) -> None:
+def test_config_profile_view_runs_validation_inline(isolated_backend: Path) -> None:
     # Registered and logged in: `seed` opens a session that closes with its
     # context, leaving the verb with no active profile.
     register_cli_profile(log_in=False, label="operator")
@@ -463,7 +463,7 @@ def test_config_profile_view_runs_validation_inline(_isolated_backend: Path) -> 
 
 
 @pytest.mark.windows_only
-def test_show_and_status_do_not_contradict_on_a_registered_profile(_isolated_backend: Path) -> None:
+def test_show_and_status_do_not_contradict_on_a_registered_profile(isolated_backend: Path) -> None:
     """``show`` and ``status`` report two distinct notions without colliding.
 
     A registered profile carries a schema-valid record but has not yet
@@ -516,20 +516,20 @@ def test_show_and_status_do_not_contradict_on_a_registered_profile(_isolated_bac
     assert "readiness\tready" not in status_result.output
 
 
-def test_config_profile_view_refuses_when_no_active_profile(_isolated_backend: Path) -> None:
+def test_config_profile_view_refuses_when_no_active_profile(isolated_backend: Path) -> None:
     # Clear the active-profile precedence chain (env + pointer) so the
     # resolver returns None and the show verb refuses.
     from cadrumo.core.bucket_pointer import BucketPointer, write_pointer
     from cadrumo.core.config import override_settings
 
-    write_pointer(_isolated_backend, BucketPointer.absent(transition_revision=1))
+    write_pointer(isolated_backend, BucketPointer.absent(transition_revision=1))
     with override_settings(cadrumo_active_profile=None):
         result = _invoke_profile(("view",))
     assert result.exit_code != 0
 
 
 @pytest.mark.windows_only
-def test_config_profile_edit_quiet_emits_updated_confirmation(_isolated_backend: Path) -> None:
+def test_config_profile_edit_quiet_emits_updated_confirmation(isolated_backend: Path) -> None:
     """``profile edit --quiet`` must emit a confirmation line with ``Status\\tupdated``."""
 
     register_cli_profile(log_in=False, label="editme")
@@ -554,7 +554,7 @@ def test_config_profile_edit_quiet_emits_updated_confirmation(_isolated_backend:
 
 
 @pytest.mark.windows_only
-def test_config_profile_edit_non_tty_recovery_hint_points_at_edit(_isolated_backend: Path) -> None:
+def test_config_profile_edit_non_tty_recovery_hint_points_at_edit(isolated_backend: Path) -> None:
     """A non-interactive ``profile edit`` (no flags) refuses with an edit-specific hint.
 
     The shared no-console message names ``profile create``, which reads
@@ -579,14 +579,14 @@ def test_config_profile_edit_non_tty_recovery_hint_points_at_edit(_isolated_back
 # --- Fix 3: degraded profile status exits non-zero ---
 
 
-def test_config_profile_status_exits_nonzero_for_dangling_pointer(_isolated_backend: Path) -> None:
+def test_config_profile_status_exits_nonzero_for_dangling_pointer(isolated_backend: Path) -> None:
     """``config profile status`` exits non-zero when the active profile
     has a dangling pointer (registered but no manifest bucket)."""
 
     from cadrumo.core.bucket_pointer import BucketPointer, write_pointer
 
     # Write a pointer to a non-existent bucket so status sees dangling_pointer.
-    write_pointer(_isolated_backend, BucketPointer.selected(bucket_id="phantom", transition_revision=1))
+    write_pointer(isolated_backend, BucketPointer.selected(bucket_id="phantom", transition_revision=1))
 
     result = _invoke_profile(("status",))
 

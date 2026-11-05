@@ -51,8 +51,8 @@ from cadrumo.core.operations import (
 
 from .supervision_support import run_to_settlement
 from .supervisor_test_support import (
-    _NOW,
-    _SENSITIVE_EXCEPTION_DETAIL,
+    SENSITIVE_EXCEPTION_DETAIL,
+    SUPERVISOR_NOW,
     IdleExecutor,
     PayloadTypeRecordingExecutor,
     RegisteredErrorExecutor,
@@ -66,11 +66,11 @@ from .supervisor_test_support import (
     UnexpectedFailureExecutor,
     UnregisteredSupervisorRequestRefinement,
     WaitingExecutor,
-    _assert_sensitive_detail_absent_from_operation_bytes,
-    _capabilities,
-    _drifted_registry,
+    assert_sensitive_detail_absent_from_operation_bytes,
+    drifted_registry,
     operation_repositories,
     operation_supervisor,
+    supervisor_capabilities,
     supervisor_registry,
     supervisor_request,
 )
@@ -109,7 +109,7 @@ def test_timed_out_settlement_refuses_live_executor_before_durable_terminal_comm
                 definition_id=running.identity.definition_id,
                 subject_ref=running.identity.subject_ref,
             )
-            active_lease = await leases.inspect(scope_ref, operation_id, observed_at=_NOW)
+            active_lease = await leases.inspect(scope_ref, operation_id, observed_at=SUPERVISOR_NOW)
             assert active_lease.current is not None
             with pytest.raises(ValueError, match="timed_out settlement requires completed executor work"):
                 await supervisor.settle(
@@ -119,7 +119,7 @@ def test_timed_out_settlement_refuses_live_executor_before_durable_terminal_comm
                         revision=running.revision + 1,
                         condition=OperationTerminalCondition.TIMED_OUT,
                         effect=OperationEffect.NONE,
-                        settled_at=_NOW,
+                        settled_at=SUPERVISOR_NOW,
                     ),
                 )
             durable_running = await journal.load(operation_id)
@@ -142,7 +142,7 @@ def test_timed_out_settlement_refuses_live_executor_before_durable_terminal_comm
                     revision=stopped.revision + 1,
                     condition=OperationTerminalCondition.TIMED_OUT,
                     effect=OperationEffect.NONE,
-                    settled_at=_NOW,
+                    settled_at=SUPERVISOR_NOW,
                 ),
             )
 
@@ -168,7 +168,7 @@ def test_interrupted_settlement_refuses_known_live_executor_without_mutating_the
             registry=supervisor_registry(
                 executor_type=WaitingExecutor,
                 build=lambda: executor,
-                capabilities=_capabilities(
+                capabilities=supervisor_capabilities(
                     permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
                 ),
             ),
@@ -193,7 +193,7 @@ def test_interrupted_settlement_refuses_known_live_executor_without_mutating_the
                 definition_id=running.identity.definition_id,
                 subject_ref=running.identity.subject_ref,
             )
-            assert (await leases.inspect(scope_ref, operation_id, observed_at=_NOW)).current is not None
+            assert (await leases.inspect(scope_ref, operation_id, observed_at=SUPERVISOR_NOW)).current is not None
             with pytest.raises(ValueError, match="interrupted settlement requires completed executor work"):
                 await supervisor.settle(
                     operation_id,
@@ -202,7 +202,7 @@ def test_interrupted_settlement_refuses_known_live_executor_without_mutating_the
                         revision=running.revision + 1,
                         condition=OperationTerminalCondition.INTERRUPTED,
                         effect=OperationEffect.UNKNOWN,
-                        settled_at=_NOW,
+                        settled_at=SUPERVISOR_NOW,
                     ),
                 )
             assert journal_path.read_bytes() == journal_before
@@ -264,7 +264,7 @@ def test_supervisor_refuses_registry_drift_against_the_pinned_invocation_digest(
         )
         operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         restarted = operation_supervisor(
-            registry=_drifted_registry(original_registry),
+            registry=drifted_registry(original_registry),
             journal=journal,
             leases=leases,
             operands=operands,
@@ -313,7 +313,7 @@ def test_loaded_snapshot_routes_refuse_definition_drift_before_return_or_mutatio
         journal_path = storage_root / "operation-journals" / f"{operation_id}.json"
         original_bytes = journal_path.read_bytes()
         restarted = operation_supervisor(
-            registry=_drifted_registry(registry),
+            registry=drifted_registry(registry),
             journal=journal,
             leases=leases,
             operands=operands,
@@ -435,7 +435,7 @@ def test_submit_refuses_a_subclass_of_the_registered_request_type(tmp_path: Path
                     definition_id=refined.definition_id, subject_ref=refined.subject_ref
                 ),
                 operation_id,
-                observed_at=_NOW,
+                observed_at=SUPERVISOR_NOW,
             )
         )
         assert observation.current is None
@@ -569,8 +569,8 @@ def test_start_settles_registered_executor_refusal_without_persisting_its_sensit
         assert terminal.terminal_receipt.diagnostic_ref is None
         assert len(terminal.events) == 1
         assert isinstance(terminal.events[0], OperationTerminalEvent)
-        assert _SENSITIVE_EXCEPTION_DETAIL not in terminal.model_dump_json()
-        _assert_sensitive_detail_absent_from_operation_bytes(storage_root)
+        assert SENSITIVE_EXCEPTION_DETAIL not in terminal.model_dump_json()
+        assert_sensitive_detail_absent_from_operation_bytes(storage_root)
 
 
 def test_start_settles_unexpected_executor_failure_with_correlated_opaque_diagnostic(tmp_path: Path) -> None:
@@ -585,7 +585,7 @@ def test_start_settles_unexpected_executor_failure_with_correlated_opaque_diagno
             registry=supervisor_registry(
                 executor_type=UnexpectedFailureExecutor,
                 build=lambda: executor,
-                capabilities=_capabilities(
+                capabilities=supervisor_capabilities(
                     owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK}),
                     permitted_effects=frozenset(
                         {OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}
@@ -621,11 +621,11 @@ def test_start_settles_unexpected_executor_failure_with_correlated_opaque_diagno
         assert terminal_event.receipt.diagnostic_ref == correlation
         assert replay.events[-2:] == terminal.events
         assert executor.resource.close_calls == 1
-        assert _SENSITIVE_EXCEPTION_DETAIL not in terminal.model_dump_json()
-        assert _SENSITIVE_EXCEPTION_DETAIL.encode("utf-8") not in b"".join(
+        assert SENSITIVE_EXCEPTION_DETAIL not in terminal.model_dump_json()
+        assert SENSITIVE_EXCEPTION_DETAIL.encode("utf-8") not in b"".join(
             event.model_dump_json().encode("utf-8") for event in replay.events
         )
-        _assert_sensitive_detail_absent_from_operation_bytes(storage_root)
+        assert_sensitive_detail_absent_from_operation_bytes(storage_root)
 
 
 def test_start_normalizes_registered_non_refusal_error_to_safe_failed_diagnostic(tmp_path: Path) -> None:
@@ -663,11 +663,11 @@ def test_start_normalizes_registered_non_refusal_error_to_safe_failed_diagnostic
         assert diagnostic.diagnostic_ref == correlation
         assert isinstance(terminal_event, OperationTerminalEvent)
         assert terminal_event.receipt.diagnostic_ref == correlation
-        assert _SENSITIVE_EXCEPTION_DETAIL not in terminal.model_dump_json()
-        assert _SENSITIVE_EXCEPTION_DETAIL.encode("utf-8") not in b"".join(
+        assert SENSITIVE_EXCEPTION_DETAIL not in terminal.model_dump_json()
+        assert SENSITIVE_EXCEPTION_DETAIL.encode("utf-8") not in b"".join(
             event.model_dump_json().encode("utf-8") for event in replay.events
         )
-        _assert_sensitive_detail_absent_from_operation_bytes(storage_root)
+        assert_sensitive_detail_absent_from_operation_bytes(storage_root)
 
 
 def test_submit_conflict_does_not_publish_an_orphan_idempotency_claim(tmp_path: Path) -> None:
@@ -712,7 +712,7 @@ def test_submit_conflict_does_not_publish_an_orphan_idempotency_claim(tmp_path: 
                     revision=held.revision + 1,
                     condition=OperationTerminalCondition.FAILED,
                     effect=OperationEffect.NONE,
-                    settled_at=_NOW,
+                    settled_at=SUPERVISOR_NOW,
                 ),
             )
         )
@@ -755,7 +755,7 @@ def test_submit_journal_create_refusal_releases_the_exact_lease_for_retry(tmp_pa
                     subject_ref=request.subject_ref,
                 ),
                 operation_id,
-                observed_at=_NOW,
+                observed_at=SUPERVISOR_NOW,
             )
         )
         assert observation.current is None

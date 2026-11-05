@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from .. import _lazy_catalogue
+from .. import lazy_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -30,8 +30,8 @@ def test_the_catalogue_loader_refuses_pyyaml_without_libyaml(monkeypatch: pytest
     """DETECTOR: a build without libyaml fails loudly at import rather than degrading."""
     monkeypatch.setattr(yaml, "__with_libyaml__", False)
     spec = importlib.util.spec_from_file_location(
-        f"{_lazy_catalogue.__package__}._lazy_catalogue_without_libyaml",
-        Path(_lazy_catalogue.__file__),
+        f"{lazy_catalogue.__package__}._lazy_catalogue_without_libyaml",
+        Path(lazy_catalogue.__file__),
     )
     assert spec is not None
     assert spec.loader is not None

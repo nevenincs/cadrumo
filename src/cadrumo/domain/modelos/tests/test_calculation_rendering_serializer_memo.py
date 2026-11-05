@@ -28,8 +28,8 @@ def _governed_fact_scope() -> Iterator[None]:
 
 
 def _cold_memos(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(rendering, "_VERIFIED_REGISTRY", rendering._VerifiedRegistryMemo(max_payload_bytes=0))
-    monkeypatch.setattr(rendering, "_REGISTRY_SERIALIZER", rendering._RegistrySerializerMemo())
+    monkeypatch.setattr(rendering, "VERIFIED_REGISTRY", rendering.VerifiedRegistryMemo(max_payload_bytes=0))
+    monkeypatch.setattr(rendering, "REGISTRY_SERIALIZER", rendering.RegistrySerializerMemo())
 
 
 @pytest.fixture(autouse=True)
@@ -59,7 +59,7 @@ def rendering_batch() -> _RenderingBatch:
 
 
 def _count_compilers(monkeypatch: pytest.MonkeyPatch) -> list[SchemaSerializer]:
-    original = rendering._compile_registry_serializer
+    original = rendering.compile_registry_serializer
     compiled: list[SchemaSerializer] = []
 
     def compile_public_schema() -> SchemaSerializer:
@@ -67,8 +67,8 @@ def _count_compilers(monkeypatch: pytest.MonkeyPatch) -> list[SchemaSerializer]:
         compiled.append(serializer)
         return serializer
 
-    monkeypatch.setattr(rendering, "_compile_registry_serializer", compile_public_schema)
-    monkeypatch.setattr(rendering, "_REGISTRY_SERIALIZER", rendering._RegistrySerializerMemo())
+    monkeypatch.setattr(rendering, "compile_registry_serializer", compile_public_schema)
+    monkeypatch.setattr(rendering, "REGISTRY_SERIALIZER", rendering.RegistrySerializerMemo())
     return compiled
 
 
@@ -129,7 +129,7 @@ def test_a_changed_model_schema_compiles_again(
 ) -> None:
     snapshot = rendering_batch.snapshots[0].registry_snapshot
     compiled = _count_compilers(monkeypatch)
-    before = rendering._registry_payload(snapshot)
+    before = rendering.registry_payload(snapshot)
 
     class ExtendedSnapshot(RegistrySnapshot):
         additional_public_field: str = Field(default="new declaration", exclude=True)
@@ -138,7 +138,7 @@ def test_a_changed_model_schema_compiles_again(
         {name: getattr(snapshot, name) for name in RegistrySnapshot.model_fields}
     )
     monkeypatch.setattr(rendering, "RegistrySnapshot", ExtendedSnapshot)
-    after = rendering._registry_payload(extended)
+    after = rendering.registry_payload(extended)
 
     assert len(compiled) == 2
     assert compiled[0] is not compiled[1]
@@ -228,7 +228,7 @@ def test_a_read_keeps_valid_historical_omitted_directory_bytes(monkeypatch: pyte
 
 
 def test_digests_end_with_the_snapshot_object_they_were_computed_over(rendering_batch: _RenderingBatch) -> None:
-    memo = rendering._VerifiedRegistryMemo(max_payload_bytes=0)
+    memo = rendering.VerifiedRegistryMemo(max_payload_bytes=0)
     saved = rendering_batch.snapshots[0].model_dump_json()
     snapshot = CalculationRenderingSnapshot.model_validate_json(saved).registry_snapshot
     calls: list[str] = []

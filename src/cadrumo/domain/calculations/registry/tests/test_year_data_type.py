@@ -15,7 +15,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ..errors import RegistryValidationError
-from ..schema_scalars import ModeloYear, _coerce_modelo_year
+from ..schema_scalars import ModeloYear, coerce_modelo_year
 from ..schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -82,7 +82,7 @@ class TestModeloYearRejects:
         # registered refusal is the cause of the ValueError Pydantic reads.
         for raw in ("", True):
             with pytest.raises(ValueError) as refusal:
-                _coerce_modelo_year(raw)
+                coerce_modelo_year(raw)
             assert isinstance(refusal.value.__cause__, RegistryValidationError)
 
 

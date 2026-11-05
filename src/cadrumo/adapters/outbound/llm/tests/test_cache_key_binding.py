@@ -27,9 +27,9 @@ from ....persistence.llm.cache import LLMCache
 from ....persistence.storage.secure_object_namespaces import LLM_CACHE_NAMESPACE
 from ..errors import LLMCacheError
 from ..models import LLMRequest, LLMResponse
-from ._engine_binding_fixtures import _ENGINE_HOLDER, _bind_engine
+from .engine_binding_fixtures import ENGINE_HOLDER, bind_engine
 
-__all__ = ["_ENGINE_HOLDER", "_bind_engine"]
+__all__ = ["ENGINE_HOLDER", "bind_engine"]
 
 # The encrypted-SQL substrate is imported inside the helpers below, matching
 # the sibling round-trip proof. Pulling ``adapters.persistence.storage`` in at
@@ -65,7 +65,7 @@ _RESPONSE_B = _response(LLMProvider.AGENT, "gpt-model-b", "TAMPERED-B")
 
 
 def _repository_engine():
-    return _ENGINE_HOLDER[0]
+    return ENGINE_HOLDER[0]
 
 
 def _row_payload(model: str) -> bytes:

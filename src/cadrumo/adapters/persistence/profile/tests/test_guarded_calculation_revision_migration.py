@@ -16,12 +16,12 @@ from ..guarded_calculation_revision_migration import GuardedCalculationRevisionM
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from .override_migration_support import override_migration_catalogue
 from .test_calculation_revision_override_migration import (
-    _ABSORBING_BINDING_ID,
-    _BUCKET_ID,
-    _OVERRIDE_VALUE,
-    _RETIRED_RELATION_ID,
-    _revision,
-    _seed_parent_work_unit,
+    ABSORBING_BINDING_ID,
+    BUCKET_ID,
+    OVERRIDE_VALUE,
+    RETIRED_RELATION_ID,
+    revision,
+    seed_parent_work_unit,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -30,11 +30,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 def test_prepare_then_commit_migrates_the_observed_encrypted_row(tmp_path: Path) -> None:
     with (
         bundled_indexed_authority().operation() as operation,
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile,
     ):
-        _seed_parent_work_unit(profile)
+        seed_parent_work_unit(profile)
         repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
-        legacy = _revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE})
+        legacy = revision(relation_overrides={RETIRED_RELATION_ID: OVERRIDE_VALUE})
         repository.save(override_migration_catalogue(legacy))
         observed = repository.load_revisioned(operation=operation)
         migration = GuardedCalculationRevisionMigration()
@@ -45,11 +45,11 @@ def test_prepare_then_commit_migrates_the_observed_encrypted_row(tmp_path: Path)
         assert plan.changed
         assert plan.expected_revision_id == observed[1]
         (migrated,) = tuple(plan.catalogue.values())
-        assert dict(migrated.relation_overrides) == {_ABSORBING_BINDING_ID: _OVERRIDE_VALUE}
+        assert dict(migrated.relation_overrides) == {ABSORBING_BINDING_ID: OVERRIDE_VALUE}
         assert migrated.calculation_revision_id == derive_calculation_revision_id_from_revision(migrated)
         assert migrated.calculation_revision_id != legacy.calculation_revision_id
         assert plan.revision_id_pairs == ((legacy.calculation_revision_id, migrated.calculation_revision_id),)
-        assert plan.override_key_pairs == ((_RETIRED_RELATION_ID, _ABSORBING_BINDING_ID),)
+        assert plan.override_key_pairs == ((RETIRED_RELATION_ID, ABSORBING_BINDING_ID),)
 
         migration.commit(repository, plan)
 
@@ -69,16 +69,16 @@ def test_prepare_then_commit_migrates_the_observed_encrypted_row(tmp_path: Path)
 def test_commit_refuses_a_real_intervening_catalogue_write(tmp_path: Path) -> None:
     with (
         bundled_indexed_authority().operation() as operation,
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile,
     ):
-        _seed_parent_work_unit(profile)
+        seed_parent_work_unit(profile)
         repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
         repository.save(
-            override_migration_catalogue(_revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE}))
+            override_migration_catalogue(revision(relation_overrides={RETIRED_RELATION_ID: OVERRIDE_VALUE}))
         )
         migration = GuardedCalculationRevisionMigration()
         plan = migration.prepare(repository, operation=operation)
-        intervening = override_migration_catalogue(_revision(relation_overrides={}))
+        intervening = override_migration_catalogue(revision(relation_overrides={}))
         repository.save(intervening)
         observed = repository.load_revisioned(operation=operation)
         assert observed[1] != plan.expected_revision_id
@@ -93,15 +93,15 @@ def test_commit_refuses_a_real_intervening_catalogue_write(tmp_path: Path) -> No
 def test_assert_current_refuses_a_new_legacy_row_without_writing(tmp_path: Path) -> None:
     with (
         bundled_indexed_authority().operation() as operation,
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile,
     ):
-        _seed_parent_work_unit(profile)
+        seed_parent_work_unit(profile)
         repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
-        repository.save(override_migration_catalogue(_revision(relation_overrides={})))
+        repository.save(override_migration_catalogue(revision(relation_overrides={})))
         migration = GuardedCalculationRevisionMigration()
         assert not migration.prepare(repository, operation=operation).changed
         repository.save(
-            override_migration_catalogue(_revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE}))
+            override_migration_catalogue(revision(relation_overrides={RETIRED_RELATION_ID: OVERRIDE_VALUE}))
         )
         observed = repository.load_revisioned(operation=operation)
 
@@ -117,12 +117,12 @@ def test_assert_current_refuses_a_new_legacy_row_without_writing(tmp_path: Path)
 def test_prepare_preserves_orphan_refusal_and_the_encrypted_row(tmp_path: Path) -> None:
     with (
         bundled_indexed_authority().operation() as operation,
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile,
     ):
-        _seed_parent_work_unit(profile)
+        seed_parent_work_unit(profile)
         repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
         orphan = "modelo-303-rel-self-this-relation-never-existed"
-        repository.save(override_migration_catalogue(_revision(relation_overrides={orphan: _OVERRIDE_VALUE})))
+        repository.save(override_migration_catalogue(revision(relation_overrides={orphan: OVERRIDE_VALUE})))
         observed = repository.load_revisioned(operation=operation)
 
         with pytest.raises(OrphanedRelationOverrideError) as refusal:
@@ -131,5 +131,5 @@ def test_prepare_preserves_orphan_refusal_and_the_encrypted_row(tmp_path: Path) 
         assert refusal.value.context is not None
         assert refusal.value.context["reason"] == "orphaned_relation_override"
         assert orphan in str(refusal.value.context["override_keys"])
-        assert _OVERRIDE_VALUE not in str(refusal.value.context)
+        assert OVERRIDE_VALUE not in str(refusal.value.context)
         assert repository.load_revisioned(operation=operation) == observed

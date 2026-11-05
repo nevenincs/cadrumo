@@ -19,8 +19,7 @@ from cadrumo.domain.transactions.models import derive_transaction_id
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from .ledger_action_create_support import ledger_ports_for_test
-from .ledger_action_persistence_support import BUCKET_ID as _BUCKET_ID
-from .ledger_action_persistence_support import repositories as _repositories
+from .ledger_action_persistence_support import BUCKET_ID, repositories
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -28,7 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def _command(**overrides: object) -> ManualLedgerTransactionCommand:
     return ManualLedgerTransactionCommand.model_validate(
         {
-            "bucket_id": _BUCKET_ID,
+            "bucket_id": BUCKET_ID,
             "booked_date": date(2026, 5, 1),
             "amount": Decimal("75.00"),
             "direction": TransactionDirection.OUTGOING,
@@ -40,11 +39,11 @@ def _command(**overrides: object) -> ManualLedgerTransactionCommand:
 
 def test_an_added_row_is_bound_and_an_edit_keeps_or_moves_the_binding(secure_objects: SecureObjectRepository) -> None:
     """Add binds; an unrelated edit keeps the account; an explicit edit moves it and re-derives the id."""
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
 
     def ports():
         return ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             objects=secure_objects,
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
@@ -62,7 +61,7 @@ def test_an_added_row_is_bound_and_an_edit_keeps_or_moves_the_binding(secure_obj
 
     with ports() as edit_ports:
         noted = update_manual_transaction_fields(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=created.ref.transaction_id,
             patch=ManualLedgerTransactionPatch(notes="monthly"),
             actor="operator",
@@ -75,7 +74,7 @@ def test_an_added_row_is_bound_and_an_edit_keeps_or_moves_the_binding(secure_obj
 
     with ports() as move_ports:
         moved = update_manual_transaction_fields(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=noted.ref.transaction_id,
             patch=ManualLedgerTransactionPatch(own_account_id="acc-02"),
             actor="operator",
@@ -93,9 +92,9 @@ def test_an_added_row_is_bound_and_an_edit_keeps_or_moves_the_binding(secure_obj
 
 def test_an_unbound_add_keeps_the_unbound_id(secure_objects: SecureObjectRepository) -> None:
     """A row added without an account derives exactly the id it always had."""
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,

@@ -63,7 +63,7 @@ from .....application.auth.session_types import (
 )
 from .....core.auth_provider import AuthProviderDescription, AuthProviderKind
 from .....core.authentication_links import aeat_authentication_url
-from .....core.config import Settings as _Settings
+from .....core.config import Settings as ConfigSettings
 from .....core.config_support import unwrap_optional_secret
 from .....core.errors.hierarchy import AeatLoginAssertionError, AuthError
 from .....core.i18n.render import tr
@@ -71,46 +71,38 @@ from .....core.identity.tax_id import tax_id_identity_token
 from .....core.logging import get_logger
 from .....core.time.clock import now
 from .....domain.user_profile.errors import UserProfileError
-from .._playwright import PlaywrightTimeoutError
 from ..browser.desktop import interactive_desktop_available
+from ..playwright import PlaywrightTimeoutError
 from . import session_store
-from ._clave_movil_page_flow import _ClaveMovilPageFlowMixin
-from ._clave_movil_salvage import _ClaveMovilSessionSalvageMixin
-from ._clave_provider_common import (
-    close_clave_browser_session,
-    close_clave_context,
-    default_sede_target_url,
-    is_authenticated_clave_landing,
-    verification_probe_url,
-)
-from ._session_probe import run_authenticated_landing_probe
 from .authenticator import AEAT_SESSION_IDLE_TTL
 from .browser_lifecycle import CloseIntentBarrier
 from .clave_movil_metadata import ClaveMovilSessionMetadata
+from .clave_movil_page_flow import ClaveMovilPageFlowMixin
+from .clave_movil_salvage import ClaveMovilSessionSalvageMixin
 from .clave_movil_state import ClaveMovilPageState
 from .clave_movil_support import (
     ClaveMovilApprovalTimeoutError,
     ClaveMovilConfigurationError,
     ClaveMovilFailureMode,
-)
-from .clave_movil_support import (
-    classify_identity as _classify_identity,
-)
-from .clave_movil_support import (
-    diagnostic_fingerprint as _diagnostic_fingerprint,
-)
-from .clave_movil_support import (
-    render_progress_banner as _render_progress_banner,
-)
-from .clave_movil_support import (
-    url_diagnostic as _url_diagnostic,
+    classify_identity,
+    diagnostic_fingerprint,
+    render_progress_banner,
+    url_diagnostic,
 )
 from .clave_profile_diagnostics import (
     active_profile_context_defaults,
     profile_identity_alignment,
     unavailable_active_profile_context,
 )
+from .clave_provider_common import (
+    close_clave_browser_session,
+    close_clave_context,
+    default_sede_target_url,
+    is_authenticated_clave_landing,
+    verification_probe_url,
+)
 from .errors import AuthConfigurationError, AuthProviderCleanupError
+from .session_probe import run_authenticated_landing_probe
 from .view_capture_identity import require_signed_in_taxpayer
 
 if TYPE_CHECKING:
@@ -120,14 +112,14 @@ if TYPE_CHECKING:
 log = get_logger(__name__)
 
 _NAVIGATION_TIMEOUT_MS_DEFAULT: Final[int] = int(
-    _Settings.model_fields["cadrumo_browser_navigation_timeout_ms"].default,
+    ConfigSettings.model_fields["cadrumo_browser_navigation_timeout_ms"].default,
 )
 # Environment variable name referenced in operator-facing error messages.
 # Named constant so grepping for the env-var name surfaces every usage site.
 _CLAVE_MOVIL_DNI_NIE_ENV: Final[str] = "CADRUMO_CLAVE_MOVIL_DNI_NIE"
 
 
-class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvageMixin):
+class ClaveMovilAuthProvider(ClaveMovilPageFlowMixin, ClaveMovilSessionSalvageMixin):
     """Cl@ve Móvil implementation of the :class:`AuthProvider` protocol.
 
     Constructed by :func:`adapters.outbound.aeat.auth.provider_selection.select_provider` when
@@ -532,7 +524,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                 health_summary=tr("application.auth.clave_movil.health.identity_unset"),
             )
         try:
-            _classify_identity(dni_nie)
+            classify_identity(dni_nie)
         except ClaveMovilConfigurationError as exc:
             return AuthProviderDescription(
                 kind=self.kind,
@@ -579,7 +571,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                 "before running `cadrumo-runtime config auth configure --provider clave_movil`.",
                 translated_message="adapters.auth.clave_movil.errors.dni_nie_not_set",
             )
-        _classify_identity(raw)
+        classify_identity(raw)
         return raw.strip().upper()
 
     def _default_target_url(self) -> str:
@@ -629,7 +621,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         fresh_login_settings = self._fresh_login_settings()
         identity = unwrap_optional_secret(self._settings.cadrumo_clave_movil_dni_nie).strip()
         try:
-            identity_kind = _classify_identity(identity)
+            identity_kind = classify_identity(identity)
         except ClaveMovilConfigurationError:
             identity_kind = "invalid_or_missing"
         auth_mode = "non_qr" if self._settings.cadrumo_clave_prefer_non_qr else "qr"
@@ -641,13 +633,13 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             "auth_route": auth_route,
             "identity_kind": identity_kind,
             "clave_identity_configured": bool(identity),
-            "clave_identity_fingerprint": _diagnostic_fingerprint(identity),
+            "clave_identity_fingerprint": diagnostic_fingerprint(identity),
             "dni_fecha_configured": bool((self._settings.cadrumo_clave_movil_dni_fecha or "").strip()),
-            "dni_fecha_fingerprint": _diagnostic_fingerprint(self._settings.cadrumo_clave_movil_dni_fecha),
+            "dni_fecha_fingerprint": diagnostic_fingerprint(self._settings.cadrumo_clave_movil_dni_fecha),
             "nie_soporte_configured": bool(
                 unwrap_optional_secret(self._settings.cadrumo_clave_movil_nie_soporte).strip(),
             ),
-            "nie_soporte_fingerprint": _diagnostic_fingerprint(self._settings.cadrumo_clave_movil_nie_soporte),
+            "nie_soporte_fingerprint": diagnostic_fingerprint(self._settings.cadrumo_clave_movil_nie_soporte),
             "prefer_non_qr": self._settings.cadrumo_clave_prefer_non_qr,
             "headless": fresh_login_settings.cadrumo_browser_headless,
             "timeout_ms": self._settings.cadrumo_clave_movil_timeout_ms,
@@ -713,7 +705,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                 profile_identity = str(selector_values.get("tax.id") or "").strip().upper()
         context["profile_record_present"] = True
         context["profile_tax_id_present"] = bool(profile_identity)
-        context["profile_tax_id_fingerprint"] = _diagnostic_fingerprint(profile_identity)
+        context["profile_tax_id_fingerprint"] = diagnostic_fingerprint(profile_identity)
         context["identity_alignment"] = profile_identity_alignment(provider_identity, profile_identity)
         return context
 
@@ -1000,7 +992,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                 context={
                     "timeout_ms": self._navigation_timeout_ms,
                     "target_path": target_path,
-                    "selector_url": _url_diagnostic(selector_url),
+                    "selector_url": url_diagnostic(selector_url),
                     **attempt_context,
                 },
             ) from exc
@@ -1040,7 +1032,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         )
 
         timeout_ms = int(self._settings.cadrumo_clave_movil_timeout_ms)
-        await _render_progress_banner(
+        await render_progress_banner(
             verification_code=verification_code,
             timeout_seconds=timeout_ms // 1000,
             used_non_qr_fallback=use_non_qr,
@@ -1059,7 +1051,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                 failure_mode=ClaveMovilFailureMode.AUTH_COMPLETION_TIMEOUT,
                 context={
                     "timeout_ms": timeout_ms,
-                    "current_url": _url_diagnostic(current_url),
+                    "current_url": url_diagnostic(current_url),
                     "target_path": target_path,
                     "diagnostic_id": diagnostic_id,
                     "phone_state": "unknown",

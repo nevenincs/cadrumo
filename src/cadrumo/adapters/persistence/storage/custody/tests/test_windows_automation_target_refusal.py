@@ -36,7 +36,7 @@ def test_invalid_target_is_refused_before_native_factory(
         native_factory_calls.append(True)
         pytest.fail("invalid target reached the Windows credential factory")
 
-    monkeypatch.setattr(windows_secret_store, "_windows_credential_api", fail_if_native_factory_is_reached)
+    monkeypatch.setattr(windows_secret_store, "windows_credential_api", fail_if_native_factory_is_reached)
     store = WindowsAutomationSecretStore()
 
     with pytest.raises(AutomationCustodyError) as raised:

@@ -18,11 +18,11 @@ from ......core.config import Settings
 from ......core.diagnostic_log import DiagnosticFormatter, diagnostic_scope
 from ......core.logging import LOG_FILE_FORMAT
 from ......tests.log_records import delivered_records
-from .. import _kdf_worker_observation as observation
-from .. import _kdf_worker_supervision as supervision
-from .._kdf_codec import KDF_FAILED_FRAME, KDF_FRAME_CONTROL, calibration_frame_bytes
-from .._kdf_worker_supervision import _SupervisedKdfWorker
+from .. import kdf_worker_observation as observation
+from .. import kdf_worker_supervision as supervision
 from ..errors import ProfileCustodyRefusedError
+from ..kdf_codec import KDF_FAILED_FRAME, KDF_FRAME_CONTROL, calibration_frame_bytes
+from ..kdf_worker_supervision import SupervisedKdfWorker
 from ..records import ProfileCustodyKdfParameters, ProfileCustodyWrappedDek
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -44,17 +44,17 @@ def _kdf() -> ProfileCustodyKdfParameters:
 
 
 @pytest.fixture
-def simulated_worker(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> _SupervisedKdfWorker:
+def simulated_worker(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> SupervisedKdfWorker:
     """Inject transport boundaries; real child/crypto coverage stays in supervision tests."""
-    worker = _SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=Settings(cadrumo_storage_root=tmp_path))
+    worker = SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=Settings(cadrumo_storage_root=tmp_path))
     frames = iter(
         ((KDF_FRAME_CONTROL, _PRIVATE.encode()), (KDF_FRAME_CONTROL, calibration_frame_bytes(derivation_ns=125)))
     )
-    monkeypatch.setattr(_SupervisedKdfWorker, "_start", lambda _self: None)
-    monkeypatch.setattr(_SupervisedKdfWorker, "_read_response_frame", lambda _self: next(frames))
-    monkeypatch.setattr(_SupervisedKdfWorker, "_verify_ready_attestation", lambda _self, _frame: None)
-    monkeypatch.setattr(_SupervisedKdfWorker, "_write_request", lambda _self, _payload: None)
-    monkeypatch.setattr(_SupervisedKdfWorker, "_require_clean_worker_exit", lambda _self: None)
+    monkeypatch.setattr(SupervisedKdfWorker, "_start", lambda _self: None)
+    monkeypatch.setattr(SupervisedKdfWorker, "_read_response_frame", lambda _self: next(frames))
+    monkeypatch.setattr(SupervisedKdfWorker, "_verify_ready_attestation", lambda _self, _frame: None)
+    monkeypatch.setattr(SupervisedKdfWorker, "_write_request", lambda _self, _payload: None)
+    monkeypatch.setattr(SupervisedKdfWorker, "_require_clean_worker_exit", lambda _self: None)
     return worker
 
 
@@ -76,21 +76,21 @@ def _summary(caplog: pytest.LogCaptureFixture) -> tuple[logging.LogRecord, dict[
 
 
 def test_success_emits_once_after_cleanup_with_monotonic_spans_and_existing_scope(
-    simulated_worker: _SupervisedKdfWorker, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+    simulated_worker: SupervisedKdfWorker, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
     caplog.set_level(logging.DEBUG, logger=supervision.__name__)
     ticks = count(step=1_000_000)
     monkeypatch.setattr(supervision.time, "monotonic_ns", lambda: next(ticks))
     cleanup_complete = False
-    original_close = _SupervisedKdfWorker._close
+    original_close = SupervisedKdfWorker._close
 
-    def close(worker: _SupervisedKdfWorker, *, failed: bool) -> None:
+    def close(worker: SupervisedKdfWorker, *, failed: bool) -> None:
         nonlocal cleanup_complete
         assert not delivered_records(caplog)
         original_close(worker, failed=failed)
         cleanup_complete = True
 
-    monkeypatch.setattr(_SupervisedKdfWorker, "_close", close)
+    monkeypatch.setattr(SupervisedKdfWorker, "_close", close)
     with diagnostic_scope() as identifier, simulated_worker as worker:
         assert not delivered_records(caplog)
         assert worker.calibrate(_kdf()) == 0.000000125
@@ -110,12 +110,12 @@ def test_success_emits_once_after_cleanup_with_monotonic_spans_and_existing_scop
 
 
 def test_prewarmed_worker_reports_request_time_separately_from_idle_lifetime(
-    simulated_worker: _SupervisedKdfWorker, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+    simulated_worker: SupervisedKdfWorker, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
     caplog.set_level(logging.DEBUG, logger=supervision.__name__)
     now = [1_000_000_000]
     monkeypatch.setattr(supervision.time, "monotonic_ns", lambda: now[0])
-    monkeypatch.setattr(_SupervisedKdfWorker, "_close", lambda _self, *, failed: None)
+    monkeypatch.setattr(SupervisedKdfWorker, "_close", lambda _self, *, failed: None)
     with simulated_worker as worker:
         process = SimpleNamespace(poll=lambda: None, returncode=0)
         monkeypatch.setattr(worker, "_process", process)
@@ -135,7 +135,7 @@ def test_prewarmed_worker_reports_request_time_separately_from_idle_lifetime(
 )
 def test_failure_retains_the_exact_phase_type_and_primary_without_private_message(
     stage: str,
-    simulated_worker: _SupervisedKdfWorker,
+    simulated_worker: SupervisedKdfWorker,
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -148,14 +148,14 @@ def test_failure_retains_the_exact_phase_type_and_primary_without_private_messag
     if stage in {"ready_wait", "result_wait"}:
         reads = 0
 
-        def read(_worker: _SupervisedKdfWorker) -> tuple[int, bytes]:
+        def read(_worker: SupervisedKdfWorker) -> tuple[int, bytes]:
             nonlocal reads
             reads += 1
             if reads == (1 if stage == "ready_wait" else 2):
                 raise primary
             return KDF_FRAME_CONTROL, _PRIVATE.encode()
 
-        monkeypatch.setattr(_SupervisedKdfWorker, "_read_response_frame", read)
+        monkeypatch.setattr(SupervisedKdfWorker, "_read_response_frame", read)
     else:
         method = {
             "start": "_start",
@@ -163,7 +163,7 @@ def test_failure_retains_the_exact_phase_type_and_primary_without_private_messag
             "request_write": "_write_request",
             "clean_exit": "_require_clean_worker_exit",
         }[stage]
-        monkeypatch.setattr(_SupervisedKdfWorker, method, fail)
+        monkeypatch.setattr(SupervisedKdfWorker, method, fail)
     with pytest.raises(type(primary)) as escaped, simulated_worker as worker:
         worker.calibrate(_kdf())
     assert escaped.value is primary
@@ -178,11 +178,11 @@ def test_failure_retains_the_exact_phase_type_and_primary_without_private_messag
 
 
 def test_invalid_result_has_validation_failure_after_the_existing_clean_exit_sequence(
-    simulated_worker: _SupervisedKdfWorker, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+    simulated_worker: SupervisedKdfWorker, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
     caplog.set_level(logging.DEBUG, logger=supervision.__name__)
     monkeypatch.setattr(
-        _SupervisedKdfWorker, "_read_response_frame", lambda _worker: (KDF_FRAME_CONTROL, _PRIVATE.encode())
+        SupervisedKdfWorker, "_read_response_frame", lambda _worker: (KDF_FRAME_CONTROL, _PRIVATE.encode())
     )
     with pytest.raises(ProfileCustodyRefusedError), simulated_worker as worker:
         worker.calibrate(_kdf())
@@ -193,7 +193,7 @@ def test_invalid_result_has_validation_failure_after_the_existing_clean_exit_seq
 
 
 def test_refused_result_does_not_disclose_secret_or_associated_data(
-    simulated_worker: _SupervisedKdfWorker, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+    simulated_worker: SupervisedKdfWorker, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
     caplog.set_level(logging.DEBUG, logger=supervision.__name__)
     wrapped = ProfileCustodyWrappedDek(
@@ -202,7 +202,7 @@ def test_refused_result_does_not_disclose_secret_or_associated_data(
         tag_b64=base64.b64encode(b"t" * 16).decode(),
     )
     monkeypatch.setattr(
-        _SupervisedKdfWorker, "_read_response_frame", lambda _worker: (KDF_FRAME_CONTROL, KDF_FAILED_FRAME)
+        SupervisedKdfWorker, "_read_response_frame", lambda _worker: (KDF_FRAME_CONTROL, KDF_FAILED_FRAME)
     )
     with simulated_worker as worker:
         assert (
@@ -219,7 +219,7 @@ def test_refused_result_does_not_disclose_secret_or_associated_data(
 @pytest.mark.parametrize("has_primary", [False, True])
 def test_cleanup_failure_still_escapes_and_records_original_failure_separately(
     has_primary: bool,
-    simulated_worker: _SupervisedKdfWorker,
+    simulated_worker: SupervisedKdfWorker,
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -227,11 +227,11 @@ def test_cleanup_failure_still_escapes_and_records_original_failure_separately(
     primary = TimeoutError(_PRIVATE)
     cleanup = OSError(_PRIVATE)
 
-    def close(_worker: _SupervisedKdfWorker, *, failed: bool) -> None:
+    def close(_worker: SupervisedKdfWorker, *, failed: bool) -> None:
         assert failed is has_primary
         raise cleanup
 
-    monkeypatch.setattr(_SupervisedKdfWorker, "_close", close)
+    monkeypatch.setattr(SupervisedKdfWorker, "_close", close)
     with pytest.raises(OSError) as escaped, simulated_worker:
         if has_primary:
             raise primary
@@ -248,7 +248,7 @@ def test_cleanup_failure_still_escapes_and_records_original_failure_separately(
 def test_sink_cannot_replace_either_original_or_escaping_cleanup_failure(
     sink_error: BaseException,
     cleanup_fails: bool,
-    simulated_worker: _SupervisedKdfWorker,
+    simulated_worker: SupervisedKdfWorker,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     primary = TimeoutError(_PRIVATE)
@@ -260,13 +260,13 @@ def test_sink_cannot_replace_either_original_or_escaping_cleanup_failure(
         calls += 1
         raise sink_error
 
-    def close(_worker: _SupervisedKdfWorker, *, failed: bool) -> None:
+    def close(_worker: SupervisedKdfWorker, *, failed: bool) -> None:
         assert failed
         raise cleanup
 
     monkeypatch.setattr(observation.logger, "log", log)
     if cleanup_fails:
-        monkeypatch.setattr(_SupervisedKdfWorker, "_close", close)
+        monkeypatch.setattr(SupervisedKdfWorker, "_close", close)
     expected = cleanup if cleanup_fails else primary
     with pytest.raises(type(expected)) as escaped, simulated_worker:
         raise primary
@@ -274,7 +274,7 @@ def test_sink_cannot_replace_either_original_or_escaping_cleanup_failure(
 
 
 def test_normal_sink_exception_is_nonfatal_after_successful_cleanup(
-    simulated_worker: _SupervisedKdfWorker, monkeypatch: pytest.MonkeyPatch
+    simulated_worker: SupervisedKdfWorker, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     calls = 0
 
@@ -290,14 +290,14 @@ def test_normal_sink_exception_is_nonfatal_after_successful_cleanup(
 
 
 def test_returned_cleanup_without_confirmed_child_exit_is_unconfirmed(
-    simulated_worker: _SupervisedKdfWorker, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+    simulated_worker: SupervisedKdfWorker, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
     caplog.set_level(logging.DEBUG, logger=supervision.__name__)
 
     class UnconfirmedProcess:
         returncode = None
 
-    monkeypatch.setattr(_SupervisedKdfWorker, "_close", lambda _worker, *, failed: None)
+    monkeypatch.setattr(SupervisedKdfWorker, "_close", lambda _worker, *, failed: None)
     with simulated_worker:
         simulated_worker._process = cast("subprocess.Popen[bytes]", UnconfirmedProcess())
     _, context = _summary(caplog)

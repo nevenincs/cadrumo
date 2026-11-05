@@ -88,12 +88,12 @@ class _RepliesRpc:
     def __init__(self, *, identifier: bytes = b"login") -> None:
         self.identifier = identifier
         self.values = {
-            protection._CLASS: struct.pack("@L", protection._COLLECTION_CLASS),
-            protection._ID: identifier,
-            protection._TOKEN: b"\x01",
-            protection._TRANSIENT: b"\0",
-            protection._TRUSTED: b"\x01",
-            protection._LOCKED: b"\0",
+            protection.CLASS: struct.pack("@L", protection.COLLECTION_CLASS),
+            protection.ID: identifier,
+            protection.TOKEN: b"\x01",
+            protection.TRANSIENT: b"\0",
+            protection.TRUSTED: b"\x01",
+            protection.LOCKED: b"\0",
         }
         self.calls: list[str] = []
         self.matches: tuple[int, ...] = (17,)
@@ -113,26 +113,26 @@ class _RepliesRpc:
             "C_Finalize": self._finalize,
         }
 
-    def call(self, name: str, payload: bytes = b"") -> protection._Reader:
+    def call(self, name: str, payload: bytes = b"") -> protection.Reader:
         self.calls.append(name)
-        assert name in protection._CALLS
+        assert name in protection.CALLS
         handler = self._handlers.get(name)
         if handler is None:
             pytest.fail(f"unexpected metadata call {name}")
         reply = handler(payload)
-        return protection._Reader(b"") if reply is None else reply
+        return protection.Reader(b"") if reply is None else reply
 
     def _initialize(self, payload: bytes) -> None:
-        assert payload == b"" + protection._blob(protection._HANDSHAKE)
+        assert payload == b"" + protection.blob(protection.HANDSHAKE)
 
-    def _get_slot_list(self, payload: bytes) -> protection._Reader:
-        assert payload == b"" + protection._u32(protection._MAX_SLOTS)
-        return protection._Reader(b"" + protection._u32(1) + protection._ulong(9))
+    def _get_slot_list(self, payload: bytes) -> protection.Reader:
+        assert payload == b"" + protection.u32(protection.MAX_SLOTS)
+        return protection.Reader(b"" + protection.u32(1) + protection.ulong(9))
 
-    def _get_token_info(self, payload: bytes) -> protection._Reader:
-        assert payload == protection._ulong(9)
+    def _get_token_info(self, payload: bytes) -> protection.Reader:
+        assert payload == protection.ulong(9)
         data = b"".join(
-            protection._blob(value.ljust(length, b" "))
+            protection.blob(value.ljust(length, b" "))
             for value, length in (
                 (b"Secret Store", 32),
                 (b"Gnome Keyring", 32),
@@ -140,59 +140,59 @@ class _RepliesRpc:
                 (self.token_serial, 16),
             )
         )
-        return protection._Reader(data + b"\0" * (11 * 8 + 4) + protection._blob(b" " * 16))
+        return protection.Reader(data + b"\0" * (11 * 8 + 4) + protection.blob(b" " * 16))
 
-    def _open_session(self, payload: bytes) -> protection._Reader:
-        assert payload == protection._ulong(9) + protection._ulong(4)
-        return protection._Reader(protection._ulong(_SESSION))
+    def _open_session(self, payload: bytes) -> protection.Reader:
+        assert payload == protection.ulong(9) + protection.ulong(4)
+        return protection.Reader(protection.ulong(_SESSION))
 
     def _find_objects_init(self, payload: bytes) -> None:
-        reader = protection._Reader(payload)
+        reader = protection.Reader(payload)
         assert reader.number(8) == _SESSION and reader.number() == 2
         for kind, value in (
-            (protection._CLASS, struct.pack("@L", protection._COLLECTION_CLASS)),
-            (protection._ID, self.identifier),
+            (protection.CLASS, struct.pack("@L", protection.COLLECTION_CLASS)),
+            (protection.ID, self.identifier),
         ):
             assert reader.number() == kind and reader.take(1) == b""
             assert reader.number() == len(value) and reader.blob() == value
         reader.finish()
 
-    def _find_objects(self, payload: bytes) -> protection._Reader:
-        assert payload == protection._ulong(_SESSION) + protection._u32(2)
-        data = b"" + protection._u32(len(self.matches))
-        return protection._Reader(data + b"".join(protection._ulong(value) for value in self.matches))
+    def _find_objects(self, payload: bytes) -> protection.Reader:
+        assert payload == protection.ulong(_SESSION) + protection.u32(2)
+        data = b"" + protection.u32(len(self.matches))
+        return protection.Reader(data + b"".join(protection.ulong(value) for value in self.matches))
 
     def _find_objects_final(self, payload: bytes) -> None:
-        assert payload == protection._ulong(_SESSION)
+        assert payload == protection.ulong(_SESSION)
 
-    def _get_attribute_value(self, payload: bytes) -> protection._Reader:
+    def _get_attribute_value(self, payload: bytes) -> protection.Reader:
         if self.failure is not None:
             raise self.failure
-        reader = protection._Reader(payload)
+        reader = protection.Reader(payload)
         assert reader.number(8) == _SESSION and reader.number(8) == self.matches[0]
         assert reader.number() == 6
         requested = [(reader.number(), reader.number()) for _ in range(6)]
         reader.finish()
         assert [kind for kind, _ in requested] == [
-            protection._CLASS,
-            protection._ID,
-            protection._TOKEN,
-            protection._TRANSIENT,
-            protection._TRUSTED,
-            protection._LOCKED,
+            protection.CLASS,
+            protection.ID,
+            protection.TOKEN,
+            protection.TRANSIENT,
+            protection.TRUSTED,
+            protection.LOCKED,
         ]
-        data = protection._u32(6)
+        data = protection.u32(6)
         for kind, _length in requested:
-            data += protection._u32(kind)
+            data += protection.u32(kind)
             if kind not in self.values:
                 data += b"\0"
             else:
                 value = self.values[kind]
-                data += b"" + protection._u32(len(value)) + protection._blob(value)
-        return protection._Reader(data + protection._ulong(0))
+                data += b"" + protection.u32(len(value)) + protection.blob(value)
+        return protection.Reader(data + protection.ulong(0))
 
     def _close_session(self, payload: bytes) -> None:
-        assert payload == protection._ulong(_SESSION)
+        assert payload == protection.ulong(_SESSION)
 
     def _finalize(self, payload: bytes) -> None:
         assert payload == b""
@@ -234,10 +234,10 @@ class _Bus:
     ) -> tuple[Any, ...]:
         self.calls.append(method)
         if method == "GetNameOwner":
-            assert body == ("org.gnome.keyring",) and destination == protection._BUS
+            assert body == ("org.gnome.keyring",) and destination == protection.BUS
             return (self.gnome_owner,)
         if method == "GetConnectionUnixProcessID":
-            assert body == (self.owner,) and destination == protection._BUS
+            assert body == (self.owner,) and destination == protection.BUS
             return (123,)
         if method == "GetControlDirectory":
             assert path == "/org/gnome/keyring/daemon" and destination is None
@@ -252,14 +252,14 @@ class _Bus:
 @pytest.fixture
 def native_metadata(monkeypatch: pytest.MonkeyPatch) -> tuple[_Bus, _RepliesRpc]:
     bus, rpc = _Bus(), _RepliesRpc()
-    monkeypatch.setattr(protection, "_control_directory", lambda control: (Path(control), 99))
+    monkeypatch.setattr(protection, "control_directory", lambda control: (Path(control), 99))
     monkeypatch.setattr(protection.os, "close", lambda descriptor: None)
 
     def connection(directory_fd: int, *, provider_pid: int, deadline: float) -> _RepliesRpc:
         assert directory_fd == 99 and provider_pid == 123 and deadline == bus.deadline
         return rpc
 
-    monkeypatch.setattr(protection, "_MetadataRpc", connection)
+    monkeypatch.setattr(protection, "MetadataRpc", connection)
     return bus, rpc
 
 
@@ -299,12 +299,12 @@ def test_protected_metadata_uses_exact_read_only_subset_and_original_deadline(
 @pytest.mark.parametrize(
     "kind,value,reason",
     [
-        (protection._TRUSTED, b"\0", AutomationCustodyCode.NEEDS_USER),
-        (protection._LOCKED, b"\x01", AutomationCustodyCode.NEEDS_USER),
-        (protection._TOKEN, b"\0", AutomationCustodyCode.UNAVAILABLE),
-        (protection._TRANSIENT, b"\x01", AutomationCustodyCode.UNAVAILABLE),
-        (protection._TRUSTED, b"\x02", AutomationCustodyCode.INVALID),
-        (protection._ID, b"other", AutomationCustodyCode.INVALID),
+        (protection.TRUSTED, b"\0", AutomationCustodyCode.NEEDS_USER),
+        (protection.LOCKED, b"\x01", AutomationCustodyCode.NEEDS_USER),
+        (protection.TOKEN, b"\0", AutomationCustodyCode.UNAVAILABLE),
+        (protection.TRANSIENT, b"\x01", AutomationCustodyCode.UNAVAILABLE),
+        (protection.TRUSTED, b"\x02", AutomationCustodyCode.INVALID),
+        (protection.ID, b"other", AutomationCustodyCode.INVALID),
     ],
 )
 def test_unsuitable_or_malformed_collection_refuses_after_own_session_cleanup(
@@ -324,7 +324,7 @@ def test_missing_or_ambiguous_native_capability_is_unavailable(
 ) -> None:
     bus, rpc = native_metadata
     if defect == "missing_attribute":
-        del rpc.values[protection._TRUSTED]
+        del rpc.values[protection.TRUSTED]
     elif defect == "duplicate_collection":
         rpc.matches = (17, 18)
     elif defect == "missing_collection":
@@ -405,7 +405,7 @@ def test_control_directory_refuses_symlinks_foreign_owners_and_unsafe_modes(
 
     monkeypatch.setattr(Path, "lstat", metadata)
     with pytest.raises(AutomationCustodyError) as refused:
-        protection._control_directory("/synthetic/control")
+        protection.control_directory("/synthetic/control")
     assert refused.value.reason is AutomationCustodyCode.UNAVAILABLE
 
 
@@ -432,20 +432,20 @@ def test_pkcs11_endpoint_requires_exact_native_peer_and_unchanged_owned_socket(
     monkeypatch.setattr(protection.os, "stat", metadata)
     monkeypatch.setattr(protection.socket, "socket", lambda *args: fake)
     with pytest.raises(AutomationCustodyError) as refused:
-        protection._MetadataRpc(99, provider_pid=123, deadline=time.monotonic() + 5)
+        protection.MetadataRpc(99, provider_pid=123, deadline=time.monotonic() + 5)
     assert refused.value.reason is AutomationCustodyCode.UNAVAILABLE and fake.closed
 
 
 @pytest.mark.parametrize(
     "response",
     [
-        protection._u32(protection._MAX_FRAME + 1),
-        protection._u32(8) + protection._u32(99) + protection._blob(b""),
-        protection._u32(12) + protection._u32(0) + protection._ulong(0),
+        protection.u32(protection.MAX_FRAME + 1),
+        protection.u32(8) + protection.u32(99) + protection.blob(b""),
+        protection.u32(12) + protection.u32(0) + protection.ulong(0),
     ],
 )
 def test_wire_rejects_unbounded_uncorrelated_and_malformed_error_frames(response: bytes) -> None:
-    rpc = object.__new__(protection._MetadataRpc)
+    rpc = object.__new__(protection.MetadataRpc)
     rpc.deadline = time.monotonic() + 5
     rpc.sock = _SocketDouble(response)
     with pytest.raises(AutomationCustodyError) as refused:
@@ -454,20 +454,20 @@ def test_wire_rejects_unbounded_uncorrelated_and_malformed_error_frames(response
 
 
 def test_wire_accepts_correlated_fragmented_reply_and_redacts_public_native_failure() -> None:
-    rpc = object.__new__(protection._MetadataRpc)
+    rpc = object.__new__(protection.MetadataRpc)
     rpc.deadline = time.monotonic() + 5
-    fake = _SocketDouble(protection._u32(8) + protection._u32(2) + protection._blob(b""), fragment_limit=2)
+    fake = _SocketDouble(protection.u32(8) + protection.u32(2) + protection.blob(b""), fragment_limit=2)
     rpc.sock = fake
     rpc.empty("C_Finalize")
-    assert fake.sent == [protection._u32(8) + protection._u32(2) + protection._blob(b"")]
-    fake.response.extend(protection._u32(12) + protection._u32(0) + protection._ulong(0x101))
+    assert fake.sent == [protection.u32(8) + protection.u32(2) + protection.blob(b"")]
+    fake.response.extend(protection.u32(12) + protection.u32(0) + protection.ulong(0x101))
     with pytest.raises(AutomationCustodyError) as refused:
         rpc.empty("C_Finalize")
     assert refused.value.reason is AutomationCustodyCode.UNAVAILABLE
 
 
 def test_expired_rpc_deadline_and_disallowed_call_never_send_protocol_data() -> None:
-    rpc = object.__new__(protection._MetadataRpc)
+    rpc = object.__new__(protection.MetadataRpc)
     rpc.deadline = time.monotonic() - 1
     rpc.sock = _SocketDouble(may_send=False)
     with pytest.raises(AutomationCustodyError) as refused:

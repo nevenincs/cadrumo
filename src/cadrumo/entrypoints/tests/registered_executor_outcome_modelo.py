@@ -81,7 +81,7 @@ from . import modelo_operation_test_support
 from .aggregate_operation_test_support import aggregate_conformance_command
 from .registered_executor_outcome_context import ExecutorOutcome
 from .registered_executor_result_assertions import (
-    _assert_calculation_report_verification_projection,
+    assert_calculation_report_verification_projection,
 )
 
 
@@ -250,7 +250,7 @@ def assert_modelo_work_revisions_outcome(ctx: ExecutorOutcome) -> None:
 def assert_modelo_calculation_report_verify_outcome(ctx: ExecutorOutcome) -> None:
     """Check the MODELO_CALCULATION_REPORT_VERIFY_OPERATION_DEFINITION_ID public result and effects."""
     verification = ctx.resolve(ModeloCalculationReportVerificationProjection)
-    _assert_calculation_report_verification_projection(ctx.payload, verification, profile_id=ctx.profile_id)
+    assert_calculation_report_verification_projection(ctx.payload, verification, profile_id=ctx.profile_id)
 
 
 def assert_modelo_review_package_build_outcome(ctx: ExecutorOutcome) -> None:

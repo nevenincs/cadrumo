@@ -35,7 +35,7 @@ from typing import TYPE_CHECKING
 import typer
 from pydantic import SecretStr
 
-from cadrumo_client.commands.output import activate_subcommand_output_language as _activate_subcommand_output_language
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.secure_input import MachineSecretPayload, MachineSecretSelection
 
 from ....core.external_constants import OutputLanguage
@@ -100,7 +100,7 @@ def profile_archive_import(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Republish a capsule directory as a usable profile."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from cadrumo_client.commands.payloads import ConfigProfileArchiveImportResult
     from cadrumo_client.commands.secure_input import select_machine_secret_channel
 

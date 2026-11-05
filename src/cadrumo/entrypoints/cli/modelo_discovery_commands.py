@@ -36,12 +36,10 @@ from ...core.tax_domain import TaxDomain
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry.schema_input_kind import InputKind
-from . import _modelo_discovery_rendering as discovery_rendering
-from ._date_parsing import _parse_iso_date
-from ._modelo_behavior_support import bare_period_error, resolve_year_period
-from ._modelo_cli_support import bad_parameter_from_error, parse_binding_override
-from ._modelo_rendering import binding_encoded_option_lines
+from . import modelo_discovery_rendering as discovery_rendering
 from .common import active_bucket_id_or_refuse, emit_envelope
+from .date_parsing import parse_iso_date
+from .modelo_behavior_support import bare_period_error, resolve_year_period
 from .modelo_bindings_results import (
     BindingEncodedOptionPayload,
     BindingListRowPayload,
@@ -49,7 +47,9 @@ from .modelo_bindings_results import (
     ModeloBindingsListResult,
     ModeloBindingsPreviewResult,
 )
+from .modelo_cli_support import bad_parameter_from_error, parse_binding_override
 from .modelo_query_results import ModeloRequiresResult
+from .modelo_rendering import binding_encoded_option_lines
 from .operation_modelo_query_read import (
     read_modelo_bindings_list,
     read_modelo_bindings_resolve,
@@ -78,7 +78,7 @@ deps = _DiscoveryDeps(
 def _as_of(raw: str | None) -> date | None:
     if raw is None:
         return None
-    return _parse_iso_date(raw, label="--as-of")
+    return parse_iso_date(raw, label="--as-of")
 
 
 def _command_error(error: ReferenceQueryError) -> Exception:

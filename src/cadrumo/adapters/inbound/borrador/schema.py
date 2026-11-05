@@ -27,7 +27,7 @@ from pydantic import AfterValidator, BaseModel, Field
 from ....core.casilla_id import CasillaId
 from ....core.identity.aeat_csv import AeatCsv
 from ....core.identity.digest import ContentDigest
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....domain.calculations.registry.form_codes import form_for_role, form_role_validator
 from ..pdf.extracted_casilla import ExtractedCasilla
 
@@ -132,7 +132,7 @@ class InboundBorradorObservation(BaseModel):
             number"``).
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: Annotated[str, AfterValidator(form_role_validator("renta.annual"))] = Field(
         default_factory=partial(form_for_role, "renta.annual")

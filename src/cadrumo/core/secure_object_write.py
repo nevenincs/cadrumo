@@ -34,7 +34,7 @@ from pydantic import BaseModel, Field
 
 from .classification.policies import SensitivityClass
 from .hex import Hex64Str
-from .models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .models import STRICT_FROZEN_CONFIG
 
 DEFAULT_WRITE_PROVENANCE = "secure-object-repository"
 ABSENT_SECURE_OBJECT_REVISION_ID = "0" * 64
@@ -61,7 +61,7 @@ class SecureObjectWrite(BaseModel):
             Direct write boundary carrying the same UTC-aware contract.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     namespace: str = Field(min_length=1)
     object_key: str = Field(min_length=1)

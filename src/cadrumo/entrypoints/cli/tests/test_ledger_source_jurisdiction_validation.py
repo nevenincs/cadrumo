@@ -7,13 +7,13 @@ from pathlib import Path
 
 import pytest
 
-from ._ledger_validation_fixtures import _open_bucket_session, bucket
-from .scenario_support import _invoke, _set_profile_axis
+from .ledger_validation_fixtures import bucket, open_bucket_session
+from .scenario_support import invoke, set_profile_axis
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-__all__ = ["_open_bucket_session", "bucket"]
+__all__ = ["bucket", "open_bucket_session"]
 
 
 def test_ledger_add_defaults_source_jurisdiction_to_es_for_resident_general(
@@ -27,7 +27,7 @@ def test_ledger_add_defaults_source_jurisdiction_to_es_for_resident_general(
 
     # Default profile is already RESIDENT_IRPF / GENERAL, so no fact mutation is needed.
 
-    result = _invoke(
+    result = invoke(
         [
             "--format",
             "json",
@@ -64,10 +64,10 @@ def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_impatriado(
     service so the ledger command sees the same stored facts it would read
     after the operator wizard updates the active profile."""
 
-    _set_profile_axis("irpf.special_regime", "impatriado")
-    _set_profile_axis("irpf.special_regime_start_date", "2023-01-01")
+    set_profile_axis("irpf.special_regime", "impatriado")
+    set_profile_axis("irpf.special_regime_start_date", "2023-01-01")
 
-    result = _invoke(
+    result = invoke(
         [
             "app",
             "ledger",
@@ -115,10 +115,10 @@ def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_non_resident(
     # without provisioning the full TRLIRNR Art. 10 representante tuple.
     # The non-EU/EEA path (Argentina, Morocco) is tracked under the schema-
     # fix follow-up that resolves the representante_fiscal_nombre catalogue gap.
-    _set_profile_axis("taxpayer_type.country_of_fiscal_residence", "FR")
-    _set_profile_axis("taxpayer_type.fiscal_residency", "non_resident_irnr")
+    set_profile_axis("taxpayer_type.country_of_fiscal_residence", "FR")
+    set_profile_axis("taxpayer_type.fiscal_residency", "non_resident_irnr")
 
-    result = _invoke(
+    result = invoke(
         [
             "app",
             "ledger",
@@ -153,7 +153,7 @@ def test_ledger_add_honours_operator_source_jurisdiction_override_for_resident(
     row (e.g. dividendos de fuente extranjera). The default-ES rule must
     not override an explicit operator value."""
 
-    result = _invoke(
+    result = invoke(
         [
             "--format",
             "json",

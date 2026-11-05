@@ -82,7 +82,7 @@ from ..live_state_composition import compose_filed_observation_persistence_ports
 from . import modelo_operation_test_support
 from . import registered_executor_case_support as conformance
 from .supervised_operation_rig import build_supervised_operation
-from .test_modelo_reconciliation_frontend_parity import _session_host
+from .test_modelo_reconciliation_frontend_parity import session_host
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -362,7 +362,7 @@ def test_a_receipt_capture_is_reconciled_by_the_filings_coordinates_on_every_fro
     with conformance.conformance_operation_runtime(
         tmp_path / "runtime",
         cleanup=conformance.OperationRuntimeCloseWitness(),
-        execution_caller_reader=_session_host(frontend),
+        execution_caller_reader=session_host(frontend),
     ) as (driver, registry, profile_id):
         subject_ref = profile_operation_subject(str(profile_id))
         with override_settings(cadrumo_active_profile=str(profile_id)):
@@ -399,7 +399,7 @@ def test_a_receipt_capture_is_reconciled_by_the_filings_coordinates_on_every_fro
             unchanged = tuple(ModeloReconciliationPersistence().iter_records())
         assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
         assert observed.projection.effect is OperationEffect.UPDATED
-        projection = conformance._resolve_result_projection(
+        projection = conformance.resolve_result_projection(
             driver,
             registry,
             definition_id=MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID,

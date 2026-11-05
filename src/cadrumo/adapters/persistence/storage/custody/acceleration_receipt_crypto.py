@@ -27,10 +27,10 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import canonical_json_bytes, sha256_hex
 from .....core.identity.profile import canonical_profile_bucket_id
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.time.utc import UtcInstant, validate_utc_aware
 from ..crypto.aead import EncryptedBlob, decrypt_record, encrypt_record
 from ..crypto.aes_gcm import KEY_SIZE
@@ -105,7 +105,7 @@ def validate_profile_session_metadata(
 class PersistedProfileSession(BaseModel):
     """Frozen session-wrapped-DEK record for one bucket's profile receipt."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: int = Field(ge=1)
     profile_id: UUID
@@ -163,7 +163,7 @@ def _associated_data(
             "sign_in_lineage": str(sign_in.lineage),
         },
     )
-    return f"{_AAD_PREFIX}:".encode(_UTF_8_ENCODING) + payload
+    return f"{_AAD_PREFIX}:".encode(UTF_8_ENCODING) + payload
 
 
 def wrap_profile_session_dek(

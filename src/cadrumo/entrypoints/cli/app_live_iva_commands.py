@@ -23,7 +23,7 @@ from ...core.i18n.render import tr
 from ...core.period import Period
 from ...core.type_guards import is_str_keyed_dict
 from ...domain.iva_compensation.reconciliation import IvaCompensationDecisionReason
-from ._app_live_auth_preflight import emit_live_auth_preflight, metric_line
+from .app_live_auth_preflight import emit_live_auth_preflight, metric_line
 from .app_live_period import required_live_period_option
 from .common import (
     emit_envelope,
@@ -31,7 +31,7 @@ from .common import (
 )
 
 
-def _live_iva_outcome_label(value: object) -> str:
+def live_iva_outcome_label(value: object) -> str:
     token = getattr(value, "value", value)
     normalized = str(token or LiveIvaAcquisitionFailureMode.UNKNOWN.value)
     try:
@@ -221,7 +221,7 @@ def _iva_wallet_history_result(report: IvaCompensationHistoryReport) -> Any:
                 blocked=decision.blocked,
                 stale_wallet=decision.stale_wallet,
                 reason_identity=decision.reason_identity.value,
-                reason=_iva_wallet_decision_reason_text(decision.reason_identity),
+                reason=iva_wallet_decision_reason_text(decision.reason_identity),
                 operator_explanation=decision.operator_explanation,
                 wallet_captured_at=decision.wallet_captured_at,
                 decided_at=decision.decided_at,
@@ -298,7 +298,7 @@ def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str
                         f"blocked={decision.blocked}",
                         f"stale_wallet={decision.stale_wallet}",
                         f"reason_identity={decision.reason_identity.value}",
-                        f"reason={_iva_wallet_decision_reason_text(decision.reason_identity)}",
+                        f"reason={iva_wallet_decision_reason_text(decision.reason_identity)}",
                         f"operator_explanation={decision.operator_explanation}",
                         f"wallet_captured_at={wallet_captured_at}",
                         f"decided_at={decision.decided_at.isoformat()}",
@@ -359,7 +359,7 @@ _IVA_WALLET_DECISION_REASON_LOCALE_KEYS: Final[dict[IvaCompensationDecisionReaso
 }
 
 
-def _iva_wallet_decision_reason_text(reason: IvaCompensationDecisionReason) -> str:
+def iva_wallet_decision_reason_text(reason: IvaCompensationDecisionReason) -> str:
     """Localize one closed decision-reason identity for operator output."""
     try:
         translation_key = _IVA_WALLET_DECISION_REASON_LOCALE_KEYS[reason]
@@ -505,14 +505,14 @@ def iva_wallet_pull_evidence_cmd(
             ctx,
             command="app.live.iva_wallet.pull_evidence",
             result=result,
-            lines=_iva_remote_state_capture_lines(report),
+            lines=iva_remote_state_capture_lines(report),
         )
     except Exception:
         completed = read.completion
         raise invalid_completion_error(completed) from None
 
 
-def _iva_remote_state_capture_lines(report: IvaRemoteStateAcquisitionReport) -> tuple[str, ...]:
+def iva_remote_state_capture_lines(report: IvaRemoteStateAcquisitionReport) -> tuple[str, ...]:
     lines = [
         *_IVA_WALLET_LIVE_SAFETY_LINES,
         metric_line("year_from", report.year_from),
@@ -522,7 +522,7 @@ def _iva_remote_state_capture_lines(report: IvaRemoteStateAcquisitionReport) -> 
         metric_line("acquisition_manifest_id", report.acquisition_manifest_id or ""),
         metric_line("auth_status", report.auth.status.value),
         metric_line("auth_outcome", report.auth.outcome_mode.value),
-        metric_line("auth_outcome_label", _live_iva_outcome_label(report.auth.outcome_mode)),
+        metric_line("auth_outcome_label", live_iva_outcome_label(report.auth.outcome_mode)),
         metric_line(
             "auth_failure_mode",
             report.auth.failure_mode.value
@@ -554,7 +554,7 @@ def _iva_surface_outcome_line(outcome: LiveIvaReadOutcome) -> str:
                 outcome.surface.value,
                 f"status={outcome.status.value}",
                 f"outcome={outcome.outcome_mode.value}",
-                f"outcome_label={_live_iva_outcome_label(outcome.outcome_mode)}",
+                f"outcome_label={live_iva_outcome_label(outcome.outcome_mode)}",
                 f"failure_mode={failure_mode_value}",
                 f"failure_type={outcome.failure_type or ''}",
                 f"failure_context={_compact_failure_context(outcome.failure_context)}",

@@ -32,7 +32,7 @@ from ..schema import ModeloDefinition
 from ..schema_catalogues import RegistryCatalogues
 from ..snapshot_globals import SnapshotGlobalCatalogues
 from ..snapshot_references import collect_snapshot_ref_ids
-from ..snapshot_source_windows import _revision_scoped_source_window_failures
+from ..snapshot_source_windows import revision_scoped_source_window_failures
 from ..temporal import ModeloRevisionDirectory
 from .authority_fakes import FakeAuthorityComponentReader
 from .registry_tree import bundled_registry_tree
@@ -120,7 +120,7 @@ def test_historical_evolution_sources_must_match_a_real_declared_endpoint(defect
         update={"revisions": {**modelo.revisions, revision.id: changed_revision}},
     )
 
-    failures = _revision_scoped_source_window_failures(changed_modelo, changed_revision, catalogues)
+    failures = revision_scoped_source_window_failures(changed_modelo, changed_revision, catalogues)
 
     assert failures
     assert any(evolution.id in failure for failure in failures)
@@ -143,7 +143,7 @@ def test_structural_endpoint_sources_cannot_be_reversed() -> None:
         update={"revisions": {**modelo.revisions, revision.id: changed_revision}},
     )
 
-    failures = _revision_scoped_source_window_failures(changed_modelo, changed_revision, catalogues)
+    failures = revision_scoped_source_window_failures(changed_modelo, changed_revision, catalogues)
 
     assert sum("validity window" in failure for failure in failures) == 6
 

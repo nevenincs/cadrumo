@@ -940,13 +940,13 @@ def parse_verification_predicate_expression(expression: str) -> ParsedVerificati
     call is parsed and refused afresh.
     """
     try:
-        return _parse_verification_predicate_expression_memo(expression)
+        return parse_verification_predicate_expression_memo(expression)
     except RegistryValidationError:
         return None
 
 
 @lru_cache(maxsize=_PARSED_PREDICATE_CACHE_SIZE)
-def _parse_verification_predicate_expression_memo(expression: str) -> ParsedVerificationPredicate:
+def parse_verification_predicate_expression_memo(expression: str) -> ParsedVerificationPredicate:
     operator_name = verification_predicate_operator_name(expression)
     if operator_name is None:
         raise RegistryValidationError("verification predicate expression names no operator")

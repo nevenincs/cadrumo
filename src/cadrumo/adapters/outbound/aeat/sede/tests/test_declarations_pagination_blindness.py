@@ -32,8 +32,8 @@ import re
 import pytest
 
 from ......tests.inventory import FIXTURES_DIR
-from .._declarations_listbox import _parse_listbox
-from ..declarations import _register_rows_from_snapshot
+from ..declarations import register_rows_from_snapshot
+from ..declarations_listbox import parse_listbox
 from ..errors import SedeParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -76,7 +76,7 @@ def test_page_declaring_more_records_than_it_rendered_is_refused() -> None:
     )
 
     with pytest.raises(SedeParseError) as exc_info:
-        _register_rows_from_snapshot(html, modelo="100", ejercicio=2026)
+        register_rows_from_snapshot(html, modelo="100", ejercicio=2026)
 
     context = exc_info.value.context
     assert context is not None
@@ -96,7 +96,7 @@ def test_truncated_page_still_parses_its_rows_and_reports_the_declared_total() -
     """
     html = (_FIXTURE_ROOT / "declaraciones-modelo-100-paginated-synthetic.html").read_text(encoding="utf-8")
 
-    page = _parse_listbox(html, modelo="100", ejercicio=2026)
+    page = parse_listbox(html, modelo="100", ejercicio=2026)
 
     assert page.declared_total == _fixture_declared_total(html)
     assert len(page.rows) == _fixture_rendered_rows(html)
@@ -115,8 +115,8 @@ def test_real_capture_without_a_pager_is_never_treated_as_truncated() -> None:
     html = (_FIXTURE_ROOT / "declaraciones-modelo-100-2022.html").read_text(encoding="utf-8")
     assert _fixture_declared_total(html) is None, "fixture grew a pager label; it can no longer pin the no-pager case"
 
-    page = _parse_listbox(html, modelo="100", ejercicio=2022)
-    rows = _register_rows_from_snapshot(html, modelo="100", ejercicio=2022)
+    page = parse_listbox(html, modelo="100", ejercicio=2022)
+    rows = register_rows_from_snapshot(html, modelo="100", ejercicio=2022)
 
     assert page.declared_total is None
     assert page.truncated is False

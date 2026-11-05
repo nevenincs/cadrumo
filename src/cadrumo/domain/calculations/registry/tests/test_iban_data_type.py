@@ -11,7 +11,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ..errors import RegistryValidationError
-from ..schema_scalars import IbanString, _validate_iban_string, validate_registry_text_scalar
+from ..schema_scalars import IbanString, validate_iban_string, validate_registry_text_scalar
 from ..schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -86,7 +86,7 @@ class TestIbanStringRejects:
             # The validator sits behind the pydantic boundary, which keeps the
             # registered refusal as the cause of the builtin ValueError.
             with pytest.raises(ValueError, match=message) as refused:
-                _validate_iban_string(raw)
+                validate_iban_string(raw)
             assert isinstance(refused.value.__cause__, RegistryValidationError)
 
 

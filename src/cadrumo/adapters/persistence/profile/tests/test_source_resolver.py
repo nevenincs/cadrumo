@@ -30,15 +30,17 @@ from cadrumo.domain.modelos.row_models import Modelo349CountryPrefixContextError
 from .....domain.calculations.registry.tests.m347_fixture import resolve_m347_counterparty_annual_threshold
 from .....domain.iva.schema import InvoiceKind
 from .source_resolver_test_support import (
-    _BUCKET_ID,
-    _OTHER_BUCKET_ID,
-    _domestic_invoice,
-    _invoice,
-    _m349_resolution,
-    _modelo_revision,
-    _resolver,
+    BUCKET_ID,
+    OTHER_BUCKET_ID,
+    domestic_invoice,
+    m349_resolution,
+    modelo_revision,
+    source_resolver,
+    source_resolver_invoice,
 )
-from .source_resolver_test_support import _generation_pinned_authority as _generation_pinned_authority
+from .source_resolver_test_support import (
+    generation_pinned_authority as generation_pinned_authority,
+)
 from .source_resolver_test_support import secure_profile as secure_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -68,24 +70,24 @@ def test_invoice_catalogue_source_resolver_emits_scalar_values_and_provenance(
     secure_profile: TestRuntimeProfile,
 ) -> None:
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
-    declarable = _invoice(
-        bucket_id=_BUCKET_ID,
+    declarable = source_resolver_invoice(
+        bucket_id=BUCKET_ID,
         invoice_number="F-2026-001",
         issued_at=date(2026, 1, 15),
         counterparty_tax_id="DE123456789",
         base_total=Decimal("1000.00"),
         iva_category=IvaCategory("intra_community_supply"),
     )
-    other_bucket = _invoice(
-        bucket_id=_OTHER_BUCKET_ID,
+    other_bucket = source_resolver_invoice(
+        bucket_id=OTHER_BUCKET_ID,
         invoice_number="F-2026-002",
         issued_at=date(2026, 1, 16),
         counterparty_tax_id="DE987654321",
         base_total=Decimal("500.00"),
         iva_category=IvaCategory("intra_community_supply"),
     )
-    domestic = _invoice(
-        bucket_id=_BUCKET_ID,
+    domestic = source_resolver_invoice(
+        bucket_id=BUCKET_ID,
         invoice_number="F-2026-003",
         issued_at=date(2026, 1, 17),
         counterparty_tax_id="DE111111125",
@@ -93,7 +95,7 @@ def test_invoice_catalogue_source_resolver_emits_scalar_values_and_provenance(
         iva_category=IvaCategory("domestic_zero"),
     )
     repository.save(build_invoice_catalogue((declarable, other_bucket, domestic)))
-    resolution = _m349_resolution(repository)
+    resolution = m349_resolution(repository)
 
     assert resolution.owned_sources == (
         BindingSourceKind.COLLECTIBLE_INVOICE,
@@ -114,8 +116,8 @@ def test_invoice_catalogue_source_resolver_counts_received_acquisition_for_m349(
     secure_profile: TestRuntimeProfile,
 ) -> None:
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
-    acquisition = _invoice(
-        bucket_id=_BUCKET_ID,
+    acquisition = source_resolver_invoice(
+        bucket_id=BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         invoice_number="R-2026-001",
         issued_at=date(2026, 1, 20),
@@ -126,7 +128,7 @@ def test_invoice_catalogue_source_resolver_counts_received_acquisition_for_m349(
         linked_transaction_ids=("2" * 64,),
     )
     repository.save(build_invoice_catalogue((acquisition,)))
-    resolution = _m349_resolution(repository)
+    resolution = m349_resolution(repository)
 
     assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
     assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("1200.00")
@@ -148,7 +150,7 @@ def test_invoice_catalogue_source_resolver_projects_domestic_m347_summary_from_i
     test whose control sat comfortably below would pass just as well against a
     `>=` comparison.
     """
-    collectible = _domestic_invoice(
+    collectible = domestic_invoice(
         bucket_id=secure_profile.bucket_id,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-C-2025-001",
@@ -158,7 +160,7 @@ def test_invoice_catalogue_source_resolver_projects_domestic_m347_summary_from_i
         base_total=Decimal("1500.00"),
         iva_total=Decimal("315.00"),
     )
-    payable = _domestic_invoice(
+    payable = domestic_invoice(
         bucket_id=secure_profile.bucket_id,
         kind=InvoiceKind.RECEIVED,
         invoice_number="M347-P-2025-001",
@@ -168,7 +170,7 @@ def test_invoice_catalogue_source_resolver_projects_domestic_m347_summary_from_i
         base_total=Decimal("983.53"),
         iva_total=Decimal("206.54"),
     )
-    floor_control = _domestic_invoice(
+    floor_control = domestic_invoice(
         bucket_id=secure_profile.bucket_id,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-C-2025-002",
@@ -180,8 +182,8 @@ def test_invoice_catalogue_source_resolver_projects_domestic_m347_summary_from_i
     )
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
     repository.save(build_invoice_catalogue((collectible, payable, floor_control)))
-    resolver = _resolver(repository)
-    m347_revision = _modelo_revision("347", "2011-2024")
+    resolver = source_resolver(repository)
+    m347_revision = modelo_revision("347", "2011-2024")
 
     with bundled_indexed_authority().operation() as operation:
         m347_threshold = m347_threshold_decimal(
@@ -213,7 +215,7 @@ def test_invoice_catalogue_source_resolver_projects_domestic_m347_summary_from_i
         f"collectible_invoice:{floor_control.invoice_id}",
     }
 
-    m349_revision = _modelo_revision("349", "2020-y-siguientes")
+    m349_revision = modelo_revision("349", "2020-y-siguientes")
     m349_resolution = resolver.resolve(
         CalculationSourceContext(
             bucket_id=secure_profile.bucket_id,
@@ -237,7 +239,7 @@ def test_invoice_catalogue_source_resolver_refuses_payable_consignment_transfer_
     repository.save(
         build_invoice_catalogue(
             (
-                _invoice(
+                source_resolver_invoice(
                     bucket_id=secure_profile.bucket_id,
                     kind=InvoiceKind.RECEIVED,
                     invoice_number="DE-RECT-2026-001",
@@ -257,7 +259,7 @@ def test_invoice_catalogue_source_resolver_refuses_payable_consignment_transfer_
     snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))
 
     with pytest.raises(RegistryValidationError, match="source kind 'payable_invoice'"):
-        _resolver(repository).resolve(
+        source_resolver(repository).resolve(
             CalculationSourceContext(
                 bucket_id=secure_profile.bucket_id,
                 modelo="349",
@@ -272,8 +274,8 @@ def test_invoice_catalogue_source_resolver_accepts_xi_goods_for_m349(
     secure_profile: TestRuntimeProfile,
 ) -> None:
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
-    declarable = _invoice(
-        bucket_id=_BUCKET_ID,
+    declarable = source_resolver_invoice(
+        bucket_id=BUCKET_ID,
         invoice_number="F-2026-XI-001",
         issued_at=date(2026, 1, 15),
         counterparty_tax_id="XI123456789",
@@ -282,7 +284,7 @@ def test_invoice_catalogue_source_resolver_accepts_xi_goods_for_m349(
         iva_category=IvaCategory("intra_community_supply"),
     )
     repository.save(build_invoice_catalogue((declarable,)))
-    resolution = _m349_resolution(repository)
+    resolution = m349_resolution(repository)
 
     assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
     assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("3000.00")
@@ -293,8 +295,8 @@ def test_invoice_catalogue_source_resolver_rejects_gb_ordinary_goods_for_m349(
     secure_profile: TestRuntimeProfile,
 ) -> None:
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
-    declarable = _invoice(
-        bucket_id=_BUCKET_ID,
+    declarable = source_resolver_invoice(
+        bucket_id=BUCKET_ID,
         invoice_number="F-2026-GB-001",
         issued_at=date(2026, 1, 15),
         counterparty_tax_id="GB123456789",
@@ -308,9 +310,9 @@ def test_invoice_catalogue_source_resolver_rejects_gb_ordinary_goods_for_m349(
     snapshot = SimpleNamespace(revision=select_revision(_modelo_349, filing_year=2026, period="1T"))
 
     with pytest.raises(Modelo349CountryPrefixContextError) as exc:
-        _resolver(repository).resolve(
+        source_resolver(repository).resolve(
             CalculationSourceContext(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 modelo="349",
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
@@ -329,7 +331,7 @@ def test_invoice_catalogue_source_resolver_reports_a_degraded_catalogue_read() -
         def load(self) -> InvoiceCatalogue:
             raise InvoiceSourcePersistenceError("invoice_catalogue_load")
 
-    resolution = _m349_resolution(DegradedReader())
+    resolution = m349_resolution(DegradedReader())
 
     reasons = tuple(d.reason for d in resolution.diagnostics)
     assert reasons, "a degraded catalogue read produced no diagnostic at all"

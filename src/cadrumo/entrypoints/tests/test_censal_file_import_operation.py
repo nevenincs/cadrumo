@@ -16,7 +16,7 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ...adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from ...application.operations.composition import compose_operation_services
 from ...application.operations.models import OperationIdentity, OperationRequest
@@ -144,7 +144,7 @@ def test_registered_file_import_refuses_foreign_profile_and_guards_persistence(
 
     monkeypatch.setattr(WorkflowStateRepository, "save", guarded_workflow_save)
 
-    _profile_create_context, profile_decode_context = _profile_contexts_for_test()
+    _profile_create_context, profile_decode_context = profile_authority_contexts()
     with conformance.conformance_operation_runtime(
         tmp_path / "censal-file-import",
         cleanup=conformance.OperationRuntimeCloseWitness(),
@@ -199,7 +199,7 @@ def test_registered_file_import_refuses_foreign_profile_and_guards_persistence(
         assert observation.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
         assert observation.projection.effect is OperationEffect.UPDATED
 
-        projection = conformance._resolve_result_projection(
+        projection = conformance.resolve_result_projection(
             driver,
             registry,
             definition_id=CENSAL_FILE_IMPORT_OPERATION_DEFINITION_ID,

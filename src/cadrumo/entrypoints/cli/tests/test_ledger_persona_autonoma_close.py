@@ -30,7 +30,7 @@ from click.testing import Result
 from ....tests.inventory import FIXTURES_DIR
 from ...tests.ledger_corpus_support import load_corpus_oracle_rules, match_corpus_rule
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
-from .ledger_cli import list_ledger_rows_via_cli as _list_rows
+from .ledger_cli import list_ledger_rows_via_cli
 from .profile_world_fixtures import recorded_fx_isolated_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -97,7 +97,7 @@ def _assert_bulk_classification_stuck(bulk_result, expected):
     assert bulk_result["applied"] == len(expected), bulk_result
 
     # Verify the classifications actually stuck (re-list to confirm).
-    by_id = {r.get("transaction_id"): r for r in _list_rows() if isinstance(r.get("transaction_id"), str)}
+    by_id = {r.get("transaction_id"): r for r in list_ledger_rows_via_cli() if isinstance(r.get("transaction_id"), str)}
     for tx_id, classification in expected.items():
         assert by_id.get(tx_id, {}).get("business_classification") == classification, tx_id
 
@@ -174,7 +174,7 @@ def test_autonoma_closes_the_first_quarter_end_to_end(tmp_path: Path) -> None:
     # TESTIMONIAL: there is no "import all CSVs in a folder" affordance;
     # the operator must invoke the verb once per file and remember the --provider flag.
     _import_corpus()
-    all_rows = _list_rows()
+    all_rows = list_ledger_rows_via_cli()
     assert len(all_rows) >= 500, f"expected full corpus imported, got {len(all_rows)}"
     # The corpus opens on the exercise whose first quarter the autonoma closes.
     exercise = min(_row_year(row) for row in all_rows)

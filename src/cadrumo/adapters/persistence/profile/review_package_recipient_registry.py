@@ -24,11 +24,11 @@ from ....application.modelo.review_package_recipient_registry_ports import (
 )
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.identity.bucket import canonical_bucket_id
-from ....core.time.clock import now as _utc_now
+from ....core.time.clock import now
 from ..storage.errors import StorageError
 from ..storage.runtime_repository import secure_object_repository_for_bucket
 from ..storage.secure_object_namespaces import (
-    MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE as _NAMESPACE,
+    MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE,
 )
 from ..storage.sql.secure_objects import SecureObjectRepository
 
@@ -62,10 +62,10 @@ class RecipientFingerprintRegistryAdapter(RecipientFingerprintRegistryRepository
 
         def _load() -> RecipientFingerprintRegister:
             record = self._repository.load(
-                _NAMESPACE.namespace,
+                MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE.namespace,
                 self._object_key,
-                expected_class=_NAMESPACE.sensitivity,
-                max_supported_version=_NAMESPACE.schema_version,
+                expected_class=MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE.sensitivity,
+                max_supported_version=MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE.schema_version,
             )
             if record is None:
                 return RecipientFingerprintRegister()
@@ -79,11 +79,11 @@ class RecipientFingerprintRegistryAdapter(RecipientFingerprintRegistryRepository
 
         def _save() -> None:
             self._repository.save(
-                namespace=_NAMESPACE.namespace,
+                namespace=MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE.namespace,
                 object_key=self._object_key,
-                classification=_NAMESPACE.sensitivity,
-                schema_version=_NAMESPACE.schema_version,
-                written_at=_utc_now(),
+                classification=MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE.sensitivity,
+                schema_version=MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE.schema_version,
+                written_at=now(),
                 payload=register.model_dump_json().encode(UTF_8_ENCODING),
                 write_provenance="adapters.persistence.profile.review_package_recipient_registry",
             )
@@ -92,7 +92,7 @@ class RecipientFingerprintRegistryAdapter(RecipientFingerprintRegistryRepository
 
     @property
     def _object_key(self) -> str:
-        return _NAMESPACE.require_default_object_key()
+        return MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE.require_default_object_key()
 
 
 def build_recipient_fingerprint_registry_ports(*, bucket_id: str) -> RecipientFingerprintRegistryPorts:

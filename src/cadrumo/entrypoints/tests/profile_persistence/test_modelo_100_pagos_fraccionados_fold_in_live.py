@@ -42,7 +42,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -70,8 +70,7 @@ from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
 )
 from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from .file_flow_test_support import calculation_ports_for_test
 from .general_iva_profile_facts_support import renta_single_taxpayer_facts
 from .observation_seeding_support import save_stamped_observation
@@ -211,7 +210,7 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
     auto-fills these — no profile fact is hand-fed through the caller channel.
     Mirrors ``test_modelo_100_cross_year_carry_continuity._seed_taxpayer_unit_profile``.
     """
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
@@ -227,7 +226,7 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
         ),
         created_at=_T0,
         updated_at=_T0,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 

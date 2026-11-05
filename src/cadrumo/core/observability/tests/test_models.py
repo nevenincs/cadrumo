@@ -226,11 +226,11 @@ class TestRunIdentity:
         import re
 
         from ..models import RUN_ID_PATTERN
-        from .run_scope import _mint_run_id
+        from .run_scope import mint_run_id
 
         pattern = re.compile(RUN_ID_PATTERN)
         for _ in range(50):
-            assert pattern.fullmatch(_mint_run_id())
+            assert pattern.fullmatch(mint_run_id())
 
 
 class TestTraceFingerprints:

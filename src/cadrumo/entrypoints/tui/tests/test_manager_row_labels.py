@@ -18,10 +18,9 @@ import pytest
 
 from ....application.user_profile.overview import ProfileFieldChoice, ProfileFieldView
 from ....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
 )
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ..profile.overview import ProfileManagerScreen
 
 pytestmark = [
@@ -103,13 +102,13 @@ def test_the_shipped_clave_route_row_never_renders_app_request() -> None:
     from ....core.i18n.render import tr
 
     storage_value = "app_request"
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="00000000-0000-4000-8000-0000000000c1",
         facts=(UserProfileFact(path="auth.clave_movil_route", value=storage_value),),
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
-    overview = build_profile_overview(record, schema=_profile_creation_context_for_test().schema)
+    overview = build_profile_overview(record, schema=leased_profile_create_context().schema)
     route = next(
         field for section in overview.sections for field in section.fields if field.path == "auth.clave_movil_route"
     )

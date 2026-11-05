@@ -24,10 +24,8 @@ from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 from cadrumo.entrypoints.ledger_action_composition import compose_ledger_action_ports
 
 from ....adapters.persistence.profile.tests.ledger_action_persistence_support import (
-    BUCKET_ID as _BUCKET_ID,
-)
-from ....adapters.persistence.profile.tests.ledger_action_persistence_support import (
-    repositories as _repositories,
+    BUCKET_ID,
+    repositories,
 )
 from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
 
@@ -37,15 +35,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     """Retain the profile record required by real ledger port composition."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
-        seed_modelo_ready_profile_record(_BUCKET_ID, clock=datetime(2026, 5, 1, tzinfo=UTC))
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as runtime:
+        seed_modelo_ready_profile_record(BUCKET_ID, clock=datetime(2026, 5, 1, tzinfo=UTC))
         yield runtime.repository
 
 
 @contextmanager
 def _ledger_ports(transaction_repository, event_repository, profile):
     with bundled_indexed_authority().operation() as operation:
-        base = compose_ledger_action_ports(bucket_id=_BUCKET_ID, operation=operation)
+        base = compose_ledger_action_ports(bucket_id=BUCKET_ID, operation=operation)
         yield replace(
             base,
             transaction_repository=transaction_repository,
@@ -57,14 +55,14 @@ def _ledger_ports(transaction_repository, event_repository, profile):
 def test_create_manual_transaction_validates_and_persists_usage_ratio_reference(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     category = SpendingCategory.from_registry("arrendamiento_vivienda_afecto")
     profile = UsageRatioProfile(ratios={category: Decimal("0.60")})
 
     with _ledger_ports(transaction_repository, event_repository, profile) as ports:
         result = create_manual_transaction(
             ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 5, 2),
                 amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -84,7 +82,7 @@ def test_create_manual_transaction_validates_and_persists_usage_ratio_reference(
     assert persisted.usage_ratio_id == category.value
     assert persisted.business_pct == Decimal("0.60")
     assert persisted.raw.raw_fields["usage_ratio_id"] == category.value
-    events = event_repository.load().for_bucket(_BUCKET_ID, event_types=(BucketEventType.LEDGER_TRANSACTION_CREATED,))
+    events = event_repository.load().for_bucket(BUCKET_ID, event_types=(BucketEventType.LEDGER_TRANSACTION_CREATED,))
     assert len(events) == 1
     assert events[0].payload["usage_ratio_id"] == category.value
     assert events[0].payload["business_pct"] == "0.60"
@@ -93,7 +91,7 @@ def test_create_manual_transaction_validates_and_persists_usage_ratio_reference(
 def test_create_manual_transaction_rejects_usage_ratio_reference_missing_from_profile(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     events_before = event_repository.load()
     category = SpendingCategory.from_registry("arrendamiento_vivienda_afecto")
 
@@ -103,7 +101,7 @@ def test_create_manual_transaction_rejects_usage_ratio_reference_missing_from_pr
     ):
         create_manual_transaction(
             ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 5, 2),
                 amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -124,7 +122,7 @@ def test_create_manual_transaction_rejects_usage_ratio_reference_missing_from_pr
 def test_create_manual_transaction_rejects_usage_ratio_alias_and_category_mismatch(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     events_before = event_repository.load()
     category = SpendingCategory.from_registry("arrendamiento_vivienda_afecto")
     profile = UsageRatioProfile(ratios={category: Decimal("0.60")})
@@ -135,7 +133,7 @@ def test_create_manual_transaction_rejects_usage_ratio_alias_and_category_mismat
     ):
         create_manual_transaction(
             ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 5, 2),
                 amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -155,7 +153,7 @@ def test_create_manual_transaction_rejects_usage_ratio_alias_and_category_mismat
     ):
         create_manual_transaction(
             ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 5, 2),
                 amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -176,7 +174,7 @@ def test_create_manual_transaction_rejects_usage_ratio_alias_and_category_mismat
 def test_create_manual_transaction_rejects_usage_ratio_business_pct_drift(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     events_before = event_repository.load()
     category = SpendingCategory.from_registry("arrendamiento_vivienda_afecto")
     profile = UsageRatioProfile(ratios={category: Decimal("0.60")})
@@ -187,7 +185,7 @@ def test_create_manual_transaction_rejects_usage_ratio_business_pct_drift(
     ):
         create_manual_transaction(
             ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 5, 2),
                 amount=Decimal("50.00"),
                 direction=TransactionDirection.OUTGOING,

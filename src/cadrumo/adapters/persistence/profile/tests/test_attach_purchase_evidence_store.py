@@ -23,9 +23,7 @@ from typing import Any
 import pytest
 
 from .evidence_test_support import (
-    make_svc as _make_svc,
-)
-from .evidence_test_support import (
+    make_svc,
     pdf_file,
 )
 
@@ -108,7 +106,7 @@ def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 
 def _mint_evidence_id(profile: TestRuntimeProfile, pdf_file: Path) -> str:
     """Register a PDF through the real evidence service and return its evidence id."""
-    service = _make_svc(profile.settings, profile.repository)
+    service = make_svc(profile.settings, profile.repository)
     result = service.add(bucket_id=_BUCKET, source_path=pdf_file)
     return result.record.evidence_id
 

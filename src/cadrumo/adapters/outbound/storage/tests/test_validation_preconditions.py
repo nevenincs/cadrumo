@@ -11,13 +11,13 @@ from typing import override
 import pytest
 
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from .. import _google_drive as drive_module
-from .. import _key_validation as key_module
 from .. import factory as factory_module
+from .. import google_drive as drive_module
 from .. import google_drive_validation as drive_validation_module
+from .. import key_validation as key_module
 from .. import local as local_module
-from .._key_validation import assert_admissible_object_key_hmac
 from ..errors import OutboundStorageValidationError
+from ..key_validation import assert_admissible_object_key_hmac
 from ..records import ProviderKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -263,7 +263,7 @@ def test_storage_validation_carrier_totality_and_canonical_construction() -> Non
 def test_factory_unhandled_kind_exclusion_is_closed_over_the_provider_enum() -> None:
     """The sole untyped branch follows an exhaustive parse and branch partition."""
     assert set(ProviderKind.__members__) == _provider_kind_branch_members()
-    assert {factory_module._parse_kind(kind.value) for kind in ProviderKind} == set(ProviderKind)
+    assert {factory_module.parse_kind(kind.value) for kind in ProviderKind} == set(ProviderKind)
     excluded = _VALIDATION_CARRIER_TOTALITY[
         "factory:get_storage_provider:adapters.outbound.storage._factory.errors.kind_unhandled"
     ]

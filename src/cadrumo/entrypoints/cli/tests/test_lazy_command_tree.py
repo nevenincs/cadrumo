@@ -190,7 +190,7 @@ def _spec_family_modules(probe: str) -> list[str]:
 
 def test_importing_the_cli_loads_no_command_spec_family() -> None:
     assert _spec_family_modules("import cadrumo.entrypoints.cli.main") == [
-        "cadrumo.entrypoints.cli._root_command_specs",
+        "cadrumo.entrypoints.cli.root_command_specs",
         "cadrumo.entrypoints.cli.command_specs",
     ]
 
@@ -208,7 +208,7 @@ def test_a_ledger_help_loads_only_the_app_families_it_walks_through() -> None:
         """
     )
 
-    assert "cadrumo.entrypoints.cli._app_ledger_command_specs" in families
+    assert "cadrumo.entrypoints.cli.app_ledger_command_specs" in families
     assert not [name for name in families if name.startswith("cadrumo.entrypoints.cli.config.")]
     assert "cadrumo.entrypoints.cli.modelo_work_command_specs" not in families
 
@@ -239,5 +239,5 @@ def test_a_real_app_dispatch_loads_no_config_family() -> None:
         """
     )
 
-    assert "cadrumo.entrypoints.cli._app_live_command_specs" in families
+    assert "cadrumo.entrypoints.cli.app_live_command_specs" in families
     assert not [name for name in families if name.startswith("cadrumo.entrypoints.cli.config.")]

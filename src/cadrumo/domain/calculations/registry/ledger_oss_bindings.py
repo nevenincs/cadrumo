@@ -17,12 +17,12 @@ from ....core.time.clock import today_madrid
 from ...iva.classification import TransactionKind, require_transaction_kind
 from ...iva.oss import OssIossRegime, require_oss_ioss_regime, resolve_oss_ioss_regime_catalogue
 from ...iva.schema import EUMemberState, InvoiceKind, IvaRateKind
-from ._ledger_binding_resolution import resolve_ledger_family_binding_values
 from .errors import RegistryValidationError
 from .eu_member_state_catalogue import require_eu_member_state, require_registry_declared_eu_member_state
 from .governed_fact_scope import governed_facts_in_scope, require_governed_fact_authority
 from .ids import BindingId
 from .iva_rate_kind_catalogue import require_iva_rate_kind, require_registry_declared_iva_rate_kind
+from .ledger_binding_resolution import resolve_ledger_family_binding_values
 from .ledger_binding_selector_support import OSS_IOSS_LEDGER_FACTS, LedgerIvaFact, OssIossLedgerFact
 from .ledger_binding_validation import (
     ledger_binding_build_diagnostics,

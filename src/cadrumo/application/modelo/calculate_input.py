@@ -14,7 +14,7 @@ The application result pairs that persisted revision with its parent
 surfaced by bucket aggregation or post-calculation advisory collectors.
 
 See Also:
-    :mod:`cadrumo.entrypoints.cli._modelo_work_calculate_cli`:
+    :mod:`cadrumo.entrypoints.cli.modelo_work_calculate_cli`:
         Parses the operator-facing ``modelo work calculate`` command and calls
         this module to build the input bundle.
     :func:`cadrumo.application.modelo.calculation_bucket_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
@@ -347,7 +347,7 @@ def calculate_modelo_work_revision(
     See Also:
         :func:`cadrumo.application.modelo.calculation_bucket_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
             Runs source aggregation and persists the calculation revision.
-        :func:`cadrumo.entrypoints.cli._modelo_work_calculate_cli._run_work_calculate`:
+        :func:`cadrumo.entrypoints.cli.modelo_work_calculate_cli.run_work_calculate`:
             Calls this service and serialises the result for the operator.
     """
     from .calculation_bucket_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics

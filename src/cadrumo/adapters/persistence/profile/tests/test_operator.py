@@ -55,7 +55,7 @@ from cadrumo.core.period import Period
 from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.buckets.event import BucketEvent, BucketEventType
 from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _certificate_indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.filing.schema import ModeloDraft, compute_modelo_draft_id, registry_schema_version
@@ -931,7 +931,7 @@ def test_reset_provider_scope_removes_only_the_target_provider_artefacts(tmp_pat
     Resetting the certificate provider must delete every certificate artefact
     and leave every Cl@ve Móvil artefact byte-for-byte in place.
     """
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
         _register_operator_profile()
         cert_path = tmp_path / "operator.p12"
         cert_path.write_bytes(b"placeholder cert")

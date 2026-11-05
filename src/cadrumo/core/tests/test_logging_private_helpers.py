@@ -9,7 +9,7 @@ from typing import cast, override
 import pytest
 
 from ..log_scrubbing import SecretScrubbingFilter, scrub_value
-from ..logging import _prepare_log_directory
+from ..logging import prepare_log_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -19,7 +19,7 @@ def test_prepare_log_directory_returns_none_for_creatable_path(tmp_path: Path) -
 
     log_file = tmp_path / "probe-logs" / "cadrumo.log"
 
-    reason = _prepare_log_directory(log_file)
+    reason = prepare_log_directory(log_file)
 
     assert reason is None
     assert log_file.parent.is_dir()
@@ -38,7 +38,7 @@ def test_prepare_log_directory_reports_reason_when_path_uncreatable(tmp_path: Pa
     blocker.write_text("x", encoding="utf-8")
     log_file = blocker / "probe-logs" / "cadrumo.log"
 
-    reason = _prepare_log_directory(log_file)
+    reason = prepare_log_directory(log_file)
 
     assert reason is not None
     assert not log_file.parent.exists()

@@ -27,8 +27,8 @@ from ......core.config import override_settings
 from ......core.parsing.codes import normalise_iso_4217_currency
 from ......domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..base import FinancialValidationError, default_currency
-from ..csv import _currency_from_aliases
-from ..ofx import _resolve_statement_context
+from ..csv import currency_from_aliases
+from ..ofx import resolve_statement_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
@@ -66,7 +66,7 @@ def _raw_transaction(currency: str) -> RawTransaction:
 
 def _csv_currency(raw: str) -> str:
     """Resolve ``raw`` through the real CSV currency-column resolver."""
-    return _currency_from_aliases(
+    return currency_from_aliases(
         {"Divisa": raw},
         {"divisa": "Divisa"},
         ("divisa",),
@@ -132,7 +132,7 @@ def test_misconfigured_default_currency_is_refused_at_its_owner(configured: str)
         with pytest.raises(FinancialValidationError, match="financial_base_currency"):
             default_currency()
         with pytest.raises(FinancialValidationError, match="financial_base_currency"):
-            _currency_from_aliases({"Importe": "10"}, {"importe": "Importe"}, ("divisa",), "ctx")
+            currency_from_aliases({"Importe": "10"}, {"importe": "Importe"}, ("divisa",), "ctx")
 
 
 def test_valid_default_currency_still_normalises() -> None:
@@ -144,7 +144,7 @@ def test_valid_default_currency_still_normalises() -> None:
     """
     with override_settings(financial_base_currency=" usd "):
         assert default_currency() == "USD"
-        assert _currency_from_aliases({"Importe": "10"}, {"importe": "Importe"}, ("divisa",), "ctx") == "USD"
+        assert currency_from_aliases({"Importe": "10"}, {"importe": "Importe"}, ("divisa",), "ctx") == "USD"
 
 
 def test_every_currency_surface_is_wired_to_the_one_shared_normaliser() -> None:
@@ -164,8 +164,8 @@ def test_every_currency_surface_is_wired_to_the_one_shared_normaliser() -> None:
     helper_name = normalise_iso_4217_currency.__name__
     call_sites = {
         "default_currency (shared fallback)": default_currency,
-        "_currency_from_aliases (CSV column)": _currency_from_aliases,
-        "_resolve_statement_context (OFX header)": _resolve_statement_context,
+        "_currency_from_aliases (CSV column)": currency_from_aliases,
+        "_resolve_statement_context (OFX header)": resolve_statement_context,
         "RawTransaction._normalize_currency (persisted record)": (
             RawTransaction.__dict__["_normalize_currency"].__func__
         ),

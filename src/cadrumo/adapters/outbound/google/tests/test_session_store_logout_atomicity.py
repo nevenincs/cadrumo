@@ -98,14 +98,14 @@ def test_a_rejected_batch_removes_neither_row(tmp_path: Path) -> None:
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         _seed()
-        repository = session_store._repository(_PROFILE)
+        repository = session_store.repository(_PROFILE)
         digest = secure_object_key_digest(_PROFILE)
 
         with pytest.raises(StorageValidationError):
             repository.apply_batch(
                 writes=(),
                 deletions=(
-                    SecureObjectDeletion(namespace=session_store._NAMESPACE_TOKEN, hashed_object_key=digest),
+                    SecureObjectDeletion(namespace=session_store.NAMESPACE_TOKEN, hashed_object_key=digest),
                     SecureObjectDeletion(namespace=_UNREGISTERED_NAMESPACE, hashed_object_key=digest),
                 ),
             )
@@ -125,9 +125,9 @@ def test_the_sequential_deletes_it_replaced_would_have_removed_the_first(tmp_pat
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         _seed()
-        repository = session_store._repository(_PROFILE)
+        repository = session_store.repository(_PROFILE)
 
-        removed_first = repository.delete(session_store._NAMESPACE_TOKEN, _PROFILE)
+        removed_first = repository.delete(session_store.NAMESPACE_TOKEN, _PROFILE)
         with pytest.raises(StorageValidationError):
             repository.delete(_UNREGISTERED_NAMESPACE, _PROFILE)
 

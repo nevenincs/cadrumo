@@ -39,8 +39,8 @@ from cadrumo_client.commands.shared_contracts import (
     ResultSchemaSpec,
     SchemaState,
     ValueContract,
+    translation_key,
 )
-from cadrumo_client.commands.shared_contracts import translation_key as _key
 from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
 from cadrumo_client.contracts.command_ports import (
     CommandNodeKind,
@@ -134,7 +134,7 @@ def _option(
         declarations,
         value,
         ParameterDefault.required() if required else ParameterDefault.value(default),
-        _key(help_key),
+        translation_key(help_key),
         is_flag=flag,
         flag_value=True if flag else None,
         multiple=multiple,
@@ -159,7 +159,7 @@ def _argument(name: str, value: ValueContract, help_key: str, *, required: bool 
         name,
         value,
         ParameterDefault.required() if required else ParameterDefault.value(None),
-        _key(help_key),
+        translation_key(help_key),
     )
 
 
@@ -169,7 +169,7 @@ def _group(key: str, parent: str, token: str, help_key: str) -> CommandSpec:
         parent,
         token,
         CommandNodeKind.GROUP,
-        _key(help_key),
+        translation_key(help_key),
         None,
         InvocationSpec(no_args_is_help=True),
         (),
@@ -201,7 +201,7 @@ def _leaf(
         parent,
         token,
         CommandNodeKind.LEAF,
-        _key(help_key),
+        translation_key(help_key),
         None,
         InvocationSpec(context_parameter="ctx"),
         parameters,
@@ -236,14 +236,14 @@ def _plantilla_media_leaf(
         "config_profile_plantilla_media",
         token,
         CommandNodeKind.LEAF,
-        _key(help_key),
+        translation_key(help_key),
         None,
         InvocationSpec(context_parameter="ctx"),
         parameters,
         policy,
         _handler("_plantilla_media", handler),
         _schema(
-            ".._config_plantilla_media_payloads",
+            "..config_plantilla_media_payloads",
             "ConfigProfilePlantillaMediaResult",
             f"config.profile.plantilla_media.{token}",
         ),
@@ -478,7 +478,7 @@ PROFILE_COMMAND_SPECS = (
         "config_profile",
         "descendiente",
         CommandNodeKind.GROUP,
-        _key("cli.config.profile.descendiente.help"),
+        translation_key("cli.config.profile.descendiente.help"),
         None,
         InvocationSpec(
             invoke_without_command=True,
@@ -489,7 +489,7 @@ PROFILE_COMMAND_SPECS = (
         ENCRYPTED_READ,
         _handler("_descendiente", "descendiente_door"),
         _schema(
-            ".._config_descendiente_payloads",
+            "..config_descendiente_payloads",
             "ConfigProfileDescendienteListResult",
             "config.profile.descendiente",
         ),
@@ -811,7 +811,7 @@ PROFILE_COMMAND_SPECS = (
         "cli.config.profile.descendiente.add_help",
         "_descendiente",
         "descendiente_add",
-        ".._config_descendiente_payloads",
+        "..config_descendiente_payloads",
         "ConfigProfileDescendienteAddResult",
         ENCRYPTED_WRITE,
         (
@@ -833,7 +833,7 @@ PROFILE_COMMAND_SPECS = (
         "cli.config.profile.descendiente.list_help",
         "_descendiente",
         "descendiente_list",
-        ".._config_descendiente_payloads",
+        "..config_descendiente_payloads",
         "ConfigProfileDescendienteListResult",
         ENCRYPTED_READ,
         (_LANGUAGE,),
@@ -845,7 +845,7 @@ PROFILE_COMMAND_SPECS = (
         "cli.config.profile.descendiente.remove_help",
         "_descendiente",
         "descendiente_remove",
-        ".._config_descendiente_payloads",
+        "..config_descendiente_payloads",
         "ConfigProfileDescendienteRemoveResult",
         ENCRYPTED_DESTRUCTIVE,
         (_argument("index", WHOLE_NUMBER_VALUE, "cli.config.profile.descendiente.remove_index_help"), _LANGUAGE),

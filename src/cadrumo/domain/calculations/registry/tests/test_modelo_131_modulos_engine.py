@@ -45,21 +45,21 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.money.rounding import round_to_cents
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from ..formula_runtime import calculate_registry_snapshot
-from ._modelo_131_modulos_engine_support import (
-    _ALIMENTACION_647_1,
-    _AUTOTAXI_721_2,
-    _CAFETERIAS_672_1,
-    _CARNE_642_1,
-    _MERCANCIAS_722,
-    _PAN_PASTELERIA_644_1,
-    _PELUQUERIA_972_1,
-    _RESTAURANTE_DOS_TENEDORES_671_4,
-    _RESTAURANTE_UN_TENEDOR_671_5,
-    _assert_fase1_previo_matches_orden_coefficients,
-    _assert_fase4_reduccion_general,
-    _expected_modulos,
-    _expected_modulos_generales,
-    _run_modulos_engine,
+from .modelo_131_modulos_engine_support import (
+    ALIMENTACION_647_1,
+    AUTOTAXI_721_2,
+    CAFETERIAS_672_1,
+    CARNE_642_1,
+    MERCANCIAS_722,
+    PAN_PASTELERIA_644_1,
+    PELUQUERIA_972_1,
+    RESTAURANTE_DOS_TENEDORES_671_4,
+    RESTAURANTE_UN_TENEDOR_671_5,
+    assert_fase1_previo_matches_orden_coefficients,
+    assert_fase4_reduccion_general,
+    expected_modulos_generales,
+    modelo_131_modulos_engine_expected_modulos,
+    run_modulos_engine,
 )
 from .published_authority import published_snapshot
 
@@ -81,49 +81,49 @@ def _pinned_authority() -> Iterator[None]:
 _FASE_1_CASES = [
     pytest.param(
         "972.1",
-        _PELUQUERIA_972_1,
+        PELUQUERIA_972_1,
         {1: Decimal("2"), 2: Decimal("1"), 3: Decimal("50"), 4: Decimal("30")},
         Decimal("23153.67"),
         id="972.1-peluqueria-de-senora-y-caballero",
     ),
     pytest.param(
         "721.2",
-        _AUTOTAXI_721_2,
+        AUTOTAXI_721_2,
         {1: Decimal("0"), 2: Decimal("1"), 3: Decimal("40")},
         Decimal("9460.09"),
         id="721.2-transporte-por-autotaxis",
     ),
     pytest.param(
         "722",
-        _MERCANCIAS_722,
+        MERCANCIAS_722,
         {1: Decimal("1"), 2: Decimal("0"), 3: Decimal("8")},
         Decimal("3738.27"),
         id="722-transporte-de-mercancias-por-carretera",
     ),
     pytest.param(
         "671.4",
-        _RESTAURANTE_DOS_TENEDORES_671_4,
+        RESTAURANTE_DOS_TENEDORES_671_4,
         {1: Decimal("2"), 2: Decimal("1"), 3: Decimal("8"), 4: Decimal("3"), 5: Decimal("1")},
         Decimal("29301.08"),
         id="671.4-restaurantes-de-dos-tenedores",
     ),
     pytest.param(
         "672.1",
-        _CAFETERIAS_672_1,
+        CAFETERIAS_672_1,
         {1: Decimal("3"), 2: Decimal("1"), 3: Decimal("10")},
         Decimal("22876.50"),
         id="672.1-cafeterias",
     ),
     pytest.param(
         "642.1",
-        _CARNE_642_1,
+        CARNE_642_1,
         {1: Decimal("1"), 2: Decimal("1"), 4: Decimal("40")},
         Decimal("16621.95"),
         id="642.1-comercio-al-por-menor-de-carne-y-despojos",
     ),
     pytest.param(
         "647.1",
-        _ALIMENTACION_647_1,
+        ALIMENTACION_647_1,
         {1: Decimal("1"), 3: Decimal("40")},
         Decimal("1832.67"),
         id="647.1-comercio-al-por-menor-de-alimentacion-con-vendedor",
@@ -156,7 +156,7 @@ def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(
     modulos: dict[int, Decimal],
     expected_previo: Decimal,
 ) -> None:
-    _assert_fase1_previo_matches_orden_coefficients(epigrafe, table, modulos, expected_previo)
+    assert_fase1_previo_matches_orden_coefficients(epigrafe, table, modulos, expected_previo)
 
 
 @pytest.mark.parametrize(("epigrafe", "modulos"), _FASE_4_CASES)
@@ -164,7 +164,7 @@ def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(
     epigrafe: str,
     modulos: dict[int, Decimal],
 ) -> None:
-    _assert_fase4_reduccion_general(epigrafe, **{f"modulo_{idx}": units for idx, units in modulos.items()})
+    assert_fase4_reduccion_general(epigrafe, **{f"modulo_{idx}": units for idx, units in modulos.items()})
 
 
 class TestRestauranteUnTenedor6715EstimacionObjetiva:
@@ -173,7 +173,7 @@ class TestRestauranteUnTenedor6715EstimacionObjetiva:
     def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(self) -> None:
         # 1 personal asalariado, 0 personal no asalariado, 6 kW potencia
         # eléctrica, 4 mesas, 2 máquinas tipo «B».
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = run_modulos_engine(
             "671.5",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("0"),
@@ -182,15 +182,15 @@ class TestRestauranteUnTenedor6715EstimacionObjetiva:
             modulo_6=Decimal("2"),
         )
         expected_previo = round_to_cents(
-            Decimal("1") * _RESTAURANTE_UN_TENEDOR_671_5[1]
-            + Decimal("6") * _RESTAURANTE_UN_TENEDOR_671_5[3]
-            + Decimal("4") * _RESTAURANTE_UN_TENEDOR_671_5[4]
-            + Decimal("2") * _RESTAURANTE_UN_TENEDOR_671_5[6],
+            Decimal("1") * RESTAURANTE_UN_TENEDOR_671_5[1]
+            + Decimal("6") * RESTAURANTE_UN_TENEDOR_671_5[3]
+            + Decimal("4") * RESTAURANTE_UN_TENEDOR_671_5[4]
+            + Decimal("2") * RESTAURANTE_UN_TENEDOR_671_5[6],
         )
         assert previo == expected_previo == Decimal("12861.72")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
+        assert_fase4_reduccion_general(
             "671.5",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("0"),
@@ -210,7 +210,7 @@ class TestPanPasteleria6441EstimacionObjetiva:
         # signos; a 4-slot engine would silently drop módulo 7 (superficie
         # del horno, 629,86 €/unit), so the engine supports all 7 módulo
         # slots rather than capping at 4.
-        previo, _minorado, _modulos, _actividad = _run_modulos_engine(
+        previo, _minorado, _modulos, _actividad = run_modulos_engine(
             "644.1",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
@@ -219,16 +219,16 @@ class TestPanPasteleria6441EstimacionObjetiva:
             modulo_7=Decimal("2"),
         )
         expected_previo = round_to_cents(
-            Decimal("1") * _PAN_PASTELERIA_644_1[1]
-            + Decimal("1") * _PAN_PASTELERIA_644_1[2]
-            + Decimal("1") * _PAN_PASTELERIA_644_1[3]
-            + Decimal("30") * _PAN_PASTELERIA_644_1[4]
-            + Decimal("2") * _PAN_PASTELERIA_644_1[7],
+            Decimal("1") * PAN_PASTELERIA_644_1[1]
+            + Decimal("1") * PAN_PASTELERIA_644_1[2]
+            + Decimal("1") * PAN_PASTELERIA_644_1[3]
+            + Decimal("30") * PAN_PASTELERIA_644_1[4]
+            + Decimal("2") * PAN_PASTELERIA_644_1[7],
         )
         assert previo == expected_previo == Decimal("24570.90")
 
     def test_fase_4_rendimiento_neto_actividad_applies_reduccion_general(self) -> None:
-        _assert_fase4_reduccion_general(
+        assert_fase4_reduccion_general(
             "644.1",
             modulo_1=Decimal("1"),
             modulo_2=Decimal("1"),
@@ -247,7 +247,7 @@ class TestModulosEngineNoSilentFabrication:
         # multiplied by a wrong or absent coefficient; the internal
         # reference casilla resolves to zero, and the operator-declared
         # casilla 01 remains the authoritative manual input.
-        previo, minorado, modulos, actividad = _run_modulos_engine(
+        previo, minorado, modulos, actividad = run_modulos_engine(
             "699.9",  # not an Orden Anexo II epígrafe — remains untabled
             modulo_1=Decimal("5"),
             modulo_2=Decimal("3"),
@@ -258,7 +258,7 @@ class TestModulosEngineNoSilentFabrication:
         assert actividad == Decimal("0")
 
     def test_blank_epigrafe_resolves_to_zero(self) -> None:
-        previo, minorado, modulos, actividad = _run_modulos_engine(None, modulo_1=Decimal("5"))
+        previo, minorado, modulos, actividad = run_modulos_engine(None, modulo_1=Decimal("5"))
         assert previo == Decimal("0")
         assert minorado == Decimal("0")
         assert modulos == Decimal("0")
@@ -268,7 +268,7 @@ class TestModulosEngineNoSilentFabrication:
         # A tabled epígrafe with no units declared (e.g. no activity conducted
         # yet this period) legitimately resolves to zero — not a silent-zero
         # violation, since the antecedent itself is zero.
-        previo, minorado, modulos, actividad = _run_modulos_engine("972.1")
+        previo, minorado, modulos, actividad = run_modulos_engine("972.1")
         assert previo == Decimal("0")
         assert minorado == Decimal("0")
         assert modulos == Decimal("0")
@@ -288,7 +288,7 @@ class TestModulosIndicesCorrectoresGenerales:
     """
 
     def _run_673_1(self, **kwargs: Decimal) -> tuple[Decimal, Decimal, Decimal, Decimal]:
-        return _run_modulos_engine(
+        return run_modulos_engine(
             "673.1",
             modulo_1=Decimal("3.66"),
             modulo_2=Decimal("1.00"),
@@ -306,7 +306,7 @@ class TestModulosIndicesCorrectoresGenerales:
         _previo, minorado, modulos, _actividad = self._run_673_1()
         assert minorado == Decimal("41368.57")
         assert modulos == Decimal("44603.33")
-        expected = _expected_modulos_generales(minorado, epigrafe="673.1")
+        expected = expected_modulos_generales(minorado, epigrafe="673.1")
         assert modulos == expected
 
     def test_pequena_dimension_applies_multiplicatively_and_excludes_indice_exceso(self) -> None:
@@ -314,7 +314,7 @@ class TestModulosIndicesCorrectoresGenerales:
         _previo, minorado, modulos, _actividad = self._run_673_1(
             indice_pequena_dimension=Decimal("0.80"),
         )
-        expected = _expected_modulos_generales(minorado, epigrafe="673.1", pequena_dimension=Decimal("0.80"))
+        expected = expected_modulos_generales(minorado, epigrafe="673.1", pequena_dimension=Decimal("0.80"))
         assert modulos == expected == Decimal("33094.86")
         # Confirms b.3 was skipped: a naive product with the manual's own
         # índice-exceso figure would be far higher than the plain 0,80 product.
@@ -322,39 +322,39 @@ class TestModulosIndicesCorrectoresGenerales:
 
     def test_pequena_dimension_ignored_for_autotaxi_especial_epigrafe(self) -> None:
         """b.1 is IGNORED (never applied) for an epígrafe carrying a documented índice especial (721.2)."""
-        previo, minorado, modulos, _actividad = _run_modulos_engine(
+        previo, minorado, modulos, _actividad = run_modulos_engine(
             "721.2",
             modulo_2=Decimal("1"),
             modulo_3=Decimal("900"),
             indice_pequena_dimension=Decimal("0.80"),
         )
-        expected_previo = round_to_cents(Decimal("1") * _AUTOTAXI_721_2[2] + Decimal("900") * _AUTOTAXI_721_2[3])
+        expected_previo = round_to_cents(Decimal("1") * AUTOTAXI_721_2[2] + Decimal("900") * AUTOTAXI_721_2[3])
         assert previo == expected_previo
         # b.1 ignored -> b.3 índice de exceso still applies to the plain minorado.
-        expected = _expected_modulos_generales(minorado, epigrafe="721.2", pequena_dimension=Decimal("0.80"))
-        assert modulos == expected == _expected_modulos(minorado, epigrafe="721.2")
+        expected = expected_modulos_generales(minorado, epigrafe="721.2", pequena_dimension=Decimal("0.80"))
+        assert modulos == expected == modelo_131_modulos_engine_expected_modulos(minorado, epigrafe="721.2")
 
     def test_pequena_dimension_ignored_for_mercancias_especial_epigrafe(self) -> None:
         """b.1 is IGNORED (never applied) for an epígrafe carrying a documented índice especial (722)."""
-        _previo, minorado, modulos, _actividad = _run_modulos_engine(
+        _previo, minorado, modulos, _actividad = run_modulos_engine(
             "722",
             modulo_1=Decimal("1"),
             modulo_3=Decimal("800"),
             indice_pequena_dimension=Decimal("0.75"),
         )
-        expected = _expected_modulos_generales(minorado, epigrafe="722", pequena_dimension=Decimal("0.75"))
-        assert modulos == expected == _expected_modulos(minorado, epigrafe="722")
+        expected = expected_modulos_generales(minorado, epigrafe="722", pequena_dimension=Decimal("0.75"))
+        assert modulos == expected == modelo_131_modulos_engine_expected_modulos(minorado, epigrafe="722")
 
     def test_temporada_applies_multiplicatively_before_indice_exceso(self) -> None:
         """b.2 (temporada) applies to minorado before b.3 evaluates the (adjusted) excess."""
         _previo, minorado, modulos, _actividad = self._run_673_1(indice_temporada=Decimal("1.50"))
-        expected = _expected_modulos_generales(minorado, epigrafe="673.1", temporada=Decimal("1.50"))
+        expected = expected_modulos_generales(minorado, epigrafe="673.1", temporada=Decimal("1.50"))
         assert modulos == expected
 
     def test_inicio_actividad_applies_when_temporada_absent(self) -> None:
         """b.4 (inicio de nuevas actividades) applies when temporada is not declared."""
         _previo, minorado, modulos, _actividad = self._run_673_1(indice_inicio_actividad=Decimal("0.80"))
-        expected = _expected_modulos_generales(minorado, epigrafe="673.1", inicio_actividad=Decimal("0.80"))
+        expected = expected_modulos_generales(minorado, epigrafe="673.1", inicio_actividad=Decimal("0.80"))
         assert modulos == expected
 
     def test_inicio_actividad_after_exceso_regression_follows_hac_1347_orden_order(self) -> None:
@@ -386,7 +386,7 @@ class TestModulosIndicesCorrectoresGenerales:
         """
         _previo, minorado, modulos, _actividad = self._run_673_1(indice_inicio_actividad=Decimal("0.80"))
         assert minorado == Decimal("41368.57")
-        expected = _expected_modulos_generales(minorado, epigrafe="673.1", inicio_actividad=Decimal("0.80"))
+        expected = expected_modulos_generales(minorado, epigrafe="673.1", inicio_actividad=Decimal("0.80"))
         assert expected == Decimal("35682.67")
         assert modulos == expected
         # The reversed (defective) order would have produced 33.847,50 —
@@ -404,7 +404,7 @@ class TestModulosIndicesCorrectoresGenerales:
         )
         assert minorado == minorado2
         assert modulos_both == modulos_temporada_only
-        expected = _expected_modulos_generales(minorado, epigrafe="673.1", temporada=Decimal("1.50"))
+        expected = expected_modulos_generales(minorado, epigrafe="673.1", temporada=Decimal("1.50"))
         assert modulos_both == expected
 
     def test_blank_indices_generales_never_fabricate_a_factor(self) -> None:
@@ -414,11 +414,11 @@ class TestModulosIndicesCorrectoresGenerales:
             indice_temporada=Decimal("0"),
             indice_inicio_actividad=Decimal("0"),
         )
-        assert modulos == _expected_modulos(minorado, epigrafe="673.1") == Decimal("44603.33")
+        assert modulos == modelo_131_modulos_engine_expected_modulos(minorado, epigrafe="673.1") == Decimal("44603.33")
 
     def test_non_positive_minorado_never_receives_indices_generales(self) -> None:
         """A non-positive rendimiento neto minorado skips the whole cascade (mirrors the b.3-only guard)."""
-        _previo, minorado, modulos, _actividad = _run_modulos_engine(
+        _previo, minorado, modulos, _actividad = run_modulos_engine(
             "972.1",
             indice_pequena_dimension=Decimal("0.80"),
             indice_temporada=Decimal("1.50"),

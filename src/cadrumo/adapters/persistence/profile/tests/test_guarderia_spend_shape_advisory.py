@@ -39,7 +39,7 @@ import pytest
 
 from .....application.aggregation.source_mesh import CalculationSourceDiagnostic
 from .....application.modelo.calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
-from .....application.modelo.tests.advisory_diagnostic_assertions import operator_text as _operator_text
+from .....application.modelo.tests.advisory_diagnostic_assertions import operator_text
 from .....application.modelo.tests.advisory_diagnostic_repositories import advisory_diagnostic_repositories
 from .....core.casilla_id import CasillaId
 from .....core.modelo import Modelo
@@ -148,7 +148,7 @@ def test_the_message_names_the_descendant_the_key_and_the_certificate() -> None:
     """
     _write(DescendantInfo(birth_date=_TURNS_THREE, gastos_guarderia_euros=2400))
 
-    message = _operator_text(_collect()[0])
+    message = operator_text(_collect()[0])
 
     assert "renta_family.descendiente.0" in message
     assert "GASTOS_GUARDERIA_MENSUAL" in message

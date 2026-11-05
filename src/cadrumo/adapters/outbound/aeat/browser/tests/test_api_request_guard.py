@@ -27,7 +27,7 @@ from ......tests.aeat_literal_fixtures import (
     API_GUARD_READ_PATH_FIXTURE,
     API_GUARD_WRITE_PATH_CANARY,
 )
-from ..._playwright import PlaywrightError
+from ...playwright import PlaywrightError
 from ..api_request_guard import GuardedApiRequests
 from .real_http_boundary import EXTERNAL, LocalHttpBoundary, open_real_browser_session, opened_http_boundary
 

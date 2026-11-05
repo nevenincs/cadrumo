@@ -19,7 +19,7 @@ from decimal import Decimal
 import pytest
 
 from ..schema_formula import FormulaExpression
-from .formula_runtime_support import evaluate as _evaluate
+from .formula_runtime_support import evaluate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -47,7 +47,7 @@ def test_if_then_else_evaluates_only_the_true_branch_when_predicate_truthy() -> 
         ),
     )
 
-    assert _evaluate(expression, {}) == Decimal("99")
+    assert evaluate(expression, {}) == Decimal("99")
 
 
 def test_if_then_else_evaluates_only_the_false_branch_when_predicate_falsy() -> None:
@@ -72,7 +72,7 @@ def test_if_then_else_evaluates_only_the_false_branch_when_predicate_falsy() -> 
         ),
     )
 
-    assert _evaluate(expression, {}) == Decimal("-7")
+    assert evaluate(expression, {}) == Decimal("-7")
 
 
 def test_if_then_else_predicate_evaluation_resolves_nested_op() -> None:
@@ -93,4 +93,4 @@ def test_if_then_else_predicate_evaluation_resolves_nested_op() -> None:
         ),
     )
 
-    assert _evaluate(expression, {}) == Decimal("42")
+    assert evaluate(expression, {}) == Decimal("42")

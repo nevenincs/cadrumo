@@ -24,10 +24,8 @@ from cadrumo.domain.transactions.errors import TransactionValidationError
 
 from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
-    BUCKET_ID as _BUCKET_ID,
-)
-from .ledger_action_persistence_support import (
-    repositories as _repositories,
+    BUCKET_ID,
+    repositories,
 )
 from .ledger_attachment_support import attachment_store, seed_attachment, seed_manual_transaction
 
@@ -41,16 +39,16 @@ def _seed_attachment(secure_objects: SecureObjectRepository, *, marker: bytes) -
 
 
 def _attach(secure_objects: SecureObjectRepository, *, transaction_id: str, attachment_ids: tuple[str, ...]):
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
         attachment_store=attachment_store(secure_objects),
     ) as ports:
         return attach_manual_transaction_evidence(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=transaction_id,
             actor="operator",
             attachment_ids=attachment_ids,
@@ -59,16 +57,16 @@ def _attach(secure_objects: SecureObjectRepository, *, transaction_id: str, atta
 
 
 def _detach(secure_objects: SecureObjectRepository, *, transaction_id: str, attachment_ids: tuple[str, ...]):
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
         attachment_store=attachment_store(secure_objects),
     ) as ports:
         return detach_manual_transaction_attachments(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=transaction_id,
             actor="operator",
             attachment_ids=attachment_ids,

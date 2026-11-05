@@ -20,11 +20,11 @@ from .ledger_ux_support import (
     _N26_HEADER,
     _invoke,
     _invoke_exact_profile,
-    _open_bucket_session,
+    open_bucket_session,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-__all__ = ["_open_bucket_session"]
+__all__ = ["open_bucket_session"]
 
 
 def _json_document(output: str) -> dict[str, object]:

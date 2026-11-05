@@ -19,7 +19,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Literal, TypeIs, get_args
 
-from ....core.hashing import content_hash_hex as _content_hash_hex
+from ....core.hashing import content_hash_hex
 from ....core.identity.digest import ContentDigest
 from .closing_foundations import InventoryLedgerError
 from .records import (
@@ -142,7 +142,7 @@ def describe_ledger(
     descriptor: InventoryLedgerDescriptor,
 ) -> InventoryLedger:
     """Replace the descriptive facts; no valuation input moves, so no consumer guard applies."""
-    fingerprint = _content_hash_hex(
+    fingerprint = content_hash_hex(
         {"kind": InventoryHistoryKind.DESCRIBED.value, **descriptor.model_dump(mode="json")},
     )
     if _is_replay(ledger, stamp.correction_id, fingerprint) or ledger.descriptor == descriptor:
@@ -161,7 +161,7 @@ def correct_opening(
     valuation_method: ValuationMethod | None,
 ) -> InventoryLedger:
     """Rectify the opening value or valuation method, keeping the values they displace."""
-    fingerprint = _content_hash_hex(
+    fingerprint = content_hash_hex(
         {
             "kind": InventoryHistoryKind.OPENING_CORRECTED.value,
             "reason": reason.value,
@@ -214,7 +214,7 @@ def correct_movement(
     reason: InventoryCorrectionReason,
 ) -> InventoryLedger:
     """Supersede one movement with a replacement under a new identity."""
-    fingerprint = _content_hash_hex(
+    fingerprint = content_hash_hex(
         {
             "kind": InventoryHistoryKind.MOVEMENT_CORRECTED.value,
             "reason": reason.value,
@@ -257,7 +257,7 @@ def reverse_movement(
     reason: InventoryCorrectionReason,
 ) -> InventoryLedger:
     """Take one movement out of the effective set, retaining it as the reversal's evidence."""
-    fingerprint = _content_hash_hex(
+    fingerprint = content_hash_hex(
         {
             "kind": InventoryHistoryKind.MOVEMENT_REVERSED.value,
             "reason": reason.value,
@@ -287,7 +287,7 @@ def retire_ledger(
     reason: InventoryRetirementReason,
 ) -> InventoryLedger:
     """Take the inventory out of the active register with every fact retained."""
-    fingerprint = _content_hash_hex({"kind": InventoryHistoryKind.RETIRED.value, "reason": reason.value})
+    fingerprint = content_hash_hex({"kind": InventoryHistoryKind.RETIRED.value, "reason": reason.value})
     if _is_replay(ledger, stamp.correction_id, fingerprint):
         return ledger
     if ledger.is_retired:
@@ -299,7 +299,7 @@ def retire_ledger(
 
 def restore_ledger(ledger: InventoryLedger, *, stamp: InventoryChangeStamp) -> InventoryLedger:
     """Bring a retired inventory back to the active register."""
-    fingerprint = _content_hash_hex({"kind": InventoryHistoryKind.RESTORED.value})
+    fingerprint = content_hash_hex({"kind": InventoryHistoryKind.RESTORED.value})
     if _is_replay(ledger, stamp.correction_id, fingerprint):
         return ledger
     if not ledger.is_retired:

@@ -60,7 +60,7 @@ def _character_shape(char: str) -> str:
     return "A" if char.isalpha() else "?"
 
 
-def _date_shape(value: str) -> str:
+def date_shape(value: str) -> str:
     """Return the character-class shape of ``value``, carrying none of it.
 
     The values these parsers refuse are personal data -- a descendant's date of
@@ -99,7 +99,7 @@ def parse_iso8601_date(raw: str | None) -> date | None:
     except ValueError as exc:
         _log.debug(
             "parse_iso8601_date: refused a value of shape %s; expected 9999-99-99",
-            _date_shape(cleaned),
+            date_shape(cleaned),
         )
         # BROAD-EXCEPT-RATIONALE-PYDANTIC-PARSE-PROXY:
         # Called from @field_validator stacks; ValueError propagates into the
@@ -211,7 +211,7 @@ def parse_ddmmyyyy_date(raw: str | None) -> date | None:
     if match is None:
         _log.debug(
             "parse_ddmmyyyy_date: refused a value of shape %s; expected 99-99-9999 or 99/99/9999",
-            _date_shape(cleaned),
+            date_shape(cleaned),
         )
         # BROAD-EXCEPT-RATIONALE-PYDANTIC-PARSE-PROXY:
         # Called from @field_validator stacks; ValueError propagates into the
@@ -226,7 +226,7 @@ def parse_ddmmyyyy_date(raw: str | None) -> date | None:
     except ValueError as exc:
         _log.debug(
             "parse_ddmmyyyy_date: a value of shape %s named month %d day %d, which is not a calendar date",
-            _date_shape(cleaned),
+            date_shape(cleaned),
             month,
             day,
         )

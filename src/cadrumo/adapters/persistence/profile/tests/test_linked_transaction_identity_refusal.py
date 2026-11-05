@@ -22,25 +22,21 @@ from ..invoices import InvoiceCatalogueRepository
 from ..transactions import TransactionCatalogueRepository
 from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
-    BUCKET_ID as _BUCKET_ID,
-)
-from .ledger_action_persistence_support import (
+    BUCKET_ID,
     purchase_invoice,
-)
-from .ledger_action_persistence_support import (
-    repositories as _repositories,
+    repositories,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
 def _persist_linked_transaction(secure_objects: SecureObjectRepository) -> tuple[str, str]:
-    transaction_repository, event_repository = _repositories(secure_objects)
-    invoice_repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
+    invoice_repository = InvoiceCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
     invoice = purchase_invoice()
     invoice_repository.save(build_invoice_catalogue((invoice,)))
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
@@ -48,7 +44,7 @@ def _persist_linked_transaction(secure_objects: SecureObjectRepository) -> tuple
     ) as ports:
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 5, 2),
                 amount=Decimal("59.29"),
                 direction=TransactionDirection.OUTGOING,
@@ -59,7 +55,7 @@ def _persist_linked_transaction(secure_objects: SecureObjectRepository) -> tuple
             occurred_at=datetime(2026, 5, 2, 9, 0, tzinfo=UTC),
         )
         link_manual_transaction_invoice(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=created.ref.transaction_id,
             invoice_id=invoice.invoice_id,
             actor="operator",
@@ -74,8 +70,8 @@ def test_linked_identity_change_refusal_leaves_encrypted_reciprocal_records_unch
 ) -> None:
     """Changing a linked row's derived id cannot write either encrypted side."""
     transaction_id, invoice_id = _persist_linked_transaction(secure_objects)
-    transaction_repository, event_repository = _repositories(secure_objects)
-    invoice_repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
+    invoice_repository = InvoiceCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
     before_transactions = transaction_repository.load()
     before_invoices = invoice_repository.load()
     before_events: BucketEventHistoryCatalogue = event_repository.load()
@@ -84,7 +80,7 @@ def test_linked_identity_change_refusal_leaves_encrypted_reciprocal_records_unch
 
     with (
         ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             objects=secure_objects,
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
@@ -96,7 +92,7 @@ def test_linked_identity_change_refusal_leaves_encrypted_reciprocal_records_unch
         ),
     ):
         update_manual_transaction_fields(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=transaction_id,
             patch=ManualLedgerTransactionPatch(amount=Decimal("60.00")),
             actor="operator",
@@ -105,8 +101,8 @@ def test_linked_identity_change_refusal_leaves_encrypted_reciprocal_records_unch
             occurred_at=datetime(2026, 5, 2, 9, 2, tzinfo=UTC),
         )
 
-    reopened_transactions = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    reopened_invoices = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    reopened_transactions = TransactionCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
+    reopened_invoices = InvoiceCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
     reopened_events = BucketEventHistoryRepository(objects=secure_objects)
     assert reopened_transactions.load() == before_transactions
     assert reopened_invoices.load() == before_invoices
@@ -124,22 +120,22 @@ def test_stale_opened_linked_detail_cannot_overwrite_the_concurrent_writer(
 ) -> None:
     """The real guarded write rejects after an opened snapshot becomes stale."""
     transaction_id, invoice_id = _persist_linked_transaction(secure_objects)
-    opened_transactions, _opened_events = _repositories(secure_objects)
+    opened_transactions, _opened_events = repositories(secure_objects)
     opened_catalogue = opened_transactions.load()
     opened = opened_catalogue.get(transaction_id)
     assert opened is not None
 
-    concurrent_transactions, concurrent_events = _repositories(secure_objects)
-    concurrent_invoices = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    concurrent_transactions, concurrent_events = repositories(secure_objects)
+    concurrent_invoices = InvoiceCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         transaction_repository=concurrent_transactions,
         bucket_event_repository=concurrent_events,
         invoice_repository=concurrent_invoices,
     ) as ports:
         concurrent = update_manual_transaction_fields(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=transaction_id,
             patch=ManualLedgerTransactionPatch(notes="concurrent operator correction"),
             actor="concurrent-operator",
@@ -149,8 +145,8 @@ def test_stale_opened_linked_detail_cannot_overwrite_the_concurrent_writer(
         )
     assert concurrent.ref.transaction_id == transaction_id
 
-    committed_transactions = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    committed_invoices = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    committed_transactions = TransactionCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
+    committed_invoices = InvoiceCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
     committed_events = BucketEventHistoryRepository(objects=secure_objects)
     transactions_after_concurrent = committed_transactions.load()
     invoices_after_concurrent = committed_invoices.load()
@@ -159,11 +155,11 @@ def test_stale_opened_linked_detail_cannot_overwrite_the_concurrent_writer(
     invoice_revision_after_concurrent = committed_invoices.load_revision()
     _events_after_concurrent, event_revision_after_concurrent = committed_events.load_revisioned()
 
-    stale_transactions, stale_events = _repositories(secure_objects)
-    stale_invoices = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    stale_transactions, stale_events = repositories(secure_objects)
+    stale_invoices = InvoiceCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
     with (
         ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             objects=secure_objects,
             transaction_repository=stale_transactions,
             bucket_event_repository=stale_events,
@@ -172,7 +168,7 @@ def test_stale_opened_linked_detail_cannot_overwrite_the_concurrent_writer(
         pytest.raises(LedgerPersistenceConflictError, match="transaction changed since it was opened"),
     ):
         update_manual_transaction_fields(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=transaction_id,
             patch=ManualLedgerTransactionPatch(notes="stale operator correction"),
             actor="stale-operator",
@@ -183,8 +179,8 @@ def test_stale_opened_linked_detail_cannot_overwrite_the_concurrent_writer(
             occurred_at=datetime(2026, 5, 2, 9, 3, tzinfo=UTC),
         )
 
-    reopened_transactions = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    reopened_invoices = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    reopened_transactions = TransactionCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
+    reopened_invoices = InvoiceCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
     reopened_events = BucketEventHistoryRepository(objects=secure_objects)
     assert reopened_transactions.load() == transactions_after_concurrent
     assert reopened_invoices.load() == invoices_after_concurrent

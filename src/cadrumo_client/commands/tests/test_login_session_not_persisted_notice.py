@@ -84,7 +84,7 @@ def test_the_notice_names_why_the_sign_in_was_not_kept(
     message_key: str,
 ) -> None:
     store = _Keychain(failure)
-    monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (store, KeyError, KeyError))
+    monkeypatch.setattr(acceleration_keychain, "acceleration_keychain_keyring", lambda: (store, KeyError, KeyError))
     outcome = _outcome()
     with bind_profile_login_session_port(build_profile_login_session_port()):
         (notice,) = custody._login_notices(outcome)
@@ -99,7 +99,7 @@ def test_a_missing_backend_says_so(monkeypatch: pytest.MonkeyPatch) -> None:
     def no_backend() -> None:
         raise KeyringUnavailableError("none", unavailability=KeychainUnavailability.NO_BACKEND)
 
-    monkeypatch.setattr(acceleration_keychain, "_keyring", no_backend)
+    monkeypatch.setattr(acceleration_keychain, "acceleration_keychain_keyring", no_backend)
     with bind_profile_login_session_port(build_profile_login_session_port()):
         (notice,) = custody._login_notices(_outcome())
     assert notice.message == tr("cli.config.login.notices.session_not_persisted_no_backend")
@@ -107,6 +107,8 @@ def test_a_missing_backend_says_so(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_a_kept_sign_in_carries_no_persistence_notice(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (_Keychain(None), KeyError, KeyError))
+    monkeypatch.setattr(
+        acceleration_keychain, "acceleration_keychain_keyring", lambda: (_Keychain(None), KeyError, KeyError)
+    )
     kept = _outcome().model_copy(update={"session_persisted": True})
     assert custody._login_notices(kept) == ()

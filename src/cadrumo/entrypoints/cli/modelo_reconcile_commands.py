@@ -24,15 +24,15 @@ from ...application.modelo.reconciliation_evidence_kind import ModeloReconciliat
 from ...application.modelo.reconciliation_list_operation import ModeloReconciliationListEntryProjection
 from ...core.i18n.render import tr
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ._modelo_cli_support import resolve_default_actor
 from .common import emit_envelope
+from .modelo_cli_support import resolve_default_actor
 
 
 def _resolve_default_actor_value() -> str:
     return resolve_default_actor()
 
 
-def _render_reconciliation_report(ctx: typer.Context, report: ModeloReconciliationReport, *, command: str) -> None:
+def render_reconciliation_report(ctx: typer.Context, report: ModeloReconciliationReport, *, command: str) -> None:
     """Render a :class:`~application.modelo.reconciliation.ModeloReconciliationReport` through the typed envelope.
 
     ``command`` is the registered leaf id (``modelo.reconcile.pull`` /
@@ -120,7 +120,7 @@ def reconcile_pull_verb(
         calculation_revision=calculation_revision,
         source=source,
     )
-    _render_reconciliation_report(ctx, report, command="modelo.reconcile.pull")
+    render_reconciliation_report(ctx, report, command="modelo.reconcile.pull")
 
 
 def reconcile_file_verb(
@@ -154,7 +154,7 @@ def reconcile_file_verb(
         actor=resolved_actor,
         calculation_revision=calculation_revision,
     )
-    _render_reconciliation_report(ctx, report, command="modelo.reconcile.import")
+    render_reconciliation_report(ctx, report, command="modelo.reconcile.import")
 
 
 def _append_reconciliation_rows(lines: list[str], entries: tuple[ModeloReconciliationListEntryProjection, ...]) -> None:

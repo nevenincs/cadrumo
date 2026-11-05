@@ -20,15 +20,17 @@ from cadrumo.domain.iva.schema import IvaCategory
 
 from .....domain.iva.schema import InvoiceKind
 from .source_resolver_test_support import (
-    _BUCKET_ID,
-    _OTHER_BUCKET_ID,
-    _invoice,
-    _m349_resolution,
-    _modelo_revision,
-    _public_resolution,
-    _resolver,
+    BUCKET_ID,
+    OTHER_BUCKET_ID,
+    m349_resolution,
+    modelo_revision,
+    public_resolution,
+    source_resolver,
+    source_resolver_invoice,
 )
-from .source_resolver_test_support import _generation_pinned_authority as _generation_pinned_authority
+from .source_resolver_test_support import (
+    generation_pinned_authority as generation_pinned_authority,
+)
 from .source_resolver_test_support import secure_profile as secure_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -130,7 +132,7 @@ def _same_facts_invoice(*, with_category: bool):
             currency="EUR",
             grand_total=Decimal("4840.00"),
         ),
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         kind=kind,
         invoice_number=number,
         issued_at=issued,
@@ -196,14 +198,14 @@ def test_the_informativas_are_unaffected_by_that_divergence(
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
     repository.save(build_invoice_catalogue((_same_facts_invoice(with_category=False),)))
     context = CalculationSourceContext(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         modelo="347",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "0A"),
-        revision=_modelo_revision("347", "2011-2024"),
+        revision=modelo_revision("347", "2011-2024"),
     )
 
-    resolution = _resolver(repository).resolve(context)
+    resolution = source_resolver(repository).resolve(context)
 
     assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
     assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("4840.00")
@@ -319,7 +321,7 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
         modelo="347",
         filing_year=2025,
         period=Period.from_year_and_code(2025, "0A"),
-        revision=_modelo_revision("347", "2011-2024"),
+        revision=modelo_revision("347", "2011-2024"),
     )
 
     # Pinned for the same reason as the M349 proof above: these are the facts
@@ -373,7 +375,7 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
         ),
         payment_status=PaymentStatus.PENDING,
     )
-    resolution = _public_resolution((canonical,), context=context)
+    resolution = public_resolution((canonical,), context=context)
     assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
     assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("3630.00")
     assert {item.source_ref for item in resolution.provenance} == {
@@ -412,7 +414,7 @@ def test_an_unattributed_invoice_in_the_bucket_store_is_still_declared(
     before this the two layers disagreed about the same record.
     """
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
-    unattributed = _invoice(
+    unattributed = source_resolver_invoice(
         bucket_id=None,
         invoice_number="F-2026-UNATTRIBUTED",
         issued_at=date(2026, 1, 15),
@@ -421,7 +423,7 @@ def test_an_unattributed_invoice_in_the_bucket_store_is_still_declared(
         iva_category=IvaCategory("intra_community_supply"),
     )
     repository.save(build_invoice_catalogue((unattributed,)))
-    resolution = _m349_resolution(repository)
+    resolution = m349_resolution(repository)
 
     assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
     assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("1000.00")
@@ -439,8 +441,8 @@ def test_an_invoice_naming_another_bucket_is_still_excluded(
     invoice surfacing in another's return.
     """
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
-    foreign = _invoice(
-        bucket_id=_OTHER_BUCKET_ID,
+    foreign = source_resolver_invoice(
+        bucket_id=OTHER_BUCKET_ID,
         invoice_number="F-2026-FOREIGN",
         issued_at=date(2026, 1, 16),
         counterparty_tax_id="DE987654321",
@@ -448,7 +450,7 @@ def test_an_invoice_naming_another_bucket_is_still_excluded(
         iva_category=IvaCategory("intra_community_supply"),
     )
     repository.save(build_invoice_catalogue((foreign,)))
-    resolution = _m349_resolution(repository)
+    resolution = m349_resolution(repository)
 
     assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("0")
     assert resolution.provenance == ()

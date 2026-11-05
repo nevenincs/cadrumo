@@ -15,38 +15,18 @@ from ..schema import ModeloDefinition, RegistrySnapshot
 from ..schema_catalogues import RegistryCatalogues
 from ..schema_surfaces import CasillaConstraints
 from .formula_runtime_support import (
-    M130_AGRARIAN_VOLUME_CASILLA as _M130_AGRARIAN_VOLUME_CASILLA,
-)
-from .formula_runtime_support import (
-    M130_AGRARIAN_WITHHELD_CASILLA as _M130_AGRARIAN_WITHHELD_CASILLA,
-)
-from .formula_runtime_support import (
-    M130_GASTOS_PREVIOS_CASILLA as _M130_GASTOS_CASILLA,
-)
-from .formula_runtime_support import (
-    M130_HOME_DEDUCTION_CASILLA as _M130_HOME_DEDUCTION_CASILLA,
-)
-from .formula_runtime_support import (
-    M130_INGRESOS_CASILLA as _M130_INGRESOS_CASILLA,
-)
-from .formula_runtime_support import M130_NORMAL_MODALITY
-from .formula_runtime_support import (
-    M130_PAGO_FRACCIONADO_CASILLA as _M130_PAGO_FRACCIONADO_CASILLA,
-)
-from .formula_runtime_support import (
-    M130_PRIOR_RETURN_RESULT_CASILLA as _M130_PRIOR_RETURN_RESULT_CASILLA,
-)
-from .formula_runtime_support import (
-    M130_RETENCIONES_CASILLA as _M130_RETENCIONES_CASILLA,
-)
-from .formula_runtime_support import (
-    PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING as _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING,
-)
-from .formula_runtime_support import (
-    PREVIOUS_YEAR_NET_INCOME_BINDING as _PREVIOUS_YEAR_NET_INCOME_BINDING,
-)
-from .formula_runtime_support import (
-    modelo_180_snapshot_with_inactive_relation_period as _modelo_180_snapshot_with_inactive_relation_period,
+    M130_AGRARIAN_VOLUME_CASILLA,
+    M130_AGRARIAN_WITHHELD_CASILLA,
+    M130_GASTOS_PREVIOS_CASILLA,
+    M130_HOME_DEDUCTION_CASILLA,
+    M130_INGRESOS_CASILLA,
+    M130_NORMAL_MODALITY,
+    M130_PAGO_FRACCIONADO_CASILLA,
+    M130_PRIOR_RETURN_RESULT_CASILLA,
+    M130_RETENCIONES_CASILLA,
+    PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING,
+    PREVIOUS_YEAR_NET_INCOME_BINDING,
+    modelo_180_snapshot_with_inactive_relation_period,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -58,7 +38,7 @@ def test_registry_formula_runtime_rejects_non_decimal_input(
     with pytest.raises(RegistryValidationError, match="must be a Decimal"):
         calculate_registry_snapshot(
             committed_modelo_130_snapshot,
-            inputs={_M130_INGRESOS_CASILLA: 100},
+            inputs={M130_INGRESOS_CASILLA: 100},
             date_context={"filing_period": date(2026, 3, 31)},
             enum_binding_values=M130_NORMAL_MODALITY,
         )
@@ -146,7 +126,7 @@ def test_registry_formula_runtime_rejects_binding_id_supplied_as_casilla_input(
     with pytest.raises(RegistryValidationError, match="unknown registry input casilla ids"):
         calculate_registry_snapshot(
             committed_modelo_130_snapshot,
-            inputs={_PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000")},
+            inputs={PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000")},
             date_context={"filing_period": date(2026, 3, 31)},
             enum_binding_values=M130_NORMAL_MODALITY,
         )
@@ -162,7 +142,7 @@ def test_registry_formula_runtime_rejects_unknown_binding_values(
             date_context={"filing_period": date(2026, 3, 31)},
             enum_binding_values=M130_NORMAL_MODALITY,
             binding_values={
-                _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
+                PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
                 "unknown-binding": Decimal("1"),
             },
         )
@@ -187,7 +167,7 @@ def test_registry_formula_runtime_rejects_unknown_relation_values(
 def test_registry_formula_runtime_rejects_relation_values_inactive_for_snapshot_period(
     registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
 ) -> None:
-    snapshot = _modelo_180_snapshot_with_inactive_relation_period(registry_tree)
+    snapshot = modelo_180_snapshot_with_inactive_relation_period(registry_tree)
 
     with pytest.raises(RegistryValidationError, match="unknown registry relation ids"):
         calculate_registry_snapshot(
@@ -200,20 +180,20 @@ def test_registry_formula_runtime_rejects_relation_values_inactive_for_snapshot_
 
 def _complete_m130_inputs() -> dict[CasillaId, Decimal]:
     return {
-        _M130_INGRESOS_CASILLA: Decimal("100"),
-        _M130_GASTOS_CASILLA: Decimal("0"),
-        _M130_RETENCIONES_CASILLA: Decimal("0"),
-        _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-        _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
-        _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
-        _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
+        M130_INGRESOS_CASILLA: Decimal("100"),
+        M130_GASTOS_PREVIOS_CASILLA: Decimal("0"),
+        M130_RETENCIONES_CASILLA: Decimal("0"),
+        M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
+        M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
+        M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+        M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
     }
 
 
 def _complete_m130_bindings() -> dict[str, Decimal]:
     return {
-        _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
-        _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
+        PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
+        PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
     }
 
 
@@ -228,8 +208,8 @@ def test_registry_formula_runtime_defaults_filing_period_axis_from_snapshot(
         enum_binding_values=M130_NORMAL_MODALITY,
     )
 
-    assert _M130_PAGO_FRACCIONADO_CASILLA in result.values
-    assert _M130_PAGO_FRACCIONADO_CASILLA in {entry.target_casilla_id for entry in result.entries}
+    assert M130_PAGO_FRACCIONADO_CASILLA in result.values
+    assert M130_PAGO_FRACCIONADO_CASILLA in {entry.target_casilla_id for entry in result.entries}
 
 
 def test_registry_formula_runtime_rejects_missing_non_snapshot_parameter_axis(
@@ -256,7 +236,7 @@ def test_registry_formula_runtime_rejects_missing_non_snapshot_parameter_axis(
 
 def _snapshot_with_zero_range_manual_cost(snapshot: RegistrySnapshot) -> RegistrySnapshot:
     """Pin a declared manual-cost range without changing the actual formula graph."""
-    target = next(casilla for casilla in snapshot.revision.casillas if casilla.id == _M130_GASTOS_CASILLA)
+    target = next(casilla for casilla in snapshot.revision.casillas if casilla.id == M130_GASTOS_PREVIOS_CASILLA)
     constrained = target.model_copy(
         update={
             "constraints": CasillaConstraints(
@@ -280,10 +260,10 @@ def test_numeric_manual_input_must_obey_declared_range_before_formula_execution(
 ) -> None:
     snapshot = _snapshot_with_zero_range_manual_cost(committed_modelo_130_snapshot)
     with pytest.raises(CasillaConstraintViolationError) as refused:
-        calculate_registry_snapshot(snapshot, inputs={_M130_GASTOS_CASILLA: value}, date_context={})
+        calculate_registry_snapshot(snapshot, inputs={M130_GASTOS_PREVIOS_CASILLA: value}, date_context={})
     context = refused.value.context
     assert context is not None
-    assert context["casilla_id"] == _M130_GASTOS_CASILLA
+    assert context["casilla_id"] == M130_GASTOS_PREVIOS_CASILLA
     assert context["value"] == str(value)
     assert context["legal_refs"]
     assert context["source_refs"]
@@ -318,8 +298,8 @@ def test_input_key_and_decimal_type_refusals_remain_before_numeric_range_checks(
     with pytest.raises(RegistryValidationError, match="unknown registry input casilla ids"):
         calculate_registry_snapshot(
             snapshot,
-            inputs={_M130_GASTOS_CASILLA: Decimal("1"), "unknown-casilla": Decimal("0")},
+            inputs={M130_GASTOS_PREVIOS_CASILLA: Decimal("1"), "unknown-casilla": Decimal("0")},
             date_context={},
         )
     with pytest.raises(RegistryValidationError, match="must be a Decimal"):
-        calculate_registry_snapshot(snapshot, inputs={_M130_GASTOS_CASILLA: 1}, date_context={})
+        calculate_registry_snapshot(snapshot, inputs={M130_GASTOS_PREVIOS_CASILLA: 1}, date_context={})

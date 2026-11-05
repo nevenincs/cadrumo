@@ -21,10 +21,10 @@ from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo_client.commands.graph import CommandSpecGraph
 from cadrumo_client.commands.shared_contracts import BindingState, DefaultKind, SchemaState
 
-from .._modelo_audit_command_specs import MODELO_ROOT_COMMAND_SPEC
-from .._modelo_core_command_specs import MODELO_CORE_COMMAND_SPECS
-from .._root_command_specs import ROOT_COMMAND_SPECS
+from ..modelo_audit_command_specs import MODELO_ROOT_COMMAND_SPEC
+from ..modelo_core_command_specs import MODELO_CORE_COMMAND_SPECS
 from ..modelo_work_command_specs import MODELO_WORK_COMMAND_SPECS
+from ..root_command_specs import ROOT_COMMAND_SPECS
 from .command_runtime_support import build_command_subtree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

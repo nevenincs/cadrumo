@@ -71,7 +71,7 @@ from ...domain.calculations.registry.ids import (
 from ...domain.calculations.registry.schema_base import LegalRefs, SourceRefs
 from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ...domain.modelos.codes import ModeloCode
-from ._decimal_wire import DecimalWireText
+from .decimal_wire import DecimalWireText
 from .modelo_aux_payloads import (
     WithholdingClaveBreakdownPayload,
 )
@@ -79,7 +79,7 @@ from .modelo_aux_payloads import (
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from ...application.modelo.export_contracts import ModeloExportResult as _AppModeloExportResult
+    from ...application.modelo.export_contracts import ModeloExportResult
     from ...application.modelo.projection_operation import (
         ProjectUnresolvedBindingProjection,
         ProjectUnresolvedCasillaProjection,
@@ -191,7 +191,7 @@ class ModeloExportPayload(OutputSchema):
     iva_wallet_decision_provenance: ModeloIvaWalletDecisionPublicProvenance | None = None
 
     @classmethod
-    def from_result(cls, result: _AppModeloExportResult) -> ModeloExportPayload:
+    def from_result(cls, result: ModeloExportResult) -> ModeloExportPayload:
         """Project the application :class:`ModeloExportResult` into this CLI :class:`ModeloExportPayload` envelope.
 
         ``output_path`` is stringified from the application ``Path``; the

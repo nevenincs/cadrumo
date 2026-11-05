@@ -33,13 +33,13 @@ from ...core.casilla_id import CasillaId
 from ...core.errors.error_codes import resolve_error_message
 from ...core.errors.hierarchy import RecordedRegisteredError
 from ...core.external_constants import OutputLanguage
-from ._modelo_cli_support import optional_decimal_option
 from .common import emit_envelope
+from .modelo_cli_support import optional_decimal_option
 from .modelo_query_results import CasillaObservationPayload, WorkPreviewMaritimeExemptionResult
 from .operation_modelo_maritime_preview import preview_modelo_maritime_exemption
 
 
-def _parse_maritime_amounts(
+def parse_maritime_amounts(
     *,
     annual_salary: str | None,
     gross_navigation_income: str | None,
@@ -162,7 +162,7 @@ def work_preview_maritime_exemption(
     observation construction stay in the registered application operation.
     """
     activate_subcommand_output_language(ctx, output_language)
-    annual_salary_decimal, gross_navigation_decimal = _parse_maritime_amounts(
+    annual_salary_decimal, gross_navigation_decimal = parse_maritime_amounts(
         annual_salary=annual_salary,
         gross_navigation_income=gross_navigation_income,
     )

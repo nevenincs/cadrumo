@@ -159,7 +159,7 @@ def _resolve_filing_window_with_operation(
 
     year_index = indexed_deadline_window_year(operation, filing_year)
     windows = tuple(item for item in year_index.dated if item[0] == modelo)
-    window = _resolve_projected_filing_window(
+    window = resolve_projected_filing_window(
         windows,
         modelo=modelo,
         filing_year=filing_year,
@@ -213,7 +213,7 @@ def _resolve_close_unknown_window(
     return next(iter(matches), None)
 
 
-def _resolve_projected_filing_window(
+def resolve_projected_filing_window(
     windows: tuple[DeadlineWindowProjection, ...],
     *,
     modelo: str,

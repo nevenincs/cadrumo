@@ -15,7 +15,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ..errors import RegistryValidationError
-from ..schema_scalars import PeriodCode, _validate_period_code
+from ..schema_scalars import PeriodCode, validate_period_code
 from ..schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -109,7 +109,7 @@ class TestPeriodCodeRejects:
         # registered refusal is the cause of the ValueError Pydantic reads.
         for raw in ("", 1):
             with pytest.raises(ValueError) as refusal:
-                _validate_period_code(raw)
+                validate_period_code(raw)
             assert isinstance(refusal.value.__cause__, RegistryValidationError)
 
 

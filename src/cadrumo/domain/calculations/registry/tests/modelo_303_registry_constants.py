@@ -5,33 +5,33 @@ from __future__ import annotations
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....tests.aeat_literal_fixtures import aeat_host
 
-_WWW1_HOST = aeat_host("www1")
-_WWW6_HOST = aeat_host("www6")
+WWW1_HOST = aeat_host("www1")
+WWW6_HOST = aeat_host("www6")
 
 
-_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = validated_casilla_id(
+M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = validated_casilla_id(
     "iva.compensacion-pendiente-periodos-anteriores"
 )
-_M303_COMPENSACION_APLICADA_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-aplicada-periodo")
-_M303_POSTERIOR_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-pendiente-periodos-posteriores")
-_M303_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
-_M303_GENERADA_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-generada-periodo")
-_M303_DISPONIBLE_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-disponible-fin-periodo")
-_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
-_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
+M303_COMPENSACION_APLICADA_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-aplicada-periodo")
+M303_POSTERIOR_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-pendiente-periodos-posteriores")
+M303_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
+M303_GENERADA_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-generada-periodo")
+M303_DISPONIBLE_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-disponible-fin-periodo")
+M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
+M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
 _M303_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA: CasillaId = validated_casilla_id("iva.prorrata-volumen-con-derecho")
 _M303_PRORRATA_VOLUMEN_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.prorrata-volumen-total")
 _M303_PRORRATA_PORCENTAJE_CASILLA: CasillaId = validated_casilla_id("iva.prorrata-porcentaje")
-_M303_BIENES_INVERSION_REGULARIZACION_CASILLA: CasillaId = validated_casilla_id("43")
-_M303_BIENES_INVERSION_REGULARIZACION_BINDING = "modelo-303-bienes-inversion-regularizacion-casilla-43"
-_M303_PRORRATA_REGULARIZACION_CASILLA: CasillaId = validated_casilla_id("44")
-_M303_PRORRATA_REGULARIZACION_BINDING = "modelo-303-prorrata-regularizacion-casilla-44"
-_M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS: tuple[CasillaId, ...] = (
+M303_BIENES_INVERSION_REGULARIZACION_CASILLA: CasillaId = validated_casilla_id("43")
+M303_BIENES_INVERSION_REGULARIZACION_BINDING = "modelo-303-bienes-inversion-regularizacion-casilla-43"
+M303_PRORRATA_REGULARIZACION_CASILLA: CasillaId = validated_casilla_id("44")
+M303_PRORRATA_REGULARIZACION_BINDING = "modelo-303-prorrata-regularizacion-casilla-44"
+M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS: tuple[CasillaId, ...] = (
     _M303_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA,
     _M303_PRORRATA_VOLUMEN_TOTAL_CASILLA,
     _M303_PRORRATA_PORCENTAJE_CASILLA,
 )
-_M303_PRORRATA_REGULARIZACION_SOURCE_PERIOD_SELECTION = "filer_liquidation_cadence"
+M303_PRORRATA_REGULARIZACION_SOURCE_PERIOD_SELECTION = "filer_liquidation_cadence"
 M303_EXPLICIT_RECORD_DESIGN_REVISIONS = (
     "2023",
     "2024-hasta-08-y-2t",

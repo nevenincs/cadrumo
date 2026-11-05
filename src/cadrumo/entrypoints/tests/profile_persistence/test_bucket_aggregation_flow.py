@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -47,8 +47,7 @@ from ....domain.modelos.calculation_revision_m303_handoff import FilingInstanceE
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.user_profile.values import ProfileSetupState
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import ProfileSetupState, create_user_profile_record
 from ...adapter_composition_work_ports import build_calculation_action_ports
 from .general_iva_profile_facts_support import general_iva_profile_facts
 
@@ -208,7 +207,7 @@ def _seed_303_work_unit(
 
 def _store_profile(objects: SecureObjectRepository) -> None:
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=general_iva_profile_facts(
@@ -219,7 +218,7 @@ def _store_profile(objects: SecureObjectRepository) -> None:
             ),
             created_at=_T0,
             updated_at=_T0,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 
@@ -234,7 +233,7 @@ def _store_first_period_profile(objects: SecureObjectRepository) -> None:
     scenario: the first Modelo 303 with an empty ledger.
     """
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=general_iva_profile_facts(
@@ -245,7 +244,7 @@ def _store_first_period_profile(objects: SecureObjectRepository) -> None:
             ),
             created_at=_T0,
             updated_at=_T0,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 

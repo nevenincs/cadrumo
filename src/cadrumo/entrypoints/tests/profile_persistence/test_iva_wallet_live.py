@@ -19,12 +19,12 @@ from ....adapters.persistence.profile.tests.profile_registration import live_cla
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.profile.tests.wallet_history import load_decision_history
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from ....application.live.iva_remote_state import capture_iva_compensation_wallet
-from ....application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ....application.modelo.iva_wallet_gate import (
-    apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding,
+    ModeloIvaWalletReconciliationBlocked,
+    apply_iva_compensation_decision_binding,
 )
 from ....application.user_profile.profile_record_repository import ProfileRecordRepository
 from ....application.user_profile.projections import record_to_path_values
@@ -105,7 +105,7 @@ def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> 
     )
     if decision.blocked:
         with pytest.raises(ModeloIvaWalletReconciliationBlocked):
-            _apply_iva_compensation_decision_binding(
+            apply_iva_compensation_decision_binding(
                 "303",
                 target_year,
                 target_filing_period,
@@ -120,7 +120,7 @@ def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> 
             )
         return
 
-    _apply_iva_compensation_decision_binding(
+    apply_iva_compensation_decision_binding(
         "303",
         target_year,
         target_filing_period,
@@ -138,7 +138,7 @@ def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> 
 
 
 def _active_profile_tax_id(bucket_id: str) -> str | None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     record = ProfileRecordRepository.for_current_session(
         bucket_id, profile_decode_context=_profile_decode_context_for_test
     ).load(bucket_id)

@@ -19,7 +19,7 @@ class CensalReviewResult:
 
 
 @dataclass(slots=True)
-class _CensalReceiptState:
+class CensalReceiptState:
     """Latest admitted terminal facts retained across submitted-operation failures."""
 
     condition: OperationTerminalCondition | None = None

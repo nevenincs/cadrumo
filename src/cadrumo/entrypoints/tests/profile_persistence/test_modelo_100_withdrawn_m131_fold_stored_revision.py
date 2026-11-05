@@ -52,11 +52,11 @@ from ....domain.modelos.calculation_revision import (
 )
 from .file_flow_test_support import calculation_ports_for_test
 from .test_modelo_100_m131_pagos_fold_in_live import (
-    _BUCKET_ID,
-    _calculate_m100_annual,
-    _non_relation_zero_bindings,
-    _seed_m131_quarters,
+    BUCKET_ID,
     bucket_id,
+    calculate_m100_annual,
+    non_relation_zero_bindings,
+    seed_m131_quarters,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -95,8 +95,8 @@ def _persist_pre_withdrawal_revisions(
 
     The quarterly Modelo 131 filings the withdrawn fold summed stay on file throughout.
     """
-    _seed_m131_quarters(objects)
-    current = _calculate_m100_annual(objects, estimation_regime="objetiva", operation=operation).revision
+    seed_m131_quarters(objects)
+    current = calculate_m100_annual(objects, estimation_regime="objetiva", operation=operation).revision
     assert isinstance(current, CalculationRevision)
     folded = _stored_before_withdrawal(current, binding_overrides={_WITHDRAWN_FOLD: _FOLDED_ESTIMATE})
     overridden = _stored_before_withdrawal(current, relation_overrides={_RETIRED_RELATION_ID: _FOLDED_ESTIMATE})
@@ -116,12 +116,12 @@ def _persist_pre_withdrawal_revisions(
 
 def _calculation_ports(objects: SecureObjectRepository) -> AbstractContextManager[CalculationActionPorts]:
     return calculation_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         work_unit_repository=WorkUnitCatalogueRepository(objects=objects),
         calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
         bucket_event_repository=BucketEventHistoryRepository(objects=objects),
-        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
+        transaction_repository=TransactionCatalogueRepository(bucket_id=BUCKET_ID, objects=objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id=BUCKET_ID, objects=objects),
     )
 
 
@@ -166,7 +166,7 @@ def test_recalculation_neither_replays_nor_refolds_the_withdrawn_figure(
     with _calculation_ports(secure_objects) as ports:
         recalculated = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit_id,
-            binding_values=_non_relation_zero_bindings(),
+            binding_values=non_relation_zero_bindings(),
             ports=ports,
         ).revision
 

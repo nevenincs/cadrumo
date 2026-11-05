@@ -41,8 +41,8 @@ from .....core.config import Settings
 from ...main import cli_app
 from ...tests.cli_runner import invoke_cached_cli
 from .. import censo_commands
-from .._censo_review_cli import confirm_censal_review
 from ..censo_results import CensoFactPayload, CensoPullDivergencePayload, CensoPullResult
+from ..censo_review_cli import confirm_censal_review
 from ..operation_censal_contracts import CensalReviewResult
 
 _live_app = cli_app()
@@ -217,7 +217,7 @@ def test_a_clear_and_a_value_conflict_raise_separate_notices() -> None:
     cleared = CensoPullDivergencePayload(path="contact.postcode", profile_value=None, aeat_value="28001")
     contested = CensoPullDivergencePayload(path="identity.tax_id", profile_value="00000000T", aeat_value="99999999R")
 
-    both = censo_commands._pull_notices(applied=False, adopted=(), divergences=(cleared, contested))
+    both = censo_commands.pull_notices(applied=False, adopted=(), divergences=(cleared, contested))
     codes = {notice.code for notice in both}
     assert "config.profile.censo.pull.cleared" in codes
     assert "config.profile.censo.pull.divergences" in codes
@@ -234,7 +234,7 @@ def test_a_clear_and_a_value_conflict_raise_separate_notices() -> None:
     }
 
     # And a run with only one kind raises only that one.
-    only_cleared = {n.code for n in censo_commands._pull_notices(applied=False, adopted=(), divergences=(cleared,))}
+    only_cleared = {n.code for n in censo_commands.pull_notices(applied=False, adopted=(), divergences=(cleared,))}
     assert "config.profile.censo.pull.divergences" not in only_cleared
 
 
@@ -262,13 +262,13 @@ def test_a_divergence_whose_values_are_masked_says_so() -> None:
     masked = CensoPullDivergencePayload(path="identity.tax_id", profile_value=tax_id, aeat_value="99999999R")
     plain = CensoPullDivergencePayload(path="contact.postcode", profile_value=postcode, aeat_value="08001")
 
-    assert censo_commands._values_are_withheld(masked)
-    assert not censo_commands._values_are_withheld(plain)
+    assert censo_commands.values_are_withheld(masked)
+    assert not censo_commands.values_are_withheld(plain)
 
-    codes = {n.code for n in censo_commands._pull_notices(applied=False, adopted=(), divergences=(masked,))}
+    codes = {n.code for n in censo_commands.pull_notices(applied=False, adopted=(), divergences=(masked,))}
     assert "config.profile.censo.pull.values_withheld" in codes
     # A readable disagreement must not claim its values were withheld.
-    plain_codes = {n.code for n in censo_commands._pull_notices(applied=False, adopted=(), divergences=(plain,))}
+    plain_codes = {n.code for n in censo_commands.pull_notices(applied=False, adopted=(), divergences=(plain,))}
     assert "config.profile.censo.pull.values_withheld" not in plain_codes
 
 
@@ -290,7 +290,7 @@ def test_every_notice_reaches_the_plain_text_output() -> None:
         profile_value="CALLE MAYOR 1",
         aeat_value="CALLE REAL 2",
     )
-    notices = censo_commands._pull_notices(applied=False, adopted=(), divergences=(cleared, contested))
+    notices = censo_commands.pull_notices(applied=False, adopted=(), divergences=(cleared, contested))
     assert {n.code for n in notices} == {
         "config.profile.censo.pull.divergences",
         "config.profile.censo.pull.cleared",
@@ -426,7 +426,7 @@ def test_reviewed_apply_outcomes_render_the_registered_projection() -> None:
         ),
     )
 
-    adopted, unchanged, divergences, source_url = censo_commands._reviewed_pull_outcomes(
+    adopted, unchanged, divergences, source_url = censo_commands.reviewed_pull_outcomes(
         reviewed=CensalReviewResult(projection=projection, applied=True),
         effective={
             "contact.postcode": EffectiveValue(value=" 28013 "),

@@ -24,16 +24,10 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.adapters.persistence.profile.tests.filing_report_support import seed_filing_gate_report
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.modelo_export_support import (
-    export_m303_filing_evidence as _general_m303_filing_evidence,
-)
-from cadrumo.adapters.persistence.profile.tests.modelo_export_support import (
-    export_taxpayer_profile as _profile,
-)
-from cadrumo.adapters.persistence.profile.tests.modelo_export_support import (
-    seed_profile as _seed_profile,
-)
-from cadrumo.adapters.persistence.profile.tests.modelo_export_support import (
-    seed_revision as _seed_revision,
+    export_m303_filing_evidence,
+    export_taxpayer_profile,
+    seed_profile,
+    seed_revision,
 )
 from cadrumo.adapters.persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine, get_engine
@@ -49,9 +43,9 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.entrypoints.adapter_composition_work_ports import build_filing_action_ports
 from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import (
-    _blocked_wallet_decision,
-    _filed_history_only_wallet_decision,
-    _seed_modelo_303_1t_clean_state,
+    blocked_wallet_decision,
+    filed_history_only_wallet_decision,
+    seed_modelo_303_1t_clean_state,
 )
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -72,19 +66,19 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_blocked(
     isolated_backend: None, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     taxpayer_nif = "12345678Z"
-    bucket_id = _seed_profile(tax_id=taxpayer_nif)
-    _, calc_rev_id = _seed_revision(
+    bucket_id = seed_profile(tax_id=taxpayer_nif)
+    _, calc_rev_id = seed_revision(
         bucket_id=bucket_id,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         modelo="303",
         filing_year=2026,
         period="2T",
-        filing_instance_evidence=_general_m303_filing_evidence(
+        filing_instance_evidence=export_m303_filing_evidence(
             Period.from_year_and_code(2026, "2T"), operation=operation
         ),
     )
-    _seed_modelo_303_1t_clean_state(bucket_id=bucket_id, taxpayer_tax_id=taxpayer_nif, operation=operation)
-    IvaWalletDecisionRepository().save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
+    seed_modelo_303_1t_clean_state(bucket_id=bucket_id, taxpayer_tax_id=taxpayer_nif, operation=operation)
+    IvaWalletDecisionRepository().save_decision(blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
 
     with (
         pytest.raises(ModeloIvaWalletReconciliationBlocked, match="stale_wallet_local_recurrence_requires_override"),
@@ -96,7 +90,7 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_blocked(
                 output_path=tmp_path / "out.txt",
                 actor="operator",
             ),
-            workflow_profile=_profile(),
+            workflow_profile=export_taxpayer_profile(),
             export_ports=modelo_export_ports_for_test(bucket_id=bucket_id, taxpayer_tax_id=taxpayer_nif),
             operation=operation,
         )
@@ -107,19 +101,19 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_filed_histo
     isolated_backend: None, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     taxpayer_nif = "87654321X"
-    bucket_id = _seed_profile(tax_id=taxpayer_nif)
-    _, calc_rev_id = _seed_revision(
+    bucket_id = seed_profile(tax_id=taxpayer_nif)
+    _, calc_rev_id = seed_revision(
         bucket_id=bucket_id,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         modelo="303",
         filing_year=2026,
         period="2T",
-        filing_instance_evidence=_general_m303_filing_evidence(
+        filing_instance_evidence=export_m303_filing_evidence(
             Period.from_year_and_code(2026, "2T"), operation=operation
         ),
     )
-    _seed_modelo_303_1t_clean_state(bucket_id=bucket_id, taxpayer_tax_id=taxpayer_nif, operation=operation)
-    IvaWalletDecisionRepository().save_decision(_filed_history_only_wallet_decision(taxpayer_nif=taxpayer_nif))
+    seed_modelo_303_1t_clean_state(bucket_id=bucket_id, taxpayer_tax_id=taxpayer_nif, operation=operation)
+    IvaWalletDecisionRepository().save_decision(filed_history_only_wallet_decision(taxpayer_nif=taxpayer_nif))
 
     with (
         pytest.raises(ModeloIvaWalletReconciliationBlocked, match="filed_history_requires_override"),
@@ -131,7 +125,7 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_filed_histo
                 output_path=tmp_path / "out.txt",
                 actor="operator",
             ),
-            workflow_profile=_profile(),
+            workflow_profile=export_taxpayer_profile(),
             export_ports=modelo_export_ports_for_test(bucket_id=bucket_id, taxpayer_tax_id=taxpayer_nif),
             operation=operation,
         )
@@ -142,20 +136,20 @@ def test_export_modelo_303_uses_injected_wallet_decision_repository(
     isolated_backend: None, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     taxpayer_nif = "12345678Z"
-    bucket_id = _seed_profile(tax_id=taxpayer_nif)
-    _, calc_rev_id = _seed_revision(
+    bucket_id = seed_profile(tax_id=taxpayer_nif)
+    _, calc_rev_id = seed_revision(
         bucket_id=bucket_id,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         modelo="303",
         filing_year=2026,
         period="2T",
-        filing_instance_evidence=_general_m303_filing_evidence(
+        filing_instance_evidence=export_m303_filing_evidence(
             Period.from_year_and_code(2026, "2T"), operation=operation
         ),
     )
-    _seed_modelo_303_1t_clean_state(bucket_id=bucket_id, taxpayer_tax_id=taxpayer_nif, operation=operation)
+    seed_modelo_303_1t_clean_state(bucket_id=bucket_id, taxpayer_tax_id=taxpayer_nif, operation=operation)
     decision_repo, decision_settings = _wallet_decision_repository_at(tmp_path / "wallet-decisions-export.db")
-    decision_repo.save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
+    decision_repo.save_decision(blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
     assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, Period.from_year_and_code(2026, "2T")) is None
 
     try:
@@ -171,7 +165,7 @@ def test_export_modelo_303_uses_injected_wallet_decision_repository(
                     output_path=tmp_path / "out.txt",
                     actor="operator",
                 ),
-                workflow_profile=_profile(),
+                workflow_profile=export_taxpayer_profile(),
                 export_ports=modelo_export_ports_for_test(
                     bucket_id=bucket_id,
                     taxpayer_tax_id=taxpayer_nif,
@@ -188,18 +182,18 @@ def test_verify_modelo_303_surfaces_filed_history_only_wallet_decision_as_blocki
     isolated_backend: None, *, operation: PinnedAuthorityOperation
 ) -> None:
     taxpayer_nif = "87654321X"
-    bucket_id = _seed_profile(tax_id=taxpayer_nif)
-    _, calc_rev_id = _seed_revision(
+    bucket_id = seed_profile(tax_id=taxpayer_nif)
+    _, calc_rev_id = seed_revision(
         bucket_id=bucket_id,
         state=CalculationRevisionState.BORRADOR,
         modelo="303",
         filing_year=2026,
         period="2T",
-        filing_instance_evidence=_general_m303_filing_evidence(
+        filing_instance_evidence=export_m303_filing_evidence(
             Period.from_year_and_code(2026, "2T"), operation=operation
         ),
     )
-    IvaWalletDecisionRepository().save_decision(_filed_history_only_wallet_decision(taxpayer_nif=taxpayer_nif))
+    IvaWalletDecisionRepository().save_decision(filed_history_only_wallet_decision(taxpayer_nif=taxpayer_nif))
 
     with bundled_indexed_authority().operation() as operation:
         report = verify_modelo_revision_with_preconditions(
@@ -207,7 +201,7 @@ def test_verify_modelo_303_surfaces_filed_history_only_wallet_decision_as_blocki
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
             actor="operator",
-            workflow_profile=_profile(),
+            workflow_profile=export_taxpayer_profile(),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
         ).report
@@ -227,19 +221,19 @@ def test_verify_modelo_303_uses_injected_wallet_decision_repository(
     isolated_backend: None, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     taxpayer_nif = "12345678Z"
-    bucket_id = _seed_profile(tax_id=taxpayer_nif)
-    _, calc_rev_id = _seed_revision(
+    bucket_id = seed_profile(tax_id=taxpayer_nif)
+    _, calc_rev_id = seed_revision(
         bucket_id=bucket_id,
         state=CalculationRevisionState.BORRADOR,
         modelo="303",
         filing_year=2026,
         period="2T",
-        filing_instance_evidence=_general_m303_filing_evidence(
+        filing_instance_evidence=export_m303_filing_evidence(
             Period.from_year_and_code(2026, "2T"), operation=operation
         ),
     )
     decision_repo, decision_settings = _wallet_decision_repository_at(tmp_path / "wallet-decisions.db")
-    decision_repo.save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
+    decision_repo.save_decision(blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
     assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, Period.from_year_and_code(2026, "2T")) is None
 
     try:
@@ -252,7 +246,7 @@ def test_verify_modelo_303_uses_injected_wallet_decision_repository(
                     iva_compensation_decision=decision_repo,
                 ),
                 actor="operator",
-                workflow_profile=_profile(),
+                workflow_profile=export_taxpayer_profile(),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
             ).report
@@ -274,19 +268,19 @@ def test_file_modelo_303_uses_injected_wallet_decision_repository_before_mutatio
     isolated_backend: None, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     taxpayer_nif = "12345678Z"
-    bucket_id = _seed_profile(tax_id=taxpayer_nif)
-    work_unit_id, calc_rev_id = _seed_revision(
+    bucket_id = seed_profile(tax_id=taxpayer_nif)
+    work_unit_id, calc_rev_id = seed_revision(
         bucket_id=bucket_id,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         modelo="303",
         filing_year=2026,
         period="2T",
-        filing_instance_evidence=_general_m303_filing_evidence(
+        filing_instance_evidence=export_m303_filing_evidence(
             Period.from_year_and_code(2026, "2T"), operation=operation
         ),
     )
     decision_repo, decision_settings = _wallet_decision_repository_at(tmp_path / "wallet-decisions-file.db")
-    decision_repo.save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
+    decision_repo.save_decision(blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
     assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, Period.from_year_and_code(2026, "2T")) is None
     revision_for_approval = CalculationRevisionCatalogueRepository().load().get(calc_rev_id)
     assert revision_for_approval is not None
@@ -302,7 +296,7 @@ def test_file_modelo_303_uses_injected_wallet_decision_repository_before_mutatio
                 calc_rev_id,
                 approved_verification_report_id=report_id,
                 actor="operator",
-                workflow_profile=_profile(),
+                workflow_profile=export_taxpayer_profile(),
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 ports=replace(
                     build_filing_action_ports(bucket_id=bucket_id, operation=operation),

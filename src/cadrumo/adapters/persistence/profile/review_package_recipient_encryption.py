@@ -33,7 +33,7 @@ from ....application.modelo.review_package_recipient_encryption import (
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.identity.bucket import canonical_bucket_id
 from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
-from ....core.time.clock import now as _utc_now
+from ....core.time.clock import now as clock_utc_now
 from ....core.time.utc import UtcInstant
 from ..storage.crypto.aead import EncryptedBlob, decrypt_record, derive_key, encrypt_record
 from ..storage.errors import (
@@ -45,7 +45,7 @@ from ..storage.errors import (
 )
 from ..storage.runtime_repository import secure_object_repository_for_bucket
 from ..storage.secure_object_namespaces import (
-    MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _NAMESPACE,
+    MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE,
 )
 from ..storage.sql.secure_objects import SecureObjectRepository
 
@@ -93,7 +93,7 @@ def _associated_data(
     return _ASSOCIATED_DATA_PREFIX + b":" + json.dumps(fields, sort_keys=True, separators=(",", ":")).encode("ascii")
 
 
-def _recipient_encryption_key_object_key(bucket_id: str) -> str:
+def recipient_encryption_key_object_key(bucket_id: str) -> str:
     """Return the namespace-owned natural key for one bucket's keypair."""
     return f"review-package-recipient-encryption-key:{canonical_bucket_id(bucket_id)}"
 
@@ -134,15 +134,18 @@ class RecipientEncryptionAdapter:
         repository = self._keypair_repository()
         try:
             record = repository.load(
-                _NAMESPACE.namespace,
+                MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE.namespace,
                 object_key,
-                expected_class=_NAMESPACE.sensitivity,
-                max_supported_version=_NAMESPACE.schema_version,
+                expected_class=MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE.sensitivity,
+                max_supported_version=MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE.schema_version,
             )
         except (OSError, StorageError) as exc:
             raise RecipientEncryptionError(
                 "unable to load recipient encryption keypair",
-                context={"namespace": _NAMESPACE.namespace, "object_key": object_key},
+                context={
+                    "namespace": MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE.namespace,
+                    "object_key": object_key,
+                },
                 translated_message="application.modelo.errors.recipient_registry_load_failed",
             ) from exc
         if record is None:
@@ -152,13 +155,19 @@ class RecipientEncryptionAdapter:
         except (TypeError, ValueError, ValidationError) as exc:
             raise RecipientEncryptionError(
                 "stored recipient encryption keypair is not well formed",
-                context={"namespace": _NAMESPACE.namespace, "object_key": object_key},
+                context={
+                    "namespace": MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE.namespace,
+                    "object_key": object_key,
+                },
                 translated_message="application.modelo.errors.recipient_registry_load_failed",
             ) from exc
         if str(keypair.bucket_id) != bucket_id:
             raise RecipientEncryptionError(
                 "stored recipient encryption keypair does not belong to the bucket it was read from",
-                context={"namespace": _NAMESPACE.namespace, "object_key": object_key},
+                context={
+                    "namespace": MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE.namespace,
+                    "object_key": object_key,
+                },
                 translated_message="application.modelo.errors.recipient_registry_load_failed",
             )
         return keypair
@@ -171,7 +180,7 @@ class RecipientEncryptionAdapter:
     ) -> RecipientEncryptionKeypair:
         """Load or atomically mint one bucket-scoped X25519 keypair."""
         normalized_bucket_id = self._bound_bucket_id(bucket_id)
-        object_key = _recipient_encryption_key_object_key(normalized_bucket_id)
+        object_key = recipient_encryption_key_object_key(normalized_bucket_id)
         existing = self._load_keypair(bucket_id=normalized_bucket_id, object_key=object_key)
         if existing is not None:
             return existing
@@ -181,16 +190,16 @@ class RecipientEncryptionAdapter:
             bucket_id=normalized_bucket_id,
             private_key_hex=private_key.private_bytes_raw().hex(),
             public_key_hex=private_key.public_key().public_bytes_raw().hex(),
-            created_at=generated_at or _utc_now(),
+            created_at=generated_at or clock_utc_now(),
         )
         payload = keypair.model_dump_json().encode(UTF_8_ENCODING)
 
         def save() -> None:
             self._keypair_repository().save(
-                namespace=_NAMESPACE.namespace,
+                namespace=MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE.namespace,
                 object_key=object_key,
-                classification=_NAMESPACE.sensitivity,
-                schema_version=_NAMESPACE.schema_version,
+                classification=MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE.sensitivity,
+                schema_version=MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE.schema_version,
                 written_at=keypair.created_at,
                 payload=payload,
                 write_provenance="adapters.persistence.profile.review_package_recipient_encryption",
@@ -207,14 +216,20 @@ class RecipientEncryptionAdapter:
             if winner is None:
                 raise RecipientEncryptionError(
                     "recipient encryption keypair creation conflicted but no winner was readable",
-                    context={"namespace": _NAMESPACE.namespace, "object_key": object_key},
+                    context={
+                        "namespace": MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE.namespace,
+                        "object_key": object_key,
+                    },
                     translated_message="application.modelo.errors.recipient_registry_load_failed",
                 ) from exc
             return winner
         except (OSError, StorageError) as exc:
             raise RecipientEncryptionError(
                 "unable to persist recipient encryption keypair",
-                context={"namespace": _NAMESPACE.namespace, "object_key": object_key},
+                context={
+                    "namespace": MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE.namespace,
+                    "object_key": object_key,
+                },
                 translated_message="application.modelo.errors.recipient_registry_load_failed",
             ) from exc
         return keypair
@@ -243,7 +258,7 @@ class RecipientEncryptionAdapter:
                 translated_message="application.modelo.errors.recipient_encryption_invalid_key",
             )
 
-        envelope_issued_at = _UTC_INSTANT.validate_python(issued_at or _utc_now())
+        envelope_issued_at = _UTC_INSTANT.validate_python(issued_at or clock_utc_now())
         envelope_valid_until = envelope_issued_at + valid_for if valid_for is not None else None
         envelope_nonce_hex = secrets.token_hex(_REPLAY_NONCE_BYTES)
 
@@ -347,7 +362,7 @@ class RecipientEncryptionAdapter:
                 translated_message="application.modelo.errors.recipient_decryption_failed",
             ) from exc
 
-        evaluated_at = now or _utc_now()
+        evaluated_at = now or clock_utc_now()
         if envelope.valid_until is not None and evaluated_at >= envelope.valid_until:
             raise RecipientPackageExpiredError(
                 "recipient-encrypted package has expired; the recipient must request a fresh package",

@@ -51,7 +51,7 @@ class MarkerScreen(Screen[None]):
     """Concrete test-only screen supplied through the factory seam."""
 
 
-def _admissions(
+def navigation_admissions(
     *,
     state: WorkbenchDestinationAdmissionState = WorkbenchDestinationAdmissionState.AVAILABLE,
 ) -> dict[str, TuiDestinationAdmissionV1]:
@@ -65,23 +65,23 @@ def _admissions(
     }
 
 
-def _factories() -> dict[str, TuiScreenFactoryV1]:
+def navigation_factories() -> dict[str, TuiScreenFactoryV1]:
     return {descriptor.destination: lambda _context: MarkerScreen() for descriptor in TUI_DESTINATION_CATALOGUE}
 
 
-def _catalogue(
+def navigation_catalogue(
     *,
     admissions: Mapping[str, TuiDestinationAdmissionV1] | None = None,
     action_candidates: tuple[TuiActionCandidateV1, ...] = (),
 ) -> TuiDestinationCatalogueV1:
     return build_destination_catalogue(
-        admissions=_admissions() if admissions is None else admissions,
-        factories=_factories(),
+        admissions=navigation_admissions() if admissions is None else admissions,
+        factories=navigation_factories(),
         action_candidates=action_candidates,
     )
 
 
-def _search_result(
+def search_result(
     *,
     admission: WorkbenchDestinationAdmission,
     action_candidate_id: NamespacedId | None = None,
@@ -140,27 +140,27 @@ def test_each_explicit_admission_state_has_truthful_reason_contract(
 
 
 def test_catalogue_requires_all_admissions_and_injected_factory_for_available_routes() -> None:
-    missing = _admissions()
+    missing = navigation_admissions()
     del missing["workbench.profile"]
     with pytest.raises(NavigationContractError, match="every destination"):
-        build_destination_catalogue(admissions=missing, factories=_factories())
+        build_destination_catalogue(admissions=missing, factories=navigation_factories())
 
     with pytest.raises(DestinationFactoryError, match="injected screen factory"):
-        build_destination_catalogue(admissions=_admissions())
+        build_destination_catalogue(admissions=navigation_admissions())
 
 
 def test_non_available_route_has_no_factory_and_cannot_be_opened() -> None:
-    admissions = _admissions(state=WorkbenchDestinationAdmissionState.LOCKED)
+    admissions = navigation_admissions(state=WorkbenchDestinationAdmissionState.LOCKED)
     with pytest.raises(DestinationFactoryError, match="non-available"):
-        _catalogue(admissions=admissions)
+        navigation_catalogue(admissions=admissions)
 
-    route_admissions = _admissions()
+    route_admissions = navigation_admissions()
     route_admissions["workbench.profile"] = TuiDestinationAdmissionV1(
         destination="workbench.profile",
         state=WorkbenchDestinationAdmissionState.LOCKED,
         reason_code="navigation.reason",
     )
-    factories = _factories()
+    factories = navigation_factories()
     del factories["workbench.profile"]
     catalogue = build_destination_catalogue(admissions=route_admissions, factories=factories)
     focus = TuiFocusIdentityV1(destination="workbench.profile", semantic_key="navigation.profile")
@@ -175,9 +175,9 @@ def test_factory_protocol_receives_semantic_context_and_returns_screen() -> None
         seen.append(context)
         return MarkerScreen()
 
-    factories = _factories()
+    factories = navigation_factories()
     factories["workbench.home"] = factory
-    catalogue = build_destination_catalogue(admissions=_admissions(), factories=factories)
+    catalogue = build_destination_catalogue(admissions=navigation_admissions(), factories=factories)
     focus = TuiFocusIdentityV1(destination="workbench.home", semantic_key="navigation.home")
     screen = catalogue.create_screen(TuiNavigationTargetV1(destination="workbench.home", focus=focus))
     assert isinstance(screen, MarkerScreen)
@@ -191,9 +191,9 @@ def test_direct_target_action_candidate_is_resolved_before_factory_invocation() 
         seen.append(context)
         return MarkerScreen()
 
-    factories = _factories()
+    factories = navigation_factories()
     factories["workbench.home"] = factory
-    catalogue = build_destination_catalogue(admissions=_admissions(), factories=factories)
+    catalogue = build_destination_catalogue(admissions=navigation_admissions(), factories=factories)
     focus = TuiFocusIdentityV1(destination="workbench.home", semantic_key="navigation.home")
     target = TuiNavigationTargetV1(
         destination="workbench.home",
@@ -206,7 +206,7 @@ def test_direct_target_action_candidate_is_resolved_before_factory_invocation() 
 
 
 def test_public_route_and_catalogue_construction_cannot_spoof_descriptor_or_order() -> None:
-    admissions = _admissions()
+    admissions = navigation_admissions()
     spoofed = TuiDestinationDescriptorV1(
         destination="workbench.home",
         label_key="tui.destination.profile",
@@ -219,7 +219,7 @@ def test_public_route_and_catalogue_construction_cannot_spoof_descriptor_or_orde
             factory=cast(TuiScreenFactoryV1, lambda _context: MarkerScreen()),
         )
 
-    routes = _catalogue().routes
+    routes = navigation_catalogue().routes
     with pytest.raises(NavigationContractError, match="canonical catalogue order"):
         TuiDestinationCatalogueV1((*routes[1:], routes[0]))
 
@@ -228,16 +228,16 @@ def test_factory_signature_is_validated_and_invocation_type_errors_are_typed() -
     def wrong_arity() -> Screen[None]:
         return MarkerScreen()
 
-    factories = _factories()
+    factories = navigation_factories()
     factories["workbench.home"] = cast(TuiScreenFactoryV1, wrong_arity)
     with pytest.raises(DestinationFactoryError, match="one positional context"):
-        build_destination_catalogue(admissions=_admissions(), factories=factories)
+        build_destination_catalogue(admissions=navigation_admissions(), factories=factories)
 
     def raises_type_error(_context: TuiScreenContextV1) -> Screen[None]:
         raise TypeError("factory implementation detail")
 
     factories["workbench.home"] = raises_type_error
-    catalogue = build_destination_catalogue(admissions=_admissions(), factories=factories)
+    catalogue = build_destination_catalogue(admissions=navigation_admissions(), factories=factories)
     focus = TuiFocusIdentityV1(destination="workbench.home", semantic_key="navigation.home")
     with pytest.raises(DestinationFactoryError, match="invocation failed"):
         catalogue.create_screen(TuiNavigationTargetV1(destination="workbench.home", focus=focus))
@@ -257,8 +257,8 @@ def test_focus_identity_is_semantic_and_target_rejects_cross_destination_focus()
 
 def test_search_result_resolves_to_semantic_focus_and_admitted_action() -> None:
     action = TuiActionCandidateV1(action_candidate_id="operator.declaration.open", destination="workbench.declarations")
-    catalogue = _catalogue(action_candidates=(action,))
-    result = _search_result(
+    catalogue = navigation_catalogue(action_candidates=(action,))
+    result = search_result(
         admission=WorkbenchDestinationAdmission(
             destination="workbench.declarations",
             state=WorkbenchDestinationAdmissionState.AVAILABLE,
@@ -273,8 +273,8 @@ def test_search_result_resolves_to_semantic_focus_and_admitted_action() -> None:
 
 
 def test_search_result_fails_closed_for_unknown_action_or_admission_drift() -> None:
-    catalogue = _catalogue()
-    result = _search_result(
+    catalogue = navigation_catalogue()
+    result = search_result(
         admission=WorkbenchDestinationAdmission(
             destination="workbench.declarations",
             state=WorkbenchDestinationAdmissionState.AVAILABLE,
@@ -284,18 +284,18 @@ def test_search_result_fails_closed_for_unknown_action_or_admission_drift() -> N
     with pytest.raises(UnresolvedActionCandidateError):
         catalogue.target_for_search_result(result)
 
-    locked = _admissions()
+    locked = navigation_admissions()
     locked["workbench.declarations"] = TuiDestinationAdmissionV1(
         destination="workbench.declarations",
         state=WorkbenchDestinationAdmissionState.LOCKED,
         reason_code="navigation.reason",
     )
-    factories = _factories()
+    factories = navigation_factories()
     del factories["workbench.declarations"]
     unavailable_catalogue = build_destination_catalogue(admissions=locked, factories=factories)
     with pytest.raises(DestinationUnavailableError):
         unavailable_catalogue.target_for_search_result(
-            _search_result(
+            search_result(
                 admission=WorkbenchDestinationAdmission(
                     destination="workbench.declarations",
                     state=WorkbenchDestinationAdmissionState.LOCKED,
@@ -307,7 +307,7 @@ def test_search_result_fails_closed_for_unknown_action_or_admission_drift() -> N
 
 def test_unknown_destination_and_raw_dependency_imports_fail_closed() -> None:
     with pytest.raises(UnknownDestinationError):
-        _catalogue().resolve("workbench.unknown")
+        navigation_catalogue().resolve("workbench.unknown")
 
     source = ast.parse((Path(__file__).parent.parent / "navigation.py").read_text())
     imported = {

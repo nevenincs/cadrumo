@@ -30,12 +30,12 @@ from ....application.user_profile.censal_operation import (
     CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING,
 )
 from ....core.operations import OperationLifecycle
-from .operation_censal_exchange import _exchange
+from .operation_censal_exchange import exchange
 
 _OBSERVATION_PAGE_LIMIT = 1
 
 
-def _observe(
+def observe(
     client: FrontendClient,
     *,
     profile_id: UUID,
@@ -53,7 +53,7 @@ def _observe(
             page_limit=_OBSERVATION_PAGE_LIMIT,
         ),
     )
-    reply = _exchange(client, session_id, request, deadline=deadline)
+    reply = exchange(client, session_id, request, deadline=deadline)
     if not isinstance(reply, OperationObserved):
         raise RefusalError(RefusalCode.INVALID_FRAME)
     if isinstance(reply.observation, OperationObservationRefusalV1):
@@ -63,7 +63,7 @@ def _observe(
     return reply.observation
 
 
-def _validate_observation(
+def validate_observation(
     observed: OperationObservationSuccessV1,
     *,
     operation_id: OperationId,
@@ -96,7 +96,7 @@ def _validate_review(
         raise RefusalError(RefusalCode.INVALID_FRAME)
 
 
-def _review_interaction(
+def review_interaction(
     client: FrontendClient,
     *,
     profile_id: UUID,
@@ -111,14 +111,14 @@ def _review_interaction(
             remaining_budget(deadline)
             if changes.armed:
                 changes.arm()
-            observed = _observe(
+            observed = observe(
                 client,
                 profile_id=profile_id,
                 session_id=session_id,
                 operation_id=operation_id,
                 deadline=deadline,
             )
-            _validate_observation(
+            validate_observation(
                 observed,
                 operation_id=operation_id,
                 subject_ref=subject_ref,

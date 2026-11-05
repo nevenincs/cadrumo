@@ -8,7 +8,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
@@ -26,7 +26,7 @@ from .registered_executor_payload_ledger_support import LEDGER_BUILDERS
 from .registered_executor_payload_live_support import LIVE_BUILDERS
 from .registered_executor_payload_modelo_support import MODELO_BUILDERS
 from .registered_executor_payload_profile_support import PROFILE_BUILDERS
-from .registered_executor_seeding_support import _prorrata_case
+from .registered_executor_seeding_support import registered_executor_seeding_prorrata_case
 
 
 def _owned_once(*tables: dict[str, PayloadBuilder]) -> dict[str, PayloadBuilder]:
@@ -51,7 +51,9 @@ def _family_payload(ctx: PayloadContext) -> PayloadResult | None:
         )
         return ctx.profile_subject, evidence_case.request, None
     if definition_id.startswith("ledger.prorrata."):
-        prorrata_case = _prorrata_case(definition_id, profile_id=ctx.profile_id, operation=ctx.operation)
+        prorrata_case = registered_executor_seeding_prorrata_case(
+            definition_id, profile_id=ctx.profile_id, operation=ctx.operation
+        )
         return ctx.profile_subject, prorrata_case.request, None
     if definition_id == "modelo.aggregate":
         return (
@@ -76,11 +78,11 @@ def _family_payload(ctx: PayloadContext) -> PayloadResult | None:
     return None
 
 
-def _payload(
+def registered_executor_payload(
     definition: OperationDefinition, *, profile_id: UUID, tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> tuple[str, BaseModel, bytes | None]:
     """Use only the exact request type exported by the registered definition."""
-    _profile_create_context_for_test, profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, profile_decode_context_for_test = profile_authority_contexts()
     ctx = PayloadContext(
         definition=definition,
         profile_id=profile_id,

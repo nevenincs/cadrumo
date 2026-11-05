@@ -17,7 +17,7 @@ from __future__ import annotations
 import pytest
 
 from ......domain.calculations.registry.errors import RegistryValidationError
-from ..nif_iva_check import _split_vies_nif
+from ..nif_iva_check import split_vies_nif
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -37,7 +37,7 @@ _EXPECTED = ("BE", "0123456789")
     ),
 )
 def test_a_printed_iva_number_splits_to_one_prefix_and_number(printed: str) -> None:
-    assert _split_vies_nif(printed) == _EXPECTED
+    assert split_vies_nif(printed) == _EXPECTED
 
 
 def test_the_dotted_form_carries_no_separator_into_the_number() -> None:
@@ -47,7 +47,7 @@ def test_the_dotted_form_carries_no_separator_into_the_number() -> None:
     sent to VIES as the number to check, so the query asks about an identifier
     no registry holds and the answer is a refusal the operator cannot explain.
     """
-    _, iva_number = _split_vies_nif("BE 0123.456.789")
+    _, iva_number = split_vies_nif("BE 0123.456.789")
     assert "." not in iva_number
     assert iva_number.isdigit()
 
@@ -69,7 +69,7 @@ def test_a_value_that_is_not_a_prefixed_iva_number_is_refused(malformed: str) ->
     # the string, so a value that was long enough before may not be after, and
     # the refusals have to survive the change that made this file necessary.
     with pytest.raises(RegistryValidationError):
-        _split_vies_nif(malformed)
+        split_vies_nif(malformed)
 
 
 def test_the_refusal_names_the_value_as_the_operator_typed_it() -> None:
@@ -78,4 +78,4 @@ def test_the_refusal_names_the_value_as_the_operator_typed_it() -> None:
     # that, and the fixture is chosen so the two forms DIFFER: "b-1" normalises
     # to "B1", so a message built from the normalised value would not match.
     with pytest.raises(RegistryValidationError, match=r"b-1"):
-        _split_vies_nif("b-1")
+        split_vies_nif("b-1")

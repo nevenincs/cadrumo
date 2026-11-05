@@ -3,7 +3,7 @@
     "id": "kdf-refused-wrong-password",
     "source": "python",
     "level": "WARNING",
-    "logger": "cadrumo.adapters.persistence.storage.custody._kdf_worker_supervision",
+    "logger": "cadrumo.adapters.persistence.storage.custody.kdf_worker_supervision",
     "message": "^kdf_worker_lifecycle$",
     "context_fields": {
       "outcome": "refused",

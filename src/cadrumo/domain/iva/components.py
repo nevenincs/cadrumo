@@ -27,12 +27,12 @@ from ..calculations.registry.governed_fact_scope import (
 from ..calculations.registry.iva_category_catalogue import (
     resolve_iva_category_catalogue,
 )
-from ._component_fact_projection import (
+from .component_fact_projection import (
     component_vocabulary_from_entries,
     cuota_settlement_catalogue_from_entries,
     resolve_component_catalogue_entries,
 )
-from ._component_row_projection import (
+from .component_row_projection import (
     category_projection_from_entries,
     project_component_catalogue,
 )
@@ -41,7 +41,7 @@ from .schema import (
     InvoiceKind,
     IvaCategory,
     IvaStrictFrozen,
-    _RegistryLegalRef,  # pyright: ignore[reportPrivateUsage] -- intra-package reuse of this package's own constrained legal-ref alias
+    RegistryLegalRef,  # pyright: ignore[reportPrivateUsage] -- intra-package reuse of this package's own constrained legal-ref alias
 )
 
 
@@ -279,8 +279,8 @@ class IvaCategoryComponents(IvaStrictFrozen):
     retencion: IvaRetencionExpectation
     retencion_grounding: IvaGroundingConfidence
     retencion_note: str = Field(default="")
-    legal_refs: tuple[_RegistryLegalRef, ...] = Field(default=())
-    pending_legal_refs: tuple[_RegistryLegalRef, ...] = Field(default=())
+    legal_refs: tuple[RegistryLegalRef, ...] = Field(default=())
+    pending_legal_refs: tuple[RegistryLegalRef, ...] = Field(default=())
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

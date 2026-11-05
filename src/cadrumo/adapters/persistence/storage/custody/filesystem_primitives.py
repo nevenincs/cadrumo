@@ -293,7 +293,7 @@ def _windows_directory_anchor_owned(
         component_paths = windows_component_paths(path)
         for index, current in enumerate(component_paths):
             access = final_access if index == len(component_paths) - 1 else 0
-            handles.append(_open_verified_component(current, access, errors=errors))
+            handles.append(open_verified_component(current, access, errors=errors))
         if not handles:
             raise ProfileCustodyRecordError(errors.empty_path)
         yield handles[-1]
@@ -336,21 +336,21 @@ def _retain_windows_component(
         # A handle that can rename or delete its directory is never
         # offered to another anchor: once moved, it no longer names
         # the path it would be shared under.
-        private = _HeldComponent(handle=_open_verified_component(current, access, errors=errors), access=access)
+        private = _HeldComponent(handle=open_verified_component(current, access, errors=errors), access=access)
         private.users += 1
         return None, private
     key = os.path.normcase(current)
     held = session.held.setdefault(key, [])
     component = next((candidate for candidate in held if candidate.access & access == access), None)
     if component is None:
-        opened = _open_verified_component(current, access, errors=errors)
+        opened = open_verified_component(current, access, errors=errors)
         component = _HeldComponent(handle=opened, access=access)
         held.append(component)
     component.users += 1
     return key, component
 
 
-def _open_verified_component(current: str, access: int, *, errors: WindowsDirectoryAnchorErrors) -> int:
+def open_verified_component(current: str, access: int, *, errors: WindowsDirectoryAnchorErrors) -> int:
     """Open one component without delete sharing and prove it is a real directory."""
     ctypes, wintypes, kernel32, create_file = windows_create_file_api()
     handle = create_file(

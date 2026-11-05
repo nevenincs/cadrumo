@@ -31,10 +31,10 @@ from collections.abc import Callable, Sequence
 import pytest
 from click.testing import Result
 
-from ....tests.cli_envelope import unwrap_schema_envelope as _json
+from ....tests.cli_envelope import unwrap_schema_envelope
 from ....tests.inventory import FIXTURES_DIR
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
-from .ledger_cli import list_ledger_rows_via_cli as _list_rows
+from .ledger_cli import list_ledger_rows_via_cli
 from .profile_world_fixtures import recorded_fx_seeded_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -85,7 +85,7 @@ def test_asesor_sees_entire_corpus_unclassified_on_arrival() -> None:
     The asesor must be able to see, at a glance, that *every* row still needs a
     disposition — none are silently treated as ready.
     """
-    rows = _list_rows()
+    rows = list_ledger_rows_via_cli()
     assert len(rows) >= 500, f"expected operating-scale corpus, got {len(rows)}"
     assert all(r.get("business_classification") == "NOT_YET_PROCESSED" for r in rows)
 
@@ -98,7 +98,7 @@ def test_asesor_triage_pending_backlog_via_review_filter() -> None:
     """
     pending = _invoke(["--format", "json", "app", "ledger", "review", "--filter", "status=pending"])
     assert pending.exit_code == 0, pending.output
-    json_result = _json(pending.output)
+    json_result = unwrap_schema_envelope(pending.output)
     rows_val = json_result.get("rows", [])
     descriptions: set[str] = set()
     if isinstance(rows_val, list):
@@ -121,7 +121,7 @@ def test_check_surfaces_all_period_anomalies_without_mutating() -> None:
     """
     check = _invoke(["--format", "json", "app", "ledger", "check"])
     assert check.exit_code == 0, check.output
-    result = _json(check.output)
+    result = unwrap_schema_envelope(check.output)
     assert result.get("ready") is False, result
     count_val = result.get("checked_transaction_count")
     if isinstance(count_val, int):
@@ -149,7 +149,7 @@ def test_preflight_period_scopes_the_readiness_gaps() -> None:
         ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", "2025"],
     )
     assert pre.exit_code == 0, pre.output
-    result = _json(pre.output)
+    result = unwrap_schema_envelope(pre.output)
     assert result.get("ready") is False, result
     count_val = result.get("checked_transaction_count")
     if isinstance(count_val, int):
@@ -175,7 +175,7 @@ def test_preflight_issue_detail_is_actionable_text() -> None:
         ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", "2025"],
     )
     assert pre.exit_code == 0, pre.output
-    json_result = _json(pre.output)
+    json_result = unwrap_schema_envelope(pre.output)
     issues_val = json_result.get("issues")
     detail_parts: list[str] = []
     if isinstance(issues_val, list):
@@ -194,13 +194,13 @@ def test_history_and_track_expose_lineage_for_one_transaction() -> None:
     For one business row both verbs must succeed and surface a stable id +
     a lifecycle/event chain — the evidence an asesor needs to defend a row.
     """
-    row = _find(_list_rows(), _RECARGO_DESC)
+    row = _find(list_ledger_rows_via_cli(), _RECARGO_DESC)
     tx_val = row.get("transaction_id")
     assert isinstance(tx_val, str)
 
     history = _invoke(["--format", "json", "app", "ledger", "history", tx_val])
     assert history.exit_code == 0, history.output
-    hist = _json(history.output)
+    hist = unwrap_schema_envelope(history.output)
     assert hist.get("transaction_id"), hist
     event_count_val = hist.get("event_count")
     if isinstance(event_count_val, int):
@@ -209,7 +209,7 @@ def test_history_and_track_expose_lineage_for_one_transaction() -> None:
 
     track = _invoke(["--format", "json", "app", "ledger", "track", tx_val])
     assert track.exit_code == 0, track.output
-    tracked = _json(track.output)
+    tracked = unwrap_schema_envelope(track.output)
     tx_obj = tracked.get("transaction")
     if isinstance(tx_obj, dict):
         typed_tx_obj: dict[str, object] = {str(key): value for key, value in tx_obj.items()}
@@ -223,17 +223,17 @@ def test_history_after_disposition_records_the_decision() -> None:
     Archiving a personal row and re-reading ``history`` must show more events
     than before — the decision is auditable, not silent.
     """
-    row = _find(_list_rows(), _PERSONAL_DESC)
+    row = _find(list_ledger_rows_via_cli(), _PERSONAL_DESC)
     tx_val = row.get("transaction_id")
     assert isinstance(tx_val, str)
-    before_hist = _json(_invoke(["--format", "json", "app", "ledger", "history", tx_val]).output)
+    before_hist = unwrap_schema_envelope(_invoke(["--format", "json", "app", "ledger", "history", tx_val]).output)
     before_val = before_hist.get("event_count")
     before = before_val if isinstance(before_val, int) else 0
     archived = _invoke(
         ["app", "ledger", "archive", tx_val, "--reason", "personal expense", "--yes"],
     )
     assert archived.exit_code == 0, archived.output
-    after_hist = _json(_invoke(["--format", "json", "app", "ledger", "history", tx_val]).output)
+    after_hist = unwrap_schema_envelope(_invoke(["--format", "json", "app", "ledger", "history", tx_val]).output)
     after_val = after_hist.get("event_count")
     after = after_val if isinstance(after_val, int) else 0
     assert after > before, (before, after)
@@ -248,21 +248,21 @@ def test_asesor_can_classify_then_preflight_surfaces_recargo_gaps() -> None:
     and then preflight must still surface a downstream fact gap, because a
     classified-but-incomplete business row is not yet filing-ready.
     """
-    row = _find(_list_rows(), _RECARGO_DESC)
+    row = _find(list_ledger_rows_via_cli(), _RECARGO_DESC)
     tx_val = row.get("transaction_id")
     assert isinstance(tx_val, str)
     classify = _invoke(
         ["app", "ledger", "classify", tx_val, "--classification", "BUSINESS"],
     )
     assert classify.exit_code == 0, classify.output
-    refreshed = _find(_list_rows(), _RECARGO_DESC)
+    refreshed = _find(list_ledger_rows_via_cli(), _RECARGO_DESC)
     assert refreshed.get("business_classification") == "BUSINESS", refreshed
 
     pre = _invoke(
         ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", "2025"],
     )
     assert pre.exit_code == 0, pre.output
-    issues_val = _json(pre.output).get("issues")
+    issues_val = unwrap_schema_envelope(pre.output).get("issues")
     recargo_issues = []
     if isinstance(issues_val, list):
         for item in issues_val:
@@ -283,7 +283,7 @@ def test_personal_row_drops_out_of_readiness_when_classified() -> None:
     NOT flag it (personal rows carry no deductible facts) — the asesor can
     distinguish "needs attention" from "legitimately out of scope".
     """
-    row = _find(_list_rows(), _PERSONAL_DESC)
+    row = _find(list_ledger_rows_via_cli(), _PERSONAL_DESC)
     tx_val = row.get("transaction_id")
     assert isinstance(tx_val, str)
     classify = _invoke(
@@ -295,7 +295,7 @@ def test_personal_row_drops_out_of_readiness_when_classified() -> None:
         ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", "2025"],
     )
     assert pre.exit_code == 0, pre.output
-    issues_val = _json(pre.output).get("issues")
+    issues_val = unwrap_schema_envelope(pre.output).get("issues")
     personal_issues = []
     if isinstance(issues_val, list):
         for item in issues_val:
@@ -314,19 +314,19 @@ def test_check_clears_recargo_row_once_personal_and_business_dispositioned() -> 
     ``check`` issue count must strictly drop — review work visibly converges
     toward a clean filing rather than staying flat.
     """
-    before_issues_val = _json(_invoke(["--format", "json", "app", "ledger", "check"]).output).get(
+    before_issues_val = unwrap_schema_envelope(_invoke(["--format", "json", "app", "ledger", "check"]).output).get(
         "issues",
         [],
     )
     before = len(before_issues_val) if isinstance(before_issues_val, list) else 0
-    row = _find(_list_rows(), _PERSONAL_DESC)
+    row = _find(list_ledger_rows_via_cli(), _PERSONAL_DESC)
     tx_val = row.get("transaction_id")
     assert isinstance(tx_val, str)
     classify = _invoke(
         ["app", "ledger", "classify", tx_val, "--classification", "PERSONAL"],
     )
     assert classify.exit_code == 0, classify.output
-    after_issues_val = _json(_invoke(["--format", "json", "app", "ledger", "check"]).output).get(
+    after_issues_val = unwrap_schema_envelope(_invoke(["--format", "json", "app", "ledger", "check"]).output).get(
         "issues",
         [],
     )

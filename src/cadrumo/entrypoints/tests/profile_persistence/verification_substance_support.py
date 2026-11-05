@@ -20,39 +20,38 @@ from cadrumo.domain.deadlines.models import (
 )
 from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 
-_Repos = tuple[
+Repos = tuple[
     WorkUnitCatalogueRepository,
     CalculationRevisionCatalogueRepository,
     VerificationReportCatalogueRepository,
     BucketEventHistoryRepository,
 ]
 
-_T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
-_T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
-_T2 = datetime(2026, 4, 14, 14, 0, 0, tzinfo=UTC)
+T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
+T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
+T2 = datetime(2026, 4, 14, 14, 0, 0, tzinfo=UTC)
 
 
-_CASILLA_01: CasillaId = validated_casilla_id("01")
-_CASILLA_02: CasillaId = validated_casilla_id("02")
-_CASILLA_03: CasillaId = validated_casilla_id("03")
-_CASILLA_05: CasillaId = validated_casilla_id("05")
-_CASILLA_06: CasillaId = validated_casilla_id("06")
+CASILLA_01: CasillaId = validated_casilla_id("01")
+CASILLA_02: CasillaId = validated_casilla_id("02")
+CASILLA_03: CasillaId = validated_casilla_id("03")
+CASILLA_05: CasillaId = validated_casilla_id("05")
+CASILLA_06: CasillaId = validated_casilla_id("06")
 _CASILLA_07: CasillaId = validated_casilla_id("07")
-_CASILLA_08: CasillaId = validated_casilla_id("08")
-_CASILLA_09: CasillaId = validated_casilla_id("09")
+CASILLA_08: CasillaId = validated_casilla_id("08")
+CASILLA_09: CasillaId = validated_casilla_id("09")
 _CASILLA_10: CasillaId = validated_casilla_id("10")
 _CASILLA_11: CasillaId = validated_casilla_id("11")
-_CASILLA_12: CasillaId = validated_casilla_id("12")
-_CASILLA_14: CasillaId = validated_casilla_id("14")
-_CASILLA_15: CasillaId = validated_casilla_id("15")
-_CASILLA_16: CasillaId = validated_casilla_id("16")
-_CASILLA_18: CasillaId = validated_casilla_id("18")
-_ABSENT_REGISTRY_CASILLA: CasillaId = validated_casilla_id("99")
+CASILLA_12: CasillaId = validated_casilla_id("12")
+CASILLA_14: CasillaId = validated_casilla_id("14")
+CASILLA_15: CasillaId = validated_casilla_id("15")
+CASILLA_16: CasillaId = validated_casilla_id("16")
+CASILLA_18: CasillaId = validated_casilla_id("18")
+ABSENT_REGISTRY_CASILLA: CasillaId = validated_casilla_id("99")
 _M200_BIN_OPEN_CASILLA: CasillaId = validated_casilla_id("00670")
 _M200_BIN_CLOSING_CASILLA: CasillaId = validated_casilla_id("00671")
 _M200_BIN_APPLIED_CASILLA: CasillaId = validated_casilla_id("DP200014:00547")
@@ -71,7 +70,7 @@ def _casilla_values(*entries: tuple[CasillaId, str]) -> dict[CasillaId, Decimal]
     return {casilla_id: Decimal(value) for casilla_id, value in entries}
 
 
-def _seed_ready_profile(
+def seed_ready_profile(
     *,
     bucket_id: str,
     irpf_estimation_regime: str = "directa_normal",
@@ -81,13 +80,13 @@ def _seed_ready_profile(
         for fact in _READY_PROFILE_FACTS
     )
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=facts,
-            created_at=_T0,
-            updated_at=_T0,
-            context=_profile_creation_context_for_test(),
+            created_at=T0,
+            updated_at=T0,
+            context=profile_creation_context_for_test(),
         ),
     )
 

@@ -25,10 +25,10 @@ import textwrap
 
 import pytest
 
-from ..snapshot import _CROSS_DOMAIN_CHECK_MODULES
+from ..snapshot import CROSS_DOMAIN_CHECK_MODULES
 from ..validate_cross_domain_snapshot import (
-    _CROSS_DOMAIN_CHECK_IDENTITIES,
-    _CROSS_DOMAIN_SNAPSHOT_CHECKS,
+    CROSS_DOMAIN_CHECK_IDENTITIES,
+    CROSS_DOMAIN_SNAPSHOT_CHECKS,
     REQUIRED_CROSS_DOMAIN_CHECK_IDENTITIES,
     CrossDomainSnapshotCheck,
     missing_required_cross_domain_check,
@@ -42,7 +42,7 @@ _OTHER_MODULE = "cadrumo.domain.renta.retenciones_routing_integrity"
 
 def _registered_checks() -> list[CrossDomainSnapshotCheck]:
     """Read the validator's private list for identity-index consistency proofs."""
-    return _CROSS_DOMAIN_SNAPSHOT_CHECKS
+    return CROSS_DOMAIN_SNAPSHOT_CHECKS
 
 
 def _build_m100_with_declared_modules(declared: str) -> subprocess.CompletedProcess[str]:
@@ -178,7 +178,7 @@ def test_every_required_check_module_is_one_the_builder_installs() -> None:
 
     installed_modules = {
         importlib.util.resolve_name(name, "cadrumo.domain.calculations.registry") if name.startswith(".") else name
-        for name in _CROSS_DOMAIN_CHECK_MODULES
+        for name in CROSS_DOMAIN_CHECK_MODULES
     }
     assert set(REQUIRED_CROSS_DOMAIN_CHECK_IDENTITIES.values()) == installed_modules
 
@@ -191,10 +191,10 @@ def test_the_identity_index_and_the_check_list_hold_the_same_checks() -> None:
     a different population than the one that runs.
     """
 
-    indexed = [check for checks in _CROSS_DOMAIN_CHECK_IDENTITIES.values() for check in checks]
+    indexed = [check for checks in CROSS_DOMAIN_CHECK_IDENTITIES.values() for check in checks]
 
     assert len(indexed) == len(_registered_checks())
     assert {id(check) for check in indexed} == {id(check) for check in _registered_checks()}
-    for identity, checks in _CROSS_DOMAIN_CHECK_IDENTITIES.items():
+    for identity, checks in CROSS_DOMAIN_CHECK_IDENTITIES.items():
         for check in checks:
             assert check.__module__ == identity

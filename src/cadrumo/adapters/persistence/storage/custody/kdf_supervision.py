@@ -19,34 +19,10 @@ from uuid import UUID
 from .....application.user_profile.proof_cancellation import ProfileProofCancellation, ProfileProofCancelledError
 from .....core.config import load_settings
 from .....core.errors.hierarchy import CadrumoError
-from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from .....core.external_constants import UTF_8_ENCODING
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
 from ..crypto.aes_gcm import KEY_SIZE
-from ._kdf_codec import (
-    canonical_frame_bytes as _canonical_frame_bytes,
-)
-from ._kdf_codec import (
-    canonical_frame_digest as _canonical_frame_digest,
-)
-from ._kdf_codec import (
-    close_fd as _close_fd,
-)
-from ._kdf_codec import (
-    windows_available_memory_bytes as _windows_available_memory_bytes,
-)
-from ._kdf_file_lease import acquire_kdf_file_lease, open_kdf_file_lease, release_kdf_file_lease
-from ._kdf_records import (
-    PROFILE_CUSTODY_KDF_ITERATIONS,
-    PROFILE_CUSTODY_KDF_MEMORY_MIB,
-    PROFILE_CUSTODY_KDF_PARALLELISM,
-)
-from ._kdf_refusals import resource_refusal as _resource_refusal
-from ._kdf_refusals import supervision_refusal as _supervision_refusal
-from ._kdf_worker_limits import PROFILE_CUSTODY_KDF_WORKER_MEMORY_BYTES
-from ._kdf_worker_supervision import _SupervisedKdfWorker, kdf_worker_never_attested
-from ._profile_password_codec import encode_profile_password
-from ._recovery_secret_codec import encode_recovery_secret
 from .errors import (
     ProfileCustodyPasswordError,
     ProfileCustodyRecordError,
@@ -55,11 +31,28 @@ from .errors import (
     ProfileCustodyRefusedError,
 )
 from .kdf_calibration_search import search_profile_kdf_grid
+from .kdf_codec import (
+    canonical_frame_bytes,
+    canonical_frame_digest,
+    close_fd,
+    windows_available_memory_bytes,
+)
+from .kdf_file_lease import acquire_kdf_file_lease, open_kdf_file_lease, release_kdf_file_lease
+from .kdf_records import (
+    PROFILE_CUSTODY_KDF_ITERATIONS,
+    PROFILE_CUSTODY_KDF_MEMORY_MIB,
+    PROFILE_CUSTODY_KDF_PARALLELISM,
+)
+from .kdf_refusals import resource_refusal, supervision_refusal
+from .kdf_worker_limits import PROFILE_CUSTODY_KDF_WORKER_MEMORY_BYTES
+from .kdf_worker_supervision import SupervisedKdfWorker, kdf_worker_never_attested
+from .profile_password_codec import encode_profile_password
 from .records import (
     ProfileCustodyEnvelope,
     ProfileCustodyKdfParameters,
     ProfileCustodyWrappedDek,
 )
+from .recovery_secret_codec import encode_recovery_secret
 from .sentinel_contract import ProfileCustodySentinelRecord, verify_profile_custody_sentinel
 
 if TYPE_CHECKING:
@@ -85,8 +78,8 @@ PROFILE_CUSTODY_KDF_TARGET_MIN_SECONDS: Final = 0.250
 PROFILE_CUSTODY_KDF_TARGET_MAX_SECONDS: Final = 0.500
 _MEBIBYTE: Final = 1024 * 1024
 _KDF_LEASE_FILENAME: Final = "profile-kdf.v1.lock"
-_KDF_THREAD_LEASE: Final = threading.BoundedSemaphore(value=1)
-_KDF_THREAD_CAPACITY: Final = threading.Condition()
+KDF_THREAD_LEASE: Final = threading.BoundedSemaphore(value=1)
+KDF_THREAD_CAPACITY: Final = threading.Condition()
 _KDF_PREWARM: Final = contextvars.ContextVar["ProfileKdfPrewarm | None"]("cadrumo_profile_kdf_prewarm", default=None)
 
 
@@ -129,7 +122,7 @@ class ProfileCustodyUnlock:
     dek: bytes
 
 
-class _CalibrationDeadlineElapsedError(CadrumoError):
+class CalibrationDeadlineElapsedError(CadrumoError):
     """Signal that a calibration grid cannot continue within its total deadline."""
 
 
@@ -143,16 +136,16 @@ def profile_password_wrap_aad(
     """Build the canonical password-wrap AAD for one current custody envelope."""
     payload = {
         "dek_epoch": dek_epoch,
-        "kdf_digest": _canonical_frame_digest(kdf.model_dump(mode="json")),
+        "kdf_digest": canonical_frame_digest(kdf.model_dump(mode="json")),
         "key_schedule": "profile-password-dek-wrap/v1",
-        "password_encoding": _UTF_8_ENCODING,
+        "password_encoding": UTF_8_ENCODING,
         "password_generation": password_generation,
         "product": "cadrumo",
         "profile_id": str(profile_id),
         "purpose": "profile-password-dek-wrap/v1",
         "schema_version": 1,
     }
-    return _canonical_frame_bytes(payload)
+    return canonical_frame_bytes(payload)
 
 
 def profile_kdf_grid(*, salt: bytes) -> tuple[ProfileCustodyKdfParameters, ...]:
@@ -189,7 +182,7 @@ def fixed_profile_kdf_fallback(*, salt: bytes) -> ProfileCustodyKdfParameters:
     )
 
 
-def _posix_memory_bytes() -> int:
+def posix_memory_bytes() -> int:
     """Return a POSIX memory bound for the eligibility gate, or 0 if unknowable.
 
     ``SC_AVPHYS_PAGES`` is the currently-free page count and is the figure to
@@ -241,16 +234,16 @@ def profile_kdf_resources() -> ProfileCustodyKdfResources:
     """Read the portable resources that bound a local KDF worker."""
     cpu_count = os.cpu_count()
     if cpu_count is None or cpu_count < 1:
-        raise _resource_refusal()
+        raise resource_refusal()
     try:
         if sys.platform == "win32":
-            available_memory = _windows_available_memory_bytes()
+            available_memory = windows_available_memory_bytes()
         else:
-            available_memory = _posix_memory_bytes()
+            available_memory = posix_memory_bytes()
     except (AttributeError, OSError, ValueError):
-        raise _resource_refusal() from None
+        raise resource_refusal() from None
     if available_memory < 1:
-        raise _resource_refusal()
+        raise resource_refusal()
     return ProfileCustodyKdfResources(available_memory_bytes=available_memory, cpu_count=cpu_count)
 
 
@@ -297,7 +290,7 @@ def calibrate_profile_kdf(*, salt: bytes, settings: Settings | None = None) -> P
     resources = profile_kdf_resources()
     fallback = fixed_profile_kdf_fallback(salt=salt)
     if not profile_kdf_is_eligible(fallback, resources=resources):
-        raise _resource_refusal()
+        raise resource_refusal()
 
     # Measuring the grid costs one supervised child per probe and per sample,
     # which is the right price for an operator's one-off enrolment and the
@@ -320,7 +313,7 @@ def calibrate_profile_kdf(*, salt: bytes, settings: Settings | None = None) -> P
             return _measure_profile_kdf(parameters, deadline=deadline, settings=settings)
         except TimeoutError as exc:
             if time.monotonic() >= deadline:
-                raise _CalibrationDeadlineElapsedError from exc
+                raise CalibrationDeadlineElapsedError from exc
             return math.inf
         except ProfileCustodyRefusedError as exc:
             if exc.refusal is ProfileCustodyRefusal.KDF_RESOURCE_LIMIT:
@@ -335,7 +328,7 @@ def calibrate_profile_kdf(*, salt: bytes, settings: Settings | None = None) -> P
             target_max_seconds=PROFILE_CUSTODY_KDF_TARGET_MAX_SECONDS,
             confirmation_samples=PROFILE_CUSTODY_KDF_SAMPLE_COUNT,
         )
-    except _CalibrationDeadlineElapsedError:
+    except CalibrationDeadlineElapsedError:
         choice = None
     if choice is None:
         return _fallback_profile_kdf_calibration(fallback)
@@ -422,7 +415,7 @@ def unlock_profile_custody_password_material(
         _require_timeout_budget(timeout_deadline, cancellation=cancellation)
         with (
             profile_kdf_lease(settings=settings, deadline=deadline, cancellation=cancellation),
-            _supervised_kdf_worker(
+            supervised_kdf_worker(
                 deadline=deadline,
                 settings=settings,
                 absolute_deadline=timeout_deadline is not None,
@@ -477,7 +470,7 @@ def wrap_profile_custody_password_material(
     try:
         with (
             profile_kdf_lease(settings=settings, deadline=deadline),
-            _supervised_kdf_worker(deadline=deadline, settings=settings) as worker,
+            supervised_kdf_worker(deadline=deadline, settings=settings) as worker,
         ):
             wrapped_dek = worker.wrap(
                 secret=secret_bytes,
@@ -519,7 +512,7 @@ def unlock_profile_custody_recovery_material(
     try:
         with (
             profile_kdf_lease(settings=settings, deadline=deadline),
-            _supervised_kdf_worker(deadline=deadline, settings=settings) as worker,
+            supervised_kdf_worker(deadline=deadline, settings=settings) as worker,
         ):
             dek = worker.unwrap(
                 password=secret_bytes,
@@ -561,7 +554,7 @@ def wrap_profile_custody_recovery_material(
     try:
         with (
             profile_kdf_lease(settings=settings, deadline=deadline),
-            _supervised_kdf_worker(deadline=deadline, settings=settings) as worker,
+            supervised_kdf_worker(deadline=deadline, settings=settings) as worker,
         ):
             wrapped = worker.wrap(secret=secret_bytes, dek=dek, kdf=kdf, associated_data=associated_data, recovery=True)
     except TimeoutError as error:
@@ -591,8 +584,8 @@ class ProfileKdfPrewarm:
         self._settings = settings or load_settings()
         self._lock = threading.Lock()
         self._settled = threading.Condition(self._lock)
-        self._spare: _SupervisedKdfWorker | None = None
-        self._failed_launch: tuple[_SupervisedKdfWorker, BaseException] | None = None
+        self._spare: SupervisedKdfWorker | None = None
+        self._failed_launch: tuple[SupervisedKdfWorker, BaseException] | None = None
         self._launching = False
         self._closed = False
         # Lets close() abandon a launch that has not attested, so no spare outlives its owner.
@@ -615,10 +608,10 @@ class ProfileKdfPrewarm:
             raise
 
     def _launch(self) -> None:
-        spare: _SupervisedKdfWorker | None = None
-        candidate: _SupervisedKdfWorker | None = None
+        spare: SupervisedKdfWorker | None = None
+        candidate: SupervisedKdfWorker | None = None
         try:
-            candidate = _SupervisedKdfWorker(
+            candidate = SupervisedKdfWorker(
                 deadline=time.monotonic() + PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS,
                 settings=self._settings,
                 cancellation=self._launch_cancellation,
@@ -650,7 +643,7 @@ class ProfileKdfPrewarm:
 
     def take(
         self, *, deadline: float, cancellation: ProfileProofCancellation | None = None
-    ) -> _SupervisedKdfWorker | None:
+    ) -> SupervisedKdfWorker | None:
         """Hand the spare to one operation, or ``None`` when a fresh launch is needed.
 
         A spare still launching is awaited until the operation's deadline or
@@ -721,13 +714,13 @@ class ProfileKdfPrewarm:
 
 
 @contextmanager
-def _supervised_kdf_worker(
+def supervised_kdf_worker(
     *,
     deadline: float,
     settings: Settings | None,
     absolute_deadline: bool = False,
     cancellation: ProfileProofCancellation | None = None,
-) -> Generator[_SupervisedKdfWorker]:
+) -> Generator[SupervisedKdfWorker]:
     """Run one operation in the bound prewarmed child when one is ready, else in a fresh one."""
     prewarm = _KDF_PREWARM.get()
     waited_from = time.monotonic()
@@ -736,7 +729,7 @@ def _supervised_kdf_worker(
         if not absolute_deadline:
             # No child served the wait, so the fresh one keeps the whole relative budget.
             deadline += time.monotonic() - waited_from
-        with _SupervisedKdfWorker(
+        with SupervisedKdfWorker(
             deadline=deadline, settings=settings, absolute_deadline=absolute_deadline, cancellation=cancellation
         ) as worker:
             yield worker
@@ -760,7 +753,7 @@ def _require_timeout_budget(deadline: float | None, *, cancellation: ProfileProo
 
 def _timeout_refusal(error: TimeoutError) -> ProfileCustodyRefusedError:
     """Name a child that never attested as supervision; a late permit or derivation as the busy host's limit."""
-    return _supervision_refusal() if kdf_worker_never_attested(error) else _resource_refusal()
+    return supervision_refusal() if kdf_worker_never_attested(error) else resource_refusal()
 
 
 def _measure_profile_kdf(
@@ -782,7 +775,7 @@ def _measure_profile_kdf(
     started = time.monotonic()
     with (
         profile_kdf_lease(settings=settings, deadline=deadline),
-        _SupervisedKdfWorker(
+        SupervisedKdfWorker(
             deadline=time.monotonic() + remaining,
             settings=settings,
         ) as worker,
@@ -792,7 +785,7 @@ def _measure_profile_kdf(
     if elapsed > PROFILE_CUSTODY_KDF_SAMPLE_DEADLINE_SECONDS:
         raise TimeoutError("profile KDF calibration sample deadline elapsed")
     if derivation_seconds > elapsed:
-        raise _supervision_refusal()
+        raise supervision_refusal()
     return derivation_seconds
 
 
@@ -808,19 +801,19 @@ def profile_kdf_lease(
     """
 
     def capacity_changed() -> None:
-        with _KDF_THREAD_CAPACITY:
-            _KDF_THREAD_CAPACITY.notify_all()
+        with KDF_THREAD_CAPACITY:
+            KDF_THREAD_CAPACITY.notify_all()
 
-    with cancellation.watch(capacity_changed) if cancellation is not None else nullcontext(), _KDF_THREAD_CAPACITY:
+    with cancellation.watch(capacity_changed) if cancellation is not None else nullcontext(), KDF_THREAD_CAPACITY:
         while True:
             if cancellation is not None:
                 cancellation.raise_if_cancelled()
             remaining = deadline - time.monotonic()
             if remaining <= 0:
-                raise _resource_refusal()
-            if _KDF_THREAD_LEASE.acquire(blocking=False):
+                raise resource_refusal()
+            if KDF_THREAD_LEASE.acquire(blocking=False):
                 break
-            _KDF_THREAD_CAPACITY.wait(timeout=remaining)
+            KDF_THREAD_CAPACITY.wait(timeout=remaining)
     try:
         try:
             root = storage_path(StorageCategory.BUCKETS, settings=settings).parent
@@ -835,7 +828,7 @@ def profile_kdf_lease(
             lock_path = root / _KDF_LEASE_FILENAME
             descriptor = open_kdf_file_lease(lock_path)
         except OSError:
-            raise _supervision_refusal() from None
+            raise supervision_refusal() from None
         try:
             acquire_kdf_file_lease(descriptor, deadline=deadline, settings=settings, cancellation=cancellation)
             try:
@@ -843,11 +836,11 @@ def profile_kdf_lease(
             finally:
                 release_kdf_file_lease(descriptor)
         finally:
-            _close_fd(descriptor)
+            close_fd(descriptor)
     finally:
-        with _KDF_THREAD_CAPACITY:
-            _KDF_THREAD_LEASE.release()
-            _KDF_THREAD_CAPACITY.notify_all()
+        with KDF_THREAD_CAPACITY:
+            KDF_THREAD_LEASE.release()
+            KDF_THREAD_CAPACITY.notify_all()
 
 
 __all__ = [

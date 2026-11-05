@@ -189,7 +189,9 @@ def test_installed_cli_resumes_other_profile_without_retiring_independent_api_se
         monkeypatch.setattr(f"{owner}.terminal_can_prompt_for_secrets", lambda: True)
         monkeypatch.setattr(f"{owner}.prompt_secret_no_echo", lambda _: pytest.fail("prompted"))
     keyring = _Keyring()
-    monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (keyring, _KeyringError, _KeyringError))
+    monkeypatch.setattr(
+        acceleration_keychain, "acceleration_keychain_keyring", lambda: (keyring, _KeyringError, _KeyringError)
+    )
     passphrase = dev_test_database_password()
     _isolated_cli_backend.mkdir(parents=True, exist_ok=True)
     endpoint = WindowsEndpoint(storage_root=_isolated_cli_backend)

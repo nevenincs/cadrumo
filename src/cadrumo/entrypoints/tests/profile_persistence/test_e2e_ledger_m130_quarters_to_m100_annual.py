@@ -131,7 +131,7 @@ def bucket_id() -> str:
 _M130_REVISION = "2019-y-siguientes"
 
 
-_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
+M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
 _M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06")
 _M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08")
 _M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10")
@@ -140,10 +140,10 @@ _M100_PAGOS_CASILLA: CasillaId = validated_casilla_id("0604")
 _M100_RETENCIONES_TRABAJO_CASILLA: CasillaId = validated_casilla_id("0596")
 _M100_TOTAL_PAGOS_CASILLA: CasillaId = validated_casilla_id("0609")
 _M100_CUOTA_DIFERENCIAL_CASILLA: CasillaId = validated_casilla_id("0610")
-_M100_ACTIVITY_INCOME_CASILLA: CasillaId = validated_casilla_id("0171")
+M100_ACTIVITY_INCOME_CASILLA: CasillaId = validated_casilla_id("0171")
 _M100_ACTIVITY_EXPENSES_SUMMARY_CASILLA: CasillaId = validated_casilla_id("0199")
 _M100_EXPENSES_PREVIOUS_SUM_CASILLA: CasillaId = validated_casilla_id("0218")
-_M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA: CasillaId = validated_casilla_id("0220")
+M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA: CasillaId = validated_casilla_id("0220")
 
 
 _QUARTER_ORDER = ("1T", "2T", "3T", "4T")
@@ -171,7 +171,7 @@ _EXPECTED_M130_C19_BY_PERIOD: dict[str, Decimal] = {
 }
 _EXPECTED_M100_ACTIVITY_INCOME = Decimal("12000.00")
 _EXPECTED_M100_ACTIVITY_EXPENSES = Decimal("2400.00")
-_EXPECTED_M100_ACTIVITY_NET = Decimal("9600.00")
+EXPECTED_M100_ACTIVITY_NET = Decimal("9600.00")
 _AUTONOMA_M130_C19_BY_PERIOD: dict[str, Decimal] = {
     "1T": Decimal("300.00"),
     "2T": Decimal("360.00"),
@@ -208,7 +208,7 @@ _M130_MANUAL_INPUTS: dict[CasillaId, Decimal] = {
 # without any synthetic M131 filings.
 
 
-def _persist_autonoma_style_ledger(secure_objects: SecureObjectRepository) -> None:
+def persist_autonoma_style_ledger(secure_objects: SecureObjectRepository) -> None:
     """Persist Autonoma-shaped annual activity income plus deductible expenses."""
     tx_repo = TransactionCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
     transactions = tuple(income_transaction(period) for period in _QUARTER_ORDER) + tuple(
@@ -221,7 +221,7 @@ def _persist_autonoma_style_ledger(secure_objects: SecureObjectRepository) -> No
     InvoiceCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects).save(InvoiceCatalogue())
 
 
-def _calculate_and_file_m130_quarter(
+def calculate_and_file_m130_quarter(
     secure_objects: SecureObjectRepository,
     *,
     period: str,
@@ -304,7 +304,7 @@ M100_ACTIVITY_KEY_CASILLA: CasillaId = validated_casilla_id("0166")
 M100_ACTIVITY_KEY = "A05"
 
 
-def _calculate_m100_annual(
+def calculate_m100_annual(
     secure_objects: SecureObjectRepository,
     *,
     casilla_inputs: dict[CasillaId, Decimal] | None = None,
@@ -350,19 +350,19 @@ def test_ledger_drives_m130_quarters_and_folds_into_m100_annual(
 ) -> None:
     """The full yearly cadence: persisted ledger → 4×M130 → M100 0604 fold-in."""
     _seed_taxpayer_profile()
-    _persist_autonoma_style_ledger(secure_objects)
+    persist_autonoma_style_ledger(secure_objects)
     seed_prior_year_m100(secure_objects)
 
     computed_c19: dict[str, Decimal] = {}
     for period in _QUARTER_ORDER:
-        revision = _calculate_and_file_m130_quarter(secure_objects, period=period)
+        revision = calculate_and_file_m130_quarter(secure_objects, period=period)
 
         # Transport invariant #1: the FULL bucket-aggregation calc action draws
         # casilla 01 from the persisted ledger (cumulative YTD), not from any
         # manual input — the operator never re-keyed income.
-        assert Decimal(revision.casilla_values[_M130_INGRESOS_CASILLA]) == _EXPECTED_CUMULATIVE_C01[period], (
+        assert Decimal(revision.casilla_values[M130_INGRESOS_CASILLA]) == _EXPECTED_CUMULATIVE_C01[period], (
             f"{period}: casilla 01 must equal cumulative ledger income "
-            f"{_EXPECTED_CUMULATIVE_C01[period]}; got {revision.casilla_values.get(_M130_INGRESOS_CASILLA)}"
+            f"{_EXPECTED_CUMULATIVE_C01[period]}; got {revision.casilla_values.get(M130_INGRESOS_CASILLA)}"
         )
         computed_c19[period] = Decimal(revision.casilla_values[M130_RESULTADO_FINAL_CASILLA])
 
@@ -371,12 +371,12 @@ def test_ledger_drives_m130_quarters_and_folds_into_m100_annual(
     # copy cannot satisfy the annual fold assertion below.
     assert computed_c19 == _EXPECTED_M130_C19_BY_PERIOD, computed_c19
 
-    annual = _calculate_m100_annual(secure_objects)
+    annual = calculate_m100_annual(secure_objects)
 
-    assert Decimal(annual.casilla_values[_M100_ACTIVITY_INCOME_CASILLA]) == _EXPECTED_M100_ACTIVITY_INCOME
+    assert Decimal(annual.casilla_values[M100_ACTIVITY_INCOME_CASILLA]) == _EXPECTED_M100_ACTIVITY_INCOME
     assert Decimal(annual.casilla_values[_M100_EXPENSES_PREVIOUS_SUM_CASILLA]) == _EXPECTED_M100_ACTIVITY_EXPENSES
-    assert Decimal(annual.casilla_values[_M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA]) == _EXPECTED_M100_ACTIVITY_EXPENSES
-    assert Decimal(annual.casilla_values[M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA]) == _EXPECTED_M100_ACTIVITY_NET
+    assert Decimal(annual.casilla_values[M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA]) == _EXPECTED_M100_ACTIVITY_EXPENSES
+    assert Decimal(annual.casilla_values[M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA]) == EXPECTED_M100_ACTIVITY_NET
 
     # Transport invariant #2: the annual M100 0604 credits what the four M130
     # quarters paid (M131 folds as not-applicable zero). Every quarter is an
@@ -392,9 +392,9 @@ def test_a_locally_filed_quarter_records_the_kind_its_revision_states(
 ) -> None:
     """A revision with no amendment identity is an original, stated by the local filing itself."""
     _seed_taxpayer_profile()
-    _persist_autonoma_style_ledger(secure_objects)
+    persist_autonoma_style_ledger(secure_objects)
     seed_prior_year_m100(secure_objects)
-    revision = _calculate_and_file_m130_quarter(secure_objects, period="1T")
+    revision = calculate_and_file_m130_quarter(secure_objects, period="1T")
     assert revision.amendment_identity is None
 
     stored = CalculationObservationRepository(objects=secure_objects).load(
@@ -421,21 +421,21 @@ def test_verify_accepts_autonoma_m100_with_official_m130_observations(
     treating them as manual casillas.
     """
     _seed_taxpayer_profile()
-    _persist_autonoma_style_ledger(secure_objects)
+    persist_autonoma_style_ledger(secure_objects)
     seed_prior_year_m100(secure_objects)
 
     for period, c19_value in _AUTONOMA_M130_C19_BY_PERIOD.items():
         import_official_m130_result_observation(secure_objects, period=period, c19_value=c19_value)
 
-    annual = _calculate_m100_annual(
+    annual = calculate_m100_annual(
         secure_objects,
         text_casilla_inputs={M100_ACTIVITY_KEY_CASILLA: M100_ACTIVITY_KEY},
     )
 
-    assert Decimal(annual.casilla_values[_M100_ACTIVITY_INCOME_CASILLA]) == Decimal("12000.00")
+    assert Decimal(annual.casilla_values[M100_ACTIVITY_INCOME_CASILLA]) == Decimal("12000.00")
     assert Decimal(annual.casilla_values[_M100_ACTIVITY_EXPENSES_SUMMARY_CASILLA]) == Decimal("2400.00")
     assert Decimal(annual.casilla_values[_M100_EXPENSES_PREVIOUS_SUM_CASILLA]) == Decimal("2400.00")
-    assert Decimal(annual.casilla_values[_M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA]) == Decimal("2400.00")
+    assert Decimal(annual.casilla_values[M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA]) == Decimal("2400.00")
     assert Decimal(annual.casilla_values[M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA]) == Decimal("9600.00")
     assert Decimal(annual.casilla_values[_M100_PAGOS_CASILLA]) == Decimal("1520.00")
     assert Decimal(annual.casilla_values[_M100_PAGOS_CASILLA]) == sum(
@@ -464,7 +464,7 @@ def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_to
 ) -> None:
     """Verified salary withholding from the payer's certificate replays through verify and XML export."""
     _seed_taxpayer_profile()
-    _persist_autonoma_style_ledger(secure_objects)
+    persist_autonoma_style_ledger(secure_objects)
     seed_prior_year_m100(secure_objects)
     seed_payer_certificate(
         operation=published_authority_operation(),
@@ -479,15 +479,15 @@ def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_to
     for period, c19_value in _AUTONOMA_M130_C19_BY_PERIOD.items():
         import_official_m130_result_observation(secure_objects, period=period, c19_value=c19_value)
 
-    annual = _calculate_m100_annual(
+    annual = calculate_m100_annual(
         secure_objects,
         casilla_inputs={validated_casilla_id("0003"): _AUTONOMA_SALARY_GROSS},
         text_casilla_inputs={M100_ACTIVITY_KEY_CASILLA: M100_ACTIVITY_KEY},
     )
 
-    assert Decimal(annual.casilla_values[_M100_ACTIVITY_INCOME_CASILLA]) == Decimal("12000.00")
+    assert Decimal(annual.casilla_values[M100_ACTIVITY_INCOME_CASILLA]) == Decimal("12000.00")
     assert Decimal(annual.casilla_values[_M100_EXPENSES_PREVIOUS_SUM_CASILLA]) == Decimal("2400.00")
-    assert Decimal(annual.casilla_values[_M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA]) == Decimal("2400.00")
+    assert Decimal(annual.casilla_values[M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA]) == Decimal("2400.00")
     assert Decimal(annual.casilla_values[M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA]) == Decimal("9600.00")
     assert Decimal(annual.casilla_values[_M100_RETENCIONES_TRABAJO_CASILLA]) == _AUTONOMA_SALARY_WITHHOLDING
     assert Decimal(annual.casilla_values[_M100_PAGOS_CASILLA]) == Decimal("1520.00")
@@ -554,7 +554,7 @@ def test_m100_base_only_gate_still_blocks_missing_renta_taxable_base(
     InvoiceCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects).save(InvoiceCatalogue())
 
     with pytest.raises(ModeloAggregationBindingError) as exc_info:
-        _calculate_m100_annual(secure_objects)
+        calculate_m100_annual(secure_objects)
 
     assert exc_info.value.translated_message == "application.modelo.errors.ledger_preflight_blocked"
     assert exc_info.value.context is not None
@@ -581,11 +581,11 @@ def test_verify_gate_blocks_chain_carrying_non_official_prior_year(
     real ledger-derived multi-period chain.
     """
     _seed_taxpayer_profile()
-    _persist_autonoma_style_ledger(secure_objects)
+    persist_autonoma_style_ledger(secure_objects)
     seed_prior_year_m100(secure_objects)
     for period in _QUARTER_ORDER:
-        _calculate_and_file_m130_quarter(secure_objects, period=period)
-    annual = _calculate_m100_annual(secure_objects)
+        calculate_and_file_m130_quarter(secure_objects, period=period)
+    annual = calculate_m100_annual(secure_objects)
 
     report = verify_revision_for_test(
         annual.calculation_revision_id,

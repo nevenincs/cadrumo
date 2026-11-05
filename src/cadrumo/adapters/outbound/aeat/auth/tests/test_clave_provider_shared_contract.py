@@ -55,13 +55,13 @@ from ......tests.aeat_literal_fixtures import (
 )
 from .....persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from .. import session_store as session_store
-from .._clave_provider_common import same_aeat_application_path
 from ..clave_movil import ClaveMovilAuthProvider
 from ..clave_movil_metadata import ClaveMovilSessionMetadata
 from ..clave_permanente import ClavePermanenteAuthProvider
 from ..clave_permanente_metadata import ClavePermanenteSessionMetadata
-from ._clave_movil_support import _settings_for as _movil_settings_for
-from ._clave_permanente_support import _settings_for as _permanente_settings_for
+from ..clave_provider_common import same_aeat_application_path
+from .clave_movil_support import clave_movil_settings_for
+from .clave_permanente_support import clave_permanente_settings_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -112,12 +112,12 @@ class _ProviderProfile:
 
 
 def _movil(tmp_path: Path) -> ClaveMovilAuthProvider:
-    return ClaveMovilAuthProvider(_movil_settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE=_IDENTITY))
+    return ClaveMovilAuthProvider(clave_movil_settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE=_IDENTITY))
 
 
 def _permanente(tmp_path: Path) -> ClavePermanenteAuthProvider:
     return ClavePermanenteAuthProvider(
-        _permanente_settings_for(
+        clave_permanente_settings_for(
             tmp_path,
             CADRUMO_CLAVE_PERMANENTE_DNI_NIE=_IDENTITY,
             CADRUMO_CLAVE_PERMANENTE_PASSWORD="unused-by-these-contracts",

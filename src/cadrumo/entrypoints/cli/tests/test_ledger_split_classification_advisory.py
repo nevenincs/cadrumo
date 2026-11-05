@@ -20,9 +20,9 @@ from typing import Any
 import pytest
 
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
-from .profile_world_fixtures import recorded_fx_isolated_backend as _isolated_backend
+from .profile_world_fixtures import recorded_fx_isolated_backend
 
-__all__ = ["_isolated_backend"]
+__all__ = ["recorded_fx_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

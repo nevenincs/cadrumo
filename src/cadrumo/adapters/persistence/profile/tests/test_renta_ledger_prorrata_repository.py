@@ -11,7 +11,7 @@ from typing import Any, cast
 import pytest
 
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 
 from .....application.aggregation.renta_gasto_ledger import aggregate_renta_gasto_ledger_from_repositories
@@ -29,8 +29,12 @@ from .....domain.prorrata_register.register import ProrrataRegisterEntry
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from .....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from .....domain.user_profile.values import (
+    ProfileSetupState,
+    UserProfileFact,
+    UserProfileRecord,
+    create_user_profile_record,
+)
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ...storage.tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ..catalogue_reads import (
@@ -123,11 +127,11 @@ def _transaction(
 
 def _profile_with_iva_regime(*iva_facts: UserProfileFact) -> UserProfileRecord:
     """Build a user-profile record from explicitly supplied IVA facts."""
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="33333333-3333-4333-8333-333333333333",
         facts=(UserProfileFact(path="identity.tax_id", value="X1234567L"), *iva_facts),
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
 
 

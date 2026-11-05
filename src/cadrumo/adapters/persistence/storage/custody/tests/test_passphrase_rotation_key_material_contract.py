@@ -25,7 +25,7 @@ from cadrumo.adapters.persistence.storage.custody.recovery import (
     unlock_profile_custody_recovery_envelope,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.capsule_record import (
@@ -110,7 +110,7 @@ def test_rotation_must_re_head_the_record_row_because_its_header_binds_the_envel
     transaction as the envelope swap. This test pins the reason that step
     cannot be dropped as an optimisation.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     handed: list[str] = []
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
@@ -150,7 +150,7 @@ def test_rotation_must_re_head_the_record_row_because_its_header_binds_the_envel
 
 def _register(tmp_path: Path, handed: list[str]):
     """Register one profile, then enrol recovery on it, capturing its code."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     from cadrumo.application.user_profile.recovery_custody import enroll_profile_recovery
     from cadrumo.application.user_profile.registration import register_profile_with_credentials
 

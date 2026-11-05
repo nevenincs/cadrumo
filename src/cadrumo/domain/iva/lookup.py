@@ -562,7 +562,7 @@ def rate_kinds_for_declared_rate(
     return tuple(matched)
 
 
-def _select_unique_rate_kind(matches: tuple[IvaRateKind, ...]) -> IvaRateKind | None:
+def select_unique_rate_kind(matches: tuple[IvaRateKind, ...]) -> IvaRateKind | None:
     """Keep the single-match rule pure so every caller shares one cardinality decision."""
     return matches[0] if len(matches) == 1 else None
 
@@ -584,7 +584,7 @@ def unique_rate_kind_for_declared_rate(
     unchanged to the canonical resolver.
     """
     matches = rate_kinds_for_declared_rate(member_state, declared_rate, on_date, operation=operation)
-    return _select_unique_rate_kind(matches)
+    return select_unique_rate_kind(matches)
 
 
 __all__ = [

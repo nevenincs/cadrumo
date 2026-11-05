@@ -24,7 +24,7 @@ import pytest
 
 from ..errors import RegistryValidationError
 from ..schema_formula import BracketEntry, FormulaExpression, ParameterDefinition
-from .formula_runtime_support import evaluate as _evaluate
+from .formula_runtime_support import evaluate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -120,12 +120,12 @@ def test_lookup_bracket_by_entity_type_dispatches_to_the_keyed_parameter() -> No
     base = Decimal("100000")
     parameters = {p.id: p for p in (_pyme_bracket_param(), _alt_bracket_param())}
 
-    pyme_result = _evaluate(
+    pyme_result = evaluate(
         _dispatch_expression(base),
         parameters=parameters,
         enum_bindings={"test-legal-entity-form": "pyme"},
     )
-    alt_result = _evaluate(
+    alt_result = evaluate(
         _dispatch_expression(base),
         parameters=parameters,
         enum_bindings={"test-legal-entity-form": "other"},
@@ -175,7 +175,7 @@ def test_lookup_bracket_by_entity_type_rejects_a_scalar_parameter() -> None:
         ),
     }
     with pytest.raises(RegistryValidationError, match="must declare data_type='bracket_table'"):
-        _evaluate(expression, parameters=parameters, enum_bindings={"test-legal-entity-form": "sl"})
+        evaluate(expression, parameters=parameters, enum_bindings={"test-legal-entity-form": "sl"})
 
 
 def test_lookup_bracket_by_entity_type_raises_on_missing_dispatch_key() -> None:
@@ -184,7 +184,7 @@ def test_lookup_bracket_by_entity_type_raises_on_missing_dispatch_key() -> None:
     parameters = {p.id: p for p in (_pyme_bracket_param(), _alt_bracket_param())}
 
     with pytest.raises(RegistryValidationError, match="missing key 'unknown'"):
-        _evaluate(
+        evaluate(
             expression,
             parameters=parameters,
             enum_bindings={"test-legal-entity-form": "unknown"},
@@ -197,7 +197,7 @@ def test_lookup_bracket_by_entity_type_raises_when_enum_binding_is_unset() -> No
     parameters = {p.id: p for p in (_pyme_bracket_param(), _alt_bracket_param())}
 
     with pytest.raises(RegistryValidationError, match="has no supplied value"):
-        _evaluate(expression, parameters=parameters, enum_bindings={})
+        evaluate(expression, parameters=parameters, enum_bindings={})
 
 
 def test_lookup_bracket_by_entity_type_requires_three_args() -> None:
@@ -217,7 +217,7 @@ def test_lookup_bracket_by_entity_type_requires_three_args() -> None:
         ),
     )
     with pytest.raises(RegistryValidationError, match="expects 3 args"):
-        _evaluate(
+        evaluate(
             expression,
             parameters={},
             enum_bindings={"test-legal-entity-form": "pyme"},
@@ -237,7 +237,7 @@ def test_lookup_bracket_by_entity_type_requires_binding_at_args_1() -> None:
         },
     )
     with pytest.raises(RegistryValidationError, match="requires args\\[1\\] to be a binding"):
-        _evaluate(
+        evaluate(
             expression,
             parameters={p.id: p for p in (_pyme_bracket_param(),)},
             enum_bindings={},
@@ -257,7 +257,7 @@ def test_lookup_bracket_by_entity_type_requires_dispatch_table_at_args_2() -> No
         },
     )
     with pytest.raises(RegistryValidationError, match="requires args\\[2\\] to be a dispatch_table"):
-        _evaluate(
+        evaluate(
             expression,
             parameters={},
             enum_bindings={"test-legal-entity-form": "pyme"},

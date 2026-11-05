@@ -31,7 +31,7 @@ from cadrumo.domain.transactions.models import Transaction
 
 from .....application.ledger.tests.manual_transaction_support import create_manual_transaction
 from .....application.ledger.tests.transaction_row_support import outgoing_manual_row
-from ._split_test_support import _BUCKET_ID, _repositories
+from .split_test_support import BUCKET_ID, repositories
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -59,9 +59,9 @@ def _split_usd_parent(
     rate: str,
     child_amounts: tuple[str, ...],
 ):
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     command = ManualLedgerTransactionCommand(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         booked_date=date(2026, 5, 2),
         amount=Decimal(parent_amount),
         currency="USD",
@@ -71,7 +71,7 @@ def _split_usd_parent(
         actor="operator-A",
     )
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
@@ -85,7 +85,7 @@ def _split_usd_parent(
         return (
             transaction_repository,
             split_transaction(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 transaction_id=parent.ref.transaction_id,
                 children=tuple(
                     SplitChildCommand(amount=Decimal(a), description=f"part {i}") for i, a in enumerate(child_amounts)
@@ -104,7 +104,7 @@ def test_a_split_leaving_a_negative_last_child_is_refused_and_persists_nothing(
     with pytest.raises(TransactionValidationError, match="negative EUR value"):
         _split_usd_parent(secure_objects, parent_amount="0.04", rate="0.5", child_amounts=("0.01",) * 4)
 
-    transaction_repository, _ = _repositories(secure_objects)
+    transaction_repository, _ = repositories(secure_objects)
     states = {t.lifecycle_state.name for t in transaction_repository.load().transactions.values()}
     assert states == {"ACTIVE"}, "the parent must stay ACTIVE and no child may be stored"
     assert len(transaction_repository.load().transactions) == 1

@@ -21,7 +21,7 @@ The read facade includes list/view/status, check and preflight, history, track, 
 
 ## Decisions, automation and data
 
-The LLM path separates proposal from decision. Without `--apply`, classification and saturated-IVA suggestions are previews marked non-persisted. With explicit apply, the handler uses the registered review operation, correlates the settled receipt to the same profile, transaction, suggestion kind, reviewed digest and provenance, and checks the terminal effect before presenting the mutation. Reject records a declined audit event while leaving the transaction unclassified. In saturated mode the model selects classification/category; the system derives IVA rate, base and amount through the registry. Autosplit likewise uses model-selected child proportions/categories while the registry supplies regulated amounts (registered review driver (`src/cadrumo/entrypoints/cli/_ledger_llm_cli.py`), LLM routes (`src/cadrumo/entrypoints/cli/_ledger_llm_cli.py`), LLM payloads (`src/cadrumo/entrypoints/cli/_ledger_llm_payloads.py`)). An operator can also select an IVA category and request system derivation without invoking an LLM. Separate Modelo 210 options are confined to direct classification and delegate incoming-only/completeness checks to the application resolver (M210 options (`src/cadrumo/entrypoints/cli/_ledger_m210_classify_cli.py`)).
+The LLM path separates proposal from decision. Without `--apply`, classification and saturated-IVA suggestions are previews marked non-persisted. With explicit apply, the handler uses the registered review operation, correlates the settled receipt to the same profile, transaction, suggestion kind, reviewed digest and provenance, and checks the terminal effect before presenting the mutation. Reject records a declined audit event while leaving the transaction unclassified. In saturated mode the model selects classification/category; the system derives IVA rate, base and amount through the registry. Autosplit likewise uses model-selected child proportions/categories while the registry supplies regulated amounts (registered review driver (`src/cadrumo/entrypoints/cli/ledger_llm_cli.py`), LLM routes (`src/cadrumo/entrypoints/cli/ledger_llm_cli.py`), LLM payloads (`src/cadrumo/entrypoints/cli/ledger_llm_payloads.py`)). An operator can also select an IVA category and request system derivation without invoking an LLM. Separate Modelo 210 options are confined to direct classification and delegate incoming-only/completeness checks to the application resolver (M210 options (`src/cadrumo/entrypoints/cli/ledger_m210_classify_cli.py`)).
 
 Classification rules are stored per profile, content-addressed and ordered by priority. Add/list expose those records; ordinary apply writes to eligible transactions, while `--dry-run` previews the same first-match result and already-classified transactions are skipped unless the operator requests reaffirmation (rule command (`src/cadrumo/entrypoints/cli/_ledger_rules_cli.py`), rule result contracts (`src/cadrumo/entrypoints/cli/_ledger_rule_payloads.py`)). Usage-ratio commands list eligible categories, set/unset per-category overrides and validate persisted overrides against current eligibility and the censo-consistency rule. Omitted year defaults to the Madrid calendar year, while list/set/eligible accept an explicit historical year (ratio handlers (`src/cadrumo/entrypoints/cli/_ledger_ratios_cli.py`), ratio schemas (`src/cadrumo/entrypoints/cli/_ledger_ratios_payloads.py`)).
 
@@ -46,10 +46,10 @@ All 14 manifest files are linked below; every assigned line was read.
 - _ledger_evidence_review_cli.py (`src/cadrumo/entrypoints/cli/_ledger_evidence_review_cli.py`)
 - _ledger_import_cli.py (`src/cadrumo/entrypoints/cli/_ledger_import_cli.py`)
 - _ledger_inventory_cli.py (`src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py`)
-- _ledger_list.py (`src/cadrumo/entrypoints/cli/_ledger_list.py`)
-- _ledger_llm_cli.py (`src/cadrumo/entrypoints/cli/_ledger_llm_cli.py`)
-- _ledger_llm_payloads.py (`src/cadrumo/entrypoints/cli/_ledger_llm_payloads.py`)
-- _ledger_m210_classify_cli.py (`src/cadrumo/entrypoints/cli/_ledger_m210_classify_cli.py`)
+- _ledger_list.py (`src/cadrumo/entrypoints/cli/ledger_list.py`)
+- _ledger_llm_cli.py (`src/cadrumo/entrypoints/cli/ledger_llm_cli.py`)
+- _ledger_llm_payloads.py (`src/cadrumo/entrypoints/cli/ledger_llm_payloads.py`)
+- _ledger_m210_classify_cli.py (`src/cadrumo/entrypoints/cli/ledger_m210_classify_cli.py`)
 - _ledger_payloads.py (`src/cadrumo/entrypoints/cli/_ledger_payloads.py`)
 - _ledger_ratios_cli.py (`src/cadrumo/entrypoints/cli/_ledger_ratios_cli.py`)
 - _ledger_ratios_payloads.py (`src/cadrumo/entrypoints/cli/_ledger_ratios_payloads.py`)

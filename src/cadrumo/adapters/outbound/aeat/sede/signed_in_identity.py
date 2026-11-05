@@ -24,16 +24,16 @@ from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
 from .....domain.calculations.registry.schema_base import EvidenceTier
-from .._html import parse_html
-from .._playwright import PlaywrightError
-from ._adapter_utils import (
+from ..html import parse_html
+from ..playwright import PlaywrightError
+from .adapter_utils import (
     assert_landed_url_readable,
     assert_read_http_for,
     assert_read_landing,
     redacted_url,
     require_playwright_page,
 )
-from ._browser_constants import PLAYWRIGHT_WAIT_DOMCONTENTLOADED
+from .browser_constants import PLAYWRIGHT_WAIT_DOMCONTENTLOADED
 from .errors import SedeFailureMode, SedeNavigationError
 
 if TYPE_CHECKING:

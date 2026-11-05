@@ -6,8 +6,8 @@ from contextlib import ExitStack
 from pathlib import Path
 from uuid import UUID
 
-from .._capsule_data import replace_capsule_file
 from ..capsule import recognize_current_profile_capsule
+from ..capsule_data import replace_capsule_file
 from ..capsule_records import PROFILE_CUSTODY_LABEL_FILENAME, PROFILE_CUSTODY_LABEL_MAX_BYTES
 from ..errors import ProfileCustodyRecordError
 from ..filesystem_primitives import anchor_directory

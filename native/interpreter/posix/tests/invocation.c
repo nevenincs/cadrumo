@@ -30,7 +30,7 @@ int main(void) {
     fclose(capture);
 
     /* The declared supervised KDF invocation keeps its parent-defined environment. */
-    char *kdf[] = {"python", "-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker",
+    char *kdf[] = {"python", "-m", "cadrumo.adapters.persistence.storage.custody.kdf_worker",
         "--request-fd", "3", "--result-fd", "4", "--descriptor-bound", "1024", NULL};
     assert(setenv("CADRUMO_INVOCATION_MARKER", "kept", 1) == 0);
     assert(define_launch(ctx, CADRUMO_LAUNCH_IMAGE, 9, kdf, &error) == 0);

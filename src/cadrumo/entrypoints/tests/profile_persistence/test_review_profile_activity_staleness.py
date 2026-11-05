@@ -51,7 +51,7 @@ from cadrumo.core.bucket_pointer import read_pointer
 from cadrumo.core.config import load_settings
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.filing.protocols import CasillaSchemaProvider
 from cadrumo.domain.filing.schema import ModeloDraft
 from cadrumo.domain.submission.models import ModeloDraftStatus
@@ -122,7 +122,7 @@ def _ready_draft(schema_provider: CasillaSchemaProvider) -> ModeloDraft:
 
 
 def test_approval_goes_stale_when_profile_activity_changes(_profile_storage: None) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         _create_profile_with_activity("asesoria")
         bucket_id = _active_bucket_id()
         schema_provider = _schema_provider()
@@ -172,7 +172,7 @@ def test_approval_not_stale_when_profile_unchanged(_profile_storage: None) -> No
     Approving against a genuinely-loaded profile and re-checking without editing
     it must yield an empty reason tuple.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         _create_profile_with_activity("asesoria")
         bucket_id = _active_bucket_id()
         schema_provider = _schema_provider()

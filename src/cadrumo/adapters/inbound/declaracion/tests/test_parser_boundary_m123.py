@@ -9,16 +9,16 @@ import pytest
 
 from .....core.casilla_id import CasillaId
 from ..parser import parse_declaracion
-from ._parser_boundary_m123_support import (
-    _M123_CORPUS_CASE_IDS,
-    _M123_CORPUS_CASES,
-    _M123_PROFILE_TARGET_CASE_IDS,
-    _M123_PROFILE_TARGET_CASES,
+from .parser_boundary_m123_support import (
+    M123_CORPUS_CASE_IDS,
+    M123_CORPUS_CASES,
+    M123_PROFILE_TARGET_CASE_IDS,
+    M123_PROFILE_TARGET_CASES,
 )
-from ._parser_boundary_support import (
-    _expected_period,
-    _modelo_snapshot,
-    _write_declaration_pdf,
+from .parser_boundary_support import (
+    expected_period,
+    modelo_snapshot,
+    write_declaration_pdf,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
@@ -26,8 +26,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.use
 
 @pytest.mark.parametrize(
     ("case_id", "year", "period", "profile_id", "expected_targets"),
-    _M123_PROFILE_TARGET_CASES,
-    ids=_M123_PROFILE_TARGET_CASE_IDS,
+    M123_PROFILE_TARGET_CASES,
+    ids=M123_PROFILE_TARGET_CASE_IDS,
 )
 def test_parser_extracts_modelo_123_registry_profile_targets_from_pdf(
     tmp_path: Path,
@@ -37,7 +37,7 @@ def test_parser_extracts_modelo_123_registry_profile_targets_from_pdf(
     profile_id: str,
     expected_targets: tuple[CasillaId, ...],
 ) -> None:
-    snapshot = _modelo_snapshot("123", filing_year=year, period=period)
+    snapshot = modelo_snapshot("123", filing_year=year, period=period)
     profile = snapshot.extraction_profiles[profile_id]
     assert tuple(target.casilla_id for target in profile.target_casillas) == expected_targets
     values = {
@@ -45,20 +45,20 @@ def test_parser_extracts_modelo_123_registry_profile_targets_from_pdf(
         for index, target in enumerate(profile.target_casillas, start=1)
     }
     pdf_path = tmp_path / f"modelo-123-{case_id}.pdf"
-    _write_declaration_pdf(pdf_path, modelo="123", ejercicio=str(year), period=period, values=values)
+    write_declaration_pdf(pdf_path, modelo="123", ejercicio=str(year), period=period, values=values)
 
     filing = parse_declaracion(pdf_path, modelo_override="123", año_override=year)
 
     assert filing.modelo == "123"
-    assert filing.period == _expected_period(year, period)
+    assert filing.period == expected_period(year, period)
     assert filing.tax_id == "00000000T"
     assert {value.casilla_id: value.printed_value for value in filing.values} == values
 
 
 @pytest.mark.parametrize(
     ("case_id", "fixture", "year", "period", "revision_id", "expected_targets", "expected_values"),
-    _M123_CORPUS_CASES,
-    ids=_M123_CORPUS_CASE_IDS,
+    M123_CORPUS_CASES,
+    ids=M123_CORPUS_CASE_IDS,
 )
 def test_parser_extracts_modelo_123_corpus_round_trip(
     case_id: str,
@@ -78,7 +78,7 @@ def test_parser_extracts_modelo_123_corpus_round_trip(
     )
 
     assert filing.modelo == "123"
-    assert filing.period == _expected_period(year, period)
+    assert filing.period == expected_period(year, period)
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "123"

@@ -40,29 +40,19 @@ from ...core.i18n.render import tr
 from ...core.modelo import Modelo
 from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
 from ...domain.modelos.filing_record import FilingDeclarationKind
-from ._modelo_cli_support import (
-    parse_calculation_wire_row_spec,
-    resolve_actor_option,
-)
-from ._modelo_cli_support import (
-    parse_kv_spec as _parse_kv_spec,
-)
-from ._modelo_cli_support import (
-    validate_casilla_key as _validate_casilla_key,
-)
-from ._modelo_rendering import (
-    filing_record_lines as _filing_record_lines,
-)
-from ._modelo_rendering import (
-    filing_record_payload as _filing_record_payload,
-)
-from ._modelo_rendering import (
-    verification_report_lines as _verification_report_lines,
-)
-from ._modelo_rendering import (
-    verification_report_payload as _verification_report_payload,
-)
 from .common import no_active_profile_refusal
+from .modelo_cli_support import (
+    parse_calculation_wire_row_spec,
+    parse_kv_spec,
+    resolve_actor_option,
+    validate_casilla_key,
+)
+from .modelo_rendering import (
+    filing_record_lines,
+    filing_record_payload,
+    verification_report_lines,
+    verification_report_payload,
+)
 from .operation_modelo_amendment import read_modelo_work_filing_record, run_modelo_work_amendment
 from .operation_modelo_metadata import read_modelo_work_unit
 from .operation_modelo_taxation_comparison import compare_modelo_taxation
@@ -123,7 +113,7 @@ def work_compare_taxation(
         recommendation_reason_words=comparison.recommendation_reason_words,
         individual_branch_single_earner_only=comparison.individual_branch_single_earner_only,
     )
-    from ._modelo_rendering import advisory_notice
+    from .modelo_rendering import advisory_notice
 
     # Honesty caveat: the individual branch is faithful only for
     # a single-earner unidad familiar. Surface it on the typed notices channel so
@@ -245,13 +235,13 @@ def _parse_amendment_casilla(spec: str) -> tuple[CasillaId, Decimal]:
             raise typer.BadParameter(tr("cli.app.modelo.work.set_not_decimal", value=value))
         return parsed
 
-    key, value = _parse_kv_spec(
+    key, value = parse_kv_spec(
         spec,
         flag="--set",
         key_label="CASILLA",
         value_label="DECIMAL",
         transform=_to_decimal,
-        key_validator=_validate_casilla_key,
+        key_validator=validate_casilla_key,
         strip_key=False,
     )
     return validated_casilla_id(key, surface="--set casilla"), value
@@ -300,7 +290,7 @@ def _required_amendment_inputs(
     return from_filing_record_id, FilingDeclarationKind(kind), reason, tuple(set_overrides or ())
 
 
-def _resolve_amendment_detail_rows(
+def resolve_amendment_detail_rows(
     row_specs: tuple[str, ...],
     *,
     declared_none: bool,
@@ -374,7 +364,7 @@ def work_amend(
         set_overrides=set_overrides,
     )
     overrides = _parse_amendment_overrides(set_specs)
-    detail_rows = _resolve_amendment_detail_rows(tuple(row or ()), declared_none=no_detail_rows)
+    detail_rows = resolve_amendment_detail_rows(tuple(row or ()), declared_none=no_detail_rows)
     target = resolve_active_bucket_id()
     if target is None:
         raise no_active_profile_refusal()
@@ -409,7 +399,7 @@ def work_amend(
         {
             "amendment_kind": amended.amendment_kind.value,
             "m303_rectificativa_motive": amended.m303_rectificativa_motive,
-            **_filing_record_payload(record).model_dump(mode="python"),
+            **filing_record_payload(record).model_dump(mode="python"),
         },
     )
     motive = amended.m303_rectificativa_motive
@@ -419,7 +409,7 @@ def work_amend(
         f"amendment_kind\t{amended.amendment_kind.value}",
         f"m303_rectificativa_motive\t{motive_value}",
         f"amends_filing_record_id\t{amended.amended_from_filing_record_id}",
-        *_filing_record_lines(record),
+        *filing_record_lines(record),
     ]
     lines.append("filing_disambiguation\t(internal only — does not submit to AEAT)")
     emit_envelope(ctx, command="modelo.work.amend", result=result, lines=lines)
@@ -468,9 +458,9 @@ def modelo_history(
 
 
 __all__ = [
-    "_verification_report_lines",
-    "_verification_report_payload",
     "modelo_history",
+    "verification_report_lines",
+    "verification_report_payload",
     "work_amend",
     "work_compare_taxation",
     "work_history",

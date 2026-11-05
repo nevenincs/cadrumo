@@ -27,7 +27,7 @@ from ....core.i18n.render import clear_output_language_cache
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...categories.spending_category import SpendingCategory
 from ...categories.spending_category_catalogue import spending_category_tokens
-from ..llm import _category_hint
+from ..llm import category_hint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -46,7 +46,7 @@ def _output_language(language: str) -> Generator[None]:
 
 def _hints(operation: PinnedAuthorityOperation) -> dict[SpendingCategory, str]:
     return {
-        category: _category_hint(category, year=2025, operation=operation)
+        category: category_hint(category, year=2025, operation=operation)
         for category in spending_category_tokens(effective_date=date(2025, 12, 31), authority=operation)
     }
 

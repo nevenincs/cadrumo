@@ -23,8 +23,8 @@ from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.frozen_mapping import FROZEN_MAPPING
 from ....core.type_adapters import OBJECT_TUPLE_ADAPTER, STRICT_STR_KEYED_MAPPING_ADAPTER
-from ._formula_operator_contracts import require_formula_operator_arity
 from .errors import RegistryValidationError
+from .formula_operator_contracts import require_formula_operator_arity
 from .ids import BindingId, ParameterId
 from .schema_base import (
     DateAxisField,

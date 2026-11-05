@@ -52,7 +52,14 @@ from ....core.json_shapes import str_keyed_mapping, str_keyed_rows
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ..storage.errors import OutboundStorageError, OutboundStorageValidationError
-from ._calc_sheets_apply_formatting import (
+from .api import (
+    ExecutableRequest,
+    GoogleRequestExecutor,
+    RequestRetryPolicy,
+    execute_request,
+)
+from .artifact_admission import managed_artifact_refusal
+from .calc_sheets_apply_formatting import (
     build_auto_filter_requests,
     build_base_font_requests,
     build_cell_constraint_requests,
@@ -65,7 +72,7 @@ from ._calc_sheets_apply_formatting import (
     build_protected_range_requests,
     build_styled_range_requests,
 )
-from ._calc_sheets_apply_values import (
+from .calc_sheets_apply_values import (
     build_evidence_value_data,
     build_formula_data,
     build_guide_value_data,
@@ -73,15 +80,8 @@ from ._calc_sheets_apply_values import (
     build_value_data,
     written_cell_values,
 )
-from ._preconditions import google_terminal_refusal
-from .api import (
-    ExecutableRequest,
-    GoogleRequestExecutor,
-    RequestRetryPolicy,
-    execute_request,
-)
-from .artifact_admission import managed_artifact_refusal
 from .managed_artifacts import ManagedGoogleArtifacts
+from .preconditions import google_terminal_refusal
 
 
 class CalcSheetsApplyPreconditionCondition(StrEnum):
@@ -163,7 +163,7 @@ class CalcSheetsExportPreview(BaseModel):
     formula_cells_to_write: NonNegativeInt
 
 
-def _developer_metadata_pairs(plan: AnySheetExportPlan) -> list[tuple[str, str]]:
+def developer_metadata_pairs(plan: AnySheetExportPlan) -> list[tuple[str, str]]:
     """Return the shared export identity stamps this transport carries as developer metadata."""
     return list(export_identity_stamps(plan))
 
@@ -182,7 +182,7 @@ def _build_developer_metadata_requests(
                 },
             },
         }
-        for key, value in _developer_metadata_pairs(plan)
+        for key, value in developer_metadata_pairs(plan)
     ]
 
 
@@ -255,7 +255,7 @@ def _build_protected_range_cleanup_requests(
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-SHEETS-API-PAYLOAD: spreadsheet is the
 # free-shape JSON payload returned by the Google Sheets API.
-def _build_structural_cleanup_requests(
+def build_structural_cleanup_requests(
     spreadsheet: Mapping[str, Any],
     plan: AnySheetExportPlan,
 ) -> list[Request]:
@@ -393,7 +393,7 @@ def _as_int(value: object) -> int:
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
-def _plan_value_payload(plan: AnySheetExportPlan) -> list[ValueRange]:
+def plan_value_payload(plan: AnySheetExportPlan) -> list[ValueRange]:
     """Assemble every non-formula value entry the plan would write.
 
     Both publication and its local preview use this literal value inventory.
@@ -407,7 +407,7 @@ def _plan_value_payload(plan: AnySheetExportPlan) -> list[ValueRange]:
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
-def _write_plan_values(
+def write_plan_values(
     *,
     execute: GoogleRequestExecutor = execute_request,
     sheets: SheetsResource,
@@ -419,7 +419,7 @@ def _write_plan_values(
     Literal values and generated formulas use separate request channels.
     """
     # Literal text, including formula-looking user input, must remain literal.
-    data = _plan_value_payload(plan)
+    data = plan_value_payload(plan)
     values_body: BatchUpdateValuesRequest = {"valueInputOption": "RAW", "data": data}
     execute(
         sheets.spreadsheets()
@@ -447,7 +447,7 @@ def _write_plan_values(
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
-def _apply_plan_structural_requests(
+def apply_plan_structural_requests(
     *,
     execute: GoogleRequestExecutor = execute_request,
     sheets: SheetsResource,
@@ -460,7 +460,7 @@ def _apply_plan_structural_requests(
     # metadata for engine + registry identity + cell-level
     # constraint validation rules + cell notes carrying the
     # constraint and its legal grounding.
-    cleanup_requests = _build_structural_cleanup_requests(spreadsheet, plan)
+    cleanup_requests = build_structural_cleanup_requests(spreadsheet, plan)
     structural_requests = (
         cleanup_requests
         + _build_developer_metadata_requests(plan)
@@ -503,7 +503,7 @@ def apply_export_plan(plan: SheetExportPlan, *, credentials: Credentials, root_f
     raise managed_artifact_refusal("selected_review_publication_required")
 
 
-def _new_target_export_preview(plan: AnySheetExportPlan) -> CalcSheetsExportPreview:
+def new_target_export_preview(plan: AnySheetExportPlan) -> CalcSheetsExportPreview:
     """Preview a plan against a target with nothing on Drive to look up yet.
 
     Every value cell previews as new content and there is nothing to clear,
@@ -513,7 +513,7 @@ def _new_target_export_preview(plan: AnySheetExportPlan) -> CalcSheetsExportPrev
     return CalcSheetsExportPreview(
         spreadsheet_exists=False,
         ranges_to_clear=(),
-        value_cells_changed=len(written_cell_values(_plan_value_payload(plan))),
+        value_cells_changed=len(written_cell_values(plan_value_payload(plan))),
         value_cells_unchanged=0,
         formula_cells_to_write=len(plan.formula_cells),
     )
@@ -524,7 +524,7 @@ def preview_export_plan(
 ) -> CalcSheetsExportPreview:
     """Inventory a new publication locally without reading an earlier workbook."""
     _require_root_folder_id(root_folder_id)
-    return _new_target_export_preview(plan)
+    return new_target_export_preview(plan)
 
 
 class _AdmittedSheetRequests:
@@ -695,8 +695,8 @@ def _populate_review_copy(
             action="sheets.spreadsheets.batchUpdate.remove_default_tabs",
             retry=RequestRetryPolicy.SINGLE_ATTEMPT,
         )
-    _write_plan_values(sheets=sheets, spreadsheet_id=artifact.artifact_id, plan=plan, execute=writes)
-    _apply_plan_structural_requests(
+    write_plan_values(sheets=sheets, spreadsheet_id=artifact.artifact_id, plan=plan, execute=writes)
+    apply_plan_structural_requests(
         sheets=sheets,
         spreadsheet_id=artifact.artifact_id,
         spreadsheet=spreadsheet,

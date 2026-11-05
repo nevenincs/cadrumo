@@ -26,23 +26,19 @@ from .....application.ledger.llm_classification_ports import LLMSaturatedSuggest
 from .....core.config import load_settings
 from .....domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from .....domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from .....domain.iva.schema import IvaCategory
 from ..buckets import BucketEventHistoryRepository
 from ..transactions import TransactionCatalogueRepository
 from .llm_no_evidence_ports_support import NO_EVIDENCE_LLM_PORTS
 from .llm_saturation_support import (
-    _BUCKET,
-    _seed_unclassified,
+    BUCKET,
+    saturating_subprocess_classifier,
+    seed_unclassified,
 )
 from .llm_saturation_support import (
     repositories as repositories,
-)
-from .llm_saturation_support import (
-    saturating_subprocess_classifier as _saturating_subprocess_classifier,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
@@ -60,18 +56,18 @@ def test_suggest_derives_substrate_from_selected_category(
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         repository, _events = repositories
         # The gross is the transaction input the derived substrate must reconstitute;
         # asserting base + iva against this seeded input (not a recomputed literal) is
         # the real invariant, not a hand-summed expectation.
         gross = Decimal("121.00")
-        tx_id = _seed_unclassified(repository, amount=gross)
+        tx_id = seed_unclassified(repository, amount=gross)
 
         suggestion = saturate_llm_classification(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             transaction_id=tx_id,
-            classifier=_saturating_subprocess_classifier(
+            classifier=saturating_subprocess_classifier(
                 iva_category=IvaCategory("domestic_general"), operation=operation
             ),
             transaction_repository=repository,
@@ -97,16 +93,14 @@ def test_suggest_zero_rated_category_derives_zero_iva(
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         repository, _events = repositories
-        tx_id = _seed_unclassified(repository)
+        tx_id = seed_unclassified(repository)
 
         suggestion = saturate_llm_classification(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             transaction_id=tx_id,
-            classifier=_saturating_subprocess_classifier(
-                iva_category=IvaCategory("domestic_zero"), operation=operation
-            ),
+            classifier=saturating_subprocess_classifier(iva_category=IvaCategory("domestic_zero"), operation=operation),
             transaction_repository=repository,
             settings=load_settings(),
             ports=NO_EVIDENCE_LLM_PORTS,
@@ -124,14 +118,14 @@ def test_suggest_non_derivable_category_surfaces_reason_not_a_guess(
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         repository, _events = repositories
-        tx_id = _seed_unclassified(repository)
+        tx_id = seed_unclassified(repository)
 
         suggestion = saturate_llm_classification(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             transaction_id=tx_id,
-            classifier=_saturating_subprocess_classifier(
+            classifier=saturating_subprocess_classifier(
                 iva_category=IvaCategory("intra_community_supply"), operation=operation
             ),
             transaction_repository=repository,

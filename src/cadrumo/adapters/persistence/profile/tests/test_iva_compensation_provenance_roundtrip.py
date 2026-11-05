@@ -45,7 +45,7 @@ from cadrumo.domain.calculations.registry.schema_references import RegistrySnaps
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 
 from .....domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
-from .iva_compensation_history_support import _state
+from .iva_compensation_history_support import iva_compensation_history_state
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -109,7 +109,7 @@ def test_app_filing_history_round_trips_through_list_and_load_under_a_bundled_au
     real isolated storage runtime while making this a regression for the
     adapter boundary rather than an accidental consumer of its caller's lease.
     """
-    original = _state(filing_year=2025, period="4T", generated=Decimal("75.00"))
+    original = iva_compensation_history_state(filing_year=2025, period="4T", generated=Decimal("75.00"))
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = IvaCompensationHistoryRepository()

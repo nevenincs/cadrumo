@@ -282,7 +282,9 @@ def stored_sign_in_runtime(
     # The backend's priority was fixed when collection imported it, before the
     # selection above, so the sign-in writer's usability probe would refuse it.
     # Hand the writer the same selected store directly.
-    monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (store, KeyringError, PasswordDeleteError))
+    monkeypatch.setattr(
+        acceleration_keychain, "acceleration_keychain_keyring", lambda: (store, KeyringError, PasswordDeleteError)
+    )
     try:
         with administration_subject(
             tmp_path, os_owner_id=owner_id(), installation_id=installation_state.installation_id

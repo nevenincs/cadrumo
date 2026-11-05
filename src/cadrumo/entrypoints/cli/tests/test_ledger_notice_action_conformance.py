@@ -16,10 +16,8 @@ from cadrumo_client.commands.shared_contracts import BindingState
 
 from ....core.directory_scan import scan_directory
 from .. import (
-    _ledger_classify_cli,
-    _ledger_llm_cli,
-    _ledger_support,
     ledger_business_invoice_commands,
+    ledger_classify_cli,
     ledger_commands,
     ledger_counterparty_commands,
     ledger_evidence_batch_commands,
@@ -28,13 +26,15 @@ from .. import (
     ledger_evidence_review_commands,
     ledger_export_commands,
     ledger_import_commands,
+    ledger_lifecycle_cli,
+    ledger_llm_cli,
     ledger_ratios_commands,
     ledger_read_commands,
     ledger_results,
     ledger_review_commands,
     ledger_rules_commands,
+    ledger_support,
 )
-from .. import ledger_lifecycle_cli as _ledger_lifecycle_cli
 from ..command_specs import COMMAND_GRAPH
 from .locale_catalogue import LocaleNode, load_locale
 
@@ -43,7 +43,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _LEDGER_NOTICE_MODULES: tuple[ModuleType, ...] = (
     ledger_commands,
     ledger_business_invoice_commands,
-    _ledger_classify_cli,
+    ledger_classify_cli,
     ledger_counterparty_commands,
     ledger_evidence_batch_commands,
     ledger_evidence_commands,
@@ -51,13 +51,13 @@ _LEDGER_NOTICE_MODULES: tuple[ModuleType, ...] = (
     ledger_evidence_review_commands,
     ledger_export_commands,
     ledger_import_commands,
-    _ledger_lifecycle_cli,
-    _ledger_llm_cli,
+    ledger_lifecycle_cli,
+    ledger_llm_cli,
     ledger_ratios_commands,
     ledger_read_commands,
     ledger_review_commands,
     ledger_rules_commands,
-    _ledger_support,
+    ledger_support,
 )
 
 _COMMAND_PROSE = re.compile(r"(?i)\b(?:aeat\s+)?app\s+ledger\b")

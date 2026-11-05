@@ -29,7 +29,7 @@ from ..ledger_business_payloads import (
     InventoryMovementPayload,
     InventoryStockLayerPayload,
 )
-from ..operation_ledger_inventory import _ledger_payload_json
+from ..operation_ledger_inventory import ledger_payload_json
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -156,7 +156,7 @@ class TestCanonicalBridge:
     def test_real_dump_bridge_round_trips(self) -> None:
         """Drive the exact construction ``runtime_ledger_inventory`` performs."""
         ledger = InventoryLedgerProjection.from_ledger(_canonical_ledger())
-        payload = json.loads(_ledger_payload_json(ledger))
+        payload = json.loads(ledger_payload_json(ledger))
         payload["bucket_event_ids"] = ["evt-1"]
 
         result = InventoryCreateResult.model_validate_json(json.dumps(payload))
@@ -169,7 +169,7 @@ class TestCanonicalBridge:
     def test_bridge_output_is_wire_identical(self) -> None:
         """Validation must not reshape the JSON the operator receives."""
         ledger = InventoryLedgerProjection.from_ledger(_canonical_ledger())
-        payload = json.loads(_ledger_payload_json(ledger))
+        payload = json.loads(ledger_payload_json(ledger))
         payload["bucket_event_ids"] = []
 
         rendered = InventoryCreateResult.model_validate_json(json.dumps(payload)).model_dump(mode="json")

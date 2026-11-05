@@ -5,7 +5,7 @@ from __future__ import annotations
 from html import escape
 
 from ......core.config import Settings
-from ..._html import parse_html
+from ...html import parse_html
 
 PATHS = Settings.external_constants().aeat.sede_paths
 

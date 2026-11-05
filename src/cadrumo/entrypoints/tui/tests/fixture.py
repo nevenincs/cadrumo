@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from ....adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
@@ -113,7 +113,7 @@ def ensure_profile() -> str:
 
     # Registration validates facts against registry authority, so it runs under a real lease.
     with bundled_indexed_authority().operation():
-        profile_create_context, profile_decode_context = _profile_contexts_for_test()
+        profile_create_context, profile_decode_context = profile_authority_contexts()
         outcome = register_profile_with_credentials(
             label=PROFILE_LABEL,
             passphrase=passphrase(),
@@ -177,7 +177,7 @@ def ensure_session() -> str:
     bucket_id = ensure_profile()
     ProfileCapsuleLifecycle().select(bucket_id)
     with bundled_indexed_authority().operation():
-        _profile_create_context, profile_decode_context = _profile_contexts_for_test()
+        _profile_create_context, profile_decode_context = profile_authority_contexts()
         authenticate_profile_for_invocation(
             name=bucket_id, passphrase_callback=passphrase, profile_decode_context=profile_decode_context
         )

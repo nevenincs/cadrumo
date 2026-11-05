@@ -19,8 +19,8 @@ import pytest
 import typer
 
 from cadrumo.application.modelo.m145_communication_period import M145CommunicationPeriod
-from cadrumo.entrypoints.cli._modelo_cli_support import parse_casilla_override, resolve_default_actor
-from cadrumo.entrypoints.cli._modelo_m145_parsing import (
+from cadrumo.entrypoints.cli.modelo_cli_support import parse_casilla_override, resolve_default_actor
+from cadrumo.entrypoints.cli.modelo_m145_parsing import (
     m145_actor_from_cli,
     m145_create_command_from_cli,
     m145_field_values_from_cli,

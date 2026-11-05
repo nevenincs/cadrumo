@@ -37,8 +37,8 @@ from .....domain.calculations.registry.bindings import RegistryModeloObservation
 from .....domain.calculations.registry.formula_runtime import RegistryCalculationResult
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..calculation_observations import CalculationObservationRepository
-from ._observation_lookup_support import find_observation, save_app_filing_observation
 from .modelo_leaf_calculation_support import calculate_from_bindings, registry_observation_of
+from .observation_lookup_support import find_observation, save_app_filing_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

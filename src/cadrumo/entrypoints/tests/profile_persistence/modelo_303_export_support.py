@@ -22,10 +22,8 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
 from ....adapters.persistence.profile.tests.modelo_303_filed_disposition import modelo_303_filed_disposition
 from ....adapters.persistence.profile.tests.modelo_export_support import (
-    seed_profile as _seed_profile,
-)
-from ....adapters.persistence.profile.tests.modelo_export_support import (
-    synthetic_valid_nif as _synthetic_valid_nif,
+    seed_profile,
+    synthetic_valid_nif,
 )
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
@@ -110,7 +108,7 @@ def _m303_snapshot_ref(period: str) -> RegistrySnapshotRef:
     return published_authority_operation().snapshot("303", filing_year=2026, period=period).snapshot_ref
 
 
-def _blocked_wallet_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCompensationReconciliationDecision:
+def blocked_wallet_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCompensationReconciliationDecision:
     now = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
     source_ref = _m303_snapshot_ref("1T")
     return IvaCompensationReconciliationDecision(
@@ -151,7 +149,7 @@ def _blocked_wallet_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCom
     )
 
 
-def _filed_history_only_wallet_decision(
+def filed_history_only_wallet_decision(
     *,
     taxpayer_nif: str,
     period: str = "2T",
@@ -236,7 +234,7 @@ def _modelo_303_engine_inputs() -> dict[BindingId, Decimal]:
 #: rendered per the fichero-BOE parity gate
 #: (``modelo-export-mirrors-official-structure``) rather than silently
 #: omitting them.
-_MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS: dict[str, Decimal] = {
+MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS: dict[str, Decimal] = {
     "18": Decimal("0.00"),
     "58": Decimal("0.00"),
     "68": Decimal("0.00"),
@@ -247,7 +245,7 @@ _MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS: dict[str, Decimal] = {
 }
 
 
-def _seed_modelo_303_1t_clean_state(
+def seed_modelo_303_1t_clean_state(
     *,
     bucket_id: str,
     taxpayer_tax_id: str,
@@ -454,8 +452,8 @@ def calculate_and_verify_modelo_303_revision(
     the revision is reloaded after verification so it carries the state the
     gate left it in.
     """
-    taxpayer_nif = _synthetic_valid_nif(12_345_678)
-    bucket_id = _seed_profile(
+    taxpayer_nif = synthetic_valid_nif(12_345_678)
+    bucket_id = seed_profile(
         tax_id=taxpayer_nif,
         profile_overrides={"identity.surnames": "Test Surnames"},
     )
@@ -491,7 +489,7 @@ def calculate_and_verify_modelo_303_revision(
     casilla_inputs = {
         "iva.prorrata-volumen-con-derecho": Decimal("100.00"),
         "iva.prorrata-volumen-total": Decimal("100.00"),
-        **_MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS,
+        **MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS,
     }
     if casilla_111 is not None:
         casilla_inputs["111"] = casilla_111
@@ -516,7 +514,7 @@ def calculate_and_verify_modelo_303_revision(
             ports=_calculation_ports_481,
             clock=datetime(2026, 5, 21, 12, 1, tzinfo=UTC),
         ).revision
-    _seed_modelo_303_1t_clean_state(
+    seed_modelo_303_1t_clean_state(
         bucket_id=bucket_id,
         taxpayer_tax_id=taxpayer_nif,
         available_compensation=Decimal("1200.00"),

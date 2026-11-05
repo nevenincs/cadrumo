@@ -19,14 +19,14 @@ from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationDecisionReason,
 )
 from cadrumo.entrypoints.tests.profile_persistence.iva_wallet_engine_support import (
-    _BUCKET_ID,
-    _TAXPAYER_NIF,
-    _create_modelo_303_work_unit,
-    _period,
-    _secure_backend,
-    _snapshot_303,
-    _store_operator_profile,
-    _work_unit_repositories,
+    BUCKET_ID,
+    TAXPAYER_NIF,
+    create_modelo_303_work_unit,
+    period,
+    secure_backend,
+    snapshot_303,
+    store_operator_profile,
+    work_unit_repositories,
 )
 
 from .iva_wallet_engine_support import resolve_without_caller_inputs
@@ -36,11 +36,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 def _first_period_work_unit(*, operation: PinnedAuthorityOperation):
 
-    snapshot = _snapshot_303(period="1T")
+    snapshot = snapshot_303(period="1T")
 
-    work_units, _, _ = _work_unit_repositories()
+    work_units, _, _ = work_unit_repositories()
 
-    return snapshot, _create_modelo_303_work_unit(snapshot, work_unit_repository=work_units, operation=operation)
+    return snapshot, create_modelo_303_work_unit(snapshot, work_unit_repository=work_units, operation=operation)
 
 
 def test_declared_activity_start_persists_an_uncontrasted_first_period_zero(
@@ -48,8 +48,8 @@ def test_declared_activity_start_persists_an_uncontrasted_first_period_zero(
 ) -> None:
     """The actual grounding path stores the weaker, honest authority identity."""
 
-    with _secure_backend(tmp_path):
-        _store_operator_profile()
+    with secure_backend(tmp_path):
+        store_operator_profile()
 
         snapshot, work_unit = _first_period_work_unit(operation=operation)
 
@@ -69,8 +69,8 @@ def test_declared_activity_start_persists_an_uncontrasted_first_period_zero(
 
         assert (
             IvaWalletDecisionRepository().load_decision(
-                _TAXPAYER_NIF,
-                _period(2026, "1T"),
+                TAXPAYER_NIF,
+                period(2026, "1T"),
             )
             == decision
         )
@@ -81,10 +81,10 @@ def test_missing_activity_start_still_blocks_the_first_period_zero(
 ) -> None:
     """Absence remains fail-closed; the advisory must not become a grant."""
 
-    with _secure_backend(tmp_path):
-        _store_operator_profile()
+    with secure_backend(tmp_path):
+        store_operator_profile()
 
-        profile = load_test_profile_record(_BUCKET_ID)
+        profile = load_test_profile_record(BUCKET_ID)
 
         replace_test_profile_record(
             profile.model_copy(
@@ -114,8 +114,8 @@ def test_missing_activity_start_still_blocks_the_first_period_zero(
 
         assert (
             IvaWalletDecisionRepository().load_decision(
-                _TAXPAYER_NIF,
-                _period(2026, "1T"),
+                TAXPAYER_NIF,
+                period(2026, "1T"),
             )
             == decision
         )

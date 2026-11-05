@@ -48,8 +48,8 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 from pydantic import BaseModel, Field, field_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.i18n.render import tr as _tr
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.i18n.render import tr
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.unit_proportion import UNIT_PROPORTION_MAX, UNIT_PROPORTION_MIN, is_unit_proportion
 from ..calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ..categories.registry import resolve_category_profiles
@@ -77,7 +77,7 @@ _OUTPUT_PREVIEW = 400
 class LLMClassificationResponse(BaseModel):
     """One LLM-emitted classification result for a transaction."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     classification: BusinessClassification
     confidence: Decimal
@@ -137,7 +137,7 @@ class LLMSplitChild(BaseModel):
     (``llm-selects-system-derives-tax-numbers``).
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     proportion: Decimal
     category: SpendingCategory | None = None
@@ -163,7 +163,7 @@ class LLMSplitResponse(BaseModel):
     one-way split. Two or more children is a genuine split recommendation.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     children: tuple[LLMSplitChild, ...]
     reason: str = Field(min_length=1, max_length=_REASON_MAX_LENGTH)
@@ -399,7 +399,7 @@ def prompt_spec_with_every_spending_category(
         registered :class:`cadrumo.domain.categories.spending_category.SpendingCategory`.
     """
     category_choices = tuple(
-        CategoryChoice(value=value, hint=_category_hint(value, year=year, operation=operation))
+        CategoryChoice(value=value, hint=category_hint(value, year=year, operation=operation))
         for value in spending_category_tokens(effective_date=date(year, 12, 31), authority=operation)
     )
     return PromptSpec(
@@ -460,7 +460,7 @@ def prompt_spec_with_saturation_fields(
         IVA-category allow-lists.
     """
     category_choices = tuple(
-        CategoryChoice(value=value, hint=_category_hint(value, year=year, operation=operation))
+        CategoryChoice(value=value, hint=category_hint(value, year=year, operation=operation))
         for value in spending_category_tokens(effective_date=date(year, 12, 31), authority=operation)
     )
     return PromptSpec(
@@ -470,7 +470,7 @@ def prompt_spec_with_saturation_fields(
     )
 
 
-def _category_hint(value: SpendingCategory, *, year: int, operation: PinnedAuthorityOperation) -> str:
+def category_hint(value: SpendingCategory, *, year: int, operation: PinnedAuthorityOperation) -> str:
     """Return the best available hint string for a SpendingCategory in ``year``.
 
     Resolves the display label and ``notes`` translation keys to Spanish at
@@ -492,9 +492,9 @@ def _category_hint(value: SpendingCategory, *, year: int, operation: PinnedAutho
     # Pinned to Spanish regardless of operator locale: the classifier reasons
     # over Spanish AEAT invoices, so authoritative AEAT terminology must reach
     # the prompt even when the operator has selected en/ca/hu.
-    spanish_label = _tr(profile.display_label, locale="es")
+    spanish_label = tr(profile.display_label, locale="es")
     rule = profile.proportionality
-    notes = _tr(rule.notes, locale="es") if rule.notes else ""
+    notes = tr(rule.notes, locale="es") if rule.notes else ""
     notes_preview = notes.strip().splitlines()[0][:_NOTES_PREVIEW] if notes else ""
     segments = [spanish_label, f"[{rule.kind.value}]"]
     if notes_preview:

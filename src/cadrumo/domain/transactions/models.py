@@ -28,7 +28,7 @@ from ...core.hashing import content_hash_hex
 from ...core.identity.bucket import BucketId
 from ...core.identity.transaction_ids import TransactionId
 from ...core.iva_deduction_fact import IvaDeductionFactKind
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.codes import normalise_iso_3166_alpha2_jurisdiction
 from ...core.prorrata_exclusions import Art104TresExclusion
 from ...core.text_fold import fold_diacritics
@@ -71,8 +71,8 @@ from .lineage_models import (
     TransactionEditLineageEntry,
     TransactionEvidenceProvenanceEntry,
     TransactionLifecycleLineageEntry,
-    _string_keyed_mapping,
     derive_split_group_id,
+    string_keyed_mapping,
 )
 from .m210_income_classification import M210IncomeClassification
 from .model_validation import (
@@ -593,7 +593,7 @@ class Transaction(BaseModel):
         modified_at: UTC-aware timestamp re-stamped on every mutating edit.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     raw: RawTransaction
     own_account_id: OwnAccountId | None = None
@@ -1049,7 +1049,7 @@ class Transaction(BaseModel):
 class BucketTransactionRef(BaseModel):
     """A transaction identifier qualified by its owning profile bucket."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
     transaction_id: TransactionId
@@ -1092,11 +1092,11 @@ def _json_catalogue_member(value: object) -> Transaction:
 
 
 def _mapping_catalogue_input(data: Mapping[object, object], *, json_mode: bool) -> dict[str, object]:
-    payload = _string_keyed_mapping(data)
+    payload = string_keyed_mapping(data)
     wrapped = "transactions" in payload
     members = payload["transactions"] if wrapped else payload
     if json_mode and is_object_mapping(members):
-        members = {key: _json_catalogue_member(value) for key, value in _string_keyed_mapping(members).items()}
+        members = {key: _json_catalogue_member(value) for key, value in string_keyed_mapping(members).items()}
     return {**payload, "transactions": members} if wrapped else {"transactions": members}
 
 
@@ -1129,7 +1129,7 @@ class TransactionCatalogue(BaseModel):
     or by passing a mapping / iterable to ``model_validate``.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transactions: Mapping[str, Transaction] = Field(default_factory=dict)
 

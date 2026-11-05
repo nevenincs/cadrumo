@@ -71,21 +71,20 @@ from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.verification_report import VerificationReport
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_calculation_action_ports,
     build_filing_action_ports,
     build_verification_repository_bundle,
 )
 from cadrumo.entrypoints.tests.profile_persistence.m303_annual_ledger_support import (
-    _BUCKET_ID,
-    _T0,
-    _YEAR,
+    BUCKET_ID,
+    T0,
+    YEAR,
     product_software_identity,
 )
 from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import (
-    _MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS,
+    MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS,
 )
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -100,7 +99,7 @@ OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 @pytest.fixture
 def bucket_id() -> str:
-    return _BUCKET_ID
+    return BUCKET_ID
 
 
 TAX_ID = "12345678Z"
@@ -162,7 +161,7 @@ def verification_ports(
 ) -> VerificationRepositoryBundle:
     """Compose complete verification ports over the isolated repositories."""
     return replace(
-        build_verification_repository_bundle(_BUCKET_ID, operation=operation),
+        build_verification_repository_bundle(BUCKET_ID, operation=operation),
         work_unit=work_repo,
         calculation=calc_repo,
         filing=filing_repo,
@@ -185,7 +184,7 @@ def filing_ports(
 ) -> FilingActionPorts:
     """Compose complete filing ports over the isolated repositories."""
     return replace(
-        build_filing_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+        build_filing_action_ports(bucket_id=BUCKET_ID, operation=operation),
         work_unit_repository=work_repo,
         calculation_repository=calc_repo,
         filing_repository=filing_repo,
@@ -203,7 +202,7 @@ def filing_ports(
 def wallet_decision(
     *,
     period: str,
-    filing_year: int = _YEAR,
+    filing_year: int = YEAR,
     taxpayer_nif: str = TAX_ID,
     decided_at: datetime = FILE_AT,
 ) -> IvaCompensationReconciliationDecision:
@@ -242,10 +241,10 @@ def wallet_decision(
 def store_profile(secure_objects: SecureObjectRepository, *, activity_start_date: date = date(2020, 1, 1)) -> None:
     """Seed the ready taxpayer profile the M303 gates read."""
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             context=published_authority_operation().profile_create_context(),
             setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
+            profile_id=BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value=TAX_ID),
                 UserProfileFact(path="identity.name", value="Laura"),
@@ -267,8 +266,8 @@ def store_profile(secure_objects: SecureObjectRepository, *, activity_start_date
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
                 UserProfileFact(path="censo.activity_start_date", value=activity_start_date),
             ),
-            created_at=_T0,
-            updated_at=_T0,
+            created_at=T0,
+            updated_at=T0,
         ),
     )
 
@@ -276,10 +275,10 @@ def store_profile(secure_objects: SecureObjectRepository, *, activity_start_date
 def store_irene_sl_profile(secure_objects: SecureObjectRepository) -> None:
     """Seed Irene SL's IVA profile for the late-local-file persona path."""
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             context=published_authority_operation().profile_create_context(),
             setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
+            profile_id=BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value=IRENE_TAX_ID),
                 UserProfileFact(path="identity.legal_name", value="Irene SL"),
@@ -300,8 +299,8 @@ def store_irene_sl_profile(secure_objects: SecureObjectRepository) -> None:
                 UserProfileFact(path="provenance.source", value="manual_cli"),
                 UserProfileFact(path="censo.activity_start_date", value=date(IRENE_YEAR, 1, 1)),
             ),
-            created_at=_T0,
-            updated_at=_T0,
+            created_at=T0,
+            updated_at=T0,
         ),
     )
 
@@ -314,7 +313,7 @@ def workflow_profile() -> TaxpayerProfile:
         pays_rent_with_retencion=False,
         does_intracomunitario=True,
         bienes_extranjero_above_threshold=False,
-        activity_start_date=date(_YEAR, 1, 1),
+        activity_start_date=date(YEAR, 1, 1),
         iva=general_regime_iva_profile(),
     )
 
@@ -349,7 +348,7 @@ def calculate_m303_quarter_revision(
     secure_objects: SecureObjectRepository,
     *,
     period: str,
-    filing_year: int = _YEAR,
+    filing_year: int = YEAR,
     taxpayer_nif: str = TAX_ID,
     calculated_at: datetime = FILE_AT,
     extra_casilla_inputs: dict[CasillaId, Decimal] | None = None,
@@ -372,7 +371,7 @@ def calculate_m303_quarter(
     secure_objects: SecureObjectRepository,
     *,
     period: str,
-    filing_year: int = _YEAR,
+    filing_year: int = YEAR,
     taxpayer_nif: str = TAX_ID,
     calculated_at: datetime = FILE_AT,
     extra_casilla_inputs: dict[CasillaId, Decimal] | None = None,
@@ -380,10 +379,10 @@ def calculate_m303_quarter(
     operation: PinnedAuthorityOperation,
 ) -> tuple[WorkUnit, BucketAggregationCalculationResult]:
     """Run the live bucket-aggregation M303 calc for one quarter and keep its source diagnostics."""
-    wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    wu_repo = WorkUnitCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
     CalculationRevisionCatalogueRepository(objects=secure_objects)
     BucketEventHistoryRepository(objects=secure_objects)
-    TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    TransactionCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
     typed_period = Period.from_year_and_code(filing_year, period)
     source_revision = (
         published_authority_operation().snapshot("303", filing_year=filing_year, period=typed_period.registry_token)
@@ -393,11 +392,11 @@ def calculate_m303_quarter(
     bound_casilla_ids = {casilla.id for casilla in source_revision.casillas if casilla.input_kind == InputKind.BOUND}
     manual_zeros = {
         casilla_id: value
-        for casilla_id, value in _MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS.items()
+        for casilla_id, value in MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS.items()
         if casilla_id not in bound_casilla_ids
     }
     work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         modelo="303",
         filing_year=filing_year,
         period=typed_period,
@@ -405,7 +404,7 @@ def calculate_m303_quarter(
         ports=WorkLifecyclePorts(
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
         ),
-        clock=_T0,
+        clock=T0,
         operation=operation,
     )
     decision = wallet_decision(
@@ -415,7 +414,7 @@ def calculate_m303_quarter(
     with bundled_indexed_authority().operation() as operation:
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+            ports=build_calculation_action_ports(bucket_id=BUCKET_ID, operation=operation),
             actor="system",
             # Manual, formula-operand "resultado" casillas (58/68/70/76/77/109/18)
             # the fichero-BOE completeness manifest requires but the engine never
@@ -464,18 +463,18 @@ def calculate_and_file_m303_quarter(
 def calculate_m390_annual(
     secure_objects: SecureObjectRepository,
     *,
-    filing_year: int = _YEAR,
+    filing_year: int = YEAR,
     operation: PinnedAuthorityOperation,
     binding_values: dict[str, Decimal] | None = None,
 ) -> CalculationRevision:
     """Run the live M390/annual calc, leaving the 303-reconciliation relations to fold."""
-    wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    wu_repo = WorkUnitCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
     CalculationRevisionCatalogueRepository(objects=secure_objects)
-    TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    TransactionCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
     InvoiceCatalogueRepository(objects=secure_objects)
     snapshot = published_authority_operation().snapshot("390", filing_year=filing_year, period="0A")
     work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         modelo="390",
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, "0A"),
@@ -483,13 +482,13 @@ def calculate_m390_annual(
         ports=WorkLifecyclePorts(
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
         ),
-        clock=_T0,
+        clock=T0,
         operation=operation,
     )
     with bundled_indexed_authority().operation() as operation:
         return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+            ports=build_calculation_action_ports(bucket_id=BUCKET_ID, operation=operation),
             binding_values=binding_values or {},
             clock=FILE_AT,
         ).revision
@@ -557,12 +556,12 @@ MANUAL_YEAR_INTERIORES_CORRIENTES_CUOTA = Decimal("1024.00")
 
 def save_general_prorrata_register(secure_objects: SecureObjectRepository) -> None:
     """Declare the general prorrata with the provisional percentage carried from the prior year."""
-    prior_year = _YEAR - 1
-    ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
+    prior_year = YEAR - 1
+    ProrrataRegisterRepository(bucket_id=BUCKET_ID, objects=secure_objects).save(
         ProrrataRegister(
             entries=(
                 ProrrataRegisterEntry(
-                    ejercicio=_YEAR,
+                    ejercicio=YEAR,
                     regime=ProrrataRegisterRegime.from_registry("general"),
                     especial_transition=None,
                     provisional_percentage=PRORRATA_PROVISIONAL_PERCENTAGE,
@@ -588,12 +587,12 @@ def assert_form_states_no_figure(
     """The editor form shows each box as not worked out, with no value, rather than an imported or summed zero."""
     with bundled_indexed_authority().operation() as form_operation:
         form = load_modelo_work_form(
-            _BUCKET_ID,
+            BUCKET_ID,
             ModeloCode("303"),
-            _YEAR,
-            Period.from_year_and_code(_YEAR, "4T"),
+            YEAR,
+            Period.from_year_and_code(YEAR, "4T"),
             operation=form_operation,
-            work_unit_repository=WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+            work_unit_repository=WorkUnitCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects),
             calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
             verification_repository=VerificationReportCatalogueRepository(objects=secure_objects),
             admission=None,
@@ -614,12 +613,12 @@ def assert_verify_export_and_file_refused(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """Verify refuses on the unresolved-binding note; export and local filing refuse the unverified draft."""
-    wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    wu_repo = WorkUnitCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     filing_repo = ModeloRecordCatalogueRepository(objects=secure_objects)
     vr_repo = VerificationReportCatalogueRepository(objects=secure_objects)
     event_repo = BucketEventHistoryRepository(objects=secure_objects)
-    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
 
     with (
         bundled_indexed_authority().operation() as verify_operation,
@@ -648,7 +647,7 @@ def assert_verify_export_and_file_refused(
 
     # The refused check leaves the draft unverified, so export and local filing
     # refuse it on state before their own calculation-note gates are reached.
-    output_path = tmp_path / f"modelo-303-{_YEAR}-4T.boe"
+    output_path = tmp_path / f"modelo-303-{YEAR}-4T.boe"
     with (
         bundled_indexed_authority().operation() as export_operation,
         pytest.raises(CalculationRevisionStateError) as export_refusal,
@@ -663,7 +662,7 @@ def assert_verify_export_and_file_refused(
             workflow_profile=workflow_profile(),
             export_ports=modelo_export_ports_for_test(
                 product_software_identity=product_software_identity(),
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 taxpayer_tax_id=TAX_ID,
                 secure_objects=secure_objects,
                 work_unit=wu_repo,

@@ -20,21 +20,15 @@ from ..buckets import BucketEventHistoryRepository
 from ..transactions import TransactionCatalogueRepository
 from .ledger_action_create_support import ledger_ports_for_test
 from .llm_evidence_split_support import (
-    _BUCKET,
-    _NOW,
-    _seed_parent,
+    BUCKET,
+    NOW,
+    seed_parent,
+    single_line_proposal,
+    split_subprocess_proposer,
+    two_line_proposal,
 )
 from .llm_evidence_split_support import (
     repositories as repositories,
-)
-from .llm_evidence_split_support import (
-    single_line_proposal as _single_line_proposal,
-)
-from .llm_evidence_split_support import (
-    split_subprocess_proposer as _split_subprocess_proposer,
-)
-from .llm_evidence_split_support import (
-    two_line_proposal as _two_line_proposal,
 )
 from .llm_no_evidence_ports_support import NO_EVIDENCE_LLM_PORTS
 
@@ -47,10 +41,10 @@ def _suggest_single_line_split(repository: TransactionCatalogueRepository, tx_id
     """Ask the split proposer for its single-line (no split) answer on ``tx_id``."""
     with bundled_indexed_authority().operation() as operation:
         return suggest_evidence_split(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             transaction_id=tx_id,
             operation=operation,
-            proposer=_split_subprocess_proposer(response=_single_line_proposal(), operation=operation),
+            proposer=split_subprocess_proposer(response=single_line_proposal(), operation=operation),
             transaction_repository=repository,
             read_evidence=False,
             settings=load_settings(),
@@ -64,7 +58,7 @@ def test_single_child_suggestion_does_not_recommend_split(
     operation: PinnedAuthorityOperation,
 ) -> None:
     repository, _events, _objects = repositories
-    tx_id = _seed_parent(repository, amount=Decimal("121.00"))
+    tx_id = seed_parent(repository, amount=Decimal("121.00"))
 
     suggestion = _suggest_single_line_split(repository, tx_id)
 
@@ -80,11 +74,11 @@ def test_apply_evidence_split_refuses_a_no_split_verdict(
     operation: PinnedAuthorityOperation,
 ) -> None:
     repository, events, objects = repositories
-    tx_id = _seed_parent(repository, amount=Decimal("121.00"))
+    tx_id = seed_parent(repository, amount=Decimal("121.00"))
     suggestion = _suggest_single_line_split(repository, tx_id)
     with (
         ledger_ports_for_test(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             objects=objects,
             transaction_repository=repository,
             bucket_event_repository=events,
@@ -93,10 +87,10 @@ def test_apply_evidence_split_refuses_a_no_split_verdict(
     ):
         apply_evidence_split(
             suggestion,
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             source_command="aeat app ledger split --llm --apply",
             ports=ports,
-            occurred_at=_NOW,
+            occurred_at=NOW,
         )
 
 
@@ -106,21 +100,21 @@ def test_apply_evidence_classification_writes_in_place_from_the_lone_child(
     operation: PinnedAuthorityOperation,
 ) -> None:
     repository, events, objects = repositories
-    tx_id = _seed_parent(repository, amount=Decimal("121.00"))
+    tx_id = seed_parent(repository, amount=Decimal("121.00"))
     suggestion = _suggest_single_line_split(repository, tx_id)
 
     with ledger_ports_for_test(
-        bucket_id=_BUCKET,
+        bucket_id=BUCKET,
         objects=objects,
         transaction_repository=repository,
         bucket_event_repository=events,
     ) as ports:
         result = apply_evidence_classification(
             suggestion,
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             source_command="aeat app ledger classify --read-evidence --auto-split --apply",
             ports=ports,
-            occurred_at=_NOW,
+            occurred_at=NOW,
         )
 
     catalogue = repository.load()
@@ -142,13 +136,13 @@ def test_apply_evidence_classification_refuses_a_multi_child_split(
     operation: PinnedAuthorityOperation,
 ) -> None:
     repository, events, objects = repositories
-    tx_id = _seed_parent(repository, amount=Decimal("121.00"))
+    tx_id = seed_parent(repository, amount=Decimal("121.00"))
     with bundled_indexed_authority().operation() as operation:
         suggestion = suggest_evidence_split(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             transaction_id=tx_id,
             operation=operation,
-            proposer=_split_subprocess_proposer(response=_two_line_proposal(), operation=operation),
+            proposer=split_subprocess_proposer(response=two_line_proposal(), operation=operation),
             transaction_repository=repository,
             read_evidence=False,
             settings=load_settings(),
@@ -156,7 +150,7 @@ def test_apply_evidence_classification_refuses_a_multi_child_split(
         )
     with (
         ledger_ports_for_test(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             objects=objects,
             transaction_repository=repository,
             bucket_event_repository=events,
@@ -165,7 +159,7 @@ def test_apply_evidence_classification_refuses_a_multi_child_split(
     ):
         apply_evidence_classification(
             suggestion,
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             source_command="aeat app ledger classify --read-evidence --auto-split --apply",
             ports=ports,
         )
@@ -178,14 +172,14 @@ def test_no_split_reviewed_classification_refuses_stale_parent_and_preserves_enc
 ) -> None:
     """The lone-child apply cannot replace a row edited after evidence review."""
     repository, events, objects = repositories
-    tx_id = _seed_parent(repository, amount=Decimal("121.00"))
+    tx_id = seed_parent(repository, amount=Decimal("121.00"))
     reviewed = repository.load().get(tx_id)
     assert reviewed is not None
     suggestion = suggest_evidence_split(
-        bucket_id=_BUCKET,
+        bucket_id=BUCKET,
         transaction_id=tx_id,
         operation=operation,
-        proposer=_split_subprocess_proposer(response=_single_line_proposal(), operation=operation),
+        proposer=split_subprocess_proposer(response=single_line_proposal(), operation=operation),
         transaction_repository=repository,
         read_evidence=False,
         settings=load_settings(),
@@ -196,7 +190,7 @@ def test_no_split_reviewed_classification_refuses_stale_parent_and_preserves_enc
     before_events = events.load()
     with (
         ledger_ports_for_test(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             objects=objects,
             transaction_repository=repository,
             bucket_event_repository=events,
@@ -205,10 +199,10 @@ def test_no_split_reviewed_classification_refuses_stale_parent_and_preserves_enc
     ):
         apply_evidence_classification(
             suggestion,
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             source_command="aeat app ledger classify --read-evidence --auto-split --apply",
             ports=ports,
-            occurred_at=_NOW,
+            occurred_at=NOW,
             expected_current=reviewed,
         )
     stored = repository.load()

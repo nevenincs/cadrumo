@@ -23,10 +23,10 @@ from ....core.period import Period
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.governed_fact_scope import validating_governed_facts
 from ...calculations.registry.schema_live_verification import ProfilePredicateDefinition
-from .. import engine as _engine_module
+from .. import engine
 from ..engine import (
-    _MISSING_WINDOWS_MESSAGE_KEY,
-    _SCHEDULE_COMPUTATION_MESSAGE_KEY,
+    MISSING_WINDOWS_MESSAGE_KEY,
+    SCHEDULE_COMPUTATION_MESSAGE_KEY,
     DeadlineEngine,
 )
 from ..errors import NoDeadlineWindowsError, ScheduleComputationError
@@ -52,8 +52,8 @@ _EXPECTED_RAISING_FUNCTIONS = frozenset(
     },
 )
 
-assert _engine_module.__file__ is not None
-_ENGINE_SOURCE = Path(_engine_module.__file__)
+assert engine.__file__ is not None
+_ENGINE_SOURCE = Path(engine.__file__)
 
 
 def _profile(operation: PinnedAuthorityOperation) -> TaxpayerProfile:
@@ -79,10 +79,10 @@ class TestMessageKeysMatchTheRegistry:
     """The stated keys are the classes' own registered keys."""
 
     def test_missing_windows_key_is_the_registered_key(self) -> None:
-        assert NoDeadlineWindowsError.code.message_key == _MISSING_WINDOWS_MESSAGE_KEY
+        assert NoDeadlineWindowsError.code.message_key == MISSING_WINDOWS_MESSAGE_KEY
 
     def test_schedule_computation_key_is_the_registered_key(self) -> None:
-        assert ScheduleComputationError.code.message_key == _SCHEDULE_COMPUTATION_MESSAGE_KEY
+        assert ScheduleComputationError.code.message_key == SCHEDULE_COMPUTATION_MESSAGE_KEY
 
 
 class TestRefusalsCarryNoAuthoredSentence:

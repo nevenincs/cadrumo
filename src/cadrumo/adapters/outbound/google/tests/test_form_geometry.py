@@ -30,14 +30,14 @@ from .....application.storage.calc_sheets.records import (
 from .....application.storage.calc_sheets.theme import StyleRole
 from .....core.period import Period
 from ...workbook.calc_sheets_xlsx import materialize_export_plan
-from .._calc_sheets_apply_formatting import (
+from ..calc_sheets_apply_formatting import (
     build_base_font_requests,
     build_form_geometry_requests,
     build_grid_resize_requests,
     build_number_format_requests,
     build_styled_range_requests,
 )
-from .._calc_sheets_apply_values import build_value_data
+from ..calc_sheets_apply_values import build_value_data
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

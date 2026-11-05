@@ -38,9 +38,9 @@ from cadrumo.domain.modelos.filing_record import (
 from cadrumo.entrypoints.adapter_composition_work_ports import build_filing_action_ports
 from cadrumo.entrypoints.tests.filing_record_read_support import persisted_filing_record
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
-    _FILE_FLOW_PROFILE_ID,
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
+    FILE_FLOW_PROFILE_ID,
     T1,
     T2,
     T3,
@@ -781,7 +781,7 @@ def test_list_filing_records_orders_multiple_periods_without_period_comparison(r
 
     listed = list_filing_records(
         ports=replace(
-            build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=published_authority_operation()),
+            build_filing_action_ports(bucket_id=FILE_FLOW_PROFILE_ID, operation=published_authority_operation()),
             filing_repository=fr_repo,
         ),
     )
@@ -843,7 +843,7 @@ def test_list_filing_records_filters_by_modelo(repos: Repos) -> None:
     listed = list_filing_records(
         modelo="100",
         ports=replace(
-            build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=published_authority_operation()),
+            build_filing_action_ports(bucket_id=FILE_FLOW_PROFILE_ID, operation=published_authority_operation()),
             filing_repository=fr_repo,
         ),
     )

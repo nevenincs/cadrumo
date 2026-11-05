@@ -12,10 +12,10 @@ from ..schema import ModeloDefinition, RegistrySnapshot
 from ..schema_catalogues import RegistryCatalogues
 from .authority_lease_support import private_authority_lease, scoped_when_requested
 from .formula_runtime_support import (
-    committed_modelo_130_snapshot as _committed_modelo_130_snapshot,
+    committed_modelo_130_snapshot as formula_runtime_committed_modelo_130_snapshot,
 )
 from .formula_runtime_support import (
-    committed_modelo_180_snapshot as _committed_modelo_180_snapshot,
+    committed_modelo_180_snapshot as formula_runtime_committed_modelo_180_snapshot,
 )
 from .registry_tree import bundled_registry_tree
 
@@ -75,14 +75,14 @@ def registry_snapshot(
 def committed_modelo_130_snapshot(
     registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> RegistrySnapshot:
-    return _committed_modelo_130_snapshot(registry_snapshot)
+    return formula_runtime_committed_modelo_130_snapshot(registry_snapshot)
 
 
 @pytest.fixture
 def committed_modelo_180_snapshot(
     registry_snapshot: Callable[..., RegistrySnapshot],
 ) -> RegistrySnapshot:
-    return _committed_modelo_180_snapshot(registry_snapshot)
+    return formula_runtime_committed_modelo_180_snapshot(registry_snapshot)
 
 
 @pytest.fixture

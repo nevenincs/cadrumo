@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.transaction_ids import TransactionId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from .errors import TransactionValidationError
 from .models import TransactionCatalogue
 
@@ -28,7 +28,7 @@ class OutOfWindowTransactionIndexEntry(BaseModel):
     does not already carry.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     transaction_id: TransactionId
     filing_date: date
@@ -41,7 +41,7 @@ class OutOfWindowTransactionSummary(BaseModel):
     by those rows. It never carries decrypted transaction facts.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     count: int = Field(ge=1)
     min_filing_date: date
@@ -91,7 +91,7 @@ class LedgerDatePartition(BaseModel):
     served it except through this flag and through latency.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     in_window: TransactionCatalogue
     out_of_window: tuple[OutOfWindowTransactionIndexEntry, ...] = ()

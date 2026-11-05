@@ -87,10 +87,10 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.query_reports import ModeloCasillaRow
 from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
 from ...domain.modelos.filing_record import FilingDeclarationKind
-from ._modelo_cli_support import bad_parameter_from_error, resolve_actor_option
-from ._modelo_rendering import filing_record_lines
 from .common import emit_envelope, no_active_profile_refusal
 from .modelo_amend_wizard_results import AmendWizardCorrectedCasillaPayload, WorkAmendWizardResult
+from .modelo_cli_support import bad_parameter_from_error, resolve_actor_option
+from .modelo_rendering import filing_record_lines
 from .operation_modelo_amendment import read_modelo_work_amendment_context, run_modelo_work_amendment
 from .operation_modelo_metadata import read_modelo_work_unit
 
@@ -107,7 +107,7 @@ class _AmendWizardAnswers(BaseModel):
 
 
 _COPY_NAMESPACE = "modelo-amend"
-_ACTIVE_RUNS: dict[str, dict[str, str]] = {}
+ACTIVE_RUNS: dict[str, dict[str, str]] = {}
 (
     "Per-run registry-derived copy tables, keyed by an opaque run token.\n\n"
     "Each wizard invocation owns one table for its whole lifetime — both the\n"
@@ -122,9 +122,9 @@ _ACTIVE_RUNS: dict[str, dict[str, str]] = {}
     "get their turn.\n"
 )
 _SELECTION_PAGE_ID = "selection"
-_KIND_PAGE_ID = "amendment-kind"
-_MOTIVE_PAGE_ID = "m303-rectificativa-motive"
-_REASON_PAGE_ID = "reason"
+KIND_PAGE_ID = "amendment-kind"
+MOTIVE_PAGE_ID = "m303-rectificativa-motive"
+REASON_PAGE_ID = "reason"
 
 
 def _resolve_amend_wizard_copy(ref: str) -> str | None:
@@ -132,7 +132,7 @@ def _resolve_amend_wizard_copy(ref: str) -> str | None:
     if not ref.startswith(prefix):
         return None
     run_token, _, _ = ref[len(prefix) :].partition(":")
-    table = _ACTIVE_RUNS.get(run_token)
+    table = ACTIVE_RUNS.get(run_token)
     return table.get(ref) if table is not None else None
 
 
@@ -143,7 +143,7 @@ def _copy_ref(run_token: str, slot: str) -> str:
     return f"{_COPY_NAMESPACE}:{run_token}:{slot}"
 
 
-def _value_page_id(casilla_id: str) -> str:
+def value_page_id(casilla_id: str) -> str:
     return f"value:{casilla_id}"
 
 
@@ -234,7 +234,7 @@ def run_modelo_work_amend_wizard(
     grammars = {row.casilla_id: row.grammar for row in correction.rows}
     _require_corrections(amendable)
     run_token = uuid4().hex
-    _ACTIVE_RUNS[run_token] = {}
+    ACTIVE_RUNS[run_token] = {}
     try:
         selected = _prompt_selection(
             amendable=amendable, baseline_values=baseline_values, unit=unit, run_token=run_token
@@ -249,7 +249,7 @@ def run_modelo_work_amend_wizard(
             run_token=run_token,
         )
     finally:
-        _ACTIVE_RUNS.pop(run_token, None)
+        ACTIVE_RUNS.pop(run_token, None)
     request = ModeloWorkAmendRequest(
         baseline=ModeloWorkAmendBaseline(from_filing_record_id=baseline.filing_record_id),
         amendment_kind=amendment_kind,
@@ -296,18 +296,18 @@ def _prompt_selection(
     ticked) reads back as an empty tuple, exactly as the one-shot prompt's
     empty answer did — the caller turns that into the no-corrections refusal.
     """
-    definition = _selection_definition(
+    definition = modelo_amend_wizard_commands_selection_definition(
         amendable=amendable, baseline_values=baseline_values, unit=unit, run_token=run_token
     )
     state = _run_flow(definition)
-    return _selected_rows(amendable=amendable, unit=unit, state=state)
+    return selected_rows(amendable=amendable, unit=unit, state=state)
 
 
-def _selection_definition(
+def modelo_amend_wizard_commands_selection_definition(
     *, amendable: tuple[ModeloCasillaRow, ...], baseline_values: Mapping[str, Decimal], unit: WorkUnit, run_token: str
 ) -> FlowDefinition:
     """Project the amendable casillas into a one-page CHECKBOX selection flow."""
-    table = _ACTIVE_RUNS[run_token]
+    table = ACTIVE_RUNS[run_token]
     summary_lines = "\n".join(f"  {row.number}\t{row.label}\t{baseline_values[row.casilla_id]}" for row in amendable)
     prompt_ref = _copy_ref(run_token, "sel:prompt")
     table[prompt_ref] = tr(
@@ -345,7 +345,7 @@ def _selection_definition(
     )
 
 
-def _selected_rows(
+def selected_rows(
     *, amendable: tuple[ModeloCasillaRow, ...], unit: WorkUnit, state: FlowState
 ) -> tuple[ModeloCasillaRow, ...]:
     """Map the CHECKBOX answer back to the selected registry rows, in flow order."""
@@ -378,7 +378,7 @@ def _wizard_corrected_amount(state: FlowState, casilla_id: str, grammar: ModeloE
     corrected value against, which admits any amount the amendment request's
     override shape takes, so it refuses only what the amendment would refuse.
     """
-    raw = (state.answers.get(_value_page_id(casilla_id)) or "").strip()
+    raw = (state.answers.get(value_page_id(casilla_id)) or "").strip()
     parsed = try_parse_canonical_decimal(raw)
     if parsed is None or grammar is None:
         raise typer.BadParameter(tr("cli.app.modelo.work.set_not_decimal", value=raw))
@@ -414,7 +414,7 @@ def _prompt_values_kind_reason(
     finite :class:`~decimal.Decimal`, and the SELECT guarantees the kind is
     one the period permits.
     """
-    definition = _values_kind_reason_definition(
+    definition = values_kind_reason_definition(
         selected=selected,
         baseline_values=baseline_values,
         permitted_amendment_kinds=permitted_amendment_kinds,
@@ -428,16 +428,16 @@ def _prompt_values_kind_reason(
         corrections.append(
             (row, previous, _wizard_corrected_amount(state, row.casilla_id, grammars.get(row.casilla_id)))
         )
-    amendment_kind = FilingDeclarationKind((state.answers.get(_KIND_PAGE_ID) or "").strip())
-    raw_motive = (state.answers.get(_MOTIVE_PAGE_ID) or "").strip()
+    amendment_kind = FilingDeclarationKind((state.answers.get(KIND_PAGE_ID) or "").strip())
+    raw_motive = (state.answers.get(MOTIVE_PAGE_ID) or "").strip()
     motive = M303RectificativaMotive(raw_motive) if raw_motive else None
-    reason = (state.answers.get(_REASON_PAGE_ID) or "").strip()
+    reason = (state.answers.get(REASON_PAGE_ID) or "").strip()
     if not reason:
         raise typer.BadParameter(tr("cli.app.modelo.work.amend_wizard_reason_required"))
     return (tuple(corrections), amendment_kind, motive, reason)
 
 
-def _values_kind_reason_definition(
+def values_kind_reason_definition(
     *,
     selected: tuple[ModeloCasillaRow, ...],
     baseline_values: Mapping[str, Decimal],
@@ -450,7 +450,7 @@ def _values_kind_reason_definition(
     The SELECT uses kinds projected under the same worker authority capture
     as the baseline. The amendment writer reasserts the legal guard.
     """
-    table = _ACTIVE_RUNS[run_token]
+    table = ACTIVE_RUNS[run_token]
     pages = _correction_value_pages(
         selected=selected, baseline_values=baseline_values, run_token=run_token, table=table
     )
@@ -486,7 +486,7 @@ def _correction_value_pages(
         help_ref = _value_help_ref(row=row, run_token=run_token, table=table)
         pages.append(
             FlowPage(
-                id=_value_page_id(row.casilla_id),
+                id=value_page_id(row.casilla_id),
                 widget=FlowWidgetKind.DECIMAL,
                 prompt=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=prompt_ref),
                 help=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=help_ref)
@@ -523,7 +523,7 @@ def _amendment_kind_page(
         "cli.app.modelo.work.amend_wizard_kind_help",
     )
     return FlowPage(
-        id=_KIND_PAGE_ID,
+        id=KIND_PAGE_ID,
         widget=FlowWidgetKind.SELECT,
         prompt=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=kind_prompt_ref),
         help=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=kind_help_ref),
@@ -555,13 +555,13 @@ def _m303_motive_page(
     motive_help_ref = _copy_ref(run_token, "motive:help")
     table[motive_help_ref] = tr("cli.app.modelo.work.m303_rectificativa_motive_help")
     return FlowPage(
-        id=_MOTIVE_PAGE_ID,
+        id=MOTIVE_PAGE_ID,
         widget=FlowWidgetKind.SELECT,
         prompt=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=motive_prompt_ref),
         help=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=motive_help_ref),
         choices=motive_choices,
         required=True,
-        visible_when=FlowCondition(page_id=_KIND_PAGE_ID, equals=FilingDeclarationKind.RECTIFICATIVA.value),
+        visible_when=FlowCondition(page_id=KIND_PAGE_ID, equals=FilingDeclarationKind.RECTIFICATIVA.value),
         answer_type=str,
     )
 
@@ -578,7 +578,7 @@ def _amendment_reason_page(*, run_token: str, table: dict[str, str]) -> FlowPage
         "cli.app.modelo.work.amend_wizard_reason_prompt",
     )
     return FlowPage(
-        id=_REASON_PAGE_ID,
+        id=REASON_PAGE_ID,
         widget=FlowWidgetKind.TEXT,
         prompt=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=reason_prompt_ref),
         required=False,
@@ -610,7 +610,7 @@ def _emit_amend_wizard_result(
     reason: str,
     corrections: tuple[tuple[ModeloCasillaRow, Decimal, Decimal], ...],
 ) -> None:
-    from ._modelo_rendering import filing_record_payload
+    from .modelo_rendering import filing_record_payload
 
     corrected_payload = tuple(
         (

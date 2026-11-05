@@ -14,17 +14,17 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.modelos.filing_record import AeatConfirmationState, FilingDeclarationKind, ModeloRecordStatus
 from cadrumo.entrypoints.adapter_composition_work_ports import build_amendment_action_ports
 from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import (
-    _IMPORT_EXPENSE_CASILLA,
-    _IMPORT_INCOME_CASILLA,
-    _T1,
-    _T2,
-    _T3,
-    _TAX_ID,
-    _import_external_filing,
-    _persist_matching_justificante,
-    _Repos,
-    _seed_work_unit,
+    IMPORT_EXPENSE_CASILLA,
+    IMPORT_INCOME_CASILLA,
+    T1,
+    T2,
+    T3,
+    TAX_ID,
+    Repos,
+    import_external_filing,
+    persist_matching_justificante,
     repos,
+    seed_work_unit,
 )
 
 __all__ = ["repos"]
@@ -36,7 +36,7 @@ def _amend(work_unit_bucket_id: str, record_id: str, income: str, *, operation: 
     return amend_modelo_revision(
         ports=build_amendment_action_ports(bucket_id=work_unit_bucket_id, operation=operation),
         from_filing_record_id=record_id,
-        overrides={_IMPORT_INCOME_CASILLA: Decimal(income)},
+        overrides={IMPORT_INCOME_CASILLA: Decimal(income)},
         amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
         reason="revenue correction",
         actor="operator-A",
@@ -46,22 +46,22 @@ def _amend(work_unit_bucket_id: str, record_id: str, income: str, *, operation: 
 
 
 def test_amending_a_pending_correction_discards_it_and_amends_the_confirmed_declaration(
-    repos: _Repos, *, operation: PinnedAuthorityOperation
+    repos: Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
     wu_repo, _cr_repo, fr_repo, _, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo, bv_repo, operation=operation)
-    _persist_matching_justificante("JUSTCHAIN0001", work_unit, captured_at=_T1)
-    imported = _import_external_filing(
+    work_unit = seed_work_unit(wu_repo, bv_repo, operation=operation)
+    persist_matching_justificante("JUSTCHAIN0001", work_unit, captured_at=T1)
+    imported = import_external_filing(
         repos,
         work_unit,
-        casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500"), _IMPORT_EXPENSE_CASILLA: Decimal("300")},
+        casilla_values={IMPORT_INCOME_CASILLA: Decimal("1500"), IMPORT_EXPENSE_CASILLA: Decimal("300")},
         evidence_reference_id="JUSTCHAIN0001",
-        expected_tax_id=_TAX_ID,
-        clock=_T1,
+        expected_tax_id=TAX_ID,
+        clock=T1,
     )
 
-    first = _amend(work_unit.bucket_id, imported.filing_record_id, "1600", operation=operation, clock=_T2)
-    second = _amend(work_unit.bucket_id, first.filing_record_id, "1700", operation=operation, clock=_T3)
+    first = _amend(work_unit.bucket_id, imported.filing_record_id, "1600", operation=operation, clock=T2)
+    second = _amend(work_unit.bucket_id, first.filing_record_id, "1700", operation=operation, clock=T3)
 
     catalogue = fr_repo.load()
     discarded = catalogue.records[first.filing_record_id]
@@ -88,24 +88,24 @@ def test_amending_a_pending_correction_discards_it_and_amends_the_confirmed_decl
     layers = CalculationObservationRepository().load_observation_layers(work_unit.modelo, work_unit.period)
     assert layers.pending_local is not None
     assert layers.pending_local.source_kind is ObservationSourceKind.APP_FILING
-    assert layers.pending_local.observation.casilla_values[_IMPORT_INCOME_CASILLA] == Decimal("1700")
+    assert layers.pending_local.observation.casilla_values[IMPORT_INCOME_CASILLA] == Decimal("1700")
 
 
 def test_amending_without_a_confirmed_declaration_is_refused(
-    repos: _Repos, *, operation: PinnedAuthorityOperation
+    repos: Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
     wu_repo, _cr_repo, fr_repo, _, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo, bv_repo, operation=operation)
-    _persist_matching_justificante("JUSTCHAIN0002", work_unit, captured_at=_T1)
-    imported = _import_external_filing(
+    work_unit = seed_work_unit(wu_repo, bv_repo, operation=operation)
+    persist_matching_justificante("JUSTCHAIN0002", work_unit, captured_at=T1)
+    imported = import_external_filing(
         repos,
         work_unit,
-        casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
+        casilla_values={IMPORT_INCOME_CASILLA: Decimal("1500")},
         evidence_reference_id="JUSTCHAIN0002",
-        expected_tax_id=_TAX_ID,
-        clock=_T1,
+        expected_tax_id=TAX_ID,
+        clock=T1,
     )
-    pending = _amend(work_unit.bucket_id, imported.filing_record_id, "1600", operation=operation, clock=_T2)
+    pending = _amend(work_unit.bucket_id, imported.filing_record_id, "1600", operation=operation, clock=T2)
     catalogue = fr_repo.load()
     unconfirmed = catalogue.records[imported.filing_record_id].model_copy(
         update={
@@ -120,4 +120,4 @@ def test_amending_without_a_confirmed_declaration_is_refused(
     )
 
     with pytest.raises(AmendmentEvidenceMissingError):
-        _amend(work_unit.bucket_id, pending.filing_record_id, "1700", operation=operation, clock=_T3)
+        _amend(work_unit.bucket_id, pending.filing_record_id, "1700", operation=operation, clock=T3)

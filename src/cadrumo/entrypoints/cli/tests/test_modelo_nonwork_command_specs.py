@@ -13,50 +13,50 @@ from cadrumo_client.commands.compiler import build_command_app
 from cadrumo_client.commands.shared_contracts import SchemaState, TranslationKey
 from cadrumo_client.contracts.command_ports import CommandNodeKind
 
-from .._modelo_nonwork_bindings_command_specs import (
-    _AS_OF_OPTION,
-    _BINDINGS_INVOCATION,
-    _BINDINGS_SCOPE,
-    _MODELO_OPTION,
-    _PERIOD_OPTION,
-    _YEAR_OPTION,
+from ..command_specs import COMMAND_GRAPH
+from ..modelo_nonwork_bindings_command_specs import (
+    AS_OF_OPTION,
+    BINDINGS_INVOCATION,
+    BINDINGS_SCOPE,
     MODELO_NONWORK_BINDINGS_COMMAND_SPECS,
+    MODELO_OPTION,
+    PERIOD_OPTION,
+    YEAR_OPTION,
 )
-from .._modelo_nonwork_calculations_command_specs import MODELO_NONWORK_CALCULATION_COMMAND_SPECS
-from .._modelo_nonwork_command_spec_policies import _INTERACTIVE_MODEL_WRITE
-from .._modelo_nonwork_command_specs import MODELO_NONWORK_COMMAND_SPECS
-from .._modelo_nonwork_common_command_parameters import (
+from ..modelo_nonwork_calculations_command_specs import MODELO_NONWORK_CALCULATION_COMMAND_SPECS
+from ..modelo_nonwork_command_spec_policies import INTERACTIVE_MODEL_WRITE
+from ..modelo_nonwork_command_specs import MODELO_NONWORK_COMMAND_SPECS
+from ..modelo_nonwork_common_command_parameters import (
     CALCULATION_REVISION_SELECTOR_OPTIONS,
     FILING_ELECTION_OPTIONS,
 )
-from .._modelo_nonwork_discovery_command_specs import (
-    _REGISTRY_YEAR_OPTION,
+from ..modelo_nonwork_discovery_command_specs import (
     CASILLA_LOOKUP_SCOPE,
     MODELO_NONWORK_DISCOVERY_COMMAND_SPECS,
+    REGISTRY_YEAR_OPTION,
 )
-from .._modelo_nonwork_m036_command_specs import (
+from ..modelo_nonwork_m036_command_specs import (
     M036_DECLARATION_PARAMETERS,
     MODELO_NONWORK_M036_COMMAND_SPECS,
 )
-from .._modelo_nonwork_m145_command_specs import (
+from ..modelo_nonwork_m145_command_specs import (
     M145_ACTOR_PARAMETER,
     M145_COMMUNICATION_RECORD_ID_PARAMETER,
     M145_RECORD_ACTION_PARAMETERS,
     MODELO_NONWORK_M145_COMMAND_SPECS,
 )
-from .._modelo_nonwork_reconcile_command_specs import (
+from ..modelo_nonwork_reconcile_command_specs import (
     MODELO_NONWORK_RECONCILE_COMMAND_SPECS,
     RECONCILE_TARGET_PARAMETERS,
 )
-from .._modelo_nonwork_review_package_command_specs import (
-    _REVIEW_PACKAGE_BUCKET_ID_OPTION,
-    _REVIEW_PACKAGE_INPUT,
-    _SIGNATURE_INPUT,
+from ..modelo_nonwork_review_package_command_specs import (
     MODELO_NONWORK_REVIEW_PACKAGE_COMMAND_SPECS,
+    REVIEW_PACKAGE_BUCKET_ID_OPTION,
+    REVIEW_PACKAGE_INPUT,
+    SIGNATURE_INPUT,
 )
-from .._modelo_nonwork_work_amend_command_specs import MODELO_NONWORK_WORK_AMEND_COMMAND_SPECS
-from ..command_specs import COMMAND_GRAPH
-from ..modelo_work_command_specs import _ADDRESS, _LANGUAGE, _a, _o
+from ..modelo_nonwork_work_amend_command_specs import MODELO_NONWORK_WORK_AMEND_COMMAND_SPECS
+from ..modelo_work_command_specs import ADDRESS, LANGUAGE, a, o
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -147,11 +147,11 @@ def test_bindings_parameters_keep_exact_order_and_identity() -> None:
     list_spec = specs["app_modelo_bindings_list"]
     resolve_spec = specs["app_modelo_bindings_resolve"]
 
-    assert type(_BINDINGS_SCOPE) is tuple
-    assert tuple(parameter.name for parameter in _BINDINGS_SCOPE) == ("modelo", "year", "period")
-    assert _BINDINGS_SCOPE[0] is _MODELO_OPTION
-    assert _BINDINGS_SCOPE[1] is _YEAR_OPTION
-    assert _BINDINGS_SCOPE[2] is _PERIOD_OPTION
+    assert type(BINDINGS_SCOPE) is tuple
+    assert tuple(parameter.name for parameter in BINDINGS_SCOPE) == ("modelo", "year", "period")
+    assert BINDINGS_SCOPE[0] is MODELO_OPTION
+    assert BINDINGS_SCOPE[1] is YEAR_OPTION
+    assert BINDINGS_SCOPE[2] is PERIOD_OPTION
     assert tuple(parameter.name for parameter in list_spec.parameters) == (
         "modelo",
         "year",
@@ -168,13 +168,13 @@ def test_bindings_parameters_keep_exact_order_and_identity() -> None:
     )
 
     for parameters in (list_spec.parameters, resolve_spec.parameters):
-        assert all(actual is expected for actual, expected in zip(parameters[:3], _BINDINGS_SCOPE, strict=True))
-        assert parameters[-1] is _AS_OF_OPTION
+        assert all(actual is expected for actual, expected in zip(parameters[:3], BINDINGS_SCOPE, strict=True))
+        assert parameters[-1] is AS_OF_OPTION
     assert list_spec.parameters[3].name == "missing"
     assert resolve_spec.parameters[3].name == "binding"
     assert list_spec.parameters[3] is not resolve_spec.parameters[3]
-    assert list_spec.invocation is _BINDINGS_INVOCATION
-    assert resolve_spec.invocation is _BINDINGS_INVOCATION
+    assert list_spec.invocation is BINDINGS_INVOCATION
+    assert resolve_spec.invocation is BINDINGS_INVOCATION
 
     # The shared options do not collapse the command-specific behavior contract.
     assert list_spec.handler is not resolve_spec.handler
@@ -211,13 +211,13 @@ def test_discovery_lookup_parameters_keep_exact_order_and_identity() -> None:
         "period",
         "as_of",
     )
-    assert _REGISTRY_YEAR_OPTION.name == "year"
-    assert _REGISTRY_YEAR_OPTION.declarations == ("--year",)
+    assert REGISTRY_YEAR_OPTION.name == "year"
+    assert REGISTRY_YEAR_OPTION.declarations == ("--year",)
     assert {
         key: tuple(parameter.name for parameter in specs[key].parameters) for key in expected_orders
     } == expected_orders
-    assert specs["app_modelo_list"].parameters[0] is _REGISTRY_YEAR_OPTION
-    assert specs["app_modelo_describe"].parameters[1] is _REGISTRY_YEAR_OPTION
+    assert specs["app_modelo_list"].parameters[0] is REGISTRY_YEAR_OPTION
+    assert specs["app_modelo_describe"].parameters[1] is REGISTRY_YEAR_OPTION
     assert all(
         actual is expected
         for actual, expected in zip(specs["app_modelo_casillas"].parameters[:4], CASILLA_LOOKUP_SCOPE, strict=True)
@@ -285,10 +285,10 @@ def test_reconcile_target_parameters_keep_order_and_import_extras_local() -> Non
 def test_work_amend_wizard_parameters_reuse_the_canonical_work_kernel() -> None:
     wizard = MODELO_NONWORK_WORK_AMEND_COMMAND_SPECS[0]
     expected = (
-        _a("work_unit_id"),
-        *_ADDRESS,
-        _o("actor", "--by"),
-        _o("output_language_opt", "--output-language", _LANGUAGE, help_name="output_language"),
+        a("work_unit_id"),
+        *ADDRESS,
+        o("actor", "--by"),
+        o("output_language_opt", "--output-language", LANGUAGE, help_name="output_language"),
     )
 
     assert wizard.key == "app_modelo_work_amend_wizard"
@@ -319,8 +319,8 @@ def test_work_amend_wizard_parameters_reuse_the_canonical_work_kernel() -> None:
         TranslationKey("cli.app.modelo.work.output_language_help"),
     )
     assert wizard.parameters == expected
-    assert all(actual is expected for actual, expected in zip(wizard.parameters[1:6], _ADDRESS, strict=True))
-    assert wizard.policy is _INTERACTIVE_MODEL_WRITE
+    assert all(actual is expected for actual, expected in zip(wizard.parameters[1:6], ADDRESS, strict=True))
+    assert wizard.policy is INTERACTIVE_MODEL_WRITE
     assert wizard.handler is not None and wizard.handler.target is not None
     assert wizard.handler.target.module == "cadrumo.entrypoints.cli.modelo_amend_wizard_commands"
     assert wizard.handler.target.qualname == "work_amend_wizard"
@@ -454,12 +454,12 @@ def test_review_package_shared_inputs_keep_exact_order_and_identity() -> None:
         "app_modelo_review_package_verify_receipt",
         "app_modelo_review_package_encrypt_for_recipient",
     ):
-        assert specs[key].parameters[0] is _REVIEW_PACKAGE_INPUT
+        assert specs[key].parameters[0] is REVIEW_PACKAGE_INPUT
     for key in (
         "app_modelo_review_package_verify_signature",
         "app_modelo_review_package_counter_sign",
     ):
-        assert specs[key].parameters[1] is _SIGNATURE_INPUT
+        assert specs[key].parameters[1] is SIGNATURE_INPUT
     for key in (
         "app_modelo_review_package_sign",
         "app_modelo_review_package_counter_sign",
@@ -468,14 +468,14 @@ def test_review_package_shared_inputs_keep_exact_order_and_identity() -> None:
         "app_modelo_review_package_encrypt_feedback",
         "app_modelo_review_package_import_feedback",
     ):
-        assert specs[key].parameters[-1] is _REVIEW_PACKAGE_BUCKET_ID_OPTION
+        assert specs[key].parameters[-1] is REVIEW_PACKAGE_BUCKET_ID_OPTION
 
     build = specs["app_modelo_review_package_build"]
     assert build.parameters[5].name == "bucket_id"
-    assert build.parameters[5] is not _REVIEW_PACKAGE_BUCKET_ID_OPTION
+    assert build.parameters[5] is not REVIEW_PACKAGE_BUCKET_ID_OPTION
     imported = specs["app_modelo_review_package_import_feedback"]
     assert imported.parameters[1].name == "package"
-    assert imported.parameters[1] is not _REVIEW_PACKAGE_INPUT
+    assert imported.parameters[1] is not REVIEW_PACKAGE_INPUT
 
 
 def test_calculation_and_filing_common_parameters_keep_exact_order_and_identity() -> None:
@@ -560,7 +560,7 @@ def test_calculation_and_filing_common_parameters_keep_exact_order_and_identity(
         )
 
     assert build.parameters[5] is CALCULATION_REVISION_SELECTOR_OPTIONS[4]
-    assert build.parameters[5] is not _REVIEW_PACKAGE_BUCKET_ID_OPTION
+    assert build.parameters[5] is not REVIEW_PACKAGE_BUCKET_ID_OPTION
 
 
 def test_every_nonwork_target_is_public_resolvable_and_runtime_materializable() -> None:

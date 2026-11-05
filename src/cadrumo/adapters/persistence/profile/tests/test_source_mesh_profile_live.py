@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 
 from .....application.aggregation.source_mesh import CalculationSourceContext
@@ -18,8 +18,12 @@ from .....application.aggregation.source_profile import ProfileSourceResolver
 from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.schema import RegistrySnapshot
-from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from .....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from .....domain.user_profile.values import (
+    ProfileSetupState,
+    UserProfileFact,
+    UserProfileRecord,
+    create_user_profile_record,
+)
 from ...storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from .published_authority_support import published_authority_operation
@@ -44,7 +48,7 @@ def _modelo_100_snapshot() -> RegistrySnapshot:
 
 
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -53,7 +57,7 @@ def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
 
 

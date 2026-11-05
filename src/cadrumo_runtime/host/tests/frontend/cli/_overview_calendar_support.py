@@ -41,7 +41,7 @@ from cadrumo.domain.modelos.filing_record import (
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.tests.aeat_literal_fixtures import aeat_url, justificante_cotejo_url
 
-__all__ = ["_isolated_backend"]
+__all__ = ["isolated_backend"]
 
 _SOURCE_URL = AnyHttpUrl(aeat_url("sede", "/"))
 _WORK_UNIT_ID = "a" * 64
@@ -90,7 +90,7 @@ def isolated_calendar_backend(tmp_path: Path) -> Generator[None]:
 
 
 @pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+def isolated_backend(tmp_path: Path) -> Iterator[None]:
     with isolated_calendar_backend(tmp_path):
         yield
 

@@ -20,14 +20,14 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from ....application.wizard.models import WizardFlow
 from ....application.wizard.tests.registry_setup_flow_support import registry_setup_flow as registry_setup_flow
-from .._root_support import _prefer_complete_verb_path
+from ..root_support import prefer_complete_verb_path
 from .cli_runner import invoke_cached_cli
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -76,7 +76,7 @@ def test_partial_click_path_cannot_mask_the_profile_create_leaf() -> None:
     shorter path reproduces the live login refusal before the TUI opens.
     """
     assert (
-        _prefer_complete_verb_path(
+        prefer_complete_verb_path(
             context_path="config profile",
             argv_path="config profile create",
         )

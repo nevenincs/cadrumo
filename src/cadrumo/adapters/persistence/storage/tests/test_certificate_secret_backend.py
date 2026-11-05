@@ -40,7 +40,7 @@ import pytest
 from pydantic import SecretStr, ValidationError
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from cadrumo.adapters.persistence.storage import certificate_secret_backend as _backend_module
+from cadrumo.adapters.persistence.storage import certificate_secret_backend
 from cadrumo.adapters.persistence.storage.blob_store.blob_store import EncryptedBlobStore
 from cadrumo.adapters.persistence.storage.certificate_secret_backend import (
     SecureStorageCertificateSecretBackend,
@@ -57,7 +57,7 @@ from cadrumo.application.auth.certificate_source_operations import (
 from cadrumo.application.auth.credentials import resolve_certificate_source_secret
 from cadrumo.application.auth.operator_results import CertificateSourceNotFoundError
 from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _certificate_indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 
 from .ephemeral_bucket_session import EphemeralBucketSession
@@ -86,7 +86,7 @@ def _register_operator_profile() -> None:
     )
 
 
-_isolated_backend = bucket_session_storage_fixture(_BUCKET_ID)
+isolated_backend = bucket_session_storage_fixture(_BUCKET_ID)
 """Open an isolated storage root plus an active bucket session for the whole test.
 
 Mirrors the sibling ``test_certificate_sources_check.py`` fixture.
@@ -192,13 +192,13 @@ def test_secure_storage_backend_request_witness_is_stable_keyed_and_secret_free(
 # ---------------------------------------------------------------------------
 # Operator-verb integration tests: the CLI-facing service functions, wired
 # through a real workflow-state repository and the active profile bucket's own
-# encrypted secret store (opened by the ``_isolated_backend`` autouse fixture).
+# encrypted secret store (opened by the ``isolated_backend`` autouse fixture).
 # ---------------------------------------------------------------------------
 
 
 def test_set_operator_certificate_source_secret_requires_a_registered_source() -> None:
     """Binding a secret to an unregistered source name is refused, not silently created."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
         _register_operator_profile()
 
         with pytest.raises(CertificateSourceNotFoundError):
@@ -213,7 +213,7 @@ def test_set_operator_certificate_source_secret_requires_a_registered_source() -
 
 def test_set_then_resolve_roundtrips_the_secret(tmp_path: Path) -> None:
     """A secret set via the operator verb is resolvable via the operator resolver."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
         _register_operator_profile()
         cert_path = tmp_path / "personal.p12"
         cert_path.write_bytes(b"placeholder cert")
@@ -249,7 +249,7 @@ def test_set_operator_certificate_source_secret_never_carries_secret_in_result(
     tmp_path: Path,
 ) -> None:
     """The mutation result never carries the secret value itself, only its presence."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
         _register_operator_profile()
         cert_path = tmp_path / "personal.p12"
         cert_path.write_bytes(b"placeholder cert")
@@ -276,7 +276,7 @@ def test_set_operator_certificate_source_secret_twice_reports_rotated(
     tmp_path: Path,
 ) -> None:
     """A second ``set`` call on the same source reports ``rotated=True``."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
         _register_operator_profile()
         cert_path = tmp_path / "personal.p12"
         cert_path.write_bytes(b"placeholder cert")
@@ -317,7 +317,7 @@ def test_remove_operator_certificate_source_secret_is_idempotent(
     tmp_path: Path,
 ) -> None:
     """Removing a certificate source's secret twice is a no-op the second time."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
         _register_operator_profile()
         cert_path = tmp_path / "personal.p12"
         cert_path.write_bytes(b"placeholder cert")
@@ -364,7 +364,7 @@ def test_resolve_certificate_source_secret_is_none_when_never_set(
     tmp_path: Path,
 ) -> None:
     """A registered source with no bound secret resolves to ``None``."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
         _register_operator_profile()
         cert_path = tmp_path / "personal.p12"
         cert_path.write_bytes(b"placeholder cert")
@@ -395,7 +395,9 @@ def test_resolve_certificate_source_secret_is_none_when_never_set(
 @pytest.mark.parametrize("symbol", _RETIRED_KEYRING_SYMBOLS)
 def test_retired_keyring_symbol_absent_from_backend_module(symbol: str) -> None:
     """The keyring backend, backend-kind selector, factory, and errors are deleted."""
-    assert not hasattr(_backend_module, symbol), f"{symbol} must be deleted from the certificate-secret backend module"
+    assert not hasattr(certificate_secret_backend, symbol), (
+        f"{symbol} must be deleted from the certificate-secret backend module"
+    )
 
 
 def test_secure_storage_backend_is_the_only_public_backend() -> None:
@@ -404,11 +406,11 @@ def test_secure_storage_backend_is_the_only_public_backend() -> None:
     No backend-descriptor label survives: named certificate secrets have a
     single storage authority, so there is no backend name to select or project.
     """
-    assert set(_backend_module.__all__) == {
+    assert set(certificate_secret_backend.__all__) == {
         "SecureStorageCertificateSecretBackend",
         "build_certificate_secret_backend",
     }
-    assert not hasattr(_backend_module, "SECURE_STORAGE_BACKEND_LABEL")
+    assert not hasattr(certificate_secret_backend, "SECURE_STORAGE_BACKEND_LABEL")
 
 
 class TestSecretStoreNaturalKey:
@@ -423,37 +425,37 @@ class TestSecretStoreNaturalKey:
     """
 
     def test_padded_and_canonical_names_address_one_secret(self) -> None:
-        canonical = _backend_module._secret_store_key(bucket_id="bucket", name="personal")
-        assert _backend_module._secret_store_key(bucket_id="bucket", name="  personal  ") == canonical
+        canonical = certificate_secret_backend.secret_store_key(bucket_id="bucket", name="personal")
+        assert certificate_secret_backend.secret_store_key(bucket_id="bucket", name="  personal  ") == canonical
         assert canonical.endswith(":personal")
 
     def test_blank_after_strip_name_is_refused(self) -> None:
         """A key the registry could never hold a record for must not be mintable."""
         for blank in ("", "   ", "\t"):
             with pytest.raises(ValidationError):
-                _backend_module._secret_store_key(bucket_id="bucket", name=blank)
+                certificate_secret_backend.secret_store_key(bucket_id="bucket", name=blank)
 
     def test_overlength_name_is_refused(self) -> None:
         with pytest.raises(ValidationError):
-            _backend_module._secret_store_key(bucket_id="bucket", name="x" * 257)
-        assert _backend_module._secret_store_key(bucket_id="bucket", name="x" * 256)
+            certificate_secret_backend.secret_store_key(bucket_id="bucket", name="x" * 257)
+        assert certificate_secret_backend.secret_store_key(bucket_id="bucket", name="x" * 256)
 
     def test_distinct_names_stay_distinct(self) -> None:
         """Canonicalisation must not collapse genuinely different sources."""
-        assert _backend_module._secret_store_key(
+        assert certificate_secret_backend.secret_store_key(
             bucket_id="bucket", name="personal"
-        ) != _backend_module._secret_store_key(bucket_id="bucket", name="apoderado")
+        ) != certificate_secret_backend.secret_store_key(bucket_id="bucket", name="apoderado")
 
     def test_bucket_scoping_survives(self) -> None:
-        assert _backend_module._secret_store_key(bucket_id="a", name="personal") != _backend_module._secret_store_key(
-            bucket_id="b", name="personal"
-        )
+        assert certificate_secret_backend.secret_store_key(
+            bucket_id="a", name="personal"
+        ) != certificate_secret_backend.secret_store_key(bucket_id="b", name="personal")
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("provider", ["clave_permanente", "certificate"])
 async def test_protected_authentication_password_is_persisted_and_reloaded(
-    _isolated_backend: None,
+    isolated_backend: None,
     provider: Literal["clave_permanente", "certificate"],
 ) -> None:
     """The setup operation writes encrypted credentials reused by a fresh projection."""
@@ -569,7 +571,7 @@ async def test_protected_authentication_password_is_persisted_and_reloaded(
         assert actual is None
 
 
-def test_certificate_path_edit_updates_the_selected_named_source(tmp_path: Path, _isolated_backend: None) -> None:
+def test_certificate_path_edit_updates_the_selected_named_source(tmp_path: Path, isolated_backend: None) -> None:
     """Setup edits the effective certificate and leaves its password bound to that source."""
     from cadrumo.application.auth.certificate_source_operations import select_operator_certificate_source
     from cadrumo.application.auth.credentials import resolve_active_certificate_credentials
@@ -579,7 +581,7 @@ def test_certificate_path_edit_updates_the_selected_named_source(tmp_path: Path,
     previous, replacement = tmp_path / "previous.p12", tmp_path / "replacement.p12"
     previous.write_bytes(b"synthetic previous certificate")
     replacement.write_bytes(b"synthetic replacement certificate")
-    with _certificate_indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         register_operator_certificate_source(
             name="personal",
             certificate_path=previous,

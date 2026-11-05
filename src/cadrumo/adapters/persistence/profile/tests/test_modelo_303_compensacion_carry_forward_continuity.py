@@ -64,7 +64,7 @@ from cadrumo.domain.calculations.registry.tests.authored_editions import split_e
 from .....application.calculations.observations_repository import observation_key
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
-from .....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.bindings import (
     resolve_available_bound_inputs_by_casilla_id,
 )
@@ -231,7 +231,7 @@ def test_2t_credit_carries_to_3t_across_the_official_design_boundary(tmp_path: P
     calculation engine is not used as the expected-value oracle.
     """
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         observation_repository = CalculationObservationRepository()
@@ -292,7 +292,7 @@ def test_2t_credit_carries_to_3t_across_the_official_design_boundary(tmp_path: P
 def test_3t_refuses_a_2t_observation_stamped_with_the_late_revision(tmp_path: Path) -> None:
     """A persisted 2T observation cannot carry when its design stamp is wrong."""
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path) as profile,
     ):
         observation_repository = CalculationObservationRepository()
@@ -400,7 +400,7 @@ def test_year_n_plus_1_1t_casilla_110_auto_resolves_from_prior_year_4t(tmp_path:
     the prior-year credit by hand.
     """
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         obs_repo = CalculationObservationRepository()
@@ -435,7 +435,7 @@ def test_modelo_303_compensacion_carry_enrolls_two_renta_years(tmp_path: Path) -
     saldo — the prior-year credit carried forward with no manual re-entry.
     """
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         obs_repo = CalculationObservationRepository()

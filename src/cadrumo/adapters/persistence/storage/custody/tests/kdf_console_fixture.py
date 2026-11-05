@@ -20,7 +20,7 @@ from pathlib import Path
 
 from ......core.child_console import isolate_child_consoles
 from ......core.config import Settings
-from .._kdf_worker_supervision import _SupervisedKdfWorker
+from ..kdf_worker_supervision import SupervisedKdfWorker
 
 _MAX_CONSOLE_PROCESSES = 64
 
@@ -44,7 +44,7 @@ def main() -> None:
         raise ValueError("unknown KDF console fixture mode")
     settings = Settings(cadrumo_storage_root=root)
     # The ready handshake also proves the worker sits in its job object.
-    with _SupervisedKdfWorker(deadline=time.monotonic() + 120, settings=settings) as worker:
+    with SupervisedKdfWorker(deadline=time.monotonic() + 120, settings=settings) as worker:
         process = worker._process
         if process is None:
             raise RuntimeError("a ready worker has a process")

@@ -271,10 +271,10 @@ def require_eu_member_state(
 ) -> EUMemberState:
     """Project one EU member-state token through fact 0131."""
     from ..calculations.registry.eu_member_state_catalogue import (
-        require_eu_member_state as _require_eu_member_state,
+        require_eu_member_state,
     )
 
-    return _require_eu_member_state(
+    return require_eu_member_state(
         value,
         effective_date=effective_date,
         authority=authority,
@@ -284,10 +284,10 @@ def require_eu_member_state(
 def require_registry_declared_eu_member_state(value: object, *, effective_date: date) -> EUMemberState:
     """Project a member-state token from the facts currently under validation."""
     from ..calculations.registry.eu_member_state_catalogue import (
-        require_registry_declared_eu_member_state as _require_registry_declared_eu_member_state,
+        require_registry_declared_eu_member_state,
     )
 
-    return _require_registry_declared_eu_member_state(value, effective_date=effective_date)
+    return require_registry_declared_eu_member_state(value, effective_date=effective_date)
 
 
 def spanish_eu_member_state(
@@ -376,7 +376,7 @@ def is_iva_cash_accounting_supplier_regime(
     return catalogue.require(treatment) == catalogue.supplier_regime_token
 
 
-_RegistryLegalRef = Annotated[
+RegistryLegalRef = Annotated[
     str,
     StringConstraints(
         strip_whitespace=True,
@@ -470,7 +470,7 @@ class IvaRateRecord(_IvaStrictFrozen):
         default=None,
         description="Last date the rate applies, or ``None`` for open-ended.",
     )
-    legal_refs: tuple[_RegistryLegalRef, ...] = Field(
+    legal_refs: tuple[RegistryLegalRef, ...] = Field(
         default=(),
         description="Binding registry legal-reference identities backing this numerical rate.",
     )
@@ -552,7 +552,7 @@ class IvaCitation(_IvaStrictFrozen):
     nobody typed and nothing could check.
     """
 
-    legal_reference: _RegistryLegalRef = Field(
+    legal_reference: RegistryLegalRef = Field(
         description="Article-qualified id resolved through the registry legal catalogue.",
     )
     quoted_text: str = Field(

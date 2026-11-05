@@ -76,10 +76,9 @@ from cadrumo.domain.modelos.verification_report import (
 )
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_calculation_action_ports,
     build_ledger_membership_ports,
@@ -284,13 +283,13 @@ def _drift_counts(report: VerificationReport) -> tuple[object, object, object] |
 def _open_draft(tmp_path: Path, *, modelo: str, period: str, criterion: str, regime: str) -> Iterator[_Draft]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
         seed_test_profile_record(
-            _create_profile_record_for_test(
+            create_user_profile_record(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET,
                 facts=_facts(criterion, regime),
                 created_at=_T0,
                 updated_at=_T0,
-                context=_profile_creation_context_for_test(),
+                context=profile_creation_context_for_test(),
             ),
         )
         objects = profile.repository

@@ -8,19 +8,19 @@ import pytest
 
 from ..errors import DeclaracionParseError
 from ..parser import parse_declaracion
-from ._parser_boundary_support import (
-    _expected_period,
+from .parser_boundary_support import (
+    expected_period,
 )
-from ._parser_synthetic_m232_support import (
-    _DECL_CNAE_CASILLA,
-    _DECL_EJERCICIO_CASILLA,
-    _DECL_TIPO_EJERCICIO_CASILLA,
-    _M232_FIXTURE_PARAMS,
-    _M232_OPEN_ENDED_REVISION_ID,
-    _M232_PROFILE_CASILLAS,
-    _M232_UNSUPPORTED_FIXTURE_PARAMS,
-    _first_supported_filing_year,
-    _write_modelo_232_declaration_pdf,
+from .parser_synthetic_m232_support import (
+    DECL_CNAE_CASILLA,
+    DECL_EJERCICIO_CASILLA,
+    DECL_TIPO_EJERCICIO_CASILLA,
+    M232_FIXTURE_PARAMS,
+    M232_OPEN_ENDED_REVISION_ID,
+    M232_PROFILE_CASILLAS,
+    M232_UNSUPPORTED_FIXTURE_PARAMS,
+    first_supported_filing_year,
+    write_modelo_232_declaration_pdf,
 )
 
 pytestmark = [
@@ -29,12 +29,12 @@ pytestmark = [
 ]
 
 
-_FLOOR_YEAR = _first_supported_filing_year()
+_FLOOR_YEAR = first_supported_filing_year()
 # A ``None`` fixture is rendered at the envelope floor: the bundled synthetic
 # fixtures print ejercicios below it, and the open-ended revision covers it.
 _POSITIVE_CASES: tuple[tuple[Path | None, int, str, str], ...] = (
-    *_M232_FIXTURE_PARAMS,
-    (None, _FLOOR_YEAR, _M232_OPEN_ENDED_REVISION_ID, str(_FLOOR_YEAR)),
+    *M232_FIXTURE_PARAMS,
+    (None, _FLOOR_YEAR, M232_OPEN_ENDED_REVISION_ID, str(_FLOOR_YEAR)),
 )
 
 
@@ -68,7 +68,7 @@ def test_parser_extracts_modelo_232_synthetic_fixture_targets(
     """
     if fixture_path is None:
         fixture_path = tmp_path / f"{year}-0A.pdf"
-        _write_modelo_232_declaration_pdf(fixture_path, ejercicio=year)
+        write_modelo_232_declaration_pdf(fixture_path, ejercicio=year)
 
     _assert_modelo_232_round_trip(
         fixture_path,
@@ -80,8 +80,8 @@ def test_parser_extracts_modelo_232_synthetic_fixture_targets(
 
 @pytest.mark.parametrize(
     "fixture_path,year,revision_id,expected_ejercicio",
-    _M232_UNSUPPORTED_FIXTURE_PARAMS,
-    ids=[revision_id for _path, _year, revision_id, _ejercicio in _M232_UNSUPPORTED_FIXTURE_PARAMS],
+    M232_UNSUPPORTED_FIXTURE_PARAMS,
+    ids=[revision_id for _path, _year, revision_id, _ejercicio in M232_UNSUPPORTED_FIXTURE_PARAMS],
 )
 def test_parser_refuses_modelo_232_synthetic_fixture_below_the_supported_floor(
     fixture_path: Path,
@@ -109,7 +109,7 @@ def _assert_modelo_232_round_trip(
     )
 
     assert filing.modelo == "232"
-    assert filing.period == _expected_period(year, "0A")
+    assert filing.period == expected_period(year, "0A")
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "232"
@@ -118,17 +118,17 @@ def _assert_modelo_232_round_trip(
     assert filing.registry_snapshot_ref.period == "0A"
 
     values = {value.casilla_id: value.printed_value for value in filing.values}
-    assert set(values.keys()) == _M232_PROFILE_CASILLAS, (
+    assert set(values.keys()) == M232_PROFILE_CASILLAS, (
         f"expected exactly {{decl.ejercicio, decl.tipo-ejercicio, decl.cnae}}, got {set(values.keys())!r}"
     )
 
-    assert values[_DECL_EJERCICIO_CASILLA] == expected_ejercicio, (
+    assert values[DECL_EJERCICIO_CASILLA] == expected_ejercicio, (
         f"decl.ejercicio: expected {expected_ejercicio!r} from AEAT-grounded DR23200 fixture, "
-        f"got {values[_DECL_EJERCICIO_CASILLA]!r}"
+        f"got {values[DECL_EJERCICIO_CASILLA]!r}"
     )
 
-    assert values[_DECL_TIPO_EJERCICIO_CASILLA] is not None, "decl.tipo-ejercicio: expected a non-None extracted value"
-    assert values[_DECL_CNAE_CASILLA] == "6201", (
+    assert values[DECL_TIPO_EJERCICIO_CASILLA] is not None, "decl.tipo-ejercicio: expected a non-None extracted value"
+    assert values[DECL_CNAE_CASILLA] == "6201", (
         f"decl.cnae: expected '6201' from AEAT-grounded DR23201 fixture "
-        f"(DR field: 'C.N.A.E. actividad principal'), got {values[_DECL_CNAE_CASILLA]!r}"
+        f"(DR field: 'C.N.A.E. actividad principal'), got {values[DECL_CNAE_CASILLA]!r}"
     )

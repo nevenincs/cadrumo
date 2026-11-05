@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._modelo_spreadsheet_command_specs import MODELO_SPREADSHEET_COMMAND_SPECS
+from ..modelo_spreadsheet_command_specs import MODELO_SPREADSHEET_COMMAND_SPECS
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

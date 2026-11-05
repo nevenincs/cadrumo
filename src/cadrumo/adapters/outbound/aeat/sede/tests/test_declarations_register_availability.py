@@ -32,7 +32,7 @@ import pytest
 from ......application.auth.session_types import AeatSession, CertificateSessionDetail
 from ......core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ..declarations import (
-    _combobox_option_texts,
+    combobox_option_texts,
     discover_filed_declaration_availability,
     filed_register_ejercicio_options,
     filed_register_modelo_options,
@@ -97,7 +97,7 @@ def test_the_two_option_shapes_stay_disjoint_on_real_markup() -> None:
 
 def test_real_markup_classifies_every_option_but_the_placeholder() -> None:
     html = _real_html()
-    texts = _combobox_option_texts(html)
+    texts = combobox_option_texts(html)
     modelo_codes = filed_register_modelo_options(html)
     modelo_shaped = sum(1 for text in texts if text.split("\xa0")[0] in modelo_codes)
     year_shaped = sum(1 for text in texts if text.strip().isdigit() and len(text.strip()) == 4)

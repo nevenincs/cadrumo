@@ -18,9 +18,9 @@ import pytest
 from textual.widget import Widget
 from textual.widgets import DataTable, Input, Static
 
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    load_test_profile_record,
+    profile_authority_contexts,
 )
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
 from ....application.user_profile.login_session import authenticate_profile_for_invocation
@@ -43,14 +43,14 @@ pytestmark = [
 ]
 
 _TERMINAL_SIZE = (160, 60)
-_CREDENTIAL_INPUT = "manager-screen-operator-secret"
+CREDENTIAL_INPUT = "manager-screen-operator-secret"
 _EDITED_PATH = "identity.name"
 
 
-def _live_overview(label: str = "Manager Subject"):
+def live_overview(label: str = "Manager Subject"):
     # Building the overview validates facts against registry authority; lease it here, on whatever thread runs this.
     with bundled_indexed_authority().operation() as operation:
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+        _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
         # Registration closes its own session, so a freshly registered profile is
         # LOCKED and the capsule -- the sole profile authority -- will not yield its
         # record. Logging in with the passphrase derives the SAME DEK the capsule was
@@ -58,20 +58,20 @@ def _live_overview(label: str = "Manager Subject"):
         # capsule refuses it as a row addressed to another object key.
         authenticate_profile_for_invocation(
             name=label,
-            passphrase_callback=lambda: _CREDENTIAL_INPUT,
+            passphrase_callback=lambda: CREDENTIAL_INPUT,
             profile_decode_context=_profile_decode_context_for_test,
         )
         record = load_test_profile_record(require_active_bucket_id())
         return build_profile_overview(
-            record, label=label, schema=_profile_contexts_for_test()[1].schema, flow=build_setup_flow(operation)
+            record, label=label, schema=profile_authority_contexts()[1].schema, flow=build_setup_flow(operation)
         )
 
 
-def _persist(path: str, value: str, _expected_revision: int, _expected_content_digest: str):
+def persist(path: str, value: str, _expected_revision: int, _expected_content_digest: str):
     """The production write door, so an edit here travels the real path."""
     # Building the overview validates facts against registry authority; lease it here, on whatever thread runs this.
     with bundled_indexed_authority().operation() as operation:
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+        _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
         record = apply_manager_profile_field_mutation(
             profile_id=require_active_bucket_id(),
             path=path,
@@ -81,7 +81,7 @@ def _persist(path: str, value: str, _expected_revision: int, _expected_content_d
         return build_profile_overview(
             record,
             label="Manager Subject",
-            schema=_profile_contexts_for_test()[1].schema,
+            schema=profile_authority_contexts()[1].schema,
             flow=build_setup_flow(operation),
         )
 
@@ -132,10 +132,10 @@ async def test_the_page_shows_every_declared_field_including_the_empty_ones(tmp_
     manager must show the full field set so the operator can see what is
     there to fill in.
     """
-    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=_CREDENTIAL_INPUT):
-        overview = _live_overview()
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        overview = live_overview()
 
-        app = ProfileManagerScreen(overview, persist=_persist)
+        app = ProfileManagerScreen(overview, persist=persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
             rendered = _rows(app)
@@ -151,10 +151,10 @@ async def test_profile_context_names_missing_requirements_but_has_no_healthy_pla
     """Only an actionable schema gap earns durable space in the profile body."""
     from textual.css.query import NoMatches
 
-    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=_CREDENTIAL_INPUT):
-        overview = _live_overview()
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        overview = live_overview()
 
-        app = ProfileManagerScreen(overview, persist=_persist)
+        app = ProfileManagerScreen(overview, persist=persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
             requirements = str(app.query_one("#manager-requirements", Static).content)
@@ -178,8 +178,8 @@ async def test_profile_body_renders_the_envelopes_typed_advisories(tmp_path) -> 
     """The manager consumes Notice in scrollable context, not permanent chrome."""
     from ....core.json_contract import Notice, NoticeSeverity
 
-    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=_CREDENTIAL_INPUT):
-        overview = _live_overview().model_copy(
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        overview = live_overview().model_copy(
             update={
                 "notices": (
                     Notice(
@@ -191,7 +191,7 @@ async def test_profile_body_renders_the_envelopes_typed_advisories(tmp_path) -> 
             },
         )
 
-        app = ProfileManagerScreen(overview, persist=_persist)
+        app = ProfileManagerScreen(overview, persist=persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
             rendered = str(app.query_one("#manager-notice-band #notice-0", Static).content)
@@ -220,8 +220,8 @@ async def test_editing_a_row_writes_through_to_the_encrypted_record(tmp_path) ->
     doing so; under load it reported a persisted value of ``None`` and read
     as a write-through defect rather than as an under-waited test.
     """
-    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=_CREDENTIAL_INPUT):
-        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        app = ProfileManagerScreen(live_overview(), persist=persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
             field = app._field_by_key[_EDITED_PATH]
@@ -253,8 +253,8 @@ async def test_editing_one_field_repaints_that_row_without_rebuilding_the_tables
     on the rendered values alone would not catch, since both paths
     ultimately show the right number.
     """
-    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=_CREDENTIAL_INPUT):
-        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        app = ProfileManagerScreen(live_overview(), persist=persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
             before = _rows(app)
@@ -305,15 +305,15 @@ async def test_a_second_edit_is_refused_before_its_dialog_opens(tmp_path) -> Non
     rather than after — there is never anything to lose.
     """
 
-    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=_CREDENTIAL_INPUT):
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
         release = threading.Event()
 
         def _gated(path: str, value: str, expected_revision: int, expected_content_digest: str):
             """The real write door, held open while the second edit is tried."""
             release.wait(timeout=30)
-            return _persist(path, value, expected_revision, expected_content_digest)
+            return persist(path, value, expected_revision, expected_content_digest)
 
-        app = ProfileManagerScreen(_live_overview(), persist=_gated)
+        app = ProfileManagerScreen(live_overview(), persist=_gated)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
             field = app._field_by_key[_EDITED_PATH]
@@ -369,8 +369,8 @@ async def test_a_masked_field_opens_empty_rather_than_prefilled(tmp_path) -> Non
         masked=True,
         required=False,
     )
-    with registered_manager_subject(tmp_path, label="Masked Subject", passphrase=_CREDENTIAL_INPUT):
-        app = ProfileManagerScreen(_live_overview("Masked Subject"), persist=_persist)
+    with registered_manager_subject(tmp_path, label="Masked Subject", passphrase=CREDENTIAL_INPUT):
+        app = ProfileManagerScreen(live_overview("Masked Subject"), persist=persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             pilot.app.push_screen(FieldEditScreen(masked))
             await settle(pilot)
@@ -395,8 +395,8 @@ async def test_a_write_failing_wordlessly_is_named_rather_than_shown_blank(tmp_p
     def _persist_wordlessly(path: str, value: str, _expected_revision: int, _expected_content_digest: str):
         raise RuntimeError
 
-    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=_CREDENTIAL_INPUT):
-        app = ProfileManagerScreen(_live_overview(), persist=_persist_wordlessly)
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        app = ProfileManagerScreen(live_overview(), persist=_persist_wordlessly)
         expected = tr("flows.manager.edit.write_failed")
 
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
@@ -420,8 +420,8 @@ async def test_a_page_with_no_actions_renders_no_action_bar(tmp_path) -> None:
     """Empty is a valid action set, and shows nothing rather than an empty box."""
     from textual.css.query import NoMatches
 
-    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=_CREDENTIAL_INPUT):
-        app = ProfileManagerScreen(_live_overview(), persist=_persist)
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        app = ProfileManagerScreen(live_overview(), persist=persist)
         async with ScreenHostApp(app).run_test(size=_TERMINAL_SIZE) as pilot:
             await settle(pilot)
             with pytest.raises(NoMatches):
@@ -451,17 +451,17 @@ async def test_a_long_field_label_never_pushes_the_value_off_screen(tmp_path) ->
     """
     _long_label_field_path = "irpf.objective_estimation_prior_year_agri_livestock_forest_gross_eur"
 
-    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=_CREDENTIAL_INPUT):
-        _live_overview()
-        baseline = _live_overview()
-        written = _persist(
+    with registered_manager_subject(tmp_path, label="Manager Subject", passphrase=CREDENTIAL_INPUT):
+        live_overview()
+        baseline = live_overview()
+        written = persist(
             _long_label_field_path,
             "12345.67",
             baseline.record_revision,
             baseline.content_digest,
         )
 
-        app = ProfileManagerScreen(written, persist=_persist)
+        app = ProfileManagerScreen(written, persist=persist)
         # Eighty columns is the claim. The height only has to hold the whole
         # IRPF table below the section header, which grows with every field the
         # section declares, so "does the value column fit once the operator can

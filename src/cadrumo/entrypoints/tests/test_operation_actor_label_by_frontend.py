@@ -118,7 +118,7 @@ def test_operator_iva_derivation_records_the_session_label_for_an_automation(
         )
 
         assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        result = conformance._resolve_result_projection(
+        result = conformance.resolve_result_projection(
             driver,
             registry,
             definition_id=definition_id,
@@ -145,7 +145,7 @@ def test_ledger_link_records_the_session_label_for_an_automation(
         execution_caller_reader=_session_host(definition_id, frontend),
     ) as (driver, registry, profile_id):
         definition = {item.definition_id: item for item in registry.definitions}[definition_id]
-        preparation = conformance._prepare_family_case(
+        preparation = conformance.prepare_family_case(
             definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation
         )
         assert preparation is not None
@@ -157,7 +157,7 @@ def test_ledger_link_records_the_session_label_for_an_automation(
         )
 
         assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        result = conformance._resolve_result_projection(
+        result = conformance.resolve_result_projection(
             driver,
             registry,
             definition_id=definition_id,
@@ -201,7 +201,7 @@ def test_counterparty_confirmation_records_the_session_label_for_an_automation(
         )
 
         assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        result = conformance._resolve_result_projection(
+        result = conformance.resolve_result_projection(
             driver,
             registry,
             definition_id=definition_id,
@@ -258,7 +258,7 @@ def test_inventory_closing_authority_records_the_session_label_for_an_automation
 
 
 def _run_reconciliation(
-    driver: conformance._ExecutionDriver,
+    driver: conformance.ExecutionDriver,
     definition_id: str,
     profile_id: UUID,
     request: ModeloReconciliationImportRequest | ModeloReconciliationPullRequest,
@@ -370,7 +370,7 @@ def _assert_invoice_event_actor(
         )
 
         assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        result = conformance._resolve_result_projection(
+        result = conformance.resolve_result_projection(
             driver,
             registry,
             definition_id=definition_id,

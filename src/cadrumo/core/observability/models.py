@@ -46,7 +46,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ..identity.aeat_box import AeatBoxNumber
 from ..identity.digest import ContentDigest, ContentDigestOrAbsent
-from ..models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..models import STRICT_FROZEN_CONFIG
 from ..time.utc import UtcInstant
 
 #: Canonical shape of a run identifier: 16 lowercase hex characters, the form
@@ -136,7 +136,7 @@ class ArgumentRecord(BaseModel):
         source: Where the value originated; see :class:`ArgumentSource`.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     name: str
     value: str
@@ -151,7 +151,7 @@ class NavigationPayload(BaseModel):
         description: Optional human-readable label for the navigation.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     url: str
     description: str = ""
@@ -167,7 +167,7 @@ class FormFillPayload(BaseModel):
         value: Literal value written to the box.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     form_id: str
     display_number: AeatBoxNumber
@@ -183,7 +183,7 @@ class AssertionPayload(BaseModel):
         detail: Optional free-form diagnostic text.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     expectation: str
     passed: bool
@@ -198,7 +198,7 @@ class CacheHitPayload(BaseModel):
         key: Cache key whose lookup succeeded.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     cache_name: str
     key: str
@@ -214,7 +214,7 @@ class ErrorPayload(BaseModel):
             contract this field is subject to.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     error_type: str
     message: str
@@ -228,7 +228,7 @@ class StepBoundaryPayload(BaseModel):
         label: Human-readable label (typically the entrypoint string).
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     step_id: str
     label: str
@@ -246,7 +246,7 @@ class WorkflowLinkPayload(BaseModel):
         workflow_run_id: Workflow-engine run id linked to this trace.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     workflow_run_id: RunId
 
@@ -262,7 +262,7 @@ class GenericPayload(BaseModel):
         fields: Ordered tuple of ``(name, str_value)`` pairs.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     fields: tuple[tuple[str, str], ...] = ()
 
@@ -296,7 +296,7 @@ class RunEventPayload(BaseModel):
         generic: :class:`GenericPayload` variant, or ``None``.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     navigation: NavigationPayload | None = None
     form_fill: FormFillPayload | None = None
@@ -330,7 +330,7 @@ class RunEvent(BaseModel):
         module: ``__name__`` of the caller that emitted the event.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     run_id: RunId
     step_id: str
@@ -361,7 +361,7 @@ class RunTrace(BaseModel):
         outcome: Terminal run outcome; see :class:`RunOutcome`.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     run_id: RunId
     started_at: UtcInstant

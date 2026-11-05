@@ -11,7 +11,7 @@ import pytest
 from ......application.live.expedientes_ports import ExpedientesDeclaration
 from ......core.period import Period
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation
-from ..._playwright import BrowserContext, Page
+from ...playwright import BrowserContext, Page
 from .. import declarations as module
 from ..errors import SedeNavigationError
 from .declarations_register_test_support import offline_aeat_session
@@ -50,13 +50,13 @@ async def test_receipt_capture_rechecks_exact_register_row(monkeypatch: pytest.M
         return "artefact", b"receipt"
 
     page = SimpleNamespace(content=content)
-    monkeypatch.setattr(module, "_registry_snapshot_for_declaration", lambda *args, **kwargs: object())
-    monkeypatch.setattr(module, "_read_guard_policy_from_snapshot", lambda snapshot: module.READ_GUARD_POLICY)
-    monkeypatch.setattr(module, "_drive_search", search)
+    monkeypatch.setattr(module, "registry_snapshot_for_declaration", lambda *args, **kwargs: object())
+    monkeypatch.setattr(module, "read_guard_policy_from_snapshot", lambda snapshot: module.READ_GUARD_POLICY)
+    monkeypatch.setattr(module, "drive_search", search)
     monkeypatch.setattr(
-        module, "_register_rows_from_snapshot", lambda *args, **kwargs: () if change == "missing" else (current,)
+        module, "register_rows_from_snapshot", lambda *args, **kwargs: () if change == "missing" else (current,)
     )
-    monkeypatch.setattr(module, "_row_locator_for_expediente", lambda *args, **kwargs: "exact-row")
+    monkeypatch.setattr(module, "row_locator_for_expediente", lambda *args, **kwargs: "exact-row")
     monkeypatch.setattr(module, "capture_row_pdf_artefact", download)
     register = module.DeclaracionesRegisterSession(
         offline_aeat_session(),

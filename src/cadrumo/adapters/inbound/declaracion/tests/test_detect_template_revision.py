@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._detect import detect_template_revision_from_pages
+from ..detect import detect_template_revision_from_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

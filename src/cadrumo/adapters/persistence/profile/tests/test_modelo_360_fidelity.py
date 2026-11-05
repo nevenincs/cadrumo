@@ -33,11 +33,11 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.tests._multi_year_roundtrip_support import (
+from cadrumo.adapters.persistence.profile.tests.multi_year_roundtrip_support import (
     assert_omitted_casilla_is_detected,
     assert_two_ejercicio_round_trip,
 )
-from cadrumo.adapters.persistence.profile.tests._observation_lookup_support import (
+from cadrumo.adapters.persistence.profile.tests.observation_lookup_support import (
     find_observation,
     save_app_filing_observation,
     saved_two_ejercicios,

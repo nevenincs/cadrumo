@@ -26,7 +26,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.time.clock import now
 from ...core.time.utc import UtcInstant
@@ -100,7 +100,7 @@ class IvaCompensationDecisionReason(StrEnum):
 class IvaCompensationOverride(BaseModel):
     """Explicit taxpayer override for Modelo 303 prior compensation."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     amount: Decimal = Field(ge=Decimal("0"))
     operator_explanation: str = Field(min_length=1, max_length=1024)
@@ -111,7 +111,7 @@ class IvaCompensationOverride(BaseModel):
 class IvaCompensationAuthoritySource(BaseModel):
     """One evidence source considered by an IVA compensation decision."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     source_kind: IvaCompensationAuthorityKind
     amount: Decimal | None = Field(default=None, ge=Decimal("0"))
@@ -145,7 +145,7 @@ class IvaCompensationReconciliationDecision(BaseModel):
     safely drive the binding or whether review is required.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     taxpayer_nif: str = Field(min_length=1, max_length=32)
     target_year: FilingYear

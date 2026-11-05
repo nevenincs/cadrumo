@@ -7,7 +7,7 @@ import pytest
 
 from .....application.storage.calc_sheets.review_workbook import build_review_workbook
 from .....application.storage.calc_sheets.tests.review_fixture import review_label, review_snapshot
-from .._calc_sheets_apply_formatting import build_number_format_requests
+from ..calc_sheets_apply_formatting import build_number_format_requests
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

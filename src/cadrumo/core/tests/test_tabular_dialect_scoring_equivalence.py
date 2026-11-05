@@ -38,16 +38,16 @@ import pytest
 
 from ...tests.inventory import FIXTURES_DIR
 from ..tabular import (
-    _HEADER_SEARCH_LIMIT,
     CANDIDATE_DELIMITERS,
+    HEADER_SEARCH_LIMIT,
     TabularSourceError,
-    _best_delimiter,
-    _header_score,
-    _locate_header,
-    _parse_with,
-    _rectangle_score,
-    _score_delimiter,
+    best_delimiter,
+    header_score,
+    locate_header,
     normalize_tabular_text,
+    parse_with,
+    rectangle_score,
+    score_delimiter,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -153,7 +153,7 @@ def _eager_score(text: str, delimiter: str) -> tuple[int, int]:
     reader = csv.reader(io.StringIO(text, newline=""), delimiter=delimiter, quotechar=_QUOTECHAR)
     parsed = [list(row) for row in reader]
     widths = Counter(len(cells) for cells in parsed if any(cell.strip() for cell in cells))
-    return _rectangle_score(widths)
+    return rectangle_score(widths)
 
 
 def _eager_best_delimiter(text: str) -> tuple[int, int, str] | None:
@@ -176,11 +176,11 @@ def _tail_copying_locate_header(
     """Locate the header the tail-copying way, slicing the remainder per candidate."""
     best_index: int | None = None
     best_score = 0
-    for index, (_, cells) in enumerate(parsed[:_HEADER_SEARCH_LIMIT]):
+    for index, (_, cells) in enumerate(parsed[:HEADER_SEARCH_LIMIT]):
         if len(cells) != column_count:
             continue
         next_row = next((row for _, row in parsed[index + 1 :] if any(cell.strip() for cell in row)), None)
-        score = _header_score(cells, next_row=next_row)
+        score = header_score(cells, next_row=next_row)
         if best_index is None or score > best_score:
             best_index = index
             best_score = score
@@ -204,9 +204,9 @@ def test_corpus_covers_every_candidate_delimiter_and_both_decimal_conventions() 
     """
     corpus = _corpus()
     assert len(corpus) >= 30, len(corpus)
-    winners = {best[2] for _, text in corpus if (best := _best_delimiter(text, _QUOTECHAR)) is not None}
+    winners = {best[2] for _, text in corpus if (best := best_delimiter(text, _QUOTECHAR)) is not None}
     assert winners == set(CANDIDATE_DELIMITERS), sorted(winners)
-    refused = [name for name, text in corpus if _best_delimiter(text, _QUOTECHAR) is None]
+    refused = [name for name, text in corpus if best_delimiter(text, _QUOTECHAR) is None]
     assert refused, "no corpus entry exercises the no-rectangle refusal"
     separators = {digest for _, text in corpus if (digest := _decimal_separator_or_none(text)) is not None}
     assert separators == {",", "."}, sorted(separators)
@@ -222,7 +222,7 @@ def test_streamed_score_matches_a_materialised_parse(delimiter: str) -> None:
     preamble-bearing and summary-bearing entries.
     """
     for name, text in _corpus():
-        assert _score_delimiter(text, delimiter, _QUOTECHAR) == _eager_score(text, delimiter), name
+        assert score_delimiter(text, delimiter, _QUOTECHAR) == _eager_score(text, delimiter), name
 
 
 def test_winning_delimiter_matches_an_eager_selector() -> None:
@@ -233,19 +233,19 @@ def test_winning_delimiter_matches_an_eager_selector() -> None:
     would move the rectangle's width and cut the columns differently.
     """
     for name, text in _corpus():
-        assert _best_delimiter(text, _QUOTECHAR) == _eager_best_delimiter(text), name
+        assert best_delimiter(text, _QUOTECHAR) == _eager_best_delimiter(text), name
 
 
 def test_header_location_matches_a_tail_copying_selector() -> None:
     """The lazy header walk must stop on the row the tail-copying walk stopped on."""
     for name, text in _corpus():
-        best = _best_delimiter(text, _QUOTECHAR)
+        best = best_delimiter(text, _QUOTECHAR)
         if best is None:
             continue
         _, column_count, delimiter = best
-        parsed = _parse_with(text, delimiter, _QUOTECHAR)
+        parsed = parse_with(text, delimiter, _QUOTECHAR)
         expected = _tail_copying_locate_header(parsed, column_count=column_count)
-        assert _locate_header(parsed, column_count=column_count) == expected, name
+        assert locate_header(parsed, column_count=column_count) == expected, name
 
 
 def test_physical_line_numbers_survive_the_winning_parse() -> None:

@@ -45,7 +45,7 @@ pytestmark = [
 __all__ = ["live_clave_movil_profile"]
 
 
-def _assert_source_url_is_a_wallet_read(source_url: str) -> None:
+def assert_source_url_is_a_wallet_read(source_url: str) -> None:
     """Assert the recorded URL is a wallet read, without pinning which host served it.
 
     AEAT load-balances an authenticated session across its numbered sede
@@ -112,7 +112,7 @@ async def test_fetch_iva_compensation_wallet_live_returns_read_observation() -> 
         pytest.fail("live IVA wallet observation target modelo was not 303")
     if observation.target_year != target_year or observation.target_period != target_period:
         pytest.fail("live IVA wallet observation target period did not match requested period")
-    _assert_source_url_is_a_wallet_read(str(observation.source_url))
+    assert_source_url_is_a_wallet_read(str(observation.source_url))
     if observation.raw_sha256 is None:
         pytest.fail("live IVA wallet observation did not include raw evidence hash")
     if not all(row.mode == "read" for row in observation.rows):

@@ -22,8 +22,11 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.ledger.list_operation import LedgerListProjection as LedgerListSnapshot
 from ....application.ledger.list_operation import ledger_list_row
-from ....application.ledger.list_query import LedgerTransactionListQuery, query_ledger_transaction_list
-from ....application.ledger.list_query import sort_ledger_results as _sort_results
+from ....application.ledger.list_query import (
+    LedgerTransactionListQuery,
+    query_ledger_transaction_list,
+    sort_ledger_results,
+)
 from ....application.ledger.models import ManualLedgerTransactionResult
 from ....application.review.filter import LedgerReviewFilterSpec
 from ....core.ledger_sort import LedgerSortField, LedgerSortOrder
@@ -33,7 +36,7 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...ledger_action_composition import compose_ledger_action_ports
-from .._ledger_list import project_ledger_list
+from ..ledger_list import project_ledger_list
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -105,8 +108,8 @@ def test_sort_by_equal_key_falls_back_to_transaction_id_ascending() -> None:
     )
     ascending_tids = sorted(r.transaction.transaction_id for r in rows)
 
-    asc = _sort_results(rows, sort_by=LedgerSortField.DESCRIPTION, sort_order=LedgerSortOrder.ASC)
-    desc = _sort_results(rows, sort_by=LedgerSortField.DESCRIPTION, sort_order=LedgerSortOrder.DESC)
+    asc = sort_ledger_results(rows, sort_by=LedgerSortField.DESCRIPTION, sort_order=LedgerSortOrder.ASC)
+    desc = sort_ledger_results(rows, sort_by=LedgerSortField.DESCRIPTION, sort_order=LedgerSortOrder.DESC)
 
     # Equal primary key -> identical tie-break order under both directions.
     assert [r.transaction.transaction_id for r in asc] == ascending_tids
@@ -141,19 +144,19 @@ def test_sort_is_stable_and_orders_distinct_keys() -> None:
     )
     rows = (high, mid, low)
 
-    by_amount_asc = _sort_results(rows, sort_by=LedgerSortField.AMOUNT, sort_order=LedgerSortOrder.ASC)
+    by_amount_asc = sort_ledger_results(rows, sort_by=LedgerSortField.AMOUNT, sort_order=LedgerSortOrder.ASC)
     assert [r.transaction.raw.amount for r in by_amount_asc] == [
         Decimal("100.00"),
         Decimal("200.00"),
         Decimal("300.00"),
     ]
-    by_amount_desc = _sort_results(rows, sort_by=LedgerSortField.AMOUNT, sort_order=LedgerSortOrder.DESC)
+    by_amount_desc = sort_ledger_results(rows, sort_by=LedgerSortField.AMOUNT, sort_order=LedgerSortOrder.DESC)
     assert [r.transaction.raw.amount for r in by_amount_desc] == [
         Decimal("300.00"),
         Decimal("200.00"),
         Decimal("100.00"),
     ]
-    by_created_asc = _sort_results(rows, sort_by=LedgerSortField.CREATED_AT, sort_order=LedgerSortOrder.ASC)
+    by_created_asc = sort_ledger_results(rows, sort_by=LedgerSortField.CREATED_AT, sort_order=LedgerSortOrder.ASC)
     assert [r.transaction.created_at for r in by_created_asc] == [
         datetime(2024, 1, 1, tzinfo=UTC),
         datetime(2024, 2, 1, tzinfo=UTC),
@@ -192,8 +195,8 @@ def test_optional_sort_key_sorts_last_under_both_orders() -> None:
     )
     rows = (missing, with_key_late, with_key_early)
 
-    asc = _sort_results(rows, sort_by=LedgerSortField.VALUE_DATE, sort_order=LedgerSortOrder.ASC)
-    desc = _sort_results(rows, sort_by=LedgerSortField.VALUE_DATE, sort_order=LedgerSortOrder.DESC)
+    asc = sort_ledger_results(rows, sort_by=LedgerSortField.VALUE_DATE, sort_order=LedgerSortOrder.ASC)
+    desc = sort_ledger_results(rows, sort_by=LedgerSortField.VALUE_DATE, sort_order=LedgerSortOrder.DESC)
 
     # Missing key trails in BOTH orders.
     assert asc[-1].transaction.raw.value_date is None

@@ -30,9 +30,9 @@ from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.period import Period, PeriodError
 from ...domain.modelos.codes import ModeloCode
-from ._modelo_behavior_support import resolve_year_period
 from .common import emit_envelope
 from .modelo_aux_payloads import WithholdingClaveBreakdownPayload
+from .modelo_behavior_support import resolve_year_period
 from .modelo_query_results import (
     ModeloAggregateResult,
     WithholdingGenerationAuditPayload,
@@ -212,7 +212,7 @@ def _aggregate_output_lines(
     return lines
 
 
-def _parse_typed_cli_observations[ObservationT: BaseModel](
+def parse_typed_cli_observations[ObservationT: BaseModel](
     values: list[str] | None, *, model: type[ObservationT], flag: str
 ) -> tuple[ObservationT, ...]:
     """Parse raw JSON observation objects into typed application records."""
@@ -240,7 +240,7 @@ __all__ = ["aggregate_modelo"]
 def _aggregate_invoice_evidence(
     ctx: typer.Context, command: PerModeloAggregationCommand, modelo: str, received_invoice_retencion: list[str]
 ) -> ModeloAggregateResult:
-    invoice_withholding_requests = _parse_typed_cli_observations(
+    invoice_withholding_requests = parse_typed_cli_observations(
         received_invoice_retencion,
         model=InvoiceWithholdingEvidenceRequest,
         flag="--received-invoice-retencion",
@@ -269,7 +269,7 @@ def _aggregate_invoice_evidence(
     return _invoice_capture_aggregate_result(capture.projection)
 
 
-def _refuse_m123_invoice(modelo: str, received_invoice_retencion: list[str] | None) -> None:
+def refuse_m123_invoice(modelo: str, received_invoice_retencion: list[str] | None) -> None:
     if (
         received_invoice_retencion is not None
         and len(received_invoice_retencion) > 0
@@ -296,7 +296,7 @@ def aggregate_modelo(
         counterpart_observation=counterpart_observation,
         foreign_asset_observation=foreign_asset_observation,
     )
-    _refuse_m123_invoice(modelo, received_invoice_retencion)
+    refuse_m123_invoice(modelo, received_invoice_retencion)
 
     command = PerModeloAggregationCommand(
         modelo=modelo,
@@ -306,14 +306,14 @@ def aggregate_modelo(
             and not (ledger_payment_withholding is not None and ledger_payment_withholding)
             else resolve_year_period(year, period, modelo=modelo)
         ),
-        counterpart_observations=_parse_typed_cli_observations(
+        counterpart_observations=parse_typed_cli_observations(
             counterpart_observation, model=CounterpartObservation, flag="--counterpart-observation"
         ),
-        foreign_asset_observations=_parse_typed_cli_observations(
+        foreign_asset_observations=parse_typed_cli_observations(
             foreign_asset_observation, model=ForeignAssetIngestObservation, flag="--foreign-asset-observation"
         ),
     )
-    ledger_payment_requests = _parse_typed_cli_observations(
+    ledger_payment_requests = parse_typed_cli_observations(
         ledger_payment_withholding,
         model=LedgerPaymentWithholdingEvidenceRequest,
         flag="--ledger-payment-withholding",

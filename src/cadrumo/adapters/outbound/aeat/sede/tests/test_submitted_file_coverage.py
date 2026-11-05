@@ -9,7 +9,7 @@ from ......domain.calculations.registry.authority import bundled_indexed_authori
 from ......domain.calculations.registry.export import resolve_export_layout
 from ......domain.calculations.registry.export_parse import parse_filed_payload
 from ......domain.calculations.registry.schema_exports import ExportLayoutDefinition, ExportRecordDefinition
-from ..declarations_observations import _submitted_file_coverage_for_casillas
+from ..declarations_observations import submitted_file_coverage_for_casillas
 from ..schema import ObservedCasillaValue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -72,7 +72,7 @@ def test_optional_slot_coverage(optional_token: bytes, drop_optional: bool, drop
             and not (drop_zero and field.casilla_id == amount.casilla_id)
         )
         assert (
-            _submitted_file_coverage_for_casillas(
+            submitted_file_coverage_for_casillas(
                 snapshot=snapshot, body=body, casillas=observations, operation=operation
             )
             == expected

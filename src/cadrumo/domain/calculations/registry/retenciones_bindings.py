@@ -377,7 +377,7 @@ def _retenciones_type2_binding_row_values(
     return resolved
 
 
-def _registry_schemes_for_modelo(
+def registry_schemes_for_modelo(
     aggregation: _RetencionesAggregationProtocol,
     *,
     authority: GovernedFactSource | None = None,
@@ -436,7 +436,7 @@ def _retenciones_selector_value(
 ) -> Decimal:
     if not selector.schemes:
         return _unfiltered_retenciones_value(selector.fact, aggregation)
-    declared_schemes = _registry_schemes_for_modelo(aggregation, authority=authority)
+    declared_schemes = registry_schemes_for_modelo(aggregation, authority=authority)
     unknown_schemes = frozenset(selector.schemes).difference(declared_schemes)
     if unknown_schemes:
         rendered = ", ".join(sorted(scheme.value for scheme in unknown_schemes))

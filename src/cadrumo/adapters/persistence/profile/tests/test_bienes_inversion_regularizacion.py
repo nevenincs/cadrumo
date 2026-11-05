@@ -33,7 +33,7 @@ from cadrumo.domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionRegularizacionParameters,
 )
 from cadrumo.domain.bienes_inversion.vocabulary import BienInversionDisposalRegime, BienInversionKind
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bienes_inversion_regularizacion_bindings import (
     BienesInversionRegularizacionOutput,
     BienesInversionRegularizacionProvider,
@@ -285,7 +285,7 @@ def test_no_advisory_when_no_in_window_goods() -> None:
 def test_source_resolver_projects_repository_register_to_binding_and_bound_casilla(tmp_path: Path) -> None:
     """The live resolver fills the declared M303 binding and casilla 43 from the real register."""
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
     ):
         repository = BienesInversionIvaRegisterRepository(objects=profile.repository)
@@ -331,7 +331,7 @@ def test_source_resolver_projects_m390_binding_from_stamped_m303_prorrata_observ
     ungrounded 200.00 is not.
     """
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
     ):
         register_repository = BienesInversionIvaRegisterRepository(objects=profile.repository)
@@ -369,7 +369,7 @@ def test_source_resolver_uses_the_explicit_secondary_m390_observation_store(tmp_
     binding is now unresolved.
     """
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime,
     ):
         primary_observations = CalculationObservationRepository(objects=runtime.primary.repository)
@@ -465,7 +465,7 @@ def test_bienes_inversion_observation_repository_caller_ast_census_has_only_expl
 def test_source_resolver_leaves_binding_unresolved_without_current_year_prorrata(tmp_path: Path) -> None:
     """A current-year definitive prorrata gap keeps the M303 binding unresolved."""
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
     ):
         repository = BienesInversionIvaRegisterRepository(objects=profile.repository)
@@ -495,7 +495,7 @@ def test_source_resolver_leaves_binding_unresolved_without_current_year_prorrata
 def test_source_resolver_adds_disposal_year_art_110_amount(tmp_path: Path) -> None:
     """A disposal-year record contributes the art. 110 single regularisation amount."""
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
     ):
         repository = BienesInversionIvaRegisterRepository(objects=profile.repository)
@@ -522,7 +522,7 @@ def test_source_resolver_adds_disposal_year_art_110_amount(tmp_path: Path) -> No
 def test_source_resolver_resolves_empty_register_to_explicit_zero(tmp_path: Path) -> None:
     """An empty real register produces an explicit zero for the declared M303 binding."""
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
     ):
         repository = BienesInversionIvaRegisterRepository(objects=profile.repository)
@@ -626,7 +626,7 @@ def test_nonempty_early_m303_register_admits_period_figures_and_preserves_defini
 ) -> None:
     """Fresh encrypted goods do not turn an in-window missing annual percentage into zero."""
     with (
-        _indexed_authority_for_test().operation() as operation,
+        bundled_indexed_authority().operation() as operation,
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
     ):
         period = Period.from_year_and_code(2026, period_token)

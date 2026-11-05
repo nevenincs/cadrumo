@@ -9,7 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....filing_evidence import FilingEvidenceReference
-from .._anexo_d_records import resolve_inventory_authoritative_closing
+from ..anexo_d_records import resolve_inventory_authoritative_closing
 from ..closing_authority_records import (
     InventoryClosingAuthorityDecision,
     InventoryClosingAuthorityRecord,

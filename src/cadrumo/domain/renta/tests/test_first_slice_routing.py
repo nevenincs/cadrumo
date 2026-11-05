@@ -32,10 +32,10 @@ from ...categories.spending_category_catalogue import (
     amortizable_spending_categories,
     spending_category_tokens,
 )
-from .._first_slice_routing import (
+from ..actividad_asset.lifecycle import AssetKind
+from ..first_slice_routing import (
     resolve_first_slice_expense_routing,
 )
-from ..actividad_asset.lifecycle import AssetKind
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_domain]
 

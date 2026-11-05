@@ -34,14 +34,14 @@ def dispatch_cli_behavior(
         from cadrumo.application.user_profile.profile_summary import summary_inventory_snapshot
         from cadrumo_client.commands.secure_input import clear_staged_machine_secret_payloads
 
-        from ._profile_authentication_gate import preflight_parsed_leaf
+        from .profile_authentication_gate import preflight_parsed_leaf
 
         try:
             invocation_context = _invocation_context(bound, context_parameter)
             listing_scope = (
                 summary_inventory_snapshot() if spec.policy.side_effects == frozenset({"none"}) else nullcontext()
             )
-            with _governed_fact_scope(spec, invocation_context), listing_scope:
+            with governed_fact_scope(spec, invocation_context), listing_scope:
                 preflight_parsed_leaf(
                     invocation_context,
                     graph=graph,
@@ -86,7 +86,7 @@ def _invocation_context(bound: BoundArguments, context_parameter: str) -> typer.
     return cast(typer.Context, context)
 
 
-def _governed_fact_scope(spec: CommandSpec, context: typer.Context) -> AbstractContextManager[None]:
+def governed_fact_scope(spec: CommandSpec, context: typer.Context) -> AbstractContextManager[None]:
     """Open the pinned authority scope for a governed AEAT command behavior."""
     if not runs_in_governed_fact_scope(spec):
         return nullcontext()

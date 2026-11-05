@@ -33,8 +33,7 @@ from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_bo
 from ...core.filing_year import FilingYear, FourDigitYear
 from ...core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...core.registry_token import StrictRegistryToken
 from ...core.time.utc import UtcInstant
@@ -42,9 +41,7 @@ from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ...core.type_guards import is_object_collection
 from ..calculations.registry.renta_codes_catalogue import (
     fiscal_residency_requires_country,
-)
-from ..calculations.registry.renta_codes_catalogue import (
-    is_ue_eea_country_code as _registry_is_ue_eea_country_code,
+    is_ue_eea_country_code,
 )
 from ..contribuyente.entity_type import EntityType, LegalEntityForm
 from ..contribuyente.renta_codes import FiscalResidency
@@ -144,7 +141,7 @@ class ObligationStatus(StrEnum):
 class ModeloEnrollment(BaseModel):
     """AEAT enrollment facts used by registry filing schedules."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     large_company: bool = False
     public_administration_budget_gt_6000000: bool = False
@@ -408,7 +405,7 @@ class CrossPeriodGroupMemberRoster(BaseModel):
     filing was reconciled and accepted.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     source_modelo: Annotated[Modelo, BeforeValidator(_parse_modelo_identifier)] = Modelo("322")
     filing_year: FilingYear
@@ -455,7 +452,7 @@ class CrossPeriodGroupMemberRoster(BaseModel):
 
 def is_ue_eee_country_code(country_code: str | None) -> bool:
     """Return True when ``country_code`` is in the EU + EEA country set."""
-    return _registry_is_ue_eea_country_code(country_code)
+    return is_ue_eea_country_code(country_code)
 
 
 def irnr_representante_fiscal_required(country_code: str | None) -> bool:
@@ -829,7 +826,7 @@ class RecargoBand(BaseModel):
         legal_ref: Stable corpus reference (``ley-58-2003:art-27.2``).
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     id: str = Field(min_length=1, max_length=64)
     min_completed_months: NonNegativeInt
@@ -872,7 +869,7 @@ class Recovery(BaseModel):
             disagree.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     still_filable: bool = True
     recargo_band: RecargoBand
@@ -916,7 +913,7 @@ class ModeloDeadline(BaseModel):
             registry's recargo bracket table.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: Annotated[Modelo, BeforeValidator(_parse_modelo_identifier)]
     period: Annotated[Period, BeforeValidator(_parse_modelo_deadline_period)]
@@ -960,7 +957,7 @@ class CloseUnknownModeloDeadline(BaseModel):
         boe_references: Legal references of the rule the window projects.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: Annotated[Modelo, BeforeValidator(_parse_modelo_identifier)]
     period: Annotated[Period, BeforeValidator(_parse_modelo_deadline_period)]

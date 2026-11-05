@@ -12,8 +12,8 @@ from ..authority import PinnedAuthorityOperation
 from ..facts.resolution import GovernedFactQuery, MappingFactQuery, ResolvedGovernedFact, ResolvedMappingFact
 from ..iva_cash_accounting_vocabulary import resolve_iva_cash_accounting_catalogue
 from ..iva_schema_vocabulary_source import (
-    _BY_AUTHORITY,
-    _PROJECTIONS,
+    BY_AUTHORITY,
+    PROJECTIONS,
 )
 from ..schema_base import DateAxis
 from ..snapshot_globals import SupportedFilingYearsCatalogue
@@ -89,12 +89,12 @@ def test_a_collected_fact_releases_its_projections(operation: PinnedAuthorityOpe
     resolve_iva_cash_accounting_catalogue(
         effective_date=_ON, authority=_FixedFact(changed, operation.supported_filing_years())
     )
-    assert key in _PROJECTIONS
+    assert key in PROJECTIONS
 
     del changed
     gc.collect()
 
-    assert key not in _PROJECTIONS
+    assert key not in PROJECTIONS
 
 
 def test_the_same_authority_is_asked_again_for_another_date(operation: PinnedAuthorityOperation) -> None:
@@ -111,9 +111,9 @@ def test_a_collected_authority_releases_its_coordinates(operation: PinnedAuthori
     authority = _FixedFact(_vocabulary(operation), operation.supported_filing_years())
     key = (id(authority), _ON)
     resolve_iva_cash_accounting_catalogue(effective_date=_ON, authority=authority)
-    assert key in _BY_AUTHORITY
+    assert key in BY_AUTHORITY
 
     del authority
     gc.collect()
 
-    assert key not in _BY_AUTHORITY
+    assert key not in BY_AUTHORITY

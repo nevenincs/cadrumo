@@ -30,7 +30,7 @@ import pytest
 
 from cadrumo.tests.audited_process import run_audited_process
 
-from ..file_permissions import _dacl_of, _operator_account_candidates, restrict_directory_permissions
+from ..file_permissions import dacl_of, operator_account_candidates, restrict_directory_permissions
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -58,7 +58,7 @@ def _operator() -> str:
     import pywintypes
     import win32security
 
-    for candidate in _operator_account_candidates():
+    for candidate in operator_account_candidates():
         try:
             win32security.LookupAccountName(None, candidate)
         except pywintypes.error:
@@ -77,7 +77,7 @@ def _dacl_shape(path: Path) -> _DaclShape:
     )
     control, _revision = descriptor.GetSecurityDescriptorControl()
     owner = win32security.ConvertSidToStringSid(descriptor.GetSecurityDescriptorOwner())
-    dacl = _dacl_of(descriptor)
+    dacl = dacl_of(descriptor)
     aces: list[tuple[int, int, int, str]] = []
     if dacl is not None:
         for index in range(dacl.GetAceCount()):
@@ -156,7 +156,7 @@ def _restored_directory_acls(directories: tuple[Path, ...]) -> Generator[None]:
                 win32security.DACL_SECURITY_INFORMATION | protection,
                 None,
                 None,
-                _dacl_of(descriptor),
+                dacl_of(descriptor),
                 None,
             )
         yield

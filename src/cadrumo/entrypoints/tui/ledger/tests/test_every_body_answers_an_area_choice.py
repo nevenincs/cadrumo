@@ -76,8 +76,8 @@ from .invoices_fixtures import transaction_projection as synthetic_transaction
 from .own_account_fixtures import MemoryOwnAccountDoor
 from .registers_fixtures import MemoryCapitalGoodsDoor, MemoryInventoryDoor, MemoryProrrataRegisterDoor
 from .review_door_fixtures import MemoryEvidenceReviewListDoor
-from .test_ledger_flows import _ImportDoor
-from .test_ledger_ingestion_surfaces import _InvoiceDoor
+from .test_ledger_flows import ImportDoor
+from .test_ledger_ingestion_surfaces import InvoiceDoor
 from .workspace_fixtures import (
     LEDGER_TX_A,
     ClassificationDoor,
@@ -215,7 +215,7 @@ def _builders() -> dict[type[LedgerWorkspaceScreen], _Build]:
         LedgerReconciliationScreen: lambda: LedgerReconciliationScreen(ledger_controller(ledger_projection())),
         LedgerUnavailableScreen: _unavailable,
         LedgerImportScreen: lambda: LedgerImportScreen(
-            _area_controller(LedgerWorkspaceInjection(review_action=ledger_review_action(), import_door=_ImportDoor()))
+            _area_controller(LedgerWorkspaceInjection(review_action=ledger_review_action(), import_door=ImportDoor()))
         ),
         LedgerClassificationScreen: lambda: LedgerClassificationScreen(
             _area_controller(
@@ -238,7 +238,7 @@ def _builders() -> dict[type[LedgerWorkspaceScreen], _Build]:
         ),
         LedgerInvoiceEntryScreen: lambda: LedgerInvoiceEntryScreen(
             _area_controller(
-                LedgerWorkspaceInjection(review_action=ledger_review_action(), invoice_add_door=_InvoiceDoor())
+                LedgerWorkspaceInjection(review_action=ledger_review_action(), invoice_add_door=InvoiceDoor())
             )
         ),
         LedgerEntryAddScreen: lambda: LedgerEntryAddScreen(entries_controller(), _entry_doors().doors()),

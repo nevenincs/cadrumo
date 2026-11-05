@@ -32,7 +32,7 @@ from pydantic import AnyHttpUrl, TypeAdapter
 
 from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -67,9 +67,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from ....domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.schema_input_kind import InputKind
@@ -79,8 +77,7 @@ from ....domain.modelos.calculation_repository import CalculationRevisionPersist
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, VerificationCompletenessStatus
 from ....domain.modelos.work_unit import WorkUnit
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.env_scope import ready_clave_settings
 from .file_flow_test_support import calculation_ports_for_test
@@ -129,7 +126,7 @@ def _required_manual_casillas_for_m130() -> tuple[CasillaId, ...]:
 
 def _seed_runtime_profile_record(bucket_id: str) -> None:
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(
@@ -142,7 +139,7 @@ def _seed_runtime_profile_record(bucket_id: str) -> None:
             ),
             created_at=_T0,
             updated_at=_T0,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 
@@ -307,7 +304,7 @@ def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(
     missing-required mechanism itself is exercised against a real registry casilla
     definition in ``test_missing_required_casilla_finding_carries_registry_provenance``.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         wu_repo, cr_repo, _filing_repo, _vr_repo, bv_repo = repos
         required = _required_manual_casillas_for_m130()
         assert required == (), (
@@ -373,7 +370,7 @@ def test_verify_grants_when_required_casillas_supplied_m130(
     repos: _Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
     """M130 revision with all required casillas present is granted verificado_completo."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         wu_repo, cr_repo, filing_repo, _vr_repo, bv_repo = repos
         required = _required_manual_casillas_for_m130()
 
@@ -467,7 +464,7 @@ def test_tampered_revision_raises_drift_error(repos: _Repos, *, operation: Pinne
     In production, such breakage can occur through raw-storage manipulation or a
     future schema migration that mutates the payload without updating the id.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         wu_repo, cr_repo, _filing_repo, _vr_repo, bv_repo = repos
 
         work_unit = create_work_unit(

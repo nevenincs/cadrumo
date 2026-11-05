@@ -43,11 +43,11 @@ from cadrumo.core.model_roles import ModelRole
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 
-from .ledger_ux_support import _add_evidence, _invoke, _open_bucket_session
+from .ledger_ux_support import _add_evidence, _invoke, open_bucket_session
 from .portable_human_cli_runtime import serving_portable_agent
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-__all__ = ["_open_bucket_session"]
+__all__ = ["open_bucket_session"]
 
 _HEADROOM_REFUSED = "ledger.evidence.label_reading.headroom_refused"
 _READER_UNAVAILABLE = "ledger.evidence.label_reading.reader_unavailable"

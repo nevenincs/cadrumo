@@ -19,7 +19,7 @@ from enum import Enum, StrEnum
 
 import pytest
 
-from ..utils import _enum_value, _parse_bool
+from ..utils import utils_enum_value, utils_parse_bool
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -94,10 +94,10 @@ _UNKNOWN_TOKENS: tuple[str | None, ...] = (
 
 def test_parse_bool_recognized_and_unknown_tokens() -> None:
     for raw, expected in _RECOGNIZED_TOKENS:
-        assert _parse_bool(raw) is expected
+        assert utils_parse_bool(raw) is expected
 
     for raw in _UNKNOWN_TOKENS:
-        assert _parse_bool(raw) is None
+        assert utils_parse_bool(raw) is None
 
 
 def test_enum_value_none_maps_to_empty_string() -> None:
@@ -108,12 +108,12 @@ def test_enum_value_none_maps_to_empty_string() -> None:
     silently match a hostile value or, more likely, silently match nothing
     and drop out of the vocabulary with no error.
     """
-    assert _enum_value(None) == ""
+    assert utils_enum_value(None) == ""
 
 
 def test_enum_value_reads_a_string_enum_member() -> None:
-    assert _enum_value(_WireStatus.OPEN) == "open"
-    assert _enum_value(_WireStatus.CLOSED) == "closed"
+    assert utils_enum_value(_WireStatus.OPEN) == "open"
+    assert utils_enum_value(_WireStatus.CLOSED) == "closed"
 
 
 def test_enum_value_stringifies_a_non_string_enum_value() -> None:
@@ -122,10 +122,10 @@ def test_enum_value_stringifies_a_non_string_enum_value() -> None:
     ``getattr(value, "value", value)`` reads ``.value`` first and stringifies
     THAT -- ``"3"``, not the enum's own repr.
     """
-    assert _enum_value(_NumericTier.THREE) == "3"
+    assert utils_enum_value(_NumericTier.THREE) == "3"
 
 
 def test_enum_value_passes_through_a_non_enum_value_via_str() -> None:
-    assert _enum_value("already-a-string") == "already-a-string"
-    assert _enum_value(42) == "42"
-    assert _enum_value(True) == "True"
+    assert utils_enum_value("already-a-string") == "already-a-string"
+    assert utils_enum_value(42) == "42"
+    assert utils_enum_value(True) == "True"

@@ -35,9 +35,9 @@ from ...core.operations import (
     OperationEffect,
     profile_operation_subject,
 )
-from ._modelo_behavior_support import work_address_for_cli
-from ._modelo_cli_support import selector_bad_parameter, validate_calculation_revision_id
 from .common import no_active_profile_refusal
+from .modelo_behavior_support import work_address_for_cli
+from .modelo_cli_support import selector_bad_parameter, validate_calculation_revision_id
 
 #: Annual verification checks the stored quarterly chain and workflow gates.
 #: Like calculation, it can outlast a transport exchange without being stuck.

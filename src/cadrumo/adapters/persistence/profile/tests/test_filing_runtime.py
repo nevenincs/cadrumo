@@ -11,18 +11,18 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile._filing_runtime import resolve_filing_repository_bucket_id
+from cadrumo.adapters.persistence.profile.filing_runtime import resolve_filing_repository_bucket_id
 from cadrumo.adapters.persistence.storage.errors import StorageValidationError
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_storage_root as _isolated_storage,
+    isolated_storage_root,
 )
 from cadrumo.core.config import override_settings
 from cadrumo.domain.filing.errors import ModeloDraftError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-__all__ = ["_isolated_storage"]
+__all__ = ["isolated_storage_root"]
 
 _EXPLICIT_BUCKET_ID = "2f85f149-2df7-41b7-b569-aae0b3d0998d"
 _ACTIVE_BUCKET_ID = "34245238-a76d-4ebf-a515-8e5af83cfc0c"

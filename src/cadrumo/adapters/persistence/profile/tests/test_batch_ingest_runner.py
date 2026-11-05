@@ -48,7 +48,7 @@ from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 
 from .....domain.iva.schema import InvoiceKind
-from ._invoice_confirmation_test_support import _invoice_draft_extraction_ports, serving_a_loopback_reader
+from .invoice_confirmation_test_support import invoice_draft_extraction_ports, serving_a_loopback_reader
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -102,7 +102,7 @@ def _batch_ports(
         attachment_ingestor=LedgerEvidenceAttachmentIngestor(store=AttachmentStore(objects=profile.repository)),
         bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
     )
-    return evidence_ports, _invoice_draft_extraction_ports(evidence_ports=evidence_ports, operation=operation)
+    return evidence_ports, invoice_draft_extraction_ports(evidence_ports=evidence_ports, operation=operation)
 
 
 def _service(profile: TestRuntimeProfile, *, operation: PinnedAuthorityOperation) -> PurchaseInvoiceEvidenceService:

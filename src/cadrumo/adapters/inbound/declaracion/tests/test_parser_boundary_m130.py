@@ -10,14 +10,14 @@ from .....tests.inventory import FIXTURES_DIR
 from ...pdf.source_provenance import source_pdf_reference_path
 from ..errors import DeclaracionParseError
 from ..parser import parse_declaracion
-from ._parser_boundary_casillas import (
-    _M130_RENDIMIENTO_NETO_CASILLA,
-    _M130_RESULTADO_CASILLA,
+from .parser_boundary_casillas import (
+    M130_RENDIMIENTO_NETO_CASILLA,
+    M130_RESULTADO_CASILLA,
 )
-from ._parser_boundary_support import (
-    _MODELO_130_EXPECTED_TARGETS,
-    _MODELO_130_SYNTHETIC_FIXTURE,
-    _modelo_130_snapshot,
+from .parser_boundary_support import (
+    MODELO_130_EXPECTED_TARGETS,
+    MODELO_130_SYNTHETIC_FIXTURE,
+    modelo_130_snapshot,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
@@ -25,13 +25,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.use
 
 def test_parser_extracts_modelo_130_registry_profile_targets_from_pdf() -> None:
     """Assert the M130 declaracion_pdf profile declares exactly the expected 19 targets."""
-    snapshot = _modelo_130_snapshot()
+    snapshot = modelo_130_snapshot()
     profile = snapshot.extraction_profiles["modelo-130-declaracion-pdf"]
     assert profile.provisional_pending_specimen is True
     assert profile.corpus_round_trip_verified is False
     assert profile.verification_source is None
     assert profile.confidence == "review_required"
-    assert tuple(target.casilla_id for target in profile.target_casillas) == _MODELO_130_EXPECTED_TARGETS
+    assert tuple(target.casilla_id for target in profile.target_casillas) == MODELO_130_EXPECTED_TARGETS
     assert profile.min_coverage == Decimal("0.1052")
     for target in profile.target_casillas:
         assert target.match_strategy == "bbox_anchored", (
@@ -53,7 +53,7 @@ def test_parser_extracts_modelo_130_legal_entity_nif_from_pdf() -> None:
 
 def test_parser_fails_when_modelo_130_registry_profile_targets_are_missing() -> None:
     """Parsing fails when the M130 profile coverage falls below the registry minimum."""
-    snap = _modelo_130_snapshot()
+    snap = modelo_130_snapshot()
     prod_profile = snap.extraction_profiles["modelo-130-declaracion-pdf"]
     strict_profile = prod_profile.model_copy(update={"min_coverage": Decimal("1")})
     profiles = dict(snap.extraction_profiles)
@@ -82,15 +82,15 @@ def test_modelo_130_synthetic_fixture_extracts_partial_casillas() -> None:
     The fixture is ``synthetic_generated``.
     """
     filing = parse_declaracion(
-        _MODELO_130_SYNTHETIC_FIXTURE,
+        MODELO_130_SYNTHETIC_FIXTURE,
         modelo_override="130",
         año_override=2024,
         period_override="1T",
     )
     extracted = {value.casilla_id: value.printed_value for value in filing.values}
     assert filing.extraction_profile_provisional is True
-    assert set(extracted.keys()) == {_M130_RENDIMIENTO_NETO_CASILLA, _M130_RESULTADO_CASILLA}, (
+    assert set(extracted.keys()) == {M130_RENDIMIENTO_NETO_CASILLA, M130_RESULTADO_CASILLA}, (
         f"2024-1T: expected casillas {{03, 19}}, got {set(extracted.keys())!r}"
     )
-    assert isinstance(extracted[_M130_RESULTADO_CASILLA], Decimal)
-    assert isinstance(extracted[_M130_RENDIMIENTO_NETO_CASILLA], Decimal)
+    assert isinstance(extracted[M130_RESULTADO_CASILLA], Decimal)
+    assert isinstance(extracted[M130_RENDIMIENTO_NETO_CASILLA], Decimal)

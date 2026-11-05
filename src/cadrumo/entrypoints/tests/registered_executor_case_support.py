@@ -20,7 +20,7 @@ from cadrumo.adapters.persistence.profile.tests.review_read_operation_test_suppo
 )
 from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
@@ -136,9 +136,13 @@ from .modelo_projection_history_conformance_support import (
 from .modelo_query_operation_test_support import ModeloQueryConformanceCase, prepare_modelo_query_conformance_case
 from .prorrata_operation_test_support import ProrrataOperationConformanceCase
 from .recipient_operation_test_support import RecipientOperationConformanceCase, prepare_recipient_operation_case
-from .registered_executor_payload_support import _payload
-from .registered_executor_scenario_constants import _CREDENTIAL_INPUT, _OPERATOR_SCOPE_PORTS
-from .registered_executor_seeding_support import ConformanceProfileSeed, _ledger_lifecycle_case, _prorrata_case
+from .registered_executor_payload_support import registered_executor_payload
+from .registered_executor_scenario_constants import CREDENTIAL_INPUT, OPERATOR_SCOPE_PORTS
+from .registered_executor_seeding_support import (
+    ConformanceProfileSeed,
+    ledger_lifecycle_case,
+    registered_executor_seeding_prorrata_case,
+)
 
 
 @dataclass(slots=True)
@@ -151,7 +155,7 @@ class OperationRuntimeCloseWitness:
         self.closed = True
 
 
-class _HeldClock:
+class HeldClock:
     """A supervisor clock that stands still until released, then reads real time.
 
     The supervisor measures its execution deadline on this clock, so while it
@@ -170,7 +174,7 @@ class _HeldClock:
 
 
 @dataclass(slots=True)
-class _ExecutionDriver:
+class ExecutionDriver:
     """Single registered execution driver over the canonical composed supervisor."""
 
     services: OperationComposedServices
@@ -295,8 +299,8 @@ class _ExecutionDriver:
         assert result.code is OperationReviewProjectionRefusalCode.REVIEW_NOT_PENDING
 
 
-def _resolve_result_projection[ProjectionT: BaseModel](
-    driver: _ExecutionDriver,
+def resolve_result_projection[ProjectionT: BaseModel](
+    driver: ExecutionDriver,
     registry: OperationRegistry,
     *,
     definition_id: str,
@@ -327,14 +331,14 @@ def _resolve_result_projection[ProjectionT: BaseModel](
 class _FamilyResultResolver:
     """Bind one settled operation's public result resolution for a family's own checks."""
 
-    driver: _ExecutionDriver
+    driver: ExecutionDriver
     registry: OperationRegistry
     definition_id: str
     operation_id: str
     terminal_revision: int
 
     def __call__[ProjectionT: BaseModel](self, projection_type: type[ProjectionT], /) -> ProjectionT:
-        projection = _resolve_result_projection(
+        projection = resolve_result_projection(
             self.driver,
             self.registry,
             definition_id=self.definition_id,
@@ -356,7 +360,7 @@ def family_environment_for_operation(definition_id: str) -> Generator[None]:
         yield
 
 
-def _prepare_family_case(
+def prepare_family_case(
     definition: OperationDefinition,
     *,
     profile_id: UUID,
@@ -374,17 +378,17 @@ def _prepare_family_case(
         ConformanceFamilyContext(
             definition=definition,
             profile_id=profile_id,
-            profile_passphrase=_CREDENTIAL_INPUT,
+            profile_passphrase=CREDENTIAL_INPUT,
             input_root=input_root,
             operation=operation,
         )
     )
 
 
-def _judge_family_outcome(
+def judge_family_outcome(
     preparation: ConformancePreparation | None,
     *,
-    driver: _ExecutionDriver,
+    driver: ExecutionDriver,
     registry: OperationRegistry,
     profile_id: UUID,
     operation_id: str,
@@ -419,7 +423,7 @@ def _judge_family_outcome(
         preparation.verify(outcome)
 
 
-def _observation() -> CensalObservation:
+def observation() -> CensalObservation:
     return CensalObservation(
         identity=CensalObservationIdentity(nif="12345678Z"),
         domicilio_fiscal=CensalObservationAddress(
@@ -460,7 +464,7 @@ async def _acquire_censo_for_the_active_case() -> CensalOperationAcquisition:
     cleanup = _ComposedRegistryCache.cleanup
     if cleanup is None:
         raise InternalInvariantError("the censal acquisition ran outside a conformance runtime")
-    return CensalOperationAcquisition(observation=_observation(), resource=cleanup)
+    return CensalOperationAcquisition(observation=observation(), resource=cleanup)
 
 
 async def _acquire_verify_observation(surface, nif, expected, operation) -> VerifyLiveObservation:
@@ -491,7 +495,7 @@ def _compose_conformance_registry(
             browser_session_factory=default_browser_session_factory,
             acquire=_acquire_censo_for_the_active_case,
             before_irreversible_section=before_irreversible_section,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             censal_fetch_port=build_censal_fetch_port(),
             provider_preflight=lambda _profile_id, _operation: None,
         ),
@@ -503,7 +507,7 @@ def _compose_conformance_registry(
     )
 
 
-def _conformance_registry(
+def conformance_registry(
     *,
     before_irreversible_section: Callable[[], Awaitable[None]] | None,
     amendment_action_ports_factory: AmendmentActionPortsFactory | None,
@@ -542,14 +546,14 @@ def _registered_subject_world(
         with override_settings(cadrumo_auth_provider=AuthProviderKind.CERTIFICATE, cadrumo_certificate_path=None):
             return register_profile_with_credentials(
                 label="S45 registered executor subject",
-                passphrase=_CREDENTIAL_INPUT,
+                passphrase=CREDENTIAL_INPUT,
                 facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
                 profile_create_context=create_context,
                 profile_decode_context=decode_context,
             ).profile_id
 
     return sealed_profile_world(
-        ("registered executor subject", str(create_context.generation), _CREDENTIAL_INPUT), register
+        ("registered executor subject", str(create_context.generation), CREDENTIAL_INPUT), register
     )
 
 
@@ -580,7 +584,7 @@ def conformance_operation_runtime(
     clock: Callable[[], datetime] = now,
     execution_caller_reader: OperationExecutionCallerReader | None = None,
     profile_seed: ConformanceProfileSeed | None = None,
-) -> Generator[tuple[_ExecutionDriver, OperationRegistry, UUID]]:
+) -> Generator[tuple[ExecutionDriver, OperationRegistry, UUID]]:
     """Give each case fresh profile, journal, lease, and operand custody.
 
     With ``profile_seed`` the case's profile is a copy of the registered
@@ -590,7 +594,7 @@ def conformance_operation_runtime(
     independently of the developer's dotenv credentials. Cases that exercise
     acquisition explicitly inject their local acquisition ports below.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
 
     _ComposedRegistryCache.cleanup = cleanup
     world = _registered_subject_world(_profile_create_context_for_test, _profile_decode_context_for_test)
@@ -603,7 +607,7 @@ def conformance_operation_runtime(
             profile_id,
         ),
     ):
-        registry = registry or _conformance_registry(
+        registry = registry or conformance_registry(
             before_irreversible_section=before_irreversible_section,
             amendment_action_ports_factory=amendment_action_ports_factory,
             execution_caller_reader=execution_caller_reader,
@@ -631,7 +635,7 @@ def conformance_operation_runtime(
                 ),
             )
             try:
-                yield _ExecutionDriver(services=services), registry, profile_id
+                yield ExecutionDriver(services=services), registry, profile_id
             finally:
                 asyncio.run(services.shutdown())
                 authority_scope.__exit__(None, None, None)
@@ -724,7 +728,7 @@ def seeded_conformance_operation_submission(
     compared here, so the declaration is held to an independently written
     value before any executor or resolver sees the derived one.
     """
-    family_preparation = _prepare_family_case(
+    family_preparation = prepare_family_case(
         definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation, family=family
     )
     projection_history_case = (
@@ -775,7 +779,7 @@ def seeded_conformance_operation_submission(
         else None
     )
     lifecycle_case = (
-        _ledger_lifecycle_case(definition.definition_id, profile_id=profile_id, operation=operation)
+        ledger_lifecycle_case(definition.definition_id, profile_id=profile_id, operation=operation)
         if definition.definition_id in {"ledger.archive", "ledger.stash", "ledger.restore", "ledger.exclude"}
         else None
     )
@@ -785,7 +789,7 @@ def seeded_conformance_operation_submission(
         else None
     )
     prorrata_case = (
-        _prorrata_case(definition.definition_id, profile_id=profile_id, operation=operation)
+        registered_executor_seeding_prorrata_case(definition.definition_id, profile_id=profile_id, operation=operation)
         if definition.definition_id.startswith("ledger.prorrata.")
         else None
     )
@@ -823,7 +827,7 @@ def seeded_conformance_operation_submission(
     elif evidence_case is not None:
         subject_ref, payload, secret = profile_operation_subject(str(profile_id)), evidence_case.request, None
     elif prorrata_case is None:
-        subject_ref, payload, secret = _payload(
+        subject_ref, payload, secret = registered_executor_payload(
             definition, profile_id=profile_id, tmp_path=tmp_path / definition.definition_id, operation=operation
         )
     else:

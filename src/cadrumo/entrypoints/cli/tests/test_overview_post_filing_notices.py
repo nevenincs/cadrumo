@@ -15,7 +15,7 @@ import pytest
 from ....application.overview.calendar_models import OverviewCalendarEvent, OverviewCalendarEventType
 from ....core.json_contract import NoticeSeverity, ResolvedNoticeAction
 from ....core.post_filing_event import PostFilingEventKind
-from .._overview_rendering import overview_post_filing_event_notices
+from ..overview_rendering import overview_post_filing_event_notices
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

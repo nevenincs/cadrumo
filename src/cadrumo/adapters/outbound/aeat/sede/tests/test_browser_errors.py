@@ -13,7 +13,7 @@ from __future__ import annotations
 import pytest
 
 from ......core.errors.error_codes import build_error_envelope
-from .._adapter_utils import require_playwright_page
+from ..adapter_utils import require_playwright_page
 from ..errors import BrowserAdapterTypeError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

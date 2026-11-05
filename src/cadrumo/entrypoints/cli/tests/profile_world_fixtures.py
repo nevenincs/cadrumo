@@ -14,7 +14,7 @@ from .cli_fixture_worlds import BackendKind, CliWorldProvider
 def profile_backend_fixture(kind: BackendKind, *, autouse: bool = True):
     """Declare the original per-test world lifetime and automatic use."""
 
-    @pytest.fixture(name="_isolated_backend", autouse=autouse)
+    @pytest.fixture(name="isolated_backend", autouse=autouse)
     def backend(tmp_path: Path, cli_world_provider: CliWorldProvider) -> Iterator[None]:
         with cli_world_provider.backend(kind, tmp_path):
             yield
@@ -29,7 +29,7 @@ cli_surface_isolated_backend = profile_backend_fixture("surface")
 
 
 @pytest.fixture(autouse=True)
-def _isolated_state(tmp_path: Path, cli_world_provider: CliWorldProvider) -> Iterator[None]:
+def isolated_state(tmp_path: Path, cli_world_provider: CliWorldProvider) -> Iterator[None]:
     with cli_world_provider.backend("sessionless", tmp_path):
         yield
 
@@ -38,7 +38,7 @@ def recorded_fx_seeded_backend(
     *,
     seed: Callable[..., object],
     autouse: bool = True,
-    name: str = "_isolated_backend",
+    name: str = "isolated_backend",
     origin_name: str = "_isolated_backend_origin",
 ):
     """Declare one module seed and one independently signed-in copy per test."""

@@ -215,13 +215,13 @@ def test_an_authority_read_verifies_the_storage_ancestry_twice_per_root_lock(
     """
     subject.publish()
     opened: list[str] = []
-    open_component = filesystem_primitives._open_verified_component
+    open_component = filesystem_primitives.open_verified_component
 
     def counting(current: str, access: int, **kwargs: Any) -> int:
         opened.append(current)
         return open_component(current, access, **kwargs)
 
-    monkeypatch.setattr(filesystem_primitives, "_open_verified_component", counting)
+    monkeypatch.setattr(filesystem_primitives, "open_verified_component", counting)
     ancestry = filesystem_primitives.windows_component_paths(subject.store.root)[:-1]
 
     subject.store.profile_lock_state()
@@ -543,7 +543,7 @@ class WindowsCredentialApiDouble:
 def test_windows_secret_store_preserves_exact_binary_blob(monkeypatch: pytest.MonkeyPatch, size: int) -> None:
     api = WindowsCredentialApiDouble()
     monkeypatch.setattr(windows_secret_store.sys, "platform", "win32")
-    monkeypatch.setattr(windows_secret_store, "_windows_credential_api", lambda: api)
+    monkeypatch.setattr(windows_secret_store, "windows_credential_api", lambda: api)
     store = WindowsAutomationSecretStore()
     namespace, account = "cadrumo.automation.synthetic.v1", "random-synthetic-item"
     source = bytes(range(256)) * (size // 256) + bytes(range(size % 256))
@@ -563,7 +563,7 @@ def test_windows_secret_store_preserves_exact_binary_blob(monkeypatch: pytest.Mo
 def test_windows_secret_store_rejects_malformed_native_blob(monkeypatch: pytest.MonkeyPatch) -> None:
     api = WindowsCredentialApiDouble()
     monkeypatch.setattr(windows_secret_store.sys, "platform", "win32")
-    monkeypatch.setattr(windows_secret_store, "_windows_credential_api", lambda: api)
+    monkeypatch.setattr(windows_secret_store, "windows_credential_api", lambda: api)
     namespace, account = "cadrumo.automation.synthetic.v1", "malformed-synthetic-item"
     api.items[namespace + ":" + account] = bytes(2561)
 
@@ -650,7 +650,7 @@ def test_windows_credential_ffi_preserves_raw_blob_layout(monkeypatch: pytest.Mo
     monkeypatch.setattr(windows_secret_store.ctypes, "WinDLL", lambda _name, **_kwargs: api, raising=False)
     monkeypatch.setattr(windows_secret_store.ctypes, "get_last_error", lambda: last_error["value"], raising=False)
 
-    manager = windows_secret_store._WindowsCredentialManager()
+    manager = windows_secret_store.WindowsCredentialManager()
     api.credential_type = manager._credential_type
     source = bytes(range(256)) * 10
     target, account = "cadrumo.automation.synthetic:" + str(uuid4()), "synthetic-account"

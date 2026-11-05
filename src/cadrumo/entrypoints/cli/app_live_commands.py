@@ -40,21 +40,21 @@ from ...application.live.remote_state_models import (
 from ...application.operator_actions.models import ActionReference
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ._app_live_auth_preflight import emit_live_auth_preflight, metric_line
-from ._app_live_rendering import _filed_capture_lines, _source_filed_capture_lines
-from ._filing_chain_payloads import (
-    FilingReconciliationPayload,
-    filing_reconciliation_lines,
-    filing_reconciliation_notices,
-    filing_reconciliation_payload,
-)
+from .app_live_auth_preflight import emit_live_auth_preflight, metric_line
 from .app_live_period import live_period_option, required_live_period_option
+from .app_live_rendering import filed_capture_lines, source_filed_capture_lines
 from .common import (
     emit_envelope,
     notice_lines,
     resolve_notice_action,
     resolve_optional_root,
     resolve_pull_year_range,
+)
+from .filing_chain_payloads import (
+    FilingReconciliationPayload,
+    filing_reconciliation_lines,
+    filing_reconciliation_notices,
+    filing_reconciliation_payload,
 )
 
 
@@ -198,8 +198,8 @@ def filed_discover_cmd(ctx: typer.Context) -> None:
 
     read = read_filed_discover_for_cli(ctx)
     try:
-        result, lines = _filed_discover_result_and_lines(read.report)
-        notices = _filed_discover_notices(read.report)
+        result, lines = filed_discover_result_and_lines(read.report)
+        notices = filed_discover_notices(read.report)
         emit_envelope(
             ctx,
             command="app.live.filed.discover",
@@ -212,7 +212,7 @@ def filed_discover_cmd(ctx: typer.Context) -> None:
         raise invalid_completion_error(completed) from None
 
 
-def _filed_discover_result_and_lines(report: FiledHistoryDiscoveryReport) -> tuple[Any, tuple[str, ...]]:
+def filed_discover_result_and_lines(report: FiledHistoryDiscoveryReport) -> tuple[Any, tuple[str, ...]]:
     from .app_live_filed_results import FiledDiscoverResult, FiledHistoryDiscoveryPairPayload
 
     lines = [
@@ -254,7 +254,7 @@ def _filed_discover_result_and_lines(report: FiledHistoryDiscoveryReport) -> tup
     return result, tuple(lines)
 
 
-def _filed_discover_notices(report: FiledHistoryDiscoveryReport) -> list[Notice]:
+def filed_discover_notices(report: FiledHistoryDiscoveryReport) -> list[Notice]:
     """Say what each signal does and does not establish, before anything is walked.
 
     Two notices, because there are two different things an operator can get
@@ -312,8 +312,8 @@ def filed_pull_all_cmd(
 
     read = read_filed_history_for_cli(ctx, output_root=output_root, limit=limit, today=today_madrid())
     try:
-        result, lines = _filed_pull_all_result_and_lines(read.report)
-        notices = _filed_pull_all_notices(read.report, limit=limit)
+        result, lines = filed_pull_all_result_and_lines(read.report)
+        notices = filed_pull_all_notices(read.report, limit=limit)
         emit_envelope(
             ctx,
             command="app.live.filed.pull_all",
@@ -326,7 +326,7 @@ def filed_pull_all_cmd(
         raise invalid_completion_error(completed) from None
 
 
-def _filed_pull_all_result_and_lines(run: FiledHistoryOnboardingRun) -> tuple[Any, tuple[str, ...]]:
+def filed_pull_all_result_and_lines(run: FiledHistoryOnboardingRun) -> tuple[Any, tuple[str, ...]]:
     from .app_live_filed_results import FiledHistoryOnboardingResult, FiledHistoryPairOutcomePayload
 
     refused = run.refused_pairs
@@ -425,7 +425,7 @@ def _limit_reached_notice(reached_count: int, *, limit: int | None) -> Notice | 
     )
 
 
-def _filed_pull_all_notices(run: FiledHistoryOnboardingRun, *, limit: int | None = None) -> list[Notice]:
+def filed_pull_all_notices(run: FiledHistoryOnboardingRun, *, limit: int | None = None) -> list[Notice]:
     """Collect the run's advisories, each from its own authority.
 
     Assembled rather than re-derived: the expected-but-not-found warning and the
@@ -521,7 +521,7 @@ def _filed_capture_payload_fields(report: FiledCaptureEvidenceTally) -> _FiledCa
     }
 
 
-def _filed_capture_notices(
+def filed_capture_notices(
     report: FiledDataCaptureReport | BulkFiledDataCaptureReport | SourceFiledDataCaptureReport,
     *,
     limit: int | None = None,
@@ -537,7 +537,7 @@ def _filed_capture_notices(
     return ((truncation,) if truncation is not None else ()) + report.evidence_notices
 
 
-def _emit_single_filed_pull(
+def emit_single_filed_pull(
     ctx: typer.Context,
     *,
     modelo: str,
@@ -566,7 +566,7 @@ def _emit_single_filed_pull(
     )
     report = read.report
     try:
-        lines = _filed_capture_lines(report, mode=LiveCaptureMode.SINGLE, modelo=report.modelo, year=report.year)
+        lines = filed_capture_lines(report, mode=LiveCaptureMode.SINGLE, modelo=report.modelo, year=report.year)
         result = FiledCaptureResult(
             output_root=report.output_root,
             modelo=report.modelo,
@@ -574,7 +574,7 @@ def _emit_single_filed_pull(
             **_filed_capture_payload_fields(report),
         )
         notices = (
-            *_filed_capture_notices(report, limit=limit),
+            *filed_capture_notices(report, limit=limit),
             *filing_reconciliation_notices(report.reconciliation_results),
         )
         emit_envelope(
@@ -589,7 +589,7 @@ def _emit_single_filed_pull(
         raise invalid_completion_error(completed) from None
 
 
-def _emit_bulk_filed_pull(
+def emit_bulk_filed_pull(
     ctx: typer.Context,
     *,
     selected_modelos: tuple[str, ...],
@@ -615,7 +615,7 @@ def _emit_bulk_filed_pull(
         dry_run=dry_run,
     )
     report = read.report
-    lines = _filed_capture_lines(
+    lines = filed_capture_lines(
         report,
         mode=LiveCaptureMode.BULK,
         modelos=report.modelos,
@@ -648,7 +648,7 @@ def _emit_bulk_filed_pull(
     )
     skipped = _skipped_casilla_notice(report.skipped_casillas)
     capture_notices = (
-        *_filed_capture_notices(report, limit=limit),
+        *filed_capture_notices(report, limit=limit),
         *report.recapture_notices,
         *filing_reconciliation_notices(report.reconciliation_results),
     )
@@ -697,7 +697,7 @@ def filed_pull_cmd(
             # is leaving no trace. Refused rather than ignored, and rather than
             # extending single mode, which is a different decision.
             raise typer.BadParameter(tr("cli.app.live.filed.pull_dry_run_single_mode_error"))
-        _emit_single_filed_pull(
+        emit_single_filed_pull(
             ctx,
             modelo=selected_modelos[0],
             year=year,
@@ -710,7 +710,7 @@ def filed_pull_cmd(
 
     if period is not None or expediente_id is not None:
         raise typer.BadParameter("--period and --expediente are only valid for one --modelo with --year")
-    _emit_bulk_filed_pull(
+    emit_bulk_filed_pull(
         ctx,
         selected_modelos=selected_modelos,
         year=year,
@@ -799,13 +799,13 @@ def filed_pull_sources_cmd(
             target_period=report.target_period,
             **_filed_capture_payload_fields(report),
         )
-        notices = (*_filed_capture_notices(report), *filing_reconciliation_notices(reconciliations))
+        notices = (*filed_capture_notices(report), *filing_reconciliation_notices(reconciliations))
         emit_envelope(
             ctx,
             command="app.live.filed.pull_sources",
             result=result,
             lines=(
-                *_source_filed_capture_lines(report),
+                *source_filed_capture_lines(report),
                 *filing_reconciliation_lines(reconciliations),
                 *notice_lines(notices),
             ),

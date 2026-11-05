@@ -31,9 +31,9 @@ from pathlib import Path
 
 import pytest
 
-from .._mapped_tabular import MappedTabularProvider
 from ..csv import CsvProvider
-from ..detection import _ordered_candidates
+from ..detection import ordered_candidates
+from ..mapped_tabular import MappedTabularProvider
 from ..ofx import OfxProvider
 from ..pdf_statement import PdfStatementProvider
 from ..xls import XlsProvider
@@ -61,7 +61,7 @@ def test_ordered_candidates_known_suffix_leads_with_declared_provider(tmp_path: 
     for case_id, suffix, content, provider_type in cases:
         target = tmp_path / f"statement-{case_id}{suffix}"
         target.write_bytes(content)
-        candidates = _ordered_candidates(target)
+        candidates = ordered_candidates(target)
 
         assert isinstance(candidates[0], provider_type), case_id
 
@@ -85,7 +85,7 @@ def test_ordered_candidates_unknown_suffix_magic_bytes_lead_with_declared_provid
     for case_id, content, provider_type in cases:
         target = tmp_path / f"statement-{case_id}.bin"
         target.write_bytes(content)
-        candidates = _ordered_candidates(target)
+        candidates = ordered_candidates(target)
 
         assert isinstance(candidates[0], provider_type), case_id
 
@@ -101,7 +101,7 @@ def test_ordered_candidates_unreadable_file_falls_back_to_default_ordering(tmp_p
     ordering (Csv, Xlsx, Xls, Ofx) is returned."""
     missing_path = tmp_path / "nonexistent.bin"
 
-    candidates = _ordered_candidates(missing_path)
+    candidates = ordered_candidates(missing_path)
 
     assert isinstance(candidates[0], CsvProvider)
 
@@ -112,7 +112,7 @@ def test_ordered_candidates_unknown_content_falls_back_to_default_ordering(tmp_p
     target = tmp_path / "statement.bin"
     target.write_bytes(b"some non-magic content without any sentinel")
 
-    candidates = _ordered_candidates(target)
+    candidates = ordered_candidates(target)
 
     assert isinstance(candidates[0], CsvProvider)
 
@@ -146,7 +146,7 @@ def test_ordered_candidates_covers_every_provider_in_every_branch(tmp_path: Path
         target = tmp_path / name
         if content is not None:
             target.write_bytes(content)
-        candidates = _ordered_candidates(target)
+        candidates = ordered_candidates(target)
         provider_types = {type(p) for p in candidates}
 
         assert {type(p) for p in candidates[:-2]} == exact, name

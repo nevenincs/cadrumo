@@ -34,8 +34,8 @@ def test_importing_profile_module_does_not_construct_settings() -> None:
     # No pre-built settings instance is held at module scope.
     assert not hasattr(profile_module, "_BROWSER_DEFAULTS")
     # The defaults are resolved through callables, not a captured object.
-    assert callable(profile_module._browser_locale_default)
-    assert callable(profile_module._browser_timezone_default)
+    assert callable(profile_module.browser_locale_default)
+    assert callable(profile_module.browser_timezone_default)
 
 
 def test_profile_resolves_browser_defaults_on_construction() -> None:

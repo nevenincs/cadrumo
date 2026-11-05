@@ -51,7 +51,7 @@ from ...tests.aeat_literal_fixtures import (
 from . import modelo_operation_test_support
 from . import registered_executor_case_support as conformance
 from .foreign_profile_refusal_support import assert_refused_for_foreign_active_profile
-from .test_modelo_reconciliation_import_operation import _CommitWitness
+from .test_modelo_reconciliation_import_operation import CommitWitness
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -196,7 +196,7 @@ def test_registered_pull_reconciles_encrypted_capture_under_exact_profile_guard(
     invalid_evidence: str | None,
 ) -> None:
     """A foreign profile cannot read the capture; the correct worker guards its atomic write."""
-    witness = _CommitWitness(MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID)
+    witness = CommitWitness(MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID)
     original_compose = compose_operation_services
     monkeypatch.setattr(
         conformance,
@@ -285,7 +285,7 @@ def test_registered_pull_reconciles_encrypted_capture_under_exact_profile_guard(
         assert terminal.condition is OperationTerminalCondition.SUCCEEDED
         assert terminal.effect is OperationEffect.UPDATED
         assert observation.projection.effect is OperationEffect.UPDATED
-        projection = conformance._resolve_result_projection(
+        projection = conformance.resolve_result_projection(
             driver,
             registry,
             definition_id=MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID,

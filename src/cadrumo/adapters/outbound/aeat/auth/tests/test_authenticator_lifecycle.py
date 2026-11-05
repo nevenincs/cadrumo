@@ -15,7 +15,7 @@ import pytest
 from ......application.auth_credentials import ActiveCertificateCredentials
 from ......core.config import Settings
 from ..authenticator import AeatAuthenticator
-from . import _authenticator_support as _support
+from . import authenticator_support
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
@@ -47,7 +47,7 @@ async def test_concurrent_close_calls_complete_through_the_public_lifecycle() ->
 # that fabricated browser responses or mutated private lifecycle state were
 # intentionally retired in favour of real Playwright/process coverage and the
 # external live protected-resource oracle.
-test_authenticator_synchronous_surface = _support.test_authenticator_synchronous_surface
-test_close_then_authenticate_does_not_deadlock = _support.test_close_then_authenticate_does_not_deadlock
-test_verify_raises_on_stale_session = _support.test_verify_raises_on_stale_session
-test_verify_raises_without_context = _support.test_verify_raises_without_context
+test_authenticator_synchronous_surface = authenticator_support.test_authenticator_synchronous_surface
+test_close_then_authenticate_does_not_deadlock = authenticator_support.test_close_then_authenticate_does_not_deadlock
+test_verify_raises_on_stale_session = authenticator_support.test_verify_raises_on_stale_session
+test_verify_raises_without_context = authenticator_support.test_verify_raises_without_context

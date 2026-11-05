@@ -121,7 +121,7 @@ def _later_period_adjustments(entries: Mapping[str, str]) -> dict[str, date]:
     return adjustments
 
 
-def _policy(entries: Mapping[str, str]) -> AmendmentRegimePolicy:
+def amendment_regime_policy(entries: Mapping[str, str]) -> AmendmentRegimePolicy:
     pre_kinds, post_kinds = _procedure_kinds(entries)
     boundaries = {modelo: _boundary_date(entries, modelo) for modelo in _boundary_models(entries)}
     return AmendmentRegimePolicy(
@@ -142,7 +142,9 @@ def resolve_amendment_regime_policy(
     Core types:
     :class:`~cadrumo.domain.calculations.registry.authority.ValidatedRegistryAuthority`.
     """
-    return _policy(_ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority))
+    return amendment_regime_policy(
+        _ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority)
+    )
 
 
 def resolve_amendment_regime_policy_for_period(

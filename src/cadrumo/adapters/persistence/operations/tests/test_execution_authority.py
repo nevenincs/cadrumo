@@ -35,11 +35,11 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction
 from .....tests.log_records import delivered_records
 from .supervision_support import run_to_settlement
 from .supervisor_test_support import (
-    _NOW,
+    SUPERVISOR_NOW,
     ResumableReviewExecutor,
-    _capabilities,
     operation_repositories,
     operation_supervisor,
+    supervisor_capabilities,
     supervisor_registry,
     supervisor_request,
 )
@@ -364,7 +364,7 @@ def test_denied_checkpoint_resume_preserves_the_recoverable_record(tmp_path: Pat
             build=lambda: ResumableReviewExecutor(
                 result_ref="result:resumed", resume_entered=entered, release_resume=release
             ),
-            capabilities=_capabilities(
+            capabilities=supervisor_capabilities(
                 durability=OperationDurability.RESUMABLE, replay=OperationReplayPolicy.RESUMABLE
             ),
             interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
@@ -390,7 +390,7 @@ def test_denied_checkpoint_resume_preserves_the_recoverable_record(tmp_path: Pat
             operands=operands,
             owner_id="3" * 64,
             token="4" * 64,
-            clock=lambda: _NOW + timedelta(minutes=2),
+            clock=lambda: SUPERVISOR_NOW + timedelta(minutes=2),
             execution_authority=authority,
         )
         with pytest.raises(ProfileAccessRefusedError):
@@ -424,7 +424,7 @@ def test_continuation_respects_exact_owner_then_rechecks_executor_authority(tmp_
             operands=operands,
             owner_id="3" * 64,
             token="4" * 64,
-            clock=lambda: _NOW + timedelta(seconds=120 if expired else 1),
+            clock=lambda: SUPERVISOR_NOW + timedelta(seconds=120 if expired else 1),
             execution_authority=authority,
         )
 

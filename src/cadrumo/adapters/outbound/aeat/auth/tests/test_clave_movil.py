@@ -23,13 +23,11 @@ from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..clave_movil import ClaveMovilAuthProvider
 from ..clave_movil_support import (
     ClaveMovilConfigurationError,
+    auth_browser_action_policy,
+    classify_identity,
+    render_progress_banner,
 )
-from ..clave_movil_support import (
-    auth_browser_action_policy as _auth_browser_action_policy,
-)
-from ..clave_movil_support import classify_identity as _classify_identity
-from ..clave_movil_support import render_progress_banner as _render_progress_banner
-from ._clave_movil_support import _CLAVE_SURFACE, _DOMAINS, _aeat_url, _run, _settings_for
+from .clave_movil_support import CLAVE_SURFACE, DOMAINS, aeat_url, clave_movil_run, clave_movil_settings_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
@@ -41,8 +39,8 @@ def _isolated_secure_session_backend(tmp_path: Path):
 
 
 def test_auth_browser_action_policy_allows_own_name_and_refuses_unclassified_action(tmp_path: Path) -> None:
-    settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
-    policy = _auth_browser_action_policy(settings)
+    settings = clave_movil_settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
+    policy = auth_browser_action_policy(settings)
     action = settings.external_constants().aeat.pre303.representation_own_name_action_label
 
     assert (
@@ -60,9 +58,9 @@ def test_auth_browser_action_policy_allows_own_name_and_refuses_unclassified_act
 
 
 def test_auth_browser_action_policy_admits_aeat_sibling_and_refuses_external_host(tmp_path: Path) -> None:
-    settings = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
-    policy = _auth_browser_action_policy(settings)
-    sibling = _aeat_url(_DOMAINS.www2, _CLAVE_SURFACE.obtener_clave_movil_non_qr_path)
+    settings = clave_movil_settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z")
+    policy = auth_browser_action_policy(settings)
+    sibling = aeat_url(DOMAINS.www2, CLAVE_SURFACE.obtener_clave_movil_non_qr_path)
 
     assert (
         assert_remote_operation_allowed(
@@ -97,7 +95,7 @@ def test_identity_classification_accepts_supported_people(identity: str, expecte
     from the domain, so a document the domain recognises cannot be dropped by a
     pattern here that was never updated.
     """
-    assert _classify_identity(identity) == expected_kind
+    assert classify_identity(identity) == expected_kind
 
 
 def test_identity_classification_refuses_an_organisation_by_naming_what_it_is() -> None:
@@ -110,7 +108,7 @@ def test_identity_classification_refuses_an_organisation_by_naming_what_it_is() 
     also true of a typo and of an empty string.
     """
     with pytest.raises(ClaveMovilConfigurationError) as excinfo:
-        _classify_identity("B66012345")
+        classify_identity("B66012345")
     message = str(excinfo.value)
     assert "CIF" in message
     assert "natural person" in message
@@ -119,7 +117,7 @@ def test_identity_classification_refuses_an_organisation_by_naming_what_it_is() 
 @pytest.mark.parametrize("identity", ["B12345674", ""])
 def test_identity_classification_rejects_unsupported_identity(identity: str) -> None:
     with pytest.raises(ClaveMovilConfigurationError, match=r"NIF|NIE|identity|CIF|empty"):
-        _classify_identity(identity)
+        classify_identity(identity)
 
 
 @pytest.mark.parametrize("identity", ["12345678A", "X1234567M"])
@@ -137,7 +135,7 @@ def test_identity_classification_rejects_checksum_invalid_identity(identity: str
     ``str(exc)``.
     """
     with pytest.raises(ClaveMovilConfigurationError) as excinfo:
-        _classify_identity(identity)
+        classify_identity(identity)
     error = excinfo.value
     assert error.translated_message == "errors.auth.clave_movil_identity_checksum"
     resolved = tr(error.translated_message)
@@ -204,7 +202,7 @@ def test_an_unchosen_route_uses_the_app_request_and_keeps_the_headless_setting(
     headless: bool,
 ) -> None:
     """Without an explicit QR choice the provider never forces a visible browser."""
-    configured = _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z").model_copy(
+    configured = clave_movil_settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z").model_copy(
         update={"cadrumo_browser_headless": headless},
     )
     provider = ClaveMovilAuthProvider(configured)
@@ -218,7 +216,7 @@ def test_an_unchosen_route_uses_the_app_request_and_keeps_the_headless_setting(
 
 def test_an_explicit_qr_route_forces_a_visible_browser(tmp_path: Path) -> None:
     """The QR code has to be seen, so a headless setting is overridden for it."""
-    configured = _settings_for(
+    configured = clave_movil_settings_for(
         tmp_path,
         CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z",
         CADRUMO_CLAVE_PREFER_NON_QR="false",
@@ -241,7 +239,7 @@ def test_describe_reports_configuration_health(
     severity: str,
 ) -> None:
     env = {} if identity is None else {"CADRUMO_CLAVE_MOVIL_DNI_NIE": identity}
-    description = ClaveMovilAuthProvider(_settings_for(tmp_path, **env)).describe()
+    description = ClaveMovilAuthProvider(clave_movil_settings_for(tmp_path, **env)).describe()
     assert description.configured is configured
     assert description.available is available
     if severity:
@@ -252,18 +250,18 @@ def test_describe_reports_configuration_health(
 
 
 def test_missing_identity_refuses_public_authenticate(tmp_path: Path) -> None:
-    provider = ClaveMovilAuthProvider(_settings_for(tmp_path))
+    provider = ClaveMovilAuthProvider(clave_movil_settings_for(tmp_path))
 
     async def run() -> None:
         with pytest.raises(ClaveMovilConfigurationError, match=r"identity|NIF|NIE|configuration"):
             await provider.authenticate()
 
-    _run(run())
+    clave_movil_run(run())
 
 
 def test_probe_without_persisted_session_refuses_without_fresh_login(tmp_path: Path) -> None:
     provider = ClaveMovilAuthProvider(
-        _settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z"),
+        clave_movil_settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z"),
     )
 
     async def run() -> None:
@@ -272,7 +270,7 @@ def test_probe_without_persisted_session_refuses_without_fresh_login(tmp_path: P
         with pytest.raises(AeatLoginAssertionError, match="no persisted"):
             await provider.probe_persisted_session()
 
-    _run(run())
+    clave_movil_run(run())
 
 
 def test_render_progress_banner_routes_only_to_armed_operator_sink() -> None:
@@ -282,16 +280,16 @@ def test_render_progress_banner_routes_only_to_armed_operator_sink() -> None:
         captured.append(progress)
 
     async def run() -> None:
-        await _render_progress_banner(verification_code="YLL", timeout_seconds=120, used_non_qr_fallback=True)
+        await render_progress_banner(verification_code="YLL", timeout_seconds=120, used_non_qr_fallback=True)
         assert captured == []
         with operator_progress_sink(capture):
-            await _render_progress_banner(verification_code="YLL", timeout_seconds=120, used_non_qr_fallback=True)
-            await _render_progress_banner(verification_code=None, timeout_seconds=120, used_non_qr_fallback=False)
-            await _render_progress_banner(
+            await render_progress_banner(verification_code="YLL", timeout_seconds=120, used_non_qr_fallback=True)
+            await render_progress_banner(verification_code=None, timeout_seconds=120, used_non_qr_fallback=False)
+            await render_progress_banner(
                 verification_code="code: 12 34", timeout_seconds=120, used_non_qr_fallback=True
             )
 
-    _run(run())
+    clave_movil_run(run())
     assert [(progress.notice_code, progress.display_code) for progress in captured] == [
         ("auth.clave-movil.approval-pending", "YLL"),
         ("auth.clave-movil.qr-scan-pending", None),
@@ -308,8 +306,8 @@ def test_render_progress_banner_uses_structured_log_not_stdio(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     with caplog.at_level(logging.INFO, logger="cadrumo.adapters.outbound.aeat.auth.clave_movil"):
-        _run(
-            _render_progress_banner(
+        clave_movil_run(
+            render_progress_banner(
                 verification_code="ABC123",
                 timeout_seconds=120,
                 used_non_qr_fallback=False,

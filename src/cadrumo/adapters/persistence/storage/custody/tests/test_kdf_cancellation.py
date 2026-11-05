@@ -14,12 +14,12 @@ from threading import Event
 import pytest
 
 from ......application.user_profile.proof_cancellation import ProfileProofCancellation, ProfileProofCancelledError
-from .. import _kdf_file_lease as file_lease
+from .. import kdf_file_lease as file_lease
 from .. import kdf_supervision
-from .._kdf_worker_supervision import _SupervisedKdfWorker
+from ..kdf_worker_supervision import SupervisedKdfWorker
 from ..records import ProfileCustodyKdfParameters, ProfileCustodyWrappedDek
-from .test_kdf_file_lease import _old_lock
-from .test_kdf_supervision import _DEK, _PASSPHRASE, _permit_is_free, _settings, _stall, _unlock_inputs
+from .test_kdf_file_lease import old_lock
+from .test_kdf_supervision import DEK, PASSPHRASE, kdf_supervision_settings, permit_is_free, stall, unlock_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -27,16 +27,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 def test_cancellation_wakes_the_process_local_permit_without_waiting_for_capacity(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    envelope, sentinel = _unlock_inputs()
-    settings = _settings(tmp_path)
+    envelope, sentinel = unlock_inputs()
+    settings = kdf_supervision_settings(tmp_path)
     cancellation, waiting = ProfileProofCancellation(), Event()
-    wait = kdf_supervision._KDF_THREAD_CAPACITY.wait
+    wait = kdf_supervision.KDF_THREAD_CAPACITY.wait
 
     def wait_for_capacity(timeout: float | None = None) -> bool:
         waiting.set()
         return wait(timeout)
 
-    monkeypatch.setattr(kdf_supervision._KDF_THREAD_CAPACITY, "wait", wait_for_capacity)
+    monkeypatch.setattr(kdf_supervision.KDF_THREAD_CAPACITY, "wait", wait_for_capacity)
     with ExitStack() as cleanup:
         pool = ThreadPoolExecutor(max_workers=1)
         cleanup.callback(pool.shutdown)
@@ -45,7 +45,7 @@ def test_cancellation_wakes_the_process_local_permit_without_waiting_for_capacit
         result = pool.submit(
             kdf_supervision.unlock_profile_custody,
             envelope,
-            _PASSPHRASE,
+            PASSPHRASE,
             sentinel=sentinel,
             settings=settings,
             timeout_deadline=time.monotonic() + 600,
@@ -55,22 +55,22 @@ def test_cancellation_wakes_the_process_local_permit_without_waiting_for_capacit
         cancellation.cancel()
         with pytest.raises(ProfileProofCancelledError):
             result.result(timeout=5)
-        assert not kdf_supervision._KDF_THREAD_LEASE.acquire(blocking=False), "the earlier permit remains owned"
-    assert _permit_is_free(settings)
+        assert not kdf_supervision.KDF_THREAD_LEASE.acquire(blocking=False), "the earlier permit remains owned"
+    assert permit_is_free(settings)
 
 
 def test_cancellation_settles_a_real_legacy_file_lock_wait_before_that_lock_is_released(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    envelope, sentinel = _unlock_inputs()
-    settings = _settings(tmp_path)
+    envelope, sentinel = unlock_inputs()
+    settings = kdf_supervision_settings(tmp_path)
     cancellation, waiting = ProfileProofCancellation(), Event()
     helpers: list[subprocess.Popen[bytes]] = []
-    derivations: list[_SupervisedKdfWorker] = []
-    unwrap = _SupervisedKdfWorker.unwrap
+    derivations: list[SupervisedKdfWorker] = []
+    unwrap = SupervisedKdfWorker.unwrap
 
     def derive(
-        worker: _SupervisedKdfWorker,
+        worker: SupervisedKdfWorker,
         *,
         password: bytes,
         kdf: ProfileCustodyKdfParameters,
@@ -88,9 +88,9 @@ def test_cancellation_settles_a_real_legacy_file_lock_wait_before_that_lock_is_r
             recovery=recovery,
         )
 
-    monkeypatch.setattr(_SupervisedKdfWorker, "unwrap", derive)
+    monkeypatch.setattr(SupervisedKdfWorker, "unwrap", derive)
     if sys.platform == "win32":
-        kernel = file_lease._kernel32()
+        kernel = file_lease.kernel32()
         wait = kernel.WaitForMultipleObjects
 
         def wait_for_capacity(count: int, handles: object, all_objects: bool, milliseconds: int) -> int:
@@ -98,7 +98,7 @@ def test_cancellation_settles_a_real_legacy_file_lock_wait_before_that_lock_is_r
             return int(wait(count, handles, all_objects, milliseconds))
 
         monkeypatch.setattr(kernel, "WaitForMultipleObjects", wait_for_capacity)
-        monkeypatch.setattr(file_lease, "_kernel32", lambda: kernel)
+        monkeypatch.setattr(file_lease, "kernel32", lambda: kernel)
     else:
         launch = file_lease.launch_lease_worker
 
@@ -118,13 +118,13 @@ def test_cancellation_settles_a_real_legacy_file_lock_wait_before_that_lock_is_r
         )
         cleanup.callback(os.close, descriptor)
         os.write(descriptor, b"\0")
-        _old_lock(descriptor, acquire=True)
-        cleanup.callback(_old_lock, descriptor, acquire=False)
+        old_lock(descriptor, acquire=True)
+        cleanup.callback(old_lock, descriptor, acquire=False)
         cleanup.callback(cancellation.cancel)
         result = pool.submit(
             kdf_supervision.unlock_profile_custody,
             envelope,
-            _PASSPHRASE,
+            PASSPHRASE,
             sentinel=sentinel,
             settings=settings,
             timeout_deadline=time.monotonic() + 600,
@@ -137,18 +137,18 @@ def test_cancellation_settles_a_real_legacy_file_lock_wait_before_that_lock_is_r
         assert not derivations, "a cancelled capacity wait must never send the password to an Argon2 child"
         assert all(helper.poll() is not None for helper in helpers)
     assert not derivations, "releasing legacy capacity cannot revive the cancelled attempt"
-    assert _permit_is_free(settings)
+    assert permit_is_free(settings)
     unlocked = kdf_supervision.unlock_profile_custody(
-        envelope, _PASSPHRASE, sentinel=sentinel, settings=settings, cancellation=ProfileProofCancellation()
+        envelope, PASSPHRASE, sentinel=sentinel, settings=settings, cancellation=ProfileProofCancellation()
     )
-    assert unlocked.dek == _DEK, "the same worker-side custody path remains usable for a fresh proof"
+    assert unlocked.dek == DEK, "the same worker-side custody path remains usable for a fresh proof"
 
 
 def test_cancellation_contains_and_reaps_the_secret_bearing_child_before_releasing_its_permit(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    envelope, sentinel = _unlock_inputs()
-    settings = _settings(tmp_path)
+    envelope, sentinel = unlock_inputs()
+    settings = kdf_supervision_settings(tmp_path)
     cancellation, sent = ProfileProofCancellation(), Event()
     prewarm = kdf_supervision.ProfileKdfPrewarm(settings=settings)
     prewarm._launch()
@@ -156,21 +156,21 @@ def test_cancellation_contains_and_reaps_the_secret_bearing_child_before_releasi
     assert spare is not None and spare._process is not None
     child = spare._process
     monkeypatch.setattr(prewarm, "refill", lambda: None)
-    write = _SupervisedKdfWorker._write_request
+    write = SupervisedKdfWorker._write_request
 
-    def stop_child_then_write(worker: _SupervisedKdfWorker, payload: dict[str, object]) -> None:
+    def stop_child_then_write(worker: SupervisedKdfWorker, payload: dict[str, object]) -> None:
         assert worker is spare
-        _stall(child)
+        stall(child)
         write(worker, payload)
         sent.set()
 
-    monkeypatch.setattr(_SupervisedKdfWorker, "_write_request", stop_child_then_write)
+    monkeypatch.setattr(SupervisedKdfWorker, "_write_request", stop_child_then_write)
 
     def prove() -> None:
         with prewarm.bound():
             kdf_supervision.unlock_profile_custody(
                 envelope,
-                _PASSPHRASE,
+                PASSPHRASE,
                 sentinel=sentinel,
                 settings=settings,
                 timeout_deadline=time.monotonic() + 600,
@@ -197,7 +197,7 @@ def test_cancellation_contains_and_reaps_the_secret_bearing_child_before_releasi
         assert spare._process is None and spare._job is None
         assert spare._request_fd is None and spare._result_fd is None and not spare._readers
         assert spare._neutral_directory is None
-        assert _permit_is_free(settings)
+        assert permit_is_free(settings)
     finally:
         cancellation.cancel()
         prewarm.close()

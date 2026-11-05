@@ -32,12 +32,8 @@ from pydantic_settings import (
     SettingsConfigDict,
 )
 
-from . import _config_runtime, _config_validation
-from . import config_live_tests as _live_test_config
-from . import config_support as _config_support
-from .auth_provider import DEFAULT_CLAVE_MOVIL_ROUTE as _DEFAULT_CLAVE_MOVIL_ROUTE
-from .auth_provider import AuthProviderKind as _AuthProviderKind
-from .auth_provider import ClaveMovilRoute as _ClaveMovilRoute
+from . import config_live_tests, config_runtime, config_support, config_validation
+from .auth_provider import DEFAULT_CLAVE_MOVIL_ROUTE, AuthProviderKind, ClaveMovilRoute
 from .config_google import GoogleOAuthClientSettings
 from .config_llm_fields import CadrumoLlmSettings
 from .config_state_root import (
@@ -46,13 +42,11 @@ from .config_state_root import (
 from .config_storage_route import classify_storage_route_for_settings, settings_for_bucket_route
 from .config_support import (
     JustificanteParserBackendSetting,
+    default_aeat_sede_origin_with_slash,
+    default_clave_permanente_sede_access_url_template,
+    default_clave_sede_access_url_template,
+    default_sede_expedientes_path,
 )
-from .config_support import default_aeat_sede_origin_with_slash as _default_aeat_sede_origin_with_slash
-from .config_support import (
-    default_clave_permanente_sede_access_url_template as _default_clave_permanente_sede_access_url_template,
-)
-from .config_support import default_clave_sede_access_url_template as _default_clave_sede_access_url_template
-from .config_support import default_sede_expedientes_path as _default_sede_expedientes_path
 from .errors.hierarchy import pydantic_validation_boundary
 from .external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from .paths import normalize_project_relative_path
@@ -75,9 +69,9 @@ if TYPE_CHECKING:
 DEV_TEST_DATABASE_PASSWORD = "aeat-dev-test-database-password"
 """Shared development/test password for database-backed secure-storage tests."""
 """Environment variable backing :attr:`Settings.cadrumo_dev_test_database_password`."""
-LIVE_READ_TEST_OPT_IN_VALUE = _live_test_config.LIVE_READ_TEST_OPT_IN_VALUE
-LIVE_READ_TEST_GOOGLE_OPT_IN_SETTINGS_FIELD = _live_test_config.LIVE_READ_TEST_GOOGLE_OPT_IN_SETTINGS_FIELD
-LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR = _live_test_config.LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR
+LIVE_READ_TEST_OPT_IN_VALUE = config_live_tests.LIVE_READ_TEST_OPT_IN_VALUE
+LIVE_READ_TEST_GOOGLE_OPT_IN_SETTINGS_FIELD = config_live_tests.LIVE_READ_TEST_GOOGLE_OPT_IN_SETTINGS_FIELD
+LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR = config_live_tests.LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR
 
 _NON_ENVIRONMENT_SELECTION_NAMES: Final[frozenset[str]] = frozenset(
     {"CADRUMO_ACTIVE_PROFILE", "CADRUMO_GOOGLE_OAUTH_CLIENT_JSON"}
@@ -182,7 +176,7 @@ class AuthorityRootSettings(BaseSettings):
     @classmethod
     def _normalize_repo_relative_paths(cls, value: Path | None, info: ValidationInfo) -> Path | None:
         del info
-        return _config_validation.normalize_repo_relative_paths(value, normalizer=normalize_project_relative_path)
+        return config_validation.normalize_repo_relative_paths(value, normalizer=normalize_project_relative_path)
 
 
 class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSettings):
@@ -262,7 +256,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
     # ── Multilingual i18n ───────────────────────────────────────────────────
     cadrumo_output_language: Annotated[
         OutputLanguage | None,
-        BeforeValidator(_config_support.coerce_output_language_setting),
+        BeforeValidator(config_support.coerce_output_language_setting),
     ] = Field(
         default=DEFAULT_OUTPUT_LANGUAGE,
         description=(
@@ -360,7 +354,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
         This is a strict ``"1"`` predicate for test selection only; production
         live-read access gates consume their own policy and capability checks.
         """
-        return _live_test_config.strict_live_test_opt_in(self.cadrumo_live_tests_enabled)
+        return config_live_tests.strict_live_test_opt_in(self.cadrumo_live_tests_enabled)
 
     # ── TTY / colour ────────────────────────────────────────────────────────
     cadrumo_force_color: bool = Field(
@@ -491,7 +485,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
 
     # ── Site-health detection ───────────────────────────────────────────────
     site_health_probe_url: str = Field(
-        default_factory=_default_aeat_sede_origin_with_slash,
+        default_factory=default_aeat_sede_origin_with_slash,
         description="AEAT Sede URL the site-health probe navigates to",
     )
     site_health_rate_limit_retry_after_default: int = Field(
@@ -532,7 +526,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
     )
 
     # ── AEAT auth provider default ──────────────────────────────────────────
-    cadrumo_auth_provider: _AuthProviderKind | None = Field(
+    cadrumo_auth_provider: AuthProviderKind | None = Field(
         default=None,
         description=(
             "Default auth provider for `cadrumo-runtime config auth status` / `test` when "
@@ -570,7 +564,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
         ),
     )
     cadrumo_clave_prefer_non_qr: bool = Field(
-        default=_DEFAULT_CLAVE_MOVIL_ROUTE is _ClaveMovilRoute.APP_REQUEST,
+        default=DEFAULT_CLAVE_MOVIL_ROUTE is ClaveMovilRoute.APP_REQUEST,
         description=(
             "Cl@ve Móvil route used when the active profile has not chosen "
             "one. True (the default) identifies with DNI/NIE + contraste and "
@@ -593,7 +587,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
         ),
     )
     aeat_clave_sede_access_url_template: str = Field(
-        default_factory=_default_clave_sede_access_url_template,
+        default_factory=default_clave_sede_access_url_template,
         description=(
             "URL template for AEAT's auth-method selector page. `{target}` "
             "is replaced with the URL-encoded target path. The default "
@@ -601,7 +595,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
         ),
     )
     aeat_sede_expedientes_path: str = Field(
-        default_factory=_default_sede_expedientes_path,
+        default_factory=default_sede_expedientes_path,
         description=(
             "AEAT Sede path for 'Mis expedientes'; the default post-auth "
             "target used by Cl@ve Móvil login and the expedientes reader."
@@ -642,7 +636,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
         ),
     )
     aeat_clave_permanente_sede_access_url_template: str = Field(
-        default_factory=_default_clave_permanente_sede_access_url_template,
+        default_factory=default_clave_permanente_sede_access_url_template,
         description=(
             "URL template for AEAT's auth-method selector page used by "
             "the Cl@ve Permanente login flow. `{target}` is replaced with "
@@ -706,11 +700,11 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_live_iva_timeout_hierarchy(self) -> Settings:
-        return _config_validation.validate_live_iva_timeout_hierarchy(self)
+        return config_validation.validate_live_iva_timeout_hierarchy(self)
 
     @model_validator(mode="after")
     def _resolve_database_url_for_active_profile(self) -> Settings:
-        return _config_validation.resolve_database_url_for_active_profile(
+        return config_validation.resolve_database_url_for_active_profile(
             self, pointer_observation=_settings_pointer_observation.get()
         )
 
@@ -720,7 +714,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
     )
     @classmethod
     def _empty_optional_paths_are_none(cls, value: object) -> object:
-        return _config_validation.empty_optional_paths_are_none(value)
+        return config_validation.empty_optional_paths_are_none(value)
 
     @field_validator(
         "cadrumo_certificate_password_secret",
@@ -728,7 +722,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
     )
     @classmethod
     def _empty_optional_secrets_are_none(cls, value: object) -> object:
-        return _config_validation.empty_optional_secrets_are_none(value)
+        return config_validation.empty_optional_secrets_are_none(value)
 
     @field_validator(
         "cadrumo_clave_movil_dni_nie",
@@ -740,13 +734,13 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
     )
     @classmethod
     def _empty_optional_clave_fields_are_none(cls, value: object) -> object:
-        return _config_validation.empty_optional_clave_fields_are_none(value)
+        return config_validation.empty_optional_clave_fields_are_none(value)
 
     @field_validator("cadrumo_clave_movil_dni_fecha")
     @classmethod
     @pydantic_validation_boundary
     def _clave_dni_fecha_is_iso_date(cls, value: str | None) -> str | None:
-        return _config_validation.clave_dni_fecha_is_iso_date(value)
+        return config_validation.clave_dni_fecha_is_iso_date(value)
 
     @field_validator(
         "aeat_clave_sede_access_url_template",
@@ -755,7 +749,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
     @classmethod
     @pydantic_validation_boundary
     def _clave_sede_access_url_template_has_target(cls, value: str) -> str:
-        return _config_validation.clave_sede_access_url_template_has_target(value)
+        return config_validation.clave_sede_access_url_template_has_target(value)
 
     @classmethod
     def env_var_names(cls) -> set[str]:
@@ -837,7 +831,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
     def _normalize_repo_relative_paths(cls, value: Path | None, info: ValidationInfo) -> Path | None:
         if info.field_name == STORAGE_ROOT_SETTINGS_FIELD and value is not None:
             return normalize_project_relative_path(storage_root_override(value))
-        return _config_validation.normalize_repo_relative_paths(value, normalizer=normalize_project_relative_path)
+        return config_validation.normalize_repo_relative_paths(value, normalizer=normalize_project_relative_path)
 
 
 settings_override: contextvars.ContextVar[Settings | None] = contextvars.ContextVar(
@@ -855,7 +849,7 @@ _settings_pointer_observation: contextvars.ContextVar[tuple[Path, BucketPointer]
 )
 
 
-def classify_storage_route(settings: Settings | None = None) -> _config_support.StorageRouteClassification:
+def classify_storage_route(settings: Settings | None = None) -> config_support.StorageRouteClassification:
     """Classify the effective primary SQL route.
 
     The returned :class:`~core.config_support.StorageRouteClassification` distinguishes explicit
@@ -883,14 +877,14 @@ def settings_for_active_profile_bucket(bucket_id: str, source: Settings | None =
 
 def _active_profile_pointer_observation() -> tuple[Path, BucketPointer]:
     """Identify the current active-profile pointer through its native coordinate."""
-    return _config_runtime.active_profile_pointer_observation(
+    return config_runtime.active_profile_pointer_observation(
         normalizer=normalize_project_relative_path,
         storage_root=default_storage_root,
     )
 
 
 @lru_cache(maxsize=8)
-def _constructed_settings(
+def constructed_settings(
     root: Path,
     selection: Literal["absent", "selected"],
     bucket_id: str | None,
@@ -938,7 +932,7 @@ def reset_settings_cache() -> None:
     prefer :func:`override_settings`, which scopes the change to a block and
     does not disturb the cache at all.
     """
-    _constructed_settings.cache_clear()
+    constructed_settings.cache_clear()
 
 
 def load_settings() -> Settings:
@@ -952,7 +946,7 @@ def load_settings() -> Settings:
     if override is not None:
         return override
     root, pointer = _active_profile_pointer_observation()
-    return _constructed_settings(
+    return constructed_settings(
         root,
         pointer.selection,
         pointer.bucket_id,

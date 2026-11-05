@@ -54,9 +54,9 @@ from cadrumo.entrypoints.tests.filing_record_read_support import (
     persisted_verification_reports,
 )
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
-    _FILE_FLOW_PROFILE_ID,
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
+    FILE_FLOW_PROFILE_ID,
     M130_CARRY_FORWARD_CASILLA,
     M130_HOME_DEDUCTION_CASILLA,
     T1,
@@ -201,7 +201,7 @@ def test_verify_grants_for_a_closed_past_period_real_registry(repos: Repos, monk
     with bundled_indexed_authority().operation() as operation:
         refreshed = get_calculation_revision(
             revision.calculation_revision_id,
-            ports=build_calculation_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
+            ports=build_calculation_action_ports(bucket_id=FILE_FLOW_PROFILE_ID, operation=operation),
         )
     assert refreshed.state is CalculationRevisionState.VERIFICADO_COMPLETO
 
@@ -220,7 +220,7 @@ def test_verify_repairs_missing_current_revision_pointer(repos: Repos) -> None:
             clock=T1,
         ).revision
     calculated_work_unit = get_work_unit(
-        work_unit.work_unit_id, ports=build_work_lifecycle_ports(bucket_id=_FILE_FLOW_PROFILE_ID)
+        work_unit.work_unit_id, ports=build_work_lifecycle_ports(bucket_id=FILE_FLOW_PROFILE_ID)
     )
     assert calculated_work_unit.current_calculation_revision_id == revision.calculation_revision_id
     wu_repo.save(
@@ -243,7 +243,7 @@ def test_verify_repairs_missing_current_revision_pointer(repos: Repos) -> None:
     )
 
     assert report.granted_verificado_completo is True
-    repaired = get_work_unit(work_unit.work_unit_id, ports=build_work_lifecycle_ports(bucket_id=_FILE_FLOW_PROFILE_ID))
+    repaired = get_work_unit(work_unit.work_unit_id, ports=build_work_lifecycle_ports(bucket_id=FILE_FLOW_PROFILE_ID))
     assert repaired.current_calculation_revision_id == revision.calculation_revision_id
 
 
@@ -272,7 +272,7 @@ def test_verify_does_not_overwrite_different_current_revision(repos: Repos) -> N
         ).revision
     assert first.calculation_revision_id != second.calculation_revision_id
     current_work_unit = get_work_unit(
-        work_unit.work_unit_id, ports=build_work_lifecycle_ports(bucket_id=_FILE_FLOW_PROFILE_ID)
+        work_unit.work_unit_id, ports=build_work_lifecycle_ports(bucket_id=FILE_FLOW_PROFILE_ID)
     )
     assert current_work_unit.current_calculation_revision_id == second.calculation_revision_id
 
@@ -289,7 +289,7 @@ def test_verify_does_not_overwrite_different_current_revision(repos: Repos) -> N
     )
 
     assert report.granted_verificado_completo is True
-    preserved = get_work_unit(work_unit.work_unit_id, ports=build_work_lifecycle_ports(bucket_id=_FILE_FLOW_PROFILE_ID))
+    preserved = get_work_unit(work_unit.work_unit_id, ports=build_work_lifecycle_ports(bucket_id=FILE_FLOW_PROFILE_ID))
     assert preserved.current_calculation_revision_id == second.calculation_revision_id
 
 
@@ -338,7 +338,7 @@ def test_get_calculation_revision_raises_on_missing_id(repos: Repos) -> None:
     with pytest.raises(CalculationRevisionNotFoundError), bundled_indexed_authority().operation() as operation:
         get_calculation_revision(
             "0" * 64,
-            ports=build_calculation_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
+            ports=build_calculation_action_ports(bucket_id=FILE_FLOW_PROFILE_ID, operation=operation),
         )
 
 
@@ -385,7 +385,7 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
     with bundled_indexed_authority().operation() as operation:
         refreshed = get_calculation_revision(
             revision.calculation_revision_id,
-            ports=build_calculation_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
+            ports=build_calculation_action_ports(bucket_id=FILE_FLOW_PROFILE_ID, operation=operation),
         )
     assert refreshed.state is CalculationRevisionState.VERIFICADO_COMPLETO
     assert refreshed.verified_at == T2
@@ -395,7 +395,7 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
     with bundled_indexed_authority().operation() as operation:
         persisted = persisted_verification_report(
             report.verification_report_id,
-            ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
+            ports=build_filing_action_ports(bucket_id=FILE_FLOW_PROFILE_ID, operation=operation),
             operation=operation,
         )
     assert persisted.granted_verificado_completo is True
@@ -465,14 +465,14 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
     with bundled_indexed_authority().operation() as operation:
         refreshed = get_calculation_revision(
             revision.calculation_revision_id,
-            ports=build_calculation_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
+            ports=build_calculation_action_ports(bucket_id=FILE_FLOW_PROFILE_ID, operation=operation),
         )
     assert refreshed.state is CalculationRevisionState.BORRADOR
 
     with bundled_indexed_authority().operation() as operation:
         persisted = persisted_verification_report(
             report.verification_report_id,
-            ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
+            ports=build_filing_action_ports(bucket_id=FILE_FLOW_PROFILE_ID, operation=operation),
             operation=operation,
         )
     assert persisted.granted_verificado_completo is False
@@ -535,7 +535,7 @@ def test_verify_reverify_collapses_to_existing_report_real_registry(
     with bundled_indexed_authority().operation() as operation:
         refreshed_state = get_calculation_revision(
             revision.calculation_revision_id,
-            ports=build_calculation_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
+            ports=build_calculation_action_ports(bucket_id=FILE_FLOW_PROFILE_ID, operation=operation),
         ).state
     assert refreshed_state is CalculationRevisionState.VERIFICADO_COMPLETO
 
@@ -555,7 +555,7 @@ def test_verify_reverify_collapses_to_existing_report_real_registry(
             r.verification_report_id
             for r in persisted_verification_reports(
                 calculation_revision_id=revision.calculation_revision_id,
-                ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
+                ports=build_filing_action_ports(bucket_id=FILE_FLOW_PROFILE_ID, operation=operation),
                 operation=operation,
             )
         )
@@ -584,7 +584,7 @@ def test_verify_reverify_collapses_to_existing_report_real_registry(
             r.verification_report_id
             for r in persisted_verification_reports(
                 calculation_revision_id=revision.calculation_revision_id,
-                ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
+                ports=build_filing_action_ports(bucket_id=FILE_FLOW_PROFILE_ID, operation=operation),
                 operation=operation,
             )
         )
@@ -592,7 +592,7 @@ def test_verify_reverify_collapses_to_existing_report_real_registry(
     with bundled_indexed_authority().operation() as operation:
         refreshed_state = get_calculation_revision(
             revision.calculation_revision_id,
-            ports=build_calculation_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
+            ports=build_calculation_action_ports(bucket_id=FILE_FLOW_PROFILE_ID, operation=operation),
         ).state
     assert refreshed_state is CalculationRevisionState.VERIFICADO_COMPLETO
 
@@ -667,14 +667,14 @@ def test_list_and_get_verification_reports_real_registry(repos: Repos) -> None:
     with bundled_indexed_authority().operation() as operation:
         listed = persisted_verification_reports(
             calculation_revision_id=revision.calculation_revision_id,
-            ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
+            ports=build_filing_action_ports(bucket_id=FILE_FLOW_PROFILE_ID, operation=operation),
             operation=operation,
         )
         assert tuple(r.verification_report_id for r in listed) == (report.verification_report_id,)
 
         fetched = persisted_verification_report(
             report.verification_report_id,
-            ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
+            ports=build_filing_action_ports(bucket_id=FILE_FLOW_PROFILE_ID, operation=operation),
             operation=operation,
         )
         assert fetched.verification_report_id == report.verification_report_id

@@ -21,7 +21,7 @@ from ...core.classification.policies import SensitivityClass
 from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.parsing.utils import parse_bool
 from ...core.text_bounds import FILING_TEXT_CAPACITY
@@ -133,7 +133,7 @@ def _parse_sensitivity(value: object) -> object:
 class ProfileFieldDefinition(BaseModel):
     """One field declared inside a user-profile schema section."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     key: _FieldKey
     type: ProfileFieldType
@@ -261,7 +261,7 @@ def _validate_numeric_bounds(field: ProfileFieldDefinition) -> None:
 class ProfileSectionDefinition(BaseModel):
     """A top-level section in the user-profile schema."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     key: _SectionKey
     title: _Description
@@ -348,7 +348,7 @@ class ProfileDerivedSelectorDefinition(BaseModel):
     values: nothing here supplies a value to the binding resolver.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     pattern: _DerivedSelectorPattern
     derived_from: tuple[_FieldPath, ...] = Field(min_length=1)
@@ -400,7 +400,7 @@ def derived_selector_for_path(
 class ProfileSchemaDefinition(BaseModel):
     """The committed centralized user-profile schema."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     id: _SchemaId
     version: int = Field(ge=1)
@@ -639,7 +639,7 @@ class ProfileValueRefusal(BaseModel):
     :attr:`kind`.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     kind: ProfileValueRefusalKind
     message: str

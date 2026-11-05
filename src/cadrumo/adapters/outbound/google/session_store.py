@@ -46,7 +46,7 @@ from ...persistence.storage.sql.secure_object_records import SecureObjectDeletio
 from ...persistence.storage.sql.secure_objects import SecureObjectRepository
 from .records import DriveConfig, OAuthMetadata, OAuthToken
 
-_NAMESPACE_TOKEN = GOOGLE_OAUTH_TOKEN_NAMESPACE.namespace
+NAMESPACE_TOKEN = GOOGLE_OAUTH_TOKEN_NAMESPACE.namespace
 _NAMESPACE_METADATA = GOOGLE_OAUTH_METADATA_NAMESPACE.namespace
 _NAMESPACE_DRIVE_CONFIG = GOOGLE_DRIVE_CONFIG_NAMESPACE.namespace
 _TOKEN_SENSITIVITY = GOOGLE_OAUTH_TOKEN_NAMESPACE.sensitivity
@@ -64,7 +64,7 @@ def save_session(profile: str, token: OAuthToken, metadata: OAuthMetadata, confi
     failed transaction together, including when replacing an earlier sign-in.
     """
     written_at = now()
-    _repository(profile).save_many(
+    repository(profile).save_many(
         tuple(
             SecureObjectWrite(
                 namespace=definition.namespace,
@@ -90,8 +90,8 @@ def load_token(profile: str) -> OAuthToken | None:
         The stored :class:`adapters.outbound.google.records.OAuthToken`, or
         ``None`` when the profile has no active Google login session.
     """
-    record = _repository(profile).load(
-        _NAMESPACE_TOKEN,
+    record = repository(profile).load(
+        NAMESPACE_TOKEN,
         profile,
         expected_class=_TOKEN_SENSITIVITY,
         max_supported_version=_TOKEN_VERSION,
@@ -108,7 +108,7 @@ def load_metadata(profile: str) -> OAuthMetadata | None:
         The stored :class:`adapters.outbound.google.records.OAuthMetadata`, or
         ``None`` when no metadata record exists for the profile.
     """
-    record = _repository(profile).load(
+    record = repository(profile).load(
         _NAMESPACE_METADATA,
         profile,
         expected_class=_METADATA_SENSITIVITY,
@@ -126,7 +126,7 @@ def load_drive_config(profile: str) -> DriveConfig | None:
         The stored :class:`adapters.outbound.google.records.DriveConfig`, or
         ``None`` when no Drive root folder has been created for the profile.
     """
-    record = _repository(profile).load(
+    record = repository(profile).load(
         _NAMESPACE_DRIVE_CONFIG,
         profile,
         expected_class=_DRIVE_CONFIG_SENSITIVITY,
@@ -172,14 +172,14 @@ def delete_session(profile: str) -> tuple[bool, bool]:
         reports no per-row outcome, and inferring presence from a delete's
         return value is what forced the two-commit shape to begin with.
     """
-    repo = _repository(profile)
+    repo = repository(profile)
     digest = secure_object_key_digest(profile)
-    token_removed = repo.exists_by_raw_key(_NAMESPACE_TOKEN, digest)
+    token_removed = repo.exists_by_raw_key(NAMESPACE_TOKEN, digest)
     metadata_removed = repo.exists_by_raw_key(_NAMESPACE_METADATA, digest)
     repo.apply_batch(
         writes=(),
         deletions=(
-            SecureObjectDeletion(namespace=_NAMESPACE_TOKEN, hashed_object_key=digest),
+            SecureObjectDeletion(namespace=NAMESPACE_TOKEN, hashed_object_key=digest),
             SecureObjectDeletion(namespace=_NAMESPACE_METADATA, hashed_object_key=digest),
         ),
     )
@@ -195,7 +195,7 @@ __all__ = [
 ]
 
 
-def _repository(profile: str) -> SecureObjectRepository:
+def repository(profile: str) -> SecureObjectRepository:
     """Open ``profile``'s own bucket database, never the database of whichever profile is selected now.
 
     A sign-in's consent can outlive a profile switch. Routing by the record's own

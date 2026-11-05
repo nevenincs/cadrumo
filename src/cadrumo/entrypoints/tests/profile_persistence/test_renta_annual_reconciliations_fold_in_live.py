@@ -62,7 +62,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -126,11 +126,10 @@ from ....domain.calculations.registry.tests.registry_observations import (
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.env_scope import ready_clave_settings
-from ._fold_in_assertions_support import _assert_distinct_positive
 from .file_flow_test_support import calculation_ports_for_test
+from .fold_in_assertions_support import assert_distinct_positive
 from .observation_seeding_support import save_stamped_observation
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
@@ -183,7 +182,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 def _seed_ready_profile() -> None:
     """Persist a filing-ready withholding-operator profile for annual summaries."""
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
@@ -200,7 +199,7 @@ def _seed_ready_profile() -> None:
             ),
             created_at=_T0,
             updated_at=_T0,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 
@@ -463,8 +462,8 @@ def test_m180_folds_in_four_m115_quarters_on_live_calculate(
     property evidence. With both sources supplied, the live resolution is clean.
     """
     obs_repo = CalculationObservationRepository()
-    expected_base = _assert_distinct_positive(_M115_C02_BASE)
-    expected_retenciones = _assert_distinct_positive(_M115_C03_RETENCIONES)
+    expected_base = assert_distinct_positive(_M115_C02_BASE)
+    expected_retenciones = assert_distinct_positive(_M115_C03_RETENCIONES)
     expected_perceptores = Decimal(len(set(_M180_RETENCION_PERCEPTOR_NIFS)))
     _seed_retencion_perceptors(
         secure_objects,
@@ -925,8 +924,8 @@ def test_m193_folds_in_four_m123_quarters_with_withholding_advisory(
     withholding resolver emits a ``source_issue`` advisory.
     """
     obs_repo = CalculationObservationRepository()
-    expected_base = _assert_distinct_positive(_M123_C06_BASE)
-    expected_retenciones = _assert_distinct_positive(_M123_C09_RETENCIONES)
+    expected_base = assert_distinct_positive(_M123_C06_BASE)
+    expected_retenciones = assert_distinct_positive(_M123_C09_RETENCIONES)
     _seed_retencion_perceptors(
         secure_objects,
         modelo="193",

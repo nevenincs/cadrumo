@@ -8,7 +8,7 @@ import pytest
 
 from ....application.modelo.work_plazo import ModeloWorkDeadlinePosture
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
-from .._modelo_rendering import work_deadline_output_from_posture, work_plazo_lines_from_posture
+from ..modelo_rendering import work_deadline_output_from_posture, work_plazo_lines_from_posture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

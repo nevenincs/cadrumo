@@ -23,7 +23,7 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.registered_bucket import registration_envelope
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
@@ -34,8 +34,7 @@ from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from cadrumo.application.wizard.results import ConfigProfileCreateResult, ProfileWizardStatus
 from cadrumo.core.config import override_settings
 from cadrumo.core.json_contract import NoticeSeverity
-from cadrumo.domain.user_profile.values import ProfileSetupState
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, create_user_profile_record
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -45,7 +44,7 @@ _DEK = bytes(range(32))
 
 def _create_committed_profile(root: Path, *, bucket_id: str, label: str) -> None:
     """Create and select the real committed capsule that owns the label projection."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     profile_id = UUID(bucket_id)
     envelope = registration_envelope(profile_id)
     session = ProfileRecordSession.from_envelope(
@@ -59,7 +58,7 @@ def _create_committed_profile(root: Path, *, bucket_id: str, label: str) -> None
             password_envelope=envelope,
             sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
             data_files={},
-            initial_record=_create_profile_record_for_test(
+            initial_record=create_user_profile_record(
                 profile_id=bucket_id, setup_state=ProfileSetupState.INCOMPLETE, context=_profile_create_context_for_test
             ),
             record_session=session,

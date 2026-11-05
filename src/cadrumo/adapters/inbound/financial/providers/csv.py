@@ -35,7 +35,7 @@ from .....core.decimal.grammar import DecimalSeparatorValue
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CoreValidationError
 from .....core.logging import get_logger
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.parsing.codes import normalise_iso_4217_currency
 from .....core.tabular import (
     TabularSourceError,
@@ -84,7 +84,7 @@ class CsvColumnMap(BaseModel):
         external_id: Aliases for the optional external transaction id.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     booked_date: tuple[str, ...]
     value_date: tuple[str, ...] = ()
@@ -646,7 +646,7 @@ def parse_tabular_transaction_row(
         decimal_separator=conventions.decimal_separator,
     )
     direction = _direction_from_aliases(raw_fields, lookup, columns.direction)
-    currency = _currency_from_aliases(
+    currency = currency_from_aliases(
         raw_fields,
         lookup,
         columns.currency,
@@ -721,7 +721,7 @@ def _value_from_aliases(
     return normalized or None
 
 
-def _currency_from_aliases(
+def currency_from_aliases(
     raw_fields: Mapping[str, str],
     lookup: Mapping[str, str],
     aliases: tuple[str, ...],

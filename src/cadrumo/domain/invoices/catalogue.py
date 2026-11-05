@@ -9,18 +9,18 @@ from typing import Final, Self, final, override
 from pydantic import BaseModel, Field, ModelWrapValidatorHandler, field_serializer, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ..iva.schema import InvoiceKind
-from ._validation_pass import invoice_validation_pass
 from .errors import InvoiceValidationError
 from .models import AUTHENTICATED_STORED_READ, Invoice
+from .validation_pass import invoice_validation_pass
 
 
 class InvoiceCatalogue(BaseModel):
     """Immutable invoice catalogue keyed by ``invoice_id``."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     invoices: Mapping[str, Invoice] = Field(default_factory=dict)
 

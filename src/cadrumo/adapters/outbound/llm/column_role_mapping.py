@@ -69,7 +69,7 @@ from .consent import EvidenceConsentToken
 from .errors import LLMValidationError
 from .models import LLMRequest
 from .preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
-from .response_json import first_json_object as _first_json_object
+from .response_json import first_json_object
 
 if TYPE_CHECKING:
     from .client import LLMClient
@@ -338,7 +338,7 @@ def build_column_role_mapping_prompt(headers: Sequence[str]) -> str:
 
 def _parse_column_role_mapping_reply(text: str) -> ColumnRoleMappingReply:
     """Decode and schema-validate the model object before claim handling."""
-    payload = _first_json_object(text)
+    payload = first_json_object(text)
     if payload is None:
         raise LLMValidationError(
             context={"column_mapping_response_parseable": False},

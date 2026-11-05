@@ -147,7 +147,7 @@ def core_table_expectations() -> dict[str, str]:
     """Return the hand-authored negative dispositions this derivation must reproduce."""
     import cadrumo.core.result_disposition as table
 
-    return {str(modelo): spec.negative.value.upper() for modelo, spec in table._DISPOSITION_SPEC.items()}
+    return {str(modelo): spec.negative.value.upper() for modelo, spec in table.DISPOSITION_SPEC.items()}
 
 
 def derivation_disagreements(root: Path | None = None) -> tuple[str, ...]:

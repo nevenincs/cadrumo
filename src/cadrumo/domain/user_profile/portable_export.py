@@ -19,13 +19,13 @@ from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from ...core.base64_codec import b64_decode_canonical
 from ...core.classification.policies import SensitivityClass
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.time.clock import now as _utc_now
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.time.clock import now
 from ...core.time.utc import UtcInstant
-from ..modelos.calculation_revision import CalculationRevision as _CalculationRevision
-from ..modelos.filing_record import ModeloRecord as _ModeloRecord
-from ..modelos.work_unit import WorkUnit as _WorkUnit
-from ..transactions.models import Transaction as _Transaction
+from ..modelos.calculation_revision import CalculationRevision
+from ..modelos.filing_record import ModeloRecord
+from ..modelos.work_unit import WorkUnit
+from ..transactions.models import Transaction
 from .values import UserProfileRecord
 
 
@@ -65,7 +65,7 @@ class CarriedSecureObject(BaseModel):
     replays the same namespace sensitivity contract.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     namespace: str = Field(min_length=1)
     object_key: str = Field(min_length=1)
@@ -94,7 +94,7 @@ class CarriedSecureObject(BaseModel):
 class CoverageManifest(BaseModel):
     """Namespace coverage declared by a portable-export bundle."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     custody_profile: Literal["structured", "full"] = "structured"
     carried_namespaces: tuple[str, ...] = ()
@@ -177,7 +177,7 @@ class UserProfilePortableExport(BaseModel):
     material and re-encrypts it under the recipient bucket's DEK on import.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     # Required, with NO default, on two grounds. A default here would be a
     # second declaration of the current write version, which is owned by the
@@ -199,17 +199,17 @@ class UserProfilePortableExport(BaseModel):
     # one export boundary transported two competing timestamp policies: the
     # outer provenance stamp accepted a naive or offset value that every row
     # it wrapped would have refused.
-    exported_at: UtcInstant = Field(default_factory=_utc_now)
+    exported_at: UtcInstant = Field(default_factory=now)
     profile: UserProfileRecord
 
     # --- Financial-history fields --------------------------------------------
     # All default to empty tuples because a bucket may legitimately carry no
     # rows in a category; the import path checks bundle_schema_version first.
 
-    work_units: tuple[_WorkUnit, ...] = ()
-    ledger_transactions: tuple[_Transaction, ...] = ()
-    calculation_revisions: tuple[_CalculationRevision, ...] = ()
-    filing_records: tuple[_ModeloRecord, ...] = ()
+    work_units: tuple[WorkUnit, ...] = ()
+    ledger_transactions: tuple[Transaction, ...] = ()
+    calculation_revisions: tuple[CalculationRevision, ...] = ()
+    filing_records: tuple[ModeloRecord, ...] = ()
 
     # --- v3 generic secure-object carry contract -----------------------------
     carried_objects: tuple[CarriedSecureObject, ...] = ()

@@ -17,13 +17,13 @@ from ..lifecycle import (
     ActivityAssetRevision,
     FurtherAcquisitionRow,
 )
-from .test_lifecycle import _revision
+from .test_lifecycle import lifecycle_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _with_condition(condition: AcquiredCondition, **changes: Any) -> ActivityAssetRevision:
-    base = _revision()
+    base = lifecycle_revision()
     facts: dict[str, Any] = {name: getattr(base, name) for name in type(base).model_fields}
     return ActivityAssetRevision(**{**facts, "acquired_condition": condition, **changes})
 

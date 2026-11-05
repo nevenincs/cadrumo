@@ -6,7 +6,7 @@ import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..parser import parse_declaracion
-from ._parser_boundary_support import _MODELO_720_SYNTHETIC_FIXTURE, _expected_period
+from .parser_boundary_support import MODELO_720_SYNTHETIC_FIXTURE, expected_period
 
 pytestmark = [
     pytest.mark.unit,
@@ -40,14 +40,14 @@ def test_parser_extracts_modelo_720_synthetic_fixture_targets() -> None:
     A profile pattern that omits the qualifying phrase will fail to match.
     """
     filing = parse_declaracion(
-        _MODELO_720_SYNTHETIC_FIXTURE,
+        MODELO_720_SYNTHETIC_FIXTURE,
         modelo_override="720",
         año_override=2024,
         period_override="0A",
     )
 
     assert filing.modelo == "720"
-    assert filing.period == _expected_period(2024, "0A")
+    assert filing.period == expected_period(2024, "0A")
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "720"

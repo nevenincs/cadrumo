@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 from ....core.aggregation import ThirdPartyDeclarationRole
 from ....core.i18n.render import tr
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.time.clock import today_madrid
 from ...contribuyente.entity_type import (
     EntityType,
@@ -28,7 +28,7 @@ from ...deadlines.models import (
     IVARegime,
     TaxpayerProfile,
 )
-from ._applicability_labels import payer_fact_incomplete_label
+from .applicability_labels import payer_fact_incomplete_label
 from .applicability_payer_facts import (
     PayerFactDeclaration,
     PayerFactProjection,
@@ -111,7 +111,7 @@ class ApplicabilityEvidenceDisagreement(BaseModel):
     sources is corrected.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     payer_fact: Annotated[str, StringConstraints(min_length=1)]
     profile_declaration: PayerFactDeclaration
@@ -145,7 +145,7 @@ class ModeloApplicability(BaseModel):
             derivation of the rule's payer fact contradict each other.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: ModeloId
     verdict: ApplicabilityVerdict
@@ -219,7 +219,7 @@ class ModeloApplicabilityExclusion(BaseModel):
         legal_refs: Scoped registry citation keys grounding the exclusion.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     id: Annotated[str, StringConstraints(min_length=1)]
     outcome: ApplicabilityVerdict
@@ -362,7 +362,7 @@ class ModeloApplicabilityRule(BaseModel):
             ``legal/*.toml`` tables.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modelo: ModeloId
     applicable_entity_types: frozenset[EntityType] = Field(min_length=1)

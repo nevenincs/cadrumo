@@ -52,15 +52,15 @@ def _assert_negative_amount_refusal(result: Result) -> None:
 #: its ledger. Seeding once and handing each test a filesystem copy keeps the
 #: isolation exactly as it was -- every test still gets its own storage root,
 #: and the cases that import or add rows cannot reach each other.
-_seeded_bucket_origin, _open_bucket_session = runtime_seeded_profile_backend_fixture(
+_seeded_bucket_origin, open_bucket_session = runtime_seeded_profile_backend_fixture(
     seed=lambda *, invoke_cli: _declare_general_regime_iva_profile(),
     label=_PROFILE_LABEL,
     settings_overrides={"cadrumo_output_language": "en"},
-    name="_open_bucket_session",
+    name="open_bucket_session",
     origin_name="_seeded_bucket_origin",
 )
 
-__all__ = ["_open_bucket_session", "_seeded_bucket_origin"]
+__all__ = ["_seeded_bucket_origin", "open_bucket_session"]
 
 # ---------------------------------------------------------------------------
 # contract.1  ledger add — business_pct set without MIXED classification

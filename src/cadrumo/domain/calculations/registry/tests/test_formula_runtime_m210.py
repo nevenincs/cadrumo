@@ -7,9 +7,9 @@ from decimal import Decimal
 
 import pytest
 
-from .._formula_runtime_irnr import _irnr_resolve_tipo_gravamen_args, _m210_allows_art_24_6_expenses
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
+from ..formula_runtime_irnr import irnr_resolve_tipo_gravamen_args, m210_allows_art_24_6_expenses
 from ..formula_runtime_ops import (
     RegistryUnresolvedOutcomeReason,
     resolve_keyed_bracket,
@@ -56,12 +56,12 @@ def test_art_24_6_expense_branch_uses_the_registry_declared_resident_token() -> 
         if token != resident_token
     )
 
-    assert _m210_allows_art_24_6_expenses(
+    assert m210_allows_art_24_6_expenses(
         tipo_renta=resident_token,
         country_code="ZW",
         effective_date=effective_date,
     )
-    assert not _m210_allows_art_24_6_expenses(
+    assert not m210_allows_art_24_6_expenses(
         tipo_renta=other_token,
         country_code="ZW",
         effective_date=effective_date,
@@ -69,7 +69,7 @@ def test_art_24_6_expense_branch_uses_the_registry_declared_resident_token() -> 
 
 
 def test_irnr_resolve_tipo_gravamen_args_accepts_current_five_arg_contract() -> None:
-    args = _irnr_resolve_tipo_gravamen_args(_current_m210_rate_expression())
+    args = irnr_resolve_tipo_gravamen_args(_current_m210_rate_expression())
 
     assert args.tipo_casilla_id == "tipo_renta"
     assert args.base_casilla_id == "base_imponible"
@@ -101,7 +101,7 @@ def test_irnr_resolve_tipo_gravamen_args_rejects_retired_convenio_parameter_cont
     )
 
     with pytest.raises(RegistryValidationError, match=r"expects 5 args, got 6"):
-        _irnr_resolve_tipo_gravamen_args(retired_expression)
+        irnr_resolve_tipo_gravamen_args(retired_expression)
 
 
 def test_irnr_resolve_tipo_gravamen_reports_unresolved_rate_as_typed_outcome() -> None:

@@ -59,7 +59,7 @@ _REQUIRED_SIDECAR_FIELDS = (
 )
 
 
-def _annex_pdfs() -> list[Path]:
+def annex_pdfs() -> list[Path]:
     """Every committed specimen, excluding this package's own test directory.
 
     The exclusion is computed against the path RELATIVE to the annex root: the
@@ -73,7 +73,7 @@ def _annex_pdfs() -> list[Path]:
     )
 
 
-_PDFS = _annex_pdfs()
+_PDFS = annex_pdfs()
 _IDS = [f"{p.parent.name}-{p.stem}" for p in _PDFS]
 
 

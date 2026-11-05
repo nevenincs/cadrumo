@@ -32,9 +32,9 @@ from ...application.modelo.work_change_contracts import (
 from ...application.operations.public_period import PublicPeriod
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...domain.modelos.work_unit import WorkUnit
-from ._modelo_behavior_support import work_address_for_cli
-from ._modelo_cli_support import selector_bad_parameter
 from .common import no_active_profile_refusal
+from .modelo_behavior_support import work_address_for_cli
+from .modelo_cli_support import selector_bad_parameter
 
 _TIMEOUT_SECONDS = 120.0
 

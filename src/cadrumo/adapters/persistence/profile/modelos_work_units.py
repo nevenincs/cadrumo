@@ -46,7 +46,7 @@ from ....domain.modelos.repository import WorkUnitPersistenceError
 from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ..storage.runtime_repository import secure_object_repository_for_bucket
 from ..storage.secure_object_namespaces import MODELO_WORK_UNIT_CATALOGUE_NAMESPACE
-from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
+from .secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:
     from collections.abc import Callable

@@ -13,7 +13,7 @@ from ......domain.calculations.registry.schema_exports import (
     ExportLayoutDefinition,
     ExportRecordDefinition,
 )
-from ..declarations_observations import _verify_submitted_file_context
+from ..declarations_observations import verify_submitted_file_context
 from ..errors import SedeParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -64,4 +64,4 @@ def test_filed_parser_retains_wrong_identity_for_context_refusal(attribute: str,
         archive_link_text="Ver",
     )
     with pytest.raises(SedeParseError, match="does not match declaration"):
-        _verify_submitted_file_context({field.id: field}, parsed.fields, declaration=declaration)
+        verify_submitted_file_context({field.id: field}, parsed.fields, declaration=declaration)

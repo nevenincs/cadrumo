@@ -15,14 +15,14 @@ from cadrumo.application.ledger.evidence_input import EvidenceInput, resolve_pur
 from cadrumo.application.ledger.evidence_input_ports import EvidenceInputPorts
 from cadrumo.core.config import Settings
 
-from ._evidence_input_test_support import (
-    _added_record,
+from .evidence_input_test_support import (
+    added_record,
     evidence_input_ports,
     isolated_settings,
     pdf_file,
     secure_objects,
 )
-from ._evidence_input_test_support import runtime_profile as runtime_profile
+from .evidence_input_test_support import runtime_profile as runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 __all__ = ["evidence_input_ports", "isolated_settings", "pdf_file", "runtime_profile", "secure_objects"]
@@ -34,7 +34,7 @@ def test_evidence_input_refuses_persistence(
     pdf_file: Path,
     evidence_input_ports: EvidenceInputPorts,
 ) -> None:
-    record = _added_record(isolated_settings, secure_objects, pdf_file)
+    record = added_record(isolated_settings, secure_objects, pdf_file)
     resolved = resolve_purchase_invoice_evidence_input(
         record,
         store=AttachmentStore(objects=secure_objects),
@@ -57,7 +57,7 @@ def test_nested_serialization_cannot_leak_evidence_bytes(
     pdf_file: Path,
     evidence_input_ports: EvidenceInputPorts,
 ) -> None:
-    record = _added_record(isolated_settings, secure_objects, pdf_file)
+    record = added_record(isolated_settings, secure_objects, pdf_file)
     resolved = resolve_purchase_invoice_evidence_input(
         record,
         store=AttachmentStore(objects=secure_objects),

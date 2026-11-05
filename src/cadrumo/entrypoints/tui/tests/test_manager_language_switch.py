@@ -25,9 +25,9 @@ import pytest
 from textual.widgets import DataTable, OptionList
 from textual.widgets._footer import FooterKey
 
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    load_test_profile_record,
+    profile_authority_contexts,
 )
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
@@ -86,7 +86,7 @@ def _register_in(language: str) -> None:
     """Create the profile already carrying a language, as registration does."""
     # Registration validates facts against registry authority, so it runs under a real lease.
     with bundled_indexed_authority().operation():
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+        _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
         from ....domain.user_profile.values import UserProfileFact
 
         register_profile_with_credentials(
@@ -104,7 +104,7 @@ def _ensure_logged_in() -> None:
     Registration closes its own session and the custody capsule is the sole
     profile authority, so a read here meets a locked capsule without one.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     authenticate_profile_for_invocation(
         name=_LABEL,
         passphrase_callback=lambda: _CREDENTIAL_INPUT,
@@ -123,7 +123,7 @@ def _manager() -> ProfileManagerScreen:
         ) -> ProfileOverview:
             # The write door runs on a worker thread, which inherits no lease.
             with bundled_indexed_authority().operation():
-                _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+                _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
                 applied = apply_manager_profile_field_mutation(
                     profile_id=require_active_bucket_id(),
                     path=path,
@@ -132,12 +132,12 @@ def _manager() -> ProfileManagerScreen:
                     expected_content_digest=expected_content_digest,
                     profile_decode_context=_profile_decode_context_for_test,
                 )
-                return build_profile_overview(applied, label=_LABEL, schema=_profile_contexts_for_test()[1].schema)
+                return build_profile_overview(applied, label=_LABEL, schema=profile_authority_contexts()[1].schema)
 
         persist: ProfileFieldPersist = persist_door
 
         return ProfileManagerScreen(
-            build_profile_overview(record, label=_LABEL, schema=_profile_contexts_for_test()[1].schema), persist=persist
+            build_profile_overview(record, label=_LABEL, schema=profile_authority_contexts()[1].schema), persist=persist
         )
 
 

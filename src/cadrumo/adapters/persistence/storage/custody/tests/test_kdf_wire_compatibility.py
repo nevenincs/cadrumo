@@ -21,23 +21,23 @@ import pytest
 from ......core.config import override_settings
 from ...crypto.aead import EncryptedBlob, decrypt_record
 from ...crypto.aes_gcm import open_sealed
-from .._kdf_codec import (
+from ..kdf_codec import (
     KDF_FAILED_FRAME,
     KDF_FRAME_CONTROL,
     calibration_frame_bytes,
     parse_calibration_frame,
     write_kdf_frame,
 )
-from .._kdf_records import (
+from ..kdf_records import (
     KDF_PARAMETER_FIELDS,
     WRAPPED_DEK_FIELDS,
     kdf_parameters_from_wire,
     wrapped_dek_from_wire,
 )
-from .._kdf_worker_supervision import _SupervisedKdfWorker
-from .._profile_password_codec import encode_profile_password
-from .._recovery_secret_codec import encode_recovery_secret
+from ..kdf_worker_supervision import SupervisedKdfWorker
+from ..profile_password_codec import encode_profile_password
 from ..records import ProfileCustodyKdfParameters, ProfileCustodyWrappedDek
+from ..recovery_secret_codec import encode_recovery_secret
 from .kdf_wire_baseline import KDF_WIRE_BASELINE
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
@@ -124,7 +124,7 @@ def test_a_profile_wrapped_at_the_fallback_point_still_opens(tmp_path: Path) -> 
 
     with (
         override_settings(cadrumo_storage_root=tmp_path),
-        _SupervisedKdfWorker(deadline=time.monotonic() + 120) as worker,
+        SupervisedKdfWorker(deadline=time.monotonic() + 120) as worker,
     ):
         opened = worker.unwrap(
             password=encode_profile_password(_BASELINE["password"]),
@@ -150,18 +150,18 @@ def test_the_current_worker_unwraps_baseline_wrapped_deks(tmp_path: Path, label:
     dek, associated_data = _b64(_BASELINE["dek_b64"]), _b64(_BASELINE["associated_data_b64"])
 
     with override_settings(cadrumo_storage_root=tmp_path):
-        with _SupervisedKdfWorker(deadline=time.monotonic() + 120) as worker:
+        with SupervisedKdfWorker(deadline=time.monotonic() + 120) as worker:
             opened = worker.unwrap(
                 password=secret, kdf=kdf, wrapped_dek=wrapped, associated_data=associated_data, recovery=recovery
             )
-        with _SupervisedKdfWorker(deadline=time.monotonic() + 120) as worker:
+        with SupervisedKdfWorker(deadline=time.monotonic() + 120) as worker:
             rewrapped = worker.wrap(secret=secret, dek=dek, kdf=kdf, associated_data=associated_data, recovery=recovery)
         assert rewrapped is not None
-        with _SupervisedKdfWorker(deadline=time.monotonic() + 120) as worker:
+        with SupervisedKdfWorker(deadline=time.monotonic() + 120) as worker:
             reopened = worker.unwrap(
                 password=secret, kdf=kdf, wrapped_dek=rewrapped, associated_data=associated_data, recovery=recovery
             )
-        with _SupervisedKdfWorker(deadline=time.monotonic() + 120) as worker:
+        with SupervisedKdfWorker(deadline=time.monotonic() + 120) as worker:
             refused = worker.unwrap(
                 password=secret, kdf=kdf, wrapped_dek=wrapped, associated_data=b"another binding", recovery=recovery
             )
@@ -260,7 +260,7 @@ def test_the_direct_binding_derives_the_argon2_library_key(memory_mib: int, iter
     """The child's direct binding call derives byte-for-byte what ``argon2.low_level`` derives."""
     from argon2.low_level import Type, hash_secret_raw
 
-    from .._kdf_worker import _derive_key
+    from ..kdf_worker import derive_key
 
     salt = bytes(range(16))
     record = kdf_parameters_from_wire(
@@ -286,16 +286,16 @@ def test_the_direct_binding_derives_the_argon2_library_key(memory_mib: int, iter
         type=Type.ID,
         version=19,
     )
-    assert _derive_key(secret=secret, kdf=record) == expected
+    assert derive_key(secret=secret, kdf=record) == expected
 
 
 def test_a_binding_refusal_becomes_the_failure_value_error() -> None:
     """A parameter the C library refuses surfaces as the ValueError the child maps to its failure frame."""
-    from .._kdf_records import KdfParameterValues
-    from .._kdf_worker import _derive_key
+    from ..kdf_records import KdfParameterValues
+    from ..kdf_worker import derive_key
 
     unsalted = KdfParameterValues(
         algorithm="argon2id", version=19, memory_mib=19, iterations=2, parallelism=1, salt_b64="", output_bytes=32
     )
     with pytest.raises(ValueError, match="refused by Argon2"):
-        _derive_key(secret=b"synthetic", kdf=unsalted)
+        derive_key(secret=b"synthetic", kdf=unsalted)

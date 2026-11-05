@@ -29,7 +29,7 @@ from textwrap import dedent
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.tests.subprocess_cli import run_subprocess_cli_harness
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
@@ -132,7 +132,7 @@ def _destroy_the_profile_record_row(root: Path) -> None:
 
 def test_a_locked_profile_reports_a_lock_and_routes_the_operator_to_login(tmp_path: Path) -> None:
     """The record is intact and unread; the operator is told to log in, not that it is gone."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         _publish_in_a_separate_process(tmp_path)
 
         with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None):
@@ -165,7 +165,7 @@ def test_a_locked_profile_reports_the_same_lock_when_the_caller_supplies_state(t
     load runs first and is refused by the same absent session. The two paths
     once produced different false diagnostics for one profile.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from ....application.workflow.state_models import WorkflowState
 
         _publish_in_a_separate_process(tmp_path)
@@ -184,7 +184,7 @@ def test_an_unlocked_profile_is_read_through_to_ready(tmp_path: Path) -> None:
     Without this the locked assertions above would hold for a projection that
     reported every profile locked, which is the inverse defect.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         _publish_in_a_separate_process(tmp_path)
         _bind_real_custody_session(tmp_path)
 
@@ -198,7 +198,7 @@ def test_an_unlocked_profile_is_read_through_to_ready(tmp_path: Path) -> None:
 
 def test_a_selector_with_no_committed_capsule_is_not_softened_into_a_lock(tmp_path: Path) -> None:
     """Genuine absence keeps its own alarming verdict; nothing is hidden behind the lock."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         write_pointer(tmp_path, BucketPointer.selected(bucket_id=PROFILE_ID, transition_revision=1))
 
         with override_settings(cadrumo_storage_root=tmp_path, cadrumo_active_profile=None):
@@ -211,7 +211,7 @@ def test_a_selector_with_no_committed_capsule_is_not_softened_into_a_lock(tmp_pa
 
 def test_a_record_destroyed_under_a_live_session_reports_unreadable_not_locked(tmp_path: Path) -> None:
     """A session exists, so the absent row is knowable and must be reported as such."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         _publish_in_a_separate_process(tmp_path)
         _bind_real_custody_session(tmp_path)
         _destroy_the_profile_record_row(tmp_path)

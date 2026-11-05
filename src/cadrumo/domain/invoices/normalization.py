@@ -17,12 +17,12 @@ from ...core.errors.hierarchy import CoreValidationError
 from ...core.identity.documents import IdentityError
 from ...core.identity.tax_id import tax_id_identity_token
 from ...core.parsing.codes import normalise_iso_4217_currency
-from ...core.parsing.dates import parse_iso8601_date as _parse_iso8601_date
+from ...core.parsing.dates import parse_iso8601_date
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ..iva.identification import identification_state_for_printed_tax_identifier
 from ..iva.schema import EUMemberState, InvoiceKind
-from ._validation_pass import answer_once
 from .errors import InvoiceValidationError
+from .validation_pass import answer_once
 from .validators import validate_counterparty_tax_id, validate_country_code
 
 if TYPE_CHECKING:
@@ -47,7 +47,7 @@ def _coerce_date(value: object) -> date:
         return value
     if isinstance(value, str):
         try:
-            result = _parse_iso8601_date(value)
+            result = parse_iso8601_date(value)
         except ValueError as exc:
             raise InvoiceValidationError(str(exc)) from exc
         if result is None:

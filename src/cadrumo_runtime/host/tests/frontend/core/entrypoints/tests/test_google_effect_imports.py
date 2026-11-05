@@ -81,8 +81,8 @@ import cadrumo_runtime.host.bootstrap
 
 for name in (
     'cadrumo.adapters.outbound.google.calc_sheets_apply',
-    'cadrumo.adapters.outbound.google._calc_sheets_apply_values',
-    'cadrumo.adapters.outbound.google._calc_sheets_apply_formatting',
+    'cadrumo.adapters.outbound.google.calc_sheets_apply_values',
+    'cadrumo.adapters.outbound.google.calc_sheets_apply_formatting',
     'cadrumo.adapters.outbound.google.managed_artifacts',
 ):
     assert name not in sys.modules, name

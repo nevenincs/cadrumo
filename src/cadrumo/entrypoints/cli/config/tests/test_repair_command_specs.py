@@ -9,7 +9,7 @@ import pytest
 
 from cadrumo_client.commands.shared_contracts import DefaultKind, SchemaState
 
-from .._repair_command_specs import CONFIG_REPAIR_COMMAND_SPECS
+from ..repair_command_specs import CONFIG_REPAIR_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

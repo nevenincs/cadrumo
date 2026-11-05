@@ -13,7 +13,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.withholding_observation_workflow import _entries_digest
+from cadrumo.adapters.persistence.profile.withholding_observation_workflow import entries_digest
 from cadrumo.application.aggregation.withholding_observation_service import (
     EconomicAllocation,
     SourceLiabilitySnapshot,
@@ -22,7 +22,7 @@ from cadrumo.application.aggregation.withholding_observation_service import (
     withholding_canonical_json,
 )
 
-from .test_withholding_observation_workflow import _entry
+from .test_withholding_observation_workflow import entry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -88,12 +88,12 @@ def test_the_allocation_guard_identity_hashes_its_four_coordinates() -> None:
 
 
 def test_the_entries_digest_sorts_rows_by_their_spelled_identity_and_is_order_free() -> None:
-    first = _entry(suffix="a", retencion=True)
-    second = _entry(suffix="b", retencion=False)
+    first = entry(suffix="a", retencion=True)
+    second = entry(suffix="b", retencion=False)
 
-    digest = _entries_digest((second, first))
+    digest = entries_digest((second, first))
 
-    assert digest == _entries_digest((first, second))
+    assert digest == entries_digest((first, second))
     rows = sorted(
         (entry.model_dump(mode="json") for entry in (first, second)),
         key=lambda row: json.dumps(row["identity"], sort_keys=True, separators=(",", ":"), ensure_ascii=True),

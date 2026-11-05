@@ -36,7 +36,7 @@ from .....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....tests.fixtures.settings import EnvFileFreeSettings
 from ..client import LLMClient
-from ..client import LLMClient as _ClientUnderInspection
+from ..client import LLMClient as ClientClientUnderInspection
 from ..consent import (
     EvidenceConsentToken,
     cloud_evidence_read_permitted,
@@ -427,7 +427,7 @@ def test_the_gate_runs_before_the_cache_read_and_before_adapter_construction() -
     same name in the docstring or a comment, and this module's own prose names
     all three.
     """
-    tree = ast.parse(textwrap.dedent(inspect.getsource(_ClientUnderInspection.complete)))
+    tree = ast.parse(textwrap.dedent(inspect.getsource(ClientClientUnderInspection.complete)))
     function = tree.body[0]
     assert isinstance(function, ast.AsyncFunctionDef)
 

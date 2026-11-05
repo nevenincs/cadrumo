@@ -75,8 +75,8 @@ _DEFAULT_DUE_SOON_DAYS = 14
 #: :class:`ScheduleComputationError`; the engine states them rather than reading
 #: ``code.message_key`` so the key stays greppable from the raise site, and a
 #: gate holds the two spellings equal.
-_MISSING_WINDOWS_MESSAGE_KEY: Final[str] = "errors.error.error_deadlines_missing_windows"
-_SCHEDULE_COMPUTATION_MESSAGE_KEY: Final[str] = "errors.error.error_deadlines_schedule_computation"
+MISSING_WINDOWS_MESSAGE_KEY: Final[str] = "errors.error.error_deadlines_missing_windows"
+SCHEDULE_COMPUTATION_MESSAGE_KEY: Final[str] = "errors.error.error_deadlines_schedule_computation"
 
 
 def classify_obligation_status(closes_on: date, today: date, due_soon_days: int) -> ObligationStatus:
@@ -108,7 +108,7 @@ def classify_obligation_status(closes_on: date, today: date, due_soon_days: int)
     return ObligationStatus.UPCOMING
 
 
-def _window_outside_activity_period(
+def window_outside_activity_period(
     *,
     period: Period,
     entity_type: EntityType | None,
@@ -161,11 +161,11 @@ class DeadlineWindowYearIndex:
 #: incarnation), never a path or an object address, so a different generation --
 #: or the same content behind a fresh reader -- projects again. Bounded because
 #: each entry retains that year's projected windows.
-_DEADLINE_WINDOW_INDEX: OrderedDict[
+DEADLINE_WINDOW_INDEX: OrderedDict[
     tuple[AuthorityGenerationPin, int],
     DeadlineWindowYearIndex,
 ] = OrderedDict()
-_DEADLINE_WINDOW_INDEX_LIMIT: Final = 32
+DEADLINE_WINDOW_INDEX_LIMIT: Final = 32
 _DEADLINE_WINDOW_INDEX_LOCK: Final = Lock()
 
 
@@ -180,16 +180,16 @@ def indexed_deadline_window_year(
     """
     key = (operation.pin(), year)
     with _DEADLINE_WINDOW_INDEX_LOCK:
-        cached = _DEADLINE_WINDOW_INDEX.get(key)
+        cached = DEADLINE_WINDOW_INDEX.get(key)
         if cached is not None:
-            _DEADLINE_WINDOW_INDEX.move_to_end(key)
+            DEADLINE_WINDOW_INDEX.move_to_end(key)
             return cached
-    projected = _project_deadline_windows(operation, year)
+    projected = project_deadline_windows(operation, year)
     with _DEADLINE_WINDOW_INDEX_LOCK:
-        _DEADLINE_WINDOW_INDEX[key] = projected
-        _DEADLINE_WINDOW_INDEX.move_to_end(key)
-        while len(_DEADLINE_WINDOW_INDEX) > _DEADLINE_WINDOW_INDEX_LIMIT:
-            _DEADLINE_WINDOW_INDEX.popitem(last=False)
+        DEADLINE_WINDOW_INDEX[key] = projected
+        DEADLINE_WINDOW_INDEX.move_to_end(key)
+        while len(DEADLINE_WINDOW_INDEX) > DEADLINE_WINDOW_INDEX_LIMIT:
+            DEADLINE_WINDOW_INDEX.popitem(last=False)
     return projected
 
 
@@ -245,7 +245,7 @@ def _authored_period_tokens(projected: list[DeadlineWindowProjection]) -> dict[s
     return {modelo_id: frozenset(tokens) for modelo_id, tokens in authored.items()}
 
 
-def _project_deadline_windows(
+def project_deadline_windows(
     operation: PinnedAuthorityOperation,
     year: int,
 ) -> DeadlineWindowYearIndex:
@@ -266,7 +266,7 @@ def _project_deadline_windows(
         for metadata, metadata_window in _owned_directory_windows(operation.modelo_directory(modelo_id), year):
             if metadata.deadline_windows.count(metadata_window) != 1:
                 raise ScheduleComputationError(
-                    translated_message=_SCHEDULE_COMPUTATION_MESSAGE_KEY,
+                    translated_message=SCHEDULE_COMPUTATION_MESSAGE_KEY,
                     context={
                         "registry_stage": "deadline_window_projection",
                         "modelo": modelo_id,
@@ -378,7 +378,7 @@ class DeadlineEngine:
         obligations.sort(key=lambda o: (o.closes_on, o.modelo, o.period.filing_year, o.period.registry_token))
         if not obligations and not close_unknown_obligations and not windows and not year_index.close_unknown:
             raise NoDeadlineWindowsError(
-                translated_message=_MISSING_WINDOWS_MESSAGE_KEY,
+                translated_message=MISSING_WINDOWS_MESSAGE_KEY,
                 context={"filing_year": year},
             )
         if obligations:
@@ -460,7 +460,7 @@ class DeadlineEngine:
             is None
         ):
             return None
-        if _window_outside_activity_period(
+        if window_outside_activity_period(
             period=window.period,
             entity_type=profile.entity_type,
             opens_on=window.opens_on,
@@ -507,7 +507,7 @@ class DeadlineEngine:
             ]
         if not windows:
             raise NoDeadlineWindowsError(
-                translated_message=_MISSING_WINDOWS_MESSAGE_KEY,
+                translated_message=MISSING_WINDOWS_MESSAGE_KEY,
                 context={"modelo": modelo, "filing_year": selected_year},
             )
         condition_text = self._evaluate_conditions(
@@ -575,7 +575,7 @@ class DeadlineEngine:
                 return indexed_deadline_window_year(selected_operation, year)
         except RegistryError as exc:
             raise ScheduleComputationError(
-                translated_message=_SCHEDULE_COMPUTATION_MESSAGE_KEY,
+                translated_message=SCHEDULE_COMPUTATION_MESSAGE_KEY,
                 context={
                     "registry_stage": "validation",
                     "filing_year": year,
@@ -638,7 +638,7 @@ class DeadlineEngine:
             explanations = evaluate_profile_conditions(conditions, profile, mode=mode)
         except RegistryError as exc:
             raise ScheduleComputationError(
-                translated_message=_SCHEDULE_COMPUTATION_MESSAGE_KEY,
+                translated_message=SCHEDULE_COMPUTATION_MESSAGE_KEY,
                 context={
                     "registry_stage": "profile_condition_evaluation",
                     "condition_count": len(conditions),
@@ -740,7 +740,7 @@ def _close_unknown_obligation(
     period = projection.period
     if revision.filing_schedules and not applicable_filing_schedules(revision, profile, period=period.registry_token):
         return None
-    if _window_outside_activity_period(
+    if window_outside_activity_period(
         period=period,
         entity_type=profile.entity_type,
         opens_on=projection.opens_on,

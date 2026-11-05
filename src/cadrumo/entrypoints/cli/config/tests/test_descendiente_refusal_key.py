@@ -20,7 +20,7 @@ from .....domain.calculations.registry.authority import bundled_indexed_authorit
 from .....domain.contribuyente.descendant import DescendantInfo
 from .....domain.contribuyente.descendant_facts import parse_descendiente_flag
 from .....tests.env_scope import output_language_scope
-from ..descendiente import _ambiguous_relacion_indices, _ambiguous_relacion_notice, _descendiente_refusal_key
+from ..descendiente import ambiguous_relacion_indices, ambiguous_relacion_notice, descendiente_refusal_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -29,19 +29,19 @@ _INVALID_FLAG = "cli.config.profile.descendiente.invalid_flag"
 
 
 def test_an_unattributed_refusal_names_no_field() -> None:
-    assert _descendiente_refusal_key(ProfileAnswerTypeError("x")) == (_INVALID_ROW, {})
+    assert descendiente_refusal_key(ProfileAnswerTypeError("x")) == (_INVALID_ROW, {})
 
 
 def test_a_birth_date_refusal_keeps_the_nacimiento_copy() -> None:
     error = ProfileAnswerTypeError("x", context={"key": "NACIMIENTO"})
 
-    assert _descendiente_refusal_key(error) == (_INVALID_FLAG, {"key": "NACIMIENTO"})
+    assert descendiente_refusal_key(error) == (_INVALID_FLAG, {"key": "NACIMIENTO"})
 
 
 def test_another_attributed_refusal_names_its_own_key() -> None:
     error = ProfileAnswerTypeError("x", context={"key": "DISCAPACIDAD"})
 
-    assert _descendiente_refusal_key(error) == (_INVALID_ROW, {"key": "DISCAPACIDAD"})
+    assert descendiente_refusal_key(error) == (_INVALID_ROW, {"key": "DISCAPACIDAD"})
 
 
 def test_the_guarderia_spend_conflict_keeps_its_dedicated_copy() -> None:
@@ -49,7 +49,7 @@ def test_the_guarderia_spend_conflict_keeps_its_dedicated_copy() -> None:
     with bundled_indexed_authority().operation(), pytest.raises(ProfileAnswerTypeError) as raised:
         parse_descendiente_flag("NACIMIENTO=2021-04-15,GASTOS_GUARDERIA=2400,GASTOS_GUARDERIA_MENSUAL=5-7:200")
 
-    assert _descendiente_refusal_key(raised.value) == (
+    assert descendiente_refusal_key(raised.value) == (
         "cli.config.profile.descendiente.guarderia_spend_shapes_conflict",
         {"key": "GASTOS_GUARDERIA_MENSUAL"},
     )
@@ -74,11 +74,11 @@ def test_relationship_advisory_matches_the_actual_ambiguous_axis(
             meses_madre_trabajo=(1,),
             relacion=DescendantRelacion.from_registry("guarda_y_custodia_judicial"),
         )
-        assert _ambiguous_relacion_indices([ambiguous, judicial], index_offset=4) == (4,)
+        assert ambiguous_relacion_indices([ambiguous, judicial], index_offset=4) == (4,)
 
     message = tr("cli.config.profile.descendiente.ambiguous_relacion_advisory", locale=locale, indices="4")
     with output_language_scope(OutputLanguage(locale)):
-        assert _ambiguous_relacion_notice((4,)).message == message
+        assert ambiguous_relacion_notice((4,)).message == message
     assert "4" in message and descendant_word in message and blood_word in message
     assert "81.1" in message and custody_word not in message
     assert "%{indices}" not in message

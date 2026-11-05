@@ -45,7 +45,7 @@ __all__ = [
     "recorded_command_operation_join",
 ]
 
-_OPERATOR_SURFACE_RECONCILIATION_META_KEY = "cadrumo.operator_surface_reconciliation"
+OPERATOR_SURFACE_RECONCILIATION_META_KEY = "cadrumo.operator_surface_reconciliation"
 
 
 @dataclass(frozen=True, slots=True)
@@ -368,7 +368,7 @@ def current_operator_surface_reconciliation() -> OperatorSurfaceReconciliation:
 
         ctx = get_current_typer_context(silent=True)
     if ctx is not None:
-        cached = ctx.meta.get(_OPERATOR_SURFACE_RECONCILIATION_META_KEY)
+        cached = ctx.meta.get(OPERATOR_SURFACE_RECONCILIATION_META_KEY)
         if cached is not None:
             if not isinstance(cached, OperatorSurfaceReconciliation):
                 raise TypeError("operator-surface reconciliation context contains an invalid value")
@@ -385,7 +385,7 @@ def current_operator_surface_reconciliation() -> OperatorSurfaceReconciliation:
         exclusions=_current_operator_surface_exclusions(),
     )
     if ctx is not None:
-        ctx.meta[_OPERATOR_SURFACE_RECONCILIATION_META_KEY] = reconciliation
+        ctx.meta[OPERATOR_SURFACE_RECONCILIATION_META_KEY] = reconciliation
     return reconciliation
 
 

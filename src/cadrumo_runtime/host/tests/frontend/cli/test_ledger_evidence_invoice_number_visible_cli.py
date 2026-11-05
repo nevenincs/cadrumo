@@ -18,9 +18,9 @@ import pytest
 
 from cadrumo.tests.env_scope import scoped_cwd
 
-from .ledger_ux_support import _invoke, _open_bucket_session
+from .ledger_ux_support import _invoke, open_bucket_session
 
-__all__ = ["_open_bucket_session"]
+__all__ = ["open_bucket_session"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

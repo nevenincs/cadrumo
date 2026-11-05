@@ -55,14 +55,12 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.decimal.constants import HUNDRED
 from ...core.errors.hierarchy import (
-    CadrumoError as _CadrumoError,
-)
-from ...core.errors.hierarchy import (
-    pydantic_validation_boundary as _pydantic_validation_boundary,
+    CadrumoError,
+    pydantic_validation_boundary,
 )
 from ...core.iva_deduction_fact import IvaDeductionFactKind
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
-from ...core.money.rounding import round_to_cents as _quantize
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.money.rounding import round_to_cents
 from ...core.percentage import Percentage
 from ..calculations.registry.bienes_inversion_catalogue import (
     is_bien_inversion_disposal_regime,
@@ -77,14 +75,12 @@ from .regularizacion_parameters import (
     BienesInversionRegularizacionParameters,
 )
 from .vocabulary import (
-    BienInversionDisposalRegime as _BienInversionDisposalRegime,
-)
-from .vocabulary import (
-    BienInversionKind as _BienInversionKind,
+    BienInversionDisposalRegime,
+    BienInversionKind,
 )
 
 
-class BienInversionRecordError(_CadrumoError):
+class BienInversionRecordError(CadrumoError):
     """Raised when a bien-de-inversión register record is structurally invalid."""
 
 
@@ -106,7 +102,7 @@ def _validate_acquisition_year(value: int, *, field_name: str) -> int:
     return value
 
 
-def _ventana_anos(kind: _BienInversionKind, parameters: BienesInversionRegularizacionParameters) -> int:
+def _ventana_anos(kind: BienInversionKind, parameters: BienesInversionRegularizacionParameters) -> int:
     """Select the art-107 window the resolved bundle declares for ``kind``.
 
     The kind-to-figure mapping lives here, with the taxonomy that owns it, rather
@@ -118,7 +114,7 @@ def _ventana_anos(kind: _BienInversionKind, parameters: BienesInversionRegulariz
     return parameters.ventana_anos_mueble
 
 
-def _divisor(kind: _BienInversionKind, parameters: BienesInversionRegularizacionParameters) -> Decimal:
+def _divisor(kind: BienInversionKind, parameters: BienesInversionRegularizacionParameters) -> Decimal:
     """Select the art-109.3a divisor the resolved bundle declares for ``kind``."""
     if is_bien_inversion_kind(kind, "kind.real_estate_token"):
         return parameters.divisor_inmueble
@@ -133,21 +129,21 @@ class BienInversionDisposal(BaseModel):
         regime: :class:`BienInversionDisposalRegime` of the transmission.
     """
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     year: int = Field(ge=1)
-    regime: _BienInversionDisposalRegime
+    regime: BienInversionDisposalRegime
 
     @field_validator("year")
     @classmethod
-    @_pydantic_validation_boundary
+    @pydantic_validation_boundary
     def _minimum_year_from_registry(cls, value: int) -> int:
         return _validate_acquisition_year(value, field_name="disposal year")
 
     @field_validator("regime", mode="before")
     @classmethod
-    @_pydantic_validation_boundary
-    def _regime_from_registry(cls, value: object) -> _BienInversionDisposalRegime:
+    @pydantic_validation_boundary
+    def _regime_from_registry(cls, value: object) -> BienInversionDisposalRegime:
         return require_bien_inversion_disposal_regime(value)
 
 
@@ -181,14 +177,14 @@ class BienInversionIvaRecord(BaseModel):
         schema_version: Forward-compatible schema version. ``"1"``.
     """
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     identifier: str = Field(min_length=1)
     description: str = Field(min_length=1)
     acquisition_year: int = Field(ge=1)
     cuota_soportada: Decimal = Field(gt=Decimal("0"))
     prorrata_inicial_pct: Percentage
-    kind: _BienInversionKind
+    kind: BienInversionKind
     art108_elegible: bool = True
     acquisition_ledger_id: str = Field(min_length=1, max_length=128)
     prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
@@ -197,7 +193,7 @@ class BienInversionIvaRecord(BaseModel):
 
     @field_validator("schema_version")
     @classmethod
-    @_pydantic_validation_boundary
+    @pydantic_validation_boundary
     def _schema_version_supported(cls, value: str) -> str:
         """Reject any schema_version other than :data:`BIENES_INVERSION_SCHEMA_VERSION`."""
         if value != BIENES_INVERSION_SCHEMA_VERSION:
@@ -206,18 +202,18 @@ class BienInversionIvaRecord(BaseModel):
 
     @field_validator("acquisition_year")
     @classmethod
-    @_pydantic_validation_boundary
+    @pydantic_validation_boundary
     def _minimum_year_from_registry(cls, value: int) -> int:
         return _validate_acquisition_year(value, field_name="acquisition year")
 
     @field_validator("kind", mode="before")
     @classmethod
-    @_pydantic_validation_boundary
-    def _kind_from_registry(cls, value: object) -> _BienInversionKind:
+    @pydantic_validation_boundary
+    def _kind_from_registry(cls, value: object) -> BienInversionKind:
         return require_bien_inversion_kind(value)
 
     @model_validator(mode="after")
-    @_pydantic_validation_boundary
+    @pydantic_validation_boundary
     def _validate_disposal_window(self) -> BienInversionIvaRecord:
         """A disposal year cannot precede acquisition."""
         if self.disposal is not None and self.disposal.year < self.acquisition_year:
@@ -227,7 +223,7 @@ class BienInversionIvaRecord(BaseModel):
     @property
     def deduccion_efectuada(self) -> Decimal:
         """Deduction actually made in the acquisition year (cuota × prorrata inicial)."""
-        return _quantize(self.cuota_soportada * self.prorrata_inicial_pct / HUNDRED)
+        return round_to_cents(self.cuota_soportada * self.prorrata_inicial_pct / HUNDRED)
 
     def is_within_regularization_window(
         self,
@@ -292,7 +288,7 @@ class RegularizacionAnualResult(BaseModel):
         direccion: :class:`RegularizacionDireccion` describing ``importe``'s sign.
     """
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     aplica: bool
     diferencia_puntos: Decimal
@@ -306,7 +302,7 @@ def compute_regularizacion_anual(
     cuota_soportada: Decimal,
     prorrata_inicial_pct: Decimal,
     prorrata_anio_pct: Decimal,
-    kind: _BienInversionKind,
+    kind: BienInversionKind,
     parameters: BienesInversionRegularizacionParameters,
 ) -> RegularizacionAnualResult:
     """Compute the LIVA art-109 annual regularización for one capital good.
@@ -368,7 +364,7 @@ def compute_regularizacion_anual(
 
     deduccion_efectuada = cuota_soportada * prorrata_inicial_pct / HUNDRED
     deduccion_procedente = cuota_soportada * prorrata_anio_pct / HUNDRED
-    importe = _quantize((deduccion_efectuada - deduccion_procedente) / divisor)
+    importe = round_to_cents((deduccion_efectuada - deduccion_procedente) / divisor)
     if importe > Decimal("0"):
         direccion = RegularizacionDireccion.INGRESO
     elif importe < Decimal("0"):
@@ -406,9 +402,9 @@ class RegularizacionTransmisionResult(BaseModel):
         capped: Whether the regla-1ª cap reduced ``importe_sin_limite``'s magnitude.
     """
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
-    regime: _BienInversionDisposalRegime
+    regime: BienInversionDisposalRegime
     anos_restantes: int
     divisor: Decimal
     importe_sin_limite: Decimal
@@ -440,8 +436,8 @@ def _transmision_uncapped_amount(
     cuota_soportada: Decimal,
     prorrata_inicial_pct: Decimal,
     anos_restantes: int,
-    kind: _BienInversionKind,
-    regime: _BienInversionDisposalRegime,
+    kind: BienInversionKind,
+    regime: BienInversionDisposalRegime,
     parameters: BienesInversionRegularizacionParameters,
 ) -> tuple[Decimal, Decimal]:
     """Return the art-109 divisor and art-110 amount before regla-1ª capping."""
@@ -456,13 +452,13 @@ def _transmision_uncapped_amount(
     divisor = _divisor(kind, parameters)
     deduccion_efectuada = cuota_soportada * prorrata_inicial_pct / HUNDRED
     deduccion_imputada = cuota_soportada * prorrata_imputada_pct / HUNDRED
-    importe_sin_limite = _quantize((deduccion_efectuada - deduccion_imputada) * anos_restantes / divisor)
+    importe_sin_limite = round_to_cents((deduccion_efectuada - deduccion_imputada) * anos_restantes / divisor)
     return divisor, importe_sin_limite
 
 
 def _apply_transmision_cap(
     *,
-    regime: _BienInversionDisposalRegime,
+    regime: BienInversionDisposalRegime,
     cuota_devengada_entrega: Decimal | None,
     importe_sin_limite: Decimal,
 ) -> tuple[Decimal, bool]:
@@ -491,8 +487,8 @@ def compute_regularizacion_transmision(
     cuota_soportada: Decimal,
     prorrata_inicial_pct: Decimal,
     anos_restantes: int,
-    kind: _BienInversionKind,
-    regime: _BienInversionDisposalRegime,
+    kind: BienInversionKind,
+    regime: BienInversionDisposalRegime,
     parameters: BienesInversionRegularizacionParameters,
     cuota_devengada_entrega: Decimal | None = None,
 ) -> RegularizacionTransmisionResult:
@@ -604,14 +600,14 @@ class BienesInversionIvaRegister(BaseModel):
         records: Tuple of :class:`BienInversionIvaRecord` rows.
     """
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: str = BIENES_INVERSION_SCHEMA_VERSION
     records: tuple[BienInversionIvaRecord, ...] = ()
 
     @field_validator("schema_version")
     @classmethod
-    @_pydantic_validation_boundary
+    @pydantic_validation_boundary
     def _schema_version_supported(cls, value: str) -> str:
         """Reject any schema_version other than :data:`BIENES_INVERSION_SCHEMA_VERSION`."""
         if value != BIENES_INVERSION_SCHEMA_VERSION:
@@ -619,7 +615,7 @@ class BienesInversionIvaRegister(BaseModel):
         return value
 
     @model_validator(mode="after")
-    @_pydantic_validation_boundary
+    @pydantic_validation_boundary
     def _identifiers_unique(self) -> BienesInversionIvaRegister:
         """Reject a register that carries two records with the same identifier."""
         seen = [record.identifier for record in self.records]
@@ -688,10 +684,10 @@ class RegistroRegularizacionRow(BaseModel):
             ``prorrata_anio_pct`` was absent.
     """
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     identifier: str
-    kind: _BienInversionKind
+    kind: BienInversionKind
     prorrata_sector_id: str | None
     prorrata_anio_pct: Decimal | None
     result: RegularizacionAnualResult | None
@@ -700,7 +696,7 @@ class RegistroRegularizacionRow(BaseModel):
 class BienesInversionSectorContribution(BaseModel):
     """Immutable one-asset regularisation contribution owned by its register sector."""
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     asset_id: str
     prorrata_sector_id: str | None
@@ -710,7 +706,7 @@ class BienesInversionSectorContribution(BaseModel):
 class InvestmentAssetAcquisitionLink(BaseModel):
     """Canonical reciprocal edge between one investment IVA fact and one asset."""
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     ledger_id: str = Field(min_length=1, max_length=128)
     transaction_date: date
@@ -758,7 +754,7 @@ class RegistroRegularizacionResult(BaseModel):
             bundle would be self-consistent and prove nothing.
     """
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     regularizacion_year: int
     rows: tuple[RegistroRegularizacionRow, ...]
@@ -769,7 +765,7 @@ class RegistroRegularizacionResult(BaseModel):
     parameters_provenance: BienesInversionParameterProvenance
 
     @model_validator(mode="after")
-    @_pydantic_validation_boundary
+    @pydantic_validation_boundary
     def _contributions_equal_casilla_43(self) -> RegistroRegularizacionResult:
         if sum((item.amount for item in self.sector_contributions), Decimal("0.00")) != self.proposed_casilla_43:
             raise BienInversionValidationError("per-asset sector contributions must equal proposed_casilla_43")
@@ -881,10 +877,10 @@ class RegistroTransmisionRow(BaseModel):
         result: The :class:`RegularizacionTransmisionResult`.
     """
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     identifier: str
-    kind: _BienInversionKind
+    kind: BienInversionKind
     prorrata_sector_id: str | None
     disposal_year: int
     result: RegularizacionTransmisionResult
@@ -907,7 +903,7 @@ class RegistroTransmisionesResult(BaseModel):
             this projection; see :class:`RegistroRegularizacionResult`.
     """
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     disposal_year: int
     rows: tuple[RegistroTransmisionRow, ...]
@@ -917,7 +913,7 @@ class RegistroTransmisionesResult(BaseModel):
     parameters_provenance: BienesInversionParameterProvenance
 
     @model_validator(mode="after")
-    @_pydantic_validation_boundary
+    @pydantic_validation_boundary
     def _contributions_equal_casilla_43(self) -> RegistroTransmisionesResult:
         if sum((item.amount for item in self.sector_contributions), Decimal("0.00")) != self.proposed_casilla_43:
             raise BienInversionValidationError("per-asset sector contributions must equal proposed_casilla_43")

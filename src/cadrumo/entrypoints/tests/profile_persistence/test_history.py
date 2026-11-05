@@ -37,10 +37,9 @@ from cadrumo.domain.modelos.verification_report import (
 )
 from cadrumo.domain.modelos.verification_repository import upsert_verification_report
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
 from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
@@ -60,7 +59,7 @@ _BUCKET_ID = "17171717-1717-4171-8171-171717171717"
 
 def _seed_ready_profile() -> None:
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
@@ -70,14 +69,14 @@ def _seed_ready_profile() -> None:
                 UserProfileFact(path="activities.description", value="economic activity"),
                 *GENERAL_REGIME_NATURAL_PERSON_FACTS,
             ),
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 
 
 def _seed_sociedad_profile() -> None:
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
@@ -97,7 +96,7 @@ def _seed_sociedad_profile() -> None:
                 UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
                 UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
             ),
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 

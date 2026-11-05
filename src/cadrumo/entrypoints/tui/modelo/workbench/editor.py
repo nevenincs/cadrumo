@@ -69,7 +69,7 @@ from .....core.i18n.render import output_language, tr
 from .....core.logging import get_logger
 from ...components.language import localized, refresh_localized_widgets
 from ...components.theme import tokenised
-from . import editor_explanations as _editor_explanations
+from . import editor_explanations
 from .casilla_list_models import CasillaListEntry
 from .casilla_list_values import description_text, stated_value_text, value_text
 from .dialog_width import fit_dialog_width
@@ -419,7 +419,7 @@ class CasillaEditorPanel(Vertical):
             blocks.append(
                 self._block("editor-calculation", "workspace.modelo.editor.block.calculation", self._calculation)
             )
-        where = _editor_explanations.where_from_text(
+        where = editor_explanations.where_from_text(
             field,
             aeat_imported=self._aeat_imported,
             language=self._language,

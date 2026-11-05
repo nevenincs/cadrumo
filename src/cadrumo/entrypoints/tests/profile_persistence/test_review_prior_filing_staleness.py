@@ -41,8 +41,7 @@ from ....application.filing.draft_review_ports import DraftReviewPorts
 from ....application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.filing.protocols import CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft
@@ -137,7 +136,7 @@ def _approve_operator_draft(
 def test_approval_goes_stale_when_prior_filing_observation_changes(
     _active_bucket_runtime: TestRuntimeProfile,
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         bucket_id = _active_bucket_runtime.bucket_id
         schema_provider = _schema_provider()
         draft = _ready_draft(schema_provider)
@@ -184,7 +183,7 @@ def test_approval_not_stale_when_prior_filing_observations_unchanged(
     meaningless. Approving and re-checking against the identical store must yield
     an empty reason tuple.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         bucket_id = _active_bucket_runtime.bucket_id
         schema_provider = _schema_provider()
         draft = _ready_draft(schema_provider)

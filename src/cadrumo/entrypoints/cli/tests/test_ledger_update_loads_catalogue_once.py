@@ -17,9 +17,9 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....domain.transactions.models import TransactionCatalogue
 from ....tests.cli_envelope import unwrap_cli_result
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
-from .profile_world_fixtures import recorded_fx_isolated_backend as _isolated_backend
+from .profile_world_fixtures import recorded_fx_isolated_backend
 
-__all__ = ["_isolated_backend"]
+__all__ = ["recorded_fx_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -71,7 +71,7 @@ def catalogue_loads(monkeypatch: pytest.MonkeyPatch) -> list[str]:
     return loads
 
 
-@pytest.mark.usefixtures("_isolated_backend")
+@pytest.mark.usefixtures("isolated_backend")
 def test_a_ledger_update_invocation_loads_the_catalogue_once(catalogue_loads: list[str]) -> None:
     transaction_id = _add_row()
     catalogue_loads.clear()

@@ -21,7 +21,6 @@ from ......core.credentials import (
 from ......core.storage_taxonomy import StorageCategory
 from ......core.storage_taxonomy_locations import storage_location
 from .. import records
-from .._profile_password_codec import decode_profile_password, encode_profile_password
 from ..errors import (
     ProfileCustodyPasswordError,
     ProfileCustodyRecordError,
@@ -30,6 +29,7 @@ from ..errors import (
     ProfileCustodyRefusedError,
 )
 from ..paths import profile_custody_path
+from ..profile_password_codec import decode_profile_password, encode_profile_password
 from ..records import (
     PROFILE_CUSTODY_ENVELOPE_MAX_BYTES,
     PROFILE_CUSTODY_PASSWORD_GENERATION_MAX,

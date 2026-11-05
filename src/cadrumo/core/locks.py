@@ -41,7 +41,7 @@ from typing import Final, override
 from .locks_errors import LockAcquisitionError
 from .logging import get_logger
 
-_log = get_logger(__name__)
+log = get_logger(__name__)
 
 
 def _default_lock_timeout() -> float:
@@ -93,7 +93,7 @@ def sidecar_lock_path(target: Path) -> Path:
 if sys.platform == "win32":  # pragma: no cover - branch covered on Windows only
     import msvcrt
 
-    def _try_lock(fd: int) -> bool:
+    def try_lock(fd: int) -> bool:
         """Try to acquire an exclusive lock on ``fd``; return ``True`` on success."""
         try:
             msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
@@ -101,7 +101,7 @@ if sys.platform == "win32":  # pragma: no cover - branch covered on Windows only
         except OSError:
             return False
 
-    def _release_lock(fd: int, *, log_events: bool = True) -> None:
+    def release_lock(fd: int, *, log_events: bool = True) -> None:
         """Release the exclusive lock previously acquired via :func:`_try_lock`."""
         # Best-effort: the OS already releases the lock when the
         # descriptor is closed. Avoid raising during teardown.
@@ -110,24 +110,24 @@ if sys.platform == "win32":  # pragma: no cover - branch covered on Windows only
             msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
         except OSError:
             if log_events:
-                _log.debug("exclusive_file_lock: Windows lock release failed for fd %s", fd, exc_info=True)
+                log.debug("exclusive_file_lock: Windows lock release failed for fd %s", fd, exc_info=True)
 
 else:  # POSIX
     import fcntl
 
-    def _try_lock(fd: int) -> bool:
+    def try_lock(fd: int) -> bool:
         try:
             fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
             return True
         except OSError:
             return False
 
-    def _release_lock(fd: int, *, log_events: bool = True) -> None:
+    def release_lock(fd: int, *, log_events: bool = True) -> None:
         try:
             fcntl.flock(fd, fcntl.LOCK_UN)
         except OSError:
             if log_events:
-                _log.debug("exclusive_file_lock: POSIX lock release failed for fd %s", fd, exc_info=True)
+                log.debug("exclusive_file_lock: POSIX lock release failed for fd %s", fd, exc_info=True)
 
 
 def _resolved_lock_budget(
@@ -155,7 +155,7 @@ def _resolved_lock_budget(
     return timeout, retry_backoff
 
 
-def _open_lock_fd(target: Path) -> tuple[int, Path]:
+def open_lock_fd(target: Path) -> tuple[int, Path]:
     """Open the sidecar lock descriptor for ``target``."""
     lock_path = sidecar_lock_path(target)
     lock_path.parent.mkdir(parents=True, exist_ok=True)
@@ -170,7 +170,7 @@ def _open_lock_fd(target: Path) -> tuple[int, Path]:
     return os.open(lock_path, open_flags, 0o600), lock_path
 
 
-def _lock_acquired_before_deadline(
+def lock_acquired_before_deadline(
     fd: int, lock_path: Path, *, deadline: float, timeout: float, log_events: bool = True
 ) -> bool:
     """Attempt one non-blocking acquire; refuse once the deadline has passed.
@@ -180,11 +180,11 @@ def _lock_acquired_before_deadline(
     which is what lets the synchronous and awaitable acquisitions share
     one deadline and one refusal without sharing a sleep.
     """
-    if _try_lock(fd):
+    if try_lock(fd):
         return True
     if time.monotonic() >= deadline:
         if log_events:
-            _log.warning(
+            log.warning(
                 "exclusive_file_lock: timed out waiting for %s after %.2fs",
                 lock_path.name,
                 timeout,
@@ -255,7 +255,7 @@ def exclusive_file_lock(
             that retry MUST bound the retry budget themselves.
     """
     timeout, retry_backoff = _resolved_lock_budget(timeout, retry_backoff)
-    fd, lock_path = _open_lock_fd(target)
+    fd, lock_path = open_lock_fd(target)
     try:
         with held_descriptor_lock(fd, lock_path, timeout=timeout, retry_backoff=retry_backoff, log_events=log_events):
             yield lock_path
@@ -286,7 +286,7 @@ def held_descriptor_lock(
     requested = time.monotonic()
     deadline = requested + timeout
     attempts = 1
-    while not _lock_acquired_before_deadline(fd, lock_path, deadline=deadline, timeout=timeout, log_events=log_events):
+    while not lock_acquired_before_deadline(fd, lock_path, deadline=deadline, timeout=timeout, log_events=log_events):
         time.sleep(retry_backoff)
         attempts += 1
     # An uncontended acquire and a short hold say nothing an operator can act
@@ -297,17 +297,17 @@ def held_descriptor_lock(
     try:
         yield
     finally:
-        _release_lock(fd, log_events=log_events)
+        release_lock(fd, log_events=log_events)
         if log_events:
             held = time.monotonic() - acquired
             # Diagnostic sinks may acquire their own file lock. Publish both
             # events after release, using the captured ownership durations.
             if contended:
-                _log.debug(
+                log.debug(
                     "exclusive_file_lock: acquired %s after waiting %.3fs over %d attempts",
                     lock_path.name,
                     acquired - requested,
                     attempts,
                 )
             if contended or held >= SLOW_LOCK_HOLD_SECONDS:
-                _log.debug("exclusive_file_lock: released %s after holding it %.3fs", lock_path.name, held)
+                log.debug("exclusive_file_lock: released %s after holding it %.3fs", lock_path.name, held)

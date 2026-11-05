@@ -53,7 +53,7 @@ from .....application.live.sede_view_ports import SedeViewEnd, SedeViewOpening, 
 from .....core.async_cleanup import AsyncCloseable, close_async_resources
 from .....core.config import Settings
 from .....core.logging import get_logger
-from .._playwright import BrowserContext, Page, PlaywrightError
+from ..playwright import BrowserContext, Page, PlaywrightError
 from .factory import default_browser_session_factory
 from .screencast import ScreencastImage, ScreencastProfile, ViewScreencast
 from .session import BrowserSession

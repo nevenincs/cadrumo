@@ -22,7 +22,7 @@ from ...google.oauth_flow import credentials_to_records
 from ...google.records import REQUIRED_SCOPES
 from ...google.root_folder import ensure_root_folder
 from ...google.tests.drive_files_server import drive_files_endpoint
-from .. import _google_drive as drive
+from .. import google_drive as drive
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

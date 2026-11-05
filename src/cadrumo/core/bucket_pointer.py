@@ -23,7 +23,7 @@ from pydantic import BaseModel, Field, ValidationError, model_validator
 
 from .errors.hierarchy import ActiveProfilePointerError, pydantic_validation_boundary
 from .identity.bucket import BucketId
-from .models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .models import STRICT_FROZEN_CONFIG
 from .toml import TomlDecodeError, parse_toml
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -47,7 +47,7 @@ class BucketPointer(BaseModel):
     on-disk compatibility format.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     selection: Literal["absent", "selected"]
     bucket_id: BucketId | None = None
@@ -153,7 +153,7 @@ def _pointer_entry_signature(target: Path) -> tuple[str, int, int] | None:
         return None
 
 
-def _open_pointer_descriptor(target: Path) -> int:
+def open_pointer_descriptor(target: Path) -> int:
     from .link_safety import is_link_like
 
     if is_link_like(target):
@@ -174,7 +174,7 @@ def _read_bounded_pointer_descriptor(descriptor: int) -> bytes:
 
 
 def _read_pointer_once(target: Path) -> bytes:
-    descriptor = _open_pointer_descriptor(target)
+    descriptor = open_pointer_descriptor(target)
     try:
         return _read_bounded_pointer_descriptor(descriptor)
     finally:

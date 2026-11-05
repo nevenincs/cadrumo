@@ -12,14 +12,14 @@ from __future__ import annotations
 import pytest
 
 from ..documents import IdentityDocument, IdentityError, is_identity_structurally_shaped
-from ..documents import validate_identity as _validate_identity
+from ..documents import validate_identity as documents_validate_identity
 from .tax_id_format_support import SPANISH_TAX_ID_FORMAT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def validate_identity(candidate: object) -> IdentityDocument:
-    return _validate_identity(candidate, SPANISH_TAX_ID_FORMAT)
+    return documents_validate_identity(candidate, SPANISH_TAX_ID_FORMAT)
 
 
 def test_valid_identity_document_variants_round_trip() -> None:

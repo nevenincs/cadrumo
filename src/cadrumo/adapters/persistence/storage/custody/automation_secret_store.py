@@ -37,7 +37,7 @@ class _WindowsCredentialApi(Protocol):
     def delete(self, target: str) -> None: ...
 
 
-class _WindowsCredentialError(CadrumoError):
+class WindowsCredentialError(CadrumoError):
     """Retain only a native error code for internal status mapping."""
 
     def __init__(self, winerror: int) -> None:
@@ -45,11 +45,11 @@ class _WindowsCredentialError(CadrumoError):
         super().__init__()
 
 
-class _InvalidWindowsCredentialError(CadrumoError):
+class InvalidWindowsCredentialError(CadrumoError):
     """A native record does not satisfy the local credential-blob contract."""
 
 
-class _WindowsCredentialManager:
+class WindowsCredentialManager:
     """Call the wide Windows APIs while preserving their byte-oriented blob."""
 
     _credential_type: Any
@@ -134,15 +134,15 @@ class _WindowsCredentialManager:
             winerror = _windows_last_error()
             if winerror == _ERROR_NOT_FOUND:
                 return None
-            raise _WindowsCredentialError(winerror)
+            raise WindowsCredentialError(winerror)
         if not credential_pointer:
-            raise _InvalidWindowsCredentialError
+            raise InvalidWindowsCredentialError
 
         try:
             credential = credential_pointer.contents
             blob_size = int(credential.CredentialBlobSize)
             if blob_size > _MAX_CREDENTIAL_BLOB_SIZE or (blob_size and not credential.CredentialBlob):
-                raise _InvalidWindowsCredentialError
+                raise InvalidWindowsCredentialError
 
             blob = bytearray(blob_size)
             try:
@@ -162,7 +162,7 @@ class _WindowsCredentialManager:
     def write(self, target: str, account: str, value: bytes) -> None:
         """Write an exact byte blob and wipe the mutable staging buffer."""
         if not 0 < len(value) <= _MAX_CREDENTIAL_BLOB_SIZE:
-            raise _InvalidWindowsCredentialError
+            raise InvalidWindowsCredentialError
 
         blob = bytearray(value)
         try:
@@ -176,19 +176,19 @@ class _WindowsCredentialManager:
             credential.Persist = self._credential_persist_local_machine
             credential.UserName = account
             if not self._cred_write(ctypes.byref(credential), 0):
-                raise _WindowsCredentialError(_windows_last_error())
+                raise WindowsCredentialError(_windows_last_error())
         finally:
             zeroise(blob)
 
     def delete(self, target: str) -> None:
         """Delete only the exact generic-credential target."""
         if not self._cred_delete(target, self._credential_type_generic, 0):
-            raise _WindowsCredentialError(_windows_last_error())
+            raise WindowsCredentialError(_windows_last_error())
 
 
-def _windows_credential_api() -> _WindowsCredentialApi:
+def windows_credential_api() -> _WindowsCredentialApi:
     """Create the native API wrapper only after the caller checks the platform."""
-    return _WindowsCredentialManager()
+    return WindowsCredentialManager()
 
 
 class WindowsAutomationSecretStore:
@@ -205,7 +205,7 @@ class WindowsAutomationSecretStore:
     @staticmethod
     def _api() -> _WindowsCredentialApi:
         try:
-            return _windows_credential_api()
+            return windows_credential_api()
         except OSError:
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
 
@@ -214,11 +214,11 @@ class WindowsAutomationSecretStore:
         target = self._target(namespace, account)
         try:
             value = self._api().read(target)
-        except _WindowsCredentialError as error:
+        except WindowsCredentialError as error:
             if error.winerror == _ERROR_NOT_FOUND:
                 return None
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
-        except _InvalidWindowsCredentialError:
+        except InvalidWindowsCredentialError:
             raise AutomationCustodyError(AutomationCustodyCode.INVALID) from None
         if value is None:
             return None
@@ -234,9 +234,9 @@ class WindowsAutomationSecretStore:
             raise AutomationCustodyError(AutomationCustodyCode.INVALID)
         try:
             self._api().write(target, account, raw)
-        except _WindowsCredentialError:
+        except WindowsCredentialError:
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
-        except _InvalidWindowsCredentialError:
+        except InvalidWindowsCredentialError:
             raise AutomationCustodyError(AutomationCustodyCode.INVALID) from None
         observed = self.read(namespace, account)
         if observed is None or not secrets.compare_digest(observed.get_secret_value(), raw):
@@ -247,7 +247,7 @@ class WindowsAutomationSecretStore:
         target = self._target(namespace, account)
         try:
             self._api().delete(target)
-        except _WindowsCredentialError as error:
+        except WindowsCredentialError as error:
             if error.winerror != _ERROR_NOT_FOUND:
                 raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
         if self.read(namespace, account) is not None:

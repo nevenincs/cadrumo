@@ -336,7 +336,7 @@ def test_bulk_cli_uses_runtime_bridge_and_emits_capture_accounting_and_notices(
     envelopes: list[dict[str, object]] = []
     monkeypatch.setattr(handler, "emit_envelope", lambda *_args, **kwargs: envelopes.append(kwargs))
 
-    handler._emit_bulk_filed_pull(
+    handler.emit_bulk_filed_pull(
         cast(typer.Context, cast(object, None)),
         selected_modelos=("303", "390"),
         year=None,
@@ -482,7 +482,7 @@ def test_bulk_preview_cli_emits_reached_without_persisted_evidence(monkeypatch: 
     envelopes: list[dict[str, object]] = []
     monkeypatch.setattr(handler, "emit_envelope", lambda *_args, **kwargs: envelopes.append(kwargs))
 
-    handler._emit_bulk_filed_pull(
+    handler.emit_bulk_filed_pull(
         cast(typer.Context, cast(object, None)),
         selected_modelos=("303", "390"),
         year=None,

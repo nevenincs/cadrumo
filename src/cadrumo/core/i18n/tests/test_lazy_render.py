@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from .._lazy_catalogue import LazyLocaleCatalogue
+from ..lazy_catalogue import LazyLocaleCatalogue
 from ..render import override_locales_root, tr
 from ..routing import route_key_to_shard
 

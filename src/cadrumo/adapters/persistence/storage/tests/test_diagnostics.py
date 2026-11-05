@@ -11,7 +11,7 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from .....application.diagnostic_models import (
     ConfigRepairReport,
@@ -481,7 +481,7 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path)
     three workflow states (no provider, provider only, fully
     authenticated) and asserting the report shape across each.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
         from .....application.auth.actions import update_auth

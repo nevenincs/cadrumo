@@ -15,15 +15,15 @@ import pytest
 from cadrumo.tests.audited_process import ensure_text_completed_process, run_audited_process
 
 from .test_config_reset import (
-    _OVERRIDE_REASON,
-    _PROFILE_A_ID,
-    _PROFILE_B_ID,
-    _create_profile,
-    _fingerprint,
-    _isolated_reset_root,
-    _persist_filing,
+    OVERRIDE_REASON,
+    PROFILE_A_ID,
+    PROFILE_B_ID,
+    create_profile,
+    fingerprint,
+    isolated_reset_root,
+    persist_filing,
 )
-from .test_config_reset_recovery import _SETTINGS_PREAMBLE, _child_env
+from .test_config_reset_recovery import SETTINGS_PREAMBLE, child_env
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -53,7 +53,7 @@ _LOCK_HOLDER_HARNESS = dedent(
     """,
 )
 
-_BLOCKED_RESET_HARNESS = _SETTINGS_PREAMBLE + dedent(
+_BLOCKED_RESET_HARNESS = SETTINGS_PREAMBLE + dedent(
     """
     import json
     import time
@@ -102,7 +102,7 @@ _BLOCKED_RESET_HARNESS = _SETTINGS_PREAMBLE + dedent(
 # one: the browser session it revokes is an encrypted row inside the bucket.
 # Opening it is what makes this a genuine write attempt rather than a refusal
 # that would pass the busy assertion for the wrong reason.
-_WRITER_HARNESS = _SETTINGS_PREAMBLE + dedent(
+_WRITER_HARNESS = SETTINGS_PREAMBLE + dedent(
     """
     import json
     import time
@@ -151,7 +151,7 @@ _WRITER_HARNESS = _SETTINGS_PREAMBLE + dedent(
     """,
 )
 
-_START_HARNESS = _SETTINGS_PREAMBLE + dedent(
+_START_HARNESS = SETTINGS_PREAMBLE + dedent(
     """
     from cadrumo.application.config_reset import start_config_reset
 
@@ -163,7 +163,7 @@ _START_HARNESS = _SETTINGS_PREAMBLE + dedent(
     """,
 )
 
-_EXCLUDED_START_HARNESS = _SETTINGS_PREAMBLE + dedent(
+_EXCLUDED_START_HARNESS = SETTINGS_PREAMBLE + dedent(
     """
     from cadrumo.application.config_reset import (
         ConfigResetAlreadyRunningError,
@@ -181,7 +181,7 @@ _EXCLUDED_START_HARNESS = _SETTINGS_PREAMBLE + dedent(
     """,
 )
 
-_RESUME_HARNESS = _SETTINGS_PREAMBLE + dedent(
+_RESUME_HARNESS = SETTINGS_PREAMBLE + dedent(
     """
     from cadrumo.application.config_reset import (
         ConfigResetConfirmationRequiredError,
@@ -244,7 +244,7 @@ def _run_child(
         run_audited_process(
             [sys.executable, "-c", harness, str(root), *args],
             cwd=Path.cwd(),
-            env=_child_env(root),
+            env=child_env(root),
             check=check,
             capture_output=True,
             text=True,
@@ -265,25 +265,25 @@ async def test_sorted_target_locks_pause_reset_and_exclude_a_real_application_wr
     from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket_by_id
     from cadrumo.core.bucket_pointer import pointer_path
 
-    with _isolated_reset_root(tmp_path) as root:
-        _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
-        _create_profile(_PROFILE_B_ID, label="Beta operator", tax_id="00000001R")
+    with isolated_reset_root(tmp_path) as root:
+        create_profile(PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
+        create_profile(PROFILE_B_ID, label="Beta operator", tax_id="00000001R")
         pointer_before = pointer_path(root).read_bytes()
         fingerprints_before = {
-            _PROFILE_A_ID: _fingerprint(_PROFILE_A_ID),
-            _PROFILE_B_ID: _fingerprint(_PROFILE_B_ID),
+            PROFILE_A_ID: fingerprint(PROFILE_A_ID),
+            PROFILE_B_ID: fingerprint(PROFILE_B_ID),
         }
-        profile_a_before = read_profile_bucket_by_id(_PROFILE_A_ID)
+        profile_a_before = read_profile_bucket_by_id(PROFILE_A_ID)
         assert profile_a_before is not None
-        profile_a_lock = lock_path(bucket_paths(root, _PROFILE_A_ID))
+        profile_a_lock = lock_path(bucket_paths(root, PROFILE_A_ID))
         holder = await asyncio.create_subprocess_exec(
             sys.executable,
             "-c",
             _LOCK_HOLDER_HARNESS,
             str(root),
-            _PROFILE_B_ID,
+            PROFILE_B_ID,
             cwd=Path.cwd(),
-            env=_child_env(root),
+            env=child_env(root),
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
@@ -300,7 +300,7 @@ async def test_sorted_target_locks_pause_reset_and_exclude_a_real_application_wr
                 str(root),
                 str(_LOCK_TIMEOUT_SECONDS),
                 cwd=Path.cwd(),
-                env=_child_env(root),
+                env=child_env(root),
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
@@ -316,12 +316,12 @@ async def test_sorted_target_locks_pause_reset_and_exclude_a_real_application_wr
                 _run_child,
                 root,
                 _WRITER_HARNESS,
-                _PROFILE_A_ID,
+                PROFILE_A_ID,
                 str(_MUTATION_TIMEOUT_SECONDS),
             )
             assert writer.returncode == _WRITER_REFUSED_EXIT_CODE, writer.stderr
             writer_payload = json.loads(writer.stdout)
-            assert writer_payload["bucket_id"] == _PROFILE_A_ID
+            assert writer_payload["bucket_id"] == PROFILE_A_ID
             assert writer_payload["elapsed"] >= _MUTATION_TIMEOUT_SECONDS
             assert writer_payload["elapsed"] < _LOCK_TIMEOUT_SECONDS
             assert reset.returncode is None
@@ -330,7 +330,7 @@ async def test_sorted_target_locks_pause_reset_and_exclude_a_real_application_wr
             reset_payload = json.loads(reset_stdout)
             observed_reset_elapsed = time.monotonic() - reset_started
             assert reset.returncode == _BUSY_EXIT_CODE, reset_stderr.decode("utf-8", errors="replace")
-            assert reset_payload["bucket_id"] == _PROFILE_B_ID
+            assert reset_payload["bucket_id"] == PROFILE_B_ID
             assert reset_payload["elapsed"] >= _LOCK_TIMEOUT_SECONDS
             assert observed_reset_elapsed >= _LOCK_TIMEOUT_SECONDS
         finally:
@@ -351,10 +351,10 @@ async def test_sorted_target_locks_pause_reset_and_exclude_a_real_application_wr
         assert ConfigResetJournalRepository().latest() is None
         assert pointer_path(root).read_bytes() == pointer_before
         assert {
-            _PROFILE_A_ID: _fingerprint(_PROFILE_A_ID),
-            _PROFILE_B_ID: _fingerprint(_PROFILE_B_ID),
+            PROFILE_A_ID: fingerprint(PROFILE_A_ID),
+            PROFILE_B_ID: fingerprint(PROFILE_B_ID),
         } == fingerprints_before
-        profile_a_after = read_profile_bucket_by_id(_PROFILE_A_ID)
+        profile_a_after = read_profile_bucket_by_id(PROFILE_A_ID)
         assert profile_a_after is not None
         assert profile_a_after.label == profile_a_before.label
 
@@ -370,9 +370,9 @@ def test_fresh_process_reset_exclusion_retention_recheck_and_renewed_confirmatio
     )
     from cadrumo.application.config_reset_repository import ConfigResetJournalRepository
 
-    with _isolated_reset_root(tmp_path) as root:
-        _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
-        _persist_filing(_PROFILE_A_ID, filing_year=2025, seed="a")
+    with isolated_reset_root(tmp_path) as root:
+        create_profile(PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
+        persist_filing(PROFILE_A_ID, filing_year=2025, seed="a")
 
         started = _run_child(root, _START_HARNESS, check=True)
         operation = ConfigResetOperation.model_validate_json(started.stdout)
@@ -391,14 +391,14 @@ def test_fresh_process_reset_exclusion_retention_recheck_and_renewed_confirmatio
         original_retention = operation.targets[0].retention
         assert original_fingerprint is not None
         assert original_retention is not None
-        _persist_filing(_PROFILE_A_ID, filing_year=2024, seed="2")
+        persist_filing(PROFILE_A_ID, filing_year=2024, seed="2")
         # The filing grows the retained set, which is what the retention
         # recheck below asserts -- but it does NOT move the capsule digest: it
         # lands in the database, which the inventory covers by path only, and
         # in a retention snapshot outside the capsule. The target-changed pause
         # this case also asserts needs a change the digest actually sees, so
         # the capsule itself is perturbed here as well.
-        (bucket_paths(root, _PROFILE_A_ID).bucket_dir / "planted.v1.json").write_bytes(b'{"planted": true}')
+        (bucket_paths(root, PROFILE_A_ID).bucket_dir / "planted.v1.json").write_bytes(b'{"planted": true}')
 
         before_unconfirmed_recheck = journal_path.read_bytes()
         unconfirmed = _run_child(
@@ -407,7 +407,7 @@ def test_fresh_process_reset_exclusion_retention_recheck_and_renewed_confirmatio
             operation.operation_id,
             "no",
             "yes",
-            _OVERRIDE_REASON,
+            OVERRIDE_REASON,
         )
         assert unconfirmed.returncode == _CONFIRMATION_EXIT_CODE
         assert unconfirmed.stdout.strip() == "CONFIRMATION_REQUIRED"
@@ -419,7 +419,7 @@ def test_fresh_process_reset_exclusion_retention_recheck_and_renewed_confirmatio
             operation.operation_id,
             "yes",
             "yes",
-            _OVERRIDE_REASON,
+            OVERRIDE_REASON,
             check=True,
         )
         changed = ConfigResetOperation.model_validate_json(changed_process.stdout)
@@ -429,7 +429,7 @@ def test_fresh_process_reset_exclusion_retention_recheck_and_renewed_confirmatio
         assert changed.targets[0].fingerprint.digest != original_fingerprint.digest
         assert changed.targets[0].retention is not None
         assert changed.targets[0].retention.retained_record_count == (original_retention.retained_record_count + 1)
-        assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.is_dir()
+        assert bucket_paths(root, PROFILE_A_ID).bucket_dir.is_dir()
 
         before_renewed_confirmation = journal_path.read_bytes()
         renewed = _run_child(
@@ -438,7 +438,7 @@ def test_fresh_process_reset_exclusion_retention_recheck_and_renewed_confirmatio
             operation.operation_id,
             "no",
             "yes",
-            _OVERRIDE_REASON,
+            OVERRIDE_REASON,
         )
         assert renewed.returncode == _CONFIRMATION_EXIT_CODE
         assert renewed.stdout.strip() == "CONFIRMATION_REQUIRED"
@@ -463,12 +463,12 @@ def test_fresh_process_reset_exclusion_retention_recheck_and_renewed_confirmatio
             operation.operation_id,
             "yes",
             "yes",
-            _OVERRIDE_REASON,
+            OVERRIDE_REASON,
             check=True,
         )
         completed = ConfigResetOperation.model_validate_json(completed_process.stdout)
         assert completed.status is ConfigResetOperationStatus.COMPLETE
         assert completed.summary is not None
         assert completed.summary.retention_override_count == 1
-        assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.exists() is False
+        assert bucket_paths(root, PROFILE_A_ID).bucket_dir.exists() is False
         assert repository.load(operation.operation_id) == completed

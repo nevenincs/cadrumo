@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 from ...core.aggregation import BindingSourceKind
 from ...core.errors.severity import BaseSeverity
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ..calculations.registry.ids import RevisionId
 from ..calculations.registry.profile_bindings import ProfileProvider
 
@@ -33,7 +33,7 @@ from ..calculations.registry.profile_bindings import ProfileProvider
 class UserProfileRegistryContractIssue(BaseModel):
     """One unresolved cross-reference between user-profile schema and modelos."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     severity: Literal[BaseSeverity.ERROR, BaseSeverity.WARNING]
     modelo_id: str
@@ -53,7 +53,7 @@ class UserProfileRegistryContractIssue(BaseModel):
 class UserProfileSelectorIndex(BaseModel):
     """Schema-owned selector namespaces consumed by modelo registry surfaces."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     profile_selectors: frozenset[str]
     schedule_predicates: frozenset[str]
@@ -69,7 +69,7 @@ class UserProfileSelectorIndex(BaseModel):
 class UserProfileRegistryContractReport(BaseModel):
     """Typed result for profile schema coverage against modelo registry usage."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_id: str
     schema_version: int

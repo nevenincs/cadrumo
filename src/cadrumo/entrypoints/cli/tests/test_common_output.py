@@ -10,7 +10,7 @@ from cadrumo_client.commands.suggestions import INVOCATION_REMAINDER_META_KEY
 
 from ....core.json_contract import OutputSchema
 from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
-from ..common import _is_metadata_invocation, emit_envelope
+from ..common import common_is_metadata_invocation, emit_envelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -56,7 +56,7 @@ def test_common_reads_metadata_posture_from_the_cli_context() -> None:
     ctx = typer.Context(click_cmd)
     ctx.meta[INVOCATION_REMAINDER_META_KEY] = ["app", "overview", "--help"]
 
-    assert _is_metadata_invocation(ctx) is True
+    assert common_is_metadata_invocation(ctx) is True
 
 
 def test_operator_progress_banner_goes_to_stderr_not_stdout(capsys: pytest.CaptureFixture[str]) -> None:
@@ -66,10 +66,10 @@ def test_operator_progress_banner_goes_to_stderr_not_stdout(capsys: pytest.Captu
     installs via ``operator_progress_sink``."""
 
     from ....core.operator_progress import OperatorProgress
-    from ..main import _emit_operator_progress
+    from ..main import emit_operator_progress
 
     asyncio.run(
-        _emit_operator_progress(
+        emit_operator_progress(
             OperatorProgress(
                 notice_code="auth.clave-movil.approval-pending",
                 message="AEAT page verification code: YLL",

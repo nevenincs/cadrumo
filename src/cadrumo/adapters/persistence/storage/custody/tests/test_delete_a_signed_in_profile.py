@@ -17,7 +17,7 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
@@ -43,7 +43,7 @@ def test_a_freshly_registered_profile_passes_the_deletion_preflight(tmp_path: Pa
     born without that fact recorded is undeletable by any route, so this is
     the narrowest proof that registration supplies it.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = register_profile_with_credentials(
             label=_LABEL,
@@ -69,7 +69,7 @@ def test_the_profile_the_operator_is_signed_into_can_be_deleted(tmp_path: Path) 
     is the one the configuration reset path runs -- prepare, confirm, delete,
     with no session close in between.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = register_profile_with_credentials(
             label=_LABEL,

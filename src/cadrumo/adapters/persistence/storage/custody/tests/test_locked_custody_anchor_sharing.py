@@ -42,13 +42,13 @@ _DELETE = 0x00010000
 def opened(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, int]]:
     """Every component handle the anchors actually open; each open still runs the real verification."""
     recorded: list[tuple[str, int]] = []
-    open_component = filesystem_primitives._open_verified_component
+    open_component = filesystem_primitives.open_verified_component
 
     def counting(current: str, access: int, **kwargs: Any) -> int:
         recorded.append((current, access))
         return open_component(current, access, **kwargs)
 
-    monkeypatch.setattr(filesystem_primitives, "_open_verified_component", counting)
+    monkeypatch.setattr(filesystem_primitives, "open_verified_component", counting)
     return recorded
 
 

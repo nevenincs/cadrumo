@@ -94,7 +94,7 @@ def _agent_refusing(code: ModelRunRefusalCode) -> Generator[RecordingModelRuns]:
 
 
 def _settle_import(
-    driver: conformance._ExecutionDriver,
+    driver: conformance.ExecutionDriver,
     registry: OperationRegistry,
     profile_id: UUID,
     *,
@@ -112,7 +112,7 @@ def _settle_import(
     observed = asyncio.run(run())
     projection = observed.projection
     assert projection.terminal_condition is OperationTerminalCondition.SUCCEEDED, projection
-    result = conformance._resolve_result_projection(
+    result = conformance.resolve_result_projection(
         driver,
         registry,
         definition_id=LEDGER_IMPORT_OPERATION_DEFINITION_ID,

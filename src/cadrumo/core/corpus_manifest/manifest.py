@@ -32,17 +32,14 @@ from pathlib import Path, PurePosixPath
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from ..errors.hierarchy import (
-    CoreValidationError as _CoreValidationError,
+    CoreValidationError,
+    pydantic_validation_boundary,
 )
-from ..errors.hierarchy import (
-    pydantic_validation_boundary as _pydantic_validation_boundary,
-)
-from ..hashing import canonical_json_bytes as _canonical_json_bytes
-from ..hashing import sha256_hex as _sha256_hex
+from ..hashing import canonical_json_bytes, sha256_hex
 from ..hex import Hex64Str
-from ..logging import get_logger as _get_logger
-from ..models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..time.clock import now as _clock_now
+from ..logging import get_logger
+from ..models import STRICT_FROZEN_CONFIG
+from ..time.clock import now
 from ..time.utc import validate_utc_aware
 from .errors import (
     CorpusBundleError,
@@ -50,7 +47,7 @@ from .errors import (
     CorpusManifestTamperError,
 )
 
-_logger = _get_logger(__name__)
+_logger = get_logger(__name__)
 
 _BUNDLE_MANIFEST_MEMBER = "corpus.manifest.json"
 """Canonical archive-member name for a bundle's embedded manifest."""
@@ -70,7 +67,7 @@ class CorpusEntry(BaseModel):
             is permitted).
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     relative_path: str = Field(min_length=1, max_length=4096)
     sha256: Hex64Str
@@ -78,7 +75,7 @@ class CorpusEntry(BaseModel):
 
     @field_validator("relative_path")
     @classmethod
-    @_pydantic_validation_boundary
+    @pydantic_validation_boundary
     def _validate_relative_path(cls, value: str) -> str:
         if value in {".", "..", ""}:
             raise CorpusManifestError(
@@ -128,7 +125,7 @@ class CorpusManifest(BaseModel):
         manifest_sha256: Self-attesting digest. Re-computed on load.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     manifest_version: int = Field(default=_MANIFEST_VERSION, ge=1)
     corpus_root_name: str = Field(min_length=1, max_length=64)
@@ -138,11 +135,11 @@ class CorpusManifest(BaseModel):
 
     @field_validator("generated_at")
     @classmethod
-    @_pydantic_validation_boundary
+    @pydantic_validation_boundary
     def _require_aware(cls, value: datetime) -> datetime:
         try:
             return validate_utc_aware(value)
-        except _CoreValidationError as exc:
+        except CoreValidationError as exc:
             raise CorpusManifestError(
                 translated_message="errors.integrity.integrity_storage_corpus_manifest",
                 context={
@@ -153,19 +150,19 @@ class CorpusManifest(BaseModel):
             ) from exc
 
 
-class _ManifestPayloadValidationError(_CoreValidationError):
+class ManifestPayloadValidationError(CoreValidationError):
     """Base error for an invalid raw manifest payload before I/O translation."""
 
 
-class _MalformedManifestPayloadError(_ManifestPayloadValidationError):
+class MalformedManifestPayloadError(ManifestPayloadValidationError):
     """Raw payload cannot be parsed into the manifest schema."""
 
 
-class _UnsupportedManifestVersionError(_ManifestPayloadValidationError):
+class UnsupportedManifestVersionError(ManifestPayloadValidationError):
     """Raw payload declares a version this consumer cannot admit."""
 
 
-class _TamperedManifestPayloadError(_ManifestPayloadValidationError):
+class TamperedManifestPayloadError(ManifestPayloadValidationError):
     """Raw payload's recorded self-digest differs from its canonical body."""
 
 
@@ -198,7 +195,7 @@ def _canonical_manifest_body(
             for entry in entries
         ],
     }
-    return _canonical_json_bytes(payload)
+    return canonical_json_bytes(payload)
 
 
 def _validate_raw_manifest_payload(raw: str | bytes) -> CorpusManifest:
@@ -212,17 +209,17 @@ def _validate_raw_manifest_payload(raw: str | bytes) -> CorpusManifest:
     try:
         manifest = CorpusManifest.model_validate_json(raw)
     except (ValueError, ValidationError) as exc:
-        raise _MalformedManifestPayloadError(str(exc)) from exc
+        raise MalformedManifestPayloadError(str(exc)) from exc
     if manifest.manifest_version > _MANIFEST_VERSION:
-        raise _UnsupportedManifestVersionError(str(manifest.manifest_version))
+        raise UnsupportedManifestVersionError(str(manifest.manifest_version))
     body = _canonical_manifest_body(
         manifest_version=manifest.manifest_version,
         corpus_root_name=manifest.corpus_root_name,
         generated_at=manifest.generated_at,
         entries=manifest.entries,
     )
-    if manifest.manifest_sha256 != _sha256_hex(body):
-        raise _TamperedManifestPayloadError()
+    if manifest.manifest_sha256 != sha256_hex(body):
+        raise TamperedManifestPayloadError()
     return manifest
 
 
@@ -241,7 +238,7 @@ def _self_signed_manifest(
         generated_at=generated_at,
         entries=entries,
     )
-    manifest_sha256 = _sha256_hex(body)
+    manifest_sha256 = sha256_hex(body)
     _logger.debug(
         "_self_signed_manifest: built manifest for %r with %d entries (sha256=%s)",
         corpus_root_name,
@@ -268,7 +265,7 @@ class CorpusBundleVerification(BaseModel):
     manifest record.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     manifest: CorpusManifest
     missing: tuple[str, ...] = Field(default=())
@@ -329,7 +326,7 @@ def build_corpus_bundle(
     raw_entries: list[CorpusEntry] = []
     for relative_path, content in members.items():
         try:
-            entry = CorpusEntry(relative_path=relative_path, sha256=_sha256_hex(content), content_length=len(content))
+            entry = CorpusEntry(relative_path=relative_path, sha256=sha256_hex(content), content_length=len(content))
         except ValidationError as exc:
             raise CorpusManifestError(
                 translated_message="errors.integrity.integrity_storage_corpus_manifest",
@@ -339,7 +336,7 @@ def build_corpus_bundle(
     manifest = _self_signed_manifest(
         raw_entries,
         corpus_root_name=corpus_root_name,
-        generated_at=_clock_now() if generated_at is None else generated_at,
+        generated_at=now() if generated_at is None else generated_at,
     )
     resolved_output = output_path.resolve()
     buffer = io.BytesIO()
@@ -421,7 +418,7 @@ def _verify_open_corpus_bundle(archive: zipfile.ZipFile) -> CorpusBundleVerifica
     for relative in sorted(archived_files & set(expected)):
         recorded = expected[relative]
         actual_bytes = archive.read(relative)
-        actual_sha256 = _sha256_hex(actual_bytes)
+        actual_sha256 = sha256_hex(actual_bytes)
         if actual_sha256 != recorded.sha256 or len(actual_bytes) != recorded.content_length:
             mismatched.append(relative)
     return CorpusBundleVerification(
@@ -436,12 +433,12 @@ def _load_bundle_manifest(archive: zipfile.ZipFile) -> CorpusManifest:
     raw = archive.read(_BUNDLE_MANIFEST_MEMBER)
     try:
         return _validate_raw_manifest_payload(raw)
-    except _MalformedManifestPayloadError as exc:
+    except MalformedManifestPayloadError as exc:
         raise CorpusBundleError(
             translated_message="errors.integrity.integrity_storage_corpus_bundle",
             context={"embedded_manifest_structurally_valid": False, "validation_error_type": type(exc).__name__},
         ) from exc
-    except _UnsupportedManifestVersionError as exc:
+    except UnsupportedManifestVersionError as exc:
         raise CorpusBundleError(
             translated_message="errors.integrity.integrity_storage_corpus_bundle",
             context={
@@ -449,7 +446,7 @@ def _load_bundle_manifest(archive: zipfile.ZipFile) -> CorpusManifest:
                 "supported_version": str(_MANIFEST_VERSION),
             },
         ) from exc
-    except _TamperedManifestPayloadError as exc:
+    except TamperedManifestPayloadError as exc:
         raise CorpusManifestTamperError(
             translated_message="errors.integrity.integrity_storage_corpus_manifest_tamper",
             context={

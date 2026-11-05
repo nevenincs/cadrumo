@@ -24,9 +24,7 @@ from textual.widgets._select import SelectOverlay
 
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     load_test_profile_record,
-)
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.login_session import authenticate_profile_for_invocation
@@ -289,7 +287,7 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
         # unlocked belongs to that thread's context and not this one.
         # Unlocking again through the ordinary login door is how the test
         # reaches the encrypted record the screen actually wrote.
-        _, profile_decode_context = _profile_contexts_for_test()
+        _, profile_decode_context = profile_authority_contexts()
         authenticate_profile_for_invocation(
             name="Language Subject",
             passphrase_callback=lambda: _CREDENTIAL_INPUT,

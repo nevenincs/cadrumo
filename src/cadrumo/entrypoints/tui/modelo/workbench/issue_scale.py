@@ -79,7 +79,7 @@ _UNENTERED_ORIGINS: Final[Mapping[IssueLevel, ModeloFormOrigin]] = MappingProxyT
 
 """The levels that list boxes nobody has entered, and the origin that places a box at each."""
 
-_UNENTERED_LOCALE_KEYS: Final[Mapping[IssueLevel, tuple[str, str, str]]] = MappingProxyType(
+UNENTERED_LOCALE_KEYS: Final[Mapping[IssueLevel, tuple[str, str, str]]] = MappingProxyType(
     {
         IssueLevel.MISSING: (
             "workspace.modelo.issues.missing",
@@ -306,7 +306,7 @@ def _require_total_tables() -> None:
         raise ValueError("every issue level needs one mark")
     if set(_ATTENTION_LEVELS) != set(ModeloFormAttention):
         raise ValueError("every attention the form gives a finding needs a level")
-    if set(_UNENTERED_LOCALE_KEYS) != set(_UNENTERED_ORIGINS):
+    if set(UNENTERED_LOCALE_KEYS) != set(_UNENTERED_ORIGINS):
         raise ValueError("every level that lists boxes nobody entered needs its sentences")
 
 

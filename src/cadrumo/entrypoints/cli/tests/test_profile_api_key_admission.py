@@ -12,8 +12,8 @@ from click.testing import Result
 
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
-from cadrumo.entrypoints.cli import _profile_authentication_gate as gate
-from cadrumo.entrypoints.cli import _profile_session_gate as session_gate
+from cadrumo.entrypoints.cli import profile_authentication_gate as gate
+from cadrumo.entrypoints.cli import profile_session_gate as session_gate
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.profile_authentication import (
@@ -80,7 +80,7 @@ def test_api_method_refuses_local_leaf_before_reading_the_root_secret(monkeypatc
     secret is read or a local session is admitted.
     """
     events: list[str] = []
-    monkeypatch.setattr(gate, "_read_and_stage_leaf", lambda **_kwargs: events.append("read_leaf"))
+    monkeypatch.setattr(gate, "read_and_stage_leaf", lambda **_kwargs: events.append("read_leaf"))
     monkeypatch.setattr(
         session_gate, "activate_profile_session", lambda *_args, **_kwargs: events.append("admit_local")
     )
@@ -104,7 +104,7 @@ def test_runtime_leaf_receives_explicit_api_method_before_local_session(
     monkeypatch.setattr("cadrumo.application.cli_provisioning.provision_cli_storage", lambda **_kwargs: None)
     monkeypatch.setattr(session_gate, "normalize_ambient_profile", lambda _ctx: None)
     monkeypatch.setattr("cadrumo.core.bucket_pointer.resolve_active_bucket_id", lambda: str(uuid4()))
-    monkeypatch.setattr(gate, "_diagnose_unregistered_profile", lambda **_kwargs: False)
+    monkeypatch.setattr(gate, "diagnose_unregistered_profile", lambda **_kwargs: False)
     source = ProfileSecretSourceOptions(stdin=True, method=ProfileAuthenticationMethod.API_KEY)
     # A grant change requires a stored reference for its independent fresh
     # reconciliation, so the raw-key route remains available to other leaves.
@@ -112,7 +112,7 @@ def test_runtime_leaf_receives_explicit_api_method_before_local_session(
         node.spec.key
         for node in COMMAND_GRAPH.nodes()
         if profile_authentication_posture(node) is ProfileAuthenticationPosture.RESUME_FALLBACK
-        and node.spec.key in gate._PROFILE_CONNECTION_KEYS
+        and node.spec.key in gate.PROFILE_CONNECTION_KEYS
     } - {"config_profile_automation_change"}
     # Two leaves gate their own dispatch before the secret source is read: a
     # discard demands its audited confirmation, and a censo import reaches the

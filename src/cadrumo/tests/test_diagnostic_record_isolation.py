@@ -24,14 +24,14 @@ _STALL_SECONDS = 0.4
 
 
 def test_a_test_can_end_while_its_diagnostic_record_is_still_queued(monkeypatch: pytest.MonkeyPatch) -> None:
-    redact = project_logging._scrub_record_message_and_args
+    redact = project_logging.scrub_record_message_and_args
     resume = time.monotonic() + _STALL_SECONDS
 
     def stalled(record: logging.LogRecord) -> None:
         time.sleep(max(0.0, resume - time.monotonic()))
         redact(record)
 
-    monkeypatch.setattr(project_logging, "_scrub_record_message_and_args", stalled)
+    monkeypatch.setattr(project_logging, "scrub_record_message_and_args", stalled)
     get_logger(_NAME).warning("left queued by the previous test")
 
     assert not flush_logging(timeout=0.01)

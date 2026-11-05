@@ -33,9 +33,9 @@ from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....tests.log_records import delivered_records
 from ..errors import (
-    _project_validation_error,
-    _unwrap_cadrumo_error,
     command_error_boundary,
+    project_validation_error,
+    unwrap_cadrumo_error,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -52,7 +52,7 @@ def test_validation_log_omits_rejected_financial_input(caplog: pytest.LogCapture
         TypeAdapter(int).validate_python(rejected)
 
     with caplog.at_level(logging.ERROR, logger="cadrumo.entrypoints.cli.errors"):
-        _project_validation_error(raised.value, lambda: None)
+        project_validation_error(raised.value, lambda: None)
 
     record = next(record for record in delivered_records(caplog) if "pydantic ValidationError" in record.message)
     assert rejected not in record.message
@@ -64,7 +64,7 @@ def test_terminal_nested_llm_validation_preserves_typed_refusal_in_every_locale(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """The standalone terminal uses the callback projector for Pydantic errors."""
-    from .._terminal_errors import run_standalone_with_error_contract
+    from ..terminal_errors import run_standalone_with_error_contract
 
     for locale in SUPPORTED_OUTPUT_LANGUAGES:
         with pytest.raises(SystemExit) as exited:
@@ -99,7 +99,7 @@ def test_terminal_json_routes_validation_diagnostic_away_from_stderr(
 ) -> None:
     """A configured diagnostic sink must not precede the error document."""
     from ....core.logging import DropOperatorDocumentEchoFilter
-    from .._terminal_errors import run_standalone_with_error_contract
+    from ..terminal_errors import run_standalone_with_error_contract
 
     logger = logging.getLogger("cadrumo.entrypoints.cli.errors")
     handler = logging.StreamHandler(sys.stderr)
@@ -140,7 +140,7 @@ def test_terminal_validation_fails_closed_without_one_typed_candidate(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """Non-typed and ambiguous nested validation retain the generic outcome."""
-    from .._terminal_errors import run_standalone_with_error_contract
+    from ..terminal_errors import run_standalone_with_error_contract
 
     with pytest.raises(SystemExit):
         run_standalone_with_error_contract(dispatch, argv=["--format", "json"])
@@ -161,7 +161,7 @@ def test_unwrap_finds_cadrumo_error_through_sqlalchemy_orig() -> None:
         orig=refusal,
     )
 
-    assert _unwrap_cadrumo_error(statement_error) is refusal
+    assert unwrap_cadrumo_error(statement_error) is refusal
 
 
 def test_unwrap_finds_cadrumo_error_through_cause_chain() -> None:
@@ -174,13 +174,13 @@ def test_unwrap_finds_cadrumo_error_through_cause_chain() -> None:
         except _ProbeRefusal as exc:
             raise RuntimeError("library wrapper") from exc
     except RuntimeError as wrapper:
-        assert _unwrap_cadrumo_error(wrapper) is refusal
+        assert unwrap_cadrumo_error(wrapper) is refusal
 
 
 def test_unwrap_returns_none_for_plain_exception() -> None:
     """A genuine non-CadrumoError exception unwraps to None."""
 
-    assert _unwrap_cadrumo_error(RuntimeError("genuine bug")) is None
+    assert unwrap_cadrumo_error(RuntimeError("genuine bug")) is None
 
 
 def test_boundary_forwards_wrapped_refusal_without_logging_traceback(
@@ -274,7 +274,7 @@ def test_terminal_boundary_logs_the_identifier_chain_for_a_genuine_crash(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """The terminal document's diagnostic record retains types and raising frames."""
-    from .._terminal_errors import _emit_crash
+    from ..terminal_errors import emit_crash
 
     def genuine_crash() -> None:
         raise RuntimeError("a genuine internal defect")
@@ -286,7 +286,7 @@ def test_terminal_boundary_logs_the_identifier_chain_for_a_genuine_crash(
         try:
             genuine_crash()
         except RuntimeError as error:
-            _emit_crash(error)
+            emit_crash(error)
     capsys.readouterr()
 
     crashes = [
@@ -310,13 +310,13 @@ def test_terminal_boundary_logs_a_typed_refusal_without_a_crash_wrapper(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """A command-resolution refusal retains its registered type and safe reason."""
-    from .._terminal_errors import _emit_crash
+    from ..terminal_errors import emit_crash
 
     with (
         caplog.at_level(logging.WARNING, logger="cadrumo_client.commands.errors"),
         pytest.raises(SystemExit),
     ):
-        _emit_crash(_ProbeRefusal("no active bucket session; run switch"))
+        emit_crash(_ProbeRefusal("no active bucket session; run switch"))
     capsys.readouterr()
 
     refusals = [

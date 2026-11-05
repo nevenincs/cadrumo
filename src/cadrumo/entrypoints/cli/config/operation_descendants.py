@@ -19,7 +19,7 @@ from ....core.errors.hierarchy import CadrumoError
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_list_from_facts
-from ._profile_mutation import execute_profile_mutation, read_mutation_baseline
+from .profile_mutation import execute_profile_mutation, read_mutation_baseline
 
 
 def _decode(

@@ -16,15 +16,11 @@ from cadrumo.application.ledger.preconditions import LedgerPreconditionCondition
 from cadrumo.core.config import Settings
 
 from .evidence_test_support import (
-    BUCKET_ID as _BUCKET_ID,
-)
-from .evidence_test_support import (
+    BUCKET_ID,
     isolated_settings,
+    make_svc,
     pdf_file,
     secure_objects,
-)
-from .evidence_test_support import (
-    make_svc as _make_svc,
 )
 from .evidence_test_support import runtime_profile as runtime_profile
 
@@ -39,10 +35,10 @@ class TestEvidenceSecureStorage:
         secure_objects: SecureObjectRepository,
         pdf_file: Path,
     ) -> None:
-        svc = _make_svc(isolated_settings, secure_objects)
+        svc = make_svc(isolated_settings, secure_objects)
 
-        result = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_file, supplier="Acme S.L.")
-        records = svc.list_all(bucket_id=_BUCKET_ID)
+        result = svc.add(bucket_id=BUCKET_ID, source_path=pdf_file, supplier="Acme S.L.")
+        records = svc.list_all(bucket_id=BUCKET_ID)
 
         assert records == (result.record,)
         raw_records = tuple(secure_objects.iter_all_records_raw())
@@ -56,9 +52,9 @@ class TestEvidenceErrorPaths:
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
     ) -> None:
-        svc = _make_svc(isolated_settings, secure_objects)
+        svc = make_svc(isolated_settings, secure_objects)
         with pytest.raises(PurchaseInvoiceEvidenceInputError) as exc_info:
-            svc.add(bucket_id=_BUCKET_ID, source_path=tmp_path / "ghost.pdf")
+            svc.add(bucket_id=BUCKET_ID, source_path=tmp_path / "ghost.pdf")
         assert exc_info.value.terminal_precondition_verdict is not None
         assert exc_info.value.terminal_precondition_verdict.failed_condition_id == (
             LedgerPreconditionCondition.EVIDENCE_FILE_READABLE.value
@@ -72,9 +68,9 @@ class TestEvidenceErrorPaths:
     ) -> None:
         txt_file = tmp_path / "note.txt"
         txt_file.write_text("hello")
-        svc = _make_svc(isolated_settings, secure_objects)
+        svc = make_svc(isolated_settings, secure_objects)
         with pytest.raises(PurchaseInvoiceEvidenceInputError) as exc_info:
-            svc.add(bucket_id=_BUCKET_ID, source_path=txt_file)
+            svc.add(bucket_id=BUCKET_ID, source_path=txt_file)
 
         # Both evidence-input refusals now share one translated key, so the key
         # alone no longer tells the two apart -- an unreadable file would satisfy
@@ -90,10 +86,10 @@ class TestEvidenceErrorPaths:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
     ) -> None:
-        svc = _make_svc(isolated_settings, secure_objects)
+        svc = make_svc(isolated_settings, secure_objects)
         with pytest.raises(PurchaseInvoiceEvidenceNotFoundError):
             svc.update(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 evidence_id="doesnotexist",
                 patch=PurchaseInvoiceEvidencePatch(notes="x"),
             )
@@ -103,6 +99,6 @@ class TestEvidenceErrorPaths:
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
     ) -> None:
-        svc = _make_svc(isolated_settings, secure_objects)
+        svc = make_svc(isolated_settings, secure_objects)
         with pytest.raises(PurchaseInvoiceEvidenceNotFoundError):
-            svc.remove(bucket_id=_BUCKET_ID, evidence_id="doesnotexist")
+            svc.remove(bucket_id=BUCKET_ID, evidence_id="doesnotexist")

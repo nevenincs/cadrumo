@@ -46,8 +46,8 @@ from ...application.modelo.m145_communication_records import (
 )
 from ...core.errors.hierarchy import CadrumoError
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ._modelo_cli_support import parse_casilla_override
-from ._modelo_m145_parsing import m145_actor_from_cli, m145_create_command_from_cli
+from .modelo_cli_support import parse_casilla_override
+from .modelo_m145_parsing import m145_actor_from_cli, m145_create_command_from_cli
 
 
 def create_m145_record(

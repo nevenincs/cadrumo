@@ -57,21 +57,21 @@ from cadrumo.core.operations import (
 )
 
 from .projection_services_support import (
-    _DEFINITION_ID,
-    _INTERACTION_ID,
-    _NOW,
-    _OPERATION_ID,
-    _PROPOSAL,
-    _TOKEN,
+    DEFINITION_ID,
+    INTERACTION_ID,
+    NOW,
+    OPERATION_ID,
+    PROPOSAL,
+    TOKEN,
     ProjectionResult,
     PublicProjectionResult,
-    _lease,
-    _pending,
-    _registry,
-    _running_snapshot,
-    _terminal_snapshot,
-    _waiting_snapshot,
-    _write,
+    projection_services_lease,
+    projection_services_pending,
+    projection_services_registry,
+    running_snapshot,
+    terminal_snapshot,
+    waiting_snapshot,
+    write,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -79,24 +79,24 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def test_response_control_requires_separately_bound_runtime_bearer(tmp_path: Path) -> None:
     root = tmp_path / "durable"
-    registry = _registry()
-    pending = _pending(registry)
+    registry = projection_services_registry()
+    pending = projection_services_pending(registry)
     repository = OperationJournalRepository(storage_root=root)
-    _write(root, repository, _waiting_snapshot(registry, pending))
+    write(root, repository, waiting_snapshot(registry, pending))
     authority = BoundOperationSecureResponseAuthority.bind(
-        operation_id=_OPERATION_ID,
-        interaction_id=_INTERACTION_ID,
+        operation_id=OPERATION_ID,
+        interaction_id=INTERACTION_ID,
         revision=0,
-        reviewed_proposal_digest=_PROPOSAL,
+        reviewed_proposal_digest=PROPOSAL,
         actor_ref="operator:reviewer",
         expires_at=pending.request.expires_at,
         intents=frozenset({OperationResponseIntent.APPLY, OperationResponseIntent.REJECT}),
-        response_token=_TOKEN,
-        clock=lambda: _NOW,
+        response_token=TOKEN,
+        clock=lambda: NOW,
     )
     request = OperationResponseControlRequestV1(
-        operation_id=_OPERATION_ID,
-        interaction_id=_INTERACTION_ID,
+        operation_id=OPERATION_ID,
+        interaction_id=INTERACTION_ID,
         revision=0,
         actor_ref="operator:reviewer",
     )
@@ -109,7 +109,7 @@ def test_response_control_requires_separately_bound_runtime_bearer(tmp_path: Pat
         operands=None,
         owner_id="5" * 64,
         lease_token_factory=lambda: "6" * 64,
-        clock=lambda: _NOW,
+        clock=lambda: NOW,
         lease_duration=timedelta(minutes=1),
     )
     service = OperationResponseControlService(
@@ -127,27 +127,27 @@ def test_response_control_requires_separately_bound_runtime_bearer(tmp_path: Pat
     assert result.available and result.permitted_intents == frozenset({"apply", "reject"})
     assert closed.outcome == "refused"
     assert all(value == 0 for value in authority._token)
-    assert _TOKEN not in result.model_dump_json()
+    assert TOKEN not in result.model_dump_json()
 
 
 def test_response_authority_is_unavailable_after_process_restart(tmp_path: Path) -> None:
     root = tmp_path / "durable"
-    registry = _registry()
-    pending = _pending(registry)
+    registry = projection_services_registry()
+    pending = projection_services_pending(registry)
     repository = OperationJournalRepository(storage_root=root)
-    _write(root, repository, _waiting_snapshot(registry, pending))
+    write(root, repository, waiting_snapshot(registry, pending))
     original_process = OperationResponseAuthorityBroker()
-    capability = original_process.reserve(_OPERATION_ID, "operator:reviewer")
-    original_process.issue(pending, _TOKEN)
+    capability = original_process.reserve(OPERATION_ID, "operator:reviewer")
+    original_process.issue(pending, TOKEN)
     original_process.close()
     restarted_process = OperationResponseAuthorityBroker()
     request = OperationResponseControlRequestV1(
-        operation_id=_OPERATION_ID,
-        interaction_id=_INTERACTION_ID,
+        operation_id=OPERATION_ID,
+        interaction_id=INTERACTION_ID,
         revision=0,
         actor_ref="operator:reviewer",
     )
-    authority = restarted_process.bind(request, pending, capability, clock=lambda: _NOW)
+    authority = restarted_process.bind(request, pending, capability, clock=lambda: NOW)
     supervisor = OperationSupervisor(
         authority_operation=unread_authority_operation(),
         registry=registry,
@@ -157,7 +157,7 @@ def test_response_authority_is_unavailable_after_process_restart(tmp_path: Path)
         operands=None,
         owner_id="7" * 64,
         lease_token_factory=lambda: "8" * 64,
-        clock=lambda: _NOW,
+        clock=lambda: NOW,
         lease_duration=timedelta(minutes=1),
     )
     service = OperationResponseControlService(
@@ -176,35 +176,35 @@ def test_response_authority_is_unavailable_after_process_restart(tmp_path: Path)
 @pytest.mark.parametrize("response_action", ["apply", "reject"])
 def test_public_response_service_consumes_runtime_authority(tmp_path: Path, response_action: str) -> None:
     root = tmp_path / response_action
-    registry = _registry()
-    pending = _pending(registry)
+    registry = projection_services_registry()
+    pending = projection_services_pending(registry)
     repository = OperationJournalRepository(storage_root=root)
-    _write(root, repository, _waiting_snapshot(registry, pending))
+    write(root, repository, waiting_snapshot(registry, pending))
     broker = OperationResponseAuthorityBroker()
-    capability = broker.reserve(_OPERATION_ID, "operator:reviewer")
-    broker.issue(pending, _TOKEN)
+    capability = broker.reserve(OPERATION_ID, "operator:reviewer")
+    broker.issue(pending, TOKEN)
     control = OperationResponseControlRequestV1(
-        operation_id=_OPERATION_ID,
-        interaction_id=_INTERACTION_ID,
+        operation_id=OPERATION_ID,
+        interaction_id=INTERACTION_ID,
         revision=0,
         actor_ref="operator:reviewer",
     )
     actor_mismatch = control.model_copy(update={"actor_ref": "operator:intruder"})
     stale = control.model_copy(update={"revision": 1})
-    forged = OperationResponseAuthorityBroker().reserve(_OPERATION_ID, "operator:reviewer")
+    forged = OperationResponseAuthorityBroker().reserve(OPERATION_ID, "operator:reviewer")
     assert isinstance(
-        broker.bind(actor_mismatch, pending, capability, clock=lambda: _NOW),
+        broker.bind(actor_mismatch, pending, capability, clock=lambda: NOW),
         UnavailableOperationSecureResponseAuthority,
     )
     assert isinstance(
-        broker.bind(stale, pending, capability, clock=lambda: _NOW), UnavailableOperationSecureResponseAuthority
+        broker.bind(stale, pending, capability, clock=lambda: NOW), UnavailableOperationSecureResponseAuthority
     )
     assert isinstance(
-        broker.bind(control, pending, forged, clock=lambda: _NOW), UnavailableOperationSecureResponseAuthority
+        broker.bind(control, pending, forged, clock=lambda: NOW), UnavailableOperationSecureResponseAuthority
     )
-    authority = broker.bind(control, pending, capability, clock=lambda: _NOW)
+    authority = broker.bind(control, pending, capability, clock=lambda: NOW)
     assert isinstance(
-        broker.bind(control, pending, capability, clock=lambda: _NOW), UnavailableOperationSecureResponseAuthority
+        broker.bind(control, pending, capability, clock=lambda: NOW), UnavailableOperationSecureResponseAuthority
     )
     supervisor = OperationSupervisor(
         authority_operation=unread_authority_operation(),
@@ -215,7 +215,7 @@ def test_public_response_service_consumes_runtime_authority(tmp_path: Path, resp
         operands=None,
         owner_id="5" * 64,
         lease_token_factory=lambda: "6" * 64,
-        clock=lambda: _NOW,
+        clock=lambda: NOW,
         lease_duration=timedelta(minutes=1),
     )
     service = OperationResponseControlService(
@@ -226,29 +226,29 @@ def test_public_response_service_consumes_runtime_authority(tmp_path: Path, resp
     )
 
     if response_action == "apply":
-        mutation = OperationResponseApplyRequestV1(**control.model_dump(), responded_at=_NOW)
+        mutation = OperationResponseApplyRequestV1(**control.model_dump(), responded_at=NOW)
         result = asyncio.run(service.apply(mutation))
     else:
         mutation = OperationResponseRejectRequestV1(
             **control.model_dump(),
-            responded_at=_NOW,
+            responded_at=NOW,
             reason_code="operator.rejected",
         )
         result = asyncio.run(service.reject(mutation))
 
     assert isinstance(result, OperationResponseMutationSuccessV1)
     assert result.response_action == response_action
-    consumed = asyncio.run(supervisor.inspect(_OPERATION_ID)).consumed_interactions
+    consumed = asyncio.run(supervisor.inspect(OPERATION_ID)).consumed_interactions
     assert len(consumed) == 1 and consumed[0].intent.value == response_action
 
 
 def test_cancellation_and_detach_delegate_to_real_supervisor_ports(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         root = tmp_path / "durable"
-        registry = _registry()
+        registry = projection_services_registry()
         repository = OperationJournalRepository(storage_root=root)
         leases = OperationLeaseFilesystemRepository(storage_root=root)
-        _write(root, repository, _running_snapshot(registry))
+        write(root, repository, running_snapshot(registry))
         supervisor = OperationSupervisor(
             authority_operation=unread_authority_operation(),
             registry=registry,
@@ -258,29 +258,29 @@ def test_cancellation_and_detach_delegate_to_real_supervisor_ports(tmp_path: Pat
             operands=operation_secure_reference_repository(objects=profile.repository),
             owner_id="5" * 64,
             lease_token_factory=lambda: "6" * 64,
-            clock=lambda: _NOW,
+            clock=lambda: NOW,
             lease_duration=timedelta(hours=1),
             cleanup_timeout=timedelta(minutes=5),
         )
         detach = asyncio.run(
             OperationDetachService(reader=repository, registry=registry, supervisor=supervisor).detach(
-                OperationDetachRequestV1(operation_id=_OPERATION_ID, expected_revision=0)
+                OperationDetachRequestV1(operation_id=OPERATION_ID, expected_revision=0)
             )
         )
         cancelled = asyncio.run(
             OperationCancellationService(reader=repository, registry=registry, supervisor=supervisor).request(
-                OperationCancellationRequestV1(operation_id=_OPERATION_ID, expected_revision=0)
+                OperationCancellationRequestV1(operation_id=OPERATION_ID, expected_revision=0)
             )
         )
         stale = asyncio.run(
             OperationCancellationService(reader=repository, registry=registry, supervisor=supervisor).request(
-                OperationCancellationRequestV1(operation_id=_OPERATION_ID, expected_revision=0)
+                OperationCancellationRequestV1(operation_id=OPERATION_ID, expected_revision=0)
             )
         )
-        journal_path = root / "operation-journals" / f"{_OPERATION_ID}.json"
+        journal_path = root / "operation-journals" / f"{OPERATION_ID}.json"
         settled_bytes = journal_path.read_bytes()
         with pytest.raises(ValueError, match="expected revision is stale"):
-            asyncio.run(supervisor.request_cancel(_OPERATION_ID, expected_revision=0))
+            asyncio.run(supervisor.request_cancel(OPERATION_ID, expected_revision=0))
 
         assert isinstance(detach, OperationDetachSuccessV1)
         assert isinstance(cancelled, OperationCancellationSuccessV1)
@@ -358,20 +358,22 @@ def test_result_projection_yields_and_settles_inside_the_callers_guard(
                 return HeldPublicProjectionResult(result_code=ProjectionResult.model_validate(result).result_code)
 
             root = tmp_path / "held-result-durable"
-            registry = _registry(result_projector=project, result_schema_type=HeldPublicProjectionResult)
+            registry = projection_services_registry(
+                result_projector=project, result_schema_type=HeldPublicProjectionResult
+            )
             repository = OperationJournalRepository(storage_root=root)
             operands = operation_secure_reference_repository(objects=profile.repository)
-            result_ref = await operands.put(ProjectionResult(result_code="held.safe.result"), written_at=_NOW)
-            terminal = _terminal_snapshot(registry, result_ref=result_ref)
-            lease = _lease()
-            observed = await OperationLeaseFilesystemRepository(storage_root=root).acquire(lease, observed_at=_NOW)
+            result_ref = await operands.put(ProjectionResult(result_code="held.safe.result"), written_at=NOW)
+            terminal = terminal_snapshot(registry, result_ref=result_ref)
+            lease = projection_services_lease()
+            observed = await OperationLeaseFilesystemRepository(storage_root=root).acquire(lease, observed_at=NOW)
             assert observed.current == lease
-            await repository.create(_running_snapshot(registry), lease=lease)
+            await repository.create(running_snapshot(registry), lease=lease)
             await repository.commit_settlement(terminal, expected_revision=0, lease=lease)
-            contract = registry.lookup_public_contract(_DEFINITION_ID)
+            contract = registry.lookup_public_contract(DEFINITION_ID)
             assert contract.result_schema is not None
             request = OperationResultProjectionRequestV1(
-                operation_id=_OPERATION_ID,
+                operation_id=OPERATION_ID,
                 terminal_revision=terminal.revision,
                 definition_contract_digest=contract.definition_contract_digest,
                 result_schema=contract.result_schema,

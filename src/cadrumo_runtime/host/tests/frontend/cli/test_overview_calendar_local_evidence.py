@@ -32,12 +32,12 @@ from cadrumo.tests.inventory import FIXTURES_DIR
 from ._overview_calendar_support import (
     _SOURCE_URL,
     PRIMARY_PROFILE_ID,
-    _isolated_backend,
     _justificante_metadata,
     _modelo_record_with_external_justificante,
+    isolated_backend,
 )
 
-__all__ = ["_isolated_backend"]
+__all__ = ["isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

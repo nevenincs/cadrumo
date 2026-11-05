@@ -62,7 +62,7 @@ def relocated_authority(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path
 
     shutil.copy2(source_descriptor, tmp_path / _DESCRIPTOR_NAME)
     shutil.copy2(database, tmp_path / database.name)
-    monkeypatch.setattr(authority_module, "_bundled_indexed_authority", None)
+    monkeypatch.setattr(authority_module, "authority_bundled_indexed_authority", None)
     return tmp_path
 
 
@@ -131,7 +131,7 @@ def test_leaving_the_root_unset_again_does_not_keep_serving_the_relocated_genera
 
     # The owner is this module's own process cache; clearing it is what puts
     # the next resolution back through the arms rather than a held reader.
-    authority_module._bundled_indexed_authority = None
+    authority_module.authority_bundled_indexed_authority = None
     with override_settings(cadrumo_authority_root=None):
         try:
             elsewhere = bundled_authority_descriptor_path()

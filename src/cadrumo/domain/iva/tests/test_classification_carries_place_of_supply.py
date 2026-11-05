@@ -28,7 +28,7 @@ from datetime import date, timedelta
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
 
@@ -93,7 +93,7 @@ def _domestic_at_general_rate(*, on: date = _GROUNDED_DAY) -> IvaInvoiceClassifi
 
 def test_cross_border_result_carries_its_governing_article_and_nature() -> None:
     """``R12`` arrives with art. 69 as its establishing provision and the services nature."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         result = classify_with_registry_rules(_services_b2b_eu_outbound(), operation=_authority_operation_for_test)
 
         assert result.matched_rule_id == "R12_services_b2b_eu_outbound"
@@ -119,7 +119,7 @@ def test_cross_border_result_carries_its_governing_article_and_nature() -> None:
 
 def test_a_silent_nature_is_present_and_grounded_rather_than_missing() -> None:
     """``R05`` carries a grounded row whose articles say nothing about the nature."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         result = classify_with_registry_rules(_domestic_at_general_rate(), operation=_authority_operation_for_test)
 
         assert result.matched_rule_id == "R05_domestic_at_rate_tier"
@@ -146,7 +146,7 @@ def test_a_resolution_that_cannot_be_performed_raises_instead_of_arriving_absent
     hand-assembled result carries.
     """
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         pytest.raises(IvaCatalogueError, match=r"place-of-supply|grounding"),
     ):
         place_of_supply_rule(
@@ -165,7 +165,7 @@ def test_the_provision_is_resolved_from_the_rule_and_not_from_the_category() -> 
     on different provisions: art. 69 locates the service, art. 68 locates the
     goods. A grounding derived from the category could not tell them apart.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         services = classify_with_registry_rules(_services_b2b_eu_outbound(), operation=_authority_operation_for_test)
         goods = classify_with_registry_rules(_distance_sale_b2c(), operation=_authority_operation_for_test)
 
@@ -194,7 +194,7 @@ def test_the_grounding_is_resolved_against_the_transaction_date() -> None:
     stop answering for it here rather than answering from a rule that no longer
     applies.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         for day in (_FIRST_GROUNDED_DAY, _LAST_GROUNDED_DAY):
             grounding = classify_with_registry_rules(
                 _services_b2b_eu_outbound(on=day), operation=_authority_operation_for_test
@@ -228,7 +228,7 @@ def test_the_fallthrough_carries_the_row_that_says_it_grounds_nothing() -> None:
     "the table says there is nothing to cite here" instead of guessing at an
     empty field.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         unclassifiable = IvaInvoiceClassificationCriteria(
             transaction_date=_GROUNDED_DAY,
             issuer_residency=IvaTerritorialScope.from_registry("third_country"),

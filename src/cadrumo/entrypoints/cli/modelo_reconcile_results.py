@@ -29,7 +29,7 @@ from ...core.modelo import Modelo
 from ...core.text_bounds import NonEmptyStr
 from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ._decimal_wire import DecimalWireText
+from .decimal_wire import DecimalWireText
 
 
 class ModeloReconciliationDiffPayload(OutputSchema):

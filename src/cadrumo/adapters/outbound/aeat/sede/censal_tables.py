@@ -17,7 +17,7 @@ from .....application.user_profile.censal_observation import (
     CensalSection,
 )
 from .....core.text_fold import fold_diacritics
-from .._html import parse_html
+from ..html import parse_html
 from .errors import SedeFailureMode, SedeParseError
 
 

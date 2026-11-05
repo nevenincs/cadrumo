@@ -188,7 +188,7 @@ def published_verdicts(published: BaseModel) -> tuple[PreconditionVerdict, ...]:
 class OperationRuntime:
     """One enrolled profile's supervised operations and the runtime they read with."""
 
-    driver: conformance._ExecutionDriver
+    driver: conformance.ExecutionDriver
     registry: OperationRegistry
     profile_id: UUID
     tmp_path: Path

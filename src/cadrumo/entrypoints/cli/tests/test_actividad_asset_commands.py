@@ -38,9 +38,9 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     OpeningHistoryStatus,
 )
 from cadrumo.entrypoints.cli.actividad_asset_commands import (
-    _correction_revision,
-    _minimum_amortization_fields,
-    _stated_disposal,
+    correction_revision,
+    minimum_amortization_fields,
+    stated_disposal,
 )
 from cadrumo.entrypoints.cli.actividad_asset_receipts import claim_receipt, inspection_receipt
 from cadrumo.entrypoints.cli.command_operation_table import COMMAND_OPERATION_ROWS
@@ -182,10 +182,10 @@ def test_a_correction_json_that_leaves_the_baja_out_is_refused_while_null_remove
     stated = json.loads(_revision().model_dump_json())
     assert stated["disposal"] is None
 
-    assert _correction_revision(json.dumps(stated)).disposal is None
+    assert correction_revision(json.dumps(stated)).disposal is None
     del stated["disposal"]
     with pytest.raises(ValidationError, match="disposal"):
-        _correction_revision(json.dumps(stated))
+        correction_revision(json.dumps(stated))
 
 
 def test_activity_asset_claim_payload_includes_the_canonical_derived_claim_identity() -> None:
@@ -240,17 +240,17 @@ def test_an_undeclared_vehicle_refusal_names_the_live_correct_command() -> None:
 
 
 def test_a_disposal_preview_states_its_proceeds_and_costs_or_is_refused() -> None:
-    stated = _stated_disposal("2026-03-01", "sale", "1200.50", "10.25", None, None, None)
+    stated = stated_disposal("2026-03-01", "sale", "1200.50", "10.25", None, None, None)
 
     assert stated is not None
     assert stated.proceeds == PublicDecimal(decimal="1200.50")
     assert stated.transmission_costs == PublicDecimal(decimal="10.25")
-    assert _stated_disposal(None, None, None, None, None, None, None) is None
+    assert stated_disposal(None, None, None, None, None, None, None) is None
     with pytest.raises(ValidationError) as refused:
-        _stated_disposal("2026-03-01", "sale", None, "10.25", None, None, None)
+        stated_disposal("2026-03-01", "sale", None, "10.25", None, None, None)
     assert [error["loc"] for error in refused.value.errors()] == [("proceeds",)]
     with pytest.raises(ValidationError) as refused_both:
-        _stated_disposal("2026-03-01", "sale", None, None, None, None, None)
+        stated_disposal("2026-03-01", "sale", None, None, None, None, None)
     assert [error["loc"] for error in refused_both.value.errors()] == [("proceeds",), ("transmission_costs",)]
 
 
@@ -324,4 +324,4 @@ def test_activity_asset_plan_lines_label_the_served_minimum_and_flag_an_incomple
                 *([] if complete else [tr("cli.ledger.actividad_asset.plan_minimum_incomplete")]),
             ]
         )
-        assert _minimum_amortization_fields(row) == expected
+        assert minimum_amortization_fields(row) == expected

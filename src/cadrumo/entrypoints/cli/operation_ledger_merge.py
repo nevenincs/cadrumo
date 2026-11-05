@@ -18,7 +18,7 @@ from ...application.ledger.merge_operation import (
     LedgerMergeRequest,
 )
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ._ledger_support import ledger_validation_bad
+from .ledger_support import ledger_validation_bad
 
 
 def _require_merge_completion(

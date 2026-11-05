@@ -38,16 +38,16 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_storage,
+    isolated_cli_backend,
 )
 from ....domain.calculations.registry.applicability_modelo202 import Modelo202Modality, derive_modelo_202_modality
 from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
-from ....tests.cli_envelope import unwrap_schema_envelope as _payload
+from ....tests.cli_envelope import unwrap_schema_envelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
-__all__ = ["_isolated_storage"]
+__all__ = ["isolated_cli_backend"]
 
 
 _INCN_ABOVE_THRESHOLD = Decimal("6_000_001.00")
@@ -276,6 +276,6 @@ def test_legal_entity_can_create_modelo_202_work_unit(tmp_path: Path) -> None:
         ],
     )
     assert result.exit_code == 0, result.output
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     assert payload["status"] == "created"
     assert payload["modelo"] == "202"

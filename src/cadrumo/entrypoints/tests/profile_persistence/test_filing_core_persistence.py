@@ -17,17 +17,16 @@ from cadrumo.application.filing.runtime import ModeloOperatorProfile, build_runt
 from cadrumo.application.filing.tests.filing_support import empty_profile_activity_fingerprint
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.filing.protocols import CasillaSchemaProvider
 from cadrumo.domain.filing.schema import ModeloDraft
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.adapter_composition_ports import build_draft_review_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -113,19 +112,19 @@ def _transaction(*, provider_id: str, amount: Decimal, description: str) -> Tran
 
 def test_approval_basis_reloads_persisted_transaction_catalogue(tmp_path: Path) -> None:
     """Both fingerprints are self-loaded from one provisioned profile capsule."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         schema_provider = _schema_provider()
         draft = _draft(schema_provider)
 
         with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
             seed_test_profile_record(
-                _create_profile_record_for_test(
+                create_user_profile_record(
                     setup_state=ProfileSetupState.COMPLETE,
                     profile_id=profile.bucket_id,
                     facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
                     created_at=_PROFILE_SEEDED_AT,
                     updated_at=_PROFILE_SEEDED_AT,
-                    context=_profile_creation_context_for_test(),
+                    context=profile_creation_context_for_test(),
                 ),
             )
             repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id)

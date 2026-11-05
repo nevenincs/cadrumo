@@ -39,7 +39,7 @@ WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.iva_compe
 #: A checksum-valid synthetic NIF. ``IvaCompensationPeriodState.taxpayer_nif``
 #: is a ``SubjectTaxId``, so a placeholder label is refused at the boundary
 #: and the fixture must carry a real identifier shape.
-_TAXPAYER_REF = "12345678Z"
+TAXPAYER_REF = "12345678Z"
 
 
 @cache
@@ -59,33 +59,33 @@ def m303_registry_snapshot_ref(filing_year: int, period: str) -> RegistrySnapsho
 _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = validated_casilla_id(
     "iva.compensacion-pendiente-periodos-anteriores"
 )
-_M303_COMPENSACION_APLICADA_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-aplicada-periodo")
-_M303_POSTERIOR_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-pendiente-periodos-posteriores")
-_M303_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
+M303_COMPENSACION_APLICADA_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-aplicada-periodo")
+M303_POSTERIOR_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-pendiente-periodos-posteriores")
+M303_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
 _M303_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("71")
-_M303_GENERADA_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-generada-periodo")
-_M303_DISPONIBLE_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-disponible-fin-periodo")
-_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
-_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
-_M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.resultado-regimen-general")
+M303_GENERADA_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-generada-periodo")
+M303_DISPONIBLE_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-disponible-fin-periodo")
+M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
+M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
+M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.resultado-regimen-general")
 _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: CasillaId = validated_casilla_id(
     "iva.anual.compensacion-generada-ejercicio-no-97"
 )
 _M303_PRINTED_PERIOD_RESULT_REFERENCE_CASILLA: CasillaId = validated_casilla_id("69")
-_M303_PRINTED_COMPENSATION_REFERENCE_CASILLA: CasillaId = validated_casilla_id("87")
+M303_PRINTED_COMPENSATION_REFERENCE_CASILLA: CasillaId = validated_casilla_id("87")
 
 #: The ejercicio these fixtures summarise. Modelo 390 is annual, so the
 #: ejercicio must be one AEAT has published a design for; the annual instrument
 #: for a given ejercicio appears late in that same year.
 _M390_EJERCICIO = 2025
 
-_BOX_85_BINDING = "modelo-390-prev-303-compensacion-ejercicio-anterior"
-_BOX_97_BINDING = "modelo-390-prev-303-compensacion-ultimo-periodo"
-_BOX_662_BINDING = "modelo-390-prev-303-compensacion-generada-ejercicio-no-97"
+BOX_85_BINDING = "modelo-390-prev-303-compensacion-ejercicio-anterior"
+BOX_97_BINDING = "modelo-390-prev-303-compensacion-ultimo-periodo"
+BOX_662_BINDING = "modelo-390-prev-303-compensacion-generada-ejercicio-no-97"
 
 
 @cache
-def _modelo_390_annual_snapshot() -> RegistrySnapshot:
+def modelo_390_annual_snapshot() -> RegistrySnapshot:
     """Build a CALCULATION-grade snapshot directly, bypassing filing-grade admission.
 
     Modelo 390 carries a real fichero-BOE layout on every revision, so this
@@ -106,7 +106,7 @@ def _modelo_390_annual_snapshot() -> RegistrySnapshot:
     )
 
 
-def _state(
+def iva_compensation_history_state(
     *,
     filing_year: int,
     period: str,
@@ -119,7 +119,7 @@ def _state(
     with bundled_indexed_authority().operation():
         return IvaCompensationPeriodState(
             provenance=IvaCompensationStateProvenance.APP_FILING,
-            taxpayer_nif=_TAXPAYER_REF,
+            taxpayer_nif=TAXPAYER_REF,
             filing_year=filing_year,
             period=Period.from_year_and_code(filing_year, period),
             registry_snapshot_ref=snapshot_ref,
@@ -137,8 +137,8 @@ def _state(
 
 def _wallet(amount: Decimal, *, generation_year: int = 2022) -> IvaCompensationWalletObservation:
     return IvaCompensationWalletObservation(
-        taxpayer_nif=_TAXPAYER_REF,
-        authenticated_identity=_TAXPAYER_REF,
+        taxpayer_nif=TAXPAYER_REF,
+        authenticated_identity=TAXPAYER_REF,
         target_year=2026,
         target_period=Period.from_year_and_code(2026, "2T"),
         rows=(
@@ -158,7 +158,7 @@ def _wallet(amount: Decimal, *, generation_year: int = 2022) -> IvaCompensationW
     )
 
 
-def _filed_observation(modelo: str) -> FiledDeclaracionObservation:
+def filed_observation(modelo: str) -> FiledDeclaracionObservation:
     return FiledDeclaracionObservation(
         modelo=modelo,
         ejercicio=2024,
@@ -166,7 +166,7 @@ def _filed_observation(modelo: str) -> FiledDeclaracionObservation:
         expediente_id="202410013522456T",
         status="filed",
         presented_at=datetime(2025, 1, 20, 12, 0, tzinfo=UTC),
-        authenticated_identity=_TAXPAYER_REF,
+        authenticated_identity=TAXPAYER_REF,
         artefacts=(
             FiledDeclaracionArtefact(
                 kind="register_row",
@@ -187,7 +187,7 @@ def _filed_observation(modelo: str) -> FiledDeclaracionObservation:
     )
 
 
-def _filed_303_compensation_observation(
+def filed_303_compensation_observation(
     *,
     filing_year: int,
     period: str,
@@ -198,7 +198,7 @@ def _filed_303_compensation_observation(
     final_result: Decimal | None = None,
 ) -> FiledDeclaracionObservation:
     resolved_final_result = resultado if final_result is None else final_result
-    return _filed_observation(modelo="303").model_copy(
+    return filed_observation(modelo="303").model_copy(
         update={
             "ejercicio": filing_year,
             "period": Period.from_year_and_code(filing_year, period),
@@ -214,7 +214,7 @@ def _filed_303_compensation_observation(
                     confidence=1.0,
                 ),
                 ObservedCasillaValue(
-                    casilla_id=_M303_COMPENSACION_APLICADA_CASILLA,
+                    casilla_id=M303_COMPENSACION_APLICADA_CASILLA,
                     value=str(applied),
                     value_kind=CasillaValueKind.NUMERIC,
                     source_artefact_kind="submitted_file",
@@ -222,7 +222,7 @@ def _filed_303_compensation_observation(
                     confidence=1.0,
                 ),
                 ObservedCasillaValue(
-                    casilla_id=_M303_RESULTADO_CASILLA,
+                    casilla_id=M303_RESULTADO_CASILLA,
                     value=str(resultado),
                     value_kind=CasillaValueKind.NUMERIC,
                     source_artefact_kind="submitted_file",
@@ -230,7 +230,7 @@ def _filed_303_compensation_observation(
                     confidence=1.0,
                 ),
                 ObservedCasillaValue(
-                    casilla_id=_M303_POSTERIOR_CASILLA,
+                    casilla_id=M303_POSTERIOR_CASILLA,
                     value=str(posterior),
                     value_kind=CasillaValueKind.NUMERIC,
                     source_artefact_kind="submitted_file",

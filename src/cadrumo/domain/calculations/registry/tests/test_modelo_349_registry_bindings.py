@@ -20,28 +20,14 @@ from ..invoice_bindings import (
 from ..schema import BindingDefinition
 from ..schema_input_kind import InputKind
 from .modelo_349_registry_support import (
-    _M349_SUBSTANTIVE_BINDING_LEGAL_REFS,
-)
-from .modelo_349_registry_support import (
-    DECL_IMPORTE_OPERACIONES_CASILLA as _DECL_IMPORTE_OPERACIONES_CASILLA,
-)
-from .modelo_349_registry_support import (
-    DECL_IMPORTE_RECTIFICACIONES_CASILLA as _DECL_IMPORTE_RECTIFICACIONES_CASILLA,
-)
-from .modelo_349_registry_support import (
-    DECL_NUMERO_OPERADORES_CASILLA as _DECL_NUMERO_OPERADORES_CASILLA,
-)
-from .modelo_349_registry_support import (
-    DECL_NUMERO_RECTIFICACIONES_CASILLA as _DECL_NUMERO_RECTIFICACIONES_CASILLA,
-)
-from .modelo_349_registry_support import (
-    DECLARANT_SUMMARY_CASILLAS as _DECLARANT_SUMMARY_CASILLAS,
-)
-from .modelo_349_registry_support import (
-    load_modelo_349 as _load_modelo_349,
-)
-from .modelo_349_registry_support import (
-    modelo_349_revision as _modelo_349_revision,
+    DECL_IMPORTE_OPERACIONES_CASILLA,
+    DECL_IMPORTE_RECTIFICACIONES_CASILLA,
+    DECL_NUMERO_OPERADORES_CASILLA,
+    DECL_NUMERO_RECTIFICACIONES_CASILLA,
+    DECLARANT_SUMMARY_CASILLAS,
+    M349_SUBSTANTIVE_BINDING_LEGAL_REFS,
+    load_modelo_349,
+    modelo_349_revision,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
@@ -52,7 +38,7 @@ def _selector(binding: BindingDefinition) -> dict[str, Any]:
 
 
 def test_committed_modelo_349_declares_invoice_source_bindings_for_declarant_summary() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
 
     summary_bindings: dict[str, BindingDefinition] = {
         b.id: b
@@ -89,7 +75,7 @@ def test_committed_modelo_349_declares_invoice_source_bindings_for_declarant_sum
 def test_core_intracom_operation_type_covers_modelo_349_registry_claves() -> None:
     """The shared invoice enum must cover the official M349 clave-de-operacion set."""
 
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
     registry_claves = {
         clave
         for binding in revision.bindings
@@ -101,20 +87,20 @@ def test_core_intracom_operation_type_covers_modelo_349_registry_claves() -> Non
 
 
 def test_committed_modelo_349_invoice_bindings_resolve_substantive_legal_refs() -> None:
-    modelo, catalogues = _load_modelo_349()
+    modelo, catalogues = load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]
     invoice_bindings = [binding for binding in revision.bindings if binding.source == "m349_intracommunity_operation"]
 
     assert len(invoice_bindings) == 17
-    assert set(catalogues.legal) >= _M349_SUBSTANTIVE_BINDING_LEGAL_REFS
+    assert set(catalogues.legal) >= M349_SUBSTANTIVE_BINDING_LEGAL_REFS
 
     for binding in invoice_bindings:
         refs = set(binding.legal_refs)
         unresolved_refs = sorted(ref for ref in refs if ref not in catalogues.legal)
         assert not unresolved_refs, f"binding {binding.id!r} has unresolved legal refs: {unresolved_refs!r}"
-        assert refs >= _M349_SUBSTANTIVE_BINDING_LEGAL_REFS, (
+        assert refs >= M349_SUBSTANTIVE_BINDING_LEGAL_REFS, (
             f"binding {binding.id!r} is missing substantive M349 legal refs: "
-            f"{sorted(_M349_SUBSTANTIVE_BINDING_LEGAL_REFS - refs)!r}"
+            f"{sorted(M349_SUBSTANTIVE_BINDING_LEGAL_REFS - refs)!r}"
         )
         assert "ley-37-1992:art-141" not in refs, (
             f"binding {binding.id!r} must not cite LIVA art. 141; that article is the travel-agency "
@@ -160,7 +146,7 @@ def _mixed_invoice_observations() -> tuple[InvoiceObservation, ...]:
 
 
 def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledger() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
 
     observations = _mixed_invoice_observations()
     *non_rect_obs, rect_obs = observations
@@ -190,7 +176,7 @@ def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledg
 
 
 def test_committed_modelo_349_invoice_binding_resolver_counts_payable_service_acquisitions() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
 
     observations = (
         InvoiceObservation(
@@ -211,7 +197,7 @@ def test_committed_modelo_349_invoice_binding_resolver_counts_payable_service_ac
 
 
 def test_committed_modelo_349_row_resolver_reads_both_directions_into_one_record_sequence() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
 
     observations = (
         InvoiceObservation(
@@ -259,7 +245,7 @@ def test_committed_modelo_349_row_resolver_reads_both_directions_into_one_record
 
 def test_committed_modelo_349_triangular_operation_from_both_directions_is_one_record() -> None:
     """Clave T bought and sold with one operator is one operador record (aeat-dr-349-2020-current type 2)."""
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
     observations = tuple(
         InvoiceObservation(
             source_kind=source_kind,
@@ -288,7 +274,7 @@ def test_committed_modelo_349_triangular_operation_from_both_directions_is_one_r
 
 
 def test_committed_modelo_349_construct_includes_invoice_bindings() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
     construct = revision.constructs[0]
     # Every 349 binding reads the combined-direction intra-community population.
     assert set(construct.bindings) == {b.id for b in revision.bindings}
@@ -296,14 +282,14 @@ def test_committed_modelo_349_construct_includes_invoice_bindings() -> None:
 
 
 def test_committed_modelo_349_declarant_summary_casillas_are_bound_to_invoice_bindings() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
 
     casillas_by_id = {c.id: c for c in revision.casillas}
     expected_bindings: dict[CasillaId, str] = {
-        _DECL_NUMERO_OPERADORES_CASILLA: "iva-349-declarante-numero-operadores",
-        _DECL_IMPORTE_OPERACIONES_CASILLA: "iva-349-declarante-importe-operaciones",
-        _DECL_NUMERO_RECTIFICACIONES_CASILLA: "iva-349-declarante-numero-rectificaciones",
-        _DECL_IMPORTE_RECTIFICACIONES_CASILLA: "iva-349-declarante-importe-rectificaciones",
+        DECL_NUMERO_OPERADORES_CASILLA: "iva-349-declarante-numero-operadores",
+        DECL_IMPORTE_OPERACIONES_CASILLA: "iva-349-declarante-importe-operaciones",
+        DECL_NUMERO_RECTIFICACIONES_CASILLA: "iva-349-declarante-numero-rectificaciones",
+        DECL_IMPORTE_RECTIFICACIONES_CASILLA: "iva-349-declarante-importe-rectificaciones",
     }
     for casilla_id, expected_binding in expected_bindings.items():
         casilla = casillas_by_id[casilla_id]
@@ -312,7 +298,7 @@ def test_committed_modelo_349_declarant_summary_casillas_are_bound_to_invoice_bi
 
 
 def test_committed_modelo_349_declares_operador_and_rectificacion_row_bindings() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
 
     row_bindings: dict[str, BindingDefinition] = {
         b.id: b
@@ -349,7 +335,7 @@ def test_committed_modelo_349_declares_operador_and_rectificacion_row_bindings()
 
 
 def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
 
     observations = (
         InvoiceObservation(
@@ -409,7 +395,7 @@ def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave
 
 
 def test_committed_modelo_349_rectificacion_row_resolver_groups_by_operator_clave_period() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
 
     observations = (
         InvoiceObservation(
@@ -459,7 +445,7 @@ def test_committed_modelo_349_rectificacion_row_resolver_groups_by_operator_clav
 
 
 def test_committed_modelo_349_full_invoice_to_casilla_pipeline() -> None:
-    revision = _modelo_349_revision()
+    revision = modelo_349_revision()
 
     observations = _mixed_invoice_observations()
 
@@ -467,25 +453,25 @@ def test_committed_modelo_349_full_invoice_to_casilla_pipeline() -> None:
     casilla_values = resolve_available_bound_inputs_by_casilla_id(revision, binding_values)
 
     # Assert the four expected casilla keys are present — wiring check.
-    expected_casilla_keys = set(_DECLARANT_SUMMARY_CASILLAS)
+    expected_casilla_keys = set(DECLARANT_SUMMARY_CASILLAS)
     assert expected_casilla_keys == set(casilla_values.keys()), (
         "invoice-to-casilla pipeline must produce exactly the four declarant casillas"
     )
 
     # Operator and importe values must equal what the resolver computed from the
     # non-rectification observations.
-    assert casilla_values[_DECL_NUMERO_OPERADORES_CASILLA] == binding_values["iva-349-declarante-numero-operadores"]
-    assert casilla_values[_DECL_IMPORTE_OPERACIONES_CASILLA] == binding_values["iva-349-declarante-importe-operaciones"]
+    assert casilla_values[DECL_NUMERO_OPERADORES_CASILLA] == binding_values["iva-349-declarante-numero-operadores"]
+    assert casilla_values[DECL_IMPORTE_OPERACIONES_CASILLA] == binding_values["iva-349-declarante-importe-operaciones"]
 
     # Rectification casillas must pass through from binding to casilla unchanged.
     assert (
-        casilla_values[_DECL_NUMERO_RECTIFICACIONES_CASILLA]
+        casilla_values[DECL_NUMERO_RECTIFICACIONES_CASILLA]
         == (binding_values["iva-349-declarante-numero-rectificaciones"])
     )
     assert (
-        casilla_values[_DECL_IMPORTE_RECTIFICACIONES_CASILLA]
+        casilla_values[DECL_IMPORTE_RECTIFICACIONES_CASILLA]
         == (binding_values["iva-349-declarante-importe-rectificaciones"])
     )
 
     # Casilla 04 carries the rectified base (200.00), not its 20.00 delta against the previous base.
-    assert casilla_values[_DECL_IMPORTE_RECTIFICACIONES_CASILLA] == Decimal("200.00")
+    assert casilla_values[DECL_IMPORTE_RECTIFICACIONES_CASILLA] == Decimal("200.00")

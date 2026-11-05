@@ -33,7 +33,7 @@ from ..storage.secure_object_namespaces import RETENCION_OBSERVATIONS_NAMESPACE
 from ..storage.sql.secure_objects import SecureObjectRepository
 
 
-def _translate_storage_failure[ResultT](operation: str, action: Callable[[], ResultT]) -> ResultT:
+def translate_storage_failure[ResultT](operation: str, action: Callable[[], ResultT]) -> ResultT:
     """Translate storage failures into the application-owned error."""
     try:
         return action()
@@ -112,7 +112,7 @@ class RetencionObservationRepositoryAdapter(
     @override
     def load_observations(self, modelo: str, period: Period) -> tuple[RetencionObservation, ...]:
         """Return all persisted observations for one modelo/period window."""
-        return _translate_storage_failure(
+        return translate_storage_failure(
             "retencion_load_observations",
             lambda: self._load_observations(modelo, period),
         )
@@ -130,7 +130,7 @@ class RetencionObservationRepositoryAdapter(
     @override
     def load_annual_source_observations(self, source_modelo: str, filing_year: int) -> tuple[RetencionObservation, ...]:
         """Read every active periodic row for the source modelo and year."""
-        return _translate_storage_failure(
+        return translate_storage_failure(
             "retencion_load_annual_source_observations",
             lambda: tuple(
                 payload.observation
@@ -146,7 +146,7 @@ class RetencionObservationRepositoryAdapter(
         last_filing_year: int,
     ) -> tuple[RetencionObservation, ...]:
         """Read every active periodic row for the source modelo up to and including ``last_filing_year``."""
-        return _translate_storage_failure(
+        return translate_storage_failure(
             "retencion_load_source_observations_through_year",
             lambda: tuple(
                 payload.observation

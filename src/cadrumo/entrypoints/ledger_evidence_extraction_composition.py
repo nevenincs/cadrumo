@@ -125,7 +125,7 @@ def invoice_draft_extraction_ports(
         consent_token: EvidenceConsentProof | None,
         authority_values: object,
     ) -> InvoiceDraft:
-        return _invoice_read_text(
+        return invoice_read_text(
             transcription,
             settings,
             consent_token,
@@ -138,7 +138,7 @@ def invoice_draft_extraction_ports(
     def propose_supply_nature(
         transcription: DocumentTranscription, settings: Settings, consent_token: EvidenceConsentProof | None
     ) -> SupplyNatureProposal | None:
-        return _invoice_propose_supply_nature(transcription, settings, consent_token, before_read=before_read)
+        return invoice_propose_supply_nature(transcription, settings, consent_token, before_read=before_read)
 
     def transcribe_vision(
         images: tuple[VisionImage, ...],
@@ -146,7 +146,7 @@ def invoice_draft_extraction_ports(
         settings: Settings,
         consent_token: EvidenceConsentProof | None,
     ) -> DocumentTranscription:
-        return _invoice_transcribe_vision(
+        return invoice_transcribe_vision(
             images,
             source_content_sha256,
             settings,
@@ -227,7 +227,7 @@ def _reader_unavailable(exc: LLMConfigError) -> InvoiceDraftReaderUnavailableErr
     return InvoiceDraftReaderUnavailableError(exc, precondition_verdict=exc.terminal_precondition_verdict)
 
 
-def _invoice_read_text(
+def invoice_read_text(
     transcription: DocumentTranscription,
     settings: Settings,
     consent_token: EvidenceConsentProof | None,
@@ -271,7 +271,7 @@ def _invoice_read_text(
         raise InvoiceDraftReaderHeadroomRefusedError(exc, failed_condition_id=_failed_condition_id(exc)) from exc
 
 
-def _invoice_propose_supply_nature(
+def invoice_propose_supply_nature(
     transcription: DocumentTranscription,
     settings: Settings,
     consent_token: EvidenceConsentProof | None,
@@ -304,7 +304,7 @@ def _invoice_rasterise_pdf(data: bytes) -> tuple[str, ...]:
         raise InvoiceDraftReaderUnavailableError(exc) from exc
 
 
-def _invoice_transcribe_vision(
+def invoice_transcribe_vision(
     images: tuple[VisionImage, ...],
     source_content_sha256: str,
     settings: Settings,

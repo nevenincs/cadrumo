@@ -71,7 +71,7 @@ def test_off_darwin_the_namespace_is_the_member_beneath_the_root(
 def test_native_namespace_refuses_permissions_replacement_and_recreation(tmp_path: Path) -> None:
     base = tmp_path.resolve() / "cache"
     base.mkdir(mode=0o700)
-    namespace = darwin_transport._Namespace(base)
+    namespace = darwin_transport.Namespace(base)
     try:
         path = namespace.verify(create=False)
         assert not path.exists()
@@ -101,9 +101,9 @@ def test_native_namespace_refuses_insecure_base_and_symlink(tmp_path: Path) -> N
     base = tmp_path.resolve() / "cache"
     base.mkdir(mode=0o755)
     with pytest.raises(PermissionError):
-        darwin_transport._Namespace(base)
+        darwin_transport.Namespace(base)
     base.chmod(0o700)
-    namespace = darwin_transport._Namespace(base)
+    namespace = darwin_transport.Namespace(base)
     try:
         target = base / "elsewhere"
         target.mkdir(mode=0o700)
@@ -130,8 +130,8 @@ def test_native_query_is_once_canonical_and_base_replacement_refuses(
         return str(alias)
 
     monkeypatch.setattr(darwin_transport.os, "confstr", query)
-    darwin_transport._namespace.cache_clear()
-    namespace = darwin_transport._namespace()
+    darwin_transport.namespace.cache_clear()
+    namespace = darwin_transport.namespace()
     try:
         path = darwin_transport.darwin_socket_directory(create=True)
         assert path == base / "cadrumo"
@@ -143,7 +143,7 @@ def test_native_query_is_once_canonical_and_base_replacement_refuses(
             darwin_transport.darwin_socket_directory(create=True)
         assert not (base / "cadrumo").exists()
     finally:
-        darwin_transport._namespace.cache_clear()
+        darwin_transport.namespace.cache_clear()
         os.close(namespace.base_fd)
         if namespace.directory_fd is not None:
             os.close(namespace.directory_fd)

@@ -10,7 +10,7 @@ import typing
 
 import typer
 
-from cadrumo_client.commands.errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.output import precondition_action_lines
 
 from ....core.json_contract import strict_round_trip
@@ -29,7 +29,7 @@ def repair_profile(
 ) -> None:
     """Inspect profile health or safely repair a degraded active-profile pointer."""
     from ....application.workflow.profile_repair import pointer_repair_refusal
-    from ._profile_support import resolve_profile_by_label
+    from .profile_support import resolve_profile_by_label
 
     pointer = resolve_profile_by_label(profile) if profile is not None else None
     if pointer is not None and not clear_active:
@@ -38,7 +38,7 @@ def repair_profile(
     named = None if profile is None or pointer is None else (profile, pointer)
     refusal = pointer_repair_refusal(named, clear_active=clear_active, confirmed=yes)
     if refusal is not None:
-        raise _CliRefusedBoundaryError(translated_message=refusal.message_key, context=refusal.context)
+        raise CliRefusedBoundaryError(translated_message=refusal.message_key, context=refusal.context)
     _emit_pointer_repair(ctx, clear_active=clear_active, confirmed=yes)
 
 

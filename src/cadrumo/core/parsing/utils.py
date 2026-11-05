@@ -40,7 +40,7 @@ _TRUTHY: frozenset[str] = frozenset(
 _FALSY: frozenset[str] = frozenset({"false", "0", "no", "n", "falso", "nem"})
 
 
-def _parse_bool(raw: str | None) -> bool | None:
+def utils_parse_bool(raw: str | None) -> bool | None:
     """Parse a raw string token into a three-state boolean.
 
     Args:
@@ -68,10 +68,10 @@ def _parse_bool(raw: str | None) -> bool | None:
 
 #: Public alias — cross-package callers must import ``parse_bool`` rather than
 #: the private ``_parse_bool`` implementation name.
-parse_bool = _parse_bool
+parse_bool = utils_parse_bool
 
 
-def _enum_value(value: object) -> str:
+def utils_enum_value(value: object) -> str:
     """Return ``Enum.value`` when present, otherwise ``str(value)``.
 
     ``None`` maps to ``""`` -- an absent value never renders as the literal
@@ -96,4 +96,4 @@ def _enum_value(value: object) -> str:
 
 #: Public alias — cross-package callers must import ``enum_value`` rather than
 #: the private ``_enum_value`` implementation name.
-enum_value = _enum_value
+enum_value = utils_enum_value

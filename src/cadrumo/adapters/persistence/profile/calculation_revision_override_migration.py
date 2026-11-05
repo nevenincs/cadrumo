@@ -68,7 +68,7 @@ from ....domain.modelos.protocols import CalculationRevisionCatalogueRepositoryP
 from .relation_binding_join import bundled_relation_binding_join, bundled_relation_binding_join_targets
 
 _LOGGER = get_logger(__name__)
-_MIGRATION_MESSAGE = "errors.fail.fail_modelo_calculation_revision_persistence"
+MIGRATION_MESSAGE = "errors.fail.fail_modelo_calculation_revision_persistence"
 _WRITE_PROVENANCE_REASON = "calculation-revision:relation-override-binding-rekey"
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -238,7 +238,7 @@ def _rekeyed_overrides_for_revision(
     if orphans:
         raise OrphanedRelationOverrideError(
             "calculation revision carries override keys that are neither a known relation nor a known binding",
-            translated_message=_MIGRATION_MESSAGE,
+            translated_message=MIGRATION_MESSAGE,
             context={
                 "reason": "orphaned_relation_override",
                 "calculation_revision_id": revision.calculation_revision_id,
@@ -248,7 +248,7 @@ def _rekeyed_overrides_for_revision(
     if collisions:
         raise OrphanedRelationOverrideError(
             "calculation revision carries disagreeing overrides that fold onto one binding",
-            translated_message=_MIGRATION_MESSAGE,
+            translated_message=MIGRATION_MESSAGE,
             context={
                 "reason": "conflicting_relation_override_fold",
                 "calculation_revision_id": revision.calculation_revision_id,
@@ -309,7 +309,7 @@ def rekey_calculation_revision_overrides(
         if derive_calculation_revision_id_from_revision(rekeyed_revision) != recomputed:
             raise CalculationRevisionPersistenceError(
                 "rekeyed calculation revision does not reproduce its recomputed content address",
-                translated_message=_MIGRATION_MESSAGE,
+                translated_message=MIGRATION_MESSAGE,
                 context={
                     "reason": "revision_id_recomputation_unstable",
                     "calculation_revision_id": revision.calculation_revision_id,
@@ -318,7 +318,7 @@ def rekey_calculation_revision_overrides(
         if recomputed in migrated:
             raise CalculationRevisionPersistenceError(
                 "two calculation revisions collide on one content address after rekeying",
-                translated_message=_MIGRATION_MESSAGE,
+                translated_message=MIGRATION_MESSAGE,
                 context={
                     "reason": "rekeyed_revision_id_collision",
                     "calculation_revision_id": recomputed,

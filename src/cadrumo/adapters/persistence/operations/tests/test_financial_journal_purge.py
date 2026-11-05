@@ -15,10 +15,10 @@ from .....core.json_shapes import model_json_object
 from .....core.locks import exclusive_file_lock
 from ...storage.errors import RepositoryError
 from .. import journal as journal_module
-from .._journal_validation import OperationJournalRecord
 from ..financial_journal_purge import FinancialEditJournalPurgeRefusedError, purge_legacy_financial_edit_journal
 from ..journal import OperationJournalRepository
-from .test_journal import _claim_lease, _lease, _snapshot
+from ..journal_validation import OperationJournalRecord
+from .test_journal import claim_lease, journal_lease, journal_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _SENTINEL = "93847562.19"
@@ -27,7 +27,7 @@ _SENTINEL = "93847562.19"
 def _write_legacy(
     tmp_path: Path, *, policy: str, schema: int | None = None, definition: str = "modelo.edit.apply"
 ) -> tuple[OperationJournalRepository, Path]:
-    snapshot = model_json_object(_snapshot(revision=0, sequence=1))
+    snapshot = model_json_object(journal_snapshot(revision=0, sequence=1))
     identity = snapshot["identity"]
     assert isinstance(identity, dict)
     identity["definition_id"] = definition
@@ -153,7 +153,7 @@ def test_paused_legacy_purge_cannot_overwrite_a_concurrent_journal_commit(
     replacement = purge_legacy_financial_edit_journal(path.read_text(encoding="utf-8"), operation_id="a" * 64)
     assert replacement is not None
     initial = OperationJournalRecord.model_validate_json(replacement).snapshot
-    template = _snapshot(revision=1, sequence=2)
+    template = journal_snapshot(revision=1, sequence=2)
     event = template.events[0].model_copy(update={"identity": initial.identity})
     successor = initial.model_copy(
         update={
@@ -164,7 +164,7 @@ def test_paused_legacy_purge_cannot_overwrite_a_concurrent_journal_commit(
             "events": (event,),
         }
     )
-    lease = _lease().model_copy(
+    lease = journal_lease().model_copy(
         update={
             "scope_ref": operation_conflict_scope_reference(
                 definition_id=initial.identity.definition_id, subject_ref=initial.identity.subject_ref
@@ -187,7 +187,7 @@ def test_paused_legacy_purge_cannot_overwrite_a_concurrent_journal_commit(
             assert entered.wait(10), "reader never reached purge analysis"
             with exclusive_file_lock(repository._repository.lock_target, timeout=0):
                 pass
-            _claim_lease(tmp_path, lease)
+            claim_lease(tmp_path, lease)
             asyncio.run(repository.commit(successor, expected_revision=initial.revision, lease=lease))
         finally:
             release.set()
@@ -198,12 +198,12 @@ def test_paused_legacy_purge_cannot_overwrite_a_concurrent_journal_commit(
 
 def test_purge_preserves_an_already_committed_terminal_outcome(tmp_path: Path) -> None:
     """Settled identity, effect and receipt remain authoritative after operand disposal."""
-    from .test_journal import _terminal_event
+    from .test_journal import terminal_event
 
     repository, path = _write_legacy(tmp_path, policy="credential_free_journal")
     document = json.loads(path.read_text(encoding="utf-8"))
     identity = document["snapshot"]["identity"]
-    terminal = model_json_object(_terminal_event())
+    terminal = model_json_object(terminal_event())
     terminal["identity"] = identity
     receipt = terminal["receipt"]
     assert isinstance(receipt, dict)

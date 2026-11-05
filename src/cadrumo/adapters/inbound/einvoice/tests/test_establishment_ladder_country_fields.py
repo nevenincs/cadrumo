@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.adapters.inbound.einvoice.parsers import ParsedEInvoice, parse_einvoice_document
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.iva.establishment import territorial_scope_for_spanish_postal_code
 
 from .....domain.iva.schema import IvaTerritorialScope
@@ -23,7 +23,7 @@ def test_the_structured_parser_exposes_each_party_country_and_postal_field() -> 
 
 def test_the_cross_industry_invoice_branch_states_a_country_before_postal_routing() -> None:
     """A CII CountryID reaches the parser and pairs with its postal code."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         specimen = b"""<?xml version="1.0" encoding="UTF-8"?>
 <rsm:CrossIndustryInvoice
     xmlns:rsm="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100"

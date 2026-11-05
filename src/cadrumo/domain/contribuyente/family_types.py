@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.text_bounds import CalendarMonth, NonNegativeDecimal
 from ..calculations.registry.form_codes import exceeds_form_bound
@@ -95,7 +95,7 @@ class MinimoDescendientesThresholds(BaseModel):
         ``renta-{year}-minimo-descendientes-declaracion-propia-rentas-limite-{year}``.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     rentas_anuales_limite: NonNegativeDecimal
     declaracion_propia_rentas_limite: NonNegativeDecimal
@@ -117,7 +117,7 @@ class GuarderiaMonthSpend(BaseModel):
     upper boundary is not this application's to determine.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     month: CalendarMonth
     amount_euros: NonNegativeInt
@@ -134,7 +134,7 @@ class _RentaPersonProfileBase(BaseModel):
     duplicate without altering any field constraint.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     tax_id: SubjectTaxId | None = None
     display_name: str | None = None

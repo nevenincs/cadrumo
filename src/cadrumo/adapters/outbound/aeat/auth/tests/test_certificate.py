@@ -26,7 +26,7 @@ from ..certificate import (
     load_certificate,
 )
 from ..providers import CertificateContextProvisioner
-from ._auth_fixtures import CERTIFICATE_INPUT
+from .auth_fixtures import CERTIFICATE_INPUT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _VALID_NOT_BEFORE = datetime(2026, 5, 28, 14, 0, 0, tzinfo=UTC)

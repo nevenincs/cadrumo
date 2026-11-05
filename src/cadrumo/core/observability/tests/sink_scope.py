@@ -7,7 +7,7 @@ import logging
 from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 
 from ...log_scrubbing import SecretScrubbingFilter
-from ...logging import _ThirdPartyDebugFilter, flush_logging
+from ...logging import ThirdPartyDebugFilter, flush_logging
 
 
 def attach_run_sink(sink: logging.Handler) -> None:
@@ -49,5 +49,5 @@ def detach_run_sink(sink: logging.Handler) -> None:
     """
     assert flush_logging(timeout=HANG_GUARD_SECONDS), "recording-test diagnostics did not drain"
     logging.getLogger().removeHandler(sink)
-    sink.filters = [f for f in sink.filters if not isinstance(f, SecretScrubbingFilter | _ThirdPartyDebugFilter)]
+    sink.filters = [f for f in sink.filters if not isinstance(f, SecretScrubbingFilter | ThirdPartyDebugFilter)]
     sink.flush()

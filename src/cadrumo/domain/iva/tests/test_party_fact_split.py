@@ -26,7 +26,7 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
 from ...calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
@@ -42,7 +42,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 @pytest.fixture(scope="module", autouse=True)
 def _registry_authority_scope() -> Iterator[None]:
-    with _indexed_authority_for_test().operation():
+    with bundled_indexed_authority().operation():
         yield
 
 
@@ -88,21 +88,21 @@ class TestRegistrationEvidenceSettlesTheIdentificationState:
     """The fact registration IS evidence of — decisively, with nothing to corroborate."""
 
     def test_a_printed_foreign_iva_number_names_its_member_state(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert identification_state_for_printed_tax_identifier(
                 _GERMAN_IVA_NUMBER, operation=_authority_operation_for_test
             ) == EUMemberState.from_registry("de")
 
     def test_a_greek_number_resolves_to_its_iso_code_not_its_iva_prefix(self) -> None:
         """``EL`` leads the number while ``GR`` keys every catalogue downstream."""
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert identification_state_for_printed_tax_identifier(
                 "EL123456789", operation=_authority_operation_for_test
             ) == EUMemberState.from_registry("gr")
 
     def test_a_number_whose_body_contradicts_its_prefix_establishes_nothing(self) -> None:
         """The prefix alone is not evidence; ``FRANCISCO`` must not identify France."""
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert (
                 identification_state_for_printed_tax_identifier("FRANCISCO", operation=_authority_operation_for_test)
                 is None
@@ -110,7 +110,7 @@ class TestRegistrationEvidenceSettlesTheIdentificationState:
 
     def test_absence_never_manufactures_a_spanish_identification(self) -> None:
         """A bare Spanish CIF prints no prefix, and silence is not a registration."""
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert (
                 identification_state_for_printed_tax_identifier(_SPANISH_CIF, operation=_authority_operation_for_test)
                 is None
@@ -162,7 +162,7 @@ class TestNoRegistrationEvidencesEstablishment:
 
     def test_a_spanish_party_may_hold_a_foreign_identification_and_stay_spanish(self) -> None:
         """The Spanish side, unchanged: registration abroad displaces no territory."""
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             criteria = IvaInvoiceClassificationCriteria(
                 transaction_date=_DATE,
                 issuer_residency=IvaTerritorialScope.from_registry("es_canarias"),
@@ -195,7 +195,7 @@ class TestTheSplitRemovesNoRefusal:
     """
 
     def test_a_german_identified_spanish_established_party_still_needs_a_rate_tier(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             criteria = IvaInvoiceClassificationCriteria(
                 transaction_date=_DATE,
                 issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
@@ -216,7 +216,7 @@ class TestTheSplitRemovesNoRefusal:
         depended on the identification in either direction — firing only with one
         present, or only with one absent — exactly one of these two would fail.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             criteria = IvaInvoiceClassificationCriteria(
                 transaction_date=_DATE,
                 issuer_residency=IvaTerritorialScope.from_registry("es_mainland"),
@@ -268,7 +268,7 @@ class TestEveryBranchDeclaresWhatItConsumes:
         assert declaring == expected
 
     def test_a_domestic_operation_reports_needing_only_the_establishment(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             result = classify_with_registry_rules(
                 IvaInvoiceClassificationCriteria(
                     transaction_date=_DATE,
@@ -284,7 +284,7 @@ class TestEveryBranchDeclaresWhatItConsumes:
             assert result.consumes_party_facts == frozenset({PartyFact.TERRITORIAL_ESTABLISHMENT})
 
     def test_an_intra_community_supply_reports_needing_the_identification(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             result = classify_with_registry_rules(
                 IvaInvoiceClassificationCriteria(
                     transaction_date=_DATE,
@@ -311,7 +311,7 @@ class TestAnUnplacedOperationDemandsEverything:
     """
 
     def test_the_fallthrough_declares_both_facts(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             result = classify_with_registry_rules(
                 IvaInvoiceClassificationCriteria(
                     transaction_date=_DATE,
@@ -343,7 +343,7 @@ class TestTheRateScheduleFollowsTheEstablishmentNotTheIdentification:
     """
 
     def test_a_german_identified_spanish_issuer_is_priced_on_the_spanish_schedule(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             spanish_only = classify_with_registry_rules(
                 IvaInvoiceClassificationCriteria(
                     transaction_date=_DATE,

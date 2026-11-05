@@ -23,11 +23,11 @@ from ..components.widgets import (
 )
 from .edit_screens import FieldEditScreen, RepeatableRowAddScreen, RepeatableRowRemoveScreen, field_help_text
 from .overview_contracts import (
-    _CONTINUE_BUTTON_ID,
-    _PLANTILLA_MEDIA_BUTTON_ID,
-    _REQUIRED_ONLY_ID,
-    _SEARCH_ID,
-    _SEARCH_SETTLE_SECONDS,
+    CONTINUE_BUTTON_ID,
+    PLANTILLA_MEDIA_BUTTON_ID,
+    REQUIRED_ONLY_ID,
+    SEARCH_ID,
+    SEARCH_SETTLE_SECONDS,
 )
 from .plantilla_media import (
     PlantillaMediaRequest,
@@ -256,20 +256,20 @@ class ProfileOverviewInteractionMixin:
 
     def action_focus_search(self: ProfileManagerScreen) -> None:
         """Move the cursor to the search box."""
-        self.query_one(f"#{_SEARCH_ID}", Input).focus()
+        self.query_one(f"#{SEARCH_ID}", Input).focus()
 
     def on_input_changed(self: ProfileManagerScreen, event: Input.Changed) -> None:
         """Filter the sections once typing in the search box pauses."""
-        if event.input.id != _SEARCH_ID:
+        if event.input.id != SEARCH_ID:
             return
         self._query = event.value
         if self._search_timer is not None:
             self._search_timer.stop()
-        self._search_timer = self.set_timer(_SEARCH_SETTLE_SECONDS, self._apply_filters)
+        self._search_timer = self.set_timer(SEARCH_SETTLE_SECONDS, self._apply_filters)
 
     def on_checkbox_changed(self: ProfileManagerScreen, event: Checkbox.Changed) -> None:
         """Show every field, or only the answers setup requires."""
-        if event.checkbox.id != _REQUIRED_ONLY_ID:
+        if event.checkbox.id != REQUIRED_ONLY_ID:
             return
         self._required_only = event.value
         self.run_worker(self._apply_filters(), group="profile-filter")
@@ -334,7 +334,7 @@ async def _handle_setup_button(screen: ProfileManagerScreen, button_id: str) -> 
     if button_id == "manager-complete-setup":
         screen.action_complete_setup()
         return True
-    if button_id == _CONTINUE_BUTTON_ID:
+    if button_id == CONTINUE_BUTTON_ID:
         await screen.action_continue_setup()
         return True
     if button_id == "onboarding-previous":
@@ -358,7 +358,7 @@ def _handle_section_button(screen: ProfileManagerScreen, button_id: str) -> bool
     if button_id.startswith("manager-remove-row-"):
         screen._open_remove_selected_row(button_id.removeprefix("manager-remove-row-"))
         return True
-    if button_id == _PLANTILLA_MEDIA_BUTTON_ID:
+    if button_id == PLANTILLA_MEDIA_BUTTON_ID:
         screen._open_plantilla_media()
         return True
     return False

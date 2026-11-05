@@ -729,13 +729,12 @@ def isolated_cli_backend(tmp_path: Path) -> Iterator[Path]:
     Import it directly into a test module rather than re-declaring the
     override block locally, e.g.::
 
-        from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
+        from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend
 
-    The re-bound name still carries ``autouse=True`` in the importing module
+    The imported name still carries ``autouse=True`` in the importing module
     because pytest resolves fixtures by the name bound in the requesting
     module's namespace, not by the module that originally defined the
-    function; this is the same pattern the entrypoints CLI test suite
-    already uses for its intra-package ``_isolated_cli_backend`` re-export.
+    function.
     A caller that wants the storage-root isolation WITHOUT autouse should
     call :func:`isolated_profile_storage_root` directly instead of importing
     this fixture — pytest does not support re-decorating an already-wrapped

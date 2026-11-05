@@ -69,7 +69,7 @@ from .....application.auth.session_types import (
 from .....core.auth_provider import AuthProviderDescription, AuthProviderKind
 from .....core.auth_session_keys import aeat_auth_session_storage_state_path
 from .....core.bucket_pointer import require_active_bucket_id
-from .....core.config import Settings as _Settings
+from .....core.config import Settings as ConfigSettings
 from .....core.config_support import unwrap_optional_secret
 from .....core.errors.hierarchy import AeatLoginAssertionError
 from .....core.logging import get_logger
@@ -78,27 +78,27 @@ from .....domain.calculations.registry.remote_state_guard import (
     RemoteOperation,
     assert_remote_operation_allowed,
 )
-from .._playwright import PlaywrightTimeoutError
+from ..playwright import PlaywrightTimeoutError
 from . import session_store
-from ._clave_provider_common import (
+from .authenticator import AEAT_SESSION_IDLE_TTL
+from .browser_lifecycle import CloseIntentBarrier
+from .clave_movil_support import classify_identity
+from .clave_permanente_metadata import ClavePermanenteSessionMetadata
+from .clave_permanente_support import (
+    ClavePermanenteFailureMode,
+    clave_permanente_auth_browser_action_policy,
+    clave_permanente_configuration_error,
+    clave_permanente_login_error,
+)
+from .clave_provider_common import (
     close_clave_browser_session,
     close_clave_context,
     default_sede_target_url,
     is_authenticated_clave_landing,
     verification_probe_url,
 )
-from ._session_probe import run_authenticated_landing_probe
-from .authenticator import AEAT_SESSION_IDLE_TTL
-from .browser_lifecycle import CloseIntentBarrier
-from .clave_movil_support import classify_identity as _classify_identity
-from .clave_permanente_metadata import ClavePermanenteSessionMetadata
-from .clave_permanente_support import ClavePermanenteFailureMode
-from .clave_permanente_support import (
-    clave_permanente_auth_browser_action_policy as _browser_action_policy,
-)
-from .clave_permanente_support import clave_permanente_configuration_error as _configuration_error
-from .clave_permanente_support import clave_permanente_login_error as _login_error
 from .errors import AuthConfigurationError, AuthProviderCleanupError
+from .session_probe import run_authenticated_landing_probe
 from .view_capture_identity import require_signed_in_taxpayer
 
 if TYPE_CHECKING:
@@ -108,7 +108,7 @@ if TYPE_CHECKING:
 log = get_logger(__name__)
 
 _NAVIGATION_TIMEOUT_MS_DEFAULT: Final[int] = int(
-    _Settings.model_fields["cadrumo_browser_navigation_timeout_ms"].default,
+    ConfigSettings.model_fields["cadrumo_browser_navigation_timeout_ms"].default,
 )
 # Environment variable names referenced in operator-facing error messages.
 # Named constants so grepping for the env-var name surfaces every usage site.
@@ -370,7 +370,7 @@ class ClavePermanenteAuthProvider:
                 health_summary="No DNI/NIE and password have been configured for Cl@ve Permanente.",
             )
         try:
-            _classify_identity(dni_nie)
+            classify_identity(dni_nie)
         except AuthConfigurationError as exc:
             return AuthProviderDescription(
                 kind=self.kind,
@@ -410,18 +410,18 @@ class ClavePermanenteAuthProvider:
     def _require_identity(self) -> str:
         raw = unwrap_optional_secret(self._settings.cadrumo_clave_permanente_dni_nie)
         if not raw:
-            raise _configuration_error(
+            raise clave_permanente_configuration_error(
                 f"{_CLAVE_PERMANENTE_DNI_NIE_ENV} is not set; set it to your DNI or NIE "
                 "before running `cadrumo-runtime config auth configure --provider clave_permanente`.",
                 failure_mode=ClavePermanenteFailureMode.INVALID_CREDENTIALS,
             )
-        _classify_identity(raw)
+        classify_identity(raw)
         return raw.strip().upper()
 
     def _require_password(self) -> str:
         raw = unwrap_optional_secret(self._settings.cadrumo_clave_permanente_password)
         if not raw:
-            raise _configuration_error(
+            raise clave_permanente_configuration_error(
                 f"{_CLAVE_PERMANENTE_PASSWORD_ENV} is not set; set it to your Cl@ve "
                 "Permanente password before running "
                 "`cadrumo-runtime config auth configure --provider clave_permanente`.",
@@ -581,7 +581,7 @@ class ClavePermanenteAuthProvider:
         before returning control for the post-auth landing wait.
         """
         surface = self._clave_surface()
-        action_policy = _browser_action_policy(self._settings)
+        action_policy = clave_permanente_auth_browser_action_policy(self._settings)
         fill = getattr(page, "fill", None)
         click = getattr(page, "click", None)
         content = getattr(page, "content", None)
@@ -617,23 +617,23 @@ class ClavePermanenteAuthProvider:
         html = content_value if isinstance(content_value, str) else ""
         normalized = html.casefold()
         if surface.elevation_sms_marker.casefold() in normalized:
-            raise _login_error(
+            raise clave_permanente_login_error(
                 "AEAT requested SMS-OTP elevation, which the read-path Cl@ve "
                 "Permanente flow cannot satisfy headlessly.",
                 failure_mode=ClavePermanenteFailureMode.ELEVATION_REQUIRED,
             )
         if surface.account_locked_marker.casefold() in normalized:
-            raise _login_error(
+            raise clave_permanente_login_error(
                 "Cl@ve reports the account is locked.",
                 failure_mode=ClavePermanenteFailureMode.ACCOUNT_LOCKED,
             )
         if surface.password_expired_marker.casefold() in normalized:
-            raise _login_error(
+            raise clave_permanente_login_error(
                 "Cl@ve reports the password has expired (Cl@ve enforces a maximum password age).",
                 failure_mode=ClavePermanenteFailureMode.PASSWORD_EXPIRED,
             )
         if surface.invalid_credentials_marker.casefold() in normalized:
-            raise _login_error(
+            raise clave_permanente_login_error(
                 "Cl@ve rejected the configured DNI/NIE + password combination.",
                 failure_mode=ClavePermanenteFailureMode.INVALID_CREDENTIALS,
             )
@@ -719,7 +719,7 @@ class ClavePermanenteAuthProvider:
             try:
                 await page.goto(selector_url, timeout=self._navigation_timeout_ms)
             except (TimeoutError, PlaywrightTimeoutError) as exc:
-                raise _login_error(
+                raise clave_permanente_login_error(
                     f"Cl@ve Permanente initial navigation did not reach the AEAT selector "
                     f"within {self._navigation_timeout_ms // 1000} seconds.",
                     failure_mode=ClavePermanenteFailureMode.INITIAL_NAVIGATION_TIMEOUT,
@@ -734,7 +734,7 @@ class ClavePermanenteAuthProvider:
                 await self._wait_for_post_auth_landing(page, target_path, timeout_ms)
             except (TimeoutError, PlaywrightTimeoutError) as exc:
                 current_url = getattr(page, "url", "") or ""
-                raise _login_error(
+                raise clave_permanente_login_error(
                     f"Cl@ve Permanente login did not reach the expected AEAT page after {timeout_ms // 1000} seconds.",
                     failure_mode=ClavePermanenteFailureMode.POST_AUTH_LANDING_TIMEOUT,
                     context={"timeout_ms": timeout_ms, "current_url": current_url, "target_path": target_path},

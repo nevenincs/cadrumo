@@ -28,14 +28,14 @@ from .....core.logging import get_logger
 from .....core.paths import select_filesystem_retention_survivors
 from .....core.period import Period
 from .....core.time.clock import now
-from .._html import parse_html
-from .._playwright import PlaywrightError
-from .._representation_gate import (
+from ..browser.factory import DefaultBrowserSession, default_browser_session_factory
+from ..html import parse_html
+from ..playwright import PlaywrightError
+from ..representation_gate import (
     dismiss_pre303_alert_modal_if_present,
     wait_for_own_name_representation_selector,
 )
-from ..browser.factory import DefaultBrowserSession, default_browser_session_factory
-from ._adapter_utils import (
+from .adapter_utils import (
     assert_query_browser_action_for,
     assert_read_http_for,
     assert_read_landing,
@@ -43,12 +43,10 @@ from ._adapter_utils import (
     landed_origin,
     redacted_url,
 )
-from ._auth_state import storage_state_for_session
-from ._browser_constants import (
-    PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
-)
-from ._browser_constants import (
-    PLAYWRIGHT_WAIT_NETWORKIDLE as _WAIT_NETWORKIDLE,
+from .auth_state import storage_state_for_session
+from .browser_constants import (
+    PLAYWRIGHT_WAIT_DOMCONTENTLOADED,
+    PLAYWRIGHT_WAIT_NETWORKIDLE,
 )
 from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from .iva_compensation_wallet_parsing import (
@@ -71,7 +69,7 @@ from .schema import IvaCompensationWalletObservation
 
 if TYPE_CHECKING:
     from .....application.auth.session_types import AeatSession
-    from .._playwright import Page
+    from ..playwright import Page
 
 
 log = get_logger(__name__)
@@ -149,7 +147,7 @@ def _validate_wallet_fetch_request(
         )
 
 
-def _raise_if_wallet_auth_gate(
+def raise_if_wallet_auth_gate(
     page: Page,
     *,
     message: str,
@@ -187,7 +185,7 @@ async def _open_wallet_for_fetch(
             target_year=target_period.filing_year,
             target_period=target_period,
         )
-        _raise_if_wallet_auth_gate(
+        raise_if_wallet_auth_gate(
             page,
             message="AEAT Pre303 presentation surface rejected the authenticated session with 4033",
             expected_url=_PRE303_PRESENTATION_URL,
@@ -239,7 +237,7 @@ async def _read_wallet_observation(
     html = await page.content()
     final_dump_dir = settings.cadrumo_wallet_diagnostic_dump_dir
     if final_dump_dir is not None:
-        await _dump_wallet_diagnostic(page, label="final-parse-input", dump_dir=final_dump_dir)
+        await dump_wallet_diagnostic(page, label="final-parse-input", dump_dir=final_dump_dir)
     try:
         return parse_iva_compensation_wallet_html(
             html,
@@ -247,7 +245,7 @@ async def _read_wallet_observation(
             authenticated_identity=session.identity_nif,
             target_year=target_period.filing_year,
             target_period=target_period,
-            source_url=_landed_wallet_url(page),
+            source_url=landed_wallet_url(page),
             captured_at=now(),
             allow_empty_wallet_shell=wallet_execute_submitted,
         )
@@ -269,8 +267,8 @@ async def fetch_iva_compensation_wallet(
 ) -> IvaCompensationWalletObservation:
     """Fetch and parse AEAT's read-only IVA compensation wallet as a :class:`IvaCompensationWalletObservation`."""
     _validate_wallet_fetch_request(session, target_year=target_year, target_period=target_period)
-    _assert_read_http("GET", _PRE303_PRESENTATION_URL)
-    _assert_read_http("GET", WALLET_URL)
+    assert_read_http("GET", _PRE303_PRESENTATION_URL)
+    assert_read_http("GET", WALLET_URL)
     settings = settings or Settings()
     storage_state = storage_state_for_session(session)
     browser_session = await default_browser_session_factory(settings)
@@ -284,7 +282,7 @@ async def fetch_iva_compensation_wallet(
             settings=settings,
             target_period=target_period,
         )
-        _raise_if_wallet_auth_gate(
+        raise_if_wallet_auth_gate(
             page,
             message="AEAT IVA compensation wallet rejected the authenticated session with 4033",
             expected_url=WALLET_URL,
@@ -319,9 +317,9 @@ async def _open_authenticated_surface(
     target_period: Period,
 ) -> bool:
     """Request an AEAT app page directly with the stored session and continue only in own name."""
-    _assert_read_http("GET", target_url)
+    assert_read_http("GET", target_url)
     await browser_session.navigate(page, target_url)
-    await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED)
+    await page.wait_for_load_state(PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
     current_url = getattr(page, "url", "") or ""
     if EXTERNAL.aeat.clave_movil.selector_access_path_marker in urlsplit(current_url).path:
         raise SedeNavigationError(
@@ -335,7 +333,7 @@ async def _open_authenticated_surface(
                 "refusal": "session_not_accepted",
             },
         )
-    _raise_if_wallet_auth_gate(
+    raise_if_wallet_auth_gate(
         page,
         message="AEAT rejected the authenticated session with 4033 before the IVA wallet read",
         expected_url=expected_url,
@@ -350,7 +348,9 @@ async def _open_authenticated_surface(
             surface=surface,
         )
     try:
-        await page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=settings.cadrumo_browser_navigation_timeout_ms)
+        await page.wait_for_load_state(
+            PLAYWRIGHT_WAIT_NETWORKIDLE, timeout=settings.cadrumo_browser_navigation_timeout_ms
+        )
     except PlaywrightError:
         log.debug(
             "IVA wallet surface did not reach networkidle surface=%s current_url=%s",
@@ -389,10 +389,10 @@ async def _open_discovered_wallet_entrypoint(
     target_period: Period,
 ) -> bool:
     """Open a wallet link discovered from the authenticated Pre303 page."""
-    _assert_read_http("GET", discovered_url)
-    _assert_read_browser_action(_WALLET_DISCOVERED_ENTRYPOINT_ACTION)
+    assert_read_http("GET", discovered_url)
+    assert_read_browser_action(_WALLET_DISCOVERED_ENTRYPOINT_ACTION)
     await browser_session.navigate(page, discovered_url)
-    await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED)
+    await page.wait_for_load_state(PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
     if _is_representation_gate_url(getattr(page, "url", "") or ""):
         await _continue_own_name_representation(
             page,
@@ -402,7 +402,9 @@ async def _open_discovered_wallet_entrypoint(
             surface="iva_compensation_wallet",
         )
     try:
-        await page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=settings.cadrumo_browser_navigation_timeout_ms)
+        await page.wait_for_load_state(
+            PLAYWRIGHT_WAIT_NETWORKIDLE, timeout=settings.cadrumo_browser_navigation_timeout_ms
+        )
     except PlaywrightError:
         log.debug(
             "Discovered IVA wallet entrypoint did not reach networkidle current_url=%s",
@@ -427,10 +429,10 @@ async def _continue_own_name_representation(
     surface: str,
 ) -> None:
     """Continue only through AEAT's own-name acting-capacity selector."""
-    _assert_read_browser_action(_OWN_NAME_REPRESENTATION_ACTION)
+    assert_read_browser_action(_OWN_NAME_REPRESENTATION_ACTION)
     try:
         selected_own_name = await _wait_for_own_name_representation_selector(page, settings=settings)
-        await _dismiss_pre303_alert_modal_if_present(page)
+        await dismiss_wallet_pre303_alert_modal_if_present(page)
         await _assert_own_name_representation_form(page, expected_path=target_path)
         await page.click(selected_own_name)
         await _assert_own_name_representation_form(page, expected_path=target_path)
@@ -439,7 +441,7 @@ async def _continue_own_name_representation(
             lambda url: target_path in url or is_aeat_auth_gate_redirect(url),
             timeout=settings.cadrumo_browser_navigation_timeout_ms,
         )
-        await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED)
+        await page.wait_for_load_state(PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
         # The wait predicate admits the 4033 auth gate on purpose, so the
         # caller can raise its own diagnostic; it is not a landing rule.
         # This is.
@@ -480,7 +482,7 @@ async def _assert_own_name_representation_form(page: Page, *, expected_path: str
     )
 
 
-async def _dismiss_pre303_alert_modal_if_present(page: Page) -> None:
+async def dismiss_wallet_pre303_alert_modal_if_present(page: Page) -> None:
     """Dismiss AEAT's pre303 alert modal, delegating to the canonical collapsed check.
 
     Unlike the auth caller, this one supplies a diagnostic on a decline: the
@@ -535,13 +537,17 @@ async def _select_own_name_actuacion_if_present(page: Page, *, settings: Setting
                 "own_name_target": redacted_url(target),
             },
         )
-    _assert_read_http("GET", target)
-    _assert_read_browser_action(_OWN_NAME_REPRESENTATION_ACTION)
+    assert_read_http("GET", target)
+    assert_read_browser_action(_OWN_NAME_REPRESENTATION_ACTION)
     try:
         await link.click()
-        await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=settings.cadrumo_browser_navigation_timeout_ms)
+        await page.wait_for_load_state(
+            PLAYWRIGHT_WAIT_DOMCONTENTLOADED, timeout=settings.cadrumo_browser_navigation_timeout_ms
+        )
         try:
-            await page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=settings.cadrumo_browser_navigation_timeout_ms)
+            await page.wait_for_load_state(
+                PLAYWRIGHT_WAIT_NETWORKIDLE, timeout=settings.cadrumo_browser_navigation_timeout_ms
+            )
         except PlaywrightError:
             log.debug(
                 "cartera own-name continuation did not reach networkidle current_url=%s",
@@ -556,7 +562,7 @@ async def _select_own_name_actuacion_if_present(page: Page, *, settings: Setting
         ) from exc
     dump_dir = settings.cadrumo_wallet_diagnostic_dump_dir
     if dump_dir is not None:
-        await _dump_wallet_diagnostic(page, label="post-own-name", dump_dir=dump_dir)
+        await dump_wallet_diagnostic(page, label="post-own-name", dump_dir=dump_dir)
     return True
 
 
@@ -618,7 +624,7 @@ async def _submit_wallet_execute_gate_if_present(
             failure_mode=SedeFailureMode.BROWSER_BACKEND_FAILED,
         )
     try:
-        html, result = await _wait_for_wallet_execute_initial_shape(
+        html, result = await wait_for_wallet_execute_initial_shape(
             content=content,
             expected_path=expected_path,
             timeout_ms=settings.cadrumo_browser_navigation_timeout_ms,
@@ -678,8 +684,8 @@ async def _run_wallet_execute_query(
         )
     submission_url = f"{current_origin}{expected_path}"
     method = wallet_execute_form_method(html)
-    _assert_read_http(method, submission_url)
-    _assert_read_browser_action(_WALLET_EXECUTE_READ_ACTION)
+    assert_read_http(method, submission_url)
+    assert_read_browser_action(_WALLET_EXECUTE_READ_ACTION)
     await _fill_wallet_query_form(
         page,
         target_year=target_period.filing_year,
@@ -687,13 +693,13 @@ async def _run_wallet_execute_query(
     )
     diagnostic_dir = settings.cadrumo_wallet_diagnostic_dump_dir
     if diagnostic_dir is not None:
-        await _dump_wallet_diagnostic(page, label="pre-execute", dump_dir=diagnostic_dir)
+        await dump_wallet_diagnostic(page, label="pre-execute", dump_dir=diagnostic_dir)
     try:
         await page.click(PRE303.wallet_execute_submit_selector)
         nav_timeout_ms = settings.cadrumo_browser_navigation_timeout_ms
-        await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=nav_timeout_ms)
+        await page.wait_for_load_state(PLAYWRIGHT_WAIT_DOMCONTENTLOADED, timeout=nav_timeout_ms)
         try:
-            await page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=nav_timeout_ms)
+            await page.wait_for_load_state(PLAYWRIGHT_WAIT_NETWORKIDLE, timeout=nav_timeout_ms)
         except PlaywrightError:
             log.debug(
                 "IVA wallet execute read query did not reach networkidle current_url=%s",
@@ -708,7 +714,7 @@ async def _run_wallet_execute_query(
             timeout_ms=settings.cadrumo_browser_navigation_timeout_ms,
         )
         if diagnostic_dir is not None:
-            await _dump_wallet_diagnostic(page, label="post-execute", dump_dir=diagnostic_dir)
+            await dump_wallet_diagnostic(page, label="post-execute", dump_dir=diagnostic_dir)
         _raise_if_wallet_terminal_shape_invalid(
             post_execute_html,
             expected_path=expected_path,
@@ -742,7 +748,7 @@ def _raise_if_wallet_terminal_shape_invalid(
         )
 
 
-async def _wait_for_wallet_execute_initial_shape(
+async def wait_for_wallet_execute_initial_shape(
     *,
     content: Callable[[], Awaitable[object]],
     expected_path: str,
@@ -859,7 +865,7 @@ def _write_wallet_diagnostic_summary(dump_dir: Path, *, label: str, summary: lis
         log.debug("wallet diagnostic: summary write failed: %s", exc, exc_info=True)
 
 
-async def _dump_wallet_diagnostic(page: Page, *, label: str, dump_dir: Path) -> None:
+async def dump_wallet_diagnostic(page: Page, *, label: str, dump_dir: Path) -> None:
     """Best-effort capture of redacted page-shape metadata for wallet DOM-drift diagnosis.
 
     Enabled only when :attr:`Settings.cadrumo_wallet_diagnostic_dump_dir` is set;
@@ -937,7 +943,7 @@ def prune_wallet_diagnostic_dumps(
     return removed
 
 
-def _landed_wallet_url(page: object) -> str:
+def landed_wallet_url(page: object) -> str:
     """Return the wallet URL naming the host that actually served this read.
 
     AEAT dispatches an authenticated session to one of its numbered sede
@@ -1010,11 +1016,11 @@ def _assert_read_landing(page: Page) -> None:
     assert_wallet_read_landing(getattr(page, "url", "") or "")
 
 
-def _assert_read_http(method: str, url: str) -> None:
+def assert_read_http(method: str, url: str) -> None:
     assert_read_http_for(IVA_COMPENSATION_WALLET_READ_POLICY, method, url)
 
 
-def _assert_read_browser_action(action: str) -> None:
+def assert_read_browser_action(action: str) -> None:
     assert_query_browser_action_for(IVA_COMPENSATION_WALLET_READ_POLICY, action)
 
 

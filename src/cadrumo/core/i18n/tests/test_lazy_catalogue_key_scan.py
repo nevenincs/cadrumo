@@ -15,13 +15,13 @@ from typing import IO
 import pytest
 
 from ...product_identity import PRODUCT_IDENTITY
-from .. import _lazy_catalogue
-from .._lazy_catalogue import (
+from .. import lazy_catalogue
+from ..lazy_catalogue import (
     LazyLocaleCatalogue,
-    _flatten_dict,
-    _scan_shard_for_key,
-    _UnscannableShardError,
+    UnscannableShardError,
+    flatten_dict,
     load_yaml_handle,
+    scan_shard_for_key,
 )
 
 pytestmark = [pytest.mark.hex_core]
@@ -64,12 +64,12 @@ modelo:
 
 def _full_load(path: Path) -> dict[str, str | None]:
     with path.open(encoding="utf-8") as handle:
-        return _flatten_dict(load_yaml_handle(handle))
+        return flatten_dict(load_yaml_handle(handle))
 
 
 def _scan(path: Path, key: str) -> str | None:
     with path.open(encoding="utf-8") as handle:
-        return _scan_shard_for_key(handle, key)
+        return scan_shard_for_key(handle, key)
 
 
 def _write_shard(root: Path, text: str) -> Path:
@@ -112,8 +112,8 @@ def test_a_shard_asked_many_keys_is_streamed_once_then_loaded_once(
     shard = _write_shard(tmp_path, _TYPED_SHARD)
     full = _full_load(shard)
     calls: list[str] = []
-    real_scan = _lazy_catalogue._scan_shard_for_key
-    real_load = _lazy_catalogue.load_yaml_handle
+    real_scan = lazy_catalogue.scan_shard_for_key
+    real_load = lazy_catalogue.load_yaml_handle
 
     def counting_scan(handle: IO[str], key: str) -> str | None:
         calls.append("scan")
@@ -123,8 +123,8 @@ def test_a_shard_asked_many_keys_is_streamed_once_then_loaded_once(
         calls.append("load")
         return real_load(handle)
 
-    monkeypatch.setattr(_lazy_catalogue, "_scan_shard_for_key", counting_scan)
-    monkeypatch.setattr(_lazy_catalogue, "load_yaml_handle", counting_load)
+    monkeypatch.setattr(lazy_catalogue, "scan_shard_for_key", counting_scan)
+    monkeypatch.setattr(lazy_catalogue, "load_yaml_handle", counting_load)
     catalogue = LazyLocaleCatalogue("es", shard_dir=tmp_path / "es")
 
     answers = {key: catalogue.get(key) for key in full}
@@ -148,7 +148,7 @@ def test_keys_the_stream_cannot_answer_fall_back_to_the_full_load(tmp_path: Path
     shard = _write_shard(tmp_path, _TYPED_SHARD)
     catalogue = LazyLocaleCatalogue("es", shard_dir=tmp_path / "es")
 
-    with pytest.raises(_UnscannableShardError):
+    with pytest.raises(UnscannableShardError):
         _scan(shard, key)
     assert catalogue.get(key) == _full_load(shard).get(key)
     assert Path(_SHARD) in catalogue._loaded_shards
@@ -168,7 +168,7 @@ def test_constructs_only_a_full_load_interprets_fall_back(tmp_path: Path, text: 
     shard = _write_shard(tmp_path, text)
     catalogue = LazyLocaleCatalogue("es", shard_dir=tmp_path / "es")
 
-    with pytest.raises(_UnscannableShardError):
+    with pytest.raises(UnscannableShardError):
         _scan(shard, _TITLE)
     assert catalogue.get(_TITLE) == expected
 
@@ -178,7 +178,7 @@ def test_a_second_document_falls_back_to_the_full_load_refusal(tmp_path: Path) -
     shard = _write_shard(tmp_path, "other: 1\n---\nmodelo:\n  schema:\n    '900':\n      title: second\n")
     catalogue = LazyLocaleCatalogue("es", shard_dir=tmp_path / "es")
 
-    with pytest.raises(_UnscannableShardError):
+    with pytest.raises(UnscannableShardError):
         _scan(shard, _TITLE)
     assert catalogue.get(_TITLE) is None
 
@@ -202,7 +202,7 @@ def test_every_packaged_modelo_title_streams_to_its_full_load_value() -> None:
         for key in {*titles[:5], *keys[:3], *keys[-3:], *keys[:: max(1, len(keys) // 20)]}:
             try:
                 streamed = _scan(shard, key)
-            except _UnscannableShardError:
+            except UnscannableShardError:
                 # Only a value the stream cannot hold as one scalar may fall back.
                 assert (full[key] or "").startswith("["), (shard, key)
                 continue

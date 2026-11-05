@@ -29,9 +29,9 @@ from ....persistence.llm.usage import UsageRecorder
 from ....persistence.storage.secure_object_namespaces import LLM_RUN_RECORD_NAMESPACE, LLM_USAGE_NAMESPACE
 from ..errors import LLMCacheError
 from ..models import UsageRecord
-from ._engine_binding_fixtures import _ENGINE_HOLDER, _bind_engine
+from .engine_binding_fixtures import ENGINE_HOLDER, bind_engine
 
-__all__ = ["_ENGINE_HOLDER", "_bind_engine"]
+__all__ = ["ENGINE_HOLDER", "bind_engine"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -85,7 +85,7 @@ def _substitute(namespace: str, *, victim_marker: str, donor_marker: str) -> Non
     from ....persistence.storage.sql.orm import SecureObjectRow
     from ....persistence.storage.sql.session import session_scope
 
-    engine = _ENGINE_HOLDER[0]
+    engine = ENGINE_HOLDER[0]
     with session_scope(engine) as session:
         rows = list(session.execute(select(SecureObjectRow).where(SecureObjectRow.namespace == namespace)).scalars())
         decoded = []
@@ -159,7 +159,7 @@ def test_the_substitution_lands_a_valid_foreign_payload(tmp_path: Path) -> None:
     recorder.record(_usage("old-request", _OLD))
     _substitute(LLM_USAGE_NAMESPACE.namespace, victim_marker="recent-request", donor_marker="old-request")
 
-    with session_scope(_ENGINE_HOLDER[0]) as session:
+    with session_scope(ENGINE_HOLDER[0]) as session:
         request_ids = []
         for row in session.execute(
             select(SecureObjectRow).where(SecureObjectRow.namespace == LLM_USAGE_NAMESPACE.namespace),

@@ -13,7 +13,7 @@ from .. import parser as module
 from ..errors import BorradorParseError
 from ..parser import parse_borrador
 from ..schema import ArtefactKind, BorradorParseMode
-from .test_modelo_100_summary import _profile, _render_borrador_pdf_bytes
+from .test_modelo_100_summary import modelo_100_summary_profile, render_borrador_pdf_bytes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -26,10 +26,10 @@ def _published_support() -> TemporalSupportEnvelope:
 
 @pytest.mark.parametrize("kind", ["BORRADOR", "PREDECLARACION", "DECLARACION"])
 def test_bytes_parser_matches_canonical_path_values_profile_and_digest(tmp_path: Path, kind: str) -> None:
-    payload = _render_borrador_pdf_bytes(artefact_kind=kind, csv="MNOP4321QRST8765" if kind == "DECLARACION" else None)
+    payload = render_borrador_pdf_bytes(artefact_kind=kind, csv="MNOP4321QRST8765" if kind == "DECLARACION" else None)
     path = tmp_path / "synthetic.pdf"
     path.write_bytes(payload)
-    profile = _profile()
+    profile = modelo_100_summary_profile()
     expected = parse_borrador(
         path,
         filing_year=2025,
@@ -50,7 +50,7 @@ def test_bytes_parser_matches_canonical_path_values_profile_and_digest(tmp_path:
 
 
 def test_bytes_detection_and_extraction_share_exactly_one_real_backend_pass(monkeypatch: pytest.MonkeyPatch) -> None:
-    payload = _render_borrador_pdf_bytes()
+    payload = render_borrador_pdf_bytes()
     original = module.extract_pages_text_from_bytes
     calls = 0
 
@@ -75,7 +75,7 @@ def test_bytes_detection_and_extraction_share_exactly_one_real_backend_pass(monk
 def test_every_year_the_published_envelope_declares_reads_without_rewriting_the_printed_year() -> None:
     support = _published_support()
     for year in support.years:
-        result = parse_borrador(_render_borrador_pdf_bytes(), filing_year=year, supported_filing_years=support)
+        result = parse_borrador(render_borrador_pdf_bytes(), filing_year=year, supported_filing_years=support)
         assert result.ejercicio == "2025"
 
 
@@ -83,7 +83,7 @@ def test_a_year_past_the_authored_horizon_stays_admitted_while_no_ceiling_is_dec
     support = _published_support()
     assert support.hard_ceiling is None
     result = parse_borrador(
-        _render_borrador_pdf_bytes(), filing_year=support.horizon + 1, supported_filing_years=support
+        render_borrador_pdf_bytes(), filing_year=support.horizon + 1, supported_filing_years=support
     )
     assert result.ejercicio == "2025"
 

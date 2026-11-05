@@ -73,7 +73,7 @@ from .log_scrubbing import SCRUBBED_RECORD, SecretScrubbingFilter, scrub_text
 from .log_snapshot import bound_format, snapshot_record, snapshot_value
 from .redaction.tax_identity_admission import lexical_tax_identity_redaction
 
-_configured = False
+configured = False
 _factory_installed = False
 
 
@@ -187,17 +187,17 @@ class DropRunEventFilter(logging.Filter):
 
 #: First-party namespaces for Cadrumo and its hosted automation diagnostics. SDK
 #: request-body DEBUG remains excluded even when it originates inside the automation.
-_FIRST_PARTY_LOGGER_ROOTS = {"cadrumo"}
+FIRST_PARTY_LOGGER_ROOTS = {"cadrumo"}
 
 
 def register_first_party_logger(namespace: str) -> None:
     """Enroll this process's owning application namespace for scrubbed diagnostics."""
     if not namespace.isidentifier():
         raise ValueError("a logger namespace must be one application identifier")
-    _FIRST_PARTY_LOGGER_ROOTS.add(namespace)
+    FIRST_PARTY_LOGGER_ROOTS.add(namespace)
 
 
-class _ThirdPartyDebugFilter(logging.Filter):
+class ThirdPartyDebugFilter(logging.Filter):
     """Hold third-party loggers below DEBUG at every sink that writes to disk.
 
     The root logger runs at DEBUG so Cadrumo's own diagnostics are complete,
@@ -231,7 +231,7 @@ class _ThirdPartyDebugFilter(logging.Filter):
         """
         if record.levelno >= logging.INFO:
             return True
-        return any(record.name == root or record.name.startswith(f"{root}.") for root in _FIRST_PARTY_LOGGER_ROOTS)
+        return any(record.name == root or record.name.startswith(f"{root}.") for root in FIRST_PARTY_LOGGER_ROOTS)
 
 
 #: Extra key marking a record whose content the emitter has ALREADY written to
@@ -309,7 +309,7 @@ def default_log_file_path() -> Path:
     return storage_path(StorageCategory.LOGS).expanduser() / filename
 
 
-def _prepare_log_directory(log_file: Path) -> str | None:
+def prepare_log_directory(log_file: Path) -> str | None:
     """Best-effort create the diagnostic log directory.
 
     Returns ``None`` when the directory already exists or was created, and a
@@ -398,7 +398,7 @@ def configure_logging() -> None:
     stalls behind a cold import. Settings, directories and files are still
     reached only on the dispatch thread.
     """
-    if not _configured and not _is_cli_metadata_invocation():
+    if not configured and not _is_cli_metadata_invocation():
         # The dispatch thread repeats these imports and counts a failure there;
         # a host's startup must not raise for a diagnostic channel.
         with suppress(Exception):
@@ -412,12 +412,12 @@ def _replace_root_handlers(sinks: list[logging.Handler], root_level: str) -> Non
     root_logger.handlers = [
         handler
         for handler in previous
-        if not isinstance(handler, _AsyncDiagnosticHandler | _ConfigureOnFirstRecordHandler)
+        if not isinstance(handler, AsyncDiagnosticHandler | _ConfigureOnFirstRecordHandler)
     ]
-    root_logger.handlers.extend(_AsyncDiagnosticHandler(sink) for sink in sinks)
+    root_logger.handlers.extend(AsyncDiagnosticHandler(sink) for sink in sinks)
     root_logger.setLevel(root_level)
     for handler in previous:
-        if isinstance(handler, _AsyncDiagnosticHandler):
+        if isinstance(handler, AsyncDiagnosticHandler):
             handler.close()
     for name in ("alembic.runtime.plugins", "pdfminer", "pikepdf._core"):
         logging.getLogger(name).setLevel(logging.WARNING)
@@ -440,8 +440,8 @@ def _configure_logging() -> None:
     The function is idempotent, so hosts and the first-record placeholder can
     both reach it without duplicating handlers.
     """
-    global _configured
-    if _configured or _is_cli_metadata_invocation():
+    global configured
+    if configured or _is_cli_metadata_invocation():
         return
 
     parts = _configuration_parts()
@@ -452,10 +452,10 @@ def _configure_logging() -> None:
         # A normal command must reach the typed CLI refusal boundary instead
         # of crashing while its import-time logger tries to open former state.
         # Do not configure a file handler or inspect the rejected root.
-        _configured = True
+        configured = True
         _retire_first_record_configuration()
         return
-    log_directory_failure = _prepare_log_directory(log_file)
+    log_directory_failure = prepare_log_directory(log_file)
     file_logging_enabled = log_directory_failure is None
 
     stderr = _DiagnosticStreamHandler(sys.stderr)
@@ -475,7 +475,7 @@ def _configure_logging() -> None:
     for sink in sinks:
         sink.setFormatter(DiagnosticFormatter(LOG_FILE_FORMAT))
         sink.addFilter(DropRunEventFilter())
-        sink.addFilter(_ThirdPartyDebugFilter())
+        sink.addFilter(ThirdPartyDebugFilter())
         sink.addFilter(SecretScrubbingFilter())
     _replace_root_handlers(sinks, settings.cadrumo_log_root_level)
 
@@ -487,7 +487,7 @@ def _configure_logging() -> None:
     _install_run_context_record_factory()
     _install_secret_scrubbing_filters()
 
-    _configured = True
+    configured = True
     _flush_pending_records()
 
     if not file_logging_enabled:
@@ -536,7 +536,7 @@ def set_log_level(level: int, *, file_level: int = logging.DEBUG) -> None:
         root_logger = logging.getLogger()
         root_logger.setLevel(logging.DEBUG)
         for handler in root_logger.handlers:
-            if isinstance(handler, _AsyncDiagnosticHandler):
+            if isinstance(handler, AsyncDiagnosticHandler):
                 sink = handler.sink
                 sink.setLevel(file_level if isinstance(sink, logging.FileHandler) else level)
 
@@ -607,7 +607,7 @@ class _ConfigureOnFirstRecordHandler(logging.Handler):
 def _configure_for_first_record(handler: _ConfigureOnFirstRecordHandler, record: logging.LogRecord) -> None:
     if (
         record.levelno < logging.WARNING
-        or _configured
+        or configured
         or _configuration_deferred
         or record.__dict__.get("_cadrumo_configuration_deferred") is True
         or type(handler).configuring
@@ -693,7 +693,7 @@ def _retire_first_record_configuration() -> None:
 def _install_first_record_configuration() -> None:
     global _root_level_before_buffering
     root_logger = logging.getLogger()
-    if _configured or any(isinstance(handler, _ConfigureOnFirstRecordHandler) for handler in root_logger.handlers):
+    if configured or any(isinstance(handler, _ConfigureOnFirstRecordHandler) for handler in root_logger.handlers):
         return
     root_logger.addHandler(_ConfigureOnFirstRecordHandler())
     if root_logger.level == logging.WARNING:
@@ -822,18 +822,18 @@ def _handle_by_own_handlers(record: logging.LogRecord) -> None:
     while logger is not None:
         for handler in tuple(logger.handlers):
             found = True
-            if isinstance(handler, _AsyncDiagnosticHandler | _ConfigureOnFirstRecordHandler) and (
+            if isinstance(handler, AsyncDiagnosticHandler | _ConfigureOnFirstRecordHandler) and (
                 record.levelno >= handler.level
             ):
                 handler.handle(record)
         logger = logger.parent if logger.propagate else None
     fallback = logging.lastResort
     # The stdlib falls back to ``lastResort`` only for a hierarchy with no handler.
-    if not found and isinstance(fallback, _AsyncDiagnosticHandler) and record.levelno >= fallback.level:
+    if not found and isinstance(fallback, AsyncDiagnosticHandler) and record.levelno >= fallback.level:
         fallback.handle(record)
 
 
-class _AsyncDiagnosticHandler(logging.Handler):
+class AsyncDiagnosticHandler(logging.Handler):
     def __init__(self, sink: logging.Handler) -> None:
         super().__init__(logging.NOTSET)
         self.sink = sink
@@ -946,7 +946,7 @@ _dispatch = DiagnosticDispatch[logging.LogRecord | Callable[[], None]](
 
 def _submit_work(work: logging.LogRecord | Callable[[], None]) -> None:
     """Keep configuration settings without retaining an invocation's authority lease."""
-    if _configured:
+    if configured:
         weight = work.__dict__.get("_cadrumo_snapshot_weight", 1024) if isinstance(work, logging.LogRecord) else 1024
         _dispatch.submit(work, weight=weight)
         return
@@ -1015,7 +1015,7 @@ if type(logging.lastResort) is getattr(logging, "_StderrHandler", None):
     _fallback_sink = _DiagnosticStreamHandler(sys.stderr, follow_stderr=True)
     _fallback_sink.addFilter(DropOperatorDocumentEchoFilter())
     _fallback_sink.addFilter(DropRunEventFilter())
-    _fallback_sink.addFilter(_ThirdPartyDebugFilter())
-    _fallback_handler = _AsyncDiagnosticHandler(_fallback_sink)
+    _fallback_sink.addFilter(ThirdPartyDebugFilter())
+    _fallback_handler = AsyncDiagnosticHandler(_fallback_sink)
     _fallback_handler.setLevel(logging.WARNING)
     logging.lastResort = _fallback_handler

@@ -5,11 +5,11 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from ._verification_chain_support import (
-    _COMPUTED_CASILLAS_M390,
-    _calculate_engine_values_from_inputs,
-    _decimal_inputs_from_extracted_values,
-    _parse_extracted_declaracion_values,
+from .verification_chain_support import (
+    COMPUTED_CASILLAS_M390,
+    calculate_engine_values_from_inputs,
+    decimal_inputs_from_extracted_values,
+    parse_extracted_declaracion_values,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
@@ -88,7 +88,7 @@ def test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible(pdf
       iva.anual.cuota-deducible-total  (box 64): VERIFIED
       iva.anual.resultado-regimen-general (box 65): VERIFIED
     """
-    extracted = _parse_extracted_declaracion_values(modelo="390", fixture_stem=pdf_stem, year=year, period="0A")
+    extracted = parse_extracted_declaracion_values(modelo="390", fixture_stem=pdf_stem, year=year, period="0A")
 
     for required_id in _M390_REQUIRED_CASILLAS:
         assert required_id in extracted, (
@@ -96,7 +96,7 @@ def test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible(pdf
             f"not in extracted values - parser did not capture it.\n  got: {sorted(extracted)}"
         )
 
-    inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_COMPUTED_CASILLAS_M390)
+    inputs = decimal_inputs_from_extracted_values(extracted, excluding=COMPUTED_CASILLAS_M390)
     # These synthetic specimens state the ordinary 21%, 10% and 4% quotas.
     # The current annual total sums the printed rate tiers [2], [4] and [6].
     for source_id, target_id in (
@@ -121,7 +121,7 @@ def test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible(pdf
         "modelo-390-prev-303-compensacion-ultimo-periodo": _comp_97,
         "modelo-390-prev-303-compensacion-generada-ejercicio-no-97": _comp_662,
     }
-    engine_values = _calculate_engine_values_from_inputs(
+    engine_values = calculate_engine_values_from_inputs(
         modelo="390",
         year=year,
         period="0A",

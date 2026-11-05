@@ -58,7 +58,7 @@ def _translate_adapter_error(operation: str, exc: Exception) -> LiveApplicationE
     )
 
 
-async def _call_adapter[T](operation: str, callback: Callable[[], Awaitable[T]]) -> T:
+async def call_adapter[T](operation: str, callback: Callable[[], Awaitable[T]]) -> T:
     """Invoke one Sede capability and translate its exception at this boundary."""
     try:
         return await callback()
@@ -117,7 +117,7 @@ class _DeferredSedeObservation:
 
 
 @dataclass(slots=True)
-class _DeferredSedeObservations:
+class DeferredSedeObservations:
     observations: tuple[FiledDeclaracionObservation, ...]
     staged: list[tuple[tuple[str, int, Period, str], FiledDeclaracionArtefact, bytes]] = field(default_factory=list)
     consumed: bool = False
@@ -176,7 +176,7 @@ class _SedeFiledDataRegisterPort(FiledDataRegisterPort):
     @override
     async def walk(self, *, modelo: str, ejercicio: int) -> tuple[FiledRegisterDeclarationProtocol, ...]:
         """Read one register pair and expose its structural application view."""
-        return await _call_adapter(
+        return await call_adapter(
             "filed_register_walk",
             lambda: self._register.walk(modelo=modelo, ejercicio=ejercicio),
         )
@@ -192,7 +192,7 @@ class _SedeFiledDataRegisterPort(FiledDataRegisterPort):
         if not isinstance(declaration, ExpedientesDeclaration):
             raise TypeError("filed register port returned a non-Sede declaration")
         concrete_sink = _concrete_artefact_sink(artefact_sink)
-        return await _call_adapter(
+        return await call_adapter(
             "filed_declaration_capture",
             lambda: self._register.capture_observation(declaration, artefact_sink=concrete_sink),
         )
@@ -204,7 +204,7 @@ class _SedeFiledDataRegisterPort(FiledDataRegisterPort):
         """Return captured bytes for a later guarded local persistence section."""
         if not isinstance(declaration, ExpedientesDeclaration):
             raise TypeError("filed register port returned a non-Sede declaration")
-        return await _call_adapter(
+        return await call_adapter(
             "filed_declaration_capture", lambda: capture_deferred_sede_observation(self._register, declaration)
         )
 
@@ -242,7 +242,7 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
                 else bundled_indexed_authority().operation()
             )
             with authority_scope as indexed_operation:
-                session, settings = await _call_adapter(
+                session, settings = await call_adapter(
                     "filed_register_session",
                     lambda: active_verified_session(
                         certificate_secret_backend_factory=self._certificate_secret_backend_factory,
@@ -287,7 +287,7 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
         on_session_write: SessionWriteReporter | None = None,
     ):
         """Read the register option lists through the application port."""
-        session, settings = await _call_adapter(
+        session, settings = await call_adapter(
             "filed_register_session",
             lambda: active_verified_session(
                 certificate_secret_backend_factory=self._certificate_secret_backend_factory,
@@ -300,7 +300,7 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
         )
         try:
             async with shared_playwright(session) as playwright:
-                return await _call_adapter(
+                return await call_adapter(
                     "filed_register_discovery",
                     lambda: discover_filed_declaration_availability(
                         session,
@@ -337,7 +337,7 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
         :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
         """
         with bundled_indexed_authority().operation() as indexed_operation:
-            session, settings = await _call_adapter(
+            session, settings = await call_adapter(
                 "filed_register_session",
                 lambda: active_verified_session(
                     certificate_secret_backend_factory=self._certificate_secret_backend_factory,
@@ -374,7 +374,7 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
                     )
                     return previous + related
 
-            return await _call_adapter("filed_source_capture", _capture)
+            return await call_adapter("filed_source_capture", _capture)
 
     @override
     async def capture_source_observations_deferred(
@@ -407,7 +407,7 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
         )
         if not all(isinstance(observation, FiledDeclaracionObservation) for observation in observations):
             raise TypeError("filed source capture returned a non-Sede observation")
-        return _DeferredSedeObservations(
+        return DeferredSedeObservations(
             observations=cast("tuple[FiledDeclaracionObservation, ...]", observations), staged=staged
         )
 

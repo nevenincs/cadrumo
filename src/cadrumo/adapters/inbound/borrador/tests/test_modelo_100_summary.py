@@ -15,9 +15,9 @@ from .....domain.calculations.registry.schema_extraction import ExtractionProfil
 from .....domain.calculations.registry.schema_references import TemporalSupportEnvelope
 from .....tests.log_records import delivered_records
 from ...pdf.source_provenance import source_pdf_reference_path
-from .._extractors.modelo_100_summary import Modelo100ObservedExtractor
 from ..errors import BorradorParseError, BorradorRefusalReason
-from ..parser import parse_borrador as _parse_borrador
+from ..extractors.modelo_100_summary import Modelo100ObservedExtractor
+from ..parser import parse_borrador as parser_parse_borrador
 from ..schema import ArtefactKind, BorradorParseMode, InboundBorradorObservation
 
 pytestmark = [
@@ -30,7 +30,7 @@ _SUPPORT = TemporalSupportEnvelope(floor=2022, horizon=2026)
 """A synthetic envelope: these tests read one artefact, not the published span."""
 
 
-parse_borrador = partial(_parse_borrador, filing_year=2025, supported_filing_years=_SUPPORT)
+parse_borrador = partial(parser_parse_borrador, filing_year=2025, supported_filing_years=_SUPPORT)
 
 
 _CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA = validated_casilla_id(
@@ -60,7 +60,7 @@ _OBSERVED_VALUES: dict[CasillaId, str] = {
 }
 
 
-def _render_borrador_pdf_bytes(
+def render_borrador_pdf_bytes(
     *,
     artefact_kind: str = "BORRADOR",
     csv: str | None = None,
@@ -114,7 +114,7 @@ def _generate_pdf(
     csv: str | None = None,
     casilla_values: Mapping[CasillaId, str] | None = None,
 ) -> Path:
-    payload = _render_borrador_pdf_bytes(
+    payload = render_borrador_pdf_bytes(
         artefact_kind=artefact_kind,
         csv=csv,
         casilla_values=casilla_values,
@@ -132,10 +132,10 @@ def default_borrador_pdf_bytes() -> bytes:
     per-test filesystem isolation intact (the rename tests still mutate only
     their own copy) while paying the Canvas-construction cost a single time.
     """
-    return _render_borrador_pdf_bytes(artefact_kind="BORRADOR", csv=None, casilla_values=None)
+    return render_borrador_pdf_bytes(artefact_kind="BORRADOR", csv=None, casilla_values=None)
 
 
-def _profile(
+def modelo_100_summary_profile(
     *,
     target_casilla_ids: tuple[CasillaId, ...] = (
         _CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA,
@@ -276,7 +276,7 @@ class TestObservedValues:
         default_borrador_pdf_bytes: bytes,
     ) -> None:
         pdf = _write_borrador_pdf(tmp_path, default_borrador_pdf_bytes)
-        profile = _profile()
+        profile = modelo_100_summary_profile()
 
         filing = parse_borrador(
             pdf,
@@ -293,7 +293,7 @@ class TestObservedValues:
 
     def test_registry_profile_fails_below_required_coverage(self, tmp_path: Path) -> None:
         pdf = _generate_pdf(tmp_path, casilla_values={_CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA: "3500.00"})
-        profile = _profile()
+        profile = modelo_100_summary_profile()
 
         with pytest.raises(BorradorParseError, match="coverage below minimum"):
             parse_borrador(
@@ -392,7 +392,7 @@ class TestBorradorParseErrorAttributes:
     def test_coverage_failure_populates_missing_and_coverage(self, tmp_path: Path) -> None:
         # PDF has only 0550; profile requires 0550 + 0700 with full coverage.
         pdf = _generate_pdf(tmp_path, casilla_values={_CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA: "3500.00"})
-        profile = _profile(
+        profile = modelo_100_summary_profile(
             target_casilla_ids=(
                 _CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA,
                 _PAGOS_FRACCIONADOS_CASILLA,
@@ -412,7 +412,7 @@ class TestBorradorParseErrorAttributes:
     def test_coverage_failure_missing_sorted_tuple(self, tmp_path: Path) -> None:
         # Profile requires three casillas; PDF only has 0550 — both absent IDs surface sorted.
         pdf = _generate_pdf(tmp_path, casilla_values={_CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA: "100.00"})
-        profile = _profile(
+        profile = modelo_100_summary_profile(
             target_casilla_ids=(
                 _CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA,
                 _CUOTA_INTEGRA_TOTAL_CASILLA,

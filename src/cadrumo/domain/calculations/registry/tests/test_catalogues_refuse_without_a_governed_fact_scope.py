@@ -83,14 +83,14 @@ from ..refund_eligibility import resolve_refund_eligibility_policy
 from ..renta_codes_catalogue import resolve_fiscal_residency_catalogue, ue_eea_country_codes
 from ..renta_expense_policy import renta_expense_policy_declarations
 from ..rental_reduction import resolve_rental_reduction_art232_tier_catalogue
-from ..retenciones_bindings import _registry_schemes_for_modelo
+from ..retenciones_bindings import registry_schemes_for_modelo
 from ..setup_profile_bindings import mapping_fact_entries
 from ..situacion_familiar_catalogue import resolve_situacion_familiar_catalogue
 from ..situacion_familiar_m145_catalogue import resolve_situacion_familiar_m145_catalogue
 from ..tax_id_format import runtime_tax_id_format, tax_id_format_value
 from ..third_party_declaration_roles import resolve_third_party_declaration_role_catalogue
 from ..travel_agency_mediation import resolve_travel_agency_mediation_catalogue
-from ..withholding_bindings import _withholding_role_declarations, resolve_retencion_clave
+from ..withholding_bindings import resolve_retencion_clave, withholding_role_declarations
 from .fact_scope import outside_governed_fact_validation
 from .m347_fixture import resolve_m347_counterparty_annual_threshold
 
@@ -243,7 +243,7 @@ _SCOPED_RESOLVERS: tuple[tuple[str, Callable[[GovernedFactSource | None], object
     ("renta_expense_policy", lambda authority: renta_expense_policy_declarations(2024, authority=authority)),
     (
         "retenciones_scheme_lookup",
-        lambda authority: _registry_schemes_for_modelo(
+        lambda authority: registry_schemes_for_modelo(
             _EmptyRetencionesAggregation("111", Period.from_year_and_code(2025, "1T")), authority=authority
         ),
     ),
@@ -252,7 +252,7 @@ _SCOPED_RESOLVERS: tuple[tuple[str, Callable[[GovernedFactSource | None], object
         lambda authority: mapping_fact_entries("legal-reference-schema-vocabulary", authority=authority),
     ),
     ("retencion_clave", lambda authority: resolve_retencion_clave("A", _EFFECTIVE, authority=authority)),
-    ("withholding_role", lambda authority: _withholding_role_declarations(_EFFECTIVE, authority=authority)),
+    ("withholding_role", lambda authority: withholding_role_declarations(_EFFECTIVE, authority=authority)),
     (
         "known_bad_citation",
         lambda authority: find_known_bad(

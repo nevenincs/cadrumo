@@ -9,7 +9,7 @@ from typing import cast
 from pydantic import BaseModel, Field, field_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.text_bounds import CALENDAR_MONTH_MAX
 from .constants import SUPPORTED_PROFILE_SCHEMA_VERSION, ProfileSchemaVersion
 from .descendant import DescendantInfo
@@ -47,7 +47,7 @@ def _survivor_rank_by_position(eligible: Sequence[DescendantInfo], filing_year: 
 class RentaFamilyProfile(BaseModel):
     """Typed repeated family-member facts consumed by Modelo 100 bindings."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: ProfileSchemaVersion = Field(default=SUPPORTED_PROFILE_SCHEMA_VERSION)
     descendants: tuple[RentaDescendantProfile, ...] = ()

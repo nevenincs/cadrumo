@@ -56,12 +56,12 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from ....core.errors.hierarchy import CadrumoError
-from ....core.hex import HEX_PATTERN_64 as _HEX_PATTERN_64
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core.time.clock import now as _utc_now
+from ....core.hex import HEX_PATTERN_64
+from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.time.clock import now
 from ....core.time.utc import UtcInstant
-from ..storage.secure_object_namespaces import MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE as _NAMESPACE
-from ._secure_model_document import ProfileBareModelSecurePersistence, resolve_profile_secure_object_repository
+from ..storage.secure_object_namespaces import MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE
+from .secure_model_document import ProfileBareModelSecurePersistence, resolve_profile_secure_object_repository
 
 if TYPE_CHECKING:
     from ..storage.sql.secure_objects import SecureObjectRepository
@@ -99,16 +99,16 @@ class RecipientPackageReplayedError(RecipientReplayGuardError):
 class ConsumedNonceRecord(BaseModel):
     """One consumed ``envelope_nonce_hex`` on file, with its consumption time."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
-    nonce_hex: str = Field(pattern=_HEX_PATTERN_64)
+    nonce_hex: str = Field(pattern=HEX_PATTERN_64)
     consumed_at: UtcInstant
 
 
 class ConsumedNonceLedger(BaseModel):
     """A bucket's full set of consumed recipient-package replay nonces."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     records: tuple[ConsumedNonceRecord, ...] = Field(default_factory=tuple)
 
@@ -146,7 +146,7 @@ class RecipientReplayGuardRepository:
         """
         self._storage = ProfileBareModelSecurePersistence(
             objects=resolve_profile_secure_object_repository(objects=objects, bucket_id=bucket_id),
-            definition=_NAMESPACE,
+            definition=MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE,
             model_type=ConsumedNonceLedger,
             empty_document=ConsumedNonceLedger,
             write_provenance="adapters.persistence.profile.recipient_replay_guard",
@@ -197,7 +197,7 @@ class RecipientReplayGuardRepository:
             RecipientPackageReplayedError: When ``nonce_hex`` is already on
                 file -- the package has been presented for decryption before.
         """
-        record = ConsumedNonceRecord(nonce_hex=nonce_hex, consumed_at=consumed_at or _utc_now())
+        record = ConsumedNonceRecord(nonce_hex=nonce_hex, consumed_at=consumed_at or now())
 
         def _append_if_new(current: ConsumedNonceLedger) -> ConsumedNonceLedger:
             if any(existing.nonce_hex == nonce_hex for existing in current.records):

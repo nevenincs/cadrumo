@@ -96,7 +96,7 @@ def _deemed_served_legal_ref(calendar: OverviewCalendar, *, operation: PinnedAut
     return str(resolved.legal_refs[0])
 
 
-def _refusal_requirements(
+def refusal_requirements(
     *,
     operation: PinnedAuthorityOperation,
     taxpayer: TaxpayerProfile,
@@ -345,7 +345,7 @@ class _OverviewReadPorts:
                 calendar=active,
                 notices=notices,
                 deemed_served_legal_ref=legal_ref,
-                refusal_requirements=_refusal_requirements(
+                refusal_requirements=refusal_requirements(
                     operation=operation,
                     taxpayer=taxpayer,
                     taxpayer_model_declared=calendar.taxpayer_model_declared,
@@ -377,7 +377,7 @@ class _OverviewReadPorts:
         )
         return OverviewAgendaRead(
             agenda=OverviewAgendaSnapshot.from_agenda(agenda),
-            refusal_requirements=_refusal_requirements(
+            refusal_requirements=refusal_requirements(
                 operation=operation,
                 taxpayer=taxpayer,
                 taxpayer_model_declared=agenda.taxpayer_model_declared,
@@ -409,7 +409,7 @@ class _OverviewReadPorts:
         return OverviewBacklogRead(
             backlog=OverviewBacklogSnapshot.from_backlog(report),
             notices=(OverviewNoticeSnapshot.from_notice(notice),) if notice is not None else (),
-            refusal_requirements=_refusal_requirements(
+            refusal_requirements=refusal_requirements(
                 operation=operation,
                 taxpayer=taxpayer,
                 taxpayer_model_declared=report.taxpayer_model_declared,
@@ -506,7 +506,7 @@ def build_overview_read_ports(*, bucket_id: str, operation: PinnedAuthorityOpera
 __all__ = ["build_overview_read_ports"]
 
 
-def _calendar_other_profiles(
+def calendar_other_profiles(
     active_bucket_id: str, pointers: Mapping[str, ProfileBucketPointer]
 ) -> tuple[OverviewLockedProfileSnapshot, ...]:
     """List every other public profile pointer in the established label order."""
@@ -535,7 +535,7 @@ def _calendar_profile_survey(
 
     pointers = list_profile_buckets()
     own_pointer = pointers.get(bucket_id)
-    other = _calendar_other_profiles(bucket_id, pointers)
+    other = calendar_other_profiles(bucket_id, pointers)
     incomplete = record.setup_state is not ProfileSetupState.COMPLETE
     return OverviewCalendarRead(
         survey=OverviewCalendarSurveySnapshot(
@@ -554,7 +554,7 @@ def _calendar_profile_survey(
         notices=notices,
         deemed_served_legal_ref=legal_ref,
         refusal_requirements=(
-            _refusal_requirements(
+            refusal_requirements(
                 operation=operation,
                 taxpayer=taxpayer,
                 taxpayer_model_declared=calendar.taxpayer_model_declared,

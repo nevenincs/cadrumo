@@ -50,7 +50,7 @@ _JUSTIFICANTE_FIXTURE = (
 )
 
 
-def _session_host(frontend: OperationFrontendProjection) -> OperationExecutionCallerReader:
+def session_host(frontend: OperationFrontendProjection) -> OperationExecutionCallerReader:
     def read(identity: OperationIdentity) -> OperationExecutionCaller:
         del identity
         return OperationExecutionCaller(frontend=frontend, session_kind=SessionKind.ATTENDED, client_id=_SESSION_CLIENT)
@@ -69,7 +69,7 @@ def test_import_pull_and_list_release_the_recorded_evidence_reference_on_every_f
     with conformance.conformance_operation_runtime(
         tmp_path / "runtime",
         cleanup=conformance.OperationRuntimeCloseWitness(),
-        execution_caller_reader=_session_host(frontend),
+        execution_caller_reader=session_host(frontend),
     ) as (driver, registry, profile_id):
         subject_ref = profile_operation_subject(str(profile_id))
         released: dict[str, ModeloReconciliationImportProjection] = {}
@@ -98,7 +98,7 @@ def test_import_pull_and_list_release_the_recorded_evidence_reference_on_every_f
                 )
                 assert recorded_observation.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
                 assert recorded_observation.projection.effect is OperationEffect.UPDATED
-                released[definition_id] = conformance._resolve_result_projection(
+                released[definition_id] = conformance.resolve_result_projection(
                     driver,
                     registry,
                     definition_id=definition_id,
@@ -117,7 +117,7 @@ def test_import_pull_and_list_release_the_recorded_evidence_reference_on_every_f
             stored = {record.source_ref for record in ModeloReconciliationPersistence().iter_records()}
 
         assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        listing = conformance._resolve_result_projection(
+        listing = conformance.resolve_result_projection(
             driver,
             registry,
             definition_id=MODELO_RECONCILIATION_LIST_OPERATION_DEFINITION_ID,

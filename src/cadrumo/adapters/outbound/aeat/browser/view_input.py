@@ -68,7 +68,7 @@ from cadrumo_client.contracts.view_stream import (
 
 from .....core.config import Settings
 from .....core.logging import get_logger
-from .._playwright import BrowserContext, Page, PlaywrightError
+from ..playwright import BrowserContext, Page, PlaywrightError
 from .view_work import settle
 
 if TYPE_CHECKING:

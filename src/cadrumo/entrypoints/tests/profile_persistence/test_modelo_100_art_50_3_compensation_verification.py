@@ -35,7 +35,7 @@ from cadrumo.domain.calculations.registry.tests.authored_editions import (
 )
 from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -75,8 +75,7 @@ from ....domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from ....domain.renta.retencion_soportada_absence import RetencionSoportadaAbsence
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ...adapter_composition_work_ports import build_work_lifecycle_ports
 from ...retencion_soportada_absence_composition import build_retencion_soportada_absence_ports
 from .file_flow_test_support import calculation_ports_for_test
@@ -165,7 +164,7 @@ def _maximum_predicate_id(year: int, row: _OriginRow) -> str:
 
 
 def _seed_profile(filing_year: int) -> None:
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -182,7 +181,7 @@ def _seed_profile(filing_year: int) -> None:
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
     # The 0596 withholding comes only from the register; here it records that no payer withheld.

@@ -9,9 +9,9 @@ import pytest
 from .....core.casilla_id import CasillaId
 from .....tests.inventory import FIXTURES_DIR
 from ..parser import parse_declaracion
-from ._parser_boundary_support import (
-    _expected_casilla_values,
-    _expected_period,
+from .parser_boundary_support import (
+    expected_casilla_values,
+    expected_period,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
@@ -21,7 +21,7 @@ _M390_CORPUS_PARAMS: tuple[tuple[str, int], ...] = (
     ("2023-0A", 2023),
 )
 _M390_EXPECTED: dict[str, dict[CasillaId, Decimal]] = {
-    "2022-0A": _expected_casilla_values(
+    "2022-0A": expected_casilla_values(
         {
             "iva.anual.repercutido.general": Decimal("10500.00"),
             "iva.anual.repercutido.reducido": Decimal("0.00"),
@@ -33,7 +33,7 @@ _M390_EXPECTED: dict[str, dict[CasillaId, Decimal]] = {
             "iva.anual.resultado-regimen-general": Decimal("2100.00"),
         }
     ),
-    "2023-0A": _expected_casilla_values(
+    "2023-0A": expected_casilla_values(
         {
             "iva.anual.repercutido.general": Decimal("12600.00"),
             "iva.anual.repercutido.reducido": Decimal("0.00"),
@@ -62,7 +62,7 @@ def test_parser_extracts_modelo_390_profile_targets_from_corpus(pdf_stem: str, y
     )
 
     assert filing.modelo == "390"
-    assert filing.period == _expected_period(year, "0A")
+    assert filing.period == expected_period(year, "0A")
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "390"

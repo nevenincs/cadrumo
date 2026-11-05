@@ -26,7 +26,7 @@ from ..storage.errors import (
     OutboundStoragePermissionError,
     OutboundStorageQuotaError,
 )
-from ._preconditions import google_terminal_refusal
+from .preconditions import google_terminal_refusal
 from .sign_in_state import ended_grant_refusal
 
 if TYPE_CHECKING:

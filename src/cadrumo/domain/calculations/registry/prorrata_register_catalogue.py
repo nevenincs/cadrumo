@@ -12,7 +12,7 @@ from ....core.prorrata_register import (
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
-from . import prorrata_register_models as _models
+from . import prorrata_register_models
 from .errors import RegistryValidationError
 from .facts.resolution import required_mapping_entry, unique_mapping_tokens
 from .facts.string_mapping import (
@@ -49,10 +49,10 @@ def resolve_prorrata_register_catalogue(
     *,
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
-) -> _models.ProrrataRegisterCatalogue:
+) -> prorrata_register_models.ProrrataRegisterCatalogue:
     """Resolve all register vocabularies through the dated 0116 mapping fact."""
     entries = _ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority)
-    catalogue = _models.ProrrataRegisterCatalogue(
+    catalogue = prorrata_register_models.ProrrataRegisterCatalogue(
         regimes=_prorrata_regimes(entries),
         transition_kinds=_prorrata_transition_kinds(entries),
         provenances=_prorrata_provenances(entries),
@@ -62,12 +62,14 @@ def resolve_prorrata_register_catalogue(
     return catalogue
 
 
-def _prorrata_regimes(entries: Mapping[str, str]) -> tuple[_models.ProrrataRegisterRegimeDefinition, ...]:
+def _prorrata_regimes(
+    entries: Mapping[str, str],
+) -> tuple[prorrata_register_models.ProrrataRegisterRegimeDefinition, ...]:
     regime_tokens = (
         *unique_mapping_tokens(entries, _REGIME_ORDER_KEY, subject=_ENTRY_SUBJECT),
         *unique_mapping_tokens(entries, _REGISTER_REGIME_ADDITIONS_KEY, subject=_ENTRY_SUBJECT),
     )
-    regimes: list[_models.ProrrataRegisterRegimeDefinition] = []
+    regimes: list[prorrata_register_models.ProrrataRegisterRegimeDefinition] = []
     for raw_token in regime_tokens:
         prefix = f"{_REGIME_PREFIX}{raw_token}"
         token = ProrrataRegisterRegime.from_registry(
@@ -76,7 +78,7 @@ def _prorrata_regimes(entries: Mapping[str, str]) -> tuple[_models.ProrrataRegis
         if str(token) != raw_token:
             raise RegistryValidationError(f"register regime {raw_token!r} declares a mismatched value")
         regimes.append(
-            _models.ProrrataRegisterRegimeDefinition(
+            prorrata_register_models.ProrrataRegisterRegimeDefinition(
                 token=token,
                 description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
                 legal_ref=required_mapping_entry(entries, f"{prefix}.legal_ref", subject=_ENTRY_SUBJECT),
@@ -88,8 +90,10 @@ def _prorrata_regimes(entries: Mapping[str, str]) -> tuple[_models.ProrrataRegis
     return tuple(regimes)
 
 
-def _prorrata_transition_kinds(entries: Mapping[str, str]) -> tuple[_models.ProrrataTransitionDefinition, ...]:
-    transition_kinds: list[_models.ProrrataTransitionDefinition] = []
+def _prorrata_transition_kinds(
+    entries: Mapping[str, str],
+) -> tuple[prorrata_register_models.ProrrataTransitionDefinition, ...]:
+    transition_kinds: list[prorrata_register_models.ProrrataTransitionDefinition] = []
     for raw_token in unique_mapping_tokens(entries, _TRANSITION_ORDER_KEY, subject=_ENTRY_SUBJECT):
         prefix = f"{_TRANSITION_PREFIX}{raw_token}"
         token = ProrrataEspecialTransitionKind.from_registry(
@@ -98,7 +102,7 @@ def _prorrata_transition_kinds(entries: Mapping[str, str]) -> tuple[_models.Pror
         if str(token) != raw_token:
             raise RegistryValidationError(f"transition {raw_token!r} declares a mismatched value")
         transition_kinds.append(
-            _models.ProrrataTransitionDefinition(
+            prorrata_register_models.ProrrataTransitionDefinition(
                 token=token,
                 description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
                 legal_ref=required_mapping_entry(entries, f"{prefix}.legal_ref", subject=_ENTRY_SUBJECT),
@@ -107,8 +111,10 @@ def _prorrata_transition_kinds(entries: Mapping[str, str]) -> tuple[_models.Pror
     return tuple(transition_kinds)
 
 
-def _prorrata_provenances(entries: Mapping[str, str]) -> tuple[_models.ProrrataProvenanceDefinition, ...]:
-    provenances: list[_models.ProrrataProvenanceDefinition] = []
+def _prorrata_provenances(
+    entries: Mapping[str, str],
+) -> tuple[prorrata_register_models.ProrrataProvenanceDefinition, ...]:
+    provenances: list[prorrata_register_models.ProrrataProvenanceDefinition] = []
     for raw_token in unique_mapping_tokens(entries, _PROVENANCE_ORDER_KEY, subject=_ENTRY_SUBJECT):
         prefix = f"{_PROVENANCE_PREFIX}{raw_token}"
         token = ProrrataProvisionalProvenance.from_registry(
@@ -117,7 +123,7 @@ def _prorrata_provenances(entries: Mapping[str, str]) -> tuple[_models.ProrrataP
         if str(token) != raw_token:
             raise RegistryValidationError(f"provenance {raw_token!r} declares a mismatched value")
         provenances.append(
-            _models.ProrrataProvenanceDefinition(
+            prorrata_register_models.ProrrataProvenanceDefinition(
                 token=token,
                 description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
                 legal_ref=required_mapping_entry(entries, f"{prefix}.legal_ref", subject=_ENTRY_SUBJECT),
@@ -138,8 +144,10 @@ def _prorrata_provenances(entries: Mapping[str, str]) -> tuple[_models.ProrrataP
     return tuple(provenances)
 
 
-def _prorrata_sector_letters(entries: Mapping[str, str]) -> tuple[_models.SectorDiferenciadoLetraDefinition, ...]:
-    sector_letters: list[_models.SectorDiferenciadoLetraDefinition] = []
+def _prorrata_sector_letters(
+    entries: Mapping[str, str],
+) -> tuple[prorrata_register_models.SectorDiferenciadoLetraDefinition, ...]:
+    sector_letters: list[prorrata_register_models.SectorDiferenciadoLetraDefinition] = []
     for raw_token in unique_mapping_tokens(entries, _SECTOR_ORDER_KEY, subject=_ENTRY_SUBJECT):
         prefix = f"{_SECTOR_PREFIX}{raw_token}"
         token = SectorDiferenciadoLetra.from_registry(
@@ -148,7 +156,7 @@ def _prorrata_sector_letters(entries: Mapping[str, str]) -> tuple[_models.Sector
         if str(token) != raw_token:
             raise RegistryValidationError(f"sector letter {raw_token!r} declares a mismatched value")
         sector_letters.append(
-            _models.SectorDiferenciadoLetraDefinition(
+            prorrata_register_models.SectorDiferenciadoLetraDefinition(
                 token=token,
                 description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
                 legal_ref=required_mapping_entry(entries, f"{prefix}.legal_ref", subject=_ENTRY_SUBJECT),
@@ -157,7 +165,7 @@ def _prorrata_sector_letters(entries: Mapping[str, str]) -> tuple[_models.Sector
     return tuple(sector_letters)
 
 
-def _validate_prorrata_register_catalogue(catalogue: _models.ProrrataRegisterCatalogue) -> None:
+def _validate_prorrata_register_catalogue(catalogue: prorrata_register_models.ProrrataRegisterCatalogue) -> None:
     if not set(catalogue.apportioning_regimes).issubset(catalogue.all_regimes):
         raise RegistryValidationError("0116 apportioning regimes must be declared in the regime vocabulary")
 

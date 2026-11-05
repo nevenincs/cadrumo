@@ -31,12 +31,12 @@ from ....core.i18n.render import lookup_translation
 from ....core.json_contract import Notice, ResolvedNoticeAction
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.deadlines.models import TaxpayerProfile
-from .._overview_rendering import (
+from ..common import action_text_lines
+from ..overview_rendering import (
     overview_calendar_output,
     overview_coverage_notices,
     overview_status_output,
 )
-from ..common import _action_text_lines
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -117,7 +117,7 @@ def test_status_text_and_envelope_notices_share_one_action_projection(report: Ov
     """
     lines, notices = overview_status_output(report)
 
-    executable_lines = _action_text_lines(notices)
+    executable_lines = action_text_lines(notices)
     actionable = [notice for notice in notices if isinstance(notice.action, ResolvedNoticeAction)]
     assert len(executable_lines) == len(actionable)
 

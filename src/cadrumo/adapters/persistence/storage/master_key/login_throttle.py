@@ -44,11 +44,11 @@ from pathlib import Path
 from pydantic import BaseModel, Field, NonNegativeInt
 
 from .....core.atomic_write import atomic_write_hardened_bytes
-from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from .....core.external_constants import UTF_8_ENCODING
 from .....core.locks import exclusive_file_lock
 from .....core.locks_errors import LockAcquisitionError
 from .....core.logging import get_logger
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.time.utc import UtcInstant
 from ..storage_path_definitions import LOGIN_THROTTLE_FILENAME
 
@@ -82,7 +82,7 @@ class LoginThrottleState(BaseModel):
     through the documented unreadable-means-cleared path instead.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: int = LOGIN_THROTTLE_SCHEMA_VERSION
     consecutive_failures: int = Field(default=0, ge=0)
@@ -92,7 +92,7 @@ class LoginThrottleState(BaseModel):
 class ThrottleEvaluation(BaseModel):
     """Typed outcome of a throttle evaluation at a given instant."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     throttled: bool
     remaining_seconds: NonNegativeInt
@@ -136,7 +136,7 @@ def _read_state(path: Path) -> LoginThrottleState:
     if not path.is_file():
         return LoginThrottleState()
     try:
-        state = LoginThrottleState.model_validate_json(path.read_text(encoding=_UTF_8_ENCODING))
+        state = LoginThrottleState.model_validate_json(path.read_text(encoding=UTF_8_ENCODING))
     except (OSError, ValueError):
         _log.warning("login throttle sidecar unreadable; treating as cleared")
         return LoginThrottleState()
@@ -155,7 +155,7 @@ def _write_state(path: Path, state: LoginThrottleState) -> None:
         state.model_dump(mode="json"),
         indent=2,
         sort_keys=True,
-    ).encode(_UTF_8_ENCODING)
+    ).encode(UTF_8_ENCODING)
     path.parent.mkdir(parents=True, exist_ok=True)
     atomic_write_hardened_bytes(path, payload + b"\n")
 

@@ -8,12 +8,12 @@ import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.ids import BindingId
-from ._parser_boundary_m130_support import _M130_CORPUS_IDS, _M130_CORPUS_PARAMS
-from ._verification_chain_support import (
-    _COMPUTED_CASILLAS_M130,
-    _calculate_engine_values_from_inputs,
-    _decimal_inputs_from_extracted_values,
-    _parse_extracted_declaracion_values,
+from .parser_boundary_m130_support import M130_CORPUS_IDS, M130_CORPUS_PARAMS
+from .verification_chain_support import (
+    COMPUTED_CASILLAS_M130,
+    calculate_engine_values_from_inputs,
+    decimal_inputs_from_extracted_values,
+    parse_extracted_declaracion_values,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
@@ -43,12 +43,12 @@ _M130_FORMULA_CHAIN_CASILLAS: tuple[CasillaId, ...] = (
 
 @pytest.mark.parametrize(
     "pdf_stem,year,period",
-    _M130_CORPUS_PARAMS,
-    ids=_M130_CORPUS_IDS,
+    M130_CORPUS_PARAMS,
+    ids=M130_CORPUS_IDS,
 )
 def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: str, year: int, period: str) -> None:
     """Engine recomputes casilla 19 (resultado final) from extracted leaf inputs."""
-    extracted = _parse_extracted_declaracion_values(modelo="130", fixture_stem=pdf_stem, year=year, period=period)
+    extracted = parse_extracted_declaracion_values(modelo="130", fixture_stem=pdf_stem, year=year, period=period)
 
     closure_extracted: Decimal | None
     if _M130_RESULTADO_CASILLA not in extracted:
@@ -61,7 +61,7 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
         closure_extracted = raw_closure
 
     extracted_c03 = extracted.get(_M130_RENDIMIENTO_NETO_CASILLA)
-    inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_COMPUTED_CASILLAS_M130)
+    inputs = decimal_inputs_from_extracted_values(extracted, excluding=COMPUTED_CASILLAS_M130)
     if isinstance(extracted_c03, Decimal):
         inputs[_M130_INGRESOS_CASILLA] = extracted_c03
     extracted_c02 = extracted.get(_M130_GASTOS_CASILLA)
@@ -73,7 +73,7 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
         "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         "irpf.previous_year_economic_activity_net_income": Decimal("0"),
     }
-    engine_values = _calculate_engine_values_from_inputs(
+    engine_values = calculate_engine_values_from_inputs(
         modelo="130",
         year=year,
         period=period,
@@ -116,6 +116,6 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
             f"FORMULA-MISMATCH [{pdf_stem}]: engine recomputed casilla '19' as "
             f"{engine_19!r} but AEAT-printed form shows {closure_extracted!r}.\n"
             f"  diff: {diff!r}\n"
-            f"  extracted inputs: {dict((k, v) for k, v in extracted.items() if k not in _COMPUTED_CASILLAS_M130)}\n"
+            f"  extracted inputs: {dict((k, v) for k, v in extracted.items() if k not in COMPUTED_CASILLAS_M130)}\n"
             f"  engine values for formula chain: {formula_chain_values}"
         )

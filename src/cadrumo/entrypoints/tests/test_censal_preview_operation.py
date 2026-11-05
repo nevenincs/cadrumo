@@ -48,7 +48,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from . import registered_executor_case_support as conformance
 from .supervised_operation_rig import operation_access_context
-from .test_censal_operation_operand import _operand
+from .test_censal_operation_operand import censal_operation_operand
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -178,7 +178,7 @@ def test_censal_preview_admits_its_exact_profile_and_settles_without_mutation(
     acquisition_task_names: list[str] = []
     acquisition_scopes: list[bool] = []
     pinned_operations: list[PinnedAuthorityOperation] = []
-    observation = _operand().observation
+    observation = censal_operation_operand().observation
 
     def browser_resources_factory() -> _PreviewBrowserResources:
         resource = _PreviewBrowserResources()
@@ -217,7 +217,7 @@ def test_censal_preview_admits_its_exact_profile_and_settles_without_mutation(
 
     # Earlier conformance cases may already have composed the default registry.
     # The preview's injected ports must reach its worker even in that order.
-    conformance._conformance_registry(
+    conformance.conformance_registry(
         before_irreversible_section=None,
         amendment_action_ports_factory=None,
         execution_caller_reader=None,
@@ -258,7 +258,7 @@ def test_censal_preview_admits_its_exact_profile_and_settles_without_mutation(
             snapshot = asyncio.run(driver.services.submission.supervisor.inspect(submission.receipt.operation_id))
             receipt = snapshot.terminal_receipt
             _assert_preview_receipt(receipt, observed, subject_ref)
-            preview = conformance._resolve_result_projection(
+            preview = conformance.resolve_result_projection(
                 driver,
                 runtime_registry,
                 definition_id=CENSAL_PREVIEW_OPERATION_DEFINITION_ID,

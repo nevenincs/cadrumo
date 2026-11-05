@@ -27,9 +27,9 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
-_BUCKET_ID = "30330303-3030-4303-8303-303303303303"
-_YEAR = 2025
-_T0 = datetime(2025, 1, 10, 10, 0, tzinfo=UTC)
+BUCKET_ID = "30330303-3030-4303-8303-303303303303"
+YEAR = 2025
+T0 = datetime(2025, 1, 10, 10, 0, tzinfo=UTC)
 _IVA_RATE = Decimal("0.21")
 _QUARTER_MONTH: dict[str, int] = {"1T": 2, "2T": 5, "3T": 8, "4T": 11}
 type StoredIvaAxis = Literal["devengada", "deducible", "casilla_59", "resultado"]
@@ -143,7 +143,7 @@ def product_software_identity() -> AeatProductSoftwareIdentity:
     )
 
 
-def transaction_booked_date(period: str, *, filing_year: int = _YEAR) -> date:
+def transaction_booked_date(period: str, *, filing_year: int = YEAR) -> date:
     """The date :func:`iva_transaction` books a row of ``period`` on: a quarter's middle month or the month itself."""
     month = _QUARTER_MONTH[period] if period in _QUARTER_MONTH else int(period)
     return date(filing_year, month, 10)
@@ -156,7 +156,7 @@ def iva_transaction(
     taxable_base: Decimal,
     iva_amount: Decimal,
     period: str,
-    filing_year: int = _YEAR,
+    filing_year: int = YEAR,
     iva_rate: Decimal = _IVA_RATE,
     amount: Decimal | None = None,
     iva_category: IvaCategory | None = None,
@@ -181,7 +181,7 @@ def iva_transaction(
                 source_sha256="c" * 64,
                 source_row_index=1,
                 source_format=SourceFormat.MANUAL,
-                ingested_at=_T0,
+                ingested_at=T0,
                 provider_name="manual-ledger",
             ),
             raw_fields={"source_kind": "ledger_transaction"},
@@ -194,7 +194,7 @@ def iva_transaction(
         "taxable_base": taxable_base,
         "iva_rate": iva_rate,
         "iva_amount": iva_amount,
-        "classified_at": _T0,
+        "classified_at": T0,
         "classified_by": "manual",
     }
     if iva_category is not None:
@@ -215,7 +215,7 @@ def iva_transaction(
 def persist_year_of_invoices(
     secure_objects: SecureObjectRepository,
     *,
-    filing_year: int = _YEAR,
+    filing_year: int = YEAR,
     facts_by_period: dict[str, dict[str, Decimal]] = _LAURA_QUARTER_FACTS,
     received_rate_percent: Decimal = Decimal("21"),
 ) -> StoredIvaByPeriod:
@@ -235,10 +235,10 @@ def persist_year_of_invoices(
     transactions: list[Transaction] = []
     purchase_invoices = []
     stored: StoredIvaByPeriod = {}
-    catalogue_ports = build_catalogue_creation_ports(bucket_id=_BUCKET_ID)
+    catalogue_ports = build_catalogue_creation_ports(bucket_id=BUCKET_ID)
     for period, facts in facts_by_period.items():
         purchase_invoice = build_catalogue_invoice(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             counterparty_name="Proveedor Taller SL",
             counterparty_tax_id="A58818501",
@@ -335,7 +335,7 @@ def persist_year_of_invoices(
             "casilla_59": facts["eu_supply_base"],
             "resultado": devengada - deducible,
         }
-    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions(tuple(transactions)))
     InvoiceCatalogueRepository(objects=secure_objects).save(build_invoice_catalogue(tuple(purchase_invoices)))
     return stored

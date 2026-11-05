@@ -14,9 +14,9 @@ from ......application.ledger.column_roles import ColumnRoleReaderUnavailable, b
 from ......application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 from ......tests.english_locale_fixture import english_locale_fixture
 from ......tests.inventory import FIXTURES_DIR
-from .._mapped_tabular import MappedTabularProvider
 from ..base import InvalidFinancialSourceError
 from ..detection import detect_provider
+from ..mapped_tabular import MappedTabularProvider
 
 __all__ = ["english_locale_fixture"]
 

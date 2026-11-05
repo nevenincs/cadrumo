@@ -58,8 +58,7 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ...domain.iva.classification import require_iva_territorial_scope
 from ...domain.iva.schema import EUMemberState, IvaTerritorialScope
-from .common import active_bucket_id_or_refuse as _counterparty_bucket_id
-from .common import bad, emit_envelope
+from .common import active_bucket_id_or_refuse, bad, emit_envelope
 from .ledger_counterparty_results import (
     CounterpartyConfirmResult,
     CounterpartyEstablishmentPayload,
@@ -130,7 +129,7 @@ def counterparty_confirm(
     actor: str | None = None,
 ) -> None:
     """Persist the operator's answer, or report the stored one unchanged."""
-    bucket_id = _counterparty_bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     asserted_by = actor or bucket_id or "operator"
     if scope is None and identification_state is None:
         raise bad(
@@ -185,7 +184,7 @@ def counterparty_withdraw(
         confirmed_counterparty_facts_key,
     )
 
-    bucket_id = _counterparty_bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     if confirmed_counterparty_facts_key(tax_identifier, country_code=country_code) is None:
         raise bad(
             tr("cli.ledger.counterparty.errors.unverifiable_identifier", identifier=tax_identifier),
@@ -352,7 +351,7 @@ def counterparty_view(
     nothing indicating that a confirm would refuse to use it -- the two surfaces
     diverging in exactly the case the verb exists for, invisibly.
     """
-    bucket_id = _counterparty_bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     completed = run_counterparty(
         ctx,
         request=LedgerCounterpartyRequest(

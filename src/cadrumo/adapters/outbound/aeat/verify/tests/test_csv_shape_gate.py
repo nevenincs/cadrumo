@@ -16,7 +16,7 @@ import pytest
 from ......core.aeat_csv import is_aeat_csv
 from ......core.config import Settings
 from ......domain.justificante.errors import JustificanteVerificationError
-from ..contract import _VERIFY_HOST, _response_confirms_valid_csv, verify_csv
+from ..contract import VERIFY_HOST, response_confirms_valid_csv, verify_csv
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -42,10 +42,10 @@ def test_a_matching_iframe_cannot_confirm_a_malformed_csv(bad_csv: str) -> None:
     """The exact audit probe: a page echoing a malformed value is not proof."""
     assert is_aeat_csv(bad_csv) is False
 
-    confirmed = _response_confirms_valid_csv(
+    confirmed = response_confirms_valid_csv(
         _viewer_html(bad_csv),
         expected_csv=bad_csv,
-        final_url=f"https://{_VERIFY_HOST}{_COTEJO_PATH}?CSV={bad_csv}",
+        final_url=f"https://{VERIFY_HOST}{_COTEJO_PATH}?CSV={bad_csv}",
     )
 
     assert confirmed is False
@@ -53,20 +53,20 @@ def test_a_matching_iframe_cannot_confirm_a_malformed_csv(bad_csv: str) -> None:
 
 def test_a_well_shaped_csv_with_a_matching_iframe_still_confirms() -> None:
     """The gate must not break the case it exists to protect."""
-    confirmed = _response_confirms_valid_csv(
+    confirmed = response_confirms_valid_csv(
         _viewer_html(_VALID_CSV),
         expected_csv=_VALID_CSV,
-        final_url=f"https://{_VERIFY_HOST}{_COTEJO_PATH}?CSV={_VALID_CSV}",
+        final_url=f"https://{VERIFY_HOST}{_COTEJO_PATH}?CSV={_VALID_CSV}",
     )
 
     assert confirmed is True
 
 
 def test_a_well_shaped_csv_with_a_mismatched_iframe_does_not_confirm() -> None:
-    confirmed = _response_confirms_valid_csv(
+    confirmed = response_confirms_valid_csv(
         _viewer_html("OTHERCSV98765432"),
         expected_csv=_VALID_CSV,
-        final_url=f"https://{_VERIFY_HOST}{_COTEJO_PATH}?CSV={_VALID_CSV}",
+        final_url=f"https://{VERIFY_HOST}{_COTEJO_PATH}?CSV={_VALID_CSV}",
     )
 
     assert confirmed is False

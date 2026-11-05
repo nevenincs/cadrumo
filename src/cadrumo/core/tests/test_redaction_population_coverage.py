@@ -197,7 +197,7 @@ def _recover_hashed_spans(source: str, digest: str) -> set[str]:
     }
 
 
-def _admitting_authority(span: str) -> str | None:
+def admitting_authority(span: str) -> str | None:
     """Name the authority that accepts ``span``, or ``None`` if none does."""
     normalised = normalise_nif_iva(span)
     candidates = [normalised]
@@ -243,7 +243,7 @@ def test_every_hashed_span_is_a_real_identity_or_account(source: str, funnel: Ca
     for digest in _DIGEST_RE.findall(redacted):
         spans = _recover_hashed_spans(source, digest)
         assert spans, f"digest {digest} in {redacted!r} matches no substring of {source!r}"
-        authorities = {span: _admitting_authority(span) for span in spans}
+        authorities = {span: admitting_authority(span) for span in spans}
         assert any(authorities.values()), (
             f"the funnel hashed {sorted(spans)!r} out of {source!r}, and no authority accepts any of them"
         )

@@ -24,23 +24,23 @@ from ..buckets import BucketEventHistoryRepository
 from ..modelo_reconciliation import ModeloReconciliationPersistence
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from .test_reconcile_value_comparison import (
-    _persist_filed_revision,
-    _receipt_for_m131,
-    _seed_work_unit,
+    isolated_backend as isolated_backend,
 )
 from .test_reconcile_value_comparison import (
-    isolated_backend as isolated_backend,
+    receipt_for_m131,
+    reconcile_value_comparison_persist_filed_revision,
+    seed_work_unit,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 
 def test_exact_revision_selection_and_historical_provenance(operation: PinnedAuthorityOperation) -> None:
-    unit = _seed_work_unit(modelo="131", filing_year=2024, period="1T")
-    _persist_filed_revision(unit, total_ingresar=Decimal("500"))
+    unit = seed_work_unit(modelo="131", filing_year=2024, period="1T")
+    reconcile_value_comparison_persist_filed_revision(unit, total_ingresar=Decimal("500"))
     repository = CalculationRevisionCatalogueRepository()
     filed = repository.load(operation=operation).for_work_unit(unit.work_unit_id)[0]
-    _persist_filed_revision(unit, total_ingresar=Decimal("600"))
+    reconcile_value_comparison_persist_filed_revision(unit, total_ingresar=Decimal("600"))
     catalogue = repository.load(operation=operation)
     draft = next(row for row in catalogue.for_work_unit(unit.work_unit_id) if row != filed)
     draft = draft.model_copy(
@@ -61,7 +61,7 @@ def test_exact_revision_selection_and_historical_provenance(operation: PinnedAut
             source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
             source_ref="test://receipt",
             actor="operator",
-            justificante=_receipt_for_m131(total_ingresar=Decimal("600")),
+            justificante=receipt_for_m131(total_ingresar=Decimal("600")),
             operation=operation,
             calculation_revision_id=revision_id,
         )
@@ -86,8 +86,8 @@ def test_exact_revision_selection_and_historical_provenance(operation: PinnedAut
     del legacy["calculation_revision_id"]
     assert ModeloReconciliationRecord.model_validate_json(json.dumps(legacy)).calculation_revision_id is None
 
-    other = _seed_work_unit(modelo="131", filing_year=2024, period="2T")
-    _persist_filed_revision(other, total_ingresar=Decimal("600"))
+    other = seed_work_unit(modelo="131", filing_year=2024, period="2T")
+    reconcile_value_comparison_persist_filed_revision(other, total_ingresar=Decimal("600"))
     other_revision = repository.load(operation=operation).for_work_unit(other.work_unit_id)[0]
     for target in ["a" * 64, other_revision.calculation_revision_id]:
         with pytest.raises(CalculationRevisionNotFoundError):
@@ -97,13 +97,13 @@ def test_exact_revision_selection_and_historical_provenance(operation: PinnedAut
 
 
 def test_history_retains_stored_coordinates_after_authority_changes(operation: PinnedAuthorityOperation) -> None:
-    unit = _seed_work_unit(modelo="131", filing_year=2024, period="1T")
+    unit = seed_work_unit(modelo="131", filing_year=2024, period="1T")
     prepared = prepare_parsed_justificante(
         work_unit=unit,
         source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
         source_ref="test://retired-law",
         actor="operator",
-        justificante=_receipt_for_m131(total_ingresar=Decimal("600")),
+        justificante=receipt_for_m131(total_ingresar=Decimal("600")),
         operation=operation,
     )
     historic_ref = prepared.record.registry_snapshot_ref.model_copy(update={"revision_id": "retired-law"})
@@ -120,8 +120,8 @@ def test_optional_only_scope_discloses_zero_compared_fields(
 ) -> None:
     from .....application.modelo import reconciliation_comparison
 
-    unit = _seed_work_unit(modelo="131", filing_year=2024, period="1T")
-    _persist_filed_revision(unit, total_ingresar=Decimal("600"))
+    unit = seed_work_unit(modelo="131", filing_year=2024, period="1T")
+    reconcile_value_comparison_persist_filed_revision(unit, total_ingresar=Decimal("600"))
     revision = CalculationRevisionCatalogueRepository().load(operation=operation).for_work_unit(unit.work_unit_id)[0]
     snapshot = operation.snapshot("131", filing_year=2024, period="1T")
     policy = replace(

@@ -54,7 +54,7 @@ def _period(year: int, token: str | None) -> Period | None:
     return None if token is None else Period.from_year_and_code(year, token)
 
 
-def _listing_row(row: FiledListingRowPublicV1) -> FiledDataListingRow:
+def listing_row(row: FiledListingRowPublicV1) -> FiledDataListingRow:
     return FiledDataListingRow(
         modelo=row.modelo,
         year=row.year,
@@ -68,7 +68,7 @@ def _listing_row(row: FiledListingRowPublicV1) -> FiledDataListingRow:
     )
 
 
-def _listing_failure(row: FiledListingFailurePublicV1) -> FiledDataCaptureFailureRow:
+def listing_failure(row: FiledListingFailurePublicV1) -> FiledDataCaptureFailureRow:
     return FiledDataCaptureFailureRow(
         modelo=row.modelo,
         year=row.year,
@@ -86,8 +86,8 @@ def _read_list_projection(
 ) -> tuple[tuple[FiledDataListingRow, ...], tuple[FiledDataCaptureFailureRow, ...]]:
     if _filed_listing_request_differs(projection, request):
         raise ValueError("filed-list result does not match its submitted scope")
-    rows = tuple(_listing_row(row) for row in projection.rows)
-    failures = tuple(_listing_failure(row) for row in projection.failures)
+    rows = tuple(listing_row(row) for row in projection.rows)
+    failures = tuple(listing_failure(row) for row in projection.failures)
     if projection.row_count != len(rows) or projection.failed_count != len(failures):
         raise ValueError("filed-list counts do not match their reconstructed rows")
     if any(_filed_listing_scope_invalid(row, request) for row in rows):
@@ -106,7 +106,7 @@ def _filed_listing_request_differs(projection: FiledListPublicResultV1, request:
     )
 
 
-def _discover_report(projection: FiledDiscoverPublicResultV1) -> FiledHistoryDiscoveryReport:
+def discover_report(projection: FiledDiscoverPublicResultV1) -> FiledHistoryDiscoveryReport:
     return FiledHistoryDiscoveryReport(
         pairs=tuple(
             FiledHistoryDiscoveryPair(
@@ -202,7 +202,7 @@ def read_filed_discover_for_cli(ctx: typer.Context) -> FiledDiscoverRead:
         projection = completed.projection
         if not isinstance(projection, FiledDiscoverPublicResultV1):
             raise ValueError("filed-discover projection has an invalid type")
-        report = _discover_report(projection)
+        report = discover_report(projection)
         _require_settled_read(completed)
     except Exception:
         raise invalid_completion_error(completed) from None

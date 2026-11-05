@@ -45,7 +45,7 @@ from ....application.filing.draft_review import ModeloApprovalStaleReason, appro
 from ....application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
 from ....application.invoices.catalogue_creation import build_catalogue_invoice
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.filing.protocols import CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft
 from ....domain.invoices.models import Invoice
@@ -104,7 +104,7 @@ def _invoice(invoice_number: str, *, taxable_base: Decimal, bucket_id: str = _RU
 def test_approval_goes_stale_when_invoice_source_data_changes(
     _active_bucket_runtime: TestRuntimeProfile,
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         bucket_id = _active_bucket_runtime.bucket_id
         schema_provider = _schema_provider()
         draft = _ready_draft(schema_provider)
@@ -155,7 +155,7 @@ def test_approval_not_stale_when_invoice_source_unchanged(
     meaningless. Approving and then re-checking against the identical catalogue
     must yield an empty reason tuple.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         bucket_id = _active_bucket_runtime.bucket_id
         schema_provider = _schema_provider()
         draft = _ready_draft(schema_provider)

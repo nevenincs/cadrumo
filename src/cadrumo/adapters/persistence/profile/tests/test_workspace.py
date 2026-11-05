@@ -48,14 +48,14 @@ from cadrumo.domain.calculations.registry.tests.published_authority import (
 
 from .published_authority_support import published_authority_operation
 from .workspace_support import (
-    _FILING_YEAR,
-    _LAW_SELECTED_REVISION_ID,
-    _assemble_static_inspection_pieces,
-    _real_303_inspection,
-    _real_inspection,
-    _seed_work_unit,
-    _supported_filing_years,
-    _visible_target,
+    FILING_YEAR,
+    LAW_SELECTED_REVISION_ID,
+    assemble_static_inspection_pieces,
+    real_303_inspection,
+    real_inspection,
+    seed_work_unit,
+    supported_filing_years,
+    visible_target,
 )
 from .workspace_support import (
     workspace_repos as workspace_repos,
@@ -69,12 +69,12 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 def test_visible_target_projects_into_a_selector_request_with_no_exact_operands() -> None:
     """The visible-target mapping must carry natural coordinates, not an exact work-unit lookup."""
-    target = _visible_target("some-bucket", revision_id="2019-y-siguientes")
+    target = visible_target("some-bucket", revision_id="2019-y-siguientes")
 
     request = modelo_work_selector_request_for_target(target, bucket_id="some-bucket")
 
     assert request.modelo == "130"
-    assert request.filing_year == _FILING_YEAR
+    assert request.filing_year == FILING_YEAR
     assert request.revision_id == "2019-y-siguientes"
     assert request.bucket_id == "some-bucket"
     assert request.work_unit_id is None
@@ -85,7 +85,7 @@ def test_visible_target_projects_into_a_selector_request_with_no_exact_operands(
 def test_formula_operand_references_answer_the_input_direction_not_the_output_direction() -> None:
     """A real revision where the same casilla is both a formula's output and another's input."""
     authority = published_authority_operation()
-    snapshot = authority.snapshot("130", filing_year=_FILING_YEAR, period="1T")
+    snapshot = authority.snapshot("130", filing_year=FILING_YEAR, period="1T")
     formulas = snapshot.revision.formulas
 
     producing_formula_ids = {formula.id for formula in formulas if formula.target_casilla_id == "03"}
@@ -112,7 +112,7 @@ _RELATION_SOURCE_CASILLA_ID = "15"
 
 def _relation_fold_filing_year() -> int:
     """Return the newest supported filing year whose Renta revision declares the fold."""
-    for year in sorted(_supported_filing_years(), reverse=True):
+    for year in sorted(supported_filing_years(), reverse=True):
         bindings = published_snapshot("100", filing_year=year, period="0A").revision.bindings
         if any(binding_id == _RELATION_BINDING_ID for binding_id, _provider in fold_slots(bindings)):
             return year
@@ -166,7 +166,7 @@ def test_static_inspection_schema_identity_is_stable_and_uses_the_s278_manifest_
     from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
     authority = published_authority_operation()
-    capture = authority.capture_law_selected_projection("130", filing_year=_FILING_YEAR, period="1T")
+    capture = authority.capture_law_selected_projection("130", filing_year=FILING_YEAR, period="1T")
     inspection = capture.projection
     assert isinstance(inspection, RegistryRevisionInspection)
 
@@ -174,7 +174,7 @@ def test_static_inspection_schema_identity_is_stable_and_uses_the_s278_manifest_
     identity_again = resolve_static_inspection_schema_identity(inspection)
 
     assert identity == identity_again
-    assert identity.schema_id == f"modelo-130-{_LAW_SELECTED_REVISION_ID}"
+    assert identity.schema_id == f"modelo-130-{LAW_SELECTED_REVISION_ID}"
     assert (
         identity.field_manifest_digest
         == generate_modelo_workspace_field_manifest_for_inspection(inspection).manifest_digest
@@ -183,7 +183,7 @@ def test_static_inspection_schema_identity_is_stable_and_uses_the_s278_manifest_
 
 def test_static_inspection_evidence_horizon_is_stable_and_sourced_from_the_inspection() -> None:
     authority = published_authority_operation()
-    capture = authority.capture_law_selected_projection("130", filing_year=_FILING_YEAR, period="1T")
+    capture = authority.capture_law_selected_projection("130", filing_year=FILING_YEAR, period="1T")
     inspection = capture.projection
     from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
@@ -215,7 +215,7 @@ def test_static_inspection_casilla_schema_records_use_the_s277_joins_and_s283_ab
     from cadrumo.core.external_constants import OutputLanguage
 
     authority = published_authority_operation()
-    capture = authority.capture_law_selected_projection("130", filing_year=_FILING_YEAR, period="1T")
+    capture = authority.capture_law_selected_projection("130", filing_year=FILING_YEAR, period="1T")
     from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
     inspection = capture.projection
@@ -232,9 +232,9 @@ def test_static_inspection_casilla_schema_records_use_the_s277_joins_and_s283_ab
     target = ModeloWorkspaceResolvedTargetV1(
         bucket_id="test-bucket-0000-0000-0000-000000000000",
         modelo="130",
-        filing_year=_FILING_YEAR,
-        period=Period.from_year_and_code(_FILING_YEAR, "1T"),
-        law_selected_revision_id=_LAW_SELECTED_REVISION_ID,
+        filing_year=FILING_YEAR,
+        period=Period.from_year_and_code(FILING_YEAR, "1T"),
+        law_selected_revision_id=LAW_SELECTED_REVISION_ID,
         review_status=inspection.review_status,
         requested_revision_assertion=ModeloWorkspaceRevisionAssertionV1(
             source=ModeloWorkspaceRevisionAssertionSource.REQUESTED,
@@ -280,8 +280,8 @@ def test_schema_facet_pagination_round_trips_a_cursor_across_all_pages(
     from cadrumo.core.external_constants import OutputLanguage
 
     bucket_id, repository = workspace_repos
-    _seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
-    inspection, target, schema_identity, baseline, contributors = _assemble_static_inspection_pieces(
+    seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
+    inspection, target, schema_identity, baseline, contributors = assemble_static_inspection_pieces(
         bucket_id, repository
     )
     records = static_inspection_casilla_schema_records(inspection, target, output_language=OutputLanguage.ES)
@@ -321,8 +321,8 @@ def test_schema_facet_stale_cursor_refuses_rather_than_returning_a_different_pag
     from cadrumo.core.external_constants import OutputLanguage
 
     bucket_id, repository = workspace_repos
-    _seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
-    inspection, target, schema_identity, baseline, contributors = _assemble_static_inspection_pieces(
+    seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
+    inspection, target, schema_identity, baseline, contributors = assemble_static_inspection_pieces(
         bucket_id, repository
     )
     records = static_inspection_casilla_schema_records(inspection, target, output_language=OutputLanguage.ES)
@@ -363,7 +363,7 @@ def test_schema_facet_stale_cursor_refuses_rather_than_returning_a_different_pag
 
 
 def _real_100_inspection() -> RegistryRevisionInspection:
-    return _real_inspection("100", filing_year=_RELATION_FILING_YEAR, period="0A")
+    return real_inspection("100", filing_year=_RELATION_FILING_YEAR, period="0A")
 
 
 def _real_303_snapshot():
@@ -371,7 +371,7 @@ def _real_303_snapshot():
 
     authority = published_authority_operation()
     capture = authority.capture_law_selected_projection(
-        "303", filing_year=_FILING_YEAR, period="1T", grade=RegistryAuthorityGrade.CALCULATION
+        "303", filing_year=FILING_YEAR, period="1T", grade=RegistryAuthorityGrade.CALCULATION
     )
     snapshot = capture.projection
     assert isinstance(snapshot, RegistrySnapshot)
@@ -388,7 +388,7 @@ def test_shared_schema_record_builders_are_identical_whether_fed_inspection_or_s
     way is the guarantee that a graded and a static read cannot disagree
     about the same revision's edges.
     """
-    inspection = _real_303_inspection()
+    inspection = real_303_inspection()
     snapshot = _real_303_snapshot()
     revision = snapshot.revision
 
@@ -448,7 +448,7 @@ def test_static_inspection_formula_schema_records_carry_their_own_full_operand_s
         ModeloWorkspaceTechnicalLabelV1,
     )
 
-    inspection = _real_303_inspection()
+    inspection = real_303_inspection()
     records = formula_schema_records(inspection.formulas)
 
     assert len(records) == len(inspection.formulas)
@@ -462,7 +462,7 @@ def test_static_inspection_formula_schema_records_carry_their_own_full_operand_s
 def test_static_inspection_parameter_schema_records_key_off_dispatching_formulas() -> None:
     from cadrumo.application.modelo.workspace_models import ModeloWorkspaceParameterReferenceV1
 
-    inspection = _real_303_inspection()
+    inspection = real_303_inspection()
     records = parameter_schema_records(inspection.parameters, inspection.formulas)
 
     assert len(records) == len(inspection.parameters)
@@ -522,7 +522,7 @@ def test_static_inspection_schema_records_project_four_reference_kinds_and_relat
     assert sorted(actual_targets) == sorted(expected_targets)
 
 
-def _minimal_resolved_target(inspection, *, modelo: str = "303", filing_year: int = _FILING_YEAR, period: str = "1T"):
+def _minimal_resolved_target(inspection, *, modelo: str = "303", filing_year: int = FILING_YEAR, period: str = "1T"):
     from cadrumo.application.modelo.workspace_models import (
         ModeloWorkspaceResolvedTargetV1,
         ModeloWorkspaceRevisionAssertionV1,
@@ -549,7 +549,7 @@ def _minimal_resolved_target(inspection, *, modelo: str = "303", filing_year: in
 
 
 def test_static_inspection_family_dispositions_reports_only_declared_not_applicable_families() -> None:
-    inspection = _real_inspection("111", filing_year=_FILING_YEAR, period="1T")
+    inspection = real_inspection("111", filing_year=FILING_YEAR, period="1T")
 
     dispositions = static_inspection_family_dispositions(inspection)
 
@@ -566,7 +566,7 @@ def test_static_inspection_family_dispositions_reports_only_declared_not_applica
 
 
 def test_static_inspection_does_not_report_populated_applicability_as_not_applicable() -> None:
-    inspection = _real_303_inspection()
+    inspection = real_303_inspection()
 
     assert _real_303_snapshot().revision.applicability
     assert "applicability" not in inspection.family_dispositions

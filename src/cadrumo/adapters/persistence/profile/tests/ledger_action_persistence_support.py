@@ -13,28 +13,28 @@ from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_
 
 from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from .....application.ledger.actions_import import (
-    persist_prepared_ledger_source_import as _persist_prepared_ledger_source_import,
+    persist_prepared_ledger_source_import,
+    prepare_ledger_source_import,
 )
-from .....application.ledger.actions_import import prepare_ledger_source_import as _prepare_ledger_source_import
-from .....application.ledger.import_ports import LedgerImportPorts as _LedgerImportPorts
-from .....application.ledger.models import LedgerSourceImportCommand as _LedgerSourceImportCommand
-from .....application.ledger.models import LedgerSourceImportResult as _LedgerSourceImportResult
-from .....application.ledger.models import ManualLedgerTransactionCommand as _ManualLedgerTransactionCommand
-from .....application.ledger.models import ManualLedgerTransactionResult as _ManualLedgerTransactionResult
-from .....application.ledger.protocols import (
-    BucketEventHistoryCoCommitWriterProtocol as _BucketEventHistoryCoCommitWriterProtocol,
+from .....application.ledger.import_ports import LedgerImportPorts
+from .....application.ledger.models import (
+    LedgerSourceImportCommand,
+    LedgerSourceImportResult,
+    ManualLedgerTransactionCommand,
+    ManualLedgerTransactionResult,
 )
 from .....application.ledger.protocols import (
-    TransactionCatalogueCoCommitWriterProtocol as _TransactionCatalogueCoCommitWriterProtocol,
+    BucketEventHistoryCoCommitWriterProtocol,
+    TransactionCatalogueCoCommitWriterProtocol,
 )
 from .....application.ledger.tests.manual_transaction_support import (
-    create_manual_transaction as _create_manual_transaction,
+    create_manual_transaction,
 )
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from .....domain.currency.service import CurrencyNormalizationService as _CurrencyNormalizationService
+from .....domain.currency.service import CurrencyNormalizationService
 from .....domain.invoices.enums import IvaRate, PaymentStatus
 from .....domain.invoices.models import Invoice, InvoiceLine
 from .....domain.iva.schema import InvoiceKind
@@ -47,21 +47,20 @@ from .....domain.modelos.calculation_revision import (
 from .....domain.modelos.codes import ModeloCode
 from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .....domain.transactions.enums import (
-    TransactionDirection as _TransactionDirection,
+    TransactionDirection,
 )
-from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction
-from .....domain.transactions.raw_transaction import SourceFormat as _SourceFormat
+from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....inbound.financial.providers.base import ParsedLedgerRow
-from ...storage.sql.secure_objects import SecureObjectRepository as _SecureObjectRepository
-from ..buckets import BucketEventHistoryRepository as _BucketEventHistoryRepository
+from ...storage.sql.secure_objects import SecureObjectRepository
+from ..buckets import BucketEventHistoryRepository
 from ..modelos_calculation import (
-    CalculationRevisionCatalogueRepository as _CalculationRevisionCatalogueRepository,
+    CalculationRevisionCatalogueRepository,
 )
 from ..modelos_work_units import (
-    WorkUnitCatalogueRepository as _WorkUnitCatalogueRepository,
+    WorkUnitCatalogueRepository,
 )
 from ..transactions import (
-    TransactionCatalogueRepository as _TransactionCatalogueRepository,
+    TransactionCatalogueRepository,
 )
 from .published_authority_support import published_authority_operation
 
@@ -82,25 +81,25 @@ __all__ = [
 
 
 def repositories(
-    objects: _SecureObjectRepository,
+    objects: SecureObjectRepository,
     *,
     bucket_id: str = BUCKET_ID,
-) -> tuple[_TransactionCatalogueRepository, _BucketEventHistoryRepository]:
+) -> tuple[TransactionCatalogueRepository, BucketEventHistoryRepository]:
     return (
-        _TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects),
-        _BucketEventHistoryRepository(objects=objects),
+        TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects),
+        BucketEventHistoryRepository(objects=objects),
     )
 
 
 def create_manual_row(
-    secure_objects: _SecureObjectRepository,
+    secure_objects: SecureObjectRepository,
     *,
     description: str,
     idempotency_key: str,
     amount: _Decimal | None = None,
     booked_date: _date | None = None,
     occurred_at: _datetime | None = None,
-) -> tuple[_TransactionCatalogueRepository, _BucketEventHistoryRepository, _ManualLedgerTransactionResult]:
+) -> tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, ManualLedgerTransactionResult]:
     # Import lazily because ``ledger_action_create_support`` imports this module
     # for the shared repository and invoice fixtures.
     from .ledger_action_create_support import ledger_ports_for_test
@@ -115,12 +114,12 @@ def create_manual_row(
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     ) as ports:
-        created = _create_manual_transaction(
-            _ManualLedgerTransactionCommand(
+        created = create_manual_transaction(
+            ManualLedgerTransactionCommand(
                 bucket_id=BUCKET_ID,
                 booked_date=resolved_booked_date,
                 amount=resolved_amount,
-                direction=_TransactionDirection.OUTGOING,
+                direction=TransactionDirection.OUTGOING,
                 description=description,
                 idempotency_key=idempotency_key,
             ),
@@ -176,7 +175,7 @@ def _raw_import_transaction(
             source_path=_Path(__file__),
             source_sha256="d" * 64,
             source_row_index=1,
-            source_format=_SourceFormat.CSV,
+            source_format=SourceFormat.CSV,
             ingested_at=_datetime(2026, 5, 1, 12, 0, tzinfo=_UTC),
             provider_name="CSV provider",
         ),
@@ -189,7 +188,7 @@ def _parsed_import_transaction(
     transaction_id: str = "provider-row-1",
     amount: _Decimal = _Decimal("80.00"),
     description: str = "provider import row",
-    direction: _TransactionDirection = _TransactionDirection.OUTGOING,
+    direction: TransactionDirection = TransactionDirection.OUTGOING,
 ) -> ParsedLedgerRow:
     """Wrap a magnitude import row with an explicit direction (parse-boundary pair)."""
     return ParsedLedgerRow(
@@ -203,7 +202,7 @@ def parsed_import_transaction(
     transaction_id: str = "provider-row-1",
     amount: _Decimal = _Decimal("80.00"),
     description: str = "provider import row",
-    direction: _TransactionDirection = _TransactionDirection.OUTGOING,
+    direction: TransactionDirection = TransactionDirection.OUTGOING,
 ) -> ParsedLedgerRow:
     return _parsed_import_transaction(
         transaction_id=transaction_id,
@@ -214,7 +213,7 @@ def parsed_import_transaction(
 
 
 def _persist_verified_revision_citing_transaction(
-    objects: _SecureObjectRepository,
+    objects: SecureObjectRepository,
     *,
     transaction_id: str,
     additional_transaction_ids: Iterable[str] = (),
@@ -287,8 +286,8 @@ def _persist_verified_revision_citing_transaction(
         filing_instance_evidence=filing_instance_evidence,
         source_provenance=(),
     )
-    _WorkUnitCatalogueRepository(objects=objects).save(build_work_unit_catalogue((work_unit,)))
-    _CalculationRevisionCatalogueRepository(objects=objects).save(
+    WorkUnitCatalogueRepository(objects=objects).save(build_work_unit_catalogue((work_unit,)))
+    CalculationRevisionCatalogueRepository(objects=objects).save(
         CalculationRevisionCatalogue(revisions={revision_id: revision}),
     )
 
@@ -298,7 +297,7 @@ def purchase_invoice() -> Invoice:
 
 
 def persist_verified_revision_citing_transaction(
-    objects: _SecureObjectRepository,
+    objects: SecureObjectRepository,
     *,
     transaction_id: str,
     additional_transaction_ids: Iterable[str] = (),
@@ -315,16 +314,16 @@ def persist_verified_revision_citing_transaction(
 
 
 def import_ledger_source(
-    command: _LedgerSourceImportCommand,
+    command: LedgerSourceImportCommand,
     *,
-    ports: _LedgerImportPorts,
-    transaction_repository: _TransactionCatalogueCoCommitWriterProtocol | None = None,
-    bucket_event_repository: _BucketEventHistoryCoCommitWriterProtocol | None = None,
-    currency_normalizer: _CurrencyNormalizationService | None = None,
-) -> _LedgerSourceImportResult:
+    ports: LedgerImportPorts,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol | None = None,
+    currency_normalizer: CurrencyNormalizationService | None = None,
+) -> LedgerSourceImportResult:
     """Import one source through the prepare and persist boundaries the registered operation uses."""
-    return _persist_prepared_ledger_source_import(
-        _prepare_ledger_source_import(command, ports=ports),
+    return persist_prepared_ledger_source_import(
+        prepare_ledger_source_import(command, ports=ports),
         transaction_repository=transaction_repository,
         bucket_event_repository=bucket_event_repository,
         currency_normalizer=currency_normalizer,

@@ -13,10 +13,8 @@ from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
 from .ledger_action_persistence_support import (
-    BUCKET_ID as _BUCKET_ID,
-)
-from .ledger_action_persistence_support import (
-    repositories as _repositories,
+    BUCKET_ID,
+    repositories,
 )
 from .remove_draft_revision_support import create_row, seed_revision_citing_transaction
 
@@ -28,7 +26,7 @@ def test_remove_finalized_revision_still_blocks_and_not_advised(
 ) -> None:
     # Re-pin the finalized BLOCK path: a VERIFICADO_COMPLETO revision citing the
     # row still refuses removal, and the draft-advisory channel stays empty.
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     transaction_id = create_row(
         secure_objects,
         idempotency_key="remove-finalized",
@@ -43,7 +41,7 @@ def test_remove_finalized_revision_still_blocks_and_not_advised(
     )
 
     dry_run = remove_manual_transaction(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         transaction_id=transaction_id,
         actor="operator-A",
         dry_run=True,
@@ -57,7 +55,7 @@ def test_remove_finalized_revision_still_blocks_and_not_advised(
 
     with pytest.raises(TransactionValidationError, match="finalized modelo"):
         remove_manual_transaction(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=transaction_id,
             actor="operator-A",
             transaction_repository=transaction_repository,

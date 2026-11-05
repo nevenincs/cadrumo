@@ -47,7 +47,7 @@ from cadrumo_client.contracts.view_stream import (
 )
 
 from .....core.logging import get_logger
-from .._playwright import BrowserContext, Page, PlaywrightError
+from ..playwright import BrowserContext, Page, PlaywrightError
 
 if TYPE_CHECKING:
     from playwright.async_api import CDPSession

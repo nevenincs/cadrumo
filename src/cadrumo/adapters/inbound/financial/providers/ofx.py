@@ -49,7 +49,6 @@ from .....core.optional_extras import (
 )
 from .....core.parsing.codes import normalise_iso_4217_currency
 from .....domain.transactions.raw_transaction import SourceFormat
-from ._constants import OFX_EXTENSIONS
 from .base import (
     FinancialProvider,
     FinancialValidationError,
@@ -62,6 +61,7 @@ from .base import (
     parse_date_value,
     synthesize_transaction_id,
 )
+from .constants import OFX_EXTENSIONS
 
 _logger = get_logger(__name__)
 _INPUT_OFX_SOURCE_LABEL = "<input-ofx>"
@@ -135,7 +135,7 @@ def _normalise_text_value(value: object, *, default: str = "") -> str:
     return value.strip() or default
 
 
-def _resolve_statement_context(statement: _OfxStatementLike) -> tuple[str, str]:
+def resolve_statement_context(statement: _OfxStatementLike) -> tuple[str, str]:
     """Return the ``(currency, account_id)`` context for one OFX statement block.
 
     ``account_id`` is the statement's declared ``ACCTID``, or empty when the
@@ -226,7 +226,7 @@ class OfxProvider(FinancialProvider):
             statements = self._load_statements(source_bytes)
             transaction_count = 0
             for statement in statements:
-                _, account_id = _resolve_statement_context(statement)
+                _, account_id = resolve_statement_context(statement)
                 for transaction in statement.transactions:
                     transaction_count += 1
                     self._parse_ofx_row(
@@ -257,7 +257,7 @@ class OfxProvider(FinancialProvider):
         source_sha256 = self._compute_sha256(source_bytes)
         source_row_index = 0
         for statement in self._load_statements(source_bytes):
-            currency, account_id = _resolve_statement_context(statement)
+            currency, account_id = resolve_statement_context(statement)
             for transaction in statement.transactions:
                 source_row_index += 1
                 parsed = self._parse_ofx_row(

@@ -31,7 +31,7 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition,
 from cadrumo.entrypoints.profile_archive_operation_composition import build_profile_archive_operation_ports
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 
-from ..archive_commands import _refuse_an_archive_target_the_writer_would_reject
+from ..archive_commands import refuse_an_archive_target_the_writer_would_reject
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -51,7 +51,7 @@ def _command_refusal(target: Path) -> CliRefusedBoundaryError:
     refusal is taken from the check it runs first, not from a whole invocation.
     """
     with pytest.raises(CliRefusedBoundaryError) as refused:
-        _refuse_an_archive_target_the_writer_would_reject(target)
+        refuse_an_archive_target_the_writer_would_reject(target)
     return refused.value
 
 

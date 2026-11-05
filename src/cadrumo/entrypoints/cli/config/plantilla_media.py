@@ -13,8 +13,8 @@ from uuid import UUID
 
 import typer
 
-from cadrumo_client.commands.errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
-from cadrumo_client.commands.output import activate_subcommand_output_language as _activate_subcommand_output_language
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -32,17 +32,17 @@ from ....core.decimal.grammar import try_parse_canonical_decimal
 from ....core.external_constants import OutputLanguage
 from ....domain.user_profile.errors import UserProfileValidationError
 from ....domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear, plantilla_media_years
-from .._config_plantilla_media_payloads import ConfigProfilePlantillaMediaResult, ProfilePlantillaMediaYearPayload
 from ..common import emit_envelope
-from ._profile_mutation import execute_profile_mutation, mutation_deadline, read_mutation_baseline
-from ._profile_support import require_active_profile_pointer as _active_profile_pointer
+from ..config_plantilla_media_payloads import ConfigProfilePlantillaMediaResult, ProfilePlantillaMediaYearPayload
 from .operation_profile_view import resolve_profile_output_language
+from .profile_mutation import execute_profile_mutation, mutation_deadline, read_mutation_baseline
+from .profile_support import require_active_profile_pointer
 
 
 def _average_workforce(raw: str) -> Decimal:
     value = try_parse_canonical_decimal(raw)
     if value is None:
-        raise _CliRefusedBoundaryError(
+        raise CliRefusedBoundaryError(
             translated_message="cli.config.profile.plantilla_media.average_workforce_not_a_number",
             context={"average_workforce": raw},
         )
@@ -83,10 +83,10 @@ def _years_from_facts(collection: ProfileViewCollection) -> tuple[PlantillaMedia
 
 
 def _client(ctx: typer.Context, *, requested_language: OutputLanguage | None) -> FrontendClient:
-    pointer = _active_profile_pointer()
+    pointer = require_active_profile_pointer()
     client = require_profile_client(ctx, expected_profile_id=UUID(str(pointer.bucket_id)))
     language = resolve_profile_output_language(client, requested=requested_language)
-    _activate_subcommand_output_language(ctx, language)
+    activate_subcommand_output_language(ctx, language)
     return client
 
 
@@ -102,7 +102,7 @@ def _committed_years(
             raise RefusalError(RefusalCode.INVALID_FRAME)
         return _years_from_facts(current)
     except RefusalError as error:
-        raise _CliRefusedBoundaryError(
+        raise CliRefusedBoundaryError(
             translated_message="cli.config.profile.mutation.committed_view_unavailable",
             context={
                 "operation_id": str(completed.operation_id),

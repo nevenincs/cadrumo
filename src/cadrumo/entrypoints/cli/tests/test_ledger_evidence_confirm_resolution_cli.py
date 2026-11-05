@@ -24,10 +24,10 @@ from ....core.confirmation_gate import ConfirmationBlockReason
 from ....core.iva_category_resolution import IvaCategoryOutcome
 from ....core.json_contract import NoticeSeverity
 from ..ledger_evidence_commands import (
-    _confirm_resolution_lines,
-    _evidence_confirm_notices,
-    _evidence_confirm_payload,
-    _resolution_notices,
+    confirm_resolution_lines,
+    evidence_confirm_notices,
+    evidence_confirm_payload,
+    resolution_notices,
 )
 from .ledger_invoice_snapshot_support import received_invoice_snapshot
 
@@ -126,12 +126,12 @@ def test_withheld_relief_and_unresolved_party_reach_the_closed_cli_projection() 
     )
     confirmation = _confirmation(establishment)
 
-    payload = _evidence_confirm_payload(
+    payload = evidence_confirm_payload(
         bucket_id=str(_PROFILE_ID),
         projection=_operation_projection(confirmation),
     )
-    notices = {notice.code: notice for notice in _resolution_notices(establishment)}
-    lines = _confirm_resolution_lines(establishment)
+    notices = {notice.code: notice for notice in resolution_notices(establishment)}
+    lines = confirm_resolution_lines(establishment)
 
     assert payload["iva_category"] is None
     assert payload["iva_category_outcome"] == IvaCategoryOutcome.UNSUPPORTED_RELIEF.value
@@ -166,11 +166,11 @@ def test_inferred_category_makes_review_notices_informational() -> None:
     )
     confirmation = _confirmation(establishment)
 
-    payload = _evidence_confirm_payload(
+    payload = evidence_confirm_payload(
         bucket_id=str(_PROFILE_ID),
         projection=_operation_projection(confirmation),
     )
-    notices = {notice.code: notice for notice in _evidence_confirm_notices(confirmation)}
+    notices = {notice.code: notice for notice in evidence_confirm_notices(confirmation)}
 
     assert payload["iva_category"] == "domestic_general"
     assert payload["iva_category_outcome"] == IvaCategoryOutcome.RATE_INFERRED.value
@@ -192,4 +192,4 @@ def test_placed_category_without_open_review_has_no_resolution_notice() -> None:
         include_review_item=False,
     )
 
-    assert _resolution_notices(establishment) == []
+    assert resolution_notices(establishment) == []

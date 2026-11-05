@@ -29,7 +29,7 @@ from .....application.storage.calc_sheets.records import (
 )
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
-from .._calc_sheets_apply_formatting import build_grid_resize_requests
+from ..calc_sheets_apply_formatting import build_grid_resize_requests
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

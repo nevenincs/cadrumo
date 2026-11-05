@@ -32,8 +32,8 @@ from cadrumo_client.commands.parameters import OptionSpec
 from cadrumo_client.commands.spec import CommandSpec
 
 from ....application.modelo.edit_apply_row_contracts import Modelo232VinculadaRowWireV1
-from .._modelo_core_command_specs import MODELO_CORE_COMMAND_SPECS
-from ..modelo_commands import _resolve_amendment_detail_rows
+from ..modelo_commands import resolve_amendment_detail_rows
+from ..modelo_core_command_specs import MODELO_CORE_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -64,7 +64,7 @@ def test_no_row_flags_at_all_says_nothing_rather_than_declaring_none() -> None:
     must be the state that gets refused rather than the one that files a nil
     declaration on their behalf.
     """
-    assert _resolve_amendment_detail_rows((), declared_none=False) is None
+    assert resolve_amendment_detail_rows((), declared_none=False) is None
 
 
 def test_the_nil_flag_declares_an_empty_set_rather_than_silence() -> None:
@@ -73,7 +73,7 @@ def test_the_nil_flag_declares_an_empty_set_rather_than_silence() -> None:
     Distinct from the case above by identity, not just value -- an empty tuple
     and ``None`` are the two answers the authority tells apart.
     """
-    resolved = _resolve_amendment_detail_rows((), declared_none=True)
+    resolved = resolve_amendment_detail_rows((), declared_none=True)
 
     assert resolved == ()
     assert resolved is not None
@@ -89,7 +89,7 @@ def test_a_row_spec_is_parsed_into_the_typed_domain_row() -> None:
     schema, so the operation crosses the wire mirror and re-validates into the
     domain row on the authority side.
     """
-    resolved = _resolve_amendment_detail_rows((_ROW_SPEC,), declared_none=False)
+    resolved = resolve_amendment_detail_rows((_ROW_SPEC,), declared_none=False)
 
     assert resolved is not None
     assert len(resolved) == 1
@@ -102,7 +102,7 @@ def test_several_rows_are_carried_in_the_order_given() -> None:
     """Repetition is how an operator declares more than one counterparty."""
     other = _ROW_SPEC.replace("B12345674", "B12345675").replace("Acme", "Beta")
 
-    resolved = _resolve_amendment_detail_rows((_ROW_SPEC, other), declared_none=False)
+    resolved = resolve_amendment_detail_rows((_ROW_SPEC, other), declared_none=False)
 
     assert resolved is not None
     vinculadas = [row for row in resolved if isinstance(row, Modelo232VinculadaRowWireV1)]
@@ -116,13 +116,13 @@ def test_declaring_none_while_also_giving_rows_is_refused() -> None:
     and the operator would have no way to tell which.
     """
     with pytest.raises(typer.BadParameter):
-        _resolve_amendment_detail_rows((_ROW_SPEC,), declared_none=True)
+        resolve_amendment_detail_rows((_ROW_SPEC,), declared_none=True)
 
 
 def test_a_malformed_row_spec_is_refused_at_the_boundary() -> None:
     """Row grammar is parsed here, so a bad spec fails before any authority runs."""
     with pytest.raises(typer.BadParameter):
-        _resolve_amendment_detail_rows(("not_a_row_type nif=B12345674",), declared_none=False)
+        resolve_amendment_detail_rows(("not_a_row_type nif=B12345674",), declared_none=False)
 
 
 def test_the_command_declares_both_row_options() -> None:

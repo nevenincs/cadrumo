@@ -17,7 +17,7 @@ from ....adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
 from ....application.exchange_rate_provider import bind_exchange_rate_provider_factory
 from ....tests.live_gate import requires_live_enabled
 from ...tests.ledger_corpus_support import LEDGER_CORPUS_ROOT, invoke_corpus_cli
-from .ledger_cli import list_ledger_rows_via_cli as _list_rows
+from .ledger_cli import list_ledger_rows_via_cli
 from .profile_world_fixtures import recorded_fx_isolated_backend
 
 __all__ = ["recorded_fx_isolated_backend"]
@@ -45,7 +45,7 @@ def test_a_multi_currency_statement_converts_against_the_live_series(invoke_cli:
             ],
             invoke_cli=invoke_cli,
         )
-        rows = _list_rows()
+        rows = list_ledger_rows_via_cli()
 
     assert result.exit_code == 0, result.output
     assert json.loads(result.output)["result"]["imported"] > 0

@@ -37,17 +37,17 @@ from .....tests.aeat_literal_fixtures import (
     aeat_host,
     aeat_url,
 )
-from .....tests.inventory import FIXTURES_DIR as _FIXTURES_ROOT
+from .....tests.inventory import FIXTURES_DIR as INVENTORY_FIXTURES_ROOT
 from .....tests.log_records import delivered_records
 from .....tests.pdf_fixtures import text_pdf_bytes
 from ...pdf.source_provenance import source_pdf_reference_path
-from .._parsers.text_extraction import TEXT_CACHE, extract_text
 from ..parser import parse_justificante, parse_justificante_bytes
+from ..parsers.text_extraction import TEXT_CACHE, extract_text
 from .parse_cache import parse_committed_justificante_fixture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("authority_operation")]
 
-FIXTURES_DIR = _FIXTURES_ROOT / "justificantes"
+FIXTURES_DIR = INVENTORY_FIXTURES_ROOT / "justificantes"
 _SEDE_HOST = aeat_host("sede")
 
 
@@ -403,15 +403,15 @@ class TestJustificanteParseErrorStructuredAttributes:
 
     def test_missing_field_raised_by_require(self, tmp_path: Path) -> None:
         """_require() populates missing=(field,) on the raised error."""
-        from .._extract import _require
+        from ..extract import require
 
         with pytest.raises(JustificanteParseError) as exc_info:
-            _require(None, "modelo")
+            require(None, "modelo")
         assert exc_info.value.missing == ("modelo",)
 
     def test_empty_text_raises_missing_text(self, tmp_path: Path) -> None:
         """Empty text raises with missing=('text',)."""
-        from .._extract import extract_justificante
+        from ..extract import extract_justificante
 
         pdf = tmp_path / "empty.pdf"
         pdf.write_bytes(b"%PDF-1.4\n%%EOF\n")

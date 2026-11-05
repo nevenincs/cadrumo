@@ -64,7 +64,7 @@ from .client import LLMClient
 from .consent import EvidenceConsentToken
 from .errors import LLMConfigError, LLMConsentError
 from .models import LLMRequest
-from .response_json import first_json_object as _first_json_object
+from .response_json import first_json_object
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -238,7 +238,7 @@ def parse_supply_nature_response(text: str) -> SupplyNatureProposal:
         The proposal. ``nature`` is populated only for an exact match against
         :func:`permitted_supply_natures`; a declared decline sets ``declined``.
     """
-    candidate = _first_json_object(text)
+    candidate = first_json_object(text)
     if candidate is None:
         return SupplyNatureProposal()
     try:

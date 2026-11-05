@@ -25,7 +25,7 @@ from typing import Final
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.observability.store import ENVELOPE_FILENAME, EVENTS_FILENAME, TRACE_FILENAME
 from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_location
@@ -113,7 +113,7 @@ def _pydantic_namespace_validator[ValidationResultT](
 class StoragePathDefinition(BaseModel):
     """Contract for one storage hierarchy path or logical marker."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     key: str = Field(min_length=1)
     kind: StoragePathKind

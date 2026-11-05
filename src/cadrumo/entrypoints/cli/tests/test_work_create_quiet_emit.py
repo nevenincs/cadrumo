@@ -39,10 +39,10 @@ from cadrumo.tests.english_locale_fixture import english_locale_fixture
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from .._modelo_rendering import work_unit_payload
-from .._modelo_work_lifecycle_cli import _emit_work_create_result
 from ..common import emit_envelope
+from ..modelo_rendering import work_unit_payload
 from ..modelo_results import WorkCreateResult
+from ..modelo_work_lifecycle_cli import emit_work_create_result
 from .cli_runner import cadrumo_click_command, invoke_cached_cli, semantic_cli_output
 
 __all__ = ["english_locale_fixture"]
@@ -140,7 +140,7 @@ def test_text_mode_quiet_suppresses_confirmation(capsys: pytest.CaptureFixture[s
     Modelo 100 only), so the quiet text surface is empty — proving the
     flag suppressed the prose without swallowing a notice.
     """
-    _emit_work_create_result(
+    emit_work_create_result(
         _context("text"),
         unit=_build_m130_unit(),
         reused=False,
@@ -163,7 +163,7 @@ def test_quiet_json_envelope_is_complete(capsys: pytest.CaptureFixture[str]) -> 
     ``result`` payload and the envelope spine must be emitted in full,
     proving the flag never degrades the machine surface.
     """
-    _emit_work_create_result(
+    emit_work_create_result(
         _context("json"),
         unit=_build_m130_unit(),
         reused=False,

@@ -7,7 +7,7 @@ from pydantic import ValidationError
 
 from .....domain.censo.tests.certificado_builder import build_certificado
 from .. import censo_results
-from ..censo_commands import _file_import_preview_lines
+from ..censo_commands import file_import_preview_lines
 from ..censo_results import CensoFactPayload, CensoFileIngestResult, CensoPullResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
@@ -72,7 +72,7 @@ def test_import_preview_retains_all_certified_axes_without_adopting_display_evid
         facts=tuple(CensoFactPayload(path=fact.path, value=str(fact.value), source=fact.source) for fact in facts),
     )
     json_evidence = result.model_dump(mode="json")["certificate"]
-    text_evidence = json.loads(_file_import_preview_lines(result)[1])
+    text_evidence = json.loads(file_import_preview_lines(result)[1])
     assert (
         json_evidence
         == text_evidence

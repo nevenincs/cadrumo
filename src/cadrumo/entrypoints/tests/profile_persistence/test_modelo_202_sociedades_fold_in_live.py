@@ -88,14 +88,14 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import create_user_profile_record
 from ...adapter_composition_work_ports import build_calculation_action_ports
 
 __all__ = ["register_wizard_catalogue", "secure_objects"]
@@ -238,7 +238,7 @@ def _seed_m200_sociedad_profile() -> None:
     no profile binding is hand-fed through the caller channel. ``display_name``
     matches the ``isolated_runtime_profile`` manifest label.
     """
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID_M200,
         facts=(
@@ -260,7 +260,7 @@ def _seed_m200_sociedad_profile() -> None:
         ),
         created_at=_T0,
         updated_at=_T0,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 
@@ -341,7 +341,7 @@ def _seed_sociedad_profile() -> None:
     manifest label (``"Test runtime profile"``) so the loaded
     :class:`CommittedProfileView` passes its cross-store label-agreement validator.
     """
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
@@ -362,7 +362,7 @@ def _seed_sociedad_profile() -> None:
         ),
         created_at=_T0,
         updated_at=_T0,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 

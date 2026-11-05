@@ -67,7 +67,7 @@ def test_retrieval_surface_imports_on_a_bare_core_install() -> None:
     for module in (
         "..lexical_index",
         "..citation_lookup",
-        ".._retrieval",
+        "..retrieval",
         "..runtime",
         "..",
         "...command_search",

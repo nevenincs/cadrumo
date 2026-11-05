@@ -15,10 +15,8 @@ from ...storage.sql.secure_objects import SecureObjectRepository
 from ..transactions import TransactionCatalogueRepository
 from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
-    BUCKET_ID as _BUCKET_ID,
-)
-from .ledger_action_persistence_support import (
-    repositories as _repositories,
+    BUCKET_ID,
+    repositories,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
@@ -28,16 +26,16 @@ def test_unlinked_detail_edit_replaces_only_its_row_with_durable_predecessor(
     secure_objects: SecureObjectRepository,
 ) -> None:
     """The TUI baseline path persists one replacement, lineage and audit event."""
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     ) as ports:
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 5, 2),
                 amount=Decimal("10.00"),
                 direction=TransactionDirection.OUTGOING,
@@ -49,7 +47,7 @@ def test_unlinked_detail_edit_replaces_only_its_row_with_durable_predecessor(
         )
         baseline = created.transaction
         updated = update_manual_transaction_fields(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=baseline.transaction_id,
             patch=ManualLedgerTransactionPatch(description="Corrected detail"),
             actor="operator",
@@ -59,7 +57,7 @@ def test_unlinked_detail_edit_replaces_only_its_row_with_durable_predecessor(
             occurred_at=datetime(2026, 5, 2, 9, 1, tzinfo=UTC),
         )
 
-    reopened = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).load()
+    reopened = TransactionCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects).load()
     assert reopened.get(baseline.transaction_id) is None
     assert reopened.get(updated.ref.transaction_id) == updated.transaction
     assert updated.ref.transaction_id != baseline.transaction_id

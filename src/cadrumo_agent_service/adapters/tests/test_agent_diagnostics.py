@@ -28,18 +28,18 @@ def log_file(tmp_path: Path) -> Iterator[Path]:
     """Use real formatters, disk handlers and privacy filters."""
     project_logging.register_first_party_logger("cadrumo_agent_service")
     project_logging.register_first_party_logger("cadrumo_agent")
-    configured = project_logging._configured
+    configured = project_logging.configured
     try:
-        project_logging._configured = False
+        project_logging.configured = False
         with override_settings(
             cadrumo_storage_root=tmp_path, cadrumo_log_root_level="DEBUG", cadrumo_log_file_level="DEBUG"
         ):
             project_logging.configure_logging()
             yield storage_path(StorageCategory.LOGS) / "cadrumo.log"
     finally:
-        project_logging._configured = False
+        project_logging.configured = False
         project_logging.configure_logging()
-        project_logging._configured = configured or True
+        project_logging.configured = configured or True
 
 
 def _line(sequence: int, *, service: str = "worker", level: str = "DEBUG", message: str = "worker diagnostic") -> bytes:

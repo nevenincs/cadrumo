@@ -28,7 +28,7 @@ from cadrumo.core.period import Period
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.buckets.event import BucketEventType
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.filing.software_identity import (
     AeatSoftwareIdentityGrade,
 )
@@ -40,14 +40,14 @@ from cadrumo.domain.transactions.own_accounts import (
 )
 from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import build_verified_modelo_303_revision
 
-from ._export_output_paths_support import (
-    _nota_three_profile,
-    _own_account,
-    _persist_rectificativa_with_nota_three,
-    _product_software_identity,
-    _typed_profile,
-    _typed_profile_with_charge_account,
+from .export_output_paths_support import (
     authored_export_clock,
+    nota_three_profile,
+    own_account,
+    persist_rectificativa_with_nota_three,
+    product_software_identity,
+    typed_profile,
+    typed_profile_with_charge_account,
 )
 
 __all__ = ["authored_export_clock", "isolated_backend"]
@@ -106,7 +106,7 @@ def test_export_modelo_303_matched_wallet_revision_writes_fichero_with_redacted_
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
             operation=_authority_operation_for_test,
         )
@@ -119,9 +119,9 @@ def test_export_modelo_303_matched_wallet_revision_writes_fichero_with_redacted_
                 actor="operator",
                 prior_domiciliation_election=PriorDomiciliationElection.KEEP,
             ),
-            workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
+            workflow_profile=typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
             export_ports=modelo_export_ports_for_test(
-                product_software_identity=_product_software_identity(),
+                product_software_identity=product_software_identity(),
                 bucket_id=bucket_id,
                 taxpayer_tax_id=taxpayer_nif,
                 work_unit=work_repo,
@@ -151,7 +151,7 @@ def test_export_modelo_303_to_a_payload_consumer_writes_no_file_and_records_the_
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
             operation=_authority_operation_for_test,
         )
@@ -166,9 +166,9 @@ def test_export_modelo_303_to_a_payload_consumer_writes_no_file_and_records_the_
                 actor="operator",
                 prior_domiciliation_election=PriorDomiciliationElection.KEEP,
             ),
-            workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
+            workflow_profile=typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
             export_ports=modelo_export_ports_for_test(
-                product_software_identity=_product_software_identity(),
+                product_software_identity=product_software_identity(),
                 bucket_id=bucket_id,
                 taxpayer_tax_id=taxpayer_nif,
                 work_unit=work_repo,
@@ -206,7 +206,7 @@ def test_export_modelo_303_stamps_the_development_identity_into_the_developer_he
     from the taxpayer, so the mock fills exactly those bytes and the result
     reports it as the development identity.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
             operation=_authority_operation_for_test,
         )
@@ -219,7 +219,7 @@ def test_export_modelo_303_stamps_the_development_identity_into_the_developer_he
                 actor="operator",
                 prior_domiciliation_election=PriorDomiciliationElection.KEEP,
             ),
-            workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
+            workflow_profile=typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
             export_ports=modelo_export_ports_for_test(
                 bucket_id=bucket_id,
                 taxpayer_tax_id=taxpayer_nif,
@@ -246,7 +246,7 @@ def test_export_modelo_303_without_a_prior_domiciliation_election_keeps_it(
     tmp_path: Path,
 ) -> None:
     """KEEP is the neutral default: an ordinary 303 with no election exports with a blank page-3 marker."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
             operation=_authority_operation_for_test,
         )
@@ -258,7 +258,7 @@ def test_export_modelo_303_without_a_prior_domiciliation_election_keeps_it(
                 output_path=output_path,
                 actor="operator",
             ),
-            workflow_profile=_typed_profile(taxpayer_nif=taxpayer_nif),
+            workflow_profile=typed_profile(taxpayer_nif=taxpayer_nif),
             export_ports=modelo_export_ports_for_test(
                 bucket_id=bucket_id,
                 taxpayer_tax_id=taxpayer_nif,
@@ -281,13 +281,13 @@ def test_export_modelo_303_rectificativa_stating_casilla_111_requires_the_electi
     tmp_path: Path,
 ) -> None:
     """Only a rectificativa with casilla 111 must choose: KEEP puts the Nota 3 refund account on DID, X does not."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
             negative_result=True,
             casilla_111=Decimal("0"),
             operation=_authority_operation_for_test,
         )
-        rectificativa = _persist_rectificativa_with_nota_three(
+        rectificativa = persist_rectificativa_with_nota_three(
             verified,
             taxpayer_nif=taxpayer_nif,
             work_repo=work_repo,
@@ -303,11 +303,11 @@ def test_export_modelo_303_rectificativa_stating_casilla_111_requires_the_electi
                     output_path=output_path,
                     actor="operator",
                 ),
-                workflow_profile=_nota_three_profile(
+                workflow_profile=nota_three_profile(
                     taxpayer_nif=taxpayer_nif, bucket_id=bucket_id, refund_account=None
                 ),
                 export_ports=modelo_export_ports_for_test(
-                    product_software_identity=_product_software_identity(),
+                    product_software_identity=product_software_identity(),
                     taxpayer_tax_id=taxpayer_nif,
                     work_unit=work_repo,
                     calculation=CalculationRevisionCatalogueRepository(m303_rectificativa_taxpayer_tax_id=taxpayer_nif),
@@ -333,7 +333,7 @@ def test_public_domiciliacion_export_selects_typed_charge_account_for_did_only(
     tmp_path: Path,
 ) -> None:
     """Public export reaches DID only through the typed selected-account snapshot."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
             positive_result=True,
             operation=_authority_operation_for_test,
@@ -349,11 +349,11 @@ def test_public_domiciliacion_export_selects_typed_charge_account_for_did_only(
                 prior_domiciliation_election=PriorDomiciliationElection.KEEP,
                 payment_election=PaymentElection.DOMICILIACION,
             ),
-            workflow_profile=_typed_profile_with_charge_account(
+            workflow_profile=typed_profile_with_charge_account(
                 taxpayer_nif=taxpayer_nif, charge_iban=charge_iban, bucket_id=bucket_id
             ),
             export_ports=modelo_export_ports_for_test(
-                product_software_identity=_product_software_identity(),
+                product_software_identity=product_software_identity(),
                 bucket_id=bucket_id,
                 taxpayer_tax_id=taxpayer_nif,
                 work_unit=work_repo,
@@ -409,14 +409,14 @@ def test_public_rectificativa_nota_three_keep_exports_full_refund_account_not_ch
     tmp_path: Path,
 ) -> None:
     """A C rectificativa with stated c111 writes a refund destination under Nota 3."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
             negative_result=True,
             casilla_111=Decimal("0"),
             operation=_authority_operation_for_test,
         )
         assert verified.casilla_values["111"] == Decimal("0")
-        rectificativa = _persist_rectificativa_with_nota_three(
+        rectificativa = persist_rectificativa_with_nota_three(
             verified,
             taxpayer_nif=taxpayer_nif,
             work_repo=work_repo,
@@ -425,7 +425,7 @@ def test_public_rectificativa_nota_three_keep_exports_full_refund_account_not_ch
         )
         # An account outside the SEPA zone, so the DID page carries its whole
         # foreign-bank block beside the IBAN (Marca SEPA 3).
-        refund_account = _own_account(
+        refund_account = own_account(
             "Nota Three Refund",
             "BR1800360305000010009795493C1",
             swift_bic="BOCBBRSPXXX",
@@ -443,11 +443,11 @@ def test_public_rectificativa_nota_three_keep_exports_full_refund_account_not_ch
                 actor="operator",
                 prior_domiciliation_election=PriorDomiciliationElection.KEEP,
             ),
-            workflow_profile=_nota_three_profile(
+            workflow_profile=nota_three_profile(
                 taxpayer_nif=taxpayer_nif, bucket_id=bucket_id, refund_account=refund_account
             ),
             export_ports=modelo_export_ports_for_test(
-                product_software_identity=_product_software_identity(),
+                product_software_identity=product_software_identity(),
                 taxpayer_tax_id=taxpayer_nif,
                 work_unit=work_repo,
                 calculation=CalculationRevisionCatalogueRepository(m303_rectificativa_taxpayer_tax_id=taxpayer_nif),
@@ -482,13 +482,13 @@ def test_public_rectificativa_nota_three_keep_refuses_without_refund_account_bef
     tmp_path: Path,
 ) -> None:
     """Nota 3 cannot emit an empty DID account block on a C rectificativa."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
             negative_result=True,
             casilla_111=Decimal("0"),
             operation=_authority_operation_for_test,
         )
-        rectificativa = _persist_rectificativa_with_nota_three(
+        rectificativa = persist_rectificativa_with_nota_three(
             verified,
             taxpayer_nif=taxpayer_nif,
             work_repo=work_repo,
@@ -505,11 +505,11 @@ def test_public_rectificativa_nota_three_keep_refuses_without_refund_account_bef
                     actor="operator",
                     prior_domiciliation_election=PriorDomiciliationElection.KEEP,
                 ),
-                workflow_profile=_nota_three_profile(
+                workflow_profile=nota_three_profile(
                     taxpayer_nif=taxpayer_nif, bucket_id=bucket_id, refund_account=None
                 ),
                 export_ports=modelo_export_ports_for_test(
-                    product_software_identity=_product_software_identity(),
+                    product_software_identity=product_software_identity(),
                     taxpayer_tax_id=taxpayer_nif,
                     work_unit=work_repo,
                     calculation=CalculationRevisionCatalogueRepository(m303_rectificativa_taxpayer_tax_id=taxpayer_nif),
@@ -528,13 +528,13 @@ def test_public_rectificativa_nota_three_remains_incompatible_with_current_domic
     tmp_path: Path,
 ) -> None:
     """The pre-existing result-sign gate refuses c111 plus a current U election."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
             negative_result=True,
             casilla_111=Decimal("0"),
             operation=_authority_operation_for_test,
         )
-        rectificativa = _persist_rectificativa_with_nota_three(
+        rectificativa = persist_rectificativa_with_nota_three(
             verified,
             taxpayer_nif=taxpayer_nif,
             work_repo=work_repo,
@@ -552,11 +552,11 @@ def test_public_rectificativa_nota_three_remains_incompatible_with_current_domic
                     prior_domiciliation_election=PriorDomiciliationElection.KEEP,
                     payment_election=PaymentElection.DOMICILIACION,
                 ),
-                workflow_profile=_nota_three_profile(
+                workflow_profile=nota_three_profile(
                     taxpayer_nif=taxpayer_nif, bucket_id=bucket_id, refund_account=None
                 ),
                 export_ports=modelo_export_ports_for_test(
-                    product_software_identity=_product_software_identity(),
+                    product_software_identity=product_software_identity(),
                     taxpayer_tax_id=taxpayer_nif,
                     work_unit=work_repo,
                     calculation=CalculationRevisionCatalogueRepository(m303_rectificativa_taxpayer_tax_id=taxpayer_nif),

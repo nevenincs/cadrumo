@@ -16,7 +16,7 @@ from .....application.workflow.profile_bucket_scan import list_profile_buckets
 from .....core.config import override_settings
 from .....core.i18n.render import tr
 from .....core.json_contract import ResolvedNoticeAction
-from ...common import _action_text_lines
+from ...common import action_text_lines
 from ...tests.cli_runner import invoke_cached_cli
 from .. import scripted_registration
 
@@ -146,7 +146,7 @@ def test_scripted_accepted_boundaries_unlock_only_with_the_exact_sequence(tmp_pa
 def test_created_profile_login_notice_has_a_resolved_safe_action(locale: str) -> None:
     label = "operator $env:USERNAME's profile"
     with override_settings(cadrumo_output_language=locale):
-        notices = scripted_registration._creation_notices(recovery_enrolled=False, label=label)
+        notices = scripted_registration.creation_notices(recovery_enrolled=False, label=label)
 
     login = next(notice for notice in notices if notice.code == "PROFILE_LOGIN_REQUIRED")
     assert label in login.message
@@ -156,7 +156,7 @@ def test_created_profile_login_notice_has_a_resolved_safe_action(locale: str) ->
     assert login.action.action.target_command_key == "config.login"
     assert login.action.argument_bindings[0].argument_name == "name"
     assert login.action.argument_bindings[0].value == label
-    assert _action_text_lines(notices) == ("next_action\taeat config login 'operator $env:USERNAME''s profile'",)
+    assert action_text_lines(notices) == ("next_action\taeat config login 'operator $env:USERNAME''s profile'",)
 
 
 @pytest.mark.parametrize("locale", ("en", "es", "ca", "hu"))
@@ -168,7 +168,7 @@ def test_created_profile_fallback_stays_a_valid_notice_when_action_resolution_fa
 
     monkeypatch.setattr(scripted_registration, "resolve_notice_action", fail_action)
     with override_settings(cadrumo_output_language=locale):
-        notices = scripted_registration._creation_notices(recovery_enrolled=False, label="Matrix")
+        notices = scripted_registration.creation_notices(recovery_enrolled=False, label="Matrix")
     assert len(notices) == 1
     assert notices[0].code == "PROFILE_CREATED_GUIDANCE_UNAVAILABLE"
     assert notices[0].action is None

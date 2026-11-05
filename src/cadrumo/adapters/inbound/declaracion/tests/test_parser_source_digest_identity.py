@@ -25,7 +25,7 @@ import pytest
 from .....core.hashing import sha256_hex
 from .....tests.inventory import FIXTURES_DIR
 from ..parser import parse_declaracion, parse_declaracion_bytes
-from ._parser_boundary_support import _modelo_snapshot, _write_declaration_pdf
+from .parser_boundary_support import modelo_snapshot, write_declaration_pdf
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
@@ -81,7 +81,7 @@ def test_path_parser_reloads_equal_metadata_replacement_and_stamps_its_digest(tm
     coverage floor. The values themselves are incidental to this test, which
     exercises cache/digest identity, not extraction fidelity.
     """
-    snapshot = _modelo_snapshot("123", filing_year=2024, period="1T")
+    snapshot = modelo_snapshot("123", filing_year=2024, period="1T")
     profile = snapshot.extraction_profiles["modelo-123-declaracion-pdf"]
     values = {
         target.casilla_id: Decimal(index).quantize(Decimal("0.01"))
@@ -91,8 +91,8 @@ def test_path_parser_reloads_equal_metadata_replacement_and_stamps_its_digest(tm
     first_pdf = tmp_path / "first.pdf"
     second_pdf = tmp_path / "second.pdf"
     target_pdf = tmp_path / "declaracion.pdf"
-    _write_declaration_pdf(first_pdf, modelo="123", ejercicio="2024", period="1T", values=values, tax_id="00000000T")
-    _write_declaration_pdf(second_pdf, modelo="123", ejercicio="2024", period="1T", values=values, tax_id="00000001R")
+    write_declaration_pdf(first_pdf, modelo="123", ejercicio="2024", period="1T", values=values, tax_id="00000000T")
+    write_declaration_pdf(second_pdf, modelo="123", ejercicio="2024", period="1T", values=values, tax_id="00000001R")
 
     first_bytes = first_pdf.read_bytes()
     second_bytes = second_pdf.read_bytes()

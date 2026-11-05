@@ -9,7 +9,7 @@ import typer
 from ...application.export.tabular import ExportSerializationFormat
 from ...core.i18n.render import tr
 from .common import emit_envelope
-from .period_parsing import _optional_canonical_period
+from .period_parsing import optional_canonical_period
 
 
 def ledger_export(
@@ -29,7 +29,7 @@ def ledger_export(
         output=output,
         export_format=export_kind,
         include_inactive=include_inactive,
-        period=_optional_canonical_period(period, year=year),
+        period=optional_canonical_period(period, year=year),
         actor=actor,
     )
     from .ledger_interchange_results import LedgerExportPayload

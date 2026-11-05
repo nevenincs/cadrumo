@@ -34,7 +34,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ...iva.errors import IvaRateNotFoundError
 from ...iva.lookup import rate_table_covers, rate_table_covers_any_positive_tier
@@ -48,7 +48,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 @pytest.fixture(autouse=True)
 def _authority_operation() -> Iterator[None]:
     """Resolve rate slots under the generation-pinned authority production uses."""
-    with _indexed_authority_for_test().operation():
+    with bundled_indexed_authority().operation():
         yield
 
 
@@ -73,7 +73,7 @@ def test_no_es_tier_currently_exhibits_an_uncovered_but_lawful_date() -> None:
     goes false, a tier has narrowed again and the refusal tests this module used
     to carry should be restored against the date that reopens.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         floor = _authority_operation_for_test.supported_filing_years().date_envelope().floor
         for kind in _POSITIVE_TIERS:
             assert rate_table_covers(
@@ -89,7 +89,7 @@ def test_no_spanish_date_publishes_one_positive_tier_without_the_others() -> Non
 
     Walks every edge of the Spanish positive tiers, which is where coverage can change.
     """
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         spain = EUMemberState.from_registry("es")
         edges: set[date] = set()
         for variant in operation.governed_fact("iva-rate-schedule").variants:
@@ -120,7 +120,7 @@ def test_the_general_and_reducido_gap_is_closed_and_stays_closed(rate: IvaRate) 
     those windows to a later start would resurrect exactly the false-legality
     refusal this module exists to prevent, and would otherwise do it silently.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         on_date = date(2023, 6, 1)
         assert iva_rate_percentage(rate, on_date) is not None
         assert rate_table_covers(
@@ -204,7 +204,7 @@ def test_the_positive_tier_reading_is_exactly_the_three_positive_tiers() -> None
     see :func:`test_no_es_tier_currently_exhibits_an_uncovered_but_lawful_date`,
     which is the test that will tell us when one can.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         for year in _authority_operation_for_test.supported_filing_years().years:
             for month in (1, 6, 12):
                 probe = date(year, month, 1)
@@ -236,7 +236,7 @@ def test_the_zero_tier_currently_hides_inside_the_positive_tiers() -> None:
     outside the positive ones, this reds and says so, and a behavioural probe
     becomes possible again and should be restored.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         envelope = _authority_operation_for_test.supported_filing_years().date_envelope()
         day = envelope.floor
         separating: list[date] = []

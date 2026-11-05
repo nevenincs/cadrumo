@@ -38,7 +38,7 @@ from pathlib import Path
 import pytest
 
 from .....tests.inventory import FIXTURES_DIR
-from .._parsers.pdfplumber_backend import extract_pages_text
+from ..parsers.pdfplumber_backend import extract_pages_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 

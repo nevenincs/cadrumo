@@ -29,7 +29,7 @@ from ...core.operations import (
 )
 from ...core.period import Period
 from ...domain.modelos.filing_record import ExternalEvidenceKind, FilingDeclarationKind
-from ._filing_chain_payloads import filing_reconciliation_payload
+from .filing_chain_payloads import filing_reconciliation_payload
 from .modelo_results import FilingRecordImportResult, ModeloRecordPayload
 
 

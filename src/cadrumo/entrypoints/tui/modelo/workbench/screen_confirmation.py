@@ -19,7 +19,7 @@ from .casilla_list_models import AddressKey
 from .navigator import section_of
 from .page_items import page_of
 from .screen_constants import (
-    _NONE_TO_CONFIRM_LOCALE_KEYS,
+    NONE_TO_CONFIRM_LOCALE_KEYS,
 )
 from .sources import GoToCasilla, OpenSourceSurface, SourcesChoice, WorkbenchSourcesScreen, surface_target
 
@@ -44,7 +44,7 @@ class WorkbenchConfirmationMixin:
         fields, in_section = self._confirm_scope()
         assumed = tuple(field for field in fields if field.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM)
         if not assumed:
-            self._notice(tr(_NONE_TO_CONFIRM_LOCALE_KEYS[in_section]))
+            self._notice(tr(NONE_TO_CONFIRM_LOCALE_KEYS[in_section]))
             return
         if not any(confirmable(field) for field in assumed):
             self._open_box(address_key(assumed[0].address))

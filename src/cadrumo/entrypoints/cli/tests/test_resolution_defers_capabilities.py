@@ -26,7 +26,7 @@ from __future__ import annotations
 import pytest
 
 from ..command_specs import COMMAND_GRAPH
-from .test_capability_family_isolation import _loaded_families
+from .test_capability_family_isolation import loaded_families
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -36,7 +36,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 #: ANNOTATION is a deferred target, so building a node's Typer signature imports
 #: whatever module owns each annotated type -- and several of those are package
 #: roots that import heavy siblings eagerly.
-_RESOLUTION_LOADERS: dict[str, str] = {
+RESOLUTION_LOADERS: dict[str, str] = {
     "app/ledger/import": "annotation resolves through ledger.actions_common -> domain.modelos protocols",
     "app/modelo/work/verify": "annotation pulls registry and persistence it may use only at execution",
     "app/modelo/work/amend": "annotation pulls the registry it may use only at execution",
@@ -50,7 +50,7 @@ def _all_paths() -> list[list[str]]:
 
 
 def _deferring_paths() -> list[list[str]]:
-    return [path for path in _all_paths() if "/".join(path) not in _RESOLUTION_LOADERS]
+    return [path for path in _all_paths() if "/".join(path) not in RESOLUTION_LOADERS]
 
 
 def test_the_exception_list_names_only_live_nodes() -> None:
@@ -61,7 +61,7 @@ def test_the_exception_list_names_only_live_nodes() -> None:
     silently exempt a node that was never checked.
     """
     live = {"/".join(path) for path in _all_paths()}
-    unknown = sorted(name for name in _RESOLUTION_LOADERS if name not in live)
+    unknown = sorted(name for name in RESOLUTION_LOADERS if name not in live)
 
     assert unknown == [], f"these exception rows name no live command: {unknown}"
 
@@ -73,7 +73,7 @@ def test_resolving_every_other_node_loads_no_capability_family() -> None:
     claim that each of them loaded nothing.
     """
     paths = _deferring_paths()
-    loaded = _loaded_families(paths)
+    loaded = loaded_families(paths)
 
     assert loaded == {}, (
         f"resolving the {len(paths)} nodes expected to defer loaded {loaded}. "
@@ -82,12 +82,12 @@ def test_resolving_every_other_node_loads_no_capability_family() -> None:
     )
 
 
-@pytest.mark.parametrize("name", sorted(_RESOLUTION_LOADERS))
+@pytest.mark.parametrize("name", sorted(RESOLUTION_LOADERS))
 def test_a_listed_node_that_now_defers_must_be_removed(name: str) -> None:
     """STALE-ENTRY: an exception that stopped applying must be deleted."""
-    loaded = _loaded_families([name.split("/")])
+    loaded = loaded_families([name.split("/")])
 
     assert loaded != {}, (
         f"`aeat {name.replace('/', ' ')}` now resolves without loading any capability family, "
-        f"so its _RESOLUTION_LOADERS entry is stale and must be removed: {_RESOLUTION_LOADERS[name]}"
+        f"so its _RESOLUTION_LOADERS entry is stale and must be removed: {RESOLUTION_LOADERS[name]}"
     )

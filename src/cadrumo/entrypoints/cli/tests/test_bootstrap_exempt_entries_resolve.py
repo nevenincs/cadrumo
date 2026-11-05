@@ -44,7 +44,7 @@ import pytest
 from click import Context as ClickContext
 from typer.main import get_command
 
-from .._bootstrap_exempt import BOOTSTRAP_EXEMPTIONS, BootstrapExemption, is_bootstrap_exempt
+from ..bootstrap_exempt import BOOTSTRAP_EXEMPTIONS, BootstrapExemption, is_bootstrap_exempt
 from ..main import cli_app
 
 app = cli_app()
@@ -242,7 +242,7 @@ def test_the_matched_paths_are_derived_from_the_records() -> None:
     A second hand-maintained tuple would let the checked data and the matched
     data drift, which is how an exemption escapes review.
     """
-    from .._bootstrap_exempt import BOOTSTRAP_EXEMPT_VERB_PATHS
+    from ..bootstrap_exempt import BOOTSTRAP_EXEMPT_VERB_PATHS
 
     assert tuple(exemption.verb_path for exemption in BOOTSTRAP_EXEMPTIONS) == BOOTSTRAP_EXEMPT_VERB_PATHS
     assert len(set(BOOTSTRAP_EXEMPT_VERB_PATHS)) == len(BOOTSTRAP_EXEMPT_VERB_PATHS)

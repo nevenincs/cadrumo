@@ -23,10 +23,10 @@ from ....domain.categories.proportionality_catalogue import require_proportional
 from ....domain.categories.spending_category import SpendingCategory
 from .cli_fixture_worlds import invoke_joined_cli as invoke_cached_cli
 from .profile_world_fixtures import (
-    active_profile_isolated_backend as _isolated_backend,
+    active_profile_isolated_backend,
 )
 
-__all__ = ["_isolated_backend"]
+__all__ = ["active_profile_isolated_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

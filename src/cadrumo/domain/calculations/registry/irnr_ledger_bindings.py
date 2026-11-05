@@ -26,14 +26,14 @@ from ....core.country_code import COUNTRY_CODE_ALPHA2_PATTERN, CountryCodeAlpha2
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
-from ._ledger_binding_resolution import (
+from .binding_selector_utils import provider_member
+from .form_codes import differs_from_role
+from .ids import BindingId
+from .ledger_binding_resolution import (
     casilla_target_matcher,
     resolve_ledger_family_binding_values,
     unsupported_ledger_family_observations,
 )
-from .binding_selector_utils import provider_member
-from .form_codes import differs_from_role
-from .ids import BindingId
 from .ledger_binding_validation import (
     ledger_binding_build_diagnostics,
     ledger_binding_selector,

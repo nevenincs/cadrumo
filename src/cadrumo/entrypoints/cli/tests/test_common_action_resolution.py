@@ -27,14 +27,14 @@ from ....core.operator_action_enums import (
     ActionEvidenceProvenance,
 )
 from ..common import (
-    _action_text_lines,
-    _powershell_action_token,
+    action_text_lines,
+    powershell_action_token,
     resolve_cli_precondition_action,
     resolve_notice_action,
     resolve_notice_actions,
 )
 from ..operator_surface_reconciliation import (
-    _OPERATOR_SURFACE_RECONCILIATION_META_KEY,
+    OPERATOR_SURFACE_RECONCILIATION_META_KEY,
     current_operator_surface_reconciliation,
 )
 
@@ -110,7 +110,7 @@ def _render_action_line(
         action=action,
     )
     resolved_notice = resolve_notice_actions((notice,))[0]
-    return _action_text_lines((resolved_notice,))[0], resolved_notice
+    return action_text_lines((resolved_notice,))[0], resolved_notice
 
 
 def test_common_action_resolver_uses_the_live_surface_for_zero_and_required_inputs() -> None:
@@ -147,7 +147,7 @@ def test_common_action_resolver_uses_the_live_surface_for_zero_and_required_inpu
 def test_common_action_resolver_refuses_invalid_invocation_reconciliation() -> None:
     """A malformed invocation cache cannot silently weaken live action checks."""
     with click.Context(click.Command("operator-surface")) as context:
-        context.meta[_OPERATOR_SURFACE_RECONCILIATION_META_KEY] = "not a reconciliation"
+        context.meta[OPERATOR_SURFACE_RECONCILIATION_META_KEY] = "not a reconciliation"
         with pytest.raises(TypeError, match="operator-surface reconciliation context contains an invalid value"):
             current_operator_surface_reconciliation()
 
@@ -260,7 +260,7 @@ def test_common_action_resolver_accepts_modelo_calculate_verdict_context_binding
 
 @pytest.mark.parametrize(("value", "rendered"), _POWERSHELL_LITERAL_CASES)
 def test_powershell_action_token_renders_the_single_quoted_literal(value: str, rendered: str) -> None:
-    assert _powershell_action_token(value) == rendered
+    assert powershell_action_token(value) == rendered
 
 
 @pytest.mark.external_tool

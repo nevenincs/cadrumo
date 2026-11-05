@@ -626,17 +626,17 @@ _LOCAL_AI_CONSUMERS: Mapping[str, _LocalAiConsumer] = {
         },
         operations=frozenset({"ledger.classify.review", "ledger.split.review"}),
     ),
-    "cadrumo.entrypoints.ledger_evidence_extraction_composition._invoice_read_text": _LocalAiConsumer(
+    "cadrumo.entrypoints.ledger_evidence_extraction_composition.invoice_read_text": _LocalAiConsumer(
         units=frozenset({f"{_LLM}.evidence_draft_text.TextInvoiceFieldExtractor"}),
         drivers={ModelRole.TEXT_EXTRACTION: _drive_evidence_text_read},
         operations=frozenset({"ledger.evidence.extract", "ledger.evidence.confirm", "ledger.evidence.batch"}),
     ),
-    "cadrumo.entrypoints.ledger_evidence_extraction_composition._invoice_transcribe_vision": _LocalAiConsumer(
+    "cadrumo.entrypoints.ledger_evidence_extraction_composition.invoice_transcribe_vision": _LocalAiConsumer(
         units=frozenset({f"{_LLM}.evidence_draft_vision.VisionDocumentTranscriber"}),
         drivers={ModelRole.VISION_TRANSCRIPTION: _drive_evidence_vision_read},
         operations=frozenset({"ledger.evidence.extract", "ledger.evidence.confirm", "ledger.evidence.batch"}),
     ),
-    "cadrumo.entrypoints.ledger_evidence_extraction_composition._invoice_propose_supply_nature": _LocalAiConsumer(
+    "cadrumo.entrypoints.ledger_evidence_extraction_composition.invoice_propose_supply_nature": _LocalAiConsumer(
         units=frozenset({f"{_LLM}.supply_nature_proposal.SupplyNatureProposer"}),
         drivers={ModelRole.SUPPLY_NATURE_PROPOSAL: _drive_evidence_supply_nature},
     ),
@@ -664,7 +664,7 @@ _LOCAL_AI_CONSUMERS: Mapping[str, _LocalAiConsumer] = {
 
 #: Consumer sites no registered operation reaches, and why.
 _UNWRAPPED_CONSUMERS: Mapping[str, str] = {
-    "cadrumo.entrypoints.ledger_evidence_extraction_composition._invoice_propose_supply_nature": (
+    "cadrumo.entrypoints.ledger_evidence_extraction_composition.invoice_propose_supply_nature": (
         "advisory and asked for only on request, which no registered extraction makes; a missing reader "
         "leaves the person asked as before rather than refusing"
     ),

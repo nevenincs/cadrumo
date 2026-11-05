@@ -128,7 +128,7 @@ def corpus_casilla_values(year: int) -> Mapping[CasillaId, Decimal]:
     return MappingProxyType(_CORPUS_VALUES[year])
 
 
-def _format_spanish_decimal(value: Decimal) -> str:
+def format_spanish_decimal(value: Decimal) -> str:
     """Format a Decimal as a Spanish-locale amount string.
 
     ``1234.56`` → ``1.234,56``
@@ -192,7 +192,7 @@ def render_borrador_pdf(year: int, casilla_values: Mapping[CasillaId, Decimal]) 
         if value is None:
             continue
         label = _CASILLA_LABELS.get(casilla_id, "")
-        amount_str = _format_spanish_decimal(value)
+        amount_str = format_spanish_decimal(value)
         # Render: ``NNNN Label  amount`` — matches borrador regex
         line = f"{casilla_id} {label}  {amount_str}"
         c.drawString(margin, y, line)

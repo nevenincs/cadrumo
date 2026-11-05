@@ -33,9 +33,9 @@ from ...google.tests.installation_client_support import (
     use_installation_client,
 )
 from ...google.tests.session_records import save_drive_config, save_token
-from .._google_drive import GoogleDriveProvider
 from ..errors import OutboundStorageConflictError, OutboundStorageValidationError
 from ..factory import build_google_credentials, get_storage_provider, resolve_drive_root_folder_id
+from ..google_drive import GoogleDriveProvider
 from ..protocol import StorageProvider
 from ..records import ProviderKind
 
@@ -80,7 +80,7 @@ def test_factory_import_does_not_import_concrete_backends() -> None:
                 import cadrumo.adapters.outbound.storage.factory
 
                 watched = (
-                    "cadrumo.adapters.outbound.storage._google_drive",
+                    "cadrumo.adapters.outbound.storage.google_drive",
                     "cadrumo.adapters.outbound.storage.local",
                 )
                 print(json.dumps({name: name in sys.modules for name in watched}, sort_keys=True))
@@ -94,7 +94,7 @@ def test_factory_import_does_not_import_concrete_backends() -> None:
 
     assert probe.returncode == 0, probe.stderr
     assert json.loads(probe.stdout) == {
-        "cadrumo.adapters.outbound.storage._google_drive": False,
+        "cadrumo.adapters.outbound.storage.google_drive": False,
         "cadrumo.adapters.outbound.storage.local": False,
     }
 

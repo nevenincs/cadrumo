@@ -36,30 +36,29 @@ from urllib.parse import parse_qs, urlencode, urlsplit
 
 from pydantic import AnyUrl
 
-from .....core.aeat_csv import is_aeat_csv as _is_aeat_csv
-from .....core.aeat_csv import normalise_aeat_csv as _normalise_aeat_csv
-from .....core.async_cleanup import close_async_resources as _close_async_resources
-from .....core.config import Settings as _Settings
-from .....core.errors.hierarchy import CadrumoError as _CadrumoError
-from .....domain.calculations.registry.remote_state_guard import RemoteOperation as _RemoteOperation
-from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy as _RemoteStateGuardPolicy
+from .....core.aeat_csv import is_aeat_csv, normalise_aeat_csv
+from .....core.async_cleanup import close_async_resources
+from .....core.config import Settings
+from .....core.errors.hierarchy import CadrumoError
 from .....domain.calculations.registry.remote_state_guard import (
-    assert_remote_operation_allowed as _assert_remote_operation_allowed,
+    RemoteOperation,
+    RemoteStateGuardPolicy,
+    assert_remote_operation_allowed,
 )
-from .....domain.calculations.registry.schema_base import EvidenceTier as _EvidenceTier
-from .....domain.justificante.errors import JustificanteVerificationError as _JustificanteVerificationError
-from .._html import parse_html as _parse_html
-from .._playwright import PlaywrightError as _PlaywrightError
-from ..sede.errors import BrowserAdapterTypeError as _BrowserAdapterTypeError
+from .....domain.calculations.registry.schema_base import EvidenceTier
+from .....domain.justificante.errors import JustificanteVerificationError
+from ..html import parse_html
+from ..playwright import PlaywrightError
+from ..sede.errors import BrowserAdapterTypeError
 
-_VERIFY_EXTERNAL = _Settings.external_constants()
-_VERIFY_URL = f"{_VERIFY_EXTERNAL.aeat.domains.www2}{_VERIFY_EXTERNAL.aeat.sede_paths.cotejo_query}"
-_VERIFY_HOST = _VERIFY_EXTERNAL.aeat.domains.www2.removeprefix("https://")
-_VERIFY_GUARD_POLICY = _RemoteStateGuardPolicy(
+_VERIFY_EXTERNAL = Settings.external_constants()
+VERIFY_URL = f"{_VERIFY_EXTERNAL.aeat.domains.www2}{_VERIFY_EXTERNAL.aeat.sede_paths.cotejo_query}"
+VERIFY_HOST = _VERIFY_EXTERNAL.aeat.domains.www2.removeprefix("https://")
+_VERIFY_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-csv-verifier-read",
-    evidence_tier=_EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
+    evidence_tier=EvidenceTier.OFFICIAL_SOURCE_GUIDANCE,
     classification="public_read_surface",
-    allowed_hosts=(_VERIFY_HOST,),
+    allowed_hosts=(VERIFY_HOST,),
     allowed_browser_action_patterns=(),
     synthetic_data_allowed=False,
     requires_authentication=False,
@@ -139,7 +138,7 @@ VerifyBrowserSessionFactory = Callable[[], Awaitable[VerifyBrowserSessionLike]]
 """Callable that builds a self-owned :class:`VerifyBrowserSessionLike`."""
 
 
-def _is_verify_browser_session_like(obj: object) -> TypeGuard[VerifyBrowserSessionLike]:
+def is_verify_browser_session_like(obj: object) -> TypeGuard[VerifyBrowserSessionLike]:
     """Return ``True`` when ``obj`` structurally satisfies :class:`VerifyBrowserSessionLike`.
 
     Checks the two method names the protocol requires; a
@@ -165,8 +164,8 @@ async def _build_default_browser_session() -> VerifyBrowserSessionLike:
 
     settings = load_settings()
     session = await default_browser_session_factory(settings)
-    if not _is_verify_browser_session_like(session):
-        raise _BrowserAdapterTypeError(
+    if not is_verify_browser_session_like(session):
+        raise BrowserAdapterTypeError(
             f"default_browser_session_factory returned an incompatible type: {type(session)}",
         )
     return session
@@ -207,9 +206,9 @@ async def verify_csv(
             because browser construction, navigation, the guard, or parsing
             fails.
     """
-    csv = _normalise_aeat_csv(csv)
-    if not _is_aeat_csv(csv):
-        raise _JustificanteVerificationError(
+    csv = normalise_aeat_csv(csv)
+    if not is_aeat_csv(csv):
+        raise JustificanteVerificationError(
             f"cannot verify {csv!r}: an AEAT CSV is 8-32 uppercase alphanumeric characters",
         )
 
@@ -220,34 +219,34 @@ async def verify_csv(
             factory = browser_session_factory or DEFAULT_BROWSER_SESSION_FACTORY
             session = await factory()
             own_browser = True
-        except (_PlaywrightError, _CadrumoError) as exc:
-            raise _JustificanteVerificationError(f"failed to construct default BrowserSession: {exc}") from exc
+        except (PlaywrightError, CadrumoError) as exc:
+            raise JustificanteVerificationError(f"failed to construct default BrowserSession: {exc}") from exc
 
     context: VerifyBrowserContextLike | None = None
     try:
         context = await session.create_context()
         page = await context.new_page()
-        verification_url = f"{_VERIFY_URL}?{urlencode({'CSV': csv})}"
-        _assert_verify_http("GET", verification_url)
+        verification_url = f"{VERIFY_URL}?{urlencode({'CSV': csv})}"
+        assert_verify_http("GET", verification_url)
         await page.goto(verification_url)
-        return _response_confirms_valid_csv(
+        return response_confirms_valid_csv(
             await page.content(),
             expected_csv=csv,
             final_url=page.url,
         )
-    except _JustificanteVerificationError:
+    except JustificanteVerificationError:
         raise
     except Exception as exc:
-        raise _JustificanteVerificationError(f"live CSV verification failed for {csv}: {exc}") from exc
+        raise JustificanteVerificationError(f"live CSV verification failed for {csv}: {exc}") from exc
     finally:
-        await _close_async_resources(
+        await close_async_resources(
             context,
             session if own_browser else None,
             task_name="cadrumo-verify-csv-close",
         )
 
 
-def _response_confirms_valid_csv(body: str, *, expected_csv: str, final_url: str) -> bool:
+def response_confirms_valid_csv(body: str, *, expected_csv: str, final_url: str) -> bool:
     """Return whether AEAT rendered a concrete document viewer.
 
     The live-grounded AEAT verifier reference records this exact viewer route
@@ -259,29 +258,29 @@ def _response_confirms_valid_csv(body: str, *, expected_csv: str, final_url: str
     "valid" verdict, so a malformed expectation reaching it would let any page
     echoing that same malformed value confirm a document that cannot exist.
     """
-    if not _is_aeat_csv(expected_csv):
+    if not is_aeat_csv(expected_csv):
         return False
     final = urlsplit(final_url)
-    if final.scheme != "https" or final.netloc != _VERIFY_HOST:
+    if final.scheme != "https" or final.netloc != VERIFY_HOST:
         return False
     if final.path != _VERIFY_EXTERNAL.aeat.sede_paths.cotejo_query:
         return False
 
-    soup = _parse_html(body)
+    soup = parse_html(body)
     viewer = soup.find("iframe", id="iframe-visualiza")
     if viewer is None:
         return False
     source = str(viewer.get("src", ""))
     parsed = urlsplit(source)
-    if parsed.netloc and parsed.netloc != _VERIFY_HOST:
+    if parsed.netloc and parsed.netloc != VERIFY_HOST:
         return False
     if parsed.path != _VERIFY_EXTERNAL.aeat.sede_paths.cotejo_document:
         return False
     return parse_qs(parsed.query).get("CSV") == [expected_csv]
 
 
-def _assert_verify_http(method: str, url: str) -> None:
-    _assert_remote_operation_allowed(
+def assert_verify_http(method: str, url: str) -> None:
+    assert_remote_operation_allowed(
         _VERIFY_GUARD_POLICY,
-        _RemoteOperation(kind="http", method=method, url=AnyUrl(url)),
+        RemoteOperation(kind="http", method=method, url=AnyUrl(url)),
     )

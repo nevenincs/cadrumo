@@ -334,7 +334,7 @@ def test_carry_forward_refuses_source_period_without_calendar_span(
 ) -> None:
     """A filing-event key cannot be assigned a fabricated date for authority lookup."""
     with pytest.raises(PeriodError, match="no calendar date span"):
-        carry_forward._expiry_review_state(
+        carry_forward.expiry_review_state(
             source_filing_year=2025,
             source_period=Period.from_year_and_code(2025, "1P"),
             as_of_year=2025,

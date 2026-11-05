@@ -10,7 +10,7 @@ the generated fixture PDFs in two ways:
   parenthetical leader: ``Ejercicio (con 4 cifras) ....... 2024``.
 
 These tests feed representative text shapes with redacted PII through
-:func:`cadrumo.adapters.inbound.justificante._extract.extract_justificante`
+:func:`cadrumo.adapters.inbound.justificante.extract.extract_justificante`
 so the fallbacks are exercised without committing real PDF fixtures.
 """
 
@@ -22,7 +22,7 @@ import pytest
 
 from .....core.period import Period
 from .....tests.aeat_literal_fixtures import justificante_cotejo_url
-from .._extract import extract_justificante
+from ..extract import extract_justificante
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 

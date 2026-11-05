@@ -26,7 +26,7 @@ from ..descendant_facts import (
 )
 from ..family_fact_context import FamilyFactResolutionContext
 from ..family_profile import RentaFamilyProfile
-from ._registry_thresholds import (
+from .registry_thresholds import (
     registry_birth_order_amounts,
     registry_menor_tres_supplement,
     registry_thresholds,

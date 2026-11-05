@@ -38,23 +38,21 @@ from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _certificate_indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from cadrumo.tests.certificates import CERTIFICATE_BUNDLE_INPUT, build_pkcs12_bundle
 
 from .certificate_sources_check_support import (
-    _OPERATOR_PROBE_PORTS,
-    _OPERATOR_SCOPE_PORTS,
-    _register_operator_profile,
-    _register_select_with_secret,
+    OPERATOR_PROBE_PORTS,
+    OPERATOR_SCOPE_PORTS,
+    register_operator_profile,
+    register_select_with_secret,
 )
 from .certificate_sources_check_support import (
-    _isolated_backend as _isolated_backend,
+    isolated_backend as isolated_backend,
 )
 from .certificate_sources_check_support import (
-    _manages_storage_roots as _manages_storage_roots,
+    manages_storage_roots as manages_storage_roots,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
@@ -62,7 +60,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 def _register_and_select_personal_source(tmp_path: Path, operation: PinnedAuthorityOperation) -> Path:
     """Register a valid ``personal`` certificate source with no bound secret and select it."""
-    _register_operator_profile()
+    register_operator_profile()
     now = datetime.now(UTC)
     cert_path = build_pkcs12_bundle(
         tmp_path,
@@ -74,12 +72,12 @@ def _register_and_select_personal_source(tmp_path: Path, operation: PinnedAuthor
     register_operator_certificate_source(
         name="personal",
         certificate_path=cert_path,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        operator_scope_ports=OPERATOR_SCOPE_PORTS,
         operation=operation,
     )
     select_operator_certificate_source(
         name="personal",
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        operator_scope_ports=OPERATOR_SCOPE_PORTS,
         operation=operation,
     )
     return cert_path
@@ -91,17 +89,17 @@ def _describe_and_probe_omitted(certificate_secret_backend_factory: InMemoryCert
         AuthProviderKind.CERTIFICATE,
         settings=load_settings(),
         certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        operator_scope_ports=OPERATOR_SCOPE_PORTS,
     ).describe()
     omitted_status = inspect_operator_auth(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        operator_probe_ports=OPERATOR_PROBE_PORTS,
+        operator_scope_ports=OPERATOR_SCOPE_PORTS,
     )
     omitted_test = run_operator_auth_test(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        operator_probe_ports=OPERATOR_PROBE_PORTS,
+        operator_scope_ports=OPERATOR_SCOPE_PORTS,
     )
     return provider_description, omitted_status, omitted_test
 
@@ -111,11 +109,11 @@ def test_resolver_returns_selected_source_path_and_secure_storage_secret(
     tmp_path: Path,
 ) -> None:
     """The active-credential resolver returns the selected source's path and its stored secret."""
-    cert_path = _register_select_with_secret(tmp_path, certificate_secret_backend_factory)
+    cert_path = register_select_with_secret(tmp_path, certificate_secret_backend_factory)
 
     credentials = resolve_active_certificate_credentials(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        operator_scope_ports=OPERATOR_SCOPE_PORTS,
     )
 
     assert credentials.source_name == "personal"
@@ -134,13 +132,13 @@ def test_check_opens_the_bundle_with_the_secure_storage_secret_no_global_fallbac
     PKCS#12 with the per-source secure-storage secret alone, classifying
     it ``ok``.
     """
-    _register_select_with_secret(tmp_path, certificate_secret_backend_factory)
+    register_select_with_secret(tmp_path, certificate_secret_backend_factory)
 
     with override_settings(cadrumo_certificate_password_secret=SecretStr("intentionally-wrong-global")):
         report = check_operator_certificate_sources(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
-            operator_probe_ports=_OPERATOR_PROBE_PORTS,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_probe_ports=OPERATOR_PROBE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
         )
 
     assert len(report.entries) == 1
@@ -159,23 +157,23 @@ def test_status_test_and_resolver_agree_on_the_selected_certificate_bytes(
     resolved per-source secret, so its probe classifies ``ok`` — proving the
     same resolved bytes and secret flow through the status/test surfaces.
     """
-    cert_path = _register_select_with_secret(tmp_path, certificate_secret_backend_factory)
+    cert_path = register_select_with_secret(tmp_path, certificate_secret_backend_factory)
 
     status = inspect_operator_auth(
         "certificate",
         certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        operator_probe_ports=OPERATOR_PROBE_PORTS,
+        operator_scope_ports=OPERATOR_SCOPE_PORTS,
     )
     test_result = run_operator_auth_test(
         "certificate",
         certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_probe_ports=_OPERATOR_PROBE_PORTS,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        operator_probe_ports=OPERATOR_PROBE_PORTS,
+        operator_scope_ports=OPERATOR_SCOPE_PORTS,
     )
     credentials = resolve_active_certificate_credentials(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        operator_scope_ports=OPERATOR_SCOPE_PORTS,
     )
 
     assert credentials.certificate_path == cert_path
@@ -189,7 +187,7 @@ def test_selected_source_without_secret_fails_closed_no_global_credential_leak(
     tmp_path: Path,
 ) -> None:
     """A selected source with no bound secret resolves ``password=None`` and never leaks a global secret."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
         cert_path = _register_and_select_personal_source(tmp_path, _certificate_authority_operation_for_test)
 
         with override_settings(
@@ -198,7 +196,7 @@ def test_selected_source_without_secret_fails_closed_no_global_credential_leak(
         ):
             credentials = resolve_active_certificate_credentials(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
             )
 
         assert credentials.source_name == "personal"
@@ -212,10 +210,10 @@ def test_central_provider_and_explicit_or_omitted_probes_fail_closed_without_nam
     tmp_path: Path,
 ) -> None:
     """A valid global password cannot satisfy a selected named source with no bound secret."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
         cert_path = _register_and_select_personal_source(tmp_path, _certificate_authority_operation_for_test)
         configure_operator_auth(
-            AuthProviderKind.CERTIFICATE.value, certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+            AuthProviderKind.CERTIFICATE.value, certificate_path=cert_path, operator_scope_ports=OPERATOR_SCOPE_PORTS
         )
 
         with override_settings(cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_INPUT)):
@@ -223,34 +221,34 @@ def test_central_provider_and_explicit_or_omitted_probes_fail_closed_without_nam
                 AuthProviderKind.CERTIFICATE,
                 settings=load_settings(),
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
             ).describe()
             explicit_status = inspect_operator_auth(
                 AuthProviderKind.CERTIFICATE.value,
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
-                operator_probe_ports=_OPERATOR_PROBE_PORTS,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_probe_ports=OPERATOR_PROBE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
             )
             omitted_status = inspect_operator_auth(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
-                operator_probe_ports=_OPERATOR_PROBE_PORTS,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_probe_ports=OPERATOR_PROBE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
             )
             explicit_test = run_operator_auth_test(
                 AuthProviderKind.CERTIFICATE.value,
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
-                operator_probe_ports=_OPERATOR_PROBE_PORTS,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_probe_ports=OPERATOR_PROBE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
             )
             omitted_test = run_operator_auth_test(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
-                operator_probe_ports=_OPERATOR_PROBE_PORTS,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_probe_ports=OPERATOR_PROBE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
             )
             omitted_preflight = build_live_auth_preflight_report(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
-                operator_probe_ports=_OPERATOR_PROBE_PORTS,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_probe_ports=OPERATOR_PROBE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
             )
 
         assert provider_description.available is False
@@ -269,9 +267,9 @@ def test_bound_named_secret_wins_over_wrong_global_through_central_and_omitted_r
     tmp_path: Path,
 ) -> None:
     """The selected secure-storage secret feeds the central factory and omitted probes."""
-    cert_path = _register_select_with_secret(tmp_path, certificate_secret_backend_factory)
+    cert_path = register_select_with_secret(tmp_path, certificate_secret_backend_factory)
     configure_operator_auth(
-        AuthProviderKind.CERTIFICATE.value, certificate_path=cert_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+        AuthProviderKind.CERTIFICATE.value, certificate_path=cert_path, operator_scope_ports=OPERATOR_SCOPE_PORTS
     )
 
     with override_settings(
@@ -292,8 +290,8 @@ def test_reregistering_active_source_keeps_resolver_provider_status_and_test_on_
     tmp_path: Path,
 ) -> None:
     """Renewing the selected source updates its path mirror and every consuming surface."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
-        _register_operator_profile()
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
+        register_operator_profile()
         now = datetime.now(UTC)
         cert_v1 = build_pkcs12_bundle(
             tmp_path,
@@ -312,28 +310,28 @@ def test_reregistering_active_source_keeps_resolver_provider_status_and_test_on_
         register_operator_certificate_source(
             name="selected",
             certificate_path=cert_v1,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         set_operator_certificate_source_secret(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             name="selected",
             secret=SecretStr(CERTIFICATE_BUNDLE_INPUT),
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         select_operator_certificate_source(
             name="selected",
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         configure_operator_auth(
-            AuthProviderKind.CERTIFICATE.value, certificate_path=cert_v1, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+            AuthProviderKind.CERTIFICATE.value, certificate_path=cert_v1, operator_scope_ports=OPERATOR_SCOPE_PORTS
         )
         register_operator_certificate_source(
             name="selected",
             certificate_path=cert_v2,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         cert_v1.unlink()
@@ -341,23 +339,23 @@ def test_reregistering_active_source_keeps_resolver_provider_status_and_test_on_
         with override_settings(cadrumo_certificate_password_secret=SecretStr("intentionally-wrong-global")):
             credentials = resolve_active_certificate_credentials(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
             )
             provider_description = select_provider(
                 AuthProviderKind.CERTIFICATE,
                 settings=load_settings(),
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
             ).describe()
             status = inspect_operator_auth(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
-                operator_probe_ports=_OPERATOR_PROBE_PORTS,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_probe_ports=OPERATOR_PROBE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
             )
             test_result = run_operator_auth_test(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
-                operator_probe_ports=_OPERATOR_PROBE_PORTS,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_probe_ports=OPERATOR_PROBE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
             )
 
         assert credentials.certificate_path == cert_v2
@@ -376,14 +374,14 @@ def test_resolver_preserves_unnamed_single_certificate_credential_when_no_named_
     tmp_path: Path,
 ) -> None:
     """An unselected registration preserves the unnamed Settings path and password."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
-        _register_operator_profile()
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
+        register_operator_profile()
         registered_path = tmp_path / "registered-but-inactive.p12"
         registered_path.write_bytes(b"registered source bytes")
         register_operator_certificate_source(
             name="inactive",
             certificate_path=registered_path,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             operation=_certificate_authority_operation_for_test,
         )
         global_path = tmp_path / "unnamed-certificate.p12"
@@ -397,7 +395,7 @@ def test_resolver_preserves_unnamed_single_certificate_credential_when_no_named_
         ):
             credentials = resolve_active_certificate_credentials(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
             )
 
         assert credentials.source_name is None
@@ -412,7 +410,7 @@ def test_central_provider_preserves_unnamed_single_certificate_credential_withou
     tmp_path: Path,
 ) -> None:
     """The unnamed Settings path and password remain valid when no source is selected."""
-    _register_operator_profile()
+    register_operator_profile()
     now = datetime.now(UTC)
     global_path = build_pkcs12_bundle(
         tmp_path,
@@ -422,7 +420,7 @@ def test_central_provider_preserves_unnamed_single_certificate_credential_withou
         subject_cn="legacy-global",
     )
     configure_operator_auth(
-        AuthProviderKind.CERTIFICATE.value, certificate_path=global_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+        AuthProviderKind.CERTIFICATE.value, certificate_path=global_path, operator_scope_ports=OPERATOR_SCOPE_PORTS
     )
 
     with override_settings(
@@ -445,7 +443,7 @@ def test_explicit_global_settings_path_overrides_stale_workflow_mirror_for_statu
     tmp_path: Path,
 ) -> None:
     """Legacy explicit Settings path is the same path emitted and probed by every surface."""
-    _register_operator_profile()
+    register_operator_profile()
     now = datetime.now(UTC)
     stale_path = build_pkcs12_bundle(
         tmp_path,
@@ -462,7 +460,7 @@ def test_explicit_global_settings_path_overrides_stale_workflow_mirror_for_statu
         subject_cn="explicit-settings",
     )
     configure_operator_auth(
-        AuthProviderKind.CERTIFICATE.value, certificate_path=stale_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+        AuthProviderKind.CERTIFICATE.value, certificate_path=stale_path, operator_scope_ports=OPERATOR_SCOPE_PORTS
     )
     stale_path.unlink()
 
@@ -474,17 +472,17 @@ def test_explicit_global_settings_path_overrides_stale_workflow_mirror_for_statu
             AuthProviderKind.CERTIFICATE,
             settings=load_settings(),
             certificate_secret_backend_factory=certificate_secret_backend_factory,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
         ).describe()
         status = inspect_operator_auth(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
-            operator_probe_ports=_OPERATOR_PROBE_PORTS,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_probe_ports=OPERATOR_PROBE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
         )
         test_result = run_operator_auth_test(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
-            operator_probe_ports=_OPERATOR_PROBE_PORTS,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_probe_ports=OPERATOR_PROBE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
         )
 
     assert provider_description.available is True
@@ -501,7 +499,7 @@ def test_central_provider_uses_configured_workflow_path_when_global_path_is_abse
     tmp_path: Path,
 ) -> None:
     """``auth configure --file`` remains the path authority for central callers."""
-    _register_operator_profile()
+    register_operator_profile()
     now = datetime.now(UTC)
     configured_path = build_pkcs12_bundle(
         tmp_path,
@@ -511,7 +509,7 @@ def test_central_provider_uses_configured_workflow_path_when_global_path_is_abse
         subject_cn="configured-file",
     )
     configure_operator_auth(
-        AuthProviderKind.CERTIFICATE.value, certificate_path=configured_path, operator_scope_ports=_OPERATOR_SCOPE_PORTS
+        AuthProviderKind.CERTIFICATE.value, certificate_path=configured_path, operator_scope_ports=OPERATOR_SCOPE_PORTS
     )
 
     with override_settings(
@@ -520,13 +518,13 @@ def test_central_provider_uses_configured_workflow_path_when_global_path_is_abse
     ):
         credentials = resolve_active_certificate_credentials(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
         )
         provider_description = select_provider(
             AuthProviderKind.CERTIFICATE,
             settings=load_settings(),
             certificate_secret_backend_factory=certificate_secret_backend_factory,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
         ).describe()
 
     assert credentials.certificate_path == configured_path

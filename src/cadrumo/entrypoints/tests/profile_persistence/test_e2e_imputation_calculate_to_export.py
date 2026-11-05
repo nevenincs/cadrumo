@@ -92,12 +92,12 @@ from .m130_m100_annual_support import (
     seed_prior_year_m100,
 )
 from .test_e2e_ledger_m130_quarters_to_m100_annual import (
-    _M100_ACTIVITY_INCOME_CASILLA,
-    _M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA,
-    _M130_INGRESOS_CASILLA,
+    M100_ACTIVITY_INCOME_CASILLA,
     M100_ACTIVITY_KEY,
     M100_ACTIVITY_KEY_CASILLA,
-    _calculate_and_file_m130_quarter,
+    M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA,
+    M130_INGRESOS_CASILLA,
+    calculate_and_file_m130_quarter,
 )
 
 __all__ = ["secure_objects"]
@@ -306,9 +306,9 @@ def test_m130_under_accrual_places_stated_rows_by_their_quarter_through_export(
             observed_also={_M130_NEGATIVE_CARRIED: Decimal(0), _M130_QUARTER_PAYMENT: OFFICIAL_M130_C19[earlier]},
         )
 
-    revision = _calculate_and_file_m130_quarter(secure_objects, period=period)
+    revision = calculate_and_file_m130_quarter(secure_objects, period=period)
 
-    assert _money(revision, _M130_INGRESOS_CASILLA) == Decimal(ingresos)
+    assert _money(revision, M130_INGRESOS_CASILLA) == Decimal(ingresos)
     assert _money(revision, _M130_GASTOS) == Decimal(gastos)
     net = Decimal(ingresos) - Decimal(gastos)
     assert _money(revision, _M130_NET) == net
@@ -349,8 +349,8 @@ def test_m100_places_stated_rows_by_the_criterion_through_export(
 
     annual = _annual(secure_objects)
 
-    assert _money(annual, _M100_ACTIVITY_INCOME_CASILLA) == Decimal(income)
-    assert _money(annual, _M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA) == Decimal(expenses)
+    assert _money(annual, M100_ACTIVITY_INCOME_CASILLA) == Decimal(income)
+    assert _money(annual, M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA) == Decimal(expenses)
     assert _money(annual, M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA) == Decimal(net)
 
     register_refund_account(secure_objects)

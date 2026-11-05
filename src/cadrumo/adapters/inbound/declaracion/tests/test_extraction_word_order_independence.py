@@ -53,30 +53,30 @@ from pathlib import Path
 import pytest
 
 from .....tests.inventory import FIXTURES_DIR
-from .._parsers.pdfplumber_backend import extract_pages_text
 from ..parser import (
-    _classify_target,
-    _extract_pages_words,
-    _numeric_casilla_anchors,
-    _PdfWord,
-    _printed_box_numbers,
+    PdfWord,
+    classify_target,
+    extract_pages_words,
+    numeric_casilla_anchors,
+    parser_printed_box_numbers,
 )
-from ._parser_boundary_support import _render_extraction_profile
+from ..parsers.pdfplumber_backend import extract_pages_text
+from .parser_boundary_support import render_extraction_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 
-def _reversed(words: list[_PdfWord]) -> list[_PdfWord]:
+def _reversed(words: list[PdfWord]) -> list[PdfWord]:
     """Last candidate first: the strongest probe for an overlooked ``[0]``."""
     return list(reversed(words))
 
 
-def _interleaved(words: list[_PdfWord]) -> list[_PdfWord]:
+def _interleaved(words: list[PdfWord]) -> list[PdfWord]:
     """Even-indexed words then odd, so neighbours on the page stop being adjacent."""
     return words[::2] + words[1::2]
 
 
-_PERMUTATIONS: tuple[tuple[str, Callable[[list[_PdfWord]], list[_PdfWord]]], ...] = (
+_PERMUTATIONS: tuple[tuple[str, Callable[[list[PdfWord]], list[PdfWord]]], ...] = (
     ("reversed", _reversed),
     ("interleaved", _interleaved),
 )
@@ -98,17 +98,17 @@ def _classify_every_target(
     filing_year: int,
     period: str,
     pdf: Path,
-    pages_words: tuple[list[_PdfWord], ...],
+    pages_words: tuple[list[PdfWord], ...],
 ) -> dict[str, tuple[str, str | None, int | None]]:
     """Every target's full outcome, so a substitution cannot hide behind a count."""
-    profile, revision = _render_extraction_profile(modelo, filing_year=filing_year, period=period)
+    profile, revision = render_extraction_profile(modelo, filing_year=filing_year, period=period)
     pages = extract_pages_text(pdf)
-    printed = _printed_box_numbers(profile, revision)
-    anchors = _numeric_casilla_anchors(profile, revision)
+    printed = parser_printed_box_numbers(profile, revision)
+    anchors = numeric_casilla_anchors(profile, revision)
 
     outcomes: dict[str, tuple[str, str | None, int | None]] = {}
     for target in profile.target_casillas:
-        result = _classify_target(
+        result = classify_target(
             target,
             pages=pages,
             pages_words=pages_words,
@@ -135,7 +135,7 @@ def test_permuting_the_word_list_changes_no_extraction_outcome(
     period: str,
     pdf: Path,
     permutation_name: str,
-    permute: Callable[[list[_PdfWord]], list[_PdfWord]],
+    permute: Callable[[list[PdfWord]], list[PdfWord]],
 ) -> None:
     """The same words in a different order must yield the same extraction.
 
@@ -146,12 +146,12 @@ def test_permuting_the_word_list_changes_no_extraction_outcome(
     """
     assert pdf.is_file(), f"{pdf} is missing, so this specimen proves nothing"
 
-    natural = _extract_pages_words(pdf)
+    natural = extract_pages_words(pdf)
     assert any(natural), f"{pdf.name}: no words extracted, so permuting proves nothing"
 
     baseline = _classify_every_target(modelo, filing_year, period, pdf, natural)
 
-    permuted: tuple[list[_PdfWord], ...] = tuple(permute(list(page)) for page in natural)
+    permuted: tuple[list[PdfWord], ...] = tuple(permute(list(page)) for page in natural)
 
     assert any(page != original for page, original in zip(permuted, natural, strict=True)), (
         f"{pdf.name}: the {permutation_name} permutation was a no-op, so this asserts nothing"

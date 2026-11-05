@@ -17,7 +17,7 @@ from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.i18n.render import tr
 from ....domain.user_profile.values import ProfileSetupState
 from ..common import bad, emit_envelope, no_active_profile_refusal
-from ._profile_mutation import execute_profile_mutation, mutation_deadline, read_mutation_baseline
+from .profile_mutation import execute_profile_mutation, mutation_deadline, read_mutation_baseline
 from .profile_setup_results import ProfileCompleteSetupResult
 
 

@@ -26,7 +26,7 @@ from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.hashing import sha256_hex
 from .....tests.path_obstruction import obstructed_path
 from ..errors import OutboundStorageError
-from ..local import LocalFileSystemProvider, _sidecar_filename
+from ..local import LocalFileSystemProvider, sidecar_filename
 from ..records import ProviderKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -63,7 +63,7 @@ class TestLabelDriftReplacement:
         # its exact sidecar path, which no file write can replace. The name
         # comes from the production helper so the test cannot drift from the
         # provider's naming scheme.
-        sidecar = tmp_path / _NAMESPACE / _sidecar_filename(_HMAC, "new")
+        sidecar = tmp_path / _NAMESPACE / sidecar_filename(_HMAC, "new")
         sidecar.parent.mkdir(parents=True, exist_ok=True)
 
         with obstructed_path(sidecar), pytest.raises(OutboundStorageError):

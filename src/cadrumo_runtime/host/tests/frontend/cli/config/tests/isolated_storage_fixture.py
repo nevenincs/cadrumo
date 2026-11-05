@@ -80,7 +80,7 @@ def config_check_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-@pytest.fixture(name="_isolated_backend", autouse=True)
+@pytest.fixture(name="isolated_backend", autouse=True)
 def config_check_isolated_backend(config_check_backend: None) -> None:
     """Autouse variant of :func:`config_check_backend` for the ``config`` command suites."""
 

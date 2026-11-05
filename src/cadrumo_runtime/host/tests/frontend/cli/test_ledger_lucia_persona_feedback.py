@@ -24,7 +24,7 @@ def _profile_only(*, invoke_cli: Callable[..., Result]) -> None:
 #: Every case starts from the same registered profile and writes ledger rows
 #: into it, so the profile is published once and each test gets its own
 #: filesystem copy of that world.
-_seeded_origin, _isolated_backend = runtime_seeded_profile_backend_fixture(
+_seeded_origin, isolated_backend = runtime_seeded_profile_backend_fixture(
     seed=_profile_only,
     label="lucia",
     profile_overrides={
@@ -42,10 +42,10 @@ _seeded_origin, _isolated_backend = runtime_seeded_profile_backend_fixture(
         "cadrumo_clave_movil_dni_fecha": None,
         "cadrumo_clave_movil_nie_soporte": None,
     },
-    name="_isolated_backend",
+    name="isolated_backend",
     origin_name="_seeded_origin",
 )
-__all__ = ["_isolated_backend", "_seeded_origin"]
+__all__ = ["_seeded_origin", "isolated_backend"]
 
 
 def _invoke(args: list[str]):

@@ -14,7 +14,7 @@ from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -58,8 +58,7 @@ from ....domain.modelos.filing_kind_evidence import observed_filing_kind_for_loc
 from ....domain.modelos.filing_record import FilingDeclarationKind
 from ....domain.modelos.work_unit import WorkUnit
 from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from .file_flow_test_support import calculation_ports_for_test
 from .observation_seeding_support import save_stamped_observation
@@ -103,7 +102,7 @@ EXPECTED_CAPITAL_CREDIT = Decimal("500.00")
 
 
 def _seed_profile() -> None:
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=BUCKET_ID,
         facts=(
@@ -130,7 +129,7 @@ def _seed_profile() -> None:
         ),
         created_at=_T0,
         updated_at=_T0,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 

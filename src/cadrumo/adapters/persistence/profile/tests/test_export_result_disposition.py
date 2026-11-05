@@ -39,12 +39,10 @@ from .....domain.modelos.calculation_revision import (
 from .....domain.modelos.codes import ModeloCode
 from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .modelo_export_support import (
-    _M130_RESULT_CASILLA,
-    _M200_REFUND_RESULT_CASILLA,
-    _M303_RESULT_CASILLA,
-)
-from .modelo_export_support import (
-    export_taxpayer_profile as _profile,
+    M130_RESULT_CASILLA,
+    M200_REFUND_RESULT_CASILLA,
+    M303_RESULT_CASILLA,
+    export_taxpayer_profile,
 )
 from .published_authority_support import published_authority_operation
 
@@ -177,15 +175,15 @@ def _result_disposition_profile(kind: str) -> TaxpayerProfile:
 @pytest.mark.parametrize(
     ("modelo", "casilla_values", "period", "expected"),
     (
-        ("303", {_M303_RESULT_CASILLA: Decimal("357.00")}, Period.from_year_and_code(2024, "1T"), "I"),
-        ("303", {_M303_RESULT_CASILLA: Decimal("-210.00")}, Period.from_year_and_code(2024, "1T"), "C"),
-        ("303", {_M303_RESULT_CASILLA: Decimal("0.00")}, Period.from_year_and_code(2024, "1T"), "N"),
+        ("303", {M303_RESULT_CASILLA: Decimal("357.00")}, Period.from_year_and_code(2024, "1T"), "I"),
+        ("303", {M303_RESULT_CASILLA: Decimal("-210.00")}, Period.from_year_and_code(2024, "1T"), "C"),
+        ("303", {M303_RESULT_CASILLA: Decimal("0.00")}, Period.from_year_and_code(2024, "1T"), "N"),
         ("303", {}, Period.from_year_and_code(2024, "1T"), "N"),
-        ("130", {_M130_RESULT_CASILLA: Decimal("-50.00")}, Period.from_year_and_code(2024, "1T"), "B"),
-        ("130", {_M130_RESULT_CASILLA: Decimal("-50.00")}, Period.from_year_and_code(2024, "3T"), "B"),
-        ("130", {_M130_RESULT_CASILLA: Decimal("-50.00")}, Period.from_year_and_code(2024, "4T"), "N"),
-        ("130", {_M130_RESULT_CASILLA: Decimal("0.00")}, Period.from_year_and_code(2024, "4T"), "N"),
-        ("200", {_M200_REFUND_RESULT_CASILLA: Decimal("-1000.00")}, Period.from_year_and_code(2025, "0A"), "D"),
+        ("130", {M130_RESULT_CASILLA: Decimal("-50.00")}, Period.from_year_and_code(2024, "1T"), "B"),
+        ("130", {M130_RESULT_CASILLA: Decimal("-50.00")}, Period.from_year_and_code(2024, "3T"), "B"),
+        ("130", {M130_RESULT_CASILLA: Decimal("-50.00")}, Period.from_year_and_code(2024, "4T"), "N"),
+        ("130", {M130_RESULT_CASILLA: Decimal("0.00")}, Period.from_year_and_code(2024, "4T"), "N"),
+        ("200", {M200_REFUND_RESULT_CASILLA: Decimal("-1000.00")}, Period.from_year_and_code(2025, "0A"), "D"),
         # A filing-grade Modelo 390 year: the 2026 edition claims applicability only.
         # Its layout declares no Tipo de declaración, so it records no disposition.
         ("390", {}, Period.from_year_and_code(2025, "0A"), None),
@@ -216,7 +214,7 @@ def test_resolve_modelo_result_disposition_maps_result_to_disposition(
         _resolve_result_disposition(
             modelo=modelo,
             casilla_values=casilla_values,
-            profile=_result_disposition_profile("ordinary") if modelo == "303" else _profile(),
+            profile=_result_disposition_profile("ordinary") if modelo == "303" else export_taxpayer_profile(),
             period=period,
         )
         == expected
@@ -226,11 +224,11 @@ def test_resolve_modelo_result_disposition_maps_result_to_disposition(
 @pytest.mark.parametrize(
     ("profile_kind", "period_code", "casilla_values", "expected"),
     (
-        *(("redeme", code, {_M303_RESULT_CASILLA: Decimal("-210.00")}, "D") for code in ("01", "02", "03", "12")),
-        *(("ordinary", code, {_M303_RESULT_CASILLA: Decimal("-210.00")}, "C") for code in ("01", "1T", "4T")),
-        ("redeme", "01", {_M303_RESULT_CASILLA: Decimal("357.00")}, "I"),
-        ("redeme", "01", {_M303_RESULT_CASILLA: Decimal("0.00")}, "N"),
-        ("redeme", "1T", {_M130_RESULT_CASILLA: Decimal("-50.00")}, "B"),
+        *(("redeme", code, {M303_RESULT_CASILLA: Decimal("-210.00")}, "D") for code in ("01", "02", "03", "12")),
+        *(("ordinary", code, {M303_RESULT_CASILLA: Decimal("-210.00")}, "C") for code in ("01", "1T", "4T")),
+        ("redeme", "01", {M303_RESULT_CASILLA: Decimal("357.00")}, "I"),
+        ("redeme", "01", {M303_RESULT_CASILLA: Decimal("0.00")}, "N"),
+        ("redeme", "1T", {M130_RESULT_CASILLA: Decimal("-50.00")}, "B"),
     ),
     ids=(
         *(f"redeme-negative-{code}" for code in ("01", "02", "03", "12")),
@@ -247,7 +245,7 @@ def test_resolve_modelo_result_disposition_redeme_upgrade_boundaries(
     expected: str,
 ) -> None:
     """REDEME standing disposition resolves only negative Modelo 303 periods to D."""
-    modelo = "130" if _M130_RESULT_CASILLA in casilla_values else "303"
+    modelo = "130" if M130_RESULT_CASILLA in casilla_values else "303"
     assert (
         _resolve_result_disposition(
             modelo=modelo,
@@ -262,12 +260,12 @@ def test_resolve_modelo_result_disposition_redeme_upgrade_boundaries(
 @pytest.mark.parametrize(
     ("modelo", "profile_kind", "period", "casilla_values", "country", "expected"),
     (
-        ("303", "redeme", ("2024", "01"), {_M303_RESULT_CASILLA: Decimal("-210.00")}, None, "D"),
-        ("303", "redeme", ("2024", "01"), {_M303_RESULT_CASILLA: Decimal("-210.00")}, "ES", "D"),
-        ("303", "redeme", ("2024", "01"), {_M303_RESULT_CASILLA: Decimal("-210.00")}, "DE", "X"),
-        ("303", "ordinary", ("2024", "1T"), {_M303_RESULT_CASILLA: Decimal("-210.00")}, "DE", "C"),
-        ("303", "redeme", ("2024", "01"), {_M303_RESULT_CASILLA: Decimal("357.00")}, "DE", "I"),
-        ("200", "ordinary", ("2025", "0A"), {_M200_REFUND_RESULT_CASILLA: Decimal("-1000.00")}, "BR", "X"),
+        ("303", "redeme", ("2024", "01"), {M303_RESULT_CASILLA: Decimal("-210.00")}, None, "D"),
+        ("303", "redeme", ("2024", "01"), {M303_RESULT_CASILLA: Decimal("-210.00")}, "ES", "D"),
+        ("303", "redeme", ("2024", "01"), {M303_RESULT_CASILLA: Decimal("-210.00")}, "DE", "X"),
+        ("303", "ordinary", ("2024", "1T"), {M303_RESULT_CASILLA: Decimal("-210.00")}, "DE", "C"),
+        ("303", "redeme", ("2024", "01"), {M303_RESULT_CASILLA: Decimal("357.00")}, "DE", "I"),
+        ("200", "ordinary", ("2025", "0A"), {M200_REFUND_RESULT_CASILLA: Decimal("-1000.00")}, "BR", "X"),
         ("360", "ordinary", ("2025", "0A"), {}, "DE", "D"),
     ),
     ids=(
@@ -293,7 +291,7 @@ def test_a_devolucion_into_a_foreign_account_settles_as_x_where_the_modelo_decla
         _resolve_result_disposition(
             modelo=modelo,
             casilla_values=casilla_values,
-            profile=_result_disposition_profile(profile_kind) if modelo == "303" else _profile(),
+            profile=_result_disposition_profile(profile_kind) if modelo == "303" else export_taxpayer_profile(),
             period=Period.from_year_and_code(int(period[0]), period[1]),
             refund_account_country=country,
         )
@@ -304,7 +302,7 @@ def test_a_devolucion_into_a_foreign_account_settles_as_x_where_the_modelo_decla
 def test_positive_modelo_303_payment_election_resolves_i_or_u_and_refuses_g() -> None:
     """Positive M303 settlement is explicit; G is typed but unavailable."""
     period = Period.from_year_and_code(2024, "1T")
-    casilla_values = {_M303_RESULT_CASILLA: Decimal("357.00")}
+    casilla_values = {M303_RESULT_CASILLA: Decimal("357.00")}
 
     assert (
         _resolve_result_disposition(
@@ -338,7 +336,7 @@ def test_positive_modelo_303_payment_election_resolves_i_or_u_and_refuses_g() ->
 def test_incompatible_result_elections_refuse_without_changing_carry_policy() -> None:
     """Payment elections never turn a credit into carry or refund semantics."""
     positive_period = Period.from_year_and_code(2024, "1T")
-    positive_values = {_M303_RESULT_CASILLA: Decimal("357.00")}
+    positive_values = {M303_RESULT_CASILLA: Decimal("357.00")}
     with pytest.raises(ModeloRefundElectionNotEligibleError):
         _resolve_result_disposition(
             modelo="303",
@@ -348,7 +346,7 @@ def test_incompatible_result_elections_refuse_without_changing_carry_policy() ->
             refund_election=RefundElection.DEVOLVER,
         )
 
-    negative_values = {_M303_RESULT_CASILLA: Decimal("-210.00")}
+    negative_values = {M303_RESULT_CASILLA: Decimal("-210.00")}
     with pytest.raises(ModeloPaymentElectionIncompatibleError):
         _resolve_result_disposition(
             modelo="303",
@@ -361,7 +359,7 @@ def test_incompatible_result_elections_refuse_without_changing_carry_policy() ->
     with pytest.raises(ModeloRefundElectionNotEligibleError):
         _resolve_result_disposition(
             modelo="303",
-            casilla_values={_M303_RESULT_CASILLA: Decimal("0.00")},
+            casilla_values={M303_RESULT_CASILLA: Decimal("0.00")},
             profile=_result_disposition_profile("ordinary"),
             period=positive_period,
             refund_election=RefundElection.DEVOLVER,
@@ -384,8 +382,8 @@ def test_domiciliacion_follows_the_declared_codes_not_the_modelo_name() -> None:
     assert (
         _resolve_result_disposition(
             modelo="130",
-            casilla_values={_M130_RESULT_CASILLA: Decimal("120.00")},
-            profile=_profile(),
+            casilla_values={M130_RESULT_CASILLA: Decimal("120.00")},
+            profile=export_taxpayer_profile(),
             period=Period.from_year_and_code(2024, "1T"),
             payment_election=PaymentElection.DOMICILIACION,
         )
@@ -394,8 +392,8 @@ def test_domiciliacion_follows_the_declared_codes_not_the_modelo_name() -> None:
     with pytest.raises(ModeloPaymentElectionIncompatibleError):
         _resolve_result_disposition(
             modelo="130",
-            casilla_values={_M130_RESULT_CASILLA: Decimal("-50.00")},
-            profile=_profile(),
+            casilla_values={M130_RESULT_CASILLA: Decimal("-50.00")},
+            profile=export_taxpayer_profile(),
             period=Period.from_year_and_code(2024, "1T"),
             payment_election=PaymentElection.DOMICILIACION,
         )
@@ -426,7 +424,7 @@ def test_a_layout_declaring_the_header_without_a_codified_spec_refuses() -> None
         _resolve_result_disposition(
             modelo="216",
             casilla_values={},
-            profile=_profile(),
+            profile=export_taxpayer_profile(),
             period=Period.from_year_and_code(2024, "1T"),
         )
 
@@ -441,7 +439,7 @@ def test_an_absent_disposition_admits_no_election() -> None:
         _resolve_result_disposition(
             modelo="390",
             casilla_values={},
-            profile=_profile(),
+            profile=export_taxpayer_profile(),
             period=period,
             payment_election=PaymentElection.DOMICILIACION,
         )
@@ -449,7 +447,7 @@ def test_an_absent_disposition_admits_no_election() -> None:
         _resolve_result_disposition(
             modelo="390",
             casilla_values={},
-            profile=_profile(),
+            profile=export_taxpayer_profile(),
             period=period,
             refund_election=RefundElection.DEVOLVER,
         )
@@ -460,7 +458,7 @@ def test_modelo_360_refuses_a_domiciliacion_election() -> None:
         _resolve_result_disposition(
             modelo="360",
             casilla_values={},
-            profile=_profile(),
+            profile=export_taxpayer_profile(),
             period=Period.from_year_and_code(2025, "0A"),
             payment_election=PaymentElection.DOMICILIACION,
         )

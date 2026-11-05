@@ -29,7 +29,7 @@ import pytest
 
 from .....application.aggregation.source_mesh import CalculationSourceDiagnostic
 from .....application.modelo.calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
-from .....application.modelo.tests.advisory_diagnostic_assertions import operator_text as _operator_text
+from .....application.modelo.tests.advisory_diagnostic_assertions import operator_text
 from .....application.modelo.tests.advisory_diagnostic_repositories import advisory_diagnostic_repositories
 from .....core.casilla_id import CasillaId
 from .....core.modelo import Modelo
@@ -151,7 +151,7 @@ def test_the_advisory_asserts_both_provisions_its_message_states() -> None:
 def test_the_advisory_names_the_descendant_and_the_way_to_answer() -> None:
     """An advisory an operator cannot act on is noise."""
     _write(_contributing_child())
-    message = _operator_text(_collect()[0])
+    message = operator_text(_collect()[0])
     assert "renta_family.descendiente.0" in message
     assert "RENTAS=" in message
     assert "RENTAS=0" in message, "the message must say a zero is a valid answer, or it reads as unanswerable"

@@ -31,7 +31,7 @@ from cadrumo.application.operations.tests.authority_test_support import unread_a
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 
 from .supervision_support import run_to_settlement
-from .supervisor_test_support import _capabilities
+from .supervisor_test_support import supervisor_capabilities
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -88,7 +88,7 @@ def _registry() -> OperationRegistry:
         ),
         phase_codes=("operation.replay.phase",),
         interaction_kinds=frozenset(),
-        capabilities=_capabilities(),
+        capabilities=supervisor_capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
     )
     registration = OperationPublicDefinitionRegistrationV1.compose(

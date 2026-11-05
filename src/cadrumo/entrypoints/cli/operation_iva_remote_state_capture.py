@@ -78,7 +78,7 @@ def _surface_report(outcome: LiveIvaSurfaceOutcomePublicV1) -> LiveIvaReadOutcom
     )
 
 
-def _report(
+def operation_iva_remote_state_capture_report(
     projection: IvaRemoteStateCapturePublicResultV1,
     *,
     request: IvaRemoteStateCaptureRequest,
@@ -148,7 +148,7 @@ def read_iva_remote_state_capture_for_cli(
         projection = completed.projection
         if not isinstance(projection, IvaRemoteStateCapturePublicResultV1):
             raise ValueError("IVA evidence projection has an invalid type")
-        report = _report(projection, request=request)
+        report = operation_iva_remote_state_capture_report(projection, request=request)
         if (
             completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
             or completed.refusal_code is not None

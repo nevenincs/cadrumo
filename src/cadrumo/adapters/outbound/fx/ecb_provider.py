@@ -87,7 +87,7 @@ class EcbReferenceRateProvider:
                 prior publication when the requested date is not a TARGET
                 working day.
         """
-        self._fetch = fetch or _https_fetch
+        self._fetch = fetch or https_fetch
         self._lookback = timedelta(days=lookback_days)
         # Resolved results are memoized per (currency, date) so a ledger import
         # spanning many rows on few distinct dates issues few requests.
@@ -124,7 +124,7 @@ class EcbReferenceRateProvider:
         return self._resolved[key]
 
     def _resolve(self, code: str, rate_date: date) -> EurRateLookup:
-        url = _observation_url(code, rate_date - self._lookback, rate_date)
+        url = observation_url(code, rate_date - self._lookback, rate_date)
         payload = self._fetch(url)
         if payload is None:
             return EurRateLookup(
@@ -132,7 +132,7 @@ class EcbReferenceRateProvider:
                 rate_date=rate_date,
                 source=ECB_RATE_SOURCE_ID,
             )
-        observations = _parse_observations(payload)
+        observations = parse_observations(payload)
         if not observations:
             return EurRateLookup(
                 status=EurRateLookupStatus.MISSING_RATE,
@@ -159,7 +159,7 @@ class EcbReferenceRateProvider:
         )
 
 
-def _observation_url(currency: str, start: date, end: date) -> str:
+def observation_url(currency: str, start: date, end: date) -> str:
     """Build the ECB Data Portal daily-spot observation URL for one currency."""
     code = _normalise_ecb_currency(currency)
     return (
@@ -177,7 +177,7 @@ def _normalise_ecb_currency(currency: str) -> str:
         raise ExchangeRateProviderError(msg) from exc
 
 
-def _parse_observations(payload: str) -> list[tuple[date, Decimal]]:
+def parse_observations(payload: str) -> list[tuple[date, Decimal]]:
     """Parse an ECB ``csvdata`` response into ``[(date, ecb_eur_base_rate)]``.
 
     A non-publication window yields an empty body, and the ECB emits rows with a
@@ -232,7 +232,7 @@ def _parse_observation_row(
     return day, quote
 
 
-def _https_fetch(url: str) -> str | None:
+def https_fetch(url: str) -> str | None:
     """Read ``url`` over HTTPS, constrained to the ECB Data Portal host.
 
     A 404 is the Data Portal saying it publishes no such series, which is an

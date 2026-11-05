@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from .....core.config_support import LLMProvider
 from .....core.model_roles import ModelRole
@@ -34,12 +34,12 @@ _REPLY = json.dumps({"classification": "BUSINESS", "confidence": "0.9", "reason"
 
 
 def _spec() -> PromptSpec:
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return prompt_spec_with_every_spending_category(year=2025, operation=operation)
 
 
 def _transaction() -> Transaction:
-    with _indexed_authority_for_test().operation() as operation, validating_governed_facts(operation):
+    with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
         return vision_transaction("ev-1")
 
 

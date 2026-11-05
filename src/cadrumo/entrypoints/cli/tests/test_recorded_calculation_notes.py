@@ -17,8 +17,8 @@ from ....domain.modelos.calculation_revision_sources import (
     CalculationNoteSentence,
     RecordedCalculationNote,
 )
-from .._modelo_rendering import recorded_note_notices
-from ..modelo_export_commands import _export_notices, _export_text_lines
+from ..modelo_export_commands import export_notices, export_text_lines
+from ..modelo_rendering import recorded_note_notices
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -57,8 +57,8 @@ def test_an_export_says_each_note_in_its_notices_and_its_lines(tmp_path: Path) -
 
     restored = ModeloFicheroBoePublicReceipt.from_result(exported).to_result()
 
-    notices = [notice.message for notice in _export_notices(restored)]
-    lines = _export_text_lines(restored)
+    notices = [notice.message for notice in export_notices(restored)]
+    lines = export_text_lines(restored)
     for figure in ("1.200,00", "600,00"):
         assert any(figure in message for message in notices)
         assert any(figure in line for line in lines)

@@ -12,7 +12,7 @@ from typing import override
 
 import pytest
 
-from ..log_file_handler import AnnouncingRotatingFileHandler, _fnv1a, append_signal_name
+from ..log_file_handler import AnnouncingRotatingFileHandler, append_signal_name, fnv1a
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -21,9 +21,9 @@ _SID = "S-1-5-21-1-2-3-1001"
 
 def test_the_signal_name_hashes_with_fnv1a_64() -> None:
     # The published FNV-1a 64 test vectors.
-    assert _fnv1a(b"") == 0xCBF29CE484222325
-    assert _fnv1a(b"a") == 0xAF63DC4C8601EC8C
-    assert _fnv1a(b"foobar") == 0x85944171F73967E8
+    assert fnv1a(b"") == 0xCBF29CE484222325
+    assert fnv1a(b"a") == 0xAF63DC4C8601EC8C
+    assert fnv1a(b"foobar") == 0x85944171F73967E8
 
 
 def test_spellings_of_one_directory_share_the_name_the_desktop_derives() -> None:

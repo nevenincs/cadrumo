@@ -20,7 +20,7 @@ from ...tests.ledger_corpus_support import (
     load_corpus_oracle_rules,
     match_corpus_rule,
 )
-from .ledger_cli import list_ledger_rows_via_cli as _list_rows
+from .ledger_cli import list_ledger_rows_via_cli
 from .profile_world_fixtures import recorded_fx_isolated_backend
 
 __all__ = ["recorded_fx_isolated_backend"]
@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 def test_bulk_classify_from_oracle_resolved_at_runtime(tmp_path: Path, invoke_cli: Callable[..., Result]) -> None:
     import_ledger_corpus(invoke_cli=invoke_cli)
     rules = load_corpus_oracle_rules()
-    rows = _list_rows()
+    rows = list_ledger_rows_via_cli()
     lines = ["transaction_id,classification,category_id"]
     expected: dict[str, str] = {}
     for row in rows:
@@ -60,7 +60,7 @@ def test_bulk_classify_from_oracle_resolved_at_runtime(tmp_path: Path, invoke_cl
     payload = json.loads(result.output)["result"]
     assert payload["applied"] == 12, payload
 
-    by_id = {row["transaction_id"]: row for row in _list_rows()}
+    by_id = {row["transaction_id"]: row for row in list_ledger_rows_via_cli()}
     for tx_id, classification in expected.items():
         assert by_id[tx_id]["business_classification"] == classification
 
@@ -70,7 +70,7 @@ def test_single_classify_intracommunity_with_eu_state(invoke_cli: Callable[..., 
     from ....domain.transactions.enums import BusinessClassification
 
     import_ledger_corpus(invoke_cli=invoke_cli)
-    rows = _list_rows()
+    rows = list_ledger_rows_via_cli()
     de_rows = [row for row in rows if "cliente DE GmbH intracom" in row["description"]]
     assert de_rows, "corpus must contain a DE intracommunity client invoice"
     tx = de_rows[0]["transaction_id"]
@@ -106,7 +106,7 @@ def test_allocate_records_business_proportion(invoke_cli: Callable[..., Result])
     from ....domain.transactions.enums import BusinessClassification
 
     import_bbva_corpus_account(invoke_cli=invoke_cli)
-    internet = find_corpus_transaction(_list_rows(), "Factura internet fibra oficina enero")
+    internet = find_corpus_transaction(list_ledger_rows_via_cli(), "Factura internet fibra oficina enero")
     tx = internet["transaction_id"]
     result = invoke_corpus_cli(
         [
@@ -155,7 +155,7 @@ def test_transfer_row_reclassified_to_internal_transfer_and_locked_out_of_tax(
     invoke_cli: Callable[..., Result],
 ) -> None:
     import_bbva_corpus_account(invoke_cli=invoke_cli)
-    rows = _list_rows()
+    rows = list_ledger_rows_via_cli()
     transfer = find_corpus_transaction(rows, "Transferencia a cuenta personal CaixaBank")
     tx = transfer["transaction_id"]
     assert transfer["direction"] == "OUTGOING"
@@ -165,7 +165,7 @@ def test_transfer_row_reclassified_to_internal_transfer_and_locked_out_of_tax(
         ["app", "ledger", "update", tx, "--direction", "INTERNAL_TRANSFER"], invoke_cli=invoke_cli
     )
     assert reclass.exit_code == 0, reclass.output
-    after = {row["transaction_id"]: row for row in _list_rows()}[tx]
+    after = {row["transaction_id"]: row for row in list_ledger_rows_via_cli()}[tx]
     assert after["direction"] == "INTERNAL_TRANSFER"
 
     refused = invoke_corpus_cli(["app", "ledger", "update", tx, "--classification", "BUSINESS"], invoke_cli=invoke_cli)

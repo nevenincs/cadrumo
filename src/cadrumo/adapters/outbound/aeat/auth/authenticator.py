@@ -57,7 +57,7 @@ from .....application.auth.session_types import (
 from .....application.auth_credentials import ActiveCertificateCredentials
 from .....core.async_cleanup import close_async_resources
 from .....core.auth_provider import AuthProviderDescription, AuthProviderKind
-from .....core.config import Settings as _Settings
+from .....core.config import Settings as ConfigSettings
 from .....core.config_support import AEAT_CERTIFICATE_PROTECTED_URL
 from .....core.errors.hierarchy import AeatLoginAssertionError
 from .....core.logging import get_logger
@@ -119,12 +119,12 @@ env-var change — the operator surface stays narrow.
 
 
 AEAT_LOGIN_NAVIGATION_TIMEOUT_MS: Final[int] = int(
-    _Settings.model_fields["cadrumo_browser_navigation_timeout_ms"].default,
+    ConfigSettings.model_fields["cadrumo_browser_navigation_timeout_ms"].default,
 )
 """Playwright navigation timeout for post-auth verification probes."""
 
 
-def _require_exact_active_certificate_session(
+def require_exact_active_certificate_session(
     session: AeatSession,
     active_session: AeatSession | None,
 ) -> None:
@@ -555,7 +555,7 @@ class AeatAuthenticator:
                     "no active browser context; call authenticate() first",
                     translated_message="adapters.auth.authenticator.errors.no_active_context",
                 )
-            _require_exact_active_certificate_session(session, self.active_session)
+            require_exact_active_certificate_session(session, self.active_session)
             self._inflight_pages += 1
             self._inflight_drained.clear()
 

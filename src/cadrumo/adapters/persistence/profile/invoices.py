@@ -37,7 +37,7 @@ from ....domain.invoices.catalogue import (
 )
 from ....domain.invoices.errors import InvoicePersistenceError
 from ..storage.secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
-from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
+from .secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:
     from ..storage.sql.secure_object_records import SecureObjectRevisionAssertion

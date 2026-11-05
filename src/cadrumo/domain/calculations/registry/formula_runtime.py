@@ -40,46 +40,26 @@ from ...period import calculation_filing_date
 from ..record_row_membership import ClosedRecordRowSet, resolve_closed_record_rows
 from .binding_value_contract import BindingValueChannel
 from .bindings import CasillaObservation
-from .casilla_membership import casillas_by_id as _casillas_by_id
-from .casilla_membership import duplicate_casilla_ids
-from .casilla_membership import text_family_casilla_ids as _text_family_casilla_ids
+from .casilla_membership import casillas_by_id as casilla_membership_casillas_by_id
+from .casilla_membership import duplicate_casilla_ids, text_family_casilla_ids
 from .errors import CasillaConstraintViolationError, RegistryValidationError
 from .formula_expression import evaluate_expression
 from .formula_initial_values import (
-    binding_values_with_absent_by_design_defaults as _binding_values_with_absent_by_design_defaults,
-)
-from .formula_initial_values import (
-    initial_values as _initial_values,
-)
-from .formula_initial_values import (
-    materialise_observations as _materialise_observations,
+    binding_values_with_absent_by_design_defaults,
+    initial_values,
+    materialise_observations,
 )
 from .formula_runtime_ops import (
     RegistryUnresolvedOutcomeReason,
+    UnresolvedFormulaDependencyError,
+    UnresolvedFormulaOutcomeError,
+    apply_rounding,
+    reject_non_decimal,
+    reject_non_string,
+    reject_unknown_external_values,
+    validated_decimal_input_casilla_ids,
 )
-from .formula_runtime_ops import (
-    UnresolvedFormulaDependencyError as _UnresolvedFormulaDependencyError,
-)
-from .formula_runtime_ops import (
-    UnresolvedFormulaOutcomeError as _UnresolvedFormulaOutcomeError,
-)
-from .formula_runtime_ops import (
-    apply_rounding as _apply_rounding,
-)
-from .formula_runtime_ops import (
-    reject_non_decimal as _reject_non_decimal,
-)
-from .formula_runtime_ops import (
-    reject_non_string as _reject_non_string,
-)
-from .formula_runtime_ops import (
-    reject_unknown_external_values as _reject_unknown_external_values,
-)
-from .formula_runtime_ops import (
-    validated_decimal_input_casilla_ids as _validated_decimal_input_casilla_ids,
-)
-from .formula_text_inputs import validate_text_input_targets as _validate_text_input_targets
-from .formula_text_inputs import validated_text_input_casilla_ids as _validated_text_input_casilla_ids
+from .formula_text_inputs import validate_text_input_targets, validated_text_input_casilla_ids
 from .ids import (
     BindingId,
     FormulaId,
@@ -385,7 +365,7 @@ def _reject_boolean_channel_conflicts(
             context={"binding_ids": ", ".join(ambiguous)},
         )
     declared_channels = {binding.id: binding.value.channel for binding in revision.bindings}
-    _reject_unknown_external_values(boolean_bindings, set(declared_channels), "boolean_binding")
+    reject_unknown_external_values(boolean_bindings, set(declared_channels), "boolean_binding")
     misrouted = sorted(
         binding_id
         for binding_id in boolean_bindings
@@ -418,7 +398,7 @@ def _resolve_calculation_inputs[InputKey, InputValue, TextInputKey, TextInputVal
 ) -> _ResolvedCalculationInputs:
     """Validate and normalize all external channels before formula traversal."""
     revision = snapshot.revision
-    resolved_inputs = _validated_decimal_input_casilla_ids(
+    resolved_inputs = validated_decimal_input_casilla_ids(
         inputs,
         revision=revision,
     )
@@ -440,7 +420,7 @@ def _resolve_calculation_inputs[InputKey, InputValue, TextInputKey, TextInputVal
     resolved_bindings = decimal_channels.resolved_bindings
     resolved_relations = decimal_channels.resolved_relations
     resolved_enum_bindings = enum_binding_values or {}
-    _reject_non_string(resolved_enum_bindings, "enum_binding")
+    reject_non_string(resolved_enum_bindings, "enum_binding")
     resolved_unresolved_relations = frozenset(unresolved_relation_ids).difference(resolved_relations)
     resolved_unresolved_bindings = frozenset((*unresolved_binding_ids, *resolved_unresolved_relations)).difference(
         resolved_bindings,
@@ -449,7 +429,7 @@ def _resolve_calculation_inputs[InputKey, InputValue, TextInputKey, TextInputVal
     resolved_date_bindings: Mapping[BindingId, date] = date_binding_values or dict[BindingId, date]()
     resolved_boolean_bindings: Mapping[BindingId, bool] = boolean_binding_values or dict[BindingId, bool]()
     _reject_boolean_channel_conflicts(revision, supplied_bindings, resolved_boolean_bindings)
-    resolved_text_inputs = _validated_text_input_casilla_ids(text_inputs or {})
+    resolved_text_inputs = validated_text_input_casilla_ids(text_inputs or {})
     return _ResolvedCalculationInputs(
         revision=revision,
         resolved_inputs=resolved_inputs,
@@ -488,15 +468,15 @@ def _resolve_decimal_binding_channels(
 ) -> _ResolvedDecimalBindingChannels:
     empty_bindings: dict[BindingId, Decimal] = {}
     supplied_bindings: Mapping[BindingId, Decimal] = binding_values if binding_values is not None else empty_bindings
-    _reject_non_decimal(supplied_bindings, "binding")
+    reject_non_decimal(supplied_bindings, "binding")
     resolved_relations = relation_values or {}
-    _reject_non_decimal(resolved_relations, "relation")
+    reject_non_decimal(resolved_relations, "relation")
     # Relation-prefill values are keyed by the provider binding id after the
     # schema cut. Keep the dedicated relation channel for source-resolution
     # diagnostics, but project its numeric values into the canonical binding
     # channel before initial casilla assembly and formula traversal.
     supplied_bindings = _merge_relation_values_into_bindings(supplied_bindings, resolved_relations)
-    resolved_bindings = _binding_values_with_absent_by_design_defaults(
+    resolved_bindings = binding_values_with_absent_by_design_defaults(
         revision,
         supplied_bindings,
         target_period=snapshot.period,
@@ -507,7 +487,7 @@ def _resolve_decimal_binding_channels(
     for unresolved_id in unresolved_relation_ids:
         if unresolved_id not in supplied_bindings:
             resolved_bindings.pop(unresolved_id, None)
-    _reject_non_decimal(resolved_bindings, "binding")
+    reject_non_decimal(resolved_bindings, "binding")
     return _ResolvedDecimalBindingChannels(
         supplied_bindings=supplied_bindings,
         resolved_bindings=resolved_bindings,
@@ -551,7 +531,7 @@ def _prepare_calculation_state(
         resolved_unresolved_relations=resolved.resolved_unresolved_relations,
         resolved_unresolved_bindings=resolved.resolved_unresolved_bindings,
     )
-    seeded = _initial_values(
+    seeded = initial_values(
         resolved.revision,
         resolved.resolved_inputs,
         binding_values=resolved.supplied_bindings,
@@ -565,8 +545,8 @@ def _prepare_calculation_state(
     )
     formulas = {formula.target_casilla_id: formula for formula in resolved.revision.formulas}
     parameters = {parameter.id: parameter for parameter in resolved.revision.parameters}
-    casillas_by_id = _casillas_by_id(resolved.revision)
-    resolved_text_inputs = _validate_text_input_targets(
+    casillas_by_id = casilla_membership_casillas_by_id(resolved.revision)
+    resolved_text_inputs = validate_text_input_targets(
         resolved.resolved_text_inputs,
         casillas_by_id=casillas_by_id,
     )
@@ -576,7 +556,7 @@ def _prepare_calculation_state(
         formulas=formulas,
         parameters=parameters,
         casillas_by_id=casillas_by_id,
-        text_casilla_ids=_text_family_casilla_ids(casillas_by_id.values()),
+        text_casilla_ids=text_family_casilla_ids(casillas_by_id.values()),
         resolved_text_inputs=resolved_text_inputs,
         computed_provenance={},
         unresolved_outcomes=[],
@@ -744,7 +724,7 @@ def _evaluate_formula_target(
             text_casilla_ids=state.text_casilla_ids,
             record_row_occupancy=resolved.record_row_occupancy,
         )
-    except _UnresolvedFormulaOutcomeError as exc:
+    except UnresolvedFormulaOutcomeError as exc:
         state.unresolved_casilla_ids.add(target)
         state.unresolved_outcomes.append(
             RegistryCalculationUnresolvedOutcome(
@@ -767,10 +747,10 @@ def _evaluate_formula_target(
             ),
         )
         return
-    except _UnresolvedFormulaDependencyError:
+    except UnresolvedFormulaDependencyError:
         state.unresolved_casilla_ids.add(target)
         return
-    value = _apply_rounding(value, formula.rounding)
+    value = apply_rounding(value, formula.rounding)
     _validate_formula_target_constraint(target, value, formula, state.casillas_by_id)
     state.values[target] = value
     state.computed_provenance[target] = CasillaObservation(
@@ -820,7 +800,7 @@ def _materialise_calculation_result(
     state: _CalculationState,
 ) -> RegistryCalculationResult:
     """Project evaluated state into observations and validate provenance links."""
-    observations = _materialise_observations(
+    observations = materialise_observations(
         values=state.values,
         text_values=state.resolved_text_inputs,
         computed_provenance=state.computed_provenance,
@@ -847,14 +827,14 @@ def _validate_external_value_ids(
     revision = snapshot.revision
     binding_ids = {binding.id for binding in revision.bindings}
     relation_ids = {binding.id for binding, _ in relation_prefill_bindings_for_period(revision, period=snapshot.period)}
-    _reject_unknown_external_values(resolved_bindings, binding_ids, "binding")
-    _reject_unknown_external_values(resolved_relations, relation_ids, "relation")
-    _reject_unknown_external_values(
+    reject_unknown_external_values(resolved_bindings, binding_ids, "binding")
+    reject_unknown_external_values(resolved_relations, relation_ids, "relation")
+    reject_unknown_external_values(
         {relation_id: ZERO for relation_id in resolved_unresolved_relations},
         relation_ids,
         "unresolved_relation",
     )
-    _reject_unknown_external_values(
+    reject_unknown_external_values(
         {binding_id: ZERO for binding_id in resolved_unresolved_bindings},
         binding_ids,
         "unresolved_binding",

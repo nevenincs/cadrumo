@@ -99,10 +99,9 @@ from cadrumo.domain.modelos.protocols import CalculationRevisionCatalogueReposit
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.adapter_composition_ports import build_borrador_100_snapshot_repository
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports, build_filing_action_ports
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
@@ -323,7 +322,7 @@ _T2 = datetime(2026, 4, 14, 14, 0, 0, tzinfo=UTC)
 _T3 = datetime(2026, 4, 15, 15, 0, 0, tzinfo=UTC)
 _T4 = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
 _T5 = datetime(2026, 4, 17, 13, 0, 0, tzinfo=UTC)
-_FILE_FLOW_PROFILE_ID = "11111111-1111-4111-8111-111111111111"
+FILE_FLOW_PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 
 _VERIFY_MODELO = "180"
 _VERIFY_REVISION = "2023-y-siguientes"
@@ -360,7 +359,7 @@ def _registry_required_manual_casillas(*, modelo: str, filing_year: int, period:
     )
 
 
-_Repos = tuple[
+FileFlowRepos = tuple[
     WorkUnitCatalogueRepository,
     CalculationRevisionCatalogueRepository,
     ModeloRecordCatalogueRepository,
@@ -371,13 +370,13 @@ _Repos = tuple[
 
 def _seed_file_flow_profile_record(profile: TestRuntimeProfile) -> None:
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=profile.bucket_id,
             facts=_READY_PROFILE_FACTS,
             created_at=_T0,
             updated_at=_T0,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 
@@ -388,7 +387,7 @@ def file_flow_seeded_profile(tmp_path: Path) -> SeededDurableProfile:
     Nothing process-global outlives this call; :func:`file_flow_repositories`
     and :func:`_file_flow_runtime` re-enter the bucket for one test at a time.
     """
-    return provision_seeded_profile(tmp_path, _FILE_FLOW_PROFILE_ID, _seed_file_flow_profile_record)
+    return provision_seeded_profile(tmp_path, FILE_FLOW_PROFILE_ID, _seed_file_flow_profile_record)
 
 
 def file_flow_repositories(shared: SeededDurableProfile) -> Iterator[Repos]:
@@ -409,7 +408,7 @@ def file_flow_repositories(shared: SeededDurableProfile) -> Iterator[Repos]:
 
 
 @dataclass(frozen=True, slots=True)
-class _FileFlowRuntime:
+class FileFlowFileFlowRuntime:
     """The live engine plus the repository bundle sharing it.
 
     Exposes the engine the repositories already use so a test can observe how
@@ -418,14 +417,14 @@ class _FileFlowRuntime:
     """
 
     engine: Engine
-    repos: _Repos
+    repos: FileFlowRepos
 
 
-def _file_flow_runtime(shared: SeededDurableProfile) -> Iterator[_FileFlowRuntime]:
+def file_flow_runtime_value(shared: SeededDurableProfile) -> Iterator[FileFlowFileFlowRuntime]:
     """Yield the file-flow repository bundle alongside its live engine."""
     with reopened_seeded_profile(shared) as profile:
         objects = profile.repository
-        yield _FileFlowRuntime(
+        yield FileFlowFileFlowRuntime(
             engine=objects.engine,
             repos=(
                 WorkUnitCatalogueRepository(objects=objects),
@@ -440,7 +439,7 @@ def _file_flow_runtime(shared: SeededDurableProfile) -> Iterator[_FileFlowRuntim
 def _seed_work_unit(
     wu_repo: WorkUnitCatalogueRepository,
     *,
-    bucket_id: str = _FILE_FLOW_PROFILE_ID,
+    bucket_id: str = FILE_FLOW_PROFILE_ID,
     modelo: str = "130",
     filing_year: int = 2026,
     period: str = "1T",
@@ -466,22 +465,22 @@ def _seed_work_unit(
         )
 
 
-_DEFAULT_130_BINDING_VALUES = {
+FILE_FLOW_DEFAULT_130_BINDING_VALUES = {
     "irpf.previous_year_economic_activity_net_income": Decimal("0"),
 }
 
 
-_M130_INCOME_CASILLA: CasillaId = validated_casilla_id("01")
+FILE_FLOW_M130_INCOME_CASILLA: CasillaId = validated_casilla_id("01")
 _M130_EXPENSE_CASILLA: CasillaId = validated_casilla_id("02")
 _M130_NET_RESULT_CASILLA: CasillaId = validated_casilla_id("03")
-_M130_PREVIOUS_PAYMENTS_CASILLA: CasillaId = validated_casilla_id("05")
-_M130_WITHHELD_CASILLA: CasillaId = validated_casilla_id("06")
+M130_PREVIOUS_PAYMENTS_CASILLA: CasillaId = validated_casilla_id("05")
+FILE_FLOW_M130_WITHHELD_CASILLA: CasillaId = validated_casilla_id("06")
 _M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08")
 _M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10")
-_M130_CARRY_FORWARD_CASILLA: CasillaId = validated_casilla_id("15")
-_M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16")
-_M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = validated_casilla_id("18")
-_M130_SALDO_NEGATIVO_CASILLA: CasillaId = validated_casilla_id("saldo-negativo-fin-periodo")
+FILE_FLOW_M130_CARRY_FORWARD_CASILLA: CasillaId = validated_casilla_id("15")
+FILE_FLOW_M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16")
+FILE_FLOW_M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = validated_casilla_id("18")
+FILE_FLOW_M130_SALDO_NEGATIVO_CASILLA: CasillaId = validated_casilla_id("saldo-negativo-fin-periodo")
 _M111_EMPLOYMENT_WITHHELD_CASILLA: CasillaId = validated_casilla_id("03")
 _M111_PROFESSIONAL_WITHHELD_CASILLA: CasillaId = validated_casilla_id("06")
 _M111_PRIZE_WITHHELD_CASILLA: CasillaId = validated_casilla_id("09")
@@ -498,10 +497,10 @@ _M180_PERCEPTOR_BASE_CASILLA: CasillaId = validated_casilla_id("perc.base")
 #: the ledger's: :func:`_seed_m130_activity` records the baseline income and
 #: gastos as ledger rows instead.
 _DEFAULT_130_BASELINE_INPUTS: dict[CasillaId, Decimal] = {
-    _M130_PREVIOUS_PAYMENTS_CASILLA: Decimal("0"),
-    _M130_WITHHELD_CASILLA: Decimal("0"),
-    _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
-    _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
+    M130_PREVIOUS_PAYMENTS_CASILLA: Decimal("0"),
+    FILE_FLOW_M130_WITHHELD_CASILLA: Decimal("0"),
+    FILE_FLOW_M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+    FILE_FLOW_M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
 }
 
 
@@ -612,7 +611,7 @@ def _workflow_gate(
     )
 
 
-def _file_revision(
+def file_flow_file_revision(
     calculation_revision_id: str,
     *,
     revision: CalculationRevision,
@@ -668,7 +667,7 @@ def _file_revision(
         ).record
 
 
-def _verify_revision(
+def file_flow_verify_revision(
     calculation_revision_id: str,
     *,
     revision: CalculationRevision,
@@ -724,7 +723,7 @@ def calculate_baseline_130_revision(work_unit: WorkUnit) -> CalculationRevision:
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             casilla_inputs=_DEFAULT_130_BASELINE_INPUTS,
-            binding_values=_DEFAULT_130_BINDING_VALUES,
+            binding_values=FILE_FLOW_DEFAULT_130_BINDING_VALUES,
             clock=_T1,
         ).revision
 
@@ -732,7 +731,7 @@ def calculate_baseline_130_revision(work_unit: WorkUnit) -> CalculationRevision:
 def _seed_modelo_180_work_unit(wu_repo: WorkUnitCatalogueRepository) -> WorkUnit:
     with bundled_indexed_authority().operation() as operation:
         return create_work_unit(
-            bucket_id=_FILE_FLOW_PROFILE_ID,
+            bucket_id=FILE_FLOW_PROFILE_ID,
             modelo=_VERIFY_MODELO,
             filing_year=_VERIFY_YEAR,
             period=Period.from_year_and_code(_VERIFY_YEAR, _VERIFY_PERIOD),
@@ -761,7 +760,7 @@ def _seed_modelo_193_work_unit(wu_repo: WorkUnitCatalogueRepository):
 DEFAULT_130_BASELINE_EXPENSE = _DEFAULT_130_BASELINE_EXPENSE
 DEFAULT_130_BASELINE_INCOME = _DEFAULT_130_BASELINE_INCOME
 DEFAULT_130_BASELINE_INPUTS = _DEFAULT_130_BASELINE_INPUTS
-DEFAULT_130_BINDING_VALUES = _DEFAULT_130_BINDING_VALUES
+DEFAULT_130_BINDING_VALUES = FILE_FLOW_DEFAULT_130_BINDING_VALUES
 M111_ACTIVITY_AMOUNT_CASILLA = _M111_ACTIVITY_AMOUNT_CASILLA
 M111_ACTIVITY_COUNT_CASILLA = _M111_ACTIVITY_COUNT_CASILLA
 M111_ACTIVITY_WITHHELD_CASILLA = _M111_ACTIVITY_WITHHELD_CASILLA
@@ -774,16 +773,16 @@ M111_PROFESSIONAL_WITHHELD_CASILLA = _M111_PROFESSIONAL_WITHHELD_CASILLA
 M111_TOTAL_WITHHELD_CASILLA = _M111_TOTAL_WITHHELD_CASILLA
 M130_AGRARIAN_VOLUME_CASILLA = _M130_AGRARIAN_VOLUME_CASILLA
 M130_AGRARIAN_WITHHELD_CASILLA = _M130_AGRARIAN_WITHHELD_CASILLA
-M130_CARRY_FORWARD_CASILLA = _M130_CARRY_FORWARD_CASILLA
+M130_CARRY_FORWARD_CASILLA = FILE_FLOW_M130_CARRY_FORWARD_CASILLA
 M130_EXPENSE_CASILLA = _M130_EXPENSE_CASILLA
-M130_HOME_DEDUCTION_CASILLA = _M130_HOME_DEDUCTION_CASILLA
-M130_INCOME_CASILLA = _M130_INCOME_CASILLA
+M130_HOME_DEDUCTION_CASILLA = FILE_FLOW_M130_HOME_DEDUCTION_CASILLA
+M130_INCOME_CASILLA = FILE_FLOW_M130_INCOME_CASILLA
 M130_NET_RESULT_CASILLA = _M130_NET_RESULT_CASILLA
-M130_PRIOR_RETURN_RESULT_CASILLA = _M130_PRIOR_RETURN_RESULT_CASILLA
-M130_SALDO_NEGATIVO_CASILLA = _M130_SALDO_NEGATIVO_CASILLA
-M130_WITHHELD_CASILLA = _M130_WITHHELD_CASILLA
+M130_PRIOR_RETURN_RESULT_CASILLA = FILE_FLOW_M130_PRIOR_RETURN_RESULT_CASILLA
+M130_SALDO_NEGATIVO_CASILLA = FILE_FLOW_M130_SALDO_NEGATIVO_CASILLA
+M130_WITHHELD_CASILLA = FILE_FLOW_M130_WITHHELD_CASILLA
 M180_PERCEPTOR_BASE_CASILLA = _M180_PERCEPTOR_BASE_CASILLA
-Repos = _Repos
+Repos = FileFlowRepos
 T0 = _T0
 T1 = _T1
 T2 = _T2
@@ -796,14 +795,14 @@ VERIFY_REVISION = _VERIFY_REVISION
 VERIFY_YEAR = _VERIFY_YEAR
 WorkflowGate = _WorkflowGate
 canonical_work_unit_period = _canonical_work_unit_period
-file_revision = _file_revision
+file_revision = file_flow_file_revision
 registry_required_manual_casillas = _registry_required_manual_casillas
 seed_modelo_180_work_unit = _seed_modelo_180_work_unit
 seed_m130_activity = _seed_m130_activity
 seed_modelo_193_work_unit = _seed_modelo_193_work_unit
 seed_work_unit = _seed_work_unit
 target_filing_records = _target_filing_records
-verify_revision = _verify_revision
+verify_revision = file_flow_verify_revision
 workflow_gate = _workflow_gate
 workflow_profile = workflow_profile
-FileFlowRuntime = _FileFlowRuntime
+FileFlowRuntime = FileFlowFileFlowRuntime

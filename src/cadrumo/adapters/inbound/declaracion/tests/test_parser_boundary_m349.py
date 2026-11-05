@@ -8,24 +8,24 @@ import pytest
 
 from .....core.casilla_id import CasillaId
 from ..parser import parse_declaracion
-from ._parser_boundary_casillas import (
-    _M349_IMPORTE_OPERACIONES_CASILLA,
-    _M349_IMPORTE_RECTIFICACIONES_CASILLA,
-    _M349_NUMERO_OPERADORES_CASILLA,
-    _M349_NUMERO_RECTIFICACIONES_CASILLA,
+from .parser_boundary_casillas import (
+    M349_IMPORTE_OPERACIONES_CASILLA,
+    M349_IMPORTE_RECTIFICACIONES_CASILLA,
+    M349_NUMERO_OPERADORES_CASILLA,
+    M349_NUMERO_RECTIFICACIONES_CASILLA,
 )
-from ._parser_boundary_support import (
-    _MODELO_349_SYNTHETIC_FIXTURE,
-    _expected_period,
+from .parser_boundary_support import (
+    MODELO_349_SYNTHETIC_FIXTURE,
+    expected_period,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 _M349_EXPECTED_VALUES: dict[CasillaId, Decimal] = {
-    _M349_NUMERO_OPERADORES_CASILLA: Decimal("5"),
-    _M349_IMPORTE_OPERACIONES_CASILLA: Decimal("1234.56"),
-    _M349_NUMERO_RECTIFICACIONES_CASILLA: Decimal("0"),
-    _M349_IMPORTE_RECTIFICACIONES_CASILLA: Decimal("0.00"),
+    M349_NUMERO_OPERADORES_CASILLA: Decimal("5"),
+    M349_IMPORTE_OPERACIONES_CASILLA: Decimal("1234.56"),
+    M349_NUMERO_RECTIFICACIONES_CASILLA: Decimal("0"),
+    M349_IMPORTE_RECTIFICACIONES_CASILLA: Decimal("0.00"),
 }
 
 
@@ -39,14 +39,14 @@ def test_parser_extracts_modelo_349_synthetic_fixture_targets() -> None:
     on each line.
     """
     filing = parse_declaracion(
-        _MODELO_349_SYNTHETIC_FIXTURE,
+        MODELO_349_SYNTHETIC_FIXTURE,
         modelo_override="349",
         año_override=2024,
         period_override="1T",
     )
 
     assert filing.modelo == "349"
-    assert filing.period == _expected_period(2024, "1T")
+    assert filing.period == expected_period(2024, "1T")
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "349"

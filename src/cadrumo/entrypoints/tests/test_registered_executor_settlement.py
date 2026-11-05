@@ -44,13 +44,13 @@ from ..adapter_composition_work_ports import build_amendment_action_ports, build
 from ..ledger_action_composition import compose_ledger_action_ports
 from . import modelo_operation_test_support
 from .registered_executor_case_support import (
+    HeldClock,
     OperationRuntimeCloseWitness,
-    _HeldClock,
-    _resolve_result_projection,
     conformance_operation_runtime,
+    resolve_result_projection,
 )
-from .registered_executor_payload_support import _payload
-from .registered_executor_scenario_constants import _OPERATOR_SCOPE_PORTS
+from .registered_executor_payload_support import registered_executor_payload
+from .registered_executor_scenario_constants import OPERATOR_SCOPE_PORTS
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -93,7 +93,7 @@ def test_ledger_track_uses_null_when_no_finalized_revision_participates(
         assert observed.projection.lifecycle is OperationLifecycle.TERMINAL
         assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
         assert observed.projection.effect is OperationEffect.NONE
-        track = _resolve_result_projection(
+        track = resolve_result_projection(
             driver,
             registry,
             definition_id="ledger.track",
@@ -279,7 +279,7 @@ def test_amendment_co_commit_refuses_each_stale_catalogue_without_partial_writes
         amendment_action_ports_factory=amendment_ports_factory,
     ) as (driver, registry, profile_id):
         definition = registry.lookup("modelo.work.amend")
-        subject_ref, payload, secret = _payload(
+        subject_ref, payload, secret = registered_executor_payload(
             definition,
             profile_id=profile_id,
             tmp_path=tmp_path / f"amendment-cas-{raced_catalogue}",
@@ -387,7 +387,7 @@ def test_censo_cooperative_cancellation_settles_after_its_irreversible_section(
         before_irreversible_section=before_irreversible_section,
     ) as (driver, registry, profile_id):
         definition = registry.lookup("user-profile.censo-review")
-        subject_ref, payload, secret = _payload(
+        subject_ref, payload, secret = registered_executor_payload(
             definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation
         )
 
@@ -431,7 +431,7 @@ def test_censo_execution_deadline_settles_its_actual_cooperative_safe_stop(
     on offer fixes that order on any host instead of racing a 50 ms budget.
     """
     cleanup = OperationRuntimeCloseWitness()
-    clock = _HeldClock()
+    clock = HeldClock()
     with conformance_operation_runtime(
         tmp_path / "censo-deadline",
         cleanup=cleanup,
@@ -439,7 +439,7 @@ def test_censo_execution_deadline_settles_its_actual_cooperative_safe_stop(
         clock=clock,
     ) as (driver, registry, profile_id):
         definition = registry.lookup("user-profile.censo-review")
-        subject_ref, payload, secret = _payload(
+        subject_ref, payload, secret = registered_executor_payload(
             definition, profile_id=profile_id, tmp_path=tmp_path, operation=operation
         )
 
@@ -490,7 +490,7 @@ def test_the_filing_authority_accepts_the_registered_operation_fixture(
                 revision_id,
                 approved_verification_report_id=report_id,
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 ports=build_filing_action_ports(bucket_id=str(profile_id), operation=operation),
                 actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
                 workflow_profile=resolve_active_workflow_profile(operation),

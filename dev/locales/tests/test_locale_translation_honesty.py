@@ -124,7 +124,7 @@ def _continuity_backing() -> dict[str, str]:
     authority, because this gate makes a claim about the SHIPPED catalogues and
     must stay answerable while the registry is refusing validation for unrelated
     reasons. It mirrors exactly what the loader does at
-    :func:`~cadrumo.domain.calculations.registry.modelo_localization._localised_casilla`:
+    :func:`~cadrumo.domain.calculations.registry.modelo_localization.localised_casilla`:
     read ``id`` and ``continuidad_id`` off the raw casilla table and derive both
     keys with the same two canonical encoders.
 

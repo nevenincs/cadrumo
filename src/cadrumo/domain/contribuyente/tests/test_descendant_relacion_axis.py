@@ -435,7 +435,7 @@ class TestGuardaYCustodiaJudicial:
         not read relación at all, so this asserts the axis did not accidentally
         acquire a gate that would exclude the new member from the mínimo.
         """
-        from ._registry_thresholds import registry_thresholds
+        from .registry_thresholds import registry_thresholds
 
         assert (
             self._child().is_eligible_ordinary(

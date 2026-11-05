@@ -11,16 +11,16 @@ from cadrumo_client.commands.graph import CommandSpecGraph
 from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
 from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
 
-from .._app_ledger_command_specs import LEDGER_COMMAND_SPECS
-from .._app_ledger_ratios_command_specs import LEDGER_RATIOS_COMMAND_SPECS
-from .._app_ledger_rule_command_specs import LEDGER_RULE_COMMAND_SPECS
-from .._app_ledger_rule_ratio_command_spec_support import (
-    _LEDGER_RULE_RATIO_LEAF_INVOCATION,
-    _RATIOS_OUTPUT_LANGUAGE_OPTION,
-    _RATIOS_YEAR_OPTION,
-    _RULE_ACTOR_OPTION,
+from ..app_ledger_command_specs import LEDGER_COMMAND_SPECS
+from ..app_ledger_ratios_command_specs import LEDGER_RATIOS_COMMAND_SPECS
+from ..app_ledger_rule_command_specs import LEDGER_RULE_COMMAND_SPECS
+from ..app_ledger_rule_ratio_command_spec_support import (
+    LEDGER_RULE_RATIO_LEAF_INVOCATION,
+    RATIOS_OUTPUT_LANGUAGE_OPTION,
+    RATIOS_YEAR_OPTION,
+    RULE_ACTOR_OPTION,
 )
-from .._root_command_specs import ROOT_COMMAND_SPECS
+from ..root_command_specs import ROOT_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -582,17 +582,17 @@ def test_rule_and_ratios_leaves_match_the_independent_literal_contract() -> None
 
 
 def test_shared_facts_have_their_literal_contract_and_only_identical_placements() -> None:
-    assert _parameter_contract(_RULE_ACTOR_OPTION) == _OPTIONAL_ACTOR
-    assert _parameter_contract(_RATIOS_YEAR_OPTION) == _OPTIONAL_YEAR
-    assert _parameter_contract(_RATIOS_OUTPUT_LANGUAGE_OPTION) == _OPTIONAL_OUTPUT_LANGUAGE
+    assert _parameter_contract(RULE_ACTOR_OPTION) == _OPTIONAL_ACTOR
+    assert _parameter_contract(RATIOS_YEAR_OPTION) == _OPTIONAL_YEAR
+    assert _parameter_contract(RATIOS_OUTPUT_LANGUAGE_OPTION) == _OPTIONAL_OUTPUT_LANGUAGE
 
     rules = {spec.token: spec for spec in LEDGER_RULE_COMMAND_SPECS}
     ratios = {spec.token: spec for spec in LEDGER_RATIOS_COMMAND_SPECS}
-    assert rules["add"].parameters[-1] is _RULE_ACTOR_OPTION
-    assert rules["apply"].parameters[-1] is _RULE_ACTOR_OPTION
-    assert all(spec.invocation is _LEDGER_RULE_RATIO_LEAF_INVOCATION for spec in (*rules.values(), *ratios.values()))
-    assert all(ratios[token].parameters[0] is _RATIOS_YEAR_OPTION for token in ("eligible", "list", "set"))
-    assert all(spec.parameters[-1] is _RATIOS_OUTPUT_LANGUAGE_OPTION for spec in ratios.values())
+    assert rules["add"].parameters[-1] is RULE_ACTOR_OPTION
+    assert rules["apply"].parameters[-1] is RULE_ACTOR_OPTION
+    assert all(spec.invocation is LEDGER_RULE_RATIO_LEAF_INVOCATION for spec in (*rules.values(), *ratios.values()))
+    assert all(ratios[token].parameters[0] is RATIOS_YEAR_OPTION for token in ("eligible", "list", "set"))
+    assert all(spec.parameters[-1] is RATIOS_OUTPUT_LANGUAGE_OPTION for spec in ratios.values())
 
 
 def test_rule_and_ratios_paths_resolve_from_the_complete_ledger_graph() -> None:

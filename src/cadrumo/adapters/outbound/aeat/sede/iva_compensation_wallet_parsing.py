@@ -37,13 +37,13 @@ from .....domain.calculations.registry.remote_state_guard import (
     assert_remote_operation_allowed,
 )
 from .....domain.calculations.registry.schema_base import EvidenceTier
-from .._html import parse_html
-from ._adapter_utils import bounded_text, normalize_display_text, normalize_response_text, redacted_url
+from ..html import parse_html
+from .adapter_utils import bounded_text, normalize_display_text, normalize_response_text, redacted_url
 from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from .schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
 
 _AMOUNT_SEPARATOR_CLASS = f"[{re.escape(AEAT_THOUSANDS_SEPARATORS)}]"
-_SPANISH_AMOUNT_RE = re.compile(r"\d{1,3}(?:" + _AMOUNT_SEPARATOR_CLASS + r"\d{3})*,\d{2}|\d+,\d{2}")
+SPANISH_AMOUNT_RE = re.compile(r"\d{1,3}(?:" + _AMOUNT_SEPARATOR_CLASS + r"\d{3})*,\d{2}|\d+,\d{2}")
 """Unanchored finder for the amount trailing AEAT's aggregate label on one line.
 
 The anchored counterpart -- mandating the printed figure IS the two-decimal
@@ -180,7 +180,7 @@ def _parse_wallet_result_rows(soup: BeautifulSoup) -> tuple[list[IvaCompensation
             if len(cells) < 3:
                 continue
             try:
-                rows.append(_wallet_row_from_cells(cells))
+                rows.append(wallet_row_from_cells(cells))
             except SedeParseError:
                 raise
             except Exception as exc:
@@ -583,7 +583,7 @@ def _normalised_title(soup: BeautifulSoup) -> str:
     return bounded_text(title.get_text(" ")) if title is not None else ""
 
 
-def _wallet_row_from_cells(cells: list[str]) -> IvaCompensationWalletRow:
+def wallet_row_from_cells(cells: list[str]) -> IvaCompensationWalletRow:
     """Build one wallet row from a cartera detail row: Ejercicio, Período, Cuota Disponible.
 
     The AEAT cartera consultation surface exposes only the still-available balance
@@ -600,7 +600,7 @@ def _wallet_row_from_cells(cells: list[str]) -> IvaCompensationWalletRow:
     return IvaCompensationWalletRow(
         generation_year=year,
         generation_period=Period.from_year_and_code(year, period_token),
-        pending_amount=_parse_spanish_decimal(cells[2]),
+        pending_amount=parse_spanish_decimal(cells[2]),
         raw_label=" | ".join(cells[:3]),
     )
 
@@ -612,7 +612,7 @@ def _parse_year(value: str) -> int:
     return int(match.group(1))
 
 
-def _parse_spanish_decimal(value: str) -> Decimal:
+def parse_spanish_decimal(value: str) -> Decimal:
     """Parse an AEAT wallet money cell, unconditionally reading a dot as a thousands separator.
 
     Unlike :func:`~adapters.inbound.pdf.label_regex.parse_spanish_decimal` (PDF receipts,
@@ -674,10 +674,10 @@ def _extract_spanish_amount(text: str) -> Decimal | None:
     Used to read AEAT's aggregate "pendientes de períodos anteriores" line, where the
     amount trails a textual label on the same element.
     """
-    matches = _SPANISH_AMOUNT_RE.findall(text)
+    matches = SPANISH_AMOUNT_RE.findall(text)
     if not matches:
         return None
-    return _parse_spanish_decimal(matches[-1])
+    return parse_spanish_decimal(matches[-1])
 
 
 def _normalised_text(value: str) -> str:

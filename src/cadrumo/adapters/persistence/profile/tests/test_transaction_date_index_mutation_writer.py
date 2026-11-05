@@ -17,14 +17,14 @@ from ...storage.sql.orm import TransactionDateIndexRow
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..transactions import TransactionCatalogueRepository
-from .test_transaction_date_index import _transaction
+from .test_transaction_date_index import transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("authority_operation")]
 _BUCKET = "44444444-4444-4444-8444-444444444444"
 
 
 def _catalogue() -> TransactionCatalogue:
-    row = _transaction(
+    row = transaction(
         provider_id="admitted-index",
         filing_date=date(2026, 2, 10),
         amount=Decimal("12.00"),

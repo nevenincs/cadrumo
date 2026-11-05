@@ -27,14 +27,14 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.custody._kdf_process import worker_environment
+from cadrumo.adapters.persistence.storage.custody.kdf_process import worker_environment
 from cadrumo.core.package_interpreter import isolated_interpreter_command
 from cadrumo.tests.audited_process import run_audited_process
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
-_WORKER_MODULE = "cadrumo.adapters.persistence.storage.custody._kdf_worker"
+_WORKER_MODULE = "cadrumo.adapters.persistence.storage.custody.kdf_worker"
 
 _FORBIDDEN_IN_CHILD: tuple[str, ...] = (
     # The ORM stack, reached through the encrypted-column helpers.
@@ -72,15 +72,15 @@ _ALLOWED_FIRST_PARTY_IN_CHILD: tuple[str, ...] = (
     "cadrumo.adapters.persistence.storage.custody",
     "cadrumo.core",
     # The child itself and its stdlib-only custody leaves.
-    "cadrumo.adapters.persistence.storage.custody._kdf_worker",
-    "cadrumo.adapters.persistence.storage.custody._kdf_attestation",
-    "cadrumo.adapters.persistence.storage.custody._kdf_codec",
-    "cadrumo.adapters.persistence.storage.custody._kdf_operations",
-    "cadrumo.adapters.persistence.storage.custody._kdf_records",
-    "cadrumo.adapters.persistence.storage.custody._kdf_worker_limits",
-    "cadrumo.adapters.persistence.storage.custody._profile_password_codec",
-    "cadrumo.adapters.persistence.storage.custody._recovery_secret_codec",
-    "cadrumo.adapters.persistence.storage._kdf_salt",
+    "cadrumo.adapters.persistence.storage.custody.kdf_worker",
+    "cadrumo.adapters.persistence.storage.custody.kdf_attestation",
+    "cadrumo.adapters.persistence.storage.custody.kdf_codec",
+    "cadrumo.adapters.persistence.storage.custody.kdf_operations",
+    "cadrumo.adapters.persistence.storage.custody.kdf_records",
+    "cadrumo.adapters.persistence.storage.custody.kdf_worker_limits",
+    "cadrumo.adapters.persistence.storage.custody.profile_password_codec",
+    "cadrumo.adapters.persistence.storage.custody.recovery_secret_codec",
+    "cadrumo.adapters.persistence.storage.kdf_salt",
     "cadrumo.adapters.persistence.storage.crypto.aes_gcm",
     "cadrumo.core.base64_codec",
     "cadrumo.core.credentials",

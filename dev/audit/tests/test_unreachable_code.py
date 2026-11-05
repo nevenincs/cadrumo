@@ -291,7 +291,7 @@ def test_repository_discovers_its_module_execution_roots(repository_spec: Shippe
 
     spec = repository_spec
 
-    assert "cadrumo.adapters.persistence.storage.custody._kdf_worker" in spec.module_roots
+    assert "cadrumo.adapters.persistence.storage.custody.kdf_worker" in spec.module_roots
     assert "cadrumo_runtime.host.frontend.cli.windows_secret_bootstrap" in spec.module_roots
     assert "cadrumo_runtime.host.frontend.tui.__main__" in spec.module_roots
     assert all(spec.audits(module) for module in spec.module_roots)

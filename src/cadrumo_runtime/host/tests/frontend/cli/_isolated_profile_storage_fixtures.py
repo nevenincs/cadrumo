@@ -77,7 +77,7 @@ def recorded_fx_seeded_backend(
     *,
     seed: ProfileWorldSeed,
     autouse: bool = True,
-    name: str = "_isolated_backend",
+    name: str = "isolated_backend",
     origin_name: str = "_isolated_backend_origin",
 ) -> tuple[Callable[..., Iterator[SealedProfileWorld]], Callable[..., Iterator[None]]]:
     """Build the recorded-FX (origin, per-test) pair for a suite with costly seeding.

@@ -28,7 +28,7 @@ from ......core.resources.bundled_data import bundled_path
 from ......domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ......domain.calculations.registry.export_xml_dictionary import xml_dictionary_entries
 from ......domain.calculations.registry.tests.published_authority import published_snapshot
-from ..declarations_observations import _observed_value_kind
+from ..declarations_observations import observed_value_kind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -91,7 +91,7 @@ def test_gate_has_subjects_and_its_classifier_fires() -> None:
     """
     skippable_total = sum(len(_skippable_casilla_ids(*subject)) for subject in _SUBJECTS)
     assert skippable_total > 0, "no revision reports a skippable casilla; the reachability check below is vacuous"
-    assert _observed_value_kind("free text") is CasillaValueKind.TEXT, "the skippable classifier no longer classifies"
+    assert observed_value_kind("free text") is CasillaValueKind.TEXT, "the skippable classifier no longer classifies"
 
 
 @pytest.mark.parametrize(("modelo", "year", "period"), _SUBJECTS)

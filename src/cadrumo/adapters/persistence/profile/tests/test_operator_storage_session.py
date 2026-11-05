@@ -44,9 +44,7 @@ from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_location
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _certificate_indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
@@ -200,7 +198,7 @@ def test_certificate_logout_removes_session_and_preserves_certificate_configurat
 ) -> None:
     """Certificate logout removes only the persisted session, not its configured custody."""
     with (
-        _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test,
+        bundled_indexed_authority().operation() as _certificate_authority_operation_for_test,
         isolated_profile_storage_root(tmp_path=tmp_path),
     ):
         certificate_path = tmp_path / "personal.p12"
@@ -313,7 +311,7 @@ def test_reset_removes_certificate_registry_and_secure_secret(
 ) -> None:
     """Certificate reset removes registrations and canonical secure-storage secrets."""
     with (
-        _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test,
+        bundled_indexed_authority().operation() as _certificate_authority_operation_for_test,
         isolated_profile_storage_root(tmp_path=tmp_path),
     ):
         cert_path = tmp_path / "operator.p12"

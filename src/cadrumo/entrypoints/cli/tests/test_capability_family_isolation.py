@@ -136,7 +136,7 @@ def _allowed_families(capabilities: frozenset[Capability]) -> frozenset[str]:
     return allowed
 
 
-def _loaded_families(paths: list[list[str]]) -> dict[str, int]:
+def loaded_families(paths: list[list[str]]) -> dict[str, int]:
     completed = subprocess.run(
         [
             sys.executable,
@@ -175,7 +175,7 @@ def _entitlement_buckets() -> dict[frozenset[str], list[frozenset[Capability]]]:
 def entitlement_unions() -> dict[frozenset[str], dict[str, int]]:
     """What each entitlement's groups load, resolved together in one interpreter per entitlement."""
     return {
-        allowed: _loaded_families([path for capabilities in members for path in _GROUPS[capabilities]])
+        allowed: loaded_families([path for capabilities in members for path in _GROUPS[capabilities]])
         for allowed, members in _entitlement_buckets().items()
     }
 
@@ -208,7 +208,7 @@ def test_merging_an_entitlement_reports_the_union_of_its_groups(
     )
     separately: set[str] = set()
     for capabilities in members:
-        separately |= set(_loaded_families(_GROUPS[capabilities]))
+        separately |= set(loaded_families(_GROUPS[capabilities]))
 
     assert set(entitlement_unions[allowed]) == separately, (
         f"groups {[sorted(caps) for caps in members]} load {sorted(separately)} one interpreter each "
@@ -235,7 +235,7 @@ def test_a_group_loads_only_the_families_it_declares(
     allowed = _allowed_families(capabilities)
     loaded = entitlement_unions[allowed]
     if any(family not in allowed for family in loaded):
-        loaded = _loaded_families(_GROUPS[capabilities])
+        loaded = loaded_families(_GROUPS[capabilities])
     undeclared = sorted(family for family in loaded if family not in allowed)
 
     assert undeclared == [], (
@@ -256,7 +256,7 @@ def test_a_pending_group_that_now_passes_must_be_removed(capabilities: frozenset
     a regression into a group that had been cleaned up.
     """
     allowed = _allowed_families(capabilities)
-    loaded = _loaded_families(_GROUPS[capabilities])
+    loaded = loaded_families(_GROUPS[capabilities])
     undeclared = sorted(family for family in loaded if family not in allowed)
 
     assert undeclared != [], (

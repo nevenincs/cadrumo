@@ -9,7 +9,7 @@ import pytest
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     create_current_profile_session,
 )
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from .....application.user_profile.custody_transactions import ProfileCustodyTransactionConflictError
 from .....application.user_profile.tests.record_session_scope import bound_profile_record_session
@@ -27,7 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 def test_label_override_resolves_real_record_and_masks_dangling_pointer_repair(tmp_path: Path) -> None:
     """Canonicalize an override label before secure reads while preserving pointer precedence."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         bucket_id = "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
         dangling_id = "62d2ab08-39f2-4811-bd2a-fe48fd105e4a"
         session = create_current_profile_session(bucket_id, root=tmp_path, label="Operator")

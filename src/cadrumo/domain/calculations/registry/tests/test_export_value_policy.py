@@ -24,7 +24,7 @@ _GROUNDING = {
 }
 
 
-def _field(
+def field(
     policy: ExportValuePolicy | None,
     *,
     field_id: str = "selected",
@@ -114,7 +114,7 @@ def test_none_policy_is_inert_and_not_an_inferred_default() -> None:
 
 
 def test_schema_hydrates_only_public_policy_tokens() -> None:
-    baseline = _field(ExportValuePolicy.SELECTED_1_UNSELECTED_0).model_dump(mode="python")
+    baseline = field(ExportValuePolicy.SELECTED_1_UNSELECTED_0).model_dump(mode="python")
     hydrated = ExportFieldDefinition.model_validate(
         baseline | {"value_policy": ExportValuePolicy.SELECTED_1_UNSELECTED_0.value},
     )
@@ -195,17 +195,17 @@ def test_each_policy_refuses_inconsistent_field_shapes(
     overrides: dict[str, object],
 ) -> None:
     with pytest.raises(ValidationError):
-        _field(policy, payload_overrides=overrides)
+        field(policy, payload_overrides=overrides)
 
 
 def test_checkbox_policy_requires_exactly_one_wire_byte() -> None:
     with pytest.raises(ValidationError):
-        _field(ExportValuePolicy.SELECTED_1_UNSELECTED_0, length=2)
+        field(ExportValuePolicy.SELECTED_1_UNSELECTED_0, length=2)
 
 
 def test_short_year_policy_requires_exactly_two_wire_bytes() -> None:
     with pytest.raises(ValidationError):
-        _field(ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS, length=4)
+        field(ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS, length=4)
 
 
 @pytest.mark.parametrize(
@@ -220,7 +220,7 @@ def test_parser_accepts_exact_policy_wire_tokens_and_refuses_mutations(
     valid: bytes,
     invalid: tuple[bytes, ...],
 ) -> None:
-    layout = _layout(_field(policy))
+    layout = _layout(field(policy))
     parsed = parse_export_payload(layout, valid).fields[0]
     assert parsed.raw == valid.decode("ascii")
     if policy is ExportValuePolicy.FOUR_DIGIT_YEAR_FINAL_TWO_DIGITS:

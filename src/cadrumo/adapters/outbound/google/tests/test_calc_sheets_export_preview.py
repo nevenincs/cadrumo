@@ -16,13 +16,13 @@ import pytest
 
 from .....application.storage.calc_sheets.engine import build_export_plan
 from .....domain.calculations.registry.tests.published_authority import published_snapshot
-from .._calc_sheets_apply_values import (
-    written_cell_values,
-)
 from ..calc_sheets_apply import (
-    _new_target_export_preview,
-    _plan_value_payload,
+    new_target_export_preview,
+    plan_value_payload,
     preview_export_plan,
+)
+from ..calc_sheets_apply_values import (
+    written_cell_values,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -38,7 +38,7 @@ class TestNewTargetPreview:
 
     def test_every_value_cell_previews_as_changed_and_nothing_is_stale(self) -> None:
         plan = _m130_plan()
-        preview = _new_target_export_preview(plan)
+        preview = new_target_export_preview(plan)
 
         assert preview.spreadsheet_exists is False
         assert preview.spreadsheet_id is None
@@ -46,7 +46,7 @@ class TestNewTargetPreview:
         assert preview.folder_id is None
         assert preview.ranges_to_clear == ()
         assert preview.value_cells_unchanged == 0
-        assert preview.value_cells_changed == len(written_cell_values(_plan_value_payload(plan)))
+        assert preview.value_cells_changed == len(written_cell_values(plan_value_payload(plan)))
         assert preview.formula_cells_to_write == len(plan.formula_cells)
 
 

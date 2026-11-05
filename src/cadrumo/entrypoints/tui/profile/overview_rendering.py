@@ -30,19 +30,19 @@ from ..components.widgets import (
 )
 from .aeat_auth_setup import readiness_text
 from .overview_contracts import (
-    _ABSENT_GLYPH,
-    _COMPLETE_SETUP_KEY,
-    _FIELD_COLUMN_WIDTH,
-    _LANGUAGE_ACTION,
-    _LANGUAGE_KEY,
-    _PLANTILLA_MEDIA_BUTTON_ID,
-    _PLANTILLA_MEDIA_SECTION,
-    _PRESENT_GLYPH,
-    _REQUIRED_MARK,
-    _ROW_INDEX_SEPARATOR,
-    _SOURCE_ACTION_LOCALE_KEYS,
-    _SOURCE_DESCRIPTION_LOCALE_KEYS,
-    _SOURCE_TITLE_LOCALE_KEYS,
+    ABSENT_GLYPH,
+    COMPLETE_SETUP_KEY,
+    FIELD_COLUMN_WIDTH,
+    LANGUAGE_ACTION,
+    LANGUAGE_KEY,
+    PLANTILLA_MEDIA_BUTTON_ID,
+    PLANTILLA_MEDIA_SECTION,
+    PRESENT_GLYPH,
+    REQUIRED_MARK,
+    ROW_INDEX_SEPARATOR,
+    SOURCE_ACTION_LOCALE_KEYS,
+    SOURCE_DESCRIPTION_LOCALE_KEYS,
+    SOURCE_TITLE_LOCALE_KEYS,
 )
 from .setup_journey import ProfileSetupStage
 
@@ -109,9 +109,9 @@ class ProfileOverviewRenderingMixin:
         return [
             SourceActionCard(
                 SourceActionDescriptor(
-                    title=tr(_SOURCE_TITLE_LOCALE_KEYS[source.key]),
-                    description=tr(_SOURCE_DESCRIPTION_LOCALE_KEYS[source.key]),
-                    action_label=tr(_SOURCE_ACTION_LOCALE_KEYS[source.key]),
+                    title=tr(SOURCE_TITLE_LOCALE_KEYS[source.key]),
+                    description=tr(SOURCE_DESCRIPTION_LOCALE_KEYS[source.key]),
+                    action_label=tr(SOURCE_ACTION_LOCALE_KEYS[source.key]),
                     credential_requirement=self._credential_requirement_badge(source.key),
                 ),
                 id=f"source-{source.key.value}",
@@ -317,9 +317,9 @@ class ProfileOverviewRenderingMixin:
         the presentation here, so the schema's translated label is never
         edited to carry it.
         """
-        label = f"{field.label}{_REQUIRED_MARK}" if field.required else field.label
+        label = f"{field.label}{REQUIRED_MARK}" if field.required else field.label
         if field.row_index is not None:
-            label = f"{field.row_index}{_ROW_INDEX_SEPARATOR}{label}"
+            label = f"{field.row_index}{ROW_INDEX_SEPARATOR}{label}"
         value = field.value or ""
         if value and field.choices:
             value = next(
@@ -327,7 +327,7 @@ class ProfileOverviewRenderingMixin:
                 tr("flows.manager.choice_unavailable"),
             )
         return (
-            _PRESENT_GLYPH if field.present else _ABSENT_GLYPH,
+            PRESENT_GLYPH if field.present else ABSENT_GLYPH,
             label,
             value,
         )
@@ -395,11 +395,11 @@ class ProfileOverviewRenderingMixin:
         # The short account name rather than the field's own label, so the
         # footer keeps every key on an eighty-column terminal.
         label = tr("tui.root.account_key.language") if field is not None else ""
-        bindings = self._bindings.key_to_bindings.get(_LANGUAGE_KEY)
+        bindings = self._bindings.key_to_bindings.get(LANGUAGE_KEY)
         if bindings is None:
             return
-        self._bindings.key_to_bindings[_LANGUAGE_KEY] = [
-            replace(binding, description=label, show=bool(label)) if binding.action == _LANGUAGE_ACTION else binding
+        self._bindings.key_to_bindings[LANGUAGE_KEY] = [
+            replace(binding, description=label, show=bool(label)) if binding.action == LANGUAGE_ACTION else binding
             for binding in bindings
         ]
         self.refresh_bindings()
@@ -443,7 +443,7 @@ async def _mount_profile_section_table(
     screen._table_by_section[section.key] = table
     screen._columns_by_section[section.key] = [
         table.add_column(tr("flows.manager.column.state")),
-        table.add_column(tr("flows.manager.column.field"), width=_FIELD_COLUMN_WIDTH),
+        table.add_column(tr("flows.manager.column.field"), width=FIELD_COLUMN_WIDTH),
         table.add_column(tr("flows.manager.column.value")),
     ]
     for field in visible:
@@ -462,12 +462,12 @@ async def _mount_profile_section_actions(
             await panel.mount(
                 Button(tr("flows.manager.rows.remove"), id=f"manager-remove-row-{section.key}", compact=True)
             )
-    if section.key == _PLANTILLA_MEDIA_SECTION and screen._plantilla_media_offered:
+    if section.key == PLANTILLA_MEDIA_SECTION and screen._plantilla_media_offered:
         # Average-workforce years are indexed records, not repeatable section rows.
         await panel.mount(
             Button(
                 tr("profile.schema.field.irpf.plantilla_media.label"),
-                id=_PLANTILLA_MEDIA_BUTTON_ID,
+                id=PLANTILLA_MEDIA_BUTTON_ID,
                 compact=True,
             )
         )
@@ -543,7 +543,7 @@ async def _mount_profile_context(screen: ProfileManagerScreen, requirements: str
         # Continue completes the setup walk itself, so it needs no duplicate button.
         await context.mount(
             Button(
-                tr("flows.manager.complete_setup.button", key=_COMPLETE_SETUP_KEY.upper()),
+                tr("flows.manager.complete_setup.button", key=COMPLETE_SETUP_KEY.upper()),
                 id="manager-complete-setup",
                 compact=True,
             )

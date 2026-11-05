@@ -31,7 +31,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -58,8 +58,7 @@ from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
 )
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from .file_flow_test_support import calculation_ports_for_test
 from .general_iva_profile_facts_support import renta_single_taxpayer_facts
 from .observation_seeding_support import save_stamped_observation
@@ -67,7 +66,7 @@ from .unchecked_credit_note_support import assert_only_unchecked_credit_notes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_BUCKET_ID = "10013148-0000-4000-8000-000000001481"
+BUCKET_ID = "10013148-0000-4000-8000-000000001481"
 
 
 __all__ = ["secure_objects"]
@@ -75,7 +74,7 @@ __all__ = ["secure_objects"]
 
 @pytest.fixture
 def bucket_id() -> str:
-    return _BUCKET_ID
+    return BUCKET_ID
 
 
 _YEAR = 2024
@@ -111,9 +110,9 @@ _M131_PAGOS_RELATION: BindingId = "renta-modelo-131-pagos-fraccionados"
 
 def _seed_taxpayer_profile(objects: SecureObjectRepository, *, estimation_regime: str) -> None:
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
+            profile_id=BUCKET_ID,
             facts=(
                 UserProfileFact(path="identity.tax_id", value="12345678Z"),
                 UserProfileFact(path="identity.name", value="Rosa"),
@@ -137,7 +136,7 @@ def _seed_taxpayer_profile(objects: SecureObjectRepository, *, estimation_regime
             ),
             created_at=_T0,
             updated_at=_T0,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 
@@ -161,7 +160,7 @@ def _seed_prior_year_m100_zero_carry(objects: SecureObjectRepository) -> None:
     )
 
 
-def _seed_m131_quarters(objects: SecureObjectRepository) -> None:
+def seed_m131_quarters(objects: SecureObjectRepository) -> None:
     obs_repo = CalculationObservationRepository(objects=objects)
     for period, pago in _M131_PAGO_BY_PERIOD.items():
         save_stamped_observation(
@@ -186,7 +185,7 @@ def _seed_m131_quarters(objects: SecureObjectRepository) -> None:
         )
 
 
-def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
+def non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     snapshot = published_authority_operation().snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
     return {
         binding.id: Decimal("0")
@@ -206,7 +205,7 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     }
 
 
-def _calculate_m100_annual(
+def calculate_m100_annual(
     objects: SecureObjectRepository, *, estimation_regime: str, operation: PinnedAuthorityOperation
 ):
     _seed_taxpayer_profile(objects, estimation_regime=estimation_regime)
@@ -214,11 +213,11 @@ def _calculate_m100_annual(
     wu_repo = WorkUnitCatalogueRepository(objects=objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=objects)
     bucket_event_repo = BucketEventHistoryRepository(objects=objects)
-    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
-    invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=BUCKET_ID, objects=objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id=BUCKET_ID, objects=objects)
     snapshot = published_authority_operation().snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
     work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         modelo="100",
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _M100_ANNUAL_PERIOD),
@@ -228,7 +227,7 @@ def _calculate_m100_annual(
         operation=operation,
     )
     with calculation_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bucket_event_repo,
@@ -237,7 +236,7 @@ def _calculate_m100_annual(
     ) as _calculation_ports_262:
         return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            binding_values=_non_relation_zero_bindings(),
+            binding_values=non_relation_zero_bindings(),
             ports=_calculation_ports_262,
             clock=_T1,
         )
@@ -246,9 +245,9 @@ def _calculate_m100_annual(
 def test_objective_estimation_profile_folds_m131_pagos_but_not_its_rendimiento_estimate(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    _seed_m131_quarters(secure_objects)
+    seed_m131_quarters(secure_objects)
 
-    result = _calculate_m100_annual(secure_objects, estimation_regime="objetiva", operation=operation)
+    result = calculate_m100_annual(secure_objects, estimation_regime="objetiva", operation=operation)
 
     values = result.revision.casilla_values
     assert values[_M100_PAGOS_CASILLA] == _EXPECTED_M131_PAGOS_TOTAL
@@ -263,7 +262,7 @@ def test_objective_estimation_profile_folds_m131_pagos_but_not_its_rendimiento_e
 def test_direct_estimation_profile_calculates_without_modelo_131_filings(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    result = _calculate_m100_annual(secure_objects, estimation_regime="directa_normal", operation=operation)
+    result = calculate_m100_annual(secure_objects, estimation_regime="directa_normal", operation=operation)
 
     assert result.revision.casilla_values[_M100_EO_RENDIMIENTO_CASILLA] == Decimal("0")
     assert result.revision.casilla_values[_M100_EO_SUM_CASILLA] == Decimal("0")

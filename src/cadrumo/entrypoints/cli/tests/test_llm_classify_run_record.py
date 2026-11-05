@@ -24,7 +24,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimePro
 from cadrumo.application.ledger.llm_classification import suggest_llm_classification
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_path
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.errors import LLMClassifierError
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
@@ -82,7 +82,7 @@ def _transaction() -> Transaction:
 
 def test_suggest_llm_classification_records_one_run_on_success(profile: TestRuntimeProfile) -> None:
     """A successful subprocess classify call records exactly one succeeded run."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         txn = _transaction()
         repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
         repository.save(TransactionCatalogue.from_transactions((txn,)))
@@ -118,7 +118,7 @@ def test_suggest_llm_classification_records_one_run_on_success(profile: TestRunt
 
 def test_suggest_llm_classification_records_one_run_on_failure(profile: TestRuntimeProfile) -> None:
     """A subprocess call whose output fails schema parsing records one failed run."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         txn = _transaction()
         repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
         repository.save(TransactionCatalogue.from_transactions((txn,)))

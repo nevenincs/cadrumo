@@ -18,7 +18,7 @@ import pytest
 
 from .....application.storage.calc_sheets.engine import build_export_plan
 from .....domain.calculations.registry.tests.published_authority import published_snapshot
-from .._calc_sheets_apply_formatting import (
+from ..calc_sheets_apply_formatting import (
     build_auto_filter_requests,
     build_base_font_requests,
     build_column_width_requests,
@@ -27,7 +27,7 @@ from .._calc_sheets_apply_formatting import (
     build_number_format_requests,
     build_styled_range_requests,
 )
-from .._calc_sheets_apply_values import (
+from ..calc_sheets_apply_values import (
     build_evidence_value_data,
     build_formula_data,
     build_value_data,

@@ -177,7 +177,7 @@ async def test_missing_configured_authority_refuses_without_packaged_fallback(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(authority_module, "_bundled_indexed_authority", None)
+    monkeypatch.setattr(authority_module, "authority_bundled_indexed_authority", None)
     adapter = admitted_adapter()
     try:
         with override_settings(cadrumo_authority_root=tmp_path):
@@ -193,7 +193,7 @@ async def test_corrupt_configured_database_refuses_without_packaged_fallback(
 ) -> None:
     source_descriptor = bundled_authority_descriptor_path()
     copy_and_corrupt_published_database(source_descriptor, tmp_path)
-    monkeypatch.setattr(authority_module, "_bundled_indexed_authority", None)
+    monkeypatch.setattr(authority_module, "authority_bundled_indexed_authority", None)
 
     adapter = admitted_adapter()
     try:
@@ -239,7 +239,7 @@ async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
         assert operation.profile_decode_context().generation == first_pin
         return canonical_query(operation=operation)
 
-    monkeypatch.setattr(authority_module, "_bundled_indexed_authority", authority)
+    monkeypatch.setattr(authority_module, "authority_bundled_indexed_authority", authority)
     monkeypatch.setattr(reference_catalogue, "registry_support_matrix", cut_over_and_query)
     adapter = admitted_adapter()
     try:

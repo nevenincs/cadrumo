@@ -86,7 +86,7 @@ def encode_authority_component(query: AuthorityComponentQuery, value: object) ->
                 "payload_sha256": value.payload_sha256,
             }
         else:
-            payload = _json_value(value)
+            payload = json_value(value)
         return canonical_json_bytes(
             {"codec": "cadrumo-authority-component-v1", "kind": query.kind.value, "payload": payload}
         )
@@ -339,7 +339,7 @@ class _ObservedFactAuthority:
         return self.authority.supported_filing_years()
 
 
-def _json_value(value: object) -> object:
+def json_value(value: object) -> object:
     """Project registry values to JSON, omitting only schema-declared defaults."""
     from .revision_contracts import DeclaredPredecessor, NoPredecessor
 
@@ -348,7 +348,7 @@ def _json_value(value: object) -> object:
         # dialect. Its serializer is a semantic projection, unlike ordinary
         # presentation serializers that may hide fields needed for authority
         # reconstruction.
-        return _json_value(value.model_dump(mode="json"))
+        return json_value(value.model_dump(mode="json"))
     if isinstance(value, BaseModel):
         return _json_model_value(value)
     return _json_non_model_value(value)
@@ -360,12 +360,12 @@ def _json_model_value(value: BaseModel) -> object:
     if type(value).__pydantic_decorators__.model_serializers:
         # A model that declares its own serialiser is authored in that shape,
         # and its parser accepts only that shape back.
-        return _json_value(value.model_dump(mode="python"))
+        return json_value(value.model_dump(mode="python"))
     return {
         field_name: (
             tagged_fact_atom_json(getattr(value, field_name))
             if _fact_atom_validators().intersection(field.metadata)
-            else _json_value(getattr(value, field_name))
+            else json_value(getattr(value, field_name))
         )
         for field_name, field in type(value).model_fields.items()
         if not _field_equals_declared_default(value, field_name)
@@ -374,20 +374,20 @@ def _json_model_value(value: BaseModel) -> object:
 
 def _json_non_model_value(value: object) -> object:
     if is_object_mapping(value):
-        return {_json_key(key): _json_value(item) for key, item in value.items()}
+        return {_json_key(key): json_value(item) for key, item in value.items()}
     if is_object_set_or_frozenset(value):
         # Iteration order of a set follows per-process string hashing, so an
         # unordered collection is written in canonical-JSON order: the same
         # authority always publishes the same bytes.
-        return sorted((_json_value(item) for item in value), key=canonical_json_bytes)
+        return sorted((json_value(item) for item in value), key=canonical_json_bytes)
     if is_object_list_or_tuple(value):
-        return [_json_value(item) for item in value]
+        return [json_value(item) for item in value]
     return _json_scalar_value(value)
 
 
 def _json_scalar_value(value: object) -> object:
     if isinstance(value, Enum):
-        return _json_value(value.value)
+        return json_value(value.value)
     if isinstance(value, Decimal):
         return str(value)
     if isinstance(value, (datetime, date)):
@@ -424,7 +424,7 @@ def _field_equals_declared_default(model: BaseModel, field_name: str) -> bool:
 
 def _json_key(key: object) -> str:
     """Project a mapping key through the JSON-safe value vocabulary."""
-    value = _json_value(key)
+    value = json_value(key)
     if not isinstance(value, (str, int, float, bool)):
         raise TypeError("authority artifact mapping keys must be JSON scalar values")
     return str(value)

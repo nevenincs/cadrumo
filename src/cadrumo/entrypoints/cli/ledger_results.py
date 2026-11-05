@@ -578,7 +578,7 @@ class LedgerSplitChildProposalPayload(OutputSchema):
 # ---------------------------------------------------------------------------
 
 
-class _LedgerMutationResult(OutputSchema):
+class LedgerMutationResult(OutputSchema):
     """Shared shape for single-transaction mutation verbs.
 
     The uniform mutation quintet: every verb that mutates exactly one ledger
@@ -594,7 +594,7 @@ class _LedgerMutationResult(OutputSchema):
     transaction: TransactionPayload
 
 
-class LedgerAddResult(_LedgerMutationResult):
+class LedgerAddResult(LedgerMutationResult):
     """JSON envelope for ``aeat app ledger add``.
 
     ``add`` joins the uniform mutation quintet by subclassing
@@ -603,11 +603,11 @@ class LedgerAddResult(_LedgerMutationResult):
     """
 
 
-class LedgerUpdateResult(_LedgerMutationResult):
+class LedgerUpdateResult(LedgerMutationResult):
     """JSON envelope for ``aeat app ledger update``."""
 
 
-class LedgerClassifySingleResult(_LedgerMutationResult):
+class LedgerClassifySingleResult(LedgerMutationResult):
     """JSON envelope for the single-transaction ``aeat app ledger classify`` path.
 
     The primary, non-optional mutation quintet: classifying one transaction
@@ -643,15 +643,15 @@ class LedgerClassifyResult(OutputRootSchema[LedgerClassifySingleResult | LedgerC
     """
 
 
-class LedgerAllocateResult(_LedgerMutationResult):
+class LedgerAllocateResult(LedgerMutationResult):
     """JSON envelope for ``aeat app ledger allocate``."""
 
 
-class LedgerAttachResult(_LedgerMutationResult):
+class LedgerAttachResult(LedgerMutationResult):
     """JSON envelope for ``aeat app ledger attach``."""
 
 
-class LedgerDetachResult(_LedgerMutationResult):
+class LedgerDetachResult(LedgerMutationResult):
     """JSON envelope for ``aeat app ledger detach``.
 
     The same uniform single-transaction mutation shape the attach side returns:
@@ -660,19 +660,19 @@ class LedgerDetachResult(_LedgerMutationResult):
     """
 
 
-class LedgerArchiveResult(_LedgerMutationResult):
+class LedgerArchiveResult(LedgerMutationResult):
     """JSON envelope for ``aeat app ledger archive``."""
 
 
-class LedgerStashResult(_LedgerMutationResult):
+class LedgerStashResult(LedgerMutationResult):
     """JSON envelope for ``aeat app ledger stash``."""
 
 
-class LedgerRestoreResult(_LedgerMutationResult):
+class LedgerRestoreResult(LedgerMutationResult):
     """JSON envelope for ``aeat app ledger restore``."""
 
 
-class LedgerExcludeResult(_LedgerMutationResult):
+class LedgerExcludeResult(LedgerMutationResult):
     """JSON envelope for ``aeat app ledger exclude``.
 
     Marks a reviewed transaction as deliberately excluded from filing; the
@@ -1141,6 +1141,7 @@ __all__ = [
     "LedgerListResult",
     "LedgerListRowPayload",
     "LedgerMergeResult",
+    "LedgerMutationResult",
     "LedgerReadinessIssuePayload",
     "LedgerRemovalBlockerPayload",
     "LedgerRemoveResult",
@@ -1169,5 +1170,4 @@ __all__ = [
     "LedgerViewResult",
     "M210IncomeClassificationPayload",
     "TransactionPayload",
-    "_LedgerMutationResult",
 ]

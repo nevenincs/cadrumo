@@ -16,8 +16,8 @@ from pathlib import Path
 
 import pytest
 
-from .. import _capsule_filesystem
-from .._capsule_filesystem import rename_windows_directory_by_handle
+from .. import capsule_filesystem
+from ..capsule_filesystem import rename_windows_directory_by_handle
 from ..errors import ProfileCustodyRecordError
 from ..filesystem_primitives import anchor_directory
 
@@ -65,7 +65,7 @@ def test_a_handle_released_inside_the_budget_lets_the_capsule_publish(tmp_path: 
 def test_a_handle_held_past_the_budget_refuses_and_leaves_the_stage(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(_capsule_filesystem, "CAPSULE_PUBLICATION_CONTENTION_BUDGET_SECONDS", 0.2)
+    monkeypatch.setattr(capsule_filesystem, "CAPSULE_PUBLICATION_CONTENTION_BUDGET_SECONDS", 0.2)
     stage = _stage(tmp_path)
     destination = tmp_path / "capsule"
     with (stage / "profile.commit.v1.json").open("rb"), ExitStack() as anchors:
@@ -104,7 +104,7 @@ def test_a_refusal_that_is_not_contention_is_not_waited_on(tmp_path: Path) -> No
     cause = caught.value.__cause__
     assert isinstance(cause, OSError)
     assert cause.errno != _ERROR_ACCESS_DENIED
-    assert waited < _capsule_filesystem.CAPSULE_PUBLICATION_CONTENTION_BUDGET_SECONDS / 2
+    assert waited < capsule_filesystem.CAPSULE_PUBLICATION_CONTENTION_BUDGET_SECONDS / 2
     assert stage.is_dir()
 
 

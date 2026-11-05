@@ -26,7 +26,7 @@ from ....core.filing_year import FourDigitYear
 from ....core.frozen_mapping import FROZEN_MAPPING
 from ....core.identity.digest import ContentDigest
 from ..export_field_kind import CasillaFieldKind, CasillaFieldKindValue
-from . import export_field_validation as _export_field_validation
+from . import export_field_validation
 from .errors import RegistryValidationError
 from .export_literal_fact import ExportLiteralFact, resolve_export_literal_fact
 from .export_record_components import validate_export_record_components
@@ -658,24 +658,24 @@ class ExportFieldDefinition(RegistryModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_field_kind(self) -> ExportFieldDefinition:
-        _export_field_validation.validate_export_field_kind(self)
+        export_field_validation.validate_export_field_kind(self)
         return self
 
     def wire_shape(self) -> tuple[str, str, str, bool, str | None]:
         """Project the declared shape onto the axes a value policy constrains."""
-        return _export_field_validation.export_field_wire_shape(self)
+        return export_field_validation.export_field_wire_shape(self)
 
     def validate_allowed_values(self) -> None:
         """Constrain an exact reviewed semantic integer domain."""
-        _export_field_validation.validate_export_allowed_values(self)
+        export_field_validation.validate_export_allowed_values(self)
 
     def validate_value_policy(self) -> None:
         """Require each explicit policy to match its complete fixed-width shape."""
-        _export_field_validation.validate_export_value_policy(self)
+        export_field_validation.validate_export_value_policy(self)
 
     def validate_decimals(self) -> None:
         """Require an explicit scale on every decimal field."""
-        _export_field_validation.validate_export_field_decimals(self)
+        export_field_validation.validate_export_field_decimals(self)
 
 
 class RecordDiscriminator(RegistryModel):

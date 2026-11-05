@@ -35,11 +35,11 @@ from ...core.i18n.render import tr
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.iva.schema import InvoiceKind, IvaCategory
-from ._date_parsing import _parse_iso_date
-from ._decimal_parsing import parse_decimal_amount, parse_fraction
-from ._ledger_support import ledger_invoice_validation_no_recovery
 from .common import emit_envelope
+from .date_parsing import parse_iso_date
+from .decimal_parsing import parse_decimal_amount, parse_fraction
 from .ledger_results import LedgerInvoicePreviewResult
+from .ledger_support import ledger_invoice_validation_no_recovery
 from .machine_secret_json_items import json_array_items
 
 _LINE_DECIMAL_FRACTIONS: Final = frozenset({"quantity", "unit_price"})
@@ -169,9 +169,9 @@ def _draft_request(
         counterparty_tax_id=counterparty_nif,
         counterparty_country=country_code,
         invoice_number=invoice_number,
-        issued_at=None if invoice_date is None else _parse_iso_date(invoice_date, label="invoice-date"),
+        issued_at=None if invoice_date is None else parse_iso_date(invoice_date, label="invoice-date"),
         currency=currency,
-        operation_date=None if operation_date is None else _parse_iso_date(operation_date, label="operation-date"),
+        operation_date=None if operation_date is None else parse_iso_date(operation_date, label="operation-date"),
         operation_type=operation_type,
         iva_category=None if iva_category is None else str(iva_category),
         invoice_class=invoice_class,

@@ -52,13 +52,13 @@ from cadrumo.core.operations import (
 )
 
 from .projection_services_support import (
-    _DEFINITION_ID,
-    _INTERACTION_ID,
-    _NOW,
-    _OPERATION_ID,
-    _REFUSAL_CODE,
-    _REFUSAL_SENTINEL,
-    _TOKEN,
+    DEFINITION_ID,
+    INTERACTION_ID,
+    NOW,
+    OPERATION_ID,
+    REFUSAL_CODE,
+    REFUSAL_SENTINEL,
+    TOKEN,
     PrivateRefusalDetail,
     ProjectionResult,
     PublicProjectionResult,
@@ -66,20 +66,20 @@ from .projection_services_support import (
     ReviewedOperand,
     SafeReviewProjection,
     WorkspaceRefreshTarget,
-    _lease,
-    _observe_refused_operation,
-    _pending,
-    _project_refusal_detail,
-    _project_result,
-    _refused_snapshot,
-    _registry,
-    _running_snapshot,
-    _terminal_snapshot,
-    _unsafe_refresh_target,
-    _unsafe_result_projection,
-    _unsafe_review_projection,
-    _waiting_snapshot,
-    _write,
+    observe_refused_operation,
+    project_refusal_detail,
+    project_result,
+    projection_services_lease,
+    projection_services_pending,
+    projection_services_registry,
+    refused_snapshot,
+    running_snapshot,
+    terminal_snapshot,
+    unsafe_refresh_target,
+    unsafe_result_projection,
+    unsafe_review_projection,
+    waiting_snapshot,
+    write,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -92,12 +92,12 @@ def _settle_terminal(
     terminal: OperationPersistedSnapshot,
 ) -> tuple[OperationPublicDefinitionContractV1, OperationResultProjectionRequestV1]:
     """Journal a running operation, commit its terminal settlement and build the result request for it."""
-    _write(root, repository, _running_snapshot(registry))
-    asyncio.run(repository.commit_settlement(terminal, expected_revision=0, lease=_lease()))
-    contract = registry.lookup_public_contract(_DEFINITION_ID)
+    write(root, repository, running_snapshot(registry))
+    asyncio.run(repository.commit_settlement(terminal, expected_revision=0, lease=projection_services_lease()))
+    contract = registry.lookup_public_contract(DEFINITION_ID)
     assert contract.result_schema is not None
     request = OperationResultProjectionRequestV1(
-        operation_id=_OPERATION_ID,
+        operation_id=OPERATION_ID,
         terminal_revision=terminal.revision,
         definition_contract_digest=contract.definition_contract_digest,
         result_schema=contract.result_schema,
@@ -108,20 +108,20 @@ def _settle_terminal(
 def test_review_resolution_uses_encrypted_operand_and_is_read_only(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         root = tmp_path / "durable"
-        registry = _registry()
+        registry = projection_services_registry()
         operands = operation_secure_reference_repository(objects=profile.repository)
-        proposal = asyncio.run(operands.put(ReviewedOperand(summary_code="safe.review"), written_at=_NOW))
-        pending = _pending(registry, proposal=proposal)
+        proposal = asyncio.run(operands.put(ReviewedOperand(summary_code="safe.review"), written_at=NOW))
+        pending = projection_services_pending(registry, proposal=proposal)
         repository = OperationJournalRepository(storage_root=root)
-        _write(root, repository, _waiting_snapshot(registry, pending))
-        journal_path = root / "operation-journals" / f"{_OPERATION_ID}.json"
+        write(root, repository, waiting_snapshot(registry, pending))
+        journal_path = root / "operation-journals" / f"{OPERATION_ID}.json"
         before = journal_path.read_bytes()
-        contract = registry.lookup_public_contract(_DEFINITION_ID)
+        contract = registry.lookup_public_contract(DEFINITION_ID)
         assert contract.review_projection_schema is not None
         request = OperationReviewProjectionRequestV1(
             reference=OperationReviewProjectionReferenceV1(
-                operation_id=_OPERATION_ID,
-                interaction_id=_INTERACTION_ID,
+                operation_id=OPERATION_ID,
+                interaction_id=INTERACTION_ID,
                 revision=0,
                 review_projection_schema=contract.review_projection_schema,
                 definition_contract_digest=contract.definition_contract_digest,
@@ -132,7 +132,7 @@ def test_review_resolution_uses_encrypted_operand_and_is_read_only(tmp_path: Pat
             reader=repository,
             registry=registry,
             operands=operands,
-            clock=lambda: _NOW,
+            clock=lambda: NOW,
         )
 
         result = asyncio.run(service.resolve(request, SafeReviewProjection))
@@ -149,7 +149,7 @@ def test_review_resolution_uses_encrypted_operand_and_is_read_only(tmp_path: Pat
                 reader=repository,
                 registry=registry,
                 operands=operands,
-                clock=lambda: _NOW + timedelta(hours=1),
+                clock=lambda: NOW + timedelta(hours=1),
             ).resolve(request, SafeReviewProjection)
         )
         digest_mismatch = asyncio.run(
@@ -176,9 +176,9 @@ def test_review_resolution_uses_encrypted_operand_and_is_read_only(tmp_path: Pat
         unsafe_output = asyncio.run(
             OperationReviewProjectionService(
                 reader=repository,
-                registry=_registry(review_projector=_unsafe_review_projection),
+                registry=projection_services_registry(review_projector=unsafe_review_projection),
                 operands=operands,
-                clock=lambda: _NOW,
+                clock=lambda: NOW,
             ).resolve(request, SafeReviewProjection)
         )
 
@@ -195,21 +195,23 @@ def test_review_resolution_uses_encrypted_operand_and_is_read_only(tmp_path: Pat
         assert schema_mismatch.code is OperationReviewProjectionRefusalCode.REVIEW_SCHEMA_MISMATCH
         assert unsafe_output.code is OperationReviewProjectionRefusalCode.REVIEW_PROJECTION_UNAVAILABLE
         assert journal_path.read_bytes() == before
-        assert _TOKEN.encode() not in before and proposal.encode() in before
+        assert TOKEN.encode() not in before and proposal.encode() in before
         assert "result_ref" not in type(request).model_fields
 
 
 def test_result_resolution_uses_encrypted_operand_and_public_contract(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         root = tmp_path / "result-durable"
-        registry = _registry(result_projector=_project_result, result_schema_type=PublicProjectionResult)
+        registry = projection_services_registry(
+            result_projector=project_result, result_schema_type=PublicProjectionResult
+        )
         repository = OperationJournalRepository(storage_root=root)
         operands = operation_secure_reference_repository(objects=profile.repository)
-        result_ref = asyncio.run(operands.put(ProjectionResult(result_code="safe.result"), written_at=_NOW))
+        result_ref = asyncio.run(operands.put(ProjectionResult(result_code="safe.result"), written_at=NOW))
         assert asyncio.run(operands.resolve(result_ref, ProjectionResult)) == ProjectionResult(
             result_code="safe.result"
         )
-        terminal = _terminal_snapshot(registry, result_ref=result_ref)
+        terminal = terminal_snapshot(registry, result_ref=result_ref)
         contract, request = _settle_terminal(root, repository, registry, terminal)
         service = OperationResultProjectionService(reader=repository, registry=registry, operands=operands)
 
@@ -230,8 +232,8 @@ def test_result_resolution_uses_encrypted_operand_and_public_contract(tmp_path: 
         unsafe_output = asyncio.run(
             OperationResultProjectionService(
                 reader=repository,
-                registry=_registry(
-                    result_projector=_unsafe_result_projection,
+                registry=projection_services_registry(
+                    result_projector=unsafe_result_projection,
                     result_schema_type=PublicProjectionResult,
                 ),
                 operands=operands,
@@ -284,14 +286,14 @@ def _paged_result_rig(tmp_path: Path, profile: TestRuntimeProfile) -> _PagedResu
 
     def project(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
         projections.append("projected")
-        return _project_result(result, receipt)
+        return project_result(result, receipt)
 
     root = tmp_path / "paged-result-durable"
-    registry = _registry(result_projector=project, result_schema_type=PublicProjectionResult)
+    registry = projection_services_registry(result_projector=project, result_schema_type=PublicProjectionResult)
     repository = OperationJournalRepository(storage_root=root)
     operands = operation_secure_reference_repository(objects=profile.repository)
-    result_ref = asyncio.run(operands.put(ProjectionResult(result_code="safe.result"), written_at=_NOW))
-    terminal = _terminal_snapshot(registry, result_ref=result_ref)
+    result_ref = asyncio.run(operands.put(ProjectionResult(result_code="safe.result"), written_at=NOW))
+    terminal = terminal_snapshot(registry, result_ref=result_ref)
     contract, request = _settle_terminal(root, repository, registry, terminal)
     service = OperationResultProjectionService(reader=repository, registry=registry, operands=operands)
     return _PagedResultRig(
@@ -341,7 +343,7 @@ def _assert_paged_reads_reuse_only_their_own_snapshot(
     assert len(projections) == 6
     assert rig.read() == first
     assert len(projections) == 7
-    rig.service.forget_snapshot(_OPERATION_ID)
+    rig.service.forget_snapshot(OPERATION_ID)
     assert rig.read() == first
     assert len(projections) == 8
     rig.service.forget_snapshot()
@@ -368,40 +370,40 @@ def test_paged_snapshot_rechecks_terminal_contract_and_keeps_readers_separate(tm
 def test_refused_detail_uses_encrypted_operand_and_preserves_the_refused_receipt(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         root = tmp_path / "refused-detail-durable"
-        registry = _registry(
-            result_projector=_project_refusal_detail,
+        registry = projection_services_registry(
+            result_projector=project_refusal_detail,
             result_schema_type=PublicRefusalDetail,
             result_type=PrivateRefusalDetail,
-            refusal_detail_codes=frozenset({_REFUSAL_CODE}),
+            refusal_detail_codes=frozenset({REFUSAL_CODE}),
         )
         repository = OperationJournalRepository(storage_root=root)
         operands = operation_secure_reference_repository(objects=profile.repository)
         private_detail = PrivateRefusalDetail(
             detail_code="modelo.not_applicable",
-            private_sentinel=_REFUSAL_SENTINEL,
+            private_sentinel=REFUSAL_SENTINEL,
         )
-        detail_ref = asyncio.run(operands.put(private_detail, written_at=_NOW))
+        detail_ref = asyncio.run(operands.put(private_detail, written_at=NOW))
         assert asyncio.run(operands.resolve(detail_ref, PrivateRefusalDetail)) == private_detail
 
-        terminal = _refused_snapshot(registry, detail_ref=detail_ref)
+        terminal = refused_snapshot(registry, detail_ref=detail_ref)
         _, request = _settle_terminal(root, repository, registry, terminal)
         service = OperationResultProjectionService(reader=repository, registry=registry, operands=operands)
-        before = _observe_refused_operation(repository, registry, expected_effect=OperationEffect.UNKNOWN)
+        before = observe_refused_operation(repository, registry, expected_effect=OperationEffect.UNKNOWN)
 
         projected = asyncio.run(service.resolve(request, PublicRefusalDetail))
-        after = _observe_refused_operation(repository, registry, expected_effect=OperationEffect.UNKNOWN)
+        after = observe_refused_operation(repository, registry, expected_effect=OperationEffect.UNKNOWN)
         persisted = b"".join(path.read_bytes() for path in tmp_path.rglob("*") if path.is_file())
-        snapshot = asyncio.run(repository.load(_OPERATION_ID))
+        snapshot = asyncio.run(repository.load(OPERATION_ID))
 
     assert isinstance(projected, OperationResultProjectionSuccessV1)
     assert projected.projection == PublicRefusalDetail(detail_code="modelo.not_applicable")
-    assert _REFUSAL_SENTINEL not in projected.model_dump_json()
-    assert _REFUSAL_SENTINEL.encode() not in persisted
+    assert REFUSAL_SENTINEL not in projected.model_dump_json()
+    assert REFUSAL_SENTINEL.encode() not in persisted
     assert detail_ref not in before.model_dump_json()
     assert before.projection.model_dump() == after.projection.model_dump()
     assert snapshot.terminal_receipt is not None
     assert snapshot.terminal_receipt.condition is OperationTerminalCondition.REFUSED
-    assert snapshot.terminal_receipt.refusal_ref == _REFUSAL_CODE
+    assert snapshot.terminal_receipt.refusal_ref == REFUSAL_CODE
     assert snapshot.terminal_receipt.refusal_detail_ref == detail_ref
     assert snapshot.terminal_receipt.result_ref is None
     assert snapshot.terminal_receipt.effect is OperationEffect.UNKNOWN
@@ -414,11 +416,11 @@ def test_unavailable_refused_detail_keeps_refusal_code_and_unknown_effect_observ
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         root = tmp_path / f"refused-detail-{stored_detail}"
-        registry = _registry(
-            result_projector=_project_refusal_detail,
+        registry = projection_services_registry(
+            result_projector=project_refusal_detail,
             result_schema_type=PublicRefusalDetail,
             result_type=PrivateRefusalDetail,
-            refusal_detail_codes=frozenset({_REFUSAL_CODE}),
+            refusal_detail_codes=frozenset({REFUSAL_CODE}),
         )
         repository = OperationJournalRepository(storage_root=root)
         operands = operation_secure_reference_repository(objects=profile.repository)
@@ -432,23 +434,23 @@ def test_unavailable_refused_detail_keeps_refusal_code_and_unknown_effect_observ
             )
             assert missing is None
         else:
-            detail_ref = asyncio.run(operands.put(ProjectionResult(result_code=_REFUSAL_SENTINEL), written_at=_NOW))
-        terminal = _refused_snapshot(registry, detail_ref=detail_ref, effect=OperationEffect.UNKNOWN)
+            detail_ref = asyncio.run(operands.put(ProjectionResult(result_code=REFUSAL_SENTINEL), written_at=NOW))
+        terminal = refused_snapshot(registry, detail_ref=detail_ref, effect=OperationEffect.UNKNOWN)
         _, request = _settle_terminal(root, repository, registry, terminal)
         service = OperationResultProjectionService(reader=repository, registry=registry, operands=operands)
-        before = _observe_refused_operation(repository, registry, expected_effect=OperationEffect.UNKNOWN)
+        before = observe_refused_operation(repository, registry, expected_effect=OperationEffect.UNKNOWN)
 
         unavailable = asyncio.run(service.resolve(request, PublicRefusalDetail))
-        after = _observe_refused_operation(repository, registry, expected_effect=OperationEffect.UNKNOWN)
-        snapshot = asyncio.run(repository.load(_OPERATION_ID))
+        after = observe_refused_operation(repository, registry, expected_effect=OperationEffect.UNKNOWN)
+        snapshot = asyncio.run(repository.load(OPERATION_ID))
 
     assert isinstance(unavailable, OperationResultProjectionRefusalV1)
     assert unavailable.code is OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE
-    assert _REFUSAL_SENTINEL not in unavailable.model_dump_json()
+    assert REFUSAL_SENTINEL not in unavailable.model_dump_json()
     assert before.projection.model_dump() == after.projection.model_dump()
     assert snapshot.terminal_receipt is not None
     assert snapshot.terminal_receipt.condition is OperationTerminalCondition.REFUSED
-    assert snapshot.terminal_receipt.refusal_ref == _REFUSAL_CODE
+    assert snapshot.terminal_receipt.refusal_ref == REFUSAL_CODE
     assert snapshot.terminal_receipt.refusal_detail_ref == detail_ref
     assert snapshot.terminal_receipt.result_ref is None
     assert snapshot.terminal_receipt.effect is OperationEffect.UNKNOWN
@@ -470,11 +472,13 @@ def test_result_projection_service_never_releases_result_ref_from_non_success_te
     """An incidental reference on any non-success receipt cannot become a result projection."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         root = tmp_path / f"non-success-result-{condition.value}"
-        registry = _registry(result_projector=_project_result, result_schema_type=PublicProjectionResult)
+        registry = projection_services_registry(
+            result_projector=project_result, result_schema_type=PublicProjectionResult
+        )
         repository = OperationJournalRepository(storage_root=root)
         operands = operation_secure_reference_repository(objects=profile.repository)
-        result_ref = asyncio.run(operands.put(ProjectionResult(result_code="must.not.escape"), written_at=_NOW))
-        terminal = _terminal_snapshot(
+        result_ref = asyncio.run(operands.put(ProjectionResult(result_code="must.not.escape"), written_at=NOW))
+        terminal = terminal_snapshot(
             registry,
             result_ref=result_ref,
             condition=condition,
@@ -506,11 +510,11 @@ def test_identity_result_projection_validates_the_encrypted_stored_model(
     """An identical public model needs no projector but still needs typed custody."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         root = tmp_path / "identity-result-durable"
-        registry = _registry()
+        registry = projection_services_registry()
         repository = OperationJournalRepository(storage_root=root)
         operands = operation_secure_reference_repository(objects=profile.repository)
-        result_ref = asyncio.run(operands.put(stored, written_at=_NOW))
-        terminal = _terminal_snapshot(registry, result_ref=result_ref)
+        result_ref = asyncio.run(operands.put(stored, written_at=NOW))
+        terminal = terminal_snapshot(registry, result_ref=result_ref)
         _, request = _settle_terminal(root, repository, registry, terminal)
         result = asyncio.run(
             OperationResultProjectionService(reader=repository, registry=registry, operands=operands).resolve(
@@ -528,15 +532,15 @@ def test_identity_result_projection_validates_the_encrypted_stored_model(
 
 def test_refresh_target_resolves_only_authoritative_successful_terminal_receipt(tmp_path: Path) -> None:
     root = tmp_path / "durable"
-    registry = _registry()
+    registry = projection_services_registry()
     repository = OperationJournalRepository(storage_root=root)
-    terminal = _terminal_snapshot(registry)
-    _write(root, repository, _running_snapshot(registry))
-    asyncio.run(repository.commit_settlement(terminal, expected_revision=0, lease=_lease()))
-    contract = registry.lookup_public_contract(_DEFINITION_ID)
+    terminal = terminal_snapshot(registry)
+    write(root, repository, running_snapshot(registry))
+    asyncio.run(repository.commit_settlement(terminal, expected_revision=0, lease=projection_services_lease()))
+    contract = registry.lookup_public_contract(DEFINITION_ID)
     assert contract.workspace_refresh_target_schema is not None
     request = OperationWorkspaceRefreshTargetRequestV1(
-        operation_id=_OPERATION_ID,
+        operation_id=OPERATION_ID,
         terminal_revision=terminal.revision,
         definition_contract_digest=contract.definition_contract_digest,
         target_schema=contract.workspace_refresh_target_schema,
@@ -559,7 +563,7 @@ def test_refresh_target_resolves_only_authoritative_successful_terminal_receipt(
     unsafe_output = asyncio.run(
         OperationWorkspaceRefreshTargetService(
             reader=repository,
-            registry=_registry(refresh_adapter=_unsafe_refresh_target),
+            registry=projection_services_registry(refresh_adapter=unsafe_refresh_target),
         ).resolve(request, WorkspaceRefreshTarget)
     )
 
@@ -578,25 +582,25 @@ def test_refresh_target_resolves_only_authoritative_successful_terminal_receipt(
 
 def test_projection_services_close_version_unknown_pending_terminal_and_adapter_refusals(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        registry = _registry()
+        registry = projection_services_registry()
         running_root = tmp_path / "running"
         running_repository = OperationJournalRepository(storage_root=running_root)
-        _write(running_root, running_repository, _running_snapshot(registry))
+        write(running_root, running_repository, running_snapshot(registry))
         operands = operation_secure_reference_repository(objects=profile.repository)
         review_service = OperationReviewProjectionService(
             reader=running_repository,
             registry=registry,
             operands=operands,
-            clock=lambda: _NOW,
+            clock=lambda: NOW,
         )
-        contract = registry.lookup_public_contract(_DEFINITION_ID)
+        contract = registry.lookup_public_contract(DEFINITION_ID)
         assert contract.review_projection_schema is not None
         not_pending = asyncio.run(
             review_service.resolve(
                 OperationReviewProjectionRequestV1(
                     reference=OperationReviewProjectionReferenceV1(
-                        operation_id=_OPERATION_ID,
-                        interaction_id=_INTERACTION_ID,
+                        operation_id=OPERATION_ID,
+                        interaction_id=INTERACTION_ID,
                         revision=0,
                         review_projection_schema=contract.review_projection_schema,
                         definition_contract_digest=contract.definition_contract_digest,
@@ -611,7 +615,7 @@ def test_projection_services_close_version_unknown_pending_terminal_and_adapter_
                 OperationReviewProjectionRequestV1(
                     reference=OperationReviewProjectionReferenceV1(
                         operation_id="9" * 64,
-                        interaction_id=_INTERACTION_ID,
+                        interaction_id=INTERACTION_ID,
                         revision=0,
                         review_projection_schema=contract.review_projection_schema,
                         definition_contract_digest=contract.definition_contract_digest,
@@ -636,7 +640,7 @@ def test_projection_services_close_version_unknown_pending_terminal_and_adapter_
 
         assert contract.workspace_refresh_target_schema is not None
         refresh_request = OperationWorkspaceRefreshTargetRequestV1(
-            operation_id=_OPERATION_ID,
+            operation_id=OPERATION_ID,
             terminal_revision=0,
             definition_contract_digest=contract.definition_contract_digest,
             target_schema=contract.workspace_refresh_target_schema,
@@ -649,13 +653,17 @@ def test_projection_services_close_version_unknown_pending_terminal_and_adapter_
             )
         )
 
-        no_adapter_registry = _registry(include_refresh=False)
+        no_adapter_registry = projection_services_registry(include_refresh=False)
         no_adapter_root = tmp_path / "no-adapter"
         no_adapter_repository = OperationJournalRepository(storage_root=no_adapter_root)
-        no_adapter_terminal = _terminal_snapshot(no_adapter_registry)
-        _write(no_adapter_root, no_adapter_repository, _running_snapshot(no_adapter_registry))
-        asyncio.run(no_adapter_repository.commit_settlement(no_adapter_terminal, expected_revision=0, lease=_lease()))
-        no_adapter_contract = no_adapter_registry.lookup_public_contract(_DEFINITION_ID)
+        no_adapter_terminal = terminal_snapshot(no_adapter_registry)
+        write(no_adapter_root, no_adapter_repository, running_snapshot(no_adapter_registry))
+        asyncio.run(
+            no_adapter_repository.commit_settlement(
+                no_adapter_terminal, expected_revision=0, lease=projection_services_lease()
+            )
+        )
+        no_adapter_contract = no_adapter_registry.lookup_public_contract(DEFINITION_ID)
         assert no_adapter_contract.result_schema is not None
         unavailable = asyncio.run(
             OperationWorkspaceRefreshTargetService(
@@ -663,7 +671,7 @@ def test_projection_services_close_version_unknown_pending_terminal_and_adapter_
                 registry=no_adapter_registry,
             ).resolve(
                 OperationWorkspaceRefreshTargetRequestV1(
-                    operation_id=_OPERATION_ID,
+                    operation_id=OPERATION_ID,
                     terminal_revision=1,
                     definition_contract_digest=no_adapter_contract.definition_contract_digest,
                     target_schema=no_adapter_contract.result_schema,

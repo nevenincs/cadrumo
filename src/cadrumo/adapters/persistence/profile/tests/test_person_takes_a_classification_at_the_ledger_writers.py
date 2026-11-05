@@ -52,7 +52,7 @@ from .classification_origin_support import (
     classify_row,
     composed_ledger,
 )
-from .test_classification_origin_at_the_ledger_writers import _PROPOSED_BY, _accept_proposal, _derive
+from .test_classification_origin_at_the_ledger_writers import PROPOSED_BY, accept_proposal, derive
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -79,7 +79,7 @@ def _row_decided_by(ledger: Ledger, party: str) -> str:
     if party == "rule":
         return add_row_classified_by_a_rule(ledger, description="classified by a rule")
     row = add_row(ledger, description="classified from a model's proposal")
-    classify_row(ledger, row, actor=AUTOMATION, stamp=_PROPOSED_BY)
+    classify_row(ledger, row, actor=AUTOMATION, stamp=PROPOSED_BY)
     return row
 
 
@@ -161,7 +161,7 @@ def test_an_automation_label_restating_the_persons_classification_takes_nothing(
     assert restated.bucket_event_ids == ()
     assert ledger.stored() == before
     personal = add_row(ledger, description="the person's personal row", classification=BusinessClassification.PERSONAL)
-    _accept_proposal(ledger, personal, actor=AUTOMATION)
+    accept_proposal(ledger, personal, actor=AUTOMATION)
     assert ledger.row(personal).classification_origin is ClassificationOrigin.PERSON
 
 
@@ -169,15 +169,15 @@ def test_a_person_running_the_derivation_automation_ran_or_accepting_the_proposa
     ledger: Ledger,
 ) -> None:
     derived = add_row_classified_by_a_rule(ledger, description="classified by a rule")
-    _derive(ledger, derived, actor=AUTOMATION)
+    derive(ledger, derived, actor=AUTOMATION)
     figures = classification_facts(ledger.row(derived))
     assert ledger.row(derived).classification_origin is ClassificationOrigin.AUTOMATION
     accepted = add_row(ledger, description="accepted from a model")
-    _accept_proposal(ledger, accepted, actor=AUTOMATION)
+    accept_proposal(ledger, accepted, actor=AUTOMATION)
     assert ledger.row(accepted).classification_origin is ClassificationOrigin.AUTOMATION
 
-    _derive(ledger, derived, actor=PERSON)
-    _accept_proposal(ledger, accepted, actor=PERSON)
+    derive(ledger, derived, actor=PERSON)
+    accept_proposal(ledger, accepted, actor=PERSON)
 
     assert classification_facts(ledger.row(derived)) == figures
     for row in (derived, accepted):

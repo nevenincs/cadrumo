@@ -114,7 +114,7 @@ def censo_import(
     ingest = reading.ingest(applied=apply)
     rows = tuple(CensoFactPayload(path=row.path, value=row.value, source=row.source) for row in ingest.facts)
     result = CensoFileIngestResult(applied=ingest.applied, certificate=ingest.certificate, facts=rows)
-    lines = _file_import_preview_lines(result)
+    lines = file_import_preview_lines(result)
     notices = [
         Notice(
             code="config.profile.censo.non_official_tier",
@@ -125,7 +125,7 @@ def censo_import(
     emit_envelope(ctx, command="config.profile.censo.import", result=result, lines=lines, notices=notices)
 
 
-def _file_import_preview_lines(result: CensoFileIngestResult) -> list[str]:
+def file_import_preview_lines(result: CensoFileIngestResult) -> list[str]:
     """Keep all six certified axes visible alongside the separately adoptable facts."""
     return [
         f"applied\t{str(result.applied).lower()}",
@@ -142,8 +142,8 @@ def censo_pull(
     """Preview the censal consulta or complete its registered reviewed apply."""
     from cadrumo_client.commands.profile_binding import bound_profile_client
 
-    from ._censo_review_cli import confirm_censal_review
     from .censo_authentication import require_censo_auth
+    from .censo_review_cli import confirm_censal_review
     from .operation_censal_prepare import prepare_censal_review
     from .operation_censal_preview import preview_censal_operation
     from .operation_censal_review import review_censal_operation
@@ -158,7 +158,7 @@ def censo_pull(
             decide=confirm_censal_review,
         )
         effective = _effective_from_prepare(prepared)
-        adopted, unchanged, divergences, source_url = _reviewed_pull_outcomes(
+        adopted, unchanged, divergences, source_url = reviewed_pull_outcomes(
             reviewed=reviewed,
             effective=effective,
         )
@@ -196,7 +196,7 @@ def censo_pull(
     # that AEAT disagrees with them is the last thing that should be
     # visible only to automation. Rebuilding both from one notice list is
     # what keeps the two renderings from drifting apart.
-    notices = _pull_notices(applied=apply, adopted=adopted, divergences=divergences)
+    notices = pull_notices(applied=apply, adopted=adopted, divergences=divergences)
     lines.extend(f"{notice.severity.value.upper()}\t{notice.message}" for notice in notices)
     emit_envelope(
         ctx,
@@ -270,7 +270,7 @@ def _reviewed_unchanged_payloads(
     )
 
 
-def _reviewed_pull_outcomes(
+def reviewed_pull_outcomes(
     *,
     reviewed: _ReviewedCensalResult,
     effective: Mapping[str, _EffectiveValue],
@@ -336,7 +336,7 @@ def _pull_lines(
     return lines
 
 
-def _values_are_withheld(row: CensoPullDivergencePayload) -> bool:
+def values_are_withheld(row: CensoPullDivergencePayload) -> bool:
     """Return whether the envelope will mask this row's values before the operator sees them.
 
     Asked of the redaction funnel itself rather than answered from a list
@@ -377,7 +377,7 @@ def _divergence_notice(
     )
 
 
-def _pull_notices(
+def pull_notices(
     *,
     applied: bool,
     adopted: tuple[CensoFactPayload, ...],
@@ -414,7 +414,7 @@ def _divergence_notices(divergences: tuple[CensoPullDivergencePayload, ...]) -> 
             "cli.config.profile.censo.pull_divergences_notice",
         ),
         (
-            tuple(row for row in divergences if _values_are_withheld(row)),
+            tuple(row for row in divergences if values_are_withheld(row)),
             "config.profile.censo.pull.values_withheld",
             "cli.config.profile.censo.pull_withheld_notice",
         ),

@@ -34,7 +34,7 @@ from typing import cast
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions_where
 from cadrumo.domain.calculations.registry.tests.published_authority import (
     published_legal_references,
@@ -55,7 +55,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 @pytest.fixture(scope="module", autouse=True)
 def _registry_authority_scope() -> Iterator[None]:
-    with _indexed_authority_for_test().operation():
+    with bundled_indexed_authority().operation():
         yield
 
 
@@ -105,7 +105,7 @@ def test_liva_art_90_corpus_excerpt_quotes_21_per_cent_general_rate() -> None:
 
 
 def test_liva_art_90_substrate_general_rate_resolves_to_21_per_cent_for_es() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         rate = lookup_rate(
             require_eu_member_state("ES"),
             IvaRateKind("general"),
@@ -118,7 +118,7 @@ def test_liva_art_90_substrate_general_rate_resolves_to_21_per_cent_for_es() -> 
 def test_iva_rate_21_helper_resolves_to_substrate_general_rate() -> None:
     """resolve_iva_rate_token("RATE_21", date.today()) wrapper must return the substrate's GENERAL
     rate divided by 100, anchored to LIVA art 90."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         expected = lookup_rate(
             require_eu_member_state("ES"),
             IvaRateKind("general"),
@@ -148,7 +148,7 @@ def test_liva_art_91_corpus_excerpt_quotes_10_and_4_per_cent_reduced_rates() -> 
 
 
 def test_liva_art_91_substrate_reduced_rate_resolves_to_10_per_cent_for_es() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         rate = lookup_rate(
             require_eu_member_state("ES"),
             IvaRateKind("reduced"),
@@ -159,7 +159,7 @@ def test_liva_art_91_substrate_reduced_rate_resolves_to_10_per_cent_for_es() -> 
 
 
 def test_iva_rate_10_helper_resolves_to_substrate_reduced_rate() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         expected = lookup_rate(
             require_eu_member_state("ES"),
             IvaRateKind("reduced"),
@@ -175,7 +175,7 @@ def test_iva_rate_10_helper_resolves_to_substrate_reduced_rate() -> None:
 
 
 def test_liva_art_91_substrate_super_reduced_rate_resolves_to_4_per_cent_for_es() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         rate = lookup_rate(
             require_eu_member_state("ES"),
             IvaRateKind("super_reduced"),
@@ -186,7 +186,7 @@ def test_liva_art_91_substrate_super_reduced_rate_resolves_to_4_per_cent_for_es(
 
 
 def test_iva_rate_4_helper_resolves_to_substrate_super_reduced_rate() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         expected = lookup_rate(
             require_eu_member_state("ES"),
             IvaRateKind("super_reduced"),
@@ -329,7 +329,7 @@ def test_iva_rate_slot_to_iva_rate_kind_mapping_is_total_and_consistent() -> Non
     IVA) must map to a IvaRateKind tier. The mapping is the bridge
     between the invoice-domain rate slots and the substrate's rate
     tiers, anchored to LIVA arts 90-91."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert {
             rate: iva_rate_kind(rate)
             for rate in (

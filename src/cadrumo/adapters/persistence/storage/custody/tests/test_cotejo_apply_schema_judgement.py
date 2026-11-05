@@ -40,7 +40,7 @@ import pytest
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.capsule_record import ProfileRecordSession
@@ -68,7 +68,7 @@ _TYPED_CENSO_PATH = "censo.activity_start_date"
 @contextmanager
 def _cotejo_subject(tmp_path: Path, *, facts: tuple[UserProfileFact, ...] | None = None) -> Generator[tuple[Path, str]]:
     """Register a real capsule, bind its record session, and route the active profile."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
             label="Cotejo apply subject",
@@ -90,7 +90,7 @@ def _cotejo_subject(tmp_path: Path, *, facts: tuple[UserProfileFact, ...] | None
 
 
 def _record_revision(profile_id: str, storage_root: Path) -> int:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     return (
         ProfileRecordRepository.for_current_session(
             profile_id, root=storage_root, profile_decode_context=_profile_decode_context_for_test
@@ -102,7 +102,7 @@ def _record_revision(profile_id: str, storage_root: Path) -> int:
 
 def test_apply_cotejo_refuses_an_adopted_value_at_a_path_the_schema_never_declared(tmp_path: Path) -> None:
     """The exact instance the schema-as-contract ruling named: an undeclared censo path."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with _cotejo_subject(tmp_path) as (storage_root, profile_id):
         before = _record_revision(profile_id, storage_root)
 
@@ -139,7 +139,7 @@ def test_apply_cotejo_refuses_an_adopted_certificate_value_in_the_wrong_shape(tm
     supplies, so this refuses for a different reason than the test above and
     cannot pass on the same branch.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with _cotejo_subject(tmp_path) as (storage_root, profile_id):
         before = _record_revision(profile_id, storage_root)
 
@@ -172,7 +172,7 @@ def test_apply_cotejo_still_commits_a_valid_reconciliation_on_an_incomplete_prof
     refuse this while passing every refusal test above, which is why this case
     decides whether the hardening is correct rather than merely strict.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with _cotejo_subject(tmp_path) as (storage_root, profile_id):
         before = _record_revision(profile_id, storage_root)
 
@@ -219,7 +219,7 @@ def test_apply_cotejo_records_divergences_on_a_profile_past_setup(tmp_path: Path
     setup can produce, and would fail for the promotion door's reasons rather
     than this one's.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with _cotejo_subject(tmp_path, facts=complete_profile_facts(published_profile_schema())) as (
         storage_root,
         profile_id,

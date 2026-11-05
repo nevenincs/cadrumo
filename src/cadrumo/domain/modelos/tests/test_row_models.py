@@ -19,32 +19,32 @@ from ..row_models import (
     Modelo184MemberRow,
     Modelo232VinculadaRow,
 )
-from ._row_model_support import (
-    _assert_validation_error,
-    _BaseRevisionIdKwargs,
-    _ValidationErrorCase,
+from .row_model_support import (
+    BaseRevisionIdKwargs,
+    ValidationErrorCase,
+    assert_validation_error,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 _M184_INVALID_CASES = (
-    _ValidationErrorCase(
+    ValidationErrorCase(
         "porcentaje-above-100",
         lambda: Modelo184MemberRow(nif="33333333C", porcentaje=Decimal("101"), importe=Decimal("0"), clave="D"),
         "100",
     ),
-    _ValidationErrorCase(
+    ValidationErrorCase(
         "porcentaje-negative",
         lambda: Modelo184MemberRow(nif="33333333C", porcentaje=Decimal("-1"), importe=Decimal("0"), clave="D"),
     ),
-    _ValidationErrorCase(
+    ValidationErrorCase(
         "pais-lowercase",
         lambda: Modelo184MemberRow(
             nif="44444444D", pais="de", porcentaje=Decimal("50"), importe=Decimal("0"), clave="D"
         ),
     ),
-    _ValidationErrorCase(
+    ValidationErrorCase(
         "blank-nif",
         lambda: Modelo184MemberRow(nif="   ", porcentaje=Decimal("50"), importe=Decimal("0"), clave="D"),
     ),
@@ -77,11 +77,11 @@ def test_vinculada_operator_input_helper_builds_a_valid_row() -> None:
 
 
 _M232_INVALID_CASES = (
-    _ValidationErrorCase(
+    ValidationErrorCase(
         "pais-lowercase",
         lambda: Modelo232VinculadaRow(nif="A12345678", pais="de", importe=Decimal("1")),
     ),
-    _ValidationErrorCase(
+    ValidationErrorCase(
         "blank-nif",
         lambda: Modelo232VinculadaRow(pais="ES", nif="   ", importe=Decimal("1")),
     ),
@@ -92,30 +92,30 @@ _M232_INVALID_CASES = (
     #
     # DR23200 Tabla A runs A-H in a single alphanumeric position; a numeric
     # code and a two-character one are both off-catalogue and unrepresentable.
-    _ValidationErrorCase(
+    ValidationErrorCase(
         "tipo-vinculacion-numeric",
         lambda: _vinculada_from_operator_input(tipo_vinculacion="1"),
     ),
-    _ValidationErrorCase(
+    ValidationErrorCase(
         "tipo-vinculacion-off-catalogue-letter",
         lambda: _vinculada_from_operator_input(tipo_vinculacion="Z"),
     ),
     # Orden HFP/816/2017 art. 3.1.f enumerates eleven claves; nothing above 11.
-    _ValidationErrorCase(
+    ValidationErrorCase(
         "tipo-operacion-above-catalogue",
         lambda: _vinculada_from_operator_input(tipo_operacion="99"),
     ),
-    _ValidationErrorCase(
+    ValidationErrorCase(
         "tipo-operacion-unpadded",
         lambda: _vinculada_from_operator_input(tipo_operacion="1"),
     ),
     # DR23200 Tabla B codes are 1A-1E in two positions; the OECD abbreviations
     # for the same art. 18.4 methods are not AEAT's codes and do not fit.
-    _ValidationErrorCase(
+    ValidationErrorCase(
         "metodo-oecd-abbreviation",
         lambda: _vinculada_from_operator_input(metodo="TNMM"),
     ),
-    _ValidationErrorCase(
+    ValidationErrorCase(
         "metodo-off-catalogue",
         lambda: _vinculada_from_operator_input(metodo="ZZ"),
     ),
@@ -184,7 +184,7 @@ class TestModelo184MemberRow:
         """Invalid M184 member-row inputs are rejected by the real model."""
         for case in _M184_INVALID_CASES:
             try:
-                _assert_validation_error(case)
+                assert_validation_error(case)
             except AssertionError as exc:
                 raise AssertionError(case.case_id) from exc
 
@@ -264,7 +264,7 @@ class TestModelo232VinculadaRow:
         """Invalid M232 vinculada-row inputs are rejected by the real model."""
         for case in _M232_INVALID_CASES:
             try:
-                _assert_validation_error(case)
+                assert_validation_error(case)
             except AssertionError as exc:
                 raise AssertionError(case.case_id) from exc
 
@@ -310,7 +310,7 @@ class TestRevisionIdWithDetailRows:
     """
 
     def test_revision_id_changes_when_rows_differ(self) -> None:
-        base_kwargs: _BaseRevisionIdKwargs = {
+        base_kwargs: BaseRevisionIdKwargs = {
             "work_unit_id": "a" * 64,
             "input_values_by_casilla_id": {},
             "binding_overrides": {},

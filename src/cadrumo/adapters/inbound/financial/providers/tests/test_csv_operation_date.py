@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from ......application.ledger.import_ports import LedgerParsedRow
-from ...ledger_import import _FinancialProviderBoundary
+from ...ledger_import import FinancialProviderBoundary
 from ..csv import CsvProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -17,7 +17,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 def _parsed_rows(tmp_path: Path, header: str, row: str) -> list[LedgerParsedRow]:
     source = tmp_path / "statement.csv"
     source.write_text(f"{header}\n{row}\n", encoding="utf-8")
-    return list(_FinancialProviderBoundary(CsvProvider()).ingest(source))
+    return list(FinancialProviderBoundary(CsvProvider()).ingest(source))
 
 
 def test_a_column_naming_the_devengo_is_the_operation_date(tmp_path: Path) -> None:

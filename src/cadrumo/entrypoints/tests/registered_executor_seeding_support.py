@@ -97,10 +97,10 @@ from .prorrata_operation_test_support import (
     ProrrataOperationConformanceCase,
     prepare_prorrata_operation_conformance_case,
 )
-from .registered_executor_scenario_constants import _OPERATOR_SCOPE_PORTS
+from .registered_executor_scenario_constants import OPERATOR_SCOPE_PORTS
 
 
-def _seeded_modelo_filing_record(profile_id: UUID, *, operation: PinnedAuthorityOperation) -> tuple[str, str]:
+def seeded_modelo_filing_record(profile_id: UUID, *, operation: PinnedAuthorityOperation) -> tuple[str, str]:
     """File one real revision and return its filing-record and casilla ids.
 
     Amendment corrects something already FILED, so its fixture cannot stop at a
@@ -308,7 +308,7 @@ def _seeded_ledger_track_with_finalized_participation(profile_id: UUID, *, opera
         verification_repositories=build_verification_repository_bundle(unit.bucket_id, operation=operation),
         actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
         workflow_profile=resolve_active_workflow_profile(operation),
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        operator_scope_ports=OPERATOR_SCOPE_PORTS,
         operation=operation,
     ).report
     if report.completeness_status is not VerificationCompletenessStatus.COMPLETE:
@@ -385,7 +385,7 @@ def seeded_modelo_edit_submission(
     return unit.work_unit_id, ModeloEditApplySubmissionV1.from_submission(submission)
 
 
-def _profile_baseline(profile_id: UUID, *, decode_context: ProfileDecodeContext) -> dict[str, object]:
+def profile_baseline(profile_id: UUID, *, decode_context: ProfileDecodeContext) -> dict[str, object]:
     """Use the actual encrypted record's CAS coordinates for a manager write."""
     record = ProfileRecordRepository.for_current_session(profile_id, profile_decode_context=decode_context).load(
         profile_id
@@ -393,11 +393,11 @@ def _profile_baseline(profile_id: UUID, *, decode_context: ProfileDecodeContext)
     return {"expected_revision": record.record_revision, "expected_content_digest": record.content_digest}
 
 
-def _seeded_repeatable_row(
+def seeded_repeatable_row(
     profile_id: UUID, *, operation: PinnedAuthorityOperation, decode_context: ProfileDecodeContext
 ) -> tuple[str, dict[str, object]]:
     """Create a real schema row so update/remove target a stored identity."""
-    baseline = _profile_baseline(profile_id, decode_context=decode_context)
+    baseline = profile_baseline(profile_id, decode_context=decode_context)
     mutation = add_profile_repeatable_section_row(
         profile_id=str(profile_id),
         section_key="activities",
@@ -424,7 +424,7 @@ def _workflow_obligation(modelo: str, period: Period) -> WorkflowObligationFacts
     )
 
 
-def _workflow_result(
+def workflow_result(
     run_id: str,
     *,
     modelo: str,
@@ -479,7 +479,7 @@ def _workflow_result(
     )
 
 
-def _seeded_justificante_snapshot(profile_id: UUID):
+def seeded_justificante_snapshot(profile_id: UUID):
     """Persist one synthetic receipt for local list/show executor scenarios."""
     pdf_bytes = b"%PDF-1.4\nregistered executor conformance\n%%EOF"
     return build_justificante_capture_service(str(profile_id)).capture(
@@ -494,7 +494,7 @@ def _seeded_justificante_snapshot(profile_id: UUID):
     )
 
 
-def _seeded_expedientes_snapshot(profile_id: UUID):
+def seeded_expedientes_snapshot(profile_id: UUID):
     """Persist one synthetic declaration-register snapshot without opening AEAT."""
     bucket_id = str(profile_id)
     captured_at = now()
@@ -524,7 +524,7 @@ def _seeded_expedientes_snapshot(profile_id: UUID):
     )
 
 
-def _seeded_notifications_snapshot(profile_id: UUID):
+def seeded_notifications_snapshot(profile_id: UUID):
     """Persist one synthetic local notification snapshot; its query port is never called."""
     captured_at = now()
     return NotificationsService(ports=compose_notifications_ports(settings=load_settings())).capture(
@@ -553,7 +553,7 @@ def _seeded_notifications_snapshot(profile_id: UUID):
     )
 
 
-def _seeded_notification_document(profile_id: UUID) -> NotificationDocumentRecord:
+def seeded_notification_document(profile_id: UUID) -> NotificationDocumentRecord:
     """Persist one synthetic document custody index row for local read scenarios."""
     certificado_id = "2699101808461"
     digest = "c" * 64
@@ -585,7 +585,7 @@ def _seeded_notification_document(profile_id: UUID) -> NotificationDocumentRecor
     return record
 
 
-def _ledger_lifecycle_case(
+def ledger_lifecycle_case(
     definition_id: str, *, profile_id: UUID, operation: PinnedAuthorityOperation
 ) -> LedgerLifecycleOperationConformanceCase:
     operation_ids: tuple[LedgerLifecycleOperationId, ...] = (
@@ -600,7 +600,7 @@ def _ledger_lifecycle_case(
     raise ValueError(f"unsupported ledger lifecycle conformance case: {definition_id}")
 
 
-def _prorrata_case(
+def registered_executor_seeding_prorrata_case(
     definition_id: str, *, profile_id: UUID, operation: PinnedAuthorityOperation
 ) -> ProrrataOperationConformanceCase:
     return prepare_prorrata_operation_conformance_case(
@@ -616,7 +616,7 @@ def _prorrata_case(
     )
 
 
-def _seed_conformance_invoice(profile_id: UUID) -> Invoice:
+def seed_conformance_invoice(profile_id: UUID) -> Invoice:
     """Persist one domain-valid invoice for registered catalogue read scenarios."""
     invoice = Invoice.model_validate(
         {

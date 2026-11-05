@@ -165,7 +165,7 @@ def apply_serial_hold(config: pytest.Config, items: list[pytest.Item]) -> None:
         config: The active :class:`pytest.Config` from the collection hook.
         items: The selected items list; filtered in-place.
     """
-    _hold_serial_items_from_xdist(config, items)
+    hold_serial_items_from_xdist(config, items)
 
 
 def _marker_contract_violation(item: pytest.Item) -> str | None:
@@ -298,7 +298,7 @@ def _banned_hits_for_import_from(node: ast.ImportFrom) -> set[str]:
     return hits
 
 
-def _hold_serial_items_from_xdist(config: pytest.Config, items: list[pytest.Item]) -> None:
+def hold_serial_items_from_xdist(config: pytest.Config, items: list[pytest.Item]) -> None:
     """Deselect ``serial`` items when xdist workers are active, and say so.
 
     ``config.workerinput`` is present only inside an xdist worker, and is the

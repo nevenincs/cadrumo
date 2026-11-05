@@ -34,26 +34,26 @@ from ..models import LedgerEvidenceConfirmationV1, LedgerEvidenceRecordRowV1, Le
 from ..review import LedgerReviewScreen
 from ..workspace_injection import LedgerWorkspaceInjection, LedgerWorkspaceRefreshV1
 from .invoices_fixtures import ReplacingHostApp
-from .test_ledger_ingestion_surfaces import _EvidenceDoor
+from .test_ledger_ingestion_surfaces import EvidenceDoor
 from .test_writes_hold_the_workspace import (
-    _EVIDENCE_PATH,
-    _FLOWS,
-    _UNKNOWN,
-    _click,
-    _CountingGate,
-    _Gate,
-    _HeldEvidenceDoor,
-    _rendered,
-    _status,
-    _text,
-    _tools,
+    EVIDENCE_PATH,
+    FLOWS,
+    UNKNOWN,
+    CountingGate,
+    Gate,
+    HeldEvidenceDoor,
+    click,
+    status,
+    text,
+    tools,
+    writes_hold_the_workspace_rendered,
 )
 from .workspace_fixtures import ledger_context, ledger_evidence_action, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 
-class _SessionLostGate(_Gate):
+class _SessionLostGate(Gate):
     """Answers every held door call with a lost session that carries an unknown outcome."""
 
     def __init__(self, lost: AccountSessionExpiredError) -> None:
@@ -67,26 +67,26 @@ class _SessionLostGate(_Gate):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("name", sorted(_FLOWS))
+@pytest.mark.parametrize("name", sorted(FLOWS))
 async def test_a_write_whose_session_is_lost_with_its_outcome_unknown_is_said_to_be_unknown(
     name: str, tmp_path: Path
 ) -> None:
-    lost = SessionExpiredOutcomeUnknownError(_UNKNOWN)
+    lost = SessionExpiredOutcomeUnknownError(UNKNOWN)
     gate = _SessionLostGate(lost)
     gate.release.set()
     with override_settings(cadrumo_output_language="en"):
-        flow = _FLOWS[name](gate, tmp_path)
+        flow = FLOWS[name](gate, tmp_path)
         async with ReplacingHostApp(flow.body).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             body = await flow.submit(pilot)
             await settle(pilot)
             assert pilot.app.screen is body
             assert not body.in_flight
-            assert _status(body) == tr("tui.ledger.flow.outcome_unknown")
-            rendered = _rendered(body)
+            assert status(body) == tr("tui.ledger.flow.outcome_unknown")
+            rendered = writes_hold_the_workspace_rendered(body)
             # The operation is named, and the operator is told to sign in and read the records again.
             assert resolve_error_message(lost) in rendered
-            assert _UNKNOWN.operation_id in rendered
+            assert UNKNOWN.operation_id in rendered
             # The workspace is composed again on signing in; this body does not re-read over the lost session.
             assert not body.write_outcome_unknown
 
@@ -95,26 +95,26 @@ async def test_a_write_whose_session_is_lost_with_its_outcome_unknown_is_said_to
 async def test_a_write_whose_runtime_stops_answering_with_its_outcome_unknown_is_said_to_be_unknown(
     tmp_path: Path,
 ) -> None:
-    lost = SessionUnavailableOutcomeUnknownError(_UNKNOWN)
+    lost = SessionUnavailableOutcomeUnknownError(UNKNOWN)
     gate = _SessionLostGate(lost)
     gate.release.set()
     with override_settings(cadrumo_output_language="en"):
-        flow = _FLOWS["invoice-entry"](gate, tmp_path)
+        flow = FLOWS["invoice-entry"](gate, tmp_path)
         async with ReplacingHostApp(flow.body).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             body = await flow.submit(pilot)
             await settle(pilot)
-            assert _status(body) == tr("tui.ledger.flow.outcome_unknown")
-            assert resolve_error_message(lost) in _rendered(body)
-            assert tr("tui.ledger.invoice.failure") not in _rendered(body)
+            assert status(body) == tr("tui.ledger.flow.outcome_unknown")
+            assert resolve_error_message(lost) in writes_hold_the_workspace_rendered(body)
+            assert tr("tui.ledger.invoice.failure") not in writes_hold_the_workspace_rendered(body)
 
 
 @pytest.mark.asyncio
 async def test_an_exclusion_whose_session_is_lost_drops_the_queue_it_was_read_for(tmp_path: Path) -> None:
-    gate = _SessionLostGate(SessionExpiredOutcomeUnknownError(_UNKNOWN))
+    gate = _SessionLostGate(SessionExpiredOutcomeUnknownError(UNKNOWN))
     gate.release.set()
     with override_settings(cadrumo_output_language="en"):
-        flow = _FLOWS["review-exclusion"](gate, tmp_path)
+        flow = FLOWS["review-exclusion"](gate, tmp_path)
         async with ReplacingHostApp(flow.body).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             body = await flow.submit(pilot)
@@ -124,13 +124,13 @@ async def test_an_exclusion_whose_session_is_lost_drops_the_queue_it_was_read_fo
             assert not body.loaded
             assert body.pending_exclusion is None
             assert not body.excluding
-            assert _status(body) == tr("tui.ledger.flow.outcome_unknown")
+            assert status(body) == tr("tui.ledger.flow.outcome_unknown")
 
 
-class _RecordsHeldEvidenceDoor(_HeldEvidenceDoor):
+class _RecordsHeldEvidenceDoor(HeldEvidenceDoor):
     """An evidence door whose record reads wait once held, then answer or find the session lost."""
 
-    def __init__(self, gate: _Gate) -> None:
+    def __init__(self, gate: Gate) -> None:
         super().__init__(gate)
         self.hold_reads = False
         self.lose_session_on_read = False
@@ -148,7 +148,7 @@ class _RecordsHeldEvidenceDoor(_HeldEvidenceDoor):
         return super().list_records()
 
 
-def _evidence_body(door: _EvidenceDoor, *, refresh_fails: bool) -> LedgerEvidenceScreen:
+def _evidence_body(door: EvidenceDoor, *, refresh_fails: bool) -> LedgerEvidenceScreen:
     projection = ledger_projection()
 
     def refresh() -> LedgerWorkspaceRefreshV1:
@@ -165,7 +165,7 @@ def _evidence_body(door: _EvidenceDoor, *, refresh_fails: bool) -> LedgerEvidenc
             evidence_items=(),
             evidence_door=door,
             refresh=refresh,
-            tools=_tools(LedgerWorkspaceArea.EVIDENCE),
+            tools=tools(LedgerWorkspaceArea.EVIDENCE),
         ),
     )
     return LedgerEvidenceScreen(controller)
@@ -176,7 +176,7 @@ def _evidence_body(door: _EvidenceDoor, *, refresh_fails: bool) -> LedgerEvidenc
 async def test_an_evidence_addition_with_an_unknown_outcome_returns_only_once_the_records_are_read(
     refresh_fails: bool,
 ) -> None:
-    write = _CountingGate(error=_UNKNOWN)
+    write = CountingGate(error=UNKNOWN)
     write.release.set()
     door = _RecordsHeldEvidenceDoor(write)
     body = _evidence_body(door, refresh_fails=refresh_fails)
@@ -184,30 +184,30 @@ async def test_an_evidence_addition_with_an_unknown_outcome_returns_only_once_th
         async with ReplacingHostApp(body).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             door.hold_reads = True
-            body.query_one("#ledger-evidence-path", Input).value = _EVIDENCE_PATH
-            await _click(pilot, body, "ledger-evidence-add")
+            body.query_one("#ledger-evidence-path", Input).value = EVIDENCE_PATH
+            await click(pilot, body, "ledger-evidence-add")
             assert await asyncio.to_thread(door.read_started.wait, SETTLE_TIMEOUT_SECONDS)
             await settle(pilot, workers=False)
 
             # The workspace re-read has landed, or failed, but the records it must show are still being read.
             add = body.query_one("#ledger-evidence-add", Button)
             assert add.disabled
-            await _click(pilot, body, "ledger-evidence-add")
+            await click(pilot, body, "ledger-evidence-add")
             assert write.calls == 1
 
             door.read_release.set()
             await settle(pilot)
             assert not add.disabled
-            assert resolve_error_message(_UNKNOWN) in _text(body, "#ledger-refusal")
+            assert resolve_error_message(UNKNOWN) in text(body, "#ledger-refusal")
             # Whether or not the workspace was re-read, the status never claims the document was saved.
-            status = _text(body, "#ledger-flow-status")
+            status = text(body, "#ledger-flow-status")
             assert "may or may not have been saved" in status
             assert "was saved" not in status
 
 
 @pytest.mark.asyncio
 async def test_an_evidence_addition_with_an_unknown_outcome_is_not_offered_when_the_records_cannot_be_read() -> None:
-    write = _CountingGate(error=_UNKNOWN)
+    write = CountingGate(error=UNKNOWN)
     write.release.set()
     door = _RecordsHeldEvidenceDoor(write)
     body = _evidence_body(door, refresh_fails=False)
@@ -217,8 +217,8 @@ async def test_an_evidence_addition_with_an_unknown_outcome_is_not_offered_when_
             door.hold_reads = True
             door.lose_session_on_read = True
             door.read_release.set()
-            body.query_one("#ledger-evidence-path", Input).value = _EVIDENCE_PATH
-            await _click(pilot, body, "ledger-evidence-add")
+            body.query_one("#ledger-evidence-path", Input).value = EVIDENCE_PATH
+            await click(pilot, body, "ledger-evidence-add")
             await settle(pilot)
 
             assert door.read_started.is_set()
@@ -228,7 +228,7 @@ async def test_an_evidence_addition_with_an_unknown_outcome_is_not_offered_when_
 
 @pytest.mark.asyncio
 async def test_a_records_load_started_before_an_unknown_addition_does_not_offer_add_again() -> None:
-    write = _CountingGate(error=_UNKNOWN)
+    write = CountingGate(error=UNKNOWN)
     write.release.set()
     door = _RecordsHeldEvidenceDoor(write)
     door.hold_reads = True
@@ -251,7 +251,7 @@ async def test_a_records_load_started_before_an_unknown_addition_does_not_offer_
             evidence_items=(),
             evidence_door=door,
             refresh=refresh,
-            tools=_tools(LedgerWorkspaceArea.EVIDENCE),
+            tools=tools(LedgerWorkspaceArea.EVIDENCE),
         ),
     )
     body = LedgerEvidenceScreen(controller)
@@ -259,8 +259,8 @@ async def test_a_records_load_started_before_an_unknown_addition_does_not_offer_
         async with ReplacingHostApp(body).run_test(size=(120, 60)) as pilot:
             # The first records load is out, and still reading, when the addition is made.
             assert await asyncio.to_thread(door.read_started.wait, SETTLE_TIMEOUT_SECONDS)
-            body.query_one("#ledger-evidence-path", Input).value = _EVIDENCE_PATH
-            await _click(pilot, body, "ledger-evidence-add")
+            body.query_one("#ledger-evidence-path", Input).value = EVIDENCE_PATH
+            await click(pilot, body, "ledger-evidence-add")
             assert await asyncio.to_thread(refreshing.wait, SETTLE_TIMEOUT_SECONDS)
 
             door.read_release.set()
@@ -279,13 +279,13 @@ async def test_a_records_load_started_before_an_unknown_addition_does_not_offer_
             await settle(pilot)
             assert not add.disabled
             assert write.calls == 1
-            assert resolve_error_message(_UNKNOWN) in _text(body, "#ledger-refusal")
+            assert resolve_error_message(UNKNOWN) in text(body, "#ledger-refusal")
 
 
-class _RecordsRefusedOnceDoor(_HeldEvidenceDoor):
+class _RecordsRefusedOnceDoor(HeldEvidenceDoor):
     """An evidence door whose next record read is refused once armed, as a draining runtime refuses it."""
 
-    def __init__(self, gate: _Gate) -> None:
+    def __init__(self, gate: Gate) -> None:
         super().__init__(gate)
         self.refuse_next_read = False
         self.reads = 0
@@ -314,7 +314,7 @@ class _CountedRefreshes:
         return LedgerWorkspaceRefreshV1(projection=ledger_projection(), evidence_items=())
 
 
-def _counted_evidence_body(door: _EvidenceDoor, refreshes: _CountedRefreshes) -> LedgerEvidenceScreen:
+def _counted_evidence_body(door: EvidenceDoor, refreshes: _CountedRefreshes) -> LedgerEvidenceScreen:
     projection = ledger_projection()
     controller = LedgerWorkspaceController(
         ledger_context(),
@@ -325,7 +325,7 @@ def _counted_evidence_body(door: _EvidenceDoor, refreshes: _CountedRefreshes) ->
             evidence_items=(),
             evidence_door=door,
             refresh=refreshes,
-            tools=_tools(LedgerWorkspaceArea.EVIDENCE),
+            tools=tools(LedgerWorkspaceArea.EVIDENCE),
         ),
     )
     return LedgerEvidenceScreen(controller)
@@ -333,7 +333,7 @@ def _counted_evidence_body(door: _EvidenceDoor, refreshes: _CountedRefreshes) ->
 
 @pytest.mark.asyncio
 async def test_an_unknown_addition_whose_records_fail_to_load_reads_them_again_when_add_is_pressed() -> None:
-    write = _CountingGate(error=_UNKNOWN)
+    write = CountingGate(error=UNKNOWN)
     write.release.set()
     door = _RecordsRefusedOnceDoor(write)
     refreshes = _CountedRefreshes()
@@ -342,57 +342,57 @@ async def test_an_unknown_addition_whose_records_fail_to_load_reads_them_again_w
         async with ReplacingHostApp(body).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             door.refuse_next_read = True
-            body.query_one("#ledger-evidence-path", Input).value = _EVIDENCE_PATH
-            await _click(pilot, body, "ledger-evidence-add")
+            body.query_one("#ledger-evidence-path", Input).value = EVIDENCE_PATH
+            await click(pilot, body, "ledger-evidence-add")
             await settle(pilot)
 
             # The records that would show whether the document landed were not read: that is said, and Add
             # is offered to read them again, never to add the document a second time.
             add = body.query_one("#ledger-evidence-add", Button)
-            assert _status(body) == tr("tui.ledger.flow.refresh_failed_unknown")
-            assert resolve_error_message(_UNKNOWN) in _text(body, "#ledger-refusal")
+            assert status(body) == tr("tui.ledger.flow.refresh_failed_unknown")
+            assert resolve_error_message(UNKNOWN) in text(body, "#ledger-refusal")
             assert body.add_awaits_reread
             assert not add.disabled
             reads = door.reads
 
-            await _click(pilot, body, "ledger-evidence-add")
+            await click(pilot, body, "ledger-evidence-add")
             await settle(pilot)
             assert write.calls == 1
             assert refreshes.calls == 2
             assert door.reads == reads + 1
             assert not body.add_awaits_reread
             assert not add.disabled
-            assert _status(body) == tr("tui.ledger.flow.outcome_unknown")
-            assert resolve_error_message(_UNKNOWN) in _text(body, "#ledger-refusal")
+            assert status(body) == tr("tui.ledger.flow.outcome_unknown")
+            assert resolve_error_message(UNKNOWN) in text(body, "#ledger-refusal")
 
 
 @pytest.mark.asyncio
 async def test_a_saved_addition_after_an_unknown_one_that_was_read_back_is_worded_as_saved_when_its_reread_fails() -> (
     None
 ):
-    write = _CountingGate(error=_UNKNOWN)
+    write = CountingGate(error=UNKNOWN)
     write.release.set()
-    door = _HeldEvidenceDoor(write)
+    door = HeldEvidenceDoor(write)
     refreshes = _CountedRefreshes(refused=frozenset({1}))
     body = _counted_evidence_body(door, refreshes)
     with override_settings(cadrumo_output_language="en"):
         async with ReplacingHostApp(body).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
-            body.query_one("#ledger-evidence-path", Input).value = _EVIDENCE_PATH
-            await _click(pilot, body, "ledger-evidence-add")
+            body.query_one("#ledger-evidence-path", Input).value = EVIDENCE_PATH
+            await click(pilot, body, "ledger-evidence-add")
             await settle(pilot)
             # Read back after the unknown addition, which therefore stops colouring later wording.
             assert refreshes.calls == 1
             assert not body.add_awaits_reread
 
             write.error = None
-            body.query_one("#ledger-evidence-path", Input).value = _EVIDENCE_PATH
-            await _click(pilot, body, "ledger-evidence-add")
+            body.query_one("#ledger-evidence-path", Input).value = EVIDENCE_PATH
+            await click(pilot, body, "ledger-evidence-add")
             await settle(pilot)
             assert write.calls == 2
             assert refreshes.calls == 2
             # This addition returned, so it is saved; only the re-read after it failed.
-            assert _status(body) == tr("tui.ledger.flow.refresh_failed")
+            assert status(body) == tr("tui.ledger.flow.refresh_failed")
 
 
 _RECORD = LedgerEvidenceRecordRowV1(
@@ -408,7 +408,7 @@ _RECORD = LedgerEvidenceRecordRowV1(
 
 @pytest.mark.asyncio
 async def test_a_confirmation_whose_review_is_withdrawn_before_it_runs_does_not_stay_in_flight() -> None:
-    door = _EvidenceDoor()
+    door = EvidenceDoor()
     door.records.append(_RECORD)
     body = _evidence_body(door, refresh_fails=False)
     with override_settings(cadrumo_output_language="en"):

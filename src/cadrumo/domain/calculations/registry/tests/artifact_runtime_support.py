@@ -34,14 +34,14 @@ from ..schema_surfaces import CasillaDefinition
 from ..schema_verification import WorkbookParityReference
 from .published_authority import published_supported_filing_years
 
-_LEGAL_ID = "ley-35-2006:art-1"
-_SOURCE_ID = "aeat-dr-130-2019-v12"
+LEGAL_ID = "ley-35-2006:art-1"
+SOURCE_ID = "aeat-dr-130-2019-v12"
 _WORKBOOK_SOURCE_ID = "aeat-dr-130-2019-v12-layout"
 
 
 def _minimal_source_ref() -> SourceReference:
     return SourceReference(
-        id=_SOURCE_ID,
+        id=SOURCE_ID,
         evidence_tier="official_source_guidance",
         authority="aeat",
         kind="instructions",
@@ -73,7 +73,7 @@ def _snapshot_checked_fact(
                     "date_axis": "filing_period",
                     "valid_from": valid_from,
                     "valid_to": valid_to,
-                    "legal_refs": (_LEGAL_ID,),
+                    "legal_refs": (LEGAL_ID,),
                     "review_status": "agent_reviewed",
                     "ownership": "authored",
                     "payload": {
@@ -136,7 +136,7 @@ def minimal_catalogues(*, facts_restated_on: date | None = None) -> RegistryCata
     another variant from then on.
     """
     legal = LegalReference(
-        id=_LEGAL_ID,
+        id=LEGAL_ID,
         evidence_tier=EvidenceTier.LEGAL_AUTHORITY,
         authority="boe",
         kind="ley",
@@ -168,7 +168,7 @@ def minimal_catalogues(*, facts_restated_on: date | None = None) -> RegistryCata
                     "variant_id": "spanish-tax-identifier-format:fixture",
                     "date_axis": "filing_period",
                     "valid_from": date(2024, 1, 1),
-                    "legal_refs": (_LEGAL_ID,),
+                    "legal_refs": (LEGAL_ID,),
                     "review_status": "agent_reviewed",
                     "ownership": "authored",
                     "payload": {
@@ -222,7 +222,7 @@ def minimal_catalogues(*, facts_restated_on: date | None = None) -> RegistryCata
                 postal_prefixes=("28",),
                 scope="peninsula_baleares",
                 name="Madrid",
-                legal_refs=(_LEGAL_ID,),
+                legal_refs=(LEGAL_ID,),
             )
         },
         territory_carve_outs={
@@ -230,7 +230,7 @@ def minimal_catalogues(*, facts_restated_on: date | None = None) -> RegistryCata
                 code="ES",
                 name="Espana",
                 establishes_nothing=True,
-                legal_refs=(_LEGAL_ID,),
+                legal_refs=(LEGAL_ID,),
             )
         },
         recargo_bands={
@@ -238,7 +238,7 @@ def minimal_catalogues(*, facts_restated_on: date | None = None) -> RegistryCata
                 id="all",
                 min_completed_months=0,
                 surcharge_pct=Decimal("1"),
-                legal_ref=_LEGAL_ID,
+                legal_ref=LEGAL_ID,
             )
         },
         apoderamientos_version="fixture-v1",
@@ -253,7 +253,7 @@ def minimal_catalogues(*, facts_restated_on: date | None = None) -> RegistryCata
         },
     ).require_complete()
     return RegistryCatalogues(
-        legal={_LEGAL_ID: legal},
+        legal={LEGAL_ID: legal},
         sources={source.id: source, workbook.id: workbook},
         facts=GovernedFactCatalogue(
             facts={fact.fact_id: fact for fact in (tax_id_format, *_snapshot_checked_facts(facts_restated_on))}
@@ -278,9 +278,9 @@ def minimal_revision(
         localization_key="test.schema.revision.test-revision.label",
         valid_from=date(2024, 1, 1),
         period_selector=PeriodSelector(year_from=2024, periods=("0A",)),
-        legal_refs=(_LEGAL_ID,),
-        source_refs=(_SOURCE_ID,),
-        orden_aplicabilidad=(_LEGAL_ID,),
+        legal_refs=(LEGAL_ID,),
+        source_refs=(SOURCE_ID,),
+        orden_aplicabilidad=(LEGAL_ID,),
         casillas=(
             CasillaDefinition(
                 id=validated_casilla_id("01", surface="artifact_runtime_fixture"),
@@ -288,8 +288,8 @@ def minimal_revision(
                 localization_keys=("test.schema.casilla.label",),
                 section=("test",),
                 input_kind=InputKind.MANUAL,
-                legal_refs=(_LEGAL_ID,),
-                source_refs=(_SOURCE_ID,),
+                legal_refs=(LEGAL_ID,),
+                source_refs=(SOURCE_ID,),
             ),
         ),
         workbook_parity_refs=(
@@ -300,7 +300,7 @@ def minimal_revision(
                 formula_coverage="static_layout",
                 runner_required=False,
                 tolerance=0,
-                legal_refs=(_LEGAL_ID,),
+                legal_refs=(LEGAL_ID,),
                 source_refs=(_WORKBOOK_SOURCE_ID,),
             ),
         ),
@@ -310,8 +310,8 @@ def minimal_revision(
                 surface="filing",
                 consumer="artifact-runtime-fixture",
                 requires_snapshot=True,
-                legal_refs=(_LEGAL_ID,),
-                source_refs=(_SOURCE_ID,),
+                legal_refs=(LEGAL_ID,),
+                source_refs=(SOURCE_ID,),
             ),
         ),
         bindings=bindings,
@@ -328,8 +328,8 @@ def minimal_modelo(revision: ModeloRevision) -> ModeloDefinition:
         cadence="annual",
         jurisdiction="ES-AEAT",
         output_sensitivity=SensitivityClass.FINANCIAL,
-        legal_refs=(_LEGAL_ID,),
-        source_refs=(_SOURCE_ID,),
+        legal_refs=(LEGAL_ID,),
+        source_refs=(SOURCE_ID,),
         revisions={revision.id: revision},
     )
 

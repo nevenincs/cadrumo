@@ -12,16 +12,16 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.adapter_composition_work_ports import build_work_lifecycle_ports
 from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import (
-    _IMPORT_INCOME_CASILLA,
-    _M303_PRINTED_RESULT_TOKEN,
-    _PROFILE_ID,
-    _T0,
-    _T1,
-    _UNKNOWN_IMPORT_CASILLA,
-    _import_external_filing,
-    _Repos,
-    _seed_work_unit,
+    IMPORT_INCOME_CASILLA,
+    M303_PRINTED_RESULT_TOKEN,
+    PROFILE_ID,
+    T0,
+    T1,
+    UNKNOWN_IMPORT_CASILLA,
+    Repos,
+    import_external_filing,
     repos,
+    seed_work_unit,
 )
 
 __all__ = ["repos"]
@@ -29,110 +29,110 @@ __all__ = ["repos"]
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-def test_import_refuses_casilla_ids_not_in_registry(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
+def test_import_refuses_casilla_ids_not_in_registry(repos: Repos, *, operation: PinnedAuthorityOperation) -> None:
     """The import path refuses casilla ids the registry does not
     declare for the work unit's modelo / filing_year / period.
     Imported baselines are the legal source of truth for amend
     paths - fabricated casilla ids cannot be silently accepted."""
 
     wu_repo, _, _, _, bucket_event_repository = repos
-    work_unit = _seed_work_unit(wu_repo, bucket_event_repository, operation=operation)
+    work_unit = seed_work_unit(wu_repo, bucket_event_repository, operation=operation)
 
     with pytest.raises(ExternalModeloImportError) as exc_info:
-        _import_external_filing(
+        import_external_filing(
             repos,
             work_unit,
-            casilla_values={_UNKNOWN_IMPORT_CASILLA: Decimal("100")},
+            casilla_values={UNKNOWN_IMPORT_CASILLA: Decimal("100")},
             evidence_reference_id="JUST-FABRICATED",
-            clock=_T1,
+            clock=T1,
         )
     assert exc_info.value.translated_message == "application.modelo.errors.external_import_unknown_casillas"
     assert exc_info.value.context is not None
     casillas_obj = exc_info.value.context.get("casillas", [])
     assert isinstance(casillas_obj, (list, tuple))
-    assert _UNKNOWN_IMPORT_CASILLA in casillas_obj
+    assert UNKNOWN_IMPORT_CASILLA in casillas_obj
 
 
-def test_import_refuses_printed_number_metadata_token(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
+def test_import_refuses_printed_number_metadata_token(repos: Repos, *, operation: PinnedAuthorityOperation) -> None:
     """External imports must not treat a printed number as a casilla reference."""
 
     _wu_repo, _, _, _, _ = repos
     work_unit = create_work_unit(
-        bucket_id=_PROFILE_ID,
+        bucket_id=PROFILE_ID,
         modelo="303",
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
         revision_id="2025",
-        ports=build_work_lifecycle_ports(bucket_id=_PROFILE_ID),
-        clock=_T0,
+        ports=build_work_lifecycle_ports(bucket_id=PROFILE_ID),
+        clock=T0,
         operation=operation,
     )
 
     with pytest.raises(ExternalModeloImportError, match="non-canonical reference tokens") as exc_info:
-        _import_external_filing(
+        import_external_filing(
             repos,
             work_unit,
-            casilla_values={_M303_PRINTED_RESULT_TOKEN: Decimal("100")},
+            casilla_values={M303_PRINTED_RESULT_TOKEN: Decimal("100")},
             evidence_reference_id="JUST-PRINTED-NUMBER",
-            clock=_T1,
+            clock=T1,
         )
 
     assert exc_info.value.translated_message == "application.modelo.errors.external_import_unknown_casillas"
     assert exc_info.value.context is not None
-    assert exc_info.value.context.get("casillas") == [_M303_PRINTED_RESULT_TOKEN]
+    assert exc_info.value.context.get("casillas") == [M303_PRINTED_RESULT_TOKEN]
     assert "iva.resultado" in str(exc_info.value)
 
 
 def test_import_refuses_non_string_casilla_keys_without_coercion(
-    repos: _Repos, *, operation: PinnedAuthorityOperation
+    repos: Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Malformed external casilla keys fail before registry membership checks."""
 
     wu_repo, _, _, _, bucket_event_repository = repos
-    work_unit = _seed_work_unit(wu_repo, bucket_event_repository, operation=operation)
+    work_unit = seed_work_unit(wu_repo, bucket_event_repository, operation=operation)
 
     with pytest.raises(ExternalModeloImportError) as exc_info:
-        _import_external_filing(
+        import_external_filing(
             repos,
             work_unit,
             casilla_values={1: Decimal("100")},
             evidence_reference_id="JUST-MALFORMED",
-            clock=_T1,
+            clock=T1,
         )
     assert exc_info.value.translated_message == "application.modelo.errors.external_import_unknown_casillas"
     assert exc_info.value.context is not None
     assert exc_info.value.context.get("casillas") == ["1"]
 
 
-def test_import_refuses_empty_casilla_values(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
+def test_import_refuses_empty_casilla_values(repos: Repos, *, operation: PinnedAuthorityOperation) -> None:
     """The import path requires at least one casilla value."""
 
     wu_repo, _, _, _, bucket_event_repository = repos
-    work_unit = _seed_work_unit(wu_repo, bucket_event_repository, operation=operation)
+    work_unit = seed_work_unit(wu_repo, bucket_event_repository, operation=operation)
 
     with pytest.raises(ExternalModeloImportError) as raised:
-        _import_external_filing(
+        import_external_filing(
             repos,
             work_unit,
             casilla_values={},
             evidence_reference_id="JUST-WHATEVER",
-            clock=_T1,
+            clock=T1,
         )
     assert raised.value.translated_message == "application.modelo.errors.external_filing_no_casilla_values"
 
 
-def test_import_refuses_empty_evidence_reference(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
+def test_import_refuses_empty_evidence_reference(repos: Repos, *, operation: PinnedAuthorityOperation) -> None:
     """The import path requires a non-empty evidence reference id."""
 
     wu_repo, _, _, _, bucket_event_repository = repos
-    work_unit = _seed_work_unit(wu_repo, bucket_event_repository, operation=operation)
+    work_unit = seed_work_unit(wu_repo, bucket_event_repository, operation=operation)
 
     with pytest.raises(ExternalModeloImportError) as raised:
-        _import_external_filing(
+        import_external_filing(
             repos,
             work_unit,
-            casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
+            casilla_values={IMPORT_INCOME_CASILLA: Decimal("1500")},
             evidence_reference_id="   ",
-            clock=_T1,
+            clock=T1,
         )
     assert raised.value.translated_message == "application.modelo.errors.external_filing_evidence_reference_blank"

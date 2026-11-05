@@ -18,8 +18,8 @@ from .....application.modelo.calculation_notes import REOPEN_HINT_LOCALE_KEY, ST
 from .....application.modelo.work_form_models import ModeloWorkForm
 from .....core.i18n.render import tr
 from .issue_scale import (
-    _UNENTERED_LOCALE_KEYS,
     TO_DO_LEVELS,
+    UNENTERED_LOCALE_KEYS,
     IssueLevel,
     IssueLine,
     UnenteredBoxes,
@@ -30,7 +30,7 @@ from .issue_scale import (
 from .keys import describe_bindings
 from .sources import BoxNumbers
 
-_CONFIRM_SCOPE_KEY: Final[str] = "b"
+CONFIRM_SCOPE_KEY: Final[str] = "b"
 
 _CALCULATE_KEY: Final[str] = "c"
 
@@ -38,13 +38,13 @@ _OPEN_AREA_KEY: Final[str] = "a"
 
 _CONFIRM_SCOPE_LOCALE_KEY: Final[str] = "workspace.modelo.issues.confirm_all"
 
-_BOXES_SUFFIX: Final[str] = "-boxes"
+BOXES_SUFFIX: Final[str] = "-boxes"
 
 _INTRO_SUFFIX: Final[str] = "-intro"
 
-_SECTION_INFIX: Final[str] = "-section-"
+SECTION_INFIX: Final[str] = "-section-"
 
-_ISSUE_ID_PREFIX: Final[str] = "issue-"
+ISSUE_ID_PREFIX: Final[str] = "issue-"
 
 _INDENT: Final[int] = 2
 
@@ -62,7 +62,7 @@ def _paragraph(text: str, style: str = "") -> Text | None:
     return Text(text, style=style) if text else None
 
 
-def _issue_prompt(line: IssueLine, *, expanded: bool, technical: bool) -> RenderableType:
+def issue_prompt(line: IssueLine, *, expanded: bool, technical: bool) -> RenderableType:
     action = None if line.level is IssueLevel.INFO else _action_with_key(line)
     return _entry(
         _paragraph(f"[{line.box}] {line.where}" if line.action_targets_box and line.box != "·" else line.where, "bold"),
@@ -89,7 +89,7 @@ def _what_to_do(key: str) -> Text | None:
 
 
 def _unentered_prompt(boxes: UnenteredBoxes) -> RenderableType:
-    what, action, _ = _UNENTERED_LOCALE_KEYS[boxes.level]
+    what, action, _ = UNENTERED_LOCALE_KEYS[boxes.level]
     unnumbered = tr("workspace.modelo.issues.where.unnumbered", count=boxes.unnumbered) if boxes.unnumbered else ""
     return _entry(
         BoxNumbers(boxes.boxes, style="bold") if boxes.boxes else None,
@@ -101,7 +101,7 @@ def _unentered_prompt(boxes: UnenteredBoxes) -> RenderableType:
 
 
 def _unentered_intro(boxes: UnenteredBoxes) -> RenderableType:
-    what, _, by_section = _UNENTERED_LOCALE_KEYS[boxes.level]
+    what, _, by_section = UNENTERED_LOCALE_KEYS[boxes.level]
     return _entry(_paragraph(tr(what)), _what_to_do(by_section), _confirm_key_line(boxes))
 
 
@@ -109,14 +109,14 @@ def _confirm_key_line(boxes: UnenteredBoxes) -> Text | None:
     """Under the assumed values, the key that confirms those of a part of the form, in full words."""
     if boxes.level is not IssueLevel.CONFIRM:
         return None
-    return _paragraph(f"[{_CONFIRM_SCOPE_KEY}] {tr(_CONFIRM_SCOPE_LOCALE_KEY)}", "italic")
+    return _paragraph(f"[{CONFIRM_SCOPE_KEY}] {tr(_CONFIRM_SCOPE_LOCALE_KEY)}", "italic")
 
 
 def _section_prompt(section: UnenteredSection) -> RenderableType:
     return _entry(_paragraph(f"{section.title} ({len(section.keys)})", "bold"))
 
 
-class _IssueList(OptionList):
+class IssueList(OptionList):
     """The grouped list, able to describe its own Enter key."""
 
     def describe_enter(self, locale_key: str) -> None:
@@ -140,11 +140,11 @@ class _IssueList(OptionList):
 def unentered_options(boxes: UnenteredBoxes) -> list[Option]:
     level = boxes.level.value
     if not boxes.by_section:
-        return [Option(_unentered_prompt(boxes), id=f"{level}{_BOXES_SUFFIX}")]
+        return [Option(_unentered_prompt(boxes), id=f"{level}{BOXES_SUFFIX}")]
     return [
         Option(_unentered_intro(boxes), id=f"{level}{_INTRO_SUFFIX}", disabled=True),
         *(
-            Option(_section_prompt(section), id=f"{level}{_SECTION_INFIX}{index}")
+            Option(_section_prompt(section), id=f"{level}{SECTION_INFIX}{index}")
             for index, section in enumerate(boxes.sections)
         ),
     ]
@@ -189,7 +189,7 @@ def _level_options(
     if boxes is not None:
         options.extend(unentered_options(boxes))
     options.extend(
-        Option(_issue_prompt(line, expanded=False, technical=False), id=f"{_ISSUE_ID_PREFIX}{index}")
+        Option(issue_prompt(line, expanded=False, technical=False), id=f"{ISSUE_ID_PREFIX}{index}")
         for index, line in indexed
     )
     return options
@@ -239,10 +239,10 @@ def _available_footer_binding(
 
 
 __all__ = (
-    "_BOXES_SUFFIX",
+    "BOXES_SUFFIX",
+    "ISSUE_ID_PREFIX",
+    "SECTION_INFIX",
     "_INTRO_SUFFIX",
-    "_ISSUE_ID_PREFIX",
-    "_SECTION_INFIX",
-    "_IssueList",
+    "IssueList",
     "options_for_screen",
 )

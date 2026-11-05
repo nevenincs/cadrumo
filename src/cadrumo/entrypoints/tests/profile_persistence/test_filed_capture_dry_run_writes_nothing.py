@@ -24,7 +24,7 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    prior_303_observation as _prior_303_observation,
+    prior_303_observation,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from cadrumo.application.live.filed_capture_accumulator import FiledCaptureAccumulator
@@ -36,7 +36,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def test_dry_run_absorb_leaves_the_bucket_database_byte_identical(tmp_path: Path) -> None:
-    observation = _prior_303_observation(pending_compensation=Decimal("0.00"))
+    observation = prior_303_observation(pending_compensation=Decimal("0.00"))
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="0981a5d8-4224-4246-b73c-4fe7b1d3ff51") as profile:
         repository = CalculationObservationRepository(bucket_id=profile.bucket_id, objects=profile.repository)

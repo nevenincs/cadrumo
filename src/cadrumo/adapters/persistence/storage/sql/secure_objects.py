@@ -15,7 +15,7 @@ from .....core.classification.policies import SensitivityClass
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
 from .....core.secure_object_write import SecureObjectWrite
-from .....core.time.clock import now as _utc_now
+from .....core.time.clock import now as clock_utc_now
 from .....core.time.utc import coerce_utc_aware
 from ..crypto.encrypted_columns import SecureObjectCallKeys, secure_object_key_digest
 from ..errors import (
@@ -29,25 +29,13 @@ from ..runtime_readiness import StorageRuntimeReadinessCode, runtime_not_ready_e
 from ..schema_lineage import ensure_schema_version_readable, inner_envelope_classification_is_expected
 from ..secure_object_namespaces import SecureObjectNamespaceDefinition, is_former_product_namespace
 from ..storage_hierarchy_registry import StorageHierarchyRegistry
-from ._secure_object_integrity import (
-    iter_namespace_decryptability as _iter_namespace_decryptability,
-)
-from ._secure_object_integrity import (
-    probe_namespace_integrity as _probe_namespace_integrity,
-)
-from ._secure_object_integrity import (
-    quarantine_unreadable_rows as _quarantine_unreadable_rows,
-)
-from ._secure_object_row_codec import (
-    secure_object_list_item_from_raw_row,
-    secure_object_record_from_row,
-)
-from ._secure_object_schema import (
-    parse_revision_ancestor_ids,
-)
-from ._secure_object_writes import OBJECT_KEY_SELECT_CHUNK, RowcountResult, SecureObjectWriteOperations
 from .engine import get_engine
 from .orm import SecureObjectRow
+from .secure_object_integrity import (
+    iter_namespace_decryptability,
+    probe_namespace_integrity,
+    quarantine_unreadable_rows,
+)
 from .secure_object_records import (
     SecureObjectBatchLoadItem,
     SecureObjectDecryptabilityRow,
@@ -58,6 +46,14 @@ from .secure_object_records import (
     SecureObjectRecord,
     SecureObjectUnreadable,  # deliberate re-export: consumers import it from this module
 )
+from .secure_object_row_codec import (
+    secure_object_list_item_from_raw_row,
+    secure_object_record_from_row,
+)
+from .secure_object_schema import (
+    parse_revision_ancestor_ids,
+)
+from .secure_object_writes import OBJECT_KEY_SELECT_CHUNK, RowcountResult, SecureObjectWriteOperations
 from .session import session_scope
 
 __all__ = ["SecureObjectUnreadable"]
@@ -342,7 +338,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
             if self._require_secure_active_session:
                 raise runtime_not_ready_error(StorageRuntimeReadinessCode.NO_ACTIVE_SESSION)
             return
-        now = _utc_now()
+        now = clock_utc_now()
         outcome = evaluate_idle(session=session, now=now)
         if outcome.expired:
             raise SessionExpiredError(
@@ -588,7 +584,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
             how many rows were quarantined per namespace.
         """
         self._check_session_freshness()
-        return _quarantine_unreadable_rows(self._engine, logger=_log)
+        return quarantine_unreadable_rows(self._engine, logger=_log)
 
     def probe_namespace_integrity(self, namespace: str) -> SecureObjectNamespaceIntegrity:
         """Count decryptable and undecryptable rows in ``namespace``.
@@ -608,7 +604,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         from a prior keychain master-key generation.
         """
         self._check_session_freshness()
-        return _probe_namespace_integrity(self._engine, namespace, logger=_log)
+        return probe_namespace_integrity(self._engine, namespace, logger=_log)
 
     def iter_namespace_decryptability(self, namespace: str) -> Iterator[SecureObjectDecryptabilityRow]:
         """Yield :class:`SecureObjectDecryptabilityRow` metadata for one namespace.
@@ -622,7 +618,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         check.
         """
         self._check_session_freshness()
-        yield from _iter_namespace_decryptability(self._engine, namespace)
+        yield from iter_namespace_decryptability(self._engine, namespace)
 
     def list_keys(self, namespace: str) -> tuple[str, ...]:
         """Return stored lookup digests under ``namespace`` as hex strings.
@@ -903,7 +899,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
                     object_key=target.object_key,
                     classification=target.expected_class,
                     schema_version=target.current_version,
-                    written_at=_utc_now(),
+                    written_at=clock_utc_now(),
                     payload=records[(target.namespace, target.object_key)].payload,
                     write_provenance=write_provenance,
                     expected_revision_id=records[(target.namespace, target.object_key)].revision_id,

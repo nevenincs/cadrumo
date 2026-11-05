@@ -36,7 +36,7 @@ from ...core.hashing import content_hash_hex
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import InvoiceId
 from ...core.identity.tax_id import TaxIdIdentityToken
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents
 from ...core.time.utc import UtcInstant, parse_iso_datetime
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
@@ -53,9 +53,7 @@ from ..iva.errors import IvaRateNotFoundError, IvaValidationError
 from ..iva.oss import OssIossRegime, resolve_oss_ioss_regime_catalogue
 from ..iva.schema import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind, spanish_eu_member_state
 from ..transactions.raw_transaction import RawProvenance, SourceFormat
-from . import normalization as _normalization
-from ._payload_normalisation import normalise_invoice_enum_fields, normalise_invoice_string_fields
-from ._validation_pass import answer_once, invoice_validation_pass
+from . import normalization
 from .business_premises import BusinessPremisesLease, normalise_legacy_business_premises_lease
 from .enums import (
     InvoiceClass,
@@ -89,6 +87,7 @@ from .figures import (
     suplido_finding,
     total_sign_finding,
 )
+from .payload_normalisation import normalise_invoice_enum_fields, normalise_invoice_string_fields
 from .rule_findings import (
     InvoiceRuleFinding,
     InvoiceRuleFindingCode,
@@ -99,6 +98,7 @@ from .rule_findings import (
     operation_date_role_finding,
     raise_first_rule_finding,
 )
+from .validation_pass import answer_once, invoice_validation_pass
 
 if TYPE_CHECKING:
     pass
@@ -272,7 +272,7 @@ def derive_invoice_id(
 class InvoiceLine(BaseModel):
     """Immutable line item on an invoice."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     description: str = Field(min_length=1)
     quantity: Decimal
@@ -372,7 +372,7 @@ class InvoiceLine(BaseModel):
 class Invoice(BaseModel):
     """Strict frozen record for one issued or received invoice."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     invoice_id: InvoiceId
     bucket_id: BucketId | None = Field(default=None)
@@ -667,9 +667,9 @@ class Invoice(BaseModel):
             return data
         payload = STR_KEYED_MAPPING_ADAPTER.validate_python(data)
         identify: Callable[[dict[str, object]], dict[str, object]] = (
-            _normalization.default_absent_counterparty_tax_id
+            normalization.default_absent_counterparty_tax_id
             if _reads_authenticated_record(info)
-            else lambda payload: _normalization.derive_invoice_id_when_complete(
+            else lambda payload: normalization.derive_invoice_id_when_complete(
                 payload,
                 derive_invoice_id=derive_invoice_id,
             )
@@ -678,19 +678,19 @@ class Invoice(BaseModel):
         # and without a declared element type the lambda parameters and the
         # loop variable all read as unknown.
         normalisers: tuple[Callable[[dict[str, object]], dict[str, object]], ...] = (
-            _normalization.normalise_invoice_dates,
+            normalization.normalise_invoice_dates,
             normalise_invoice_enum_fields,
             normalise_invoice_string_fields,
             normalise_legacy_business_premises_lease,
-            _normalization.normalise_invoice_counterparty,
-            _normalization.normalise_invoice_currency,
-            _normalization.normalise_invoice_monetary_fields,
+            normalization.normalise_invoice_counterparty,
+            normalization.normalise_invoice_currency,
+            normalization.normalise_invoice_monetary_fields,
             identify,
-            lambda payload: _normalization.normalise_invoice_collections(
+            lambda payload: normalization.normalise_invoice_collections(
                 payload,
                 normalise_linked_transaction_ids=_normalise_linked_transaction_ids,
             ),
-            _normalization.normalise_invoice_payment_id,
+            normalization.normalise_invoice_payment_id,
         )
         for normalise in normalisers:
             payload = normalise(payload)
@@ -729,7 +729,7 @@ class Invoice(BaseModel):
         )
         stamp_present = any(stamp_flags)
         fx_rate = self.fx_rate if self.fx_rate is not None else Decimal("0")
-        _normalization.raise_first_invoice_violation(
+        normalization.raise_first_invoice_violation(
             (
                 (
                     (self.currency == DEFAULT_CURRENCY, stamp_present) == (True, True),
@@ -1120,7 +1120,7 @@ class Invoice(BaseModel):
                         ("lines",),
                     )
                 )
-            _normalization.raise_first_invoice_violation(
+            normalization.raise_first_invoice_violation(
                 (
                     (
                         axis_flags not in ((True, True), (False, False)),
@@ -1151,7 +1151,7 @@ class Invoice(BaseModel):
             regime = catalogue.require(self.oss_ioss_regime)
         except RegistryValidationError as exc:
             raise InvoiceValidationError("oss_ioss_regime must be declared by the facts registry") from exc
-        _normalization.raise_first_invoice_violation(
+        normalization.raise_first_invoice_violation(
             (
                 (
                     self.kind is not InvoiceKind.ISSUED,
@@ -1196,7 +1196,7 @@ class Invoice(BaseModel):
 
 def _normalise_linked_transaction_ids(value: object) -> tuple[str, ...]:
     """Deduplicate-preserve-order and validate the shape of linked transaction IDs."""
-    _normalization.raise_first_invoice_violation(
+    normalization.raise_first_invoice_violation(
         (
             (
                 isinstance(value, str | bytes),
@@ -1207,9 +1207,9 @@ def _normalise_linked_transaction_ids(value: object) -> tuple[str, ...]:
     )
     seen: dict[str, None] = {}
     for item in OBJECT_TUPLE_ADAPTER.validate_python(value):
-        text = _normalization.require_invoice_text(item, "each linked_transaction_id must be a string")
+        text = normalization.require_invoice_text(item, "each linked_transaction_id must be a string")
         normalized = text.strip().lower()
-        _normalization.raise_first_invoice_violation(
+        normalization.raise_first_invoice_violation(
             (
                 (
                     not _is_hex_digest(normalized, length=64),

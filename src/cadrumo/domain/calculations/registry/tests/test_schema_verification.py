@@ -11,8 +11,8 @@ from ..schema_verification import (
     KNOWN_VERIFICATION_PREDICATE_OPERATORS,
     ParsedVerificationPredicate,
     VerificationPredicateOperator,
-    _parse_verification_predicate_expression_memo,
     parse_verification_predicate_expression,
+    parse_verification_predicate_expression_memo,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -78,7 +78,7 @@ def test_repeated_parse_reuses_the_memoised_value_without_reparsing(
 ) -> None:
     """A second parse of the same text is served without running the grammar again."""
     expression = 'equals_sum(["27", "03", "06", "09"])'
-    _parse_verification_predicate_expression_memo.cache_clear()
+    parse_verification_predicate_expression_memo.cache_clear()
     grammar_calls: list[str] = []
     real_operator_name = schema_verification.verification_predicate_operator_name
 
@@ -127,9 +127,9 @@ def test_malformed_expression_refuses_on_every_parse_and_never_enters_the_memo(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A malformed text is re-parsed and refused on every call, and the memo holds none of it."""
-    _parse_verification_predicate_expression_memo.cache_clear()
+    parse_verification_predicate_expression_memo.cache_clear()
     parse_verification_predicate_expression('all_nonzero(["01", "02"])')
-    size_before = _parse_verification_predicate_expression_memo.cache_info().currsize
+    size_before = parse_verification_predicate_expression_memo.cache_info().currsize
     grammar_calls: list[str] = []
     real_operator_name = schema_verification.verification_predicate_operator_name
 
@@ -144,27 +144,27 @@ def test_malformed_expression_refuses_on_every_parse_and_never_enters_the_memo(
     assert parse_verification_predicate_expression(malformed) is None
 
     assert grammar_calls == [malformed, malformed, malformed]
-    assert _parse_verification_predicate_expression_memo.cache_info().currsize == size_before
+    assert parse_verification_predicate_expression_memo.cache_info().currsize == size_before
 
 
 def test_memo_holds_only_successful_parses() -> None:
     """Every memoised value is a parsed predicate; refusals leave no entry behind."""
-    _parse_verification_predicate_expression_memo.cache_clear()
+    parse_verification_predicate_expression_memo.cache_clear()
     valid = 'implies_nonzero(["01", "07"])'
     parse_verification_predicate_expression('unknown_operator(["01", "02"])')
     parse_verification_predicate_expression(valid)
     parse_verification_predicate_expression('all_nonzero("01", "02")')
     parse_verification_predicate_expression(valid)
 
-    info = _parse_verification_predicate_expression_memo.cache_info()
+    info = parse_verification_predicate_expression_memo.cache_info()
     assert info.currsize == 1
     assert info.hits == 1
-    assert isinstance(_parse_verification_predicate_expression_memo(valid), ParsedVerificationPredicate)
+    assert isinstance(parse_verification_predicate_expression_memo(valid), ParsedVerificationPredicate)
 
 
 def test_distinct_expression_text_is_parsed_independently() -> None:
     """Whitespace-distinct and near-identical texts never borrow another text's parse."""
-    _parse_verification_predicate_expression_memo.cache_clear()
+    parse_verification_predicate_expression_memo.cache_clear()
     valid = parse_verification_predicate_expression('all_nonzero(["01", "02"])')
     padded = parse_verification_predicate_expression('  all_nonzero(["01", "02"])  ')
     broken = parse_verification_predicate_expression('all_nonzero(["01", "02"]')

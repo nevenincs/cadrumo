@@ -37,12 +37,12 @@ from .....application.storage.calc_sheets.records import (
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.ids import LegalRefId
-from .._calc_sheets_apply_formatting import _condition_for_constraint, _input_message_for_constraint
-from .._calc_sheets_apply_values import coerce_cell_value
 from ..calc_sheets_apply import (
-    _build_structural_cleanup_requests,
-    _developer_metadata_pairs,
+    build_structural_cleanup_requests,
+    developer_metadata_pairs,
 )
+from ..calc_sheets_apply_formatting import condition_for_constraint, input_message_for_constraint
+from ..calc_sheets_apply_values import coerce_cell_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -112,7 +112,7 @@ def test_coerce_cell_value_passes_string_through() -> None:
 
 def test_condition_non_negative_no_bounds_emits_greater_than_eq_zero() -> None:
     constraint = _make_constraint(sign="non_negative", casilla_id=_IVA_COMPENSACION_ANTERIORES_CASILLA)
-    condition = _condition_for_constraint(constraint)
+    condition = condition_for_constraint(constraint)
     assert condition is not None
     assert condition["type"] == "NUMBER_GREATER_THAN_EQ"
     assert condition["values"] == [{"userEnteredValue": "0"}]
@@ -125,7 +125,7 @@ def test_condition_min_and_max_emit_number_between() -> None:
         max_value=Decimal("100"),
         casilla_id=_IVA_PRORRATA_PORCENTAJE_CASILLA,
     )
-    condition = _condition_for_constraint(constraint)
+    condition = condition_for_constraint(constraint)
     assert condition is not None
     assert condition["type"] == "NUMBER_BETWEEN"
     assert condition["values"] == [
@@ -142,7 +142,7 @@ def test_condition_non_negative_with_max_emits_number_between_at_zero_lower() ->
         max_value=Decimal("100"),
         casilla_id=_IVA_PRORRATA_PORCENTAJE_CASILLA,
     )
-    condition = _condition_for_constraint(constraint)
+    condition = condition_for_constraint(constraint)
     assert condition is not None
     assert condition["type"] == "NUMBER_BETWEEN"
     assert condition["values"][0] == {"userEnteredValue": "0"}
@@ -151,7 +151,7 @@ def test_condition_non_negative_with_max_emits_number_between_at_zero_lower() ->
 
 def test_condition_non_positive_no_bounds_emits_less_than_eq_zero() -> None:
     constraint = _make_constraint(sign="non_positive", casilla_id=_IVA_RESULTADO_NEGATIVO_CASILLA)
-    condition = _condition_for_constraint(constraint)
+    condition = condition_for_constraint(constraint)
     assert condition is not None
     assert condition["type"] == "NUMBER_LESS_THAN_EQ"
     assert condition["values"] == [{"userEnteredValue": "0"}]
@@ -161,7 +161,7 @@ def test_condition_unconstrained_returns_none() -> None:
     """sign='any' with no min / max → no data-validation rule needed."""
 
     constraint = _make_constraint(sign="any", casilla_id=_ANY_CASILLA)
-    assert _condition_for_constraint(constraint) is None
+    assert condition_for_constraint(constraint) is None
 
 
 # ---------------------------------------------------------------------------
@@ -175,7 +175,7 @@ def test_input_message_renders_non_negative_sign() -> None:
         casilla_id=_IVA_COMPENSACION_ANTERIORES_CASILLA,
         legal_refs=("ley-37-1992:art-99",),
     )
-    message = _input_message_for_constraint(constraint)
+    message = input_message_for_constraint(constraint)
     assert _IVA_COMPENSACION_ANTERIORES_CASILLA in message
     assert "≥ 0" in message
     assert "ley-37-1992:art-99" in message
@@ -189,7 +189,7 @@ def test_input_message_renders_min_and_max_bounds() -> None:
         casilla_id=_IVA_PRORRATA_PORCENTAJE_CASILLA,
         legal_refs=("ley-37-1992:art-104",),
     )
-    message = _input_message_for_constraint(constraint)
+    message = input_message_for_constraint(constraint)
     assert _IVA_PRORRATA_PORCENTAJE_CASILLA in message
     assert "≥ 0" in message
     assert "≤ 100" in message
@@ -197,7 +197,7 @@ def test_input_message_renders_min_and_max_bounds() -> None:
 
 def test_input_message_renders_any_when_no_bounds() -> None:
     constraint = _make_constraint(sign="any", casilla_id=_SOME_CASILLA)
-    message = _input_message_for_constraint(constraint)
+    message = input_message_for_constraint(constraint)
     assert "any" in message
 
 
@@ -234,7 +234,7 @@ def test_developer_metadata_pairs_preserve_relation_grounding() -> None:
         guide=SheetGuideContent(title="Guide", paragraphs=("Line.",)),
     )
 
-    pairs = dict(_developer_metadata_pairs(plan))
+    pairs = dict(developer_metadata_pairs(plan))
 
     assert pairs["cadrumo_relation:modelo-180-115-base-anual"] == (
         "value=190.00; provenance=local_filing; source_modelo=115; source_filing_year=2026; "
@@ -274,7 +274,7 @@ def test_developer_metadata_pairs_preserve_blank_relation_grounding() -> None:
         guide=SheetGuideContent(title="Guide", paragraphs=("Line.",)),
     )
 
-    pairs = dict(_developer_metadata_pairs(plan))
+    pairs = dict(developer_metadata_pairs(plan))
 
     assert pairs["cadrumo_relation:modelo-180-115-base-anual"] == (
         "provenance=operator_manual; source_modelo=115; source_filing_year=2026; "
@@ -336,7 +336,7 @@ def test_structural_cleanup_deletes_only_adapter_managed_metadata_and_protected_
         ],
     }
 
-    requests = _build_structural_cleanup_requests(spreadsheet, plan)
+    requests = build_structural_cleanup_requests(spreadsheet, plan)
 
     assert requests == [
         {

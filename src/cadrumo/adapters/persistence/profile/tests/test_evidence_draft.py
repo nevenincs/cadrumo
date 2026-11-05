@@ -53,29 +53,28 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.document_shape import DocumentShape
 from cadrumo.domain.invoices.errors import InvoiceValidationError
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 from .....core.model_roles import ModelRole
 from .....domain.iva.schema import InvoiceKind
 from ....outbound.llm.tests.model_run_support import IMAGE_LANE, serving_agent
-from ._invoice_confirmation_test_support import (
-    _BUCKET_ID,
+from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from .invoice_confirmation_test_support import (
+    BUCKET_ID,
     InvoiceAuthorityFixture,
-    _make_svc,
     evidence_text_layer_ports_for_test,
     invoice_confirmation_kwargs,
     invoice_draft_extraction_kwargs,
     isolated_settings,
+    make_svc,
     secure_objects,
     serving_a_loopback_reader,
 )
-from ._invoice_confirmation_test_support import runtime_profile as runtime_profile
-from ._invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
-from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
+from .invoice_confirmation_test_support import runtime_profile as runtime_profile
+from .invoice_confirmation_test_support import seeded_filer_profile as seeded_filer_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_filer_profile"]
@@ -202,22 +201,22 @@ class _InvoiceExtraction:
         settings: Settings,
     ) -> InvoiceDraft:
         return extract_invoice_draft_from_evidence(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             evidence_id=evidence_id,
             attachment_id=attachment_id,
             settings=settings,
-            **invoice_draft_extraction_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
+            **invoice_draft_extraction_kwargs(bucket_id=BUCKET_ID, authority=self._invoice_authority),
         )
 
     def _confirm_received_from_acme(self, evidence_id: str, settings: Settings):
         return confirm_invoice_draft_from_evidence(
             counterparty_country="ES",
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             evidence_id=evidence_id,
             counterparty_name="Acme Suministros SL",
             settings=settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
+            **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=self._invoice_authority),
         )
 
 
@@ -239,8 +238,8 @@ class TestExtractInvoiceDraftFromEvidence(_InvoiceExtraction):
     ) -> None:
         pdf_path = tmp_path / "factura.pdf"
         pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
-        svc = _make_svc(isolated_settings, secure_objects)
-        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        svc = make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=BUCKET_ID, source_path=pdf_path).record
 
         draft = self._extract(evidence_id=record.evidence_id, settings=isolated_settings)
 
@@ -261,8 +260,8 @@ class TestExtractInvoiceDraftFromEvidence(_InvoiceExtraction):
     ) -> None:
         pdf_path = tmp_path / "factura.pdf"
         pdf_path.write_bytes(text_pdf_bytes(_PARTIAL_INVOICE_LINES))
-        svc = _make_svc(isolated_settings, secure_objects)
-        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        svc = make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=BUCKET_ID, source_path=pdf_path).record
         assert record.attachment_id is not None
 
         draft = self._extract(attachment_id=record.attachment_id, settings=isolated_settings)
@@ -295,8 +294,8 @@ class TestExtractInvoiceDraftFromEvidence(_InvoiceExtraction):
         """The stored bytes are read into memory only; nothing lands on disk."""
         pdf_path = tmp_path / "factura.pdf"
         pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
-        svc = _make_svc(isolated_settings, secure_objects)
-        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        svc = make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=BUCKET_ID, source_path=pdf_path).record
 
         empty_dir = tmp_path_factory.mktemp("no-write-expected-from-store")
         self._extract(evidence_id=record.evidence_id, settings=isolated_settings)
@@ -350,8 +349,8 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback(_InvoiceExtraction):
     ) -> None:
         pdf_path = tmp_path / "scan.pdf"
         pdf_path.write_bytes(_scan_only_pdf_bytes())
-        svc = _make_svc(isolated_settings, secure_objects)
-        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        svc = make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=BUCKET_ID, source_path=pdf_path).record
         assert record.media_kind is MediaKind.PDF
 
         with serving_agent(replies=(self._extraction_json(),), lane=IMAGE_LANE) as service:
@@ -379,8 +378,8 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback(_InvoiceExtraction):
     ) -> None:
         image_path = tmp_path / "receipt.png"
         image_path.write_bytes(_png_bytes())
-        svc = _make_svc(isolated_settings, secure_objects)
-        record = svc.add(bucket_id=_BUCKET_ID, source_path=image_path).record
+        svc = make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=BUCKET_ID, source_path=image_path).record
         assert record.media_kind is MediaKind.IMAGE
 
         with serving_agent(replies=(self._extraction_json(),), lane=IMAGE_LANE):
@@ -397,8 +396,8 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback(_InvoiceExtraction):
     ) -> None:
         pdf_path = tmp_path / "scan.pdf"
         pdf_path.write_bytes(_scan_only_pdf_bytes())
-        svc = _make_svc(isolated_settings, secure_objects)
-        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        svc = make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=BUCKET_ID, source_path=pdf_path).record
 
         empty_dir = tmp_path_factory.mktemp("no-write-expected-vision-fallback")
 
@@ -415,21 +414,21 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback(_InvoiceExtraction):
         """An operator who opted out of image reading gets a typed refusal, not an empty draft."""
         pdf_path = tmp_path / "scan.pdf"
         pdf_path.write_bytes(_scan_only_pdf_bytes())
-        svc = _make_svc(isolated_settings, secure_objects)
-        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        svc = make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=BUCKET_ID, source_path=pdf_path).record
 
         clock = datetime(2026, 1, 1, tzinfo=UTC)
         seed_test_profile_record(
-            _create_profile_record_for_test(
+            create_user_profile_record(
                 setup_state=ProfileSetupState.COMPLETE,
-                profile_id=_BUCKET_ID,
+                profile_id=BUCKET_ID,
                 facts=(
                     UserProfileFact(path="identity.tax_id", value="12345678Z"),
                     UserProfileFact(path="capabilities.llm_vision", value=False),
                 ),
                 created_at=clock,
                 updated_at=clock,
-                context=_profile_creation_context_for_test(),
+                context=profile_creation_context_for_test(),
             ),
         )
 
@@ -469,8 +468,8 @@ class TestConfirmInvoiceDraftFromEvidence(_InvoiceExtraction):
     ) -> None:
         pdf_path = tmp_path / "factura.pdf"
         pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
-        svc = _make_svc(isolated_settings, secure_objects)
-        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        svc = make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=BUCKET_ID, source_path=pdf_path).record
         self._repo(secure_objects)
 
         confirmation = self._confirm_received_from_acme(record.evidence_id, isolated_settings)
@@ -503,8 +502,8 @@ class TestConfirmInvoiceDraftFromEvidence(_InvoiceExtraction):
         """
         pdf_path = tmp_path / "factura.pdf"
         pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
-        svc = _make_svc(isolated_settings, secure_objects)
-        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        svc = make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=BUCKET_ID, source_path=pdf_path).record
         confirmation = self._confirm_received_from_acme(record.evidence_id, isolated_settings)
 
         with pytest.raises(PurchaseInvoiceEvidenceInputError) as excinfo:
@@ -522,8 +521,8 @@ class TestConfirmInvoiceDraftFromEvidence(_InvoiceExtraction):
     ) -> None:
         pdf_path = tmp_path / "factura.pdf"
         pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
-        svc = _make_svc(isolated_settings, secure_objects)
-        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        svc = make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=BUCKET_ID, source_path=pdf_path).record
         self._repo(secure_objects)
 
         first = self._confirm_received_from_acme(record.evidence_id, isolated_settings)
@@ -544,20 +543,20 @@ class TestConfirmInvoiceDraftFromEvidence(_InvoiceExtraction):
     ) -> None:
         pdf_path = tmp_path / "factura.pdf"
         pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
-        svc = _make_svc(isolated_settings, secure_objects)
-        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        svc = make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=BUCKET_ID, source_path=pdf_path).record
         self._repo(secure_objects)
 
         confirmation = confirm_invoice_draft_from_evidence(
             counterparty_country="ES",
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             evidence_id=record.evidence_id,
             counterparty_name="Acme Suministros SL",
             invoice_number="OVERRIDE-9999",
             taxable_base=Decimal("500.00"),
             settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
+            **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=self._invoice_authority),
         )
 
         assert confirmation.created is True
@@ -583,20 +582,20 @@ class TestConfirmInvoiceDraftFromEvidence(_InvoiceExtraction):
         """
         pdf_path = tmp_path / "factura.pdf"
         pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
-        svc = _make_svc(isolated_settings, secure_objects)
-        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        svc = make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=BUCKET_ID, source_path=pdf_path).record
         self._repo(secure_objects)
 
         confirmation = confirm_invoice_draft_from_evidence(
             counterparty_country="ES",
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             evidence_id=record.evidence_id,
             counterparty_name="Acme Suministros SL",
             taxable_base=Decimal("0"),
             iva_rate=Decimal("0"),
             settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
+            **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=self._invoice_authority),
         )
 
         assert confirmation.invoice.base_total == Decimal("0")
@@ -612,21 +611,21 @@ class TestConfirmInvoiceDraftFromEvidence(_InvoiceExtraction):
         """A field absent from extraction with no override refuses loudly."""
         pdf_path = tmp_path / "factura.pdf"
         pdf_path.write_bytes(text_pdf_bytes(_PARTIAL_INVOICE_LINES))
-        svc = _make_svc(isolated_settings, secure_objects)
-        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        svc = make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=BUCKET_ID, source_path=pdf_path).record
         self._repo(secure_objects)
 
         with pytest.raises(PurchaseInvoiceEvidenceInputError):
             confirm_invoice_draft_from_evidence(
                 counterparty_country="ES",
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 kind=InvoiceKind.RECEIVED,
                 evidence_id=record.evidence_id,
                 counterparty_name="Acme Suministros SL",
                 # No override for supplier_tax_id / invoice_number, which the
                 # partial layout does not carry either.
                 settings=isolated_settings,
-                **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
+                **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=self._invoice_authority),
             )
         # Nothing was written on the refused attempt.
         assert len(InvoiceCatalogueRepository(objects=secure_objects).load()) == 0
@@ -639,8 +638,8 @@ class TestConfirmInvoiceDraftFromEvidence(_InvoiceExtraction):
     ) -> None:
         pdf_path = tmp_path / "factura.pdf"
         pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
-        svc = _make_svc(isolated_settings, secure_objects)
-        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        svc = make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=BUCKET_ID, source_path=pdf_path).record
         self._repo(secure_objects)
 
         # The counterparty tax-id checksum is enforced by a pydantic
@@ -660,13 +659,13 @@ class TestConfirmInvoiceDraftFromEvidence(_InvoiceExtraction):
         with pytest.raises((InvoiceValidationError, ValidationError, PurchaseInvoiceEvidenceInputError)):
             confirm_invoice_draft_from_evidence(
                 counterparty_country="ES",
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 kind=InvoiceKind.RECEIVED,
                 evidence_id=record.evidence_id,
                 counterparty_name="Acme Suministros SL",
                 counterparty_tax_id="not-a-real-nif",
                 settings=isolated_settings,
-                **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
+                **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=self._invoice_authority),
             )
         # Nothing was written on the refused attempt.
         assert len(InvoiceCatalogueRepository(objects=secure_objects).load()) == 0
@@ -681,19 +680,19 @@ class TestConfirmInvoiceDraftFromEvidence(_InvoiceExtraction):
         """The evidence bytes are re-read into memory only; nothing lands on disk."""
         pdf_path = tmp_path / "factura.pdf"
         pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
-        svc = _make_svc(isolated_settings, secure_objects)
-        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        svc = make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=BUCKET_ID, source_path=pdf_path).record
         self._repo(secure_objects)
 
         empty_dir = tmp_path_factory.mktemp("no-write-expected-confirm")
         confirm_invoice_draft_from_evidence(
             counterparty_country="ES",
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             evidence_id=record.evidence_id,
             counterparty_name="Acme Suministros SL",
             settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
+            **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=self._invoice_authority),
         )
 
         assert scan_directory(empty_dir) == ()
@@ -712,8 +711,8 @@ class TestConfirmInvoiceDraftFromEvidence(_InvoiceExtraction):
         """
         pdf_path = tmp_path / "factura.pdf"
         pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
-        svc = _make_svc(isolated_settings, secure_objects)
-        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        svc = make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=BUCKET_ID, source_path=pdf_path).record
         assert record.attachment_id is not None
         self._repo(secure_objects)
 
@@ -732,14 +731,14 @@ class TestConfirmInvoiceDraftFromEvidence(_InvoiceExtraction):
         """The same auto-link happens on the ``attachment_id`` reference path."""
         pdf_path = tmp_path / "factura.pdf"
         pdf_path.write_bytes(text_pdf_bytes(_PARTIAL_INVOICE_LINES))
-        svc = _make_svc(isolated_settings, secure_objects)
-        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        svc = make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=BUCKET_ID, source_path=pdf_path).record
         assert record.attachment_id is not None
         self._repo(secure_objects)
 
         confirmation = confirm_invoice_draft_from_evidence(
             counterparty_country="ES",
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             attachment_id=record.attachment_id,
             counterparty_name="Acme Suministros SL",
@@ -747,7 +746,7 @@ class TestConfirmInvoiceDraftFromEvidence(_InvoiceExtraction):
             invoice_number="ATT-0099",
             invoice_date=date(2026, 3, 15),
             settings=isolated_settings,
-            **invoice_confirmation_kwargs(bucket_id=_BUCKET_ID, authority=self._invoice_authority),
+            **invoice_confirmation_kwargs(bucket_id=BUCKET_ID, authority=self._invoice_authority),
         )
 
         store = AttachmentStore(objects=secure_objects)
@@ -763,8 +762,8 @@ class TestConfirmInvoiceDraftFromEvidence(_InvoiceExtraction):
         """A guarded idempotent re-confirm re-asserts the same link, never duplicating it."""
         pdf_path = tmp_path / "factura.pdf"
         pdf_path.write_bytes(text_pdf_bytes(_FULL_INVOICE_LINES))
-        svc = _make_svc(isolated_settings, secure_objects)
-        record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+        svc = make_svc(isolated_settings, secure_objects)
+        record = svc.add(bucket_id=BUCKET_ID, source_path=pdf_path).record
         assert record.attachment_id is not None
         self._repo(secure_objects)
 

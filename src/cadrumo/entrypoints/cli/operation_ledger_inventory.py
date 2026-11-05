@@ -119,7 +119,7 @@ def _client_for_request(ctx: typer.Context, request: BaseModel) -> FrontendClien
     return require_profile_client(ctx, expected_profile_id=profile_id)
 
 
-def _run[ProjectionT: BaseModel](
+def run[ProjectionT: BaseModel](
     ctx: typer.Context,
     request: BaseModel,
     *,
@@ -189,7 +189,7 @@ def _collapse_public_decimal_objects(value: _JsonValue) -> _JsonValue:
     return value
 
 
-def _ledger_payload_json(ledger: InventoryLedgerProjection, *, outcome: str | None = None) -> str:
+def ledger_payload_json(ledger: InventoryLedgerProjection, *, outcome: str | None = None) -> str:
     # Pydantic serialized this strict projection; the standard decoder exposes its
     # result as Any, so restore the closed JSON value type at this boundary.
     # Diagnostics ride on envelope notices; the worker projection retains them
@@ -211,7 +211,7 @@ def read_inventory_catalogue(
     """Read the selected profile's list projection inside its bound worker."""
     client_profile = UUID(require_active_bucket_id())
     request = InventoryListRequest(profile_id=client_profile)
-    completed = _run(
+    completed = run(
         ctx,
         request,
         definition_id=INVENTORY_LIST_OPERATION_DEFINITION_ID,
@@ -254,7 +254,7 @@ def create_inventory_ledger(
     request: InventoryCreateRequest,
 ) -> tuple[RegisteredOperationCompletion[InventoryCreateProjection], InventoryCreateResult]:
     """Create one ledger through the request's exact profile worker."""
-    completed = _run(
+    completed = run(
         ctx,
         request,
         definition_id=INVENTORY_CREATE_OPERATION_DEFINITION_ID,
@@ -277,7 +277,7 @@ def create_inventory_ledger(
         or not ledger.bucket_event_ids
     ):
         raise invalid_completion_error(completed)
-    payload = InventoryCreateResult.model_validate_json(_ledger_payload_json(ledger))
+    payload = InventoryCreateResult.model_validate_json(ledger_payload_json(ledger))
     return completed, payload
 
 
@@ -287,7 +287,7 @@ def add_inventory_movement(
     request: InventoryMovementAddRequest,
 ) -> tuple[RegisteredOperationCompletion[InventoryMovementAddProjection], InventoryMovementAddResult]:
     """Append one typed movement through the request's exact profile worker."""
-    completed = _run(
+    completed = run(
         ctx,
         request,
         definition_id=INVENTORY_MOVEMENT_ADD_OPERATION_DEFINITION_ID,
@@ -310,7 +310,7 @@ def add_inventory_movement(
         or not ledger.bucket_event_ids
     ):
         raise invalid_completion_error(completed)
-    return completed, InventoryMovementAddResult.model_validate_json(_ledger_payload_json(ledger))
+    return completed, InventoryMovementAddResult.model_validate_json(ledger_payload_json(ledger))
 
 
 def inspect_inventory_ledger(
@@ -319,7 +319,7 @@ def inspect_inventory_ledger(
     request: InventoryInspectRequest,
 ) -> tuple[RegisteredOperationCompletion[InventoryInspectProjection], InventoryInspectResult]:
     """Read one ledger with its movements and retained history through the exact profile worker."""
-    completed = _run(
+    completed = run(
         ctx,
         request,
         definition_id=INVENTORY_INSPECT_OPERATION_DEFINITION_ID,
@@ -339,7 +339,7 @@ def inspect_inventory_ledger(
         or completed.refusal_code is not None
     ):
         raise invalid_completion_error(completed)
-    return completed, InventoryInspectResult.model_validate_json(_ledger_payload_json(ledger))
+    return completed, InventoryInspectResult.model_validate_json(ledger_payload_json(ledger))
 
 
 def apply_inventory_ledger_change(
@@ -348,7 +348,7 @@ def apply_inventory_ledger_change(
     request: InventoryLedgerChangeRequest,
 ) -> tuple[RegisteredOperationCompletion[InventoryLedgerChangeProjection], InventoryLedgerChangeResult]:
     """Run one edit, rectification, retirement or restoration through the exact profile worker."""
-    completed = _run(
+    completed = run(
         ctx,
         request,
         definition_id=_LEDGER_CHANGE_DEFINITION_IDS[type(request)],
@@ -370,7 +370,7 @@ def apply_inventory_ledger_change(
     ):
         raise invalid_completion_error(completed)
     return completed, InventoryLedgerChangeResult.model_validate_json(
-        _ledger_payload_json(ledger, outcome=projection.outcome)
+        ledger_payload_json(ledger, outcome=projection.outcome)
     )
 
 
@@ -380,7 +380,7 @@ def preview_inventory_valuation(
     request: InventoryValuationPreviewRequest,
 ) -> tuple[RegisteredOperationCompletion[InventoryValuationOperationProjection], InventoryValuationPreviewPayload]:
     """Run and audit a valuation preview through the exact profile worker."""
-    completed = _run(
+    completed = run(
         ctx,
         request,
         definition_id=INVENTORY_VALUATION_PREVIEW_OPERATION_DEFINITION_ID,
@@ -427,7 +427,7 @@ def record_inventory_closing_authority(
 
 def read_inventory_options(ctx: typer.Context, *, request: InventoryOptionsRequest) -> InventoryOptionsResult:
     """Read the inventory form vocabularies through the exact profile worker."""
-    completed = _run(
+    completed = run(
         ctx,
         request,
         definition_id=INVENTORY_OPTIONS_OPERATION_DEFINITION_ID,
@@ -445,7 +445,7 @@ def read_inventory_options(ctx: typer.Context, *, request: InventoryOptionsReque
 
 def add_inventory_evidence(ctx: typer.Context, *, request: InventoryEvidenceAddRequest) -> InventoryEvidenceAddResult:
     """Store one purchase document through the exact profile worker."""
-    completed = _run(
+    completed = run(
         ctx,
         request,
         definition_id=INVENTORY_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
@@ -487,7 +487,7 @@ def _record_closing(
     RegisteredOperationCompletion[InventoryClosingAuthorityOperationProjection],
     InventoryClosingAuthorityRecordResult,
 ]:
-    completed = _run(
+    completed = run(
         ctx,
         request,
         definition_id=definition_id,

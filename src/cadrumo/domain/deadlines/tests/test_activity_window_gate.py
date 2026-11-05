@@ -14,7 +14,7 @@ import pytest
 
 from ....core.period import Period
 from ...contribuyente.entity_type import EntityType
-from ..engine import _window_outside_activity_period
+from ..engine import window_outside_activity_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -23,7 +23,7 @@ def test_pre_start_window_is_filtered_out() -> None:
     """A window that closes before the operator's alta is dropped."""
 
     assert (
-        _window_outside_activity_period(
+        window_outside_activity_period(
             period=Period.from_year_and_code(2023, "1T"),
             entity_type=EntityType.from_registry("natural_person"),
             opens_on=date(2023, 1, 1),
@@ -39,7 +39,7 @@ def test_post_baja_window_is_filtered_out() -> None:
     """A window that opens after the operator's baja is dropped."""
 
     assert (
-        _window_outside_activity_period(
+        window_outside_activity_period(
             period=Period.from_year_and_code(2025, "3T"),
             entity_type=EntityType.from_registry("natural_person"),
             opens_on=date(2025, 7, 1),
@@ -56,7 +56,7 @@ def test_window_straddling_alta_is_retained() -> None:
     the operator may still owe a return covering the active fraction."""
 
     assert (
-        _window_outside_activity_period(
+        window_outside_activity_period(
             period=Period.from_year_and_code(2024, "2T"),
             entity_type=EntityType.from_registry("natural_person"),
             opens_on=date(2024, 4, 1),
@@ -73,7 +73,7 @@ def test_window_straddling_baja_is_retained() -> None:
     activity occurred during the window even if it ended mid-period."""
 
     assert (
-        _window_outside_activity_period(
+        window_outside_activity_period(
             period=Period.from_year_and_code(2024, "2T"),
             entity_type=EntityType.from_registry("natural_person"),
             opens_on=date(2024, 4, 1),
@@ -91,7 +91,7 @@ def test_no_censo_dates_means_no_filtering() -> None:
     activity-period evidence needed to suppress any window."""
 
     assert (
-        _window_outside_activity_period(
+        window_outside_activity_period(
             period=Period.from_year_and_code(2024, "2T"),
             entity_type=EntityType.from_registry("natural_person"),
             opens_on=date(2024, 4, 1),
@@ -107,7 +107,7 @@ def test_window_inside_active_period_is_retained() -> None:
     """Standard case: window opens after alta and closes before baja."""
 
     assert (
-        _window_outside_activity_period(
+        window_outside_activity_period(
             period=Period.from_year_and_code(2024, "3T"),
             entity_type=EntityType.from_registry("natural_person"),
             opens_on=date(2024, 7, 1),
@@ -124,7 +124,7 @@ def test_period_ending_on_alta_date_is_retained() -> None:
     """A period ending on the alta date still overlaps activity."""
 
     assert (
-        _window_outside_activity_period(
+        window_outside_activity_period(
             period=Period.from_year_and_code(2024, "03"),
             entity_type=EntityType.from_registry("natural_person"),
             opens_on=date(2024, 4, 1),
@@ -140,7 +140,7 @@ def test_period_opening_on_baja_date_is_retained() -> None:
     """A period opening on the baja date still overlaps activity."""
 
     assert (
-        _window_outside_activity_period(
+        window_outside_activity_period(
             period=Period.from_year_and_code(2024, "2T"),
             entity_type=EntityType.from_registry("natural_person"),
             opens_on=date(2024, 7, 1),
@@ -157,7 +157,7 @@ def test_residual_obligation_after_cessation_is_retained(period_code: str) -> No
     """A later filing window does not erase an overlapping final tax period."""
 
     assert (
-        _window_outside_activity_period(
+        window_outside_activity_period(
             period=Period.from_year_and_code(2025, period_code),
             entity_type=EntityType.from_registry("natural_person"),
             opens_on=date(2026, 1, 1),
@@ -171,7 +171,7 @@ def test_residual_obligation_after_cessation_is_retained(period_code: str) -> No
 
 def test_period_entirely_after_cessation_is_filtered() -> None:
     assert (
-        _window_outside_activity_period(
+        window_outside_activity_period(
             period=Period.from_year_and_code(2026, "1T"),
             entity_type=EntityType.from_registry("natural_person"),
             opens_on=date(2026, 4, 1),
@@ -185,7 +185,7 @@ def test_period_entirely_after_cessation_is_filtered() -> None:
 
 def test_legal_entity_activity_end_does_not_impersonate_extinction() -> None:
     assert (
-        _window_outside_activity_period(
+        window_outside_activity_period(
             period=Period.from_year_and_code(2026, "0A"),
             entity_type=EntityType.from_registry("legal_entity"),
             opens_on=date(2027, 7, 1),

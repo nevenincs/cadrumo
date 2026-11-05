@@ -17,10 +17,9 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -37,14 +36,14 @@ _isolated_backend = bucket_session_storage_fixture(_BUCKET_ID)
 def _register_with_tax_id() -> None:
     """Publish the capsule carrying a fiscal id before reading the bucket."""
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
                 UserProfileFact(path=_TAX_ID_PATH, value=_TAX_ID),
                 UserProfileFact(path="auth.clave_movil_route", value="qr"),
             ),
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
         label=_PROFILE_LABEL,
     )

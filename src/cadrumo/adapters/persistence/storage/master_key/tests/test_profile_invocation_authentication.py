@@ -17,7 +17,7 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
 )
 from cadrumo.adapters.persistence.storage.master_key.login_throttle import evaluate_login_throttle
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.authentication import ProfileAuthenticationRefusedError
@@ -31,7 +31,7 @@ from cadrumo.application.user_profile.registration import register_profile_with_
 from cadrumo.core.bucket_pointer import read_pointer
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_location
-from cadrumo.core.time.clock import now as _now
+from cadrumo.core.time.clock import now
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 _CREDENTIAL_A = "invocation-password-a"
@@ -39,7 +39,7 @@ _CREDENTIAL_B = "invocation-password-b"
 
 
 def _register_two_profiles(storage_root: Path) -> tuple[str, str]:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     first = register_profile_with_credentials(
         label="Handover A",
         passphrase=_CREDENTIAL_A,
@@ -64,7 +64,7 @@ def _close_live_login() -> None:
 @pytest.mark.parametrize("candidate", ("wrong-password-for-b", "short"))
 def test_rejected_b_password_is_non_oracular_and_leaves_active_a_intact(tmp_path: Path, candidate: str) -> None:
     """Rejected target credentials leave the existing local custody intact."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         profile_a, profile_b = _register_two_profiles(storage_root)
         ProfileCapsuleLifecycle().select(profile_a)
@@ -93,7 +93,7 @@ def test_rejected_b_password_is_non_oracular_and_leaves_active_a_intact(tmp_path
             assert evaluate_login_throttle(
                 storage_root=storage_root,
                 bucket_id=profile_b,
-                now=_now(),
+                now=now(),
             ).throttled
 
             assert read_pointer(storage_root) == pointer_a
@@ -109,7 +109,7 @@ def test_rejected_b_password_is_non_oracular_and_leaves_active_a_intact(tmp_path
 
 def test_invalid_b_candidate_material_leaves_active_a_and_pointer_bytes_intact(tmp_path: Path) -> None:
     """A malformed B custody artifact is refused before any A replacement."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         profile_a, profile_b = _register_two_profiles(storage_root)
         ProfileCapsuleLifecycle().select(profile_a)
@@ -156,7 +156,7 @@ def test_invalid_b_candidate_material_leaves_active_a_and_pointer_bytes_intact(t
 
 def test_invocation_authentication_preserves_selection_and_other_runtime_receipt(tmp_path: Path) -> None:
     """Proof binds the named profile locally and leaves the shared sign-in untouched."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         profile_a, profile_b = _register_two_profiles(storage_root)
         ProfileCapsuleLifecycle().select(profile_a)

@@ -14,11 +14,11 @@ from threading import Event
 import pytest
 
 from ......core.config import Settings
-from .. import _kdf_file_lease as lease
-from .._kdf_codec import close_fd
-from .._kdf_lease_worker import KDF_LEASE_WAITING
-from .._kdf_process import launch_lease_worker, terminate_process_tree
+from .. import kdf_file_lease as lease
 from ..errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
+from ..kdf_codec import close_fd
+from ..kdf_lease_worker import KDF_LEASE_WAITING
+from ..kdf_process import launch_lease_worker, terminate_process_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -27,7 +27,7 @@ import os
 import sys
 import threading
 from pathlib import Path
-from cadrumo.adapters.persistence.storage.custody._kdf_process import launch_lease_worker
+from cadrumo.adapters.persistence.storage.custody.kdf_process import launch_lease_worker
 
 root = Path(sys.argv[1])
 lease = os.open(root / "profile-kdf.v1.lock", os.O_RDWR)
@@ -42,7 +42,7 @@ threading.Event().wait()
 """
 
 
-def _old_lock(descriptor: int, *, acquire: bool) -> None:
+def old_lock(descriptor: int, *, acquire: bool) -> None:
     """An existing runtime uses precisely this unchanged OS lock domain."""
     if sys.platform == "win32":
         import msvcrt
@@ -64,7 +64,7 @@ def test_kernel_wait_joins_the_same_lock_held_by_an_older_runtime(
     current = lease.open_kdf_file_lease(path)
     started = Event()
     if sys.platform == "win32":
-        kernel = lease._kernel32()
+        kernel = lease.kernel32()
         wait = kernel.WaitForSingleObject
 
         def waiting(handle: int, milliseconds: int) -> int:
@@ -72,7 +72,7 @@ def test_kernel_wait_joins_the_same_lock_held_by_an_older_runtime(
             return int(wait(handle, milliseconds))
 
         monkeypatch.setattr(kernel, "WaitForSingleObject", waiting)
-        monkeypatch.setattr(lease, "_kernel32", lambda: kernel)
+        monkeypatch.setattr(lease, "kernel32", lambda: kernel)
     else:
         launch = lease.launch_lease_worker
 
@@ -82,7 +82,7 @@ def test_kernel_wait_joins_the_same_lock_held_by_an_older_runtime(
             return process
 
         monkeypatch.setattr(lease, "launch_lease_worker", launching)
-    _old_lock(old, acquire=True)
+    old_lock(old, acquire=True)
     try:
 
         def acquire() -> None:
@@ -98,22 +98,22 @@ def test_kernel_wait_joins_the_same_lock_held_by_an_older_runtime(
             with pytest.raises(OSError):
                 probe = os.open(path, os.O_RDWR)
                 try:
-                    _old_lock(probe, acquire=True)
+                    old_lock(probe, acquire=True)
                 finally:
                     os.close(probe)
             assert not future.done()
-            _old_lock(old, acquire=False)
+            old_lock(old, acquire=False)
             future.result(timeout=10)
         # The acquired lease outlives any helper used for the wait.
         probe = os.open(path, os.O_RDWR)
         try:
             with pytest.raises(OSError):
-                _old_lock(probe, acquire=True)
+                old_lock(probe, acquire=True)
         finally:
             os.close(probe)
         lease.release_kdf_file_lease(current)
-        _old_lock(old, acquire=True)
-        _old_lock(old, acquire=False)
+        old_lock(old, acquire=True)
+        old_lock(old, acquire=False)
     finally:
         os.close(current)
         os.close(old)
@@ -124,20 +124,20 @@ def test_timeout_settles_pending_kernel_lock_and_releases_no_late_lease(tmp_path
     old = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
     os.write(old, b"\0")
     current = lease.open_kdf_file_lease(path)
-    _old_lock(old, acquire=True)
+    old_lock(old, acquire=True)
     try:
         with pytest.raises(ProfileCustodyRefusedError) as captured:
             lease.acquire_kdf_file_lease(
                 current, deadline=time.monotonic() + 0.1, settings=Settings(cadrumo_storage_root=tmp_path)
             )
         assert captured.value.refusal is ProfileCustodyRefusal.KDF_RESOURCE_LIMIT
-        _old_lock(old, acquire=False)
+        old_lock(old, acquire=False)
         # A cancelled overlapped completion or helper must never acquire later
         # and hold capacity on behalf of the superseded login.
         probe = os.open(path, os.O_RDWR)
         try:
-            _old_lock(probe, acquire=True)
-            _old_lock(probe, acquire=False)
+            old_lock(probe, acquire=True)
+            old_lock(probe, acquire=False)
         finally:
             os.close(probe)
     finally:
@@ -155,25 +155,25 @@ def test_windows_capacity_granted_as_timeout_wins_is_explicitly_unlocked(
     old = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
     os.write(old, b"\0")
     current = lease.open_kdf_file_lease(path)
-    _old_lock(old, acquire=True)
-    kernel = lease._kernel32()
+    old_lock(old, acquire=True)
+    kernel = lease.kernel32()
     wait = kernel.WaitForSingleObject
 
     def grant_at_timeout(handle: int, milliseconds: int) -> int:
-        _old_lock(old, acquire=False)
+        old_lock(old, acquire=False)
         assert wait(handle, milliseconds) == 0
         # The real overlapped operation completed successfully, but its owner
         # has already chosen timeout. CancelIoEx cannot undo that successful lock.
         return 258
 
     monkeypatch.setattr(kernel, "WaitForSingleObject", grant_at_timeout)
-    monkeypatch.setattr(lease, "_kernel32", lambda: kernel)
+    monkeypatch.setattr(lease, "kernel32", lambda: kernel)
     try:
         with pytest.raises(ProfileCustodyRefusedError) as captured:
             lease.acquire_kdf_file_lease(current, deadline=time.monotonic() + 5)
         assert captured.value.refusal is ProfileCustodyRefusal.KDF_RESOURCE_LIMIT
-        _old_lock(old, acquire=True)
-        _old_lock(old, acquire=False)
+        old_lock(old, acquire=True)
+        old_lock(old, acquire=False)
     finally:
         close_fd(current)
         close_fd(old)
@@ -192,7 +192,7 @@ def test_posix_helper_exits_when_its_only_owner_pipe_closes_while_capacity_is_he
     owner_read, owner_write = os.pipe()
     result_read, result_write = os.pipe()
     helper: subprocess.Popen[bytes] | None = None
-    _old_lock(old, acquire=True)
+    old_lock(old, acquire=True)
     try:
         helper = launch_lease_worker(
             neutral_root=tmp_path, lease_fd=current, owner_fd=owner_read, result_fd=result_write
@@ -208,10 +208,10 @@ def test_posix_helper_exits_when_its_only_owner_pipe_closes_while_capacity_is_he
         owner_write = -1
         assert helper.wait(timeout=5) != 0
         assert os.read(result_read, 1) == b""
-        _old_lock(old, acquire=False)
+        old_lock(old, acquire=False)
         # No orphan retained the shared description or acquired it after EOF.
-        _old_lock(old, acquire=True)
-        _old_lock(old, acquire=False)
+        old_lock(old, acquire=True)
+        old_lock(old, acquire=False)
     finally:
         if helper is not None and helper.poll() is None:
             terminate_process_tree(helper, None)
@@ -228,7 +228,7 @@ def test_killed_posix_owner_cannot_strand_a_blocked_helper_or_later_lease(tmp_pa
 
     path = tmp_path / "profile-kdf.v1.lock"
     old = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
-    _old_lock(old, acquire=True)
+    old_lock(old, acquire=True)
 
     async def kill_owner() -> None:
         owner = await asyncio.create_subprocess_exec(
@@ -256,8 +256,8 @@ def test_killed_posix_owner_cannot_strand_a_blocked_helper_or_later_lease(tmp_pa
 
     try:
         asyncio.run(kill_owner())
-        _old_lock(old, acquire=False)
-        _old_lock(old, acquire=True)
-        _old_lock(old, acquire=False)
+        old_lock(old, acquire=False)
+        old_lock(old, acquire=True)
+        old_lock(old, acquire=False)
     finally:
         close_fd(old)

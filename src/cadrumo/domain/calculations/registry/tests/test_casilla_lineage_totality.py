@@ -17,12 +17,12 @@ from ..casilla_lineage_totality import CasillaRowKey, lineage_totality, unresolv
 from ..schema import ModeloDefinition, ModeloRevision
 from ..schema_references import PeriodSelector
 from ..schema_surfaces import CasillaDefinition
-from ._synthetic_locale_fixtures import _synthetic_locale_scope, _write_test_label
 from .lineage_totality import is_total
+from .synthetic_locale_fixtures import synthetic_locale_scope, write_test_label
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-__all__ = ["_synthetic_locale_scope"]
+__all__ = ["synthetic_locale_scope"]
 
 _MODELO = "123"
 _EVIDENCE = "disenos_registro/modelo_123/files/2025.txt:188 box [07] first printed in 2025"
@@ -44,7 +44,7 @@ def _row(
     payload: dict[str, object] = {
         "id": cid,
         "number": cid,
-        "localization_keys": (_write_test_label(f"Casilla {cid}"),),
+        "localization_keys": (write_test_label(f"Casilla {cid}"),),
         "section": ("liquidacion",),
         "data_type": "money",
         "semantic_role": f"importe_{cid}",

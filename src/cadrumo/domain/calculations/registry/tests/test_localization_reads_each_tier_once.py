@@ -98,7 +98,7 @@ def test_the_rendered_value_is_the_one_the_selection_read(
     """
     catalogue = _CountingCatalogue(entries)
     monkeypatch.setattr(
-        "cadrumo.domain.calculations.registry.modelo_localization._catalogue_lookup",
+        "cadrumo.domain.calculations.registry.modelo_localization.catalogue_lookup",
         catalogue,
     )
 

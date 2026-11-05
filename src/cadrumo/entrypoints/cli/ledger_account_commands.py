@@ -39,8 +39,8 @@ from ...core.iban import normalise_iban
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.iva.sepa_marca import SepaMarca, derive_sepa_marca
 from ...domain.transactions.own_accounts import OwnAccountHolding, OwnAccountRole
-from ._date_parsing import _parse_iso_date
 from .common import active_bucket_id_or_refuse, bad, emit_envelope
+from .date_parsing import parse_iso_date
 from .ledger_account_results import (
     OwnAccountChangeResult,
     OwnAccountDesignationPayload,
@@ -125,10 +125,10 @@ def _profile_id() -> UUID:
     return UUID(active_bucket_id_or_refuse())
 
 
-def _date_option(value: str | None, *, option: str) -> date | None:
+def date_option(value: str | None, *, option: str) -> date | None:
     if value is None:
         return None
-    return _parse_iso_date(value, label=option, translation_key="cli.ledger.account.errors.invalid_date")
+    return parse_iso_date(value, label=option, translation_key="cli.ledger.account.errors.invalid_date")
 
 
 def _accounts(result: LedgerOwnAccountResult) -> tuple[OwnAccountPayload, ...]:
@@ -192,7 +192,7 @@ def account_add(
 ) -> None:
     """Add one own account; its number arrives through the secret channel or a no-echo prompt."""
     profile_id = _profile_id()
-    opened = _date_option(opened_on, option="--opened-on")
+    opened = date_option(opened_on, option="--opened-on")
     selection = select_machine_secret_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
     secrets = (
         read_machine_secret_payload(OwnAccountAddSecrets, selection=selection)
@@ -265,7 +265,7 @@ def account_update(
 ) -> None:
     """Replace the named details of one own account; account material comes only through the secret channel."""
     profile_id = _profile_id()
-    opened = _date_option(opened_on, option="--opened-on")
+    opened = date_option(opened_on, option="--opened-on")
     selection = select_machine_secret_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
     secrets = (
         read_machine_secret_payload(OwnAccountUpdateSecrets, selection=selection)
@@ -297,7 +297,7 @@ def account_update(
 
 def account_close(ctx: typer.Context, own_account_id: str, closed_on: str) -> None:
     """Close one own account on a date; a closed account is kept, not deleted."""
-    closed = _date_option(closed_on, option="--on")
+    closed = date_option(closed_on, option="--on")
     result = _run(
         ctx,
         LedgerOwnAccountRequest(

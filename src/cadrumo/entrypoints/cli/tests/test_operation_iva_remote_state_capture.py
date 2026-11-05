@@ -212,7 +212,7 @@ def test_combined_capture_command_preserves_payload_lines_and_surface_outcomes(
         projection=projection,
         effect=OperationEffect.UPDATED,
     )
-    report = bridge._report(
+    report = bridge.operation_iva_remote_state_capture_report(
         projection,
         request=IvaRemoteStateCaptureRequest(
             profile_id=_PROFILE,

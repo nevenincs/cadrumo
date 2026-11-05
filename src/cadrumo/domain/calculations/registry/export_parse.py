@@ -61,7 +61,7 @@ def _payload_body(layout: ExportLayoutDefinition, payload: bytes) -> tuple[int, 
     """Locate the body after admitting the filing envelope or auxiliary header extent."""
     cursor = 0
     if layout.filing_envelope is not None:
-        cursor, payload = _filing_envelope_body(layout.filing_envelope, payload)
+        cursor, payload = filing_envelope_body(layout.filing_envelope, payload)
     elif layout.auxiliary_envelope_header is not None:
         # The total-less page-zero header opens the payload ahead of the
         # records. Its bytes carry filing-instance facts (year, period,
@@ -109,7 +109,7 @@ def _parse_payload(
     return ParsedExportPayload(layout_id=layout.id, fields=tuple(parsed), casillas=casillas)
 
 
-def _filing_envelope_body(envelope: FilingEnvelopeDefinition, payload: bytes) -> tuple[int, bytes]:
+def filing_envelope_body(envelope: FilingEnvelopeDefinition, payload: bytes) -> tuple[int, bytes]:
     """Return the body start and the payload without its closer, refusing a malformed envelope.
 
     The prefix carries filing-instance facts (year, period, product identity)
@@ -249,7 +249,7 @@ def _record_literals_match(record: ExportRecordDefinition, record_text: str) -> 
         matched_literal = True
         raw = record_text[field.offset - 1 : field.offset - 1 + field.length]
         try:
-            parsed_literal = _parse_field_value(field, raw)
+            parsed_literal = parse_field_value(field, raw)
         except RegistryValidationError:
             return False, matched_literal
         if parsed_literal != field.literal:
@@ -321,7 +321,7 @@ def _parse_record_fields(
                 )
             value = None
         else:
-            value = _parse_field_value(field, raw)
+            value = parse_field_value(field, raw)
         if field.kind == CasillaFieldKind.LITERAL and value != field.literal:
             raise RegistryValidationError(f"export literal field {field.id!r} does not match the registry layout")
         parsed.append(
@@ -359,7 +359,7 @@ def _empty_occurrence_blocks(
     return frozenset(empty)
 
 
-def _parse_field_value(
+def parse_field_value(
     field: ExportFieldDefinition,
     raw: str,
 ) -> ParsedExportPolicyValue:

@@ -34,11 +34,11 @@ from cadrumo.domain.invoices.tests.modelo_349_invoice_facts import (
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
-from cadrumo.entrypoints.tests.profile_persistence._dormant_resolver_live_support import (
-    _T0,
-    _T1,
-    _revision,
-    _seed_ready_profile,
+from cadrumo.entrypoints.tests.profile_persistence.dormant_resolver_live_support import (
+    T0,
+    T1,
+    dormant_resolver_live_revision,
+    seed_ready_profile,
 )
 
 pytestmark = [pytest.mark.hex_entrypoint]
@@ -57,7 +57,7 @@ _M349_OPERADORES_CASILLA: CasillaId = validated_casilla_id("decl.numero-operador
 @pytest.fixture
 def m349_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M349_BUCKET) as profile:
-        _seed_ready_profile(profile.repository, bucket_id=_M349_BUCKET)
+        seed_ready_profile(profile.repository, bucket_id=_M349_BUCKET)
         yield profile.repository
 
 
@@ -94,7 +94,7 @@ def m349_calculated(
 
     # Non-vacuity: the casilla under test binds the invoice source, and the seeded
     # bases are distinct so a copy/contamination cannot satisfy the sum.
-    revision = _revision("349", _M349_REVISION)
+    revision = dormant_resolver_live_revision("349", _M349_REVISION)
     importe_casilla = next(c for c in revision.casillas if c.id == _M349_IMPORTE_CASILLA)
     assert importe_casilla.binding == _M349_IMPORTE_BINDING
     assert any(
@@ -111,14 +111,14 @@ def m349_calculated(
         ports=WorkLifecyclePorts(
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=m349_objects)
         ),
-        clock=_T0,
+        clock=T0,
         operation=operation,
     )
     with bundled_indexed_authority().operation() as operation:
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=_M349_BUCKET, operation=operation),
-            clock=_T1,
+            clock=T1,
         )
 
     assert isinstance(result, BucketAggregationCalculationResult)

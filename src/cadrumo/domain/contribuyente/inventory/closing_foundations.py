@@ -9,23 +9,21 @@ from enum import StrEnum
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core.decimal.constants import MONEY_ZERO
-from ....core.errors.hierarchy import CadrumoError as _CadrumoError
-from ....core.errors.hierarchy import CoreValidationError as _CoreValidationError
-from ....core.errors.hierarchy import pydantic_validation_boundary
+from ....core.errors.hierarchy import CadrumoError, CoreValidationError, pydantic_validation_boundary
 from ....core.filing_year import FilingYear
-from ....core.hashing import content_hash_hex as _content_hash_hex
+from ....core.hashing import content_hash_hex
 from ....core.identity.digest import ContentDigest
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
-from ....core.money.rounding import round_to_cents as _quantize
+from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.money.rounding import round_to_cents
 from ...filing_evidence import FilingEvidenceReference
-from ...identifiers import canonical_decimal_string as _canonical_decimal_string
+from ...identifiers import canonical_decimal_string
 
 
-class InventoryLedgerError(_CadrumoError):
+class InventoryLedgerError(CadrumoError):
     """Raised when an inventory ledger operation is invalid."""
 
 
-class InventoryValidationError(InventoryLedgerError, _CoreValidationError):
+class InventoryValidationError(InventoryLedgerError, CoreValidationError):
     """Raised when an inventory ledger fails Pydantic validation.
 
     Inherits from CoreValidationError (which itself inherits from CoreError
@@ -36,7 +34,7 @@ class InventoryValidationError(InventoryLedgerError, _CoreValidationError):
 
 def require_inventory_cents(value: Decimal, *, field_name: str) -> Decimal:
     """Refuse a monetary value that is not already quantised to cents."""
-    if value != _quantize(value):
+    if value != round_to_cents(value):
         raise InventoryValidationError(f"{field_name} must be quantised to cents")
     return value
 
@@ -59,7 +57,7 @@ class PhysicalClosingEvidenceRole(StrEnum):
 class PhysicalClosingEvidence(BaseModel):
     """Digest-bound opaque evidence supporting a physical closing."""
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     reference: FilingEvidenceReference
     role: PhysicalClosingEvidenceRole
     content_digest: ContentDigest
@@ -81,7 +79,7 @@ class InventoryClosingDecisionEvidenceRole(StrEnum):
 class InventoryClosingDecisionEvidence(BaseModel):
     """Digest-bound reconciliation evidence used by one authority decision."""
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     reference: FilingEvidenceReference
     role: InventoryClosingDecisionEvidenceRole
     content_digest: ContentDigest
@@ -90,7 +88,7 @@ class InventoryClosingDecisionEvidence(BaseModel):
 class PriorClosingContinuityEvidence(BaseModel):
     """Digest-bound evidence of the immediately prior authoritative closing."""
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     reference: FilingEvidenceReference
     content_digest: ContentDigest
 
@@ -104,12 +102,12 @@ def fingerprint_prior_authoritative_closing(
     evidence: tuple[PriorClosingContinuityEvidence, ...],
 ) -> ContentDigest:
     """Derive immutable identity for one prior authoritative closing fact."""
-    return _content_hash_hex(
+    return content_hash_hex(
         {
             "fingerprint_schema_version": "1",
             "actividad_id": actividad_id,
             "filing_year": filing_year,
-            "authoritative_closing_value": _canonical_decimal_string(authoritative_closing_value),
+            "authoritative_closing_value": canonical_decimal_string(authoritative_closing_value),
             "authoritative_source_fingerprint": authoritative_source_fingerprint,
             "evidence": [
                 {"reference": item.reference.reference, "content_digest": item.content_digest}
@@ -126,7 +124,7 @@ def fingerprint_prior_closing_source(
     evidence: tuple[PriorClosingContinuityEvidence, ...],
 ) -> ContentDigest:
     """Derive the source identity of a prior closing known only through its documents."""
-    return _content_hash_hex(
+    return content_hash_hex(
         {
             "fingerprint_schema_version": "1",
             "actividad_id": actividad_id,
@@ -142,7 +140,7 @@ def fingerprint_prior_closing_source(
 class PhysicalClosingObservation(BaseModel):
     """Immutable evidenced physical closing valuation for one activity and year."""
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
     observation_id: str = Field(min_length=1, max_length=128)
     observed_on: date
     as_of_date: date
@@ -186,7 +184,7 @@ class PhysicalClosingObservation(BaseModel):
     @property
     def fingerprint(self) -> ContentDigest:
         """Return canonical economic/evidence identity for the observation."""
-        return _content_hash_hex(
+        return content_hash_hex(
             {
                 "fingerprint_schema_version": "1",
                 "observation_id": self.observation_id,
@@ -194,7 +192,7 @@ class PhysicalClosingObservation(BaseModel):
                 "as_of_date": self.as_of_date.isoformat(),
                 "actividad_id": self.actividad_id,
                 "filing_year": self.filing_year,
-                "closing_value": _canonical_decimal_string(self.closing_value),
+                "closing_value": canonical_decimal_string(self.closing_value),
                 "valuation_basis": self.valuation_basis.value,
                 "evidence": [
                     {

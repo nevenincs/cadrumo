@@ -54,7 +54,7 @@ from cadrumo.application.aggregation.tests.renta_income_aggregation_support impo
 )
 from cadrumo.core.period import Period
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.currency.models import CurrencyNormalizationStatus, MonetaryAmount
 from cadrumo.domain.currency.service import CurrencyNormalizationService
 from cadrumo.domain.iva.flow import IvaFlowDirection
@@ -214,7 +214,7 @@ def built() -> _CorpusRows:
     Each row building through the strict pydantic model is itself a fidelity
     assertion (invalid field combinations would raise here).
     """
-    with _indexed_authority_for_test().operation():
+    with bundled_indexed_authority().operation():
         return _build_transactions()
 
 
@@ -247,7 +247,7 @@ def _catalogue(built: _CorpusRows) -> TransactionCatalogue:
 
 def test_iva_pipeline_gates_transfers_personal_and_nondeclarable(built: _CorpusRows) -> None:
     """No gated row may ever surface as an IVA observation, any period."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         gated_ids = {tx.transaction_id for tx, rule, _ in built if not rule.get("iva_declarable", False)}
         catalogue = _catalogue(built)
         emitted: set[str] = set()
@@ -267,7 +267,7 @@ def test_iva_pipeline_gates_transfers_personal_and_nondeclarable(built: _CorpusR
 
 def test_iva_observations_match_oracle_category_and_flow(built: _CorpusRows) -> None:
     """Every emitted observation matches the oracle's category and flow."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         by_id = {tx.transaction_id: rule for tx, rule, _ in built}
         catalogue = _catalogue(built)
         seen = 0
@@ -301,7 +301,7 @@ def test_iva_observations_match_oracle_category_and_flow(built: _CorpusRows) -> 
 
 def test_iva_pipeline_refuses_input_categories_without_authoritative_deduction_evidence(built: _CorpusRows) -> None:
     """Legacy corpus input categories remain blocked until their evidence oracle is extended."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         catalogue = _catalogue(built)
         categories: set[IvaCategory] = set()
         refusal_count = 0
@@ -335,7 +335,7 @@ def test_renta_income_excludes_salary_rent_and_interest_from_m130(built: _Corpus
     excluded_ids = {tx.transaction_id for tx, rule, _ in built if "excluded_m130" in rule.get("feeds", [])}
     assert excluded_ids, "corpus must contain salary/rent/interest income"
     emitted: set[str] = set()
-    with _indexed_authority_for_test().operation():
+    with bundled_indexed_authority().operation():
         catalogue = _catalogue(built)
         for period in _QUARTERLY_TEST_PERIODS:
             result = aggregate_renta_income_ledger(
@@ -354,7 +354,7 @@ def test_renta_income_excludes_salary_rent_and_interest_from_m130(built: _Corpus
 
 def test_recargo_equivalencia_is_not_deductible_input_iva(built: _CorpusRows) -> None:
     """The RE anomaly row must never surface as deductible soportado IVA."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         re_ids = {
             tx.transaction_id
             for tx, rule, _ in built

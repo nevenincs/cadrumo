@@ -22,7 +22,7 @@ from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import SnapshotId
 from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry.ids import BindingId
-from ._app_live_payloads_support import canonical_borrador_period, canonical_borrador_utc_timestamp
+from .app_live_payloads_support import canonical_borrador_period, canonical_borrador_utc_timestamp
 
 
 class Borrador100SnapshotSummaryPayload(OutputSchema):

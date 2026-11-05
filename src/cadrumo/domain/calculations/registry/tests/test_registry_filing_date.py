@@ -8,7 +8,7 @@ import pytest
 
 from ....period import calculation_filing_date
 from ..schema import RegistrySnapshot
-from ._registry_filing_date_support import registry_filing_date
+from .registry_filing_date_support import registry_filing_date
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 

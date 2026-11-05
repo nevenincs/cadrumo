@@ -37,7 +37,7 @@ from cadrumo.domain.prorrata_register.register import (
     ProrrataRegisterEntry,
     SectorDefinition,
 )
-from cadrumo.entrypoints.cli.prorrata_register_commands import _entry_payload
+from cadrumo.entrypoints.cli.prorrata_register_commands import entry_payload
 from cadrumo.entrypoints.cli.prorrata_register_results import (
     ProrrataDeclareGrossResult,
     ProrrataDeclareSectorResult,
@@ -674,7 +674,7 @@ def test_entry_payload_round_trips_the_especial_transition_kind_as_a_stable_toke
         source_registry_snapshot_refs=(),
     )
 
-    payload = _entry_payload(ProrrataEntryProjection.from_entry(entry))
+    payload = entry_payload(ProrrataEntryProjection.from_entry(entry))
 
     assert payload.especial_transition is not None
     assert payload.especial_transition.kind == kind

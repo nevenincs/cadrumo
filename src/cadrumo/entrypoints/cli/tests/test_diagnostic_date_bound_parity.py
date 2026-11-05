@@ -9,7 +9,7 @@ import pytest
 import typer
 from pydantic import ValidationError
 
-from ..app_diagnostics_commands import _parse_iso_date as parse_diagnostics_date
+from ..app_diagnostics_commands import parse_iso_date as parse_diagnostics_date
 from ..diagnostics_results import (
     ErrorsBreakdownResult,
     LatencyPercentilesPayload,
@@ -18,7 +18,7 @@ from ..diagnostics_results import (
     RunHealthResult,
     RunsListResult,
 )
-from ..ledger_read_commands import _parse_iso_date as parse_ledger_date
+from ..ledger_read_commands import parse_iso_date as parse_ledger_date
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 

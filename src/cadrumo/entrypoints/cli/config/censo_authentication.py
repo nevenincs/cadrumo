@@ -41,7 +41,7 @@ from ....core.i18n.render import tr
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.output_rendering import OutputFormat
 from ..common import format_of
-from ._profile_mutation import execute_profile_mutation, mutation_deadline, read_mutation_baseline
+from .profile_mutation import execute_profile_mutation, mutation_deadline, read_mutation_baseline
 
 
 def read_censo_auth(client: FrontendClient) -> AuthSyncReadiness:
@@ -83,7 +83,7 @@ def require_censo_auth(ctx: typer.Context, *, configure: bool = False) -> None:
     if configure and not interactive:
         raise _readiness_error(readiness, console_required=True)
     if configure or (not readiness.ready and interactive and typer.confirm(tr("cli.censo_auth.offer"), default=True)):
-        _configure(client, readiness)
+        censo_authentication_configure(client, readiness)
         readiness = read_censo_auth(client)
     if not readiness.ready:
         raise _readiness_error(readiness)
@@ -138,7 +138,7 @@ def _prompt_field(client: FrontendClient, path: str) -> None:
         write_stderr(tr("cli.censo_auth.still_missing", field=path))
 
 
-def _configure(client: FrontendClient, readiness: AuthSyncReadiness) -> None:
+def censo_authentication_configure(client: FrontendClient, readiness: AuthSyncReadiness) -> None:
     choices = known_auth_provider_ids()
     provider = typer.prompt(
         tr("cli.censo_auth.method"),
@@ -185,10 +185,10 @@ def _prompt_provider_fields(client: FrontendClient, kind: AuthProviderKind, rout
                 if item.field in {"auth.fecha_validez", "auth.numero_soporte"}:
                     _prompt_field(client, item.field)
     if kind in PASSWORD_CREDENTIAL_PROVIDERS:
-        _save_password(client, kind)
+        save_password(client, kind)
 
 
-def _save_password(client: FrontendClient, provider: AuthProviderKind) -> None:
+def save_password(client: FrontendClient, provider: AuthProviderKind) -> None:
     import json
 
     from ....application.auth.credential_operations import (

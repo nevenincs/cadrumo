@@ -66,8 +66,8 @@ from .activity_asset_operation_test_support import (
 )
 from .prorrata_bienes_operation_test_support import prepare_bienes_inversion_operation_conformance_case
 from .registered_executor_payload_context import PayloadBuilder, PayloadContext, PayloadResult
-from .registered_executor_scenario_constants import _LEDGER_LIST_PRIVATE_FILTER_SENTINEL, _OWN_ACCOUNT_SYNTHETIC_IBAN
-from .registered_executor_seeding_support import _seed_conformance_invoice, seeded_ledger_track_transaction_id
+from .registered_executor_scenario_constants import LEDGER_LIST_PRIVATE_FILTER_SENTINEL, OWN_ACCOUNT_SYNTHETIC_IBAN
+from .registered_executor_seeding_support import seed_conformance_invoice, seeded_ledger_track_transaction_id
 
 _EVIDENCE_PDF = b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n"
 
@@ -113,7 +113,7 @@ def _ledger_own_account(ctx: PayloadContext) -> PayloadResult:
             "action": "add",
             "label": "synthetic conformance account",
             "holding": OwnAccountHolding.TITULAR,
-            "iban": _OWN_ACCOUNT_SYNTHETIC_IBAN,
+            "iban": OWN_ACCOUNT_SYNTHETIC_IBAN,
         },
     )
 
@@ -576,7 +576,7 @@ def _ledger_list(ctx: PayloadContext) -> PayloadResult:
                 direction=TransactionDirection.OUTGOING,
                 description=description,
                 business_classification=BusinessClassification.NOT_YET_PROCESSED,
-                group_label=_LEDGER_LIST_PRIVATE_FILTER_SENTINEL,
+                group_label=LEDGER_LIST_PRIVATE_FILTER_SENTINEL,
                 actor=modelo_operation_test_support.MODELO_OPERATION_TEST_ACTOR,
             ),
             ports=ports,
@@ -587,7 +587,7 @@ def _ledger_list(ctx: PayloadContext) -> PayloadResult:
         {
             "profile_id": ctx.profile_id,
             "filters": ("period=1T", "year=2025", "classification=not_yet_processed"),
-            "group": _LEDGER_LIST_PRIVATE_FILTER_SENTINEL,
+            "group": LEDGER_LIST_PRIVATE_FILTER_SENTINEL,
             "limit": 2,
             "offset": 1,
             "sort_by": LedgerSortField.DESCRIPTION,
@@ -728,7 +728,7 @@ def _ledger_invoice_preview(ctx: PayloadContext) -> PayloadResult:
 
 
 def _ledger_invoice_stored(ctx: PayloadContext) -> PayloadResult:
-    invoice = _seed_conformance_invoice(ctx.profile_id)
+    invoice = seed_conformance_invoice(ctx.profile_id)
     values: dict[str, object] = {"profile_id": ctx.profile_id}
     if ctx.definition_id == INVOICE_LIST_OPERATION_DEFINITION_ID:
         values["kind"] = None

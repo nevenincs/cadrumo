@@ -8,10 +8,8 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests.modelo_export_support import (
-    export_m303_filing_evidence as _general_m303_filing_evidence,
-)
-from cadrumo.adapters.persistence.profile.tests.modelo_export_support import (
-    export_taxpayer_profile as _profile,
+    export_m303_filing_evidence,
+    export_taxpayer_profile,
 )
 from cadrumo.application.aggregation.iva_ledger import (
     IvaLedgerAggregation,
@@ -82,7 +80,7 @@ def _general_m303_filing_facts(*, operation: PinnedAuthorityOperation):
     period = Period.from_year_and_code(2026, "1T")
     prorrata_register = ProrrataRegister()
     return resolve_m303_filing_facts(
-        evidence=_general_m303_filing_evidence(period, operation=operation),
+        evidence=export_m303_filing_evidence(period, operation=operation),
         supplier_regime=resolve_m303_supplier_regime_arrival(
             period=period,
             iva_aggregation=IvaLedgerAggregation(period=period),
@@ -113,7 +111,7 @@ def test_export_scope_mapper_rejects_general_evidence_for_a_simplified_profile(
 ) -> None:
     """General evidence cannot be exported under a simplified profile composition."""
     filing_facts = _general_m303_filing_facts(operation=operation)
-    workflow_profile = _profile()
+    workflow_profile = export_taxpayer_profile()
     assert workflow_profile.iva is not None
     simplified_profile = workflow_profile.model_copy(
         update={

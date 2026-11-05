@@ -23,7 +23,7 @@ from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..bienes_inversion import BienesInversionIvaRegisterRepository
 from ..prorrata_register import ProrrataRegisterRepository
 from ..transactions import TransactionCatalogueRepository
-from .test_iva_ledger_prorrata_apportionment import _fully_taxable_purchase, _fully_taxable_sale
+from .test_iva_ledger_prorrata_apportionment import fully_taxable_purchase, fully_taxable_sale
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter, pytest.mark.usefixtures("operation")]
 _BUCKET = "108e9631-8e8f-4a81-840f-39ba3e07a70b"
@@ -38,7 +38,7 @@ def _sale(
     excluded: bool = False,
     year: int = 2026,
 ) -> Transaction:
-    original = _fully_taxable_sale(name)
+    original = fully_taxable_sale(name)
     data = original.model_dump()
     data.pop("transaction_id")
     raw = original.raw.model_dump()
@@ -74,7 +74,7 @@ def test_annual_volume_comparison_preserves_authority_and_marks_incomplete_evide
             _sale("exempt-sale", category="domestic_exempt", article=None if unclassified else "art_20_uno_8"),
             _sale("excluded-sale", excluded=True),
             _sale("prior-year-sale", year=2025),
-            _fully_taxable_purchase("purchase-not-turnover"),
+            fully_taxable_purchase("purchase-not-turnover"),
         )
         transactions.save(TransactionCatalogue.from_transactions(rows))
         aggregation = aggregate_iva_ledger_observations_from_repositories(

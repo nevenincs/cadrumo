@@ -48,12 +48,12 @@ from .....core.directory_scan import scan_directory
 from .....core.period import Period
 from .....domain.justificante.schema import Justificante
 from .....tests.aeat_literal_fixtures import aeat_host
-from .....tests.inventory import FIXTURES_DIR as _FIXTURES_ROOT
+from .....tests.inventory import FIXTURES_DIR
 from .parse_cache import parse_committed_justificante_fixture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("authority_operation")]
 
-_JUSTIFICANTES_DIR = _FIXTURES_ROOT / "justificantes"
+_JUSTIFICANTES_DIR = FIXTURES_DIR / "justificantes"
 _SEDE_HOST = aeat_host("sede")
 
 # The sanitiser injects a redacted tax id per fixture: a NIE/NIF for a personal

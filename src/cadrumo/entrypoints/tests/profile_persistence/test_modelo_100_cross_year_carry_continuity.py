@@ -57,7 +57,7 @@ import pytest
 
 from cadrumo.application.modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -78,8 +78,7 @@ from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
 )
 from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
 from .observation_seeding_support import save_stamped_observation
 
@@ -152,7 +151,7 @@ def _seed_taxpayer_unit_profile() -> None:
     # The display_name MUST match the label the isolated_runtime_profile
     # fixture stamps on the bucket's profile manifest ("Test runtime profile");
     # a divergent label trips the torn-rename guard in CommittedProfileView.
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -179,7 +178,7 @@ def _seed_taxpayer_unit_profile() -> None:
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 

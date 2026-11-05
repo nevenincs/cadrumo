@@ -32,14 +32,14 @@ from ..acceleration_receipt import (
     PROFILE_SESSION_RECORD_MAX_BYTES,
     AccelerationReceiptRevocationError,
     ReceiptDeletion,
-    _pending_retirement_bytes,
-    _profile_session_lock_path,
-    _profile_session_retirement_path,
-    _receipt_bytes,
-    _write_acceleration_receipt,
     delete_profile_session,
     mint_profile_session,
+    pending_retirement_bytes,
+    profile_session_lock_path,
     profile_session_path,
+    profile_session_retirement_path,
+    receipt_bytes,
+    write_acceleration_receipt,
 )
 from ..acceleration_receipt_crypto import (
     PROFILE_SESSION_SCHEMA_VERSION,
@@ -217,7 +217,7 @@ class TestAnchoredReceiptBoundary:
         """
         profile_id = _profile_id()
         path = self._path(tmp_path, profile_id)
-        lock_path = _profile_session_lock_path(path)
+        lock_path = profile_session_lock_path(path)
         # The active-profile transaction has already provisioned this root
         # leaf before an established profile reaches resume.  Establish that
         # lifecycle precondition, so this is an exact before/after probe of
@@ -383,7 +383,7 @@ finally:
     def test_noncanonical_and_duplicate_json_are_refused_by_exact_bytes(self, tmp_path: Path) -> None:
         profile_id = _profile_id()
         record = _wrap(session_key=secrets.token_bytes(32), dek=secrets.token_bytes(32), profile_id=profile_id)
-        canonical = _receipt_bytes(record)
+        canonical = receipt_bytes(record)
         duplicate = canonical[:-1] + f',"profile_id":"{profile_id}"}}'.encode()
 
         for candidate in (b" " + canonical, duplicate):
@@ -517,14 +517,14 @@ print(outcome.refusal.value if outcome.refusal is not None else 'resumed')
         monkeypatch.setattr(receipt_owner, "delete_acceleration_secret", unavailable)
         profile_id = _profile_id()
         self._prepare_sidecar(tmp_path, profile_id)
-        successor = _receipt_bytes(
+        successor = receipt_bytes(
             _wrap(session_key=secrets.token_bytes(32), dek=secrets.token_bytes(32), profile_id=profile_id),
         )
-        journal_path = _profile_session_retirement_path(storage_root=tmp_path, profile_id=profile_id)
+        journal_path = profile_session_retirement_path(storage_root=tmp_path, profile_id=profile_id)
         compare_and_replace_profile_custody_local_record(
             journal_path,
             expected=None,
-            replacement=_pending_retirement_bytes(profile_id=profile_id, predecessor=None, successor=successor),
+            replacement=pending_retirement_bytes(profile_id=profile_id, predecessor=None, successor=successor),
             maximum_bytes=24 * 1024,
         )
         assert journal_path.exists(), "the journal must exist, or its removal proves nothing"
@@ -541,11 +541,11 @@ print(outcome.refusal.value if outcome.refusal is not None else 'resumed')
         """A process dies after journal publication but before keychain storage."""
         profile_id = _profile_id()
         self._prepare_sidecar(tmp_path, profile_id)
-        successor = _receipt_bytes(
+        successor = receipt_bytes(
             _wrap(session_key=secrets.token_bytes(32), dek=secrets.token_bytes(32), profile_id=profile_id),
         )
-        journal_path = _profile_session_retirement_path(storage_root=tmp_path, profile_id=profile_id)
-        journal = _pending_retirement_bytes(profile_id=profile_id, predecessor=None, successor=successor)
+        journal_path = profile_session_retirement_path(storage_root=tmp_path, profile_id=profile_id)
+        journal = pending_retirement_bytes(profile_id=profile_id, predecessor=None, successor=successor)
         compare_and_replace_profile_custody_local_record(
             journal_path,
             expected=None,
@@ -576,7 +576,7 @@ print(outcome.refusal.value if outcome.refusal is not None else 'resumed')
             dek=secrets.token_bytes(32),
             profile_id=profile_id,
         )
-        predecessor = _write_acceleration_receipt(
+        predecessor = write_acceleration_receipt(
             storage_root=tmp_path,
             profile_id=profile_id,
             record=predecessor_record,
@@ -587,9 +587,9 @@ print(outcome.refusal.value if outcome.refusal is not None else 'resumed')
             dek=secrets.token_bytes(32),
             profile_id=profile_id,
         )
-        successor = _receipt_bytes(successor_record)
-        journal_path = _profile_session_retirement_path(storage_root=tmp_path, profile_id=profile_id)
-        journal = _pending_retirement_bytes(
+        successor = receipt_bytes(successor_record)
+        journal_path = profile_session_retirement_path(storage_root=tmp_path, profile_id=profile_id)
+        journal = pending_retirement_bytes(
             profile_id=profile_id,
             predecessor=predecessor,
             successor=successor,
@@ -600,7 +600,7 @@ print(outcome.refusal.value if outcome.refusal is not None else 'resumed')
             replacement=journal,
             maximum_bytes=24 * 1024,
         )
-        _write_acceleration_receipt(
+        write_acceleration_receipt(
             storage_root=tmp_path,
             profile_id=profile_id,
             record=successor_record,
@@ -772,7 +772,7 @@ class TestProfileSessionAcceleration:
         path = profile_session_path(storage_root=tmp_path, profile_id=profile_id)
         try:
             forged = record.model_copy(update={"idle_deadline": _NOW + timedelta(hours=3)})
-            path.write_bytes(_receipt_bytes(forged))
+            path.write_bytes(receipt_bytes(forged))
             outcome, resumed = resume_receipt_as_runtime(
                 storage_root=tmp_path,
                 profile_id=profile_id,
@@ -788,7 +788,7 @@ class TestProfileSessionAcceleration:
             # A proof that fails to unwrap cannot tell a forged key from a
             # corrupt record, so the runtime door keeps both halves.
             assert outcome.deletion is ReceiptDeletion.NOT_REQUIRED
-            assert path.read_bytes() == _receipt_bytes(forged)
+            assert path.read_bytes() == receipt_bytes(forged)
             assert (
                 keyring.get_password(
                     PROFILE_SESSION_KEYCHAIN_SERVICE,

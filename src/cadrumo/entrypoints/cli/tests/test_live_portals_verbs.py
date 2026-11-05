@@ -15,7 +15,7 @@ from ....core.i18n.render import tr
 from ....domain.portals.errors import PortalRegistryInvariant, portal_integrity_error
 from ....domain.portals.registry import PORTAL_REGISTRY
 from .. import app_live_portals_commands as portals_cli_module
-from ..app_live_portals_commands import _project_portal_refusal
+from ..app_live_portals_commands import project_portal_refusal
 from ..common import cli_policy_refusal_projection
 from .cli_runner import invoke_cached_cli
 
@@ -201,7 +201,7 @@ def test_portal_integrity_refusal_reaches_the_cli_boundary_as_safety() -> None:
         facts={"portal": "portal_test", "entry_unique": False},
     )
 
-    projection = cli_policy_refusal_projection(_project_portal_refusal(error))
+    projection = cli_policy_refusal_projection(project_portal_refusal(error))
 
     assert projection is not None
     assert projection.precondition_action.model_dump(mode="json") == {

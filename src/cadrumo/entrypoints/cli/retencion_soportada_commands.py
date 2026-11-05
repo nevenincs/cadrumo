@@ -17,8 +17,8 @@ from ...application.retencion_soportada_certificado.requests import (
 from ...core.i18n.render import tr
 from ...core.retencion_soportada import RetencionSoportadaClase
 from ...domain.renta.retencion_soportada import RetencionSoportadaOrigen
-from ._decimal_parsing import parse_decimal_amount
 from .common import active_bucket_id_or_refuse, bad, emit_envelope
+from .decimal_parsing import parse_decimal_amount
 from .operation_ledger_retencion_soportada import (
     list_retencion_soportada,
     record_retencion_soportada,

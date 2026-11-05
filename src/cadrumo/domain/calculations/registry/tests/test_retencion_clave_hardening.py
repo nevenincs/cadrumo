@@ -25,7 +25,7 @@ from pydantic import ValidationError
 from .....core.aggregation import RetencionClave
 from ..authority import PinnedAuthorityOperation
 from ..governed_fact_scope import validating_governed_facts
-from ..withholding_bindings import WithholdingObservation, _retencion_clave_declarations
+from ..withholding_bindings import WithholdingObservation, retencion_clave_declarations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -39,7 +39,7 @@ def _authority_scope(operation: PinnedAuthorityOperation) -> Iterator[None]:
 
 
 def _m190_dr_claves(operation: PinnedAuthorityOperation) -> frozenset[str]:
-    order = _retencion_clave_declarations(_ON, authority=operation)["clave_order"]
+    order = retencion_clave_declarations(_ON, authority=operation)["clave_order"]
     return frozenset(token.strip() for token in order.split(",") if token.strip())
 
 

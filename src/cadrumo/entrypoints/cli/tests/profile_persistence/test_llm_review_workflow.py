@@ -53,16 +53,12 @@ from cadrumo.entrypoints.ledger_llm_composition import compose_ledger_llm
 
 from .....adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from .....adapters.persistence.profile.tests.llm_evidence_split_support import (
-    single_line_proposal as _single_line_proposal,
-)
-from .....adapters.persistence.profile.tests.llm_evidence_split_support import (
-    split_subprocess_proposer as _split_subprocess_proposer,
-)
-from .....adapters.persistence.profile.tests.llm_evidence_split_support import (
-    two_line_proposal as _two_line_proposal,
+    single_line_proposal,
+    split_subprocess_proposer,
+    two_line_proposal,
 )
 from .....adapters.persistence.profile.tests.llm_saturation_support import (
-    saturating_subprocess_classifier as _saturating_subprocess_classifier,
+    saturating_subprocess_classifier,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -261,7 +257,7 @@ def _saturated_suggestion(
         bucket_id=repository.bucket_id,
         transaction_id=tx_id,
         operation=ledger_ports.operation,
-        classifier=_saturating_subprocess_classifier(iva_category=IvaCategory("domestic_general"), operation=operation),
+        classifier=saturating_subprocess_classifier(iva_category=IvaCategory("domestic_general"), operation=operation),
         transaction_repository=repository,
         settings=settings,
         ports=llm_ports,
@@ -283,7 +279,7 @@ def _split_suggestion(
         bucket_id=repository.bucket_id,
         transaction_id=tx_id,
         operation=ledger_ports.operation,
-        proposer=_split_subprocess_proposer(response=proposal, operation=operation),
+        proposer=split_subprocess_proposer(response=proposal, operation=operation),
         transaction_repository=repository,
         read_evidence=False,
         settings=settings,
@@ -343,7 +339,7 @@ def test_multi_child_split_apply_stamps_the_auto_split_origin_label(
             _split_suggestion(
                 repository,
                 tx_id,
-                proposal=_two_line_proposal(),
+                proposal=two_line_proposal(),
                 ledger_ports=ports,
                 llm_ports=llm_ports,
                 settings=settings,
@@ -384,7 +380,7 @@ def test_split_llm_origin_stamps_its_own_distinct_source_command(
             _split_suggestion(
                 repository,
                 tx_id,
-                proposal=_two_line_proposal(),
+                proposal=two_line_proposal(),
                 ledger_ports=ports,
                 llm_ports=llm_ports,
                 settings=settings,
@@ -424,7 +420,7 @@ def test_no_split_verdict_refuses_a_split_decision(
             _split_suggestion(
                 repository,
                 tx_id,
-                proposal=_single_line_proposal(),
+                proposal=single_line_proposal(),
                 ledger_ports=ports,
                 llm_ports=llm_ports,
                 settings=settings,
@@ -514,7 +510,7 @@ def test_cli_route_parity_split_apply_matches_direct_primitive(
                 suggestion = _split_suggestion(
                     repository,
                     tx_id,
-                    proposal=_two_line_proposal(),
+                    proposal=two_line_proposal(),
                     ledger_ports=ports,
                     llm_ports=llm_ports,
                     settings=settings,
@@ -586,7 +582,7 @@ def test_reviewed_apply_refuses_stale_row_without_overwriting_newer_persistence(
             suggestion = _split_suggestion(
                 repository,
                 tx_id,
-                proposal=_two_line_proposal(),
+                proposal=two_line_proposal(),
                 ledger_ports=ports,
                 llm_ports=llm_ports,
                 settings=settings,

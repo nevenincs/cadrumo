@@ -13,7 +13,7 @@ This chunk covers 26 CLI modules (5,750 lines; 47,627 measured o200k_base proxy 
 
 ## Product capabilities
 
-The live CLI family distinguishes AEAT observation from AEAT mutation. Its module description says these commands collect or render local evidence and do not submit forms, make payments, acknowledge notifications, or perform representative write actions. The command-spec composer separates local metadata and encrypted-local reads from profile-bound network captures, and each operation emits a typed result envelope (live command family (`src/cadrumo/entrypoints/cli/_app_live_command_specs.py`), capture policy (`src/cadrumo/entrypoints/cli/_app_live_command_spec_support.py`), live handler boundary (`src/cadrumo/entrypoints/cli/_app_live.py`)).
+The live CLI family distinguishes AEAT observation from AEAT mutation. Its module description says these commands collect or render local evidence and do not submit forms, make payments, acknowledge notifications, or perform representative write actions. The command-spec composer separates local metadata and encrypted-local reads from profile-bound network captures, and each operation emits a typed result envelope (live command family (`src/cadrumo/entrypoints/cli/app_live_command_specs.py`), capture policy (`src/cadrumo/entrypoints/cli/app_live_command_spec_support.py`), live handler boundary (`src/cadrumo/entrypoints/cli/_app_live.py`)).
 
 Operators can inspect locally captured expedientes, filed-declaration, justificante, notification, and IVA evidence; initiate bounded read/capture flows; import a local Modelo 100 draft PDF into a profile snapshot; and inspect a local portal catalogue. Expedientes commands capture a declaration-register snapshot and offer local list, view, and latest reads. Justificante pull captures a signed receipt through the registered profile worker, then reports its CSV, expediente, digest, capture state, and whether metadata or filing evidence was enrolled locally; list and view report custody metadata without printing the stored PDF body (expedientes handlers (`src/cadrumo/entrypoints/cli/_app_live_expedientes_cli.py`), receipt handler (`src/cadrumo/entrypoints/cli/_app_live_justificante_cli.py`), receipt payload (`src/cadrumo/entrypoints/cli/_app_live_justificante_payloads.py`)).
 
@@ -27,7 +27,7 @@ Notification pull captures a DEHú snapshot; list, view, and latest read it loca
 
 The CLI presents evidence from AEAT declaration registers, IVA wallet/history surfaces, DEHú snapshots and signed justificantes, alongside profile facts and registry-selected filing dependencies. It preserves uncertainty where sources do not support a complete account: filed-history pairs retain their discovery provenance; capture failures remain distinct from a completed zero-row walk; skipped casillas are named without exposing their values; notification documents carry a digest and parsed report without embedding the encrypted document bytes. These are evidence projections, not a legal validation of AEAT records or current tax rules.
 
-Authentication preflight is rendered to stderr using the application’s report and a CLI redaction function; it surfaces configured/available state, identity-alignment status, session state, and credential-presence booleans rather than credential values (auth preflight (`src/cadrumo/entrypoints/cli/_app_live_auth_preflight.py`), redacted output fields (`src/cadrumo/entrypoints/cli/_app_live_auth_preflight.py`)). Local snapshot detail can include taxpayer and recipient names/NIFs, case identifiers, and tax amounts. Those are useful for the authorized operator but remain sensitive terminal/JSON output; this chunk does not establish how shell history, logs, or downstream automation retain them.
+Authentication preflight is rendered to stderr using the application’s report and a CLI redaction function; it surfaces configured/available state, identity-alignment status, session state, and credential-presence booleans rather than credential values (auth preflight (`src/cadrumo/entrypoints/cli/app_live_auth_preflight.py`), redacted output fields (`src/cadrumo/entrypoints/cli/app_live_auth_preflight.py`)). Local snapshot detail can include taxpayer and recipient names/NIFs, case identifiers, and tax amounts. Those are useful for the authorized operator but remain sensitive terminal/JSON output; this chunk does not establish how shell history, logs, or downstream automation retain them.
 
 ## Security and implementation assessment
 
@@ -45,29 +45,29 @@ These CLI modules rely on registered exact-profile runtime operations, the live 
 
 ## Complete assigned-file coverage
 
-- `src/cadrumo/entrypoints/cli/_app_ledger_rule_command_specs.py`
-- `src/cadrumo/entrypoints/cli/_app_ledger_rule_ratio_command_spec_support.py`
+- `src/cadrumo/entrypoints/cli/app_ledger_rule_command_specs.py`
+- `src/cadrumo/entrypoints/cli/app_ledger_rule_ratio_command_spec_support.py`
 - `src/cadrumo/entrypoints/cli/_app_live.py`
-- `src/cadrumo/entrypoints/cli/_app_live_auth_preflight.py`
+- `src/cadrumo/entrypoints/cli/app_live_auth_preflight.py`
 - `src/cadrumo/entrypoints/cli/_app_live_borrador_cli.py`
-- `src/cadrumo/entrypoints/cli/_app_live_borrador_command_specs.py`
+- `src/cadrumo/entrypoints/cli/app_live_borrador_command_specs.py`
 - `src/cadrumo/entrypoints/cli/_app_live_borrador_payloads.py`
-- `src/cadrumo/entrypoints/cli/_app_live_command_spec_support.py`
-- `src/cadrumo/entrypoints/cli/_app_live_command_specs.py`
+- `src/cadrumo/entrypoints/cli/app_live_command_spec_support.py`
+- `src/cadrumo/entrypoints/cli/app_live_command_specs.py`
 - `src/cadrumo/entrypoints/cli/_app_live_expedientes_cli.py`
-- `src/cadrumo/entrypoints/cli/_app_live_expedientes_command_specs.py`
+- `src/cadrumo/entrypoints/cli/app_live_expedientes_command_specs.py`
 - `src/cadrumo/entrypoints/cli/_app_live_expedientes_payloads.py`
 - `src/cadrumo/entrypoints/cli/_app_live_filed_payloads.py`
-- `src/cadrumo/entrypoints/cli/_app_live_foundation_command_specs.py`
-- `src/cadrumo/entrypoints/cli/_app_live_iva_wallet_command_specs.py`
+- `src/cadrumo/entrypoints/cli/app_live_foundation_command_specs.py`
+- `src/cadrumo/entrypoints/cli/app_live_iva_wallet_command_specs.py`
 - `src/cadrumo/entrypoints/cli/_app_live_iva_wallet_payloads.py`
 - `src/cadrumo/entrypoints/cli/_app_live_justificante_cli.py`
-- `src/cadrumo/entrypoints/cli/_app_live_justificante_command_specs.py`
+- `src/cadrumo/entrypoints/cli/app_live_justificante_command_specs.py`
 - `src/cadrumo/entrypoints/cli/_app_live_justificante_payloads.py`
 - `src/cadrumo/entrypoints/cli/_app_live_notifications_cli.py`
-- `src/cadrumo/entrypoints/cli/_app_live_notifications_command_specs.py`
+- `src/cadrumo/entrypoints/cli/app_live_notifications_command_specs.py`
 - `src/cadrumo/entrypoints/cli/_app_live_notifications_payloads.py`
-- `src/cadrumo/entrypoints/cli/_app_live_payloads_support.py`
+- `src/cadrumo/entrypoints/cli/app_live_payloads_support.py`
 - `src/cadrumo/entrypoints/cli/_app_live_portals_cli.py`
-- `src/cadrumo/entrypoints/cli/_app_live_portals_command_specs.py`
+- `src/cadrumo/entrypoints/cli/app_live_portals_command_specs.py`
 <!-- /preserved:article -->

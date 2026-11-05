@@ -31,15 +31,11 @@ from cadrumo.core.config import Settings
 from cadrumo.core.time.clock import frozen_clock
 
 from .evidence_test_support import (
-    BUCKET_ID as _BUCKET_ID,
-)
-from .evidence_test_support import (
+    BUCKET_ID,
     isolated_settings,
+    make_svc,
     pdf_file,
     secure_objects,
-)
-from .evidence_test_support import (
-    make_svc as _make_svc,
 )
 from .evidence_test_support import runtime_profile as runtime_profile
 
@@ -56,14 +52,14 @@ class TestEvidenceIdContentAddressed:
         secure_objects: SecureObjectRepository,
         pdf_file: Path,
     ) -> None:
-        svc = _make_svc(isolated_settings, secure_objects)
+        svc = make_svc(isolated_settings, secure_objects)
         # Every storage op stays under one frozen instant, exactly as replay
         # freezes the whole run: a write under a frozen clock resets the bucket
         # session's idle deadline to that instant, so a later real-clock read
         # would see the session expired.
         with frozen_clock(_INSTANT):
             record = svc.add(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 source_path=pdf_file,
                 supplier="Acme S.L.",
                 invoice_number="INV-001",
@@ -91,8 +87,8 @@ class TestEvidenceIdContentAddressed:
             )
 
             # The content id survives a fresh-repository reload with strict equality.
-            reloaded = _make_svc(isolated_settings, secure_objects).view(
-                bucket_id=_BUCKET_ID,
+            reloaded = make_svc(isolated_settings, secure_objects).view(
+                bucket_id=BUCKET_ID,
                 evidence_id=record.evidence_id,
             )
         assert reloaded == record
@@ -103,9 +99,9 @@ class TestEvidenceIdContentAddressed:
         secure_objects: SecureObjectRepository,
         pdf_file: Path,
     ) -> None:
-        svc = _make_svc(isolated_settings, secure_objects)
-        first = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_file, invoice_number="INV-A").record
-        second = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_file, invoice_number="INV-B").record
+        svc = make_svc(isolated_settings, secure_objects)
+        first = svc.add(bucket_id=BUCKET_ID, source_path=pdf_file, invoice_number="INV-A").record
+        second = svc.add(bucket_id=BUCKET_ID, source_path=pdf_file, invoice_number="INV-B").record
         # A record differing only in invoice_number derives a different id, so
         # the id is bound to content rather than being a constant.
         assert first.evidence_id != second.evidence_id
@@ -116,15 +112,15 @@ class TestEvidenceIdContentAddressed:
         secure_objects: SecureObjectRepository,
         pdf_file: Path,
     ) -> None:
-        svc = _make_svc(isolated_settings, secure_objects)
+        svc = make_svc(isolated_settings, secure_objects)
         with frozen_clock(_INSTANT):
-            first = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_file, invoice_number="DUP").record
-            second = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_file, invoice_number="DUP").record
+            first = svc.add(bucket_id=BUCKET_ID, source_path=pdf_file, invoice_number="DUP").record
+            second = svc.add(bucket_id=BUCKET_ID, source_path=pdf_file, invoice_number="DUP").record
             # Two identical evidence records minted at the same frozen instant would
             # collide on the base digest; the mint's disambiguator keeps them distinct
             # so the genuine-duplicate case the ledger supports is preserved.
             assert first.evidence_id != second.evidence_id
-            persisted_ids = {r.evidence_id for r in svc.list_all(bucket_id=_BUCKET_ID)}
+            persisted_ids = {r.evidence_id for r in svc.list_all(bucket_id=BUCKET_ID)}
         assert persisted_ids == {first.evidence_id, second.evidence_id}
 
     def test_evidence_id_roundtrip_antitautology(
@@ -143,9 +139,9 @@ class TestEvidenceIdContentAddressed:
         from cadrumo.adapters.persistence.profile.purchase_invoice_evidence import PurchaseInvoiceEvidenceRepository
         from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidenceDocument
 
-        svc = _make_svc(isolated_settings, secure_objects)
+        svc = make_svc(isolated_settings, secure_objects)
         original = svc.add(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             source_path=pdf_file,
             supplier="Acme S.L.",
             invoice_number="ANTITAUT",
@@ -153,13 +149,13 @@ class TestEvidenceIdContentAddressed:
         ).record
 
         repository = PurchaseInvoiceEvidenceRepository(objects=secure_objects)
-        document = repository.load(_BUCKET_ID)
+        document = repository.load(BUCKET_ID)
         assert document is not None
         tampered = original.model_copy(update={"supplier": "Tampered SL", "notes": "TAMPERED"})
-        repository.save(PurchaseInvoiceEvidenceDocument(bucket_id=_BUCKET_ID, records=(tampered,)))
+        repository.save(PurchaseInvoiceEvidenceDocument(bucket_id=BUCKET_ID, records=(tampered,)))
 
-        reloaded = _make_svc(isolated_settings, secure_objects).view(
-            bucket_id=_BUCKET_ID,
+        reloaded = make_svc(isolated_settings, secure_objects).view(
+            bucket_id=BUCKET_ID,
             evidence_id=original.evidence_id,
         )
         assert reloaded != original

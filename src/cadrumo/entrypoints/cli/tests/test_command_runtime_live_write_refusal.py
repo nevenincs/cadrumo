@@ -19,10 +19,10 @@ import pytest
 from typer import Typer
 from typer.testing import CliRunner
 
-from cadrumo.entrypoints.cli._terminal_errors import run_standalone_with_error_contract
 from cadrumo.entrypoints.cli.command_lifecycle import dispatch_cli_behavior
 from cadrumo.entrypoints.cli.command_targets import resolve_deferred_target
 from cadrumo.entrypoints.cli.errors import decorate_typer_app
+from cadrumo.entrypoints.cli.terminal_errors import run_standalone_with_error_contract
 from cadrumo_client.commands.compiler import build_command_app
 from cadrumo_client.commands.graph import CommandSpecGraph
 from cadrumo_client.commands.shared_contracts import (

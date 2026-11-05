@@ -22,13 +22,11 @@ from typing import NamedTuple
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
 from ....core.decimal.constants import HUNDRED, MONEY_ZERO, ONE
-from ....core.errors.hierarchy import CadrumoError as _CadrumoError
-from ....core.errors.hierarchy import pydantic_validation_boundary
+from ....core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ....core.filing_year import FourDigitYear
 from ....core.identity.digest import ContentDigest
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
-from ....core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ....core.money.rounding import round_to_cents as _quantize
+from ....core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ....core.money.rounding import round_to_cents
 from ....core.percentage import Percentage
 from ....core.time.utc import UtcInstant
 from ....core.unit_proportion import UnitProportion
@@ -42,7 +40,7 @@ from .closing_foundations import (
 )
 
 
-class AmortizacionLedgerError(_CadrumoError):
+class AmortizacionLedgerError(CadrumoError):
     """Raised when an amortizacion ledger operation is invalid."""
 
 
@@ -123,7 +121,7 @@ class InventoryAttributableCostKind(StrEnum):
 class InventoryAcquisitionEvidence(BaseModel):
     """Nominal evidence reference plus its immutable content digest."""
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     reference: FilingEvidenceReference
     evidence_kind: InventoryAcquisitionEvidenceKind
@@ -133,7 +131,7 @@ class InventoryAcquisitionEvidence(BaseModel):
 class InventoryAttributableCostComponent(BaseModel):
     """One evidenced cost directly attributable to an inventory purchase."""
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     component_id: str = Field(min_length=1, max_length=128)
     kind: InventoryAttributableCostKind
@@ -172,13 +170,13 @@ class InventoryAttributableCostComponent(BaseModel):
     @property
     def recoverable_iva(self) -> Decimal:
         """Return IVA excluded from inventory acquisition cost."""
-        return _quantize(self.iva_amount * self.deductible_iva_ratio)
+        return round_to_cents(self.iva_amount * self.deductible_iva_ratio)
 
 
 class InventoryAcquisitionCompleteness(BaseModel):
     """Evidence-backed attestations that all three cost reviews occurred."""
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     consideration_evidence: FilingEvidenceReference
     attributable_cost_review_evidence: FilingEvidenceReference
@@ -188,7 +186,7 @@ class InventoryAcquisitionCompleteness(BaseModel):
 class InventoryAcquisitionCost(BaseModel):
     """Complete, evidenced acquisition-cost decomposition for one purchase."""
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     consideration_excluding_iva: Decimal = Field(ge=MONEY_ZERO)
     consideration_iva_amount: Decimal = Field(ge=MONEY_ZERO)
@@ -289,7 +287,7 @@ def derive_inventory_acquisition_totals(
 ) -> InventoryAcquisitionTotals:
     """Add up one purchase: cost holds the price, attributable costs and the IVA that cannot be recovered."""
     attributable = sum((item.taxable_base for item in attributable_cost_components), MONEY_ZERO)
-    recoverable = _quantize(
+    recoverable = round_to_cents(
         consideration_iva_amount * consideration_deductible_iva_ratio,
     ) + sum((item.recoverable_iva for item in attributable_cost_components), MONEY_ZERO)
     total_iva = consideration_iva_amount + sum(
@@ -299,10 +297,10 @@ def derive_inventory_acquisition_totals(
     nonrecoverable = total_iva - recoverable
     total = consideration_excluding_iva + attributable + nonrecoverable
     return InventoryAcquisitionTotals(
-        directly_attributable_cost_total=_quantize(attributable),
-        recoverable_iva_excluded=_quantize(recoverable),
-        nonrecoverable_iva_included=_quantize(nonrecoverable),
-        total_acquisition_cost=_quantize(total),
+        directly_attributable_cost_total=round_to_cents(attributable),
+        recoverable_iva_excluded=round_to_cents(recoverable),
+        nonrecoverable_iva_included=round_to_cents(nonrecoverable),
+        total_acquisition_cost=round_to_cents(total),
     )
 
 
@@ -321,7 +319,7 @@ def _validate_acquisition_amount_decomposition(acquisition: InventoryAcquisition
 class InventoryAcquisitionFacts(BaseModel):
     """A purchase as an operator states it; :meth:`to_cost` adds up the totals left out."""
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     consideration_excluding_iva: Decimal = Field(ge=MONEY_ZERO)
     consideration_iva_amount: Decimal = Field(ge=MONEY_ZERO)
@@ -403,7 +401,7 @@ class MovementRecord(BaseModel):
         schema_version: Forward-compatible schema version. ``"3"``.
     """
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     movement_id: str = Field(min_length=1)
     movement_date: date
@@ -549,13 +547,13 @@ def _require_movement_cost(movement: MovementRecord) -> None:
 
 def _validate_movement_taxable_amount(movement: MovementRecord) -> None:
     if movement.taxable_base is not None:
-        computed_iva = _quantize(movement.taxable_base * movement.iva_rate / HUNDRED)
+        computed_iva = round_to_cents(movement.taxable_base * movement.iva_rate / HUNDRED)
         if movement.iva_amount is not None and movement.iva_amount != computed_iva:
             raise InventoryValidationError("iva_amount must equal taxable_base * iva_rate")
     if (
         movement.unit_cost is not None
         and movement.taxable_base is not None
-        and _quantize(movement.quantity * movement.unit_cost) != movement.taxable_base
+        and round_to_cents(movement.quantity * movement.unit_cost) != movement.taxable_base
     ):
         raise InventoryValidationError("taxable_base must equal quantity * unit_cost")
 
@@ -566,11 +564,11 @@ def _validate_purchase_movement_acquisition(movement: MovementRecord) -> None:
     acquisition_cost = movement.acquisition_cost
     if acquisition_cost is None:
         raise InventoryValidationError("purchase movements require complete acquisition_cost")
-    if acquisition_cost.consideration_excluding_iva != _quantize(movement.value):
+    if acquisition_cost.consideration_excluding_iva != round_to_cents(movement.value):
         raise InventoryValidationError("acquisition consideration must equal the purchase consideration")
     expected_iva = movement.iva_amount
     if expected_iva is None:
-        expected_iva = _quantize(movement.value * movement.iva_rate / HUNDRED)
+        expected_iva = round_to_cents(movement.value * movement.iva_rate / HUNDRED)
     if acquisition_cost.consideration_iva_amount != expected_iva:
         raise InventoryValidationError("acquisition consideration IVA must equal the purchase IVA")
     if acquisition_cost.consideration_deductible_iva_ratio != movement.deductible_iva_ratio:
@@ -594,7 +592,7 @@ class StockLayer(BaseModel):
             stock and weighted-average pools).
     """
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     sku: str = Field(default="default", min_length=1)
     quantity: Decimal = Field(gt=Decimal("0"))
@@ -633,7 +631,7 @@ class InventoryRetirementReason(StrEnum):
 class InventoryLedgerDescriptor(BaseModel):
     """Descriptive facts of an inventory; they never enter its valuation or fingerprints."""
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     label: str = Field(min_length=1, max_length=128)
     description: str | None = Field(default=None, min_length=1, max_length=1024)
@@ -666,7 +664,7 @@ class InventoryLedgerHistoryEntry(BaseModel):
         prior_descriptor: The descriptor the change displaced, absent on the first.
     """
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     correction_id: str = Field(min_length=1, max_length=64)
     kind: InventoryHistoryKind
@@ -804,11 +802,13 @@ class InventoryLedger(BaseModel):
     @pydantic_validation_boundary
     def _opening_stock_matches_layers(self) -> InventoryLedger:
         """Enforce that ``opening_layers`` value-balances with ``opening_stock``."""
-        from ._anexo_d_records import resolve_inventory_authoritative_closing
+        from .anexo_d_records import resolve_inventory_authoritative_closing
         from .valuation import layers_value
 
         self._validate_movement_history()
-        if self.opening_layers and _quantize(layers_value(self.opening_layers)) != _quantize(self.opening_stock):
+        if self.opening_layers and round_to_cents(layers_value(self.opening_layers)) != round_to_cents(
+            self.opening_stock
+        ):
             raise InventoryValidationError("opening_stock must equal the value of opening_layers")
         if self.closing_authority_record is not None:
             record = self.closing_authority_record
@@ -854,7 +854,7 @@ class InventoryLedgerDocument(BaseModel):
             ``(actividad_id, year)`` pair.
     """
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: str = INVENTORY_SCHEMA_VERSION
     ledgers: tuple[InventoryLedger, ...] = ()
@@ -926,7 +926,7 @@ class InventoryValuationResult(BaseModel):
             the period.
     """
 
-    model_config = _STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_CONFIG
 
     closing_layers: tuple[StockLayer, ...]
     closing_value: Decimal

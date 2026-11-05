@@ -17,8 +17,8 @@ from .....application.user_profile.profile_operation_contracts import (
     ProfileMutationOperationProjection,
 )
 from .....core.operations import OperationEffect, OperationTerminalCondition
-from .._profile_mutation import execute_profile_mutation
-from ..profile_row_commands import _parse_row_key, _parse_values
+from ..profile_mutation import execute_profile_mutation
+from ..profile_row_commands import parse_row_key, parse_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -43,7 +43,7 @@ def test_post_commit_view_refusal_keeps_known_success_and_operation_identity(mon
             effect=OperationEffect.UPDATED,
         )
 
-    monkeypatch.setattr("cadrumo.entrypoints.cli.config._profile_mutation.run_profile_mutation", complete)
+    monkeypatch.setattr("cadrumo.entrypoints.cli.config.profile_mutation.run_profile_mutation", complete)
     with pytest.raises(CliRefusedBoundaryError) as caught:
         execute_profile_mutation(cast(FrontendClient, _RefusedReadClient()), request, deadline=10**12)
 
@@ -73,7 +73,7 @@ def test_terminal_operation_refusal_keeps_reason_and_settlement_context(monkeypa
             effect=OperationEffect.NONE,
         )
 
-    monkeypatch.setattr("cadrumo.entrypoints.cli.config._profile_mutation.run_profile_mutation", refuse)
+    monkeypatch.setattr("cadrumo.entrypoints.cli.config.profile_mutation.run_profile_mutation", refuse)
     with pytest.raises(CliRefusedBoundaryError) as caught:
         execute_profile_mutation(cast(FrontendClient, _RefusedReadClient()), request, deadline=10**12)
 
@@ -86,12 +86,12 @@ def test_terminal_operation_refusal_keeps_reason_and_settlement_context(monkeypa
 
 
 def test_row_tokens_reject_invalid_assignments_and_identity_before_private_operation() -> None:
-    assert _parse_values(["description=Another activity"]) == {"description": "Another activity"}
-    assert _parse_row_key("base") == ""
-    assert _parse_row_key("004") == "4"
+    assert parse_values(["description=Another activity"]) == {"description": "Another activity"}
+    assert parse_row_key("base") == ""
+    assert parse_row_key("004") == "4"
     with pytest.raises(CliRefusedBoundaryError):
-        _parse_values(["not-an-assignment"])
+        parse_values(["not-an-assignment"])
     with pytest.raises(CliRefusedBoundaryError):
-        _parse_values(["description=first", "description=second"])
+        parse_values(["description=first", "description=second"])
     with pytest.raises(CliRefusedBoundaryError):
-        _parse_row_key("bad-row")
+        parse_row_key("bad-row")

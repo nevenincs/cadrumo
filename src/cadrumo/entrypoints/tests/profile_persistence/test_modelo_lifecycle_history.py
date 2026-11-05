@@ -20,7 +20,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.errors import ModeloValidationError
-from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import _FILE_FLOW_PROFILE_ID, _Repos
+from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import FILE_FLOW_PROFILE_ID, FileFlowRepos
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -28,7 +28,7 @@ _T0 = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 15, 13, 0, tzinfo=UTC)
 
 
-def _history_ports(repos: _Repos) -> ModeloHistoryPorts:
+def _history_ports(repos: FileFlowRepos) -> ModeloHistoryPorts:
     """Adapt the real persistence repositories to the application history port."""
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     return ModeloHistoryPorts(
@@ -40,11 +40,11 @@ def _history_ports(repos: _Repos) -> ModeloHistoryPorts:
     )
 
 
-def _create(repos: _Repos, *, period: str = "1T", filing_year: int = 2026, operation: PinnedAuthorityOperation):
+def _create(repos: FileFlowRepos, *, period: str = "1T", filing_year: int = 2026, operation: PinnedAuthorityOperation):
     """Create one modelo 130 work unit through the real lifecycle service."""
     wu_repo, _, _, _, bv_repo = repos
     return create_work_unit(
-        bucket_id=_FILE_FLOW_PROFILE_ID,
+        bucket_id=FILE_FLOW_PROFILE_ID,
         modelo="130",
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period),
@@ -107,7 +107,7 @@ class TestAssembly:
     """Subject selection, narrowing, ordering and refusal over the real emitters."""
 
     def test_the_creation_event_reaches_the_history(
-        self, repos: _Repos, *, operation: PinnedAuthorityOperation
+        self, repos: FileFlowRepos, *, operation: PinnedAuthorityOperation
     ) -> None:
         """A work unit created through the real lifecycle service appears in its modelo's history.
 
@@ -125,7 +125,7 @@ class TestAssembly:
         assert any(event.object_id == created.work_unit_id for event in history.events)
 
     def test_a_modelo_with_no_events_returns_an_empty_history(
-        self, repos: _Repos, *, operation: PinnedAuthorityOperation
+        self, repos: FileFlowRepos, *, operation: PinnedAuthorityOperation
     ) -> None:
         """Selection is on the event's own subject key, so an unrelated modelo sees nothing."""
         _, _, _, _, _bv_repo = repos
@@ -133,7 +133,9 @@ class TestAssembly:
 
         assert assemble_modelo_lifecycle_history("303", ports=_history_ports(repos)).events == ()
 
-    def test_filing_year_narrows_the_history(self, repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
+    def test_filing_year_narrows_the_history(
+        self, repos: FileFlowRepos, *, operation: PinnedAuthorityOperation
+    ) -> None:
         """A filing year the events do not declare yields nothing; the declared one yields rows."""
         _, _, _, _, _bv_repo = repos
         _create(repos, operation=operation)
@@ -141,7 +143,7 @@ class TestAssembly:
         assert assemble_modelo_lifecycle_history("130", filing_year=2025, ports=_history_ports(repos)).events == ()
         assert assemble_modelo_lifecycle_history("130", filing_year=2026, ports=_history_ports(repos)).events
 
-    def test_period_narrows_the_history(self, repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:
+    def test_period_narrows_the_history(self, repos: FileFlowRepos, *, operation: PinnedAuthorityOperation) -> None:
         """Two periods of the same modelo stay separable."""
         _, _, _, _, _bv_repo = repos
         first = _create(repos, period="1T", operation=operation)
@@ -157,7 +159,7 @@ class TestAssembly:
         assert {event.payload["period"] for event in narrowed.events} == {first.period.registry_token}
 
     def test_rows_are_ordered_by_the_shared_total_order(
-        self, repos: _Repos, *, operation: PinnedAuthorityOperation
+        self, repos: FileFlowRepos, *, operation: PinnedAuthorityOperation
     ) -> None:
         """Ordering must be the canonical key, not ``occurred_at`` alone.
 
@@ -181,7 +183,7 @@ class TestAssembly:
         assert len(events) >= 2
         assert keys == sorted(keys)
 
-    def test_a_malformed_modelo_is_refused_rather_than_answered_empty(self, repos: _Repos) -> None:
+    def test_a_malformed_modelo_is_refused_rather_than_answered_empty(self, repos: FileFlowRepos) -> None:
         """An unusable identifier must refuse, not return an empty timeline.
 
         An empty result means the modelo has no history. That is a different
@@ -194,7 +196,7 @@ class TestAssembly:
             assemble_modelo_lifecycle_history("abc", ports=_history_ports(repos))
 
     def test_rows_keep_the_fields_a_restated_read_model_dropped(
-        self, repos: _Repos, *, operation: PinnedAuthorityOperation
+        self, repos: FileFlowRepos, *, operation: PinnedAuthorityOperation
     ) -> None:
         """The history carries validated domain events, not a lossy copy of them.
 
@@ -210,14 +212,14 @@ class TestAssembly:
         events = assemble_modelo_lifecycle_history("130", ports=_history_ports(repos)).events
 
         assert events
-        assert all(event.bucket_id == _FILE_FLOW_PROFILE_ID for event in events)
+        assert all(event.bucket_id == FILE_FLOW_PROFILE_ID for event in events)
         assert all(event.payload_version >= 1 for event in events)
 
 
 class TestPersistedPayloadFallback:
     """The ``year`` fallback serves persisted payloads no live emitter writes."""
 
-    def test_a_legacy_year_payload_still_matches_the_filing_year(self, repos: _Repos) -> None:
+    def test_a_legacy_year_payload_still_matches_the_filing_year(self, repos: FileFlowRepos) -> None:
         """An event carrying ``year`` instead of ``filing_year`` must still narrow correctly.
 
         No current emitter writes ``year`` into a bucket-event payload, but the
@@ -230,7 +232,7 @@ class TestPersistedPayloadFallback:
 
         _, _, _, _, bv_repo = repos
         fields = {
-            "bucket_id": _FILE_FLOW_PROFILE_ID,
+            "bucket_id": FILE_FLOW_PROFILE_ID,
             "event_type": BucketEventType.MODELO_EXPORTED,
             "occurred_at": _T0,
             "actor": "legacy-emitter",

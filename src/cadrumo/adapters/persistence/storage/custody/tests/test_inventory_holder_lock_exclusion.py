@@ -28,7 +28,7 @@ from uuid import UUID
 
 import pytest
 
-from .._inventory import (
+from ..inventory import (
     HOLDER_LOCK_RELATIVE_PATHS,
     inventory_profile_custody_capsule,
 )

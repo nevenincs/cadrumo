@@ -51,7 +51,7 @@ symbol variants -- so a measure qualified by a footnote is not read as \
 unqualified."""
 
 [[parser]]
-module = "src/cadrumo/adapters/inbound/borrador/_extractors/modelo_100_summary.py"
+module = "src/cadrumo/adapters/inbound/borrador/extractors/modelo_100_summary.py"
 corpus = "AEAT borrador renta summary (extracted PDF text)"
 reason = """\
 Reads the taxpayer's own borrador summary, which AEAT publishes as prose \
@@ -85,12 +85,12 @@ corpus = "BOE consolidated legal text"
 reason = "Resolves legal-reference ids and their corpus anchors against bundled BOE text."
 
 [[parser]]
-module = "src/cadrumo/adapters/inbound/declaracion/_detect.py"
+module = "src/cadrumo/adapters/inbound/declaracion/detect.py"
 corpus = "AEAT declaración documents"
 reason = "Detects which modelo and ejercicio an imported AEAT document is, before any typed parse."
 
 [[parser]]
-module = "src/cadrumo/adapters/inbound/justificante/_extract.py"
+module = "src/cadrumo/adapters/inbound/justificante/extract.py"
 corpus = "AEAT justificante de presentación"
 reason = "Extracts the CSV and filing coordinates AEAT prints on a submission receipt."
 

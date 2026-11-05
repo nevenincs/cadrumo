@@ -292,8 +292,8 @@ def _list_read_for_command(
     projection: FiledListPublicResultV1,
     completion: RegisteredOperationCompletion[FiledListPublicResultV1],
 ) -> bridge.FiledListRead:
-    listed = tuple(bridge._listing_row(row) for row in projection.rows)
-    failures = tuple(bridge._listing_failure(row) for row in projection.failures)
+    listed = tuple(bridge.listing_row(row) for row in projection.rows)
+    failures = tuple(bridge.listing_failure(row) for row in projection.failures)
     return bridge.FiledListRead(completion=completion, projection=projection, rows=listed, failures=failures)
 
 
@@ -307,7 +307,7 @@ def test_discover_command_preserves_result_lines_and_notices(monkeypatch: pytest
     read = bridge.FiledDiscoverRead(
         completion=completion,
         projection=projection,
-        report=bridge._discover_report(projection),
+        report=bridge.discover_report(projection),
     )
     monkeypatch.setattr(bridge, "read_filed_discover_for_cli", lambda *_args, **_kwargs: read)
     envelopes: list[dict[str, object]] = []

@@ -36,7 +36,7 @@ _log = get_logger(__name__)
 _USERDOMAIN_ENV_VAR: Final[str] = "USERDOMAIN"
 
 
-def _operator_account_candidates() -> list[str]:
+def operator_account_candidates() -> list[str]:
     username = getpass.getuser()
     # os.environ.get allowlist: USERDOMAIN is a Windows OS-integration
     # variable, not AEAT-prefixed config, so it is read from the environment
@@ -45,7 +45,7 @@ def _operator_account_candidates() -> list[str]:
     return [f"{userdomain}\\{username}", username] if (userdomain is not None and userdomain) else [username]
 
 
-def _dacl_of(descriptor: PySECURITY_DESCRIPTOR) -> PyACL | None:
+def dacl_of(descriptor: PySECURITY_DESCRIPTOR) -> PyACL | None:
     """Return the descriptor's DACL, or ``None`` for a NULL DACL.
 
     The published stub declares a ``PyACL`` return, but a NULL DACL -- no DACL
@@ -77,7 +77,7 @@ def _grant_operator_full_control(path: Path, account: str, *, inheritable: bool)
     descriptor = win32security.GetNamedSecurityInfo(
         str(path), win32security.SE_FILE_OBJECT, win32security.DACL_SECURITY_INFORMATION
     )
-    current = _dacl_of(descriptor)
+    current = dacl_of(descriptor)
     rewritten = win32security.ACL()
     granted = False
     aces = () if current is None else tuple(current.GetAce(index) for index in range(current.GetAceCount()))
@@ -196,7 +196,7 @@ def _windows_restrict_to_operator(path: Path, *, inheritable: bool) -> None:
         import pywintypes
 
         failure = "no operator account candidate was tried"
-        for candidate in _operator_account_candidates():
+        for candidate in operator_account_candidates():
             try:
                 _grant_operator_full_control(path, candidate, inheritable=inheritable)
             except pywintypes.error as error:

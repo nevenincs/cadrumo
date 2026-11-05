@@ -36,7 +36,7 @@ from ....domain.modelos.filing_record import (
 )
 from ....domain.modelos.work_unit import derive_work_unit_id
 from .. import operation_modelo_filing_record_view as bridge
-from .._filing_chain_payloads import (
+from ..filing_chain_payloads import (
     ObservationLayerPayload,
     ObservationLayersPayload,
     ObservationOverridePayload,

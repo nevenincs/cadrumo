@@ -29,8 +29,7 @@ from typing import Union, get_args, get_origin
 import pytest
 from pydantic import ValidationError
 
-from ...tests.env_scope import isolated_aeat_env as _isolated_aeat_env
-from ...tests.env_scope import settings_without_env_file
+from ...tests.env_scope import isolated_aeat_env, settings_without_env_file
 from ...tests.inventory import REPO_ROOT
 from ..auth_provider import AuthProviderKind
 from ..bucket_pointer import BucketPointer
@@ -119,7 +118,7 @@ class TestEnvExampleAlignment:
 
     def test_settings_instantiate_without_env(self) -> None:
         """Settings must load with all defaults when no env file and no env vars are present."""
-        with _isolated_aeat_env():
+        with isolated_aeat_env():
             settings = settings_without_env_file()
         assert settings.cadrumo_output_language == "es"
 
@@ -130,12 +129,12 @@ class TestAuthProviderEnum:
     def test_env_value_coerces_to_enum(self) -> None:
         from ..auth_provider import AuthProviderKind
 
-        with _isolated_aeat_env(CADRUMO_AUTH_PROVIDER="clave_movil"):
+        with isolated_aeat_env(CADRUMO_AUTH_PROVIDER="clave_movil"):
             settings = settings_without_env_file()
         assert settings.cadrumo_auth_provider is AuthProviderKind.CLAVE_MOVIL
 
     def test_blank_env_value_treated_as_unset(self) -> None:
-        with _isolated_aeat_env(CADRUMO_AUTH_PROVIDER=""):
+        with isolated_aeat_env(CADRUMO_AUTH_PROVIDER=""):
             settings = settings_without_env_file()
         assert settings.cadrumo_auth_provider is None
 
@@ -143,7 +142,7 @@ class TestAuthProviderEnum:
         import pydantic
 
         with (
-            _isolated_aeat_env(CADRUMO_AUTH_PROVIDER="not_a_provider_kind"),
+            isolated_aeat_env(CADRUMO_AUTH_PROVIDER="not_a_provider_kind"),
             pytest.raises(pydantic.ValidationError),
         ):
             settings_without_env_file()
@@ -162,7 +161,7 @@ class TestEnvironmentSources:
 
     def test_blank_env_values_are_ignored(self, tmp_path: Path) -> None:
         """Blank env values must not coerce optional settings into live values."""
-        with _isolated_aeat_env(
+        with isolated_aeat_env(
             CADRUMO_CERTIFICATE_PATH="",
             CADRUMO_CERTIFICATE_PASSWORD_SECRET="",
         ):
@@ -191,7 +190,7 @@ class TestEnvironmentSources:
         wholesale env-reading failure would also leave the valid field unset).
         """
         legacy_env_values = {"AEAT_SECRET_PASSPHRASE": "legacy-secret-value"}
-        with _isolated_aeat_env(
+        with isolated_aeat_env(
             AEAT_LOCAL_STORAGE_ROOT="legacy-state-root",
             **legacy_env_values,
             UNRELATED_CADRUMO_TYPO="1",
@@ -202,13 +201,13 @@ class TestEnvironmentSources:
 
     def test_blank_optional_path_env_vars_are_treated_as_unset(self) -> None:
         """Blank optional path env vars must normalize to ``None``."""
-        with _isolated_aeat_env(CADRUMO_CERTIFICATE_PATH=""):
+        with isolated_aeat_env(CADRUMO_CERTIFICATE_PATH=""):
             settings = settings_without_env_file()
         assert settings.cadrumo_certificate_path is None
 
     def test_blank_optional_secret_env_vars_are_treated_as_unset(self) -> None:
         """Blank optional secret env vars must normalize to ``None``."""
-        with _isolated_aeat_env(CADRUMO_CERTIFICATE_PASSWORD_SECRET=""):
+        with isolated_aeat_env(CADRUMO_CERTIFICATE_PASSWORD_SECRET=""):
             settings = settings_without_env_file()
         assert settings.cadrumo_certificate_password_secret is None
 
@@ -311,7 +310,7 @@ class TestDatabaseUrlDerivation:
         ``sqlite:///<root>/cadrumo.db`` fallback rather than staying empty."""
         storage_root = tmp_path / "aeat-state"
 
-        with _isolated_aeat_env(CADRUMO_STORAGE_ROOT=storage_root.as_posix()):
+        with isolated_aeat_env(CADRUMO_STORAGE_ROOT=storage_root.as_posix()):
             settings = settings_without_env_file()
 
         expected = (
@@ -324,7 +323,7 @@ class TestDatabaseUrlDerivation:
         """An explicit ``CADRUMO_DATABASE_URL`` wins over the derived fallback."""
         explicit_url = f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}"
 
-        with _isolated_aeat_env(
+        with isolated_aeat_env(
             CADRUMO_STORAGE_ROOT=(tmp_path / "aeat-state").as_posix(),
             CADRUMO_DATABASE_URL=explicit_url,
         ):
@@ -341,7 +340,7 @@ class TestDatabaseUrlDerivation:
         """
         storage_root = tmp_path / "aeat-state"
 
-        with _isolated_aeat_env(CADRUMO_STORAGE_ROOT=storage_root.as_posix()):
+        with isolated_aeat_env(CADRUMO_STORAGE_ROOT=storage_root.as_posix()):
             settings = settings_without_env_file(cadrumo_active_profile="acme")
 
         expected_database_file = (
@@ -379,7 +378,7 @@ class TestDatabaseUrlDerivation:
         override_token = config.settings_override.set(None)
         reset_settings_cache()
         try:
-            with _isolated_aeat_env(CADRUMO_STORAGE_ROOT=storage_root.as_posix()):
+            with isolated_aeat_env(CADRUMO_STORAGE_ROOT=storage_root.as_posix()):
                 settings = load_settings()
         finally:
             reset_settings_cache()
@@ -406,7 +405,7 @@ class TestDatabaseUrlDerivation:
         override_token = config.settings_override.set(None)
         reset_settings_cache()
         try:
-            with _isolated_aeat_env(CADRUMO_STORAGE_ROOT="relative-s168-root"), pytest.raises(CoreValidationError):
+            with isolated_aeat_env(CADRUMO_STORAGE_ROOT="relative-s168-root"), pytest.raises(CoreValidationError):
                 load_settings()
         finally:
             reset_settings_cache()
@@ -428,7 +427,7 @@ class TestDatabaseUrlDerivation:
         template_vars = _parse_env_example_kv()
         assert template_vars, "env/.env.example must declare at least one variable"
 
-        with _isolated_aeat_env(**template_vars):
+        with isolated_aeat_env(**template_vars):
             settings = settings_without_env_file(
                 cadrumo_storage_root=storage_root,
                 cadrumo_active_profile=bucket_id,

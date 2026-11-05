@@ -35,11 +35,11 @@ from cadrumo.core.operations import OperationEffect, OperationLifecycle
 
 from .supervision_support import run_to_settlement
 from .test_censal_operation_executor import (
-    _OPERATOR_SCOPE_PORTS,
     NOW,
-    _observation,
-    _scoped_authority_operation,
+    OPERATOR_SCOPE_PORTS,
     censal_request_payload,
+    observation,
+    scoped_authority_operation,
     subject,
 )
 
@@ -52,12 +52,12 @@ def test_inspect_then_respond_uses_one_original_censal_capability(tmp_path: Path
         root = tmp_path / "operations"
 
         async def acquire():
-            return _observation()
+            return observation()
 
         definition = build_censal_operation_definition(
             certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
             browser_session_factory=default_browser_session_factory,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             censal_fetch_port=fetch_censal_datos,
             provider_preflight=lambda _profile_id, _operation: None,
             acquire=acquire,
@@ -69,7 +69,7 @@ def test_inspect_then_respond_uses_one_original_censal_capability(tmp_path: Path
         journal = OperationJournalRepository(storage_root=root)
         services = compose_operation_services(
             registry=registry,
-            authority_operation=_scoped_authority_operation(),
+            authority_operation=scoped_authority_operation(),
             journal=journal,
             reader=journal,
             event_stream=journal,

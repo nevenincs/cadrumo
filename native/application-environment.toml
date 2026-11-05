@@ -686,7 +686,7 @@ platform = "windows"
 arguments = [
   { literal = "-S" },
   { literal = "-m" },
-  { literal = "cadrumo.adapters.persistence.storage.custody._kdf_worker" },
+  { literal = "cadrumo.adapters.persistence.storage.custody.kdf_worker" },
   { literal = "--request-handle" },
   { slot = "request", kind = "handle" },
   { literal = "--result-handle" },
@@ -699,7 +699,7 @@ profile = "kdf-child"
 platform = "posix"
 arguments = [
   { literal = "-m" },
-  { literal = "cadrumo.adapters.persistence.storage.custody._kdf_worker" },
+  { literal = "cadrumo.adapters.persistence.storage.custody.kdf_worker" },
   { literal = "--request-fd" },
   { slot = "request", kind = "descriptor", minimum = 3 },
   { literal = "--result-fd" },
@@ -718,7 +718,7 @@ platform = "posix"
 arguments = [
   { literal = "-S" },
   { literal = "-m" },
-  { literal = "cadrumo.adapters.persistence.storage.custody._kdf_worker" },
+  { literal = "cadrumo.adapters.persistence.storage.custody.kdf_worker" },
   { literal = "--request-fd" },
   { slot = "request", kind = "descriptor", minimum = 3 },
   { literal = "--result-fd" },
@@ -771,7 +771,7 @@ path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Wi
 name = "windows-kdf-child-keeps-its-parent-environment"
 platform = "windows"
 image = "python"
-arguments = ["-S", "-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "--request-handle", "540", "--result-handle", "548"]
+arguments = ["-S", "-m", "cadrumo.adapters.persistence.storage.custody.kdf_worker", "--request-handle", "540", "--result-handle", "548"]
 ambient = { CADRUMO_GOOGLE_OAUTH_CLIENT_JSON = "untrusted-caller-identity", SYSTEMROOT = "C:\\Windows", NEUTRAL = "kept", CADRUMO_AGENT_PORT = "0", PATH = "C:\\parent" }
 profile = "kdf-child"
 environment = { SYSTEMROOT = "C:\\Windows", NEUTRAL = "kept", CADRUMO_AGENT_PORT = "0", PATH = "C:\\parent" }
@@ -780,7 +780,7 @@ environment = { SYSTEMROOT = "C:\\Windows", NEUTRAL = "kept", CADRUMO_AGENT_PORT
 name = "windows-kdf-near-miss-takes-the-interpreter-profile"
 platform = "windows"
 image = "python"
-arguments = ["-S", "-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "--request-handle", "540", "--result-handle", "540"]
+arguments = ["-S", "-m", "cadrumo.adapters.persistence.storage.custody.kdf_worker", "--request-handle", "540", "--result-handle", "540"]
 ambient = { SYSTEMROOT = "C:\\Windows", NEUTRAL = "dropped" }
 profile = "python"
 environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
@@ -790,7 +790,7 @@ path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Wi
 name = "windows-kdf-without-its-site-flag-takes-the-interpreter-profile"
 platform = "windows"
 image = "python"
-arguments = ["-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "--request-handle", "540", "--result-handle", "548"]
+arguments = ["-m", "cadrumo.adapters.persistence.storage.custody.kdf_worker", "--request-handle", "540", "--result-handle", "548"]
 ambient = { SYSTEMROOT = "C:\\Windows", NEUTRAL = "dropped" }
 profile = "python"
 environment = { SYSTEMROOT = "C:\\Windows", CADRUMO_STORAGE_ROOT = "C:\\launch-vector\\state", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp", CADRUMO_AUTHORITY_ROOT = "C:\\launch-vector\\package\\data\\authority" }
@@ -820,7 +820,7 @@ path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bi
 name = "posix-kdf-child-keeps-its-parent-environment"
 platform = "posix"
 image = "python"
-arguments = ["-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "--request-fd", "3", "--result-fd", "4", "--descriptor-bound", "1024"]
+arguments = ["-m", "cadrumo.adapters.persistence.storage.custody.kdf_worker", "--request-fd", "3", "--result-fd", "4", "--descriptor-bound", "1024"]
 ambient = { CADRUMO_GOOGLE_OAUTH_CLIENT_JSON = "untrusted-caller-identity", NEUTRAL = "kept", CADRUMO_AGENT_PORT = "0", PATH = "/parent" }
 profile = "kdf-child"
 environment = { NEUTRAL = "kept", CADRUMO_AGENT_PORT = "0", PATH = "/parent" }
@@ -829,7 +829,7 @@ environment = { NEUTRAL = "kept", CADRUMO_AGENT_PORT = "0", PATH = "/parent" }
 name = "posix-hosted-kdf-child-keeps-its-parent-environment"
 platform = "posix"
 image = "python"
-arguments = ["-S", "-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "--request-fd", "3", "--result-fd", "4", "--descriptor-bound", "1024"]
+arguments = ["-S", "-m", "cadrumo.adapters.persistence.storage.custody.kdf_worker", "--request-fd", "3", "--result-fd", "4", "--descriptor-bound", "1024"]
 ambient = { PYTHONDONTWRITEBYTECODE = "1", PYTHONHASHSEED = "0", PYTHONNOUSERSITE = "1", NEUTRAL = "kept" }
 profile = "kdf-child"
 environment = { PYTHONDONTWRITEBYTECODE = "1", PYTHONHASHSEED = "0", PYTHONNOUSERSITE = "1", NEUTRAL = "kept" }
@@ -838,7 +838,7 @@ environment = { PYTHONDONTWRITEBYTECODE = "1", PYTHONHASHSEED = "0", PYTHONNOUSE
 name = "posix-hosted-kdf-repeated-descriptor-is-not-the-invocation"
 platform = "posix"
 image = "python"
-arguments = ["-S", "-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "--request-fd", "3", "--result-fd", "3", "--descriptor-bound", "1024"]
+arguments = ["-S", "-m", "cadrumo.adapters.persistence.storage.custody.kdf_worker", "--request-fd", "3", "--result-fd", "3", "--descriptor-bound", "1024"]
 ambient = { HOME = "/home/ada", NEUTRAL = "dropped" }
 profile = "python"
 environment = { HOME = "/home/ada", CADRUMO_STORAGE_ROOT = "/launch-vector/state", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }
@@ -848,7 +848,7 @@ path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bi
 name = "posix-kdf-standard-descriptor-is-not-the-invocation"
 platform = "posix"
 image = "python"
-arguments = ["-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker", "--request-fd", "2", "--result-fd", "4", "--descriptor-bound", "1024"]
+arguments = ["-m", "cadrumo.adapters.persistence.storage.custody.kdf_worker", "--request-fd", "2", "--result-fd", "4", "--descriptor-bound", "1024"]
 ambient = { HOME = "/home/ada", NEUTRAL = "dropped" }
 profile = "python"
 environment = { HOME = "/home/ada", CADRUMO_STORAGE_ROOT = "/launch-vector/state", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp", CADRUMO_AUTHORITY_ROOT = "/launch-vector/package/data/authority" }

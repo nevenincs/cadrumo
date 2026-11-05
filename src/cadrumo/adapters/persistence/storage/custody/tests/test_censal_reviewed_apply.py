@@ -15,7 +15,7 @@ from pydantic import ValidationError
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.capsule_record import (
@@ -53,7 +53,7 @@ _NOW = datetime(2026, 8, 24, 16, tzinfo=UTC)
 
 @contextmanager
 def _subject(tmp_path: Path) -> Generator[tuple[str, ProfileRecordSession]]:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         outcome = register_profile_with_credentials(
             label="Reviewed censal apply",
@@ -105,7 +105,7 @@ def _proposal(record: object) -> CensalReviewedOperand:
 
 
 def test_reviewed_proposal_applies_exact_effects_and_one_event(tmp_path: Path) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with _subject(tmp_path) as (profile_id, session):
         repository = ProfileRecordRepository.for_current_session(
             profile_id, profile_decode_context=_profile_decode_context_for_test
@@ -134,7 +134,7 @@ def test_reviewed_proposal_applies_exact_effects_and_one_event(tmp_path: Path) -
 
 @pytest.mark.parametrize("stale_axis", ["revision", "digest"])
 def test_reviewed_proposal_refuses_stale_baseline_without_effect(tmp_path: Path, stale_axis: str) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with _subject(tmp_path) as (profile_id, session):
         repository = ProfileRecordRepository.for_current_session(
             profile_id, profile_decode_context=_profile_decode_context_for_test
@@ -164,7 +164,7 @@ def test_reviewed_proposal_refuses_stale_baseline_without_effect(tmp_path: Path,
 
 
 def test_reviewed_proposal_refuses_tampered_intent_before_effect(tmp_path: Path) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with _subject(tmp_path) as (profile_id, session):
         repository = ProfileRecordRepository.for_current_session(
             profile_id, profile_decode_context=_profile_decode_context_for_test
@@ -193,7 +193,7 @@ def test_reviewed_proposal_refuses_tampered_intent_before_effect(tmp_path: Path)
 
 
 def test_reviewed_proposal_refuses_foreign_profile_baseline_without_effect(tmp_path: Path) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with _subject(tmp_path) as (profile_id, session):
         repository = ProfileRecordRepository.for_current_session(
             profile_id, profile_decode_context=_profile_decode_context_for_test
@@ -232,7 +232,7 @@ def test_incomplete_direct_mode_refuses_before_publication(
     missing_effect: Literal["adopted", "divergences", "none"],
     message: str,
 ) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with _subject(tmp_path) as (profile_id, session):
         repository = ProfileRecordRepository.for_current_session(
             profile_id, profile_decode_context=_profile_decode_context_for_test
@@ -268,7 +268,7 @@ def test_reviewed_and_direct_mixed_mode_refuses_before_publication(
     tmp_path: Path,
     direct_effect: Literal["adopted", "divergences"],
 ) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with _subject(tmp_path) as (profile_id, session):
         repository = ProfileRecordRepository.for_current_session(
             profile_id, profile_decode_context=_profile_decode_context_for_test

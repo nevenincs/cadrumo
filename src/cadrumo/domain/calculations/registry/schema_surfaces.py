@@ -15,7 +15,6 @@ from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.identity.aeat_box import AeatBoxNumber
 from ....core.identity.continuidad import ContinuidadId
-from ._schema_export_exemption import ExportExemptionReasonValue
 from .casilla_lineage import CasillaLineageOriginField
 from .credit_reconciliation import WithholdingSideField
 from .errors import RegistryValidationError
@@ -39,6 +38,7 @@ from .schema_base import (
     SourceRefs,
     coerce_enum_member,
 )
+from .schema_export_exemption import ExportExemptionReasonValue
 from .schema_input_kind import InputKind, InputKindValue
 from .schema_scalars import DecimalValue
 

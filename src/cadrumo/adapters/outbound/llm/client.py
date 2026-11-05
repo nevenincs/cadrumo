@@ -220,7 +220,7 @@ class _ProviderPacing:
             self._resume_at.clear()
 
 
-_PROVIDER_PACING = _ProviderPacing()
+PROVIDER_PACING = _ProviderPacing()
 
 
 @dataclass(frozen=True)
@@ -437,7 +437,7 @@ class LLMClient:
         remaining window stays armed and readable, so a surface that wants to
         report "paced for another N seconds" can, rather than blocking on it.
         """
-        remaining = min(_PROVIDER_PACING.remaining_s(provider), policy.budget_s)
+        remaining = min(PROVIDER_PACING.remaining_s(provider), policy.budget_s)
         if remaining <= 0:
             return
         _LOGGER.info("llm dispatch paced provider=%s waiting=%.2fs", provider.value, remaining)
@@ -484,7 +484,7 @@ class LLMClient:
                     # permitted attempt still governs every dispatch after it,
                     # and arming only on the retrying path would let the item
                     # that gave up be the one that told nobody.
-                    _PROVIDER_PACING.arm(adapter.provider, min(delay, policy.budget_s))
+                    PROVIDER_PACING.arm(adapter.provider, min(delay, policy.budget_s))
                 if attempt >= policy.max_attempts or not transport_retry_permitted(exc):
                     raise
                 if time.monotonic() - started + delay > policy.budget_s:

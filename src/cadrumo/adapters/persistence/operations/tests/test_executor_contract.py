@@ -53,7 +53,7 @@ from cadrumo.core.operations import (
 from cadrumo.core.operator_progress import OperatorProgress, emit_operator_progress
 
 from .supervision_support import run_to_settlement
-from .supervisor_test_support import _capabilities, operation_repositories
+from .supervisor_test_support import operation_repositories, supervisor_capabilities
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -182,7 +182,7 @@ def _definition(*, executor_type: type[object], build: Callable[[], object]) -> 
         ),
         phase_codes=("operation.phase.declared",),
         interaction_kinds=frozenset(),
-        capabilities=_capabilities(),
+        capabilities=supervisor_capabilities(),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
     )
 

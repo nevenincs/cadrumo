@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ......application.live.expedientes_ports import ExpedientesDeclaration
 from ......core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
@@ -25,33 +25,33 @@ from ......domain.calculations.registry.formula_runtime import calculate_registr
 from ......domain.calculations.registry.schema import RegistrySnapshot
 from ......domain.calculations.registry.schema_input_kind import InputKind
 from .....persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from .._declarations_fetch import assert_declarations_read_browser_action, assert_declarations_read_http
+from ..declarations_fetch import assert_declarations_read_browser_action, assert_declarations_read_http
 from ..declarations_observations import (
-    _observed_casillas_from_declaration_pdf,
-    _read_guard_policy_from_snapshot,
-    _submitted_file_coverage_for_casillas,
     non_numeric_observed_casillas,
+    observed_casillas_from_declaration_pdf,
     observed_casillas_from_submitted_file,
     observed_header_facts_from_submitted_file,
+    read_guard_policy_from_snapshot,
     registry_observation_from_filed_declaration,
+    submitted_file_coverage_for_casillas,
 )
 from ..errors import SedeParseError
 from ..observation_store import FiledDeclaracionObservationStore
 from ..schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
-from ._declarations_support import (
-    _COTEJO_DOCUMENT_URL,
-    _DECLARATIONS_LISTING_BASE_PATH,
-    _DECLARATIONS_LISTING_URL,
-    _FIXTURE_ROOT,
-    _MODELO_130_COMPUTED_CASILLAS,
-    _REGISTER_DOWNLOAD_URL,
-    _declaration_pdf_payload,
-    _filed_observation,
-    _modelo_130_snapshot,
-    _modelo_snapshot,
-    _resolve_previous_filing_from_observations,
-    _submitted_file_payload,
-    _value_valid_m100_submitted_payload,
+from .declarations_support import (
+    COTEJO_DOCUMENT_URL,
+    DECLARATIONS_LISTING_BASE_PATH,
+    DECLARATIONS_LISTING_URL,
+    FIXTURE_ROOT,
+    MODELO_130_COMPUTED_CASILLAS,
+    REGISTER_DOWNLOAD_URL,
+    declaration_pdf_payload,
+    filed_observation,
+    modelo_130_snapshot,
+    modelo_snapshot,
+    resolve_previous_filing_from_observations,
+    submitted_file_payload,
+    value_valid_m100_submitted_payload,
 )
 
 pytestmark = [
@@ -85,7 +85,7 @@ _M130_SALDO_NEGATIVO_FIN_PERIODO_CASILLA: CasillaId = validated_casilla_id(
     "saldo-negativo-fin-periodo",
     surface="_M130_SALDO_NEGATIVO_FIN_PERIODO_CASILLA",
 )
-_SUBMITTED_FILE_111_2025_1T = _FIXTURE_ROOT / "submitted-files" / "modelo-111-2025-1T-redacted.txt"
+_SUBMITTED_FILE_111_2025_1T = FIXTURE_ROOT / "submitted-files" / "modelo-111-2025-1T-redacted.txt"
 _M111_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("28", surface="_M111_RETENCIONES_CASILLA")
 _M111_RESULTADO_CASILLA: CasillaId = validated_casilla_id("30", surface="_M111_RESULTADO_CASILLA")
 
@@ -97,7 +97,7 @@ def _casilla_values(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal
 def _submitted_file_artefact(body: bytes) -> FiledDeclaracionArtefact:
     return FiledDeclaracionArtefact(
         kind="submitted_file",
-        source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
+        source_url=AnyHttpUrl(DECLARATIONS_LISTING_URL),
         content_type="application/octet-stream",
         byte_count=len(body),
         sha256=hashlib.sha256(body).hexdigest(),
@@ -147,7 +147,7 @@ def _m100_submitted_file_record(body: bytes) -> tuple[ExpedientesDeclaration, Fi
     )
     artefact = FiledDeclaracionArtefact(
         kind="submitted_file",
-        source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
+        source_url=AnyHttpUrl(DECLARATIONS_LISTING_URL),
         content_type="application/xml",
         byte_count=len(body),
         sha256=hashlib.sha256(body).hexdigest(),
@@ -160,9 +160,9 @@ class TestSubmittedFileObservation:
     """Verify submitted-file artefacts are interpreted through the registry layout."""
 
     def test_redacted_submitted_file_values_become_observed_casillas(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            snapshot = _modelo_130_snapshot(operation=_authority_operation_for_test)
-            body = _submitted_file_payload()
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            snapshot = modelo_130_snapshot(operation=_authority_operation_for_test)
+            body = submitted_file_payload()
             declaration, artefact = _m130_submitted_file_record(body)
 
             observed = observed_casillas_from_submitted_file(
@@ -204,8 +204,8 @@ class TestSubmittedFileObservation:
         means numeric enum 1. NIF, municipality and postal identifiers remain
         text, including their significant leading zeros.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            snapshot = _modelo_snapshot("180", filing_year=2026, period="0A", operation=_authority_operation_for_test)
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            snapshot = modelo_snapshot("180", filing_year=2026, period="0A", operation=_authority_operation_for_test)
             declarante_fields: dict[tuple[int, int], str] = {
                 (1, 1): "1",
                 (2, 4): "180",
@@ -302,9 +302,9 @@ class TestSubmittedFileObservation:
             assert declarant_tax_id_values == {"00011111Z"}
 
     def test_modelo_130_redacted_submitted_file_matches_registry_calculation(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            snapshot = _modelo_130_snapshot(operation=_authority_operation_for_test)
-            body = _submitted_file_payload()
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            snapshot = modelo_130_snapshot(operation=_authority_operation_for_test)
+            body = submitted_file_payload()
             declaration, artefact = _m130_submitted_file_record(body)
             observed = observed_casillas_from_submitted_file(
                 snapshot=snapshot,
@@ -351,10 +351,10 @@ class TestSubmittedFileObservation:
                     strict=True,
                 )
             }
-            binding_values = _resolve_previous_filing_from_observations(
+            binding_values = resolve_previous_filing_from_observations(
                 snapshot.revision,
                 (
-                    _filed_observation(
+                    filed_observation(
                         modelo=source_reference.source_modelo,
                         ejercicio=2025,
                         period=source_reference.required_periods[0],
@@ -370,7 +370,7 @@ class TestSubmittedFileObservation:
             computed_casillas = {
                 casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind == InputKind.COMPUTED
             }
-            assert computed_casillas == _MODELO_130_COMPUTED_CASILLAS | {
+            assert computed_casillas == MODELO_130_COMPUTED_CASILLAS | {
                 _M130_SALDO_NEGATIVO_FIN_PERIODO_CASILLA,
                 validated_casilla_id("provisiones-gastos-dificil-justificacion"),
             }
@@ -383,18 +383,18 @@ class TestSubmittedFileObservation:
                 enum_binding_values={"modelo-130-estimacion-directa-modalidad": "directa_normal"},
             )
 
-            assert {casilla_id: calculated.values[casilla_id] for casilla_id in _MODELO_130_COMPUTED_CASILLAS} == {
-                casilla_id: observed_values[casilla_id] for casilla_id in _MODELO_130_COMPUTED_CASILLAS
+            assert {casilla_id: calculated.values[casilla_id] for casilla_id in MODELO_130_COMPUTED_CASILLAS} == {
+                casilla_id: observed_values[casilla_id] for casilla_id in MODELO_130_COMPUTED_CASILLAS
             }
             assert calculated.values[_M130_SALDO_NEGATIVO_FIN_PERIODO_CASILLA] == Decimal("0.00")
 
     def test_submitted_file_coverage_scores_fully_extracted_modelo_130_filing(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             # The extracted coverage helper resolves the export layout and scores the
             # observed casillas against the registry-expected set. The M130 redacted
             # submitted file yields every expected result casilla, so coverage is 1.0.
-            snapshot = _modelo_130_snapshot(operation=_authority_operation_for_test)
-            body = _submitted_file_payload()
+            snapshot = modelo_130_snapshot(operation=_authority_operation_for_test)
+            body = submitted_file_payload()
             declaration, artefact = _m130_submitted_file_record(body)
             casillas = observed_casillas_from_submitted_file(
                 snapshot=snapshot,
@@ -404,7 +404,7 @@ class TestSubmittedFileObservation:
                 operation=_authority_operation_for_test,
             )
 
-            coverage = _submitted_file_coverage_for_casillas(
+            coverage = submitted_file_coverage_for_casillas(
                 snapshot=snapshot, body=body, casillas=casillas, operation=_authority_operation_for_test
             )
 
@@ -421,10 +421,10 @@ class TestSubmittedFileObservation:
             assert coverage == pytest.approx(1.0)
 
     def test_modelo_111_live_redacted_submitted_file_values_become_observed_casillas(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            snapshot = _modelo_snapshot("111", filing_year=2025, period="1T", operation=_authority_operation_for_test)
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            snapshot = modelo_snapshot("111", filing_year=2025, period="1T", operation=_authority_operation_for_test)
             resolved = resolve_export_layout(snapshot)
-            body = _submitted_file_payload(_SUBMITTED_FILE_111_2025_1T)
+            body = submitted_file_payload(_SUBMITTED_FILE_111_2025_1T)
             declaration = ExpedientesDeclaration(
                 modelo="111",
                 ejercicio=2025,
@@ -437,7 +437,7 @@ class TestSubmittedFileObservation:
             )
             artefact = FiledDeclaracionArtefact(
                 kind="submitted_file",
-                source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
+                source_url=AnyHttpUrl(DECLARATIONS_LISTING_URL),
                 content_type="application/octet-stream",
                 byte_count=len(body),
                 sha256=hashlib.sha256(body).hexdigest(),
@@ -476,9 +476,9 @@ class TestSubmittedFileObservation:
             assert observed_values[_M111_RESULTADO_CASILLA] == calculated.values[_M111_RESULTADO_CASILLA]
 
     def test_modelo_100_redacted_xml_dictionary_values_become_observed_casillas(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            snapshot = _modelo_snapshot("100", filing_year=2023, period="0A", operation=_authority_operation_for_test)
-            body = _value_valid_m100_submitted_payload()
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            snapshot = modelo_snapshot("100", filing_year=2023, period="0A", operation=_authority_operation_for_test)
+            body = value_valid_m100_submitted_payload()
             declaration, artefact = _m100_submitted_file_record(body)
 
             observed = observed_casillas_from_submitted_file(
@@ -516,9 +516,9 @@ class TestSubmittedFileObservation:
             assert "CL SANITIZADA 0000 LOCALIDAD" in body_text
 
     def test_modelo_100_redacted_xml_observation_roundtrips_through_encrypted_store(self, tmp_path: Path) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            snapshot = _modelo_snapshot("100", filing_year=2023, period="0A", operation=_authority_operation_for_test)
-            body = _value_valid_m100_submitted_payload()
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            snapshot = modelo_snapshot("100", filing_year=2023, period="0A", operation=_authority_operation_for_test)
+            body = value_valid_m100_submitted_payload()
             declaration, artefact = _m100_submitted_file_record(body)
             store = FiledDeclaracionObservationStore(
                 tmp_path / "observations",
@@ -566,8 +566,8 @@ class TestDeclaracionPdfObservation:
     """
 
     def test_declaration_pdf_values_become_observed_casillas(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            snapshot = _modelo_130_snapshot(operation=_authority_operation_for_test)
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            snapshot = modelo_130_snapshot(operation=_authority_operation_for_test)
             profile = snapshot.extraction_profiles["modelo-130-declaracion-pdf"]
             values = {
                 target.casilla_id: Decimal(index).quantize(Decimal("0.01"))
@@ -584,17 +584,17 @@ class TestDeclaracionPdfObservation:
                 declaration_copy_link_text="Ver",
             )
 
-            observed = _observed_casillas_from_declaration_pdf(
+            observed = observed_casillas_from_declaration_pdf(
                 snapshot=snapshot,
                 declaration=declaration,
-                body=_declaration_pdf_payload(values, profile=profile),
+                body=declaration_pdf_payload(values, profile=profile),
             )
 
             assert {item.casilla_id: Decimal(item.value) for item in observed} == values
 
     def test_declaration_pdf_parse_failure_redacts_identifier_and_chained_error(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            snapshot = _modelo_130_snapshot(operation=_authority_operation_for_test)
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            snapshot = modelo_130_snapshot(operation=_authority_operation_for_test)
             declaration = ExpedientesDeclaration(
                 modelo="130",
                 ejercicio=2026,
@@ -607,7 +607,7 @@ class TestDeclaracionPdfObservation:
             )
 
             with pytest.raises(SedeParseError) as exc_info:
-                _observed_casillas_from_declaration_pdf(
+                observed_casillas_from_declaration_pdf(
                     snapshot=snapshot,
                     declaration=declaration,
                     body=b"not a declaration PDF",
@@ -620,8 +620,8 @@ class TestDeclaracionPdfObservation:
             assert "20269999CANARY123" not in str(getattr(err, "context", {}))
 
     def test_modelo_111_declaration_pdf_values_become_observed_casillas(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            snapshot = _modelo_snapshot("111", filing_year=2025, period="1T", operation=_authority_operation_for_test)
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            snapshot = modelo_snapshot("111", filing_year=2025, period="1T", operation=_authority_operation_for_test)
             profile = snapshot.extraction_profiles["modelo-111-declaracion-pdf"]
             values = {
                 target.casilla_id: Decimal(index).quantize(Decimal("0.01"))
@@ -638,10 +638,10 @@ class TestDeclaracionPdfObservation:
                 declaration_copy_link_text="Ver",
             )
 
-            observed = _observed_casillas_from_declaration_pdf(
+            observed = observed_casillas_from_declaration_pdf(
                 snapshot=snapshot,
                 declaration=declaration,
-                body=_declaration_pdf_payload(values, modelo="111", ejercicio=2025, profile=profile),
+                body=declaration_pdf_payload(values, modelo="111", ejercicio=2025, profile=profile),
             )
 
             assert {item.casilla_id: Decimal(item.value) for item in observed} == values
@@ -651,30 +651,30 @@ class TestReadOperationGuard:
     """Verify declaration-reader remote operations are fail-closed."""
 
     def test_modelo_100_declaration_reader_uses_snapshot_guard(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            snapshot = _modelo_snapshot("100", filing_year=2025, period="0A", operation=_authority_operation_for_test)
-            policy = _read_guard_policy_from_snapshot(snapshot)
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            snapshot = modelo_snapshot("100", filing_year=2025, period="0A", operation=_authority_operation_for_test)
+            policy = read_guard_policy_from_snapshot(snapshot)
 
             assert policy.classification == "authenticated_read_surface"
             assert policy.requires_authentication is True
             assert policy.requires_aeat_authorization is True
             assert_declarations_read_http(
                 "GET",
-                _DECLARATIONS_LISTING_URL,
+                DECLARATIONS_LISTING_URL,
                 policy=policy,
             )
             with pytest.raises(RegistryValidationError, match="remote write method"):
                 assert_declarations_read_http(
                     "POST",
-                    _DECLARATIONS_LISTING_URL,
+                    DECLARATIONS_LISTING_URL,
                     policy=policy,
                 )
 
     @pytest.mark.parametrize(
         "url",
         (
-            f"{_COTEJO_DOCUMENT_URL}?CSV=S3RASL6U73H49Y83",
-            _REGISTER_DOWNLOAD_URL,
+            f"{COTEJO_DOCUMENT_URL}?CSV=S3RASL6U73H49Y83",
+            REGISTER_DOWNLOAD_URL,
         ),
     )
     def test_allowed_get_read_surfaces(self, url: str) -> None:
@@ -692,14 +692,14 @@ class TestReadOperationGuard:
         with pytest.raises(RegistryValidationError, match="not in allowed read-only hosts"):
             assert_declarations_read_http(
                 "GET",
-                f"https://example.test{_DECLARATIONS_LISTING_BASE_PATH}/zkau?dtid=z_test&cmd_0=download",
+                f"https://example.test{DECLARATIONS_LISTING_BASE_PATH}/zkau?dtid=z_test&cmd_0=download",
             )
 
     def test_non_read_method_rejected(self) -> None:
         with pytest.raises(RegistryValidationError, match="remote write method"):
             assert_declarations_read_http(
                 "POST",
-                f"{_COTEJO_DOCUMENT_URL}?CSV=S3RASL6U73H49Y83",
+                f"{COTEJO_DOCUMENT_URL}?CSV=S3RASL6U73H49Y83",
             )
 
     def test_mutating_action_rejected(self) -> None:
@@ -711,14 +711,14 @@ class TestFiledObservationBindings:
     """Verify filed observations can supply registry previous-filing bindings."""
 
     def test_previous_filing_binding_resolves_from_filed_observation(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            snapshot = _modelo_130_snapshot(operation=_authority_operation_for_test)
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            snapshot = modelo_130_snapshot(operation=_authority_operation_for_test)
             source_reference, casilla_values = _previous_net_income_source(snapshot)
 
-            resolved = _resolve_previous_filing_from_observations(
+            resolved = resolve_previous_filing_from_observations(
                 snapshot.revision,
                 (
-                    _filed_observation(
+                    filed_observation(
                         modelo=source_reference.source_modelo,
                         ejercicio=2025,
                         period=source_reference.required_periods[0],
@@ -735,13 +735,13 @@ class TestFiledObservationBindings:
             }
 
     def test_encrypted_filed_observation_roundtrip_supplies_previous_filing_binding(self, tmp_path: Path) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            snapshot = _modelo_130_snapshot(operation=_authority_operation_for_test)
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            snapshot = modelo_130_snapshot(operation=_authority_operation_for_test)
             source_reference, casilla_values = _previous_net_income_source(snapshot)
             store = FiledDeclaracionObservationStore(
                 tmp_path / "observations",
             )
-            observation = _filed_observation(
+            observation = filed_observation(
                 modelo=source_reference.source_modelo,
                 ejercicio=2025,
                 period=source_reference.required_periods[0],
@@ -750,7 +750,7 @@ class TestFiledObservationBindings:
 
             manifest_path = store.persist_observation(observation)
             loaded = store.load_observation(manifest_path)
-            resolved = _resolve_previous_filing_from_observations(
+            resolved = resolve_previous_filing_from_observations(
                 snapshot.revision,
                 (loaded,),
                 filing_year=2026,
@@ -763,8 +763,8 @@ class TestFiledObservationBindings:
             }
 
     def test_justificante_values_rejected_for_registry_binding_input(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            observation = _filed_observation(
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            observation = filed_observation(
                 modelo="100",
                 ejercicio=2025,
                 period="0A",
@@ -783,10 +783,10 @@ class TestFiledObservationBindings:
         (a cross-period clean-state gate, or an operator-facing advisory)
         reports the gap rather than the resolver refusing outright.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            snapshot = _modelo_130_snapshot(operation=_authority_operation_for_test)
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            snapshot = modelo_130_snapshot(operation=_authority_operation_for_test)
 
-            resolved = _resolve_previous_filing_from_observations(
+            resolved = resolve_previous_filing_from_observations(
                 snapshot.revision,
                 (),
                 filing_year=2026,
@@ -804,8 +804,8 @@ class TestFiledObservationBindings:
         no-observations refusal is what stops an empty record being persisted as
         if it were evidence.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            observation = _filed_observation(
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            observation = filed_observation(
                 modelo="100",
                 ejercicio=2025,
                 period="0A",
@@ -822,8 +822,8 @@ class TestFiledObservationBindings:
         discarded its numeric evidence too. The skipped set is not lost: it is
         enumerated by ``non_numeric_observed_casillas`` for the operator.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            observation = _filed_observation(
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            observation = filed_observation(
                 modelo="100",
                 ejercicio=2025,
                 period="0A",
@@ -846,8 +846,8 @@ class TestFiledObservationBindings:
             } == {_M100_CASILLA_0180}
 
     def test_contradictory_observed_values_rejected(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            observation = _filed_observation(
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            observation = filed_observation(
                 modelo="100",
                 ejercicio=2025,
                 period="0A",
@@ -879,8 +879,8 @@ class TestFiledObservationBindings:
                 registry_observation_from_filed_declaration(observation, operation=_authority_operation_for_test)
 
     def test_incomplete_observation_coverage_rejected(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            observation = _filed_observation(
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            observation = filed_observation(
                 modelo="100",
                 ejercicio=2025,
                 period="0A",

@@ -23,12 +23,12 @@ import pytest
 from ..errors import RegistryValidationError
 from ..ledger_binding_selector_support import LEDGER_IVA_FACTS
 from ..ledger_iva_bindings import (
-    _IVA_ALTERNATIVE_MEASURE_FACTS,
-    _IVA_INDEPENDENT_QUANTITY_FACTS,
+    IVA_ALTERNATIVE_MEASURE_FACTS,
+    IVA_INDEPENDENT_QUANTITY_FACTS,
 )
 from ..ledger_renta_income_bindings import (
-    _RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS,
-    _RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS,
+    RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS,
+    RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS,
 )
 from ..quantity_screen_enrolment import assert_quantity_readers_cover_independent_facts, independent_quantity_facts
 
@@ -42,13 +42,13 @@ def test_the_iva_family_excludes_nothing_as_an_alternative_measure() -> None:
     IVA adapter rests on: no one of the three stands in for another, so an empty
     exclusion set is correct here where the renta side's is deliberately not.
     """
-    assert _IVA_ALTERNATIVE_MEASURE_FACTS == {}
-    assert _IVA_INDEPENDENT_QUANTITY_FACTS == LEDGER_IVA_FACTS
+    assert IVA_ALTERNATIVE_MEASURE_FACTS == {}
+    assert IVA_INDEPENDENT_QUANTITY_FACTS == LEDGER_IVA_FACTS
     assert (
         frozenset(
             {"base_amount_sum", "iva_amount_sum", "recargo_amount_sum"},
         )
-        == _IVA_INDEPENDENT_QUANTITY_FACTS
+        == IVA_INDEPENDENT_QUANTITY_FACTS
     )
 
 
@@ -59,7 +59,7 @@ def test_the_renta_family_screens_only_the_withholding() -> None:
     suffered retención remains independent. If both families screened everything
     the empty IVA exclusion set would carry no information.
     """
-    assert frozenset({"declared_withheld_amount_sum"}) == _RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS
+    assert frozenset({"declared_withheld_amount_sum"}) == RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS
 
 
 def test_every_declared_exclusion_states_its_reason() -> None:
@@ -70,12 +70,12 @@ def test_every_declared_exclusion_states_its_reason() -> None:
     author narrowing the screen has to state which quantity the fact re-measures
     instead of appending a member nobody has to justify.
     """
-    assert set(_RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS) == {
+    assert set(RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS) == {
         "ingresos_integros_sum",
         "taxable_base_sum",
         "cash_received_sum",
     }
-    for fact, reason in _RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS.items():
+    for fact, reason in RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS.items():
         assert reason.strip(), f"{fact} is excluded from the quantity screen with no stated reason"
 
 

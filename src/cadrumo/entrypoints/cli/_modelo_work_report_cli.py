@@ -40,8 +40,8 @@ from ...core.i18n.render import output_language as active_output_language
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
-from ._modelo_cli_support import validate_trusted_public_key
 from .common import emit_envelope
+from .modelo_cli_support import validate_trusted_public_key
 from .modelo_results import WorkReportResult, WorkReportVerifyResult
 
 __all__ = ["work_report", "work_report_verify"]
@@ -124,7 +124,7 @@ def work_report(
     from ...application.modelo.selectors import ModeloCalculationRevisionSelector
     from ...application.modelo.work_export_contracts import ModeloExportRequest
     from ...core.modelo_export_artefact import ModeloExportArtefact
-    from ._modelo_cli_support import resolve_default_actor
+    from .modelo_cli_support import resolve_default_actor
     from .operation_modelo_export import run_modelo_export
     from .operation_modelo_verification import select_modelo_work_revision_for_cli
 

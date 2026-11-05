@@ -23,12 +23,12 @@ from ...storage_hierarchy_registry import StorageHierarchyRegistry
 from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..secure_object_records import SecureObjectNamespaceIntegrity, SecureObjectRecord, SecureObjectUnreadable
 from ..secure_objects import SecureObjectRepository
-from ._secure_objects_support import (
-    _ephemeral_secure_repo,
-    _ephemeral_secure_repo_at,
-    _seed_under_key,
-)
 from .raw_key_writer import save_with_raw_key
+from .secure_objects_support import (
+    ephemeral_secure_repo,
+    ephemeral_secure_repo_at,
+    seed_under_key,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -36,7 +36,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 def test_iter_records_with_failures_yields_registry_schema_drift(tmp_path: Path) -> None:
     """Registry-bound row schema drift surfaces as a typed unreadable outcome."""
 
-    with _ephemeral_secure_repo(tmp_path, "registry-schema-drift.db") as (_, engine, repo):
+    with ephemeral_secure_repo(tmp_path, "registry-schema-drift.db") as (_, engine, repo):
         namespace = "cadrumo-test.registry.schema"
         registry = StorageHierarchyRegistry(
             namespaces=(
@@ -80,7 +80,7 @@ def test_iter_records_with_failures_returns_empty_on_empty_namespace(
     tmp_path: Path,
 ) -> None:
     """A namespace with no rows yields an empty iterator without raising."""
-    with _ephemeral_secure_repo(tmp_path, "empty.db") as (_, _, repo):
+    with ephemeral_secure_repo(tmp_path, "empty.db") as (_, _, repo):
         items = list(
             repo.iter_records_with_failures(
                 "cadrumo-test.empty",
@@ -95,7 +95,7 @@ def test_iter_records_with_failures_yields_older_schema_drift(tmp_path: Path) ->
     """Rows below the current version are unreadable without migration."""
     from ......core.i18n.render import tr
 
-    with _ephemeral_secure_repo(tmp_path, "older-schema-drift.db") as (_, _, repo):
+    with ephemeral_secure_repo(tmp_path, "older-schema-drift.db") as (_, _, repo):
         namespace = "cadrumo-test.older.schema"
         repo.save(
             namespace=namespace,
@@ -129,7 +129,7 @@ def test_iter_records_with_failures_yields_older_schema_drift(tmp_path: Path) ->
 def test_iter_records_with_failures_applies_bounded_batch_execution(tmp_path: Path) -> None:
     """The explicit diagnostic iterator executes its row scan with a bounded batch size."""
 
-    with _ephemeral_secure_repo(tmp_path, "bounded-batches.db") as (_, engine, repo):
+    with ephemeral_secure_repo(tmp_path, "bounded-batches.db") as (_, engine, repo):
         namespace = "cadrumo-test.bounded.batches"
         captured_options: list[dict[str, object]] = []
 
@@ -177,7 +177,7 @@ def test_iter_records_with_failures_applies_bounded_batch_execution(tmp_path: Pa
 def test_iter_records_with_failures_rejects_invalid_batch_size(tmp_path: Path) -> None:
     """Batch size must be positive before the diagnostic row scan starts."""
 
-    with _ephemeral_secure_repo(tmp_path, "invalid-batch-size.db") as (_, _, repo):
+    with ephemeral_secure_repo(tmp_path, "invalid-batch-size.db") as (_, _, repo):
         with pytest.raises(StorageValidationError) as raised:
             list(
                 repo.iter_records_with_failures(
@@ -196,7 +196,7 @@ def test_list_records_only_emits_warning_when_unreadable_rows_exist(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """No warning fires on a clean namespace; the warning is gated on real failures."""
-    with _ephemeral_secure_repo(tmp_path, "clean.db") as (_, _, repo):
+    with ephemeral_secure_repo(tmp_path, "clean.db") as (_, _, repo):
         namespace = "cadrumo-test.clean"
         repo.save(
             namespace=namespace,
@@ -225,7 +225,7 @@ def test_iter_all_records_raw_yields_every_row_without_decryption(tmp_path: Path
 
     from ..secure_object_records import SecureObjectRawRow
 
-    with _ephemeral_secure_repo(tmp_path, "raw.db") as (_, _, repo):
+    with ephemeral_secure_repo(tmp_path, "raw.db") as (_, _, repo):
         now = datetime.now(UTC)
         repo.save(
             namespace="cadrumo.alpha",
@@ -280,7 +280,7 @@ def test_iter_all_records_raw_yields_every_row_without_decryption(tmp_path: Path
 def test_iter_all_records_raw_returns_empty_iterator_for_empty_table(tmp_path: Path) -> None:
     """No rows persisted → iterator yields nothing without raising."""
 
-    with _ephemeral_secure_repo(tmp_path, "empty.db") as (_, _, repo):
+    with ephemeral_secure_repo(tmp_path, "empty.db") as (_, _, repo):
         rows = list(repo.iter_all_records_raw())
         assert rows == []
 
@@ -296,7 +296,7 @@ def test_iter_all_records_raw_does_not_attempt_decryption_under_rotated_master_k
 
     seed_provider = EphemeralBucketSession()
     db_path = tmp_path / "rotated.db"
-    _seed_under_key(
+    seed_under_key(
         db_path=db_path,
         provider=seed_provider,
         namespace="cadrumo.rotated",
@@ -304,7 +304,7 @@ def test_iter_all_records_raw_does_not_attempt_decryption_under_rotated_master_k
         payload=b"rotated-payload",
     )
     # Switch to a fresh master key the seeded payload was NOT encrypted under.
-    with _ephemeral_secure_repo_at(db_path) as (_, repo):
+    with ephemeral_secure_repo_at(db_path) as (_, repo):
         rows = list(repo.iter_all_records_raw())
         assert len(rows) == 1
         # The ciphertext bytes are returned verbatim; no DecryptionError.
@@ -323,7 +323,7 @@ def test_quarantine_unreadable_rows_preserves_revision_metadata(tmp_path: Path) 
     seed_provider = EphemeralBucketSession()
     db_path = tmp_path / "quarantine-metadata.db"
     namespace = "cadrumo.quarantine.metadata"
-    _seed_under_key(
+    seed_under_key(
         db_path=db_path,
         provider=seed_provider,
         namespace=namespace,
@@ -357,7 +357,7 @@ def test_quarantine_unreadable_rows_preserves_revision_metadata(tmp_path: Path) 
             {**metadata_values, "namespace": namespace},
         )
 
-    with _ephemeral_secure_repo_at(db_path) as (_, repo):
+    with ephemeral_secure_repo_at(db_path) as (_, repo):
         report = repo.quarantine_unreadable_rows()
 
         assert report == (
@@ -381,7 +381,7 @@ def test_quarantine_unreadable_rows_preserves_revision_metadata(tmp_path: Path) 
 def test_secure_object_save_writes_revision_integrity_metadata(tmp_path: Path) -> None:
     """A save writes storage-level revision and integrity metadata to disk."""
 
-    with _ephemeral_secure_repo(tmp_path, "revision-write.db") as (db_path, _, repo):
+    with ephemeral_secure_repo(tmp_path, "revision-write.db") as (db_path, _, repo):
         payload = b"revision-integrity-payload"
         written_at = datetime(2026, 5, 22, 13, 0, 0, tzinfo=UTC)
         repo.save(
@@ -416,7 +416,7 @@ def test_secure_object_save_writes_revision_integrity_metadata(tmp_path: Path) -
 def test_secure_object_overwrite_links_previous_revision_metadata(tmp_path: Path) -> None:
     """Overwrites preserve the previous storage revision reference and payload hash."""
 
-    with _ephemeral_secure_repo(tmp_path, "revision-overwrite.db") as (db_path, _, repo):
+    with ephemeral_secure_repo(tmp_path, "revision-overwrite.db") as (db_path, _, repo):
         namespace = "cadrumo.revision.overwrite"
         repo.save(
             namespace=namespace,
@@ -459,7 +459,7 @@ def test_secure_object_overwrite_links_previous_revision_metadata(tmp_path: Path
 def test_secure_object_save_many_writes_revision_metadata(tmp_path: Path) -> None:
     """Batched writes carry revision metadata for each persisted row."""
 
-    with _ephemeral_secure_repo(tmp_path, "revision-save-many.db") as (db_path, _, repo):
+    with ephemeral_secure_repo(tmp_path, "revision-save-many.db") as (db_path, _, repo):
         repo.save_many(
             (
                 SecureObjectWrite(
@@ -505,7 +505,7 @@ def test_secure_object_save_many_writes_revision_metadata(tmp_path: Path) -> Non
 def test_secure_object_save_with_raw_key_writes_revision_metadata(tmp_path: Path) -> None:
     """Raw-key archive restore writes the same metadata as natural-key saves."""
 
-    with _ephemeral_secure_repo(tmp_path, "revision-raw-key.db") as (db_path, _, repo):
+    with ephemeral_secure_repo(tmp_path, "revision-raw-key.db") as (db_path, _, repo):
         raw_key = bytes(range(32))
         payload = b"raw-key-revision-payload"
         save_with_raw_key(
@@ -556,7 +556,7 @@ def test_secure_object_write_rejects_conflict_policy_until_cas_contract_exists()
 def test_secure_object_save_with_expected_revision_updates_only_current_row(tmp_path: Path) -> None:
     """Expected-revision writes update when the stored revision still matches."""
 
-    with _ephemeral_secure_repo(tmp_path, "revision-cas-success.db") as (db_path, _, repo):
+    with ephemeral_secure_repo(tmp_path, "revision-cas-success.db") as (db_path, _, repo):
         namespace = "cadrumo.revision.cas"
         repo.save(
             namespace=namespace,
@@ -597,7 +597,7 @@ def test_secure_object_save_with_expected_revision_updates_only_current_row(tmp_
 def test_secure_object_save_with_stale_expected_revision_refuses_without_overwrite(tmp_path: Path) -> None:
     """A stale expected revision must not overwrite the current secure object."""
 
-    with _ephemeral_secure_repo(tmp_path, "revision-cas-stale.db") as (db_path, _, repo):
+    with ephemeral_secure_repo(tmp_path, "revision-cas-stale.db") as (db_path, _, repo):
         namespace = "cadrumo.revision.cas.stale"
         repo.save(
             namespace=namespace,
@@ -641,7 +641,7 @@ def test_secure_object_save_with_stale_expected_revision_refuses_without_overwri
 def test_secure_object_save_with_expected_revision_refuses_missing_row(tmp_path: Path) -> None:
     """A CAS write must not create a missing object for a stale expected revision."""
 
-    with _ephemeral_secure_repo(tmp_path, "revision-cas-missing.db") as (db_path, _, repo):
+    with ephemeral_secure_repo(tmp_path, "revision-cas-missing.db") as (db_path, _, repo):
         namespace = "cadrumo.revision.cas.missing"
         with pytest.raises(SecureObjectRevisionConflictError) as raised:
             repo.save(

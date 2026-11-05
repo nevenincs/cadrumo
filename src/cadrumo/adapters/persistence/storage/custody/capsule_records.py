@@ -23,9 +23,9 @@ from .....core.hashing import (
 from .....core.identity.digest import PrefixedContentDigest
 from .....core.identity.profile import canonical_profile_bucket_id
 from .....core.identity.profile_label import ProfileLabel
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.profile_publication import ProfilePublicationKindValue
-from .....core.time.clock import now as _now
+from .....core.time.clock import now
 from .digest_model import CustodyDigestModel
 from .errors import ProfileCustodyRecordError
 from .filesystem_primitives import ProfileCustodyPasswordReadOperation
@@ -62,7 +62,7 @@ _COMMIT_TIME_RE: Final = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}
 class _ProfileCustodyCapsuleLabelPayload(BaseModel):
     """The immutable label lineage excluding its two derived digests."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: Literal[1]
     profile_id: UUID
@@ -231,7 +231,7 @@ class ProfileCustodyCapsuleLabel(_ProfileCustodyCapsuleLabelPayload):
 
 
 class _ProfileCustodyCommitPayload(BaseModel):
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: Literal[1]
     layout_version: Literal[1]
@@ -283,7 +283,7 @@ class ProfileCustodyCommit(_ProfileCustodyCommitPayload, CustodyDigestModel):
         to supply separately, so the commit instant and the digest computed
         over it can never be set by two different code paths that drift.
         """
-        instant = (published_at or _now()).astimezone(UTC)
+        instant = (published_at or now()).astimezone(UTC)
         serialized_time = instant.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
         payload = _ProfileCustodyCommitPayload(
             schema_version=PROFILE_CUSTODY_COMMIT_SCHEMA_VERSION,
@@ -317,7 +317,7 @@ class ProfileCustodyDeletionMarker(CustodyDigestModel):
     _digest_subject: ClassVar[str] = "profile custody deletion marker"
     _digest_mismatch_message: ClassVar[str] = "profile deletion marker self_digest does not match"
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_version: Literal[1] = 1
     owner: Literal["application-local-custody"] = "application-local-custody"

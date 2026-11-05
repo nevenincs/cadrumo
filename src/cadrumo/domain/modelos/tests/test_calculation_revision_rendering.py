@@ -21,7 +21,7 @@ from ....core.hashing import content_hash_hex
 from ....core.models import STRICT_FROZEN_CONFIG
 from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.revision_contracts import DeclaredPredecessor, NoPredecessor
-from ..calculation_revision_rendering import CalculationRenderingSnapshot, _retain_registry_schema_fields
+from ..calculation_revision_rendering import CalculationRenderingSnapshot, retain_registry_schema_fields
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -56,7 +56,7 @@ def test_complete_schema_retains_conditional_fields_and_authored_predecessors() 
     adapter = TypeAdapter(_PresentationFields)
     adapter.rebuild()
     schema = deepcopy(adapter.core_schema)
-    _retain_registry_schema_fields(schema)
+    retain_registry_schema_fields(schema)
     serializer = SchemaSerializer(schema, _use_prebuilt=False)
 
     assert serializer.to_python(original, mode="json", by_alias=False, exclude_computed_fields=True) == {

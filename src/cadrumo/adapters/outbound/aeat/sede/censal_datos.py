@@ -55,18 +55,18 @@ from .....core.text_fold import fold_diacritics
 from .....core.time.clock import now
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
 from .....domain.calculations.registry.schema_base import EvidenceTier
-from .._html import parse_html
-from .._playwright import PlaywrightError
 from ..browser.factory import default_browser_session_factory
-from ._adapter_utils import (
+from ..html import parse_html
+from ..playwright import PlaywrightError
+from .adapter_utils import (
     assert_landed_url_readable,
     assert_read_http_for,
     is_aeat_auth_gate_redirect,
     redacted_url,
     require_playwright_page,
 )
-from ._auth_state import storage_state_for_session
-from ._browser_constants import PLAYWRIGHT_WAIT_DOMCONTENTLOADED
+from .auth_state import storage_state_for_session
+from .browser_constants import PLAYWRIGHT_WAIT_DOMCONTENTLOADED
 from .censal_navigation import CENSAL_READ_POST_PATHS, capture_censal_consultations
 from .censal_tables import census_shape_error, census_source_url
 from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
@@ -105,7 +105,7 @@ _REPRESENTATION_DIALOG_MARKER: Final = EXTERNAL.aeat.clave_movil.dialogo_represe
 # because none of them contains the token an earlier draft forbade
 # (``MOD036``): the filing tool is ``BU36-ASIS/M036/index.zul`` and the write
 # sibling is ``BUGC-JDIT/ModifDomiDual``.
-_FORBIDDEN_LANDING_MARKERS: Final[tuple[str, ...]] = EXTERNAL.aeat.live_safety.censal_forbidden_landing_markers
+FORBIDDEN_LANDING_MARKERS: Final[tuple[str, ...]] = EXTERNAL.aeat.live_safety.censal_forbidden_landing_markers
 
 READ_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-sede-censal-datos-read",
@@ -161,7 +161,7 @@ _NOTIFICATION_SECTION: Final = "domicilio de notificacion"
 # removes any parenthetical qualifier, and drops a trailing colon, so
 # "Complemento domicilio (ej.:Urbanización...)" and the notification
 # variant that adds "Polígono Industrial" both reduce to one key.
-_IDENTITY_LABELS: Final[Mapping[str, str]] = {
+IDENTITY_LABELS: Final[Mapping[str, str]] = {
     "nif": "nif",
     "apellidos y nombre": "apellidos_y_nombre",
     "administracion de su domicilio fiscal": "administracion_domicilio_fiscal",
@@ -175,7 +175,7 @@ _IDENTITY_LABELS: Final[Mapping[str, str]] = {
     "suscrito voluntariamente a notificaciones electronicas": "suscrito_voluntariamente_notificaciones_electronicas",
 }
 
-_DOMICILIO_LABELS: Final[Mapping[str, str]] = {
+DOMICILIO_LABELS: Final[Mapping[str, str]] = {
     "tipo via": "tipo_via",
     "nombre via": "nombre_via",
     "tipo de numero": "tipo_numero",
@@ -232,16 +232,16 @@ def parse_censal_datos(html: str, *, source_url: str) -> CensalObservation:
 
     for table in soup.find_all("table"):
         table = _require_tag(table, element="table")
-        section = _section_of(table)
+        section = section_of(table)
         if section is None:
             continue
         tables_seen += 1
         if section == _IDENTITY_SECTION:
-            _collect(table, _IDENTITY_LABELS, identity_fields)
+            _collect(table, IDENTITY_LABELS, identity_fields)
         elif section == _FISCAL_SECTION:
-            _collect(table, _DOMICILIO_LABELS, fiscal_fields)
+            _collect(table, DOMICILIO_LABELS, fiscal_fields)
         else:
-            _collect(table, _DOMICILIO_LABELS, notification_fields)
+            _collect(table, DOMICILIO_LABELS, notification_fields)
 
     if tables_seen == 0:
         raise SedeParseError(
@@ -267,7 +267,7 @@ def _deaccent(text: str) -> str:
     return fold_diacritics(text).casefold()
 
 
-def _fold(text: str) -> str:
+def fold(text: str) -> str:
     """Lowercase, strip diacritics, drop parentheticals, and trim punctuation.
 
     AEAT qualifies several labels with a parenthetical example — the
@@ -278,7 +278,7 @@ def _fold(text: str) -> str:
     return _deaccent(without_parenthetical).strip().rstrip(":").strip()
 
 
-def _section_of(table: Tag) -> str | None:
+def section_of(table: Tag) -> str | None:
     """Return the folded censal section a table belongs to, or ``None``.
 
     AEAT stamps every censal data table with a ``title`` naming its group,
@@ -292,7 +292,7 @@ def _section_of(table: Tag) -> str | None:
     candidates.extend(node.get_text(" ", strip=True) for node in (caption, heading, nearby) if isinstance(node, Tag))
     for candidate in candidates:
         if isinstance(candidate, str):
-            title = _fold(candidate)
+            title = fold(candidate)
             if title in {_IDENTITY_SECTION, _FISCAL_SECTION, _NOTIFICATION_SECTION}:
                 return title
     return None
@@ -335,7 +335,7 @@ def _rows_of(table: Tag) -> Iterator[tuple[list[str], list[str]]]:
         if row.find_parent("table") is not table:
             continue
         cells = [_require_tag(cell, element="cell") for cell in row.find_all(["td", "th"], recursive=False)]
-        if len(cells) == 1 and _fold(cells[0].get_text(" ", strip=True)) in {
+        if len(cells) == 1 and fold(cells[0].get_text(" ", strip=True)) in {
             _IDENTITY_SECTION,
             _FISCAL_SECTION,
             _NOTIFICATION_SECTION,
@@ -376,7 +376,7 @@ def _is_label_cell(cell: Tag) -> bool:
 
 def _assign(labels: Mapping[str, str], label: str, value: str, into: dict[str, str]) -> None:
     """Map one AEAT label to its model field and record a non-blank value."""
-    field = labels.get(_fold(label))
+    field = labels.get(fold(label))
     if field is None:
         raise census_shape_error("unrecognized identity or address label")
     cleaned = _clean(value)
@@ -412,7 +412,7 @@ def _parse_flag(raw: str | None) -> bool | None:
     """Parse an AEAT ``Sí`` / ``No`` cell into a tri-state boolean."""
     if raw is None:
         return None
-    folded = _fold(raw)
+    folded = fold(raw)
     if folded in _AFFIRMATIVE:
         return True
     if folded in _NEGATIVE:
@@ -458,7 +458,7 @@ async def fetch_censal_datos(
         )
     settings = settings or Settings()
     storage_state = storage_state_for_session(session)
-    return await _navigate_and_parse(
+    return await navigate_and_parse(
         storage_state,
         taxpayer_nif=taxpayer_nif,
         settings=settings,
@@ -482,7 +482,7 @@ def censal_datos_url(taxpayer_nif: str, *, origin: str) -> str:
     return f"{origin}{_CENSAL_PATH}?nifRepresentado={quote(taxpayer_nif, safe='')}&E_HNR=&EJERCICIO=0"
 
 
-def _censal_landing_url(page: object, *, requested_url: str) -> str:
+def censal_landing_url(page: object, *, requested_url: str) -> str:
     """Return the URL AEAT actually served, refusing an unreadable landing.
 
     Mirrors :func:`_walker.assert_landed_url_readable`: an empty or otherwise
@@ -494,7 +494,7 @@ def _censal_landing_url(page: object, *, requested_url: str) -> str:
     return assert_landed_url_readable(getattr(page, "url", "") or "", requested_url=requested_url)
 
 
-async def _navigate_and_parse(
+async def navigate_and_parse(
     storage_state: Mapping[str, object],
     *,
     taxpayer_nif: str,
@@ -528,7 +528,7 @@ async def _navigate_and_parse(
 async def _read_consulta_landing(page: Page, *, taxpayer_nif: str) -> tuple[CensalObservation, str]:
     """Request the consulta in ``page``, refuse any other landing and parse it; returns the landed path too."""
     url = censal_datos_url(taxpayer_nif, origin=_CENSAL_ORIGIN)
-    _assert_read_http("GET", url)
+    assert_read_http("GET", url)
     try:
         await page.goto(url, wait_until=PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
     except PlaywrightError as exc:
@@ -541,11 +541,11 @@ async def _read_consulta_landing(page: Page, *, taxpayer_nif: str) -> tuple[Cens
     # refuse a landing that is not the consulta, re-assert the host AEAT
     # actually served, then refuse outright if that landing is a censal
     # modification surface.
-    landing_url = _censal_landing_url(page, requested_url=redacted_url(url) or "")
-    _refuse_non_consulta_landing(landing_url)
+    landing_url = censal_landing_url(page, requested_url=redacted_url(url) or "")
+    refuse_non_consulta_landing(landing_url)
     landing = urlsplit(landing_url)
-    _assert_read_http("GET", f"{landing.scheme}://{landing.netloc}{landing.path}")
-    _assert_read_landing(landing_url)
+    assert_read_http("GET", f"{landing.scheme}://{landing.netloc}{landing.path}")
+    assert_read_landing(landing_url)
 
     html = await page.content()
     result = parse_censal_datos(html, source_url=str(census_source_url(landing_url)))
@@ -566,7 +566,7 @@ async def _read_consulta_landing(page: Page, *, taxpayer_nif: str) -> tuple[Cens
     return result, landing.path
 
 
-def _refuse_non_consulta_landing(landing_url: str) -> None:
+def refuse_non_consulta_landing(landing_url: str) -> None:
     """Refuse at once when AEAT answered the consulta request with any page but the consulta.
 
     The access selector, the Cl@ve login and the 4033 gate mean the stored
@@ -601,7 +601,7 @@ def _refuse_non_consulta_landing(landing_url: str) -> None:
         )
 
 
-def _assert_read_http(method: str, url: str) -> None:
+def assert_read_http(method: str, url: str) -> None:
     """Fail-closed guard: refuse any non-read-only or off-AEAT censal navigation."""
     assert_read_http_for(READ_GUARD_POLICY, method, url)
 
@@ -620,13 +620,13 @@ def forbidden_censal_landing_marker(landing_url: str) -> str | None:
         The first marker that matched, or ``None`` when the landing is safe.
     """
     folded = landing_url.casefold()
-    for marker in _FORBIDDEN_LANDING_MARKERS:
+    for marker in FORBIDDEN_LANDING_MARKERS:
         if marker.casefold() in folded:
             return marker
     return None
 
 
-def _assert_read_landing(landing_url: str) -> None:
+def assert_read_landing(landing_url: str) -> None:
     """Refuse a landing on a censal modification surface.
 
     The consulta page offers *Cambio de Domicilio Fiscal*, *Cambio de

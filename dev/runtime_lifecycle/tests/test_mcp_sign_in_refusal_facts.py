@@ -167,7 +167,9 @@ def _in_a_logon_without_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
     from keyring.errors import KeyringError, PasswordDeleteError
 
     store = _LogonWithoutCredentials()
-    monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (store, KeyringError, PasswordDeleteError))
+    monkeypatch.setattr(
+        acceleration_keychain, "acceleration_keychain_keyring", lambda: (store, KeyringError, PasswordDeleteError)
+    )
 
 
 @pytest.mark.anyio

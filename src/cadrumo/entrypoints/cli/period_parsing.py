@@ -24,7 +24,7 @@ from .common import bad
 if TYPE_CHECKING:
     from ...core.period import Period
 
-__all__ = ["_canonical_period", "_optional_canonical_period"]
+__all__ = ["optional_canonical_period", "period_parsing_canonical_period"]
 
 
 # The ledger ``--period`` surface speaks ONE strict operator grammar — the
@@ -96,7 +96,7 @@ def _ledger_period_accepted_tokens() -> tuple[str, ...]:
     return tuple(accepted)
 
 
-class _LedgerPeriodRefusal(typer.BadParameter):
+class LedgerPeriodRefusal(typer.BadParameter):
     """A ``--period`` refusal that carries the accepted token set as structured data.
 
     Subclasses :class:`typer.BadParameter` so the boundary behaviour is unchanged
@@ -128,7 +128,7 @@ class _LedgerPeriodRefusal(typer.BadParameter):
         self.accepted_period_tokens: tuple[str, ...] = accepted_period_tokens
 
 
-def _canonical_period(period: str, *, year: int) -> Period:
+def period_parsing_canonical_period(period: str, *, year: int) -> Period:
     """Resolve a strict AEAT ``--period`` token plus ``--year`` to a :class:`Period`.
 
     The ledger ``--period`` surface accepts only the canonical AEAT modelo
@@ -159,14 +159,14 @@ def _canonical_period(period: str, *, year: int) -> Period:
             # A registry-valid token the ledger cannot filter by (an instalment
             # clave such as ``1P``): refuse with the AEAT-token guidance below.
 
-    raise _LedgerPeriodRefusal(
+    raise LedgerPeriodRefusal(
         translated_message="cli.common.errors.period_unrecognised",
         context={"raw": period},
         accepted_period_tokens=_ledger_period_accepted_tokens(),
     )
 
 
-def _optional_canonical_period(period: str | None, *, year: int | None) -> Period | None:
+def optional_canonical_period(period: str | None, *, year: int | None) -> Period | None:
     """Resolve an optional ``--period`` / ``--year`` pair to :class:`Period` or ``None``.
 
     Returns ``None`` when no ``--period`` is supplied (the command scopes the
@@ -180,4 +180,4 @@ def _optional_canonical_period(period: str | None, *, year: int | None) -> Perio
         return None
     if year is None:
         raise bad(tr("cli.common.errors.period_missing_year", token=period.strip()))
-    return _canonical_period(period, year=year)
+    return period_parsing_canonical_period(period, year=year)

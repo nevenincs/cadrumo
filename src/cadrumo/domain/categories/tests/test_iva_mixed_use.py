@@ -36,7 +36,7 @@ from ..proportionality import (
 )
 from ..registry import (
     CATEGORY_PROFILE_FACT_ID,
-    _profile_from_authority_fact,
+    profile_from_authority_fact,
     resolve_category_profile,
     resolve_category_profiles,
 )
@@ -252,4 +252,4 @@ def test_the_loader_refuses_a_manual_quotation_the_build_did_not_check(operation
     )
 
     with pytest.raises(CategoryValidationError, match="no source citation of its variant carries that text"):
-        _profile_from_authority_fact(unchecked, operation=operation, year=2025)
+        profile_from_authority_fact(unchecked, operation=operation, year=2025)

@@ -52,11 +52,15 @@ from cadrumo.application.user_profile.capabilities import CapabilitySource, reso
 from cadrumo.core.capabilities import ServiceCapability
 from cadrumo.core.config import Settings, load_settings
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import (
+    ProfileSetupState,
+    UserProfileFact,
+    UserProfileRecord,
+    create_user_profile_record,
+)
 
 from .....domain.calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
@@ -68,13 +72,13 @@ _PRODUCTION_ROOT = Path(__file__).resolve().parents[3]
 
 
 def _record(*facts: UserProfileFact) -> UserProfileRecord:
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="19191919-1919-4191-8191-191919191919",
         facts=facts,
         created_at=_NOW,
         updated_at=_NOW,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 

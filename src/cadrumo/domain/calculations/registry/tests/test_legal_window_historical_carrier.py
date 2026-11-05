@@ -28,7 +28,7 @@ from ..schema import ModeloDefinition, ModeloRevision
 from ..schema_catalogues import RegistryCatalogues
 from ..schema_formula import BracketEntry, ParameterDefinition
 from ..schema_references import LegalReference, PeriodSelector
-from ..snapshot import _historical_carrier_admits, check_revision_scoped_legal_windows
+from ..snapshot import check_revision_scoped_legal_windows, historical_carrier_admits
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -61,7 +61,7 @@ def _repealed_reference() -> LegalReference:
 
 def test_a_value_window_inside_the_governed_span_is_admitted() -> None:
     """The case the gate exists to allow: historical value, historical provision."""
-    assert _historical_carrier_admits(
+    assert historical_carrier_admits(
         _repealed_reference(),
         ((_GOVERNS_FROM, _GOVERNS_TO, "filing_period"),),
     )
@@ -69,7 +69,7 @@ def test_a_value_window_inside_the_governed_span_is_admitted() -> None:
 
 def test_a_narrower_contained_window_is_admitted() -> None:
     """Containment, not equality: a value need not span the whole provision."""
-    assert _historical_carrier_admits(
+    assert historical_carrier_admits(
         _repealed_reference(),
         ((date(2000, 1, 1), date(2010, 12, 31), "filing_period"),),
     )
@@ -77,7 +77,7 @@ def test_a_narrower_contained_window_is_admitted() -> None:
 
 def test_a_current_era_value_grounded_in_repealed_wording_is_refused() -> None:
     """TEETH: the stale-citation defect the whole window check exists to catch."""
-    assert not _historical_carrier_admits(
+    assert not historical_carrier_admits(
         _repealed_reference(),
         ((date(2022, 1, 1), None, "filing_period"),),
     )
@@ -89,7 +89,7 @@ def test_an_open_ended_value_window_is_refused() -> None:
     An open window can never be contained in a closed governed span, so the
     cheapest route to a false admission is closed off by construction.
     """
-    assert not _historical_carrier_admits(
+    assert not historical_carrier_admits(
         _repealed_reference(),
         ((_GOVERNS_FROM, None, "filing_period"),),
     )
@@ -97,7 +97,7 @@ def test_an_open_ended_value_window_is_refused() -> None:
 
 def test_a_closed_but_uncontained_window_is_refused() -> None:
     """TEETH: overlap is not enough, and a post-repeal window earns nothing."""
-    assert not _historical_carrier_admits(
+    assert not historical_carrier_admits(
         _repealed_reference(),
         ((date(2015, 1, 1), date(2021, 12, 31), "filing_period"),),
     )
@@ -105,7 +105,7 @@ def test_a_closed_but_uncontained_window_is_refused() -> None:
 
 def test_a_window_straddling_the_repeal_is_refused() -> None:
     """TEETH: partial containment is refused, so a value cannot reach past force."""
-    assert not _historical_carrier_admits(
+    assert not historical_carrier_admits(
         _repealed_reference(),
         ((date(2010, 1, 1), date(2016, 12, 31), "filing_period"),),
     )
@@ -117,7 +117,7 @@ def test_a_submission_date_value_never_earns_the_exemption() -> None:
     Contained on every other clause, and still refused, so the axis check cannot
     pass vacuously.
     """
-    assert not _historical_carrier_admits(
+    assert not historical_carrier_admits(
         _repealed_reference(),
         ((_GOVERNS_FROM, _GOVERNS_TO, "submission_date"),),
     )
@@ -129,7 +129,7 @@ def test_a_reference_cited_outside_parameters_earns_nothing() -> None:
     A reference some non-parameter record also cites has no parameter carrier to
     defend it, and must be checked against the revision window as before.
     """
-    assert not _historical_carrier_admits(_repealed_reference(), ())
+    assert not historical_carrier_admits(_repealed_reference(), ())
 
 
 _CURRENT_WORDING = "ley-35-2006:art-93-fixture-vigente"

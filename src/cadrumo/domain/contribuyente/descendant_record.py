@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.descendant_relacion import DescendantRelacion
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.text_bounds import CalendarMonth, is_calendar_month, is_canonical_month_set
 from ...core.time.clock import today_madrid
 from ..calculations.registry.descendant_disability_catalogue import accepted_descendant_disability_grades
@@ -32,7 +32,7 @@ from .family_types import (
 class DescendantRecordFields(BaseModel):
     """Canonical field vocabulary shared by domain records and projections."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     birth_date: date
     relacion: DescendantRelacion = Field(default_factory=descendant_relacion_default_token)

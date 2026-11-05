@@ -43,12 +43,12 @@ __all__ = [
     "PostalCode",
     "ProvinceCode",
     "WorkbookCellRefStr",
-    "_coerce_modelo_year",
-    "_validate_country_code",
-    "_validate_iban_string",
     "_validate_nif_string",
-    "_validate_period_code",
+    "coerce_modelo_year",
     "registry_scalar_value_type",
+    "validate_country_code",
+    "validate_iban_string",
+    "validate_period_code",
     "validate_registry_text_scalar",
 ]
 
@@ -108,7 +108,7 @@ identifier independently of a casilla declaration.
 
 
 @pydantic_validation_boundary
-def _coerce_modelo_year(value: object) -> object:
+def coerce_modelo_year(value: object) -> object:
     """Coerce a fiscal-year input to an int within the registry-supported window.
 
     Accepts an int directly or a non-empty string of digits. Rejects
@@ -131,7 +131,7 @@ def _coerce_modelo_year(value: object) -> object:
 
 
 ModeloYear = Annotated[
-    int, BeforeValidator(_coerce_modelo_year), Field(ge=FOUR_DIGIT_YEAR_FIRST, le=FOUR_DIGIT_YEAR_LAST)
+    int, BeforeValidator(coerce_modelo_year), Field(ge=FOUR_DIGIT_YEAR_FIRST, le=FOUR_DIGIT_YEAR_LAST)
 ]
 """Canonical fiscal-year integer for the registry boundary.
 
@@ -149,7 +149,7 @@ _EVENT_PATTERN = re.compile(r"^EVENT-\d+$")
 
 
 @pydantic_validation_boundary
-def _validate_period_code(value: object) -> object:
+def validate_period_code(value: object) -> object:
     """Validate a filing-period code against the registry-supported set.
 
     Accepted forms (from the fiscal-period inventory):
@@ -169,7 +169,7 @@ def _validate_period_code(value: object) -> object:
     raise RegistryValidationError(f"period_code value {value!r} does not match a supported filing-period form")
 
 
-PeriodCode = Annotated[str, BeforeValidator(_validate_period_code)]
+PeriodCode = Annotated[str, BeforeValidator(validate_period_code)]
 """Canonical filing-period code for the registry boundary.
 
 Used as the value type for casillas declaring
@@ -183,7 +183,7 @@ _COUNTRY_CODE_RE = re.compile(rf"^{COUNTRY_CODE_ALPHA2_PATTERN}$")
 
 
 @pydantic_validation_boundary
-def _validate_country_code(value: object) -> object:
+def validate_country_code(value: object) -> object:
     """Validate a two-character ISO 3166-1 alpha-2 country code.
 
     Format-only validation against the shared
@@ -211,7 +211,7 @@ def _validate_country_code(value: object) -> object:
     return value
 
 
-CountryCode = Annotated[str, BeforeValidator(_validate_country_code)]
+CountryCode = Annotated[str, BeforeValidator(validate_country_code)]
 """Two-character country code for the registry boundary.
 
 Used as the value type for casillas declaring
@@ -223,7 +223,7 @@ alias enforces only the alpha-2 shape.
 
 
 @pydantic_validation_boundary
-def _validate_iban_string(value: object) -> object:
+def validate_iban_string(value: object) -> object:
     """Validate an IBAN: country code, check digits, BBAN, and mod-97 residue.
 
     The validator strips whitespace and hyphens, uppercases, then
@@ -244,7 +244,7 @@ def _validate_iban_string(value: object) -> object:
     return canonical
 
 
-IbanString = Annotated[str, BeforeValidator(_validate_iban_string)]
+IbanString = Annotated[str, BeforeValidator(validate_iban_string)]
 """Canonical IBAN string for the registry boundary.
 
 Used as the value type for casillas declaring ``data_type = "iban"``
@@ -415,7 +415,7 @@ RegistryScalarValueType = TypeAliasType(  # noqa: UP040
 """Runtime family for a registry casilla ``data_type`` declaration."""
 
 
-_REGISTRY_SCALAR_VALUE_TYPES: dict[str, RegistryScalarValueType] = {
+REGISTRY_SCALAR_VALUE_TYPES: dict[str, RegistryScalarValueType] = {
     "decimal": "decimal",
     "money": "decimal",
     "ratio": "decimal",
@@ -444,13 +444,13 @@ _REGISTRY_TEXT_SCALAR_VALIDATORS: dict[str, Callable[[object], object]] = {
     "text": lambda value: value,
     "nif_iva": inspect.unwrap(_validate_nif_iva_string),
     "name": inspect.unwrap(_validate_name_string),
-    "period_code": inspect.unwrap(_validate_period_code),
-    "country_code": inspect.unwrap(_validate_country_code),
+    "period_code": inspect.unwrap(validate_period_code),
+    "country_code": inspect.unwrap(validate_country_code),
     "ccaa_code": inspect.unwrap(_validate_ccaa_code),
     "province_code": inspect.unwrap(_validate_province_code),
     "municipality_code": inspect.unwrap(_validate_municipality_code),
     "postal_code": inspect.unwrap(_validate_postal_code),
-    "iban": inspect.unwrap(_validate_iban_string),
+    "iban": inspect.unwrap(validate_iban_string),
     "bic": inspect.unwrap(_validate_bic_string),
 }
 
@@ -458,7 +458,7 @@ _REGISTRY_TEXT_SCALAR_VALIDATORS: dict[str, Callable[[object], object]] = {
 def registry_scalar_value_type(data_type: str) -> RegistryScalarValueType:
     """Return the runtime family declared by a registry scalar data type."""
     try:
-        return _REGISTRY_SCALAR_VALUE_TYPES[data_type]
+        return REGISTRY_SCALAR_VALUE_TYPES[data_type]
     except KeyError as exc:
         raise RegistryValidationError(f"unsupported registry casilla data type {data_type!r}") from exc
 

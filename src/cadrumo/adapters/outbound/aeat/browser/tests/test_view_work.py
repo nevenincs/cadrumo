@@ -8,7 +8,7 @@ from collections.abc import Awaitable
 
 import pytest
 
-from ..._playwright import PlaywrightError
+from ...playwright import PlaywrightError
 from ..view_work import settle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

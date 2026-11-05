@@ -13,21 +13,21 @@ from uuid import UUID
 from pydantic import BaseModel, ValidationError
 
 from ......core.logging import get_logger
-from ......core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ......core.models import STRICT_FROZEN_CONFIG
 from ...errors import KeyringUnavailableError, StorageValidationError
-from .. import acceleration_receipt_crypto as _crypto
+from .. import acceleration_receipt_crypto
 from ..acceleration_receipt import (
     PROFILE_SESSION_RECORD_MAX_BYTES,
     ReceiptDeletion,
-    _clear_captured_receipt,
-    _current_record,
-    _decode_receipt,
-    _delete_refused_receipt,
-    _ensure_profile_session_directory,
-    _profile_session_lock_path,
-    _receipt_binding_refusal,
-    _recover_pending_retirement,
+    clear_captured_receipt,
+    current_record,
+    decode_receipt,
+    delete_refused_receipt,
+    ensure_profile_session_directory,
+    profile_session_lock_path,
     profile_session_path,
+    receipt_binding_refusal,
+    recover_pending_retirement,
 )
 from ..errors import ProfileCustodyRecordError
 from ..filesystem import (
@@ -77,16 +77,16 @@ class ReceiptBindingVerdict(StrEnum):
 class ReceiptBindingCheck(BaseModel):
     """Typed outcome of checking a receipt against the expected sign-in."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     verdict: ReceiptBindingVerdict
     deletion: ReceiptDeletion
-    record: _crypto.PersistedProfileSession | None = None
+    record: acceleration_receipt_crypto.PersistedProfileSession | None = None
 
 
 def classify_profile_session_binding(
     *,
-    record: _crypto.PersistedProfileSession,
+    record: acceleration_receipt_crypto.PersistedProfileSession,
     profile_id: UUID,
     login_id: str,
     generation: SignInGenerationObservation,
@@ -100,7 +100,7 @@ def classify_profile_session_binding(
     """
     if record.profile_id != profile_id:
         return ReceiptBindingVerdict.PROFILE_MISMATCH
-    refused = _receipt_binding_refusal(record=record, login_id=login_id, generation=generation)
+    refused = receipt_binding_refusal(record=record, login_id=login_id, generation=generation)
     return ReceiptBindingVerdict.BOUND if refused is None else ReceiptBindingVerdict(refused.value)
 
 
@@ -122,10 +122,10 @@ def verify_profile_session_binding(*, sign_in: SignInGenerationCustody, login_id
     path = profile_session_path(storage_root=storage_root, profile_id=profile_id)
     with profile_custody_root_lock(storage_root):
         generation = sign_in.observe()
-        _ensure_profile_session_directory(path)
-        with profile_custody_local_lock(_profile_session_lock_path(path)):
+        ensure_profile_session_directory(path)
+        with profile_custody_local_lock(profile_session_lock_path(path)):
             try:
-                _recover_pending_retirement(storage_root=storage_root, profile_id=profile_id)
+                recover_pending_retirement(storage_root=storage_root, profile_id=profile_id)
             except (
                 KeyringUnavailableError,
                 ProfileCustodyRecordError,
@@ -140,14 +140,14 @@ def verify_profile_session_binding(*, sign_in: SignInGenerationCustody, login_id
             if payload is None:
                 return ReceiptBindingCheck(verdict=ReceiptBindingVerdict.ABSENT, deletion=ReceiptDeletion.NOT_REQUIRED)
             try:
-                decoded = _decode_receipt(payload)
+                decoded = decode_receipt(payload)
             except (ValueError, ValidationError):
-                cleared = _clear_captured_receipt(path, payload=payload, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES)
+                cleared = clear_captured_receipt(path, payload=payload, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES)
                 return ReceiptBindingCheck(
                     verdict=ReceiptBindingVerdict.MALFORMED,
                     deletion=ReceiptDeletion.DELETED if cleared else ReceiptDeletion.RECEIPT_RETAINED,
                 )
-            record = _current_record(decoded)
+            record = current_record(decoded)
             if record is None:
                 verdict = ReceiptBindingVerdict.SCHEMA_VERSION_MISMATCH
             else:
@@ -161,6 +161,6 @@ def verify_profile_session_binding(*, sign_in: SignInGenerationCustody, login_id
                     return ReceiptBindingCheck(verdict=verdict, deletion=ReceiptDeletion.NOT_REQUIRED, record=record)
             return ReceiptBindingCheck(
                 verdict=verdict,
-                deletion=_delete_refused_receipt(path=path, payload=payload, decoded=decoded),
+                deletion=delete_refused_receipt(path=path, payload=payload, decoded=decoded),
                 record=record,
             )

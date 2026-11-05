@@ -23,31 +23,28 @@ from ......core.config import Settings, override_settings
 from ......core.pid_liveness import pid_is_alive
 from ......core.storage_taxonomy import StorageCategory
 from ......core.storage_taxonomy_locations import storage_location
-from .. import _kdf_worker_supervision as worker_supervision
 from .. import kdf_supervision
-from .._kdf_attestation import (
-    expected_kdf_worker_limits,
-    kdf_worker_platform,
-    parse_ready_attestation,
-    validate_ready_attestation_shape,
-)
-from .._kdf_codec import KDF_FRAME_CONTROL, KDF_FRAME_HEADER, KDF_FRAME_MAGIC, KDF_FRAME_VERSION, read_kdf_frame
-from .._kdf_process import apply_posix_worker_limits, worker_environment
-from .._kdf_process import terminate_process_tree as _terminate_process_tree
-from .._kdf_windows_job import _WindowsJob
-from .._kdf_worker_supervision import _SupervisedKdfWorker
+from .. import kdf_worker_supervision as worker_supervision
 from ..errors import (
     ProfileCustodyPasswordError,
     ProfileCustodyRecordError,
     ProfileCustodyRefusal,
     ProfileCustodyRefusedError,
 )
+from ..kdf_attestation import (
+    expected_kdf_worker_limits,
+    kdf_worker_platform,
+    parse_ready_attestation,
+    validate_ready_attestation_shape,
+)
+from ..kdf_codec import KDF_FRAME_CONTROL, KDF_FRAME_HEADER, KDF_FRAME_MAGIC, KDF_FRAME_VERSION, read_kdf_frame
+from ..kdf_process import apply_posix_worker_limits, terminate_process_tree, worker_environment
 from ..kdf_supervision import (
     PROFILE_CUSTODY_KDF_CALIBRATION_VERSION,
     ProfileCustodyKdfResources,
-    _posix_memory_bytes,
     calibrate_profile_kdf,
     fixed_profile_kdf_fallback,
+    posix_memory_bytes,
     profile_kdf_grid,
     profile_kdf_is_eligible,
     profile_kdf_lease,
@@ -57,6 +54,8 @@ from ..kdf_supervision import (
     wrap_profile_custody_password_material,
     wrap_profile_custody_recovery_material,
 )
+from ..kdf_windows_job import WindowsJob
+from ..kdf_worker_supervision import SupervisedKdfWorker
 from ..records import ProfileCustodyEnvelope, ProfileCustodyKdfParameters, parse_profile_custody_envelope
 from ..sentinel_contract import ProfileCustodySentinelRecord, parse_profile_custody_sentinel_record
 
@@ -70,8 +69,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _READY_DEADLINE_SECONDS = 120.0
 
 _PROFILE_ID = UUID("06648eb9-e60e-46d2-bd35-9aaf55a92e24")
-_PASSPHRASE = "profile " + "password" + " 123"
-_DEK = bytes(range(32))
+PASSPHRASE = "profile " + "password" + " 123"
+DEK = bytes(range(32))
 _ENVELOPE_BYTES = (
     b'{"dek_epoch":"ZWVlZWVlZWVlZWVlZWVlZQ==","kdf":{"algorithm":"argon2id","iterations":2,'
     b'"memory_mib":19,"output_bytes":32,"parallelism":1,"salt_b64":"a2tra2tra2tra2tra2traw==",'
@@ -89,7 +88,7 @@ _SENTINEL_BYTES = (
 )
 
 
-def _settings(tmp_path: Path) -> Settings:
+def kdf_supervision_settings(tmp_path: Path) -> Settings:
     return Settings(cadrumo_storage_root=tmp_path, cadrumo_profile_kdf_measure_calibration=True)
 
 
@@ -110,7 +109,7 @@ def _kdf(
     )
 
 
-def _unlock_inputs(
+def unlock_inputs(
     *, kdf: ProfileCustodyKdfParameters | None = None
 ) -> tuple[ProfileCustodyEnvelope, ProfileCustodySentinelRecord]:
     if kdf is not None:
@@ -183,13 +182,13 @@ with profile_kdf_lease(deadline=time.monotonic() + 30):
         assert (await holder.stdout.readline()).decode().strip() == "leased"
         with (
             pytest.raises(ProfileCustodyRefusedError) as captured,
-            profile_kdf_lease(settings=_settings(tmp_path), deadline=time.monotonic() + 0.1),
+            profile_kdf_lease(settings=kdf_supervision_settings(tmp_path), deadline=time.monotonic() + 0.1),
         ):
             raise AssertionError("cross-process lease unexpectedly admitted a concurrent owner")
         assert captured.value.refusal is ProfileCustodyRefusal.KDF_RESOURCE_LIMIT
         holder.kill()
         await asyncio.wait_for(holder.wait(), timeout=2.0)
-        with profile_kdf_lease(settings=_settings(tmp_path), deadline=time.monotonic() + 1.0):
+        with profile_kdf_lease(settings=kdf_supervision_settings(tmp_path), deadline=time.monotonic() + 1.0):
             assert (tmp_path / "profile-kdf.v1.lock").is_file()
     finally:
         if holder.returncode is None:
@@ -212,7 +211,7 @@ def test_strict_frame_reader_refuses_oversized_wire_length() -> None:
 
 
 def test_ready_without_a_secret_then_failure_reaps_the_real_worker_tree() -> None:
-    worker = _SupervisedKdfWorker(deadline=time.monotonic() + _READY_DEADLINE_SECONDS)
+    worker = SupervisedKdfWorker(deadline=time.monotonic() + _READY_DEADLINE_SECONDS)
     process: subprocess.Popen[bytes] | None = None
 
     with pytest.raises(RuntimeError, match="test containment cleanup"), worker:
@@ -226,8 +225,8 @@ def test_ready_without_a_secret_then_failure_reaps_the_real_worker_tree() -> Non
 
 
 def test_ready_attestation_proves_the_real_os_containment_environment_and_handle_boundary(tmp_path: Path) -> None:
-    settings = _settings(tmp_path)
-    worker = _SupervisedKdfWorker(deadline=time.monotonic() + _READY_DEADLINE_SECONDS, settings=settings)
+    settings = kdf_supervision_settings(tmp_path)
+    worker = SupervisedKdfWorker(deadline=time.monotonic() + _READY_DEADLINE_SECONDS, settings=settings)
 
     with worker:
         process = worker._process
@@ -320,7 +319,7 @@ async def _assert_posix_worker_sheds_extra_inherited_pty_and_pipe_descriptors_as
         command = [
             sys.executable,
             "-m",
-            "cadrumo.adapters.persistence.storage.custody._kdf_worker",
+            "cadrumo.adapters.persistence.storage.custody.kdf_worker",
             "--request-fd",
             str(request_read),
             "--result-fd",
@@ -371,7 +370,7 @@ def test_real_worker_sheds_extra_inherited_pty_and_pipe_descriptors_before_ready
         _assert_posix_worker_sheds_extra_inherited_pty_and_pipe_descriptors_before_ready()
         return
 
-    worker = _SupervisedKdfWorker(deadline=time.monotonic() + _READY_DEADLINE_SECONDS)
+    worker = SupervisedKdfWorker(deadline=time.monotonic() + _READY_DEADLINE_SECONDS)
     with worker:
         assert worker._process is not None
         assert worker._job is not None
@@ -418,7 +417,7 @@ time.sleep(30)
         "subprocess.Popen[bytes]",
         cast(Any, parent)._transport.get_extra_info("subprocess"),
     )
-    job = _WindowsJob.create() if sys.platform == "win32" else None
+    job = WindowsJob.create() if sys.platform == "win32" else None
     try:
         if job is not None:
             job.assign(native_parent)
@@ -430,14 +429,14 @@ time.sleep(30)
         child_result = (await parent.stdout.readline()).strip()
         if child_result == b"contained":
             assert sys.platform == "win32"
-            _terminate_process_tree(native_parent, job)
+            terminate_process_tree(native_parent, job)
             assert native_parent.poll() is not None
             await parent.wait()
             return
         descendant_pid = int(child_result)
         if sys.platform != "win32":
             assert os.getpgid(descendant_pid) == parent.pid
-        _terminate_process_tree(native_parent, job)
+        terminate_process_tree(native_parent, job)
         deadline = time.monotonic() + 2.0
         while pid_is_alive(descendant_pid):
             if time.monotonic() >= deadline:
@@ -447,14 +446,14 @@ time.sleep(30)
         await parent.wait()
     finally:
         if native_parent.poll() is None:
-            _terminate_process_tree(native_parent, job)
+            terminate_process_tree(native_parent, job)
         else:
             if job is not None:
                 job.close()
 
 
 def test_ready_then_deadline_terminates_and_reaps_the_real_worker() -> None:
-    worker = _SupervisedKdfWorker(deadline=time.monotonic() + _READY_DEADLINE_SECONDS)
+    worker = SupervisedKdfWorker(deadline=time.monotonic() + _READY_DEADLINE_SECONDS)
     process: subprocess.Popen[bytes] | None = None
 
     with pytest.raises(TimeoutError, match="did not respond"), worker:
@@ -469,25 +468,25 @@ def test_ready_then_deadline_terminates_and_reaps_the_real_worker() -> None:
 
 
 def test_unavailable_canonical_root_has_no_weaker_supervision_fallback(tmp_path: Path) -> None:
-    envelope, sentinel = _unlock_inputs()
+    envelope, sentinel = unlock_inputs()
 
     first_enrollment_root = tmp_path / "first-enrollment-root"
     unlock_profile_custody(
         envelope,
-        _PASSPHRASE,
+        PASSPHRASE,
         sentinel=sentinel,
-        settings=_settings(first_enrollment_root),
+        settings=kdf_supervision_settings(first_enrollment_root),
     )
     assert first_enrollment_root.is_dir()
 
     blocked_parent = tmp_path / "non-directory-parent"
-    blocked_settings = _settings(blocked_parent / "custody-root")
+    blocked_settings = kdf_supervision_settings(blocked_parent / "custody-root")
     blocked_parent.write_text("not a directory", encoding="utf-8")
 
     with pytest.raises(ProfileCustodyRefusedError) as captured:
         unlock_profile_custody(
             envelope,
-            _PASSPHRASE,
+            PASSPHRASE,
             sentinel=sentinel,
             settings=blocked_settings,
         )
@@ -503,7 +502,7 @@ def test_sentinel_record_rejects_fixed_purpose_substitution() -> None:
 
 
 def test_real_supervised_calibration_returns_only_the_versioned_grid_or_fixed_fallback(tmp_path: Path) -> None:
-    calibration = calibrate_profile_kdf(salt=b"c" * 16, settings=_settings(tmp_path))
+    calibration = calibrate_profile_kdf(salt=b"c" * 16, settings=kdf_supervision_settings(tmp_path))
 
     assert calibration.version == PROFILE_CUSTODY_KDF_CALIBRATION_VERSION
     assert calibration.parameters in profile_kdf_grid(salt=b"c" * 16)
@@ -519,7 +518,7 @@ def test_real_supervised_calibration_returns_only_the_versioned_grid_or_fixed_fa
 def test_real_worker_times_the_derivation_alone_inside_the_sample(tmp_path: Path) -> None:
     with override_settings(cadrumo_storage_root=tmp_path):
         started = time.monotonic()
-        with _SupervisedKdfWorker(deadline=time.monotonic() + 60) as worker:
+        with SupervisedKdfWorker(deadline=time.monotonic() + 60) as worker:
             derivation = worker.calibrate(_kdf(memory_mib=19, iterations=2, parallelism=1))
         sample = time.monotonic() - started
 
@@ -527,17 +526,17 @@ def test_real_worker_times_the_derivation_alone_inside_the_sample(tmp_path: Path
 
 
 def test_real_child_unwrap_returns_only_a_parent_sentinel_proven_dek(tmp_path: Path) -> None:
-    envelope, sentinel = _unlock_inputs()
+    envelope, sentinel = unlock_inputs()
 
     unlock = unlock_profile_custody(
         envelope,
-        _PASSPHRASE,
+        PASSPHRASE,
         sentinel=sentinel,
-        settings=_settings(tmp_path),
+        settings=kdf_supervision_settings(tmp_path),
     )
 
     assert unlock.profile_id == _PROFILE_ID
-    assert unlock.dek == _DEK
+    assert unlock.dek == DEK
     assert unlock.envelope_digest == envelope.self_digest
 
 
@@ -566,8 +565,8 @@ def test_runtime_unlock_spends_one_absolute_timeout_budget_across_capacity_and_a
     monkeypatch.setattr(kdf_supervision, "time", clock)
     monkeypatch.setattr(worker_supervision, "time", clock)
     lease = kdf_supervision.profile_kdf_lease
-    verify = _SupervisedKdfWorker._verify_ready_attestation
-    workers: list[_SupervisedKdfWorker] = []
+    verify = SupervisedKdfWorker._verify_ready_attestation
+    workers: list[SupervisedKdfWorker] = []
     children: list[subprocess.Popen[bytes]] = []
     deadlines: list[float] = []
 
@@ -580,7 +579,7 @@ def test_runtime_unlock_spends_one_absolute_timeout_budget_across_capacity_and_a
             clock.elapsed += 20.0
             yield
 
-    def delayed_attestation(worker: _SupervisedKdfWorker, frame: tuple[int, bytes]) -> None:
+    def delayed_attestation(worker: SupervisedKdfWorker, frame: tuple[int, bytes]) -> None:
         verify(worker, frame)
         workers.append(worker)
         assert worker._process is not None
@@ -589,37 +588,35 @@ def test_runtime_unlock_spends_one_absolute_timeout_budget_across_capacity_and_a
         clock.elapsed += 20.0
 
     monkeypatch.setattr(kdf_supervision, "profile_kdf_lease", delayed_capacity)
-    monkeypatch.setattr(_SupervisedKdfWorker, "_verify_ready_attestation", delayed_attestation)
-    envelope, sentinel = _unlock_inputs()
-    settings = _settings(tmp_path)
+    monkeypatch.setattr(SupervisedKdfWorker, "_verify_ready_attestation", delayed_attestation)
+    envelope, sentinel = unlock_inputs()
+    settings = kdf_supervision_settings(tmp_path)
     timeout = clock.monotonic() + budget
     if budget == 120.0:
         unlocked = unlock_profile_custody(
-            envelope, _PASSPHRASE, sentinel=sentinel, settings=settings, timeout_deadline=timeout
+            envelope, PASSPHRASE, sentinel=sentinel, settings=settings, timeout_deadline=timeout
         )
-        assert unlocked.dek == _DEK
+        assert unlocked.dek == DEK
     else:
         with pytest.raises(ProfileCustodyRefusedError) as captured:
-            unlock_profile_custody(
-                envelope, _PASSPHRASE, sentinel=sentinel, settings=settings, timeout_deadline=timeout
-            )
+            unlock_profile_custody(envelope, PASSPHRASE, sentinel=sentinel, settings=settings, timeout_deadline=timeout)
         assert captured.value.refusal is ProfileCustodyRefusal.KDF_TIMEOUT
         assert workers[0]._operation is None, "expired attestation must send no secret derivation request"
     assert deadlines == [timeout, timeout], "launch and every dependent phase retain the exact owner instant"
     assert all(child.poll() is not None for child in children)
     assert workers[0]._request_fd is None and workers[0]._result_fd is None
     assert workers[0]._job is None and workers[0]._neutral_directory is None
-    assert _permit_is_free(settings)
+    assert permit_is_free(settings)
 
 
 def test_elapsed_runtime_timeout_never_enters_a_child(tmp_path: Path) -> None:
-    envelope, sentinel = _unlock_inputs()
+    envelope, sentinel = unlock_inputs()
     with pytest.raises(ProfileCustodyRefusedError) as captured:
         unlock_profile_custody(
             envelope,
-            _PASSPHRASE,
+            PASSPHRASE,
             sentinel=sentinel,
-            settings=_settings(tmp_path),
+            settings=kdf_supervision_settings(tmp_path),
             timeout_deadline=time.monotonic() - 1,
         )
     assert captured.value.refusal is ProfileCustodyRefusal.KDF_TIMEOUT
@@ -627,7 +624,9 @@ def test_elapsed_runtime_timeout_never_enters_a_child(tmp_path: Path) -> None:
 
 def test_expired_owner_deadline_cannot_send_a_request_to_an_attested_spare(tmp_path: Path) -> None:
     """Capacity becoming available after timeout must not send a secret frame."""
-    worker = _SupervisedKdfWorker(deadline=time.monotonic() + _READY_DEADLINE_SECONDS, settings=_settings(tmp_path))
+    worker = SupervisedKdfWorker(
+        deadline=time.monotonic() + _READY_DEADLINE_SECONDS, settings=kdf_supervision_settings(tmp_path)
+    )
     process: subprocess.Popen[bytes] | None = None
     with worker:
         process = worker._process
@@ -641,22 +640,26 @@ def test_expired_owner_deadline_cannot_send_a_request_to_an_attested_spare(tmp_p
 
 @pytest.mark.parametrize("invalid", [float("inf"), float("-inf"), float("nan")])
 def test_runtime_timeout_deadline_must_be_finite(tmp_path: Path, invalid: float) -> None:
-    envelope, sentinel = _unlock_inputs()
+    envelope, sentinel = unlock_inputs()
     with pytest.raises(ValueError, match="finite"):
         unlock_profile_custody(
-            envelope, _PASSPHRASE, sentinel=sentinel, settings=_settings(tmp_path), timeout_deadline=invalid
+            envelope,
+            PASSPHRASE,
+            sentinel=sentinel,
+            settings=kdf_supervision_settings(tmp_path),
+            timeout_deadline=invalid,
         )
 
 
 def test_real_worker_keeps_short_recovery_secret_outside_password_policy(tmp_path: Path) -> None:
-    envelope, sentinel = _unlock_inputs()
+    envelope, sentinel = unlock_inputs()
     recovery_candidate = "short"
     recovery_aad = b"profile-recovery-policy-independence/v1"
-    settings = _settings(tmp_path)
+    settings = kdf_supervision_settings(tmp_path)
 
     wrapped = wrap_profile_custody_recovery_material(
         secret=recovery_candidate,
-        dek=_DEK,
+        dek=DEK,
         kdf=envelope.kdf,
         associated_data=recovery_aad,
         settings=settings,
@@ -672,11 +675,11 @@ def test_real_worker_keeps_short_recovery_secret_outside_password_policy(tmp_pat
         settings=settings,
     )
 
-    assert recovered == _DEK
+    assert recovered == DEK
     with pytest.raises(ProfileCustodyPasswordError, match="too_few_scalars"):
         wrap_profile_custody_password_material(
             secret=recovery_candidate,
-            dek=_DEK,
+            dek=DEK,
             kdf=envelope.kdf,
             associated_data=recovery_aad,
             settings=settings,
@@ -684,14 +687,14 @@ def test_real_worker_keeps_short_recovery_secret_outside_password_policy(tmp_pat
 
 
 def test_wrong_password_and_canonical_sentinel_substitution_do_not_release_a_dek(tmp_path: Path) -> None:
-    envelope, sentinel = _unlock_inputs()
+    envelope, sentinel = unlock_inputs()
 
     with pytest.raises(ProfileCustodyPasswordError):
         unlock_profile_custody(
             envelope,
             "wrong profile password",
             sentinel=sentinel,
-            settings=_settings(tmp_path),
+            settings=kdf_supervision_settings(tmp_path),
         )
     substituted = parse_profile_custody_sentinel_record(
         _SENTINEL_BYTES.replace(
@@ -702,9 +705,9 @@ def test_wrong_password_and_canonical_sentinel_substitution_do_not_release_a_dek
     with pytest.raises(ProfileCustodyRecordError):
         unlock_profile_custody(
             envelope,
-            _PASSPHRASE,
+            PASSPHRASE,
             sentinel=substituted,
-            settings=_settings(tmp_path),
+            settings=kdf_supervision_settings(tmp_path),
         )
 
 
@@ -714,14 +717,14 @@ def test_expired_deadline_refuses_and_releases_the_supervised_child_boundary(tmp
     No derivation began, so the refusal is supervision's; the permit is free and
     is acquired at once, and no interpreter attests within fifty milliseconds.
     """
-    envelope, sentinel = _unlock_inputs()
+    envelope, sentinel = unlock_inputs()
 
     with pytest.raises(ProfileCustodyRefusedError) as captured:
         unlock_profile_custody(
             envelope,
-            _PASSPHRASE,
+            PASSPHRASE,
             sentinel=sentinel,
-            settings=_settings(tmp_path),
+            settings=kdf_supervision_settings(tmp_path),
             timeout_seconds=0.05,
         )
 
@@ -734,8 +737,8 @@ _PERMIT_HELD_SECONDS = 6.0
 
 def test_a_correct_password_waits_out_another_derivation_holding_the_permit(tmp_path: Path) -> None:
     """A busy installation's permit makes an unwrap late, not refused as a resource limit."""
-    envelope, sentinel = _unlock_inputs()
-    settings = _settings(tmp_path)
+    envelope, sentinel = unlock_inputs()
+    settings = kdf_supervision_settings(tmp_path)
     held, holding = threading.Event(), threading.Event()
 
     def hold() -> None:
@@ -748,17 +751,17 @@ def test_a_correct_password_waits_out_another_derivation_holding_the_permit(tmp_
     try:
         assert held.wait(5)
         started = time.monotonic()
-        unlock = unlock_profile_custody(envelope, _PASSPHRASE, sentinel=sentinel, settings=settings)
+        unlock = unlock_profile_custody(envelope, PASSPHRASE, sentinel=sentinel, settings=settings)
         waited = time.monotonic() - started
     finally:
         holding.set()
         holder.join(timeout=10)
 
-    assert unlock.dek == _DEK
+    assert unlock.dek == DEK
     assert waited >= _PERMIT_HELD_SECONDS - 1
 
 
-def _stall(process: subprocess.Popen[bytes]) -> None:
+def stall(process: subprocess.Popen[bytes]) -> None:
     """Stop a live child without ending it, as a starved host stops a derivation."""
     if sys.platform == "win32":
         import ctypes
@@ -772,9 +775,9 @@ def _stall(process: subprocess.Popen[bytes]) -> None:
         os.kill(process.pid, signal.SIGSTOP)
 
 
-def _permit_is_free(settings: Settings) -> bool:
+def permit_is_free(settings: Settings) -> bool:
     """Take and release the installation's KDF permit without waiting for it."""
-    if not kdf_supervision._KDF_THREAD_LEASE.acquire(blocking=False):
+    if not kdf_supervision.KDF_THREAD_LEASE.acquire(blocking=False):
         return False
     try:
         root = settings.cadrumo_storage_root.resolve(strict=True)
@@ -801,7 +804,7 @@ def _permit_is_free(settings: Settings) -> bool:
         finally:
             os.close(descriptor)
     finally:
-        kdf_supervision._KDF_THREAD_LEASE.release()
+        kdf_supervision.KDF_THREAD_LEASE.release()
 
 
 def test_a_stalled_derivation_releases_its_permit_child_and_pipes_so_the_retry_proceeds(tmp_path: Path) -> None:
@@ -814,8 +817,8 @@ def test_a_stalled_derivation_releases_its_permit_child_and_pipes_so_the_retry_p
     a fresh child under the full budget. The stall is a real suspended
     process, so the short budget here decides only when the refusal comes.
     """
-    envelope, sentinel = _unlock_inputs()
-    settings = _settings(tmp_path)
+    envelope, sentinel = unlock_inputs()
+    settings = kdf_supervision_settings(tmp_path)
     prewarm = kdf_supervision.ProfileKdfPrewarm(settings=settings)
     # The launch returns only once the spare has attested its limits.
     prewarm._launch()
@@ -824,21 +827,21 @@ def test_a_stalled_derivation_releases_its_permit_child_and_pipes_so_the_retry_p
     stalled_process = stalled._process
     assert stalled_process is not None
     try:
-        _stall(stalled_process)
+        stall(stalled_process)
 
         with prewarm.bound(), pytest.raises(ProfileCustodyRefusedError) as captured:
-            unlock_profile_custody(envelope, _PASSPHRASE, sentinel=sentinel, settings=settings, timeout_seconds=2.0)
+            unlock_profile_custody(envelope, PASSPHRASE, sentinel=sentinel, settings=settings, timeout_seconds=2.0)
 
         assert captured.value.refusal is ProfileCustodyRefusal.KDF_RESOURCE_LIMIT
         assert stalled_process.returncode is not None
         assert stalled._process is None and stalled._job is None
         assert stalled._request_fd is None and stalled._result_fd is None
         assert stalled._neutral_directory is None
-        assert _permit_is_free(settings)
+        assert permit_is_free(settings)
 
         with prewarm.bound():
-            unlock = unlock_profile_custody(envelope, _PASSPHRASE, sentinel=sentinel, settings=settings)
-        assert unlock.dek == _DEK
+            unlock = unlock_profile_custody(envelope, PASSPHRASE, sentinel=sentinel, settings=settings)
+        assert unlock.dek == DEK
     finally:
         prewarm.close()
         if stalled_process.poll() is None:
@@ -848,8 +851,8 @@ def test_a_stalled_derivation_releases_its_permit_child_and_pipes_so_the_retry_p
 
 def test_a_budget_spent_waiting_for_the_permit_is_refused_as_a_resource_limit(tmp_path: Path) -> None:
     """While another derivation holds the installation's permit past the whole budget, the host is busy."""
-    envelope, sentinel = _unlock_inputs()
-    settings = _settings(tmp_path)
+    envelope, sentinel = unlock_inputs()
+    settings = kdf_supervision_settings(tmp_path)
     held, holding = threading.Event(), threading.Event()
 
     def hold() -> None:
@@ -862,7 +865,7 @@ def test_a_budget_spent_waiting_for_the_permit_is_refused_as_a_resource_limit(tm
     try:
         assert held.wait(5)
         with pytest.raises(ProfileCustodyRefusedError) as captured:
-            unlock_profile_custody(envelope, _PASSPHRASE, sentinel=sentinel, settings=settings, timeout_seconds=0.5)
+            unlock_profile_custody(envelope, PASSPHRASE, sentinel=sentinel, settings=settings, timeout_seconds=0.5)
     finally:
         holding.set()
         holder.join(timeout=10)
@@ -899,7 +902,7 @@ def test_a_host_without_the_free_page_count_still_reports_memory(
         {"SC_PAGE_SIZE": 16384, "SC_PHYS_PAGES": 524288},
     )
 
-    assert _posix_memory_bytes() == 16384 * 524288
+    assert posix_memory_bytes() == 16384 * 524288
 
 
 def test_the_free_page_count_is_preferred_where_the_host_offers_it(
@@ -916,7 +919,7 @@ def test_the_free_page_count_is_preferred_where_the_host_offers_it(
         {"SC_PAGE_SIZE": 4096, "SC_PHYS_PAGES": 1_000_000, "SC_AVPHYS_PAGES": 1_000},
     )
 
-    assert _posix_memory_bytes() == 4096 * 1_000
+    assert posix_memory_bytes() == 4096 * 1_000
 
 
 def test_a_host_that_reports_no_page_counts_still_refuses(
@@ -925,4 +928,4 @@ def test_a_host_that_reports_no_page_counts_still_refuses(
     """Fail closed. Unknowable memory must not be read as abundant memory."""
     _sysconf_stub(monkeypatch, {"SC_PAGE_SIZE": 1}, {"SC_PAGE_SIZE": 4096})
 
-    assert _posix_memory_bytes() == 0
+    assert posix_memory_bytes() == 0

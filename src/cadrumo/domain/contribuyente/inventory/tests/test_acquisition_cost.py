@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.iva.schema import IvaRateKind
 
 from ....calculations.registry.eu_member_state_catalogue import require_eu_member_state
@@ -110,7 +110,7 @@ def _purchase(**overrides: object) -> MovementRecord:
 
 
 def test_omitted_inventory_rate_resolves_general_iva_on_movement_devengo() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         movement_date = date(2025, 2, 1)
         movement = MovementRecord(
             movement_id="opening-implicit-rate",

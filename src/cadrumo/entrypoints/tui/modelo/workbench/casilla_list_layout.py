@@ -11,8 +11,7 @@ from .....application.modelo.work_form_models import ModeloFormRepeatingRow
 from .....application.modelo.work_form_wording import rate_text, record_value_text
 from .....core.i18n.render import tr
 from ...components.cell_text import wrap_words
-from . import casilla_list_models as _models
-from . import casilla_list_values as _values
+from . import casilla_list_models, casilla_list_values
 from .grid import (
     GRID_GAP,
     GRID_LEAD,
@@ -42,33 +41,35 @@ class CasillaListLayoutMixin:
     def _content_width(self: CasillaList) -> int:
         return max(self.scrollable_content_region.width, 20)
 
-    def _measure(self: CasillaList, drawn_in_tables: frozenset[int]) -> _models._Measures:
+    def _measure(self: CasillaList, drawn_in_tables: frozenset[int]) -> casilla_list_models.Measures:
         entries = [
             item
             for index, item in enumerate(self._items)
-            if isinstance(item, _models.CasillaListEntry) and index not in drawn_in_tables
+            if isinstance(item, casilla_list_models.CasillaListEntry) and index not in drawn_in_tables
         ]
         if not entries:
-            return _models._Measures()
-        return _models._Measures(
-            box=max(cell_len(_values._box_mark(entry.field)) for entry in entries),
-            label=min(max(entry.indent + cell_len(self._label(entry)) for entry in entries), _values._LABEL_CAP),
-            value=min(max(cell_len(self._value(entry)) for entry in entries), _values._VALUE_CAP),
+            return casilla_list_models.Measures()
+        return casilla_list_models.Measures(
+            box=max(cell_len(casilla_list_values.box_mark(entry.field)) for entry in entries),
+            label=min(
+                max(entry.indent + cell_len(self._label(entry)) for entry in entries), casilla_list_values.LABEL_CAP
+            ),
+            value=min(max(cell_len(self._value(entry)) for entry in entries), casilla_list_values.VALUE_CAP),
             words=max(cell_len(entry.origin_words) for entry in entries),
         )
 
-    def _value(self: CasillaList, entry: _models.CasillaListEntry) -> str:
+    def _value(self: CasillaList, entry: casilla_list_models.CasillaListEntry) -> str:
         """The value a line shows: a grid cell never says the design fixes it."""
         if entry.row_label is not None:
-            return _values.grid_value_text(entry, self._language)
-        return _values.row_value_text(entry, self._language)
+            return casilla_list_values.grid_value_text(entry, self._language)
+        return casilla_list_values.row_value_text(entry, self._language)
 
-    def _columns(self: CasillaList, width: int) -> _models._Columns:
+    def _columns(self: CasillaList, width: int) -> casilla_list_models.Columns:
         """Share one width out: the box whole, then the value, the label, and the origin words where they fit."""
         measures = self._measures
         # What is left once the lead, the box and its space, the space before
         # the value and the space and glyph after it are placed.
-        room = width - (_values._LEAD + measures.box + 1 + 1 + 2)
+        room = width - (casilla_list_values.LEAD + measures.box + 1 + 1 + 2)
         words_cells = 1 + measures.words
         # The words take room only while the label keeps as much as it needs,
         # or at least as much as the value and the words it would give way to.
@@ -76,21 +77,25 @@ class CasillaListLayoutMixin:
         show_words = measures.words > 0 and room - measures.value - words_cells >= needed
         if show_words:
             room -= words_cells
-        value = min(measures.value, max(room - min(measures.label, _values._LABEL_FLOOR), 1))
+        value = min(measures.value, max(room - min(measures.label, casilla_list_values.LABEL_FLOOR), 1))
         label = max(min(measures.label, room - value), 1)
         detail = (
             show_words
-            and width >= _values._WIDEST
-            and room - value - label >= cell_len(_values._SEPARATOR) + _values._DETAIL_WIDTH
+            and width >= casilla_list_values.WIDEST
+            and room - value - label >= cell_len(casilla_list_values.SEPARATOR) + casilla_list_values.DETAIL_WIDTH
         )
-        return _models._Columns(
+        return casilla_list_models.Columns(
             box=measures.box, label=label, value=value, words=measures.words if show_words else 0, detail=detail
         )
 
-    def _label_lines(self: CasillaList, entry: _models.CasillaListEntry, columns: _models._Columns) -> tuple[str, ...]:
-        return wrap_words(self._label(entry), _values._label_width(entry, columns))
+    def _label_lines(
+        self: CasillaList, entry: casilla_list_models.CasillaListEntry, columns: casilla_list_models.Columns
+    ) -> tuple[str, ...]:
+        return wrap_words(self._label(entry), casilla_list_values.label_width(entry, columns))
 
-    def _note(self: CasillaList, index: int, entry: _models.CasillaListEntry, columns: _models._Columns) -> str | None:
+    def _note(
+        self: CasillaList, index: int, entry: casilla_list_models.CasillaListEntry, columns: casilla_list_models.Columns
+    ) -> str | None:
         """The optional line under a field: what a change replaces, a blocker, or where the description starts.
 
         A box of a stacked grid shows no description; the help band carries it.
@@ -103,34 +108,39 @@ class CasillaListLayoutMixin:
             return tr(attention_words_key(Attention.BLOCKED))
         if index in self._stacked:
             return None
-        description = _values.description_text(entry.field)
+        description = casilla_list_values.description_text(entry.field)
         return description.split(". ")[0] if (description is not None and description) else None
 
     def _rated_label(self: CasillaList, place: GridRowPlace) -> str:
         """A row's heading with the rate its row is taxed at, when it has one."""
         if place.rate is not None:
-            return _values._SEPARATOR.join((place.heading, rate_text(place.rate, self._language)))
+            return casilla_list_values.SEPARATOR.join((place.heading, rate_text(place.rate, self._language)))
         return place.heading
 
     def _stacked_label(self: CasillaList, place: GridRowPlace) -> str:
         """A stacked row's heading, told apart from its neighbours by its rate or by the boxes it holds."""
         if place.rate is None and len(place.boxes) > 1:
-            return tr(_values._ROW_BOXES_LOCALE_KEY, heading=place.heading, first=place.boxes[0], last=place.boxes[-1])
+            return tr(
+                casilla_list_values.ROW_BOXES_LOCALE_KEY,
+                heading=place.heading,
+                first=place.boxes[0],
+                last=place.boxes[-1],
+            )
         return self._rated_label(place)
 
-    def _height(self: CasillaList, index: int, item: _models.CasillaListItem, width: int) -> int:
+    def _height(self: CasillaList, index: int, item: casilla_list_models.CasillaListItem, width: int) -> int:
         if index in self._tables:
             row = self._tables[index]
             return row.header_height + len(row.labels)
         if self._owner[index] != index:
             return 0
-        if isinstance(item, _models.CasillaListHeading):
+        if isinstance(item, casilla_list_models.CasillaListHeading):
             if item.row is not None:
-                return len(wrap_words(self._stacked_label(item.row), width - _values._LEAD))
+                return len(wrap_words(self._stacked_label(item.row), width - casilla_list_values.LEAD))
             return 1
         if isinstance(item, CasillaListRecords):
             return len(self._records.get(index, ()))
-        if not isinstance(item, _models.CasillaListEntry):
+        if not isinstance(item, casilla_list_models.CasillaListEntry):
             return 1
         columns = self._columns(width)
         return len(self._label_lines(item, columns)) + (1 if bool(self._note(index, item, columns)) else 0)
@@ -139,24 +149,24 @@ class CasillaListLayoutMixin:
         """The index of every grid row heading, grouped by the grid it belongs to, in list order."""
         grids: dict[GridShape, list[int]] = {}
         for index, item in enumerate(self._items):
-            if isinstance(item, _models.CasillaListHeading) and item.row is not None:
+            if isinstance(item, casilla_list_models.CasillaListHeading) and item.row is not None:
                 grids.setdefault(item.row.grid, []).append(index)
         return grids
 
     def _owned(self: CasillaList, heading: int) -> range:
         """The items a grid row heading owns: its boxes and any literal the design prints without one."""
         item = self._items[heading]
-        span = item.row.span if isinstance(item, _models.CasillaListHeading) and item.row is not None else 0
+        span = item.row.span if isinstance(item, casilla_list_models.CasillaListHeading) and item.row is not None else 0
         return range(heading + 1, min(heading + 1 + span, len(self._items)))
 
     def _row_cells(self: CasillaList, heading: int) -> tuple[int | None, ...]:
         item = self._items[heading]
-        if not isinstance(item, _models.CasillaListHeading) or item.row is None:
+        if not isinstance(item, casilla_list_models.CasillaListHeading) or item.row is None:
             return ()
         owned = {
             entry.key: index
             for index in self._owned(heading)
-            if isinstance(entry := self._items[index], _models.CasillaListEntry)
+            if isinstance(entry := self._items[index], casilla_list_models.CasillaListEntry)
         }
         return tuple(None if slot.key is None else owned.get(slot.key) for slot in item.row.slots)
 
@@ -187,7 +197,9 @@ class CasillaListLayoutMixin:
     ) -> tuple[list[tuple[int | None, ...]], list[GridRowPlace | None]]:
         rows = [self._row_cells(heading) for heading in headings]
         places = [
-            item.row for heading in headings if isinstance(item := self._items[heading], _models.CasillaListHeading)
+            item.row
+            for heading in headings
+            if isinstance(item := self._items[heading], casilla_list_models.CasillaListHeading)
         ]
         return rows, places
 
@@ -223,15 +235,15 @@ class CasillaListLayoutMixin:
             entries = [
                 entry
                 for index in cells
-                if index is not None and isinstance(entry := self._items[index], _models.CasillaListEntry)
+                if index is not None and isinstance(entry := self._items[index], casilla_list_models.CasillaListEntry)
             ]
-            self._tables[heading] = _models._TableRow(
+            self._tables[heading] = casilla_list_models.TableRow(
                 geometry=geometry,
                 cells=cells,
                 literals=() if place is None else tuple(slot.literal for slot in place.slots),
                 labels=wrap_label(labels[position], geometry.label) if labels[position] else ("",),
                 header=position == 0,
-                level=_values._row_level(entries),
+                level=casilla_list_values.row_level(entries),
             )
 
     def _own_table_cells(self: CasillaList, heading: int, cells: tuple[int | None, ...]) -> None:
@@ -252,12 +264,12 @@ class CasillaListLayoutMixin:
 
     def _cell_text(self: CasillaList, index: int) -> GridCellText:
         item = self._items[index]
-        if not isinstance(item, _models.CasillaListEntry):
+        if not isinstance(item, casilla_list_models.CasillaListEntry):
             return GridCellText(box="", value="")
         return GridCellText(
-            box=_values._box_mark(item.field),
-            value=_values.grid_value_text(item, self._language),
-            rate=item.field.data_type == _values._RATIO_DATA_TYPE,
+            box=casilla_list_values.box_mark(item.field),
+            value=casilla_list_values.grid_value_text(item, self._language),
+            rate=item.field.data_type == casilla_list_values.RATIO_DATA_TYPE,
         )
 
     def _record_values(self: CasillaList, row: ModeloFormRepeatingRow, data_types: tuple[str, ...]) -> tuple[str, ...]:
@@ -265,7 +277,7 @@ class CasillaListLayoutMixin:
             record_value_text(value, data_type, self._language)
             for value, data_type in zip(row.values, data_types, strict=True)
         )
-        return tuple(_values._EMPTY_VALUE if text is None else text for text in texts)
+        return tuple(casilla_list_values.EMPTY_VALUE if text is None else text for text in texts)
 
     def _record_lines(self: CasillaList, item: CasillaListRecords, width: int) -> tuple[tuple[str, str], ...]:
         """A repeating group's records: a table when it fits, otherwise every labelled value stacked."""
@@ -308,7 +320,7 @@ class CasillaListLayoutMixin:
                 parts.append(" " * GRID_GAP + self._record_cell(text, geometry.widths[column], item, column))
             lines.append(("".join(parts), "subheading"))
         for index, row in zip(indexes, values, strict=True):
-            parts = [" " * GRID_LEAD + _values._right(index, geometry.index)]
+            parts = [" " * GRID_LEAD + casilla_list_values.right(index, geometry.index)]
             parts.extend(
                 " " * GRID_GAP + self._record_cell(text, geometry.widths[column], item, column)
                 for column, text in enumerate(row)
@@ -318,9 +330,9 @@ class CasillaListLayoutMixin:
 
     def _record_cell(self: CasillaList, text: str, width: int, item: CasillaListRecords, column: int) -> str:
         """An amount is right-aligned under its heading, anything else left-aligned."""
-        if item.data_types[column] == _values._MONEY_DATA_TYPE:
-            return _values._right(text, width)
-        return _values._fit(text, width)
+        if item.data_types[column] == casilla_list_values.MONEY_DATA_TYPE:
+            return casilla_list_values.right(text, width)
+        return casilla_list_values.fit(text, width)
 
     def _layout(self: CasillaList) -> None:
         width = self._content_width()

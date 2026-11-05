@@ -43,12 +43,6 @@ from ...iva.schema import (
     IvaRateKind,
     default_iva_cash_accounting_treatment,
 )
-from ._ledger_binding_resolution import (
-    UnroutedLedgerQuantity,
-    resolve_ledger_family_binding_values,
-    unrouted_ledger_family_quantities,
-    unsupported_ledger_family_observations,
-)
 from .binding_selector_utils import provider_member, selector_against_model
 from .errors import RegistryValidationError
 from .ids import BindingId
@@ -63,6 +57,12 @@ from .iva_legal_vocabulary import require_iva_exemption_article
 from .iva_rate_kind_catalogue import (
     require_iva_rate_kind,
     require_registry_declared_iva_rate_kind,
+)
+from .ledger_binding_resolution import (
+    UnroutedLedgerQuantity,
+    resolve_ledger_family_binding_values,
+    unrouted_ledger_family_quantities,
+    unsupported_ledger_family_observations,
 )
 from .ledger_binding_selector_support import LEDGER_IVA_FACTS, LedgerIvaFact, LedgerIvaFactValue
 from .ledger_binding_validation import (
@@ -476,7 +476,7 @@ def validate_ledger_iva_aggregation_binding_definition(
     require_ledger_fact(binding, selector.fact, LEDGER_IVA_FACTS)
 
     try:
-        _iva_reachability_probe(selector)
+        iva_reachability_probe(selector)
     except RegistryValidationError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} {exc}") from exc
 
@@ -560,7 +560,7 @@ class _IvaReachabilityProbeObservation(NamedTuple):
     deduction_fact_kind: IvaDeductionFactKind | None = None
 
 
-def _iva_reachability_probe(selector: LedgerIvaProvider) -> None:
+def iva_reachability_probe(selector: LedgerIvaProvider) -> None:
     """Assert the selector matches at least one constructible observation shape.
 
     Builds a synthetic observation from the selector's OWN declared values and
@@ -589,7 +589,7 @@ def _iva_reachability_probe(selector: LedgerIvaProvider) -> None:
       incorrectly. That residual blind spot needs a data-carrying check, and
       no build-time data-free check can observe it.
     """
-    matcher = _iva_build_matcher(selector)
+    matcher = iva_build_matcher(selector)
     probe = _IvaReachabilityProbeObservation(
         category=selector.categories[0],
         rate_kind=selector.rate_kinds[0],
@@ -657,7 +657,7 @@ def _iva_optional_selector_axes_match(
     return selector.exemption_articles is None or observation.exemption_article in set(selector.exemption_articles)
 
 
-def _iva_build_matcher(selector: LedgerIvaProvider) -> Callable[[IvaSelectorAxesProtocol], bool]:
+def iva_build_matcher(selector: LedgerIvaProvider) -> Callable[[IvaSelectorAxesProtocol], bool]:
     categories = set(selector.categories)
     rate_kinds = set(selector.rate_kinds)
 
@@ -709,7 +709,7 @@ def resolve_ledger_iva_aggregation_binding_values(
         observations,
         source_kind=BindingSourceKind.LEDGER_IVA_AGGREGATION,
         provider_model=LedgerIvaProvider,
-        build_matcher=_iva_build_matcher,
+        build_matcher=iva_build_matcher,
         aggregate=_iva_aggregate,
     )
 
@@ -758,7 +758,7 @@ def unsupported_ledger_iva_observations(
         observations,
         source_kind=BindingSourceKind.LEDGER_IVA_AGGREGATION,
         provider_model=LedgerIvaProvider,
-        build_matcher=_iva_build_matcher,
+        build_matcher=iva_build_matcher,
         is_declarable=lambda observation: True,
         extra_exclusion=lambda observation: observation.category in registry_category_projection("cuota_less_m303"),
     )
@@ -776,13 +776,13 @@ def unsupported_ledger_iva_observations(
 # this family, not an unfilled placeholder, and
 # ``test_ledger_quantity_screen_partition`` asserts it so the claim is checked
 # rather than left as an absence a later author could fill in unnoticed.
-_IVA_ALTERNATIVE_MEASURE_FACTS: Mapping[str, str] = dict[str, str]()
+IVA_ALTERNATIVE_MEASURE_FACTS: Mapping[str, str] = dict[str, str]()
 
 #: DERIVED as the complement, exactly as the renta side derives its own, so the
 #: two sets cannot drift apart.
-_IVA_INDEPENDENT_QUANTITY_FACTS: frozenset[str] = independent_quantity_facts(
+IVA_INDEPENDENT_QUANTITY_FACTS: frozenset[str] = independent_quantity_facts(
     LEDGER_IVA_FACTS,
-    _IVA_ALTERNATIVE_MEASURE_FACTS,
+    IVA_ALTERNATIVE_MEASURE_FACTS,
 )
 
 #: Per-fact readers for the independent quantities. Keyed on the same
@@ -796,7 +796,7 @@ _IVA_INDEPENDENT_QUANTITY_READERS: dict[str, Callable[[IvaLedgerObservation], De
 
 assert_quantity_readers_cover_independent_facts(
     "ledger-IVA",
-    _IVA_INDEPENDENT_QUANTITY_FACTS,
+    IVA_INDEPENDENT_QUANTITY_FACTS,
     _IVA_INDEPENDENT_QUANTITY_READERS,
 )
 
@@ -845,9 +845,9 @@ def unrouted_ledger_iva_quantities(
         observations,
         source_kind=BindingSourceKind.LEDGER_IVA_AGGREGATION,
         provider_model=LedgerIvaProvider,
-        build_matcher=_iva_build_matcher,
+        build_matcher=iva_build_matcher,
         read_fact=lambda selector: selector.fact,
-        independent_facts=_IVA_INDEPENDENT_QUANTITY_FACTS,
+        independent_facts=IVA_INDEPENDENT_QUANTITY_FACTS,
         readers=_IVA_INDEPENDENT_QUANTITY_READERS,
     )
 
@@ -977,7 +977,7 @@ def structurally_unroutable_iva_base_categories(
     if out_of_scope is None:
         out_of_scope = registry_category_projection("m303_base_out_of_scope")
     base_selectors = _base_iva_selectors(revision)
-    matchers = tuple((selector, _iva_build_matcher(selector)) for selector in base_selectors)
+    matchers = tuple((selector, iva_build_matcher(selector)) for selector in base_selectors)
     return tuple(
         category
         for category in resolve_iva_category_catalogue(effective_date=revision.valid_from).all_categories

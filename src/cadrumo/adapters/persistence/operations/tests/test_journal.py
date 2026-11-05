@@ -63,8 +63,8 @@ from .....core.operations import (
 from .....tests.thread_file_io_probe import recording_file_io
 from ...storage.errors import RepositoryError
 from .. import journal as journal_module
-from .._journal_validation import OperationJournalRecord
 from ..journal import OperationJournalRepository
+from ..journal_validation import OperationJournalRecord
 from ..lease import OperationLeaseFilesystemRepository, OperationLeaseStorage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -73,12 +73,12 @@ if TYPE_CHECKING:
     from _typeshed import TraceFunction
 
 
-_STARTED = datetime(2026, 8, 13, 20, tzinfo=UTC)
+STARTED = datetime(2026, 8, 13, 20, tzinfo=UTC)
 
 
-def _snapshot(*, revision: int, sequence: int) -> OperationPersistedSnapshot:
+def journal_snapshot(*, revision: int, sequence: int) -> OperationPersistedSnapshot:
     identity = OperationIdentity(operation_id="a" * 64, definition_id="test.operation", subject_ref="subject")
-    updated_at = _STARTED + timedelta(minutes=revision)
+    updated_at = STARTED + timedelta(minutes=revision)
     event = OperationPhaseEvent(
         identity=identity,
         revision=revision,
@@ -95,7 +95,7 @@ def _snapshot(*, revision: int, sequence: int) -> OperationPersistedSnapshot:
         revision=revision,
         lifecycle=OperationLifecycle.RUNNING,
         phase_code=event.phase_code,
-        started_at=_STARTED,
+        started_at=STARTED,
         updated_at=updated_at,
         execution_deadline=None,
         cleanup_deadline=None,
@@ -107,21 +107,21 @@ def _snapshot(*, revision: int, sequence: int) -> OperationPersistedSnapshot:
     )
 
 
-def _lease(operation_id: str = "a" * 64) -> OperationOwnerLease:
+def journal_lease(operation_id: str = "a" * 64) -> OperationOwnerLease:
     return OperationOwnerLease(
         operation_id=operation_id,
         scope_ref=operation_conflict_scope_reference(definition_id="test.operation", subject_ref="subject"),
         owner_id="b" * 64,
         token="c" * 64,
-        acquired_at=_STARTED,
-        expires_at=_STARTED + timedelta(hours=1),
+        acquired_at=STARTED,
+        expires_at=STARTED + timedelta(hours=1),
     )
 
 
 def _progress_snapshot() -> OperationPersistedSnapshot:
     """Build a successor that retains its phase while publishing progress."""
     identity = OperationIdentity(operation_id="a" * 64, definition_id="test.operation", subject_ref="subject")
-    updated_at = _STARTED + timedelta(minutes=1)
+    updated_at = STARTED + timedelta(minutes=1)
     event = OperationProgressEvent(
         identity=identity,
         revision=1,
@@ -140,7 +140,7 @@ def _progress_snapshot() -> OperationPersistedSnapshot:
         revision=1,
         lifecycle=OperationLifecycle.RUNNING,
         phase_code="phase.0",
-        started_at=_STARTED,
+        started_at=STARTED,
         updated_at=updated_at,
         execution_deadline=None,
         cleanup_deadline=None,
@@ -152,7 +152,7 @@ def _progress_snapshot() -> OperationPersistedSnapshot:
     )
 
 
-def _claim_lease(storage_root: Path, lease: OperationOwnerLease) -> None:
+def claim_lease(storage_root: Path, lease: OperationOwnerLease) -> None:
     """Acquire the exact durable owner used by one journal writer."""
     result = asyncio.run(
         OperationLeaseFilesystemRepository(storage_root=storage_root).acquire(lease, observed_at=lease.acquired_at)
@@ -163,15 +163,15 @@ def _claim_lease(storage_root: Path, lease: OperationOwnerLease) -> None:
 def _create_history(storage_root: Path) -> tuple[OperationJournalRepository, tuple[OperationPersistedSnapshot, ...]]:
     """Write three real revision transitions with a retained event per revision."""
     repository = OperationJournalRepository(storage_root=storage_root)
-    snapshots = tuple(_snapshot(revision=revision, sequence=revision + 1) for revision in range(3))
-    _claim_lease(storage_root, _lease())
-    asyncio.run(repository.create(snapshots[0], lease=_lease()))
+    snapshots = tuple(journal_snapshot(revision=revision, sequence=revision + 1) for revision in range(3))
+    claim_lease(storage_root, journal_lease())
+    asyncio.run(repository.create(snapshots[0], lease=journal_lease()))
     for expected_revision, snapshot in zip((0, 1), snapshots[1:], strict=True):
-        asyncio.run(repository.commit(snapshot, expected_revision=expected_revision, lease=_lease()))
+        asyncio.run(repository.commit(snapshot, expected_revision=expected_revision, lease=journal_lease()))
     return repository, snapshots
 
 
-def _terminal_event() -> OperationTerminalEvent:
+def terminal_event() -> OperationTerminalEvent:
     """Build a valid early terminal event used only to corrupt stored history."""
     identity = OperationIdentity(operation_id="a" * 64, definition_id="test.operation", subject_ref="subject")
     receipt = OperationTerminalReceipt(
@@ -179,14 +179,14 @@ def _terminal_event() -> OperationTerminalEvent:
         revision=0,
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.NONE,
-        settled_at=_STARTED,
+        settled_at=STARTED,
         result_ref="result:complete",
     )
     return OperationTerminalEvent(
         identity=identity,
         revision=0,
         sequence=1,
-        timestamp=_STARTED,
+        timestamp=STARTED,
         code="operation.terminal",
         receipt=receipt,
     )
@@ -219,7 +219,7 @@ def _consumed_interaction() -> OperationConsumedInteraction:
             continuation_digest=pending.request.continuation_digest,
             reviewed_proposal_digest=pending.reviewed_proposal_digest,
             actor_ref="operator:persistence-test",
-            responded_at=_STARTED + timedelta(minutes=3),
+            responded_at=STARTED + timedelta(minutes=3),
             baseline_digest="4" * 64,
             proposed_effect_digest="5" * 64,
         )
@@ -295,53 +295,65 @@ def _observe_in_process(
 def test_operation_journal_commits_cas_transitions_and_refuses_mutations(tmp_path: Path) -> None:
     """The on-disk record advances once and all rejected writes leave it intact."""
     repository = OperationJournalRepository(storage_root=tmp_path)
-    initial = _snapshot(revision=0, sequence=1)
-    _claim_lease(tmp_path, _lease())
-    asyncio.run(repository.create(initial, lease=_lease()))
+    initial = journal_snapshot(revision=0, sequence=1)
+    claim_lease(tmp_path, journal_lease())
+    asyncio.run(repository.create(initial, lease=journal_lease()))
     path = tmp_path / "operation-journals" / f"{initial.operation_id}.json"
     original_bytes = path.read_bytes()
 
     with pytest.raises(RepositoryError, match="successor revision"):
-        asyncio.run(repository.commit(initial, expected_revision=0, lease=_lease()))
+        asyncio.run(repository.commit(initial, expected_revision=0, lease=journal_lease()))
     assert path.read_bytes() == original_bytes
 
     with pytest.raises(RepositoryError, match="stale"):
-        asyncio.run(repository.commit(_snapshot(revision=1, sequence=2), expected_revision=1, lease=_lease()))
+        asyncio.run(
+            repository.commit(journal_snapshot(revision=1, sequence=2), expected_revision=1, lease=journal_lease())
+        )
     assert path.read_bytes() == original_bytes
 
     with pytest.raises(RepositoryError, match="lease"):
-        asyncio.run(repository.commit(_snapshot(revision=1, sequence=2), expected_revision=0, lease=_lease("e" * 64)))
+        asyncio.run(
+            repository.commit(
+                journal_snapshot(revision=1, sequence=2), expected_revision=0, lease=journal_lease("e" * 64)
+            )
+        )
     assert path.read_bytes() == original_bytes
 
-    future_lease = _lease().model_copy(
+    future_lease = journal_lease().model_copy(
         update={
-            "acquired_at": _STARTED + timedelta(minutes=2),
-            "expires_at": _STARTED + timedelta(minutes=4),
+            "acquired_at": STARTED + timedelta(minutes=2),
+            "expires_at": STARTED + timedelta(minutes=4),
         }
     )
     lease_repository = OperationLeaseFilesystemRepository(storage_root=tmp_path)
-    released = asyncio.run(lease_repository.release(_lease(), observed_at=_STARTED + timedelta(seconds=1)))
+    released = asyncio.run(lease_repository.release(journal_lease(), observed_at=STARTED + timedelta(seconds=1)))
     assert released.disposition is OperationLeaseDisposition.RELEASED
-    _claim_lease(tmp_path, future_lease)
+    claim_lease(tmp_path, future_lease)
     with pytest.raises(RepositoryError, match="not yet active"):
-        asyncio.run(repository.commit(_snapshot(revision=1, sequence=2), expected_revision=0, lease=future_lease))
+        asyncio.run(
+            repository.commit(journal_snapshot(revision=1, sequence=2), expected_revision=0, lease=future_lease)
+        )
     assert path.read_bytes() == original_bytes
 
-    released = asyncio.run(lease_repository.release(future_lease, observed_at=_STARTED + timedelta(minutes=2)))
+    released = asyncio.run(lease_repository.release(future_lease, observed_at=STARTED + timedelta(minutes=2)))
     assert released.disposition is OperationLeaseDisposition.RELEASED
-    _claim_lease(tmp_path, _lease())
+    claim_lease(tmp_path, journal_lease())
 
     with pytest.raises(RepositoryError, match="cursor"):
-        asyncio.run(repository.commit(_snapshot(revision=1, sequence=3), expected_revision=0, lease=_lease()))
+        asyncio.run(
+            repository.commit(journal_snapshot(revision=1, sequence=3), expected_revision=0, lease=journal_lease())
+        )
     assert path.read_bytes() == original_bytes
 
-    changed_contract = _snapshot(revision=1, sequence=2).model_copy(update={"definition_contract_digest": "f" * 64})
+    changed_contract = journal_snapshot(revision=1, sequence=2).model_copy(
+        update={"definition_contract_digest": "f" * 64}
+    )
     with pytest.raises(RepositoryError, match="definition contract digest"):
-        asyncio.run(repository.commit(changed_contract, expected_revision=0, lease=_lease()))
+        asyncio.run(repository.commit(changed_contract, expected_revision=0, lease=journal_lease()))
     assert path.read_bytes() == original_bytes
 
-    successor = _snapshot(revision=1, sequence=2)
-    asyncio.run(repository.commit(successor, expected_revision=0, lease=_lease()))
+    successor = journal_snapshot(revision=1, sequence=2)
+    asyncio.run(repository.commit(successor, expected_revision=0, lease=journal_lease()))
     reloaded = OperationJournalRepository(storage_root=tmp_path)
     assert asyncio.run(reloaded.load(initial.operation_id)) == successor
     raw = path.read_text(encoding="utf-8")
@@ -364,46 +376,48 @@ def test_operation_journal_create_requires_coherent_initial_history_and_commit_r
         request_reference="d" * 64,
         revision=0,
         lifecycle=OperationLifecycle.RUNNING,
-        started_at=_STARTED,
-        updated_at=_STARTED,
+        started_at=STARTED,
+        updated_at=STARTED,
         execution_deadline=None,
         cleanup_deadline=None,
         cancellation_requested_at=None,
         cancellation_acknowledged_at=None,
         cancellation_deferred=False,
     )
-    _claim_lease(tmp_path, _lease())
-    asyncio.run(repository.create(empty, lease=_lease()))
+    claim_lease(tmp_path, journal_lease())
+    asyncio.run(repository.create(empty, lease=journal_lease()))
     assert (
         asyncio.run(repository.read_after(identity.operation_id, 0, limit=1)).status is OperationReplayStatus.CAUGHT_UP
     )
 
     malformed_root = tmp_path / "malformed"
     malformed = OperationJournalRepository(storage_root=malformed_root)
-    _claim_lease(malformed_root, _lease())
+    claim_lease(malformed_root, journal_lease())
     with pytest.raises(RepositoryError, match="begin at sequence one"):
-        asyncio.run(malformed.create(_snapshot(revision=0, sequence=2), lease=_lease()))
+        asyncio.run(malformed.create(journal_snapshot(revision=0, sequence=2), lease=journal_lease()))
     commit_only_root = tmp_path / "commit-only"
     commit_only = OperationJournalRepository(storage_root=commit_only_root)
-    _claim_lease(commit_only_root, _lease())
+    claim_lease(commit_only_root, journal_lease())
     with pytest.raises(RepositoryError, match="existing snapshot created via create"):
-        asyncio.run(commit_only.commit(_snapshot(revision=0, sequence=1), expected_revision=0, lease=_lease()))
+        asyncio.run(
+            commit_only.commit(journal_snapshot(revision=0, sequence=1), expected_revision=0, lease=journal_lease())
+        )
     assert not (commit_only_root / "operation-journals" / f"{identity.operation_id}.json").exists()
 
 
 def test_operation_journal_creates_and_resolves_idempotency_only_from_a_complete_snapshot(tmp_path: Path) -> None:
     """A real retry claim is visible only as part of its durable initial journal."""
     repository = OperationJournalRepository(storage_root=tmp_path)
-    initial = _snapshot(revision=0, sequence=1)
+    initial = journal_snapshot(revision=0, sequence=1)
     claim = OperationIdempotencyClaim.bind(
         identity=initial.identity,
         idempotency_key="retry-once",
         request_reference=initial.request_reference,
     )
     idempotent_initial = initial.model_copy(update={"idempotency_claim": claim})
-    _claim_lease(tmp_path, _lease())
+    claim_lease(tmp_path, journal_lease())
 
-    assert asyncio.run(repository.create(idempotent_initial, lease=_lease())) == initial.operation_id
+    assert asyncio.run(repository.create(idempotent_initial, lease=journal_lease())) == initial.operation_id
     assert (
         asyncio.run(OperationJournalRepository(storage_root=tmp_path).resolve_idempotency(claim))
         == initial.operation_id
@@ -453,7 +467,7 @@ def test_journal_purge_analysis_releases_the_lock_and_keeps_its_captured_revisio
     """A current record's JSON purge inspection cannot exclude an unrelated writer."""
     repository, snapshots = _create_history(tmp_path)
     initial = snapshots[-1]
-    successor = _snapshot(revision=3, sequence=4)
+    successor = journal_snapshot(revision=3, sequence=4)
     entered, release = threading.Event(), threading.Event()
     original_purge = journal_module.purge_legacy_financial_edit_journal
 
@@ -482,7 +496,7 @@ def test_journal_purge_analysis_releases_the_lock_and_keeps_its_captured_revisio
             assert entered.wait(10), "reader never reached purge analysis"
             with exclusive_file_lock(repository._repository.lock_target, timeout=0):
                 pass
-            asyncio.run(repository.commit(successor, expected_revision=initial.revision, lease=_lease()))
+            asyncio.run(repository.commit(successor, expected_revision=initial.revision, lease=journal_lease()))
         finally:
             release.set()
         assert reading.result(timeout=10) == initial
@@ -495,7 +509,7 @@ def test_journal_decode_releases_the_lock_and_keeps_its_captured_revision(
 ) -> None:
     repository, snapshots = _create_history(tmp_path)
     initial = snapshots[-1]
-    successor = _snapshot(revision=3, sequence=4)
+    successor = journal_snapshot(revision=3, sequence=4)
     expected = (
         asyncio.run(repository.read_after(initial.operation_id, 0, limit=10)) if read_mode == "replay" else initial
     )
@@ -529,7 +543,7 @@ def test_journal_decode_releases_the_lock_and_keeps_its_captured_revision(
             # nonblocking probe makes this a lock-ownership proof, not a timing race.
             with exclusive_file_lock(storage.lock_target, timeout=0):
                 pass
-            asyncio.run(repository.commit(successor, expected_revision=initial.revision, lease=_lease()))
+            asyncio.run(repository.commit(successor, expected_revision=initial.revision, lease=journal_lease()))
         finally:
             release.set()
         assert reading.result(timeout=10) == expected
@@ -617,7 +631,7 @@ def test_operation_observation_is_one_locked_record_under_a_real_interleaved_tra
     """Snapshot, page, and progress input are all one complete journal generation."""
     _repository, snapshots = _create_history(tmp_path)
     initial = snapshots[-1]
-    successor = _snapshot(revision=3, sequence=4)
+    successor = journal_snapshot(revision=3, sequence=4)
     storage = OperationLeaseStorage(storage_root=tmp_path)
     assert storage.lock_target == tmp_path / "operation-journals" / ".repository"
 
@@ -631,7 +645,7 @@ def test_operation_observation_is_one_locked_record_under_a_real_interleaved_tra
         args=(
             str(tmp_path),
             successor.model_dump_json(),
-            _lease().model_dump_json(),
+            journal_lease().model_dump_json(),
             commit_attempting,
             commit_results,
         ),
@@ -718,11 +732,11 @@ def test_operation_observation_carries_the_complete_progress_fold_separately_fro
 ) -> None:
     """A bounded replay never truncates the progress fold needed through the anchor."""
     repository = OperationJournalRepository(storage_root=tmp_path)
-    initial = _snapshot(revision=0, sequence=1)
+    initial = journal_snapshot(revision=0, sequence=1)
     successor = _progress_snapshot()
-    _claim_lease(tmp_path, _lease())
-    asyncio.run(repository.create(initial, lease=_lease()))
-    asyncio.run(repository.commit(successor, expected_revision=0, lease=_lease()))
+    claim_lease(tmp_path, journal_lease())
+    asyncio.run(repository.create(initial, lease=journal_lease()))
+    asyncio.run(repository.commit(successor, expected_revision=0, lease=journal_lease()))
 
     materialization = asyncio.run(repository.read_observation(initial.operation_id, 0, limit=1))
 
@@ -742,24 +756,26 @@ def test_operation_journal_refuses_rewriting_full_consumed_interaction_evidence(
     """A real CAS keeps every consumed response fact immutable, not only its ID."""
     repository, snapshots = _create_history(tmp_path)
     accepted_consumption = _consumed_interaction()
-    accepted = _snapshot(revision=3, sequence=4).model_copy(update={"consumed_interactions": (accepted_consumption,)})
-    asyncio.run(repository.commit(accepted, expected_revision=snapshots[-1].revision, lease=_lease()))
+    accepted = journal_snapshot(revision=3, sequence=4).model_copy(
+        update={"consumed_interactions": (accepted_consumption,)}
+    )
+    asyncio.run(repository.commit(accepted, expected_revision=snapshots[-1].revision, lease=journal_lease()))
 
     changed_values = {
         "intent": "reject",
         "response_digest": "9" * 64,
-        "consumed_at": _STARTED + timedelta(minutes=4),
+        "consumed_at": STARTED + timedelta(minutes=4),
         "checkpoint": accepted_consumption.checkpoint.model_copy(update={"reviewed_proposal_digest": "8" * 64}),
         "continuation_proof_digest": "7" * 64,
     }
     changed_value = changed_values[field]
     planted = accepted_consumption.model_copy(update={field: changed_value})
-    tampered = _snapshot(revision=4, sequence=5).model_copy(update={"consumed_interactions": (planted,)})
+    tampered = journal_snapshot(revision=4, sequence=5).model_copy(update={"consumed_interactions": (planted,)})
     path = tmp_path / "operation-journals" / f"{accepted.operation_id}.json"
     stable_bytes = path.read_bytes()
 
     with pytest.raises(RepositoryError, match="cannot rewrite consumed interaction history"):
-        asyncio.run(repository.commit(tampered, expected_revision=accepted.revision, lease=_lease()))
+        asyncio.run(repository.commit(tampered, expected_revision=accepted.revision, lease=journal_lease()))
     assert path.read_bytes() == stable_bytes
 
 
@@ -767,8 +783,8 @@ def test_operation_journal_refuses_intent_only_tamper_during_strict_hydration(tm
     """A changed durable intent cannot reach dispatch with its original continuation proof."""
     repository, snapshots = _create_history(tmp_path)
     consumed = _consumed_interaction()
-    accepted = _snapshot(revision=3, sequence=4).model_copy(update={"consumed_interactions": (consumed,)})
-    asyncio.run(repository.commit(accepted, expected_revision=snapshots[-1].revision, lease=_lease()))
+    accepted = journal_snapshot(revision=3, sequence=4).model_copy(update={"consumed_interactions": (consumed,)})
+    asyncio.run(repository.commit(accepted, expected_revision=snapshots[-1].revision, lease=journal_lease()))
     path = tmp_path / "operation-journals" / f"{accepted.operation_id}.json"
     document = json.loads(path.read_text(encoding="utf-8"))
     document["snapshot"]["consumed_interactions"][0]["intent"] = "reject"
@@ -822,7 +838,7 @@ def test_operation_journal_refuses_raw_history_corruption(tmp_path: Path, corrup
         case "revision":
             history[1]["revision"] = 3
         case "terminal":
-            history[0] = _terminal_event().model_dump(mode="json")
+            history[0] = terminal_event().model_dump(mode="json")
         case "snapshot_tail":
             history[-1]["code"] = "phase.altered"
         case _:
@@ -844,22 +860,22 @@ class _JournalOnTheLoop(OperationJournalRepository):
 async def _exercise_operation_ports(journal: OperationJournalRepository, storage_root: Path) -> list[str]:
     """Drive every journal and lease port call once and return the loop thread's file access."""
     leases = OperationLeaseFilesystemRepository(storage_root=storage_root)
-    lease = _lease()
+    lease = journal_lease()
     scope_ref = lease.scope_ref
-    first = _snapshot(revision=0, sequence=1)
-    second = _snapshot(revision=1, sequence=2)
+    first = journal_snapshot(revision=0, sequence=1)
+    second = journal_snapshot(revision=1, sequence=2)
     loop_thread = threading.get_ident()
     with recording_file_io(loop_thread) as loop_io:
-        assert (await leases.acquire(lease, observed_at=_STARTED)).disposition is OperationLeaseDisposition.ACQUIRED
-        await leases.inspect(scope_ref, lease.operation_id, observed_at=_STARTED)
+        assert (await leases.acquire(lease, observed_at=STARTED)).disposition is OperationLeaseDisposition.ACQUIRED
+        await leases.inspect(scope_ref, lease.operation_id, observed_at=STARTED)
         await journal.create(first, lease=lease)
         await journal.commit(second, expected_revision=0, lease=lease)
         assert (await journal.load(first.operation_id)) == second
         await journal.read_after(first.operation_id, 0, limit=10)
         await journal.read_observation(first.operation_id, 0, limit=10)
         renewed = lease.model_copy(update={"expires_at": lease.expires_at + timedelta(minutes=1)})
-        await leases.compare_and_swap(lease, renewed, observed_at=_STARTED)
-        await leases.release(renewed, observed_at=_STARTED)
+        await leases.compare_and_swap(lease, renewed, observed_at=STARTED)
+        await leases.release(renewed, observed_at=STARTED)
     return list(loop_io)
 
 
@@ -905,21 +921,21 @@ def test_journal_and_lease_transitions_prepare_the_shared_root_once_per_reposito
     journal_root = os.path.normcase(os.fspath(storage_root / "operation-journals"))
     journal = OperationJournalRepository(storage_root=storage_root)
     leases = OperationLeaseFilesystemRepository(storage_root=storage_root)
-    lease = _lease()
-    snapshots = tuple(_snapshot(revision=revision, sequence=revision + 1) for revision in range(8))
+    lease = journal_lease()
+    snapshots = tuple(journal_snapshot(revision=revision, sequence=revision + 1) for revision in range(8))
     recorded: list[tuple[str, str]] = []
     _ROOT_PREPARATION_CALLS[0] = recorded
     try:
 
         async def transitions() -> None:
-            await leases.inspect(lease.scope_ref, lease.operation_id, observed_at=_STARTED)
-            await leases.acquire(lease, observed_at=_STARTED)
+            await leases.inspect(lease.scope_ref, lease.operation_id, observed_at=STARTED)
+            await leases.acquire(lease, observed_at=STARTED)
             await journal.create(snapshots[0], lease=lease)
             for expected_revision, snapshot in enumerate(snapshots[1:]):
                 await journal.commit(snapshot, expected_revision=expected_revision, lease=lease)
             renewed = lease.model_copy(update={"expires_at": lease.expires_at + timedelta(minutes=1)})
-            await leases.compare_and_swap(lease, renewed, observed_at=_STARTED)
-            await leases.release(renewed, observed_at=_STARTED)
+            await leases.compare_and_swap(lease, renewed, observed_at=STARTED)
+            await leases.release(renewed, observed_at=STARTED)
 
         asyncio.run(transitions())
     finally:

@@ -20,7 +20,9 @@ from ..calculations.registry.errors import RegistryError
 from ..calculations.registry.ids import RevisionId
 from ..modelos.codes import ModeloCode
 from ..modelos.errors import ModeloValidationError
-from ._entries import (
+from .categories import PortalCategory
+from .codes import Portal
+from .entries import (
     portal_calendario_contribuyente,
     portal_cert_selection,
     portal_cert_validation_rest,
@@ -63,8 +65,6 @@ from ._entries import (
     portal_renta_web_borrador,
     portal_sede_root,
 )
-from .categories import PortalCategory
-from .codes import Portal
 from .errors import (
     PortalRegistryInvariant,
     UnknownPortalError,
@@ -162,14 +162,14 @@ def _check_replaced_by(entries: Mapping[Portal, PortalMetadata]) -> None:
             )
 
 
-def _finalise_registry(
+def finalise_registry(
     entries: tuple[PortalMetadata, ...],
 ) -> Mapping[Portal, PortalMetadata]:
     """Assemble the frozen registry mapping and enforce every invariant.
 
     Args:
         entries: The per-entry ``ENTRY`` objects loaded from
-            :mod:`cadrumo.domain.portals._entries`.
+            :mod:`cadrumo.domain.portals.entries`.
 
     Returns:
         A :class:`types.MappingProxyType` from :class:`Portal` to
@@ -223,7 +223,7 @@ def _finalise_registry(
     return MappingProxyType(materialised)
 
 
-PORTAL_REGISTRY: Mapping[Portal, PortalMetadata] = _finalise_registry(_ENTRIES)
+PORTAL_REGISTRY: Mapping[Portal, PortalMetadata] = finalise_registry(_ENTRIES)
 
 
 def _portal_consumer_binding(modelo_id: str, revision_id: RevisionId, consumer: str) -> Portal | None:

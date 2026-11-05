@@ -22,7 +22,7 @@ from ..master_key.active_session import activate_session
 from ..master_key.bucket_session import BucketSession
 from ..namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ..runtime import (
-    _SYNTHETIC_SESSION_BUCKET_IDS,
+    SYNTHETIC_SESSION_BUCKET_IDS,
     StorageRuntime,
     inspect_bucket_storage_runtime,
     inspect_storage_runtime,
@@ -100,7 +100,7 @@ def test_the_synthetic_bucket_exemption_is_still_what_makes_this_matter() -> Non
     that stops being true the argument needs rewriting, and a docstring nobody
     re-checks is how a gate ends up defending a hazard that moved.
     """
-    assert "ephemeral" in _SYNTHETIC_SESSION_BUCKET_IDS
+    assert "ephemeral" in SYNTHETIC_SESSION_BUCKET_IDS
 
 
 def test_runtime_ready_when_route_and_active_session_match(tmp_path: Path) -> None:

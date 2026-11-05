@@ -235,7 +235,7 @@ def _unloaded_source_origin(module: str) -> str | None:
     return None
 
 
-def _module_origin(module: str) -> str | None:
+def module_origin(module: str) -> str | None:
     """Locate a module's Python source, preferring what the import system already knows.
 
     A loaded module states its own origin. Otherwise the file is found where
@@ -258,12 +258,12 @@ def _module_origin(module: str) -> str | None:
 
 
 def _is_package(module: str) -> bool:
-    origin = _module_origin(module)
+    origin = module_origin(module)
     return origin is not None and origin.endswith("__init__.py")
 
 
 def _source_bytes(module: str) -> bytes | None:
-    origin = _module_origin(module)
+    origin = module_origin(module)
     if origin is None:
         return None
     try:
@@ -296,7 +296,7 @@ class _ImportStatement:
     is_from: bool
 
 
-_import_statements_cache: dict[str, tuple[str, tuple[_ImportStatement, ...]]] = {}
+import_statements_cache: dict[str, tuple[str, tuple[_ImportStatement, ...]]] = {}
 """The parsed statements of each module's latest-seen source, with the digest they were parsed from.
 
 Parsing about four hundred sources dominates a closure computation. A module's
@@ -307,8 +307,8 @@ call, and every call re-reads and re-hashes every source.
 """
 
 
-def _parsed_import_statements(module: str, source: bytes, digest: str) -> tuple[_ImportStatement, ...]:
-    cached = _import_statements_cache.get(module)
+def parsed_import_statements(module: str, source: bytes, digest: str) -> tuple[_ImportStatement, ...]:
+    cached = import_statements_cache.get(module)
     if cached is not None and cached[0] == digest:
         return cached[1]
     statements: list[_ImportStatement] = []
@@ -320,7 +320,7 @@ def _parsed_import_statements(module: str, source: bytes, digest: str) -> tuple[
                 _ImportStatement(node.level, node.module or "", tuple(alias.name for alias in node.names), True)
             )
     parsed = tuple(statements)
-    _import_statements_cache[module] = (digest, parsed)
+    import_statements_cache[module] = (digest, parsed)
     return parsed
 
 
@@ -336,7 +336,7 @@ def _statement_modules(statement: _ImportStatement, package: str) -> set[str]:
         return found
     for name in statement.names:
         candidate = f"{target}.{name}"
-        if name != "*" and _module_origin(candidate) is not None:
+        if name != "*" and module_origin(candidate) is not None:
             found.add(candidate)
     return found
 
@@ -381,7 +381,7 @@ def snapshot_validator_closure() -> tuple[ValidatorSource, ...]:
             raise RegistryValidationError(f"snapshot validator module {module!r} has no readable Python source")
         digest = _source_digest(source)
         digests[module] = digest
-        statements = _parsed_import_statements(module, source, digest)
+        statements = parsed_import_statements(module, source, digest)
         pending.extend(name for name in _imported_modules(module, statements) if name not in digests)
     return tuple(ValidatorSource(module, digests[module]) for module in sorted(digests))
 

@@ -23,10 +23,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .....core.config import Settings as _Settings
+from .....core.config import Settings
 
 
-def _browser_locale_default() -> str | None:
+def browser_locale_default() -> str | None:
     """Resolve the default browser locale lazily.
 
     ``Settings()`` constructs the full pydantic-settings object,
@@ -39,12 +39,12 @@ def _browser_locale_default() -> str | None:
     instantiated) confines any settings-data drift to the code path
     that genuinely needs the browser adapter.
     """
-    return _Settings().cadrumo_browser_locale
+    return Settings().cadrumo_browser_locale
 
 
-def _browser_timezone_default() -> str | None:
+def browser_timezone_default() -> str | None:
     """Resolve the default browser timezone lazily (see :func:`_browser_locale_default`)."""
-    return _Settings().cadrumo_browser_timezone
+    return Settings().cadrumo_browser_timezone
 
 
 @dataclass
@@ -68,5 +68,5 @@ class Profile:
 
     name: str
     user_agent: str | None = None
-    locale: str | None = field(default_factory=_browser_locale_default)
-    timezone_id: str | None = field(default_factory=_browser_timezone_default)
+    locale: str | None = field(default_factory=browser_locale_default)
+    timezone_id: str | None = field(default_factory=browser_timezone_default)

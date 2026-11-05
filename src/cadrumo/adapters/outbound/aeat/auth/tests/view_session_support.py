@@ -42,8 +42,8 @@ from cadrumo.core.operations import OperationEffect
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from .. import session_store
-from ._auth_fixtures import CERTIFICATE_INPUT
-from ._authenticator_support import _build_bundle
+from .auth_fixtures import CERTIFICATE_INPUT
+from .authenticator_support import build_bundle
 
 PROFILE_ID: Final[str] = "1f6b0000-0000-4000-8000-00000000c1c1"
 CERTIFICATE_NIF: Final[str] = "12345678Z"
@@ -84,7 +84,7 @@ class OperationHost:
 def _certificate_settings(tmp_path: Path) -> AbstractContextManager[object]:
     return override_settings(
         cadrumo_active_profile=None,
-        cadrumo_certificate_path=_build_bundle(tmp_path),
+        cadrumo_certificate_path=build_bundle(tmp_path),
         cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_INPUT),
         cadrumo_browser_close_timeout_ms=15_000,
     )

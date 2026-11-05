@@ -17,7 +17,7 @@ from ..mirror_manifest import (
     inspect_remote_mirror_upload,
     put_remote_mirror_namespace_manifest,
 )
-from ..mirror_push import _push_mirror_manifests
+from ..mirror_push import push_mirror_manifests
 from ..records import RemoteMirrorIssueKind, RemoteMirrorObjectManifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -38,7 +38,7 @@ def test_namespace_manifest_is_not_published_before_ciphertext_integrity(tmp_pat
         target.write_bytes(b"tampered-ciphertext")
     failures: list[tuple[str, str]] = []
 
-    published = _push_mirror_manifests(
+    published = push_mirror_manifests(
         provider=provider,
         manifests_by_namespace={_NAMESPACE: manifest},
         failed_namespaces=set(),

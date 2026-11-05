@@ -53,32 +53,16 @@ from cadrumo.core.hashing import sha256_hex
 from cadrumo.domain.attachments.enums import AttachmentKind
 
 from .notification_document_support import (
-    BUCKET_ID as _BUCKET_ID,
-)
-from .notification_document_support import (
-    CERT_READ as _CERT_READ,
-)
-from .notification_document_support import (
-    CERT_UNREAD as _CERT_UNREAD,
-)
-from .notification_document_support import (
-    DETAIL_URL as _DETAIL_URL,
-)
-from .notification_document_support import (
-    DOCUMENT_NAMESPACE as _DOCUMENT_NAMESPACE,
-)
-from .notification_document_support import (
+    BUCKET_ID,
+    CERT_READ,
+    CERT_UNREAD,
+    DETAIL_URL,
+    DOCUMENT_NAMESPACE,
     SANCION_TEXT_LINES,
     build_service,
-)
-from .notification_document_support import (
-    read_row as _read_row,
-)
-from .notification_document_support import (
-    sancion_pdf_bytes as _pdf_bytes,
-)
-from .notification_document_support import (
-    served_document as _document,
+    read_row,
+    sancion_pdf_bytes,
+    served_document,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -88,23 +72,23 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def test_a_captured_document_survives_the_encrypted_roundtrip(tmp_path: Path) -> None:
     """Strict equality across the real encrypted store, field for field."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         service = build_service()
-        document = _document()
+        document = served_document()
 
-        persisted = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=document).record
-        loaded = service.show(bucket_id=_BUCKET_ID, certificado_id=_CERT_READ)
+        persisted = service.persist_document(bucket_id=BUCKET_ID, row=read_row(), document=document).record
+        loaded = service.show(bucket_id=BUCKET_ID, certificado_id=CERT_READ)
 
         assert profile.paths.database_file.is_file()
         assert loaded == persisted
 
         # Witness every field a re-default would silently change.
-        assert loaded.certificado_id == _CERT_READ
-        assert loaded.bucket_id == _BUCKET_ID
+        assert loaded.certificado_id == CERT_READ
+        assert loaded.bucket_id == BUCKET_ID
         assert loaded.attachment_id == sha256_hex(document.pdf_bytes)
         assert loaded.document_sha256 == document.pdf_sha256
         assert loaded.byte_size == len(document.pdf_bytes)
-        assert loaded.source_url == _DETAIL_URL
+        assert loaded.source_url == DETAIL_URL
         assert loaded.parse_refusal is None
         assert loaded.mode == "read"
 
@@ -119,11 +103,11 @@ def test_a_captured_document_survives_the_encrypted_roundtrip(tmp_path: Path) ->
 
 def test_the_document_bytes_land_in_the_encrypted_attachment_store(tmp_path: Path) -> None:
     """The bytes are in encrypted custody, byte-identical, and classified honestly."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         service = build_service()
-        document = _document()
+        document = served_document()
 
-        record = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=document).record
+        record = service.persist_document(bucket_id=BUCKET_ID, row=read_row(), document=document).record
 
         store = AttachmentStore()
         manifest = store.load_manifest(record.attachment_id)
@@ -142,26 +126,26 @@ def test_re_pulling_one_notification_stores_nothing_and_returns_what_is_held(tmp
     from the clock on every genuine store, so an equal value across two calls
     is proof the second call never built a record at all.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         service = build_service()
 
-        first = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=_document())
-        second = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=_document())
+        first = service.persist_document(bucket_id=BUCKET_ID, row=read_row(), document=served_document())
+        second = service.persist_document(bucket_id=BUCKET_ID, row=read_row(), document=served_document())
 
         assert first.already_in_custody is False
         assert second.already_in_custody is True
         assert second.record == first.record
         assert second.record.fetched_at == first.record.fetched_at
-        assert len(service.list_documents(bucket_id=_BUCKET_ID)) == 1
+        assert len(service.list_documents(bucket_id=BUCKET_ID)) == 1
 
 
 def test_an_unpulled_notification_is_a_miss_not_a_blank_record(tmp_path: Path) -> None:
     """A missing document refuses; it never resolves to an empty reading."""
     with (
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID),
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID),
         pytest.raises(NotificationDocumentNotFoundError),
     ):
-        build_service().show(bucket_id=_BUCKET_ID, certificado_id=_CERT_READ)
+        build_service().show(bucket_id=BUCKET_ID, certificado_id=CERT_READ)
 
 
 # ── The legal guard ────────────────────────────────────────────────────────
@@ -169,36 +153,36 @@ def test_an_unpulled_notification_is_a_miss_not_a_blank_record(tmp_path: Path) -
 
 def test_an_unread_notification_is_refused_before_any_byte_is_stored(tmp_path: Path) -> None:
     """The comparecencia guard bites through the custody layer, not only below it."""
-    unread = _read_row(certificado_id=_CERT_UNREAD).model_copy(update={"leida": False})
+    unread = read_row(certificado_id=CERT_UNREAD).model_copy(update={"leida": False})
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         service = build_service()
 
         with pytest.raises(SedeNavigationError, match=r"comparecencia|read"):
             service.persist_document(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 row=unread,
-                document=_document(certificado_id=_CERT_UNREAD),
+                document=served_document(certificado_id=CERT_UNREAD),
             )
 
-        assert service.list_documents(bucket_id=_BUCKET_ID) == ()
+        assert service.list_documents(bucket_id=BUCKET_ID) == ()
 
 
 def test_a_pending_notification_with_no_read_column_is_refused(tmp_path: Path) -> None:
     """``leida is None`` is fail-closed: unknown is not permission."""
-    pending = _read_row(certificado_id=_CERT_UNREAD).model_copy(update={"leida": None, "tipo": "pendiente"})
+    pending = read_row(certificado_id=CERT_UNREAD).model_copy(update={"leida": None, "tipo": "pendiente"})
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         service = build_service()
 
         with pytest.raises(SedeNavigationError):
             service.persist_document(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 row=pending,
-                document=_document(certificado_id=_CERT_UNREAD),
+                document=served_document(certificado_id=CERT_UNREAD),
             )
 
-        assert service.list_documents(bucket_id=_BUCKET_ID) == ()
+        assert service.list_documents(bucket_id=BUCKET_ID) == ()
 
 
 @pytest.mark.asyncio
@@ -220,24 +204,24 @@ async def test_a_refused_row_never_reaches_the_wire(tmp_path: Path) -> None:
         def __getattribute__(self, name: str) -> object:
             raise AssertionError(f"the fetch path was entered on a refused row: touched {name!r}")
 
-    unread = _read_row(certificado_id=_CERT_UNREAD).model_copy(update={"leida": False})
+    unread = read_row(certificado_id=CERT_UNREAD).model_copy(update={"leida": False})
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         service = build_service()
 
         with pytest.raises(SedeNavigationError):
             await service.pull_document(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 session=_Tripwire(),  # type: ignore[arg-type]
                 row=unread,
             )
 
-        assert service.list_documents(bucket_id=_BUCKET_ID) == ()
+        assert service.list_documents(bucket_id=BUCKET_ID) == ()
 
 
 def test_a_document_for_another_notification_is_refused(tmp_path: Path) -> None:
     """Custody must not file one taxpayer act under another notification's id."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         service = build_service()
 
         with pytest.raises(
@@ -245,12 +229,12 @@ def test_a_document_for_another_notification_is_refused(tmp_path: Path) -> None:
             match=r"application\.live\.notifications\.errors\.document_row_mismatch",
         ):
             service.persist_document(
-                bucket_id=_BUCKET_ID,
-                row=_read_row(),
-                document=_document(certificado_id=_CERT_UNREAD),
+                bucket_id=BUCKET_ID,
+                row=read_row(),
+                document=served_document(certificado_id=CERT_UNREAD),
             )
 
-        assert service.list_documents(bucket_id=_BUCKET_ID) == ()
+        assert service.list_documents(bucket_id=BUCKET_ID) == ()
 
 
 def test_the_service_exposes_no_verb_that_could_mutate_aeat_state(tmp_path: Path) -> None:
@@ -281,17 +265,17 @@ def test_an_unreadable_document_keeps_its_bytes_and_records_the_refusal(tmp_path
     exclusive by construction — so the strict equality check here is what
     closes that gap across the two records.
     """
-    truncated = _pdf_bytes(("Clave de liquidacion: A2860024500012345", "Referencia: 2024/0001234"))
+    truncated = sancion_pdf_bytes(("Clave de liquidacion: A2860024500012345", "Referencia: 2024/0001234"))
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         service = build_service()
 
         record = service.persist_document(
-            bucket_id=_BUCKET_ID,
-            row=_read_row(),
-            document=_document(data=truncated),
+            bucket_id=BUCKET_ID,
+            row=read_row(),
+            document=served_document(data=truncated),
         ).record
-        loaded = service.show(bucket_id=_BUCKET_ID, certificado_id=_CERT_READ)
+        loaded = service.show(bucket_id=BUCKET_ID, certificado_id=CERT_READ)
 
         assert loaded == record
         assert record.sancion is None
@@ -311,9 +295,9 @@ def test_deleting_the_attachment_id_on_disk_makes_the_load_refuse(tmp_path: Path
     re-default, the record would assert that a document is held while pointing
     at nothing — a custody claim with no custody.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         service = build_service()
-        service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=_document())
+        service.persist_document(bucket_id=BUCKET_ID, row=read_row(), document=served_document())
 
         def _drop(decoded: dict[str, Any]) -> None:
             payload = decoded["payload"]
@@ -325,14 +309,14 @@ def test_deleting_the_attachment_id_on_disk_makes_the_load_refuse(tmp_path: Path
         mutate_encrypted_secure_object_json(
             profile.repository._engine,
             row_statement=select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _DOCUMENT_NAMESPACE,
-                SecureObjectRow.object_key == notification_document_object_key(_BUCKET_ID, _CERT_READ),
+                SecureObjectRow.namespace == DOCUMENT_NAMESPACE,
+                SecureObjectRow.object_key == notification_document_object_key(BUCKET_ID, CERT_READ),
             ),
             mutate=_drop,
         )
 
         with pytest.raises(ValidationError, match="attachment_id"):
-            service.show(bucket_id=_BUCKET_ID, certificado_id=_CERT_READ)
+            service.show(bucket_id=BUCKET_ID, certificado_id=CERT_READ)
 
 
 def test_dropping_a_figure_from_the_nested_reading_makes_the_load_refuse(tmp_path: Path) -> None:
@@ -341,9 +325,9 @@ def test_dropping_a_figure_from_the_nested_reading_makes_the_load_refuse(tmp_pat
     Without this, the nested reading would be the one place in the record where
     a missing amount could come back as a plausible number.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         service = build_service()
-        service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=_document())
+        service.persist_document(bucket_id=BUCKET_ID, row=read_row(), document=served_document())
 
         def _drop(decoded: dict[str, Any]) -> None:
             sancion = decoded["payload"]["sancion"]  # type: ignore[index]
@@ -353,14 +337,14 @@ def test_dropping_a_figure_from_the_nested_reading_makes_the_load_refuse(tmp_pat
         mutate_encrypted_secure_object_json(
             profile.repository._engine,
             row_statement=select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _DOCUMENT_NAMESPACE,
-                SecureObjectRow.object_key == notification_document_object_key(_BUCKET_ID, _CERT_READ),
+                SecureObjectRow.namespace == DOCUMENT_NAMESPACE,
+                SecureObjectRow.object_key == notification_document_object_key(BUCKET_ID, CERT_READ),
             ),
             mutate=_drop,
         )
 
         with pytest.raises(ValidationError, match="importe_a_ingresar"):
-            service.show(bucket_id=_BUCKET_ID, certificado_id=_CERT_READ)
+            service.show(bucket_id=BUCKET_ID, certificado_id=CERT_READ)
 
 
 def test_deleting_the_parse_refusal_on_disk_makes_the_load_refuse(tmp_path: Path) -> None:
@@ -377,14 +361,14 @@ def test_deleting_the_parse_refusal_on_disk_makes_the_load_refuse(tmp_path: Path
     stated reason reads as "this act carried no amounts" — and it is exactly
     the record that a dropped optional key would otherwise have produced.
     """
-    truncated = _pdf_bytes(("Clave de liquidacion: A2860024500012345", "Referencia: 2024/0001234"))
+    truncated = sancion_pdf_bytes(("Clave de liquidacion: A2860024500012345", "Referencia: 2024/0001234"))
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         service = build_service()
         persisted = service.persist_document(
-            bucket_id=_BUCKET_ID,
-            row=_read_row(),
-            document=_document(data=truncated),
+            bucket_id=BUCKET_ID,
+            row=read_row(),
+            document=served_document(data=truncated),
         ).record
         assert persisted.parse_refusal is not None
 
@@ -398,21 +382,21 @@ def test_deleting_the_parse_refusal_on_disk_makes_the_load_refuse(tmp_path: Path
         mutate_encrypted_secure_object_json(
             profile.repository._engine,
             row_statement=select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _DOCUMENT_NAMESPACE,
-                SecureObjectRow.object_key == notification_document_object_key(_BUCKET_ID, _CERT_READ),
+                SecureObjectRow.namespace == DOCUMENT_NAMESPACE,
+                SecureObjectRow.object_key == notification_document_object_key(BUCKET_ID, CERT_READ),
             ),
             mutate=_drop,
         )
 
         with pytest.raises(ValidationError, match="neither a reading nor a refusal"):
-            service.show(bucket_id=_BUCKET_ID, certificado_id=_CERT_READ)
+            service.show(bucket_id=BUCKET_ID, certificado_id=CERT_READ)
 
 
 def test_a_zero_byte_size_on_disk_makes_the_load_refuse(tmp_path: Path) -> None:
     """A custody record claiming zero bytes is a contradiction, not a small document."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         service = build_service()
-        service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=_document())
+        service.persist_document(bucket_id=BUCKET_ID, row=read_row(), document=served_document())
 
         def _zero(decoded: dict[str, Any]) -> None:
             decoded["payload"]["byte_size"] = 0  # type: ignore[index]
@@ -420,14 +404,14 @@ def test_a_zero_byte_size_on_disk_makes_the_load_refuse(tmp_path: Path) -> None:
         mutate_encrypted_secure_object_json(
             profile.repository._engine,
             row_statement=select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _DOCUMENT_NAMESPACE,
-                SecureObjectRow.object_key == notification_document_object_key(_BUCKET_ID, _CERT_READ),
+                SecureObjectRow.namespace == DOCUMENT_NAMESPACE,
+                SecureObjectRow.object_key == notification_document_object_key(BUCKET_ID, CERT_READ),
             ),
             mutate=_zero,
         )
 
         with pytest.raises(ValidationError, match="byte_size"):
-            service.show(bucket_id=_BUCKET_ID, certificado_id=_CERT_READ)
+            service.show(bucket_id=BUCKET_ID, certificado_id=CERT_READ)
 
 
 def test_the_stored_record_is_not_readable_as_plaintext_on_disk(tmp_path: Path) -> None:
@@ -440,9 +424,9 @@ def test_the_stored_record_is_not_readable_as_plaintext_on_disk(tmp_path: Path) 
     below for the full-tree sweep — but the database file is where every byte
     this service writes ultimately lands, so it stays pinned here too.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         service = build_service()
-        record = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=_document()).record
+        record = service.persist_document(bucket_id=BUCKET_ID, row=read_row(), document=served_document()).record
 
         raw = profile.paths.database_file.read_bytes()
         assert b"A2860024500012345" not in raw
@@ -466,10 +450,10 @@ def test_no_file_anywhere_under_the_profile_root_carries_the_plaintext_document(
     a store artefact this cycle has not been taught to write yet is covered
     the same way as one it already writes.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         service = build_service()
-        document = _document()
-        record = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=document).record
+        document = served_document()
+        record = service.persist_document(bucket_id=BUCKET_ID, row=read_row(), document=document).record
 
         files = [path for path in scan_directory(tmp_path, recursive=True) if path.is_file()]
         # Anti-vacuity: the walk must find the real artefacts this cycle

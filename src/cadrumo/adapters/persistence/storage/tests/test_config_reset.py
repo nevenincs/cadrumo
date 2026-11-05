@@ -22,29 +22,29 @@ from cadrumo.core.bucket_pointer import read_pointer
 from cadrumo.core.directory_scan import iter_directory, scan_directory
 from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _certificate_indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_PROFILE_A_ID = "11111111-1111-4111-8111-111111111111"
-_PROFILE_B_ID = "22222222-2222-4222-8222-222222222222"
+PROFILE_A_ID = "11111111-1111-4111-8111-111111111111"
+PROFILE_B_ID = "22222222-2222-4222-8222-222222222222"
 _PROFILE_C_ID = "33333333-3333-4333-8333-333333333333"
 _DANGLING_ID = "44444444-4444-4444-8444-444444444444"
-_OVERRIDE_REASON = "Court order requiring erasure before the statutory retention date."
+OVERRIDE_REASON = "Court order requiring erasure before the statutory retention date."
 
 
 @contextmanager
-def _isolated_reset_root(tmp_path: Path) -> Generator[Path]:
+def isolated_reset_root(tmp_path: Path) -> Generator[Path]:
     from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         yield root
 
 
-def _create_profile(
+def create_profile(
     profile_id: str,
     *,
     label: str,
@@ -152,7 +152,7 @@ def _write_active_pointer(root: Path, bucket_id: str) -> None:
     )
 
 
-def _persist_filing(
+def persist_filing(
     bucket_id: str,
     *,
     filing_year: int,
@@ -215,7 +215,7 @@ def _persist_filing(
     )
 
 
-def _fingerprint(bucket_id: str) -> str:
+def fingerprint(bucket_id: str) -> str:
     from cadrumo.application.bucket_maintenance.contracts import AssessBucketDeletionCommand
     from cadrumo.application.bucket_maintenance.service import BucketMaintenanceService
 
@@ -233,7 +233,7 @@ def test_start_and_resume_require_explicit_confirmation(tmp_path: Path) -> None:
         start_config_reset,
     )
 
-    with _isolated_reset_root(tmp_path):
+    with isolated_reset_root(tmp_path):
         with pytest.raises(ConfigResetConfirmationRequiredError):
             start_config_reset(
                 confirmed=False,
@@ -256,7 +256,7 @@ def _assert_reset_completed_for_both_targets(operation: ConfigResetOperation) ->
 
     assert operation.status is ConfigResetOperationStatus.COMPLETE
     assert tuple(target.bucket_id for target in operation.targets) == (
-        _PROFILE_A_ID,
+        PROFILE_A_ID,
         _DANGLING_ID,
     )
     assert all(target.bucket_id != "cadrumo.db" for target in operation.targets)
@@ -286,8 +286,8 @@ def _assert_reset_erased_buckets_pointer_and_spared_the_cold_default(
 
     assert pointer_path(root).is_file()
     assert read_pointer(root).bucket_id is None
-    assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.exists() is False
-    assert bucket_paths(root, _PROFILE_B_ID).bucket_dir.exists() is False
+    assert bucket_paths(root, PROFILE_A_ID).bucket_dir.exists() is False
+    assert bucket_paths(root, PROFILE_B_ID).bucket_dir.exists() is False
     assert bucket_paths(root, _DANGLING_ID).bucket_dir.exists() is False
     assert cold_default_database.read_bytes() == cold_default_bytes
 
@@ -308,7 +308,7 @@ def _assert_locked_targets_cleared_by_capsule_destruction(
     # carried the password and recovery envelopes and the key sentinel, and
     # the session receipt outside it is the only other wrapping of the same
     # key. Both are gone, so nothing that could unwrap the leftover remains.
-    assert profile_session_path(storage_root=root, profile_id=UUID(_PROFILE_A_ID)).exists() is False
+    assert profile_session_path(storage_root=root, profile_id=UUID(PROFILE_A_ID)).exists() is False
     for target in operation.targets:
         clearance = target.auth_clearance
         assert clearance is not None
@@ -319,7 +319,7 @@ def _assert_locked_targets_cleared_by_capsule_destruction(
         for target in operation.targets
         if target.auth_clearance is not None
     }
-    assert cleared_locks[_PROFILE_A_ID] == (AuthProviderKind.CLAVE_PERMANENTE.value,)
+    assert cleared_locks[PROFILE_A_ID] == (AuthProviderKind.CLAVE_PERMANENTE.value,)
     assert cleared_locks[_DANGLING_ID] == ()
 
 
@@ -339,7 +339,7 @@ def test_start_discovers_live_and_dangling_targets_then_completes(
     must NOT reappear, and the acquisition lock moved to a live target, where
     clearing it is a contract the reset actually holds.
     """
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
         from cadrumo.application.auth.acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
         from cadrumo.application.auth.certificate_source_operations import (
             register_operator_certificate_source,
@@ -352,23 +352,23 @@ def test_start_discovers_live_and_dangling_targets_then_completes(
         from cadrumo.core.storage_taxonomy import StorageCategory
         from cadrumo.core.storage_taxonomy_locations import storage_location
 
-        with _isolated_reset_root(tmp_path) as root:
+        with isolated_reset_root(tmp_path) as root:
             root.mkdir(parents=True, exist_ok=True)
             cold_default_database = root / storage_location(StorageCategory.ROOT_FALLBACK_DATABASE).subpath
             cold_default_bytes = b"cold-default-database-is-not-a-profile-bucket"
             cold_default_database.write_bytes(cold_default_bytes)
-            _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
-            _create_profile(_PROFILE_B_ID, label="Beta operator", tax_id="00000001R")
-            _delete_profile_through_custody(_PROFILE_B_ID, root=root)
+            create_profile(PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
+            create_profile(PROFILE_B_ID, label="Beta operator", tax_id="00000001R")
+            _delete_profile_through_custody(PROFILE_B_ID, root=root)
 
             certificate_path = tmp_path / "operator.p12"
             certificate_path.write_bytes(b"test certificate")
-            _write_active_pointer(root, _PROFILE_A_ID)
+            _write_active_pointer(root, PROFILE_A_ID)
             # Registering a certificate source and its secret needs the profile
             # OPEN: the source record is a row inside the capsule and the secret's
             # lookup digest is derived from the bucket's key. Doing it cold refuses,
             # which is the same wall the reset meets from the other side.
-            with open_test_profile_session(_PROFILE_A_ID):
+            with open_test_profile_session(PROFILE_A_ID):
                 register_operator_certificate_source(
                     name="personal",
                     certificate_path=certificate_path,
@@ -389,11 +389,11 @@ def test_start_discovers_live_and_dangling_targets_then_completes(
             # The lock is acquired for whichever profile the pointer names, so the
             # pointer picks the subject here; the reset's own pointer is written
             # below.
-            _write_active_pointer(root, _PROFILE_A_ID)
+            _write_active_pointer(root, PROFILE_A_ID)
             lock_path = auth_acquisition_lock_path(
                 settings,
                 AuthProviderKind.CLAVE_PERMANENTE,
-                bucket_id=_PROFILE_A_ID,
+                bucket_id=PROFILE_A_ID,
             )
             with acquire_auth_acquisition_lock(
                 settings,
@@ -441,7 +441,7 @@ def test_a_locked_dangling_target_has_its_key_free_lock_cleared_and_says_what_it
     from cadrumo.core.auth_provider import AuthProviderKind
     from cadrumo.core.config import load_settings
 
-    with _isolated_reset_root(tmp_path) as root:
+    with isolated_reset_root(tmp_path) as root:
         root.mkdir(parents=True, exist_ok=True)
         _write_active_pointer(root, _DANGLING_ID)
         settings = load_settings()
@@ -495,22 +495,22 @@ def test_a_profile_from_the_seeding_door_alone_is_deletion_assessable(
     from cadrumo.application.filing.retention import FilingRetentionAuthority
     from cadrumo.domain.buckets.errors import BucketDeleteRefusedError
 
-    with _isolated_reset_root(tmp_path) as root:
+    with isolated_reset_root(tmp_path) as root:
         from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 
-        with open_test_profile_session(_PROFILE_A_ID):
-            register_minimal_profile(profile_id=_PROFILE_A_ID, display_name="Alpha operator")
+        with open_test_profile_session(PROFILE_A_ID):
+            register_minimal_profile(profile_id=PROFILE_A_ID, display_name="Alpha operator")
 
         service = BucketMaintenanceService(bucket_storage=profile_custody_port().bucket_storage())
-        assessment = service.assess_deletion(AssessBucketDeletionCommand(bucket_id=_PROFILE_A_ID))
+        assessment = service.assess_deletion(AssessBucketDeletionCommand(bucket_id=PROFILE_A_ID))
         assert assessment.exists is True
         assert assessment.retention is not None
         assert assessment.retention.blocks_erase is False
         assert assessment.retention.retained == ()
 
-        FilingRetentionAuthority(root=root).path(UUID(_PROFILE_A_ID)).unlink()
+        FilingRetentionAuthority(root=root).path(UUID(PROFILE_A_ID)).unlink()
         with pytest.raises(BucketDeleteRefusedError):
-            service.assess_deletion(AssessBucketDeletionCommand(bucket_id=_PROFILE_A_ID))
+            service.assess_deletion(AssessBucketDeletionCommand(bucket_id=PROFILE_A_ID))
 
 
 def test_retention_preflight_pauses_before_auth_pointer_or_bucket_mutation(
@@ -528,15 +528,15 @@ def test_retention_preflight_pauses_before_auth_pointer_or_bucket_mutation(
     )
     from cadrumo.core.bucket_pointer import pointer_path
 
-    with _isolated_reset_root(tmp_path) as root:
-        _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
-        _create_profile(_PROFILE_B_ID, label="Beta operator", tax_id="00000001R")
-        _persist_filing(_PROFILE_B_ID, filing_year=2025, seed="a")
-        _write_active_pointer(root, _PROFILE_A_ID)
+    with isolated_reset_root(tmp_path) as root:
+        create_profile(PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
+        create_profile(PROFILE_B_ID, label="Beta operator", tax_id="00000001R")
+        persist_filing(PROFILE_B_ID, filing_year=2025, seed="a")
+        _write_active_pointer(root, PROFILE_A_ID)
         pointer_before = pointer_path(root).read_bytes()
         fingerprints_before = {
-            _PROFILE_A_ID: _fingerprint(_PROFILE_A_ID),
-            _PROFILE_B_ID: _fingerprint(_PROFILE_B_ID),
+            PROFILE_A_ID: fingerprint(PROFILE_A_ID),
+            PROFILE_B_ID: fingerprint(PROFILE_B_ID),
         }
 
         operation = start_config_reset(
@@ -548,16 +548,16 @@ def test_retention_preflight_pauses_before_auth_pointer_or_bucket_mutation(
 
         assert operation.status is ConfigResetOperationStatus.PAUSED
         assert operation.pause_reason is ConfigResetPauseReason.RETENTION_UNRESOLVED
-        assert operation.paused_target_ids == (_PROFILE_B_ID,)
+        assert operation.paused_target_ids == (PROFILE_B_ID,)
         assert pointer_path(root).read_bytes() == pointer_before
         assert {
-            _PROFILE_A_ID: _fingerprint(_PROFILE_A_ID),
-            _PROFILE_B_ID: _fingerprint(_PROFILE_B_ID),
+            PROFILE_A_ID: fingerprint(PROFILE_A_ID),
+            PROFILE_B_ID: fingerprint(PROFILE_B_ID),
         } == fingerprints_before
         phases = {target.bucket_id: target.phase for target in operation.targets}
         assert phases == {
-            _PROFILE_A_ID: ConfigResetTargetPhase.RETENTION_APPROVED,
-            _PROFILE_B_ID: ConfigResetTargetPhase.SNAPSHOTTED,
+            PROFILE_A_ID: ConfigResetTargetPhase.RETENTION_APPROVED,
+            PROFILE_B_ID: ConfigResetTargetPhase.SNAPSHOTTED,
         }
         assert all(target.retention is not None for target in operation.targets)
 
@@ -574,7 +574,7 @@ def test_retention_preflight_pauses_before_auth_pointer_or_bucket_mutation(
             operation.operation_id,
             confirmed=True,
             acknowledge_retention_override=True,
-            retention_override_reason=_OVERRIDE_REASON,
+            retention_override_reason=OVERRIDE_REASON,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             bucket_storage=profile_custody_port().bucket_storage(),
             certificate_secret_backend_factory=build_certificate_secret_backend,
@@ -594,11 +594,11 @@ def test_resume_converges_after_a_target_is_removed_out_of_band(
         ConfigResetTargetPhase,
     )
 
-    with _isolated_reset_root(tmp_path) as root:
-        _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
-        _create_profile(_PROFILE_B_ID, label="Beta operator", tax_id="00000001R")
-        _persist_filing(_PROFILE_B_ID, filing_year=2025, seed="a")
-        _write_active_pointer(root, _PROFILE_A_ID)
+    with isolated_reset_root(tmp_path) as root:
+        create_profile(PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
+        create_profile(PROFILE_B_ID, label="Beta operator", tax_id="00000001R")
+        persist_filing(PROFILE_B_ID, filing_year=2025, seed="a")
+        _write_active_pointer(root, PROFILE_A_ID)
 
         paused = start_config_reset(
             confirmed=True,
@@ -609,7 +609,7 @@ def test_resume_converges_after_a_target_is_removed_out_of_band(
         assert paused.status is ConfigResetOperationStatus.PAUSED
         assert paused.pause_reason is ConfigResetPauseReason.RETENTION_UNRESOLVED
 
-        _remove_bucket_directory_out_of_band(_PROFILE_B_ID, root=root)
+        _remove_bucket_directory_out_of_band(PROFILE_B_ID, root=root)
 
         changed = resume_config_reset(
             paused.operation_id,
@@ -620,8 +620,8 @@ def test_resume_converges_after_a_target_is_removed_out_of_band(
         )
         assert changed.status is ConfigResetOperationStatus.PAUSED
         assert changed.pause_reason is ConfigResetPauseReason.TARGET_STATE_CHANGED
-        assert changed.paused_target_ids == (_PROFILE_B_ID,)
-        vanished = next(target for target in changed.targets if target.bucket_id == _PROFILE_B_ID)
+        assert changed.paused_target_ids == (PROFILE_B_ID,)
+        vanished = next(target for target in changed.targets if target.bucket_id == PROFILE_B_ID)
         assert vanished.exists_at_snapshot is False
         assert vanished.fingerprint is None
 
@@ -638,8 +638,8 @@ def test_resume_converges_after_a_target_is_removed_out_of_band(
         assert completed.summary.already_absent_count == 1
         phases = {target.bucket_id: target.phase for target in completed.targets}
         assert phases == {
-            _PROFILE_A_ID: ConfigResetTargetPhase.DELETED,
-            _PROFILE_B_ID: ConfigResetTargetPhase.DELETED,
+            PROFILE_A_ID: ConfigResetTargetPhase.DELETED,
+            PROFILE_B_ID: ConfigResetTargetPhase.DELETED,
         }
 
 
@@ -647,9 +647,9 @@ def test_status_is_a_read_only_journal_view(tmp_path: Path) -> None:
     from cadrumo.application.config_reset import config_reset_status, start_config_reset
     from cadrumo.application.config_reset_repository import ConfigResetJournalRepository
 
-    with _isolated_reset_root(tmp_path):
-        _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
-        _persist_filing(_PROFILE_A_ID, filing_year=2025, seed="c")
+    with isolated_reset_root(tmp_path):
+        create_profile(PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
+        persist_filing(PROFILE_A_ID, filing_year=2025, seed="c")
         operation = start_config_reset(
             confirmed=True,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -671,9 +671,9 @@ def test_resume_pauses_once_when_target_content_changed_then_accepts_new_snapsho
     from cadrumo.application.config_reset import resume_config_reset, start_config_reset
     from cadrumo.application.config_reset_models import ConfigResetOperationStatus, ConfigResetPauseReason
 
-    with _isolated_reset_root(tmp_path) as root:
-        _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
-        _persist_filing(_PROFILE_A_ID, filing_year=2025, seed="e")
+    with isolated_reset_root(tmp_path) as root:
+        create_profile(PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
+        persist_filing(PROFILE_A_ID, filing_year=2025, seed="e")
         operation = start_config_reset(
             confirmed=True,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -687,12 +687,12 @@ def test_resume_pauses_once_when_target_content_changed_then_accepts_new_snapsho
         # which the inventory covers by path only, and in a retention snapshot
         # that lives outside the capsule. Planting a file inside the capsule is
         # what actually changes the target this reset snapshotted.
-        (_capsule_dir_for(root, _PROFILE_A_ID) / "planted.v1.json").write_bytes(b'{"planted": true}')
+        (_capsule_dir_for(root, PROFILE_A_ID) / "planted.v1.json").write_bytes(b'{"planted": true}')
         changed = resume_config_reset(
             operation.operation_id,
             confirmed=True,
             acknowledge_retention_override=True,
-            retention_override_reason=_OVERRIDE_REASON,
+            retention_override_reason=OVERRIDE_REASON,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             bucket_storage=profile_custody_port().bucket_storage(),
             certificate_secret_backend_factory=build_certificate_secret_backend,
@@ -700,7 +700,7 @@ def test_resume_pauses_once_when_target_content_changed_then_accepts_new_snapsho
 
         assert changed.status is ConfigResetOperationStatus.PAUSED
         assert changed.pause_reason is ConfigResetPauseReason.TARGET_STATE_CHANGED
-        assert changed.paused_target_ids == (_PROFILE_A_ID,)
+        assert changed.paused_target_ids == (PROFILE_A_ID,)
         assert changed.targets[0].fingerprint is not None
         assert changed.targets[0].fingerprint.digest != original_fingerprint.digest
 
@@ -708,7 +708,7 @@ def test_resume_pauses_once_when_target_content_changed_then_accepts_new_snapsho
             operation.operation_id,
             confirmed=True,
             acknowledge_retention_override=True,
-            retention_override_reason=_OVERRIDE_REASON,
+            retention_override_reason=OVERRIDE_REASON,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             bucket_storage=profile_custody_port().bucket_storage(),
             certificate_secret_backend_factory=build_certificate_secret_backend,
@@ -723,9 +723,9 @@ def test_resume_adds_changed_pointer_target_under_the_same_operation(
     from cadrumo.application.config_reset import resume_config_reset, start_config_reset
     from cadrumo.application.config_reset_models import ConfigResetOperationStatus, ConfigResetPauseReason
 
-    with _isolated_reset_root(tmp_path) as root:
-        _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
-        _persist_filing(_PROFILE_A_ID, filing_year=2025, seed="3")
+    with isolated_reset_root(tmp_path) as root:
+        create_profile(PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
+        persist_filing(PROFILE_A_ID, filing_year=2025, seed="3")
         operation = start_config_reset(
             confirmed=True,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -733,12 +733,12 @@ def test_resume_adds_changed_pointer_target_under_the_same_operation(
             certificate_secret_backend_factory=build_certificate_secret_backend,
         )
 
-        _create_profile(_PROFILE_C_ID, label="Gamma operator", tax_id="00000002W")
+        create_profile(_PROFILE_C_ID, label="Gamma operator", tax_id="00000002W")
         changed = resume_config_reset(
             operation.operation_id,
             confirmed=True,
             acknowledge_retention_override=True,
-            retention_override_reason=_OVERRIDE_REASON,
+            retention_override_reason=OVERRIDE_REASON,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             bucket_storage=profile_custody_port().bucket_storage(),
             certificate_secret_backend_factory=build_certificate_secret_backend,
@@ -748,24 +748,24 @@ def test_resume_adds_changed_pointer_target_under_the_same_operation(
         assert changed.pause_reason is ConfigResetPauseReason.POINTER_CHANGED
         assert changed.paused_target_ids == (_PROFILE_C_ID,)
         assert tuple(target.bucket_id for target in changed.targets) == (
-            _PROFILE_A_ID,
+            PROFILE_A_ID,
             _PROFILE_C_ID,
         )
-        assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.is_dir()
+        assert bucket_paths(root, PROFILE_A_ID).bucket_dir.is_dir()
         assert bucket_paths(root, _PROFILE_C_ID).bucket_dir.is_dir()
 
         completed = resume_config_reset(
             operation.operation_id,
             confirmed=True,
             acknowledge_retention_override=True,
-            retention_override_reason=_OVERRIDE_REASON,
+            retention_override_reason=OVERRIDE_REASON,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             bucket_storage=profile_custody_port().bucket_storage(),
             certificate_secret_backend_factory=build_certificate_secret_backend,
         )
         assert completed.status is ConfigResetOperationStatus.COMPLETE
         assert tuple(target.bucket_id for target in completed.targets) == (
-            _PROFILE_A_ID,
+            PROFILE_A_ID,
             _PROFILE_C_ID,
         )
 
@@ -776,9 +776,9 @@ def test_resume_detects_an_a_to_b_to_a_pointer_coordinate_change(tmp_path: Path)
     from cadrumo.application.config_reset_models import ConfigResetPauseReason
     from cadrumo.application.user_profile.profile_pointer import active_profile_pointer_transaction
 
-    with _isolated_reset_root(tmp_path) as root:
-        _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
-        _persist_filing(_PROFILE_A_ID, filing_year=2025, seed="c")
+    with isolated_reset_root(tmp_path) as root:
+        create_profile(PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
+        persist_filing(PROFILE_A_ID, filing_year=2025, seed="c")
         operation = start_config_reset(
             confirmed=True,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -786,11 +786,11 @@ def test_resume_detects_an_a_to_b_to_a_pointer_coordinate_change(tmp_path: Path)
             certificate_secret_backend_factory=build_certificate_secret_backend,
         )
         before = operation.pointer_snapshot.record
-        assert before.bucket_id == _PROFILE_A_ID
+        assert before.bucket_id == PROFILE_A_ID
 
         with active_profile_pointer_transaction(root) as transaction:
             intermediate = transaction.select(_PROFILE_C_ID)
-            returned = transaction.select(_PROFILE_A_ID)
+            returned = transaction.select(PROFILE_A_ID)
         assert intermediate.transition_revision == before.transition_revision + 1
         assert returned.transition_revision == before.transition_revision + 2
         assert returned.bucket_id == before.bucket_id
@@ -800,7 +800,7 @@ def test_resume_detects_an_a_to_b_to_a_pointer_coordinate_change(tmp_path: Path)
             operation.operation_id,
             confirmed=True,
             acknowledge_retention_override=True,
-            retention_override_reason=_OVERRIDE_REASON,
+            retention_override_reason=OVERRIDE_REASON,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             bucket_storage=profile_custody_port().bucket_storage(),
             certificate_secret_backend_factory=build_certificate_secret_backend,

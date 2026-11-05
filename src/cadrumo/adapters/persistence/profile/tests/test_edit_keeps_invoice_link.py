@@ -22,10 +22,8 @@ from .....domain.transactions.service import link_invoice
 from ...storage.sql.secure_objects import SecureObjectRepository
 from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
-    BUCKET_ID as _BUCKET_ID,
-)
-from .ledger_action_persistence_support import (
-    repositories as _repositories,
+    BUCKET_ID,
+    repositories,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
@@ -34,16 +32,16 @@ _INVOICE_ID = "a" * 64
 
 
 def _linked_row(secure_objects: SecureObjectRepository) -> str:
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     ) as ports:
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 1, 8),
                 amount=Decimal("59.29"),
                 direction=TransactionDirection.OUTGOING,
@@ -59,15 +57,15 @@ def _linked_row(secure_objects: SecureObjectRepository) -> str:
 
 
 def _classify(secure_objects: SecureObjectRepository, transaction_id: str) -> tuple[str, int]:
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     ) as ports:
         result = update_manual_transaction_fields(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=transaction_id,
             patch=ManualLedgerTransactionPatch(business_classification=BusinessClassification.PERSONAL),
             actor="test",
@@ -84,7 +82,7 @@ def test_classifying_a_linked_row_keeps_its_invoice_link(secure_objects: SecureO
 
     classified_id, _ = _classify(secure_objects, transaction_id)
 
-    transaction_repository, _ = _repositories(secure_objects)
+    transaction_repository, _ = repositories(secure_objects)
     stored = transaction_repository.load().transactions[classified_id]
     assert stored.business_classification is BusinessClassification.PERSONAL
     assert stored.invoice_id == _INVOICE_ID
@@ -105,12 +103,12 @@ def test_changing_a_linked_rows_identity_refuses_without_replacing_it(
     secure_objects: SecureObjectRepository,
 ) -> None:
     transaction_id = _linked_row(secure_objects)
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     before = transaction_repository.load()
 
     with (
         ledger_ports_for_test(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             objects=secure_objects,
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
@@ -118,7 +116,7 @@ def test_changing_a_linked_rows_identity_refuses_without_replacing_it(
         pytest.raises(TransactionValidationError, match="invoice link"),
     ):
         update_manual_transaction_fields(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             transaction_id=transaction_id,
             patch=ManualLedgerTransactionPatch(amount=Decimal("60.00")),
             actor="test",

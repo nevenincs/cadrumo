@@ -13,13 +13,13 @@ from ...application.modelo.work_export_contracts import ModeloExportRequest
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
-from ._modelo_cli_support import (
+from .common import emit_envelope
+from .modelo_cli_support import (
     parse_revision_selector,
     resolve_default_actor,
 )
-from ._modelo_rendering import recorded_note_notices
-from .common import emit_envelope
 from .modelo_query_results import ModeloExportPayload
+from .modelo_rendering import recorded_note_notices
 from .operation_modelo_export import run_modelo_export
 from .operation_modelo_verification import select_modelo_work_revision_for_cli
 
@@ -79,7 +79,7 @@ def _development_software_identity_notice(result: ModeloExportResult) -> Notice:
     )
 
 
-def _export_notices(result: ModeloExportResult) -> list[Notice]:
+def export_notices(result: ModeloExportResult) -> list[Notice]:
     notices = [_local_export_evidence_notice(result)]
     if result.software_identity_grade is AeatSoftwareIdentityGrade.DEVELOPMENT_MOCK:
         notices.append(_development_software_identity_notice(result))
@@ -91,7 +91,7 @@ def _export_notices(result: ModeloExportResult) -> list[Notice]:
     return notices
 
 
-def _export_text_lines(result: ModeloExportResult) -> list[str]:
+def export_text_lines(result: ModeloExportResult) -> list[str]:
     return [
         "operation\tmodelo.export",
         f"work_unit_id\t{result.work_unit_id}",
@@ -168,8 +168,8 @@ def modelo_export_verb(
         ctx,
         command="modelo.export",
         result=export_result,
-        lines=_export_text_lines(result),
-        notices=_export_notices(result),
+        lines=export_text_lines(result),
+        notices=export_notices(result),
     )
 
 

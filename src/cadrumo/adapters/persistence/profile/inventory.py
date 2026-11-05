@@ -38,7 +38,7 @@ from ....domain.contribuyente.inventory.corrections import (
 from ....domain.contribuyente.inventory.records import InventoryLedger, InventoryLedgerDocument, MovementRecord
 from ..storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from ..storage.sql.secure_objects import SecureObjectRepository
-from ._secure_model_document import (
+from .secure_model_document import (
     ProfileBareModelSecurePersistence,
     resolve_profile_secure_object_repository,
 )

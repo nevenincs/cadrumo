@@ -33,18 +33,18 @@ from ......tests.aeat_literal_fixtures import (
 )
 from ......tests.log_records import delivered_records
 from ..clave_movil import ClaveMovilAuthProvider
-from ._clave_movil_support import _CLAVE_SURFACE, _DOMAINS, _aeat_url, _settings_for
+from .clave_movil_support import CLAVE_SURFACE, DOMAINS, aeat_url, clave_movil_settings_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _SEDE_PATHS = Settings.external_constants().aeat.sede_paths
 _TARGET_PATH = _SEDE_PATHS.expedientes_resumen
-_COMPLETED_LANDING = _aeat_url(_DOMAINS.www6, _TARGET_PATH)
+_COMPLETED_LANDING = aeat_url(DOMAINS.www6, _TARGET_PATH)
 
 
 def _provider(tmp_path: Path) -> ClaveMovilAuthProvider:
     """Build the real provider; no browser is reached by the decision under test."""
-    return ClaveMovilAuthProvider(_settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z"))
+    return ClaveMovilAuthProvider(clave_movil_settings_for(tmp_path, CADRUMO_CLAVE_MOVIL_DNI_NIE="12345678Z"))
 
 
 def test_a_completed_authenticated_landing_is_recorded(tmp_path: Path) -> None:
@@ -63,11 +63,11 @@ def test_a_completed_authenticated_landing_is_recorded(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     "clave_flow_url",
     [
-        _CLAVE_SURFACE.selector_access_url_template.format(target=_TARGET_PATH),
-        _aeat_url(_DOMAINS.www6, _CLAVE_SURFACE.dialogo_representacion_path),
-        _aeat_url(_DOMAINS.www12, _CLAVE_SURFACE.obtener_clave_movil_non_qr_path),
-        _aeat_url(_DOMAINS.www12, _CLAVE_SURFACE.obtener_clave_movil_qr_path),
-        _aeat_url(_DOMAINS.www12, _CLAVE_SURFACE.cancelar_clave_movil_path),
+        CLAVE_SURFACE.selector_access_url_template.format(target=_TARGET_PATH),
+        aeat_url(DOMAINS.www6, CLAVE_SURFACE.dialogo_representacion_path),
+        aeat_url(DOMAINS.www12, CLAVE_SURFACE.obtener_clave_movil_non_qr_path),
+        aeat_url(DOMAINS.www12, CLAVE_SURFACE.obtener_clave_movil_qr_path),
+        aeat_url(DOMAINS.www12, CLAVE_SURFACE.cancelar_clave_movil_path),
     ],
 )
 def test_every_clave_flow_page_is_refused_as_a_landing(tmp_path: Path, clave_flow_url: str) -> None:
@@ -90,16 +90,16 @@ def test_the_refused_selector_page_is_the_one_that_re_enters_the_clave_dispatch(
     rule: a later reader relaxing the refusal can see what it re-opens.
     """
 
-    selector_url = _CLAVE_SURFACE.selector_access_url_template.format(target=_TARGET_PATH)
+    selector_url = CLAVE_SURFACE.selector_access_url_template.format(target=_TARGET_PATH)
 
-    assert _CLAVE_SURFACE.selector_access_path_marker in selector_url
+    assert CLAVE_SURFACE.selector_access_path_marker in selector_url
     assert _provider(tmp_path)._salvageable_landing_url(selector_url, target_path=_TARGET_PATH) is None
 
 
 def test_the_auth_gate_error_page_is_refused(tmp_path: Path) -> None:
     """The 4033 gate is AEAT reporting the session did not authorise."""
 
-    gate_url = _aeat_url(_DOMAINS.sede, _SEDE_PATHS.auth_gate_4033)
+    gate_url = aeat_url(DOMAINS.sede, _SEDE_PATHS.auth_gate_4033)
 
     assert _provider(tmp_path)._salvageable_landing_url(gate_url, target_path=_TARGET_PATH) is None
 
@@ -132,7 +132,7 @@ class _FailedLoginContext:
 
 
 class _WaitingPage:
-    url = _aeat_url(_DOMAINS.www12, _CLAVE_SURFACE.obtener_clave_movil_non_qr_path)
+    url = aeat_url(DOMAINS.www12, CLAVE_SURFACE.obtener_clave_movil_non_qr_path)
 
 
 def test_an_unapproved_login_is_not_logged_as_an_authenticated_session(

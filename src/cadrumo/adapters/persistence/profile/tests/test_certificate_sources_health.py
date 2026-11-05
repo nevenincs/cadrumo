@@ -29,7 +29,7 @@ from cadrumo.application.tests.operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
 from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _certificate_indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from cadrumo.tests.certificates import CERTIFICATE_BUNDLE_INPUT, build_pkcs12_bundle
 
@@ -63,7 +63,7 @@ def test_check_reports_ok_for_a_certificate_far_from_expiry(
     tmp_path: Path,
 ) -> None:
     """A certificate with hundreds of days remaining is classified ``ok``."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
         _register_operator_profile()
         cert_path = build_pkcs12_bundle(
             tmp_path,
@@ -106,7 +106,7 @@ def test_check_reports_expiring_within_the_warning_window(
     tmp_path: Path,
 ) -> None:
     """A certificate inside the 60-day warning window is classified ``expiring``."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
         _register_operator_profile()
         now = datetime.now(UTC)
         cert_path = build_pkcs12_bundle(
@@ -154,7 +154,7 @@ def test_check_reports_expired_for_a_lapsed_certificate(
     tmp_path: Path,
 ) -> None:
     """A certificate whose validity has already elapsed is classified ``expired``."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
         _register_operator_profile()
         now = datetime.now(UTC)
         cert_path = build_pkcs12_bundle(
@@ -202,7 +202,7 @@ def test_check_covers_every_registered_source_independently(
     tmp_path: Path,
 ) -> None:
     """Every registered source is classified, not only the active source."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
         _register_operator_profile()
         now = datetime.now(UTC)
         valid_cert = build_pkcs12_bundle(
@@ -273,7 +273,7 @@ def test_check_classifies_a_missing_certificate_file_distinctly(
     tmp_path: Path,
 ) -> None:
     """A deleted registered file surfaces ``file_missing``, never ``ok``."""
-    with _certificate_indexed_authority_for_test().operation() as _certificate_authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _certificate_authority_operation_for_test:
         _register_operator_profile()
         ghost_path = tmp_path / "deleted.p12"
         ghost_path.write_bytes(b"placeholder")

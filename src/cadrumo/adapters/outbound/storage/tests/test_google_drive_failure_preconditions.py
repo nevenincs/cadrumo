@@ -12,16 +12,9 @@ import pytest
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....tests.google_credentials import unused_google_credentials
 from .....tests.terminal_precondition_ast import call_name, fact_expressions
-from .. import _google_drive as drive_module
-from .. import _google_drive_metadata as drive_metadata_module
+from .. import google_drive as drive_module
+from .. import google_drive_metadata as drive_metadata_module
 from .. import google_drive_requests as drive_requests_module
-from .._google_drive import GoogleDriveProvider
-from .._google_drive_metadata import (
-    DriveStoragePreconditionCondition,
-    _parse_drive_modified_time,
-    _parse_drive_size,
-    drive_storage_content_hash,
-)
 from ..errors import (
     OutboundStorageConflictError,
     OutboundStorageError,
@@ -31,6 +24,13 @@ from ..errors import (
     OutboundStoragePermissionError,
     OutboundStorageQuotaError,
     OutboundStorageUnavailableError,
+)
+from ..google_drive import GoogleDriveProvider
+from ..google_drive_metadata import (
+    DriveStoragePreconditionCondition,
+    drive_storage_content_hash,
+    parse_drive_modified_time,
+    parse_drive_size,
 )
 from .managed_drive_fixture import current_drive_receipts, drive_files_list_endpoint
 
@@ -640,9 +640,9 @@ def test_malformed_drive_metadata_has_exact_safety_contracts(
 ) -> None:
     with pytest.raises(OutboundStorageIntegrityError) as raised:
         if case == "size":
-            _parse_drive_size("not-an-integer", provider_object_id="drive-file")
+            parse_drive_size("not-an-integer", provider_object_id="drive-file")
         elif case == "modified-time":
-            _parse_drive_modified_time("not-a-time", provider_object_id="drive-file")
+            parse_drive_modified_time("not-a-time", provider_object_id="drive-file")
         else:
             drive_storage_content_hash({"id": "drive-file", "appProperties": {"content_hash": "sha256-x"}})
 

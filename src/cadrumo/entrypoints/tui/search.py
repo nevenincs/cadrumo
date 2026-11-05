@@ -107,7 +107,7 @@ _RESULT_SOURCE_LOCALE_KEYS: Final[Mapping[WorkbenchSearchSource, str]] = {
     WorkbenchSearchSource.RECONCILIATION: "tui.search.result.source.reconciliation",
     WorkbenchSearchSource.NOTIFICATION: "tui.search.result.source.notification",
 }
-_RESULT_STATUS_LOCALE_KEYS: Final[Mapping[WorkbenchSearchStatus, str]] = {
+RESULT_STATUS_LOCALE_KEYS: Final[Mapping[WorkbenchSearchStatus, str]] = {
     WorkbenchSearchStatus.LEDGER_ENTRY_READY: "tui.search.result.status.ledger_entry_ready",
     WorkbenchSearchStatus.LEDGER_ENTRY_NEEDS_REVIEW: "tui.search.result.status.ledger_entry_needs_review",
     WorkbenchSearchStatus.LEDGER_ENTRY_CLASSIFIED: "tui.search.result.status.ledger_entry_classified",
@@ -133,7 +133,7 @@ _RESULT_STATUS_LOCALE_KEYS: Final[Mapping[WorkbenchSearchStatus, str]] = {
     WorkbenchSearchStatus.NOTIFICATION_UNREAD: "tui.search.result.status.notification_unread",
     WorkbenchSearchStatus.NOTIFICATION_READ: "tui.search.result.status.notification_read",
 }
-_DESTINATION_LOCALE_KEYS: Final[Mapping[str, str]] = {
+DESTINATION_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "workbench.home": "tui.search.destination.home",
     "workbench.ledger": "tui.search.destination.ledger",
     "workbench.withholding": "tui.search.destination.withholding",
@@ -144,7 +144,7 @@ _DESTINATION_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "workbench.reference": "tui.search.destination.reference",
     "workbench.profile": "tui.search.destination.profile",
 }
-_DESTINATION_HELP_LOCALE_KEYS: Final[Mapping[str, str]] = {
+DESTINATION_HELP_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "workbench.home": "tui.search.destination_help.home",
     "workbench.ledger": "tui.search.destination_help.ledger",
     "workbench.withholding": "tui.search.destination_help.withholding",
@@ -155,7 +155,7 @@ _DESTINATION_HELP_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "workbench.reference": "tui.search.destination_help.reference",
     "workbench.profile": "tui.search.destination_help.profile",
 }
-_ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = {
+ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "operator.profile.edit": "tui.search.action.edit_profile",
     "operator.modelo.work.revisions": "tui.search.action.list_work_revisions",
     "operator.ledger.review": "tui.search.action.review_ledger",
@@ -178,11 +178,11 @@ def _render_locale(key: str, locale: str | None, **values: object) -> str:
     return tr(key, locale=locale, **values)
 
 
-def _result_text(result: WorkbenchSearchResult, *, locale: str | None = None) -> str:
+def result_text(result: WorkbenchSearchResult, *, locale: str | None = None) -> str:
     """Render safe search metadata through localized human-facing labels."""
     label = _render_locale(_RESULT_LABEL_LOCALE_KEYS[result.label_key], locale)
     source = _render_locale(_RESULT_SOURCE_LOCALE_KEYS[result.source], locale)
-    status = _render_locale(_RESULT_STATUS_LOCALE_KEYS[result.status], locale)
+    status = _render_locale(RESULT_STATUS_LOCALE_KEYS[result.status], locale)
     parts = [label, source, status]
     if result.address is not None:
         parts.append(
@@ -197,9 +197,9 @@ def _result_text(result: WorkbenchSearchResult, *, locale: str | None = None) ->
     return " · ".join(parts)
 
 
-def _destination_text(destination: str, *, locale: str | None = None) -> str:
+def destination_text(destination: str, *, locale: str | None = None) -> str:
     """Produce localized wording for one admitted destination."""
-    key = _DESTINATION_LOCALE_KEYS.get(destination, "tui.search.destination.unknown")
+    key = DESTINATION_LOCALE_KEYS.get(destination, "tui.search.destination.unknown")
     return _render_locale(key, locale)
 
 
@@ -211,8 +211,8 @@ def _command_help(target: TuiNavigationTargetV1, *, locale: str | None = None) -
     area name for both printed every destination twice.
     """
     if target.action_candidate_id is not None:
-        return _destination_text(target.destination, locale=locale)
-    key = _DESTINATION_HELP_LOCALE_KEYS.get(target.destination)
+        return destination_text(target.destination, locale=locale)
+    key = DESTINATION_HELP_LOCALE_KEYS.get(target.destination)
     return "" if key is None else _render_locale(key, locale)
 
 
@@ -239,7 +239,7 @@ def workbench_action_label(action_id: str, *, locale: str | None = None) -> str:
     rather than as a plausible label: it still renders, because a table row is
     not the place to raise, but it never claims to be a named action.
     """
-    key = _ACTION_LOCALE_KEYS.get(action_id, _ACTION_UNKNOWN_LOCALE_KEY)
+    key = ACTION_LOCALE_KEYS.get(action_id, _ACTION_UNKNOWN_LOCALE_KEY)
     return _render_locale(key, locale)
 
 
@@ -295,13 +295,13 @@ class WorkbenchSearchProviderV1(Provider):
                 target = host.destination_catalogue.target_for_search_result(result)
             except (DestinationUnavailableError, NavigationContractError):
                 continue
-            text = _result_text(result)
+            text = result_text(result)
             yield Hit(
                 score=1.0 / (result.rank + 1),
                 match_display=text,
                 command=_navigation_command(host.navigate_to, target),
                 text=text,
-                help=_destination_text(result.admission.destination),
+                help=destination_text(result.admission.destination),
             )
 
 
@@ -356,7 +356,7 @@ def _command_entries(
                 semantic_key=f"navigation.{destination.removeprefix('workbench.')}",
             ),
         )
-        entries.append((_destination_text(destination), destination_target))
+        entries.append((destination_text(destination), destination_target))
         for candidate in route.action_candidates:
             action_target = TuiNavigationTargetV1(
                 destination=destination,

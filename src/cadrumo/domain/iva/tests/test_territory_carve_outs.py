@@ -39,7 +39,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ..establishment import (
     StatedCountryCodeStatus,
@@ -53,7 +53,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def test_monaco_is_not_a_third_country() -> None:
     """The defect the table exists to prevent, asserted on the side where it exempts."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(
             "MC", operation=_authority_operation_for_test
         ) != IvaTerritorialScope.from_registry("third_country")
@@ -65,7 +65,7 @@ def test_monaco_resolves_exactly_as_france_does() -> None:
     Pinning ``MC`` to the EU-member scope would pass identically today and would
     stop being about art. 3.Tres the moment France's own status was what moved.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(
             "MC", operation=_authority_operation_for_test
         ) == territorial_scope_for_country("FR", operation=_authority_operation_for_test)
@@ -78,7 +78,7 @@ def test_the_isle_of_man_resolves_exactly_as_the_united_kingdom_does() -> None:
     with the row unchanged. That is only possible because the row never named a
     scope, and this is the assertion that holds it to it.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(
             "IM", operation=_authority_operation_for_test
         ) == territorial_scope_for_country("GB", operation=_authority_operation_for_test)
@@ -91,7 +91,7 @@ def test_an_excluded_territory_is_a_third_territory(code: str) -> None:
     Two readings of the same provision rather than an inference, which is why
     these carry a scope directly while the assimilations carry a pointer.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(
             code, operation=_authority_operation_for_test
         ) == IvaTerritorialScope.from_registry("third_country")
@@ -106,7 +106,7 @@ def test_an_excluded_territory_does_not_inherit_its_member_state(code: str) -> N
     ``EU_MEMBER`` -- the ordering the table depends on, asserted rather than
     assumed.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(
             code, operation=_authority_operation_for_test
         ) != IvaTerritorialScope.from_registry("eu_member")
@@ -126,7 +126,7 @@ def test_a_spanish_territory_code_establishes_nothing_and_is_not_a_gap(code: str
     operator as codes this system does not carry, which invites somebody to
     "fix" the data. They are a decision, and now they say so.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(code, operation=_authority_operation_for_test) is None
         assert (
             stated_country_code_status(code, operation=_authority_operation_for_test)
@@ -143,7 +143,7 @@ def test_a_spanish_territory_code_never_yields_a_spanish_scope(code: str) -> Non
     code is the evidence for that, and a country code that skipped it would be a
     second authority on the Spanish territories.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(code, operation=_authority_operation_for_test) not in {
             IvaTerritorialScope.from_registry("es_mainland"),
             IvaTerritorialScope.from_registry("es_canarias"),
@@ -158,7 +158,7 @@ def test_the_carve_outs_do_not_disturb_the_ordinary_answers() -> None:
     more codes than it names -- would pass every case above while quietly
     changing what an ordinary Member State or third country establishes.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         assert territorial_scope_for_country(
             "FR", operation=_authority_operation_for_test
         ) == IvaTerritorialScope.from_registry("eu_member")

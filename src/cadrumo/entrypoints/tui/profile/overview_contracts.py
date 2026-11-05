@@ -7,15 +7,15 @@ from ....domain.user_profile.plantilla_media import PLANTILLA_MEDIA_PATH
 from ..components.theme import tokenised
 from .setup_journey import ProfileSetupStage
 
-_PRESENT_GLYPH = "●"
+PRESENT_GLYPH = "●"
 
 """Marks a field carrying a value. A glyph, not colour alone."""
 
-_ABSENT_GLYPH = "○"
+ABSENT_GLYPH = "○"
 
 """Marks a declared field the operator has not filled in yet."""
 
-_FIELD_COLUMN_WIDTH = 24
+FIELD_COLUMN_WIDTH = 24
 
 """Cap, in cells, on the field-name column of every section table.
 
@@ -37,7 +37,7 @@ profile rather than a fixed schema label, so letting it use whatever room
 the field-name column no longer claims is the point of the cap.
 """
 
-_ROW_INDEX_SEPARATOR = " · "
+ROW_INDEX_SEPARATOR = " · "
 
 """Sits between a repeated row's instance number and its field label.
 
@@ -48,17 +48,17 @@ read three identical ``NIF`` rows, since the path telling them apart is
 shown only once the row is opened.
 """
 
-_LANGUAGE_KEY = "f2"
+LANGUAGE_KEY = "f2"
 
 """The key that opens the language chooser."""
 
-_COMPLETE_SETUP_KEY = "f8"
+COMPLETE_SETUP_KEY = "f8"
 
 """The key that declares the profile's setup complete, while it is not."""
 
-_COMPLETE_SETUP_ACTION = "complete_setup"
+COMPLETE_SETUP_ACTION = "complete_setup"
 
-_LANGUAGE_ACTION = "choose_language"
+LANGUAGE_ACTION = "choose_language"
 
 """The action that key runs.
 
@@ -67,31 +67,31 @@ rather than declared beside it, and the two halves have to find each
 other.
 """
 
-_SOURCE_TITLE_LOCALE_KEYS: dict[ProfileAcquisitionSourceKey, str] = {
+SOURCE_TITLE_LOCALE_KEYS: dict[ProfileAcquisitionSourceKey, str] = {
     ProfileAcquisitionSourceKey.CENSAL_REVIEW: "profile.journey.source.censal_review.title",
     ProfileAcquisitionSourceKey.FILED_HISTORY: "profile.journey.source.filed_history.title",
 }
 
-_SOURCE_DESCRIPTION_LOCALE_KEYS: dict[ProfileAcquisitionSourceKey, str] = {
+SOURCE_DESCRIPTION_LOCALE_KEYS: dict[ProfileAcquisitionSourceKey, str] = {
     ProfileAcquisitionSourceKey.CENSAL_REVIEW: "profile.journey.source.censal_review.description",
     ProfileAcquisitionSourceKey.FILED_HISTORY: "profile.journey.source.filed_history.description",
 }
 
-_SOURCE_ACTION_LOCALE_KEYS: dict[ProfileAcquisitionSourceKey, str] = {
+SOURCE_ACTION_LOCALE_KEYS: dict[ProfileAcquisitionSourceKey, str] = {
     ProfileAcquisitionSourceKey.CENSAL_REVIEW: "profile.journey.source.censal_review.action",
     ProfileAcquisitionSourceKey.FILED_HISTORY: "profile.journey.source.filed_history.action",
 }
 
 
-_PLANTILLA_MEDIA_SECTION = PLANTILLA_MEDIA_PATH.split(".", 1)[0]
+PLANTILLA_MEDIA_SECTION = PLANTILLA_MEDIA_PATH.split(".", 1)[0]
 
 """The non-repeatable section whose panel carries the average-workforce years."""
 
-_PLANTILLA_MEDIA_BUTTON_ID = "manager-plantilla-media"
+PLANTILLA_MEDIA_BUTTON_ID = "manager-plantilla-media"
 
-_CONTINUE_BUTTON_ID = "onboarding-continue"
+CONTINUE_BUTTON_ID = "onboarding-continue"
 
-_SETUP_TITLE_LOCALE_KEYS = {
+SETUP_TITLE_LOCALE_KEYS = {
     ProfileSetupStage.OVERVIEW: "flows.manager.setup.overview_title",
     ProfileSetupStage.GET_DATA: "flows.manager.setup.get_data_title",
     ProfileSetupStage.REQUIRED: "flows.manager.setup.required_title",
@@ -99,7 +99,7 @@ _SETUP_TITLE_LOCALE_KEYS = {
     ProfileSetupStage.READY: "flows.manager.setup.ready_title",
 }
 
-_SETUP_NAV_LOCALE_KEYS = {
+SETUP_NAV_LOCALE_KEYS = {
     ProfileSetupStage.OVERVIEW: "flows.manager.setup.nav_overview",
     ProfileSetupStage.GET_DATA: "flows.manager.setup.nav_get_data",
     ProfileSetupStage.REQUIRED: "flows.manager.setup.nav_required",
@@ -107,7 +107,7 @@ _SETUP_NAV_LOCALE_KEYS = {
     ProfileSetupStage.READY: "flows.manager.setup.nav_ready",
 }
 
-_SETUP_COPY_LOCALE_KEYS = {
+SETUP_COPY_LOCALE_KEYS = {
     ProfileSetupStage.OVERVIEW: "flows.manager.setup.overview_copy",
     ProfileSetupStage.GET_DATA: "flows.manager.setup.get_data_copy",
     ProfileSetupStage.REQUIRED: "flows.manager.setup.required_copy",
@@ -115,22 +115,22 @@ _SETUP_COPY_LOCALE_KEYS = {
     ProfileSetupStage.READY: "flows.manager.setup.ready_copy",
 }
 
-_SEARCH_ID = "manager-search"
+SEARCH_ID = "manager-search"
 
-_REQUIRED_ONLY_ID = "manager-required-only"
+REQUIRED_ONLY_ID = "manager-required-only"
 
-_SEARCH_SETTLE_SECONDS = 0.15
+SEARCH_SETTLE_SECONDS = 0.15
 
 """How long typing pauses before the sections are filtered again.
 
 Filtering rebuilds every section table, so doing it on each keystroke would
 make the box lag behind the operator's typing on a full profile."""
 
-_REQUIRED_MARK = "*"
+REQUIRED_MARK = "*"
 
 """Marks a field filing will eventually require."""
 
-_EDIT_DIALOG_CSS = tokenised("""
+EDIT_DIALOG_CSS = tokenised("""
 #edit-dialog {
     border: $cadrumo-radius-overlay $accent;
     background: $surface;

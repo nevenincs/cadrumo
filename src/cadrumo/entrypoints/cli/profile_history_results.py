@@ -1,6 +1,6 @@
 """Typed ``--json`` payload schemas for ``aeat config profile history``.
 
-The adjacent :mod:`cadrumo.entrypoints.cli._config_descendiente_payloads` owns
+The adjacent :mod:`cadrumo.entrypoints.cli.config_descendiente_payloads` owns
 the declared-descendant contract, leaving this module to carry append-only
 bucket history without coupling the payload families.
 

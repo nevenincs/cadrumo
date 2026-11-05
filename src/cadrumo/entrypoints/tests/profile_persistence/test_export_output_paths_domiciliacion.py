@@ -42,7 +42,7 @@ from cadrumo.core.payment_election import PaymentElection
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.buckets.event import BucketEventType
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
@@ -70,17 +70,17 @@ from cadrumo.domain.transactions.own_accounts import (
 )
 from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import build_verified_modelo_303_revision
 
-from ._export_output_paths_support import (
-    _baseline_justificante,
-    _own_account,
-    _product_software_identity,
-    _redeme_profile,
-    _register_own_account,
-    _typed_profile,
-    _typed_profile_with_charge_account,
-    _u_command,
-    _with_rederived_id,
+from .export_output_paths_support import (
     authored_export_clock,
+    export_output_paths_baseline_justificante,
+    own_account,
+    product_software_identity,
+    redeme_profile,
+    register_own_account,
+    typed_profile,
+    typed_profile_with_charge_account,
+    u_command,
+    with_rederived_id,
 )
 
 __all__ = ["authored_export_clock", "isolated_backend"]
@@ -93,7 +93,7 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
     tmp_path: Path,
 ) -> None:
     """Actual export and filing event ledgers retain proof coordinates, never accounts."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
             negative_result=True,
             casilla_111=Decimal("0"),
@@ -181,8 +181,8 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
             "amendment_reason": "correct prior direct-debit election",
         },
     )
-    rectificativa = _with_rederived_id(_amended)
-    baseline_justificante = _baseline_justificante(
+    rectificativa = with_rederived_id(_amended)
+    baseline_justificante = export_output_paths_baseline_justificante(
         baseline_evidence_reference,
         work_unit=work_unit,
         taxpayer_nif=taxpayer_nif,
@@ -190,7 +190,7 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
     )
     JustificanteRepository().save(baseline_justificante)
     calc_repo = CalculationRevisionCatalogueRepository(m303_rectificativa_taxpayer_tax_id=taxpayer_nif)
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         calc_repo.save(
             upsert_calculation_revision(
                 calc_repo.load(),
@@ -210,7 +210,7 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
         )
 
     output_path = tmp_path / "modelo-303-prior-domiciliation.txt"
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         result = export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id=rectificativa.calculation_revision_id,
@@ -218,9 +218,9 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
                 actor="operator",
                 prior_domiciliation_election=PriorDomiciliationElection.CANCEL_OR_MODIFY,
             ),
-            workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
+            workflow_profile=typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
             export_ports=modelo_export_ports_for_test(
-                product_software_identity=_product_software_identity(),
+                product_software_identity=product_software_identity(),
                 taxpayer_tax_id=taxpayer_nif,
                 work_unit=work_repo,
                 calculation=calc_repo,
@@ -252,7 +252,7 @@ def testprior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_pr
         verification_repository,
     )
     _, filing_baseline_revision_id = filing_repository.load_revisioned()
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         filing = persist_filed_revision(
             target=rectificativa,
             approved_verification_report_id=report_id,
@@ -292,22 +292,22 @@ def test_public_domiciliacion_per_filing_choice_overrides_the_charge_designation
     tmp_path: Path,
 ) -> None:
     """An explicit charge account wins over the designated one, and only its id is recorded."""
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
             positive_result=True,
             operation=operation,
         )
         designated = "ES7921000813610123456789"
         chosen = "ES9121000418450200051332"
-        _register_own_account(bucket_id, _own_account("Designada", designated), designate=(OwnAccountRole.CHARGE,))
-        chosen_id = _register_own_account(bucket_id, _own_account("Elegida", chosen))
+        register_own_account(bucket_id, own_account("Designada", designated), designate=(OwnAccountRole.CHARGE,))
+        chosen_id = register_own_account(bucket_id, own_account("Elegida", chosen))
         output_path = tmp_path / "modelo-303-chosen-charge.txt"
 
         result = export_modelo_revision(
-            _u_command(verified, output_path, charge_account_id=chosen_id),
-            workflow_profile=_typed_profile(taxpayer_nif=taxpayer_nif),
+            u_command(verified, output_path, charge_account_id=chosen_id),
+            workflow_profile=typed_profile(taxpayer_nif=taxpayer_nif),
             export_ports=modelo_export_ports_for_test(
-                product_software_identity=_product_software_identity(),
+                product_software_identity=product_software_identity(),
                 bucket_id=bucket_id,
                 taxpayer_tax_id=taxpayer_nif,
                 work_unit=work_repo,
@@ -351,23 +351,23 @@ def test_public_domiciliacion_refuses_an_unusable_charge_account_before_any_byte
     reason: str,
 ) -> None:
     """An unknown or closed own account is the missing-account refusal, named by its opaque id."""
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
             positive_result=True,
             operation=operation,
         )
-        details = _own_account("Cargo", "ES9121000418450200051332")
+        details = own_account("Cargo", "ES9121000418450200051332")
         if closed_on is not None:
             details = details.model_copy(update={"closed_on": date.fromisoformat(closed_on)})
-        _register_own_account(bucket_id, details, designate=(OwnAccountRole.CHARGE,))
+        register_own_account(bucket_id, details, designate=(OwnAccountRole.CHARGE,))
         output_path = tmp_path / "modelo-303-unusable-charge.txt"
 
         with pytest.raises(ModeloChargeAccountMissingError) as refused:
             export_modelo_revision(
-                _u_command(verified, output_path, charge_account_id=charge_account_id),
-                workflow_profile=_typed_profile(taxpayer_nif=taxpayer_nif),
+                u_command(verified, output_path, charge_account_id=charge_account_id),
+                workflow_profile=typed_profile(taxpayer_nif=taxpayer_nif),
                 export_ports=modelo_export_ports_for_test(
-                    product_software_identity=_product_software_identity(),
+                    product_software_identity=product_software_identity(),
                     bucket_id=bucket_id,
                     taxpayer_tax_id=taxpayer_nif,
                     work_unit=work_repo,
@@ -393,13 +393,13 @@ def test_public_ingreso_ignores_a_closed_charge_designation(
     tmp_path: Path,
 ) -> None:
     """A closed designated account blocks only the export that needs its role."""
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
             positive_result=True,
             operation=operation,
         )
-        closed = _own_account("Cargo", "ES9121000418450200051332").model_copy(update={"closed_on": date(2026, 1, 31)})
-        _register_own_account(bucket_id, closed, designate=(OwnAccountRole.CHARGE,))
+        closed = own_account("Cargo", "ES9121000418450200051332").model_copy(update={"closed_on": date(2026, 1, 31)})
+        register_own_account(bucket_id, closed, designate=(OwnAccountRole.CHARGE,))
         output_path = tmp_path / "modelo-303-ingreso-closed-designation.txt"
 
         result = export_modelo_revision(
@@ -409,9 +409,9 @@ def test_public_ingreso_ignores_a_closed_charge_designation(
                 actor="operator",
                 prior_domiciliation_election=PriorDomiciliationElection.KEEP,
             ),
-            workflow_profile=_typed_profile(taxpayer_nif=taxpayer_nif),
+            workflow_profile=typed_profile(taxpayer_nif=taxpayer_nif),
             export_ports=modelo_export_ports_for_test(
-                product_software_identity=_product_software_identity(),
+                product_software_identity=product_software_identity(),
                 bucket_id=bucket_id,
                 taxpayer_tax_id=taxpayer_nif,
                 work_unit=work_repo,
@@ -443,13 +443,13 @@ def test_public_refund_tipo_follows_the_refund_account_country(
     marca: str,
 ) -> None:
     """A devolución into a Spanish account is D; into a foreign one, X, with the DID page to match."""
-    with _indexed_authority_for_test().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
             negative_result=True,
             operation=operation,
         )
-        account_id = _register_own_account(
-            bucket_id, _own_account("Devolución", refund_iban), designate=(OwnAccountRole.REFUND,)
+        account_id = register_own_account(
+            bucket_id, own_account("Devolución", refund_iban), designate=(OwnAccountRole.REFUND,)
         )
         output_path = tmp_path / f"modelo-303-refund-{tipo}.txt"
 
@@ -460,9 +460,9 @@ def test_public_refund_tipo_follows_the_refund_account_country(
                 actor="operator",
                 prior_domiciliation_election=PriorDomiciliationElection.KEEP,
             ),
-            workflow_profile=_redeme_profile(taxpayer_nif=taxpayer_nif),
+            workflow_profile=redeme_profile(taxpayer_nif=taxpayer_nif),
             export_ports=modelo_export_ports_for_test(
-                product_software_identity=_product_software_identity(),
+                product_software_identity=product_software_identity(),
                 bucket_id=bucket_id,
                 taxpayer_tax_id=taxpayer_nif,
                 work_unit=work_repo,
@@ -499,7 +499,7 @@ def test_public_domiciliacion_without_persisted_charge_account_refuses(
     tmp_path: Path,
 ) -> None:
     """A persisted refund account never becomes a public U debit fallback."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         _taxpayer_nif, _bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
             positive_result=True,
             operation=_authority_operation_for_test,
@@ -515,9 +515,9 @@ def test_public_domiciliacion_without_persisted_charge_account_refuses(
                     prior_domiciliation_election=PriorDomiciliationElection.KEEP,
                     payment_election=PaymentElection.DOMICILIACION,
                 ),
-                workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=_taxpayer_nif, charge_iban=None),
+                workflow_profile=typed_profile_with_charge_account(taxpayer_nif=_taxpayer_nif, charge_iban=None),
                 export_ports=modelo_export_ports_for_test(
-                    product_software_identity=_product_software_identity(),
+                    product_software_identity=product_software_identity(),
                     taxpayer_tax_id=_taxpayer_nif,
                     work_unit=work_repo,
                     calculation=calc_repo,
@@ -535,7 +535,7 @@ def test_public_domiciliacion_with_a_foreign_charge_account_refuses_before_any_b
     tmp_path: Path,
 ) -> None:
     """A non-ES charge account is capability-refused until art. 5 bis is grounded."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
             positive_result=True,
             operation=_authority_operation_for_test,
@@ -551,13 +551,13 @@ def test_public_domiciliacion_with_a_foreign_charge_account_refuses_before_any_b
                     prior_domiciliation_election=PriorDomiciliationElection.KEEP,
                     payment_election=PaymentElection.DOMICILIACION,
                 ),
-                workflow_profile=_typed_profile_with_charge_account(
+                workflow_profile=typed_profile_with_charge_account(
                     taxpayer_nif=taxpayer_nif,
                     charge_iban="DE89370400440532013000",
                     bucket_id=bucket_id,
                 ),
                 export_ports=modelo_export_ports_for_test(
-                    product_software_identity=_product_software_identity(),
+                    product_software_identity=product_software_identity(),
                     bucket_id=bucket_id,
                     taxpayer_tax_id=taxpayer_nif,
                     work_unit=work_repo,
@@ -583,7 +583,7 @@ def test_public_cuenta_corriente_payment_election_is_capability_refused(
     tmp_path: Path,
 ) -> None:
     """G remains a typed but unavailable capability and never reads a charge account."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         _taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
             positive_result=True,
             operation=_authority_operation_for_test,
@@ -599,13 +599,13 @@ def test_public_cuenta_corriente_payment_election_is_capability_refused(
                     prior_domiciliation_election=PriorDomiciliationElection.KEEP,
                     payment_election=PaymentElection.CUENTA_CORRIENTE,
                 ),
-                workflow_profile=_typed_profile_with_charge_account(
+                workflow_profile=typed_profile_with_charge_account(
                     taxpayer_nif=_taxpayer_nif,
                     charge_iban="ES7921000813610123456789",
                     bucket_id=bucket_id,
                 ),
                 export_ports=modelo_export_ports_for_test(
-                    product_software_identity=_product_software_identity(),
+                    product_software_identity=product_software_identity(),
                     taxpayer_tax_id=_taxpayer_nif,
                     work_unit=work_repo,
                     calculation=calc_repo,
@@ -623,7 +623,7 @@ def test_public_ingreso_export_omits_did_page(
     tmp_path: Path,
 ) -> None:
     """A public positive ingreso export omits DID rather than emitting an empty account page."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         taxpayer_nif, _bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
             positive_result=True,
             operation=_authority_operation_for_test,
@@ -637,9 +637,9 @@ def test_public_ingreso_export_omits_did_page(
                 actor="operator",
                 prior_domiciliation_election=PriorDomiciliationElection.KEEP,
             ),
-            workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
+            workflow_profile=typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
             export_ports=modelo_export_ports_for_test(
-                product_software_identity=_product_software_identity(),
+                product_software_identity=product_software_identity(),
                 taxpayer_tax_id=taxpayer_nif,
                 work_unit=work_repo,
                 calculation=calc_repo,
@@ -665,7 +665,7 @@ def test_export_refuses_existing_directory_output_and_leaves_no_tmp_orphan(
     cleartext financial data in the orphaned ``.tmp`` file. Assert both the
     typed refusal and that no ``.tmp`` orphan remains on disk.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         taxpayer_nif, _bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
             operation=_authority_operation_for_test,
         )
@@ -682,9 +682,9 @@ def test_export_refuses_existing_directory_output_and_leaves_no_tmp_orphan(
                     actor="operator",
                     prior_domiciliation_election=PriorDomiciliationElection.KEEP,
                 ),
-                workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
+                workflow_profile=typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
                 export_ports=modelo_export_ports_for_test(
-                    product_software_identity=_product_software_identity(),
+                    product_software_identity=product_software_identity(),
                     taxpayer_tax_id=taxpayer_nif,
                     work_unit=work_repo,
                     calculation=calc_repo,
@@ -706,7 +706,7 @@ def test_export_refuses_empty_output_path(
     tmp_path: Path,
 ) -> None:
     """An empty / current-directory ``--output`` is refused before any write."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         taxpayer_nif, _bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
             operation=_authority_operation_for_test,
         )
@@ -719,9 +719,9 @@ def test_export_refuses_empty_output_path(
                     actor="operator",
                     prior_domiciliation_election=PriorDomiciliationElection.KEEP,
                 ),
-                workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
+                workflow_profile=typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
                 export_ports=modelo_export_ports_for_test(
-                    product_software_identity=_product_software_identity(),
+                    product_software_identity=product_software_identity(),
                     taxpayer_tax_id=taxpayer_nif,
                     work_unit=work_repo,
                     calculation=calc_repo,
@@ -738,12 +738,12 @@ def test_export_refuses_an_existing_file_unless_the_operator_chooses_to_replace_
     tmp_path: Path,
 ) -> None:
     """An earlier export is never silently destroyed; an explicit replace rewrites it identically."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = build_verified_modelo_303_revision(
             operation=_authority_operation_for_test,
         )
         output_path = tmp_path / "modelo-303.txt"
-        profile = _typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None)
+        profile = typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None)
 
         def export(*, replace_existing: bool, minute: int) -> ModeloExportResult:
             return export_modelo_revision(
@@ -756,7 +756,7 @@ def test_export_refuses_an_existing_file_unless_the_operator_chooses_to_replace_
                 ),
                 workflow_profile=profile,
                 export_ports=modelo_export_ports_for_test(
-                    product_software_identity=_product_software_identity(),
+                    product_software_identity=product_software_identity(),
                     taxpayer_tax_id=taxpayer_nif,
                     work_unit=work_repo,
                     calculation=calc_repo,

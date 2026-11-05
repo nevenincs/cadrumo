@@ -20,7 +20,7 @@ from ...storage.tests.secure_sql import (
     reset_secure_object_store,
 )
 from ...tests.runtime_profile_fixture import default_bucket_runtime_profile_fixture
-from ._invoice_confirmation_test_support import InvoiceAuthorityFixture
+from .invoice_confirmation_test_support import InvoiceAuthorityFixture
 from .ledger_action_persistence_support import BUCKET_ID
 from .published_authority_support import release_published_authority_operation
 

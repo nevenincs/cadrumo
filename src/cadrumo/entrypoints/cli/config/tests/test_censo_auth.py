@@ -81,7 +81,7 @@ def test_setup_rechecks_saved_readiness_before_allowing_remote_read(monkeypatch:
     monkeypatch.setattr(censo_authentication, "read_censo_auth", lambda _client: next(readings))
     monkeypatch.setattr(typer, "confirm", lambda *_args, **_kwargs: True)
     saved: list[bool] = []
-    monkeypatch.setattr(censo_authentication, "_configure", lambda *_args: saved.append(True))
+    monkeypatch.setattr(censo_authentication, "censo_authentication_configure", lambda *_args: saved.append(True))
     with pytest.raises(CliRefusedBoundaryError):
         censo_authentication.require_censo_auth(context)
     assert saved == [True]
@@ -91,7 +91,7 @@ def test_editing_is_explicitly_available_even_when_ready(monkeypatch: pytest.Mon
     context = _context(monkeypatch, output=OutputFormat.TEXT, console=True)
     monkeypatch.setattr(censo_authentication, "read_censo_auth", lambda _client: _readiness(ready=True))
     saved: list[bool] = []
-    monkeypatch.setattr(censo_authentication, "_configure", lambda *_args: saved.append(True))
+    monkeypatch.setattr(censo_authentication, "censo_authentication_configure", lambda *_args: saved.append(True))
     censo_authentication.require_censo_auth(context, configure=True)
     assert saved == [True]
 
@@ -113,5 +113,5 @@ def test_password_uses_protected_channel_and_is_erased(monkeypatch: pytest.Monke
         return SimpleNamespace(projection=SimpleNamespace(saved=True, provider="clave_permanente"))
 
     monkeypatch.setattr(censo_authentication, "run_registered_operation", submit)
-    censo_authentication._save_password(client, AuthProviderKind.CLAVE_PERMANENTE)
+    censo_authentication.save_password(client, AuthProviderKind.CLAVE_PERMANENTE)
     assert observed and not any(observed[0])

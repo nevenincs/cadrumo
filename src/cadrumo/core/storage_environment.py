@@ -221,7 +221,7 @@ def _environment_value(environ: Mapping[str, str], name: str, platform: StorageP
     return _checked_path_value(value).strip() or None
 
 
-def _normalized_absolute(path: PurePath) -> PurePath:
+def normalized_absolute(path: PurePath) -> PurePath:
     _checked_path_value(str(path))
     if not path.is_absolute():
         _refuse(StorageRootRefusal.NON_ABSOLUTE_PIN, "Storage path must be absolute.")
@@ -262,7 +262,7 @@ def normalize_storage_path(path: Path) -> Path:
     if not path.is_absolute():
         _refuse(StorageRootRefusal.NON_ABSOLUTE_PIN, "A child process requires an absolute storage root pin.")
     _refuse_links(path)
-    normalized = Path(_normalized_absolute(path))
+    normalized = Path(normalized_absolute(path))
     _refuse_links(normalized)
     return normalized
 
@@ -338,7 +338,7 @@ def _home_base(platform: StoragePlatform | None, environ: Mapping[str, str], pat
     return path_type(home)
 
 
-def _anchored_storage_root(
+def anchored_storage_root(
     *,
     platform: StoragePlatform | None,
     environ: Mapping[str, str],
@@ -367,7 +367,7 @@ def _anchored_storage_root(
 
 def storage_root_for(environ: Mapping[str, str], *, sys_platform: str | None = None) -> Path:
     """Resolve this host's storage root for ``environ``."""
-    resolved = _anchored_storage_root(
+    resolved = anchored_storage_root(
         platform=declared_platform(sys_platform),
         environ=environ,
         path_type=_host_path_type(),
@@ -390,7 +390,7 @@ def configured_storage_root(*, environ: Mapping[str, str] | None = None) -> Path
 
 def storage_root_override(value: str | Path) -> Path:
     """Validate and normalize one explicit root; a relative root is refused."""
-    anchored = _anchored_storage_root(
+    anchored = anchored_storage_root(
         platform=declared_platform(),
         environ={**os.environ, STORAGE_ROOT.variable: str(value)},
         path_type=_host_path_type(),
@@ -514,7 +514,7 @@ def _child_relay_settings(
             continue
         value = environment_in[name]
         if name in authority:
-            _normalized_absolute(_host_path_type()(_checked_path_value(value)))
+            normalized_absolute(_host_path_type()(_checked_path_value(value)))
         environment[name] = value
 
 

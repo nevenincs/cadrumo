@@ -40,7 +40,7 @@ from ....application.user_profile.censal_operation import (
 )
 from ....core.hashing import canonical_json_bytes
 from ....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
-from .operation_censal_exchange import _exchange
+from .operation_censal_exchange import exchange
 
 
 def _decode_censal_terminal(
@@ -91,7 +91,7 @@ def _expected_schema(
     )
 
 
-def _validate_contract(
+def validate_contract(
     client: FrontendClient, request: CensalOperationRequest, deadline: float
 ) -> OperationPublicDefinitionContractV1:
     contract = client.contract(CENSAL_OPERATION_DEFINITION_ID, deadline=deadline)
@@ -119,7 +119,7 @@ def _validate_contract(
     return contract
 
 
-def _resolve_review(
+def resolve_review(
     client: FrontendClient,
     *,
     profile_id: UUID,
@@ -135,7 +135,7 @@ def _resolve_review(
         session_id=session_id,
         review=OperationReviewProjectionRequestV1(reference=pending.review_reference),
     )
-    reply = _exchange(client, session_id, request, deadline=deadline)
+    reply = exchange(client, session_id, request, deadline=deadline)
     if (
         not isinstance(reply, OperationProjected)
         or reply.operation_id != operation_id
@@ -163,7 +163,7 @@ def _resolve_review(
     return success.projection
 
 
-def _validate_terminal(
+def validate_terminal(
     client: FrontendClient,
     observed: OperationObservationSuccessV1,
     *,

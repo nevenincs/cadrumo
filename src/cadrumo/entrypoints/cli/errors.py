@@ -44,8 +44,8 @@ import click
 import typer
 from pydantic import BaseModel, ValidationError
 
-from cadrumo_client.commands import errors as _client_commands_errors
-from cadrumo_client.commands.errors import CliUnexpectedBoundaryError as _CliUnexpectedBoundaryError
+from cadrumo_client.commands import errors
+from cadrumo_client.commands.errors import CliUnexpectedBoundaryError
 
 from ...application.cli_exception_preconditions import CliExceptionPrecondition
 from ...application.operator_actions.models import PreconditionVerdict
@@ -67,7 +67,7 @@ from ...domain.user_profile.errors import StoredProfileDriftError
 
 _log = logging.getLogger(__name__)
 
-_BOUNDARY_SUSPENDED: ContextVar[bool] = ContextVar("cadrumo_cli_error_boundary_suspended", default=False)
+BOUNDARY_SUSPENDED: ContextVar[bool] = ContextVar("cadrumo_cli_error_boundary_suspended", default=False)
 #: Dotted identifier of the command whose callback is currently executing,
 #: set by :func:`command_error_boundary` at entry so the error spine's
 #: ``command`` field can name the failing command (byte-identical to the
@@ -247,7 +247,7 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
         Wrapped callback with the original signature preserved.
     """
     existing = _WRAPPED_CALLBACKS.get(id(callback))
-    if existing is not None and _is_memoised_wrapper(existing):
+    if existing is not None and is_memoised_wrapper(existing):
         # Safe: _WRAPPED_CALLBACKS stores only the _wrapped closure produced
         # by THIS function from a callback[P, R] argument. The memo key is
         # id(callback), which uniquely identifies the object at this call site.
@@ -268,7 +268,7 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
                 return callback(*args, **kwargs)
             except Exception as error:
                 # Typer/Click control flow and the under-test override propagate untouched.
-                if _is_click_control_flow(error) or _BOUNDARY_SUSPENDED.get():
+                if _is_click_control_flow(error) or BOUNDARY_SUSPENDED.get():
                     raise
                 emit_error_and_exit(_project_boundary_error(error, callback))
         finally:
@@ -486,7 +486,7 @@ def _error_remedy_context(error: BaseException) -> dict[str, str] | None:
     reason = getattr(error, "reason", None)
     if reason is None and isinstance(error, CadrumoError):
         reason = (error.context or {}).get("reason")
-    if reason is None and isinstance(error, _client_commands_errors.CliRefusedBoundaryError) and error.args:
+    if reason is None and isinstance(error, errors.CliRefusedBoundaryError) and error.args:
         reason = error.args[0]
     remedy = connection_unavailable_remedy(reason if isinstance(reason, str) else None)
     remedy_context = {"remedy": remedy} if remedy is not None else None
@@ -604,12 +604,12 @@ def _boundary_no_recovery_verdict(error: CadrumoError) -> PreconditionVerdict | 
         CliExceptionPrecondition,
         cli_exception_no_recovery_verdict,
     )
-    from ._tty import NonTtyRefusedError
     from .config.errors import ConfigBoundaryError
+    from .tty import NonTtyRefusedError
 
     if isinstance(error, CliValidationBoundaryError):
         condition = CliExceptionPrecondition.VALIDATION_BOUNDARY
-    elif isinstance(error, _CliUnexpectedBoundaryError):
+    elif isinstance(error, CliUnexpectedBoundaryError):
         condition = CliExceptionPrecondition.UNEXPECTED_BOUNDARY
     elif isinstance(error, CliStoredDataValidationBoundaryError):
         condition = CliExceptionPrecondition.STORED_DATA_VALID
@@ -619,7 +619,7 @@ def _boundary_no_recovery_verdict(error: CadrumoError) -> PreconditionVerdict | 
         condition = CliExceptionPrecondition.CONFIG_BOUNDARY
     elif isinstance(error, NonTtyRefusedError):
         condition = CliExceptionPrecondition.STDIN_INTERACTIVE
-    elif isinstance(error, _client_commands_errors.CliRefusedBoundaryError):
+    elif isinstance(error, errors.CliRefusedBoundaryError):
         condition = CliExceptionPrecondition.REFUSAL_RETRIED
     else:
         return None
@@ -661,7 +661,7 @@ def emit_error_and_exit(error: CadrumoError) -> Never:
         if projection.requested_leaf is not None:
             command = projection.requested_leaf.subject_leaf_key
 
-    _client_commands_errors.log_cli_boundary_failure("cli_command", error)
+    errors.log_cli_boundary_failure("cli_command", error)
     code = get_registered_error_code(error)
     payload = render_error_payload(
         error,
@@ -724,7 +724,7 @@ def _callback_name(callback: Callable[..., object] | None) -> str:
     return callback.__class__.__name__
 
 
-def _is_memoised_wrapper(obj: object) -> TypeGuard[Callable[..., object]]:
+def is_memoised_wrapper(obj: object) -> TypeGuard[Callable[..., object]]:
     """Narrow ``obj`` to a callable produced by the command error boundary.
 
     The callable must have been produced by
@@ -748,7 +748,7 @@ def _supports_reconfigure(stream: object) -> TypeGuard[_ReconfigurableTextIO]:
     return hasattr(stream, "reconfigure")
 
 
-def _unwrap_cadrumo_error(error: BaseException) -> CadrumoError | None:
+def unwrap_cadrumo_error(error: BaseException) -> CadrumoError | None:
     """Return the typed :class:`CadrumoError` wrapped inside ``error``, if any.
 
     A library boundary (notably SQLAlchemy) can catch an
@@ -862,12 +862,12 @@ def _project_former_product_state(error: Exception, callback: Callable[..., obje
     from .common import attach_cli_policy_verdict
 
     return attach_cli_policy_verdict(
-        _client_commands_errors.CliRefusedBoundaryError(str(error)),
+        errors.CliRefusedBoundaryError(str(error)),
         verdict=former_product_state_verdict(FormerProductDetectionScope.STARTUP),
     )
 
 
-def _project_cadrumo_error(error: CadrumoError, callback: Callable[..., object]) -> CadrumoError:
+def project_cadrumo_error(error: CadrumoError, callback: Callable[..., object]) -> CadrumoError:
     """Forward a typed error, attaching boundary-owned terminal policy when proven."""
     from ...application.cli_exception_preconditions import (
         cli_exception_envelope_view,
@@ -965,7 +965,7 @@ def _storage_session_failure_verdict(error: CadrumoError) -> PreconditionVerdict
     )
 
 
-def _project_validation_error(error: ValidationError, callback: Callable[..., object]) -> CadrumoError:
+def project_validation_error(error: ValidationError, callback: Callable[..., object]) -> CadrumoError:
     """Log only validation structure, then wrap the input-time failure.
 
     The wrapped :class:`CliValidationBoundaryError` keeps the refusal SENTENCE
@@ -1004,8 +1004,8 @@ def _project_validation_error(error: ValidationError, callback: Callable[..., ob
 _ERROR_PROJECTIONS: tuple[_BoundaryProjectionRow, ...] = (
     _TypedProjection(StoredProfileDriftError, _project_stored_data_drift),
     _TypedProjection(FormerProductStateError, _project_former_product_state),
-    _TypedProjection(CadrumoError, _project_cadrumo_error),
-    _TypedProjection(ValidationError, _project_validation_error),
+    _TypedProjection(CadrumoError, project_cadrumo_error),
+    _TypedProjection(ValidationError, project_validation_error),
 )
 
 
@@ -1021,16 +1021,16 @@ def _project_unexpected(error: Exception, callback: Callable[..., object]) -> Ca
     where ``aeat config repair logs`` later echoes it back at the operator as if
     it were a live crash.
     """
-    wrapped = _unwrap_cadrumo_error(error)
+    wrapped = unwrap_cadrumo_error(error)
     if wrapped is not None:
-        return _project_cadrumo_error(wrapped, callback)
+        return project_cadrumo_error(wrapped, callback)
     # Exception messages and traceback locals may contain private input.
     _log.debug(
         "command_error_boundary: unexpected exception in %s type=%s",
         getattr(callback, "__name__", type(callback).__name__),
         type(error).__name__,
     )
-    return _CliUnexpectedBoundaryError(error)
+    return CliUnexpectedBoundaryError(error)
 
 
 def _project_boundary_error(error: Exception, callback: Callable[..., object]) -> CadrumoError:
@@ -1054,8 +1054,8 @@ def project_cli_boundary_error(error: Exception, callback: Callable[..., object]
         projected = row.apply(error, callback)
         if projected is not None:
             return projected
-    wrapped = _unwrap_cadrumo_error(error)
-    return _project_cadrumo_error(wrapped, callback) if wrapped is not None else _CliUnexpectedBoundaryError(error)
+    wrapped = unwrap_cadrumo_error(error)
+    return project_cadrumo_error(wrapped, callback) if wrapped is not None else CliUnexpectedBoundaryError(error)
 
 
 __all__ = [

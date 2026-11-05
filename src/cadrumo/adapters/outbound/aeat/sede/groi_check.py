@@ -57,22 +57,20 @@ from .....domain.calculations.registry.schema_base import EvidenceTier
 from ..browser.errors import BrowserError
 from ..browser.factory import default_browser_session_factory
 from ..browser.session import BrowserSession
-from ._adapter_utils import (
-    _LocateHelper,
-    _SedeCheckerModel,
+from .adapter_utils import (
+    LocateHelper,
+    SedeCheckerModel,
     assert_query_browser_action_for,
     assert_read_landing,
     extract_marker_verdict,
     make_locate_helper,
     require_playwright_page,
 )
-from ._browser_constants import (
-    PLAYWRIGHT_WAIT_NETWORKIDLE as _WAIT_NETWORKIDLE,
-)
-from ._browser_constants import (
+from .browser_constants import (
+    PLAYWRIGHT_WAIT_NETWORKIDLE,
     default_viewport,
 )
-from ._browser_stage import build_playwright_stage_runner
+from .browser_stage import build_playwright_stage_runner
 from .errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNavigationError, SedeParseError
 
 logger = get_logger(__name__)
@@ -150,7 +148,7 @@ def _assert_read_landing(page: Page) -> None:
     assert_groi_read_landing(getattr(page, "url", "") or "")
 
 
-def _assert_query_browser_action(action: str) -> None:
+def assert_query_browser_action(action: str) -> None:
     """Assert that ``action`` is permitted under the GROI read-only guard policy.
 
     Thin delegator to :func:`~._adapter_utils.assert_query_browser_action_for`
@@ -165,10 +163,10 @@ _playwright_stage = build_playwright_stage_runner(
     logger=logger,
 )
 
-_locate: _LocateHelper = make_locate_helper("GROI")
+_locate: LocateHelper = make_locate_helper("GROI")
 
 
-class GroiNifVerdict(_SedeCheckerModel):
+class GroiNifVerdict(SedeCheckerModel):
     """One observation per declared Spanish NIF after live navigation.
 
     ``verdict`` is the AEAT-rendered ROI-registration status: ``valid``
@@ -183,7 +181,7 @@ class GroiNifVerdict(_SedeCheckerModel):
     raw_evidence_locator: str | None = Field(default=None, max_length=512)
 
 
-class GroiResult(_SedeCheckerModel):
+class GroiResult(SedeCheckerModel):
     """Aggregate live-driver result across every declared Spanish NIF."""
 
     observations: tuple[GroiNifVerdict, ...] = ()
@@ -223,7 +221,7 @@ async def collect_groi_observations(
             # only DOM the verdict parser sees.
             await browser_session.navigate(page, Settings.external_constants().aeat.oracles.groi_check)
             await _playwright_stage(
-                page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=timeout_ms),
+                page.wait_for_load_state(PLAYWRIGHT_WAIT_NETWORKIDLE, timeout=timeout_ms),
                 stage="wait-form-networkidle",
                 description="GROI form network idle",
                 timeout_ms=timeout_ms,
@@ -264,7 +262,7 @@ async def _open_groi_form(page: Page, *, timeout_ms: int) -> None:
     retargeted the form to a different action (e.g., a write endpoint
     masquerading under the same URL), the driver refuses to submit.
     """
-    _assert_query_browser_action("open-groi-form")
+    assert_query_browser_action("open-groi-form")
     await _locate(
         page,
         _NIF_INPUT_SELECTORS,
@@ -316,7 +314,7 @@ async def _check_single_nif(
     timeout_ms: int,
 ) -> IdentityCheckVerdictValue:
     """Fill the form with one NIF, submit, scrape the rendered verdict."""
-    _assert_query_browser_action(f"check-nif-{nif}")
+    assert_query_browser_action(f"check-nif-{nif}")
     nif_input = await _locate(
         page,
         _NIF_INPUT_SELECTORS,
@@ -346,7 +344,7 @@ async def _check_single_nif(
         timeout_is_shape_change=True,
     )
     await _playwright_stage(
-        page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=timeout_ms),
+        page.wait_for_load_state(PLAYWRIGHT_WAIT_NETWORKIDLE, timeout=timeout_ms),
         stage=f"check-nif-{nif}:wait-response",
         description="GROI response network idle",
         timeout_ms=timeout_ms,
@@ -362,10 +360,10 @@ async def _check_single_nif(
         description="GROI response body text",
         timeout_ms=timeout_ms,
     )
-    return extract_marker_verdict(body_text, positive_markers=_POSITIVE_MARKERS)
+    return extract_marker_verdict(body_text, positive_markers=GROI_CHECK_POSITIVE_MARKERS)
 
 
-_POSITIVE_MARKERS: tuple[str, ...] = (
+GROI_CHECK_POSITIVE_MARKERS: tuple[str, ...] = (
     "consta un operador intracomunitario",
     "consta como operador intracomunitario",
     "operador intracomunitario identificado",

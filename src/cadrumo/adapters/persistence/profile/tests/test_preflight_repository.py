@@ -13,7 +13,7 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.ledger.preflight import preflight_ledger_tax_readiness
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.transactions.errors import TransactionValidationError
 from cadrumo.domain.transactions.models import TransactionCatalogue
 
@@ -34,7 +34,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
 def test_preflight_repository_path_loads_bucket_catalogue(secure_objects: SecureObjectRepository) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         objects = secure_objects
         repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
         repository.save(TransactionCatalogue.from_transactions((preflight_transaction("row-ready"),)))
@@ -53,7 +53,7 @@ def test_preflight_repository_path_loads_bucket_catalogue(secure_objects: Secure
 
 
 def test_preflight_default_repository_loads_active_runtime_bucket(tmp_path: Path) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
             TransactionCatalogueRepository(bucket_id=profile.bucket_id).save(
                 TransactionCatalogue.from_transactions((preflight_transaction("row-ready"),)),
@@ -72,7 +72,7 @@ def test_preflight_default_repository_loads_active_runtime_bucket(tmp_path: Path
 
 
 def test_preflight_rejects_repository_bucket_mismatch(secure_objects: SecureObjectRepository) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         objects = secure_objects
         with pytest.raises(TransactionValidationError, match="bucket_id"):
             preflight_ledger_tax_readiness(

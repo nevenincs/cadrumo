@@ -49,7 +49,7 @@ from ..storage.errors import StorageValidationError
 from ..storage.secure_object_namespaces import CALCULATION_OBSERVATIONS_NAMESPACE, PROFILE_PRORRATA_REGISTER_NAMESPACE
 from ..storage.sql.secure_object_records import SecureObjectRevisionAssertion
 from ..storage.sql.secure_objects import SecureObjectRepository
-from ._secure_model_document import (
+from .secure_model_document import (
     ProfileBareModelSecurePersistence,
     resolve_profile_secure_object_repository,
 )

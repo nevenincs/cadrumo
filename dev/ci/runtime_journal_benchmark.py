@@ -174,7 +174,7 @@ def observe_journal(recorder: JournalRecorder) -> Generator[None]:
     from cadrumo.application.journal_repository import JournalRepositoryBase
     from cadrumo.core import locks
 
-    acquire, release = locks._lock_acquired_before_deadline, locks._release_lock
+    acquire, release = locks.lock_acquired_before_deadline, locks.release_lock
 
     @functools.wraps(acquire)
     def acquired(fd: int, lock_path: Path, **kwargs: Any) -> bool:
@@ -212,8 +212,8 @@ def observe_journal(recorder: JournalRecorder) -> Generator[None]:
             recorder.finish(span, outcome, clock=released_at)
 
     with pytest.MonkeyPatch.context() as patch:
-        patch.setattr(locks, "_lock_acquired_before_deadline", acquired)
-        patch.setattr(locks, "_release_lock", released)
+        patch.setattr(locks, "lock_acquired_before_deadline", acquired)
+        patch.setattr(locks, "release_lock", released)
         for name in (
             "load",
             "read_existing",
@@ -226,7 +226,7 @@ def observe_journal(recorder: JournalRecorder) -> Generator[None]:
             "_advance_unlocked",
             "_load_unlocked",
         ):
-            _wrap(patch, recorder, journal._SnapshotJournalRepository, name, "journal." + name)
+            _wrap(patch, recorder, journal.SnapshotJournalRepository, name, "journal." + name)
         for name in ("_read_payload", "_decode_payload", "_write", "_write_payload"):
             _wrap(patch, recorder, JournalRepositoryBase, name, "record." + name.removeprefix("_"))
         for name in ("require_live_exact_unlocked", "replace_unlocked", "_record_unlocked"):

@@ -56,7 +56,7 @@ _FLOW_COPY = {
 }
 
 
-class _ImportDoor:
+class ImportDoor:
     """Records every preview and apply, answering with fixed synthetic counts."""
 
     def __init__(self) -> None:
@@ -99,7 +99,7 @@ class _SlowClassificationDoor(ClassificationDoor):
         )
 
 
-class _SlowImportDoor(_ImportDoor):
+class _SlowImportDoor(ImportDoor):
     def __init__(self) -> None:
         super().__init__()
         self.started = asyncio.Event()
@@ -113,7 +113,7 @@ class _SlowImportDoor(_ImportDoor):
         return self._outcome(request, dry_run=False)
 
 
-class _RefusingImportDoor(_ImportDoor):
+class _RefusingImportDoor(ImportDoor):
     """Refuses to apply with the application's own typed, translated error."""
 
     @override
@@ -125,7 +125,7 @@ class _RefusingImportDoor(_ImportDoor):
         )
 
 
-def _import_controller(door: _ImportDoor | None) -> LedgerWorkspaceController:
+def _import_controller(door: ImportDoor | None) -> LedgerWorkspaceController:
     return LedgerWorkspaceController(
         ledger_context(),
         ledger_projection(),
@@ -133,7 +133,7 @@ def _import_controller(door: _ImportDoor | None) -> LedgerWorkspaceController:
     )
 
 
-async def _preview(pilot: Pilot[None], screen: LedgerImportScreen, path: Path) -> None:
+async def ledger_flows_preview(pilot: Pilot[None], screen: LedgerImportScreen, path: Path) -> None:
     screen.query_one("#ledger-import-path", Input).value = str(path)
     screen.query_one("#ledger-import-preview-button", Button).press()
     await settle(pilot)
@@ -206,7 +206,7 @@ async def test_classification_is_explicit_confirmable_cancelable_and_catalogue_a
 async def test_import_previews_first_then_applies_exactly_the_previewed_request(tmp_path: Path) -> None:
     statement = tmp_path / "statement.csv"
     statement.write_text("date,amount\n", encoding="utf-8")
-    door = _ImportDoor()
+    door = ImportDoor()
     controller = _import_controller(door)
     screen = cast(
         "LedgerImportScreen",
@@ -217,7 +217,7 @@ async def test_import_previews_first_then_applies_exactly_the_previewed_request(
         async with app.run_test(size=(100, 60)) as pilot:
             await settle(pilot)
             cast("Select[str]", screen.query_one("#ledger-import-provider", Select)).value = LedgerProviderID.CSV.value
-            await _preview(pilot, screen, statement)
+            await ledger_flows_preview(pilot, screen, statement)
             assert screen.flow_state is LedgerFlowState.CONFIRMING
             assert door.previews == [
                 LedgerImportRequestV1(
@@ -247,12 +247,12 @@ async def test_import_previews_first_then_applies_exactly_the_previewed_request(
 async def test_import_cancel_after_preview_writes_nothing(tmp_path: Path) -> None:
     statement = tmp_path / "statement.csv"
     statement.write_text("date,amount\n", encoding="utf-8")
-    door = _ImportDoor()
+    door = ImportDoor()
     screen = LedgerImportScreen(_import_controller(door))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(100, 60)) as pilot:
         await settle(pilot)
-        await _preview(pilot, screen, statement)
+        await ledger_flows_preview(pilot, screen, statement)
         assert screen.flow_state is LedgerFlowState.CONFIRMING
         await pilot.press("escape")
         assert screen.flow_state is LedgerFlowState.CANCELLED
@@ -262,13 +262,13 @@ async def test_import_cancel_after_preview_writes_nothing(tmp_path: Path) -> Non
 
 @pytest.mark.asyncio
 async def test_import_refuses_an_absent_path_and_an_invoice_book_without_country(tmp_path: Path) -> None:
-    door = _ImportDoor()
+    door = ImportDoor()
     screen = LedgerImportScreen(_import_controller(door))
     app = ScreenHostApp[None](screen)
     with override_settings(cadrumo_output_language="en"):
         async with app.run_test(size=(100, 60)) as pilot:
             await settle(pilot)
-            await _preview(pilot, screen, tmp_path / "absent.csv")
+            await ledger_flows_preview(pilot, screen, tmp_path / "absent.csv")
             assert screen.flow_state is LedgerFlowState.EDITING
             assert "Nothing exists at" in str(screen.query_one("#ledger-refusal", Static).render())
             book = tmp_path / "received.csv"
@@ -279,11 +279,11 @@ async def test_import_refuses_an_absent_path_and_an_invoice_book_without_country
             await settle(pilot)
             assert not screen.query_one("#ledger-import-provider", Select).display
             screen.query_one("#ledger-import-country", Input).value = ""
-            await _preview(pilot, screen, book)
+            await ledger_flows_preview(pilot, screen, book)
             assert "two letters" in str(screen.query_one("#ledger-refusal", Static).render())
             assert not door.previews
             screen.query_one("#ledger-import-country", Input).value = "es"
-            await _preview(pilot, screen, book)
+            await ledger_flows_preview(pilot, screen, book)
             assert door.previews[-1].country == "ES"
             assert door.previews[-1].source_kind is LedgerImportSourceKind.INVOICES_RECEIVED
 
@@ -347,7 +347,7 @@ async def test_escape_is_refused_while_import_submission_is_in_flight(tmp_path: 
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(100, 60)) as pilot:
         await settle(pilot)
-        await _preview(pilot, screen, statement)
+        await ledger_flows_preview(pilot, screen, statement)
         screen.query_one("#ledger-import-confirm", Button).press()
         await settle_until(pilot, door.started.is_set, "the import to start applying", workers=False)
         assert screen.flow_state is LedgerFlowState.SUBMITTING
@@ -371,7 +371,7 @@ async def test_import_refusal_is_the_application_message_in_the_operator_languag
         app = ScreenHostApp[None](screen)
         async with app.run_test(size=(100, 60)) as pilot:
             await settle(pilot)
-            await _preview(pilot, screen, statement)
+            await ledger_flows_preview(pilot, screen, statement)
             screen.query_one("#ledger-import-confirm", Button).press()
             await settle(pilot)
             assert screen.flow_state is LedgerFlowState.FAILED
@@ -386,7 +386,7 @@ def test_import_area_is_refused_without_its_door() -> None:
     refusal = _import_controller(None).refusal_for(LedgerWorkspaceArea.IMPORT)
     assert refusal is not None
     assert refusal.reason_key == "tui.ledger.refusal.submission_unavailable"
-    assert _import_controller(_ImportDoor()).refusal_for(LedgerWorkspaceArea.IMPORT) is None
+    assert _import_controller(ImportDoor()).refusal_for(LedgerWorkspaceArea.IMPORT) is None
 
 
 def test_factory_refuses_undeclared_or_drifted_classification_action() -> None:
@@ -434,7 +434,7 @@ async def test_flow_copy_is_localized_while_semantic_choices_are_invariant(local
             review_action=ledger_review_action(),
             classify_action=ledger_classify_action(),
             classification_submitter=ClassificationDoor(),
-            import_door=_ImportDoor(),
+            import_door=ImportDoor(),
         ),
     )
     with override_settings(cadrumo_output_language=locale.value):
@@ -506,7 +506,7 @@ async def test_classification_flow_has_exact_focus_and_real_compositor_geometry(
 
 @pytest.mark.asyncio
 async def test_import_flow_starts_at_the_path_and_keeps_one_scroll_owner() -> None:
-    screen = LedgerImportScreen(_import_controller(_ImportDoor()))
+    screen = LedgerImportScreen(_import_controller(ImportDoor()))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
         await settle(pilot)
@@ -571,7 +571,7 @@ async def test_browse_mounts_a_tree_at_the_typed_folder_and_a_choice_fills_the_p
 
     statement = tmp_path / "statement.csv"
     statement.write_text("date,amount\n", encoding="utf-8")
-    screen = LedgerImportScreen(_import_controller(_ImportDoor()))
+    screen = LedgerImportScreen(_import_controller(ImportDoor()))
     async with ScreenHostApp[None](screen).run_test(size=(100, 60)) as pilot:
         await settle(pilot)
         assert not screen.query("#ledger-import-tree")

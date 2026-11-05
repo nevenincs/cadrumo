@@ -18,12 +18,12 @@ from ..components.widgets import (
     DisclosureGroup,
 )
 from .overview_contracts import (
-    _CONTINUE_BUTTON_ID,
-    _REQUIRED_ONLY_ID,
-    _SEARCH_ID,
-    _SETUP_COPY_LOCALE_KEYS,
-    _SETUP_NAV_LOCALE_KEYS,
-    _SETUP_TITLE_LOCALE_KEYS,
+    CONTINUE_BUTTON_ID,
+    REQUIRED_ONLY_ID,
+    SEARCH_ID,
+    SETUP_COPY_LOCALE_KEYS,
+    SETUP_NAV_LOCALE_KEYS,
+    SETUP_TITLE_LOCALE_KEYS,
 )
 from .setup_journey import SETUP_STAGES, ProfileSetupStage
 
@@ -50,7 +50,7 @@ class ProfileOverviewSetupRenderMixin:
         _render_setup_checklist(self, stage, missing)
         busy = self._pending_write is not None or self._pending_completion is not None
         _render_setup_navigation(self, overview, stage, index, done, busy)
-        button = self.query_one(f"#{_CONTINUE_BUTTON_ID}", Button)
+        button = self.query_one(f"#{CONTINUE_BUTTON_ID}", Button)
         button.disabled = busy
         if str(button.label) != action:
             button.label = action
@@ -70,7 +70,7 @@ class ProfileOverviewSetupNavigationMixin:
         self._walking = False
         self._setup_stage = stage
         self._query = ""
-        self.query_one(f"#{_SEARCH_ID}", Input).value = ""
+        self.query_one(f"#{SEARCH_ID}", Input).value = ""
         self.query_one("#manager-field-help", Static).display = False
         for section in self.overview.sections:
             self.query_one(f"#fold-{section.key}", DisclosureGroup).collapsed = (
@@ -79,7 +79,7 @@ class ProfileOverviewSetupNavigationMixin:
             )
         self.query_one("#manager-sources-fold", DisclosureGroup).collapsed = False
         await self._redraw()
-        self.query_one(f"#{_CONTINUE_BUTTON_ID}", Button).focus()
+        self.query_one(f"#{CONTINUE_BUTTON_ID}", Button).focus()
         self.call_after_refresh(
             self.query_one("#manager-body", ContentScroll).scroll_home, animate=False, immediate=True
         )
@@ -154,8 +154,8 @@ def _render_onboarding_prompts(screen: ProfileManagerScreen) -> None:
     """Keep setup prompts and search labels current in every manager mode."""
     screen.query_one("#manager-sources-summary", Static).update(tr("flows.manager.onboarding.sources_summary"))
     screen.query_one("#manager-sources-fold", DisclosureGroup).title = tr("flows.manager.onboarding.sources_title")
-    screen.query_one(f"#{_SEARCH_ID}", Input).placeholder = tr("flows.manager.onboarding.search_placeholder")
-    screen.query_one(f"#{_REQUIRED_ONLY_ID}", Checkbox).label = tr("flows.manager.onboarding.required_only")
+    screen.query_one(f"#{SEARCH_ID}", Input).placeholder = tr("flows.manager.onboarding.search_placeholder")
+    screen.query_one(f"#{REQUIRED_ONLY_ID}", Checkbox).label = tr("flows.manager.onboarding.required_only")
 
 
 def _setup_progress_values(
@@ -214,10 +214,10 @@ def _render_setup_copy(
 ) -> None:
     """Render the selected stage's title and explanatory copy."""
     title = screen.query_one("#onboarding-stage-title", Static)
-    title.update(tr(_SETUP_TITLE_LOCALE_KEYS[stage]))
+    title.update(tr(SETUP_TITLE_LOCALE_KEYS[stage]))
     title.set_class(stage is ProfileSetupStage.READY, "setup-success")
     screen.query_one("#onboarding-stage-copy", Static).update(
-        tr(_SETUP_COPY_LOCALE_KEYS[stage], missing=len(missing), total=total)
+        tr(SETUP_COPY_LOCALE_KEYS[stage], missing=len(missing), total=total)
     )
 
 
@@ -259,7 +259,7 @@ def _render_setup_navigation(
             ProfileSetupStage.READY: done,
         }[candidate]
         marker = "✓" if passed else str(position + 1)
-        stage_button.label = f"{marker} {tr(_SETUP_NAV_LOCALE_KEYS[candidate])}"
+        stage_button.label = f"{marker} {tr(SETUP_NAV_LOCALE_KEYS[candidate])}"
         stage_button.variant = "primary" if candidate is stage else "default"
         stage_button.set_class(candidate is stage, "setup-current")
         stage_button.disabled = busy or (candidate is ProfileSetupStage.READY and not done)
@@ -354,7 +354,7 @@ async def _settle_successful_completion(screen: ProfileManagerScreen, result: Pr
     await screen._redraw()
     screen.refresh_bindings()
     if screen._onboarding:
-        screen.query_one(f"#{_CONTINUE_BUTTON_ID}", Button).focus()
+        screen.query_one(f"#{CONTINUE_BUTTON_ID}", Button).focus()
     else:
         screen.query_one("#manager-status", PinnedStatusBar).show_success(tr("flows.manager.complete_setup.completed"))
 

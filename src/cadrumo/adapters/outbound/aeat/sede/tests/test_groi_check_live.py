@@ -29,9 +29,9 @@ from playwright.async_api import BrowserContext, Page
 from ......core.config import Settings
 from ......tests.live_gate import requires_live_enabled
 from ...browser.factory import default_browser_session_factory
-from .._adapter_utils import extract_marker_verdict
+from ..adapter_utils import extract_marker_verdict
 from ..groi_check import (
-    _POSITIVE_MARKERS,
+    GROI_CHECK_POSITIVE_MARKERS,
     collect_groi_observations,
 )
 
@@ -65,7 +65,7 @@ def test_groi_verdict_parser_recognises_live_telefonica_certification() -> None:
 
     requires_live_enabled()
     body_text = asyncio.run(_query_live_body_text(_PROBE_NIF))
-    assert extract_marker_verdict(body_text, positive_markers=_POSITIVE_MARKERS) == "valid", body_text[:500]
+    assert extract_marker_verdict(body_text, positive_markers=GROI_CHECK_POSITIVE_MARKERS) == "valid", body_text[:500]
 
 
 @asynccontextmanager

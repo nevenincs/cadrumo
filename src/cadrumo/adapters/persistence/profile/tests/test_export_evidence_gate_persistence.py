@@ -24,9 +24,7 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -136,7 +134,7 @@ def _revision(
 def test_export_service_refuses_ledger_revision_without_evidence_reference(
     active_profile: None, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         revision = _revision(
             work_unit=_persisted_work_unit(operation=operation), source_transaction_ids=(_TX_ID,), operation=operation
         )

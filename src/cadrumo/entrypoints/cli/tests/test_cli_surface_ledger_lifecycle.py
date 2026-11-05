@@ -13,13 +13,13 @@ from click.testing import Result
 
 from ....core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER
 from ....domain.invoices.tests.catalogue_support import build_invoice_catalogue
-from ....tests.cli_envelope import unwrap_cli_result as _json
+from ....tests.cli_envelope import unwrap_cli_result
 from ....tests.cli_json_support import require_json_object
 from .profile_world_fixtures import cli_surface_isolated_backend
 from .scenario_support import (
-    _active_bucket_id,
-    _invoke,
+    active_bucket_id,
     create_cli_surface_profile,
+    invoke,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
@@ -34,7 +34,7 @@ def _exit_code(result: Result) -> int:
 
 
 def _create_manual_ledger_row(description: str, *, amount: str = "25.00", key: str) -> dict[str, object]:
-    result = _invoke(
+    result = invoke(
         [
             "--format",
             "json",
@@ -54,7 +54,7 @@ def _create_manual_ledger_row(description: str, *, amount: str = "25.00", key: s
         ],
     )
     assert result.exit_code == 0, result.output
-    return require_json_object(_json(result))
+    return require_json_object(unwrap_cli_result(result))
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,7 +79,7 @@ class _LedgerLifecycleOutcome:
 def _drive_ledger_lifecycle_round_trip(tmp_path: Path) -> _LedgerLifecycleOutcome:
     """Drive the lifecycle round-trip: attach -> archive -> stash -> remove -> export -> reset."""
     create_cli_surface_profile(log_in=False)
-    bucket_id = _active_bucket_id()
+    bucket_id = active_bucket_id()
 
     purchase_evidence_id = _seed_purchase_invoice_evidence(bucket_id)
 
@@ -147,7 +147,7 @@ def _seed_purchase_invoice_evidence(bucket_id: str) -> str:
 def _ledger_lifecycle_attach(*, purchase_invoice_evidence_id: str) -> dict[str, object]:
     """Create a manual ledger row and attach the purchase-invoice evidence reference."""
     row = _create_manual_ledger_row("attach evidence row", amount="121.00", key="cli-attach-row")
-    attached = _invoke(
+    attached = invoke(
         [
             "--format",
             "json",
@@ -160,13 +160,13 @@ def _ledger_lifecycle_attach(*, purchase_invoice_evidence_id: str) -> dict[str, 
         ],
     )
     assert attached.exit_code == 0, attached.output
-    return require_json_object(_json(attached))
+    return require_json_object(unwrap_cli_result(attached))
 
 
 def _ledger_lifecycle_lifecycle_transition(verb: str, *, reason: str, key: str) -> dict[str, object]:
     """Drive one ``app ledger <verb> <id> --reason ... --yes`` lifecycle transition."""
     row = _create_manual_ledger_row(f"{verb} row", key=key)
-    result = _invoke(
+    result = invoke(
         [
             "--format",
             "json",
@@ -180,28 +180,32 @@ def _ledger_lifecycle_lifecycle_transition(verb: str, *, reason: str, key: str) 
         ],
     )
     assert result.exit_code == 0, result.output
-    return require_json_object(_json(result))
+    return require_json_object(unwrap_cli_result(result))
 
 
 def _ledger_lifecycle_remove() -> tuple[dict[str, object], int, dict[str, object]]:
     """Drive the three-step remove flow: --dry-run, refused (no --yes), confirmed --yes."""
     remove_row = _create_manual_ledger_row("remove row", key="cli-remove-row")
-    dry = _invoke(
+    dry = invoke(
         ["--format", "json", "app", "ledger", "remove", str(remove_row["transaction_id"]), "--dry-run"],
     )
     assert dry.exit_code == 0, dry.output
-    refused = _invoke(["--format", "json", "app", "ledger", "remove", str(remove_row["transaction_id"])])
-    confirmed = _invoke(
+    refused = invoke(["--format", "json", "app", "ledger", "remove", str(remove_row["transaction_id"])])
+    confirmed = invoke(
         ["--format", "json", "app", "ledger", "remove", str(remove_row["transaction_id"]), "--yes"],
     )
     assert confirmed.exit_code == 0, confirmed.output
-    return require_json_object(_json(dry)), _exit_code(refused), require_json_object(_json(confirmed))
+    return (
+        require_json_object(unwrap_cli_result(dry)),
+        _exit_code(refused),
+        require_json_object(unwrap_cli_result(confirmed)),
+    )
 
 
 def _ledger_lifecycle_export(tmp_path: Path) -> tuple[dict[str, object], Path]:
     """Drive the ledger export to a JSONL file under ``tmp_path``."""
     export_path = tmp_path / "ledger-export.jsonl"
-    exported = _invoke(
+    exported = invoke(
         [
             "--format",
             "json",
@@ -216,17 +220,21 @@ def _ledger_lifecycle_export(tmp_path: Path) -> tuple[dict[str, object], Path]:
         ],
     )
     assert exported.exit_code == 0, exported.output
-    return require_json_object(_json(exported)), export_path
+    return require_json_object(unwrap_cli_result(exported)), export_path
 
 
 def _ledger_lifecycle_reset() -> tuple[dict[str, object], int, dict[str, object]]:
     """Drive the three-step reset flow: --dry-run, refused (no --yes), confirmed --yes."""
-    dry = _invoke(["--format", "json", "app", "ledger", "reset", "--dry-run"])
+    dry = invoke(["--format", "json", "app", "ledger", "reset", "--dry-run"])
     assert dry.exit_code == 0, dry.output
-    refused = _invoke(["--format", "json", "app", "ledger", "reset", "--reason", "test cleanup"])
-    confirmed = _invoke(["--format", "json", "app", "ledger", "reset", "--reason", "test cleanup", "--yes"])
+    refused = invoke(["--format", "json", "app", "ledger", "reset", "--reason", "test cleanup"])
+    confirmed = invoke(["--format", "json", "app", "ledger", "reset", "--reason", "test cleanup", "--yes"])
     assert confirmed.exit_code == 0, confirmed.output
-    return require_json_object(_json(dry)), _exit_code(refused), require_json_object(_json(confirmed))
+    return (
+        require_json_object(unwrap_cli_result(dry)),
+        _exit_code(refused),
+        require_json_object(unwrap_cli_result(confirmed)),
+    )
 
 
 def test_app_ledger_lifecycle_round_trip_exercises_mutating_surfaces(

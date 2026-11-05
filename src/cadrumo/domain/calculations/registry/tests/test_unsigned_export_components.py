@@ -8,7 +8,7 @@ from ..errors import RegistryValidationError
 from ..export_parse import parse_export_payload
 from ..export_value_policy import ExportValuePolicy, ParsedExportPolicyWireValue
 from ..schema_exports import ExportFieldDefinition, ExportLayoutDefinition, ExportRecordDefinition
-from .test_export_value_policy import _field
+from .test_export_value_policy import field
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
@@ -17,8 +17,8 @@ def _components(
     *, fraction_length: int = 2, fraction_offset: int = 6, fraction_casilla: str = "01"
 ) -> tuple[ExportFieldDefinition, ...]:
     return (
-        _field(ExportValuePolicy.INTEGER_PART, field_id="integer", length=5),
-        _field(
+        field(ExportValuePolicy.INTEGER_PART, field_id="integer", length=5),
+        field(
             ExportValuePolicy.FRACTIONAL_DIGITS,
             field_id="fraction",
             casilla_id=fraction_casilla,

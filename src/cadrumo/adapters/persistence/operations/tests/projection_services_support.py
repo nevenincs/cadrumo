@@ -68,28 +68,28 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
 )
 
-_NOW = datetime(2026, 8, 24, 12, tzinfo=UTC)
+NOW = datetime(2026, 8, 24, 12, tzinfo=UTC)
 
 
-_OPERATION_ID = "1" * 64
+OPERATION_ID = "1" * 64
 
 
-_INTERACTION_ID = "2" * 64
+INTERACTION_ID = "2" * 64
 
 
-_TOKEN = "3" * 64
+TOKEN = "3" * 64
 
 
-_PROPOSAL = "4" * 64
+PROPOSAL = "4" * 64
 
 
-_DEFINITION_ID = "operations.projection.test"
+DEFINITION_ID = "operations.projection.test"
 
 
-_REFUSAL_CODE = "REFUSED_OPERATION_SUBJECT_BUSY"
+REFUSAL_CODE = "REFUSED_OPERATION_SUBJECT_BUSY"
 
 
-_REFUSAL_SENTINEL = "PRIVATE-REFUSAL-DETAIL-SENTINEL"
+REFUSAL_SENTINEL = "PRIVATE-REFUSAL-DETAIL-SENTINEL"
 
 
 class ProjectionRequest(BaseModel):
@@ -157,23 +157,23 @@ def _project_review(operand: BaseModel, interaction: OperationInteractionRequest
     return SafeReviewProjection(summary_code=ReviewedOperand.model_validate(operand).summary_code)
 
 
-def _project_result(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
+def project_result(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
     del receipt
     return PublicProjectionResult(result_code=ProjectionResult.model_validate(result).result_code)
 
 
-def _project_refusal_detail(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
+def project_refusal_detail(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
     """Release only the declared detail code for its exact refused terminal."""
     if (
         type(result) is not PrivateRefusalDetail
         or receipt.condition is not OperationTerminalCondition.REFUSED
-        or receipt.refusal_ref != _REFUSAL_CODE
+        or receipt.refusal_ref != REFUSAL_CODE
     ):
         raise TypeError("refusal detail does not match its registered refused terminal")
     return PublicRefusalDetail(detail_code=result.detail_code)
 
 
-def _unsafe_result_projection(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
+def unsafe_result_projection(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
     del result, receipt
     return SafeReviewProjection(summary_code="wrong-model")
 
@@ -183,17 +183,17 @@ def _refresh_target(receipt: OperationTerminalReceipt) -> BaseModel:
     return WorkspaceRefreshTarget(workspace_coordinate="profile:active")
 
 
-def _unsafe_review_projection(operand: BaseModel, interaction: OperationInteractionRequest) -> BaseModel:
+def unsafe_review_projection(operand: BaseModel, interaction: OperationInteractionRequest) -> BaseModel:
     del operand, interaction
     return WorkspaceRefreshTarget(workspace_coordinate="wrong-model")
 
 
-def _unsafe_refresh_target(receipt: OperationTerminalReceipt) -> BaseModel:
+def unsafe_refresh_target(receipt: OperationTerminalReceipt) -> BaseModel:
     del receipt
     return SafeReviewProjection(summary_code="wrong-model")
 
 
-def _registry(
+def projection_services_registry(
     *,
     close_policy: OperationClosePolicy = OperationClosePolicy.DETACH_ALLOWED,
     review_projector: Callable[[BaseModel, OperationInteractionRequest], BaseModel] = _project_review,
@@ -218,7 +218,7 @@ def _registry(
         close_policy=close_policy,
     )
     definition = OperationDefinition(
-        definition_id=_DEFINITION_ID,
+        definition_id=DEFINITION_ID,
         request_type=ProjectionRequest,
         subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=result_type,
@@ -272,25 +272,27 @@ def _registry(
     return OperationRegistry(definitions=(definition,), public_registrations=(registration,))
 
 
-def _lease() -> OperationOwnerLease:
+def projection_services_lease() -> OperationOwnerLease:
     return OperationOwnerLease(
-        operation_id=_OPERATION_ID,
-        scope_ref=operation_conflict_scope_reference(definition_id=_DEFINITION_ID, subject_ref="profile:active"),
+        operation_id=OPERATION_ID,
+        scope_ref=operation_conflict_scope_reference(definition_id=DEFINITION_ID, subject_ref="profile:active"),
         owner_id="5" * 64,
         token="6" * 64,
-        acquired_at=_NOW,
-        expires_at=_NOW + timedelta(hours=1),
+        acquired_at=NOW,
+        expires_at=NOW + timedelta(hours=1),
     )
 
 
-def _pending(registry: OperationRegistry, *, proposal: str = _PROPOSAL) -> OperationPendingInteraction:
-    contract = registry.lookup_public_contract(_DEFINITION_ID)
+def projection_services_pending(
+    registry: OperationRegistry, *, proposal: str = PROPOSAL
+) -> OperationPendingInteraction:
+    contract = registry.lookup_public_contract(DEFINITION_ID)
     assert contract.interaction_response_schema is not None
     request = OperationInteractionRequest(
-        interaction_id=_INTERACTION_ID,
+        interaction_id=INTERACTION_ID,
         identity=OperationIdentity(
-            operation_id=_OPERATION_ID,
-            definition_id=_DEFINITION_ID,
+            operation_id=OPERATION_ID,
+            definition_id=DEFINITION_ID,
             subject_ref="profile:active",
         ),
         revision=0,
@@ -298,37 +300,37 @@ def _pending(registry: OperationRegistry, *, proposal: str = _PROPOSAL) -> Opera
         presentation_code="projection.review.ready",
         response_schema_ref=operation_public_schema_reference(contract.interaction_response_schema),
         continuation_digest="7" * 64,
-        expires_at=_NOW + timedelta(minutes=30),
+        expires_at=NOW + timedelta(minutes=30),
     )
     return OperationPendingInteraction.bind(
         request=request,
-        response_token=_TOKEN,
+        response_token=TOKEN,
         reviewed_proposal_digest=proposal,
         baseline_digest="9" * 64,
         proposed_effect_digest="a" * 64,
     )
 
 
-def _waiting_snapshot(registry: OperationRegistry, pending: OperationPendingInteraction) -> OperationPersistedSnapshot:
+def waiting_snapshot(registry: OperationRegistry, pending: OperationPendingInteraction) -> OperationPersistedSnapshot:
     identity = pending.request.identity
     event = OperationInteractionEvent(
         identity=identity,
         revision=0,
         sequence=1,
-        timestamp=_NOW,
+        timestamp=NOW,
         code="operation.interaction.pending",
         interaction_id=pending.request.interaction_id,
     )
     return OperationPersistedSnapshot(
         identity=identity,
-        definition_contract_digest=registry.lookup_public_contract(_DEFINITION_ID).definition_contract_digest,
+        definition_contract_digest=registry.lookup_public_contract(DEFINITION_ID).definition_contract_digest,
         request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
         request_reference="8" * 64,
         revision=0,
         lifecycle=OperationLifecycle.WAITING_FOR_INTERACTION,
-        started_at=_NOW,
-        updated_at=_NOW,
-        execution_deadline=_NOW + timedelta(hours=1),
+        started_at=NOW,
+        updated_at=NOW,
+        execution_deadline=NOW + timedelta(hours=1),
         cleanup_deadline=None,
         cancellation_requested_at=None,
         cancellation_acknowledged_at=None,
@@ -339,31 +341,31 @@ def _waiting_snapshot(registry: OperationRegistry, pending: OperationPendingInte
     )
 
 
-def _running_snapshot(registry: OperationRegistry) -> OperationPersistedSnapshot:
+def running_snapshot(registry: OperationRegistry) -> OperationPersistedSnapshot:
     identity = OperationIdentity(
-        operation_id=_OPERATION_ID,
-        definition_id=_DEFINITION_ID,
+        operation_id=OPERATION_ID,
+        definition_id=DEFINITION_ID,
         subject_ref="profile:active",
     )
     event = OperationPhaseEvent(
         identity=identity,
         revision=0,
         sequence=1,
-        timestamp=_NOW,
+        timestamp=NOW,
         code="projection.running",
         phase_code="projection.running",
     )
     return OperationPersistedSnapshot(
         identity=identity,
-        definition_contract_digest=registry.lookup_public_contract(_DEFINITION_ID).definition_contract_digest,
+        definition_contract_digest=registry.lookup_public_contract(DEFINITION_ID).definition_contract_digest,
         request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
         request_reference="8" * 64,
         revision=0,
         lifecycle=OperationLifecycle.RUNNING,
         phase_code="projection.running",
-        started_at=_NOW,
-        updated_at=_NOW,
-        execution_deadline=_NOW + timedelta(hours=1),
+        started_at=NOW,
+        updated_at=NOW,
+        execution_deadline=NOW + timedelta(hours=1),
         cleanup_deadline=None,
         cancellation_requested_at=None,
         cancellation_acknowledged_at=None,
@@ -373,7 +375,7 @@ def _running_snapshot(registry: OperationRegistry) -> OperationPersistedSnapshot
     )
 
 
-def _terminal_snapshot(
+def terminal_snapshot(
     registry: OperationRegistry,
     *,
     result_ref: str = "result:projection-complete",
@@ -381,13 +383,13 @@ def _terminal_snapshot(
     effect: OperationEffect = OperationEffect.UPDATED,
     failure_error_code: str | None = None,
 ) -> OperationPersistedSnapshot:
-    running = _running_snapshot(registry)
+    running = running_snapshot(registry)
     receipt = OperationTerminalReceipt(
         identity=running.identity,
         revision=1,
         condition=condition,
         effect=effect,
-        settled_at=_NOW + timedelta(minutes=1),
+        settled_at=NOW + timedelta(minutes=1),
         result_ref=result_ref,
         failure_error_code=failure_error_code,
     )
@@ -415,21 +417,21 @@ def _terminal_snapshot(
     )
 
 
-def _refused_snapshot(
+def refused_snapshot(
     registry: OperationRegistry,
     *,
     detail_ref: str,
     effect: OperationEffect = OperationEffect.UNKNOWN,
 ) -> OperationPersistedSnapshot:
     """Build one durable refused receipt with a separate encrypted-detail reference."""
-    running = _running_snapshot(registry)
+    running = running_snapshot(registry)
     receipt = OperationTerminalReceipt(
         identity=running.identity,
         revision=1,
         condition=OperationTerminalCondition.REFUSED,
         effect=effect,
-        settled_at=_NOW + timedelta(minutes=1),
-        refusal_ref=_REFUSAL_CODE,
+        settled_at=NOW + timedelta(minutes=1),
+        refusal_ref=REFUSAL_CODE,
         refusal_detail_ref=detail_ref,
     )
     event = OperationTerminalEvent(
@@ -456,7 +458,7 @@ def _refused_snapshot(
     )
 
 
-def _observe_refused_operation(
+def observe_refused_operation(
     repository: OperationJournalRepository,
     registry: OperationRegistry,
     *,
@@ -465,20 +467,20 @@ def _observe_refused_operation(
     """Re-read the durable public lifecycle independently of result projection."""
     observed = asyncio.run(
         OperationObservationService(reader=repository, registry=registry).observe(
-            OperationObservationRequestV1(operation_id=_OPERATION_ID, after_cursor=0, page_limit=32)
+            OperationObservationRequestV1(operation_id=OPERATION_ID, after_cursor=0, page_limit=32)
         )
     )
     assert isinstance(observed, OperationObservationSuccessV1)
     assert observed.projection.lifecycle is OperationLifecycle.TERMINAL
     assert observed.projection.terminal_condition is OperationTerminalCondition.REFUSED
-    assert observed.projection.refusal_ref == _REFUSAL_CODE
+    assert observed.projection.refusal_ref == REFUSAL_CODE
     assert observed.projection.effect is expected_effect
     assert observed.projection.result_ref is None
     return observed
 
 
-def _write(root: Path, repository: OperationJournalRepository, snapshot: OperationPersistedSnapshot) -> None:
-    lease = _lease()
-    observed = asyncio.run(OperationLeaseFilesystemRepository(storage_root=root).acquire(lease, observed_at=_NOW))
+def write(root: Path, repository: OperationJournalRepository, snapshot: OperationPersistedSnapshot) -> None:
+    lease = projection_services_lease()
+    observed = asyncio.run(OperationLeaseFilesystemRepository(storage_root=root).acquire(lease, observed_at=NOW))
     assert observed.current == lease
     asyncio.run(repository.create(snapshot, lease=lease))

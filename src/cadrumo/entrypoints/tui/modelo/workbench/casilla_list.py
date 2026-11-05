@@ -46,8 +46,7 @@ from textual.strip import Strip
 from .....core.external_constants import OutputLanguage
 from ...components.app_access import TypedAppAccess
 from ...components.theme import tokenised
-from . import casilla_list_models as _models
-from . import casilla_list_values as _values
+from . import casilla_list_models, casilla_list_values
 from .casilla_list_layout import CasillaListLayoutMixin
 from .casilla_list_navigation import CasillaListNavigationMixin
 from .casilla_list_rendering import CasillaListRenderingMixin
@@ -159,13 +158,13 @@ class CasillaList(
     class Highlighted(Message):
         """The cursor now rests on a field, or on nothing."""
 
-        def __init__(self, entry: _models.CasillaListEntry | None) -> None:
+        def __init__(self, entry: casilla_list_models.CasillaListEntry | None) -> None:
             """Carry the field now under the cursor."""
             super().__init__()
             self.entry = entry
 
     class _AddressMessage(Message):
-        def __init__(self, entry: _models.CasillaListEntry) -> None:
+        def __init__(self, entry: casilla_list_models.CasillaListEntry) -> None:
             """Carry the field the filer acted on."""
             super().__init__()
             self.entry = entry
@@ -184,18 +183,18 @@ class CasillaList(
 
     def __init__(
         self,
-        items: tuple[_models.CasillaListItem, ...] = (),
+        items: tuple[casilla_list_models.CasillaListItem, ...] = (),
         *,
         language: OutputLanguage,
-        density: _models.Density = "comfortable",
+        density: casilla_list_models.Density = "comfortable",
         id: str | None = None,
     ) -> None:
         """Hold the page's items; lines are laid out when the width is known."""
         super().__init__(id=id)
-        self._items: tuple[_models.CasillaListItem, ...] = items
+        self._items: tuple[casilla_list_models.CasillaListItem, ...] = items
         self._language = language
-        self._density: _models.Density = density
-        self._cursor: _models.AddressKey | None = None
+        self._density: casilla_list_models.Density = density
+        self._cursor: casilla_list_models.AddressKey | None = None
         #: Rows after the cursor's field kept in view when the list scrolls down to it.
         self._following = 0
         #: The grid column the cursor keeps while it moves up and down through a table.
@@ -203,7 +202,7 @@ class CasillaList(
         self._starts: list[int] = []
         self._heights: list[int] = []
         self._owner: list[int] = []
-        self._tables: dict[int, _models._TableRow] = {}
+        self._tables: dict[int, casilla_list_models.TableRow] = {}
         self._cell_of: dict[int, tuple[int, int]] = {}
         self._stacked: frozenset[int] = frozenset()
         self._records: dict[int, tuple[tuple[str, str], ...]] = {}
@@ -214,12 +213,12 @@ class CasillaList(
     # ── public surface ───────────────────────────────────────────────────
 
     @property
-    def items(self) -> tuple[_models.CasillaListItem, ...]:
+    def items(self) -> tuple[casilla_list_models.CasillaListItem, ...]:
         """The items currently shown."""
         return self._items
 
     @property
-    def highlighted(self) -> _models.CasillaListEntry | None:
+    def highlighted(self) -> casilla_list_models.CasillaListEntry | None:
         """The field under the cursor, if any."""
         index = self._cursor_index()
         return None if index is None else self._entry_at(index)
@@ -232,11 +231,13 @@ class CasillaList(
         return index is not None and index in self._cell_of
 
     @property
-    def density(self) -> _models.Density:
+    def density(self) -> casilla_list_models.Density:
         """Whether fields take one line or two."""
         return self._density
 
-    def set_items(self, items: tuple[_models.CasillaListItem, ...], *, language: OutputLanguage | None = None) -> None:
+    def set_items(
+        self, items: tuple[casilla_list_models.CasillaListItem, ...], *, language: OutputLanguage | None = None
+    ) -> None:
         """Replace the items, keeping the cursor on the same address when it is still shown."""
         self._items = items
         if language is not None:
@@ -249,7 +250,7 @@ class CasillaList(
         self.refresh()
         self.post_message(self.Highlighted(self.highlighted))
 
-    def set_density(self, density: _models.Density) -> None:
+    def set_density(self, density: casilla_list_models.Density) -> None:
         """Show fields on one line or two."""
         self._density = density
         self._laid_out_width = -1
@@ -267,7 +268,7 @@ class CasillaList(
         bindings = self._bindings.key_to_bindings.get(key)
         return bindings[0] if (bindings is not None and bindings) else None
 
-    def focus_address(self, key: _models.AddressKey) -> bool:
+    def focus_address(self, key: casilla_list_models.AddressKey) -> bool:
         """Put the cursor on one address, or bring the table of records showing it into view.
 
         A column of a repeating group's records is no field the cursor rests
@@ -276,7 +277,7 @@ class CasillaList(
         is unknown. ``False`` when this page shows the address nowhere.
         """
         for index, item in enumerate(self._items):
-            if isinstance(item, _models.CasillaListEntry) and item.key == key:
+            if isinstance(item, casilla_list_models.CasillaListEntry) and item.key == key:
                 self._move_cursor_to(index)
                 return True
         records = self._records_showing(key)
@@ -288,16 +289,19 @@ class CasillaList(
         self.refresh()
         return True
 
-    def _records_showing(self, key: _models.AddressKey) -> int | None:
+    def _records_showing(self, key: casilla_list_models.AddressKey) -> int | None:
         """The line a group's records start at, when one of its columns shows the casilla ``key`` names."""
         kind, identifier = key
-        if kind != _values._CASILLA_KIND:
+        if kind != casilla_list_values.CASILLA_KIND:
             return None
         for index, item in enumerate(self._items):
-            if isinstance(item, CasillaListRecords | _models.CasillaListNote) and identifier in item.column_casilla_ids:
+            if (
+                isinstance(item, CasillaListRecords | casilla_list_models.CasillaListNote)
+                and identifier in item.column_casilla_ids
+            ):
                 heading = index - 1
                 before = self._items[heading] if heading >= 0 else None
-                return heading if isinstance(before, _models.CasillaListHeading) else index
+                return heading if isinstance(before, casilla_list_models.CasillaListHeading) else index
         return None
 
     @override

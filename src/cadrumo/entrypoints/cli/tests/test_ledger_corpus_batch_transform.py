@@ -15,7 +15,7 @@ from ...tests.ledger_corpus_support import (
     match_corpus_rule,
     set_corpus_transaction_group,
 )
-from .ledger_cli import list_ledger_rows_via_cli as _list_rows
+from .ledger_cli import list_ledger_rows_via_cli
 from .profile_world_fixtures import recorded_fx_isolated_backend
 
 __all__ = ["recorded_fx_isolated_backend"]
@@ -27,7 +27,7 @@ def test_batch_transform_recategorize_relabel_reallocate_at_scale(
     tmp_path: Path, invoke_cli: Callable[..., Result]
 ) -> None:
     import_ledger_corpus(invoke_cli=invoke_cli)
-    rows = _list_rows()
+    rows = list_ledger_rows_via_cli()
     rules = load_corpus_oracle_rules()
 
     lines = ["transaction_id,classification,category_id"]
@@ -52,7 +52,7 @@ def test_batch_transform_recategorize_relabel_reallocate_at_scale(
     assert res.exit_code == 0, res.output
     payload = json.loads(res.output)["result"]
     assert payload["applied"] == len(targeted), payload
-    by_id = {row["transaction_id"]: row for row in _list_rows()}
+    by_id = {row["transaction_id"]: row for row in list_ledger_rows_via_cli()}
     for tx_id in targeted:
         assert by_id[tx_id]["business_classification"] == "BUSINESS"
 
@@ -73,7 +73,7 @@ def test_batch_transform_recategorize_relabel_reallocate_at_scale(
     assert res2.exit_code == 0, res2.output
     payload2 = json.loads(res2.output)["result"]
     assert payload2["applied"] == len(mixed_ids), payload2
-    final = {row["transaction_id"]: row for row in _list_rows()}
+    final = {row["transaction_id"]: row for row in list_ledger_rows_via_cli()}
     for tx_id in mixed_ids:
         assert final[tx_id]["business_classification"] == "MIXED"
         assert final[tx_id]["group_label"] == "Cierre 2025"

@@ -6,7 +6,7 @@ import logging
 
 from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 
-from ..logging import _AsyncDiagnosticHandler, flush_logging
+from ..logging import AsyncDiagnosticHandler, flush_logging
 
 
 def delivery_sinks() -> list[logging.Handler]:
@@ -21,5 +21,5 @@ def delivery_sinks() -> list[logging.Handler]:
     """
     assert flush_logging(timeout=HANG_GUARD_SECONDS)
     return [
-        handler.sink for handler in tuple(logging.getLogger().handlers) if isinstance(handler, _AsyncDiagnosticHandler)
+        handler.sink for handler in tuple(logging.getLogger().handlers) if isinstance(handler, AsyncDiagnosticHandler)
     ]

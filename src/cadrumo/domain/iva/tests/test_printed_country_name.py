@@ -38,7 +38,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
 
 from ..country_vocabulary import country_codes_by_printed_name, normalise_printed_country_name
@@ -70,12 +70,12 @@ class TestAnUnrecognisedNameEstablishesNothing:
         ],
     )
     def test_a_name_outside_the_vocabulary_yields_no_country(self, printed: str) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert country_code_for_printed_country_name(printed, operation=_authority_operation_for_test) is None
 
     @pytest.mark.parametrize("printed", ["Atlantis", "Kazakhstan", "", "   "])
     def test_a_name_outside_the_vocabulary_yields_no_scope(self, printed: str) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert (
                 territorial_scope_for_country(
                     country_code_for_printed_country_name(printed, operation=_authority_operation_for_test),
@@ -85,7 +85,7 @@ class TestAnUnrecognisedNameEstablishesNothing:
             )
 
     def test_an_absent_name_yields_nothing(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert country_code_for_printed_country_name(None, operation=_authority_operation_for_test) is None
             assert (
                 territorial_scope_for_country(
@@ -108,7 +108,7 @@ class TestAnUnrecognisedNameEstablishesNothing:
         Spanish outcomes are excluded by name rather than left implied by the
         ``is None`` assertions above.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert country_code_for_printed_country_name(printed, operation=_authority_operation_for_test) != "ES"
             assert territorial_scope_for_country(
                 country_code_for_printed_country_name(printed, operation=_authority_operation_for_test),
@@ -135,7 +135,7 @@ class TestANearMissIsNotAMatch:
         would resolve, and it would resolve to the wrong tax territory from a
         correctly printed name.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert country_code_for_printed_country_name(printed, operation=_authority_operation_for_test) is None
 
     @pytest.mark.parametrize(
@@ -143,7 +143,7 @@ class TestANearMissIsNotAMatch:
         ["German", "Germanys", "Alemani", "Franc", "Italiana", "Portugalia", "Chin", "Chad"],
     )
     def test_a_truncated_or_extended_spelling_does_not_match(self, printed: str) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert country_code_for_printed_country_name(printed, operation=_authority_operation_for_test) is None
 
     def test_a_name_embedded_in_a_wider_line_does_not_match(self) -> None:
@@ -154,7 +154,7 @@ class TestANearMissIsNotAMatch:
         address line reaching it means the reading stage handed over the wrong
         thing -- and answering anyway would hide that.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert (
                 country_code_for_printed_country_name(
                     "Musterstrasse 1, 10115 Berlin, Deutschland", operation=_authority_operation_for_test
@@ -171,11 +171,11 @@ class TestThePrintedVariantsARealDocumentCarries:
         ["Deutschland", "DEUTSCHLAND", "deutschland", "  Deutschland  ", "Alemania", "Germany"],
     )
     def test_case_whitespace_and_language_variants_reach_germany(self, printed: str) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert country_code_for_printed_country_name(printed, operation=_authority_operation_for_test) == "DE"
 
     def test_a_name_broken_across_an_address_line_collapses(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert (
                 country_code_for_printed_country_name("Paises\n  Bajos", operation=_authority_operation_for_test)
                 == "NL"
@@ -203,7 +203,7 @@ class TestThePrintedVariantsARealDocumentCarries:
         expected: str,
     ) -> None:
         """Accent folding earning its place, on the population that needs it."""
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert country_code_for_printed_country_name(accented, operation=_authority_operation_for_test) == expected
             assert (
                 country_code_for_printed_country_name(ascii_only, operation=_authority_operation_for_test) == expected
@@ -217,7 +217,7 @@ class TestThePrintedVariantsARealDocumentCarries:
         simplification that dropped the listed form would red here rather than
         silently narrow the vocabulary.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert country_code_for_printed_country_name("Österreich", operation=_authority_operation_for_test) == "AT"
             assert country_code_for_printed_country_name("Oesterreich", operation=_authority_operation_for_test) == "AT"
 
@@ -226,14 +226,14 @@ class TestTheRungComposesRatherThanDecides:
     """Scope comes from the country resolver; this axis only names the country."""
 
     def test_a_member_state_name_establishes_the_eu_scope(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert territorial_scope_for_country(
                 country_code_for_printed_country_name("Deutschland", operation=_authority_operation_for_test),
                 operation=_authority_operation_for_test,
             ) == IvaTerritorialScope.from_registry("eu_member")
 
     def test_a_third_country_name_establishes_the_third_country_scope(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert territorial_scope_for_country(
                 country_code_for_printed_country_name("Suiza", operation=_authority_operation_for_test),
                 operation=_authority_operation_for_test,
@@ -247,7 +247,7 @@ class TestTheRungComposesRatherThanDecides:
         holds three the law treats differently and only the postal code
         separates them.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             assert country_code_for_printed_country_name("España", operation=_authority_operation_for_test) == "ES"
             assert (
                 territorial_scope_for_country(
@@ -267,7 +267,7 @@ class TestTheVocabularyCoversWhatTheClassifierTurnsOn:
         Northern Ireland is excluded from the expectation deliberately, and the
         next test asserts the exclusion rather than leaving it implied.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             covered = {
                 code.upper() for code in country_codes_by_printed_name(operation=_authority_operation_for_test).values()
             }
@@ -282,7 +282,7 @@ class TestTheVocabularyCoversWhatTheClassifierTurnsOn:
         established by a printed NIF-IVA prefix or not at all. A name mapping to
         XI would manufacture the goods jurisdiction from a postal address.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             codes = {
                 code.upper() for code in country_codes_by_printed_name(operation=_authority_operation_for_test).values()
             }
@@ -295,18 +295,18 @@ class TestTheVocabularyCoversWhatTheClassifierTurnsOn:
 
     def test_no_sub_national_name_is_carried(self) -> None:
         """The excluded class, asserted rather than described in a comment."""
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             for printed in ("England", "Scotland", "Wales", "Catalunya", "Bayern", "Baviera"):
                 assert country_code_for_printed_country_name(printed, operation=_authority_operation_for_test) is None
 
     def test_a_bare_alpha_two_code_is_not_a_name(self) -> None:
         """Codes belong to the code rung; two authorities on one string is one too many."""
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             for printed in ("DE", "FR", "ES", "de"):
                 assert country_code_for_printed_country_name(printed, operation=_authority_operation_for_test) is None
 
     def test_every_declared_code_is_a_well_formed_alpha_two(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             for code in country_codes_by_printed_name(operation=_authority_operation_for_test).values():
                 assert len(code) == 2 and code.isalpha() and code.isupper(), code
 
@@ -317,7 +317,7 @@ class TestTheVocabularyCoversWhatTheClassifierTurnsOn:
         table, so this checks that the matcher's normalisation is the SAME
         normalisation the resolver indexed under.
         """
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
             for name, code in country_codes_by_printed_name(operation=_authority_operation_for_test).items():
                 assert (
                     country_code_for_printed_country_name(

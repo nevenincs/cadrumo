@@ -29,8 +29,8 @@ from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransa
 
 from .....domain.iva.schema import InvoiceKind
 
-_NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
-_BUCKET = "c8bef9e4-b162-4bea-b33d-332c607f0ed1"  # was 'bucket-split'
+NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
+BUCKET = "c8bef9e4-b162-4bea-b33d-332c607f0ed1"  # was 'bucket-split'
 
 
 def split_subprocess_proposer(
@@ -91,16 +91,16 @@ def single_line_proposal() -> LLMSplitResponse:
 def repositories(
     tmp_path: Path,
 ) -> Iterator[tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository]]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET) as profile:
         objects = profile.repository
         yield (
-            TransactionCatalogueRepository(bucket_id=_BUCKET, objects=objects),
+            TransactionCatalogueRepository(bucket_id=BUCKET, objects=objects),
             BucketEventHistoryRepository(objects=objects),
             objects,
         )
 
 
-def _seed_received_invoice(objects: SecureObjectRepository, *, invoice_number: str = "P-2026-001") -> str:
+def seed_received_invoice(objects: SecureObjectRepository, *, invoice_number: str = "P-2026-001") -> str:
     """Persist one RECEIVED purchase invoice in the bucket and return its id."""
     line = InvoiceLine(
         description="Material oficina",
@@ -113,7 +113,7 @@ def _seed_received_invoice(objects: SecureObjectRepository, *, invoice_number: s
     invoice = Invoice.model_validate(
         {
             "kind": InvoiceKind.RECEIVED,
-            "bucket_id": _BUCKET,
+            "bucket_id": BUCKET,
             "invoice_number": invoice_number,
             "issued_at": date(2026, 5, 2),
             "counterparty_name": "Proveedor Mixto SL",
@@ -131,7 +131,7 @@ def _seed_received_invoice(objects: SecureObjectRepository, *, invoice_number: s
     return invoice.invoice_id
 
 
-def _seed_parent(
+def seed_parent(
     repository: TransactionCatalogueRepository,
     *,
     amount: Decimal = Decimal("121.00"),
@@ -151,7 +151,7 @@ def _seed_parent(
             source_sha256="b" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=_NOW,
+            ingested_at=NOW,
             provider_name="csv",
         ),
         raw_fields={"Concepto": "mixed supplier invoice"},

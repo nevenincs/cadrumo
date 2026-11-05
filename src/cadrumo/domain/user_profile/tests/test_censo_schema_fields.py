@@ -10,7 +10,7 @@ import pytest
 
 from ...calculations.registry.tests.published_authority import published_legal_reference
 from ..schema import ProfileSchemaDefinition
-from ._schema_loader_fixtures import function_scoped_schema
+from .schema_loader_fixtures import function_scoped_schema
 
 __all__ = ["function_scoped_schema"]
 

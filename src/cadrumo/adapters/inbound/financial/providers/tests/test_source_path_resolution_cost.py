@@ -13,16 +13,16 @@ from typing import Any
 import pytest
 
 from .. import base as provider_base
-from ..base import FinancialProvider, _resolved_absolute_source_path
+from ..base import FinancialProvider, resolved_absolute_source_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 
 @pytest.fixture(autouse=True)
 def _forget_resolved_paths() -> Iterator[None]:
-    provider_base._resolved_absolute_source_path.cache_clear()
+    provider_base.resolved_absolute_source_path.cache_clear()
     yield
-    provider_base._resolved_absolute_source_path.cache_clear()
+    provider_base.resolved_absolute_source_path.cache_clear()
 
 
 @pytest.fixture
@@ -89,12 +89,12 @@ def test_a_relative_path_is_stamped_with_its_resolved_name(tmp_path: Path, monke
 
 
 def test_the_resolution_cache_stays_bounded(tmp_path: Path) -> None:
-    bound = _resolved_absolute_source_path.cache_info().maxsize
+    bound = resolved_absolute_source_path.cache_info().maxsize
     assert bound is not None, "an unbounded resolution cache would retain every path a host ever imported"
     for index in range(bound + 5):
-        _resolved_absolute_source_path(str(tmp_path / f"{index}.csv"))
+        resolved_absolute_source_path(str(tmp_path / f"{index}.csv"))
 
-    assert _resolved_absolute_source_path.cache_info().currsize == bound
+    assert resolved_absolute_source_path.cache_info().currsize == bound
 
 
 def test_a_relative_path_follows_a_change_of_directory(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

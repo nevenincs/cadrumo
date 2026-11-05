@@ -320,7 +320,9 @@ def test_failed_candidate_keeps_prior_profile_receipt_and_other_client(
     _select(first_id)
     original = observe_active_profile_pointer()
     keyring = _Keyring()
-    monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (keyring, _KeyringError, _KeyringError))
+    monkeypatch.setattr(
+        acceleration_keychain, "acceleration_keychain_keyring", lambda: (keyring, _KeyringError, _KeyringError)
+    )
     synthetic_receipt = receipt_store.mint_profile_session(
         storage_root=_isolated_cli_backend,
         profile_id=first_id,

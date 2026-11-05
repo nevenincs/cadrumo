@@ -58,7 +58,7 @@ _JUSTIFICANTE_FIXTURE = (
 _SWAPPED_DECLARACION_FIXTURE = _JUSTIFICANTE_FIXTURE.with_name("2024-2T.pdf")
 
 
-class _CommitWitness:
+class CommitWitness:
     """Observe exact operation identity and its guarded persistence boundary."""
 
     def __init__(self, definition_id: str = MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID) -> None:
@@ -108,7 +108,7 @@ def test_registered_import_checks_exact_profile_and_guards_atomic_persistence(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """The real registered executor refuses retargeting and settles its write as UPDATED."""
-    witness = _CommitWitness()
+    witness = CommitWitness()
     original_compose = compose_operation_services
     monkeypatch.setattr(
         conformance,
@@ -188,7 +188,7 @@ def test_registered_import_checks_exact_profile_and_guards_atomic_persistence(
         assert observation.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
         assert observation.projection.effect is OperationEffect.UPDATED
 
-        projection = conformance._resolve_result_projection(
+        projection = conformance.resolve_result_projection(
             driver,
             registry,
             definition_id=MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID,

@@ -7,7 +7,7 @@ from dataclasses import replace
 from decimal import Decimal
 
 from .....core.decimal.grammar import DecimalSeparatorValue
-from ._statement_grounding import (
+from .statement_grounding_support import (
     GroundedMovement,
     GroundedStatement,
     MovementDraft,

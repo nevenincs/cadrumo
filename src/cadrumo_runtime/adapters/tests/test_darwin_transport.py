@@ -23,10 +23,10 @@ pytestmark = [
 
 
 @pytest.fixture
-def external_namespace(monkeypatch: pytest.MonkeyPatch) -> Iterator[darwin_transport._Namespace]:
+def external_namespace(monkeypatch: pytest.MonkeyPatch) -> Iterator[darwin_transport.Namespace]:
     with tempfile.TemporaryDirectory(prefix="d-", dir=runtime_namespace_base()) as scratch:
-        namespace = darwin_transport._Namespace(Path(scratch).resolve())
-        monkeypatch.setattr(darwin_transport, "_namespace", lambda: namespace)
+        namespace = darwin_transport.Namespace(Path(scratch).resolve())
+        monkeypatch.setattr(darwin_transport, "namespace", lambda: namespace)
         try:
             yield namespace
         finally:
@@ -36,7 +36,7 @@ def external_namespace(monkeypatch: pytest.MonkeyPatch) -> Iterator[darwin_trans
 
 
 def test_endpoint_never_recreates_external_namespace_after_resolver(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, external_namespace: darwin_transport._Namespace
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, external_namespace: darwin_transport.Namespace
 ) -> None:
     def resolve(root: Path, *, create: bool = False) -> tuple[Path, bool]:
         path = external_namespace.verify(create=create)
@@ -50,7 +50,7 @@ def test_endpoint_never_recreates_external_namespace_after_resolver(
 
 
 def test_endpoint_uses_external_namespace_and_retains_lock_on_close(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, external_namespace: darwin_transport._Namespace
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, external_namespace: darwin_transport.Namespace
 ) -> None:
     monkeypatch.setattr(
         posix_endpoint,

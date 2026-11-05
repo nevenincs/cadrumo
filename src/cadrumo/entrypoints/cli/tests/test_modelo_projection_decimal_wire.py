@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from ..modelo_projection_commands import _decimal_wire
+from ..modelo_projection_commands import decimal_wire
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -14,4 +14,4 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 @pytest.mark.parametrize(("value", "expected"), ((Decimal("1E+3"), "1000"), (Decimal("1E-8"), "0.00000001")))
 def test_projection_decimal_wire_is_canonical_fixed_point(value: Decimal, expected: str) -> None:
     """Projection output matches the CLI JSON renderer instead of Decimal exponent notation."""
-    assert _decimal_wire(value) == expected
+    assert decimal_wire(value) == expected

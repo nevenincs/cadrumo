@@ -48,26 +48,26 @@ from cadrumo.core.operations import (
 
 from .supervision_support import run_to_settlement
 from .supervisor_test_support import (
-    _BASELINE_DIGEST,
-    _NOW,
-    _PROPOSED_EFFECT_DIGEST,
-    _RESPONSE_TOKEN,
+    BASELINE_DIGEST,
+    PROPOSED_EFFECT_DIGEST,
+    RESPONSE_TOKEN,
+    SUPERVISOR_NOW,
     DurableContinuationExecutor,
     IdleExecutor,
     ResumableIdleExecutor,
     ResumableReviewExecutor,
     ReviewedOperand,
     WaitingExecutor,
-    _abandon_running_operation,
-    _capabilities,
-    _close_host_over_live_executor,
-    _lapse_settler,
-    _response,
+    abandon_running_operation,
+    close_host_over_live_executor,
+    lapse_settler,
     operation_repositories,
     operation_supervisor,
     resumable_review_supervisor,
+    supervisor_capabilities,
     supervisor_registry,
     supervisor_request,
+    supervisor_response,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -76,9 +76,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 def test_reconcile_takes_over_expired_owner_settles_and_releases_scope(tmp_path: Path) -> None:
     """A new owner with no local task admits genuine owner-loss interruption and frees the scope."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands, operation_id = _abandon_running_operation(tmp_path, profile.repository)
-        recovered_at = _NOW + timedelta(minutes=2)
-        recovery = _lapse_settler(journal=journal, leases=leases, operands=operands, at=recovered_at)
+        journal, leases, operands, operation_id = abandon_running_operation(tmp_path, profile.repository)
+        recovered_at = SUPERVISOR_NOW + timedelta(minutes=2)
+        recovery = lapse_settler(journal=journal, leases=leases, operands=operands, at=recovered_at)
 
         assert operation_id not in recovery._executor_tasks
         terminal = asyncio.run(recovery.reconcile(operation_id))
@@ -109,9 +109,9 @@ def test_reconcile_takes_over_expired_owner_settles_and_releases_scope(tmp_path:
 def test_a_submission_recovers_a_started_holder_whose_owner_lapsed(tmp_path: Path) -> None:
     """A runtime that died mid-run must not hold its subject until someone reconciles by hand."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        journal, leases, operands, operation_id = _abandon_running_operation(tmp_path, profile.repository)
-        recovered_at = _NOW + timedelta(minutes=2)
-        successor = _lapse_settler(journal=journal, leases=leases, operands=operands, at=recovered_at)
+        journal, leases, operands, operation_id = abandon_running_operation(tmp_path, profile.repository)
+        recovered_at = SUPERVISOR_NOW + timedelta(minutes=2)
+        successor = lapse_settler(journal=journal, leases=leases, operands=operands, at=recovered_at)
 
         replacement = asyncio.run(
             successor.submit(supervisor_request(subject_ref="subject:shared"), operation_id="6" * 64)
@@ -147,9 +147,9 @@ def test_reconcile_foreign_expired_lease_orphans_target_without_mutating_foreign
             definition_id=target.identity.definition_id,
             subject_ref=target.identity.subject_ref,
         )
-        target_lease = asyncio.run(leases.inspect(scope_ref, target_id, observed_at=_NOW)).current
+        target_lease = asyncio.run(leases.inspect(scope_ref, target_id, observed_at=SUPERVISOR_NOW)).current
         assert target_lease is not None
-        foreign_at = _NOW + timedelta(minutes=2)
+        foreign_at = SUPERVISOR_NOW + timedelta(minutes=2)
         foreign_lease = OperationOwnerLease(
             operation_id="6" * 64,
             scope_ref=scope_ref,
@@ -185,7 +185,7 @@ def test_reconcile_foreign_expired_lease_orphans_target_without_mutating_foreign
         foreign_path = storage_root / "operation-journals" / f"{foreign_lease.operation_id}.json"
         foreign_before = foreign_path.read_bytes()
         recovered_at = foreign_at + timedelta(minutes=2)
-        recovery = _lapse_settler(journal=journal, leases=leases, operands=operands, at=recovered_at, registry=registry)
+        recovery = lapse_settler(journal=journal, leases=leases, operands=operands, at=recovered_at, registry=registry)
 
         terminal = asyncio.run(recovery.reconcile(target_id))
         released = asyncio.run(leases.inspect(scope_ref, target_id, observed_at=recovered_at))
@@ -220,12 +220,16 @@ def test_reconcile_recovers_an_unstarted_expired_entry_with_new_durable_ownershi
             lease_duration=timedelta(minutes=1),
         )
         operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
-        recovery = _lapse_settler(
-            journal=journal, leases=leases, operands=operands, at=_NOW + timedelta(minutes=2), registry=registry
+        recovery = lapse_settler(
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            at=SUPERVISOR_NOW + timedelta(minutes=2),
+            registry=registry,
         )
 
         recovered = asyncio.run(recovery.reconcile(operation_id))
-        restarted = asyncio.run(_close_host_over_live_executor(recovery, operation_id, started))
+        restarted = asyncio.run(close_host_over_live_executor(recovery, operation_id, started))
 
     assert recovered.lifecycle is OperationLifecycle.CREATED
     assert isinstance(recovered.events[0], OperationReconciliationEvent)
@@ -258,8 +262,12 @@ def test_reconcile_reenters_only_a_declared_valid_checkpoint(tmp_path: Path) -> 
         )
         operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         waiting = asyncio.run(run_to_settlement(owner, operation_id))
-        recovery = _lapse_settler(
-            journal=journal, leases=leases, operands=operands, at=_NOW + timedelta(minutes=2), registry=registry
+        recovery = lapse_settler(
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            at=SUPERVISOR_NOW + timedelta(minutes=2),
+            registry=registry,
         )
 
         async def observe_live_resume() -> tuple[OperationPersistedSnapshot, OperationPersistedSnapshot]:
@@ -303,8 +311,12 @@ def test_resumed_executor_result_reference_settles_the_recovered_operation(tmp_p
         )
         operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
         waiting = asyncio.run(run_to_settlement(owner, operation_id))
-        recovery = _lapse_settler(
-            journal=journal, leases=leases, operands=operands, at=_NOW + timedelta(minutes=2), registry=registry
+        recovery = lapse_settler(
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            at=SUPERVISOR_NOW + timedelta(minutes=2),
+            registry=registry,
         )
 
         terminal = asyncio.run(recovery.reconcile(operation_id))
@@ -335,7 +347,7 @@ def test_reconcile_refuses_changed_definition_digest_before_reentry(tmp_path: Pa
         owner_registry = supervisor_registry(
             executor_type=ResumableReviewExecutor,
             build=build,
-            capabilities=_capabilities(
+            capabilities=supervisor_capabilities(
                 durability=OperationDurability.RESUMABLE,
                 replay=OperationReplayPolicy.RESUMABLE,
             ),
@@ -356,22 +368,28 @@ def test_reconcile_refuses_changed_definition_digest_before_reentry(tmp_path: Pa
         changed_registry = supervisor_registry(
             executor_type=ResumableReviewExecutor,
             build=build,
-            capabilities=_capabilities(
+            capabilities=supervisor_capabilities(
                 durability=OperationDurability.RESUMABLE,
                 replay=OperationReplayPolicy.RESUMABLE,
             ),
             interaction_kinds=frozenset({OperationInteractionKind.INPUT}),
             reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
         )
-        recovery = _lapse_settler(
-            journal=journal, leases=leases, operands=operands, at=_NOW + timedelta(minutes=2), registry=changed_registry
+        recovery = lapse_settler(
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            at=SUPERVISOR_NOW + timedelta(minutes=2),
+            registry=changed_registry,
         )
 
         journal_path = tmp_path / "durable-state" / "operation-journals" / f"{operation_id}.json"
         before_response = journal_path.read_bytes()
         with pytest.raises(ValueError, match="no longer reproduces"):
             asyncio.run(
-                recovery.respond(_response(intent="apply", operation_id=operation_id, revision=waiting.revision))
+                recovery.respond(
+                    supervisor_response(intent="apply", operation_id=operation_id, revision=waiting.revision)
+                )
             )
         assert journal_path.read_bytes() == before_response
         with pytest.raises(ValueError, match="no longer reproduces"):
@@ -398,9 +416,13 @@ def test_reconcile_refuses_resume_without_a_declared_valid_checkpoint(tmp_path: 
             operands=operands,
         )
         operation_id = asyncio.run(owner.submit(supervisor_request(), operation_id="3" * 64))
-        abandoned = asyncio.run(_close_host_over_live_executor(owner, operation_id, ResumableIdleExecutor.started))
-        recovery = _lapse_settler(
-            journal=journal, leases=leases, operands=operands, at=_NOW + timedelta(minutes=2), registry=registry
+        abandoned = asyncio.run(close_host_over_live_executor(owner, operation_id, ResumableIdleExecutor.started))
+        recovery = lapse_settler(
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            at=SUPERVISOR_NOW + timedelta(minutes=2),
+            registry=registry,
         )
 
         terminal = asyncio.run(recovery.reconcile(operation_id))
@@ -430,10 +452,10 @@ def test_reconcile_classifies_absent_lease_as_orphan_before_unknown_interruption
         scope_ref = operation_conflict_scope_reference(
             definition_id="operation.supervisor.test", subject_ref="subject:one"
         )
-        observed = asyncio.run(leases.inspect(scope_ref, operation_id, observed_at=_NOW))
+        observed = asyncio.run(leases.inspect(scope_ref, operation_id, observed_at=SUPERVISOR_NOW))
         assert observed.current is not None
         assert (
-            asyncio.run(leases.release(observed.current, observed_at=_NOW)).disposition
+            asyncio.run(leases.release(observed.current, observed_at=SUPERVISOR_NOW)).disposition
             is OperationLeaseDisposition.RELEASED
         )
         recovery = operation_supervisor(
@@ -485,13 +507,13 @@ def test_secure_review_publication_and_consumed_continuation_recover_without_rea
                     interaction_id=pending.request.interaction_id,
                     operation_id=operation_id,
                     revision=pending.request.revision,
-                    response_token=_RESPONSE_TOKEN,
+                    response_token=RESPONSE_TOKEN,
                     continuation_digest=pending.request.continuation_digest,
                     reviewed_proposal_digest=pending.reviewed_proposal_digest,
                     actor_ref="operator:integration",
-                    responded_at=_NOW,
-                    baseline_digest=_BASELINE_DIGEST,
-                    proposed_effect_digest=_PROPOSED_EFFECT_DIGEST,
+                    responded_at=SUPERVISOR_NOW,
+                    baseline_digest=BASELINE_DIGEST,
+                    proposed_effect_digest=PROPOSED_EFFECT_DIGEST,
                 )
             )
             await DurableContinuationExecutor.resumed.wait()
@@ -499,8 +521,12 @@ def test_secure_review_publication_and_consumed_continuation_recover_without_rea
 
         operation_id, consumed = asyncio.run(publish_consume_and_schedule())
         persisted = asyncio.run(journal.load(operation_id))
-        recovery = _lapse_settler(
-            journal=journal, leases=leases, operands=operands, at=_NOW + timedelta(minutes=2), registry=registry
+        recovery = lapse_settler(
+            journal=journal,
+            leases=leases,
+            operands=operands,
+            at=SUPERVISOR_NOW + timedelta(minutes=2),
+            registry=registry,
         )
 
         async def observe_recovered_continuation() -> tuple[OperationPersistedSnapshot, OperationPersistedSnapshot]:

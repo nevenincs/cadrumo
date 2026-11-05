@@ -28,7 +28,7 @@ import pytest
 import typer
 
 from cadrumo.core.period import Period, StandardPeriodCode
-from cadrumo.entrypoints.cli.period_parsing import _canonical_period, _LedgerPeriodRefusal
+from cadrumo.entrypoints.cli.period_parsing import LedgerPeriodRefusal, period_parsing_canonical_period
 
 from .cli_fixture_worlds import invoke_joined_cli
 from .profile_world_fixtures import profile_backend_fixture
@@ -100,7 +100,7 @@ def test_aeat_token_plus_year_resolves_to_period() -> None:
     """
 
     for token, year, registry_token, start, end in _TOKEN_YEAR_SPAN:
-        resolved = _canonical_period(token, year=year)
+        resolved = period_parsing_canonical_period(token, year=year)
         assert isinstance(resolved, Period)
         assert resolved.filing_year == year
         assert resolved.registry_token == registry_token
@@ -119,13 +119,13 @@ def test_registry_union_validator_is_the_token_authority() -> None:
 
     # Span-shaped tokens resolve.
     tokens = ("1T", "0A", "06")
-    assert tuple(_canonical_period(token, year=2024).registry_token for token in tokens) == tokens
+    assert tuple(period_parsing_canonical_period(token, year=2024).registry_token for token in tokens) == tokens
 
     # Non-span registry-union members and instalment claves do not resolve to a
     # ledger date span; they raise rather than emit an unusable period.
     for non_ledger in ("1P", "EXT-1T", "EVENT-3"):
         with pytest.raises(typer.BadParameter):
-            _canonical_period(non_ledger, year=2024)
+            period_parsing_canonical_period(non_ledger, year=2024)
 
 
 # --- Calendar shapes now REFUSE -----------------------------------------------
@@ -160,9 +160,9 @@ def test_calendar_shape_refuses_advertising_accepted_tokens_as_data() -> None:
     assert len(expected) == 17  # 1T-4T, 0A, 01-12; instalment claves 1P-4P carry no span
     for calendar_shape in _CALENDAR_SHAPES:
         with pytest.raises(typer.BadParameter) as excinfo:
-            _canonical_period(calendar_shape, year=2024)
+            period_parsing_canonical_period(calendar_shape, year=2024)
         refusal = excinfo.value
-        assert isinstance(refusal, _LedgerPeriodRefusal), calendar_shape
+        assert isinstance(refusal, LedgerPeriodRefusal), calendar_shape
         assert frozenset(refusal.accepted_period_tokens) == expected, calendar_shape
         message = str(refusal)
         assert "1T" in message and "--year" in message, calendar_shape
@@ -179,7 +179,7 @@ def test_year_qualified_hybrid_refuses() -> None:
 
     for hybrid in _YEAR_QUALIFIED_HYBRIDS:
         with pytest.raises(typer.BadParameter):
-            _canonical_period(hybrid, year=2024)
+            period_parsing_canonical_period(hybrid, year=2024)
 
 
 def test_invalid_token_refuses_advertising_accepted_tokens_as_data() -> None:
@@ -193,9 +193,9 @@ def test_invalid_token_refuses_advertising_accepted_tokens_as_data() -> None:
     expected = _expected_span_shaped_tokens()
     for invalid_token in _INVALID_TOKENS:
         with pytest.raises(typer.BadParameter) as excinfo:
-            _canonical_period(invalid_token, year=2024)
+            period_parsing_canonical_period(invalid_token, year=2024)
         refusal = excinfo.value
-        assert isinstance(refusal, _LedgerPeriodRefusal), invalid_token
+        assert isinstance(refusal, LedgerPeriodRefusal), invalid_token
         assert frozenset(refusal.accepted_period_tokens) == expected, invalid_token
         message = str(refusal)
         assert "1T" in message and "--year" in message, invalid_token
@@ -205,13 +205,13 @@ def test_empty_period_refuses() -> None:
     """An empty period refuses with the dedicated empty-period message."""
 
     with pytest.raises(typer.BadParameter):
-        _canonical_period("   ", year=2024)
+        period_parsing_canonical_period("   ", year=2024)
 
 
 # --- End-to-end: real ledger command takes --period AEAT token + --year -------
 
 
-_isolated_backend = profile_backend_fixture("active", autouse=False)
+isolated_backend = profile_backend_fixture("active", autouse=False)
 
 
 def _add_business_row_missing_facts() -> None:
@@ -237,7 +237,7 @@ def _add_business_row_missing_facts() -> None:
     assert add.exit_code == 0, add.output
 
 
-def test_preflight_accepts_aeat_token_with_year(_isolated_backend: None) -> None:
+def test_preflight_accepts_aeat_token_with_year(isolated_backend: None) -> None:
     """``ledger preflight --period 1T --year 2026`` selects the Q1 2026 row and reports the gap.
 
     Real backend, real encrypted bucket: a February 2026 business row falls in
@@ -258,7 +258,7 @@ def test_preflight_accepts_aeat_token_with_year(_isolated_backend: None) -> None
     assert "ready\tfalse" in result.output
 
 
-def test_ledger_read_period_display_matches_typed_period_across_text_and_json(_isolated_backend: None) -> None:
+def test_ledger_read_period_display_matches_typed_period_across_text_and_json(isolated_backend: None) -> None:
     """Real ledger reads use ``Period.__str__`, while JSON retains raw period fields."""
 
     _add_business_row_missing_facts()
@@ -282,7 +282,7 @@ def test_ledger_read_period_display_matches_typed_period_across_text_and_json(_i
     }
 
 
-def test_status_accepts_aeat_token_with_year(_isolated_backend: None) -> None:
+def test_status_accepts_aeat_token_with_year(isolated_backend: None) -> None:
     """``ledger status --period 1T --year 2026`` reports the Q1 totals."""
 
     _add_business_row_missing_facts()
@@ -296,7 +296,7 @@ def test_status_accepts_aeat_token_with_year(_isolated_backend: None) -> None:
     assert "2026Q1" not in result.output
 
 
-def test_preflight_calendar_shape_refuses(_isolated_backend: None) -> None:
+def test_preflight_calendar_shape_refuses(isolated_backend: None) -> None:
     """``ledger preflight --period 2026Q1 --year 2026`` refuses, naming the AEAT tokens."""
 
     result = invoke_joined_cli(["app", "ledger", "preflight", "--period", "2026Q1", "--year", "2026"])
@@ -319,7 +319,7 @@ def _error_context(output: str) -> dict[str, object]:
     raise AssertionError(f"no JSON error document found in output:\n{output}")
 
 
-def test_period_refusal_advertises_accepted_tokens_on_error_envelope(_isolated_backend: None) -> None:
+def test_period_refusal_advertises_accepted_tokens_on_error_envelope(isolated_backend: None) -> None:
     """A JSON-mode ``--period`` refusal carries the accepted set on the error context.
 
     Real cached CLI, ``--format json``: a calendar shape refuses and the
@@ -351,7 +351,7 @@ def _write_import_statement(path: Path) -> None:
 
 def test_import_accepts_aeat_token_with_year(
     tmp_path: Path,
-    _isolated_backend: None,
+    isolated_backend: None,
 ) -> None:
     """``ledger import --period 1T --year 2024`` accepts the canonical period form."""
 
@@ -386,7 +386,7 @@ def test_import_accepts_aeat_token_with_year(
 
 def test_import_historic_period_forms_refuse_with_current_canonical_grammar(
     tmp_path: Path,
-    _isolated_backend: None,
+    isolated_backend: None,
 ) -> None:
     """Historic combined forms refuse and teach the AEAT token plus ``--year`` grammar."""
 
@@ -420,7 +420,7 @@ def test_import_historic_period_forms_refuse_with_current_canonical_grammar(
 
 def test_import_period_without_year_refuses_with_year_guidance(
     tmp_path: Path,
-    _isolated_backend: None,
+    isolated_backend: None,
 ) -> None:
     """``ledger import --period 1T`` refuses because import also requires ``--year``."""
 
@@ -449,7 +449,7 @@ def test_import_period_without_year_refuses_with_year_guidance(
 
 def test_import_period_year_prefixed_token_refuses_with_current_canonical_grammar(
     tmp_path: Path,
-    _isolated_backend: None,
+    isolated_backend: None,
 ) -> None:
     """``ledger import --period 2026T1 --year 2026`` refuses and teaches ``1T`` plus ``--year``."""
 
@@ -480,7 +480,7 @@ def test_import_period_year_prefixed_token_refuses_with_current_canonical_gramma
     assert "2026-Q1" not in result.output
 
 
-def test_status_period_without_year_refuses(_isolated_backend: None) -> None:
+def test_status_period_without_year_refuses(isolated_backend: None) -> None:
     """``ledger status --period 1T`` (no --year) refuses, instructing to add --year."""
 
     _add_business_row_missing_facts()

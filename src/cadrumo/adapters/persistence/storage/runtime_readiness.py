@@ -29,7 +29,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel
 
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.models import STRICT_FROZEN_CONFIG
 from .errors import StorageValidationError
 
 
@@ -48,7 +48,7 @@ class StorageRuntimeReadinessCode(StrEnum):
 class StorageRuntimeReadinessIssue(BaseModel):
     """One reason the runtime is not ready for profile-bound storage."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     code: StorageRuntimeReadinessCode
 
@@ -56,7 +56,7 @@ class StorageRuntimeReadinessIssue(BaseModel):
 class StorageRuntimeSession(BaseModel):
     """Key-material-free projection of the active bucket session."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     active: bool
     idle_deadline: datetime
@@ -67,7 +67,7 @@ class StorageRuntimeSession(BaseModel):
 class StorageRuntimeReadiness(BaseModel):
     """Profile-bound storage readiness result."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     ready: bool
     code: StorageRuntimeReadinessCode

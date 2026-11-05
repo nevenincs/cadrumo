@@ -23,9 +23,9 @@ from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_work_lifecycle_ports,
 )
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
-    _FILE_FLOW_PROFILE_ID,
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
+    FILE_FLOW_PROFILE_ID,
     T1,
     T2,
     T3,
@@ -51,7 +51,7 @@ def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
     with bundled_indexed_authority().operation() as operation:
         return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit_id,
-            ports=build_calculation_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
+            ports=build_calculation_action_ports(bucket_id=FILE_FLOW_PROFILE_ID, operation=operation),
             **kwargs,
         ).revision
 
@@ -61,7 +61,7 @@ def _discard_work_unit(work_unit_id: str, **kwargs: Any) -> Any:
     kwargs.pop("bucket_event_repository", None)
     return discard_work_unit(
         work_unit_id,
-        ports=build_work_lifecycle_ports(bucket_id=_FILE_FLOW_PROFILE_ID),
+        ports=build_work_lifecycle_ports(bucket_id=FILE_FLOW_PROFILE_ID),
         **kwargs,
     )
 
@@ -121,7 +121,7 @@ def _file_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
         return file_modelo_revision(
             calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            ports=build_filing_action_ports(bucket_id=_FILE_FLOW_PROFILE_ID, operation=operation),
+            ports=build_filing_action_ports(bucket_id=FILE_FLOW_PROFILE_ID, operation=operation),
             operation=operation,
             **kwargs,
         )

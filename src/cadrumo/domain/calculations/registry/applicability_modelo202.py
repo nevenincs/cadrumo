@@ -14,10 +14,10 @@ from typing import Annotated
 from pydantic import BaseModel, Field, StringConstraints
 
 from ....core.modelo import Modelo
-from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.models import STRICT_FROZEN_CONFIG
 from ...contribuyente.entity_type import EntityType
 from ...deadlines.models import TaxpayerProfile
-from .entity_type import entity_type_legal_entity_token as _registry_entity_type_legal_entity_token
+from .entity_type import entity_type_legal_entity_token
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, ResolvedScalarFact, ScalarFactQuery
 from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
@@ -40,7 +40,7 @@ class Modelo202Modality(StrEnum):
 class Modelo202ModalityVerdict(BaseModel):
     """The derived Modelo 202 modality verdict and its grounding."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     modality: Modelo202Modality
     reason: _OperatorReason
@@ -164,7 +164,7 @@ def modelo_202_modality_from_inputs(
         effective_date=effective_date,
         authority=authority,
     )
-    if entity_type is None or entity_type != _registry_entity_type_legal_entity_token(authority=authority):
+    if entity_type is None or entity_type != entity_type_legal_entity_token(authority=authority):
         return Modelo202ModalityVerdict(
             modality=Modelo202Modality.INCOMPLETE,
             reason=declarations["reason.not_applicable"],

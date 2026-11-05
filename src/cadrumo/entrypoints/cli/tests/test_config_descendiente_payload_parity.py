@@ -21,7 +21,7 @@ from pydantic import ValidationError
 from ....core.descendant_relacion import DescendantRelacion
 from ....domain.calculations.registry.descendant_disability_catalogue import accepted_descendant_disability_grades
 from ....domain.contribuyente.descendant import DescendantInfo
-from .._config_descendiente_payloads import ProfileDescendientePayload
+from ..config_descendiente_payloads import ProfileDescendientePayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 

@@ -93,7 +93,7 @@ def check_revision_scoped_source_windows(
         RegistryValidationError: If any revision-scoped source window fails to
             overlap the revision's own validity window.
     """
-    failures = _revision_scoped_source_window_failures(modelo, revision, catalogues, revision_directory)
+    failures = revision_scoped_source_window_failures(modelo, revision, catalogues, revision_directory)
     if failures:
         raise RegistryValidationError(
             f"modelo {modelo.id} revision {revision.id} cites sources outside their applicability window:\n"
@@ -101,7 +101,7 @@ def check_revision_scoped_source_windows(
         )
 
 
-def _revision_scoped_source_window_failures(
+def revision_scoped_source_window_failures(
     modelo: ModeloDefinition,
     revision: ModeloRevision,
     catalogues: RegistryCatalogues,

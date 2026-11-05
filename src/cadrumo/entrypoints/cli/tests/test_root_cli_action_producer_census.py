@@ -9,10 +9,10 @@ from types import ModuleType
 
 import pytest
 
-from .. import _log_levels as log_levels_module
 from .. import app_diagnostics_commands as diagnostics_module
 from .. import app_live_commands as live_module
 from .. import app_live_period as live_period_module
+from .. import log_levels as log_levels_module
 from ..config import archive_reconcile as maintenance_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -150,7 +150,7 @@ def test_llm_guidance_callers_and_native_option_shape_exclusions_are_exact() -> 
 
 @pytest.mark.parametrize("code", sorted(code for _, code in _LLM_NOTICE_CALLERS))
 def test_llm_no_run_notices_resolve_the_catalogue_action_at_runtime(code: str) -> None:
-    notice = diagnostics_module._llm_no_run_data_notice(code=code)
+    notice = diagnostics_module.llm_no_run_data_notice(code=code)
 
     assert notice.action is not None
     assert notice.action.model_dump(mode="json") == {

@@ -25,7 +25,7 @@ from ..errors import (
     BrowserEvasionError,
     BrowserPreconditionCondition,
 )
-from ..evasion import _raise_playwright_stealth_unavailable
+from ..evasion import raise_playwright_stealth_unavailable
 from ..profile import Profile
 from ..session import BrowserSession
 
@@ -278,7 +278,7 @@ def test_browser_producers_have_no_direct_verdict_constructor_or_authored_recove
 def test_missing_evasion_support_has_an_exact_runtime_safety_verdict() -> None:
     cause = ImportError("playwright-stealth is unavailable")
     with pytest.raises(BrowserEvasionError) as raised:
-        _raise_playwright_stealth_unavailable(cause)
+        raise_playwright_stealth_unavailable(cause)
 
     assert raised.value.__cause__ is cause
     _assert_terminal_contract(

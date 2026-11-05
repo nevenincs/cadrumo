@@ -18,11 +18,11 @@ from decimal import Decimal
 import pytest
 
 from ..parser import parse_declaracion
-from ._parser_boundary_m303_support import _M303_CURRENT_PROFILE_CASILLAS
-from ._parser_boundary_support import (
-    _MODELO_303_SYNTHETIC_FIXTURE,
-    _expected_casilla_values,
-    _expected_period,
+from .parser_boundary_m303_support import M303_CURRENT_PROFILE_CASILLAS
+from .parser_boundary_support import (
+    MODELO_303_SYNTHETIC_FIXTURE,
+    expected_casilla_values,
+    expected_period,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
@@ -40,19 +40,19 @@ def test_parser_extracts_modelo_303_targets_from_synthetic_fixture() -> None:
     identity step by design.
     """
     filing = parse_declaracion(
-        _MODELO_303_SYNTHETIC_FIXTURE,
+        MODELO_303_SYNTHETIC_FIXTURE,
         modelo_override="303",
         año_override=2024,
         period_override="1T",
     )
 
     assert filing.modelo == "303"
-    assert filing.period == _expected_period(2024, "1T")
+    assert filing.period == expected_period(2024, "1T")
     assert filing.tax_id == "Y0000001S"
     values = {value.casilla_id: value.printed_value for value in filing.values}
-    assert set(values.keys()) == _M303_CURRENT_PROFILE_CASILLAS
+    assert set(values.keys()) == M303_CURRENT_PROFILE_CASILLAS
 
-    expected_values = _expected_casilla_values(
+    expected_values = expected_casilla_values(
         {
             "27": Decimal("13200.00"),
             "29": Decimal("8400.00"),

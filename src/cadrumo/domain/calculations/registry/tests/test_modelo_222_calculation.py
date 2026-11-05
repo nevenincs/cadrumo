@@ -17,7 +17,7 @@ import pytest
 from .....core.authority_grade import RegistryAuthorityGrade
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema import RegistrySnapshot
-from ._cross_dependency_calculation_support import _casilla_inputs
+from .cross_dependency_calculation_support import casilla_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -35,7 +35,7 @@ def _calculate(
 ) -> dict[str, Decimal]:
     snapshot = registry_snapshot("222", 2025, "1P", grade=RegistryAuthorityGrade.CALCULATION)
     assert {formula.target_casilla_id for formula in snapshot.revision.formulas} == _FORMULA_TARGETS
-    inputs = _casilla_inputs({box: Decimal(values.get(box, "0")) for box in _MANUAL_BOXES})
+    inputs = casilla_inputs({box: Decimal(values.get(box, "0")) for box in _MANUAL_BOXES})
     result = calculate_registry_snapshot(snapshot, inputs=inputs, date_context={"filing_period": date(2025, 4, 20)})
     return {entry.target_casilla_id: entry.value for entry in result.entries}
 

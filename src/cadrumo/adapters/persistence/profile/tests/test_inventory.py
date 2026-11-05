@@ -25,8 +25,8 @@ from .....domain.contribuyente.inventory.valuation import compute_inventory_valu
 from ...storage.tests.secure_sql import TestRuntimeProfile
 from ...tests.runtime_profile_fixture import default_bucket_runtime_profile_fixture
 from ..inventory import InventoryLedgerRepository, record_movement
-from ._inventory_acquisition_fixture import (
-    acquisition_for as _acquisition_for,
+from .inventory_acquisition_fixture import (
+    acquisition_for,
 )
 
 _runtime_profile = default_bucket_runtime_profile_fixture()
@@ -47,7 +47,7 @@ def _movement(kind: MovementKind, quantity: str, unit_cost: str, day: int) -> Mo
         quantity=Decimal(quantity),
         unit_cost=Decimal(unit_cost),
         acquisition_cost=(
-            _acquisition_for(value, iva_rate=Decimal("21.00"), ratio=Decimal("1.00"))
+            acquisition_for(value, iva_rate=Decimal("21.00"), ratio=Decimal("1.00"))
             if kind is MovementKind.PURCHASE
             else None
         ),
@@ -134,7 +134,7 @@ def test_inventory_persistence_is_encrypted_financial_secure_object(_runtime_pro
                 taxable_base=Decimal("100.00"),
                 iva_rate=Decimal("21.00"),
                 iva_amount=Decimal("21.00"),
-                acquisition_cost=_acquisition_for(Decimal("100.00"), iva_rate=Decimal("21.00"), ratio=Decimal("1.00")),
+                acquisition_cost=acquisition_for(Decimal("100.00"), iva_rate=Decimal("21.00"), ratio=Decimal("1.00")),
             ),
         ),
     )

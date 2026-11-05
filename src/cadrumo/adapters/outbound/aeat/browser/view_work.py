@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Awaitable
 
-from .._playwright import PlaywrightError
+from ..playwright import PlaywrightError
 
 
 async def settle(work: Awaitable[object], log: logging.Logger) -> None:

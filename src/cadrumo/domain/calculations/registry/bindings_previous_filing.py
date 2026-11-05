@@ -361,7 +361,7 @@ class _UnobservedCasillas:
     casilla_ids: tuple[CasillaId, ...]
 
 
-class _PreviousFilingObservationAbsentError(CadrumoError):
+class PreviousFilingObservationAbsentError(CadrumoError):
     """Internal signal: the required source filing was simply never observed.
 
     Raised by :func:`_resolve_anchor_values` for the ZERO-MATCH case only,
@@ -398,7 +398,7 @@ def _resolve_anchor_values(
     )
     if selector.grouping == "per_grupo_member":
         if not matches:
-            raise _PreviousFilingObservationAbsentError(
+            raise PreviousFilingObservationAbsentError(
                 f"binding {binding.id!r} (per_grupo_member) has no observed filing "
                 f"{selector.source_modelo!r}/{expected_year}/{required_period!r}",
             )
@@ -410,7 +410,7 @@ def _resolve_anchor_values(
             values.extend(member_values)
         return values
     if not matches:
-        raise _PreviousFilingObservationAbsentError(
+        raise PreviousFilingObservationAbsentError(
             f"binding {binding.id!r} has no observed filing "
             f"{selector.source_modelo!r}/{expected_year}/{required_period!r}",
         )
@@ -454,7 +454,7 @@ def _resolve_binding_values(
                 expected_year=expected_year,
                 required_period=required_period,
             )
-        except _PreviousFilingObservationAbsentError:
+        except PreviousFilingObservationAbsentError:
             # The whole binding resolves to unsatisfied rather than a partial
             # (and therefore wrong) value from the anchors that DID resolve.
             # A malformed binding (RegistryValidationError, not caught here)

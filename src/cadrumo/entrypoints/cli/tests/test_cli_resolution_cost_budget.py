@@ -37,7 +37,7 @@ from typing import Any
 import pytest
 
 from ..command_specs import COMMAND_GRAPH
-from .test_resolution_defers_capabilities import _RESOLUTION_LOADERS
+from .test_resolution_defers_capabilities import RESOLUTION_LOADERS
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -146,7 +146,7 @@ def _budgeted_nodes() -> list[tuple[str, str]]:
         for node in COMMAND_GRAPH.nodes()
         # The graph ROOT has an empty path: it is the executable itself, not a
         # command anyone resolves, and an empty token is not addressable.
-        if node.path[1:] and "/".join(node.path[1:]) not in _RESOLUTION_LOADERS
+        if node.path[1:] and "/".join(node.path[1:]) not in RESOLUTION_LOADERS
     ]
 
 

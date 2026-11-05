@@ -48,13 +48,13 @@ from .issue_scale import (
     verdict_text,
 )
 from .issue_screen_components import (
-    _BOXES_SUFFIX,
-    _CONFIRM_SCOPE_KEY,
-    _ISSUE_ID_PREFIX,
-    _SECTION_INFIX,
-    _issue_prompt,
-    _IssueList,
+    BOXES_SUFFIX,
+    CONFIRM_SCOPE_KEY,
+    ISSUE_ID_PREFIX,
+    SECTION_INFIX,
+    IssueList,
     footer_keys_for_width,
+    issue_prompt,
     options_for_screen,
 )
 
@@ -79,7 +79,7 @@ _SCREEN_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
 
 """What ``b`` does, in full, where the list has room to say it; the footer says it in two words."""
 
-_FOOTER_PRIORITY: Final[tuple[str, ...]] = ("enter", "escape", "a", _CONFIRM_SCOPE_KEY, "t")
+_FOOTER_PRIORITY: Final[tuple[str, ...]] = ("enter", "escape", "a", CONFIRM_SCOPE_KEY, "t")
 
 """The list's footer keys, most needed first; those that do not fit the width are left to the help."""
 
@@ -189,7 +189,7 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
             yield Static(
                 verdict_text(self._form, changes_unapplied=self._changes_unapplied), id="issues-verdict", markup=False
             )
-            yield _IssueList(*self._options(), id="issues-list")
+            yield IssueList(*self._options(), id="issues-list")
             with Horizontal(id="issues-actions"):
                 yield localized(
                     Button(tr("workspace.modelo.result_diff.close"), id="issues-close", variant="primary"),
@@ -213,23 +213,23 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
         fit_dialog_height(self, self.app.size.height)
         describe_bindings(self._bindings.key_to_bindings, _SCREEN_LOCALE_KEYS)
         self.refresh_bindings()
-        issues = self.query_one(_IssueList)
+        issues = self.query_one(IssueList)
         issues.focus()
         self._describe_enter()
         # The first entry sits under its group heading: start at the top so the heading says what it is.
         self.call_after_refresh(issues.scroll_home, animate=False, immediate=True)
 
     def _issue_index(self, option_id: str | None) -> int | None:
-        if option_id is None or not option_id.startswith(_ISSUE_ID_PREFIX):
+        if option_id is None or not option_id.startswith(ISSUE_ID_PREFIX):
             return None
-        index = int(option_id.removeprefix(_ISSUE_ID_PREFIX))
+        index = int(option_id.removeprefix(ISSUE_ID_PREFIX))
         return index if index < len(self._lines) else None
 
     def _section(self, option_id: str | None) -> UnenteredSection | None:
         if option_id is None:
             return None
         for boxes in self._unentered.values():
-            prefix = f"{boxes.level.value}{_SECTION_INFIX}"
+            prefix = f"{boxes.level.value}{SECTION_INFIX}"
             if option_id.startswith(prefix):
                 index = int(option_id.removeprefix(prefix))
                 return boxes.sections[index] if index < len(boxes.sections) else None
@@ -238,12 +238,12 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
     def _listed(self, option_id: str | None) -> UnenteredBoxes | None:
         """The missing or assumed boxes an entry lists by number, when it is that entry."""
         return next(
-            (boxes for boxes in self._unentered.values() if option_id == f"{boxes.level.value}{_BOXES_SUFFIX}"),
+            (boxes for boxes in self._unentered.values() if option_id == f"{boxes.level.value}{BOXES_SUFFIX}"),
             None,
         )
 
     def _highlighted_id(self) -> str | None:
-        issues = self.query_one(_IssueList)
+        issues = self.query_one(IssueList)
         if issues.highlighted is None:
             return None
         return issues.get_option_at_index(issues.highlighted).id
@@ -261,13 +261,13 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
             choice = "less"
         else:
             choice = "more"
-        self.query_one(_IssueList).describe_enter(_ENTER_LOCALE_KEYS[choice])
+        self.query_one(IssueList).describe_enter(_ENTER_LOCALE_KEYS[choice])
         self._describe_open_area(None if index is None else self._lines[index].area)
         self._fit_footer()
 
     def _fit_footer(self) -> None:
         """Show the keys that fit the footer side by side, most needed first, so none is cut at the edge."""
-        issues = self.query_one(_IssueList)
+        issues = self.query_one(IssueList)
         shown = footer_keys_for_width(
             _FOOTER_PRIORITY,
             self.app.size.width,
@@ -350,8 +350,8 @@ class WorkbenchIssuesScreen(ModalScreen[IssuesChoice | None]):
             self.dismiss(ConfirmAssumedValues(at=target))
 
     def _redraw(self, index: int) -> None:
-        prompt = _issue_prompt(self._lines[index], expanded=index in self._expanded, technical=index in self._technical)
-        self.query_one(_IssueList).replace_option_prompt(f"{_ISSUE_ID_PREFIX}{index}", prompt)
+        prompt = issue_prompt(self._lines[index], expanded=index in self._expanded, technical=index in self._technical)
+        self.query_one(IssueList).replace_option_prompt(f"{ISSUE_ID_PREFIX}{index}", prompt)
 
     def on_option_list_option_highlighted(self, _event: OptionList.OptionHighlighted) -> None:
         """Name what Enter does on the entry now under the cursor."""

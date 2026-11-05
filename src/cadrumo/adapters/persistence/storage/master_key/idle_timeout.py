@@ -22,9 +22,9 @@ from datetime import datetime, timedelta
 
 from pydantic import BaseModel, NonNegativeInt
 
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.models import STRICT_FROZEN_CONFIG
 from ..errors import (
-    storage_validation_error as _storage_validation_error,
+    storage_validation_error,
 )
 from .bucket_session import BucketSession
 
@@ -34,7 +34,7 @@ DEFAULT_IDLE_LOCK_MINUTES = 15
 class IdleEvaluation(BaseModel):
     """Typed outcome of an idle-window evaluation."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     expired: bool
     remaining_seconds: NonNegativeInt
@@ -67,7 +67,7 @@ def evaluate_idle(
         StorageValidationError: When ``configured_minutes`` is not a strict positive integer.
     """
     if configured_minutes <= 0:
-        raise _storage_validation_error("configured_minutes must be a strict positive integer")
+        raise storage_validation_error("configured_minutes must be a strict positive integer")
 
     if session.sealed:
         return IdleEvaluation(expired=True, remaining_seconds=0)

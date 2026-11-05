@@ -52,17 +52,17 @@ from .....domain.contribuyente.inventory.valuation import (
     derive_inventory_anexo_d_values,
 )
 from .inventory_service_integration_support import (
-    _BUCKET_A_ID,
-    _BUCKET_B_ID,
-    _OTHER_BUCKET_ID,
-    _acquisition,
-    _authority_record,
-    _event_repo,
-    _make_svc,
+    BUCKET_A_ID,
+    BUCKET_B_ID,
+    OTHER_BUCKET_ID,
+    acquisition,
+    authority_record,
+    event_repo,
+    make_svc,
 )
 
 if TYPE_CHECKING:
-    from cadrumo.domain.contribuyente.inventory import closing_authority_records as _closing_types
+    from cadrumo.domain.contribuyente.inventory import closing_authority_records
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -73,7 +73,7 @@ def _purchase(movement_id: str, *, month: int, quantity: str, total: str) -> Inv
         movement_date=date(2025, month, 1),
         kind=MovementKind.PURCHASE,
         quantity=Decimal(quantity),
-        acquisition_cost=_acquisition(total),
+        acquisition_cost=acquisition(total),
     )
 
 
@@ -118,7 +118,7 @@ class TestLedgerCorrections:
         before: tuple[str, str],
         after: tuple[str, str],
     ) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         bucket = secure_engine.bucket_id
         _seed_two_purchases_and_a_sale(svc, bucket, method=method)
         preview = svc.valuation_preview(bucket_id=bucket, actividad_id="A1", year=2025).preview
@@ -145,11 +145,11 @@ class TestLedgerCorrections:
         assert entry.superseded_movement.movement_id == "BUY-2"
         assert entry.superseded_movement.capitalized_value == Decimal("140.00")
         assert entry.replacement_movement_id == "BUY-2B"
-        event = _event_repo(secure_engine).load().events[result.bucket_event_ids[0]]
+        event = event_repo(secure_engine).load().events[result.bucket_event_ids[0]]
         assert event.event_type is BucketEventType.LEDGER_INVENTORY_MOVEMENT_CORRECTED
 
     def test_a_reversal_leaves_the_effective_set_and_keeps_history(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         bucket = secure_engine.bucket_id
         _seed_two_purchases_and_a_sale(svc, bucket, method="fifo")
 
@@ -171,7 +171,7 @@ class TestLedgerCorrections:
     def test_a_reversal_that_would_take_stock_negative_refuses_and_changes_nothing(
         self, secure_engine: TestRuntimeProfile
     ) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         bucket = secure_engine.bucket_id
         _seed_two_purchases_and_a_sale(svc, bucket, method="fifo")
         before = svc.show(bucket_id=bucket, actividad_id="A1", year=2025)
@@ -192,7 +192,7 @@ class TestLedgerCorrections:
     def test_an_exact_replay_changes_nothing_and_another_request_under_the_id_refuses(
         self, secure_engine: TestRuntimeProfile
     ) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         bucket = secure_engine.bucket_id
         _seed_two_purchases_and_a_sale(svc, bucket, method="fifo")
 
@@ -220,7 +220,7 @@ class TestLedgerCorrections:
     def test_a_superseded_movement_can_be_neither_rectified_nor_reissued(
         self, secure_engine: TestRuntimeProfile
     ) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         bucket = secure_engine.bucket_id
         _seed_two_purchases_and_a_sale(svc, bucket, method="fifo")
         svc.movement_reverse(
@@ -262,7 +262,7 @@ class TestLedgerCorrections:
         assert absent.value.translated_message == "application.inventory.service.errors.movement_not_found"
 
     def test_a_replacement_dated_outside_the_ledger_year_refuses(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         bucket = secure_engine.bucket_id
         _seed_two_purchases_and_a_sale(svc, bucket, method="fifo")
         with pytest.raises(InventoryServiceInputError) as refused:
@@ -277,14 +277,14 @@ class TestLedgerCorrections:
                     movement_date=date(2024, 12, 31),
                     kind=MovementKind.PURCHASE,
                     quantity=Decimal("10"),
-                    acquisition_cost=_acquisition("100.00"),
+                    acquisition_cost=acquisition("100.00"),
                 ),
                 reason=InventoryCorrectionReason.KEYING_ERROR,
             )
         assert refused.value.translated_message == "application.inventory.service.errors.movement_outside_year"
 
     def test_opening_and_method_corrections_keep_what_they_displace(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         bucket = secure_engine.bucket_id
         svc.create(
             bucket_id=bucket, actividad_id="A1", year=2025, valuation_method="fifo", opening_stock=Decimal("100.00")
@@ -320,13 +320,13 @@ class TestLedgerCorrections:
     def test_describing_never_moves_valuation_and_stays_open_after_a_closing_authority(
         self, secure_engine: TestRuntimeProfile
     ) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         bucket = secure_engine.bucket_id
         svc.create(
             bucket_id=bucket, actividad_id="A1", year=2025, valuation_method="fifo", opening_stock=Decimal("100.00")
         )
         svc.closing_authority_record(
-            bucket_id=bucket, actividad_id="A1", year=2025, authority_record=_authority_record()
+            bucket_id=bucket, actividad_id="A1", year=2025, authority_record=authority_record()
         )
 
         first = svc.describe(
@@ -356,13 +356,13 @@ class TestLedgerCorrections:
         )
 
     def test_a_recorded_closing_authority_refuses_every_stock_change(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         bucket = secure_engine.bucket_id
         svc.create(
             bucket_id=bucket, actividad_id="A1", year=2025, valuation_method="fifo", opening_stock=Decimal("100.00")
         )
         svc.closing_authority_record(
-            bucket_id=bucket, actividad_id="A1", year=2025, authority_record=_authority_record()
+            bucket_id=bucket, actividad_id="A1", year=2025, authority_record=authority_record()
         )
         key = "application.inventory.service.errors.closing_authority_recorded"
 
@@ -395,14 +395,14 @@ class TestLedgerCorrections:
     def test_a_later_years_closing_authority_refuses_a_change_to_the_year_it_rests_on(
         self, secure_engine: TestRuntimeProfile
     ) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         bucket = secure_engine.bucket_id
         svc.create(bucket_id=bucket, actividad_id="A1", year=2024, valuation_method="fifo")
         svc.create(
             bucket_id=bucket, actividad_id="A1", year=2025, valuation_method="fifo", opening_stock=Decimal("100.00")
         )
         svc.closing_authority_record(
-            bucket_id=bucket, actividad_id="A1", year=2025, authority_record=_authority_record()
+            bucket_id=bucket, actividad_id="A1", year=2025, authority_record=authority_record()
         )
 
         with pytest.raises(InventoryServiceInputError) as refused:
@@ -425,7 +425,7 @@ class TestLedgerCorrections:
     def test_retiring_keeps_every_fact_refuses_stock_changes_and_restoring_reopens(
         self, secure_engine: TestRuntimeProfile
     ) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         bucket = secure_engine.bucket_id
         _seed_two_purchases_and_a_sale(svc, bucket, method="fifo")
 
@@ -468,7 +468,7 @@ class TestLedgerCorrections:
         assert not_retired.value.translated_message == "application.inventory.service.errors.inventory_not_retired"
 
     def test_a_change_to_an_absent_inventory_refuses_as_not_found(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         with pytest.raises(InventoryActividadNotFoundError) as refused:
             svc.restore(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, correction_id="back")
         assert refused.value.translated_message == "application.inventory.service.errors.activity_not_found"
@@ -477,13 +477,13 @@ class TestLedgerCorrections:
 
 class TestBucketIsolation:
     def test_requested_bucket_must_match_active_runtime(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
 
         # The typed readiness code, not prose: the refusal is locale-neutral, so
         # a regex over its message matches a translation key and would pass on
         # any unrelated storage refusal just as readily.
         with pytest.raises(StorageValidationError) as raised:
-            svc.list_all(bucket_id=_OTHER_BUCKET_ID)
+            svc.list_all(bucket_id=OTHER_BUCKET_ID)
 
         assert raised.value.translated_message == "errors.storage.runtime.not_ready"
         assert raised.value.context is not None
@@ -493,15 +493,15 @@ class TestBucketIsolation:
         }
 
     def test_ledgers_are_runtime_profile_scoped(self, tmp_path: Path) -> None:
-        with isolated_runtime_profile(tmp_path=tmp_path / "profile-a", bucket_id=_BUCKET_A_ID) as bucket_a:
-            svc_a = _make_svc(bucket_a)
+        with isolated_runtime_profile(tmp_path=tmp_path / "profile-a", bucket_id=BUCKET_A_ID) as bucket_a:
+            svc_a = make_svc(bucket_a)
             svc_a.create(bucket_id=bucket_a.bucket_id, actividad_id="A1", year=2025, valuation_method="fifo")
             assert svc_a.show(bucket_id=bucket_a.bucket_id, actividad_id="A1", year=2025).valuation_method is (
                 ValuationMethod.FIFO
             )
 
-        with isolated_runtime_profile(tmp_path=tmp_path / "profile-b", bucket_id=_BUCKET_B_ID) as bucket_b:
-            svc_b = _make_svc(bucket_b)
+        with isolated_runtime_profile(tmp_path=tmp_path / "profile-b", bucket_id=BUCKET_B_ID) as bucket_b:
+            svc_b = make_svc(bucket_b)
             assert svc_b.list_all(bucket_id=bucket_b.bucket_id) == ()
             svc_b.create(bucket_id=bucket_b.bucket_id, actividad_id="A1", year=2025, valuation_method="pmp")
             assert svc_b.show(bucket_id=bucket_b.bucket_id, actividad_id="A1", year=2025).valuation_method is (
@@ -511,7 +511,7 @@ class TestBucketIsolation:
 
 class TestSecureStorage:
     def test_create_persists_inventory_document_as_secure_object(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         svc.create(
             bucket_id=secure_engine.bucket_id,
             actividad_id="SECURE-A1",
@@ -605,7 +605,7 @@ def _closing_book(svc: InventoryService, bucket: str, *, year: int = 2025, openi
             movement_date=date(year, 3, 1),
             kind=MovementKind.PURCHASE,
             quantity=Decimal("10"),
-            acquisition_cost=_acquisition("100.00"),
+            acquisition_cost=acquisition("100.00"),
         ),
         InventoryMovementCommand(
             movement_id=f"SELL-{year}",
@@ -619,7 +619,7 @@ def _closing_book(svc: InventoryService, bucket: str, *, year: int = 2025, openi
 
 def _closing_value(
     svc: InventoryService, bucket: str, facts: InventoryClosingValueFacts
-) -> _closing_types.InventoryClosingAuthorityRecord:
+) -> closing_authority_records.InventoryClosingAuthorityRecord:
     result = svc.closing_value_record(bucket_id=bucket, facts=facts, actor="runtime", source_command=_CLOSING_SOURCE)
     record = result.ledger.closing_authority_record
     assert record is not None
@@ -628,7 +628,7 @@ def _closing_value(
 
 class TestClosingValueFromPlainFacts:
     def test_a_movement_derived_closing_derives_every_fingerprint(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         bucket = secure_engine.bucket_id
         _closing_book(svc, bucket)
 
@@ -654,7 +654,7 @@ class TestClosingValueFromPlainFacts:
     def test_a_count_is_bound_by_its_own_fingerprint_and_its_difference_retained(
         self, secure_engine: TestRuntimeProfile
     ) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         bucket = secure_engine.bucket_id
         _closing_book(svc, bucket)
 
@@ -674,7 +674,7 @@ class TestClosingValueFromPlainFacts:
         assert derivation.issues == ("physical_closing_conflict",)
 
     def test_the_same_facts_are_an_exact_replay_and_other_facts_refuse(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         bucket = secure_engine.bucket_id
         _closing_book(svc, bucket)
 
@@ -699,7 +699,7 @@ class TestClosingValueFromPlainFacts:
     def test_the_backend_stamps_the_decision_and_a_retry_keeps_the_stamp(
         self, secure_engine: TestRuntimeProfile
     ) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         bucket = secure_engine.bucket_id
         _closing_book(svc, bucket)
         before = now()
@@ -720,7 +720,7 @@ class TestClosingValueFromPlainFacts:
     def test_a_retry_with_other_details_still_conflicts_at_a_later_instant(
         self, secure_engine: TestRuntimeProfile
     ) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         bucket = secure_engine.bucket_id
         _closing_book(svc, bucket)
         svc.closing_value_record(
@@ -740,7 +740,7 @@ class TestClosingValueFromPlainFacts:
     def test_a_copy_that_read_the_book_before_the_commit_replays_the_stored_stamp(
         self, secure_engine: TestRuntimeProfile, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         bucket = secure_engine.bucket_id
         _closing_book(svc, bucket)
         repository = svc._repository_for(bucket)
@@ -768,7 +768,7 @@ class TestClosingValueFromPlainFacts:
     def test_a_closed_prior_book_needs_no_document_and_its_closing_must_be_the_opening(
         self, secure_engine: TestRuntimeProfile
     ) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         bucket = secure_engine.bucket_id
         _closing_book(svc, bucket, year=2024)
         prior = _closing_value(svc, bucket, _closing_facts(year=2024))
@@ -783,7 +783,7 @@ class TestClosingValueFromPlainFacts:
     def test_an_opening_that_differs_from_the_closed_prior_book_refuses(
         self, secure_engine: TestRuntimeProfile
     ) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         bucket = secure_engine.bucket_id
         _closing_book(svc, bucket, year=2024)
         _closing_value(svc, bucket, _closing_facts(year=2024))
@@ -794,7 +794,7 @@ class TestClosingValueFromPlainFacts:
         assert refused.value.translated_message == "application.inventory.service.errors.closing_authority_invalid"
 
     def test_an_opening_with_no_closed_prior_book_needs_a_document(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         bucket = secure_engine.bucket_id
         _closing_book(svc, bucket)
 
@@ -804,7 +804,7 @@ class TestClosingValueFromPlainFacts:
         assert svc.show(bucket_id=bucket, actividad_id="A1", year=2025).closing_authority_record is None
 
     def test_a_missing_book_is_named(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
 
         with pytest.raises(InventoryActividadNotFoundError):
             _closing_value(svc, secure_engine.bucket_id, _closing_facts())

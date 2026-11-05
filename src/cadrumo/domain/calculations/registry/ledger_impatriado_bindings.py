@@ -32,7 +32,9 @@ from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
-from ._ledger_binding_resolution import (
+from .form_codes import differs_from_role
+from .ids import BindingId
+from .ledger_binding_resolution import (
     cash_received_total,
     casilla_target_matcher,
     income_amount_is_declarable,
@@ -40,8 +42,6 @@ from ._ledger_binding_resolution import (
     resolve_ledger_family_binding_values,
     unsupported_ledger_family_observations,
 )
-from .form_codes import differs_from_role
-from .ids import BindingId
 from .ledger_binding_selector_support import (
     IMPATRIADO_LEDGER_INCOME_FACTS,
     ImpatriadoLedgerIncomeFact,

@@ -21,7 +21,7 @@ from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
@@ -81,7 +81,7 @@ from cadrumo.tests.aeat_literal_fixtures import aeat_url
 from .....application.user_profile.tests.record_session_scope import bound_profile_record_session
 from .supervision_support import run_to_settlement
 
-_OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
+OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -95,19 +95,19 @@ def _test_censal_operation_definition() -> OperationDefinition:
     return build_censal_operation_definition(
         certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
         browser_session_factory=default_browser_session_factory,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        operator_scope_ports=OPERATOR_SCOPE_PORTS,
         censal_fetch_port=fetch_censal_datos,
         provider_preflight=lambda _profile_id, _operation: None,
     )
 
 
-def _test_censal_operation_definition_id() -> str:
+def censal_test_operation_definition_id() -> str:
     return _test_censal_operation_definition().definition_id
 
 
 @contextmanager
 def subject(tmp_path: Path) -> Generator[tuple[str, SecureObjectRepository, ProfileRecordSession]]:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         outcome = register_profile_with_credentials(
             label="Censal operation executor",
@@ -137,7 +137,7 @@ def subject(tmp_path: Path) -> Generator[tuple[str, SecureObjectRepository, Prof
             session.close()
 
 
-def _observation() -> CensalObservation:
+def observation() -> CensalObservation:
     return CensalObservation(
         identity=CensalObservationIdentity(nif="12345678Z"),
         domicilio_fiscal=CensalObservationAddress(
@@ -154,7 +154,7 @@ def _observation() -> CensalObservation:
 
 
 def censal_request_payload(profile_id: str) -> CensalOperationRequest:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     record = ProfileRecordRepository.for_current_session(
         profile_id, profile_decode_context=_profile_decode_context_for_test
     ).load(profile_id)
@@ -171,7 +171,7 @@ def censal_request_payload(profile_id: str) -> CensalOperationRequest:
     )
 
 
-def _scoped_authority_operation() -> PinnedAuthorityOperation:
+def scoped_authority_operation() -> PinnedAuthorityOperation:
     """Return the session lease this module runs under; the executor reads it."""
     scoped = governed_facts_in_scope()
     assert isinstance(scoped, PinnedAuthorityOperation), "censal executor tests run under the authority lease"
@@ -199,7 +199,7 @@ def censal_supervisor(
     )
     journal = OperationJournalRepository(storage_root=root)
     return OperationSupervisor(
-        authority_operation=_scoped_authority_operation(),
+        authority_operation=scoped_authority_operation(),
         registry=OperationRegistry(
             definitions=(definition,),
             public_registrations=(build_censal_operation_registration(definition),),
@@ -268,7 +268,7 @@ async def resolved_result(
     operation_id: str,
 ) -> CensalOperationResult:
     terminal = await supervisor.await_terminal(operation_id)
-    contract = supervisor.registry.lookup_public_contract(_test_censal_operation_definition_id())
+    contract = supervisor.registry.lookup_public_contract(censal_test_operation_definition_id())
     assert contract.result_schema is not None
     released = await OperationResultProjectionService(
         reader=OperationJournalRepository(storage_root=root),
@@ -291,20 +291,20 @@ async def resolved_result(
 
 
 def test_censal_executor_acquires_once_recovers_review_and_applies_exact_operand(tmp_path: Path) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     acquisitions = 0
 
     async def acquire() -> CensalObservation:
         nonlocal acquisitions
         acquisitions += 1
-        return _observation()
+        return observation()
 
     with subject(tmp_path) as (profile_id, objects, _session):
         durable_root = tmp_path / "operations"
         executor = CensalOperationExecutor(
             certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
             browser_session_factory=default_browser_session_factory,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
             censal_fetch_port=fetch_censal_datos,
             provider_preflight=lambda _profile_id, _operation: None,
             acquire=acquire,
@@ -317,7 +317,7 @@ def test_censal_executor_acquires_once_recovers_review_and_applies_exact_operand
             token="2" * 64,
         )
         request = OperationRequest(
-            definition_id=_test_censal_operation_definition_id(),
+            definition_id=censal_test_operation_definition_id(),
             subject_ref=profile_id,
             payload=censal_request_payload(profile_id),
         )
@@ -364,7 +364,7 @@ def test_censal_executor_acquires_once_recovers_review_and_applies_exact_operand
                         revision=recovered_pending.request.revision,
                         review_projection_schema=CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING.identity,
                         definition_contract_digest=recovery.registry.lookup_public_contract(
-                            _test_censal_operation_definition_id()
+                            censal_test_operation_definition_id()
                         ).definition_contract_digest,
                         expires_at=recovered_pending.request.expires_at,
                     )
@@ -395,10 +395,10 @@ def test_censal_executor_acquires_once_recovers_review_and_applies_exact_operand
 
 
 def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_path: Path) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
 
     async def acquire() -> CensalObservation:
-        return _observation()
+        return observation()
 
     with subject(tmp_path) as (profile_id, objects, session):
         durable_root = tmp_path / "operations"
@@ -413,7 +413,7 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
                 executor=CensalOperationExecutor(
                     certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
                     browser_session_factory=default_browser_session_factory,
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    operator_scope_ports=OPERATOR_SCOPE_PORTS,
                     censal_fetch_port=fetch_censal_datos,
                     provider_preflight=lambda _profile_id, _operation: None,
                     acquire=acquire,
@@ -422,7 +422,7 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
                 token="7" * 64,
             )
             request = OperationRequest(
-                definition_id=_test_censal_operation_definition_id(),
+                definition_id=censal_test_operation_definition_id(),
                 subject_ref=profile_id,
                 payload=censal_request_payload(profile_id),
             )
@@ -487,7 +487,7 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
                 executor=CensalOperationExecutor(
                     certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
                     browser_session_factory=default_browser_session_factory,
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    operator_scope_ports=OPERATOR_SCOPE_PORTS,
                     censal_fetch_port=fetch_censal_datos,
                     provider_preflight=lambda _profile_id, _operation: None,
                     acquire=acquire,
@@ -497,7 +497,7 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
                 token="e" * 64,
             )
             request = OperationRequest(
-                definition_id=_test_censal_operation_definition_id(),
+                definition_id=censal_test_operation_definition_id(),
                 subject_ref=profile_id,
                 payload=censal_request_payload(profile_id),
             )
@@ -533,7 +533,7 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
                 executor=CensalOperationExecutor(
                     certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
                     browser_session_factory=default_browser_session_factory,
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    operator_scope_ports=OPERATOR_SCOPE_PORTS,
                     censal_fetch_port=fetch_censal_datos,
                     provider_preflight=lambda _profile_id, _operation: None,
                     acquire=acquire,
@@ -543,7 +543,7 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
                 token="b" * 64,
             )
             request = OperationRequest(
-                definition_id=_test_censal_operation_definition_id(),
+                definition_id=censal_test_operation_definition_id(),
                 subject_ref=profile_id,
                 payload=censal_request_payload(profile_id),
             )
@@ -566,12 +566,12 @@ def test_censal_executor_rejects_none_and_post_commit_failure_stays_unknown(tmp_
 def test_censal_executor_cancellation_before_irreversible_entry_keeps_none_and_writes_nothing(
     tmp_path: Path,
 ) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     reached_boundary = asyncio.Event()
     release_boundary = asyncio.Event()
 
     async def acquire() -> CensalObservation:
-        return _observation()
+        return observation()
 
     async def hold_before_entry() -> None:
         reached_boundary.set()
@@ -588,7 +588,7 @@ def test_censal_executor_cancellation_before_irreversible_entry_keeps_none_and_w
             executor=CensalOperationExecutor(
                 certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
                 browser_session_factory=default_browser_session_factory,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 censal_fetch_port=fetch_censal_datos,
                 provider_preflight=lambda _profile_id, _operation: None,
                 acquire=acquire,
@@ -598,7 +598,7 @@ def test_censal_executor_cancellation_before_irreversible_entry_keeps_none_and_w
             token="2" * 64,
         )
         request = OperationRequest(
-            definition_id=_test_censal_operation_definition_id(),
+            definition_id=censal_test_operation_definition_id(),
             subject_ref=profile_id,
             payload=censal_request_payload(profile_id),
         )

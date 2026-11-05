@@ -8,7 +8,7 @@ from uuid import UUID
 
 import typer
 
-from cadrumo_client.commands.output import activate_subcommand_output_language as _activate_subcommand_output_language
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.profile_binding import bound_profile_client, require_profile_client
 
 from ....core.errors.hierarchy import InternalInvariantError
@@ -38,9 +38,9 @@ def _resolve_bucket_history_filters(
     str | None,
 ]:
     """Parse and validate the filters owned by the history read surface."""
-    selected = _parse_bucket_event_types(event_type)
-    since_dt = _parse_bucket_history_instant(since, flag="--since")
-    until_dt = _parse_bucket_history_instant(until, flag="--until")
+    selected = parse_bucket_event_types(event_type)
+    since_dt = parse_bucket_history_instant(since, flag="--since")
+    until_dt = parse_bucket_history_instant(until, flag="--until")
     if since_dt is not None and until_dt is not None and since_dt > until_dt:
         raise typer.BadParameter(tr("cli.config.profile.history.since_after_until"))
     return (
@@ -77,7 +77,7 @@ def profile_history(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Browse the authenticated profile's append-only event history."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
 
     profile_label, profile_id = _resolve_profile_history_target(profile, ctx=ctx)
     selected, since_dt, until_dt, object_id_token, actor_token = _resolve_bucket_history_filters(
@@ -111,7 +111,7 @@ def profile_history(
         until=projection.until,
         object_id=projection.object_id,
         actor=projection.actor,
-        events=[_bucket_history_event_payload(event) for event in events],
+        events=[bucket_history_event_payload(event) for event in events],
     )
     lines = _bucket_history_lines(profile_label=profile_label, events=events)
     emit_envelope(ctx, command="config.bucket.history", result=bucket_result, lines=lines)
@@ -120,7 +120,7 @@ def profile_history(
 def _resolve_profile_history_target(profile: str | None, *, ctx: typer.Context) -> tuple[str, UUID]:
     """Bind history to the parsed profile target or the authenticated client."""
     from ....application.workflow.profile_bucket_scan import read_profile_bucket_by_id
-    from .._profile_authentication_gate import resolved_command_profile_target
+    from ..profile_authentication_gate import resolved_command_profile_target
 
     client = bound_profile_client(ctx)
     pointer = resolved_command_profile_target(ctx)
@@ -134,7 +134,7 @@ def _resolve_profile_history_target(profile: str | None, *, ctx: typer.Context) 
     return pointer.label, client.profile_id
 
 
-def _parse_bucket_event_types(event_type: list[str] | None) -> tuple[BucketEventType, ...] | None:
+def parse_bucket_event_types(event_type: list[str] | None) -> tuple[BucketEventType, ...] | None:
     """Parse the ``--event-type`` flag tuple, raising :class:`typer.BadParameter` on unknown values."""
     if not (event_type is not None and event_type):
         return None
@@ -155,7 +155,7 @@ def _parse_bucket_event_types(event_type: list[str] | None) -> tuple[BucketEvent
     return tuple(parsed)
 
 
-def _parse_bucket_history_instant(raw: str | None, *, flag: str) -> datetime | None:
+def parse_bucket_history_instant(raw: str | None, *, flag: str) -> datetime | None:
     """Parse one ``--since`` / ``--until`` value into a :class:`datetime`, or ``None`` when absent."""
     if not (raw is not None and raw):
         return None
@@ -172,7 +172,7 @@ def _parse_bucket_history_instant(raw: str | None, *, flag: str) -> datetime | N
     return coerce_utc_aware(parsed)
 
 
-def _bucket_history_event_payload(event: BucketEvent) -> BucketHistoryEventPayload:
+def bucket_history_event_payload(event: BucketEvent) -> BucketHistoryEventPayload:
     """Project one bucket event onto its typed JSON payload row."""
     from ..profile_history_results import BucketHistoryEventPayload
 
@@ -188,4 +188,4 @@ def _bucket_history_event_payload(event: BucketEvent) -> BucketHistoryEventPaylo
     )
 
 
-__all__ = ["_parse_bucket_event_types", "_parse_bucket_history_instant", "profile_history"]
+__all__ = ["parse_bucket_event_types", "parse_bucket_history_instant", "profile_history"]

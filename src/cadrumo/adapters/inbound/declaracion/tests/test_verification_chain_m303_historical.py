@@ -2,16 +2,16 @@ from __future__ import annotations
 
 import pytest
 
-from ._parser_boundary_m303_support import _M303_HISTORICAL_IDS, _M303_HISTORICAL_PARAMS
-from ._verification_chain_support import (
-    _assert_m303_printed_resultado_regimen_general_arithmetic,
-    _parse_extracted_declaracion_values,
+from .parser_boundary_m303_support import M303_HISTORICAL_IDS, M303_HISTORICAL_PARAMS
+from .verification_chain_support import (
+    assert_m303_printed_resultado_regimen_general_arithmetic,
+    parse_extracted_declaracion_values,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
 
-@pytest.mark.parametrize("pdf_stem,year,period", _M303_HISTORICAL_PARAMS, ids=_M303_HISTORICAL_IDS)
+@pytest.mark.parametrize("pdf_stem,year,period", M303_HISTORICAL_PARAMS, ids=M303_HISTORICAL_IDS)
 def test_verification_chain_m303_historical_printed_resultado_regimen_general_arithmetic(
     pdf_stem: str,
     year: int,
@@ -33,9 +33,9 @@ def test_verification_chain_m303_historical_printed_resultado_regimen_general_ar
     printed boxes still leaves the resultado at zero. The engine cannot verify
     this chain from the page in either revision.
     """
-    extracted = _parse_extracted_declaracion_values(modelo="303", fixture_stem=pdf_stem, year=year, period=period)
+    extracted = parse_extracted_declaracion_values(modelo="303", fixture_stem=pdf_stem, year=year, period=period)
 
-    _assert_m303_printed_resultado_regimen_general_arithmetic(
+    assert_m303_printed_resultado_regimen_general_arithmetic(
         pdf_stem=pdf_stem,
         extracted=extracted,
     )

@@ -111,7 +111,7 @@ class _SessionHost:
 
 
 def _run(
-    driver: conformance._ExecutionDriver, definition_id: str, profile_id: UUID, payload: BaseModel
+    driver: conformance.ExecutionDriver, definition_id: str, profile_id: UUID, payload: BaseModel
 ) -> tuple[OperationSubmission, OperationObservationSuccessV1]:
     submitted, observed = asyncio.run(
         driver.run(
@@ -193,14 +193,14 @@ def _stored_layers(profile_id: UUID) -> ObservationLayers:
 
 
 def _observation_result(
-    driver: conformance._ExecutionDriver,
+    driver: conformance.ExecutionDriver,
     registry: OperationRegistry,
     submitted: OperationSubmission,
     observed: OperationObservationSuccessV1,
 ) -> ModeloLocalObservationMutationProjection:
     assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
     assert observed.projection.effect is OperationEffect.UPDATED
-    return conformance._resolve_result_projection(
+    return conformance.resolve_result_projection(
         driver,
         registry,
         definition_id=_OBSERVATION,
@@ -362,14 +362,14 @@ def _draft_request(
 
 
 def _m145_result(
-    driver: conformance._ExecutionDriver,
+    driver: conformance.ExecutionDriver,
     registry: OperationRegistry,
     definition_id: str,
     submitted: OperationSubmission,
     observed: OperationObservationSuccessV1,
 ) -> M145CommunicationOperationResult:
     assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-    return conformance._resolve_result_projection(
+    return conformance.resolve_result_projection(
         driver,
         registry,
         definition_id=definition_id,

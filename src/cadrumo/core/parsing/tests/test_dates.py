@@ -23,7 +23,7 @@ import pytest
 
 from ....tests.log_records import delivered_records
 from ..dates import (
-    _date_shape,
+    date_shape,
     parse_ddmmyyyy_date,
     parse_iso8601_date,
     require_iso8601_date,
@@ -121,15 +121,15 @@ def test_refused_dates_are_diagnosed_by_shape_and_never_logged_in_clear_text(
 
 def test_date_shape_classes_every_character_without_carrying_it() -> None:
     """The mask is built from literals: same shape in, same mask out."""
-    assert _date_shape("1997-13-45") == "9999-99-99"
-    assert _date_shape("2001-13-45") == "9999-99-99"
-    assert _date_shape("31/12/1998") == "99/99/9999"
-    assert _date_shape("nacimiento") == "AAAAAAAAAA"
-    assert _date_shape("12 de mayo") == "99 AA AAAA"
-    assert _date_shape("1997-01-02T00:00:00") == "9999-99-99T99:99:99"
+    assert date_shape("1997-13-45") == "9999-99-99"
+    assert date_shape("2001-13-45") == "9999-99-99"
+    assert date_shape("31/12/1998") == "99/99/9999"
+    assert date_shape("nacimiento") == "AAAAAAAAAA"
+    assert date_shape("12 de mayo") == "99 AA AAAA"
+    assert date_shape("1997-01-02T00:00:00") == "9999-99-99T99:99:99"
     # Accented letters are letters; an unclassed character is neither.
-    assert _date_shape("año1") == "AAA9"
-    assert _date_shape("1997_01") == "9999?99"
+    assert date_shape("año1") == "AAA9"
+    assert date_shape("1997_01") == "9999?99"
 
 
 @pytest.mark.parametrize(

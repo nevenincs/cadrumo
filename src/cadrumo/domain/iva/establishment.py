@@ -86,7 +86,7 @@ from ...core.spanish_postcode import is_spanish_postcode
 from ...core.type_guards import is_object_mapping
 from ..calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
 from ..calculations.registry.nif_iva_catalogue import resolve_nif_iva_catalogue
-from . import country_vocabulary as _country_vocabulary
+from . import country_vocabulary
 from .classification import require_iva_territorial_scope, territorial_scope_alias
 from .schema import IvaTerritorialScope
 
@@ -314,7 +314,7 @@ def catalogued_country_codes(
             its one-name-one-country invariant.
     """
     return (
-        frozenset(_country_vocabulary.country_codes_by_printed_name(operation=operation).values())
+        frozenset(country_vocabulary.country_codes_by_printed_name(operation=operation).values())
         | _eu_member_codes(operation=operation)
         | {SPAIN_COUNTRY_CODE}
         | frozenset(_territory_carve_outs(operation=operation))
@@ -710,7 +710,7 @@ def country_code_for_stated_country_code(
             return None
         return normalised
     if len(candidate) == _ALPHA3_LENGTH:
-        return _country_vocabulary.country_codes_by_alpha3(operation=operation).get(candidate)
+        return country_vocabulary.country_codes_by_alpha3(operation=operation).get(candidate)
     return None
 
 
@@ -852,7 +852,7 @@ def country_code_for_printed_country_name(
     """
     if printed_name is None:
         return None
-    candidate = _country_vocabulary.normalise_printed_country_name(printed_name)
+    candidate = country_vocabulary.normalise_printed_country_name(printed_name)
     if not candidate:
         return None
-    return _country_vocabulary.country_codes_by_printed_name(operation=operation).get(candidate)
+    return country_vocabulary.country_codes_by_printed_name(operation=operation).get(candidate)

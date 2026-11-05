@@ -33,7 +33,7 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
     current_active_bucket_session,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.evidence.profile_legal_hold import LegalHoldCaseAuthority
@@ -47,7 +47,7 @@ from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_record_repository import close_active_profile_record_session
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
-from cadrumo.core.time.clock import now as _now
+from cadrumo.core.time.clock import now
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -70,7 +70,7 @@ def _register_and_sign_in(root: Path) -> UUID:
     than a contrived one: it opens the capsule's own database connection, which
     is the thing whose sidecars land inside the inventoried tree.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     outcome = register_profile_with_credentials(
         label=_LABEL,
         passphrase=_CREDENTIAL_INPUT,
@@ -98,12 +98,12 @@ def _authorise_clear_hold(root: Path, profile_id: UUID) -> None:
     LegalHoldCaseAuthority(root=root).record_open_case_snapshot(
         profile_id=profile_id,
         open_case_ids=(),
-        observed_at=_now(),
+        observed_at=now(),
     )
     FilingRetentionAuthority(root=root).record_filing_catalogue(
         profile_id=profile_id,
         records=(),
-        observed_at=_now(),
+        observed_at=now(),
     )
 
 
@@ -210,10 +210,10 @@ def test_the_marker_still_bites_after_the_deletion_revokes_its_own_session(tmp_p
             service = ProfileCustodyTransactionService(root=storage_root)
 
             journal = service.prepare_delete(profile_id=profile_id)
-            journal = service._mark_delete_prepared(journal, _now())
+            journal = service._mark_delete_prepared(journal, now())
             journal = service._advance_delete_state(
                 journal,
-                _now(),
+                now(),
                 expected=ProfileCustodyTransactionState.DELETE_MARKED,
                 next_state=ProfileCustodyTransactionState.PROCESS_SECRETS_REVOKED,
                 action=service._revoke_process_secrets,

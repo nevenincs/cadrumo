@@ -29,11 +29,11 @@ from typing import TYPE_CHECKING
 
 from ....core.casilla_id import CasillaId
 from ....core.decimal.constants import ONE, ZERO
-from ....core.money.rounding import round_to_cents as _round_to_cents
-from ._formula_operator_contracts import require_formula_operator_arity
+from ....core.money.rounding import round_to_cents
 from .casilla_membership import undeclared_casilla_ids
 from .errors import RegistrySnapshotError, RegistryValidationError
 from .formula_input_keys import canonicalize_formula_input_keys
+from .formula_operator_contracts import require_formula_operator_arity
 from .ids import ParameterId, RevisionId
 from .schema_base import NUMERIC_CASILLA_DATA_TYPES
 from .schema_formula import BracketEntry, DatedValue, FormulaExpression, ParameterDefinition
@@ -43,7 +43,7 @@ if TYPE_CHECKING:
     from _typeshed import SupportsAllComparisons
 
     from .authority import PinnedAuthorityOperation
-    from .formula_expression import EvalContext as _EvalContext
+    from .formula_expression import EvalContext
     from .schema import ModeloRevision
 
 _COMPARISON_OPS = frozenset({"less_than", "less_equal", "greater_than", "greater_equal", "equal"})
@@ -89,7 +89,7 @@ class UnresolvedFormulaOutcomeError(RegistrySnapshotError):
         self.context = dict(context)
 
 
-def numeric_casilla_value(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:
+def numeric_casilla_value(casilla_id: CasillaId, ctx: EvalContext) -> Decimal:
     """Read a resolved numeric casilla value from the evaluation context.
 
     Generic accessor shared by the M210/IRNR, M131 módulos, and M303 módulos
@@ -142,7 +142,7 @@ def require_parameter_leaf(expression: FormulaExpression, *, op: str, position: 
     return expression.parameter
 
 
-def text_tolerant_casilla_value(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:
+def text_tolerant_casilla_value(casilla_id: CasillaId, ctx: EvalContext) -> Decimal:
     """Read a casilla whose official record design declares either a text or a decimal type.
 
     Some official record designs declare a rate-like casilla as text (``X``)
@@ -367,7 +367,7 @@ def resolve_parameter(parameter: ParameterDefinition, date_context: Mapping[str,
     return resolve_dated_value(parameter, date_context).value
 
 
-def resolve_scalar_parameter(parameter_id: str, ctx: _EvalContext, *, op: str) -> Decimal:
+def resolve_scalar_parameter(parameter_id: str, ctx: EvalContext, *, op: str) -> Decimal:
     """Resolve a scalar parameter and record its runtime provenance.
 
     Formula-operation families share the same scalar type contract and must
@@ -458,7 +458,7 @@ def apply_rounding(value: Decimal, rounding: RegistryRoundingCode | None) -> Dec
     if rounding is None:
         return value
     if rounding == RegistryRoundingCode.MONEY_2:
-        return _round_to_cents(value)
+        return round_to_cents(value)
     if rounding == RegistryRoundingCode.INTEGER:
         return value.quantize(ONE, rounding=ROUND_HALF_UP)
     if rounding == RegistryRoundingCode.INTEGER_CEILING:

@@ -18,7 +18,11 @@ from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
-from ._ledger_binding_resolution import (
+from .binding_selector_utils import provider_member
+from .errors import RegistryError, RegistryValidationError
+from .form_codes import forms_for_role
+from .ids import BindingId
+from .ledger_binding_resolution import (
     UnroutedLedgerQuantity,
     cash_received_total,
     casilla_target_matcher,
@@ -28,10 +32,6 @@ from ._ledger_binding_resolution import (
     unrouted_ledger_family_quantities,
     unsupported_ledger_family_observations,
 )
-from .binding_selector_utils import provider_member
-from .errors import RegistryError, RegistryValidationError
-from .form_codes import forms_for_role
-from .ids import BindingId
 from .ledger_binding_selector_support import (
     LEDGER_INCOME_FACTS,
     LedgerIncomeFact,
@@ -424,7 +424,7 @@ def ungrounded_ledger_renta_income_observations(
 # and that is the whole point: the retención a taxpayer suffered is an
 # INDEPENDENT quantity carried on the same observation, not an alternative
 # measure of its income. Nothing else can stand in for it.
-_RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS: Mapping[str, str] = {
+RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS: Mapping[str, str] = {
     LedgerIncomeFact.INGRESOS_INTEGROS_SUM: (
         "measures the row's income as its declared taxable base, falling back to bank cash; "
         "one of three income measures a revision picks between"
@@ -444,9 +444,9 @@ _RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS: Mapping[str, str] = {
 #: must be classified deliberately as an alternative measure to be excluded --
 #: the safe direction, since forgetting to classify one surfaces an advisory
 #: rather than silently dropping a quantity.
-_RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS: frozenset[str] = independent_quantity_facts(
+RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS: frozenset[str] = independent_quantity_facts(
     LEDGER_INCOME_FACTS,
-    _RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS,
+    RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS,
 )
 
 
@@ -464,7 +464,7 @@ _RENTA_INDEPENDENT_QUANTITY_READERS: dict[str, Callable[[RentaIncomeObservationP
 
 assert_quantity_readers_cover_independent_facts(
     "renta-income",
-    _RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS,
+    RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS,
     _RENTA_INDEPENDENT_QUANTITY_READERS,
 )
 
@@ -518,7 +518,7 @@ def unrouted_ledger_renta_income_quantities(
         provider_model=LedgerRentaIncomeProvider,
         build_matcher=casilla_target_matcher,
         read_fact=lambda selector: selector.fact,
-        independent_facts=_RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS,
+        independent_facts=RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS,
         readers=_RENTA_INDEPENDENT_QUANTITY_READERS,
     )
 

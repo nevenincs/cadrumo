@@ -28,38 +28,38 @@ from cadrumo.domain.user_profile.values import UserProfileFact
 from .....domain.iva.schema import InvoiceKind
 from .published_authority_support import published_authority_operation
 
-_BUCKET_ID = "24242424-2424-4242-8242-242424242424"
+BUCKET_ID = "24242424-2424-4242-8242-242424242424"
 
-_OTHER_BUCKET_ID = "25252525-2525-4252-8252-252525252525"
+OTHER_BUCKET_ID = "25252525-2525-4252-8252-252525252525"
 
 
-def _modelo_revision(modelo_id: str, revision_id: str):
+def modelo_revision(modelo_id: str, revision_id: str):
     return published_authority_operation().revision_with_export_layouts(modelo_id, revision_id)
 
 
-secure_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="secure_profile")
+secure_profile = bucket_scoped_runtime_profile_fixture(BUCKET_ID, autouse=False, name="secure_profile")
 
 
 @pytest.fixture(autouse=True)
-def _generation_pinned_authority() -> Iterator[None]:
+def generation_pinned_authority() -> Iterator[None]:
     """Run every test inside one generation-pinned authority operation."""
     with bundled_indexed_authority().operation():
         yield
 
 
-def _resolver(reader: InvoiceSourceCatalogueReader) -> InvoiceCatalogueSourceResolver:
+def source_resolver(reader: InvoiceSourceCatalogueReader) -> InvoiceCatalogueSourceResolver:
     return InvoiceCatalogueSourceResolver(
         ports=InvoiceSourceResolverPorts(catalogue_reader=reader),
     )
 
 
-def _m349_resolution(reader: InvoiceSourceCatalogueReader):
+def m349_resolution(reader: InvoiceSourceCatalogueReader):
     """Resolve the committed Modelo 349 revision for 2026 1T against a catalogue reader."""
     modelos, _catalogues = bundled_registry_tree()
     modelo_349 = next(candidate for candidate in modelos if candidate.id == "349")
-    return _resolver(reader).resolve(
+    return source_resolver(reader).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="349",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
@@ -68,7 +68,7 @@ def _m349_resolution(reader: InvoiceSourceCatalogueReader):
     )
 
 
-class _InMemoryCatalogueReader:
+class InMemoryCatalogueReader:
     """Adapter-test-owned reader fake for public resolver projections."""
 
     def __init__(self, invoices: Sequence[Invoice]) -> None:
@@ -78,31 +78,31 @@ class _InMemoryCatalogueReader:
         return self._catalogue
 
 
-def _public_resolution(
+def public_resolution(
     invoices: Sequence[Invoice],
     *,
     context: CalculationSourceContext,
 ):
     """Resolve local fixture data through the public application seam."""
-    return _resolver(_InMemoryCatalogueReader(invoices)).resolve(context)
+    return source_resolver(InMemoryCatalogueReader(invoices)).resolve(context)
 
 
-def _public_m349_claves(invoices: Sequence[Invoice]) -> tuple[str, ...]:
+def public_m349_claves(invoices: Sequence[Invoice]) -> tuple[str, ...]:
     """Return M349 claves emitted by the resolver's public detail-row seam."""
-    resolution = _public_resolution(
+    resolution = public_resolution(
         invoices,
         context=CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="349",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
-            revision=_modelo_revision("349", "2020-y-siguientes"),
+            revision=modelo_revision("349", "2020-y-siguientes"),
         ),
     )
     return tuple(row.clave_operacion for row in resolution.detail_rows if isinstance(row, Modelo349OperadorRow))
 
 
-def _invoice(
+def source_resolver_invoice(
     *,
     bucket_id: str | None,
     kind: InvoiceKind = InvoiceKind.ISSUED,
@@ -170,7 +170,7 @@ def _invoice(
     )
 
 
-def _domestic_invoice(
+def domestic_invoice(
     *,
     bucket_id: str,
     kind: InvoiceKind,
@@ -224,7 +224,7 @@ def _domestic_invoice(
     )
 
 
-def _public_administration_profile_facts() -> tuple[UserProfileFact, ...]:
+def public_administration_profile_facts() -> tuple[UserProfileFact, ...]:
     return (
         UserProfileFact(path="identity.tax_id", value="Q1234567D"),
         UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
@@ -241,7 +241,7 @@ def _public_administration_profile_facts() -> tuple[UserProfileFact, ...]:
     )
 
 
-def _statutory_information_duty_profile_facts() -> tuple[UserProfileFact, ...]:
+def statutory_information_duty_profile_facts() -> tuple[UserProfileFact, ...]:
     return (
         UserProfileFact(path="identity.tax_id", value="B12345674"),
         UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
@@ -258,7 +258,7 @@ def _statutory_information_duty_profile_facts() -> tuple[UserProfileFact, ...]:
     )
 
 
-def _clave_probe_invoice(kind: InvoiceKind, category: IvaCategory) -> Invoice:
+def clave_probe_invoice(kind: InvoiceKind, category: IvaCategory) -> Invoice:
     """Build a minimal exempt-shaped invoice carrying a category and no operation_type."""
     base = Decimal("1000.00")
     line = InvoiceLine(
@@ -289,18 +289,18 @@ def _clave_probe_invoice(kind: InvoiceKind, category: IvaCategory) -> Invoice:
     )
 
 
-def _unsettled_reading_refs(resolution) -> list[str | None]:
+def unsettled_reading_refs(resolution) -> list[str | None]:
     return sorted(
         (item.source_ref for item in resolution.diagnostics if item.reason == "unsettled_legal_reading"),
         key=str,
     )
 
 
-def _m347_2026_context(bucket_id: str) -> CalculationSourceContext:
+def m347_2026_context(bucket_id: str) -> CalculationSourceContext:
     return CalculationSourceContext(
         bucket_id=bucket_id,
         modelo="347",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "0A"),
-        revision=_modelo_revision("347", "2025-y-siguientes"),
+        revision=modelo_revision("347", "2025-y-siguientes"),
     )

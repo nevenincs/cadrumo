@@ -44,7 +44,7 @@ if TYPE_CHECKING:
 # (`missing_flags`, also internal once interpolated) instead of leaking
 # a raw `('tax-id', 'activity')` tuple as a stray context line.
 # Policy verdicts are projected through the typed action channel, not as object-valued context.
-_INTERNAL_CONTEXT_KEYS: frozenset[str] = frozenset(
+INTERNAL_CONTEXT_KEYS: frozenset[str] = frozenset(
     {"prompt_key", "question_id", "flow_id", "missing", "missing_flags", "terminal_precondition_verdict"}
 )
 
@@ -70,7 +70,7 @@ class ErrorCategory(StrEnum):
     LOCKED = "LOCKED"
 
 
-def _category_text_prefix(category: ErrorCategory) -> str:
+def category_text_prefix(category: ErrorCategory) -> str:
     """Return the sentence-case stderr prefix for ``category``."""
     from ..i18n.render import tr
 
@@ -167,13 +167,13 @@ def complete_error_envelope_model() -> None:
 
 
 _ERROR_REGISTRY_MUTABLE: dict[str, ErrorCode] = {}
-_CLASS_CODE_REGISTRY: dict[type[BaseException], ErrorCode] = {}
+CLASS_CODE_REGISTRY: dict[type[BaseException], ErrorCode] = {}
 
 # Collects CadrumoError subclasses created before the declared-code catalogue
 # was loaded. The catalogue spans every layer's declaration module, so loading
 # it at import would make any exception import walk all of them; the first
 # lookup loads it and drains this set instead.
-_DEFERRED_BIND: set[type[BaseException]] = set()
+DEFERRED_BIND: set[type[BaseException]] = set()
 
 
 def register(code: ErrorCode) -> ErrorCode:
@@ -234,25 +234,25 @@ def get_registered_error_code_by_code(code: str) -> ErrorCode:
     return matches[0]
 
 
-def _flush_deferred_binds() -> None:
+def flush_deferred_binds() -> None:
     """Bind every class created before the declared-code catalogue loaded.
 
     Loads the catalogue first; a class still unbound afterwards has no
     declaration and stays pending for its caller to refuse.
     """
     declared = declared_error_codes_by_qualname()
-    if not _DEFERRED_BIND:
+    if not DEFERRED_BIND:
         return
     still_pending: set[type[BaseException]] = set()
-    for error_type in list(_DEFERRED_BIND):
+    for error_type in list(DEFERRED_BIND):
         code = declared.get(_qualname(error_type))
         if code is not None:
-            _CLASS_CODE_REGISTRY[error_type] = code
+            CLASS_CODE_REGISTRY[error_type] = code
             type.__setattr__(error_type, "code", code)
         else:
             still_pending.add(error_type)
-    _DEFERRED_BIND.clear()
-    _DEFERRED_BIND.update(still_pending)
+    DEFERRED_BIND.clear()
+    DEFERRED_BIND.update(still_pending)
 
 
 def bind_error_code(error_type: type[BaseException]) -> ErrorCode | None:
@@ -274,12 +274,12 @@ def bind_error_code(error_type: type[BaseException]) -> ErrorCode | None:
         InternalInvariantError: When the mapping is available but contains no entry
             for this class.
     """
-    bound = _CLASS_CODE_REGISTRY.get(error_type)
+    bound = CLASS_CODE_REGISTRY.get(error_type)
     if bound is not None:
         return bound
     declared = _declared_code_map
     if declared is None:
-        _DEFERRED_BIND.add(error_type)
+        DEFERRED_BIND.add(error_type)
         return None
     qualname = _qualname(error_type)
     code = declared.get(qualname)
@@ -294,7 +294,7 @@ def bind_error_code(error_type: type[BaseException]) -> ErrorCode | None:
             f"process mid-flight: run `git status` and rerun once the working "
             f"tree settles.",
         )
-    _CLASS_CODE_REGISTRY[error_type] = code
+    CLASS_CODE_REGISTRY[error_type] = code
     type.__setattr__(error_type, "code", code)
     return code
 
@@ -306,13 +306,13 @@ def get_registered_error_code(error: BaseException | type[BaseException]) -> Err
     the lookup, so classes created before the catalogue loaded are bound
     here on first use.
     """
-    _flush_deferred_binds()
+    flush_deferred_binds()
     from .hierarchy import RecordedRegisteredError
 
     if isinstance(error, RecordedRegisteredError):
         return get_registered_error_code_by_code(error.recorded_code)
     error_type = error if isinstance(error, type) else type(error)
-    code = _CLASS_CODE_REGISTRY.get(error_type)
+    code = CLASS_CODE_REGISTRY.get(error_type)
     if code is None:
         resolved = bind_error_code(error_type)
         # The catalogue is loaded by now, so None means it is still loading:
@@ -342,7 +342,7 @@ def scrub_error_context(context: Mapping[str, object] | None) -> dict[str, str] 
 
     scrubbed: dict[str, str] = {}
     for key, value in sorted(context.items()):
-        if key in _INTERNAL_CONTEXT_KEYS:
+        if key in INTERNAL_CONTEXT_KEYS:
             continue
         if is_sensitive_redaction_key(key):
             scrubbed[key] = "<redacted>"
@@ -422,7 +422,7 @@ def render_error_text(
 ) -> str:
     """Render the human-readable stderr payload for ``error``."""
     code = get_registered_error_code(error)
-    prefix = _category_text_prefix(code.category)
+    prefix = category_text_prefix(code.category)
     message = resolve_error_message(error, code)
     first_line = f"{prefix} {message}"
     lines = [first_line]

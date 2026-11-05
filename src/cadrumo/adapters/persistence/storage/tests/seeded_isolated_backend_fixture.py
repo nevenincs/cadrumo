@@ -49,7 +49,7 @@ def seeded_isolated_backend_fixture(
     seed: Callable[[], None],
     bucket_id: str = DEFAULT_BUCKET_ID,
     autouse: bool = True,
-    name: str = "_isolated_backend",
+    name: str = "isolated_backend",
     origin_name: str = "_isolated_backend_origin",
     settings_overrides: Mapping[str, object] | None = None,
     profile_overrides: Mapping[str, str] | None = None,

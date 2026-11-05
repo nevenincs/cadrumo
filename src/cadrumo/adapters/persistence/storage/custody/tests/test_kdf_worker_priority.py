@@ -17,8 +17,8 @@ from typing import Any, cast
 import pytest
 
 from ......core.config import Settings
-from .._kdf_process import WINDOWS_ABOVE_NORMAL_PRIORITY_CLASS
-from .._kdf_worker_supervision import _SupervisedKdfWorker
+from ..kdf_process import WINDOWS_ABOVE_NORMAL_PRIORITY_CLASS
+from ..kdf_worker_supervision import SupervisedKdfWorker
 
 pytestmark = [
     pytest.mark.integration,
@@ -28,7 +28,7 @@ pytestmark = [
 
 
 def test_attested_kdf_child_runs_above_normal_priority(tmp_path: Path) -> None:
-    worker = _SupervisedKdfWorker(deadline=time.monotonic() + 60, settings=Settings(cadrumo_storage_root=tmp_path))
+    worker = SupervisedKdfWorker(deadline=time.monotonic() + 60, settings=Settings(cadrumo_storage_root=tmp_path))
     with worker:
         process = worker._process
         assert process is not None and process.poll() is None

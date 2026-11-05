@@ -39,7 +39,7 @@ from .....domain.calculations.registry.tests.registry_observations import (
 )
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..calculation_observations import CalculationObservationRepository
-from ._observation_lookup_support import save_app_filing_observation
+from .observation_lookup_support import save_app_filing_observation
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

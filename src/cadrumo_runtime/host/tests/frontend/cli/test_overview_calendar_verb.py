@@ -59,7 +59,7 @@ from ._overview_calendar_support import (
 )
 from ._overview_native_support import invoke_native_overview
 
-__all__ = ["_isolated_backend"]
+__all__ = ["isolated_backend"]
 
 pytestmark = [
     pytest.mark.integration,
@@ -73,7 +73,7 @@ _ACTIVE_NATIVE: ContextVar[NativeCliProfileFixture | None] = ContextVar("overvie
 
 
 @pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+def isolated_backend(tmp_path: Path) -> Iterator[None]:
     """Keep the canonical seeded bucket while admitting its real credentialed worker."""
     global PRIMARY_PROFILE_ID
     with native_cli_profile_scope(tmp_path) as fixture:

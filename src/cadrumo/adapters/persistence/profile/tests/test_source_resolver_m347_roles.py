@@ -17,26 +17,27 @@ from cadrumo.domain.invoices.models import Invoice
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 
 from .....domain.iva.schema import InvoiceKind
 from .source_resolver_test_support import (
-    _BUCKET_ID,
-    _domestic_invoice,
-    _invoice,
-    _m347_2026_context,
-    _m349_resolution,
-    _modelo_revision,
-    _public_administration_profile_facts,
-    _public_resolution,
-    _resolver,
-    _statutory_information_duty_profile_facts,
-    _unsettled_reading_refs,
+    BUCKET_ID,
+    domestic_invoice,
+    m347_2026_context,
+    m349_resolution,
+    modelo_revision,
+    public_administration_profile_facts,
+    public_resolution,
+    source_resolver,
+    source_resolver_invoice,
+    statutory_information_duty_profile_facts,
+    unsettled_reading_refs,
 )
-from .source_resolver_test_support import _generation_pinned_authority as _generation_pinned_authority
+from .source_resolver_test_support import (
+    generation_pinned_authority as generation_pinned_authority,
+)
 from .source_resolver_test_support import secure_profile as secure_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -51,7 +52,7 @@ def _capability_bucket_invoices(bucket_id: str) -> tuple[Invoice, ...]:
         # Domestic, over the M347 declaration floor, carrying a recargo and a
         # retencion: both must ride through without disturbing the declared
         # figures, since neither is an M347 concept.
-        _invoice(
+        source_resolver_invoice(
             bucket_id=bucket_id,
             kind=InvoiceKind.ISSUED,
             invoice_number="CAP-ES-001",
@@ -63,7 +64,7 @@ def _capability_bucket_invoices(bucket_id: str) -> tuple[Invoice, ...]:
             iva_category=IvaCategory("domestic_zero"),
         ),
         # Intra-community supply of goods -> M349 clave E.
-        _invoice(
+        source_resolver_invoice(
             bucket_id=bucket_id,
             kind=InvoiceKind.ISSUED,
             invoice_number="CAP-DE-001",
@@ -77,7 +78,7 @@ def _capability_bucket_invoices(bucket_id: str) -> tuple[Invoice, ...]:
         # Intra-community acquisition of SERVICES -> M349 clave I. This is the
         # class the resolver docstring once claimed no IVA category could
         # express, so its presence here is deliberate.
-        _invoice(
+        source_resolver_invoice(
             bucket_id=bucket_id,
             kind=InvoiceKind.RECEIVED,
             invoice_number="CAP-IT-001",
@@ -103,8 +104,8 @@ def test_capability_parity_m349_declares_every_intracommunity_capability(
     tests and is exactly what a parity proof exists to catch.
     """
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
-    repository.save(build_invoice_catalogue(_capability_bucket_invoices(_BUCKET_ID)))
-    resolution = _m349_resolution(repository)
+    repository.save(build_invoice_catalogue(_capability_bucket_invoices(BUCKET_ID)))
+    resolution = m349_resolution(repository)
 
     from cadrumo.domain.modelos.row_models import Modelo349OperadorRow
 
@@ -138,15 +139,15 @@ def test_capability_parity_m347_excludes_the_intracommunity_operations(
     counterparty under an ORDINARY operation still reaches the declaration.
     """
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
-    repository.save(build_invoice_catalogue(_capability_bucket_invoices(_BUCKET_ID)))
+    repository.save(build_invoice_catalogue(_capability_bucket_invoices(BUCKET_ID)))
 
-    resolution = _resolver(repository).resolve(
+    resolution = source_resolver(repository).resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             modelo="347",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "0A"),
-            revision=_modelo_revision("347", "2011-2024"),
+            revision=modelo_revision("347", "2011-2024"),
         ),
     )
 
@@ -167,7 +168,7 @@ def test_m347_declares_an_ordinary_operation_with_a_nonresident_counterparty(
     US customer of a service not subject to Spanish IVA is exactly that case:
     it must count toward the M347 declarante summary, not vanish silently.
     """
-    service_sale = _invoice(
+    service_sale = source_resolver_invoice(
         bucket_id=secure_profile.bucket_id,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-US-2026-001",
@@ -181,13 +182,13 @@ def test_m347_declares_an_ordinary_operation_with_a_nonresident_counterparty(
     repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
     repository.save(build_invoice_catalogue((service_sale,)))
 
-    resolution = _resolver(repository).resolve(
+    resolution = source_resolver(repository).resolve(
         CalculationSourceContext(
             bucket_id=secure_profile.bucket_id,
             modelo="347",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "0A"),
-            revision=_modelo_revision("347", "2011-2024"),
+            revision=modelo_revision("347", "2011-2024"),
         ),
     )
 
@@ -213,7 +214,7 @@ def test_m347_excludes_the_imports_and_exports_of_goods(
     goods category differs, so the exclusion reads the operation, never the
     residence.
     """
-    goods = _invoice(
+    goods = source_resolver_invoice(
         bucket_id=None,
         kind=kind,
         invoice_number=f"M347-GOODS-{kind.value.upper()}-2026-001",
@@ -225,19 +226,19 @@ def test_m347_excludes_the_imports_and_exports_of_goods(
         iva_category=IvaCategory(category),
     )
 
-    resolution = _public_resolution((goods,), context=_m347_2026_context(secure_profile.bucket_id))
+    resolution = public_resolution((goods,), context=m347_2026_context(secure_profile.bucket_id))
 
     assert resolution.provenance == ()
     assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("0")
     assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("0")
-    assert _unsettled_reading_refs(resolution) == []
+    assert unsettled_reading_refs(resolution) == []
 
 
 def test_m347_declares_an_operation_assimilated_to_an_export_and_discloses_the_open_exclusion(
     secure_profile: TestRuntimeProfile,
 ) -> None:
     """An operation assimilated to an export may be goods or services; it stays declared with an advisory."""
-    assimilated = _invoice(
+    assimilated = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-ASIMILADA-2026-001",
@@ -249,17 +250,17 @@ def test_m347_declares_an_operation_assimilated_to_an_export_and_discloses_the_o
         iva_category=IvaCategory("export_assimilated_zero_rated"),
     )
 
-    resolution = _public_resolution((assimilated,), context=_m347_2026_context(secure_profile.bucket_id))
+    resolution = public_resolution((assimilated,), context=m347_2026_context(secure_profile.bucket_id))
 
     assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
-    assert _unsettled_reading_refs(resolution) == ["m347-exclusion:iva-category"]
+    assert unsettled_reading_refs(resolution) == ["m347-exclusion:iva-category"]
     advisory = next(item for item in resolution.diagnostics if item.reason == "unsettled_legal_reading")
     assert "M347-ASIMILADA-2026-001" in advisory.message
     assert advisory.asserted_legal_refs == ("rd-1065-2007:art-33.2.g",)
 
 
 def _withheld_invoice(bucket_id: str, *, kind: InvoiceKind, invoice_number: str) -> Invoice:
-    return _domestic_invoice(
+    return domestic_invoice(
         bucket_id=bucket_id,
         kind=kind,
         invoice_number=invoice_number,
@@ -283,13 +284,13 @@ def test_m347_excludes_a_received_invoice_whose_withholding_the_filer_declares_a
         secure_profile.bucket_id, kind=InvoiceKind.RECEIVED, invoice_number="M347-RETENIDA-REC-2026-001"
     )
     unwithheld = withheld.model_copy(update={"retention_rate": None, "retention_amount": None})
-    context = _m347_2026_context(secure_profile.bucket_id)
+    context = m347_2026_context(secure_profile.bucket_id)
 
-    excluded = _public_resolution((withheld,), context=context)
-    declared = _public_resolution((unwithheld,), context=context)
+    excluded = public_resolution((withheld,), context=context)
+    declared = public_resolution((unwithheld,), context=context)
 
     assert excluded.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("0")
-    assert _unsettled_reading_refs(excluded) == []
+    assert unsettled_reading_refs(excluded) == []
     assert declared.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
     assert declared.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("4235.00")
 
@@ -308,10 +309,10 @@ def test_m347_declares_an_issued_invoice_withheld_by_the_customer_and_discloses_
         secure_profile.bucket_id, kind=InvoiceKind.ISSUED, invoice_number="M347-RETENIDA-EMI-2026-001"
     )
 
-    resolution = _public_resolution((withheld,), context=_m347_2026_context(secure_profile.bucket_id))
+    resolution = public_resolution((withheld,), context=m347_2026_context(secure_profile.bucket_id))
 
     assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
-    assert _unsettled_reading_refs(resolution) == ["m347-exclusion:withheld-issued-invoice"]
+    assert unsettled_reading_refs(resolution) == ["m347-exclusion:withheld-issued-invoice"]
     advisory = next(item for item in resolution.diagnostics if item.reason == "unsettled_legal_reading")
     assert advisory.asserted_legal_refs == (
         "rd-1065-2007:art-33.2.i",
@@ -340,9 +341,9 @@ def test_m347_clave_f_declares_a_mediated_sale_ordinary_sale_of_the_same_amount_
         modelo="347",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "0A"),
-        revision=_modelo_revision("347", "2025-y-siguientes"),
+        revision=modelo_revision("347", "2025-y-siguientes"),
     )
-    mediated_sale = _invoice(
+    mediated_sale = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-AGENCY-2026-001",
@@ -356,7 +357,7 @@ def test_m347_clave_f_declares_a_mediated_sale_ordinary_sale_of_the_same_amount_
     mediated_sale = mediated_sale.model_copy(
         update={"travel_agency_mediation": TravelAgencyMediationType.from_registry("mediated_service")},
     )
-    ordinary_sale = _invoice(
+    ordinary_sale = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-ORDINARY-2026-001",
@@ -369,7 +370,7 @@ def test_m347_clave_f_declares_a_mediated_sale_ordinary_sale_of_the_same_amount_
     )
     assert ordinary_sale.travel_agency_mediation is None
 
-    resolution = _public_resolution((mediated_sale, ordinary_sale), context=context)
+    resolution = public_resolution((mediated_sale, ordinary_sale), context=context)
 
     assert {item.source_ref for item in resolution.provenance} == {
         f"collectible_invoice:{mediated_sale.invoice_id}",
@@ -392,9 +393,9 @@ def test_m347_clave_g_declares_only_air_transport_purchases_not_other_mediated_p
         modelo="347",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "0A"),
-        revision=_modelo_revision("347", "2025-y-siguientes"),
+        revision=modelo_revision("347", "2025-y-siguientes"),
     )
-    air_transport_purchase = _invoice(
+    air_transport_purchase = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.RECEIVED,
         invoice_number="M347-AIR-2026-001",
@@ -408,7 +409,7 @@ def test_m347_clave_g_declares_only_air_transport_purchases_not_other_mediated_p
     air_transport_purchase = air_transport_purchase.model_copy(
         update={"travel_agency_mediation": TravelAgencyMediationType.from_registry("air_passenger_transport")},
     )
-    non_air_mediated_purchase = _invoice(
+    non_air_mediated_purchase = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.RECEIVED,
         invoice_number="M347-HOTEL-2026-001",
@@ -423,7 +424,7 @@ def test_m347_clave_g_declares_only_air_transport_purchases_not_other_mediated_p
         update={"travel_agency_mediation": TravelAgencyMediationType.from_registry("mediated_service")},
     )
 
-    resolution = _public_resolution((air_transport_purchase, non_air_mediated_purchase), context=context)
+    resolution = public_resolution((air_transport_purchase, non_air_mediated_purchase), context=context)
 
     assert {item.source_ref for item in resolution.provenance} == {
         f"payable_invoice:{air_transport_purchase.invoice_id}",
@@ -442,7 +443,7 @@ def test_m347_filer_declaration_roles_fails_closed_to_empty_for_a_profile_absent
     an M347 filer whose profile is otherwise incomplete or unset still
     reaches claves A, B, F and G, and simply carries no C/D/E eligibility.
     """
-    purchase = _invoice(
+    purchase = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.RECEIVED,
         invoice_number="M347-ABSENT-ROLE-2026-001",
@@ -453,14 +454,14 @@ def test_m347_filer_declaration_roles_fails_closed_to_empty_for_a_profile_absent
         base_total=Decimal("3500.00"),
         iva_category=IvaCategory("domestic_general"),
     )
-    resolution = _public_resolution(
+    resolution = public_resolution(
         (purchase,),
         context=CalculationSourceContext(
             bucket_id=secure_profile.bucket_id,
             modelo="347",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "0A"),
-            revision=_modelo_revision("347", "2025-y-siguientes"),
+            revision=modelo_revision("347", "2025-y-siguientes"),
         ),
     )
     # The one advisory left is the record gap every Spanish declarado carries
@@ -497,15 +498,15 @@ def test_m347_filer_declaration_roles_reaches_a_role_set_by_the_real_operator_pa
         ),
     )
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=secure_profile.bucket_id,
             facts=facts,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 
-    collection = _invoice(
+    collection = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-ROLE-COLLECTION-2026-001",
@@ -521,7 +522,7 @@ def test_m347_filer_declaration_roles_reaches_a_role_set_by_the_real_operator_pa
             "collected_on_behalf_of_name": "Colegiado Beneficiario SL",
         },
     )
-    ordinary = _invoice(
+    ordinary = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-ROLE-ORDINARY-2026-001",
@@ -532,14 +533,14 @@ def test_m347_filer_declaration_roles_reaches_a_role_set_by_the_real_operator_pa
         base_total=Decimal("3500.00"),
         iva_category=IvaCategory("domestic_general"),
     )
-    resolution = _public_resolution(
+    resolution = public_resolution(
         (collection, ordinary),
         context=CalculationSourceContext(
             bucket_id=secure_profile.bucket_id,
             modelo="347",
             filing_year=2026,
             period=Period.from_year_and_code(2026, "0A"),
-            revision=_modelo_revision("347", "2025-y-siguientes"),
+            revision=modelo_revision("347", "2025-y-siguientes"),
         ),
     )
     assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("2")
@@ -577,8 +578,8 @@ def test_m347_clave_c_declares_the_beneficiary_not_the_payer_through_the_real_re
     classifier reads both facts together, not either one.
     """
     seed_test_profile_record(
-        _create_profile_record_for_test(
-            context=_profile_creation_context_for_test(),
+        create_user_profile_record(
+            context=profile_creation_context_for_test(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=secure_profile.bucket_id,
             facts=_third_party_fee_collector_profile_facts(),
@@ -589,10 +590,10 @@ def test_m347_clave_c_declares_the_beneficiary_not_the_payer_through_the_real_re
         modelo="347",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "0A"),
-        revision=_modelo_revision("347", "2025-y-siguientes"),
+        revision=modelo_revision("347", "2025-y-siguientes"),
     )
 
-    collection_invoice = _invoice(
+    collection_invoice = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-COBRO-2026-001",
@@ -609,7 +610,7 @@ def test_m347_clave_c_declares_the_beneficiary_not_the_payer_through_the_real_re
             "collected_on_behalf_of_name": "Colegiado Beneficiario SL",
         },
     )
-    ordinary_invoice = _invoice(
+    ordinary_invoice = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-ORDINARIA-2026-001",
@@ -622,7 +623,7 @@ def test_m347_clave_c_declares_the_beneficiary_not_the_payer_through_the_real_re
     )
     assert ordinary_invoice.collected_on_behalf_of_tax_id is None
 
-    resolution = _public_resolution((collection_invoice, ordinary_invoice), context=context)
+    resolution = public_resolution((collection_invoice, ordinary_invoice), context=context)
 
     assert {item.source_ref for item in resolution.provenance} == {
         f"collectible_invoice:{collection_invoice.invoice_id}",
@@ -648,9 +649,9 @@ def test_m347_clave_c_requires_the_filer_role_a_beneficiary_fact_alone_is_not_en
         modelo="347",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "0A"),
-        revision=_modelo_revision("347", "2025-y-siguientes"),
+        revision=modelo_revision("347", "2025-y-siguientes"),
     )
-    collection_shaped_invoice = _invoice(
+    collection_shaped_invoice = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-COBRO-2026-002",
@@ -668,7 +669,7 @@ def test_m347_clave_c_requires_the_filer_role_a_beneficiary_fact_alone_is_not_en
         },
     )
 
-    ordinary_invoice = _invoice(
+    ordinary_invoice = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-COBRO-2026-003",
@@ -679,7 +680,7 @@ def test_m347_clave_c_requires_the_filer_role_a_beneficiary_fact_alone_is_not_en
         base_total=Decimal("3500.00"),
         iva_category=IvaCategory("domestic_general"),
     )
-    resolution = _public_resolution((collection_shaped_invoice, ordinary_invoice), context=context)
+    resolution = public_resolution((collection_shaped_invoice, ordinary_invoice), context=context)
 
     assert {item.source_ref for item in resolution.provenance} == {
         f"collectible_invoice:{collection_shaped_invoice.invoice_id}",
@@ -702,11 +703,11 @@ def test_m347_clave_e_declares_a_subvencion_from_a_public_administration_ordinar
     classification, proving the role alone is not sufficient.
     """
     seed_test_profile_record(
-        _create_profile_record_for_test(
-            context=_profile_creation_context_for_test(),
+        create_user_profile_record(
+            context=profile_creation_context_for_test(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=secure_profile.bucket_id,
-            facts=_public_administration_profile_facts(),
+            facts=public_administration_profile_facts(),
         ),
     )
     context = CalculationSourceContext(
@@ -714,10 +715,10 @@ def test_m347_clave_e_declares_a_subvencion_from_a_public_administration_ordinar
         modelo="347",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "0A"),
-        revision=_modelo_revision("347", "2025-y-siguientes"),
+        revision=modelo_revision("347", "2025-y-siguientes"),
     )
 
-    subvencion_invoice = _invoice(
+    subvencion_invoice = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-SUBVENCION-2026-001",
@@ -729,7 +730,7 @@ def test_m347_clave_e_declares_a_subvencion_from_a_public_administration_ordinar
         iva_category=IvaCategory("domestic_general"),
     )
     subvencion_invoice = subvencion_invoice.model_copy(update={"is_subvencion_ayuda": True})
-    ordinary_invoice = _invoice(
+    ordinary_invoice = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-PAGO-ORDINARIO-2026-001",
@@ -743,7 +744,7 @@ def test_m347_clave_e_declares_a_subvencion_from_a_public_administration_ordinar
     ordinary_invoice = ordinary_invoice.model_copy(update={"is_subvencion_ayuda": False})
     assert ordinary_invoice.is_subvencion_ayuda is False
 
-    resolution = _public_resolution((subvencion_invoice, ordinary_invoice), context=context)
+    resolution = public_resolution((subvencion_invoice, ordinary_invoice), context=context)
 
     assert {item.source_ref for item in resolution.provenance} == {
         f"collectible_invoice:{subvencion_invoice.invoice_id}",
@@ -764,9 +765,9 @@ def test_m347_clave_e_requires_the_public_administration_role_a_subvencion_fact_
         modelo="347",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "0A"),
-        revision=_modelo_revision("347", "2025-y-siguientes"),
+        revision=modelo_revision("347", "2025-y-siguientes"),
     )
-    subvencion_shaped_invoice = _invoice(
+    subvencion_shaped_invoice = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-SUBVENCION-2026-002",
@@ -779,7 +780,7 @@ def test_m347_clave_e_requires_the_public_administration_role_a_subvencion_fact_
     )
     subvencion_shaped_invoice = subvencion_shaped_invoice.model_copy(update={"is_subvencion_ayuda": True})
 
-    resolution = _public_resolution((subvencion_shaped_invoice,), context=context)
+    resolution = public_resolution((subvencion_shaped_invoice,), context=context)
 
     assert {item.source_ref for item in resolution.provenance} == {
         f"collectible_invoice:{subvencion_shaped_invoice.invoice_id}",
@@ -799,11 +800,11 @@ def test_m347_clave_d_declares_an_acquisition_outside_activity_the_same_activity
     would misclassify the second as D too.
     """
     seed_test_profile_record(
-        _create_profile_record_for_test(
-            context=_profile_creation_context_for_test(),
+        create_user_profile_record(
+            context=profile_creation_context_for_test(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=secure_profile.bucket_id,
-            facts=_statutory_information_duty_profile_facts(),
+            facts=statutory_information_duty_profile_facts(),
         ),
     )
     context = CalculationSourceContext(
@@ -811,10 +812,10 @@ def test_m347_clave_d_declares_an_acquisition_outside_activity_the_same_activity
         modelo="347",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "0A"),
-        revision=_modelo_revision("347", "2025-y-siguientes"),
+        revision=modelo_revision("347", "2025-y-siguientes"),
     )
 
-    outside_activity_purchase = _invoice(
+    outside_activity_purchase = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.RECEIVED,
         invoice_number="M347-AL-MARGEN-2026-001",
@@ -826,7 +827,7 @@ def test_m347_clave_d_declares_an_acquisition_outside_activity_the_same_activity
         iva_category=IvaCategory("domestic_general"),
     )
     outside_activity_purchase = outside_activity_purchase.model_copy(update={"outside_economic_activity": True})
-    within_activity_purchase = _invoice(
+    within_activity_purchase = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.RECEIVED,
         invoice_number="M347-DENTRO-ACTIVIDAD-2026-001",
@@ -839,7 +840,7 @@ def test_m347_clave_d_declares_an_acquisition_outside_activity_the_same_activity
     )
     within_activity_purchase = within_activity_purchase.model_copy(update={"outside_economic_activity": False})
 
-    resolution = _public_resolution((outside_activity_purchase, within_activity_purchase), context=context)
+    resolution = public_resolution((outside_activity_purchase, within_activity_purchase), context=context)
 
     assert {item.source_ref for item in resolution.provenance} == {
         f"payable_invoice:{outside_activity_purchase.invoice_id}",
@@ -860,9 +861,9 @@ def test_m347_clave_d_requires_the_filer_role_the_fact_alone_is_not_enough(
         modelo="347",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "0A"),
-        revision=_modelo_revision("347", "2025-y-siguientes"),
+        revision=modelo_revision("347", "2025-y-siguientes"),
     )
-    outside_activity_shaped_purchase = _invoice(
+    outside_activity_shaped_purchase = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.RECEIVED,
         invoice_number="M347-AL-MARGEN-2026-002",
@@ -877,7 +878,7 @@ def test_m347_clave_d_requires_the_filer_role_the_fact_alone_is_not_enough(
         update={"outside_economic_activity": True},
     )
 
-    resolution = _public_resolution((outside_activity_shaped_purchase,), context=context)
+    resolution = public_resolution((outside_activity_shaped_purchase,), context=context)
 
     assert {item.source_ref for item in resolution.provenance} == {
         f"payable_invoice:{outside_activity_shaped_purchase.invoice_id}",
@@ -894,9 +895,9 @@ def test_m347_role_fact_advisories_fires_only_for_a_role_carrying_filer_with_the
         modelo="347",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "0A"),
-        revision=_modelo_revision("347", "2025-y-siguientes"),
+        revision=modelo_revision("347", "2025-y-siguientes"),
     )
-    unrelated_purchase = _invoice(
+    unrelated_purchase = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.RECEIVED,
         invoice_number="M347-SIN-ROL-2026-001",
@@ -908,7 +909,7 @@ def test_m347_role_fact_advisories_fires_only_for_a_role_carrying_filer_with_the
         iva_category=IvaCategory("domestic_general"),
     )
 
-    diagnostics = _public_resolution((unrelated_purchase,), context=context).diagnostics
+    diagnostics = public_resolution((unrelated_purchase,), context=context).diagnostics
 
     # No role advisory; the one diagnostic is the provincia gap every Spanish declarado carries.
     assert [item.source_ref for item in diagnostics] == ["m347-record:provincia-not-recorded"]
@@ -919,11 +920,11 @@ def test_m347_role_fact_advisories_fires_for_an_unset_clave_d_fact_and_not_once_
 ) -> None:
     """A D-role filer's RECEIVED invoice with the fact undeclared surfaces an advisory; declaring it clears it."""
     seed_test_profile_record(
-        _create_profile_record_for_test(
-            context=_profile_creation_context_for_test(),
+        create_user_profile_record(
+            context=profile_creation_context_for_test(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=secure_profile.bucket_id,
-            facts=_statutory_information_duty_profile_facts(),
+            facts=statutory_information_duty_profile_facts(),
         ),
     )
     context = CalculationSourceContext(
@@ -931,9 +932,9 @@ def test_m347_role_fact_advisories_fires_for_an_unset_clave_d_fact_and_not_once_
         modelo="347",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "0A"),
-        revision=_modelo_revision("347", "2025-y-siguientes"),
+        revision=modelo_revision("347", "2025-y-siguientes"),
     )
-    undeclared_purchase = _invoice(
+    undeclared_purchase = source_resolver_invoice(
         bucket_id=None,
         kind=InvoiceKind.RECEIVED,
         invoice_number="M347-SIN-DECLARAR-2026-001",
@@ -949,8 +950,8 @@ def test_m347_role_fact_advisories_fires_for_an_unset_clave_d_fact_and_not_once_
     # Both resolutions also carry the provincia gap every Spanish declarado has;
     # it is asserted exactly so that nothing else can hide beside the role advisory.
     provincia_gap = "m347-record:provincia-not-recorded"
-    undeclared_all = _public_resolution((undeclared_purchase,), context=context).diagnostics
-    declared_all = _public_resolution((declared_purchase,), context=context).diagnostics
+    undeclared_all = public_resolution((undeclared_purchase,), context=context).diagnostics
+    declared_all = public_resolution((declared_purchase,), context=context).diagnostics
     undeclared_diagnostics = tuple(item for item in undeclared_all if item.source_ref != provincia_gap)
     declared_diagnostics = tuple(item for item in declared_all if item.source_ref != provincia_gap)
 

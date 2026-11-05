@@ -27,7 +27,7 @@ from uuid import UUID
 
 import typer
 
-from cadrumo_client.commands.output import activate_subcommand_output_language as _activate_subcommand_output_language
+from cadrumo_client.commands.output import activate_subcommand_output_language
 
 from ....core.external_constants import OutputLanguage
 from ..common import emit_envelope
@@ -66,7 +66,7 @@ def _inspect_lines(inspection: ProfileCapsuleArchiveInspection) -> tuple[str, ..
     )
 
 
-def _refuse_an_archive_target_the_writer_would_reject(target: Path) -> None:
+def refuse_an_archive_target_the_writer_would_reject(target: Path) -> None:
     """Refuse a destination the sealed-archive writer would reject anyway.
 
     The decision is the application's, and the export operation makes it again
@@ -96,7 +96,7 @@ def archive_export(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Write the bound profile's capsule to a sealed archive."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from cadrumo_client.commands.payloads import ConfigProfileArchiveExportResult
     from cadrumo_client.commands.profile_binding import bound_profile_client
     from cadrumo_client.contracts.access_refusals import AccessDenialCode
@@ -104,9 +104,9 @@ def archive_export(
     from ....application.user_profile.access_errors import ProfileAccessRefusedError
     from ....application.user_profile.archive_operation import ProfileArchiveExportRequest
     from ..operation_profile_archive import run_profile_archive_export
-    from ._profile_support import resolve_profile_by_label
+    from .profile_support import resolve_profile_by_label
 
-    _refuse_an_archive_target_the_writer_would_reject(output)
+    refuse_an_archive_target_the_writer_would_reject(output)
     pointer = None
     if name is not None:
         # Resolve the explicit label to this invocation's authenticated worker.
@@ -139,7 +139,7 @@ def archive_inspect(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Report an archive's plaintext header without decrypting it."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     from cadrumo_client.commands.payloads import ConfigProfileArchiveInspectResult
 
     from ....application.user_profile.capsule_archive import inspect_profile_capsule_archive

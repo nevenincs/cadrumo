@@ -17,64 +17,26 @@ from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCom
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    CAPTURED_AT as _CAPTURED_AT,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    M303_DECLARATION_TYPE_C as _M303_DECLARATION_TYPE_C,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    M303_DECLARATION_TYPE_I as _M303_DECLARATION_TYPE_I,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    M303_DISPONIBLE_CASILLA as _M303_DISPONIBLE_CASILLA,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    M303_GENERADA_CASILLA as _M303_GENERADA_CASILLA,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    M303_POSTERIOR_CASILLA as _M303_POSTERIOR_CASILLA,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    MODELO_130_FIXTURE_CSV as _MODELO_130_FIXTURE_CSV,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    MODELO_303_FIXTURE_CSV as _MODELO_303_FIXTURE_CSV,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    SYNTHETIC_EXPEDIENTE_ID as _SYNTHETIC_EXPEDIENTE_ID,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    SYNTHETIC_PROFILE_ID as _SYNTHETIC_PROFILE_ID,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    filed_declaration as _declaration,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    modelo_303_justificante_pdf_bytes as _modelo_303_justificante_pdf_bytes,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    parsed_303_submitted_file_observation as _parsed_303_submitted_file_observation,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    prior_303_observation as _prior_303_observation,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    profile_backend as _profile_backend,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    registry_snapshot as _registry_snapshot,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    secure_backend as _secure_backend,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    seed_current_130_filing as _seed_current_130_filing,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    stored_130_justificante_observation as _stored_130_justificante_observation,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    stored_303_justificante_observation as _stored_303_justificante_observation,
+    CAPTURED_AT,
+    M303_DECLARATION_TYPE_C,
+    M303_DECLARATION_TYPE_I,
+    M303_DISPONIBLE_CASILLA,
+    M303_GENERADA_CASILLA,
+    M303_POSTERIOR_CASILLA,
+    MODELO_130_FIXTURE_CSV,
+    MODELO_303_FIXTURE_CSV,
+    SYNTHETIC_EXPEDIENTE_ID,
+    SYNTHETIC_PROFILE_ID,
+    filed_declaration,
+    modelo_303_justificante_pdf_bytes,
+    parsed_303_submitted_file_observation,
+    prior_303_observation,
+    profile_backend,
+    registry_snapshot,
+    secure_backend,
+    seed_current_130_filing,
+    stored_130_justificante_observation,
+    stored_303_justificante_observation,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
 from cadrumo.application.calculations.binding_prefill import (
@@ -99,36 +61,38 @@ from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvena
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as authority_indexed_authority_for_test,
+)
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from cadrumo.domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind
 from cadrumo.entrypoints.live_state_composition import compose_live_state
 
-from ._filed_capture_history_ports_support import FILED_OPERATION_STACK, SESSION_BUCKET_ID, filed_ports
+from .filed_capture_history_ports_support import FILED_OPERATION_STACK, SESSION_BUCKET_ID, filed_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def test_filed_observation_capture_promotes_previous_303_into_recurrence_history(tmp_path: Path) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test, _secure_backend(tmp_path):
+    with authority_indexed_authority_for_test().operation() as _authority_operation_for_test, secure_backend(tmp_path):
         repository = CalculationObservationRepository()
         calculation_key = persist_filed_calculation_observation(
-            _prior_303_observation(pending_compensation=Decimal("1200.00")),
+            prior_303_observation(pending_compensation=Decimal("1200.00")),
             ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path, calculation_repository=repository),
         )
 
-        target_snapshot = _registry_snapshot("303", 2026, "2T")
+        target_snapshot = registry_snapshot("303", 2026, "2T")
         prefill = resolve_bindings_from_local_store(
             target_snapshot,
             repository=repository,
-            captured_at=_CAPTURED_AT,
+            captured_at=CAPTURED_AT,
             iva_history_repository=IvaCompensationHistoryRepository(),
             operation=_authority_operation_for_test,
         )
         recurrence, recurrence_prefill = extract_modelo_303_local_iva_compensation_recurrence(
             target_snapshot,
             repository=repository,
-            captured_at=_CAPTURED_AT,
+            captured_at=CAPTURED_AT,
             iva_history_repository=IvaCompensationHistoryRepository(),
             operation=_authority_operation_for_test,
         )
@@ -139,8 +103,8 @@ def test_filed_observation_capture_promotes_previous_303_into_recurrence_history
         assert loaded is not None
         assert loaded.source_metadata == {
             "aeat_register_status": "ALTA",
-            "aeat_expediente_id": _SYNTHETIC_EXPEDIENTE_ID,
-            "authenticated_identity": _SYNTHETIC_PROFILE_ID,
+            "aeat_expediente_id": SYNTHETIC_EXPEDIENTE_ID,
+            "authenticated_identity": SYNTHETIC_PROFILE_ID,
         }
         assert prefill.binding_values == {"modelo-303-compensacion-pendiente-anteriores": Decimal("1200.00")}
         assert prefill.prefilled[0].source_modelo == "303"
@@ -152,9 +116,9 @@ def test_filed_observation_capture_promotes_previous_303_into_recurrence_history
 
 
 def test_filed_observation_capture_records_single_justificante_csv_metadata(tmp_path: Path) -> None:
-    with _secure_backend(tmp_path):
+    with secure_backend(tmp_path):
         repository = CalculationObservationRepository()
-        observation = _prior_303_observation(pending_compensation=Decimal("1200.00"))
+        observation = prior_303_observation(pending_compensation=Decimal("1200.00"))
 
         persist_filed_calculation_observation(
             observation,
@@ -167,20 +131,20 @@ def test_filed_observation_capture_records_single_justificante_csv_metadata(tmp_
     assert loaded is not None
     assert loaded.source_metadata == {
         "aeat_register_status": "ALTA",
-        "aeat_expediente_id": _SYNTHETIC_EXPEDIENTE_ID,
-        "authenticated_identity": _SYNTHETIC_PROFILE_ID,
+        "aeat_expediente_id": SYNTHETIC_EXPEDIENTE_ID,
+        "authenticated_identity": SYNTHETIC_PROFILE_ID,
         "aeat_justificante_csv": "CSV30320261T",
     }
 
 
 def test_latest_filed_observation_capture_threads_justificante_csv_metadata(tmp_path: Path) -> None:
-    with _secure_backend(tmp_path):
-        observation = _prior_303_observation(pending_compensation=Decimal("1200.00"))
+    with secure_backend(tmp_path):
+        observation = prior_303_observation(pending_compensation=Decimal("1200.00"))
 
         keys = finalize_filed_capture(
             (observation,),
             justificante_csvs_by_observation={
-                ("303", 2026, "1T", _SYNTHETIC_EXPEDIENTE_ID): ("CSV30320261T",),
+                ("303", 2026, "1T", SYNTHETIC_EXPEDIENTE_ID): ("CSV30320261T",),
             },
             policy=FiledCaptureFailurePolicy.BEST_EFFORT,
             ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path),
@@ -193,8 +157,8 @@ def test_latest_filed_observation_capture_threads_justificante_csv_metadata(tmp_
 
 
 def test_filed_capture_best_effort_finalizer_reports_incomplete_observation(tmp_path: Path) -> None:
-    with _secure_backend(tmp_path):
-        observation = _prior_303_observation(pending_compensation=Decimal("1200.00")).model_copy(
+    with secure_backend(tmp_path):
+        observation = prior_303_observation(pending_compensation=Decimal("1200.00")).model_copy(
             update={"extraction_coverage": {}},
         )
 
@@ -212,7 +176,7 @@ def test_filed_capture_best_effort_finalizer_reports_incomplete_observation(tmp_
     assert finalization.failures[0].modelo == "303"
     assert finalization.failures[0].year == 2026
     assert finalization.failures[0].period == Period.from_year_and_code(2026, "1T")
-    assert finalization.failures[0].expediente_id == _SYNTHETIC_EXPEDIENTE_ID
+    assert finalization.failures[0].expediente_id == SYNTHETIC_EXPEDIENTE_ID
     assert finalization.failures[0].error_type == "SedeParseError"
     assert "has no extraction coverage" in finalization.failures[0].message
     assert stored is None
@@ -220,8 +184,8 @@ def test_filed_capture_best_effort_finalizer_reports_incomplete_observation(tmp_
 
 def test_filed_capture_fail_fast_finalizer_raises_on_incomplete_observation(tmp_path: Path) -> None:
     """Single and source capture use FAIL_FAST: a registry-enrollment failure aborts."""
-    with _secure_backend(tmp_path):
-        observation = _prior_303_observation(pending_compensation=Decimal("1200.00")).model_copy(
+    with secure_backend(tmp_path):
+        observation = prior_303_observation(pending_compensation=Decimal("1200.00")).model_copy(
             update={"extraction_coverage": {}},
         )
 
@@ -258,14 +222,14 @@ def test_capture_finalizer_persists_in_the_shared_selection_and_ordering_authori
     agree, keeps the finalizer from drifting into its own selection.
     """
     observations = (
-        _prior_303_observation(
+        prior_303_observation(
             year=2026,
             period="1T",
             expediente_id="200030300000030Z",
             pending_compensation=Decimal("20.00"),
             presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
         ),
-        _prior_303_observation(
+        prior_303_observation(
             year=2026,
             period="1T",
             expediente_id="200030300000031Z",
@@ -273,7 +237,7 @@ def test_capture_finalizer_persists_in_the_shared_selection_and_ordering_authori
             pending_compensation=Decimal("99.00"),
             presented_at=datetime(2026, 4, 25, 10, 0, 0, tzinfo=UTC),
         ),
-        _prior_303_observation(
+        prior_303_observation(
             year=2025,
             period="4T",
             expediente_id="200030300000032Z",
@@ -291,7 +255,7 @@ def test_capture_finalizer_persists_in_the_shared_selection_and_ordering_authori
     )
 
     # The finalizer persists those same keys in that same order via the shared authority.
-    with _secure_backend(tmp_path / "finalizer"):
+    with secure_backend(tmp_path / "finalizer"):
         finalization = finalize_filed_capture(
             observations,
             policy=FiledCaptureFailurePolicy.BEST_EFFORT,
@@ -315,12 +279,12 @@ def test_finalizer_does_not_disturb_the_separate_strict_iva_compensation_path(tm
     stays a separate function with its own reload-verification contract, so the
     two are not collapsed by the finalizer consolidation.
     """
-    observation = _prior_303_observation(
+    observation = prior_303_observation(
         pending_compensation=Decimal("5.00"),
         expediente_id="200030300000040Z",
         presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
     )
-    with _secure_backend(tmp_path):
+    with secure_backend(tmp_path):
         strict_keys = persistiva_compensation_history_observations_strict(
             (observation,),
             ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path),
@@ -333,10 +297,10 @@ def test_finalizer_does_not_disturb_the_separate_strict_iva_compensation_path(tm
 
 
 def test_filed_observation_capture_promotes_cross_year_303_recurrence_history(tmp_path: Path) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test, _secure_backend(tmp_path):
+    with authority_indexed_authority_for_test().operation() as _authority_operation_for_test, secure_backend(tmp_path):
         repository = CalculationObservationRepository()
         calculation_key = persist_filed_calculation_observation(
-            _prior_303_observation(
+            prior_303_observation(
                 year=2025,
                 period="4T",
                 pending_compensation=Decimal("450.00"),
@@ -345,11 +309,11 @@ def test_filed_observation_capture_promotes_cross_year_303_recurrence_history(tm
             ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path, calculation_repository=repository),
         )
 
-        target_snapshot = _registry_snapshot("303", 2026, "1T")
+        target_snapshot = registry_snapshot("303", 2026, "1T")
         prefill = resolve_bindings_from_local_store(
             target_snapshot,
             repository=repository,
-            captured_at=_CAPTURED_AT,
+            captured_at=CAPTURED_AT,
             iva_history_repository=IvaCompensationHistoryRepository(),
             operation=_authority_operation_for_test,
         )
@@ -361,19 +325,19 @@ def test_filed_observation_capture_promotes_cross_year_303_recurrence_history(tm
 
 
 def test_binding_prefill_uses_profile_secure_iva_compensation_history(tmp_path: Path) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test, _secure_backend(tmp_path):
+    with authority_indexed_authority_for_test().operation() as _authority_operation_for_test, secure_backend(tmp_path):
         repository = CalculationObservationRepository()
         history_repository = IvaCompensationHistoryRepository()
         history_repository.save_period(
             IvaCompensationPeriodState(
                 provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
-                taxpayer_nif=_SYNTHETIC_PROFILE_ID,
+                taxpayer_nif=SYNTHETIC_PROFILE_ID,
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
-                registry_snapshot_ref=_registry_snapshot("303", 2026, "1T").snapshot_ref,
-                expediente_id=_SYNTHETIC_EXPEDIENTE_ID,
+                registry_snapshot_ref=registry_snapshot("303", 2026, "1T").snapshot_ref,
+                expediente_id=SYNTHETIC_EXPEDIENTE_ID,
                 status="ALTA",
-                presented_at=_CAPTURED_AT,
+                presented_at=CAPTURED_AT,
                 prior_pending_amount=Decimal("2.34"),
                 applied_amount=Decimal("1.23"),
                 pending_for_later_amount=Decimal("8.90"),
@@ -381,17 +345,17 @@ def test_binding_prefill_uses_profile_secure_iva_compensation_history(tmp_path: 
                 final_result_amount=Decimal("-4.32"),
                 generated_amount=Decimal("4.32"),
                 available_end_amount=Decimal("13.22"),
-                source_observation_key=f"303:2026:1T:{_SYNTHETIC_EXPEDIENTE_ID}",
+                source_observation_key=f"303:2026:1T:{SYNTHETIC_EXPEDIENTE_ID}",
                 source_artefact_sha256=hashlib.sha256(b"synthetic-submitted-file").hexdigest(),
             ),
         )
 
-        target_snapshot = _registry_snapshot("303", 2026, "2T")
+        target_snapshot = registry_snapshot("303", 2026, "2T")
         prefill = resolve_bindings_from_local_store(
             target_snapshot,
             repository=repository,
             iva_history_repository=history_repository,
-            captured_at=_CAPTURED_AT,
+            captured_at=CAPTURED_AT,
             operation=_authority_operation_for_test,
         )
 
@@ -403,15 +367,15 @@ def test_binding_prefill_uses_profile_secure_iva_compensation_history(tmp_path: 
 
 
 def test_iva_compensation_history_strict_persist_stores_latest_and_reloads(tmp_path: Path) -> None:
-    with _secure_backend(tmp_path):
+    with secure_backend(tmp_path):
         keys = persistiva_compensation_history_observations_strict(
             (
-                _prior_303_observation(
+                prior_303_observation(
                     pending_compensation=Decimal("1.00"),
                     expediente_id="200030300000004Z",
                     presented_at=datetime(2026, 4, 19, 10, 0, 0, tzinfo=UTC),
                 ),
-                _prior_303_observation(
+                prior_303_observation(
                     pending_compensation=Decimal("2.00"),
                     expediente_id="200030300000005Z",
                     presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
@@ -429,13 +393,13 @@ def test_iva_compensation_history_strict_persist_stores_latest_and_reloads(tmp_p
 
 
 def test_direct_filed_observation_persist_refuses_non_alta_status(tmp_path: Path) -> None:
-    with _secure_backend(tmp_path):
+    with secure_backend(tmp_path):
         with pytest.raises(
             LiveApplicationInputError,
             match=r"application\.live\.filed_observations\.errors\.observation_not_active",
         ):
             persist_filed_calculation_observation(
-                _prior_303_observation(
+                prior_303_observation(
                     pending_compensation=Decimal("900.00"),
                     status="BAJA",
                     presented_at=datetime(2026, 4, 22, 10, 0, 0, tzinfo=UTC),
@@ -448,9 +412,9 @@ def test_direct_filed_observation_persist_refuses_non_alta_status(tmp_path: Path
 
 
 def test_filed_observation_capture_enrolls_matching_justificante_metadata(tmp_path: Path) -> None:
-    with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
+    with profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
         store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
-        observation = _stored_130_justificante_observation(store)
+        observation = stored_130_justificante_observation(store)
 
         csvs = enroll_filed_justificante_evidence(
             observation, ports=filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id
@@ -480,7 +444,7 @@ def test_a_committed_modelo_303_receipt_is_enrolled_from_the_register_path(tmp_p
     divergence rather than sidestepping it, and the enrollment that follows is
     what the divergence used to prevent.
     """
-    receipt = parse_justificante_bytes(_modelo_303_justificante_pdf_bytes())
+    receipt = parse_justificante_bytes(modelo_303_justificante_pdf_bytes())
     expediente_id = "202630300000411A"
     assert receipt.presentation_id is not None
     assert receipt.presentation_id.strip().casefold() != expediente_id.strip().casefold(), (
@@ -488,16 +452,16 @@ def test_a_committed_modelo_303_receipt_is_enrolled_from_the_register_path(tmp_p
         "show the divergence being tolerated"
     )
 
-    with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
+    with profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
         store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
-        observation = _stored_303_justificante_observation(store, expediente_id=expediente_id)
+        observation = stored_303_justificante_observation(store, expediente_id=expediente_id)
 
         csvs = enroll_filed_justificante_evidence(
             observation, ports=filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id
         ).justificante_csvs
 
-        assert csvs == (_MODELO_303_FIXTURE_CSV,)
-        loaded = JustificanteRepository().load(_MODELO_303_FIXTURE_CSV)
+        assert csvs == (MODELO_303_FIXTURE_CSV,)
+        loaded = JustificanteRepository().load(MODELO_303_FIXTURE_CSV)
         assert loaded is not None
         assert loaded.modelo == "303"
         assert loaded.ejercicio == "2026"
@@ -514,7 +478,7 @@ def test_a_committed_modelo_303_receipt_is_enrolled_from_the_register_path(tmp_p
 #: axis the predicate consults; it now diverges on the csv the artefact's bytes
 #: were fetched under, which is.
 _REFUSED_JUSTIFICANTE_METADATA_CASES = (
-    ("wrong-taxpayer", "X1234567L", _MODELO_130_FIXTURE_CSV),
+    ("wrong-taxpayer", "X1234567L", MODELO_130_FIXTURE_CSV),
     ("csv-is-another-filings", "00000000T", "QQQQ7777WWWW3333"),
 )
 
@@ -524,9 +488,9 @@ def test_filed_observation_capture_refuses_invalid_justificante_metadata(
 ) -> None:
     for case_id, authenticated_identity, captured_csv in _REFUSED_JUSTIFICANTE_METADATA_CASES:
         case_root = tmp_path / case_id
-        with _profile_backend(case_root, tax_id=authenticated_identity) as bucket_id:
+        with profile_backend(case_root, tax_id=authenticated_identity) as bucket_id:
             store = FiledDeclaracionObservationStore(tmp_path / f"filed-declarations-{case_id}")
-            observation = _stored_130_justificante_observation(
+            observation = stored_130_justificante_observation(
                 store,
                 authenticated_identity=authenticated_identity,
                 captured_csv=captured_csv,
@@ -537,7 +501,7 @@ def test_filed_observation_capture_refuses_invalid_justificante_metadata(
             ).justificante_csvs
 
             assert csvs == (), case_id
-            assert JustificanteRepository().load(_MODELO_130_FIXTURE_CSV) is None, case_id
+            assert JustificanteRepository().load(MODELO_130_FIXTURE_CSV) is None, case_id
 
 
 def test_filed_observation_capture_reconciles_a_matching_pending_filing_without_stamping_it(tmp_path: Path) -> None:
@@ -547,10 +511,10 @@ def test_filed_observation_capture_reconciles_a_matching_pending_filing_without_
     filing; Modelo 130 declares no receipt-total comparison, so the filing stays
     unconfirmed and the reconciliation is recorded as unverifiable.
     """
-    with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
+    with profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
         store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
-        observation = _stored_130_justificante_observation(store)
-        filing = _seed_current_130_filing(bucket_id=bucket_id)
+        observation = stored_130_justificante_observation(store)
+        filing = seed_current_130_filing(bucket_id=bucket_id)
 
         result = enroll_filed_justificante_evidence(
             observation, ports=filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id
@@ -589,16 +553,16 @@ def test_filed_observation_capture_reconciles_a_matching_pending_filing_without_
 
 def test_filed_observation_capture_keeps_existing_justificante_pdf_evidence_for_same_csv(tmp_path: Path) -> None:
     """An incomparable repeated receipt retains the whole existing filing and its audit history."""
-    with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
+    with profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
         store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
-        observation = _stored_130_justificante_observation(store)
-        filing = _seed_current_130_filing(
+        observation = stored_130_justificante_observation(store)
+        filing = seed_current_130_filing(
             bucket_id=bucket_id,
             aeat_accepted=True,
             external_evidence=ExternalEvidence(
                 kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
                 reference_id="ABCD1234EFGH5678",
-                imported_at=_CAPTURED_AT,
+                imported_at=CAPTURED_AT,
             ),
         )
         events_before = BucketEventHistoryRepository().load()
@@ -607,7 +571,7 @@ def test_filed_observation_capture_keeps_existing_justificante_pdf_evidence_for_
             observation, ports=filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id
         )
 
-        assert result.justificante_csvs == (_MODELO_130_FIXTURE_CSV,)
+        assert result.justificante_csvs == (MODELO_130_FIXTURE_CSV,)
         assert result.filing_record_ids == ()
         assert result.conflicting_filing_record_ids == ()
         assert [(item.outcome, item.filing_record_id) for item in result.reconciliation_results] == [
@@ -638,16 +602,16 @@ def test_filed_observation_capture_keeps_existing_csv_register_evidence_for_same
     tmp_path: Path,
 ) -> None:
     """CSV case folding identifies the recorded filing without bypassing content comparison."""
-    with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
+    with profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
         store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
-        observation = _stored_130_justificante_observation(store)
-        filing = _seed_current_130_filing(
+        observation = stored_130_justificante_observation(store)
+        filing = seed_current_130_filing(
             bucket_id=bucket_id,
             aeat_accepted=True,
             external_evidence=ExternalEvidence(
                 kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
                 reference_id="abcd1234efgh5678",
-                imported_at=_CAPTURED_AT,
+                imported_at=CAPTURED_AT,
             ),
         )
         events_before = BucketEventHistoryRepository().load()
@@ -656,7 +620,7 @@ def test_filed_observation_capture_keeps_existing_csv_register_evidence_for_same
             observation, ports=filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id
         )
 
-        assert result.justificante_csvs == (_MODELO_130_FIXTURE_CSV,)
+        assert result.justificante_csvs == (MODELO_130_FIXTURE_CSV,)
         assert result.filing_record_ids == ()
         assert result.conflicting_filing_record_ids == ()
         assert [(item.outcome, item.filing_record_id) for item in result.reconciliation_results] == [
@@ -685,16 +649,16 @@ def test_filed_observation_capture_keeps_existing_csv_register_evidence_for_same
 
 def test_filed_observation_capture_leaves_a_different_confirmed_filing_untouched(tmp_path: Path) -> None:
     """A receipt for another presentation cannot be recorded without its content."""
-    with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
+    with profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
         store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
-        observation = _stored_130_justificante_observation(store)
-        filing = _seed_current_130_filing(
+        observation = stored_130_justificante_observation(store)
+        filing = seed_current_130_filing(
             bucket_id=bucket_id,
             aeat_accepted=True,
             external_evidence=ExternalEvidence(
                 kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
                 reference_id="DIFFERENTCSV12345",
-                imported_at=_CAPTURED_AT,
+                imported_at=CAPTURED_AT,
             ),
         )
 
@@ -730,10 +694,10 @@ def test_filed_observation_capture_leaves_a_different_confirmed_filing_untouched
 
 
 def test_filed_observation_capture_does_not_stamp_current_filing_for_wrong_profile_taxpayer(tmp_path: Path) -> None:
-    with _profile_backend(tmp_path, tax_id="X1234567L") as bucket_id:
+    with profile_backend(tmp_path, tax_id="X1234567L") as bucket_id:
         store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
-        observation = _stored_130_justificante_observation(store)
-        _seed_current_130_filing(bucket_id=bucket_id)
+        observation = stored_130_justificante_observation(store)
+        seed_current_130_filing(bucket_id=bucket_id)
 
         result = enroll_filed_justificante_evidence(
             observation, ports=filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id
@@ -759,19 +723,19 @@ def test_filed_observation_capture_does_not_stamp_current_filing_for_wrong_profi
 def test_iva_history_capture_selects_latest_alta_declaration_per_period() -> None:
     selected = latest_declarations_by_period(
         (
-            _declaration(
+            filed_declaration(
                 period="1T",
                 expediente_id="200030300000006Z",
                 estado="BAJA",
                 presented_at=datetime(2026, 4, 22, 10, 0, 0, tzinfo=UTC),
             ),
-            _declaration(
+            filed_declaration(
                 period="1T",
                 expediente_id="200030300000007Z",
                 estado="ALTA",
                 presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
             ),
-            _declaration(
+            filed_declaration(
                 period="2T",
                 expediente_id="200030300000008Z",
                 estado="ALTA",
@@ -789,7 +753,7 @@ def test_iva_history_capture_selects_latest_alta_declaration_per_period() -> Non
 
 
 def test_iva_history_capture_orders_annual_0a_after_periodic_declarations() -> None:
-    annual = _declaration(
+    annual = filed_declaration(
         period="0A",
         expediente_id="200039000000020Z",
         estado="ALTA",
@@ -798,7 +762,7 @@ def test_iva_history_capture_orders_annual_0a_after_periodic_declarations() -> N
     selected = latest_declarations_by_period(
         (
             annual,
-            _declaration(
+            filed_declaration(
                 period="4T",
                 expediente_id="200030300000019Z",
                 estado="ALTA",
@@ -812,7 +776,7 @@ def test_iva_history_capture_orders_annual_0a_after_periodic_declarations() -> N
 
 def test_filed_history_keeps_non_iva_numeric_period_order_alongside_iva_rows() -> None:
     def declaration_for(modelo: str, period: str, expediente_id: str) -> ExpedientesDeclaration:
-        return _declaration(
+        return filed_declaration(
             period=period,
             expediente_id=expediente_id,
             estado="ALTA",
@@ -834,16 +798,16 @@ def test_filed_history_keeps_non_iva_numeric_period_order_alongside_iva_rows() -
 
 
 def test_duplicate_period_capture_promotes_alta_over_later_non_alta_observation(tmp_path: Path) -> None:
-    with _secure_backend(tmp_path):
+    with secure_backend(tmp_path):
         repository = CalculationObservationRepository()
         keys = finalize_filed_capture(
             (
-                _prior_303_observation(
+                prior_303_observation(
                     expediente_id="200030300000012Z",
                     pending_compensation=Decimal("1200.00"),
                     presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
                 ),
-                _prior_303_observation(
+                prior_303_observation(
                     expediente_id="200030300000013Z",
                     pending_compensation=Decimal("900.00"),
                     status="BAJA",
@@ -863,21 +827,21 @@ def test_duplicate_period_capture_promotes_alta_over_later_non_alta_observation(
 
         assert keys == ("303:2026:1T",)
         assert stored is not None
-        assert stored.observation.casilla_values[_M303_DISPONIBLE_CASILLA] == Decimal("1200.00")
+        assert stored.observation.casilla_values[M303_DISPONIBLE_CASILLA] == Decimal("1200.00")
         assert history is not None
         assert history.expediente_id == "200030300000012Z"
 
 
 def test_iva_history_strict_persist_promotes_alta_over_later_non_alta_observation(tmp_path: Path) -> None:
-    with _secure_backend(tmp_path):
+    with secure_backend(tmp_path):
         keys = persistiva_compensation_history_observations_strict(
             (
-                _prior_303_observation(
+                prior_303_observation(
                     expediente_id="200030300000014Z",
                     pending_compensation=Decimal("1200.00"),
                     presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
                 ),
-                _prior_303_observation(
+                prior_303_observation(
                     expediente_id="200030300000015Z",
                     pending_compensation=Decimal("900.00"),
                     status="BAJA",
@@ -896,10 +860,10 @@ def test_iva_history_strict_persist_promotes_alta_over_later_non_alta_observatio
 
 
 def test_iva_history_strict_persist_ignores_non_alta_only_period(tmp_path: Path) -> None:
-    with _secure_backend(tmp_path):
+    with secure_backend(tmp_path):
         keys = persistiva_compensation_history_observations_strict(
             (
-                _prior_303_observation(
+                prior_303_observation(
                     expediente_id="200030300000016Z",
                     pending_compensation=Decimal("900.00"),
                     status="BAJA",
@@ -915,11 +879,11 @@ def test_iva_history_strict_persist_ignores_non_alta_only_period(tmp_path: Path)
 
 
 def test_iva_history_strict_persist_refuses_non_303_before_writing(tmp_path: Path) -> None:
-    non_303 = _prior_303_observation(pending_compensation=Decimal("900.00")).model_copy(
+    non_303 = prior_303_observation(pending_compensation=Decimal("900.00")).model_copy(
         update={"modelo": "130"},
     )
 
-    with _secure_backend(tmp_path):
+    with secure_backend(tmp_path):
         with pytest.raises(LiveApplicationInputError) as error:
             persistiva_compensation_history_observations_strict(
                 (non_303,),
@@ -932,16 +896,16 @@ def test_iva_history_strict_persist_refuses_non_303_before_writing(tmp_path: Pat
 
 
 def test_duplicate_period_capture_promotes_latest_filing_to_calculation_history(tmp_path: Path) -> None:
-    with _secure_backend(tmp_path):
+    with secure_backend(tmp_path):
         repository = CalculationObservationRepository()
         finalize_filed_capture(
             (
-                _prior_303_observation(
+                prior_303_observation(
                     expediente_id="200030300000002Z",
                     pending_compensation=Decimal("800.00"),
                     presented_at=datetime(2026, 4, 19, 10, 0, 0, tzinfo=UTC),
                 ),
-                _prior_303_observation(
+                prior_303_observation(
                     expediente_id="200030300000003Z",
                     pending_compensation=Decimal("1200.00"),
                     presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
@@ -958,25 +922,25 @@ def test_duplicate_period_capture_promotes_latest_filing_to_calculation_history(
         stored = repository.load_observation("303", Period.from_year_and_code(2026, "1T"))
 
         assert stored is not None
-        assert stored.observation.casilla_values[_M303_DISPONIBLE_CASILLA] == Decimal("1200.00")
+        assert stored.observation.casilla_values[M303_DISPONIBLE_CASILLA] == Decimal("1200.00")
 
 
 def test_filed_303_capture_persists_secure_iva_compensation_history(tmp_path: Path) -> None:
-    with _secure_backend(tmp_path) as db_path:
+    with secure_backend(tmp_path) as db_path:
         prior_pending = Decimal("19.99")
         applied = Decimal("3.21")
         pending_later = Decimal("7.89")
         period_result = Decimal("-4.56")
         final_result = Decimal("-4.56")
         key = persist_filed_calculation_observation(
-            _prior_303_observation(
+            prior_303_observation(
                 pending_compensation=pending_later,
                 prior_pending=prior_pending,
                 applied=applied,
                 result=period_result,
                 final_result=final_result,
-                expediente_id=_SYNTHETIC_EXPEDIENTE_ID,
-                headers=(_M303_DECLARATION_TYPE_C,),
+                expediente_id=SYNTHETIC_EXPEDIENTE_ID,
+                headers=(M303_DECLARATION_TYPE_C,),
             ),
             ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path),
         )
@@ -985,15 +949,15 @@ def test_filed_303_capture_persists_secure_iva_compensation_history(tmp_path: Pa
 
         assert key == "303:2026:1T"
         assert history is not None
-        assert history.taxpayer_nif == _SYNTHETIC_PROFILE_ID
-        assert history.expediente_id == _SYNTHETIC_EXPEDIENTE_ID
+        assert history.taxpayer_nif == SYNTHETIC_PROFILE_ID
+        assert history.expediente_id == SYNTHETIC_EXPEDIENTE_ID
         assert history.prior_pending_amount == prior_pending
         assert history.applied_amount == applied
         assert history.pending_for_later_amount == pending_later
         assert history.period_result_amount == period_result
         assert history.final_result_amount == final_result
         assert history.source_artefact_sha256 == hashlib.sha256(b"303-2026-1T-submitted-file").hexdigest()
-        assert history.source_observation_key == f"303:2026:1T:{_SYNTHETIC_EXPEDIENTE_ID}"
+        assert history.source_observation_key == f"303:2026:1T:{SYNTHETIC_EXPEDIENTE_ID}"
 
         listed = list_iva_compensation_history(
             ports=compose_live_state(
@@ -1006,8 +970,8 @@ def test_filed_303_capture_persists_secure_iva_compensation_history(tmp_path: Pa
         assert not hasattr(listed.rows[0], "taxpayer_nif")
 
         database_bytes = read_db_at_rest_bytes(db_path)
-        assert _SYNTHETIC_PROFILE_ID.encode("utf-8") not in database_bytes
-        assert _SYNTHETIC_EXPEDIENTE_ID.encode("utf-8") not in database_bytes
+        assert SYNTHETIC_PROFILE_ID.encode("utf-8") not in database_bytes
+        assert SYNTHETIC_EXPEDIENTE_ID.encode("utf-8") not in database_bytes
 
 
 def test_filed_303_capture_accepts_canonical_compensation_casilla_ids(tmp_path: Path) -> None:
@@ -1017,16 +981,16 @@ def test_filed_303_capture_accepts_canonical_compensation_casilla_ids(tmp_path: 
     period_result = Decimal("-2.50")
     generated = Decimal("2.50")
     expected_available_end = pending_compensation + generated
-    with _secure_backend(tmp_path):
+    with secure_backend(tmp_path):
         key = persist_filed_calculation_observation(
-            _prior_303_observation(
+            prior_303_observation(
                 pending_compensation=pending_compensation,
                 prior_pending=prior_pending,
                 applied=applied,
                 result=period_result,
                 final_result=period_result,
                 generated=generated,
-                headers=(_M303_DECLARATION_TYPE_C,),
+                headers=(M303_DECLARATION_TYPE_C,),
             ),
             ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path),
         )
@@ -1042,19 +1006,17 @@ def test_filed_303_capture_accepts_canonical_compensation_casilla_ids(tmp_path: 
         assert history.period_result_amount == period_result
         assert history.available_end_amount == expected_available_end
         assert stored is not None
-        assert stored.observation.casilla_values[_M303_DISPONIBLE_CASILLA] == expected_available_end
-        available = next(
-            item for item in stored.observation.observations if item.casilla_id == _M303_DISPONIBLE_CASILLA
-        )
+        assert stored.observation.casilla_values[M303_DISPONIBLE_CASILLA] == expected_available_end
+        available = next(item for item in stored.observation.observations if item.casilla_id == M303_DISPONIBLE_CASILLA)
         assert available.formula_id == "modelo-303-compensacion-disponible-fin-periodo"
-        assert available.operand_casilla_refs == (_M303_POSTERIOR_CASILLA, _M303_GENERADA_CASILLA)
+        assert available.operand_casilla_refs == (M303_POSTERIOR_CASILLA, M303_GENERADA_CASILLA)
         assert available.operand_values == (pending_compensation, generated)
 
 
 def test_multiyear_303_submitted_file_parser_promotes_sanitized_iva_history(tmp_path: Path) -> None:
-    with _secure_backend(tmp_path):
+    with secure_backend(tmp_path):
         observations = (
-            _parsed_303_submitted_file_observation(
+            parsed_303_submitted_file_observation(
                 year=2025,
                 period="4T",
                 expediente_id="200030300000009Z",
@@ -1065,7 +1027,7 @@ def test_multiyear_303_submitted_file_parser_promotes_sanitized_iva_history(tmp_
                 casilla_69=Decimal("-100.00"),
                 casilla_71=Decimal("-100.00"),
             ),
-            _parsed_303_submitted_file_observation(
+            parsed_303_submitted_file_observation(
                 year=2026,
                 period="1T",
                 expediente_id="200030300000010Z",
@@ -1076,7 +1038,7 @@ def test_multiyear_303_submitted_file_parser_promotes_sanitized_iva_history(tmp_
                 casilla_69=Decimal("-50.00"),
                 casilla_71=Decimal("-50.00"),
             ),
-            _parsed_303_submitted_file_observation(
+            parsed_303_submitted_file_observation(
                 year=2026,
                 period="2T",
                 expediente_id="200030300000011Z",
@@ -1086,7 +1048,7 @@ def test_multiyear_303_submitted_file_parser_promotes_sanitized_iva_history(tmp_
                 casilla_87=Decimal("100.00"),
                 casilla_69=Decimal("25.00"),
                 casilla_71=Decimal("25.00"),
-                headers=(_M303_DECLARATION_TYPE_I,),
+                headers=(M303_DECLARATION_TYPE_I,),
             ),
         )
 

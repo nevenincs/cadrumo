@@ -30,7 +30,7 @@ _XLSX_FIXTURE = FIXTURES_DIR / "financial" / "synthetic-transactions.xlsx"
 _N26_HEADER = ["Date", "Payee", "Payment reference", "Amount (EUR)", "Currency", "Transaction ID"]
 
 
-def _xlsx_cell_values(path: Path) -> list[tuple[str, list[list[object]]]]:
+def xlsx_cell_values(path: Path) -> list[tuple[str, list[list[object]]]]:
     workbook = load_workbook(filename=path, read_only=True, data_only=False)
     try:
         return [
@@ -57,7 +57,7 @@ def _comparable(row: ParsedLedgerRow) -> tuple[object, ...]:
 
 def test_xls_statement_parses_exactly_like_the_same_xlsx_statement(tmp_path: Path) -> None:
     legacy = tmp_path / "synthetic-transactions.xls"
-    legacy.write_bytes(xls_workbook_bytes(_xlsx_cell_values(_XLSX_FIXTURE)))
+    legacy.write_bytes(xls_workbook_bytes(xlsx_cell_values(_XLSX_FIXTURE)))
 
     xlsx_rows = tuple(XlsxProvider().ingest(_XLSX_FIXTURE))
     xls_rows = tuple(XlsProvider().ingest(legacy))

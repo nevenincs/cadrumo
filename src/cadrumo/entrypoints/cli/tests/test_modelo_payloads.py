@@ -24,16 +24,16 @@ from ....core.external_constants import OutputLanguage
 from ....domain.calculations.registry.ids import RelationId
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from .._modelo_revision_payload_parts import (
+from ..modelo_query_results import CasillaObservationPayload, DeltaRowPayload
+from ..modelo_results import CalculationRevisionPayload, FindingPayload, WorkCalculateResult
+from ..modelo_revision_payload_parts import (
     CalculationRevisionProjectionFields,
     DetailRowPayload,
     ObservationPayload,
     SourceProvenancePayload,
 )
-from .._modelo_work_revision_payloads import WorkObservationsResult, WorkRevisionResult
-from .._modelo_work_wizard_payloads import WorkWizardResult
-from ..modelo_query_results import CasillaObservationPayload, DeltaRowPayload
-from ..modelo_results import CalculationRevisionPayload, FindingPayload, WorkCalculateResult
+from ..modelo_work_revision_payloads import WorkObservationsResult, WorkRevisionResult
+from ..modelo_work_wizard_payloads import WorkWizardResult
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

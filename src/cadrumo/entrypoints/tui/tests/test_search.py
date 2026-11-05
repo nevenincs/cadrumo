@@ -40,11 +40,11 @@ from ..navigation import (
     build_destination_catalogue,
 )
 from ..search import (
-    _RESULT_STATUS_LOCALE_KEYS,
+    RESULT_STATUS_LOCALE_KEYS,
     WorkbenchCommandProviderV1,
     WorkbenchSearchProviderV1,
-    _destination_text,
-    _result_text,
+    destination_text,
+    result_text,
     workbench_action_label,
 )
 from .settling import settle
@@ -185,7 +185,7 @@ async def test_search_provider_preserves_application_stable_identity_and_admitte
         hits = await _hits(provider, "declaration")
         assert len(hits) == 1
         hit = hits[0]
-        assert hit.help == _destination_text("workbench.declarations")
+        assert hit.help == destination_text("workbench.declarations")
         assert stable_id not in hit.help
         hit.command()
         await settle(pilot)
@@ -239,8 +239,8 @@ async def test_command_provider_discovers_admitted_destinations_and_action_ident
         provider = WorkbenchCommandProviderV1(app.screen)
         discovery = await _discover(provider)
         action_hit = next(hit for hit in discovery if hit.text == workbench_action_label(action.action_candidate_id))
-        assert any(hit.text == _destination_text("workbench.home") for hit in discovery)
-        assert action_hit.help == _destination_text("workbench.declarations")
+        assert any(hit.text == destination_text("workbench.home") for hit in discovery)
+        assert action_hit.help == destination_text("workbench.declarations")
         assert all(
             hit.help is not None and "workbench." not in hit.help and "operator." not in hit.help for hit in discovery
         )
@@ -263,8 +263,8 @@ def test_search_copy_is_available_and_human_facing_in_every_locale(locale: str) 
     result = response.results[0]
     strict_token = I18N_STRICT_MISSING_KEYS.set(True)
     try:
-        rendered = _result_text(result, locale=locale)
-        destination = _destination_text("workbench.declarations", locale=locale)
+        rendered = result_text(result, locale=locale)
+        destination = destination_text("workbench.declarations", locale=locale)
         action = workbench_action_label("operator.modelo.work.revisions", locale=locale)
     finally:
         I18N_STRICT_MISSING_KEYS.reset(strict_token)
@@ -285,7 +285,7 @@ def test_search_copy_is_available_and_human_facing_in_every_locale(locale: str) 
 def test_search_copy_changes_with_locale_without_changing_stable_result_identity() -> None:
     """Language changes affect presentation only, never application identity."""
     result = WorkbenchSearchService([_document()]).search(WorkbenchSearchRequest(query="declaration")).results[0]
-    rendered = tuple(_result_text(result, locale=locale) for locale in SUPPORTED_OUTPUT_LANGUAGES)
+    rendered = tuple(result_text(result, locale=locale) for locale in SUPPORTED_OUTPUT_LANGUAGES)
 
     assert len(set(rendered)) == len(SUPPORTED_OUTPUT_LANGUAGES)
     assert (
@@ -312,7 +312,7 @@ async def test_palette_help_is_localized_and_never_exposes_internal_identity(loc
             result_hits = await _hits(WorkbenchSearchProviderV1(app.screen), "declaration")
             command_hits = await _discover(WorkbenchCommandProviderV1(app.screen))
 
-    expected_destination = _destination_text("workbench.declarations", locale=locale)
+    expected_destination = destination_text("workbench.declarations", locale=locale)
     assert result_hits[0].help == expected_destination
     assert any(hit.help == expected_destination for hit in command_hits)
     visible_help = "\n".join(hit.help or "" for hit in (*result_hits, *command_hits))
@@ -331,7 +331,7 @@ async def test_palette_help_is_localized_and_never_exposes_internal_identity(loc
 )
 def test_missing_and_unavailable_statuses_have_localized_palette_copy(status: WorkbenchSearchStatus) -> None:
     """The palette's closed status vocabulary includes honest missing states."""
-    key = _RESULT_STATUS_LOCALE_KEYS[status]
+    key = RESULT_STATUS_LOCALE_KEYS[status]
     values = tuple(tr(key, locale=locale) for locale in SUPPORTED_OUTPUT_LANGUAGES)
 
     assert all(value != key for value in values)

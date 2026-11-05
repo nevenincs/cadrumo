@@ -29,7 +29,7 @@ from .....application.calculations.relation_prefill import (
 from .....core.aggregation import BindingSourceKind
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
-from .....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.bindings import RegistryModeloObservation
 from .....domain.calculations.registry.handoffs import relation_consumption_channels, relation_consumption_index
 from .....domain.calculations.registry.relations import RegistryFoldRequirement, relation_prefill_bindings_for_period
@@ -97,7 +97,7 @@ def _modelo_115_observations() -> tuple[RegistryModeloObservation, ...]:
 
 def test_relation_prefill_source_resolver_matches_local_store_prefill(tmp_path: Path) -> None:
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repository = CalculationObservationRepository()
@@ -187,7 +187,7 @@ def test_resolve_relations_returns_operator_manual_blanks_when_local_store_is_em
     cross-domain-handoffs audit 2026-05-16 must not accidentally
     broaden back to a silent-swallow ``except Exception``).
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         with isolated_runtime_profile(tmp_path=tmp_path):
             repository = CalculationObservationRepository()
             snapshot = _snapshot("180", 2026, "0A")
@@ -216,7 +216,7 @@ def test_resolve_relations_produced_values_carry_provenance_string_when_resolved
     This pins the provenance-string contract across the
     modelo→filing handoff boundary (F2 finding, 2026-05-16 audit).
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         with isolated_runtime_profile(tmp_path=tmp_path):
             repository = CalculationObservationRepository()
             for observation in _modelo_115_observations():
@@ -274,7 +274,7 @@ def test_unresolved_bound_carry_the_taxpayer_files_is_advised(tmp_path: Path) ->
     and stays silent.
     """
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repository = CalculationObservationRepository()  # empty store
@@ -372,7 +372,7 @@ def test_operator_manual_relation_detail_is_a_debug_breadcrumb_not_a_warning(
     """
     logger_name = "cadrumo.application.calculations.relation_prefill"
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repository = CalculationObservationRepository()  # empty store — cold-start
@@ -413,7 +413,7 @@ def test_operator_manual_relation_detail_is_a_debug_breadcrumb_not_a_warning(
 def test_m202_1p_previous_payments_materialises_zero_without_prior_relation(tmp_path: Path) -> None:
     """Modelo 202 1P has no previous same-year installment to fold into casilla 30."""
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repository = CalculationObservationRepository()
@@ -441,7 +441,7 @@ def test_m202_1p_previous_payments_materialises_zero_without_prior_relation(tmp_
 def test_m202_2p_previous_payments_stays_unresolved_without_prior_filing(tmp_path: Path) -> None:
     """Modelo 202 2P still requires the actual 1P installment relation."""
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repository = CalculationObservationRepository()
@@ -478,7 +478,7 @@ def test_orphaned_non_formula_binding_surfaces_advisory_diagnostic(tmp_path: Pat
     re-run cross-section validation) to exercise the defensive guard.
     """
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repository = CalculationObservationRepository()  # empty store — relation cannot resolve
@@ -543,7 +543,7 @@ def test_modelo_190_empty_store_collapses_absent_m111_source_to_one_diagnostic(
     ``(source_modelo, filing_year, periods)``, it must be exactly one.
     """
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repository = CalculationObservationRepository()  # empty store — nothing to resolve
@@ -619,7 +619,7 @@ def testscoped_relation_source_requirements_drops_pre_activity_quarters() -> Non
     not be required by the annual fold. Expected period sets derive from the
     calendar boundary (1T ends 31-Mar), not from the relation formula.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         snapshot = _snapshot("100", 2024, "0A")
         # Activity started 2024-04-01: 1T (ends 2024-03-31) is STRICTLY before it.
         scoped = scoped_relation_source_requirements(
@@ -637,7 +637,7 @@ def testscoped_relation_source_requirements_drops_pre_activity_quarters() -> Non
 def test_mid_year_start_folds_available_quarters_not_all_or_nothing(tmp_path: Path) -> None:
     """A Q2-start filer folds the quarters it filed; the pre-activity 1T is scoped, not left unresolved (IRPF-1)."""
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repository = CalculationObservationRepository()
@@ -669,7 +669,7 @@ def test_mid_year_start_folds_available_quarters_not_all_or_nothing(tmp_path: Pa
 def test_genuinely_missing_in_scope_quarter_still_unresolves(tmp_path: Path) -> None:
     """A missing POST-activity quarter still unresolves — no-silent-under-declaration is preserved (IRPF-1)."""
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_runtime_profile(tmp_path=tmp_path),
     ):
         repository = CalculationObservationRepository()

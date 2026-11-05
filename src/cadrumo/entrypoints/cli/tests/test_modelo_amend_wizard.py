@@ -43,7 +43,7 @@ from cadrumo.adapters.persistence.profile.justificante import JustificanteReposi
 from cadrumo.adapters.persistence.profile.tests.modelo_303_filed_disposition import modelo_303_filed_disposition
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
-    isolated_cli_backend as _isolated_cli_backend,
+    isolated_cli_backend,
 )
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.application.flows.definition import FlowPage
@@ -83,24 +83,24 @@ from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind, FilingDec
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports, build_filing_action_ports
 from cadrumo.entrypoints.cli.modelo_amend_wizard_commands import (
-    _ACTIVE_RUNS,
-    _KIND_PAGE_ID,
-    _MOTIVE_PAGE_ID,
-    _REASON_PAGE_ID,
-    _selected_rows,
-    _selection_definition,
-    _value_page_id,
-    _values_kind_reason_definition,
+    ACTIVE_RUNS,
+    KIND_PAGE_ID,
+    MOTIVE_PAGE_ID,
+    REASON_PAGE_ID,
+    modelo_amend_wizard_commands_selection_definition,
+    selected_rows,
+    value_page_id,
+    values_kind_reason_definition,
 )
 from cadrumo.entrypoints.tests.filing_record_read_support import persisted_filing_record
 from cadrumo.tests.aeat_literal_fixtures import justificante_cotejo_url
-from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
+from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
 from .cli_fixture_worlds import HumanProbeSession, ProfileSeeder, invoke_joined_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
 from .modelo_work_scenarios import create_m130_work_unit, create_m303_work_unit, load_work_unit_by_id
 
-__all__ = ["_isolated_cli_backend"]
+__all__ = ["isolated_cli_backend"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -220,7 +220,7 @@ def _invoke(args: list[str], *, runtime_profile: HumanProbeSession | None = None
 
 
 def _payload_string(output: str, key: str) -> str:
-    value = STR_KEYED_MAPPING_ADAPTER.validate_python(_payload(output))[key]
+    value = STR_KEYED_MAPPING_ADAPTER.validate_python(unwrap_schema_envelope(output))[key]
     assert isinstance(value, str)
     return value
 
@@ -422,9 +422,9 @@ def _scripted_amend(
         baseline_values, amendable = baseline.baseline_values, baseline.amendable
         by_number = {row.number: row for row in amendable}
         selected_ids = [by_number[number].casilla_id for number in change_numbers]
-        _ACTIVE_RUNS[run_id] = {}
+        ACTIVE_RUNS[run_id] = {}
         try:
-            selection_definition = _selection_definition(
+            selection_definition = modelo_amend_wizard_commands_selection_definition(
                 amendable=amendable,
                 baseline_values=baseline_values,
                 unit=unit,
@@ -436,9 +436,9 @@ def _scripted_amend(
                 mode=FlowMode.CREATE,
             )
             assert selection_projection.submit_eligible
-            selected = _selected_rows(amendable=amendable, unit=unit, state=selection_state)
+            selected = selected_rows(amendable=amendable, unit=unit, state=selection_state)
 
-            corrections_definition = _values_kind_reason_definition(
+            corrections_definition = values_kind_reason_definition(
                 selected=selected,
                 baseline_values=baseline_values,
                 permitted_amendment_kinds=context.permitted_amendment_kinds,
@@ -446,7 +446,7 @@ def _scripted_amend(
                 run_token=run_id,
             )
             has_motive_page = any(
-                page.id == _MOTIVE_PAGE_ID for section in corrections_definition.sections for page in section.items
+                page.id == MOTIVE_PAGE_ID for section in corrections_definition.sections for page in section.items
             )
             tokens = [corrected_by_number[row.number] for row in selected] + [kind]
             if has_motive_page and kind == "rectificativa":
@@ -462,13 +462,13 @@ def _scripted_amend(
             for row in selected:
                 casilla_id = row.casilla_id
                 assert isinstance(casilla_id, str)
-                overrides[casilla_id] = (corrections_state.answers.get(_value_page_id(casilla_id)) or "").strip()
-            derived_kind = (corrections_state.answers.get(_KIND_PAGE_ID) or "").strip()
-            derived_motive = (corrections_state.answers.get(_MOTIVE_PAGE_ID) or "").strip() or None
-            derived_reason = (corrections_state.answers.get(_REASON_PAGE_ID) or "").strip()
+                overrides[casilla_id] = (corrections_state.answers.get(value_page_id(casilla_id)) or "").strip()
+            derived_kind = (corrections_state.answers.get(KIND_PAGE_ID) or "").strip()
+            derived_motive = (corrections_state.answers.get(MOTIVE_PAGE_ID) or "").strip() or None
+            derived_reason = (corrections_state.answers.get(REASON_PAGE_ID) or "").strip()
             return overrides, derived_kind, derived_motive, derived_reason
         finally:
-            _ACTIVE_RUNS.pop(run_id, None)
+            ACTIVE_RUNS.pop(run_id, None)
 
 
 def _amend_via_shared_path(
@@ -519,9 +519,9 @@ def _permitted_kind_choice_values(
         baseline_values, amendable = baseline.baseline_values, baseline.amendable
         by_number = {row.number: row for row in amendable}
         selected = tuple(by_number[number] for number in change_numbers)
-        _ACTIVE_RUNS[run_id] = {}
+        ACTIVE_RUNS[run_id] = {}
         try:
-            definition = _values_kind_reason_definition(
+            definition = values_kind_reason_definition(
                 selected=selected,
                 baseline_values=baseline_values,
                 permitted_amendment_kinds=context.permitted_amendment_kinds,
@@ -529,12 +529,12 @@ def _permitted_kind_choice_values(
                 run_token=run_id,
             )
             kind_page = next(
-                page for section in definition.sections for page in section.items if page.id == _KIND_PAGE_ID
+                page for section in definition.sections for page in section.items if page.id == KIND_PAGE_ID
             )
             assert isinstance(kind_page, FlowPage)
             return tuple(choice.value for choice in kind_page.choices)
         finally:
-            _ACTIVE_RUNS.pop(run_id, None)
+            ACTIVE_RUNS.pop(run_id, None)
 
 
 def test_amend_wizard_scripted_sequence_files_m130_complementaria(
@@ -574,7 +574,7 @@ def test_amend_wizard_scripted_sequence_files_m130_complementaria(
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
 
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     assert payload["work_unit_id"] == work_unit_id
     assert payload["amendment_kind"] == "complementaria"
     assert payload["status"] == "vigente"
@@ -583,7 +583,7 @@ def test_amend_wizard_scripted_sequence_files_m130_complementaria(
     assert payload["amends_filing_record_id"] == baseline_filing_id
 
     # The correction is persisted, not merely reported.
-    revision = _payload(
+    revision = unwrap_schema_envelope(
         _invoke(
             ["--format", "json", "app", "modelo", "work", "revision", payload["calculation_revision_id"]],
             runtime_profile=_operator_profile,
@@ -630,14 +630,14 @@ def test_amend_wizard_scripted_sequence_files_m303_rectificativa(
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
 
-    payload = _payload(result.output)
+    payload = unwrap_schema_envelope(result.output)
     assert payload["amendment_kind"] == "rectificativa"
     assert payload["m303_rectificativa_motive"] == _M303_RECTIFICATIVA_MOTIVE
     assert payload["status"] == "vigente"
     assert payload["external_evidence"] is None
     assert payload["amends_filing_record_id"] == baseline_filing_id
 
-    revision = _payload(
+    revision = unwrap_schema_envelope(
         _invoke(
             ["--format", "json", "app", "modelo", "work", "revision", payload["calculation_revision_id"]],
             runtime_profile=_operator_profile,
@@ -767,7 +767,7 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend(
         runtime_profile=_operator_profile,
     )
     assert wizard_result.exit_code == 0, wizard_result.output
-    wizard_payload = _payload(wizard_result.output)
+    wizard_payload = unwrap_schema_envelope(wizard_result.output)
 
     hand_built_result = _invoke(
         [
@@ -782,7 +782,7 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend(
         runtime_profile=_operator_profile,
     )  # fmt: skip
     assert hand_built_result.exit_code == 0, f"{hand_built_result.output}"
-    hand_built_payload = _payload(hand_built_result.output)
+    hand_built_payload = unwrap_schema_envelope(hand_built_result.output)
 
     # The wizard-derived override set is exactly the hand-typed one.
     assert overrides == {"07": str(_M303_CORRECTED_BASE_GENERAL)}
@@ -794,13 +794,13 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend(
         assert wizard_payload[field] == hand_built_payload[field], field
 
     # The persisted revisions agree -- the parity claim is about stored state.
-    wizard_revision = _payload(
+    wizard_revision = unwrap_schema_envelope(
         _invoke(
             ["--format", "json", "app", "modelo", "work", "revision", wizard_payload["calculation_revision_id"]],
             runtime_profile=_operator_profile,
         ).output,
     )
-    hand_built_revision = _payload(
+    hand_built_revision = unwrap_schema_envelope(
         _invoke(
             [
                 "--format", "json",
@@ -889,9 +889,9 @@ def test_amend_wizard_blank_selection_yields_no_corrections(seed_profile: Profil
         baseline = _amendable_baseline(work_unit_id, bucket_id=bucket_id)
         unit = baseline.unit
         baseline_values, amendable = baseline.baseline_values, baseline.amendable
-        _ACTIVE_RUNS[run_id] = {}
+        ACTIVE_RUNS[run_id] = {}
         try:
-            definition = _selection_definition(
+            definition = modelo_amend_wizard_commands_selection_definition(
                 amendable=amendable,
                 baseline_values=baseline_values,
                 unit=unit,
@@ -899,9 +899,9 @@ def test_amend_wizard_blank_selection_yields_no_corrections(seed_profile: Profil
             )
             state, projection = run_scripted_flow(definition, [""], mode=FlowMode.CREATE)
             assert projection.submit_eligible
-            assert _selected_rows(amendable=amendable, unit=unit, state=state) == ()
+            assert selected_rows(amendable=amendable, unit=unit, state=state) == ()
         finally:
-            _ACTIVE_RUNS.pop(run_id, None)
+            ACTIVE_RUNS.pop(run_id, None)
 
 
 def test_amend_wizard_non_interactive_host_refuses_with_the_typed_console_error(

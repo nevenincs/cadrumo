@@ -19,13 +19,13 @@ from cadrumo.adapters.persistence.profile.state_projection import StateProjectio
 from cadrumo.adapters.persistence.profile.usage_ratios import load_usage_ratios
 from cadrumo.application.auth.credentials import ActiveAuthProjectionSnapshot
 from cadrumo.application.auth.operator import (
-    build_live_auth_preflight_report as _build_live_auth_preflight_report,
+    build_live_auth_preflight_report as operator_build_live_auth_preflight_report,
 )
 from cadrumo.application.auth.operator import (
-    configure_operator_auth as _configure_operator_auth,
+    configure_operator_auth as operator_configure_operator_auth,
 )
-from cadrumo.application.auth.operator import inspect_operator_auth as _inspect_operator_auth
-from cadrumo.application.auth.operator import test_operator_auth as _test_operator_auth
+from cadrumo.application.auth.operator import inspect_operator_auth as operator_inspect_operator_auth
+from cadrumo.application.auth.operator import test_operator_auth as run_operator_auth_test
 from cadrumo.application.auth.operator_probe_ports import OperatorProbePorts
 from cadrumo.application.auth.operator_results import (
     AuthConfigureResult,
@@ -41,7 +41,7 @@ from cadrumo.application.diagnostics_ports import (
     DiagnosticsPorts,
 )
 from cadrumo.application.state_projection import (
-    build_operator_state_projection as _build_operator_state_projection,
+    build_operator_state_projection as state_projection_build_operator_state_projection,
 )
 from cadrumo.application.state_projection_models import ModeloReadinessRequest, OperatorStateProjection
 from cadrumo.application.state_projection_ports import StateProjectionReadPorts
@@ -114,7 +114,7 @@ def configure_operator_auth(
     """Invoke auth configuration with a caller-owned real authority lease."""
 
     with authority_operation() as operation:
-        return _configure_operator_auth(
+        return operator_configure_operator_auth(
             provider,
             certificate_path=certificate_path,
             operator_scope_ports=operator_scope_ports,
@@ -133,7 +133,7 @@ def inspect_operator_auth(
     """Invoke auth status with one real operation and projection read bundle."""
 
     with authority_operation() as operation:
-        return _inspect_operator_auth(
+        return operator_inspect_operator_auth(
             provider,
             certificate_secret_backend_factory=_certificate_factory(certificate_secret_backend_factory),
             operator_probe_ports=operator_probe_ports,
@@ -155,7 +155,7 @@ def test_operator_auth(
     """Invoke auth test with one real operation and projection read bundle."""
 
     with authority_operation() as operation:
-        return _test_operator_auth(
+        return run_operator_auth_test(
             provider,
             certificate_secret_backend_factory=_certificate_factory(certificate_secret_backend_factory),
             operator_probe_ports=operator_probe_ports,
@@ -178,7 +178,7 @@ def build_live_auth_preflight_report(
     """Invoke auth preflight with one real operation and projection read bundle."""
 
     with authority_operation() as operation:
-        return _build_live_auth_preflight_report(
+        return operator_build_live_auth_preflight_report(
             provider,
             certificate_secret_backend_factory=_certificate_factory(certificate_secret_backend_factory),
             operator_probe_ports=operator_probe_ports,
@@ -207,7 +207,7 @@ def build_operator_state_projection(
     """Build a projection under a real operation for direct-producer tests."""
 
     with authority_operation() as operation:
-        return _build_operator_state_projection(
+        return state_projection_build_operator_state_projection(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             operator_probe_ports=operator_probe_ports,
             operator_scope_ports=operator_scope_ports,

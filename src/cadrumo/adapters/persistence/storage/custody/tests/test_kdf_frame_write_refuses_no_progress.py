@@ -12,7 +12,7 @@ import os
 import pytest
 
 from ......tests.attribute_scope import scoped_attribute
-from .._kdf_codec import KDF_FRAME_CONTROL, read_kdf_frame, write_kdf_frame
+from ..kdf_codec import KDF_FRAME_CONTROL, read_kdf_frame, write_kdf_frame
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

@@ -24,7 +24,7 @@ import pytest
 
 from ......core.config import Settings
 from ...bucket.errors import BucketLockedError
-from ..bucket_session import _ROUTED_SETTINGS_MEMO_SIZE, BucketSession
+from ..bucket_session import ROUTED_SETTINGS_MEMO_SIZE, BucketSession
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -94,10 +94,10 @@ def test_the_memo_stays_bounded(tmp_path) -> None:
     """Control: retention is bounded, so a long session cannot grow without limit."""
     session = _session()
 
-    for index in range(_ROUTED_SETTINGS_MEMO_SIZE + 6):
+    for index in range(ROUTED_SETTINGS_MEMO_SIZE + 6):
         session.routed_settings(Settings(cadrumo_storage_root=tmp_path / f"root-{index}"))
 
-    assert _derivations(session) <= _ROUTED_SETTINGS_MEMO_SIZE
+    assert _derivations(session) <= ROUTED_SETTINGS_MEMO_SIZE
 
 
 def test_a_sealed_session_serves_no_route(tmp_path) -> None:

@@ -309,7 +309,7 @@ def test_scrub_error_context_strips_internal_keys_from_rendered_output() -> None
     inspect them.
     """
 
-    from ..error_codes import _INTERNAL_CONTEXT_KEYS
+    from ..error_codes import INTERNAL_CONTEXT_KEYS
 
     error = LockAcquisitionError(
         context={
@@ -340,5 +340,5 @@ def test_scrub_error_context_strips_internal_keys_from_rendered_output() -> None
     assert "question_id" in error.context
 
     # The internal key set is a frozenset containing exactly these two names.
-    assert "prompt_key" in _INTERNAL_CONTEXT_KEYS
-    assert "question_id" in _INTERNAL_CONTEXT_KEYS
+    assert "prompt_key" in INTERNAL_CONTEXT_KEYS
+    assert "question_id" in INTERNAL_CONTEXT_KEYS

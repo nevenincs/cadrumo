@@ -20,7 +20,7 @@ from cadrumo.application.operations.terminated_owner import settle_terminated_op
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 
 from .supervisor_test_support import (
-    _NOW,
+    SUPERVISOR_NOW,
     IdleExecutor,
     operation_repositories,
     operation_supervisor,
@@ -54,7 +54,7 @@ def test_dead_owner_settlement_is_atomic_and_never_resolves_operands(tmp_path: P
             scope = operation_conflict_scope_reference(
                 definition_id=snapshot.identity.definition_id, subject_ref=snapshot.identity.subject_ref
             )
-            before = await leases.inspect(scope, operation_id, observed_at=_NOW)
+            before = await leases.inspect(scope, operation_id, observed_at=SUPERVISOR_NOW)
             assert before.current is not None
             if entered:
                 # Persist the last worker fact before simulated native death;
@@ -63,14 +63,14 @@ def test_dead_owner_settlement_is_atomic_and_never_resolves_operands(tmp_path: P
                     update={
                         "revision": snapshot.revision + 1,
                         "lifecycle": OperationLifecycle.RUNNING,
-                        "executor_entered_at": _NOW,
+                        "executor_entered_at": SUPERVISOR_NOW,
                         "phase_code": "operation.running",
                         "events": (
                             OperationPhaseEvent(
                                 identity=snapshot.identity,
                                 revision=snapshot.revision + 1,
                                 sequence=snapshot.event_cursor + 1,
-                                timestamp=_NOW,
+                                timestamp=SUPERVISOR_NOW,
                                 code="operation.phase",
                                 phase_code="operation.running",
                             ),
@@ -85,17 +85,17 @@ def test_dead_owner_settlement_is_atomic_and_never_resolves_operands(tmp_path: P
                 journal=journal,
                 leases=leases,
                 registry=registry,
-                observed_at=_NOW,
+                observed_at=SUPERVISOR_NOW,
             )
             assert await journal.load(operation_id) == snapshot
-            assert await leases.inspect(scope, operation_id, observed_at=_NOW) == before
+            assert await leases.inspect(scope, operation_id, observed_at=SUPERVISOR_NOW) == before
             assert await settle_terminated_operation(
                 operation_id=operation_id,
                 terminated_owner_id="1" * 64,
                 journal=journal,
                 leases=leases,
                 registry=registry,
-                observed_at=_NOW,
+                observed_at=SUPERVISOR_NOW,
             )
             settled = await journal.load(operation_id)
             assert settled.terminal_condition is OperationTerminalCondition.INTERRUPTED
@@ -104,14 +104,14 @@ def test_dead_owner_settlement_is_atomic_and_never_resolves_operands(tmp_path: P
             assert isinstance(settled.events[0], OperationReconciliationEvent)
             assert settled.events[0].outcome is OperationReconciliationOutcome.ORPHANED
             assert settled.events[0].lease_evidence_ref == before.evidence_ref
-            assert (await leases.inspect(scope, operation_id, observed_at=_NOW)).current is None
+            assert (await leases.inspect(scope, operation_id, observed_at=SUPERVISOR_NOW)).current is None
             assert not await settle_terminated_operation(
                 operation_id=operation_id,
                 terminated_owner_id="1" * 64,
                 journal=journal,
                 leases=leases,
                 registry=registry,
-                observed_at=_NOW,
+                observed_at=SUPERVISOR_NOW,
             )
 
         asyncio.run(exercise())
@@ -140,7 +140,7 @@ def test_expired_dead_owner_lease_is_not_renewed_or_released(tmp_path: Path) -> 
             scope = operation_conflict_scope_reference(
                 definition_id=snapshot.identity.definition_id, subject_ref=snapshot.identity.subject_ref
             )
-            instant = _NOW + timedelta(seconds=2)
+            instant = SUPERVISOR_NOW + timedelta(seconds=2)
             before = await leases.inspect(scope, operation_id, observed_at=instant)
             with pytest.raises(ValueError, match="expired"):
                 await settle_terminated_operation(
@@ -200,13 +200,15 @@ def test_raced_lease_replacement_cannot_be_settled_by_dead_owner(tmp_path: Path)
                     journal=RacingJournal(storage_root=root),
                     leases=leases,
                     registry=registry,
-                    observed_at=_NOW,
+                    observed_at=SUPERVISOR_NOW,
                 )
             assert await journal.load(operation_id) == before
             scope = operation_conflict_scope_reference(
                 definition_id=before.identity.definition_id, subject_ref=before.identity.subject_ref
             )
-            current = (await leases.inspect(scope, operation_id, observed_at=_NOW + timedelta(minutes=11))).current
+            current = (
+                await leases.inspect(scope, operation_id, observed_at=SUPERVISOR_NOW + timedelta(minutes=11))
+            ).current
             assert current is not None and current.owner_id == "4" * 64 and current.token == "5" * 64
 
         asyncio.run(exercise())

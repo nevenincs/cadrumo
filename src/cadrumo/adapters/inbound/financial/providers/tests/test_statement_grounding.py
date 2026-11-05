@@ -17,8 +17,8 @@ from ......application.ledger.statement_reading import (
     ProposedStatementMovement,
     ProposedStatementPage,
 )
-from .._statement_grounding import ReconciliationOutcome, StatementPageText
 from ..statement_grounding import ground_statement
+from ..statement_grounding_support import ReconciliationOutcome, StatementPageText
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 

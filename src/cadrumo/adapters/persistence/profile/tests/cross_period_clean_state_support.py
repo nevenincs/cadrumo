@@ -79,8 +79,7 @@ from cadrumo.domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.tests.aeat_literal_fixtures import justificante_cotejo_url
 
 from .....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
@@ -111,7 +110,7 @@ def _store_ready_profile(
 ) -> None:
     with bundled_indexed_authority().operation():
         seed_test_profile_record(
-            _create_profile_record_for_test(
+            create_user_profile_record(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=profile_id,
                 facts=(
@@ -316,7 +315,7 @@ def _seed_member_322_filing(
     )
 
     evidence_reference_id = f"JUST322{member_nif}"
-    _persist_justificante_metadata(
+    cross_period_clean_state_persist_justificante_metadata(
         evidence_reference_id,
         modelo="322",
         period=_M353_PERIOD,
@@ -366,7 +365,7 @@ def _seed_member_322_filing(
     )
 
 
-def _persist_justificante_metadata(
+def cross_period_clean_state_persist_justificante_metadata(
     csv: str,
     *,
     modelo: str,
@@ -485,7 +484,9 @@ def _persist_source_justificante_if_needed(
     omitted: bool,
 ) -> None:
     if _is_justificante_evidence(evidence_kind) and not omitted:
-        _persist_justificante_metadata(evidence_reference_id, modelo="303", period=period, filing_year=_M390_YEAR)
+        cross_period_clean_state_persist_justificante_metadata(
+            evidence_reference_id, modelo="303", period=period, filing_year=_M390_YEAR
+        )
 
 
 def _seed_source_period_filing(
@@ -800,7 +801,7 @@ external_evidence_blockers = _external_evidence_blockers
 live_capture_filing = _live_capture_filing
 m390_first_quarter_evidence = _m390_first_quarter_evidence
 member_fan_in_requirement = _member_fan_in_requirement
-persist_justificante_metadata = _persist_justificante_metadata
+persist_justificante_metadata = cross_period_clean_state_persist_justificante_metadata
 save_member_322_observation = _save_member_322_observation
 seed_member_322_filing = _seed_member_322_filing
 seed_official_303_source_filings = _seed_official_303_source_filings

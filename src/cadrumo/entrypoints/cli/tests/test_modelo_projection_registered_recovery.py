@@ -14,7 +14,7 @@ from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.shared_contracts import DefaultKind
 
 from .. import modelo_projection_commands
-from .._modelo_projection_command_specs import MODELO_PROJECTION_COMMAND_SPECS
+from ..modelo_projection_command_specs import MODELO_PROJECTION_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

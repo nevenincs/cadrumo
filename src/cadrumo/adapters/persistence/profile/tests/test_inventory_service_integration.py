@@ -25,11 +25,11 @@ from .....domain.contribuyente.inventory.records import (
     ValuationMethod,
 )
 from .inventory_service_integration_support import (
-    _acquisition,
-    _authority_record,
-    _event_repo,
-    _make_svc,
-    _physical_authority_record,
+    acquisition,
+    authority_record,
+    event_repo,
+    make_svc,
+    physical_authority_record,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -37,7 +37,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 class TestCreate:
     def test_create_persists_a_fresh_ledger(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         result = svc.create(
             bucket_id=secure_engine.bucket_id,
             actividad_id="A1",
@@ -53,7 +53,7 @@ class TestCreate:
         assert ledger.period_movements == ()
 
     def test_create_refuses_duplicate_actividad_year(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         svc.create(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, valuation_method="fifo")
         with pytest.raises(InventoryActividadConflictError) as exc_info:
             svc.create(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, valuation_method="pmp")
@@ -61,20 +61,20 @@ class TestCreate:
         assert exc_info.value.context == {"actividad_id": "A1", "year": "2025"}
 
     def test_create_refuses_invalid_valuation_method(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         with pytest.raises(InventoryServiceInputError) as exc_info:
             svc.create(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, valuation_method="lifo")
         assert exc_info.value.translated_message == "application.inventory.service.errors.invalid_valuation_method"
         assert exc_info.value.context == {"valuation_method": "lifo"}
 
     def test_create_persists_across_service_instances(self, secure_engine: TestRuntimeProfile) -> None:
-        _make_svc(secure_engine).create(
+        make_svc(secure_engine).create(
             bucket_id=secure_engine.bucket_id,
             actividad_id="A1",
             year=2025,
             valuation_method="fifo",
         )
-        fresh = _make_svc(secure_engine)
+        fresh = make_svc(secure_engine)
         ledgers = fresh.list_all(bucket_id=secure_engine.bucket_id)
         assert len(ledgers) == 1
         assert ledgers[0].actividad_id == "A1"
@@ -82,11 +82,11 @@ class TestCreate:
 
 class TestList:
     def test_list_empty_bucket_returns_empty_tuple(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         assert svc.list_all(bucket_id=secure_engine.bucket_id) == ()
 
     def test_list_returns_one_summary_per_actividad_year(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         svc.create(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2024, valuation_method="fifo")
         svc.create(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, valuation_method="pmp")
         svc.create(bucket_id=secure_engine.bucket_id, actividad_id="A2", year=2025, valuation_method="fifo")
@@ -98,7 +98,7 @@ class TestList:
 
 class TestShow:
     def test_show_returns_ledger_with_movements(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         svc.create(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, valuation_method="fifo")
         svc.movement_add(
             bucket_id=secure_engine.bucket_id,
@@ -109,7 +109,7 @@ class TestShow:
                 movement_date=date(2025, 3, 15),
                 kind=MovementKind.PURCHASE,
                 quantity=Decimal("10"),
-                acquisition_cost=_acquisition("500.00"),
+                acquisition_cost=acquisition("500.00"),
             ),
         )
         ledger = svc.show(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025)
@@ -117,7 +117,7 @@ class TestShow:
         assert ledger.period_movements[0].movement_id == "M-001"
 
     def test_show_refuses_on_missing_actividad(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         with pytest.raises(InventoryActividadNotFoundError) as exc_info:
             svc.show(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025)
         assert exc_info.value.translated_message == "application.inventory.service.errors.activity_not_found"
@@ -126,7 +126,7 @@ class TestShow:
 
 class TestMovementAdd:
     def test_movement_add_appends_to_existing_ledger(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         svc.create(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, valuation_method="fifo")
         svc.movement_add(
             bucket_id=secure_engine.bucket_id,
@@ -137,7 +137,7 @@ class TestMovementAdd:
                 movement_date=date(2025, 3, 1),
                 kind=MovementKind.PURCHASE,
                 quantity=Decimal("5"),
-                acquisition_cost=_acquisition("500.00"),
+                acquisition_cost=acquisition("500.00"),
             ),
         )
         result = svc.movement_add(
@@ -158,14 +158,14 @@ class TestMovementAdd:
         assert ids == ["M-001", "M-002"]
 
     def test_movement_add_refuses_duplicate_movement_id(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         svc.create(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, valuation_method="fifo")
         cmd = InventoryMovementCommand(
             movement_id="DUP",
             movement_date=date(2025, 3, 1),
             kind=MovementKind.PURCHASE,
             quantity=Decimal("1"),
-            acquisition_cost=_acquisition("100.00"),
+            acquisition_cost=acquisition("100.00"),
         )
         svc.movement_add(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, movement=cmd)
         with pytest.raises(InventoryServiceInputError) as exc_info:
@@ -174,13 +174,13 @@ class TestMovementAdd:
         assert exc_info.value.context == {"movement_id": "DUP"}
 
     def test_movement_add_refuses_when_actividad_missing(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         cmd = InventoryMovementCommand(
             movement_id="M-001",
             movement_date=date(2025, 3, 1),
             kind=MovementKind.PURCHASE,
             quantity=Decimal("1"),
-            acquisition_cost=_acquisition("100.00"),
+            acquisition_cost=acquisition("100.00"),
         )
         with pytest.raises(InventoryActividadNotFoundError):
             svc.movement_add(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, movement=cmd)
@@ -192,7 +192,7 @@ class TestMovementAdd:
         refused by ``movement_add`` itself — the persistence adapter no longer
         runs the valuation calculation.
         """
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         svc.create(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, valuation_method="fifo")
         svc.movement_add(
             bucket_id=secure_engine.bucket_id,
@@ -203,7 +203,7 @@ class TestMovementAdd:
                 movement_date=date(2025, 3, 1),
                 kind=MovementKind.PURCHASE,
                 quantity=Decimal("1"),
-                acquisition_cost=_acquisition("10.00"),
+                acquisition_cost=acquisition("10.00"),
             ),
         )
         with pytest.raises(InventoryServiceInputError) as exc_info:
@@ -234,7 +234,7 @@ class TestMovementAdd:
 
 class TestValuationPreview:
     def test_valuation_preview_runs_domain_engine(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         svc.create(
             bucket_id=secure_engine.bucket_id,
             actividad_id="A1",
@@ -251,7 +251,7 @@ class TestValuationPreview:
                 movement_date=date(2025, 1, 10),
                 kind=MovementKind.PURCHASE,
                 quantity=Decimal("10"),
-                acquisition_cost=_acquisition("500.00"),
+                acquisition_cost=acquisition("500.00"),
             ),
         )
         result = svc.valuation_preview(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025)
@@ -263,7 +263,7 @@ class TestValuationPreview:
 
 class TestClosingAuthorityRecord:
     def test_record_persists_and_exact_replay_is_idempotent(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         svc.create(
             bucket_id=secure_engine.bucket_id,
             actividad_id="A1",
@@ -271,7 +271,7 @@ class TestClosingAuthorityRecord:
             valuation_method="fifo",
             opening_stock=Decimal("100.00"),
         )
-        record = _authority_record()
+        record = authority_record()
         first = svc.closing_authority_record(
             bucket_id=secure_engine.bucket_id,
             actividad_id="A1",
@@ -297,7 +297,7 @@ class TestClosingAuthorityRecord:
     def test_record_refuses_divergent_replay_without_overwrite(self, secure_engine: TestRuntimeProfile) -> None:
         from cadrumo.domain.contribuyente.inventory.closing_authority_records import InventoryClosingAuthorityRecord
 
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         svc.create(
             bucket_id=secure_engine.bucket_id,
             actividad_id="A1",
@@ -305,7 +305,7 @@ class TestClosingAuthorityRecord:
             valuation_method="fifo",
             opening_stock=Decimal("100.00"),
         )
-        original = _authority_record()
+        original = authority_record()
         svc.closing_authority_record(
             bucket_id=secure_engine.bucket_id,
             actividad_id="A1",
@@ -318,7 +318,7 @@ class TestClosingAuthorityRecord:
                 bucket_id=secure_engine.bucket_id,
                 actividad_id="A1",
                 year=2025,
-                authority_record=_authority_record(reason="A different reviewed decision."),
+                authority_record=authority_record(reason="A different reviewed decision."),
             )
         link = original.prior_closing_link
         changed_source = "d" * 64
@@ -350,7 +350,7 @@ class TestClosingAuthorityRecord:
                 bucket_id=secure_engine.bucket_id,
                 actividad_id="A1",
                 year=2025,
-                authority_record=_physical_authority_record(),
+                authority_record=physical_authority_record(),
             )
         assert (
             svc.show(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025).closing_authority_record
@@ -362,17 +362,17 @@ class TestInventoryEventEmission:
     """Verify each mutating verb emits the correct BucketEventType."""
 
     def test_create_emits_ledger_inventory_created(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         result = svc.create(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, valuation_method="fifo")
         assert len(result.bucket_event_ids) == 1
-        catalogue = _event_repo(secure_engine).load()
+        catalogue = event_repo(secure_engine).load()
         event = catalogue.events[result.bucket_event_ids[0]]
         assert event.event_type is BucketEventType.LEDGER_INVENTORY_CREATED
         assert event.bucket_id == secure_engine.bucket_id
         assert "A1" in event.object_id
 
     def test_movement_add_emits_ledger_inventory_movement_added(self, secure_engine: TestRuntimeProfile) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         svc.create(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, valuation_method="fifo")
         result = svc.movement_add(
             bucket_id=secure_engine.bucket_id,
@@ -383,11 +383,11 @@ class TestInventoryEventEmission:
                 movement_date=date(2025, 3, 1),
                 kind=MovementKind.PURCHASE,
                 quantity=Decimal("5"),
-                acquisition_cost=_acquisition("500.00"),
+                acquisition_cost=acquisition("500.00"),
             ),
         )
         assert len(result.bucket_event_ids) == 1
-        catalogue = _event_repo(secure_engine).load()
+        catalogue = event_repo(secure_engine).load()
         event = catalogue.events[result.bucket_event_ids[0]]
         assert event.event_type is BucketEventType.LEDGER_INVENTORY_MOVEMENT_ADDED
 
@@ -395,10 +395,10 @@ class TestInventoryEventEmission:
         self,
         secure_engine: TestRuntimeProfile,
     ) -> None:
-        svc = _make_svc(secure_engine)
+        svc = make_svc(secure_engine)
         svc.create(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, valuation_method="fifo")
         result = svc.valuation_preview(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025)
         assert len(result.bucket_event_ids) == 1
-        catalogue = _event_repo(secure_engine).load()
+        catalogue = event_repo(secure_engine).load()
         event = catalogue.events[result.bucket_event_ids[0]]
         assert event.event_type is BucketEventType.LEDGER_INVENTORY_VALUATION_PREVIEWED

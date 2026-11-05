@@ -9,12 +9,12 @@ from types import MappingProxyType
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.classification.policies import SensitivityClass
 from ....core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
 from ...calculations.registry.tests.published_authority import (
-    leased_profile_create_context as _profile_creation_context_for_test,
+    leased_profile_create_context,
 )
 from ..portable_export import CarriedSecureObject, CoverageManifest, UserProfilePortableExport
 from ..values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -38,21 +38,21 @@ _BINARY_PAYLOAD_B64 = base64.b64encode(_BINARY_PAYLOAD).decode("ascii")
 
 def _export(**fields: object) -> UserProfilePortableExport:
     """Build a bundle the way export does: under the pinned profile context."""
-    return UserProfilePortableExport.model_validate(fields, context=_profile_creation_context_for_test())
+    return UserProfilePortableExport.model_validate(fields, context=leased_profile_create_context())
 
 
 def _reload(payload: str) -> UserProfilePortableExport:
-    return UserProfilePortableExport.model_validate_json(payload, context=_profile_creation_context_for_test())
+    return UserProfilePortableExport.model_validate_json(payload, context=leased_profile_create_context())
 
 
 def _profile() -> UserProfileRecord:
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
         created_at=_INSTANT,
         updated_at=_INSTANT,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 
@@ -70,7 +70,7 @@ def _campaign_record() -> UserProfileRecord:
     ``source`` and a real effective-dated window) so a save-drops-field
     regression would break the strict equality the roundtrip asserts.
     """
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         profile_id=_BUCKET_ID,
         setup_state=ProfileSetupState.INCOMPLETE,
         facts=(
@@ -98,7 +98,7 @@ def _campaign_record() -> UserProfileRecord:
         ),
         created_at=_INSTANT,
         updated_at=_INSTANT,
-        context=_profile_creation_context_for_test(),
+        context=leased_profile_create_context(),
     )
 
 

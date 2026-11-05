@@ -58,7 +58,7 @@ from ....application.modelo.selectors import ModeloCalculationRevisionSelector
 from ....core.i18n.render import locale_map
 from .cli_runner import cadrumo_click_command
 from .live_command_validation import CitedCommand, validate_cited_command
-from .test_documented_command_conformance import _AEAT_TOKEN_RE, _parse_command_line
+from .test_documented_command_conformance import AEAT_TOKEN_RE, parse_command_line
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -97,7 +97,7 @@ _LITERAL_HINT_STRINGS: tuple[str, ...] = (
     "aeat app modelo work calculate",
     # cadrumo.application.workflow.engine: draft-has-errors next_action.
     "aeat app modelo verification-report list --calculation-revision-id <calculation_revision_id>",
-    # cadrumo.entrypoints.cli._modelo_rendering: local-finish-line guidance.
+    # cadrumo.entrypoints.cli.modelo_rendering: local-finish-line guidance.
     "aeat app modelo export",
     "aeat app modelo work file",
 )
@@ -112,7 +112,7 @@ def _locale_command_strings() -> Iterator[tuple[str, str]]:
             continue
         if not isinstance(value, str):
             continue
-        if _AEAT_TOKEN_RE.search(value) is None:
+        if AEAT_TOKEN_RE.search(value) is None:
             continue
         token = (key, value)
         if token in seen:
@@ -173,25 +173,25 @@ def _cited_from_text(text: str) -> list[CitedCommand]:
     out: list[CitedCommand] = []
 
     def unquoted(raw_line: str) -> None:
-        match = _AEAT_TOKEN_RE.search(raw_line)
+        match = AEAT_TOKEN_RE.search(raw_line)
         if match is None:
             return
         span = _command_span(raw_line[match.end() :].strip())
         if not span:
             return
-        parsed = _parse_command_line(f"aeat {span}")
+        parsed = parse_command_line(f"aeat {span}")
         if parsed is not None:
             out.append(parsed)
 
     for raw_line in text.splitlines():
         start = 0
         for literal in re.finditer(r"`([^`]+)`", raw_line):
-            if _AEAT_TOKEN_RE.search(literal.group(1)) is None:
+            if AEAT_TOKEN_RE.search(literal.group(1)) is None:
                 continue
             unquoted(raw_line[start : literal.start()].replace("`", " "))
             # An explicit command literal is validated whole. Do not trim a
             # bad flag/suffix or structured argument into a safe prefix.
-            parsed = _parse_command_line(literal.group(1))
+            parsed = parse_command_line(literal.group(1))
             if parsed is not None:
                 out.append(parsed)
             start = literal.end()

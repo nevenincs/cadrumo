@@ -6,7 +6,7 @@ from typing import Final
 
 import pytest
 
-from .._app_ledger_lifecycle_command_specs import LEDGER_LIFECYCLE_COMMAND_SPECS
+from ..app_ledger_lifecycle_command_specs import LEDGER_LIFECYCLE_COMMAND_SPECS
 from ..command_specs import COMMAND_GRAPH
 from .ledger_command_spec_matrix import (
     EMPTY_DEFAULT,

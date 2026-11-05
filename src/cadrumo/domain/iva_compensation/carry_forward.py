@@ -25,7 +25,7 @@ from ...core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST, Fil
 from ...core.identity.aeat_expediente import AeatExpedienteId
 from ...core.identity.digest import ContentDigest
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period, PeriodKind, StandardPeriodCode
 from ...core.time.utc import UtcInstant
 from ..calculations.registry.authority import PinnedAuthorityOperation
@@ -64,7 +64,7 @@ class IvaCompensationExpiryReviewState(StrEnum):
 class IvaCompensationPeriodState(BaseModel):
     """Latest known Modelo 303 compensation state for one filed period."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     taxpayer_nif: SubjectTaxId | None = Field(
         default=None,
@@ -178,7 +178,7 @@ class IvaCompensationPeriodState(BaseModel):
 class IvaCompensationCarryForwardLot(BaseModel):
     """One generated IVA compensation balance tracked from its source period."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     taxpayer_nif: SubjectTaxId | None = Field(
         default=None,
@@ -210,7 +210,7 @@ class IvaCompensationCarryForwardLot(BaseModel):
 class IvaCompensationCarryForwardReport(BaseModel):
     """Carry-forward lot projection from filed Modelo 303 compensation history."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     as_of_year: FilingYear
     lots: tuple[IvaCompensationCarryForwardLot, ...]
@@ -421,7 +421,7 @@ def _materialize_carry_forward_lots(
             applied_amount=item.applied_amount,
             remaining_amount=item.remaining_amount,
             age_years=max(0, as_of_year - item.source_filing_year),
-            expiry_review_state=_expiry_review_state(
+            expiry_review_state=expiry_review_state(
                 source_filing_year=item.source_filing_year,
                 source_period=item.source_period,
                 as_of_year=as_of_year,
@@ -457,7 +457,7 @@ class IvaCompensationYearEndCarryPartition(BaseModel):
     generated_not_in_last_amount`` always holds.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     filing_year: FilingYear
     last_period_amount: Decimal = Field(ge=ZERO)
@@ -548,7 +548,7 @@ def iva_compensation_period_sort_key(period: Period) -> tuple[int, str]:
     return (_OTHER_PERIOD_SORT_RANK, period.registry_token)
 
 
-def _expiry_review_state(
+def expiry_review_state(
     *,
     source_filing_year: int,
     source_period: Period,

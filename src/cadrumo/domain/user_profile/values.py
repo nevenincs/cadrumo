@@ -19,14 +19,14 @@ from pydantic import BaseModel, Field, StringConstraints, ValidationInfo, field_
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
+from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI
 from ...core.hashing import content_hash_hex
 from ...core.identity.digest import ContentDigest, ContentDigestOrAbsent
-from ...core.identity.profile import ProfileId as _ProfileId
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.identity.profile import ProfileId
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.parsing.utils import parse_bool
-from ...core.time.clock import now as _utc_now
+from ...core.time.clock import now
 from ...core.time.utc import UtcInstant
 from .errors import UserProfileValidationError
 from .schema import ProfileSchemaDefinition
@@ -66,7 +66,7 @@ else:
     ProfileContext = object
 
 
-def _authority_context_types() -> tuple[type[ProfileCreateContext], type[ProfileDecodeContext]]:
+def authority_context_types() -> tuple[type[ProfileCreateContext], type[ProfileDecodeContext]]:
     """Resolve the frozen authority context classes after package import."""
     from ..calculations.registry.authority_artifact import ProfileCreateContext, ProfileDecodeContext
 
@@ -83,14 +83,14 @@ def _schema_from_context(info: ValidationInfo, *, surface: str) -> ProfileSchema
     validates the complete payload.
     """
     context = info.context
-    if isinstance(context, _authority_context_types()):
+    if isinstance(context, authority_context_types()):
         return context.schema
     raise UserProfileValidationError(f"{surface}: validation requires an explicit pinned profile context")
 
 
-def _context_for_schema(context: object) -> ProfileContext:
+def context_for_schema(context: object) -> ProfileContext:
     """Validate the small context contract before entering pydantic."""
-    if not isinstance(context, _authority_context_types()):
+    if not isinstance(context, authority_context_types()):
         raise TypeError("profile operations require ProfileCreateContext or ProfileDecodeContext")
     schema = context.schema
     if not isinstance(schema, ProfileSchemaDefinition):
@@ -231,11 +231,11 @@ def new_profile_id() -> str:
 class UserProfileFact(BaseModel):
     """One effective-dated user-profile fact."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     path: _FieldPath
     value: UserProfileFactValue
-    source: _Source = _PROVENANCE_SOURCE_MANUAL_CLI
+    source: _Source = PROVENANCE_SOURCE_MANUAL_CLI
     valid_from: date | None = None
     valid_to: date | None = None
 
@@ -323,18 +323,18 @@ def validate_profile_fact(fact: UserProfileFact, *, schema: ProfileSchemaDefinit
 class UserProfileRecord(BaseModel):
     """The current typed fact record, without label or removal projections."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     schema_id: str
     schema_version: PayloadSchemaVersion
-    profile_id: _ProfileId
+    profile_id: ProfileId
     facts: tuple[UserProfileFact, ...] = Field(default=())
     setup_state: ProfileSetupState
     record_revision: int = Field(default=1, ge=1)
     previous_record_digest: ContentDigest | None = None
     content_digest: ContentDigestOrAbsent = ""
-    created_at: UtcInstant = Field(default_factory=_utc_now)
-    updated_at: UtcInstant = Field(default_factory=_utc_now)
+    created_at: UtcInstant = Field(default_factory=now)
+    updated_at: UtcInstant = Field(default_factory=now)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -370,13 +370,13 @@ class UserProfileRecord(BaseModel):
 class UserProfileSnapshot(BaseModel):
     """Immutable filing/export profile snapshot."""
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     snapshot_id: _SnapshotId
-    profile_id: _ProfileId
+    profile_id: ProfileId
     schema_id: str
     schema_version: PayloadSchemaVersion
-    created_at: UtcInstant = Field(default_factory=_utc_now)
+    created_at: UtcInstant = Field(default_factory=now)
     facts: tuple[UserProfileFact, ...]
     canonical_hash: ContentDigest
 
@@ -408,7 +408,7 @@ class UserProfileSnapshot(BaseModel):
         guarantee at the boundary: the persisted hash MUST match the
         persisted facts.
         """
-        derived = _derive_canonical_hash(
+        derived = derive_canonical_hash(
             schema_id=self.schema_id,
             schema_version=self.schema_version,
             profile_id=self.profile_id,
@@ -423,7 +423,7 @@ class UserProfileSnapshot(BaseModel):
         return self
 
 
-def _derive_canonical_hash(
+def derive_canonical_hash(
     *,
     schema_id: str,
     schema_version: int,
@@ -456,7 +456,7 @@ def _derive_canonical_hash(
     )
 
 
-def _typed_profile_facts(
+def typed_profile_facts(
     facts: Iterable[object],
     *,
     schema: ProfileSchemaDefinition,
@@ -488,13 +488,13 @@ def create_user_profile_record(
     identity supplied by the authority and validates every fact against that
     same immutable declaration.  It never consults the bundled TOML loader.
     """
-    checked = _context_for_schema(context)
-    create_context_type, _ = _authority_context_types()
+    checked = context_for_schema(context)
+    create_context_type, _ = authority_context_types()
     if not isinstance(checked, create_context_type):
         raise TypeError("creating a profile record requires ProfileCreateContext")
     schema = checked.schema
-    typed_facts = _typed_profile_facts(tuple(facts), schema=schema)
-    instant_created = created_at or _utc_now()
+    typed_facts = typed_profile_facts(tuple(facts), schema=schema)
+    instant_created = created_at or now()
     instant_updated = updated_at or instant_created
     payload: dict[str, object] = {
         "schema_id": schema.id,
@@ -517,8 +517,8 @@ def decode_user_profile_record(
     context: ProfileDecodeContext,
 ) -> UserProfileRecord:
     """Decode a secure profile record against the operation-pinned schema."""
-    checked = _context_for_schema(context)
-    _, decode_context_type = _authority_context_types()
+    checked = context_for_schema(context)
+    _, decode_context_type = authority_context_types()
     if not isinstance(checked, decode_context_type):
         raise TypeError("decoding a profile record requires ProfileDecodeContext")
     if isinstance(payload, Mapping):

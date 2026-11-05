@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ......application.live.expedientes_ports import ExpedientesDeclaration
 from ......core.casilla_id import CasillaId, validated_casilla_id
@@ -20,28 +20,28 @@ from ......domain.calculations.registry.export import resolve_export_layout
 from ......domain.calculations.registry.export_parse import parse_export_payload
 from ...browser.factory import opened_browser_page, shared_playwright_runtime
 from ...browser.profile import Profile
-from .._declarations_diagnostics import declarations_page_shape_context as _declarations_page_shape_context
-from .._declarations_listbox import _parse_listbox, _parse_presented_at
-from ..declarations import _EJERCICIO_OPTION_RE, _MODELO_OPTION_RE, _combobox_option_texts, _select_combobox_value
+from ..declarations import EJERCICIO_OPTION_RE, MODELO_OPTION_RE, combobox_option_texts, select_combobox_value
+from ..declarations_diagnostics import declarations_page_shape_context
+from ..declarations_listbox import parse_listbox, parse_presented_at
 from ..declarations_observations import (
-    _verify_submitted_file_context,
-    _with_derived_303_compensation_available_observation,
     registry_observation_from_filed_declaration,
+    verify_submitted_file_context,
+    with_derived_303_compensation_available_observation,
 )
-from ..declarations_remote import extract_csv_from_url as _extract_csv_from_url
+from ..declarations_remote import extract_csv_from_url
 from ..errors import SedeParseError, SedeValidationError
-from ._declarations_support import (
-    _COTEJO_QUERY_URL,
-    _DECLARATIONS_LISTING_URL,
-    _FIXTURE_ROOT,
-    _declaration_row,
-    _filed_observation,
-    _modelo_130_snapshot,
-    _modelo_snapshot,
-    _select_authoritative_declaration,
-    _submitted_file_payload,
-)
 from .declarations_register_test_support import aeat_sede_fixture
+from .declarations_support import (
+    COTEJO_QUERY_URL,
+    DECLARATIONS_LISTING_URL,
+    FIXTURE_ROOT,
+    declaration_row,
+    declarations_select_authoritative_declaration,
+    filed_observation,
+    modelo_130_snapshot,
+    modelo_snapshot,
+    submitted_file_payload,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -58,16 +58,16 @@ _M303_PRINTED_COMPENSATION_REFERENCE_CASILLA: CasillaId = validated_casilla_id("
 
 
 def test_authoritative_declaration_selection_uses_latest_alta_row_for_duplicate_period() -> None:
-    older = _declaration_row(
+    older = declaration_row(
         expediente_id="202430313521426G",
         presented_at=datetime(2025, 3, 27, 17, 31, 56, tzinfo=UTC),
     )
-    newer = _declaration_row(
+    newer = declaration_row(
         expediente_id="202430313521428B",
         presented_at=datetime(2025, 3, 28, 13, 4, 47, tzinfo=UTC),
     )
 
-    selected = _select_authoritative_declaration(
+    selected = declarations_select_authoritative_declaration(
         (older, newer),
         modelo="303",
         ejercicio=2024,
@@ -95,15 +95,15 @@ def test_declarations_page_shape_context_redacts_url_query_and_input_values() ->
     </html>
     """
 
-    context = _declarations_page_shape_context(
+    context = declarations_page_shape_context(
         html,
-        landing_url=f"{_DECLARATIONS_LISTING_URL}?token=QUERY-CANARY",
+        landing_url=f"{DECLARATIONS_LISTING_URL}?token=QUERY-CANARY",
         stage="post_buscar",
         modelo="303",
         ejercicio=2026,
     )
 
-    assert context["landing_url"] == _DECLARATIONS_LISTING_URL
+    assert context["landing_url"] == DECLARATIONS_LISTING_URL
     assert context["has_modelo_label"] is True
     assert context["has_ejercicio_label"] is True
     assert context["has_buscar_button"] is True
@@ -151,9 +151,9 @@ def test_declarations_page_shape_context_carries_page_text_so_the_leak_assertion
     </html>
     """
 
-    context = _declarations_page_shape_context(
+    context = declarations_page_shape_context(
         html,
-        landing_url=_DECLARATIONS_LISTING_URL,
+        landing_url=DECLARATIONS_LISTING_URL,
         stage="post_buscar",
         modelo="303",
         ejercicio=2026,
@@ -187,9 +187,9 @@ def test_declarations_page_shape_context_field_set_is_closed() -> None:
     with no structural guard is precisely the one whose leak assertion watches a
     channel that does not exist.
     """
-    context = _declarations_page_shape_context(
+    context = declarations_page_shape_context(
         "<html><head><title>t</title></head><body></body></html>",
-        landing_url=_DECLARATIONS_LISTING_URL,
+        landing_url=DECLARATIONS_LISTING_URL,
         stage="post_buscar",
     )
 
@@ -215,8 +215,8 @@ def test_declarations_page_shape_context_field_set_is_closed() -> None:
 
 
 def test_modelo_303_filed_observation_derives_compensation_available() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        observation = _filed_observation(
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        observation = filed_observation(
             modelo="303",
             ejercicio=2024,
             period="4T",
@@ -226,7 +226,7 @@ def test_modelo_303_filed_observation_derives_compensation_available() -> None:
             },
         )
 
-        derived = _with_derived_303_compensation_available_observation(
+        derived = with_derived_303_compensation_available_observation(
             observation, operation=_authority_operation_for_test
         )
         registry_observation = registry_observation_from_filed_declaration(
@@ -234,7 +234,7 @@ def test_modelo_303_filed_observation_derives_compensation_available() -> None:
         )
         registry_casillas = {
             casilla.id: casilla
-            for casilla in _modelo_snapshot(
+            for casilla in modelo_snapshot(
                 "303", filing_year=2024, period="4T", operation=_authority_operation_for_test
             ).revision.casillas
         }
@@ -251,8 +251,8 @@ def test_modelo_303_filed_observation_derives_compensation_available() -> None:
 
 
 def test_modelo_303_filed_observation_derives_compensation_available_from_registry_formula() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        observation = _filed_observation(
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        observation = filed_observation(
             modelo="303",
             ejercicio=2024,
             period="4T",
@@ -263,7 +263,7 @@ def test_modelo_303_filed_observation_derives_compensation_available_from_regist
             },
         )
 
-        derived = _with_derived_303_compensation_available_observation(
+        derived = with_derived_303_compensation_available_observation(
             observation, operation=_authority_operation_for_test
         )
 
@@ -274,8 +274,8 @@ def test_modelo_303_filed_observation_derives_compensation_available_from_regist
 
 
 def test_registry_observation_from_filed_declaration_refuses_noncanonical_casilla_ids() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        observation = _filed_observation(
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        observation = filed_observation(
             modelo="303",
             ejercicio=2024,
             period="4T",
@@ -294,12 +294,12 @@ class TestParseListbox:
         # The one captured listbox page is for one ejercicio, which its file name records.
         (fixture,) = (
             path
-            for path in _FIXTURE_ROOT.glob("declaraciones-modelo-100-*.html")
+            for path in FIXTURE_ROOT.glob("declaraciones-modelo-100-*.html")
             if path.stem.removeprefix("declaraciones-modelo-100-").isdigit()
         )
         ejercicio = int(fixture.stem.removeprefix("declaraciones-modelo-100-"))
         html = fixture.read_text(encoding="utf-8")
-        rows = _parse_listbox(html, modelo="100", ejercicio=ejercicio).rows
+        rows = parse_listbox(html, modelo="100", ejercicio=ejercicio).rows
         assert len(rows) == 1
         row = rows[0]
         assert row.modelo == "100"
@@ -358,7 +358,7 @@ class TestParseListbox:
               </tr>
             </div>
         """
-        rows = _parse_listbox(html, modelo="130", ejercicio=2026).rows
+        rows = parse_listbox(html, modelo="130", ejercicio=2026).rows
 
         assert len(rows) == 1
         row = rows[0]
@@ -394,7 +394,7 @@ class TestParseListbox:
               </tr>
             </div>
         """
-        row = _parse_listbox(html, modelo="130", ejercicio=2026).rows[0]
+        row = parse_listbox(html, modelo="130", ejercicio=2026).rows[0]
 
         assert row.declaration_copy_link_text == "Ver"
         assert row.archive_link_text is None
@@ -416,18 +416,18 @@ class TestParseListbox:
               </table>
             </div>
         """
-        rows = _parse_listbox(html, modelo="130", ejercicio=2024).rows
+        rows = parse_listbox(html, modelo="130", ejercicio=2024).rows
         assert rows == ()
 
     def test_missing_listbox_raises_parse_error(self) -> None:
         """Assert HTML without a listbox raises :exc:`SedeParseError`."""
         with pytest.raises(SedeParseError, match=r"listbox|missing|parse"):
-            _parse_listbox("<html><body>not a listbox</body></html>", modelo="100", ejercicio=2022)
+            parse_listbox("<html><body>not a listbox</body></html>", modelo="100", ejercicio=2022)
 
     def test_missing_listbox_is_tagged_external_shape_changed(self) -> None:
         """A page with no ``.z-listbox`` container is a portal-drift outcome, not a bare parse error."""
         with pytest.raises(SedeParseError) as exc_info:
-            _parse_listbox("<html><body>not a listbox</body></html>", modelo="100", ejercicio=2022)
+            parse_listbox("<html><body>not a listbox</body></html>", modelo="100", ejercicio=2022)
         assert exc_info.value.failure_mode == "external_shape_changed"
         assert exc_info.value.context is not None
         assert exc_info.value.context["modelo"] == "100"
@@ -442,7 +442,7 @@ class TestParseListbox:
             </div>
         """
         with pytest.raises(SedeParseError) as exc_info:
-            _parse_listbox(html, modelo="303", ejercicio=2025)
+            parse_listbox(html, modelo="303", ejercicio=2025)
         assert exc_info.value.failure_mode == "external_shape_changed"
         assert exc_info.value.context is not None
         assert exc_info.value.context["modelo"] == "303"
@@ -480,7 +480,7 @@ class TestParseListbox:
             </div>
         """
         with pytest.raises(SedeParseError) as exc_info:
-            _parse_listbox(html, modelo="130", ejercicio=2026)
+            parse_listbox(html, modelo="130", ejercicio=2026)
         assert _exception_chain_disclosures(exc_info.value, leaked_cell) == []
 
 
@@ -588,7 +588,7 @@ class TestParsePresentedAt:
 
     def test_canonical_shape(self) -> None:
         """Assert a well-formed Spanish timestamp parses to a UTC :class:`datetime`."""
-        result = _parse_presented_at("01/02/2024 19:15:34")
+        result = parse_presented_at("01/02/2024 19:15:34")
         assert result == datetime(
             year=2024,
             month=2,
@@ -602,12 +602,12 @@ class TestParsePresentedAt:
     def test_invalid_shape_raises_registered_validation_error(self) -> None:
         """Assert ISO-style timestamps are rejected with the registered sede error."""
         with pytest.raises(SedeValidationError, match=r"unexpected presented_at shape"):
-            _parse_presented_at("2024-02-01 19:15:34")
+            parse_presented_at("2024-02-01 19:15:34")
 
     def test_partial_match_rejected(self) -> None:
         """Assert a date-only string (no time component) is rejected."""
         with pytest.raises(SedeValidationError, match=r"unexpected presented_at shape"):
-            _parse_presented_at("01/02/2024")
+            parse_presented_at("01/02/2024")
 
 
 def _combobox_html(label_text: str, labels: tuple[str, ...]) -> str:
@@ -644,10 +644,10 @@ class TestSearchOptionSelection:
                 """,
             )
 
-            selected = await _select_combobox_value(
+            selected = await select_combobox_value(
                 page,
                 label_text="Ejercicio (*)",
-                option_pattern=_EJERCICIO_OPTION_RE,
+                option_pattern=EJERCICIO_OPTION_RE,
                 option_match="2026",
             )
             selected_year = await page.evaluate("window.selectedYear ?? null")
@@ -661,7 +661,7 @@ class TestSearchOptionSelection:
         [
             pytest.param(
                 "Modelo (*)",
-                _MODELO_OPTION_RE,
+                MODELO_OPTION_RE,
                 "303",
                 "303 -",
                 ("-- Seleccione --", "322 - IVA. GRUPO DE ENTIDADES. MODELO 303 - INDIVIDUAL", "303 - IVA"),
@@ -671,7 +671,7 @@ class TestSearchOptionSelection:
             ),
             pytest.param(
                 "Modelo (*)",
-                _MODELO_OPTION_RE,
+                MODELO_OPTION_RE,
                 "30",
                 "30 -",
                 ("130 - IRPF. PAGO FRACCIONADO", "30 - SINTETICO"),
@@ -681,7 +681,7 @@ class TestSearchOptionSelection:
             ),
             pytest.param(
                 "Ejercicio (*)",
-                _EJERCICIO_OPTION_RE,
+                EJERCICIO_OPTION_RE,
                 "2024",
                 "2024",
                 ("ATF - ANEXO 2024", "2025", "2024"),
@@ -691,7 +691,7 @@ class TestSearchOptionSelection:
             ),
             pytest.param(
                 "Modelo (*)",
-                _MODELO_OPTION_RE,
+                MODELO_OPTION_RE,
                 "341",
                 "341 -",
                 ("322 - IVA. MODELO 341 - OTRO", "341 - DECLARACION", "341 - DECLARACION"),
@@ -701,7 +701,7 @@ class TestSearchOptionSelection:
             ),
             pytest.param(
                 "Modelo (*)",
-                _MODELO_OPTION_RE,
+                MODELO_OPTION_RE,
                 "303",
                 "303 -",
                 ("322 - IVA. MODELO 303 - INDIVIDUAL",),
@@ -732,7 +732,7 @@ class TestSearchOptionSelection:
             substring_pick = (
                 await page.locator(".z-comboitem-text").filter(has_text=substring_needle).first.text_content()
             )
-            selected = await _select_combobox_value(
+            selected = await select_combobox_value(
                 page,
                 label_text=label_text,
                 option_pattern=option_pattern,
@@ -755,10 +755,10 @@ class TestSearchOptionSelection:
             await page.set_content(_combobox_html("Modelo (*)", ("303 - IVA. AUTOLIQUIDACION", "303 - IVA. OTRA")))
 
             with pytest.raises(SedeParseError, match="refusing to guess"):
-                await _select_combobox_value(
+                await select_combobox_value(
                     page,
                     label_text="Modelo (*)",
-                    option_pattern=_MODELO_OPTION_RE,
+                    option_pattern=MODELO_OPTION_RE,
                     option_match="303",
                 )
             clicked_index = await page.evaluate("window.selectedIndex ?? null")
@@ -767,7 +767,7 @@ class TestSearchOptionSelection:
 
     @pytest.mark.asyncio
     async def test_real_register_modelos_select_by_code_including_the_twice_listed_one(self, tmp_path: Path) -> None:
-        labels = _combobox_option_texts(aeat_sede_fixture("declaraciones-modelo-100-2022"))
+        labels = combobox_option_texts(aeat_sede_fixture("declaraciones-modelo-100-2022"))
         settings = Settings(cadrumo_storage_root=tmp_path)
         profile = Profile(name="test-declarations")
         async with (
@@ -777,10 +777,10 @@ class TestSearchOptionSelection:
             await page.set_content(_combobox_html("Modelo (*)", labels))
 
             for code in ("14A", "174", "303", "341"):
-                selected = await _select_combobox_value(
+                selected = await select_combobox_value(
                     page,
                     label_text="Modelo (*)",
-                    option_pattern=_MODELO_OPTION_RE,
+                    option_pattern=MODELO_OPTION_RE,
                     option_match=code,
                 )
                 clicked_index = await page.evaluate("window.selectedIndex ?? null")
@@ -794,59 +794,59 @@ class TestSearchOptionSelection:
 class TestExtractCsvFromUrl:
     """Verify cotejo-URL CSV extraction validates the AEAT shape strictly."""
 
-    _COTEJO = f"{_COTEJO_QUERY_URL}?CSV="
+    _COTEJO = f"{COTEJO_QUERY_URL}?CSV="
 
     def test_canonical_csv(self) -> None:
         """Assert a canonical 16-character CSV extracts cleanly."""
-        assert _extract_csv_from_url(f"{self._COTEJO}S3RASL6U73H49Y83") == "S3RASL6U73H49Y83"
+        assert extract_csv_from_url(f"{self._COTEJO}S3RASL6U73H49Y83") == "S3RASL6U73H49Y83"
 
     def test_missing_csv_param_raises(self) -> None:
         """Assert a URL without a CSV query parameter raises :exc:`SedeParseError`."""
         with pytest.raises(SedeParseError, match="missing CSV"):
-            _extract_csv_from_url(_DECLARATIONS_LISTING_URL)
+            extract_csv_from_url(DECLARATIONS_LISTING_URL)
 
     def test_lowercase_csv_rejected(self) -> None:
         """Assert a lowercase CSV value is rejected (AEAT only emits uppercase)."""
         # AEAT only emits uppercase CSV; lowercase indicates a
         # malformed response or attacker-crafted URL.
         with pytest.raises(SedeParseError, match="does not match AEAT shape"):
-            _extract_csv_from_url(f"{self._COTEJO}lowercaseinvalid")
+            extract_csv_from_url(f"{self._COTEJO}lowercaseinvalid")
 
     def test_too_short_csv_rejected(self) -> None:
         """Assert a CSV shorter than the AEAT minimum is rejected."""
         with pytest.raises(SedeParseError, match="does not match AEAT shape"):
-            _extract_csv_from_url(f"{self._COTEJO}AB12")
+            extract_csv_from_url(f"{self._COTEJO}AB12")
 
     def test_maximum_length_csv_extracts(self) -> None:
         """The audited 32-character maximum remains a valid AEAT CSV."""
-        assert _extract_csv_from_url(f"{self._COTEJO}{'A' * 32}") == "A" * 32
+        assert extract_csv_from_url(f"{self._COTEJO}{'A' * 32}") == "A" * 32
 
     def test_csv_longer_than_the_maximum_is_rejected(self) -> None:
         """Assert a 33-character CSV is rejected rather than truncated."""
         with pytest.raises(SedeParseError, match="does not match AEAT shape"):
-            _extract_csv_from_url(f"{self._COTEJO}{'A' * 33}")
+            extract_csv_from_url(f"{self._COTEJO}{'A' * 33}")
 
     def test_csv_with_special_chars_rejected(self) -> None:
         """Assert a CSV containing path-traversal characters is rejected."""
         with pytest.raises(SedeParseError, match="does not match AEAT shape"):
-            _extract_csv_from_url(f"{self._COTEJO}AAAA1234../../etc")
+            extract_csv_from_url(f"{self._COTEJO}AAAA1234../../etc")
 
     def test_multiple_csv_values_rejected(self) -> None:
         """Assert multiple CSV query parameter values are rejected."""
         # AEAT never repeats the CSV parameter; multiple values
         # indicate a malformed response or an attacker-crafted URL.
         with pytest.raises(SedeParseError, match="2 CSV values"):
-            _extract_csv_from_url(f"{self._COTEJO}AAAA1234&CSV=BBBB5678")
+            extract_csv_from_url(f"{self._COTEJO}AAAA1234&CSV=BBBB5678")
 
 
 class TestSubmittedFileContext:
     """Verify submitted files are bound to the declaration row context."""
 
     def test_period_mismatch_raises_parse_error(self) -> None:
-        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-            snapshot = _modelo_130_snapshot(operation=_authority_operation_for_test)
+        with bundled_indexed_authority().operation() as _authority_operation_for_test:
+            snapshot = modelo_130_snapshot(operation=_authority_operation_for_test)
             resolved = resolve_export_layout(snapshot)
-            parsed = parse_export_payload(resolved.layout, _submitted_file_payload())
+            parsed = parse_export_payload(resolved.layout, submitted_file_payload())
             declaration = ExpedientesDeclaration(
                 modelo="130",
                 ejercicio=2026,
@@ -859,4 +859,4 @@ class TestSubmittedFileContext:
             )
 
             with pytest.raises(SedeParseError, match="does not match declaration"):
-                _verify_submitted_file_context(resolved.fields_by_id, parsed.fields, declaration=declaration)
+                verify_submitted_file_context(resolved.fields_by_id, parsed.fields, declaration=declaration)

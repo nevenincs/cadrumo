@@ -38,7 +38,7 @@ from ...calculations.registry.authority import PinnedAuthorityOperation
 from ..proportionality import (
     CategoryCitation,
     CategoryCitationSource,
-    _authoritative_citation_origins,
+    authoritative_citation_origins,
 )
 from ..registry import load_category_profiles
 
@@ -144,7 +144,7 @@ def test_accepted_origins_agree_with_the_canonical_domain_registry() -> None:
     :func:`test_origin_set_is_read_from_the_registry_at_call_time`.
     """
     domains = load_external_constants().aeat.domains
-    accepted = _authoritative_citation_origins()
+    accepted = authoritative_citation_origins()
 
     assert domains.host_suffix.lower() in accepted
     assert domains.boe.lower().endswith(next(o for o in accepted if "boe" in o))
@@ -162,7 +162,7 @@ def test_origin_set_is_read_from_the_registry_at_call_time() -> None:
     """
     import inspect
 
-    source = inspect.getsource(_authoritative_citation_origins)
+    source = inspect.getsource(authoritative_citation_origins)
 
     assert "load_external_constants()" in source, source
     for literal in (AEAT_HOST_SUFFIX_EXPECTED, "boe.es"):

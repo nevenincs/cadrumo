@@ -40,15 +40,15 @@ from ......tests.inventory import FIXTURES_DIR
 from ...browser.tests.real_http_boundary import LocalHttpBoundary, open_real_browser_session, real_browser_factory
 from .. import censal_datos as censal_datos_module
 from ..censal_datos import (
-    _FORBIDDEN_LANDING_MARKERS,
-    _assert_read_http,
-    _assert_read_landing,
-    _censal_landing_url,
+    FORBIDDEN_LANDING_MARKERS,
+    assert_read_http,
+    assert_read_landing,
     censal_datos_url,
+    censal_landing_url,
     forbidden_censal_landing_marker,
     parse_censal_datos,
 )
-from ..censal_datos import _navigate_and_parse as read_censal
+from ..censal_datos import navigate_and_parse as read_censal
 from ..errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from ..iva_compensation_wallet import fetch_iva_compensation_wallet
 from .censal_consultation_fixtures import consultation_documents
@@ -148,24 +148,24 @@ class TestParseCensalDatos:
         Guards against AEAT adding a censal field that the parser quietly
         ignores, which would under-report the taxpayer's censal state.
         """
-        from ..._html import parse_html
+        from ...html import parse_html
         from ..censal_datos import (
-            _DOMICILIO_LABELS,
-            _IDENTITY_LABELS,
-            _fold,
-            _section_of,
+            DOMICILIO_LABELS,
+            IDENTITY_LABELS,
+            fold,
+            section_of,
         )
 
         soup = parse_html(_fixture_html())
         unmapped: list[str] = []
         for table in soup.find_all("table"):
-            section = _section_of(table)
+            section = section_of(table)
             if section is None:
                 continue
-            known = _IDENTITY_LABELS if section == "datos identificativos del contribuyente" else _DOMICILIO_LABELS
+            known = IDENTITY_LABELS if section == "datos identificativos del contribuyente" else DOMICILIO_LABELS
             for bold in table.find_all("b"):
                 label = bold.get_text(" ", strip=True)
-                if label and _fold(label) not in known:
+                if label and fold(label) not in known:
                     unmapped.append(label)
 
         assert unmapped == []
@@ -206,15 +206,15 @@ class TestNoWriteSurface:
     def test_landing_guard_refuses_every_real_write_path(self, landing: str) -> None:
         """The runtime guard fails closed on each write surface the page reaches."""
         with pytest.raises(SedeNavigationError) as excinfo:
-            _assert_read_landing(landing)
+            assert_read_landing(landing)
 
         assert excinfo.value.failure_mode == "live_navigation_failed"
 
-    @pytest.mark.parametrize("marker", _FORBIDDEN_LANDING_MARKERS)
+    @pytest.mark.parametrize("marker", FORBIDDEN_LANDING_MARKERS)
     def test_every_declared_marker_is_load_bearing(self, marker: str) -> None:
         """Each declared marker refuses on its own, so none is dead weight."""
         with pytest.raises(SedeNavigationError):
-            _assert_read_landing(f"{_CENSAL_URL}{marker}")
+            assert_read_landing(f"{_CENSAL_URL}{marker}")
 
     @pytest.mark.parametrize("code", ["G322", "G313", "G323", "G414"])
     def test_landing_guard_refuses_every_procedure_launcher(self, code: str) -> None:
@@ -229,12 +229,12 @@ class TestNoWriteSurface:
 
         assert forbidden_censal_landing_marker(launcher) is not None
         with pytest.raises(SedeNavigationError):
-            _assert_read_landing(launcher)
+            assert_read_landing(launcher)
 
     def test_declared_markers_carry_no_empty_string(self) -> None:
         """An empty marker would match every landing and refuse the read itself."""
-        assert _FORBIDDEN_LANDING_MARKERS
-        assert all(marker.strip() for marker in _FORBIDDEN_LANDING_MARKERS)
+        assert FORBIDDEN_LANDING_MARKERS
+        assert all(marker.strip() for marker in FORBIDDEN_LANDING_MARKERS)
 
     def test_marker_authority_agrees_with_the_raising_guard(self) -> None:
         """The exported marker lookup is the guard's own rule, not a second copy.
@@ -253,26 +253,26 @@ class TestNoWriteSurface:
         Pairs with the refusal cases above: a guard that refused everything
         would make those assertions meaningless.
         """
-        _assert_read_landing(censal_datos_url("Y0000001Z", origin=_AEAT.domains.sede))
+        assert_read_landing(censal_datos_url("Y0000001Z", origin=_AEAT.domains.sede))
 
     def test_read_guard_refuses_a_write_method(self) -> None:
         """No censal navigation may use a mutating HTTP method."""
         from ......domain.calculations.registry.errors import RegistryValidationError
 
         with pytest.raises(RegistryValidationError):
-            _assert_read_http("POST", _CENSAL_URL)
+            assert_read_http("POST", _CENSAL_URL)
 
     def test_read_guard_refuses_an_off_aeat_host(self) -> None:
         """A redirect off the AEAT apex fails closed."""
         from ......domain.calculations.registry.errors import RegistryValidationError
 
         with pytest.raises(RegistryValidationError):
-            _assert_read_http("GET", f"https://example.invalid{_AEAT.sede_paths.censal_datos}")
+            assert_read_http("GET", f"https://example.invalid{_AEAT.sede_paths.censal_datos}")
 
     @pytest.mark.parametrize("origin", ["www1", "www2", "www6", "www12"])
     def test_read_guard_admits_every_numbered_dispatch_host(self, origin: str) -> None:
         """AEAT may redirect a session across its ``www{n}`` pool, so every number is admitted."""
-        _assert_read_http("GET", aeat_url(origin, _AEAT.sede_paths.censal_datos))
+        assert_read_http("GET", aeat_url(origin, _AEAT.sede_paths.censal_datos))
 
     def test_url_builder_requires_an_explicit_origin(self) -> None:
         """No caller may build a censal URL against an assumed host.
@@ -315,7 +315,7 @@ class TestCensalLandingIsRefusedWhenUnreadable:
 
     def test_a_readable_landing_is_returned_unchanged(self) -> None:
         landed = f"{_AEAT.domains.www12}{_AEAT.sede_paths.censal_datos}"
-        assert _censal_landing_url(_LandedPage(landed), requested_url=_CENSAL_URL) == landed
+        assert censal_landing_url(_LandedPage(landed), requested_url=_CENSAL_URL) == landed
 
     @pytest.mark.parametrize("landed", ["", "about:blank"])
     def test_an_unreadable_landing_is_refused_not_substituted(self, landed: str) -> None:
@@ -323,7 +323,7 @@ class TestCensalLandingIsRefusedWhenUnreadable:
         page = _LandedPage(landed)
         produced: str | None = None
         try:
-            produced = _censal_landing_url(page, requested_url=_CENSAL_URL)
+            produced = censal_landing_url(page, requested_url=_CENSAL_URL)
         except SedeNavigationError:
             produced = None
         assert produced != _CENSAL_URL, (
@@ -331,11 +331,11 @@ class TestCensalLandingIsRefusedWhenUnreadable:
         )
         assert produced is None
         with pytest.raises(SedeNavigationError):
-            _censal_landing_url(page, requested_url=_CENSAL_URL)
+            censal_landing_url(page, requested_url=_CENSAL_URL)
 
     def test_the_refusal_names_the_requested_url(self) -> None:
         with pytest.raises(SedeNavigationError) as excinfo:
-            _censal_landing_url(_LandedPage(""), requested_url=_CENSAL_URL)
+            censal_landing_url(_LandedPage(""), requested_url=_CENSAL_URL)
         context = excinfo.value.context
         assert context is not None
         assert context["requested_url"] == _CENSAL_URL
@@ -469,7 +469,7 @@ class TestDirectAuthenticatedEntry:
         """Refuse the selector promptly after its response, independent of browser startup and teardown."""
         boundary = _SedeDocuments(_bouncing_to(_SELECTOR_URL, _AUTHENTICATED_SELECTOR_HTML))
         selector_refusal_timestamps: list[float] = []
-        refuse_non_consulta_landing = censal_datos_module._refuse_non_consulta_landing
+        refuse_non_consulta_landing = censal_datos_module.refuse_non_consulta_landing
 
         def record_selector_refusal(landing_url: str) -> None:
             try:
@@ -485,7 +485,7 @@ class TestDirectAuthenticatedEntry:
 
         monkeypatch.setattr(
             censal_datos_module,
-            "_refuse_non_consulta_landing",
+            "refuse_non_consulta_landing",
             record_selector_refusal,
         )
         try:

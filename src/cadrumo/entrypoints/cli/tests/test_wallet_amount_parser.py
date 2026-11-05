@@ -20,16 +20,16 @@ def test_wallet_amount_refuses_non_canonical_forms() -> None:
     """
     import typer as _typer
 
-    from ..modelo_iva_wallet_commands import _wallet_amount
+    from ..modelo_iva_wallet_commands import wallet_amount
 
     for raw in ("1.000", "1e3", "1E3", "+1200", "1_000", ".5", "1.", "NaN", "-NaN", "Infinity", "-Infinity"):
         assert isinstance(Decimal(raw), Decimal), raw
         with pytest.raises(_typer.BadParameter):
-            _wallet_amount(raw)
+            wallet_amount(raw)
 
     for raw in ("1.234,56", "36.500,00", "not-decimal", "1 200"):
         with pytest.raises(_typer.BadParameter):
-            _wallet_amount(raw)
+            wallet_amount(raw)
 
 
 @pytest.mark.parametrize(
@@ -45,6 +45,6 @@ def test_wallet_amount_refuses_non_canonical_forms() -> None:
     ],
 )
 def test_wallet_amount_accepts_canonical_forms(raw: str, expected: Decimal) -> None:
-    from ..modelo_iva_wallet_commands import _wallet_amount
+    from ..modelo_iva_wallet_commands import wallet_amount
 
-    assert _wallet_amount(raw) == expected
+    assert wallet_amount(raw) == expected

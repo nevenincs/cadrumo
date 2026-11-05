@@ -38,10 +38,10 @@ from ......domain.modelos.filing_kind_evidence import (
 )
 from ......domain.modelos.filing_record import FilingDeclarationKind
 from ......domain.submission.models import ModeloDraftStatus
-from ..declarations_capture import _relation_source_gaps
+from ..declarations_capture import relation_source_gaps
 from ..declarations_observations import observed_filing_kind_marker_from_submitted_file
 from ..schema import FiledDeclaracionObservation
-from ._declarations_support import _filed_observation, _modelo_130_snapshot, _submitted_file_payload
+from .declarations_support import filed_observation, modelo_130_snapshot, submitted_file_payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -85,7 +85,7 @@ def test_each_published_layout_names_exactly_the_design_positions(
 
 
 def _m130_body_with_marker(token: bytes) -> bytes:
-    body = _submitted_file_payload()
+    body = submitted_file_payload()
     position = body.index(_M130_PAGE_01_OPEN_TAG) + _M130_MARKER_OFFSET - 1
     assert body[position : position + 1] == b" "
     return body[:position] + token + body[position + 1 :]
@@ -99,7 +99,7 @@ def test_the_modelo_130_fichero_marker_admits_the_kind_it_states(
     operation: PinnedAuthorityOperation, token: bytes, kind: FilingDeclarationKind
 ) -> None:
     marker = observed_filing_kind_marker_from_submitted_file(
-        snapshot=_modelo_130_snapshot(operation=operation),
+        snapshot=modelo_130_snapshot(operation=operation),
         body=_m130_body_with_marker(token),
         operation=operation,
     )
@@ -112,13 +112,13 @@ def test_the_modelo_130_fichero_marker_admits_the_kind_it_states(
 def test_an_unparseable_fichero_reads_no_marker_and_the_capture_kind_is_unknown(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    body = _submitted_file_payload()
+    body = submitted_file_payload()
     marker = observed_filing_kind_marker_from_submitted_file(
-        snapshot=_modelo_130_snapshot(operation=operation),
+        snapshot=modelo_130_snapshot(operation=operation),
         body=body[: len(body) // 2],
         operation=operation,
     )
-    observation = _filed_observation(modelo="130", ejercicio=2026, period="1T", casilla_values={})
+    observation = filed_observation(modelo="130", ejercicio=2026, period="1T", casilla_values={})
 
     assert marker is None
     filing_kind = filed_observation_filing_kind(observation.model_copy(update={"filing_kind_marker": marker}))
@@ -135,7 +135,7 @@ def _marker(token: str) -> SubmittedFileFilingKindMarker:
 def _m130_quarter(
     values: dict[str, Decimal], *, marker: SubmittedFileFilingKindMarker | None
 ) -> FiledDeclaracionObservation:
-    observation = _filed_observation(
+    observation = filed_observation(
         modelo="130",
         ejercicio=2025,
         period="2T",
@@ -184,7 +184,7 @@ def test_live_relation_capture_applies_the_shared_complementaria_only_predicate(
 ) -> None:
     observation = _m130_quarter(values, marker=marker)
 
-    assert _relation_source_gaps(observation, {_C18, _C19}, operation=operation) == (missing, contradicted)
+    assert relation_source_gaps(observation, {_C18, _C19}, operation=operation) == (missing, contradicted)
 
 
 _M131_PAGE_01_OPEN_TAG = b"<T13101000>"
@@ -259,7 +259,7 @@ def test_a_modelo_131_continuation_page_indicator_never_disagrees_with_the_page_
         body=body,
         operation=operation,
     )
-    observation = _filed_observation(modelo="131", ejercicio=2026, period="1T", casilla_values={})
+    observation = filed_observation(modelo="131", ejercicio=2026, period="1T", casilla_values={})
 
     assert marker is not None
     assert marker.declaration_marker.token == ("X" if complementaria else "")

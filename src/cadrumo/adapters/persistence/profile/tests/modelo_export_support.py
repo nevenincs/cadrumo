@@ -52,12 +52,12 @@ from .published_authority_support import published_authority_operation
 
 _ACTIVE_STORAGE_STACK: ExitStack | None = None
 _PROFILE_SPAN_OPEN = False
-_M130_INPUT_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INPUT_CASILLA")
-_M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id("03", surface="_M130_RENDIMIENTO_NETO_CASILLA")
-_M130_RESULT_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_RESULT_CASILLA")
-_M303_RESULT_CASILLA: CasillaId = validated_casilla_id("71", surface="_M303_RESULT_CASILLA")
+M130_INPUT_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INPUT_CASILLA")
+M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id("03", surface="_M130_RENDIMIENTO_NETO_CASILLA")
+M130_RESULT_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_RESULT_CASILLA")
+M303_RESULT_CASILLA: CasillaId = validated_casilla_id("71", surface="_M303_RESULT_CASILLA")
 _SPANISH_IBAN = "ES9121000418450200051332"
-_M200_REFUND_RESULT_CASILLA: CasillaId = validated_casilla_id(
+M200_REFUND_RESULT_CASILLA: CasillaId = validated_casilla_id(
     "DP200014B:00599",
     surface="_M200_REFUND_RESULT_CASILLA",
 )
@@ -69,7 +69,7 @@ def export_m303_filing_evidence(period: Period, *, operation: PinnedAuthorityOpe
     return general_m303_filing_evidence(period, reference="test:export:exonerado-not-applicable", operation=operation)
 
 
-def _casilla_id_from_payload(value: object) -> CasillaId:
+def casilla_id_from_payload(value: object) -> CasillaId:
     return validated_casilla_id(value, surface="test casilla id")
 
 

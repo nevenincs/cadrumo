@@ -86,7 +86,7 @@ def _run[ProjectionT: BaseModel](
         )
 
         assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        projection = conformance._resolve_result_projection(
+        projection = conformance.resolve_result_projection(
             driver,
             registry,
             definition_id=definition_id,

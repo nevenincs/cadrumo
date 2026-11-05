@@ -454,7 +454,7 @@ class UnavailablePaymentCutoff(BaseModel):
         return None
 
 
-class _CalendarGapError(CadrumoError):
+class CalendarGapError(CadrumoError):
     """A year the derivation walks cannot classify its days."""
 
     def __init__(self, reason: PaymentCutoffUnavailableReason) -> None:
@@ -485,14 +485,14 @@ def _territory_business_day(
         try:
             loaded = load_holiday_calendar(year, operation=operation)
         except DeadlineValidationError as exc:
-            raise _CalendarGapError(PaymentCutoffUnavailableReason.HOLIDAY_CALENDAR_UNAVAILABLE) from exc
+            raise CalendarGapError(PaymentCutoffUnavailableReason.HOLIDAY_CALENDAR_UNAVAILABLE) from exc
         supplied[year] = loaded
         return loaded
 
     def business_day(candidate: date) -> bool:
         holiday_calendar = calendar_for(candidate.year)
         if territory not in holiday_calendar.verified_territories:
-            raise _CalendarGapError(PaymentCutoffUnavailableReason.TERRITORY_UNVERIFIED)
+            raise CalendarGapError(PaymentCutoffUnavailableReason.TERRITORY_UNVERIFIED)
         return is_business_day(candidate, calendar=holiday_calendar, ccaa_code=territory)
 
     return business_day
@@ -575,7 +575,7 @@ def derive_payment_cutoff(
             closes_on=window.closes_on,
             business_day=business_day,
         )
-    except _CalendarGapError as gap:
+    except CalendarGapError as gap:
         return UnavailablePaymentCutoff(
             window_id=window.id,
             reason=gap.reason,

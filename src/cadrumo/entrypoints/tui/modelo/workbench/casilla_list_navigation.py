@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from . import casilla_list_models as _models
-from . import casilla_list_values as _values
+from . import casilla_list_models, casilla_list_values
 
 if TYPE_CHECKING:
     from .casilla_list import CasillaList
@@ -14,20 +13,20 @@ if TYPE_CHECKING:
 class CasillaListNavigationMixin:
     """Address-based cursor movement for the virtual casilla list."""
 
-    def _entry_at(self: CasillaList, index: int) -> _models.CasillaListEntry | None:
+    def _entry_at(self: CasillaList, index: int) -> casilla_list_models.CasillaListEntry | None:
         item = self._items[index] if 0 <= index < len(self._items) else None
-        return item if isinstance(item, _models.CasillaListEntry) else None
+        return item if isinstance(item, casilla_list_models.CasillaListEntry) else None
 
     def _cursor_index(self: CasillaList) -> int | None:
         if self._cursor is None:
             return None
         for index, item in enumerate(self._items):
-            if isinstance(item, _models.CasillaListEntry) and item.key == self._cursor:
+            if isinstance(item, casilla_list_models.CasillaListEntry) and item.key == self._cursor:
                 return index
         return None
 
     def _select_first_entry(self: CasillaList) -> None:
-        first = next((item for item in self._items if isinstance(item, _models.CasillaListEntry)), None)
+        first = next((item for item in self._items if isinstance(item, casilla_list_models.CasillaListEntry)), None)
         self._cursor = None if first is None else first.key
 
     def _move_cursor_to(self: CasillaList, index: int, *, column: int | None = None) -> None:
@@ -55,7 +54,7 @@ class CasillaListNavigationMixin:
         bottom = top + self._heights[owner]
         view_top = int(self.scroll_offset.y)
         view_height = max(self.scrollable_content_region.height, 1)
-        following = self._following if view_height >= _values.FOLLOWING_MIN_VIEW else 0
+        following = self._following if view_height >= casilla_list_values.FOLLOWING_MIN_VIEW else 0
         if top < view_top:
             self.scroll_to(y=max(top - 1, 0), animate=False)
         elif bottom + following > view_top + view_height:
@@ -81,7 +80,7 @@ class CasillaListNavigationMixin:
     def _step(self: CasillaList, start: int, delta: int) -> int | None:
         index = start + delta
         while 0 <= index < len(self._items):
-            if isinstance(self._items[index], _models.CasillaListEntry):
+            if isinstance(self._items[index], casilla_list_models.CasillaListEntry):
                 return index
             index += delta
         return None
@@ -93,7 +92,7 @@ class CasillaListNavigationMixin:
             if index in self._tables:
                 if self._tables[index].focusable():
                     stops.append(index)
-            elif isinstance(item, _models.CasillaListEntry) and index not in self._cell_of:
+            elif isinstance(item, casilla_list_models.CasillaListEntry) and index not in self._cell_of:
                 stops.append(index)
         return stops
 

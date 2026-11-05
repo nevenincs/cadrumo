@@ -6,7 +6,7 @@ import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.ids import BindingId
-from ._verification_chain_support import _assert_annual_relation_closure_chain
+from .verification_chain_support import assert_annual_relation_closure_chain
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
@@ -74,7 +74,7 @@ def test_verification_chain_m193_engine_recomputes_closure_casillas_from_m123_re
     Verdict: VERIFIED - the M123->M193 monetary relation chain resolves without
     resurrecting the retired quarterly perceptor-count relation.
     """
-    _assert_annual_relation_closure_chain(
+    assert_annual_relation_closure_chain(
         annual_modelo="193",
         source_modelo="123",
         fixture_stem="2024-0A",

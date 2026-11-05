@@ -13,7 +13,7 @@ from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ....core.logging import configure_logging, flush_logging, get_logger, set_log_level
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.tests.log_sinks import delivery_sinks
-from .._log_levels import LogLevel, LogLevelResolutionError, apply_to_root_logger, resolve_log_level
+from ..log_levels import LogLevel, LogLevelResolutionError, apply_to_root_logger, resolve_log_level
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

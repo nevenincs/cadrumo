@@ -23,10 +23,10 @@ from ....core.logging import get_logger
 from ....domain.calculations.registry.schema_references import TemporalSupportEnvelope
 from ..pdf.page_text_extraction import extract_pages_text_from_bytes
 from ..pdf.source_provenance import sha256_file
-from ._detect import detect_artefact_kind_from_pages
-from ._extractors.modelo_100_summary import Modelo100ObservedExtractor
-from ._parsers.pdfplumber_backend import extract_pages_text
+from .detect import detect_artefact_kind_from_pages
 from .errors import BorradorParseError
+from .extractors.modelo_100_summary import Modelo100ObservedExtractor
+from .parsers.pdfplumber_backend import extract_pages_text
 from .schema import (
     ArtefactKind,
     BorradorExtractionProfile,

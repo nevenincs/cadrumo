@@ -433,7 +433,7 @@ def _scrub_mapping_format(message: str, args: Mapping[str, object]) -> tuple[str
     return _PERCENT_PLACEHOLDER_RE.sub(compatible, rewritten), scrubbed_args
 
 
-def _scrub_record_message_and_args(record: logging.LogRecord) -> None:
+def scrub_record_message_and_args(record: logging.LogRecord) -> None:
     """Scrub a record's message and all supported argument shapes."""
     raw_msg: object = record.msg
     scrubbed_msg = scrub_text(raw_msg) if isinstance(raw_msg, str) else scrub_value(raw_msg)
@@ -508,7 +508,7 @@ class SecretScrubbingFilter(logging.Filter):
         if SCRUBBED_RECORD.get() is record:
             return True
         stamp_diagnostic_scalar_fields(record)
-        _scrub_record_message_and_args(record)
+        scrub_record_message_and_args(record)
         _scrub_record_exception(record)
         _scrub_record_extras(record)
         return True

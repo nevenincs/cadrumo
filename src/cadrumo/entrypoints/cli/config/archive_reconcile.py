@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import typer
 
-from cadrumo_client.commands.output import activate_subcommand_output_language as _activate_subcommand_output_language
+from cadrumo_client.commands.output import activate_subcommand_output_language
 
 from ....application.operator_actions.models import ActionReference
 from ....core.external_constants import OutputLanguage
@@ -49,7 +49,7 @@ def profile_archive_reconcile(
     from ....application.user_profile.archive_operation import ProfileArchiveReconcileRequest
     from ..operation_profile_archive import run_profile_archive_reconcile
 
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
     client = bound_profile_client(ctx)
     projection = run_profile_archive_reconcile(
         ctx,

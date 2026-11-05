@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from ....application.operator_actions.preconditions import no_action_precondition_verdict
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from ._key_validation import assert_admissible_object_key_hmac
 from .errors import OutboundStorageValidationError
+from .key_validation import assert_admissible_object_key_hmac
 
 
 def drive_validation_verdict(

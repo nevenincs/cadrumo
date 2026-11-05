@@ -112,14 +112,14 @@ from .invoices_fixtures import (
 from .invoices_fixtures import transaction_projection as synthetic_transaction
 from .own_account_fixtures import SYNTHETIC_ES_IBAN, MemoryOwnAccountDoor
 from .registers_fixtures import MemoryCapitalGoodsDoor
-from .test_categorisation_review import _ask as ask_for_review
-from .test_categorisation_review import _decide as decide_review
-from .test_invoices_import import _review as review_invoice_import
-from .test_invoices_wizard import _fill_and_review as review_invoice_wizard
-from .test_ledger_flows import _ImportDoor, _preview
-from .test_ledger_ingestion_surfaces import _EvidenceDoor, _ExclusionDoor, _InvoiceDoor
-from .test_ledger_slice3 import _TX, _link_action, _LinkDoor
-from .test_ledger_tools import _tool
+from .test_categorisation_review import categorisation_review_ask as ask_for_review
+from .test_categorisation_review import decide as decide_review
+from .test_invoices_import import review as review_invoice_import
+from .test_invoices_wizard import fill_and_review as review_invoice_wizard
+from .test_ledger_flows import ImportDoor, ledger_flows_preview
+from .test_ledger_ingestion_surfaces import EvidenceDoor, ExclusionDoor, InvoiceDoor
+from .test_ledger_slice3 import TX, LinkDoor, link_action
+from .test_ledger_tools import tool
 from .workspace_fixtures import (
     ClassificationDoor,
     ledger_classify_action,
@@ -135,11 +135,11 @@ from .workspace_fixtures import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 _OVERVIEW_ROW = tuple(LedgerWorkspaceArea).index(LedgerWorkspaceArea.OVERVIEW)
-_UNKNOWN = OperationOutcomeUnknownError(operation_id="f" * 64, effect=OperationEffect.UNKNOWN)
-_EVIDENCE_PATH = "C:/synthetic/invoice_A-0003.pdf"
+UNKNOWN = OperationOutcomeUnknownError(operation_id="f" * 64, effect=OperationEffect.UNKNOWN)
+EVIDENCE_PATH = "C:/synthetic/invoice_A-0003.pdf"
 
 
-class _Gate:
+class Gate:
     """Holds every door call that reaches it until released, then answers or raises the configured error."""
 
     def __init__(self, error: OperationOutcomeUnknownError | None) -> None:
@@ -167,7 +167,7 @@ class _HeldDoor[RequestT, ResultT]:
     def __init__(
         self,
         door: _ProfileDoor[RequestT, ResultT],
-        gate: _Gate,
+        gate: Gate,
         *,
         hold: Callable[[RequestT], bool] = lambda _request: True,
     ) -> None:
@@ -204,7 +204,7 @@ async def _press(pilot: Pilot[None], body: LedgerWorkspaceScreen, button_id: str
     await settle(pilot)
 
 
-async def _click(pilot: Pilot[None], body: LedgerWorkspaceScreen, button_id: str) -> None:
+async def click(pilot: Pilot[None], body: LedgerWorkspaceScreen, button_id: str) -> None:
     """Press a button and wait for the messages it posts, without waiting for the workers it starts."""
     body.query_one(f"#{button_id}", Button).press()
     await settle(pilot, workers=False)
@@ -217,17 +217,17 @@ async def _accept(pilot: Pilot[None]) -> None:
     await settle(pilot, workers=False)
 
 
-def _text(body: LedgerWorkspaceScreen, selector: str) -> str:
+def text(body: LedgerWorkspaceScreen, selector: str) -> str:
     return str(body.query_one(selector, Static).render())
 
 
-def _rendered(body: LedgerWorkspaceScreen) -> str:
+def writes_hold_the_workspace_rendered(body: LedgerWorkspaceScreen) -> str:
     return "\n".join(str(widget.render()) for widget in body.query(Static))
 
 
-def _status(body: LedgerWorkspaceScreen) -> str:
+def status(body: LedgerWorkspaceScreen) -> str:
     found = body.query("#ledger-flow-status")
-    return str(cast(Static, found.first()).render()) if found else _text(body, "#ledger-refusal")
+    return str(cast(Static, found.first()).render()) if found else text(body, "#ledger-refusal")
 
 
 async def _choose_overview(pilot: Pilot[None], body: LedgerWorkspaceScreen) -> None:
@@ -244,7 +244,7 @@ async def _cannot_leave(pilot: Pilot[None], body: LedgerWorkspaceScreen) -> None
     await _choose_overview(pilot, body)
     assert pilot.app.screen is body
     assert body.requested_target is None
-    assert _status(body) == refusal
+    assert status(body) == refusal
     if body.query("#ledger-tools"):
         _status_line(body).update("")
         tools = body.query_one("#ledger-tools", DataTable)
@@ -254,13 +254,13 @@ async def _cannot_leave(pilot: Pilot[None], body: LedgerWorkspaceScreen) -> None
         await pilot.press("enter")
         await settle(pilot, workers=False)
         assert pilot.app.screen is body
-        assert _status(body) == refusal
+        assert status(body) == refusal
     _status_line(body).update("")
     await pilot.press("escape")
     await settle(pilot, workers=False)
     assert pilot.app.screen is body
     assert not body.back_requested
-    assert _status(body) == refusal
+    assert status(body) == refusal
 
 
 def _status_line(body: LedgerWorkspaceScreen) -> Static:
@@ -268,15 +268,15 @@ def _status_line(body: LedgerWorkspaceScreen) -> Static:
     return cast(Static, found.first()) if found else body.query_one("#ledger-refusal", Static)
 
 
-def _tools(area: LedgerWorkspaceArea) -> tuple[LedgerToolV1, ...]:
-    return (_tool(area, "held"),)
+def tools(area: LedgerWorkspaceArea) -> tuple[LedgerToolV1, ...]:
+    return (tool(area, "held"),)
 
 
 # -- Area bodies -----------------------------------------------------------------
 
 
 class _HeldClassificationDoor(ClassificationDoor):
-    def __init__(self, gate: _Gate) -> None:
+    def __init__(self, gate: Gate) -> None:
         super().__init__()
         self._gate = gate
 
@@ -286,7 +286,7 @@ class _HeldClassificationDoor(ClassificationDoor):
         return await super().__call__(submission)
 
 
-def _classification(gate: _Gate, _tmp_path: Path) -> _Flow:
+def _classification(gate: Gate, _tmp_path: Path) -> _Flow:
     projection = ledger_projection()
     door = _HeldClassificationDoor(gate)
     controller = LedgerWorkspaceController(
@@ -296,7 +296,7 @@ def _classification(gate: _Gate, _tmp_path: Path) -> _Flow:
             review_action=ledger_review_action(),
             classify_action=ledger_classify_action(),
             classification_submitter=door,
-            tools=_tools(LedgerWorkspaceArea.CLASSIFICATION),
+            tools=tools(LedgerWorkspaceArea.CLASSIFICATION),
         ),
     )
     body = LedgerClassificationScreen(controller)
@@ -311,14 +311,14 @@ def _classification(gate: _Gate, _tmp_path: Path) -> _Flow:
 
     def saved(_pilot: Pilot[None], shown: LedgerWorkspaceScreen) -> None:
         assert body.flow_state is LedgerFlowState.SUCCEEDED
-        assert _status(shown) == tr("tui.ledger.classification.success")
+        assert status(shown) == tr("tui.ledger.classification.success")
         assert len(door.calls) == 1
 
     return _Flow(body, submit, saved)
 
 
-class _HeldImportDoor(_ImportDoor):
-    def __init__(self, gate: _Gate) -> None:
+class _HeldImportDoor(ImportDoor):
+    def __init__(self, gate: Gate) -> None:
         super().__init__()
         self._gate = gate
 
@@ -328,7 +328,7 @@ class _HeldImportDoor(_ImportDoor):
         return await super().apply(request)
 
 
-def _bank_import(gate: _Gate, tmp_path: Path) -> _Flow:
+def _bank_import(gate: Gate, tmp_path: Path) -> _Flow:
     statement = tmp_path / "statement.csv"
     statement.write_text("date,amount\n", encoding="utf-8")
     door = _HeldImportDoor(gate)
@@ -336,14 +336,14 @@ def _bank_import(gate: _Gate, tmp_path: Path) -> _Flow:
         ledger_context(),
         ledger_projection(),
         LedgerWorkspaceInjection(
-            review_action=ledger_review_action(), import_door=door, tools=_tools(LedgerWorkspaceArea.IMPORT)
+            review_action=ledger_review_action(), import_door=door, tools=tools(LedgerWorkspaceArea.IMPORT)
         ),
     )
     body = LedgerImportScreen(controller)
 
     async def submit(pilot: Pilot[None]) -> LedgerWorkspaceScreen:
-        await _preview(pilot, body, statement)
-        await _click(pilot, body, "ledger-import-confirm")
+        await ledger_flows_preview(pilot, body, statement)
+        await click(pilot, body, "ledger-import-confirm")
         return body
 
     def saved(_pilot: Pilot[None], _shown: LedgerWorkspaceScreen) -> None:
@@ -353,8 +353,8 @@ def _bank_import(gate: _Gate, tmp_path: Path) -> _Flow:
     return _Flow(body, submit, saved)
 
 
-class _HeldLinkDoor(_LinkDoor):
-    def __init__(self, gate: _Gate) -> None:
+class _HeldLinkDoor(LinkDoor):
+    def __init__(self, gate: Gate) -> None:
         super().__init__()
         self._gate = gate
 
@@ -364,20 +364,20 @@ class _HeldLinkDoor(_LinkDoor):
         return await super().__call__(submission)
 
 
-def _reconciliation(gate: _Gate, _tmp_path: Path) -> _Flow:
+def _reconciliation(gate: Gate, _tmp_path: Path) -> _Flow:
     door = _HeldLinkDoor(gate)
     context = TuiScreenContextV1(
         destination="workbench.ledger",
-        focus=TuiFocusIdentityV1(destination="workbench.ledger", semantic_key="ledger.transaction", restore_token=_TX),
+        focus=TuiFocusIdentityV1(destination="workbench.ledger", semantic_key="ledger.transaction", restore_token=TX),
     )
     controller = LedgerWorkspaceController(
         context,
         ledger_reconciled_projection(),
         LedgerWorkspaceInjection(
             review_action=ledger_review_action(),
-            link_action=_link_action(),
+            link_action=link_action(),
             link_submitter=door,
-            tools=_tools(LedgerWorkspaceArea.RECONCILIATION),
+            tools=tools(LedgerWorkspaceArea.RECONCILIATION),
         ),
     )
     body = LedgerReconciliationScreen(controller)
@@ -392,14 +392,14 @@ def _reconciliation(gate: _Gate, _tmp_path: Path) -> _Flow:
 
     def saved(_pilot: Pilot[None], shown: LedgerWorkspaceScreen) -> None:
         assert body.flow_state is LedgerFlowState.SUCCEEDED
-        assert _status(shown) == tr("tui.ledger.reconciliation.success")
+        assert status(shown) == tr("tui.ledger.reconciliation.success")
         assert len(door.calls) == 1
 
     return _Flow(body, submit, saved)
 
 
-class _HeldExclusionDoor(_ExclusionDoor):
-    def __init__(self, gate: _Gate) -> None:
+class _HeldExclusionDoor(ExclusionDoor):
+    def __init__(self, gate: Gate) -> None:
         super().__init__()
         self._gate = gate
 
@@ -409,7 +409,7 @@ class _HeldExclusionDoor(_ExclusionDoor):
         return await super().__call__(submission)
 
 
-def _review_exclusion(gate: _Gate, _tmp_path: Path) -> _Flow:
+def _review_exclusion(gate: Gate, _tmp_path: Path) -> _Flow:
     door = _HeldExclusionDoor(gate)
     projection = ledger_projection()
     controller = LedgerWorkspaceController(
@@ -421,7 +421,7 @@ def _review_exclusion(gate: _Gate, _tmp_path: Path) -> _Flow:
             classify_action=ledger_classify_action(),
             classification_submitter=ClassificationDoor(),
             exclusion_submitter=door,
-            tools=_tools(LedgerWorkspaceArea.REVIEW),
+            tools=tools(LedgerWorkspaceArea.REVIEW),
         ),
     )
     body = LedgerReviewScreen(controller)
@@ -432,7 +432,7 @@ def _review_exclusion(gate: _Gate, _tmp_path: Path) -> _Flow:
         review.move_cursor(row=0)
         await pilot.press("x")
         await settle(pilot)
-        await _click(pilot, body, "ledger-exclusion-confirm")
+        await click(pilot, body, "ledger-exclusion-confirm")
         return body
 
     def saved(pilot: Pilot[None], _shown: LedgerWorkspaceScreen) -> None:
@@ -444,8 +444,8 @@ def _review_exclusion(gate: _Gate, _tmp_path: Path) -> _Flow:
     return _Flow(body, submit, saved, leaves_after_saving=False)
 
 
-class _HeldEvidenceDoor(_EvidenceDoor):
-    def __init__(self, gate: _Gate) -> None:
+class HeldEvidenceDoor(EvidenceDoor):
+    def __init__(self, gate: Gate) -> None:
         super().__init__()
         self._gate = gate
 
@@ -455,8 +455,8 @@ class _HeldEvidenceDoor(_EvidenceDoor):
         return await super().add(source_path)
 
 
-def _evidence_add(gate: _Gate, _tmp_path: Path) -> _Flow:
-    door = _HeldEvidenceDoor(gate)
+def _evidence_add(gate: Gate, _tmp_path: Path) -> _Flow:
+    door = HeldEvidenceDoor(gate)
     projection = ledger_projection()
     controller = LedgerWorkspaceController(
         ledger_context(),
@@ -467,19 +467,19 @@ def _evidence_add(gate: _Gate, _tmp_path: Path) -> _Flow:
             evidence_items=(),
             evidence_door=door,
             refresh=lambda: LedgerWorkspaceRefreshV1(projection=projection, evidence_items=()),
-            tools=_tools(LedgerWorkspaceArea.EVIDENCE),
+            tools=tools(LedgerWorkspaceArea.EVIDENCE),
         ),
     )
     body = LedgerEvidenceScreen(controller)
 
     async def submit(pilot: Pilot[None]) -> LedgerWorkspaceScreen:
-        body.query_one("#ledger-evidence-path", Input).value = _EVIDENCE_PATH
-        await _click(pilot, body, "ledger-evidence-add")
+        body.query_one("#ledger-evidence-path", Input).value = EVIDENCE_PATH
+        await click(pilot, body, "ledger-evidence-add")
         return body
 
     def saved(_pilot: Pilot[None], shown: LedgerWorkspaceScreen) -> None:
-        assert door.added == [_EVIDENCE_PATH]
-        assert _status(shown) == tr("tui.ledger.evidence.added", file="invoice_A-0003.pdf")
+        assert door.added == [EVIDENCE_PATH]
+        assert status(shown) == tr("tui.ledger.evidence.added", file="invoice_A-0003.pdf")
 
     return _Flow(body, submit, saved)
 
@@ -487,7 +487,7 @@ def _evidence_add(gate: _Gate, _tmp_path: Path) -> _Flow:
 # -- Entry tools -----------------------------------------------------------------
 
 
-def _entry_add(gate: _Gate, _tmp_path: Path) -> _Flow:
+def _entry_add(gate: Gate, _tmp_path: Path) -> _Flow:
     ledger = MemoryEntriesLedger.with_entries(2)
     doors = ledger.doors()
     held = replace(doors, add=cast(LedgerAddDoorV1, _HeldDoor[LedgerAddRequest, object](doors.add, gate)))
@@ -498,7 +498,7 @@ def _entry_add(gate: _Gate, _tmp_path: Path) -> _Flow:
         body.query_one("#entries-add-amount", Input).value = "120.50"
         body.query_one("#entries-add-description", Input).value = "Material de oficina"
         await _press(pilot, body, "entries-add-review")
-        await _click(pilot, body, "entries-add-confirm")
+        await click(pilot, body, "entries-add-confirm")
         return body
 
     def saved(_pilot: Pilot[None], _shown: LedgerWorkspaceScreen) -> None:
@@ -508,7 +508,7 @@ def _entry_add(gate: _Gate, _tmp_path: Path) -> _Flow:
     return _Flow(body, submit, saved)
 
 
-def _entry_export(gate: _Gate, tmp_path: Path) -> _Flow:
+def _entry_export(gate: Gate, tmp_path: Path) -> _Flow:
     ledger = MemoryEntriesLedger.with_entries(2)
     doors = ledger.doors()
     held = replace(doors, export=cast(LedgerExportDoorV1, _HeldDoor[LedgerExportRequest, object](doors.export, gate)))
@@ -518,12 +518,12 @@ def _entry_export(gate: _Gate, tmp_path: Path) -> _Flow:
     async def submit(pilot: Pilot[None]) -> LedgerWorkspaceScreen:
         body.query_one("#entries-export-path", Input).value = path
         await _press(pilot, body, "entries-export-review")
-        await _click(pilot, body, "entries-export-confirm")
+        await click(pilot, body, "entries-export-confirm")
         return body
 
     def saved(_pilot: Pilot[None], shown: LedgerWorkspaceScreen) -> None:
         assert body.flow_state is LedgerFlowState.SUCCEEDED
-        assert tr("tui.ledger.entry_tools.export.written", path=path) in _status(shown)
+        assert tr("tui.ledger.entry_tools.export.written", path=path) in status(shown)
 
     return _Flow(
         body,
@@ -533,7 +533,7 @@ def _entry_export(gate: _Gate, tmp_path: Path) -> _Flow:
     )
 
 
-def _entry_reset(gate: _Gate, _tmp_path: Path) -> _Flow:
+def _entry_reset(gate: Gate, _tmp_path: Path) -> _Flow:
     ledger = MemoryEntriesLedger.with_entries(4)
     doors = ledger.doors()
     held_reset = _HeldDoor[LedgerResetRequest, object](doors.reset, gate, hold=lambda request: not request.dry_run)
@@ -542,18 +542,18 @@ def _entry_reset(gate: _Gate, _tmp_path: Path) -> _Flow:
     async def submit(pilot: Pilot[None]) -> LedgerWorkspaceScreen:
         body.query_one("#entries-reset-reason", Input).value = "start over with a clean import"
         await _press(pilot, body, "entries-reset-preview-button")
-        await _click(pilot, body, "entries-reset-run")
+        await click(pilot, body, "entries-reset-run")
         await _accept(pilot)
         return body
 
     def saved(_pilot: Pilot[None], shown: LedgerWorkspaceScreen) -> None:
         assert body.flow_state is LedgerFlowState.SUCCEEDED
-        assert _status(shown) == tr("tui.ledger.entry_tools.reset.done", count=4)
+        assert status(shown) == tr("tui.ledger.entry_tools.reset.done", count=4)
 
     return _Flow(body, submit, saved)
 
 
-def _entry_removal(gate: _Gate, _tmp_path: Path) -> _Flow:
+def _entry_removal(gate: Gate, _tmp_path: Path) -> _Flow:
     ledger = MemoryEntriesLedger.with_entries(3)
     doors = ledger.doors()
     held_remove = _HeldDoor[LedgerRemoveRequest, object](doors.remove, gate, hold=lambda request: not request.dry_run)
@@ -565,7 +565,7 @@ def _entry_removal(gate: _Gate, _tmp_path: Path) -> _Flow:
         table.move_cursor(row=2)
         await pilot.press("enter")
         await settle(pilot)
-        await _click(pilot, body, "entries-browse-remove")
+        await click(pilot, body, "entries-browse-remove")
         await settle(pilot)
         await _accept(pilot)
         return body
@@ -580,7 +580,7 @@ def _entry_removal(gate: _Gate, _tmp_path: Path) -> _Flow:
 # -- Records, registers and accounts ------------------------------------------------
 
 
-def _own_account(gate: _Gate, _tmp_path: Path) -> _Flow:
+def _own_account(gate: Gate, _tmp_path: Path) -> _Flow:
     door = _HeldDoor(MemoryOwnAccountDoor(), gate, hold=lambda request: request.action != "list")
     controller = LedgerWorkspaceController(
         ledger_context(),
@@ -596,12 +596,12 @@ def _own_account(gate: _Gate, _tmp_path: Path) -> _Flow:
         body.query_one("#own-account-label", Input).value = "main"
         body.query_one("#own-account-iban", Input).value = SYNTHETIC_ES_IBAN
         await _press(pilot, body, "own-account-review")
-        assert body.staged is not None, _text(body, "#ledger-refusal")
-        await _click(pilot, body, "own-account-confirm")
+        assert body.staged is not None, text(body, "#ledger-refusal")
+        await click(pilot, body, "own-account-confirm")
         return body
 
     def saved(_pilot: Pilot[None], shown: LedgerWorkspaceScreen) -> None:
-        assert _status(shown) == tr("tui.ledger.records.saved")
+        assert status(shown) == tr("tui.ledger.records.saved")
         assert len(body.accounts) == 1
 
     return _Flow(body, submit, saved)
@@ -610,7 +610,7 @@ def _own_account(gate: _Gate, _tmp_path: Path) -> _Flow:
 class _HeldRecordDoors(MemoryRecordDoors):
     def __init__(
         self,
-        gate: _Gate,
+        gate: Gate,
         invoices: tuple[CatalogueInvoiceSnapshot, ...] = (),
         transactions: tuple[LedgerTransactionProjection, ...] = (),
     ) -> None:
@@ -643,7 +643,7 @@ def _record_controller(doors: MemoryRecordDoors) -> LedgerWorkspaceController:
     )
 
 
-def _invoice_correction(gate: _Gate, _tmp_path: Path) -> _Flow:
+def _invoice_correction(gate: Gate, _tmp_path: Path) -> _Flow:
     invoice = invoice_snapshot()
     doors = _HeldRecordDoors(gate, invoices=(invoice,))
     body = LedgerInvoiceDetailScreen(_record_controller(doors), cast(LedgerRecordDoorsV1, doors), invoice.invoice_id)
@@ -651,17 +651,17 @@ def _invoice_correction(gate: _Gate, _tmp_path: Path) -> _Flow:
     async def submit(pilot: Pilot[None]) -> LedgerWorkspaceScreen:
         body.query_one("#ledger-invoice-notes", Input).value = "after"
         await _press(pilot, body, "ledger-invoice-edit-review")
-        await _click(pilot, body, "ledger-invoice-edit-save")
+        await click(pilot, body, "ledger-invoice-edit-save")
         return body
 
     def saved(_pilot: Pilot[None], shown: LedgerWorkspaceScreen) -> None:
-        assert _status(shown) == tr("tui.ledger.records.saved")
+        assert status(shown) == tr("tui.ledger.records.saved")
         assert doors.catalogue[invoice.invoice_id].notes == "after"
 
     return _Flow(body, submit, saved)
 
 
-def _transaction_correction(gate: _Gate, _tmp_path: Path) -> _Flow:
+def _transaction_correction(gate: Gate, _tmp_path: Path) -> _Flow:
     transaction = synthetic_transaction()
     doors = _HeldRecordDoors(gate, transactions=(transaction,))
     body = LedgerTransactionDetailScreen(
@@ -671,18 +671,18 @@ def _transaction_correction(gate: _Gate, _tmp_path: Path) -> _Flow:
     async def submit(pilot: Pilot[None]) -> LedgerWorkspaceScreen:
         body.query_one("#ledger-transaction-description", Input).value = "changed description"
         await _press(pilot, body, "ledger-transaction-edit-review")
-        await _click(pilot, body, "ledger-transaction-edit-save")
+        await click(pilot, body, "ledger-transaction-edit-save")
         return body
 
     def saved(_pilot: Pilot[None], shown: LedgerWorkspaceScreen) -> None:
-        assert _status(shown) == tr("tui.ledger.records.saved")
+        assert status(shown) == tr("tui.ledger.records.saved")
         assert doors.transactions[transaction.transaction_id].description == "changed description"
 
     return _Flow(body, submit, saved)
 
 
 class _HeldCapitalGoodsDoor(MemoryCapitalGoodsDoor):
-    def __init__(self, gate: _Gate) -> None:
+    def __init__(self, gate: Gate) -> None:
         super().__init__()
         self._gate = gate
 
@@ -692,7 +692,7 @@ class _HeldCapitalGoodsDoor(MemoryCapitalGoodsDoor):
         return await super().declare(request)
 
 
-def _capital_good(gate: _Gate, _tmp_path: Path) -> _Flow:
+def _capital_good(gate: Gate, _tmp_path: Path) -> _Flow:
     door = _HeldCapitalGoodsDoor(gate)
     controller = LedgerWorkspaceController(
         ledger_context(), ledger_projection(), LedgerWorkspaceInjection(review_action=ledger_review_action())
@@ -711,13 +711,13 @@ def _capital_good(gate: _Gate, _tmp_path: Path) -> _Flow:
         ):
             body.query_one(selector, Input).value = value
         await _press(pilot, body, "register-review")
-        assert body.staged is not None, _text(body, "#ledger-refusal")
-        await _click(pilot, body, "register-confirm")
+        assert body.staged is not None, text(body, "#ledger-refusal")
+        await click(pilot, body, "register-confirm")
         return body
 
     def saved(_pilot: Pilot[None], shown: LedgerWorkspaceScreen) -> None:
-        assert tr("tui.ledger.registers.capital_goods.declared", count=1) in _text(shown, "#register-result")
-        assert _status(shown) == tr("tui.ledger.records.saved")
+        assert tr("tui.ledger.registers.capital_goods.declared", count=1) in text(shown, "#register-result")
+        assert status(shown) == tr("tui.ledger.records.saved")
 
     return _Flow(body, submit, saved)
 
@@ -726,7 +726,7 @@ def _capital_good(gate: _Gate, _tmp_path: Path) -> _Flow:
 
 
 class _HeldInvoiceImportDoor(MemoryInvoiceImportDoor):
-    def __init__(self, gate: _Gate) -> None:
+    def __init__(self, gate: Gate) -> None:
         super().__init__()
         self._gate = gate
 
@@ -736,7 +736,7 @@ class _HeldInvoiceImportDoor(MemoryInvoiceImportDoor):
         return await super().apply(request)
 
 
-def _invoice_import(gate: _Gate, _tmp_path: Path) -> _Flow:
+def _invoice_import(gate: Gate, _tmp_path: Path) -> _Flow:
     door = _HeldInvoiceImportDoor(gate)
     controller = LedgerWorkspaceController(
         ledger_context(), ledger_projection(), LedgerWorkspaceInjection(review_action=ledger_review_action())
@@ -745,7 +745,7 @@ def _invoice_import(gate: _Gate, _tmp_path: Path) -> _Flow:
 
     async def submit(pilot: Pilot[None]) -> LedgerWorkspaceScreen:
         await review_invoice_import(pilot, body)
-        await _click(pilot, body, "ledger-invoices-import-confirm")
+        await click(pilot, body, "ledger-invoices-import-confirm")
         return body
 
     def saved(_pilot: Pilot[None], _shown: LedgerWorkspaceScreen) -> None:
@@ -756,7 +756,7 @@ def _invoice_import(gate: _Gate, _tmp_path: Path) -> _Flow:
 
 
 class _HeldInvoiceWizardDoor(MemoryInvoiceWizardDoor):
-    def __init__(self, gate: _Gate) -> None:
+    def __init__(self, gate: Gate) -> None:
         super().__init__()
         self._gate = gate
 
@@ -766,7 +766,7 @@ class _HeldInvoiceWizardDoor(MemoryInvoiceWizardDoor):
         return await super().__call__(request)
 
 
-def _invoice_wizard(gate: _Gate, _tmp_path: Path) -> _Flow:
+def _invoice_wizard(gate: Gate, _tmp_path: Path) -> _Flow:
     door = _HeldInvoiceWizardDoor(gate)
     controller = LedgerWorkspaceController(
         ledger_context(), ledger_projection(), LedgerWorkspaceInjection(review_action=ledger_review_action())
@@ -775,7 +775,7 @@ def _invoice_wizard(gate: _Gate, _tmp_path: Path) -> _Flow:
 
     async def submit(pilot: Pilot[None]) -> LedgerWorkspaceScreen:
         await review_invoice_wizard(pilot, body)
-        await _click(pilot, body, "ledger-invoices-wizard-confirm")
+        await click(pilot, body, "ledger-invoices-wizard-confirm")
         return body
 
     def saved(_pilot: Pilot[None], _shown: LedgerWorkspaceScreen) -> None:
@@ -785,8 +785,8 @@ def _invoice_wizard(gate: _Gate, _tmp_path: Path) -> _Flow:
     return _Flow(body, submit, saved)
 
 
-class _HeldInvoiceDoor(_InvoiceDoor):
-    def __init__(self, gate: _Gate) -> None:
+class _HeldInvoiceDoor(InvoiceDoor):
+    def __init__(self, gate: Gate) -> None:
         super().__init__()
         self._gate = gate
 
@@ -796,7 +796,7 @@ class _HeldInvoiceDoor(_InvoiceDoor):
         return await super().__call__(entry)
 
 
-def _invoice_entry(gate: _Gate, _tmp_path: Path) -> _Flow:
+def _invoice_entry(gate: Gate, _tmp_path: Path) -> _Flow:
     door = _HeldInvoiceDoor(gate)
     body = LedgerInvoiceEntryScreen(
         LedgerWorkspaceController(
@@ -817,7 +817,7 @@ def _invoice_entry(gate: _Gate, _tmp_path: Path) -> _Flow:
         ):
             body.query_one(f"#ledger-invoice-{name}", Input).value = value
         await _press(pilot, body, "ledger-invoice-review")
-        await _click(pilot, body, "ledger-invoice-confirm")
+        await click(pilot, body, "ledger-invoice-confirm")
         return body
 
     def saved(_pilot: Pilot[None], _shown: LedgerWorkspaceScreen) -> None:
@@ -830,7 +830,7 @@ def _invoice_entry(gate: _Gate, _tmp_path: Path) -> _Flow:
 # -- Categorisation and evidence files -------------------------------------------------
 
 
-def _classification_rule(gate: _Gate, _tmp_path: Path) -> _Flow:
+def _classification_rule(gate: Gate, _tmp_path: Path) -> _Flow:
     book = MemoryRuleBook(
         entries={synthetic_id(1): ("Papelería Norte factura 12", BusinessClassification.NOT_YET_PROCESSED)}
     )
@@ -849,18 +849,18 @@ def _classification_rule(gate: _Gate, _tmp_path: Path) -> _Flow:
         body.query_one("#categorisation-rule-pattern", Input).value = "papelería"
         await _press(pilot, body, "categorisation-rule-review-add")
         assert body.staged is not None
-        await _click(pilot, body, "categorisation-confirm")
+        await click(pilot, body, "categorisation-confirm")
         return body
 
     def saved(_pilot: Pilot[None], shown: LedgerWorkspaceScreen) -> None:
         assert len(book.rules) == 1
         assert body.staged is None
-        assert _status(shown) == tr("tui.ledger.categorisation.saved")
+        assert status(shown) == tr("tui.ledger.categorisation.saved")
 
     return _Flow(body, submit, saved)
 
 
-def _evidence_record_correction(gate: _Gate, _tmp_path: Path) -> _Flow:
+def _evidence_record_correction(gate: Gate, _tmp_path: Path) -> _Flow:
     store = MemoryEvidenceFilesStore()
     store.seed_records(3)
     doors = store.doors()
@@ -884,18 +884,18 @@ def _evidence_record_correction(gate: _Gate, _tmp_path: Path) -> _Flow:
         await _press(pilot, body, "evidence-files-review-update")
         write = pilot.app.screen
         assert isinstance(write, LedgerEvidenceFilesWriteScreen)
-        await _click(pilot, write, "evidence-files-confirm")
+        await click(pilot, write, "evidence-files-confirm")
         return write
 
     def saved(_pilot: Pilot[None], shown: LedgerWorkspaceScreen) -> None:
         assert isinstance(shown, LedgerEvidenceFilesWriteScreen)
         assert shown.flow_state is LedgerFlowState.SUCCEEDED
-        assert _status(shown) == tr("tui.ledger.evidence_files.write.saved")
+        assert status(shown) == tr("tui.ledger.evidence_files.write.saved")
 
     return _Flow(body, submit, saved)
 
 
-_FLOWS: dict[str, Callable[[_Gate, Path], _Flow]] = {
+FLOWS: dict[str, Callable[[Gate, Path], _Flow]] = {
     "bank-import": _bank_import,
     "capital-good": _capital_good,
     "classification": _classification,
@@ -918,11 +918,11 @@ _FLOWS: dict[str, Callable[[_Gate, Path], _Flow]] = {
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("name", sorted(_FLOWS))
+@pytest.mark.parametrize("name", sorted(FLOWS))
 async def test_a_write_in_flight_keeps_its_body_until_its_outcome_renders(name: str, tmp_path: Path) -> None:
-    gate = _Gate(error=None)
+    gate = Gate(error=None)
     with override_settings(cadrumo_output_language="en"):
-        flow = _FLOWS[name](gate, tmp_path)
+        flow = FLOWS[name](gate, tmp_path)
         async with ReplacingHostApp(flow.body).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             body = await flow.submit(pilot)
@@ -942,21 +942,21 @@ async def test_a_write_in_flight_keeps_its_body_until_its_outcome_renders(name: 
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("name", sorted(_FLOWS))
+@pytest.mark.parametrize("name", sorted(FLOWS))
 async def test_a_write_whose_outcome_is_unknown_is_said_to_be_unknown(name: str, tmp_path: Path) -> None:
-    gate = _Gate(error=_UNKNOWN)
+    gate = Gate(error=UNKNOWN)
     gate.release.set()
     with override_settings(cadrumo_output_language="en"):
-        flow = _FLOWS[name](gate, tmp_path)
+        flow = FLOWS[name](gate, tmp_path)
         async with ReplacingHostApp(flow.body).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
             body = await flow.submit(pilot)
             await settle(pilot)
             assert pilot.app.screen is body
             assert not body.in_flight
-            rendered = _rendered(body)
+            rendered = writes_hold_the_workspace_rendered(body)
             assert flow.unknown_line() in rendered
-            assert resolve_error_message(_UNKNOWN) in rendered
+            assert resolve_error_message(UNKNOWN) in rendered
             assert body.write_outcome_unknown
             # Saying "refused" or "not saved" would invite a retry that could apply the change twice.
             assert tr("tui.ledger.records.failed") not in rendered
@@ -1000,15 +1000,15 @@ async def test_a_review_that_settles_failed_with_an_effect_is_said_to_be_unknown
             await settle(pilot)
             await ask_for_review(pilot, screen, "categorisation-review-ask")
             await decide_review(pilot, "btn-operation-apply")
-            assert _status(screen) == tr("tui.ledger.flow.outcome_unknown")
+            assert status(screen) == tr("tui.ledger.flow.outcome_unknown")
             unknown = OperationOutcomeUnknownError(operation_id=door.controllers[0].operation_id, effect=None)
-            assert resolve_error_message(unknown) in _text(screen, "#ledger-refusal")
-            assert tr("tui.ledger.categorisation.not_done") not in _text(screen, "#ledger-refusal")
+            assert resolve_error_message(unknown) in text(screen, "#ledger-refusal")
+            assert tr("tui.ledger.categorisation.not_done") not in text(screen, "#ledger-refusal")
             assert screen.write_outcome_unknown
             assert door.results == []
 
 
-class _CountingGate(_Gate):
+class CountingGate(Gate):
     """A gate that also counts the door calls that reached it."""
 
     def __init__(self, error: OperationOutcomeUnknownError | None) -> None:
@@ -1024,7 +1024,7 @@ class _CountingGate(_Gate):
 class _HeldRereadDoor:
     """The review queue door: the first read opens the area, and every later re-read waits at the gate."""
 
-    def __init__(self, door: LedgerReviewDoorV1, gate: _Gate) -> None:
+    def __init__(self, door: LedgerReviewDoorV1, gate: Gate) -> None:
         self._door = door
         self._gate = gate
         self._reads = 0
@@ -1042,9 +1042,9 @@ class _HeldRereadDoor:
 
 @pytest.mark.asyncio
 async def test_an_exclusion_whose_outcome_is_unknown_is_offered_again_only_over_a_reread_queue() -> None:
-    write = _CountingGate(error=_UNKNOWN)
+    write = CountingGate(error=UNKNOWN)
     write.release.set()
-    reread = _Gate(error=None)
+    reread = Gate(error=None)
     projection = ledger_projection()
     queue = ledger_review_door(projection)
     held_queue = _HeldRereadDoor(queue, reread)
@@ -1057,7 +1057,7 @@ async def test_an_exclusion_whose_outcome_is_unknown_is_offered_again_only_over_
             classify_action=ledger_classify_action(),
             classification_submitter=ClassificationDoor(),
             exclusion_submitter=_HeldExclusionDoor(write),
-            tools=_tools(LedgerWorkspaceArea.REVIEW),
+            tools=tools(LedgerWorkspaceArea.REVIEW),
         ),
     )
     body = LedgerReviewScreen(controller)
@@ -1071,7 +1071,7 @@ async def test_an_exclusion_whose_outcome_is_unknown_is_offered_again_only_over_
             review.move_cursor(row=0)
             await pilot.press("x")
             await settle(pilot)
-            await _click(pilot, body, "ledger-exclusion-confirm")
+            await click(pilot, body, "ledger-exclusion-confirm")
             await asyncio.wait_for(reread.started.wait(), timeout=10)
 
             # The entry may already be excluded: until the queue is read again, nothing is offered to exclude.
@@ -1086,16 +1086,16 @@ async def test_an_exclusion_whose_outcome_is_unknown_is_offered_again_only_over_
             await settle(pilot)
             assert len(queue.requests) == 2
             assert body.rows == listed
-            assert _status(body) == tr("tui.ledger.flow.outcome_unknown")
-            assert resolve_error_message(_UNKNOWN) in _text(body, "#ledger-refusal")
+            assert status(body) == tr("tui.ledger.flow.outcome_unknown")
+            assert resolve_error_message(UNKNOWN) in text(body, "#ledger-refusal")
             assert pilot.app.screen is body
 
 
 @pytest.mark.asyncio
 async def test_an_evidence_addition_whose_outcome_is_unknown_is_offered_again_only_over_reread_records() -> None:
-    write = _CountingGate(error=_UNKNOWN)
+    write = CountingGate(error=UNKNOWN)
     write.release.set()
-    door = _HeldEvidenceDoor(write)
+    door = HeldEvidenceDoor(write)
     projection = ledger_projection()
     refreshing = threading.Event()
     refreshed = threading.Event()
@@ -1116,27 +1116,27 @@ async def test_an_evidence_addition_whose_outcome_is_unknown_is_offered_again_on
             evidence_items=(),
             evidence_door=door,
             refresh=refresh,
-            tools=_tools(LedgerWorkspaceArea.EVIDENCE),
+            tools=tools(LedgerWorkspaceArea.EVIDENCE),
         ),
     )
     body = LedgerEvidenceScreen(controller)
     with override_settings(cadrumo_output_language="en"):
         async with ReplacingHostApp(body).run_test(size=(120, 60)) as pilot:
             await settle(pilot)
-            body.query_one("#ledger-evidence-path", Input).value = _EVIDENCE_PATH
-            await _click(pilot, body, "ledger-evidence-add")
+            body.query_one("#ledger-evidence-path", Input).value = EVIDENCE_PATH
+            await click(pilot, body, "ledger-evidence-add")
             assert await asyncio.to_thread(refreshing.wait, 10)
             await settle(pilot, workers=False)
 
             # The document may already be added: until the records are read again, the addition is not offered.
             add = body.query_one("#ledger-evidence-add", Button)
             assert add.disabled
-            await _click(pilot, body, "ledger-evidence-add")
+            await click(pilot, body, "ledger-evidence-add")
             assert write.calls == 1
 
             refreshed.set()
             await settle(pilot)
             assert refreshes == [1]
             assert not add.disabled
-            assert _status(body) == tr("tui.ledger.flow.outcome_unknown")
-            assert resolve_error_message(_UNKNOWN) in _text(body, "#ledger-refusal")
+            assert status(body) == tr("tui.ledger.flow.outcome_unknown")
+            assert resolve_error_message(UNKNOWN) in text(body, "#ledger-refusal")

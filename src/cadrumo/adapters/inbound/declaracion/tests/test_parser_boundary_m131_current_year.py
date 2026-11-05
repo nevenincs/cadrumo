@@ -38,7 +38,7 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.tests.authored_editions import single_exercise_editions
 from .....tests.inventory import FIXTURES_DIR
 from ..parser import parse_declaracion
-from ._parser_boundary_support import _expected_period, _modelo_snapshot
+from .parser_boundary_support import expected_period, modelo_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
@@ -84,7 +84,7 @@ _M131_CURRENT_YEAR_EXPECTED_CASILLAS = frozenset(_M131_CURRENT_YEAR_EXPECTED_VAL
 )
 def test_parser_extracts_modelo_131_current_year_profile_targets(year: int, profile_id: str) -> None:
     """Registry profile declares exactly the 15-casilla current-year target set."""
-    snapshot = _modelo_snapshot("131", filing_year=year, period="1T")
+    snapshot = modelo_snapshot("131", filing_year=year, period="1T")
     profile = snapshot.extraction_profiles[profile_id]
     assert {target.casilla_id for target in profile.target_casillas} == _M131_CURRENT_YEAR_EXPECTED_CASILLAS
     for target in profile.target_casillas:
@@ -122,7 +122,7 @@ def test_parser_extracts_modelo_131_current_year_profile_targets_from_committed_
     )
 
     assert filing.modelo == "131"
-    assert filing.period == _expected_period(year, "1T")
+    assert filing.period == expected_period(year, "1T")
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "131"

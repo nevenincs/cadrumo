@@ -44,24 +44,24 @@ from .....core.i18n.render import tr
 from .....core.identity.aeat_certificado import AEAT_CERTIFICADO_PATTERN, AeatCertificadoId
 from .....core.identity.digest import ContentDigest
 from .....core.logging import get_logger
-from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.parsing.dates import parse_date
 from .....core.time.clock import now
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
 from .....domain.calculations.registry.schema_base import EvidenceTier
-from .._html import parse_html
-from .._playwright import PlaywrightError
 from ..browser.api_request_guard import GuardedApiRequests
 from ..browser.factory import default_browser_session_factory
-from ._adapter_utils import (
+from ..html import parse_html
+from ..playwright import PlaywrightError
+from .adapter_utils import (
     assert_landed_url_readable,
     assert_pdf_response,
     assert_read_http_for,
     assert_read_landing,
     cell_text,
 )
-from ._auth_state import storage_state_for_session
-from ._browser_constants import PLAYWRIGHT_WAIT_DOMCONTENTLOADED
+from .auth_state import storage_state_for_session
+from .browser_constants import PLAYWRIGHT_WAIT_DOMCONTENTLOADED
 from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
 
 if TYPE_CHECKING:
@@ -192,7 +192,7 @@ class RemoteNotification(BaseModel):
         mode: Structural read-only marker.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     certificado_id: AeatCertificadoId
     tipo: SedeNotificationTipoValue
@@ -220,7 +220,7 @@ class NotificationsSnapshot(BaseModel):
         mode: Structural read-only marker.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     rows: tuple[RemoteNotification, ...]
     captured_at: datetime
@@ -375,10 +375,10 @@ def _row_from_cells(
         notif_raw,
     ) = _notification_cell_values(cells, header_index)
 
-    fecha_emision = _parse_date_local(emision_raw)
+    fecha_emision = parse_date_local(emision_raw)
     if fecha_emision is None:
         return None
-    fecha_notificacion = _parse_date_local(notif_raw)
+    fecha_notificacion = parse_date_local(notif_raw)
 
     return _build_remote_notification(
         certificado_id=certificado_id,
@@ -451,7 +451,7 @@ def _build_remote_notification(
         return None
 
 
-def _parse_date_local(raw: str | None) -> date | None:
+def parse_date_local(raw: str | None) -> date | None:
     """Parse a Spanish ``DD-MM-YYYY`` date string, returning ``None`` on any failure."""
     return parse_date(raw, fmt="ddmmyyyy", on_error="none")
 
@@ -547,7 +547,7 @@ class NotificationDocument(BaseModel):
         mode: Structural read-only marker.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     certificado_id: AeatCertificadoId
     pdf_bytes: bytes
@@ -647,7 +647,7 @@ async def fetch_notification_document(
         page = await context.new_page()
         # Land the detail page first so AEAT sees the referring navigation.
         await page.goto(url, wait_until=PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
-        assert_notifications_read_landing(_notifications_landing_url(page, requested_url=url))
+        assert_notifications_read_landing(notifications_landing_url(page, requested_url=url))
         response = await GuardedApiRequests(context, (READ_GUARD_POLICY,)).post(
             url,
             form={
@@ -711,7 +711,7 @@ async def _fetch_and_parse(
             "AeatSession has no persisted auth session; run `cadrumo-runtime config auth status` first",
             translated_message=tr("adapters.sede.errors.no_auth_session"),
         )
-    return await _navigate_and_parse(
+    return await navigate_and_parse(
         storage_state,
         url=url,
         parser=parser,
@@ -723,7 +723,7 @@ async def _fetch_and_parse(
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-PLAYWRIGHT-PAGE: page is a Playwright
 # Page-like object; typed loosely so both sync and async Playwright pages
 # satisfy this shared helper without importing either concrete type here.
-def _notifications_landing_url(page: Any, *, requested_url: str) -> str:
+def notifications_landing_url(page: Any, *, requested_url: str) -> str:
     """Return the URL AEAT actually served, refusing an unreadable landing.
 
     Mirrors :func:`_walker.assert_landed_url_readable`: an empty or otherwise
@@ -735,7 +735,7 @@ def _notifications_landing_url(page: Any, *, requested_url: str) -> str:
     return assert_landed_url_readable(getattr(page, "url", "") or "", requested_url=requested_url)
 
 
-async def _navigate_and_parse(
+async def navigate_and_parse(
     storage_state: Mapping[str, object],
     *,
     url: str,
@@ -766,7 +766,7 @@ async def _navigate_and_parse(
         try:
             await page.goto(_NOTIF_SUMMARY_URL, wait_until=PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
             assert_notifications_read_landing(
-                _notifications_landing_url(page, requested_url=_NOTIF_SUMMARY_URL),
+                notifications_landing_url(page, requested_url=_NOTIF_SUMMARY_URL),
             )
         except (PlaywrightError, OSError) as exc:
             log.debug(
@@ -783,7 +783,7 @@ async def _navigate_and_parse(
         # capture where AEAT actually landed and re-assert that host through
         # the host-suffix read guard so an off-AEAT redirect fails closed
         # while a ``www{n}`` load-balancer dispatch is tolerated.
-        landing_url = _notifications_landing_url(page, requested_url=url)
+        landing_url = notifications_landing_url(page, requested_url=url)
         assert_notifications_read_landing(landing_url)
         landing = urlsplit(landing_url)
         html = await page.content()

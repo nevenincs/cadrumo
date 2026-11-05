@@ -24,7 +24,7 @@ from ....core.modelo_work_progress_state import ModeloWorkProgressState
 from ....core.operations import OperationEffect
 from ....core.period import Period
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from .. import _modelo_work_review_cli as handler
+from .. import modelo_work_review_cli as handler
 from .. import operation_modelo_work_review as bridge
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -139,7 +139,7 @@ def test_post_submission_render_failure_retains_receipt(monkeypatch: pytest.Monk
         lambda *_args, **_kwargs: bridge.ModeloWorkReviewed(completion=completion, review=completion.projection.review),
     )
     if failure_point == "lines":
-        monkeypatch.setattr(handler, "_review_lines", lambda _result: (_ for _ in ()).throw(ValueError("private")))
+        monkeypatch.setattr(handler, "review_lines", lambda _result: (_ for _ in ()).throw(ValueError("private")))
     else:
         monkeypatch.setattr(
             handler, "emit_envelope", lambda *_args, **_kwargs: (_ for _ in ()).throw(ValueError("private"))

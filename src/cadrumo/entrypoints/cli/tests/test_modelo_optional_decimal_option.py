@@ -1,7 +1,7 @@
 """Boundary tests for the shared optional euro-amount CLI option gate.
 
 Exercises the real :func:`optional_decimal_option` in
-:mod:`cadrumo.entrypoints.cli._modelo_cli_support` — the single home for the
+:mod:`cadrumo.entrypoints.cli.modelo_cli_support` — the single home for the
 "optional operator-typed amount whose refusal names its own field" shape, now
 consumed by the eight ``modelo work calculate`` shortcut amounts and the two
 ``preview-maritime-exemption`` amounts. No mocks, no stubs, no skips: every case
@@ -19,7 +19,7 @@ from decimal import Decimal
 import pytest
 import typer
 
-from cadrumo.entrypoints.cli._modelo_cli_support import optional_decimal_option
+from cadrumo.entrypoints.cli.modelo_cli_support import optional_decimal_option
 from cadrumo.tests.english_locale_fixture import english_locale_fixture
 
 __all__ = ["english_locale_fixture"]

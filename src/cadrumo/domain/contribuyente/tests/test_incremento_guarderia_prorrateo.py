@@ -29,7 +29,7 @@ from ..family_fact_context import FamilyFactResolutionContext
 from ..family_profile import RentaFamilyProfile
 from ..guarderia_mensual import parse_guarderia_mensual
 from ..meses_trabajo import parse_meses_trabajo
-from ._registry_thresholds import registry_thresholds
+from .registry_thresholds import registry_thresholds
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

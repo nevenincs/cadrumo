@@ -29,7 +29,7 @@ import pytest
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.bindings import CasillaObservation
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -52,7 +52,7 @@ from .override_migration_support import override_migration_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_BUCKET_ID = "9a1c77e0-4b22-4c3e-9a0e-5f0b7c1d2e34"
+BUCKET_ID = "9a1c77e0-4b22-4c3e-9a0e-5f0b7c1d2e34"
 
 
 _CASILLA_01: CasillaId = validated_casilla_id("casilla-01", surface="_CASILLA_01")
@@ -60,17 +60,17 @@ _CASILLA_01: CasillaId = validated_casilla_id("casilla-01", surface="_CASILLA_01
 #: One retired relation id and the binding that absorbed it, read off the frozen
 #: join rather than restated, so a table edit cannot leave this suite asserting
 #: a correspondence the migration no longer implements.
-_RETIRED_RELATION_ID = "modelo-303-rel-self-compensacion-anteriores"
-_ABSORBING_BINDING_ID = "modelo-303-compensacion-pendiente-anteriores"
-_OVERRIDE_VALUE = "50.00"
+RETIRED_RELATION_ID = "modelo-303-rel-self-compensacion-anteriores"
+ABSORBING_BINDING_ID = "modelo-303-compensacion-pendiente-anteriores"
+OVERRIDE_VALUE = "50.00"
 _CREATED_AT = datetime(2026, 4, 2, 9, 0, 0, tzinfo=UTC)
 
 
-def _revision(*, relation_overrides: dict[str, str]) -> CalculationRevision:
+def revision(*, relation_overrides: dict[str, str]) -> CalculationRevision:
     """Build one synthetic revision whose content address matches its contents."""
     casilla_values = {_CASILLA_01: Decimal("1000.00")}
     revision_id = derive_calculation_revision_id(
-        work_unit_id=parent_work_unit_id(_BUCKET_ID),
+        work_unit_id=parent_work_unit_id(BUCKET_ID),
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=casilla_values,
@@ -80,7 +80,7 @@ def _revision(*, relation_overrides: dict[str, str]) -> CalculationRevision:
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
-        work_unit_id=parent_work_unit_id(_BUCKET_ID),
+        work_unit_id=parent_work_unit_id(BUCKET_ID),
         registry_snapshot_ref=registry_snapshot_ref(),
         state=CalculationRevisionState.BORRADOR,
         filing_instance_evidence=None,
@@ -106,8 +106,8 @@ def _revision(*, relation_overrides: dict[str, str]) -> CalculationRevision:
 
 def _parent_work_unit() -> WorkUnit:
     return WorkUnit(
-        work_unit_id=parent_work_unit_id(_BUCKET_ID),
-        bucket_id=_BUCKET_ID,
+        work_unit_id=parent_work_unit_id(BUCKET_ID),
+        bucket_id=BUCKET_ID,
         modelo=registry_snapshot_ref().modelo,
         filing_year=registry_snapshot_ref().modelo_year,
         period=work_unit_period(),
@@ -118,7 +118,7 @@ def _parent_work_unit() -> WorkUnit:
     )
 
 
-def _seed_parent_work_unit(profile: TestRuntimeProfile) -> None:
+def seed_parent_work_unit(profile: TestRuntimeProfile) -> None:
     WorkUnitCatalogueRepository(objects=profile.repository).save(
         build_work_unit_catalogue((_parent_work_unit(),)),
     )
@@ -126,13 +126,13 @@ def _seed_parent_work_unit(profile: TestRuntimeProfile) -> None:
 
 def test_frozen_join_carries_the_retired_relation_this_suite_migrates() -> None:
     """The fixture's relation-to-binding correspondence is the shipped table's own."""
-    assert bundled_relation_binding_join()[_RETIRED_RELATION_ID] == _ABSORBING_BINDING_ID
+    assert bundled_relation_binding_join()[RETIRED_RELATION_ID] == ABSORBING_BINDING_ID
 
 
 def test_pre_cut_relation_override_is_rekeyed_and_the_revision_id_recomputed() -> None:
     """A stored pre-absorption override moves onto its binding under a new content address."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        stored = _revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE})
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        stored = revision(relation_overrides={RETIRED_RELATION_ID: OVERRIDE_VALUE})
 
         result = rekey_calculation_revision_overrides(
             override_migration_catalogue(stored), operation=_authority_operation_for_test
@@ -142,38 +142,38 @@ def test_pre_cut_relation_override_is_rekeyed_and_the_revision_id_recomputed() -
         (remap,) = result.rekeyed_revisions
         assert remap.previous_calculation_revision_id == stored.calculation_revision_id
         assert remap.calculation_revision_id != stored.calculation_revision_id
-        assert remap.work_unit_id == parent_work_unit_id(_BUCKET_ID)
+        assert remap.work_unit_id == parent_work_unit_id(BUCKET_ID)
 
         migrated = result.catalogue.get(remap.calculation_revision_id)
         assert migrated is not None
-        assert dict(migrated.relation_overrides) == {_ABSORBING_BINDING_ID: _OVERRIDE_VALUE}
+        assert dict(migrated.relation_overrides) == {ABSORBING_BINDING_ID: OVERRIDE_VALUE}
         # The recomputed id is the canonical derivation of the migrated contents,
         # not a value the migration invented alongside them.
         assert derive_calculation_revision_id_from_revision(migrated) == remap.calculation_revision_id
 
         (move,) = result.rekeyed_override_keys
-        assert (move.relation_id, move.binding_id) == (_RETIRED_RELATION_ID, _ABSORBING_BINDING_ID)
+        assert (move.relation_id, move.binding_id) == (RETIRED_RELATION_ID, ABSORBING_BINDING_ID)
         assert move.calculation_revision_id == stored.calculation_revision_id
 
 
 def test_override_value_appears_in_no_reported_field() -> None:
     """The run's report carries identifiers only, never the taxpayer's figure."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         result = rekey_calculation_revision_overrides(
-            override_migration_catalogue(_revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE})),
+            override_migration_catalogue(revision(relation_overrides={RETIRED_RELATION_ID: OVERRIDE_VALUE})),
             operation=_authority_operation_for_test,
         )
 
         reported = result.model_dump_json(exclude={"catalogue"})
 
-        assert _OVERRIDE_VALUE not in reported
+        assert OVERRIDE_VALUE not in reported
 
 
 def test_second_run_over_a_migrated_catalogue_changes_nothing() -> None:
     """Idempotence: re-running rekeys nothing and moves no content address."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         first = rekey_calculation_revision_overrides(
-            override_migration_catalogue(_revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE})),
+            override_migration_catalogue(revision(relation_overrides={RETIRED_RELATION_ID: OVERRIDE_VALUE})),
             operation=_authority_operation_for_test,
         )
 
@@ -188,9 +188,9 @@ def test_second_run_over_a_migrated_catalogue_changes_nothing() -> None:
 
 def test_unknown_override_key_is_refused_rather_than_dropped() -> None:
     """An override the frozen join cannot resolve stops the run, naming the key."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         orphan = "modelo-303-rel-self-this-relation-never-existed"
-        stored = _revision(relation_overrides={orphan: _OVERRIDE_VALUE})
+        stored = revision(relation_overrides={orphan: OVERRIDE_VALUE})
 
         with pytest.raises(OrphanedRelationOverrideError) as refusal:
             rekey_calculation_revision_overrides(
@@ -202,13 +202,13 @@ def test_unknown_override_key_is_refused_rather_than_dropped() -> None:
         assert context["reason"] == "orphaned_relation_override"
         assert orphan in str(context["override_keys"])
         # The refusal identifies the key, never the taxpayer figure behind it.
-        assert _OVERRIDE_VALUE not in str(context)
+        assert OVERRIDE_VALUE not in str(context)
 
 
 def test_revision_without_overrides_is_untouched_and_keeps_its_id() -> None:
     """A revision the migration has no business rewriting keeps its content address."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        stored = _revision(relation_overrides={})
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        stored = revision(relation_overrides={})
 
         result = rekey_calculation_revision_overrides(
             override_migration_catalogue(stored), operation=_authority_operation_for_test
@@ -222,12 +222,12 @@ def test_revision_without_overrides_is_untouched_and_keeps_its_id() -> None:
 def test_migration_rekeys_a_catalogue_through_encrypted_storage(tmp_path: Path) -> None:
     """End to end: the stored encrypted catalogue comes back binding-keyed."""
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile,
     ):
-        _seed_parent_work_unit(profile)
+        seed_parent_work_unit(profile)
         repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
-        stored = _revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE})
+        stored = revision(relation_overrides={RETIRED_RELATION_ID: OVERRIDE_VALUE})
         repository.save(override_migration_catalogue(stored))
 
         result = migrate_stored_relation_overrides_to_binding_ids(repository, operation=_authority_operation_for_test)
@@ -237,7 +237,7 @@ def test_migration_rekeys_a_catalogue_through_encrypted_storage(tmp_path: Path) 
         reloaded = repository.load()
         assert stored.calculation_revision_id not in reloaded
         (migrated,) = tuple(reloaded.values())
-        assert dict(migrated.relation_overrides) == {_ABSORBING_BINDING_ID: _OVERRIDE_VALUE}
+        assert dict(migrated.relation_overrides) == {ABSORBING_BINDING_ID: OVERRIDE_VALUE}
 
         # Re-running against the now-migrated encrypted row is a no-op, so a
         # migration interrupted after its write can simply be repeated.
@@ -252,13 +252,13 @@ def test_migration_rekeys_a_catalogue_through_encrypted_storage(tmp_path: Path) 
 
 def test_one_operation_reads_the_catalogue_for_migration_once(tmp_path: Path) -> None:
     with (
-        _indexed_authority_for_test().operation() as operation,
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
+        bundled_indexed_authority().operation() as operation,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile,
     ):
-        _seed_parent_work_unit(profile)
+        seed_parent_work_unit(profile)
         repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
         repository.save(
-            override_migration_catalogue(_revision(relation_overrides={_ABSORBING_BINDING_ID: _OVERRIDE_VALUE}))
+            override_migration_catalogue(revision(relation_overrides={ABSORBING_BINDING_ID: OVERRIDE_VALUE}))
         )
 
         first = migrate_stored_relation_overrides_to_binding_ids(repository, operation=operation)
@@ -270,18 +270,16 @@ def test_one_operation_reads_the_catalogue_for_migration_once(tmp_path: Path) ->
 
 def test_the_next_operation_still_refuses_an_unknown_stored_override_key(tmp_path: Path) -> None:
     with (
-        _indexed_authority_for_test().operation() as operation,
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
+        bundled_indexed_authority().operation() as operation,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile,
     ):
-        _seed_parent_work_unit(profile)
+        seed_parent_work_unit(profile)
         settled = CalculationRevisionCatalogueRepository(objects=profile.repository)
-        settled.save(
-            override_migration_catalogue(_revision(relation_overrides={_ABSORBING_BINDING_ID: _OVERRIDE_VALUE}))
-        )
+        settled.save(override_migration_catalogue(revision(relation_overrides={ABSORBING_BINDING_ID: OVERRIDE_VALUE})))
         migrate_stored_relation_overrides_to_binding_ids(settled, operation=operation)
         next_operation = CalculationRevisionCatalogueRepository(objects=profile.repository)
         next_operation.save(
-            override_migration_catalogue(_revision(relation_overrides={"not-a-known-key": _OVERRIDE_VALUE}))
+            override_migration_catalogue(revision(relation_overrides={"not-a-known-key": OVERRIDE_VALUE}))
         )
 
         for _attempt in range(2):
@@ -298,12 +296,12 @@ def _stored_catalogue_payload_selects(selects: list[str]) -> list[str]:
 def test_a_new_repository_reads_no_payload_for_a_catalogue_published_without_overrides(tmp_path: Path) -> None:
     """Each calculation composes a new repository; the bytes it published need no second read."""
     with (
-        _indexed_authority_for_test().operation() as operation,
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
+        bundled_indexed_authority().operation() as operation,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile,
     ):
-        _seed_parent_work_unit(profile)
+        seed_parent_work_unit(profile)
         publisher = CalculationRevisionCatalogueRepository(objects=profile.repository)
-        publisher.save_with_secure_object_writes(override_migration_catalogue(_revision(relation_overrides={})), ())
+        publisher.save_with_secure_object_writes(override_migration_catalogue(revision(relation_overrides={})), ())
 
         next_calculation = CalculationRevisionCatalogueRepository(objects=profile.repository)
         with secure_object_select_log(profile.repository.engine) as selects:
@@ -316,12 +314,12 @@ def test_a_new_repository_reads_no_payload_for_a_catalogue_published_without_ove
 def test_a_catalogue_learned_override_free_by_a_read_needs_no_second_read(tmp_path: Path) -> None:
     """A row this process did not write is read once, then its exact bytes are known."""
     with (
-        _indexed_authority_for_test().operation() as operation,
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
+        bundled_indexed_authority().operation() as operation,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile,
     ):
-        _seed_parent_work_unit(profile)
+        seed_parent_work_unit(profile)
         CalculationRevisionCatalogueRepository(objects=profile.repository).save(
-            override_migration_catalogue(_revision(relation_overrides={}))
+            override_migration_catalogue(revision(relation_overrides={}))
         )
 
         first = migrate_stored_relation_overrides_to_binding_ids(
@@ -339,16 +337,16 @@ def test_a_catalogue_learned_override_free_by_a_read_needs_no_second_read(tmp_pa
 def test_a_retired_key_landing_after_an_override_free_proof_is_still_migrated(tmp_path: Path) -> None:
     """Another writer moving the row off the proven bytes makes the next run do the work."""
     with (
-        _indexed_authority_for_test().operation() as operation,
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
+        bundled_indexed_authority().operation() as operation,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile,
     ):
-        _seed_parent_work_unit(profile)
+        seed_parent_work_unit(profile)
         proven = CalculationRevisionCatalogueRepository(objects=profile.repository)
-        proven.save_with_secure_object_writes(override_migration_catalogue(_revision(relation_overrides={})), ())
+        proven.save_with_secure_object_writes(override_migration_catalogue(revision(relation_overrides={})), ())
         assert migrate_stored_relation_overrides_to_binding_ids(proven, operation=operation) is None
 
         CalculationRevisionCatalogueRepository(objects=profile.repository).save(
-            override_migration_catalogue(_revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE}))
+            override_migration_catalogue(revision(relation_overrides={RETIRED_RELATION_ID: OVERRIDE_VALUE}))
         )
 
         next_calculation = CalculationRevisionCatalogueRepository(objects=profile.repository)
@@ -358,18 +356,18 @@ def test_a_retired_key_landing_after_an_override_free_proof_is_still_migrated(tm
     assert result is not None
     assert result.changed
     (migrated,) = tuple(reloaded.values())
-    assert dict(migrated.relation_overrides) == {_ABSORBING_BINDING_ID: _OVERRIDE_VALUE}
+    assert dict(migrated.relation_overrides) == {ABSORBING_BINDING_ID: OVERRIDE_VALUE}
 
 
 def test_a_published_catalogue_holding_a_retired_key_earns_no_proof(tmp_path: Path) -> None:
     """Bytes holding any override are never remembered, so publishing one cannot skip its migration."""
     with (
-        _indexed_authority_for_test().operation() as operation,
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
+        bundled_indexed_authority().operation() as operation,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile,
     ):
-        _seed_parent_work_unit(profile)
+        seed_parent_work_unit(profile)
         CalculationRevisionCatalogueRepository(objects=profile.repository).save_with_secure_object_writes(
-            override_migration_catalogue(_revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE})),
+            override_migration_catalogue(revision(relation_overrides={RETIRED_RELATION_ID: OVERRIDE_VALUE})),
             (),
         )
 
@@ -384,23 +382,23 @@ def test_a_published_catalogue_holding_a_retired_key_earns_no_proof(tmp_path: Pa
 def test_a_proof_for_one_store_does_not_skip_another_store_of_the_same_bucket(tmp_path: Path) -> None:
     """A second store carrying the same bucket id is judged by its own row's bytes."""
     with (
-        _indexed_authority_for_test().operation() as operation,
-        isolated_runtime_profile(tmp_path=tmp_path / "proven", bucket_id=_BUCKET_ID) as profile,
+        bundled_indexed_authority().operation() as operation,
+        isolated_runtime_profile(tmp_path=tmp_path / "proven", bucket_id=BUCKET_ID) as profile,
     ):
-        _seed_parent_work_unit(profile)
+        seed_parent_work_unit(profile)
         CalculationRevisionCatalogueRepository(objects=profile.repository).save_with_secure_object_writes(
-            override_migration_catalogue(_revision(relation_overrides={})), ()
+            override_migration_catalogue(revision(relation_overrides={})), ()
         )
         assert CalculationRevisionCatalogueRepository(
             objects=profile.repository
         ).stored_catalogue_is_known_override_free()
     with (
-        _indexed_authority_for_test().operation() as operation,
-        isolated_runtime_profile(tmp_path=tmp_path / "other", bucket_id=_BUCKET_ID) as other,
+        bundled_indexed_authority().operation() as operation,
+        isolated_runtime_profile(tmp_path=tmp_path / "other", bucket_id=BUCKET_ID) as other,
     ):
-        _seed_parent_work_unit(other)
+        seed_parent_work_unit(other)
         CalculationRevisionCatalogueRepository(objects=other.repository).save(
-            override_migration_catalogue(_revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE}))
+            override_migration_catalogue(revision(relation_overrides={RETIRED_RELATION_ID: OVERRIDE_VALUE}))
         )
 
         result = migrate_stored_relation_overrides_to_binding_ids(

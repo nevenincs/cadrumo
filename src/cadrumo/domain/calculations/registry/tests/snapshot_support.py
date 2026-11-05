@@ -13,16 +13,16 @@ from pathlib import Path
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.hashing import content_hash_hex
 from ..authority import ValidatedRegistryAuthority, bundled_indexed_authority
-from ..authority_component_codec import _json_value
+from ..authority_component_codec import json_value
 from ..ids import RevisionId
 from ..schema import ModeloDefinition, RegistrySnapshot
 from ..schema_catalogues import RegistryCatalogues
-from ..snapshot import build_validated_snapshot as _build_validated_snapshot
+from ..snapshot import build_validated_snapshot as snapshot_build_validated_snapshot
 
 _SNAPSHOT_CACHE: dict[tuple[object, ...], tuple[ModeloDefinition, RegistryCatalogues, RegistrySnapshot]] = {}
 
 
-def _fixture_authority_identity_digest(
+def fixture_authority_identity_digest(
     modelo: ModeloDefinition,
     catalogues: RegistryCatalogues,
 ) -> str:
@@ -30,13 +30,13 @@ def _fixture_authority_identity_digest(
     return content_hash_hex(
         {
             "schema": "registry-snapshot-test-authority/v1",
-            "modelo": _json_value(modelo),
-            "catalogues": _json_value(catalogues),
+            "modelo": json_value(modelo),
+            "catalogues": json_value(catalogues),
         }
     )
 
 
-def _fixture_authority(
+def fixture_authority(
     modelo: ModeloDefinition,
     catalogues: RegistryCatalogues,
 ) -> ValidatedRegistryAuthority:
@@ -44,7 +44,7 @@ def _fixture_authority(
     return ValidatedRegistryAuthority.from_validated_components(
         modelos=(modelo,),
         catalogues=catalogues,
-        identity_digest=_fixture_authority_identity_digest(modelo, catalogues),
+        identity_digest=fixture_authority_identity_digest(modelo, catalogues),
     )
 
 
@@ -98,7 +98,7 @@ def _graded_snapshot(
     operation lease, which scopes that generation's facts for the build.
     """
     if catalogues.facts.facts:
-        return _fixture_authority(modelo, catalogues).snapshot(
+        return fixture_authority(modelo, catalogues).snapshot(
             modelo.id,
             filing_year=filing_year,
             period=period,
@@ -107,7 +107,7 @@ def _graded_snapshot(
             grade=grade,
         )
     with bundled_indexed_authority().operation():
-        return _build_validated_snapshot(
+        return snapshot_build_validated_snapshot(
             modelo,
             catalogues,
             filing_year=filing_year,
@@ -150,7 +150,7 @@ def build_snapshot_for_validated_modelo(
     grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
 ) -> RegistrySnapshot:
     """Build a graded snapshot after model-local validation already ran."""
-    return _build_validated_snapshot(
+    return snapshot_build_validated_snapshot(
         modelo,
         catalogues,
         filing_year=filing_year,

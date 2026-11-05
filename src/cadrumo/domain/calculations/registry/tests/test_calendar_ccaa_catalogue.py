@@ -9,7 +9,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
-from ..calendar_ccaa_catalogue import _ENTRIES_FACT, _catalogue, resolve_calendar_ccaa_catalogue
+from ..calendar_ccaa_catalogue import ENTRIES_FACT, catalogue, resolve_calendar_ccaa_catalogue
 from ..errors import RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -44,7 +44,7 @@ _ISO_3166_2_ES = (
 
 def _published_entries() -> dict[str, str]:
     with bundled_indexed_authority().operation() as operation:
-        return dict(_ENTRIES_FACT.resolve_scoped_entries(effective_date=_EFFECTIVE, authority=operation))
+        return dict(ENTRIES_FACT.resolve_scoped_entries(effective_date=_EFFECTIVE, authority=operation))
 
 
 def test_catalogue_declares_every_iso_territory_in_order() -> None:
@@ -77,11 +77,11 @@ def _with(entries: Mapping[str, str], key: str, value: str) -> dict[str, str]:
 
 
 def test_published_entries_project_cleanly() -> None:
-    assert len(_catalogue(_published_entries()).definitions) == len(_ISO_3166_2_ES)
+    assert len(catalogue(_published_entries()).definitions) == len(_ISO_3166_2_ES)
 
 
 def test_territory_count_that_disagrees_with_the_order_is_rejected() -> None:
     entries = _with(_published_entries(), "calendar_ccaa.relation.calendar_territory_count", "18")
 
     with pytest.raises(RegistryValidationError, match="does not match"):
-        _catalogue(entries)
+        catalogue(entries)

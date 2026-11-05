@@ -79,7 +79,9 @@ def test_status_never_reads_keychain_or_changes_receipt(
         binding=custody.binding.model_copy(update={"installation_id": installation_state.installation_id}),
     )
     keyring = _Keyring()
-    monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (keyring, RuntimeError, KeyError))
+    monkeypatch.setattr(
+        acceleration_keychain, "acceleration_keychain_keyring", lambda: (keyring, RuntimeError, KeyError)
+    )
     instant = now()
     receipts.mint_profile_session(
         storage_root=tmp_path,
@@ -98,19 +100,21 @@ def test_status_never_reads_keychain_or_changes_receipt(
     def forbidden_keychain() -> None:
         pytest.fail("status read the keychain")
 
-    monkeypatch.setattr(acceleration_keychain, "_keyring", forbidden_keychain)
+    monkeypatch.setattr(acceleration_keychain, "acceleration_keychain_keyring", forbidden_keychain)
     path = receipts.profile_session_path(storage_root=tmp_path, profile_id=profile_id)
     before = path.read_bytes()
     if case in {"sign_out", "sign_out_delete_failure", "sign_out_retirement_failure", "sign_out_keyring_unavailable"}:
-        monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (keyring, RuntimeError, KeyError))
+        monkeypatch.setattr(
+            acceleration_keychain, "acceleration_keychain_keyring", lambda: (keyring, RuntimeError, KeyError)
+        )
         if case == "sign_out_delete_failure":
-            monkeypatch.setattr(receipts, "_clear_captured_receipt", lambda *_args, **_kwargs: False)
+            monkeypatch.setattr(receipts, "clear_captured_receipt", lambda *_args, **_kwargs: False)
         if case == "sign_out_retirement_failure":
 
             def fail_retirement(**_kwargs: object) -> bool:
                 raise receipts.StorageValidationError("synthetic interrupted retirement")
 
-            monkeypatch.setattr(receipts, "_recover_pending_retirement", fail_retirement)
+            monkeypatch.setattr(receipts, "recover_pending_retirement", fail_retirement)
         if case == "sign_out_keyring_unavailable":
 
             def fail_keychain(_service: str, _account: str) -> None:
@@ -129,7 +133,7 @@ def test_status_never_reads_keychain_or_changes_receipt(
                 "sign_out_keyring_unavailable": receipts.ReceiptDeletion.KEYCHAIN_ENTRY_RETAINED,
             }[case]
         )
-        monkeypatch.setattr(acceleration_keychain, "_keyring", forbidden_keychain)
+        monkeypatch.setattr(acceleration_keychain, "acceleration_keychain_keyring", forbidden_keychain)
     if case == "generation_advanced":
         custody.advance()
     elif case == "generation_unreadable":
@@ -150,7 +154,9 @@ def test_status_never_reads_keychain_or_changes_receipt(
         credential_facilities=Availability.UNAVAILABLE,
     )
     if case.startswith("sweep_"):
-        monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (keyring, RuntimeError, KeyError))
+        monkeypatch.setattr(
+            acceleration_keychain, "acceleration_keychain_keyring", lambda: (keyring, RuntimeError, KeyError)
+        )
         prior_generation = custody.observe().current
         if case == "sweep_custody_changed":
             envelope = load_committed_profile_password_material(profile_id, root=tmp_path).envelope
@@ -177,7 +183,7 @@ def test_status_never_reads_keychain_or_changes_receipt(
         revoked = case in {"sweep_locked", "sweep_absent_complete", "sweep_custody_changed"}
         assert retired == ((profile_id,) if revoked else ())
         assert (custody.observe().current != prior_generation) is revoked
-        monkeypatch.setattr(acceleration_keychain, "_keyring", forbidden_keychain)
+        monkeypatch.setattr(acceleration_keychain, "acceleration_keychain_keyring", forbidden_keychain)
     status = observe_sign_in(
         root=tmp_path,
         storage_identity="a" * 64,

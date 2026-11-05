@@ -77,7 +77,9 @@ class _Keyring:
 @pytest.fixture
 def keychain(monkeypatch: pytest.MonkeyPatch) -> _Keyring:
     store = _Keyring()
-    monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (store, _KeyringError, _KeyringError))
+    monkeypatch.setattr(
+        acceleration_keychain, "acceleration_keychain_keyring", lambda: (store, _KeyringError, _KeyringError)
+    )
     return store
 
 
@@ -249,7 +251,7 @@ class TestMintBinding:
         key = keychain.entries[_account(record.profile_id, record.session_id)]
         with pytest.raises(DecryptionError):
             unwrap_profile_session_dek(session_key=b64_decode(key), record=forged)
-        _path(sign_in).write_bytes(receipt._receipt_bytes(forged))
+        _path(sign_in).write_bytes(receipt.receipt_bytes(forged))
 
         outcome = _resume(sign_in)
 
@@ -266,7 +268,7 @@ class TestMintBinding:
         key = keychain.entries[_account(record.profile_id, record.session_id)]
         with pytest.raises(DecryptionError):
             unwrap_profile_session_dek(session_key=b64_decode(key), record=forged)
-        _path(sign_in).write_bytes(receipt._receipt_bytes(forged))
+        _path(sign_in).write_bytes(receipt.receipt_bytes(forged))
 
         outcome = _resume(sign_in)
 
@@ -450,7 +452,7 @@ class TestOlderSchemaDispatch:
 
         assert json.loads(path.read_bytes())["schema_version"] == 3
         assert _account(sign_in.binding.profile_id, old_session) not in keychain.entries
-        assert not receipt._profile_session_retirement_path(
+        assert not receipt.profile_session_retirement_path(
             storage_root=sign_in.root, profile_id=sign_in.binding.profile_id
         ).exists()
         outcome = _resume(sign_in)

@@ -27,8 +27,7 @@ from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDe
 from cadrumo.core.period import Period
 from cadrumo.core.prorrata_exclusions import Art104TresExclusion
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
@@ -269,7 +268,7 @@ def test_repository_backed_projection_rejects_bucket_mismatch_before_loading(
     secure_objects: SecureObjectRepository,
 ) -> None:
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         pytest.raises(AggregationValidationError, match="bucket_mismatch"),
     ):
         aggregate_iva_ledger_observations_from_repositories(
@@ -294,7 +293,7 @@ def test_repository_backed_projection_refuses_a_real_foreign_prorrata_repository
 ) -> None:
     """IVA aggregation never combines a primary ledger with another bucket's register."""
     with (
-        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        bundled_indexed_authority().operation() as _authority_operation_for_test,
         isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime,
     ):
         TransactionCatalogueRepository(bucket_id=runtime.primary.bucket_id).save(
@@ -317,7 +316,7 @@ def test_repository_backed_projection_refuses_a_real_foreign_prorrata_repository
 
 
 def test_repository_backed_projection_loads_persisted_bucket_catalogue(secure_objects: SecureObjectRepository) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         transaction = _transaction("row-repository")
         repository = TransactionCatalogueRepository(
             bucket_id=_BUCKET_ID,
@@ -364,7 +363,7 @@ def test_repository_backed_projection_reports_out_of_period_catalogue_transactio
     visibility signal without allocating one row-level issue per excluded
     plaintext index entry.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         in_period = _transaction("row-in-period", value_date=date(2026, 4, 5))
         out_of_period = _transaction("row-out-of-period", value_date=date(2026, 7, 10))
         repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
@@ -390,7 +389,7 @@ def test_repository_backed_projection_summarizes_previously_silent_out_of_window
     repository-backed partition reports their count and date span instead of
     dropping them before aggregation.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         in_period = _transaction("row-in-period", value_date=date(2026, 4, 5))
         excluded_out_of_period = _transaction(
             "row-excluded-out-of-period",
@@ -427,7 +426,7 @@ def test_repository_backed_projection_partition_matches_full_scan(
     In-window observations and prorrata references must match; only the
     out-of-window issue taxonomy can differ between the two paths.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         q2_row_a = _transaction("row-q2-a", value_date=date(2026, 4, 5), taxable_base=Decimal("100.00"))
         q2_row_b = _transaction(
             "row-q2-b", value_date=date(2026, 6, 20), taxable_base=Decimal("200.00"), iva_amount=Decimal("42.00")

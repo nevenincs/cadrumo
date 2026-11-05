@@ -33,7 +33,7 @@ from ..storage.secure_object_namespaces import WITHHOLDING_OBSERVATIONS_NAMESPAC
 from ..storage.sql.secure_objects import SecureObjectRepository
 
 
-def _translate_storage_failure[ResultT](operation: str, action: Callable[[], ResultT]) -> ResultT:
+def translate_storage_failure[ResultT](operation: str, action: Callable[[], ResultT]) -> ResultT:
     """Translate storage failures into the application-owned error."""
     try:
         return action()
@@ -114,7 +114,7 @@ class PercepcionObservationRepositoryAdapter(
     @override
     def load_observations(self, modelo: str, period: Period) -> tuple[WithholdingObservation, ...]:
         """Return all persisted observations for one modelo/period window."""
-        return _translate_storage_failure(
+        return translate_storage_failure(
             "percepcion_load_observations",
             lambda: self._load_observations(modelo, period),
         )
@@ -136,7 +136,7 @@ class PercepcionObservationRepositoryAdapter(
         filing_year: int,
     ) -> tuple[WithholdingObservation, ...]:
         """Read each active quarterly row for an annual withholding return."""
-        return _translate_storage_failure(
+        return translate_storage_failure(
             "percepcion_load_annual_source_observations",
             lambda: tuple(
                 payload.observation

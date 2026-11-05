@@ -16,7 +16,7 @@ from cadrumo.adapters.persistence.profile.review_package_signing import (
     ReviewPackageSigningKeypairAdapter,
     build_review_package_signing_keypair_reader,
 )
-from cadrumo.adapters.persistence.profile.tests._review_package_bytes_support import (
+from cadrumo.adapters.persistence.profile.tests.review_package_bytes_support import (
     build_package_path,
     review_package_revision,
     review_package_work_unit,

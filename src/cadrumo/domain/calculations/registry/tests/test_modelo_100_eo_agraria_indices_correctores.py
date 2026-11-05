@@ -40,7 +40,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from ._modelo_100_eo_agraria_support import calculate_neutral_modelo_100_2025
+from .modelo_100_eo_agraria_support import calculate_neutral_modelo_100_2025
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 

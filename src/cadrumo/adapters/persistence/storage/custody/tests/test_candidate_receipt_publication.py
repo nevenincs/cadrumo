@@ -70,7 +70,9 @@ class _Keyring:
 @pytest.fixture
 def keyring(monkeypatch: pytest.MonkeyPatch) -> _Keyring:
     store = _Keyring()
-    monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (store, _KeyringError, _KeyringError))
+    monkeypatch.setattr(
+        acceleration_keychain, "acceleration_keychain_keyring", lambda: (store, _KeyringError, _KeyringError)
+    )
     return store
 
 

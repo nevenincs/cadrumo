@@ -56,11 +56,11 @@ from .registered_executor_case_support import (
     family_environment_for_operation,
     seeded_conformance_operation_submission,
 )
-from .registered_executor_outcome_assertions import _assert_registered_executor_conformance_outcome
+from .registered_executor_outcome_assertions import assert_registered_executor_conformance_outcome
 from .registered_executor_seeding_support import conformance_profile_seed
 
 
-def _run_registered_executor_conformance_case(
+def run_registered_executor_conformance_case(
     tmp_path: Path,
     case: RegisteredExecutorConformanceCase,
     *,
@@ -187,7 +187,7 @@ def _run_registered_executor_conformance_case(
         submitted, observed = asyncio.run(
             driver.run(definition_id=definition.definition_id, subject_ref=subject_ref, payload=payload, secret=secret)
         )
-        _assert_registered_executor_conformance_outcome(
+        assert_registered_executor_conformance_outcome(
             asset_before=asset_before,
             asset_repository=asset_repository,
             attachment_case=attachment_case,

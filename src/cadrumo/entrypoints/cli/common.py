@@ -556,7 +556,7 @@ def attach_cli_policy_verdict[ExceptionT: Exception](
 # ---------------------------------------------------------------------
 
 
-def _is_metadata_invocation(ctx: typer.Context) -> bool:
+def common_is_metadata_invocation(ctx: typer.Context) -> bool:
     """Read metadata posture from captured tokens and eager callback flags.
 
     Click consumes eager ``--help`` / ``--version`` options before group
@@ -686,7 +686,7 @@ _SAFE_ACTION_TOKEN = re.compile(r"^[A-Za-z0-9._:/=+-]+$")
 _POWERSHELL_SINGLE_QUOTE = re.compile("['\u2018\u2019\u201a\u201b]")
 
 
-def _powershell_action_token(token: str) -> str:
+def powershell_action_token(token: str) -> str:
     """Render one argv token as a PowerShell literal without enabling expansion.
 
     PowerShell expands ``$()``, ``$env:...`` and backticks inside double-quoted
@@ -700,7 +700,7 @@ def _powershell_action_token(token: str) -> str:
     return "'" + _POWERSHELL_SINGLE_QUOTE.sub(lambda quote: quote.group(0) * 2, token) + "'"
 
 
-def _action_text_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
+def action_text_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
     """Derive executable text commands from the same resolved action DTOs as JSON."""
     from ...application.operator_surface.verb_input_contracts import cli_argv_for
     from ...core.json_contract import ResolvedNoticeAction
@@ -719,7 +719,7 @@ def _action_text_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
             binding.argument_name: binding.value for binding in notice_action.argument_bindings
         }
         argv = cli_argv_for(schema, arguments)[2:]
-        rendered = " ".join(_powershell_action_token(token) for token in argv)
+        rendered = " ".join(powershell_action_token(token) for token in argv)
         lines.append(f"next_action\t{PRODUCT_IDENTITY.cli_executable} {rendered}")
     return tuple(lines)
 
@@ -793,7 +793,7 @@ def emit_envelope(
         metadata_only: Skip profile notices, action resolution, and sandbox
             discovery for a callback that only renders command metadata.
     """
-    metadata_invocation = metadata_only or _is_metadata_invocation(ctx)
+    metadata_invocation = metadata_only or common_is_metadata_invocation(ctx)
     output_format = _format_of(ctx)
     supplied_notices = tuple(notices or ())
     if metadata_invocation:
@@ -834,7 +834,7 @@ def emit_envelope(
     if metadata_invocation:
         rendered_lines = tuple(lines)
     else:
-        rendered_lines = (*lines, *notice_lines(resolved_notices), *_action_text_lines(resolved_notices))
+        rendered_lines = (*lines, *notice_lines(resolved_notices), *action_text_lines(resolved_notices))
         from ...application.operator_output.sandbox_notice import sandbox_banner_line, sandbox_notice_for_active_bucket
 
         sandbox_notice = sandbox_notice_for_active_bucket()
@@ -949,7 +949,7 @@ def _bad(message: str) -> typer.BadParameter:
 bad = _bad
 
 
-def _no_active_profile_refusal() -> Exception:
+def common_no_active_profile_refusal() -> Exception:
     """Return the canonical no-active-profile refusal exception.
 
     A missing active profile is a workflow-state refusal, not a
@@ -989,7 +989,7 @@ def _no_active_profile_refusal() -> Exception:
     return attach_cli_policy_verdict(error, verdict=verdict)
 
 
-no_active_profile_refusal = _no_active_profile_refusal
+no_active_profile_refusal = common_no_active_profile_refusal
 
 
 def resolve_optional_root(value: Path | None, default: Callable[[], Path]) -> Path:
@@ -1041,4 +1041,4 @@ def active_bucket_id_or_refuse() -> str:
     try:
         return require_active_bucket_id()
     except NoActiveProfileError as exc:
-        raise _no_active_profile_refusal() from exc
+        raise common_no_active_profile_refusal() from exc

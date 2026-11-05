@@ -35,8 +35,7 @@ from typing import Any
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 
 from ....core.resources.bundled_data import bundled_path
 from ..classification import IvaInvoiceClassificationCriteria, resolve_iva_classification_catalogue
@@ -51,7 +50,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 @pytest.fixture
 def operation() -> Iterator[PinnedAuthorityOperation]:
     """Lease the bundled generation, which carries the IVA runtime catalogues."""
-    with _indexed_authority_for_test().operation() as pinned:
+    with bundled_indexed_authority().operation() as pinned:
         yield pinned
 
 
@@ -130,7 +129,7 @@ def test_the_grounding_row_reads_the_two_articles_the_manual_reasons_through() -
     A row that cited only one of the two would still classify correctly while
     losing the half of the reasoning that explains why.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         oracle = _oracle()
         expected = oracle["expected"]
 

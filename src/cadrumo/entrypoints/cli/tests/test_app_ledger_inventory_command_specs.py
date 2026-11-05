@@ -14,8 +14,8 @@ from cadrumo_client.commands.shared_contracts import (
 )
 
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
-from .._app_ledger_inventory_analysis_command_specs import LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS
-from .._app_ledger_inventory_command_specs import LEDGER_INVENTORY_COMMAND_SPECS
+from ..app_ledger_inventory_analysis_command_specs import LEDGER_INVENTORY_ANALYSIS_COMMAND_SPECS
+from ..app_ledger_inventory_command_specs import LEDGER_INVENTORY_COMMAND_SPECS
 from ..app_ledger_inventory_common_command_parameters import (
     INVENTORY_ACTIVIDAD_ID_ARGUMENT,
     INVENTORY_ACTIVIDAD_ID_OPTION,

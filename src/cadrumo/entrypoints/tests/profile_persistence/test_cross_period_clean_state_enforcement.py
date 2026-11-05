@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -26,7 +26,7 @@ from ....adapters.persistence.storage.operator_scope import build_operator_scope
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import create_user_profile_record
 
 __all__ = ["register_wizard_catalogue"]
 
@@ -179,19 +179,19 @@ def _seed_ready_profile(bucket_id: str, objects: SecureObjectRepository | None =
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
             ),
         )
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=bucket_id,
         facts=tuple(facts),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 
 
 def _seed_m100_profile_facts(bucket_id: str, objects: SecureObjectRepository | None) -> None:
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=bucket_id,
         facts=(
@@ -219,7 +219,7 @@ def _seed_m100_profile_facts(bucket_id: str, objects: SecureObjectRepository | N
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 

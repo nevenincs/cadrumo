@@ -15,16 +15,12 @@ from cadrumo.core.config import Settings
 from cadrumo.domain.buckets.event import BucketEventType
 
 from .evidence_test_support import (
-    BUCKET_ID as _BUCKET_ID,
-)
-from .evidence_test_support import (
-    _event_repo,
+    BUCKET_ID,
+    event_repo,
     isolated_settings,
+    make_svc,
     pdf_file,
     secure_objects,
-)
-from .evidence_test_support import (
-    make_svc as _make_svc,
 )
 from .evidence_test_support import runtime_profile as runtime_profile
 
@@ -41,14 +37,14 @@ class TestEvidenceEventEmission:
         secure_objects: SecureObjectRepository,
         pdf_file: Path,
     ) -> None:
-        svc = _make_svc(isolated_settings, secure_objects)
-        result = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_file)
+        svc = make_svc(isolated_settings, secure_objects)
+        result = svc.add(bucket_id=BUCKET_ID, source_path=pdf_file)
         assert len(result.bucket_event_ids) == 1
-        catalogue = _event_repo(secure_objects).load()
+        catalogue = event_repo(secure_objects).load()
         event = catalogue.events[result.bucket_event_ids[0]]
         assert event.event_type is BucketEventType.PURCHASE_INVOICE_EVIDENCE_ATTACHED
         assert event.object_id == result.record.evidence_id
-        assert event.bucket_id == _BUCKET_ID
+        assert event.bucket_id == BUCKET_ID
 
     def test_default_event_repository_uses_active_runtime_bucket(
         self,
@@ -56,14 +52,14 @@ class TestEvidenceEventEmission:
         secure_objects: SecureObjectRepository,
         pdf_file: Path,
     ) -> None:
-        svc = _make_svc(isolated_settings, secure_objects)
+        svc = make_svc(isolated_settings, secure_objects)
 
-        result = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_file)
+        result = svc.add(bucket_id=BUCKET_ID, source_path=pdf_file)
 
-        catalogue = _event_repo(secure_objects).load()
+        catalogue = event_repo(secure_objects).load()
         event = catalogue.events[result.bucket_event_ids[0]]
         assert event.event_type is BucketEventType.PURCHASE_INVOICE_EVIDENCE_ATTACHED
-        assert event.bucket_id == _BUCKET_ID
+        assert event.bucket_id == BUCKET_ID
 
     def test_update_emits_purchase_invoice_evidence_replaced(
         self,
@@ -71,15 +67,15 @@ class TestEvidenceEventEmission:
         secure_objects: SecureObjectRepository,
         pdf_file: Path,
     ) -> None:
-        svc = _make_svc(isolated_settings, secure_objects)
-        add_result = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_file)
+        svc = make_svc(isolated_settings, secure_objects)
+        add_result = svc.add(bucket_id=BUCKET_ID, source_path=pdf_file)
         update_result = svc.update(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             evidence_id=add_result.record.evidence_id,
             patch=PurchaseInvoiceEvidencePatch(notes="updated"),
         )
         assert len(update_result.bucket_event_ids) == 1
-        catalogue = _event_repo(secure_objects).load()
+        catalogue = event_repo(secure_objects).load()
         event = catalogue.events[update_result.bucket_event_ids[0]]
         assert event.event_type is BucketEventType.PURCHASE_INVOICE_EVIDENCE_REPLACED
         assert event.object_id == add_result.record.evidence_id
@@ -90,14 +86,14 @@ class TestEvidenceEventEmission:
         secure_objects: SecureObjectRepository,
         pdf_file: Path,
     ) -> None:
-        svc = _make_svc(isolated_settings, secure_objects)
-        add_result = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_file)
+        svc = make_svc(isolated_settings, secure_objects)
+        add_result = svc.add(bucket_id=BUCKET_ID, source_path=pdf_file)
         remove_result = svc.remove(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             evidence_id=add_result.record.evidence_id,
         )
         assert len(remove_result.bucket_event_ids) == 1
-        catalogue = _event_repo(secure_objects).load()
+        catalogue = event_repo(secure_objects).load()
         event = catalogue.events[remove_result.bucket_event_ids[0]]
         assert event.event_type is BucketEventType.PURCHASE_INVOICE_EVIDENCE_DETACHED
 
@@ -107,9 +103,9 @@ class TestEvidenceEventEmission:
         secure_objects: SecureObjectRepository,
         pdf_file: Path,
     ) -> None:
-        svc = _make_svc(isolated_settings, secure_objects)
+        svc = make_svc(isolated_settings, secure_objects)
         result = svc.add(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             source_path=pdf_file,
             supplier="Acme S.L.",
             invoice_number="INV-001",
@@ -124,15 +120,15 @@ class TestEvidenceEventEmission:
         secure_objects: SecureObjectRepository,
         pdf_file: Path,
     ) -> None:
-        svc = _make_svc(isolated_settings, secure_objects)
+        svc = make_svc(isolated_settings, secure_objects)
 
-        result = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_file, actor="operator-A")
+        result = svc.add(bucket_id=BUCKET_ID, source_path=pdf_file, actor="operator-A")
 
         store = AttachmentStore(objects=secure_objects)
         manifest = store.load_manifest(result.record.attachment_id)
         assert store.read_bytes(manifest.sha256) == pdf_file.read_bytes()
         assert manifest.attachment_id == result.record.source_sha256
-        assert manifest.bucket_id == _BUCKET_ID
+        assert manifest.bucket_id == BUCKET_ID
         assert manifest.captured_by == "operator-A"
         assert manifest.source_command == "aeat app ledger evidence add"
 
@@ -142,11 +138,11 @@ class TestEvidenceEventEmission:
         secure_objects: SecureObjectRepository,
         pdf_file: Path,
     ) -> None:
-        svc = _make_svc(isolated_settings, secure_objects)
-        add_result = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_file)
+        svc = make_svc(isolated_settings, secure_objects)
+        add_result = svc.add(bucket_id=BUCKET_ID, source_path=pdf_file)
         remove_result = svc.remove(
-            bucket_id=_BUCKET_ID,
+            bucket_id=BUCKET_ID,
             evidence_id=add_result.record.evidence_id,
         )
         assert remove_result.record == add_result.record
-        assert svc.list_all(bucket_id=_BUCKET_ID) == ()
+        assert svc.list_all(bucket_id=BUCKET_ID) == ()

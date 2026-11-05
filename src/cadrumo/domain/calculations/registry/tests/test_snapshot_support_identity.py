@@ -14,9 +14,9 @@ from ..schema_base import DateAxis
 from ..schema_catalogues import RegistryCatalogues
 from .artifact_runtime_support import minimal_catalogues, minimal_modelo, minimal_revision
 from .snapshot_support import (
-    _fixture_authority,
-    _fixture_authority_identity_digest,
     build_validated_snapshot,
+    fixture_authority,
+    fixture_authority_identity_digest,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -29,8 +29,8 @@ def _subject() -> tuple[ModeloDefinition, RegistryCatalogues]:
 def test_semantically_equal_typed_inputs_have_a_stable_identity() -> None:
     modelo, catalogues = _subject()
 
-    first = _fixture_authority_identity_digest(modelo, catalogues)
-    second = _fixture_authority_identity_digest(modelo.model_copy(deep=True), catalogues.model_copy(deep=True))
+    first = fixture_authority_identity_digest(modelo, catalogues)
+    second = fixture_authority_identity_digest(modelo.model_copy(deep=True), catalogues.model_copy(deep=True))
 
     assert first == second
     assert len(first) == 64
@@ -41,14 +41,14 @@ def test_an_excluded_semantic_field_participates_in_fixture_identity() -> None:
     modelo, catalogues = _subject()
     changed = modelo.model_copy(update={"title_localization_key": "test.schema.modelo.130.changed-title"})
 
-    assert _fixture_authority_identity_digest(changed, catalogues) != _fixture_authority_identity_digest(
+    assert fixture_authority_identity_digest(changed, catalogues) != fixture_authority_identity_digest(
         modelo, catalogues
     )
 
 
 def test_fixture_identity_is_accepted_by_governed_fact_resolution() -> None:
     modelo, catalogues = _subject()
-    authority = _fixture_authority(modelo, catalogues)
+    authority = fixture_authority(modelo, catalogues)
 
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
@@ -58,7 +58,7 @@ def test_fixture_identity_is_accepted_by_governed_fact_resolution() -> None:
         )
     )
 
-    assert resolved.authority_digest == _fixture_authority_identity_digest(modelo, catalogues)
+    assert resolved.authority_digest == fixture_authority_identity_digest(modelo, catalogues)
 
 
 def test_fixture_authority_does_not_upgrade_an_unsupported_filing_grade() -> None:

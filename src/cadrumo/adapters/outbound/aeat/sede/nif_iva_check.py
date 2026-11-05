@@ -43,13 +43,13 @@ from .....domain.calculations.registry.remote_state_guard import (
     RemoteStateGuardPolicy,
 )
 from .....domain.calculations.registry.schema_base import EvidenceTier
-from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ..browser.errors import BrowserError
 from ..browser.factory import default_browser_session_factory
 from ..browser.session import BrowserSession
-from ._adapter_utils import (
-    _LocateHelper,
-    _SedeCheckerModel,
+from ..playwright import PlaywrightError, PlaywrightTimeoutError
+from .adapter_utils import (
+    LocateHelper,
+    SedeCheckerModel,
     assert_query_browser_action_for,
     assert_read_landing,
     extract_marker_verdict,
@@ -57,13 +57,11 @@ from ._adapter_utils import (
     make_locate_helper,
     require_playwright_page,
 )
-from ._browser_constants import (
-    PLAYWRIGHT_WAIT_NETWORKIDLE as _WAIT_NETWORKIDLE,
-)
-from ._browser_constants import (
+from .browser_constants import (
+    PLAYWRIGHT_WAIT_NETWORKIDLE,
     default_viewport,
 )
-from ._browser_stage import build_playwright_stage_runner
+from .browser_stage import build_playwright_stage_runner
 from .errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNavigationError
 
 logger = get_logger(__name__)
@@ -131,7 +129,7 @@ def _assert_read_landing(page: Page) -> None:
     assert_nif_iva_read_landing(getattr(page, "url", "") or "")
 
 
-def _assert_query_browser_action(action: str) -> None:
+def assert_query_browser_action(action: str) -> None:
     assert_query_browser_action_for(READ_GUARD_POLICY, action)
 
 
@@ -141,7 +139,7 @@ _playwright_stage = build_playwright_stage_runner(
     logger=logger,
 )
 
-_locate: _LocateHelper = make_locate_helper("NIF-IVA")
+_locate: LocateHelper = make_locate_helper("NIF-IVA")
 
 DEFAULT_NIF_IVA_TIMEOUT_MS: int = 30000
 _COUNTRY_SELECTORS: tuple[str, ...] = (
@@ -177,7 +175,7 @@ _SUBMIT_SELECTORS: tuple[str, ...] = (
 )
 
 
-class SedeNifIvaCheckObservation(_SedeCheckerModel):
+class SedeNifIvaCheckObservation(SedeCheckerModel):
     """One observation emitted per declared NIF after live navigation.
 
     ``verdict`` is the AEAT/VIES-rendered validity for that NIF:
@@ -190,7 +188,7 @@ class SedeNifIvaCheckObservation(_SedeCheckerModel):
     raw_evidence_locator: str | None = Field(default=None, max_length=512)
 
 
-class NifIvaCheckResult(_SedeCheckerModel):
+class NifIvaCheckResult(SedeCheckerModel):
     """Aggregate live-driver result across all declared NIFs for one browser pass.
 
     Each entry in ``observations`` corresponds to one NIF submitted to the
@@ -240,7 +238,7 @@ async def collect_nif_iva_check_observations(
             f"{EXTERNAL.aeat.domains.sede}{EXTERNAL.aeat.help_pages.nif_iva_landing}",
         )
         await _playwright_stage(
-            page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=timeout_ms),
+            page.wait_for_load_state(PLAYWRIGHT_WAIT_NETWORKIDLE, timeout=timeout_ms),
             stage="wait-entry-networkidle",
             description="NIF-IVA sede entry network idle",
             timeout_ms=timeout_ms,
@@ -250,7 +248,7 @@ async def collect_nif_iva_check_observations(
         # Form servlet: now reachable with sede cookies set.
         await browser_session.navigate(page, EXTERNAL.aeat.oracles.nif_iva_verification)
         await _playwright_stage(
-            page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=timeout_ms),
+            page.wait_for_load_state(PLAYWRIGHT_WAIT_NETWORKIDLE, timeout=timeout_ms),
             stage="wait-form-networkidle",
             description="NIF-IVA form servlet network idle",
             timeout_ms=timeout_ms,
@@ -306,7 +304,7 @@ async def collect_nif_iva_check_observations(
 
 async def _open_nif_iva_form(page: Page, *, timeout_ms: int) -> None:
     """Wait for the country and IVA-number controls to become interactive."""
-    _assert_query_browser_action("open-nif-iva-form")
+    assert_query_browser_action("open-nif-iva-form")
     await _locate(
         page,
         _COUNTRY_SELECTORS,
@@ -330,13 +328,13 @@ async def _check_single_nif(
     timeout_ms: int,
 ) -> IdentityCheckVerdictValue:
     """Submit one NIF query and scrape the rendered verdict."""
-    _assert_query_browser_action(f"check-nif-{nif}")
-    country_code, iva_number = _split_vies_nif(nif)
+    assert_query_browser_action(f"check-nif-{nif}")
+    country_code, iva_number = split_vies_nif(nif)
     await _select_country_code(page, country_code, timeout_ms=timeout_ms)
     await _fill_iva_number(page, iva_number, timeout_ms=timeout_ms)
     await _click_query_button(page, timeout_ms=timeout_ms)
     await _playwright_stage(
-        page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=timeout_ms),
+        page.wait_for_load_state(PLAYWRIGHT_WAIT_NETWORKIDLE, timeout=timeout_ms),
         stage=f"check-nif-{nif}:wait-response",
         description="NIF-IVA response network idle",
         timeout_ms=timeout_ms,
@@ -352,10 +350,10 @@ async def _check_single_nif(
         description="NIF-IVA response body text",
         timeout_ms=timeout_ms,
     )
-    return extract_marker_verdict(body_text, positive_markers=_POSITIVE_MARKERS)
+    return extract_marker_verdict(body_text, positive_markers=NIF_IVA_CHECK_POSITIVE_MARKERS)
 
 
-_POSITIVE_MARKERS: tuple[str, ...] = (
+NIF_IVA_CHECK_POSITIVE_MARKERS: tuple[str, ...] = (
     "si consta",
     "si esta identificado",
     "operador intracomunitario identificado",
@@ -436,7 +434,7 @@ async def _click_expected(locator: Locator, *, stage: str, description: str, tim
     )
 
 
-def _split_vies_nif(nif: str) -> tuple[str, str]:
+def split_vies_nif(nif: str) -> tuple[str, str]:
     """Split a NIF-IVA into its country prefix and number, on the canonical normal form.
 
     Normalisation is :func:`~core.identity.nif_iva.normalise_nif_iva`, which is named

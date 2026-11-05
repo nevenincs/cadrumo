@@ -23,7 +23,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator
 from ...core.decimal.constants import ZERO
 from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.codes import normalise_iso_4217_currency
 from ...core.time.utc import UtcInstant
 from .errors import TransactionValidationError
@@ -68,7 +68,7 @@ class RawProvenance(BaseModel):
             financial provider.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     source_path: Path
     source_sha256: ContentDigest
@@ -151,7 +151,7 @@ class RawTransaction(BaseModel):
             stringified values, preserved verbatim for audit.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     provider_transaction_id: str = Field(min_length=1)
     booked_date: date

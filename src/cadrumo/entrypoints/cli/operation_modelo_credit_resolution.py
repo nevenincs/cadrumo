@@ -25,7 +25,7 @@ from ...application.modelo.credit_resolution_contracts import (
 )
 from ...application.modelo.credit_resolution_repository import CREDIT_RESOLUTION_MESSAGE_LOCALE_KEYS
 from ...core.operations import OperationEffect, OperationTerminalCondition
-from ._modelo_work_disagreement_payloads import DisagreementResolutionPayload, DisagreementSourcePayload
+from .modelo_work_disagreement_payloads import DisagreementResolutionPayload, DisagreementSourcePayload
 
 __all__ = [
     "accept_credit_resolution",

@@ -153,7 +153,7 @@ Each profile belongs to one program. The host validates a launch parameter again
 #### `kdf-child`
 
 - **Program:** `python`
-- **Started with:** `-S -m cadrumo.adapters.persistence.storage.custody._kdf_worker --request-handle <request:handle> --result-handle <result:handle>` on Windows; `-m cadrumo.adapters.persistence.storage.custody._kdf_worker --request-fd <request:descriptor> --result-fd <result:descriptor> --descriptor-bound <bound:descriptor>` on Linux and macOS
+- **Started with:** `-S -m cadrumo.adapters.persistence.storage.custody.kdf_worker --request-handle <request:handle> --result-handle <result:handle>` on Windows; `-m cadrumo.adapters.persistence.storage.custody.kdf_worker --request-fd <request:descriptor> --result-fd <result:descriptor> --descriptor-bound <bound:descriptor>` on Linux and macOS
 - **Starts from:** its caller's whole environment, unchanged
 - **Sets itself:** nothing
 - **Search path (`PATH`):** left as its caller sets it

@@ -32,11 +32,11 @@ from .....application.storage.calc_sheets.records import (
 )
 from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from ...workbook.calc_sheets_xlsx import materialize_export_plan
-from .._calc_sheets_apply_values import (
+from ..calc_sheets_apply import developer_metadata_pairs, plan_value_payload
+from ..calc_sheets_apply_values import (
     build_formula_data,
     written_cell_values,
 )
-from ..calc_sheets_apply import _developer_metadata_pairs, _plan_value_payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
@@ -64,11 +64,11 @@ def test_human_template_preview_preserves_zero_and_blank_without_technical_metad
         ),
         guide=SheetGuideContent(title="Ejemplo ficticio", paragraphs=("No válido para presentar.",)),
     )
-    online_values = written_cell_values(_plan_value_payload(plan))
+    online_values = written_cell_values(plan_value_payload(plan))
     offline_values = _offline_cell_values(materialize_export_plan(plan))
     assert all(offline_values.get(address, "") == value for address, value in online_values.items())
     assert offline_values == {"'Modelo'!A1": "Ejemplo ficticio", "'Modelo'!A2": 0}
-    assert _developer_metadata_pairs(plan) == []
+    assert developer_metadata_pairs(plan) == []
 
 
 def _plan(modelo: str, year: int, period: str, on: date) -> SheetExportPlan:
@@ -98,7 +98,7 @@ def test_offline_workbook_writes_exactly_the_online_payload_cells(
     on: date,
 ) -> None:
     plan = _plan(modelo, year, period, on)
-    online_payload = _plan_value_payload(plan) + build_formula_data(plan.formula_cells)
+    online_payload = plan_value_payload(plan) + build_formula_data(plan.formula_cells)
     online_values = written_cell_values(online_payload)
     online_addresses = frozenset(online_values)
 

@@ -26,7 +26,7 @@ import pytest
 from pydantic import BaseModel
 
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -83,8 +83,7 @@ from ....domain.calculations.registry.tests.authored_editions import (
 from ....domain.contribuyente.renta_codes import RentaDeclaracionType, RentaMaritalStatus
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from .file_flow_test_support import calculation_ports_for_test
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -167,7 +166,7 @@ def _seed_taxpayer(renta_facts: tuple[UserProfileFact, ...], *, economic_activit
         else _SALARIED_FACTS
     )
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
@@ -179,7 +178,7 @@ def _seed_taxpayer(renta_facts: tuple[UserProfileFact, ...], *, economic_activit
             ),
             created_at=datetime(2026, 4, 1, tzinfo=UTC),
             updated_at=datetime(2026, 4, 1, tzinfo=UTC),
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 

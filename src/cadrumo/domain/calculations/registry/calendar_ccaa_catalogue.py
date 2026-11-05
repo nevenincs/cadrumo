@@ -109,10 +109,10 @@ def _integer(entries: Mapping[str, str], key: str) -> int:
 _ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
 
 
-_ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY)
+ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY)
 
 
-def _catalogue(entries: Mapping[str, str]) -> CalendarCcaaCatalogue:
+def catalogue(entries: Mapping[str, str]) -> CalendarCcaaCatalogue:
     definitions: list[CalendarCcaaDefinition] = []
     for raw_code in unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT):
         definitions.append(_territory_definition(entries, raw_code))
@@ -161,7 +161,7 @@ def resolve_calendar_ccaa_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> CalendarCcaaCatalogue:
     """Resolve the selected dated deadline-calendar territory catalogue."""
-    return _catalogue(_ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority))
+    return catalogue(ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority))
 
 
 __all__ = [

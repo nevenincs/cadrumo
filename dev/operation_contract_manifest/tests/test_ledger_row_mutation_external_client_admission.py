@@ -222,7 +222,7 @@ def test_the_real_resolvers_refuse_a_row_of_another_profile_on_every_frontend(
 
 
 def _run[ResultT: BaseModel](
-    driver: conformance._ExecutionDriver,
+    driver: conformance.ExecutionDriver,
     registry: OperationRegistry,
     *,
     definition_id: str,
@@ -236,7 +236,7 @@ def _run[ResultT: BaseModel](
     )
     assert observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED, definition_id
     assert observed.projection.effect is OperationEffect.UPDATED, definition_id
-    return conformance._resolve_result_projection(
+    return conformance.resolve_result_projection(
         driver,
         registry,
         definition_id=definition_id,

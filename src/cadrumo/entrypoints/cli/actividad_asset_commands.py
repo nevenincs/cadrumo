@@ -16,15 +16,15 @@ from ...domain.renta.actividad_asset.disposal import ActivityAssetDisposalReason
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
 from ...domain.renta.actividad_asset.register_records import AcquisitionDocumentKind, ActivityAssetDescriptorFacts
 from ...domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge, parse_requested_free_amount
-from ._actividad_asset_payloads import (
+from .actividad_asset_payloads import (
     ActivityAssetFilingHandoffPayload,
     ActivityAssetForecastPayload,
     ActivityAssetHistoryPayload,
     ActivityAssetReadPayload,
 )
-from ._date_parsing import _parse_iso_date
 from .actividad_asset_receipts import claim_receipt, inspection_receipt
 from .common import emit_envelope
+from .date_parsing import parse_iso_date
 from .operation_ledger_actividad_asset import (
     acquisition_candidates_activity_asset,
     calculate_activity_asset_disposal,
@@ -116,7 +116,7 @@ def actividad_asset_inspect(ctx: typer.Context, asset_id: str) -> None:
     )
 
 
-def _correction_revision(revision_json: str) -> ActivityAssetRevision:
+def correction_revision(revision_json: str) -> ActivityAssetRevision:
     """Parse a correction's revision, which states its baja or states null to remove it."""
     revision = ActivityAssetRevision.model_validate_json(revision_json)
     if "disposal" not in revision.model_fields_set:
@@ -133,7 +133,7 @@ def actividad_asset_correct(
     """Append a typed JSON correction revision, with the claims it replaces in the same write."""
     result = correct_activity_asset(
         ctx,
-        revision=_correction_revision(revision_json),
+        revision=correction_revision(revision_json),
         superseding_claims=(
             () if superseding_claims_json is None else _SUPERSEDING_CLAIMS.validate_json(superseding_claims_json)
         ),
@@ -162,8 +162,8 @@ def actividad_asset_forecast(
     result = forecast_activity_asset(
         ctx,
         asset_id=asset_id,
-        covered_from=_parse_iso_date(covered_from, label="covered-from"),
-        covered_until=_parse_iso_date(covered_until, label="covered-until"),
+        covered_from=parse_iso_date(covered_from, label="covered-from"),
+        covered_until=parse_iso_date(covered_until, label="covered-until"),
         requested_free_amount=parse_requested_free_amount(free_depreciation_amount),
         supersedes_claim_id=supersedes_claim_id,
     )
@@ -268,7 +268,7 @@ def _disposal(
     later_affectation_on: str | None,
 ) -> ActivityAssetDisposalSnapshot:
     return ActivityAssetDisposalSnapshot(
-        disposal_date=_parse_iso_date(disposal_date, label="disposal-date"),
+        disposal_date=parse_iso_date(disposal_date, label="disposal-date"),
         reason=ActivityAssetDisposalReason(reason),
         proceeds=PublicDecimal(decimal=proceeds),
         transmission_costs=PublicDecimal(decimal=transmission_costs),
@@ -279,9 +279,7 @@ def _disposal(
             else PriorFreeDepreciationRegime(prior_free_depreciation_regime)
         ),
         later_affectation_on=(
-            None
-            if later_affectation_on is None
-            else _parse_iso_date(later_affectation_on, label="later-affectation-on")
+            None if later_affectation_on is None else parse_iso_date(later_affectation_on, label="later-affectation-on")
         ),
     )
 
@@ -322,7 +320,7 @@ def actividad_asset_dispose(
     )
 
 
-def _stated_disposal(
+def stated_disposal(
     disposal_date: str | None,
     reason: str | None,
     proceeds: str | None,
@@ -368,7 +366,7 @@ def actividad_asset_disposal_calculate(
     later_affectation_on: str | None = None,
 ) -> None:
     """Work out a baja's figures: the one these options state as a preview, or else the recorded one."""
-    stated = _stated_disposal(
+    stated = stated_disposal(
         disposal_date,
         reason,
         proceeds,
@@ -411,13 +409,13 @@ def actividad_asset_plan(ctx: typer.Context, asset_id: str) -> None:
         result,
         *(
             f"{row.tax_year}\t{row.planned.decimal if row.planned else row.absence or ''}"
-            f"\t{row.claimed.decimal}\t{row.claim_state.value}\t{_minimum_amortization_fields(row)}"
+            f"\t{row.claimed.decimal}\t{row.claim_state.value}\t{minimum_amortization_fields(row)}"
             for row in result.rows or ()
         ),
     )
 
 
-def _minimum_amortization_fields(row: ActivityAssetPlanRow) -> str:
+def minimum_amortization_fields(row: ActivityAssetPlanRow) -> str:
     """Label the served minimum amortization, naming a year without authority rather than hiding it.
 
     A figure from an incomplete walk leaves a year out, so it carries the word

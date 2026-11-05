@@ -11,8 +11,8 @@ from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...google.artifact_receipt_store import GoogleArtifactReceiptStore
 from ...google.root_folder import ensure_root_folder
 from ...google.tests.drive_files_server import drive_files_endpoint
-from .._google_drive import GoogleDriveProvider
 from ..errors import OutboundStorageConflictError
+from ..google_drive import GoogleDriveProvider
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_outbound_adapter]
 _PROFILE = UUID("3d2a9c41-7f5e-4b0a-9c1d-5e8f7a6b4c32")

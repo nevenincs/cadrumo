@@ -33,9 +33,9 @@ from .. import oauth_flow as oauth_flow_module
 from .. import sign_in_state as sign_in_state_module
 from ..active_profile import resolve_active_profile
 from ..oauth_flow import (
-    _decode_email_from_id_token,
-    _raise_local_server_error,
     credentials_to_records,
+    decode_email_from_id_token,
+    raise_local_server_error,
     require_resolvable_profile_record,
 )
 from ..records import REQUIRED_SCOPES
@@ -418,7 +418,7 @@ def test_local_oauth_external_refusals_have_exact_runtime_safety_verdicts(
     facts: dict[str, bool],
 ) -> None:
     with pytest.raises(GoogleAuthError) as raised:
-        _raise_local_server_error(upstream)
+        raise_local_server_error(upstream)
 
     assert raised.value.__cause__ is None
     assert raised.value.__suppress_context__
@@ -434,7 +434,7 @@ def test_local_oauth_external_refusals_have_exact_runtime_safety_verdicts(
 def test_missing_identity_assertion_has_an_exact_runtime_safety_verdict() -> None:
     credentials = Credentials(token="short-lived-access-token")
     with pytest.raises(GoogleAuthError) as raised:
-        _decode_email_from_id_token(
+        decode_email_from_id_token(
             credentials, audience="desktop-client.apps.googleusercontent.com", expected_nonce="synthetic-nonce"
         )
 

@@ -8,7 +8,7 @@ from cadrumo.application.user_profile.preflight import build_profile_preflight_r
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.tests.published_authority import published_profile_schema
-from cadrumo.entrypoints.overview_read_composition import _refusal_requirements
+from cadrumo.entrypoints.overview_read_composition import refusal_requirements
 
 _ENTITY_TYPE_SELECTOR = "taxpayer.entity_type"
 _IRPF_INCOME_CATEGORIES_SELECTOR = "taxpayer.irpf_income_categories"
@@ -20,7 +20,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 def test_an_undeclared_entity_type_is_named_rather_than_summarised() -> None:
     """The refusal names the entity-type field, not only "model undeclared"."""
     with bundled_indexed_authority().operation() as operation:
-        requirements = _refusal_requirements(
+        requirements = refusal_requirements(
             operation=operation, taxpayer=_profile(), taxpayer_model_declared=False, warning_codes=()
         )
     assert any(_label_for(_ENTITY_TYPE_SELECTOR) in requirement for requirement in requirements)
@@ -36,7 +36,7 @@ def test_a_natural_person_without_income_categories_is_told_about_the_categories
     from cadrumo.domain.contribuyente.entity_type import EntityType
 
     with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
-        requirements = _refusal_requirements(
+        requirements = refusal_requirements(
             operation=operation,
             taxpayer=_profile(entity_type=EntityType.from_registry("natural_person")),
             taxpayer_model_declared=False,

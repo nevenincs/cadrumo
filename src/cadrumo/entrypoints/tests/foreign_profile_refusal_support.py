@@ -13,7 +13,7 @@ from . import registered_executor_case_support as conformance
 
 
 def assert_refused_for_foreign_active_profile(
-    driver: conformance._ExecutionDriver,
+    driver: conformance.ExecutionDriver,
     *,
     definition_id: str,
     subject_ref: str,

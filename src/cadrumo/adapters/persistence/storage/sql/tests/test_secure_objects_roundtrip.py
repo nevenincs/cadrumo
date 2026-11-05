@@ -27,11 +27,11 @@ from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..orm import SecureObjectRow
 from ..secure_object_records import SecureObjectRecord, SecureObjectUnreadable
 from ..secure_objects import SecureObjectRepository
-from ._secure_objects_support import (
-    _ephemeral_secure_repo,
-    _seed_under_key,
-)
 from .raw_key_writer import save_with_raw_key
+from .secure_objects_support import (
+    ephemeral_secure_repo,
+    seed_under_key,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -74,7 +74,7 @@ def test_revision_id_round_trips_for_self_consistency_check(tmp_path: Path) -> N
     from ..secure_object_crypto import derive_revision_id
     from ..session import session_scope
 
-    with _ephemeral_secure_repo(tmp_path, "revision-fidelity.db") as (_db_path, engine, repo):
+    with ephemeral_secure_repo(tmp_path, "revision-fidelity.db") as (_db_path, engine, repo):
         # Two writes to the same key so the second row carries a populated
         # previous_revision_id / previous_payload_hash lineage chain.
         repo.save(
@@ -145,7 +145,7 @@ def test_save_refuses_a_written_at_that_could_not_be_read_back(
     the refusal must happen BEFORE the row is committed.
     """
 
-    with _ephemeral_secure_repo(tmp_path, f"written-at-{label}.db") as (_db_path, engine, repo):
+    with ephemeral_secure_repo(tmp_path, f"written-at-{label}.db") as (_db_path, engine, repo):
         with pytest.raises(CoreValidationError):
             repo.save(
                 namespace="aeat-test",
@@ -177,7 +177,7 @@ def test_save_accepts_and_reads_back_a_utc_aware_written_at(tmp_path: Path) -> N
     """
 
     written_at = datetime(2026, 5, 1, 12, 0, tzinfo=UTC)
-    with _ephemeral_secure_repo(tmp_path, "written-at-utc.db") as (_db_path, _engine, repo):
+    with ephemeral_secure_repo(tmp_path, "written-at-utc.db") as (_db_path, _engine, repo):
         repo.save(
             namespace="aeat-test",
             object_key="key-utc",
@@ -207,7 +207,7 @@ def test_secure_object_write_dto_and_save_share_one_written_at_contract(tmp_path
 
     offset_instant = datetime(2026, 5, 1, 12, 0, tzinfo=timezone(timedelta(hours=1)))
     with (
-        _ephemeral_secure_repo(tmp_path, "written-at-dto.db") as (_db_path, _engine, repo),
+        ephemeral_secure_repo(tmp_path, "written-at-dto.db") as (_db_path, _engine, repo),
         pytest.raises(CoreValidationError),
     ):
         repo.save_many(
@@ -238,7 +238,7 @@ def test_revision_lineage_tamper_fails_closed(tmp_path: Path) -> None:
     is orthogonal to the AEAD payload authentication.
     """
 
-    with _ephemeral_secure_repo(tmp_path, "lineage-tamper.db") as (db_path, _engine, repo):
+    with ephemeral_secure_repo(tmp_path, "lineage-tamper.db") as (db_path, _engine, repo):
         repo.save(
             namespace="aeat-test",
             object_key="key-tamper",
@@ -293,7 +293,7 @@ def test_secure_object_row_substitution_fails_closed(tmp_path: Path) -> None:
     the anti-tautology proof for the at-rest row-substitution gap.
     """
 
-    with _ephemeral_secure_repo(tmp_path, "substitution.db") as (db_path, _engine, repo):
+    with ephemeral_secure_repo(tmp_path, "substitution.db") as (db_path, _engine, repo):
         for key, body in (("key-alpha", b"alpha-secret-payload"), ("key-beta", b"beta-secret-payload")):
             repo.save(
                 namespace="aeat-test",
@@ -331,7 +331,7 @@ def test_secure_object_row_substitution_fails_closed(tmp_path: Path) -> None:
 def test_secure_object_payload_is_encrypted_in_database(tmp_path: Path) -> None:
     """Sensitive payload bytes round-trip without plaintext landing in SQLite."""
 
-    with _ephemeral_secure_repo(tmp_path, "secure.db") as (db_path, _engine, repo):
+    with ephemeral_secure_repo(tmp_path, "secure.db") as (db_path, _engine, repo):
         payload = b"SECURE_OBJECT_CANARY_tax_financial_payload"
         natural_key = "CSV1234-sensitive-natural-key"
         repo.save(
@@ -377,7 +377,7 @@ def test_secure_object_record_roundtrip_preserves_full_record_fields(tmp_path: P
     SQLite returns naive, so the boundary is lossless for the instant too.
     """
 
-    with _ephemeral_secure_repo(tmp_path, "record.db") as (db_path, _engine, repo):
+    with ephemeral_secure_repo(tmp_path, "record.db") as (db_path, _engine, repo):
         namespace = "cadrumo-test.record"
         natural_key = "record-key-non-default"
         written_at = datetime(2026, 5, 21, 10, 30, 0, tzinfo=UTC)
@@ -450,7 +450,7 @@ def test_secure_object_table_materializes_revision_integrity_columns(tmp_path: P
 def test_secure_object_record_schema_version_mutation_breaks_roundtrip(tmp_path: Path) -> None:
     """A database-side metadata mutation must not still load as the original record."""
 
-    with _ephemeral_secure_repo(tmp_path, "record-mutation.db") as (db_path, _engine, repo):
+    with ephemeral_secure_repo(tmp_path, "record-mutation.db") as (db_path, _engine, repo):
         namespace = "cadrumo-test.record.mutation"
         natural_key = "record-key"
         repo.save(
@@ -502,7 +502,7 @@ def test_secure_object_record_schema_version_mutation_breaks_roundtrip(tmp_path:
 def test_secure_object_record_older_schema_version_is_refused(tmp_path: Path) -> None:
     """A row below the consumer's current version is never migrated implicitly."""
 
-    with _ephemeral_secure_repo(tmp_path, "record-older-schema.db") as (_db_path, _engine, repo):
+    with ephemeral_secure_repo(tmp_path, "record-older-schema.db") as (_db_path, _engine, repo):
         namespace = "cadrumo-test.record.older-schema"
         natural_key = "record-key"
         repo.save(
@@ -534,7 +534,7 @@ def test_secure_object_record_older_schema_version_is_refused(tmp_path: Path) ->
 def test_secure_object_load_classification_error_is_localized_and_redacted(tmp_path: Path) -> None:
     """Load-time classification failures do not expose natural or lookup keys."""
 
-    with _ephemeral_secure_repo(tmp_path, "load-classification-redaction.db") as (db_path, _engine, repo):
+    with ephemeral_secure_repo(tmp_path, "load-classification-redaction.db") as (db_path, _engine, repo):
         namespace = "cadrumo-test.load.classification"
         natural_key = "classification-secret-key"
         repo.save(
@@ -577,7 +577,7 @@ def test_secure_object_load_classification_error_is_localized_and_redacted(tmp_p
 def test_secure_object_raw_key_validation_errors_are_localized(tmp_path: Path) -> None:
     """Raw-key public helpers reject malformed digests with translated errors."""
 
-    with _ephemeral_secure_repo(tmp_path, "raw-key-localized.db") as (_db_path, _engine, repo):
+    with ephemeral_secure_repo(tmp_path, "raw-key-localized.db") as (_db_path, _engine, repo):
         with pytest.raises(StorageValidationError) as exists_raised:
             repo.exists_by_raw_key("cadrumo-test.raw", b"short")
         assert (
@@ -605,7 +605,7 @@ def test_secure_object_raw_key_validation_errors_are_localized(tmp_path: Path) -
 def test_secure_object_batch_size_validation_error_is_localized(tmp_path: Path) -> None:
     """Batch-size validation uses the translated storage-validation key."""
 
-    with _ephemeral_secure_repo(tmp_path, "batch-size-localized.db") as (_db_path, _engine, repo):
+    with ephemeral_secure_repo(tmp_path, "batch-size-localized.db") as (_db_path, _engine, repo):
         with pytest.raises(StorageValidationError) as raised:
             list(
                 repo.iter_records_with_failures(
@@ -636,7 +636,7 @@ def test_list_records_fails_closed_when_any_row_is_unreadable(
     namespace = "cadrumo-test.rotation"
 
     # Seed a row under the OLD key, leaving the ciphertext at rest.
-    _seed_under_key(
+    seed_under_key(
         db_path=db_path,
         provider=key_old,
         namespace=namespace,
@@ -691,7 +691,7 @@ def test_list_records_fails_closed_when_any_row_is_unreadable(
 def test_list_records_does_not_yield_partial_subset_before_failure(tmp_path: Path) -> None:
     """The fail-closed list path buffers all readable rows before yielding."""
 
-    with _ephemeral_secure_repo(tmp_path, "metadata-order.db") as (db_path, _engine, repo):
+    with ephemeral_secure_repo(tmp_path, "metadata-order.db") as (db_path, _engine, repo):
         namespace = "cadrumo-test.metadata.order"
         repo.save(
             namespace=namespace,
@@ -719,7 +719,7 @@ def test_list_records_does_not_yield_partial_subset_before_failure(tmp_path: Pat
 def test_list_records_yields_records_when_every_row_is_readable(tmp_path: Path) -> None:
     """Readable namespaces still yield records through the default list path."""
 
-    with _ephemeral_secure_repo(tmp_path, "readable-list.db") as (_db_path, _engine, repo):
+    with ephemeral_secure_repo(tmp_path, "readable-list.db") as (_db_path, _engine, repo):
         repo.save(
             namespace="cadrumo-test.readable.list",
             object_key="readable-key",
@@ -750,7 +750,7 @@ def test_list_records_rejects_unreadable_row_before_readable_subset(
     key_new = EphemeralBucketSession()
     namespace = "cadrumo-test.rotation.readable"
 
-    _seed_under_key(
+    seed_under_key(
         db_path=db_path,
         provider=key_old,
         namespace=namespace,
@@ -803,7 +803,7 @@ def test_iter_records_with_failures_yields_typed_outcomes_for_each_row(
         ("row-1-old", b"old-1-plaintext"),
         ("row-2-old", b"old-2-plaintext"),
     ):
-        _seed_under_key(
+        seed_under_key(
             db_path=db_path,
             provider=key_old,
             namespace=namespace,
@@ -848,7 +848,7 @@ def test_iter_records_with_failures_yields_typed_outcomes_for_each_row(
 def test_iter_records_with_failures_yields_metadata_contract_failures(tmp_path: Path) -> None:
     """Row-level metadata failures surface as typed unreadable outcomes."""
 
-    with _ephemeral_secure_repo(tmp_path, "metadata-failures.db") as (db_path, _engine, repo):
+    with ephemeral_secure_repo(tmp_path, "metadata-failures.db") as (db_path, _engine, repo):
         namespace = "cadrumo-test.metadata.failures"
         repo.save(
             namespace=namespace,

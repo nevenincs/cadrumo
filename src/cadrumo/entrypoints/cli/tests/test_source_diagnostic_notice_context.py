@@ -26,7 +26,7 @@ from ....domain.calculations.registry.relations import (
     relation_source_requirements,
 )
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
-from .._modelo_rendering import source_diagnostic_notice
+from ..modelo_rendering import source_diagnostic_notice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -9,17 +9,18 @@ from decimal import Decimal
 
 from ....core.casilla_id import CasillaId
 from ....core.decimal.constants import ONE, ZERO
-from . import _formula_runtime_irnr as _irnr
-from . import _formula_runtime_m131 as _m131
-from . import formula_runtime_m100 as _m100
-from ._formula_operator_contracts import require_formula_operator_arity
+from . import formula_runtime_irnr, formula_runtime_m100, formula_runtime_m131
 from .errors import RegistryValidationError
-from .formula_runtime_ops import RegistryUnresolvedOutcomeReason, UnresolvedFormulaOutcomeError
-from .formula_runtime_ops import UnresolvedFormulaDependencyError as _UnresolvedFormulaDependencyError
-from .formula_runtime_ops import evaluate_args_op as _evaluate_args_op
-from .formula_runtime_ops import numeric_casilla_value as _numeric_casilla_value
-from .formula_runtime_ops import resolve_bracket as _resolve_bracket
-from .formula_runtime_ops import resolve_scalar_parameter as _resolve_scalar_parameter
+from .formula_operator_contracts import require_formula_operator_arity
+from .formula_runtime_ops import (
+    RegistryUnresolvedOutcomeReason,
+    UnresolvedFormulaDependencyError,
+    UnresolvedFormulaOutcomeError,
+    evaluate_args_op,
+    numeric_casilla_value,
+    resolve_bracket,
+    resolve_scalar_parameter,
+)
 from .ids import BindingId, RelationId
 from .schema_formula import FormulaExpression, ParameterDefinition
 
@@ -137,7 +138,7 @@ def evaluate_with_context(expression: FormulaExpression, ctx: EvalContext) -> De
     if evaluator is not None:
         return evaluator(expression, ctx)
     args = [evaluate_with_context(arg, ctx) for arg in expression.args]
-    return _evaluate_args_op(op, args)
+    return evaluate_args_op(op, args)
 
 
 def _evaluate_lookup_bracket(expression: FormulaExpression, ctx: EvalContext) -> Decimal:
@@ -155,7 +156,7 @@ def _evaluate_lookup_bracket(expression: FormulaExpression, ctx: EvalContext) ->
         )
     base = evaluate_with_context(expression.args[0], ctx)
     ctx.operand_refs.append(bracket_arg.parameter)
-    result = _resolve_bracket(bracket_param, base, ctx.date_context)
+    result = resolve_bracket(bracket_param, base, ctx.date_context)
     ctx.operand_values.append(result)
     return result
 
@@ -194,7 +195,7 @@ def _evaluate_lookup_bracket_by_ccaa(expression: FormulaExpression, ctx: EvalCon
     base = evaluate_with_context(expression.args[0], ctx)
     ctx.operand_refs.append(binding_arg.binding)
     ctx.operand_refs.append(bracket_param_id)
-    result = _resolve_bracket(bracket_param, base, ctx.date_context)
+    result = resolve_bracket(bracket_param, base, ctx.date_context)
     ctx.operand_values.append(result)
     return result
 
@@ -250,7 +251,7 @@ def _evaluate_lookup_parameter_by_entity_type(expression: FormulaExpression, ctx
         )
     scalar_param_id = dispatch_table[dispatch_key]
     ctx.operand_refs.append(binding_arg.binding)
-    return _resolve_scalar_parameter(scalar_param_id, ctx, op=op)
+    return resolve_scalar_parameter(scalar_param_id, ctx, op=op)
 
 
 def _evaluate_lookup_bracket_by_entity_type(expression: FormulaExpression, ctx: EvalContext) -> Decimal:
@@ -325,7 +326,7 @@ def _evaluate_lookup_bracket_by_entity_type(expression: FormulaExpression, ctx: 
     base = evaluate_with_context(expression.args[0], ctx)
     ctx.operand_refs.append(binding_arg.binding)
     ctx.operand_refs.append(bracket_param_id)
-    result = _resolve_bracket(bracket_param, base, ctx.date_context)
+    result = resolve_bracket(bracket_param, base, ctx.date_context)
     ctx.operand_values.append(result)
     return result
 
@@ -354,7 +355,7 @@ def _evaluate_record_row_unused(expression: FormulaExpression, ctx: EvalContext)
     elif occupied is True or supplied:
         result = ZERO
     else:
-        raise _UnresolvedFormulaDependencyError((binding_id,))
+        raise UnresolvedFormulaDependencyError((binding_id,))
     ctx.operand_refs.append(binding_id)
     ctx.operand_values.append(result)
     return result
@@ -362,21 +363,21 @@ def _evaluate_record_row_unused(expression: FormulaExpression, ctx: EvalContext)
 
 def _text_binding_operand(key: BindingId, ctx: EvalContext) -> str:
     if key in ctx.unresolved_binding_ids:
-        raise _UnresolvedFormulaDependencyError((key,))
+        raise UnresolvedFormulaDependencyError((key,))
     if key in ctx.binding_values or key in ctx.boolean_binding_values or key in ctx.date_binding_values:
         raise RegistryValidationError("text_equal operand has a non-text or ambiguous channel")
     value = ctx.enum_binding_values.get(key)
     if value is None:
         # An undeclared fact is unknown, not a malformed operand: the comparison and every
         # casilla that depends on it stay unresolved until the fact is supplied.
-        raise _UnresolvedFormulaDependencyError((key,))
+        raise UnresolvedFormulaDependencyError((key,))
     ctx.operand_refs.append(key)
     return value
 
 
 def _text_casilla_operand(key: CasillaId, ctx: EvalContext) -> str | None:
     if key in ctx.unresolved_casilla_ids:
-        raise _UnresolvedFormulaDependencyError((key,))
+        raise UnresolvedFormulaDependencyError((key,))
     if key not in ctx.text_casilla_ids or key in ctx.values:
         raise RegistryValidationError("text_equal operand is not a text casilla")
     value = ctx.text_values.get(key)
@@ -506,7 +507,7 @@ def _evaluate_binding_leaf(binding_id: BindingId, ctx: EvalContext) -> Decimal:
         return value
     if binding_id not in ctx.binding_values:
         if binding_id in ctx.unresolved_binding_ids:
-            raise _UnresolvedFormulaDependencyError((binding_id,))
+            raise UnresolvedFormulaDependencyError((binding_id,))
         raise RegistryValidationError(
             f"binding {binding_id!r} has no supplied value",
             translated_message="errors.calc.binding_value_missing",
@@ -534,13 +535,13 @@ def _evaluate_leaf(expression: FormulaExpression, ctx: EvalContext) -> Decimal:
     if expression.literal is not None:
         return expression.literal
     if expression.casilla_id is not None:
-        return _numeric_casilla_value(expression.casilla_id, ctx)
+        return numeric_casilla_value(expression.casilla_id, ctx)
     if expression.binding is not None:
         return _evaluate_binding_leaf(expression.binding, ctx)
     if expression.date_binding is not None:
         _reject_date_binding_leaf(expression.date_binding)
     if expression.parameter is not None:
-        return _resolve_scalar_parameter(expression.parameter, ctx, op="formula_parameter")
+        return resolve_scalar_parameter(expression.parameter, ctx, op="formula_parameter")
     raise RegistryValidationError(
         "empty formula expression",
         translated_message="errors.calc.empty_expression",
@@ -551,9 +552,9 @@ _FormulaExpressionEvaluator = Callable[[FormulaExpression, EvalContext], Decimal
 SPECIALIZED_EXPRESSION_EVALUATORS: dict[str, _FormulaExpressionEvaluator] = {
     "lookup_bracket": _evaluate_lookup_bracket,
     "lookup_bracket_by_ccaa": _evaluate_lookup_bracket_by_ccaa,
-    "m100_resolve_renta_inmobiliaria_imputada": _m100.evaluate_m100_resolve_renta_inmobiliaria_imputada,
-    "irnr_resolve_tipo_gravamen": _irnr.evaluate_irnr_resolve_tipo_gravamen,
-    "m210_resolve_base_imponible": _irnr.evaluate_m210_resolve_base_imponible,
+    "m100_resolve_renta_inmobiliaria_imputada": formula_runtime_m100.evaluate_m100_resolve_renta_inmobiliaria_imputada,
+    "irnr_resolve_tipo_gravamen": formula_runtime_irnr.evaluate_irnr_resolve_tipo_gravamen,
+    "m210_resolve_base_imponible": formula_runtime_irnr.evaluate_m210_resolve_base_imponible,
     "lookup_parameter_by_entity_type": _evaluate_lookup_parameter_by_entity_type,
     "lookup_bracket_by_entity_type": _evaluate_lookup_bracket_by_entity_type,
     "if_then_else": _evaluate_if_then_else,
@@ -562,15 +563,17 @@ SPECIALIZED_EXPRESSION_EVALUATORS: dict[str, _FormulaExpressionEvaluator] = {
     "text_equal": _evaluate_text_equal,
     "record_row_unused": _evaluate_record_row_unused,
     "age_at_year_end": _evaluate_age_at_year_end,
-    "m131_resolve_modulos_previo": _m131.evaluate_m131_resolve_modulos_previo,
-    "m131_resolve_modulos_minoracion_empleo": _m131.evaluate_m131_resolve_modulos_minoracion_empleo,
-    "m131_resolve_modulos_indice_exceso": _m131.evaluate_m131_resolve_modulos_indice_exceso,
-    "m131_resolve_modulos_indices_generales": _m131.evaluate_m131_resolve_modulos_indices_generales,
+    "m131_resolve_modulos_previo": formula_runtime_m131.evaluate_m131_resolve_modulos_previo,
+    "m131_resolve_modulos_minoracion_empleo": formula_runtime_m131.evaluate_m131_resolve_modulos_minoracion_empleo,
+    "m131_resolve_modulos_indice_exceso": formula_runtime_m131.evaluate_m131_resolve_modulos_indice_exceso,
+    "m131_resolve_modulos_indices_generales": formula_runtime_m131.evaluate_m131_resolve_modulos_indices_generales,
     "m131_resolve_modulos_pequena_dimension_ignorado_flag": (
-        _m131.evaluate_m131_resolve_modulos_pequena_dimension_ignorado_flag
+        formula_runtime_m131.evaluate_m131_resolve_modulos_pequena_dimension_ignorado_flag
     ),
     "m131_resolve_modulos_temporada_inicio_conflicto_flag": (
-        _m131.evaluate_m131_resolve_modulos_temporada_inicio_conflicto_flag
+        formula_runtime_m131.evaluate_m131_resolve_modulos_temporada_inicio_conflicto_flag
     ),
-    "m100_resolve_eo_agraria_indices_correctores": _m100.evaluate_m100_resolve_eo_agraria_indices_correctores,
+    "m100_resolve_eo_agraria_indices_correctores": (
+        formula_runtime_m100.evaluate_m100_resolve_eo_agraria_indices_correctores
+    ),
 }

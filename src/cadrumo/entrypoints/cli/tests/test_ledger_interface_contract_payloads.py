@@ -20,11 +20,6 @@ from ....application.ledger.models import LedgerExportResult, LedgerExportRow
 from ....domain.invoices.enums import InvoiceClass, IvaRate, PaymentStatus
 from ....domain.iva.schema import InvoiceKind
 from ....domain.transactions.enums import BusinessClassification
-from .._ledger_llm_payloads import (
-    LedgerClassifyLlmRejectResult,
-    LedgerClassifyLlmSaturateResult,
-    LedgerClassifyLlmSuggestResult,
-)
 from ..ledger_business_payloads import (
     EvidenceListResult,
     EvidenceRecordPayload,
@@ -43,6 +38,11 @@ from ..ledger_interchange_results import (
     LedgerExportRowPayload,
     LedgerImportTransactionRefPayload,
 )
+from ..ledger_llm_payloads import (
+    LedgerClassifyLlmRejectResult,
+    LedgerClassifyLlmSaturateResult,
+    LedgerClassifyLlmSuggestResult,
+)
 from ..ledger_ratios_results import (
     RatiosEligibleResult,
     RatiosEligibleRowPayload,
@@ -57,8 +57,8 @@ from ..ledger_results import (
     LedgerHistoryResult,
     LedgerLinkResult,
     LedgerListRowPayload,
+    LedgerMutationResult,
     TransactionPayload,
-    _LedgerMutationResult,
 )
 from ..ledger_rule_results import RuleApplyAppliedPayload, RuleApplyResult
 from ..modelo_query_results import LedgerIssuePayload
@@ -122,7 +122,7 @@ def test_readiness_issue_payloads_keep_the_domain_detail_requirement() -> None:
 
 def test_add_result_subclasses_mutation_quintet_and_carries_review_status() -> None:
     """LedgerAddResult is a _LedgerMutationResult and carries review_status."""
-    assert issubclass(LedgerAddResult, _LedgerMutationResult)
+    assert issubclass(LedgerAddResult, LedgerMutationResult)
     result = LedgerAddResult.model_validate(
         {
             "bucket_id": "default",
@@ -141,7 +141,7 @@ def test_add_result_subclasses_mutation_quintet_and_carries_review_status() -> N
 
 def test_classify_single_result_is_the_mutation_quintet() -> None:
     """The single-transaction classify path returns the mutation quintet."""
-    assert issubclass(LedgerClassifySingleResult, _LedgerMutationResult)
+    assert issubclass(LedgerClassifySingleResult, LedgerMutationResult)
     result = LedgerClassifySingleResult.model_validate(
         {
             "bucket_id": "default",

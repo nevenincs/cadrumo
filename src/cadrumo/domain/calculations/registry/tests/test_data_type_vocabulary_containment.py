@@ -32,7 +32,7 @@ from ..errors import RegistryValidationError
 from ..manual_input_selector import ManualInputDataType
 from ..schema_exports import ExportFieldDataType, ExportFieldDefinition
 from ..schema_formula import ParameterDefinition
-from ..schema_scalars import _REGISTRY_SCALAR_VALUE_TYPES, registry_scalar_value_type
+from ..schema_scalars import REGISTRY_SCALAR_VALUE_TYPES, registry_scalar_value_type
 from ..schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -81,7 +81,7 @@ def test_the_casilla_vocabulary_is_exactly_the_runtime_scalar_taxonomy() -> None
     vocabulary stopped matching the classifier the containment checks would be
     measuring the wrong set and still pass.
     """
-    assert _declared_members(CasillaDefinition) == frozenset(_REGISTRY_SCALAR_VALUE_TYPES), (
+    assert _declared_members(CasillaDefinition) == frozenset(REGISTRY_SCALAR_VALUE_TYPES), (
         "the casilla data_type vocabulary and the runtime scalar classifier disagree, so one of "
         "them admits a type the other cannot classify. Fix the disagreement rather than the "
         "assertion: every containment check in this module is measured against this set."

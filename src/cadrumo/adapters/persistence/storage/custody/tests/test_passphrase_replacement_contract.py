@@ -34,7 +34,7 @@ from cadrumo.adapters.persistence.storage.master_key.login_throttle import (
     record_login_failure,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
+    profile_authority_contexts,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_session_setup import reset_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
@@ -62,8 +62,7 @@ from cadrumo.application.user_profile.recovery_custody import (
 )
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
-from cadrumo.core.time.clock import frozen_clock
-from cadrumo.core.time.clock import now as _now
+from cadrumo.core.time.clock import frozen_clock, now
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
 from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginThrottledError
@@ -79,7 +78,7 @@ _REPLACEMENT = "passphrase-replacement-new-operator-secret"
 
 
 def _register() -> UUID:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     outcome = register_profile_with_credentials(
         label=_LABEL,
         passphrase=_CURRENT,
@@ -104,7 +103,7 @@ def _wrong(code: str) -> str:
 
 
 def _reset(profile_id: UUID, code: str, new_passphrase: str = _REPLACEMENT) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     reset_profile_passphrase_with_recovery(
         profile_id=profile_id,
         recovery_code=code,
@@ -115,7 +114,7 @@ def _reset(profile_id: UUID, code: str, new_passphrase: str = _REPLACEMENT) -> N
 
 
 def _rotate(profile_id: UUID) -> None:
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     rotate_profile_passphrase(
         profile_id=profile_id,
         current_passphrase=_CURRENT,
@@ -127,7 +126,7 @@ def _rotate(profile_id: UUID) -> None:
 
 def _replacement_proofs(profile_id: UUID, *, passphrase: str) -> list[str | None]:
     """Log in under ``passphrase`` and read every replacement event's recorded proof."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     authenticate_profile_for_invocation(
         name=_LABEL,
         passphrase_callback=lambda: passphrase,
@@ -216,7 +215,7 @@ def test_a_throttled_profile_refuses_a_reset_before_any_key_derivation(
         bucket_id = str(profile_id)
         # Five failures owe a 32-second wait: far longer than this test runs.
         for _ in range(5):
-            record_login_failure(storage_root=storage_root, bucket_id=bucket_id, now=_now())
+            record_login_failure(storage_root=storage_root, bucket_id=bucket_id, now=now())
         envelope_before = load_committed_profile_password_material(profile_id).envelope
 
         def _kdf_reached(*_args: object, **_kwargs: object) -> None:
@@ -230,8 +229,7 @@ def test_a_throttled_profile_refuses_a_reset_before_any_key_derivation(
         assert refused.value.remaining_seconds > 0
         assert load_committed_profile_password_material(profile_id).envelope == envelope_before
         assert (
-            evaluate_login_throttle(storage_root=storage_root, bucket_id=bucket_id, now=_now()).consecutive_failures
-            == 5
+            evaluate_login_throttle(storage_root=storage_root, bucket_id=bucket_id, now=now()).consecutive_failures == 5
         )
 
 
@@ -243,13 +241,12 @@ def test_a_failed_recovery_proof_counts_against_the_login_backoff(tmp_path: Path
         reset_test_profile_session()
         bucket_id = str(profile_id)
         assert (
-            evaluate_login_throttle(storage_root=storage_root, bucket_id=bucket_id, now=_now()).consecutive_failures
-            == 0
+            evaluate_login_throttle(storage_root=storage_root, bucket_id=bucket_id, now=now()).consecutive_failures == 0
         )
 
         # Held so the one-failure backoff, a two-second window, cannot elapse
         # while the proof and the login below run.
-        refused_at = _now()
+        refused_at = now()
         with frozen_clock(refused_at), pytest.raises(ProfileRecoveryError) as refused:
             _reset(profile_id, _wrong(code))
         assert refused.value.translated_message == "application.user_profile.errors.recovery_code_rejected"
@@ -259,7 +256,7 @@ def test_a_failed_recovery_proof_counts_against_the_login_backoff(tmp_path: Path
         assert evaluation.throttled is True
 
         # The login door now waits on the reset door's failure.
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+        _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
         with frozen_clock(refused_at + timedelta(seconds=1)), pytest.raises(ProfileLoginThrottledError):
             authenticate_profile_for_invocation(
                 name=_LABEL,
@@ -275,17 +272,15 @@ def test_a_proven_recovery_code_clears_the_backoff_as_a_login_does(tmp_path: Pat
         reset_test_profile_session()
         bucket_id = str(profile_id)
         # A failure old enough that its wait has elapsed: counted, not throttling.
-        record_login_failure(storage_root=storage_root, bucket_id=bucket_id, now=_now() - timedelta(minutes=10))
+        record_login_failure(storage_root=storage_root, bucket_id=bucket_id, now=now() - timedelta(minutes=10))
         assert (
-            evaluate_login_throttle(storage_root=storage_root, bucket_id=bucket_id, now=_now()).consecutive_failures
-            == 1
+            evaluate_login_throttle(storage_root=storage_root, bucket_id=bucket_id, now=now()).consecutive_failures == 1
         )
 
         _reset(profile_id, code)
 
         assert (
-            evaluate_login_throttle(storage_root=storage_root, bucket_id=bucket_id, now=_now()).consecutive_failures
-            == 0
+            evaluate_login_throttle(storage_root=storage_root, bucket_id=bucket_id, now=now()).consecutive_failures == 0
         )
 
 
@@ -302,7 +297,7 @@ def test_a_session_receipt_minted_before_a_reset_is_refused_at_resume(tmp_path: 
         reset_test_profile_session()
         material = load_committed_profile_password_material(profile_id)
         dek = unlock_profile_custody_password(material, password=_CURRENT).dek
-        issued = _now()
+        issued = now()
         mint_profile_session(
             storage_root=storage_root,
             profile_id=profile_id,
@@ -354,7 +349,7 @@ def test_an_archive_exported_before_a_reset_restores_under_the_old_passphrase(tm
     every archive taken under it: after the live profile is gone, the old
     archive still opens with the OLD passphrase and not with the new one.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         profile_id = _register()
         code = _enroll(profile_id)
@@ -398,7 +393,7 @@ def test_selection_changes_leave_the_failed_attempt_backoff_in_place(tmp_path: P
         bucket_id = str(profile_id)
         # Five failures owe a 32-second wait: far longer than this test runs.
         for _ in range(5):
-            record_login_failure(storage_root=storage_root, bucket_id=bucket_id, now=_now())
+            record_login_failure(storage_root=storage_root, bucket_id=bucket_id, now=now())
 
         # Selection needs no credential. Clearing the fixture's selection also
         # leaves the durable authentication attempts intact.
@@ -406,10 +401,9 @@ def test_selection_changes_leave_the_failed_attempt_backoff_in_place(tmp_path: P
         reset_test_profile_session()
 
         assert (
-            evaluate_login_throttle(storage_root=storage_root, bucket_id=bucket_id, now=_now()).consecutive_failures
-            == 5
+            evaluate_login_throttle(storage_root=storage_root, bucket_id=bucket_id, now=now()).consecutive_failures == 5
         )
-        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+        _profile_create_context_for_test, _profile_decode_context_for_test = profile_authority_contexts()
         with pytest.raises(ProfileLoginThrottledError):
             authenticate_profile_for_invocation(
                 name=_LABEL,
@@ -423,7 +417,7 @@ def test_selection_changes_leave_the_failed_attempt_backoff_in_place(tmp_path: P
 @pytest.mark.parametrize("proof", ["password", "recovery"])
 def test_replacement_fences_sign_in_only_after_successful_proof(tmp_path: Path, proof: str) -> None:
     """Both real lifecycle doors preserve failed proof and durably revoke success."""
-    _, decode = _profile_contexts_for_test()
+    _, decode = profile_authority_contexts()
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         profile_id = _register()
         code = _enroll(profile_id)
@@ -445,7 +439,7 @@ def test_replacement_fences_sign_in_only_after_successful_proof(tmp_path: Path, 
         if proof == "password":
             _rotate(profile_id)
         else:
-            with frozen_clock(_now() + timedelta(minutes=2)):
+            with frozen_clock(now() + timedelta(minutes=2)):
                 _reset(profile_id, code)
         advanced = custody.observe().current
         assert advanced is not None

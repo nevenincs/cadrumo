@@ -59,7 +59,7 @@ from .decimal.grammar import (
 from .errors.hierarchy import CoreValidationError
 from .external_constants import CSV_ENCODING_FALLBACK_CHAIN
 from .logging import get_logger
-from .models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .models import STRICT_FROZEN_CONFIG
 from .text_bounds import PositiveCount
 from .text_fold import fold_printed_phrase
 
@@ -102,7 +102,7 @@ CANDIDATE_DELIMITERS: tuple[str, ...] = (";", ",", "\t", "|")
 #: How many leading rows may be searched for the header. Real preambles run to
 #: about seven lines; twenty leaves margin without letting a header be found in
 #: the middle of the data.
-_HEADER_SEARCH_LIMIT = 20
+HEADER_SEARCH_LIMIT = 20
 
 #: Leading tokens marking an appended aggregate row rather than a movement.
 #: Diacritics are folded before comparison, so ``TOTALES`` and ``Totales``
@@ -143,7 +143,7 @@ class TabularNotice(BaseModel):
             or ``None`` for a whole-file observation.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     code: TabularNoticeCode
     detail: str
@@ -163,7 +163,7 @@ class TabularDialect(BaseModel):
         column_count: Field count of the table's rectangle.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     delimiter: str = Field(min_length=1, max_length=1)
     quotechar: str = Field(min_length=1, max_length=1)
@@ -184,7 +184,7 @@ class NormalizedRow(BaseModel):
             separator rewriting or type coercion applied.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     source_line_number: int = Field(ge=1)
     cells: tuple[str, ...]
@@ -204,7 +204,7 @@ class NormalizedTable(BaseModel):
         notices: Every structural observation made while normalizing.
     """
 
-    model_config = _STRICT_FROZEN
+    model_config = STRICT_FROZEN_CONFIG
 
     dialect: TabularDialect
     headers: tuple[str, ...]
@@ -301,7 +301,7 @@ def decode_tabular_bytes(source_bytes: bytes) -> tuple[str, str, TabularNotice |
     )
 
 
-def _parse_with(text: str, delimiter: str, quotechar: str) -> list[tuple[int, list[str]]]:
+def parse_with(text: str, delimiter: str, quotechar: str) -> list[tuple[int, list[str]]]:
     """Parse ``text`` under one candidate delimiter, keeping physical line numbers."""
     reader = csv.reader(io.StringIO(text, newline=""), delimiter=delimiter, quotechar=quotechar)
     parsed: list[tuple[int, list[str]]] = []
@@ -312,7 +312,7 @@ def _parse_with(text: str, delimiter: str, quotechar: str) -> list[tuple[int, li
     return parsed
 
 
-def _rectangle_score(widths: Counter[int]) -> tuple[int, int]:
+def rectangle_score(widths: Counter[int]) -> tuple[int, int]:
     """Return ``(score, column_count)`` for one candidate parse's width histogram.
 
     The score rewards the largest consistent rectangle: how many rows share the
@@ -332,7 +332,7 @@ def _rectangle_score(widths: Counter[int]) -> tuple[int, int]:
     return best_score, best_width
 
 
-def _score_delimiter(text: str, delimiter: str, quotechar: str) -> tuple[int, int]:
+def score_delimiter(text: str, delimiter: str, quotechar: str) -> tuple[int, int]:
     """Score one candidate delimiter without materializing its parse.
 
     Only the field-count histogram decides the delimiter, and
@@ -353,10 +353,10 @@ def _score_delimiter(text: str, delimiter: str, quotechar: str) -> tuple[int, in
     for row in reader:
         if any(cell.strip() for cell in row):
             widths[len(row)] += 1
-    return _rectangle_score(widths)
+    return rectangle_score(widths)
 
 
-def _best_delimiter(text: str, quotechar: str) -> tuple[int, int, str] | None:
+def best_delimiter(text: str, quotechar: str) -> tuple[int, int, str] | None:
     """Return ``(score, column_count, delimiter)`` for the winning delimiter.
 
     ``None`` when no candidate produced a rectangle at all — a single-column
@@ -366,7 +366,7 @@ def _best_delimiter(text: str, quotechar: str) -> tuple[int, int, str] | None:
     """
     best: tuple[int, int, str] | None = None
     for delimiter in CANDIDATE_DELIMITERS:
-        score, width = _score_delimiter(text, delimiter, quotechar)
+        score, width = score_delimiter(text, delimiter, quotechar)
         if score == 0:
             continue
         if best is None or score > best[0]:
@@ -383,11 +383,11 @@ def _best_delimiter_parse(
     The full parse is materialized once, for the winner only; the losing
     candidates are streamed for their score and never held.
     """
-    best = _best_delimiter(text, quotechar)
+    best = best_delimiter(text, quotechar)
     if best is None:
         return None
     score, width, delimiter = best
-    return score, width, delimiter, _parse_with(text, delimiter, quotechar)
+    return score, width, delimiter, parse_with(text, delimiter, quotechar)
 
 
 def detect_tabular_delimiter(text: str, *, quotechar: str = '"') -> str | None:
@@ -402,7 +402,7 @@ def detect_tabular_delimiter(text: str, *, quotechar: str = '"') -> str | None:
         candidate produced a rectangle. A caller that must parse regardless
         chooses its own fallback.
     """
-    best = _best_delimiter(text, quotechar)
+    best = best_delimiter(text, quotechar)
     return None if best is None else best[2]
 
 
@@ -438,7 +438,7 @@ def _row_is_data_like(cells: list[str]) -> bool:
     return any(_looks_like_date(cell) or _looks_numeric(cell) for cell in cells)
 
 
-def _header_score(cells: list[str], *, next_row: list[str] | None) -> int:
+def header_score(cells: list[str], *, next_row: list[str] | None) -> int:
     """Score one candidate header row.
 
     A header is text: its cells are populated and none of them is a number or a
@@ -452,7 +452,7 @@ def _header_score(cells: list[str], *, next_row: list[str] | None) -> int:
     return populated * 2 - valued * 3 + following
 
 
-def _locate_header(parsed: list[tuple[int, list[str]]], *, column_count: int) -> int | None:
+def locate_header(parsed: list[tuple[int, list[str]]], *, column_count: int) -> int | None:
     """Return the index in ``parsed`` of the best header row, or ``None``.
 
     The following-row lookup walks ``parsed`` through :func:`itertools.islice`
@@ -463,11 +463,11 @@ def _locate_header(parsed: list[tuple[int, list[str]]], *, column_count: int) ->
     """
     best_index: int | None = None
     best_score = 0
-    for index, (_, cells) in enumerate(islice(parsed, _HEADER_SEARCH_LIMIT)):
+    for index, (_, cells) in enumerate(islice(parsed, HEADER_SEARCH_LIMIT)):
         if not _is_header_candidate(cells, column_count=column_count):
             continue
         next_row = _next_populated_row(parsed, start=index + 1)
-        score = _header_score(cells, next_row=next_row)
+        score = header_score(cells, next_row=next_row)
         if best_index is None or score > best_score:
             best_index = index
             best_score = score
@@ -638,7 +638,7 @@ def normalize_tabular_text(text: str, *, encoding: str, quotechar: str = '"') ->
     best = _require_best_delimiter_parse(text, quotechar)
     _, column_count, delimiter, parsed = best
 
-    header_index = _locate_header(parsed, column_count=column_count)
+    header_index = locate_header(parsed, column_count=column_count)
     if header_index is None:
         raise TabularSourceError(
             f"tabular source has no row of {column_count} fields that reads as a header",

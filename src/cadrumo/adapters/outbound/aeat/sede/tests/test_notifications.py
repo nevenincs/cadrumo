@@ -26,9 +26,9 @@ from ...browser.tests.real_http_boundary import opened_http_boundary, real_brows
 from ..errors import SedeNavigationError
 from ..notifications import (
     READ_GUARD_POLICY,
-    _navigate_and_parse,
-    _notifications_landing_url,
     assert_notifications_read_landing,
+    navigate_and_parse,
+    notifications_landing_url,
     parse_notifications_query,
 )
 
@@ -78,7 +78,7 @@ class TestNavigateAndParseLandingGuard:
         html = (_FIXTURE_ROOT / "notifications-query-results.html").read_text(encoding="utf-8")
         async with opened_http_boundary() as boundary:
             boundary.configure_html(html)
-            snap = await _navigate_and_parse(
+            snap = await navigate_and_parse(
                 {},
                 url=_QUERY_URL,
                 parser=parse_notifications_query,
@@ -106,7 +106,7 @@ class TestNavigateAndParseLandingGuard:
         )
         async with opened_http_boundary() as boundary:
             boundary.configure_html(empty_html)
-            snap = await _navigate_and_parse(
+            snap = await navigate_and_parse(
                 {},
                 url=_QUERY_URL,
                 parser=parse_notifications_query,
@@ -126,7 +126,7 @@ class TestNavigateAndParseLandingGuard:
         async with opened_http_boundary() as boundary:
             boundary.configure_html(interstitial)
             with pytest.raises(SedeNavigationError) as exc_info:
-                await _navigate_and_parse(
+                await navigate_and_parse(
                     {},
                     url=_QUERY_URL,
                     parser=parse_notifications_query,
@@ -148,7 +148,7 @@ class TestNavigateAndParseLandingGuard:
         async with opened_http_boundary() as boundary:
             boundary.configure_html("<html><body>unreachable</body></html>")
             with pytest.raises(RegistryValidationError, match="allowed read-only paths"):
-                await _navigate_and_parse(
+                await navigate_and_parse(
                     {},
                     url=unknown,
                     parser=parse_notifications_query,
@@ -181,7 +181,7 @@ class TestNotificationsLandingIsRefusedWhenUnreadable:
 
     def test_a_readable_landing_is_returned_unchanged(self) -> None:
         landed = f"{_AEAT.domains.www12}{_AEAT.sede_paths.notifications_summary}"
-        assert _notifications_landing_url(_LandedPage(landed), requested_url=_SUMMARY_URL) == landed
+        assert notifications_landing_url(_LandedPage(landed), requested_url=_SUMMARY_URL) == landed
 
     @pytest.mark.parametrize("landed", ["", "about:blank"])
     def test_an_unreadable_landing_is_refused_not_substituted(self, landed: str) -> None:
@@ -189,7 +189,7 @@ class TestNotificationsLandingIsRefusedWhenUnreadable:
         page = _LandedPage(landed)
         produced: str | None = None
         try:
-            produced = _notifications_landing_url(page, requested_url=_SUMMARY_URL)
+            produced = notifications_landing_url(page, requested_url=_SUMMARY_URL)
         except SedeNavigationError:
             produced = None
         assert produced != _SUMMARY_URL, (
@@ -197,11 +197,11 @@ class TestNotificationsLandingIsRefusedWhenUnreadable:
         )
         assert produced is None
         with pytest.raises(SedeNavigationError):
-            _notifications_landing_url(page, requested_url=_SUMMARY_URL)
+            notifications_landing_url(page, requested_url=_SUMMARY_URL)
 
     def test_the_refusal_names_the_requested_url(self) -> None:
         with pytest.raises(SedeNavigationError) as excinfo:
-            _notifications_landing_url(_LandedPage(""), requested_url=_SUMMARY_URL)
+            notifications_landing_url(_LandedPage(""), requested_url=_SUMMARY_URL)
         context = excinfo.value.context
         assert context is not None
         assert context["requested_url"] == _SUMMARY_URL

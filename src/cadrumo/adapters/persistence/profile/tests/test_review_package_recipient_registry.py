@@ -35,7 +35,7 @@ from cadrumo.adapters.persistence.profile.review_package_recipient_registry impo
     RecipientFingerprintRegistryAdapter,
 )
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
-    MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE as _NAMESPACE,
+    MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE,
 )
 from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
 from cadrumo.adapters.persistence.storage.sql.session import session_scope
@@ -174,10 +174,10 @@ def test_encrypted_registry_load_refuses_duplicate_persisted_recipient_id(tmp_pa
         assert ports.registry_repository.load() == expected
 
         persisted = profile.repository.load(
-            _NAMESPACE.namespace,
-            _NAMESPACE.require_default_object_key(),
+            MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE.namespace,
+            MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE.require_default_object_key(),
             expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_NAMESPACE.schema_version,
+            max_supported_version=MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE.schema_version,
         )
         assert persisted is not None
         document = _json.loads(persisted.payload.decode("utf-8"))
@@ -186,8 +186,8 @@ def test_encrypted_registry_load_refuses_duplicate_persisted_recipient_id(tmp_pa
 
         records[1]["recipient_id"] = records[0]["recipient_id"]
         profile.repository.save(
-            namespace=_NAMESPACE.namespace,
-            object_key=_NAMESPACE.require_default_object_key(),
+            namespace=MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE.namespace,
+            object_key=MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE.require_default_object_key(),
             classification=persisted.classification,
             schema_version=persisted.schema_version,
             written_at=persisted.written_at,
@@ -205,10 +205,10 @@ def test_register_is_never_stored_as_plaintext(tmp_path: Path) -> None:
         _add(ports, recipient_id="my-accountant", public_key_hex=public_key_hex, added_at=_NOW)
 
         raw_record = profile.repository.load(
-            _NAMESPACE.namespace,
-            _NAMESPACE.require_default_object_key(),
+            MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE.namespace,
+            MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE.require_default_object_key(),
             expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=_NAMESPACE.schema_version,
+            max_supported_version=MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE.schema_version,
         )
         assert raw_record is not None
         assert public_key_hex.encode("utf-8") in raw_record.payload
@@ -217,7 +217,10 @@ def test_register_is_never_stored_as_plaintext(tmp_path: Path) -> None:
 
         with session_scope(profile.repository._engine) as session:
             row = session.execute(
-                select(SecureObjectRow).where(SecureObjectRow.namespace == _NAMESPACE.namespace),
+                select(SecureObjectRow).where(
+                    SecureObjectRow.namespace
+                    == MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE.namespace
+                ),
             ).scalar_one()
             ciphertext_bytes = bytes(row.payload)
 
@@ -300,12 +303,18 @@ def test_load_raises_on_corrupted_ciphertext(tmp_path: Path) -> None:
 
         with session_scope(profile.repository._engine) as session:
             row = session.execute(
-                select(SecureObjectRow).where(SecureObjectRow.namespace == _NAMESPACE.namespace),
+                select(SecureObjectRow).where(
+                    SecureObjectRow.namespace
+                    == MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE.namespace
+                ),
             ).scalar_one()
             corrupted_payload = bytes(row.payload)[:-1] + bytes([bytes(row.payload)[-1] ^ 0xFF])
             session.execute(
                 update(SecureObjectRow)
-                .where(SecureObjectRow.namespace == _NAMESPACE.namespace)
+                .where(
+                    SecureObjectRow.namespace
+                    == MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE.namespace
+                )
                 .values(payload=corrupted_payload),
             )
 

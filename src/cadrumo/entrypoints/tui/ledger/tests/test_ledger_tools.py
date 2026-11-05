@@ -45,7 +45,7 @@ class _ToolScreen(LedgerWorkspaceScreen):
         self.populate_navigation()
 
 
-def _tool(area: LedgerWorkspaceArea, name: str, label_key: str = "tui.ledger.area.review") -> LedgerToolV1:
+def tool(area: LedgerWorkspaceArea, name: str, label_key: str = "tui.ledger.area.review") -> LedgerToolV1:
     return LedgerToolV1(
         key=f"ledger.tool.test.{name}",
         label_key=label_key,
@@ -84,15 +84,15 @@ def test_a_tool_without_a_label_key_is_refused() -> None:
 
 def test_two_tools_sharing_a_key_are_refused_at_construction() -> None:
     with pytest.raises(ValueError, match="unique"):
-        _controller(_tool(LedgerWorkspaceArea.OVERVIEW, "same"), _tool(LedgerWorkspaceArea.ENTRIES, "same"))
+        _controller(tool(LedgerWorkspaceArea.OVERVIEW, "same"), tool(LedgerWorkspaceArea.ENTRIES, "same"))
 
 
 @pytest.mark.asyncio
 async def test_an_area_lists_only_its_own_tools_beneath_the_navigation() -> None:
     controller = _controller(
-        _tool(LedgerWorkspaceArea.OVERVIEW, "first"),
-        _tool(LedgerWorkspaceArea.ENTRIES, "elsewhere"),
-        _tool(LedgerWorkspaceArea.OVERVIEW, "second"),
+        tool(LedgerWorkspaceArea.OVERVIEW, "first"),
+        tool(LedgerWorkspaceArea.ENTRIES, "elsewhere"),
+        tool(LedgerWorkspaceArea.OVERVIEW, "second"),
     )
     screen = LedgerOverviewScreen(controller)
     async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
@@ -109,7 +109,7 @@ async def test_an_area_lists_only_its_own_tools_beneath_the_navigation() -> None
 
 @pytest.mark.asyncio
 async def test_an_area_without_tools_lists_none() -> None:
-    screen = LedgerOverviewScreen(_controller(_tool(LedgerWorkspaceArea.ENTRIES, "elsewhere")))
+    screen = LedgerOverviewScreen(_controller(tool(LedgerWorkspaceArea.ENTRIES, "elsewhere")))
     async with WorkspaceHostApp(screen).run_test(size=(120, 40)) as pilot:
         await settle(pilot)
         assert not screen.query("#ledger-tools")
@@ -118,7 +118,7 @@ async def test_an_area_without_tools_lists_none() -> None:
 
 @pytest.mark.asyncio
 async def test_a_chosen_tool_opens_in_place_and_back_returns_to_its_own_area() -> None:
-    controller = _controller(_tool(LedgerWorkspaceArea.ENTRIES, "rules"))
+    controller = _controller(tool(LedgerWorkspaceArea.ENTRIES, "rules"))
     entries = resolve_ledger_screen(controller, controller.route_target(LedgerWorkspaceArea.ENTRIES))
     assert isinstance(entries, LedgerEntriesScreen)
     app = WorkspaceHostApp(entries)
@@ -142,7 +142,7 @@ async def test_a_chosen_tool_opens_in_place_and_back_returns_to_its_own_area() -
 async def test_the_tool_list_rewords_in_place_when_the_profile_language_changes() -> None:
     # The profile language, as production switches it: the list is reworded after
     # the body's own repaint, on the app's loop, where only the profile snapshot applies.
-    controller = _controller(_tool(LedgerWorkspaceArea.OVERVIEW, "named", label_key="tui.ledger.area.entries"))
+    controller = _controller(tool(LedgerWorkspaceArea.OVERVIEW, "named", label_key="tui.ledger.area.entries"))
     screen = LedgerOverviewScreen(controller)
     with override_settings(cadrumo_output_language=""):
         register_language_resolver()

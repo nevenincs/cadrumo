@@ -40,10 +40,10 @@ from .header import result_view
 from .ports import ModeloWorkbenchActionsV1, WorkbenchExportRequest
 from .result import WorkbenchResultScreen, result_lines
 from .screen_constants import (
-    _CHECKED_LOCALE_KEYS,
-    _NEXT_KEYS,
-    _SELF_REPORTING_OPERATIONS,
-    _VALUE_CHANGING_OPERATIONS,
+    CHECKED_LOCALE_KEYS,
+    NEXT_KEYS,
+    SELF_REPORTING_OPERATIONS,
+    VALUE_CHANGING_OPERATIONS,
 )
 
 if TYPE_CHECKING:
@@ -88,7 +88,7 @@ class WorkbenchOperationMixin:
             return True
         if self._session.dirty:
             action = tr("workspace.modelo.next.apply", count=len(self._session.changes))
-            self._notice(f"{action} [{_NEXT_KEYS[ModeloFormNextAction.APPLY]}]")
+            self._notice(f"{action} [{NEXT_KEYS[ModeloFormNextAction.APPLY]}]")
             return True
         hold = export_hold(load.form, self._language, verified=load.verified, recorded=self.recorded)
         if hold is None or hold.reason is ModeloFormExportHoldReason.VERIFY:
@@ -98,7 +98,7 @@ class WorkbenchOperationMixin:
         elif self._may_confirm():
             self._confirm_next()
         blocks = hold.reason is ModeloFormExportHoldReason.BLOCKS
-        key = _NEXT_KEYS[ModeloFormNextAction.RESOLVE if blocks else ModeloFormNextAction.CONFIRM]
+        key = NEXT_KEYS[ModeloFormNextAction.RESOLVE if blocks else ModeloFormNextAction.CONFIRM]
         self._notice(f"{hold.words} [{key}]")
         return True
 
@@ -121,10 +121,10 @@ class WorkbenchOperationMixin:
         if not artefacts:
             if self._filing_withheld():
                 return
-            self._notice(f"{tr('workspace.modelo.export.verify_first')} [{_NEXT_KEYS[ModeloFormNextAction.VERIFY]}]")
+            self._notice(f"{tr('workspace.modelo.export.verify_first')} [{NEXT_KEYS[ModeloFormNextAction.VERIFY]}]")
             return
         if load.form.calculation_revision_id is None:
-            self._notice(f"{tr('workspace.modelo.export.verify_first')} [{_NEXT_KEYS[ModeloFormNextAction.VERIFY]}]")
+            self._notice(f"{tr('workspace.modelo.export.verify_first')} [{NEXT_KEYS[ModeloFormNextAction.VERIFY]}]")
             return
         offer = replace(
             offer,
@@ -143,9 +143,7 @@ class WorkbenchOperationMixin:
             if request.artefact is not ModeloExportArtefact.CALCULATION_REVIEW_XLSX and (
                 self._load is None or not self._load.verified
             ):
-                self._notice(
-                    f"{tr('workspace.modelo.export.verify_first')} [{_NEXT_KEYS[ModeloFormNextAction.VERIFY]}]"
-                )
+                self._notice(f"{tr('workspace.modelo.export.verify_first')} [{NEXT_KEYS[ModeloFormNextAction.VERIFY]}]")
                 return
             self._run_operation(partial(actions.export, request))
 
@@ -256,7 +254,7 @@ class WorkbenchOperationMixin:
             self._session.discard()
         projection = outcome.view_model.projection
         definition = str(projection.definition_id)
-        reports_itself = not applies_changes and definition in _SELF_REPORTING_OPERATIONS
+        reports_itself = not applies_changes and definition in SELF_REPORTING_OPERATIONS
         if not reports_itself:
             self._notice(tr("workspace.modelo.operation.done"))
         actions = self._actions
@@ -279,7 +277,7 @@ class WorkbenchOperationMixin:
             and actions is not None
         ):
             self.run_worker(partial(self._state_export_result, actions, projection), group="workbench-export")
-        changes_values = projection.definition_id in _VALUE_CHANGING_OPERATIONS
+        changes_values = projection.definition_id in VALUE_CHANGING_OPERATIONS
         original = before if changes_values else None
         self.run_worker(
             partial(self._read_after, original, yours, reporting),
@@ -347,10 +345,10 @@ class WorkbenchOperationMixin:
             verdict = form.verification
             if verdict is None:
                 return tr("workspace.modelo.operation.done")
-            checked = tr(_CHECKED_LOCALE_KEYS[verdict])
+            checked = tr(CHECKED_LOCALE_KEYS[verdict])
             if verdict is VerificationCompletenessStatus.COMPLETE:
                 return checked
-            return f"{checked} [{_NEXT_KEYS[ModeloFormNextAction.RESOLVE]}]"
+            return f"{checked} [{NEXT_KEYS[ModeloFormNextAction.RESOLVE]}]"
         view = result_view(form, self._language, staged=0, recorded=self.recorded)
         if view is None or view.settled is None:
             return tr("workspace.modelo.operation.done")

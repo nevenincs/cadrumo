@@ -35,8 +35,11 @@ from ...core.i18n.render import tr
 from ...core.json_contract import Notice, strict_round_trip
 from ...core.period import Period, PeriodError
 from ...core.time.clock import today_madrid
-from ._date_parsing import _parse_iso_date
-from ._overview_rendering import (
+from .common import attach_cli_policy_verdict, bad, emit_envelope, resolve_notice_action
+from .date_parsing import parse_iso_date
+from .operation_overview import OverviewReadCompletion, read_overview
+from .operation_overview_pipeline import read_overview_pipeline
+from .overview_rendering import (
     overview_agenda_output,
     overview_backlog_output,
     overview_calendar_output,
@@ -47,11 +50,8 @@ from ._overview_rendering import (
     overview_prepare_output,
     overview_status_output,
 )
-from .common import attach_cli_policy_verdict, bad, emit_envelope, resolve_notice_action
-from .operation_overview import OverviewReadCompletion, read_overview
-from .operation_overview_pipeline import read_overview_pipeline
 from .overview_results import OverviewCalendarResult, OverviewDraftPayload, OverviewStatusResult
-from .period_parsing import _canonical_period
+from .period_parsing import period_parsing_canonical_period
 
 
 def _request(kind: OverviewReadKind, **fields: object) -> OverviewReadRequest:
@@ -81,7 +81,7 @@ def _notice(snapshot: OverviewNoticeSnapshot) -> Notice:
     )
 
 
-def _emit_read[T](completed: OverviewReadCompletion, render: Callable[[], T]) -> T:
+def emit_read[T](completed: OverviewReadCompletion, render: Callable[[], T]) -> T:
     """Keep the successful worker receipt if local rendering or output fails."""
     try:
         return render()
@@ -184,7 +184,7 @@ def overview_status(
         notices.extend(_notice(item) for item in payload.notices)
         emit_envelope(ctx, command="overview.status", result=typed, lines=lines, notices=notices)
 
-    _emit_read(completed, render)
+    emit_read(completed, render)
 
 
 def overview_calendar(
@@ -200,8 +200,8 @@ def overview_calendar(
     activate_subcommand_output_language(ctx, output_language)
     query = _request(
         OverviewReadKind.CALENDAR,
-        from_date=_parse_iso_date(from_date, label="--from"),
-        to_date=_parse_iso_date(to_date, label="--to"),
+        from_date=parse_iso_date(from_date, label="--from"),
+        to_date=parse_iso_date(to_date, label="--to"),
         allow_incomplete=allow_incomplete,
         show_suppressed=show_suppressed,
         all_profiles=all_profiles,
@@ -233,7 +233,7 @@ def overview_calendar(
             typed, lines, notices = _overview_calendar_survey_output(completed, payload, allow_incomplete)
         emit_envelope(ctx, command="overview.calendar", result=typed, lines=lines, notices=notices)
 
-    _emit_read(completed, render)
+    emit_read(completed, render)
 
 
 def overview_agenda(
@@ -244,7 +244,7 @@ def overview_agenda(
         raise bad(tr("cli.overview.agenda.errors.invalid_horizon"))
     query = _request(
         OverviewReadKind.AGENDA,
-        as_of=_parse_iso_date(as_of, label="--date") if (as_of is not None and as_of) else today_madrid(),
+        as_of=parse_iso_date(as_of, label="--date") if (as_of is not None and as_of) else today_madrid(),
         horizon_days=horizon_days,
         allow_incomplete=allow_incomplete,
     )
@@ -267,7 +267,7 @@ def overview_agenda(
         typed, lines, notices = overview_agenda_output(agenda)
         emit_envelope(ctx, command="overview.agenda", result=typed, lines=lines, notices=notices)
 
-    _emit_read(completed, render)
+    emit_read(completed, render)
 
 
 def overview_backlog(
@@ -279,9 +279,9 @@ def overview_backlog(
     """Render canonical past-due rows captured in the worker."""
     fields: dict[str, object] = {"allow_incomplete": allow_incomplete}
     if from_date is not None:
-        fields["from_date"] = _parse_iso_date(from_date, label="--from")
+        fields["from_date"] = parse_iso_date(from_date, label="--from")
     if to_date is not None:
-        fields["to_date"] = _parse_iso_date(to_date, label="--to")
+        fields["to_date"] = parse_iso_date(to_date, label="--to")
     completed = read_overview(ctx, request=_request(OverviewReadKind.BACKLOG, **fields))
 
     def render() -> None:
@@ -302,7 +302,7 @@ def overview_backlog(
         typed, lines, notices = overview_backlog_output(backlog, work_units_notice=notice)
         emit_envelope(ctx, command="overview.backlog", result=typed, lines=lines, notices=notices)
 
-    _emit_read(completed, render)
+    emit_read(completed, render)
 
 
 def overview_explain(ctx: typer.Context, modelo: str, year: int | None = None) -> None:
@@ -325,12 +325,12 @@ def overview_explain(ctx: typer.Context, modelo: str, year: int | None = None) -
             notices=tuple(_notice(row) for row in payload.notices),
         )
 
-    _emit_read(completed, render)
+    emit_read(completed, render)
 
 
 def overview_prepare(ctx: typer.Context, modelo: str, year: int, period: str) -> None:
     """Render the canonical exact-period preparation checklist."""
-    canonical = _canonical_period(period, year=year)
+    canonical = period_parsing_canonical_period(period, year=year)
     completed = read_overview(
         ctx,
         request=_request(OverviewReadKind.PREPARE, modelo=modelo, period=PublicPeriod.from_period(canonical)),
@@ -343,14 +343,14 @@ def overview_prepare(ctx: typer.Context, modelo: str, year: int, period: str) ->
         typed, lines, notices = overview_prepare_output(payload.preparation.to_walkthrough())
         emit_envelope(ctx, command="overview.prepare", result=typed, lines=lines, notices=notices)
 
-    _emit_read(completed, render)
+    emit_read(completed, render)
 
 
 def overview_pipeline(ctx: typer.Context, year: int, period: str) -> None:
     """Render one authenticated profile worker's pipeline-health snapshot."""
     from .ledger_results import LedgerStatusResult
 
-    canonical_period = _canonical_period(period, year=year)
+    canonical_period = period_parsing_canonical_period(period, year=year)
     completed = read_overview_pipeline(
         ctx, period=canonical_period, output_language=OutputLanguage(current_output_language())
     )

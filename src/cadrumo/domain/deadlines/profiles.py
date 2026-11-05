@@ -23,7 +23,7 @@ from typing import TypedDict
 
 from ...core.aggregation import ThirdPartyDeclarationRole
 from ...core.modelo import Modelo
-from ...core.parsing.dates import parse_date as _parse_date_canonical
+from ...core.parsing.dates import parse_date as dates_parse_date_canonical
 from ...core.period import Period
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.irpf_income_categories import (
@@ -31,8 +31,8 @@ from ..calculations.registry.irpf_income_categories import (
     require_irpf_income_category,
 )
 from ..calculations.registry.irpf_regimes import require_irpf_special_regime
-from ..calculations.registry.iva_regime_vocabulary import default_iva_regime as _default_iva_regime
 from ..calculations.registry.iva_regime_vocabulary import (
+    default_iva_regime,
     iva_regime_no_aplica_token,
     require_iva_regime,
 )
@@ -81,7 +81,7 @@ def taxpayer_profile_from_mapping(
     and to ``iva_regime_default`` for profiles that still require an
     IVA regime declaration.
     """
-    iva_regime_default = _default_iva_regime() if iva_regime_default is None else require_iva_regime(iva_regime_default)
+    iva_regime_default = default_iva_regime() if iva_regime_default is None else require_iva_regime(iva_regime_default)
     canonical, padded = _canonicalize_and_pad(values, tax_id_default=tax_id_default)
     typed = project_setup_answers(padded)
     return _build_taxpayer_profile(
@@ -361,8 +361,8 @@ def _resolve_profile_relationship_fields(
 def _resolve_profile_activity_fields(canonical: Mapping[str, str]) -> _ProfileActivityFields:
     """Resolve activity dates and the prior-year INCN amount."""
     return {
-        "activity_start_date": _parse_date(canonical.get("censo.activity_start_date")),
-        "activity_end_date": _parse_date(canonical.get("censo.activity_end_date")),
+        "activity_start_date": profiles_parse_date(canonical.get("censo.activity_start_date")),
+        "activity_end_date": profiles_parse_date(canonical.get("censo.activity_end_date")),
         "incn_prior_12_months": _parse_decimal(canonical.get("taxpayer_type.incn_prior_12_months")),
     }
 
@@ -383,7 +383,7 @@ def _resolve_profile_regime_fields(
         "irpf_special_regime": _resolve_special_regime(
             typed.irpf_special_regime or canonical.get("irpf.special_regime", ""),
         ),
-        "special_regime_start_date": _parse_date(
+        "special_regime_start_date": profiles_parse_date(
             typed.irpf_special_regime_start_date or canonical.get("irpf.special_regime_start_date"),
         ),
         "fiscal_residency": _resolve_fiscal_residency(
@@ -551,9 +551,9 @@ def _resolve_modelo_iva_profile(canonical: Mapping[str, str], typed: SetupAnswer
     )
 
 
-def _parse_date(raw: str | None) -> date | None:
+def profiles_parse_date(raw: str | None) -> date | None:
     try:
-        return _parse_date_canonical(raw, fmt="iso8601", on_error="raise")
+        return dates_parse_date_canonical(raw, fmt="iso8601", on_error="raise")
     except ValueError as exc:
         raise ProfileError(f"invalid censo date {raw!r}; expected ISO-8601") from exc
 

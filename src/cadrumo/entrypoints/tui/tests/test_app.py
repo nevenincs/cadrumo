@@ -64,7 +64,7 @@ class MarkerScreen(Screen[None]):
         self.dismiss(None)
 
 
-def _catalogue(
+def catalogue(
     contexts: list[TuiScreenContextV1],
     *,
     destination: TuiDestinationIdV1 = "workbench.ledger",
@@ -114,7 +114,7 @@ async def test_mouse_click_home_filing_opens_matching_calendar_row(period: str) 
         return DeclarationsCalendarScreen(calendar_controller(calendar, context=context))
 
     app = CadrumoTuiApp(
-        destination_catalogue=_catalogue([], destination="workbench.declarations", destination_factory=factory),
+        destination_catalogue=catalogue([], destination="workbench.declarations", destination_factory=factory),
         refresh_home=lambda: home,
     )
     async with app.run_test(size=(160, 50)) as pilot:
@@ -145,9 +145,9 @@ async def test_navigate_to_refuses_unavailable_destination_without_replacing_hom
         focus=TuiFocusIdentityV1(destination="workbench.ledger", semantic_key="ledger.entry"),
     )
     app = CadrumoTuiApp(
-        destination_catalogue=_catalogue([], destination_state=destination_state),
+        destination_catalogue=catalogue([], destination_state=destination_state),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
-        account_factories=_account_factories(),
+        account_factories=account_factories(),
     )
 
     async with app.run_test() as pilot:
@@ -184,12 +184,12 @@ async def test_navigate_to_refuses_a_factory_invocation_failure_without_leaving_
         focus=TuiFocusIdentityV1(destination="workbench.ledger", semantic_key="ledger.entry"),
     )
     app = CadrumoTuiApp(
-        destination_catalogue=_catalogue(
+        destination_catalogue=catalogue(
             [],
             destination_factory=broken_factory,
         ),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
-        account_factories=_account_factories(),
+        account_factories=account_factories(),
     )
 
     async with app.run_test() as pilot:
@@ -231,7 +231,7 @@ async def test_child_dismissal_refreshes_home_and_restores_its_semantic_focus() 
     contexts: list[TuiScreenContextV1] = []
     projection = build_home_projection_fixture(HomeFixtureScenario.READY)
     app = CadrumoTuiApp(
-        destination_catalogue=_catalogue(contexts),
+        destination_catalogue=catalogue(contexts),
         refresh_home=lambda: projection,
     )
     target = TuiNavigationTargetV1(
@@ -286,7 +286,7 @@ async def test_expired_child_return_tears_down_profile_bound_doors_and_recompose
     )
     projections = [ready, expired]
     app = CadrumoTuiApp(
-        destination_catalogue=_catalogue(contexts),
+        destination_catalogue=catalogue(contexts),
         refresh_home=lambda: projections.pop(0),
     )
 
@@ -317,10 +317,10 @@ async def test_expired_child_return_tears_down_profile_bound_doors_and_recompose
 async def test_expired_custody_refresh_recomposes_without_rendering_a_stale_root() -> None:
     """A precise custody expiry becomes the same non-secret expiry handoff."""
     app = CadrumoTuiApp(
-        destination_catalogue=_catalogue([]),
+        destination_catalogue=catalogue([]),
         refresh_home=lambda: (_ for _ in ()).throw(AccountSessionExpiredError()),
         workbench_search_service=WorkbenchSearchService(()),
-        account_factories=_account_factories(),
+        account_factories=account_factories(),
     )
 
     async with app.run_test() as pilot:
@@ -353,10 +353,10 @@ async def test_a_refused_home_refresh_keeps_the_session_and_reports_a_code() -> 
         raise RuntimeError("secure workbench generation changed during capture")
 
     app = CadrumoTuiApp(
-        destination_catalogue=_catalogue([]),
+        destination_catalogue=catalogue([]),
         refresh_home=refresh,
         workbench_search_service=WorkbenchSearchService(()),
-        account_factories=_account_factories(),
+        account_factories=account_factories(),
     )
 
     async with app.run_test() as pilot:
@@ -381,10 +381,10 @@ async def test_a_refused_refresh_never_reports_an_expiry_it_did_not_observe() ->
     write -- so the refusal must not be reported as a recomposition.
     """
     app = CadrumoTuiApp(
-        destination_catalogue=_catalogue([]),
+        destination_catalogue=catalogue([]),
         refresh_home=lambda: (_ for _ in ()).throw(RuntimeError("secure workbench generation changed during capture")),
         workbench_search_service=WorkbenchSearchService(()),
-        account_factories=_account_factories(),
+        account_factories=account_factories(),
     )
 
     async with app.run_test() as pilot:
@@ -405,7 +405,7 @@ def _direct_session_action(reason: AccountRecomposeReasonV1) -> AccountDirectSes
     return AccountDirectSessionActionV1(complete=complete)
 
 
-def _account_factories(
+def account_factories(
     change_user: AccountDirectSessionActionV1 | None = None,
     *,
     password: Screen[ProfilePassphraseRotationOutcome | None] | None = None,
@@ -456,7 +456,7 @@ async def test_with_pushed_retirement_the_session_is_read_only_at_its_expiry() -
             )
         return HomeAccountSession(posture=HomeSessionPosture.ACTIVE, profile_label="Current profile", expires_at=None)
 
-    factories = _account_factories()
+    factories = account_factories()
     object.__setattr__(factories, "subscribe_retirement", lambda _retired: lambda: None)
     app = CadrumoTuiApp(account_factories=factories, read_account_session=read)
     async with app.run_test() as pilot:
@@ -482,9 +482,9 @@ async def test_an_unfinished_profile_opens_on_setup_once_then_returns_home() -> 
     """The first Home of a session hands on to the Profile setup walk, and only once."""
     contexts: list[TuiScreenContextV1] = []
     app = CadrumoTuiApp(
-        destination_catalogue=_catalogue(contexts),
+        destination_catalogue=catalogue(contexts),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
-        account_factories=_account_factories(onboarding_pending=True),
+        account_factories=account_factories(onboarding_pending=True),
     )
     async with app.run_test() as pilot:
         await settle(pilot)
@@ -513,10 +513,10 @@ async def test_change_user_requests_fresh_selection_and_revokes_old_profile_root
         return AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.CHANGE_USER)
 
     app = CadrumoTuiApp(
-        destination_catalogue=_catalogue(contexts),
+        destination_catalogue=catalogue(contexts),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
         workbench_search_service=WorkbenchSearchService(()),
-        account_factories=_account_factories(AccountDirectSessionActionV1(complete=complete)),
+        account_factories=account_factories(AccountDirectSessionActionV1(complete=complete)),
     )
 
     async with app.run_test(size=(80, 24)) as pilot:
@@ -539,10 +539,10 @@ async def test_password_rotation_recomposes_before_the_old_session_root_can_be_r
     """A new custody generation cannot leave prior profile-bound doors live."""
     password = Screen[ProfilePassphraseRotationOutcome | None]()
     app = CadrumoTuiApp(
-        destination_catalogue=_catalogue([]),
+        destination_catalogue=catalogue([]),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
         workbench_search_service=WorkbenchSearchService(()),
-        account_factories=_account_factories(password=password),
+        account_factories=account_factories(password=password),
     )
     outcome = ProfilePassphraseRotationOutcome(
         profile_id="11111111-1111-4111-8111-111111111111",
@@ -584,9 +584,9 @@ async def test_home_link_keys_open_their_page_through_the_admitted_catalogue(
 ) -> None:
     contexts: list[TuiScreenContextV1] = []
     app = CadrumoTuiApp(
-        destination_catalogue=_catalogue(contexts),
+        destination_catalogue=catalogue(contexts),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
-        account_factories=_account_factories(),
+        account_factories=account_factories(),
     )
     async with app.run_test(size=(120, 40)) as pilot:
         await settle(pilot)
@@ -605,9 +605,9 @@ async def test_home_link_keys_open_their_page_through_the_admitted_catalogue(
 async def test_home_lists_a_closed_page_with_its_reason_and_refuses_to_open_it() -> None:
     contexts: list[TuiScreenContextV1] = []
     app = CadrumoTuiApp(
-        destination_catalogue=_catalogue(contexts, destination_state=WorkbenchDestinationAdmissionState.NEVER_CAPTURED),
+        destination_catalogue=catalogue(contexts, destination_state=WorkbenchDestinationAdmissionState.NEVER_CAPTURED),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
-        account_factories=_account_factories(),
+        account_factories=account_factories(),
     )
     async with app.run_test(size=(120, 40)) as pilot:
         await settle(pilot)
@@ -627,9 +627,9 @@ async def test_home_sign_out_link_signs_out_through_the_account_door() -> None:
         return AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.SIGNED_OUT)
 
     app = CadrumoTuiApp(
-        destination_catalogue=_catalogue([]),
+        destination_catalogue=catalogue([]),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
-        account_factories=_account_factories(sign_out=AccountDirectSessionActionV1(complete=complete)),
+        account_factories=account_factories(sign_out=AccountDirectSessionActionV1(complete=complete)),
     )
     async with app.run_test(size=(120, 40)) as pilot:
         await settle(pilot)
@@ -646,7 +646,7 @@ async def test_home_sign_out_link_signs_out_through_the_account_door() -> None:
 @pytest.mark.asyncio
 async def test_home_without_account_doors_marks_its_account_links_unavailable() -> None:
     app = CadrumoTuiApp(
-        destination_catalogue=_catalogue([]),
+        destination_catalogue=catalogue([]),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
     )
     async with app.run_test(size=(120, 40)) as pilot:
@@ -675,10 +675,10 @@ async def test_sign_out_direct_action_recomposes_success_or_requires_fresh_admis
         )
 
     app = CadrumoTuiApp(
-        destination_catalogue=_catalogue([]),
+        destination_catalogue=catalogue([]),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
         workbench_search_service=WorkbenchSearchService(()),
-        account_factories=_account_factories(sign_out=AccountDirectSessionActionV1(complete=complete)),
+        account_factories=account_factories(sign_out=AccountDirectSessionActionV1(complete=complete)),
     )
 
     async with app.run_test() as pilot:
@@ -702,9 +702,9 @@ async def test_sign_out_direct_action_recomposes_success_or_requires_fresh_admis
 async def test_account_header_is_keyboard_reachable_without_horizontal_overflow(width: int) -> None:
     """Every account control has a key named in the footer, and the bar fits the width."""
     app = CadrumoTuiApp(
-        destination_catalogue=_catalogue([]),
+        destination_catalogue=catalogue([]),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
-        account_factories=_account_factories(),
+        account_factories=account_factories(),
     )
 
     async with app.run_test(size=(width, 24)) as pilot:
@@ -750,12 +750,12 @@ async def test_direct_account_action_severs_private_root_before_completion(
         return desired
 
     direct = AccountDirectSessionActionV1(complete=complete)
-    factories = _account_factories(
+    factories = account_factories(
         direct if action is AccountActionV1.CHANGE_USER else None,
         sign_out=direct if action is AccountActionV1.SIGN_OUT else None,
     )
     app = CadrumoTuiApp(
-        destination_catalogue=_catalogue([]),
+        destination_catalogue=catalogue([]),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
         workbench_search_service=WorkbenchSearchService(()),
         account_factories=factories,
@@ -782,9 +782,9 @@ async def test_failed_direct_action_exits_to_fresh_admission_and_hides_unavailab
     async def complete() -> AccountRecomposeRequiredV1:
         raise ValueError("synthetic-private-failure")
 
-    factories = _account_factories(AccountDirectSessionActionV1(complete=complete), password_available=False)
+    factories = account_factories(AccountDirectSessionActionV1(complete=complete), password_available=False)
     app = CadrumoTuiApp(
-        destination_catalogue=_catalogue([]),
+        destination_catalogue=catalogue([]),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
         account_factories=factories,
     )
@@ -811,9 +811,9 @@ async def test_cancelled_direct_action_retains_completion_until_runtime_effect_s
         return AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.SIGNED_OUT)
 
     app = CadrumoTuiApp(
-        destination_catalogue=_catalogue([]),
+        destination_catalogue=catalogue([]),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
-        account_factories=_account_factories(sign_out=AccountDirectSessionActionV1(complete=complete)),
+        account_factories=account_factories(sign_out=AccountDirectSessionActionV1(complete=complete)),
     )
     async with app.run_test() as pilot:
         await settle(pilot)
@@ -839,9 +839,9 @@ async def test_access_dismissal_with_lost_admission_exits_before_old_root_can_re
         access_lost = True
 
     app = CadrumoTuiApp(
-        destination_catalogue=_catalogue([]),
+        destination_catalogue=catalogue([]),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
-        account_factories=_account_factories(access=Screen()),
+        account_factories=account_factories(access=Screen()),
     )
     lost_screen = LostAccessScreen()
     async with app.run_test() as pilot:
@@ -856,10 +856,10 @@ async def test_access_dismissal_with_lost_admission_exits_before_old_root_can_re
 
 @pytest.mark.asyncio
 async def test_captured_home_bundle_replaces_matching_catalogue_account_and_clears_search() -> None:
-    old_catalogue = _catalogue([])
-    new_catalogue = _catalogue([])
-    old_factories = _account_factories()
-    new_factories = _account_factories(password_available=False)
+    old_catalogue = catalogue([])
+    new_catalogue = catalogue([])
+    old_factories = account_factories()
+    new_factories = account_factories(password_available=False)
     bundle = RootPresentationV1(
         home=build_home_projection_fixture(HomeFixtureScenario.READY),
         destination_catalogue=new_catalogue,
@@ -907,7 +907,7 @@ async def test_authoritative_child_return_rebuilds_the_injected_search_snapshot_
     refreshed_search = WorkbenchSearchService(())
     refreshes: list[WorkbenchSearchService] = []
     app = CadrumoTuiApp(
-        destination_catalogue=_catalogue(contexts),
+        destination_catalogue=catalogue(contexts),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
         workbench_search_service=initial_search,
         refresh_workbench_search=lambda: (refreshes.append(refreshed_search), refreshed_search)[1],
@@ -943,7 +943,7 @@ async def test_failed_search_refresh_retains_last_good_and_sanitizes_refusal(
         raise RuntimeError("12345678Z C:\\protected\\search.json")
 
     app = CadrumoTuiApp(
-        destination_catalogue=_catalogue(contexts),
+        destination_catalogue=catalogue(contexts),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
         workbench_search_service=initial_search,
         refresh_workbench_search=fail_refresh,
@@ -987,7 +987,7 @@ async def test_the_return_to_home_rereads_off_the_event_loop_and_shows_that_it_i
         return refreshed_search
 
     app = CadrumoTuiApp(
-        destination_catalogue=_catalogue(contexts),
+        destination_catalogue=catalogue(contexts),
         refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
         workbench_search_service=WorkbenchSearchService(()),
         refresh_workbench_search=slow_refresh,

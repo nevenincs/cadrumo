@@ -19,7 +19,7 @@ from typing import Final
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from .. import models
 from ..catalogue import InvoiceCatalogue
@@ -41,7 +41,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 @pytest.fixture(autouse=True)
 def _authority_operation() -> Iterator[None]:
     """Validate invoices under the generation-pinned authority production uses."""
-    with _indexed_authority_for_test().operation():
+    with bundled_indexed_authority().operation():
         yield
 
 

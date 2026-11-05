@@ -11,7 +11,7 @@ from .....application.user_profile.censal_observation import CensalConsultation
 from .....core.config import Settings
 from .....core.remote_authority import is_current_aeat_host
 from .....domain.calculations.registry.errors import RegistryValidationError
-from ._adapter_utils import assert_query_browser_action_for, assert_read_http_for
+from .adapter_utils import assert_query_browser_action_for, assert_read_http_for
 from .censal_tables import census_key, parse_censal_table
 from .censal_tax_status import parse_censal_tax_status
 from .errors import SedeFailureMode, SedeNavigationError

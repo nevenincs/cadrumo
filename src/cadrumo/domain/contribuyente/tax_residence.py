@@ -14,8 +14,8 @@ from typing import cast
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.parsing.dates import parse_iso8601_date as _parse_iso8601_date
-from ...core.text_fold import fold_diacritics as _fold_diacritics
+from ...core.parsing.dates import parse_iso8601_date
+from ...core.text_fold import fold_diacritics
 from ..calculations.registry.ccaa_catalogue import resolve_ccaa_catalogue
 from ..calculations.registry.errors import RegistryValidationError
 from .ccaa import CCAA
@@ -46,7 +46,7 @@ class ResidenceChange(BaseModel, frozen=True, strict=True):
     @pydantic_validation_boundary
     def _parse_effective_from(cls, value: object) -> object:
         if isinstance(value, str):
-            return _parse_iso8601_date(value)
+            return parse_iso8601_date(value)
         return value
 
 
@@ -85,7 +85,7 @@ class TaxResidenceProfile(BaseModel, frozen=True, strict=True):
     @pydantic_validation_boundary
     def _parse_since(cls, value: object) -> object:
         if isinstance(value, str):
-            return _parse_iso8601_date(value)
+            return parse_iso8601_date(value)
         return value
 
 
@@ -135,4 +135,4 @@ def classify_tax_region(raw: str | None) -> ResidenceTerritory:
 
 def _normalize_region_token(raw: str) -> str:
     stripped = raw.strip().casefold().replace(" ", "_").replace("-", "_")
-    return _fold_diacritics(stripped)
+    return fold_diacritics(stripped)

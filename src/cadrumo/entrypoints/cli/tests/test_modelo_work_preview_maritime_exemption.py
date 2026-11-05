@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 import typer
 
-from ..modelo_maritime_commands import _parse_maritime_amounts
+from ..modelo_maritime_commands import parse_maritime_amounts
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -44,11 +44,11 @@ class TestAmountGrammarRefusal:
     )
     def test_non_canonical_annual_salary_refuses(self, raw_amount: str) -> None:
         with pytest.raises(typer.BadParameter) as refusal:
-            _parse_maritime_amounts(annual_salary=raw_amount, gross_navigation_income=None)
+            parse_maritime_amounts(annual_salary=raw_amount, gross_navigation_income=None)
         assert "--annual-salary" in str(refusal.value)
 
     @pytest.mark.parametrize("raw_amount", ["1e3", "+36500", "36.500", "36500,00"])
     def test_non_canonical_navigation_income_refuses(self, raw_amount: str) -> None:
         with pytest.raises(typer.BadParameter) as refusal:
-            _parse_maritime_amounts(annual_salary=None, gross_navigation_income=raw_amount)
+            parse_maritime_amounts(annual_salary=None, gross_navigation_income=raw_amount)
         assert "--gross-navigation-income" in str(refusal.value)

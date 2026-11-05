@@ -41,7 +41,7 @@ if TYPE_CHECKING:
 
     from ...application.operator_surface.manifest import CommandSchemaRef
     from ...core.json_contract import RegisteredSchema
-    from ._command_policy import CommandExecutionPolicy
+    from .command_policy import CommandExecutionPolicy
 
 
 def machine_secret_payload_metadata(spec: CommandSpec) -> tuple[MachineSecretPayloadMetadata, ...]:
@@ -328,7 +328,7 @@ def command_registration_metadata() -> tuple[CommandRegistrationMetadata, ...]:
 @cache
 def command_registration_policy(command: str) -> CommandExecutionPolicy:
     """Return the execution policy declared for ``command``."""
-    from ._command_policy import CommandExecutionPolicy
+    from .command_policy import CommandExecutionPolicy
     from .command_specs import COMMAND_GRAPH
 
     spec = COMMAND_GRAPH.by_schema_identity().get(command)

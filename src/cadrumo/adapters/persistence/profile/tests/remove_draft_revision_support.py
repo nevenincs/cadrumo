@@ -28,10 +28,8 @@ from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
 from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
-    BUCKET_ID as _BUCKET_ID,
-)
-from .ledger_action_persistence_support import (
-    repositories as _repositories,
+    BUCKET_ID,
+    repositories,
 )
 
 _REVISION_CASILLA: CasillaId = validated_casilla_id("01")
@@ -43,7 +41,7 @@ def seed_revision_citing_transaction(
     transaction_id: str,
     state: CalculationRevisionState,
     period_code: str,
-    bucket_id: str = _BUCKET_ID,
+    bucket_id: str = BUCKET_ID,
     operation: PinnedAuthorityOperation,
 ) -> str:
     """Seed one real revision in ``state`` that cites ``transaction_id``."""
@@ -134,16 +132,16 @@ def create_row(
     idempotency_key: str,
     description: str,
 ) -> str:
-    transaction_repository, event_repository = _repositories(objects)
+    transaction_repository, event_repository = repositories(objects)
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     ) as ports:
         created = create_manual_transaction(
             ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=date(2026, 5, 2),
                 amount=Decimal("1200.00"),
                 direction=TransactionDirection.INCOMING,

@@ -53,14 +53,14 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
     build_test_verification_repository_bundle,
 )
 from cadrumo.entrypoints.tests.profile_persistence.verification_substance_support import (
-    _CASILLA_05,
-    _CASILLA_06,
-    _CASILLA_16,
-    _CASILLA_18,
-    _T0,
-    _T1,
-    _T2,
-    _seed_ready_profile,
+    CASILLA_05,
+    CASILLA_06,
+    CASILLA_16,
+    CASILLA_18,
+    T0,
+    T1,
+    T2,
+    seed_ready_profile,
     workflow_profile,
 )
 
@@ -239,7 +239,7 @@ def test_art109_period_evidence_fails_closed_when_gross_only_receipt_cannot_prov
 @pytest.fixture
 def objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        _seed_ready_profile(bucket_id=_BUCKET_ID)
+        seed_ready_profile(bucket_id=_BUCKET_ID)
         upsert_test_profile_facts(
             _BUCKET_ID, (fact for fact in cash_criterion_facts(2026) if fact.path != "irpf.estimation_regime")
         )
@@ -261,7 +261,7 @@ def _calculate_m130_draft(
         ports=WorkLifecyclePorts(
             work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=objects)
         ),
-        clock=_T0,
+        clock=T0,
         operation=operation,
     )
     with calculation_ports_for_test(
@@ -273,17 +273,17 @@ def _calculate_m130_draft(
         revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             casilla_inputs={
-                _CASILLA_05: Decimal("0.00"),
-                _CASILLA_06: Decimal("0.00"),
-                _CASILLA_16: Decimal("0.00"),
-                _CASILLA_18: Decimal("0.00"),
+                CASILLA_05: Decimal("0.00"),
+                CASILLA_06: Decimal("0.00"),
+                CASILLA_16: Decimal("0.00"),
+                CASILLA_18: Decimal("0.00"),
             },
             binding_values={
                 "irpf.previous_year_economic_activity_net_income": Decimal("20000.00"),
                 "modelo-130-resultados-negativos-anteriores": Decimal("0.00"),
             },
             ports=_calculation_ports_255,
-            clock=_T1,
+            clock=T1,
         ).revision
     return work_unit, revision
 
@@ -357,7 +357,7 @@ def _verify_art109_findings(
             workflow_profile=workflow_profile().model_copy(
                 update={"art109_activity_income_withholding_ge_70pct": profile_flag},
             ),
-            clock=_T2,
+            clock=T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=verify_operation,
         )
@@ -365,7 +365,7 @@ def _verify_art109_findings(
     assert not [
         finding
         for finding in result.report.findings
-        if finding.casilla_id == _CASILLA_06 and finding.severity is ModeloVerificationFindingSeverity.BLOCKING
+        if finding.casilla_id == CASILLA_06 and finding.severity is ModeloVerificationFindingSeverity.BLOCKING
     ], result.report.findings
     return _collect_art109_findings(objects, revision=revision, profile_flag=profile_flag)
 

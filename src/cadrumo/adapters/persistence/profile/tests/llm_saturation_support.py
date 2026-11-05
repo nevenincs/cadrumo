@@ -23,8 +23,8 @@ from cadrumo.domain.transactions.llm import prompt_spec_with_saturation_fields
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
-_NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
-_BUCKET = "17171717-1717-4717-8717-171717171717"
+NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
+BUCKET = "17171717-1717-4717-8717-171717171717"
 _DEFAULT_IVA_CATEGORY = IvaCategory("domestic_general")
 _DEFAULT_SPENDING_CATEGORY = SpendingCategory.from_registry("arrendamiento_local")
 
@@ -63,15 +63,15 @@ print({response_json!r})
 
 @pytest.fixture
 def repositories(tmp_path: Path) -> Iterator[tuple[TransactionCatalogueRepository, BucketEventHistoryRepository]]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET) as profile:
         objects = profile.repository
         yield (
-            TransactionCatalogueRepository(bucket_id=_BUCKET, objects=objects),
+            TransactionCatalogueRepository(bucket_id=BUCKET, objects=objects),
             BucketEventHistoryRepository(objects=objects),
         )
 
 
-def _seed_unclassified(repository: TransactionCatalogueRepository, *, amount: Decimal = Decimal("121.00")) -> str:
+def seed_unclassified(repository: TransactionCatalogueRepository, *, amount: Decimal = Decimal("121.00")) -> str:
     """Persist one ACTIVE, NOT_YET_PROCESSED transaction and return its id."""
     raw = RawTransaction(
         provider_transaction_id="row-saturate-1",
@@ -86,7 +86,7 @@ def _seed_unclassified(repository: TransactionCatalogueRepository, *, amount: De
             source_sha256="a" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=_NOW,
+            ingested_at=NOW,
             provider_name="csv",
         ),
         raw_fields={"Concepto": "client lunch"},
@@ -98,7 +98,7 @@ def _seed_unclassified(repository: TransactionCatalogueRepository, *, amount: De
     return tx.transaction_id
 
 
-def _seed_business(
+def seed_business(
     repository: TransactionCatalogueRepository,
     *,
     amount: Decimal = Decimal("121.00"),
@@ -118,7 +118,7 @@ def _seed_business(
             source_sha256="b" * 64,
             source_row_index=1,
             source_format=SourceFormat.CSV,
-            ingested_at=_NOW,
+            ingested_at=NOW,
             provider_name="csv",
         ),
         raw_fields={"Concepto": "office rent"},

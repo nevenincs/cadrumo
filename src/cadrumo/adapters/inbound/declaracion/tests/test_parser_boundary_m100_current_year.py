@@ -31,10 +31,10 @@ import pytest
 
 from .....tests.inventory import FIXTURES_DIR
 from ..parser import parse_declaracion
-from ._parser_boundary_m100_current_support import M100_CURRENT_YEAR_EXPECTED_CASILLAS
-from ._parser_boundary_support import (
-    _expected_period,
-    _modelo_snapshot,
+from .parser_boundary_m100_current_support import M100_CURRENT_YEAR_EXPECTED_CASILLAS
+from .parser_boundary_support import (
+    expected_period,
+    modelo_snapshot,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
@@ -93,7 +93,7 @@ _M100_CURRENT_YEAR_EXPECTED_VALUES: dict[str, Decimal] = {
 )
 def test_parser_extracts_modelo_100_current_year_profile_targets(year: int, profile_id: str) -> None:
     """Registry profile declares exactly the 21-casilla current-year target set."""
-    snapshot = _modelo_snapshot("100", filing_year=year, period="0A")
+    snapshot = modelo_snapshot("100", filing_year=year, period="0A")
     profile = snapshot.extraction_profiles[profile_id]
     assert {target.casilla_id for target in profile.target_casillas} == M100_CURRENT_YEAR_EXPECTED_CASILLAS
     for target in profile.target_casillas:
@@ -120,7 +120,7 @@ def test_parser_extracts_modelo_100_current_year_profile_targets_from_committed_
     filing = parse_declaracion(pdf_path, modelo_override="100", año_override=year, period_override="0A")
 
     assert filing.modelo == "100"
-    assert filing.period == _expected_period(year, "0A")
+    assert filing.period == expected_period(year, "0A")
     assert filing.tax_id == "Y0000001S"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "100"

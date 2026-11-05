@@ -30,7 +30,7 @@ from sqlalchemy.types import TypeDecorator
 
 from .....core.keyed_digest import keyed_digest_bytes
 from ..errors import (
-    storage_validation_error as _storage_validation_error,
+    storage_validation_error,
 )
 from ..master_key.active_session import (
     get_active_hmac_subkey,
@@ -230,7 +230,7 @@ class HashedLookup(TypeDecorator[bytes]):
             StorageValidationError: When ``plaintext`` is not a string.
         """
         if not isinstance(plaintext, str):
-            raise _storage_validation_error(f"HashedLookup.compute expects str; got {type(plaintext).__name__}")
+            raise storage_validation_error(f"HashedLookup.compute expects str; got {type(plaintext).__name__}")
         # The sub-key depends only on the active DEK and the column-lookup
         # context, so it is resolved through the session-scoped memo rather
         # than re-derived per digest; the HMAC over ``plaintext`` is the only
@@ -249,11 +249,11 @@ class HashedLookup(TypeDecorator[bytes]):
         if isinstance(value, bytes | bytearray | memoryview):
             digest = bytes(value)
             if len(digest) != _HASHED_LOOKUP_DIGEST_SIZE:
-                raise _storage_validation_error(
+                raise storage_validation_error(
                     f"HashedLookup pre-computed digest must be {_HASHED_LOOKUP_DIGEST_SIZE} bytes; got {len(digest)}",
                 )
             return digest
-        raise _storage_validation_error(
+        raise storage_validation_error(
             f"HashedLookup expects str or bytes; got {type(value).__name__}",
         )
 
@@ -265,7 +265,7 @@ class HashedLookup(TypeDecorator[bytes]):
         # the raw digest so callers can compare it against another
         # ``compute()`` result.
         if len(value) != _HASHED_LOOKUP_DIGEST_SIZE:
-            raise _storage_validation_error(
+            raise storage_validation_error(
                 f"HashedLookup expects {_HASHED_LOOKUP_DIGEST_SIZE}-byte digests; got {len(value)}",
             )
         return bytes(value)

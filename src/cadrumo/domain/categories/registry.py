@@ -133,7 +133,7 @@ def _resolve_profile(
         ) from exc
     if not isinstance(fact, ResolvedMappingFact):
         raise CategoryValidationError("category profile authority returned a non-mapping fact")
-    return _profile_from_authority_fact(
+    return profile_from_authority_fact(
         fact,
         operation=operation,
         year=year,
@@ -141,7 +141,7 @@ def _resolve_profile(
     )
 
 
-def _profile_from_authority_fact(
+def profile_from_authority_fact(
     resolved: ResolvedMappingFact,
     *,
     operation: PinnedAuthorityOperation,

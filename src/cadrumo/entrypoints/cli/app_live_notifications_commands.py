@@ -35,7 +35,7 @@ from ...application.live.notification_document_read_operation import (
 )
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ._app_live_auth_preflight import emit_live_auth_preflight
+from .app_live_auth_preflight import emit_live_auth_preflight
 from .app_live_notifications_results import (
     NotificationDocumentHistoryEntry,
     NotificationDocumentHistoryResult,

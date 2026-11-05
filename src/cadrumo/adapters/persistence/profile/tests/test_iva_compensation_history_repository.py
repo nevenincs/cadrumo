@@ -16,7 +16,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.iva_compensation.carry_forward import build_iva_compensation_carry_forward_report
 
-from .iva_compensation_history_support import _state
+from .iva_compensation_history_support import iva_compensation_history_state
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -24,7 +24,7 @@ _HISTORY_BUCKET_ID = "30330300-0000-4000-8000-000000000305"
 
 
 def test_iva_compensation_history_round_trips_a_period_bound_encrypted_payload(tmp_path: Path) -> None:
-    state = _state(filing_year=2026, period="2T", generated=Decimal("47.00"))
+    state = iva_compensation_history_state(filing_year=2026, period="2T", generated=Decimal("47.00"))
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_HISTORY_BUCKET_ID):
         repository = IvaCompensationHistoryRepository()
@@ -41,7 +41,7 @@ def test_replaying_the_same_period_state_does_not_duplicate_a_compensation_lot(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """An identical recalculation/replay replaces one period key, not the wallet history."""
-    state = _state(filing_year=2026, period="2T", generated=Decimal("47.00"))
+    state = iva_compensation_history_state(filing_year=2026, period="2T", generated=Decimal("47.00"))
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_HISTORY_BUCKET_ID):
         repository = IvaCompensationHistoryRepository()
@@ -57,7 +57,7 @@ def test_replaying_the_same_period_state_does_not_duplicate_a_compensation_lot(
 
 
 def test_iva_compensation_history_refuses_a_period_payload_rekeyed_under_foreign_storage_key(tmp_path: Path) -> None:
-    state = _state(filing_year=2026, period="2T", generated=Decimal("47.00"))
+    state = iva_compensation_history_state(filing_year=2026, period="2T", generated=Decimal("47.00"))
     foreign_period = Period.from_year_and_code(2025, "1T")
     foreign_key = iva_compensation_period_key(foreign_period)
 

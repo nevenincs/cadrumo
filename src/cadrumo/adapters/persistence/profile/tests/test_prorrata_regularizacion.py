@@ -32,8 +32,7 @@ from .....core.modelo import Modelo
 from .....core.period import Period
 from .....core.prorrata_register import ProrrataProvisionalProvenance
 from .....core.result_disposition import ResultDisposition
-from .....domain.calculations.registry.authority import PinnedAuthorityOperation
-from .....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.calculations.registry.binding_targets import casillas_by_binding
 from .....domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
@@ -325,7 +324,7 @@ def test_settlement_writeback_persists_observation_that_seeds_next_year_carried_
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Filing the settlement writes the register and lets year+1 carry from the stamped observation."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
         with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
             calculation_repository = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
             filing_repository = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID)

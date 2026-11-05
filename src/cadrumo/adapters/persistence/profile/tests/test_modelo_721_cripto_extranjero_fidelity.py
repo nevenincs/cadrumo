@@ -61,11 +61,11 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.tests._multi_year_roundtrip_support import (
+from cadrumo.adapters.persistence.profile.tests.multi_year_roundtrip_support import (
     assert_omitted_casilla_is_detected,
     assert_two_ejercicio_round_trip,
 )
-from cadrumo.adapters.persistence.profile.tests._observation_lookup_support import (
+from cadrumo.adapters.persistence.profile.tests.observation_lookup_support import (
     find_observation,
     save_app_filing_observation,
     saved_two_ejercicios,
@@ -75,7 +75,7 @@ from cadrumo.application.foreign_asset_thresholds import foreign_asset_declarati
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.foreign_asset_obligation import ForeignAssetObligationGroup
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observation_rows,
@@ -96,7 +96,7 @@ _CONTEXT_LABEL = "721-monedas-virtuales-extranjero-prior-year-baseline-two-annua
 
 #: Initial declaration threshold per RD 1065/2007 art. 42-quater (same structure
 #: as 720: €50,000 aggregate value at 31 December through a third-party custodian).
-with _indexed_authority_for_test().operation() as _module_authority_operation_for_test:
+with bundled_indexed_authority().operation() as _module_authority_operation_for_test:
     _MONEDAS_VIRTUALES_THRESHOLD = foreign_asset_declaration_thresholds(
         modelo=_MODELO,
         filing_year=_YEAR_N_PLUS_1,

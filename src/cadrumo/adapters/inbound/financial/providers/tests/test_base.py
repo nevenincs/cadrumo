@@ -18,7 +18,6 @@ from ......core.decimal.grammar import DecimalSeparator
 from ......core.tabular import coerce_cell_text
 from ......domain.transactions.raw_transaction import RawTransaction, SourceFormat
 from ......tests.inventory import FIXTURES_DIR
-from .._mapped_tabular import MappedTabularProvider
 from ..base import (
     BankStatementParseError,
     FinancialValidationError,
@@ -29,6 +28,7 @@ from ..base import (
 )
 from ..csv import CsvProvider
 from ..detection import detect_provider
+from ..mapped_tabular import MappedTabularProvider
 from ..ofx import OfxProvider
 from ..pdf_statement import PdfStatementProvider
 from ..xls import XlsProvider

@@ -84,7 +84,7 @@ _BUSINESS = BusinessClassification.BUSINESS
 _PROPOSED_BY = "llm:local-text:synthetic"
 _TYPED = "typed by the caller"
 
-_Runtime = tuple[conformance._ExecutionDriver, OperationRegistry, UUID, SwitchableSessionHost]
+_Runtime = tuple[conformance.ExecutionDriver, OperationRegistry, UUID, SwitchableSessionHost]
 _Act = tuple[str, BaseModel]
 
 _FRONTENDS = pytest.mark.parametrize(

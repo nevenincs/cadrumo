@@ -30,7 +30,7 @@ from __future__ import annotations
 import pytest
 
 from ......core.config import Settings
-from .._declarations_fetch import (
+from ..declarations_fetch import (
     SEDE_BASE,
     cotejo_document_url,
     listing_url_for,

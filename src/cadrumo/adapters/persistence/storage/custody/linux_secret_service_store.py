@@ -59,7 +59,7 @@ def _attributes(namespace: str, account: str) -> dict[str, str]:
 
 
 @contextmanager
-def _native_bus() -> Generator[DeadlineSecretBus]:
+def native_bus() -> Generator[DeadlineSecretBus]:
     try:
         bus = DeadlineSecretBus(user_secret_bus_path(), time.monotonic() + OPERATION_SECONDS)
         try:
@@ -137,7 +137,7 @@ def _find(bus: DeadlineSecretBus, collection: str, attributes: dict[str, str]) -
 
 
 @contextmanager
-def _session(bus: DeadlineSecretBus) -> Generator[Any]:
+def linux_secret_service_store_session(bus: DeadlineSecretBus) -> Generator[Any]:
     from secretstorage.dhcrypto import DH_PRIME_1024, Session
 
     session = Session()
@@ -170,7 +170,7 @@ def _session(bus: DeadlineSecretBus) -> Generator[Any]:
         session.my_private_key = 0
 
 
-def _read_item(bus: DeadlineSecretBus, path: str, session: Any) -> bytes:
+def read_item(bus: DeadlineSecretBus, path: str, session: Any) -> bytes:
     (secret,) = secret_reply_body(bus.call(path, ITEM_IFACE, "GetSecret", "o", (session.object_path,)), 1)
     session_path, iv, ciphertext, content_type = secret_reply_body(secret, 4)
     if (
@@ -201,14 +201,14 @@ class LinuxSecretServiceAutomationSecretStore:
     def read(self, namespace: str, account: str) -> SecretBytes | None:
         """Read the uniquely matching unlocked item within the existing collection."""
         attributes = _attributes(namespace, account)
-        with _native_bus() as bus:
+        with native_bus() as bus:
             collection = _collection(bus)
             require_protected_gnome_collection(bus, collection)
             path = _find(bus, collection, attributes)
             if path is None:
                 return None
-            with _session(bus) as session:
-                return SecretBytes(_read_item(bus, path, session))
+            with linux_secret_service_store_session(bus) as session:
+                return SecretBytes(read_item(bus, path, session))
 
     def replace(self, namespace: str, account: str, value: SecretBytes) -> None:
         """Atomically replace exact attributes and verify the resulting secret."""
@@ -218,13 +218,13 @@ class LinuxSecretServiceAutomationSecretStore:
         raw = value.get_secret_value()
         if not 0 < len(raw) <= MAX_SECRET_SIZE:
             raise invalid_secret_reply()
-        with _native_bus() as bus:
+        with native_bus() as bus:
             from secretstorage.util import format_secret
 
             collection = _collection(bus)
             require_protected_gnome_collection(bus, collection)
             _find(bus, collection, attributes)
-            with _session(bus) as session:
+            with linux_secret_service_store_session(bus) as session:
                 properties = {
                     ITEM_IFACE + ".Label": ("s", "Cadrumo automation"),
                     ITEM_IFACE + ".Attributes": ("a{ss}", attributes),
@@ -243,13 +243,13 @@ class LinuxSecretServiceAutomationSecretStore:
                     raise AutomationCustodyError(AutomationCustodyCode.NEEDS_USER)
                 item = secret_object_path(item)
                 observed = _find(bus, collection, attributes)
-                if observed != item or not secrets.compare_digest(_read_item(bus, item, session), raw):
+                if observed != item or not secrets.compare_digest(read_item(bus, item, session), raw):
                     raise invalid_secret_reply()
 
     def delete(self, namespace: str, account: str) -> None:
         """Delete the uniquely matching item and verify absence without prompting."""
         attributes = _attributes(namespace, account)
-        with _native_bus() as bus:
+        with native_bus() as bus:
             collection = _collection(bus)
             require_protected_gnome_collection(bus, collection)
             path = _find(bus, collection, attributes)

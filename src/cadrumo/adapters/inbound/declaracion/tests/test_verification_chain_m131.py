@@ -6,12 +6,12 @@ import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.ids import BindingId
-from ._verification_chain_support import (
-    _COMPUTED_CASILLAS_M131,
-    _assert_engine_closure_matches_extracted_decimal,
-    _calculate_engine_values_from_inputs,
-    _decimal_inputs_from_extracted_values,
-    _parse_extracted_declaracion_values,
+from .verification_chain_support import (
+    COMPUTED_CASILLAS_M131,
+    assert_engine_closure_matches_extracted_decimal,
+    calculate_engine_values_from_inputs,
+    decimal_inputs_from_extracted_values,
+    parse_extracted_declaracion_values,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
@@ -64,19 +64,19 @@ def test_verification_chain_m131_engine_recomputes_closure_casillas() -> None:
     i.e. the formula DAG closes. This is NOT an AEAT-verified verdict — see
     FIXTURE, NOT ORACLE above.
     """
-    extracted = _parse_extracted_declaracion_values(
+    extracted = parse_extracted_declaracion_values(
         modelo="131",
         fixture_stem="2024-1T",
         year=2026,
         period="1T",
         template_revision="2026",
     )
-    inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_COMPUTED_CASILLAS_M131)
+    inputs = decimal_inputs_from_extracted_values(extracted, excluding=COMPUTED_CASILLAS_M131)
 
     binding_values: dict[BindingId, Decimal] = {
         "modelo-131-resultados-negativos-anteriores": Decimal("0"),
     }
-    engine_values = _calculate_engine_values_from_inputs(
+    engine_values = calculate_engine_values_from_inputs(
         modelo="131",
         year=2026,
         period="1T",
@@ -95,7 +95,7 @@ def test_verification_chain_m131_engine_recomputes_closure_casillas() -> None:
     )
 
     for closure_id in _M131_CLOSURE_CASILLAS:
-        _assert_engine_closure_matches_extracted_decimal(
+        assert_engine_closure_matches_extracted_decimal(
             label="M131/yr=2026-1T",
             engine_values=engine_values,
             extracted=extracted,

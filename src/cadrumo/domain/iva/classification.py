@@ -55,7 +55,7 @@ from ...core.registry_token import StrictRegistryToken
 from ...core.time.clock import today_madrid
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import unique_mapping_tokens
-from ._classification_engine import (
+from .classification_engine import (
     fallback_classification,
     first_matching_classification,
     registry_iva_classification_catalogue,
@@ -63,8 +63,8 @@ from ._classification_engine import (
     resolve_rate_category_mapping,
     resolve_rate_territories,
 )
-from ._fact_mapping_entries import mapping_entries
 from .errors import IvaValidationError
+from .fact_mapping_entries import mapping_entries
 from .place_of_supply import IvaPlaceOfSupplyRule
 from .schema import (
     EUMemberState,

@@ -20,52 +20,22 @@ from cadrumo.adapters.outbound.aeat.sede.schema import (
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    CAPTURED_AT as _CAPTURED_AT,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    M303_POSTERIOR_CASILLA as _M303_POSTERIOR_CASILLA,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    MODELO_130_FIXTURE_CSV as _MODELO_130_FIXTURE_CSV,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    MODELO_303_FIXTURE_CSV as _MODELO_303_FIXTURE_CSV,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    SYNTHETIC_PROFILE_ID as _SYNTHETIC_PROFILE_ID,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    modelo_130_justificante_pdf_bytes as _modelo_130_justificante_pdf_bytes,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    modelo_303_justificante_pdf_bytes as _modelo_303_justificante_pdf_bytes,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    prior_303_observation as _prior_303_observation,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    profile_backend as _profile_backend,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    registry_snapshot as _registry_snapshot,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    secure_backend as _secure_backend,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    seed_current_130_filing as _seed_current_130_filing,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    seed_current_303_filing as _seed_current_303_filing,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    stored_130_justificante_observation as _stored_130_justificante_observation,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    stored_303_justificante_observation as _stored_303_justificante_observation,
-)
-from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
-    stored_justificante_observation as _stored_justificante_observation,
+    CAPTURED_AT,
+    M303_POSTERIOR_CASILLA,
+    MODELO_130_FIXTURE_CSV,
+    MODELO_303_FIXTURE_CSV,
+    SYNTHETIC_PROFILE_ID,
+    modelo_130_justificante_pdf_bytes,
+    modelo_303_justificante_pdf_bytes,
+    prior_303_observation,
+    profile_backend,
+    registry_snapshot,
+    secure_backend,
+    seed_current_130_filing,
+    seed_current_303_filing,
+    stored_130_justificante_observation,
+    stored_303_justificante_observation,
+    stored_justificante_observation,
 )
 from cadrumo.application.calculations.m303_carry_ingress import M303CarryIngressError
 from cadrumo.application.calculations.observations_repository import ObservationSourceKind
@@ -83,7 +53,7 @@ from cadrumo.core.casilla_value_kind import CasillaValueKind
 from cadrumo.core.config import Settings
 from cadrumo.core.json_contract import NoticeSeverity
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -91,7 +61,7 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
     revision_id_for_observation,
 )
 
-from ._filed_capture_history_ports_support import SESSION_BUCKET_ID, filed_ports
+from .filed_capture_history_ports_support import SESSION_BUCKET_ID, filed_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -110,35 +80,35 @@ def test_history_selection_is_invariant_to_the_order_duplicated_periods_arrive_i
     Ordinary single-filing periods sit in the same batch so a selector that
     collapsed everything to one row per modelo-year would not pass.
     """
-    original_3t = _prior_303_observation(
+    original_3t = prior_303_observation(
         year=2024,
         period="3T",
         expediente_id="202430300000303C",
         pending_compensation=Decimal("300.00"),
         presented_at=datetime(2024, 10, 18, 12, 5, 11, tzinfo=UTC),
     )
-    amendment_3t = _prior_303_observation(
+    amendment_3t = prior_303_observation(
         year=2024,
         period="3T",
         expediente_id="202430300000505E",
         pending_compensation=Decimal("355.00"),
         presented_at=datetime(2025, 3, 14, 11, 20, 36, tzinfo=UTC),
     )
-    original_4t = _prior_303_observation(
+    original_4t = prior_303_observation(
         year=2024,
         period="4T",
         expediente_id="202430300000404D",
         pending_compensation=Decimal("400.00"),
         presented_at=datetime(2025, 1, 27, 16, 42, 58, tzinfo=UTC),
     )
-    amendment_4t = _prior_303_observation(
+    amendment_4t = prior_303_observation(
         year=2024,
         period="4T",
         expediente_id="202430300000606F",
         pending_compensation=Decimal("444.00"),
         presented_at=datetime(2025, 3, 14, 11, 58, 9, tzinfo=UTC),
     )
-    single_1t = _prior_303_observation(
+    single_1t = prior_303_observation(
         year=2024,
         period="1T",
         expediente_id="202430300000101A",
@@ -196,7 +166,7 @@ def test_persisted_source_metadata_carries_the_register_request_type_signal(tmp_
         "the raw observation does not carry the signal, so this test cannot show it being carried"
     )
 
-    with _secure_backend(tmp_path):
+    with secure_backend(tmp_path):
         persist_filed_calculation_observation(
             observation,
             ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path),
@@ -225,13 +195,13 @@ def test_persisted_source_metadata_omits_an_absent_request_type_rather_than_writ
     blank = _filed_130_observation().model_copy(update={"metadata": {"tipo_solicitud": "   "}})
     missing = _filed_130_observation().model_copy(update={"metadata": {"observaciones": ""}})
 
-    with _secure_backend(tmp_path / "blank"):
+    with secure_backend(tmp_path / "blank"):
         persist_filed_calculation_observation(
             blank,
             ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path),
         )
         blank_row = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
-    with _secure_backend(tmp_path / "missing"):
+    with secure_backend(tmp_path / "missing"):
         persist_filed_calculation_observation(
             missing,
             ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path),
@@ -259,7 +229,7 @@ def test_the_request_type_signal_survives_a_strict_persistence_roundtrip(tmp_pat
     observation = _filed_130_observation().model_copy(
         update={"metadata": {"tipo_solicitud": _SYNTHETIC_REQUEST_TYPE, "observaciones": "OBS"}},
     )
-    with _secure_backend(tmp_path):
+    with secure_backend(tmp_path):
         persist_filed_calculation_observation(
             observation,
             ports=filed_ports(bucket_id=SESSION_BUCKET_ID, root=tmp_path),
@@ -274,7 +244,7 @@ def test_the_request_type_signal_survives_a_strict_persistence_roundtrip(tmp_pat
     assert first.source_metadata == {
         "aeat_register_status": "ALTA",
         "aeat_expediente_id": observation.expediente_id,
-        "authenticated_identity": _SYNTHETIC_PROFILE_ID,
+        "authenticated_identity": SYNTHETIC_PROFILE_ID,
         "aeat_tipo_solicitud": _SYNTHETIC_REQUEST_TYPE,
         "aeat_justificante_csv": "CSV13020261T",
     }
@@ -308,17 +278,17 @@ def test_a_receipt_reaches_its_filing_even_though_its_identifier_is_not_the_regi
     # premise: it is what makes the stamp below evidence that the identifier is
     # no longer consulted, rather than evidence that two equal values agreed.
     register_expediente_id = "202613000000101A"
-    receipt = parse_justificante_bytes(_modelo_130_justificante_pdf_bytes())
+    receipt = parse_justificante_bytes(modelo_130_justificante_pdf_bytes())
     assert receipt.presentation_id is not None
     assert receipt.presentation_id.strip().casefold() != register_expediente_id.strip().casefold(), (
         "the receipt's presentation identifier and the register expediente id no longer diverge, "
         "so this fixture pair cannot exercise the divergence"
     )
 
-    with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
+    with profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
         store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
-        observation = _stored_130_justificante_observation(store, expediente_id=register_expediente_id)
-        filing = _seed_current_130_filing(bucket_id=bucket_id)
+        observation = stored_130_justificante_observation(store, expediente_id=register_expediente_id)
+        filing = seed_current_130_filing(bucket_id=bucket_id)
 
         result = enroll_filed_justificante_evidence(
             observation, ports=filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id
@@ -358,10 +328,10 @@ def test_a_receipt_is_refused_when_its_csv_is_not_the_csv_its_bytes_were_fetched
     alone: same modelo, ejercicio, period and taxpayer identity, and a filing
     record present and ready to be stamped.
     """
-    with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
+    with profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
         store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
-        observation = _stored_130_justificante_observation(store, captured_csv="QQQQ7777WWWW3333")
-        _seed_current_130_filing(bucket_id=bucket_id)
+        observation = stored_130_justificante_observation(store, captured_csv="QQQQ7777WWWW3333")
+        seed_current_130_filing(bucket_id=bucket_id)
 
         result = enroll_filed_justificante_evidence(
             observation, ports=filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id
@@ -395,9 +365,9 @@ def test_a_receipt_is_refused_when_no_csv_can_be_recovered_from_the_artefact_url
     propagate would abort the whole enrollment over one malformed URL, so it
     joins the other swallowed outcomes instead.
     """
-    with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
+    with profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
         store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
-        observation = _stored_130_justificante_observation(store)
+        observation = stored_130_justificante_observation(store)
         artefact = observation.artefacts[0]
         observation = observation.model_copy(
             update={
@@ -408,7 +378,7 @@ def test_a_receipt_is_refused_when_no_csv_can_be_recovered_from_the_artefact_url
                 ),
             },
         )
-        _seed_current_130_filing(bucket_id=bucket_id)
+        seed_current_130_filing(bucket_id=bucket_id)
 
         result = enroll_filed_justificante_evidence(
             observation, ports=filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id
@@ -434,7 +404,7 @@ def test_the_csv_check_tells_two_same_period_filings_apart_where_the_other_axes_
     printed on those bytes reaches its filing's reconciliation. The row whose URL
     names the other filing's csv is refused before any reconciliation.
     """
-    receipt = parse_justificante_bytes(_modelo_303_justificante_pdf_bytes())
+    receipt = parse_justificante_bytes(modelo_303_justificante_pdf_bytes())
     other_filing_csv = "QQQQ7777WWWW3333"
     assert receipt.csv.strip().upper() != other_filing_csv, (
         "the two filings' csvs no longer diverge, so nothing here can be discriminated"
@@ -450,11 +420,11 @@ def test_the_csv_check_tells_two_same_period_filings_apart_where_the_other_axes_
             tax_id="00000000T",
         ), f"the predicate must accept the receipt for {expediente_id}, or the two are already separable"
 
-    with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
+    with profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
         store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
-        filing = _seed_current_303_filing(bucket_id=bucket_id)
+        filing = seed_current_303_filing(bucket_id=bucket_id)
 
-        wrong_filing = _stored_303_justificante_observation(
+        wrong_filing = stored_303_justificante_observation(
             store,
             expediente_id="202630300000412B",
             captured_csv=other_filing_csv,
@@ -473,7 +443,7 @@ def test_the_csv_check_tells_two_same_period_filings_apart_where_the_other_axes_
             )
         )
 
-        right_filing = _stored_303_justificante_observation(store)
+        right_filing = stored_303_justificante_observation(store)
         accepted = enroll_filed_justificante_evidence(
             right_filing, ports=filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id
         )
@@ -509,41 +479,41 @@ def _artefact_replaced(
 
 
 def _manifest_mismatch_observation(store: FiledDeclaracionObservationStore) -> FiledDeclaracionObservation:
-    observation = _stored_130_justificante_observation(store)
+    observation = stored_130_justificante_observation(store)
     return _artefact_replaced(observation, byte_count=observation.artefacts[0].byte_count + 1)
 
 
 def _unparsable_pdf_observation(store: FiledDeclaracionObservationStore) -> FiledDeclaracionObservation:
-    return _stored_justificante_observation(
+    return stored_justificante_observation(
         store,
         modelo="130",
         pdf_bytes=b"%PDF-1.4 not a receipt",
         authenticated_identity="00000000T",
         expediente_id="202613000000199Z",
-        captured_csv=_MODELO_130_FIXTURE_CSV,
+        captured_csv=MODELO_130_FIXTURE_CSV,
     )
 
 
 def _csv_unresolvable_observation(store: FiledDeclaracionObservationStore) -> FiledDeclaracionObservation:
-    observation = _stored_130_justificante_observation(store)
+    observation = stored_130_justificante_observation(store)
     stripped = str(observation.artefacts[0].source_url).split("?", 1)[0]
     return _artefact_replaced(observation, source_url=AnyHttpUrl(stripped))
 
 
 def _csv_mismatch_observation(store: FiledDeclaracionObservationStore) -> FiledDeclaracionObservation:
-    return _stored_130_justificante_observation(store, captured_csv="QQQQ7777WWWW3333")
+    return stored_130_justificante_observation(store, captured_csv="QQQQ7777WWWW3333")
 
 
 def _filing_target_mismatch_observation(store: FiledDeclaracionObservationStore) -> FiledDeclaracionObservation:
     # The csv agrees, so this reaches the filing-target axis rather than stopping
     # at the csv one: a Modelo 130 receipt filed under a Modelo 303 register row.
-    return _stored_justificante_observation(
+    return stored_justificante_observation(
         store,
         modelo="303",
-        pdf_bytes=_modelo_130_justificante_pdf_bytes(),
+        pdf_bytes=modelo_130_justificante_pdf_bytes(),
         authenticated_identity="00000000T",
         expediente_id="202630300000199Z",
-        captured_csv=_MODELO_130_FIXTURE_CSV,
+        captured_csv=MODELO_130_FIXTURE_CSV,
     )
 
 
@@ -567,11 +537,11 @@ def test_each_unreached_justificante_outcome_reports_its_own_reason(tmp_path: Pa
     count-only check, so the set of reasons is what is compared.
     """
     reasons: dict[str, str] = {}
-    with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
+    with profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
         for case_id, mutate in _UNREACHED_JUSTIFICANTE_CASES:
             store = FiledDeclaracionObservationStore(tmp_path / f"unreached-{case_id}")
             observation = mutate(store)
-            _seed_current_130_filing(bucket_id=bucket_id)
+            seed_current_130_filing(bucket_id=bucket_id)
 
             result = enroll_filed_justificante_evidence(
                 observation, ports=filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id
@@ -609,16 +579,16 @@ def test_an_enrollment_that_saves_evidence_raises_no_unreached_notice(tmp_path: 
     every case above while telling an operator that a successful enrollment
     reached no evidence.
     """
-    with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
+    with profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
         store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
-        observation = _stored_130_justificante_observation(store)
-        _seed_current_130_filing(bucket_id=bucket_id)
+        observation = stored_130_justificante_observation(store)
+        seed_current_130_filing(bucket_id=bucket_id)
 
         result = enroll_filed_justificante_evidence(
             observation, ports=filed_ports(bucket_id=bucket_id, root=tmp_path), bucket_id=bucket_id
         )
 
-    assert result.justificante_csvs == (_MODELO_130_FIXTURE_CSV,)
+    assert result.justificante_csvs == (MODELO_130_FIXTURE_CSV,)
     assert result.notices == ()
 
 
@@ -631,8 +601,8 @@ def test_fixture_csv_constants_still_match_the_receipts() -> None:
     drift, and this is the anchor that catches the drift: replace a fixture and
     the constants stop describing it.
     """
-    assert parse_justificante_bytes(_modelo_130_justificante_pdf_bytes()).csv == _MODELO_130_FIXTURE_CSV
-    assert parse_justificante_bytes(_modelo_303_justificante_pdf_bytes()).csv == _MODELO_303_FIXTURE_CSV
+    assert parse_justificante_bytes(modelo_130_justificante_pdf_bytes()).csv == MODELO_130_FIXTURE_CSV
+    assert parse_justificante_bytes(modelo_303_justificante_pdf_bytes()).csv == MODELO_303_FIXTURE_CSV
 
 
 def test_an_incomplete_prior_filing_observation_never_reaches_the_store(tmp_path: Path) -> None:
@@ -652,16 +622,16 @@ def test_an_incomplete_prior_filing_observation_never_reaches_the_store(tmp_path
             modelo="303",
             filing_year=year,
             period="1T",
-            casilla_values={_M303_POSTERIOR_CASILLA: Decimal("1200.00")},
+            casilla_values={M303_POSTERIOR_CASILLA: Decimal("1200.00")},
         ),
     )
-    with _indexed_authority_for_test().operation(), _secure_backend(tmp_path):
+    with bundled_indexed_authority().operation(), secure_backend(tmp_path):
         repository = CalculationObservationRepository()
         with pytest.raises(M303CarryIngressError):
             repository.prepare_observation_envelope(
                 observation,
                 source_kind="aeat_sede_justificante",
-                captured_at=_CAPTURED_AT,
+                captured_at=CAPTURED_AT,
                 stamped_revision_id=revision_id_for_observation(observation),
             )
         assert tuple(repository.iter_records()) == ()
@@ -670,7 +640,7 @@ def test_an_incomplete_prior_filing_observation_never_reaches_the_store(tmp_path
 def _filed_130_observation(
     *,
     expediente_id: str = "13020260410ABCD1234EFGH5678",
-    presented_at: datetime = _CAPTURED_AT,
+    presented_at: datetime = CAPTURED_AT,
 ) -> FiledDeclaracionObservation:
     """One Modelo 130 filed observation that enrols as registry-grounded evidence.
 
@@ -699,7 +669,7 @@ def _filed_130_observation(
         expediente_id=expediente_id,
         status="ALTA",
         presented_at=presented_at,
-        authenticated_identity=_SYNTHETIC_PROFILE_ID,
+        authenticated_identity=SYNTHETIC_PROFILE_ID,
         artefacts=(artefact,),
         casillas=(
             ObservedCasillaValue(
@@ -712,7 +682,7 @@ def _filed_130_observation(
             ),
         ),
         extraction_coverage={"submitted_file": 1.0},
-        registry_snapshot_ref=_registry_snapshot("130", 2026, "1T").snapshot_ref,
+        registry_snapshot_ref=registry_snapshot("130", 2026, "1T").snapshot_ref,
     )
 
 
@@ -738,7 +708,7 @@ def test_discovery_driven_capture_stamps_the_same_official_source_kind(tmp_path:
     observation = _filed_130_observation()
     period = Period.from_year_and_code(2026, "1T")
 
-    with _secure_backend(tmp_path / "single"):
+    with secure_backend(tmp_path / "single"):
         single_finalization = finalize_filed_capture(
             (observation,),
             policy=FiledCaptureFailurePolicy.FAIL_FAST,
@@ -750,7 +720,7 @@ def test_discovery_driven_capture_stamps_the_same_official_source_kind(tmp_path:
     # finalizer policy is BEST_EFFORT because partial success is the expected
     # outcome of a history walk. That policy is the ONLY thing the discovery route
     # changes about finalization, which is why it is the arm under test.
-    with _secure_backend(tmp_path / "discovered"):
+    with secure_backend(tmp_path / "discovered"):
         discovered_finalization = finalize_filed_capture(
             (observation,),
             policy=FiledCaptureFailurePolicy.BEST_EFFORT,
@@ -785,7 +755,7 @@ def test_no_discovery_signal_token_reaches_the_observation_provenance(tmp_path: 
     """
     from cadrumo.core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 
-    with _secure_backend(tmp_path):
+    with secure_backend(tmp_path):
         finalize_filed_capture(
             (_filed_130_observation(),),
             policy=FiledCaptureFailurePolicy.BEST_EFFORT,

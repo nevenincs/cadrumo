@@ -11,14 +11,14 @@ from ..errors import FilingYearOutsideSupportEnvelopeError
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import relation_prefill_bindings_for_period, relation_source_requirements
 from ..schema import RegistrySnapshot
-from ._cross_dependency_calculation_support import (
-    _M200_CUOTA_DIFERENCIAL_CASILLA,
-    _M202_CUOTA_BASE_CASILLA,
-    _casilla_inputs,
-    _observations_from_requirements,
+from .authored_editions import authored_revisions
+from .cross_dependency_calculation_support import (
+    M200_CUOTA_DIFERENCIAL_CASILLA,
+    M202_CUOTA_BASE_CASILLA,
+    casilla_inputs,
+    observations_from_requirements,
     source_editions_calculate,
 )
-from .authored_editions import authored_revisions
 from .published_authority import (
     PublishedGovernedFactSource,
     published_authored_revision,
@@ -47,7 +47,7 @@ def test_modelo_202_modalidad_chains_calculate_for_synthetic_inputs(
     formula_targets = {formula.target_casilla_id for formula in revision.formulas}
     assert formula_targets == {"03", "13", "16", "18", "22", "25", "26", "32", "34", "38", "39", "63", "66"}
 
-    inputs = _casilla_inputs(
+    inputs = casilla_inputs(
         {
             "01": Decimal("10000"),
             "02": Decimal("0"),
@@ -93,7 +93,7 @@ def test_modelo_202_modalidad_chains_calculate_for_synthetic_inputs(
         date_context={"filing_period": date(2026, 12, 31)},
         binding_values={
             "modelo-202-pagos-fraccionados-anteriores": Decimal("3000"),
-            "modelo-202-cuota-base-ejercicio-anterior": inputs[_M202_CUOTA_BASE_CASILLA],
+            "modelo-202-cuota-base-ejercicio-anterior": inputs[M202_CUOTA_BASE_CASILLA],
         },
     )
     assert {str(casilla_id) for casilla_id in inputs} <= declared_ids
@@ -184,7 +184,7 @@ def _assert_pre_b2_correcciones_shape(
     assert "67" not in casilla_ids
     assert {"61", "62", "63", "64", "65", "66"}.isdisjoint(casilla_ids)
 
-    inputs = _casilla_inputs(
+    inputs = casilla_inputs(
         {
             "05": Decimal("2000"),
             "07": Decimal("500"),
@@ -241,7 +241,7 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
     assert classifications["200"].treatment == "factual_evidence"
 
     requirements = relation_source_requirements(revision, filing_year=filing_year, period="0A")
-    observations = _observations_from_requirements(
+    observations = observations_from_requirements(
         requirements,
         lambda _requirement, period_index: (
             Decimal("1200"),
@@ -261,7 +261,7 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
     assert set(relation_values) == relation_ids
 
     diferencial_formula = next(
-        formula for formula in revision.formulas if formula.target_casilla_id == _M200_CUOTA_DIFERENCIAL_CASILLA
+        formula for formula in revision.formulas if formula.target_casilla_id == M200_CUOTA_DIFERENCIAL_CASILLA
     )
     assert diferencial_formula.id == "modelo-200-cuota-diferencial"
     assert diferencial_formula.expression.op == "subtract"
@@ -269,7 +269,7 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
 
     result = calculate_registry_snapshot(
         snapshot,
-        inputs=_casilla_inputs(
+        inputs=casilla_inputs(
             {
                 "DP200012:00501": Decimal("48000"),
                 "DP200013:00417": Decimal("0"),

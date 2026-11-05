@@ -34,25 +34,25 @@ from .....domain.contribuyente.inventory.records import (
 )
 
 if TYPE_CHECKING:
-    from cadrumo.domain.contribuyente.inventory import closing_authority_records as _closing_types
+    from cadrumo.domain.contribuyente.inventory import closing_authority_records
 
 
 _BUCKET_ID = "f2b75bc8-7925-49a1-9744-55c86dce3064"
 
 
-_BUCKET_A_ID = "b319db66-5926-4885-80db-2d3c9137b2e6"
+BUCKET_A_ID = "b319db66-5926-4885-80db-2d3c9137b2e6"
 
 
-_BUCKET_B_ID = "f054bdb7-870f-40e6-b7c8-99d9a9c9d265"
+BUCKET_B_ID = "f054bdb7-870f-40e6-b7c8-99d9a9c9d265"
 
 
-_OTHER_BUCKET_ID = "7add327e-476e-4abe-b306-a25d88026213"
+OTHER_BUCKET_ID = "7add327e-476e-4abe-b306-a25d88026213"
 
 
 secure_engine = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="secure_engine")
 
 
-def _make_svc(profile: TestRuntimeProfile) -> InventoryService:
+def make_svc(profile: TestRuntimeProfile) -> InventoryService:
     return InventoryService(
         ports=InventoryServicePorts(
             inventory_repository_factory=lambda bucket_id: InventoryLedgerRepository(
@@ -64,11 +64,11 @@ def _make_svc(profile: TestRuntimeProfile) -> InventoryService:
     )
 
 
-def _event_repo(profile: TestRuntimeProfile) -> BucketEventHistoryRepository:
+def event_repo(profile: TestRuntimeProfile) -> BucketEventHistoryRepository:
     return BucketEventHistoryRepository(objects=profile.repository)
 
 
-def _acquisition(value: str) -> InventoryAcquisitionCost:
+def acquisition(value: str) -> InventoryAcquisitionCost:
     invoice = FilingEvidenceReference(reference="invoice-evidence")
     cost_review = FilingEvidenceReference(reference="cost-review-evidence")
     iva_review = FilingEvidenceReference(reference="iva-review-evidence")
@@ -106,9 +106,9 @@ def _acquisition(value: str) -> InventoryAcquisitionCost:
     )
 
 
-def _authority_record(
+def authority_record(
     *, reason: str = "Reviewed movement-derived closing."
-) -> _closing_types.InventoryClosingAuthorityRecord:
+) -> closing_authority_records.InventoryClosingAuthorityRecord:
     from cadrumo.domain.contribuyente.inventory.closing_authority_records import (
         InventoryClosingAuthorityDecision,
         InventoryClosingAuthorityRecord,
@@ -158,10 +158,10 @@ def _authority_record(
     )
 
 
-def _physical_authority_record() -> _closing_types.InventoryClosingAuthorityRecord:
+def physical_authority_record() -> closing_authority_records.InventoryClosingAuthorityRecord:
     from cadrumo.domain.contribuyente.inventory.closing_authority_records import InventoryClosingAuthorityRecord
 
-    base = _authority_record()
+    base = authority_record()
     observation = PhysicalClosingObservation(
         observation_id="physical-2025",
         observed_on=date(2026, 1, 1),

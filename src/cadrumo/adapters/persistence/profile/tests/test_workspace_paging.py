@@ -48,14 +48,14 @@ from cadrumo.domain.calculations.registry.authority import (
 
 from .published_authority_support import published_authority_operation
 from .workspace_support import (
-    _FILING_YEAR,
-    _LAW_SELECTED_REVISION_ID,
-    _T0,
-    _assemble_static_inspection_pieces,
-    _counted_catalogue_reads,
-    _real_303_inspection,
-    _seed_work_unit,
-    _visible_target,
+    FILING_YEAR,
+    LAW_SELECTED_REVISION_ID,
+    T0,
+    assemble_static_inspection_pieces,
+    counted_catalogue_reads,
+    real_303_inspection,
+    seed_work_unit,
+    visible_target,
 )
 from .workspace_support import (
     workspace_repos as workspace_repos,
@@ -82,12 +82,12 @@ def test_a_caller_can_spend_the_cursor_the_schema_facet_mints(
     from cadrumo.core.external_constants import OutputLanguage
 
     bucket_id, repository = workspace_repos
-    _seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
+    seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
     authority = published_authority_operation()
 
     def _resolve(cursor=None):
         return resolve_static_inspection_result(
-            _visible_target(bucket_id),
+            visible_target(bucket_id),
             bucket_id=bucket_id,
             catalogue_repository=repository,
             authority=authority,
@@ -125,11 +125,11 @@ def test_a_cursor_naming_a_facet_the_resolver_does_not_paginate_refuses(
     from cadrumo.core.external_constants import OutputLanguage
 
     bucket_id, repository = workspace_repos
-    _seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
+    seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
     authority = published_authority_operation()
 
     first_page = resolve_static_inspection_result(
-        _visible_target(bucket_id),
+        visible_target(bucket_id),
         bucket_id=bucket_id,
         catalogue_repository=repository,
         authority=authority,
@@ -143,7 +143,7 @@ def test_a_cursor_naming_a_facet_the_resolver_does_not_paginate_refuses(
     foreign = minted.model_copy(update={"facet": ModeloWorkspaceFacetName.PROVENANCE})
     with pytest.raises(ModeloWorkspaceStaleCursorError):
         resolve_static_inspection_result(
-            _visible_target(bucket_id),
+            visible_target(bucket_id),
             bucket_id=bucket_id,
             catalogue_repository=repository,
             authority=authority,
@@ -159,11 +159,11 @@ def test_resolve_static_inspection_result_assembles_a_complete_valid_projection(
     from cadrumo.core.external_constants import OutputLanguage
 
     bucket_id, repository = workspace_repos
-    _seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
+    seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
     authority = published_authority_operation()
 
     result = resolve_static_inspection_result(
-        _visible_target(bucket_id),
+        visible_target(bucket_id),
         bucket_id=bucket_id,
         catalogue_repository=repository,
         authority=authority,
@@ -173,7 +173,7 @@ def test_resolve_static_inspection_result_assembles_a_complete_valid_projection(
     assert isinstance(result, ModeloWorkspaceStaticInspectionResultV1)
     projection = result.projection
     assert projection.target.modelo == "130"
-    assert projection.target.law_selected_revision_id == _LAW_SELECTED_REVISION_ID
+    assert projection.target.law_selected_revision_id == LAW_SELECTED_REVISION_ID
     assert projection.schema_facet.records  # a real, non-empty schema facet
     assert projection.work_review is STATIC_INSPECTION_WORK_REVIEW_FACET
     assert len(projection.capabilities) == len(ModeloWorkspaceCapabilityName)
@@ -200,14 +200,14 @@ def test_resolve_static_inspection_result_reads_the_work_catalogue_once_to_captu
     what it had already captured.
     """
     bucket_id, repository = workspace_repos
-    _seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
+    seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
     authority = published_authority_operation()
 
     from cadrumo.core.external_constants import OutputLanguage
 
-    reads = _counted_catalogue_reads(monkeypatch)
+    reads = counted_catalogue_reads(monkeypatch)
     result = resolve_static_inspection_result(
-        _visible_target(bucket_id),
+        visible_target(bucket_id),
         bucket_id=bucket_id,
         catalogue_repository=repository,
         authority=authority,
@@ -230,12 +230,12 @@ def test_capture_with_a_grade_admits_a_registry_snapshot_reading_work_and_regist
     from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
     bucket_id, repository = workspace_repos
-    _seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
+    seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
     authority = published_authority_operation()
 
-    reads = _counted_catalogue_reads(monkeypatch)
+    reads = counted_catalogue_reads(monkeypatch)
     work_capture, registry_capture, axes = capture_modelo_workspace_target_captures(
-        _visible_target(bucket_id),
+        visible_target(bucket_id),
         bucket_id=bucket_id,
         catalogue_repository=repository,
         authority=authority,
@@ -246,7 +246,7 @@ def test_capture_with_a_grade_admits_a_registry_snapshot_reading_work_and_regist
     assert registry_capture.projection.snapshot is not None
     assert isinstance(registry_capture.projection.snapshot, RegistrySnapshot)
     assert registry_capture.projection.inspection is None
-    assert axes.law_selected_revision_id == _LAW_SELECTED_REVISION_ID
+    assert axes.law_selected_revision_id == LAW_SELECTED_REVISION_ID
 
     assert len(reads) == 1
 
@@ -276,13 +276,13 @@ def _real_calculation_revision_with_row_materialization():
     bucket_id = "30330300-0000-4000-8000-000000000601"
     scalar_casilla = validated_casilla_id("00501")
     row_casilla = validated_casilla_id("00181")
-    now = datetime(_FILING_YEAR, 7, 4, 14, 0, tzinfo=UTC)
+    now = datetime(FILING_YEAR, 7, 4, 14, 0, tzinfo=UTC)
 
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="303",
-        filing_year=_FILING_YEAR,
-        period=Period.from_year_and_code(_FILING_YEAR, "1T"),
+        filing_year=FILING_YEAR,
+        period=Period.from_year_and_code(FILING_YEAR, "1T"),
         revision_id="2022",
     )
     row_identity = RowSourceIdentity(
@@ -320,7 +320,7 @@ def _real_calculation_revision_with_row_materialization():
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="303",
             revision_id="2022",
-            modelo_year=_FILING_YEAR,
+            modelo_year=FILING_YEAR,
             period="1T",
         ),
         state=CalculationRevisionState.BORRADOR,
@@ -358,7 +358,7 @@ def _real_303_casilla_ids() -> tuple[str, ...]:
     it the honest anchor for a paging proof. The overflow is the shipped
     registry's shape, not a number these tests chose.
     """
-    return tuple(_real_303_inspection().casilla_ids)
+    return tuple(real_303_inspection().casilla_ids)
 
 
 def _paging_coordinate(bucket_id: str, repository: WorkUnitCatalogueRepository):
@@ -370,7 +370,7 @@ def _paging_coordinate(bucket_id: str, repository: WorkUnitCatalogueRepository):
     Admission-versus-facet coherence is :class:`ModeloWorkspaceProjectionV1`'s
     invariant, proven separately, not this helper's.
     """
-    _inspection, target, schema_identity, baseline, contributors = _assemble_static_inspection_pieces(
+    _inspection, target, schema_identity, baseline, contributors = assemble_static_inspection_pieces(
         bucket_id, repository
     )
     return target, schema_identity, baseline, contributors
@@ -415,7 +415,7 @@ def test_materialization_facet_pages_a_real_revision_that_exceeds_the_page_size(
     from cadrumo.core.casilla_id import validated_casilla_id
 
     bucket_id, repository = workspace_repos
-    _seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
+    seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
     target, schema_identity, baseline, contributors = _paging_coordinate(bucket_id, repository)
     page_size = _production_default_page_size()
 
@@ -473,7 +473,7 @@ def test_an_overflowing_facet_built_without_a_cursor_still_refuses(
     from cadrumo.core.casilla_id import validated_casilla_id
 
     bucket_id, repository = workspace_repos
-    _seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
+    seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
     target, schema_identity, baseline, contributors = _paging_coordinate(bucket_id, repository)
     page_size = _production_default_page_size()
 
@@ -530,8 +530,8 @@ def _resolved_target_with_work_unit(*, work_unit_id: str, revision_id: str = "20
     return ModeloWorkspaceResolvedTargetV1(
         bucket_id="test-bucket-0000-0000-0000-000000000000",
         modelo="303",
-        filing_year=_FILING_YEAR,
-        period=Period.from_year_and_code(_FILING_YEAR, "1T"),
+        filing_year=FILING_YEAR,
+        period=Period.from_year_and_code(FILING_YEAR, "1T"),
         law_selected_revision_id=revision_id,
         review_status=RevisionReviewStatus.PENDING_REVIEW,
         requested_revision_assertion=ModeloWorkspaceRevisionAssertionV1(
@@ -557,7 +557,7 @@ def _minimal_calculation_revision(*, work_unit_id: str, state):
         derive_calculation_revision_id,
     )
 
-    now = datetime(_FILING_YEAR, 7, 4, 14, 0, tzinfo=UTC)
+    now = datetime(FILING_YEAR, 7, 4, 14, 0, tzinfo=UTC)
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={},
@@ -574,7 +574,7 @@ def _minimal_calculation_revision(*, work_unit_id: str, state):
         registry_snapshot_ref=RegistrySnapshotRef(
             modelo="303",
             revision_id="2022",
-            modelo_year=_FILING_YEAR,
+            modelo_year=FILING_YEAR,
             period="1T",
         ),
         state=state,
@@ -604,7 +604,7 @@ def test_static_inspection_labels_equal_per_key_resolution_in_every_language() -
 
     inspection = (
         published_authority_operation()
-        .capture_law_selected_projection("130", filing_year=_FILING_YEAR, period="1T")
+        .capture_law_selected_projection("130", filing_year=FILING_YEAR, period="1T")
         .projection
     )
     assert isinstance(inspection, RegistryRevisionInspection)
@@ -612,9 +612,9 @@ def test_static_inspection_labels_equal_per_key_resolution_in_every_language() -
     target = ModeloWorkspaceResolvedTargetV1(
         bucket_id="test-bucket-0000-0000-0000-000000000000",
         modelo="130",
-        filing_year=_FILING_YEAR,
-        period=Period.from_year_and_code(_FILING_YEAR, "1T"),
-        law_selected_revision_id=_LAW_SELECTED_REVISION_ID,
+        filing_year=FILING_YEAR,
+        period=Period.from_year_and_code(FILING_YEAR, "1T"),
+        law_selected_revision_id=LAW_SELECTED_REVISION_ID,
         review_status=inspection.review_status,
         requested_revision_assertion=ModeloWorkspaceRevisionAssertionV1(
             source=ModeloWorkspaceRevisionAssertionSource.REQUESTED, disposition=not_present, asserted_revision_id=None
@@ -691,9 +691,9 @@ def test_a_work_capture_stays_current_until_its_catalogue_is_written(
     workspace_repos: tuple[str, WorkUnitCatalogueRepository], *, operation: PinnedAuthorityOperation
 ) -> None:
     bucket_id, repository = workspace_repos
-    _seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
+    seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
     port = ModeloWorkspaceWorkPortV1(
-        request=modelo_work_selector_request_for_target(_visible_target(bucket_id), bucket_id=bucket_id),
+        request=modelo_work_selector_request_for_target(visible_target(bucket_id), bucket_id=bucket_id),
         catalogue_repository=repository,
     )
     captured = port.capture_projection_with_epoch()
@@ -703,13 +703,13 @@ def test_a_work_capture_stays_current_until_its_catalogue_is_written(
     create_work_unit(
         bucket_id=bucket_id,
         modelo="130",
-        filing_year=_FILING_YEAR,
-        period=Period.from_year_and_code(_FILING_YEAR, "2T"),
-        revision_id=_LAW_SELECTED_REVISION_ID,
+        filing_year=FILING_YEAR,
+        period=Period.from_year_and_code(FILING_YEAR, "2T"),
+        revision_id=LAW_SELECTED_REVISION_ID,
         ports=WorkLifecyclePorts(
             work_unit_repository=repository, bucket_event_repository=BucketEventHistoryRepository()
         ),
-        clock=_T0,
+        clock=T0,
         operation=operation,
     )
 
@@ -722,10 +722,10 @@ def test_static_admission_refuses_as_changed_when_the_registry_moves_before_its_
     from cadrumo.core.external_constants import OutputLanguage
 
     bucket_id, repository = workspace_repos
-    _seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
+    seed_work_unit(repository, bucket_id=bucket_id, operation=operation)
 
     result = resolve_static_inspection_result(
-        _visible_target(bucket_id),
+        visible_target(bucket_id),
         bucket_id=bucket_id,
         catalogue_repository=repository,
         authority=_RepublishedAfterCapture(published_authority_operation()),

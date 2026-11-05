@@ -24,17 +24,17 @@ from ...application.modelo.revision_inventory_operation import ModeloRevisionInv
 from ...application.modelo.selectors import ModeloCalculationRevisionSelector
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language as current_output_language
-from ._modelo_cli_support import parse_revision_selector
-from ._modelo_rendering import (
+from .common import emit_envelope
+from .modelo_cli_support import parse_revision_selector
+from .modelo_rendering import (
     short_id,
 )
-from ._modelo_work_revision_payloads import WorkObservationsResult, WorkRevisionResult
-from .common import emit_envelope
 from .modelo_results import (
     CalculationRevisionSummaryPayload,
     WorkRevisionsResult,
 )
 from .modelo_revision_rendering import calculation_observation_payload_lines
+from .modelo_work_revision_payloads import WorkObservationsResult, WorkRevisionResult
 from .operation_modelo_calculation import calculation_snapshot_lines, calculation_snapshot_payload
 from .operation_modelo_revision import read_modelo_revision_inventory_for_cli, read_modelo_revision_snapshot_for_cli
 

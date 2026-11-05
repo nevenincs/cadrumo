@@ -16,19 +16,19 @@ from .header import URGENT_CHIPS, StatusLine, attention_chips, status_line
 from .keys import describe_bindings
 from .progress import WorkbenchProgress
 from .screen_constants import (
-    _CHANGE_KEYS,
-    _CLOSE_LOCALE_KEY,
-    _FINDINGS_KEY,
-    _FOOTER_KEY_GAP,
-    _FOOTER_PRIORITY,
-    _LEGEND_KEYS,
-    _LIST_LOCALE_KEYS,
-    _NARROW,
-    _NEXT_KEYS,
-    _PALETTE_FRAME,
-    _RECORDED_ENTER_LOCALE_KEY,
-    _SCREEN_LOCALE_KEYS,
-    _SHORT,
+    CHANGE_KEYS,
+    CLOSE_LOCALE_KEY,
+    FINDINGS_KEY,
+    FOOTER_KEY_GAP,
+    FOOTER_PRIORITY,
+    LEGEND_KEYS,
+    LIST_LOCALE_KEYS,
+    NARROW,
+    NEXT_KEYS,
+    PALETTE_FRAME,
+    RECORDED_ENTER_LOCALE_KEY,
+    SCREEN_LOCALE_KEYS,
+    SHORT,
 )
 from .screen_widgets import SymbolsPanel
 
@@ -97,11 +97,11 @@ class WorkbenchFooterMixin:
         self._render_page()
 
     def _apply_width(self: ModeloWorkbenchScreen, width: int) -> None:
-        self.set_class(width < _NARROW, "-narrow")
+        self.set_class(width < NARROW, "-narrow")
 
     def _apply_height(self: ModeloWorkbenchScreen, height: int) -> None:
         """On a short terminal show more boxes: one line each, a one-line help band that ``?`` expands."""
-        short = 0 < height < _SHORT
+        short = 0 < height < SHORT
         self.set_class(short, "-short")
         if self._density_chosen is None:
             self.query_one(CasillaList).set_density("compact" if short else "comfortable")
@@ -121,7 +121,7 @@ class WorkbenchFooterMixin:
         A declaration recorded as filed shows no key that would change it or
         lead to something left to do.
         """
-        descriptions = {**self._list_locale_keys(), **_SCREEN_LOCALE_KEYS}
+        descriptions = {**self._list_locale_keys(), **SCREEN_LOCALE_KEYS}
         budget = self._footer_budget(width, descriptions)
         hidden = self._hidden_keys()
         pinned = self._pinned_keys()
@@ -137,14 +137,14 @@ class WorkbenchFooterMixin:
             width
             - self._palette_cost()
             - sum(
-                cell_len(f"{self.app.get_key_display(binding)} {binding.description}") + _FOOTER_KEY_GAP
+                cell_len(f"{self.app.get_key_display(binding)} {binding.description}") + FOOTER_KEY_GAP
                 for binding in others
             )
         )
 
     @staticmethod
     def _footer_key_order(pinned: tuple[str, ...]) -> tuple[str, ...]:
-        return (*pinned, *(key for key in _FOOTER_PRIORITY if key not in pinned))
+        return (*pinned, *(key for key in FOOTER_PRIORITY if key not in pinned))
 
     def _footer_visible_keys(
         self: ModeloWorkbenchScreen,
@@ -168,7 +168,7 @@ class WorkbenchFooterMixin:
     def _footer_key_decision(
         self: ModeloWorkbenchScreen, key: str, budget: int, pinned: tuple[str, ...], descriptions: Mapping[str, str]
     ) -> tuple[bool, bool, int]:
-        cost = cell_len(self._key_label(key, descriptions[key])) + _FOOTER_KEY_GAP
+        cost = cell_len(self._key_label(key, descriptions[key])) + FOOTER_KEY_GAP
         if cost > budget:
             return False, key not in pinned, 0
         return True, False, cost
@@ -188,7 +188,7 @@ class WorkbenchFooterMixin:
     def _active_pinned_keys(
         self: ModeloWorkbenchScreen, progress: WorkbenchProgress, fieldless: bool, form: ModeloWorkForm
     ) -> tuple[str, ...]:
-        named = _FINDINGS_KEY if progress.findings_lead else _NEXT_KEYS[progress.next_action]
+        named = FINDINGS_KEY if progress.findings_lead else NEXT_KEYS[progress.next_action]
         pinned = ["question_mark"]
         if named:
             pinned.append(self._footer_progress_key(named))
@@ -196,10 +196,10 @@ class WorkbenchFooterMixin:
             pinned.extend(("up", "escape"))
         pinned.append("f8")
         if any(chip.level in URGENT_CHIPS for chip in attention_chips(form, recorded=False)):
-            pinned.append(_FINDINGS_KEY)
+            pinned.append(FINDINGS_KEY)
         kept: list[str] = []
         for key in pinned:
-            if key in _FOOTER_PRIORITY and key not in kept:
+            if key in FOOTER_PRIORITY and key not in kept:
                 kept.append(key)
         return tuple(kept)
 
@@ -211,7 +211,7 @@ class WorkbenchFooterMixin:
 
     def _hidden_keys(self: ModeloWorkbenchScreen) -> frozenset[str]:
         """Hide field actions without a selected field; read-only content keeps its scroll cue."""
-        hidden: set[str] = set(_CHANGE_KEYS) if self.recorded else set()
+        hidden: set[str] = set(CHANGE_KEYS) if self.recorded else set()
         if self.query_one(CasillaList).highlighted is None:
             hidden.update(("enter", "s"))
         else:
@@ -221,8 +221,8 @@ class WorkbenchFooterMixin:
     def _list_locale_keys(self: ModeloWorkbenchScreen) -> Mapping[str, str]:
         """What the list's keys say: Enter opens a box to read once the declaration is recorded as filed."""
         if self.recorded:
-            return {**_LIST_LOCALE_KEYS, "enter": _RECORDED_ENTER_LOCALE_KEY}
-        return _LIST_LOCALE_KEYS
+            return {**LIST_LOCALE_KEYS, "enter": RECORDED_ENTER_LOCALE_KEY}
+        return LIST_LOCALE_KEYS
 
     def _palette_cost(self: ModeloWorkbenchScreen) -> int:
         """The cells the footer keeps at its right edge for the command palette key, when it shows one."""
@@ -233,17 +233,17 @@ class WorkbenchFooterMixin:
         if active is None:
             return 0
         binding = active.binding
-        return cell_len(f"{app.get_key_display(binding)} {binding.description}") + _PALETTE_FRAME
+        return cell_len(f"{app.get_key_display(binding)} {binding.description}") + PALETTE_FRAME
 
     def _describe_keys(self: ModeloWorkbenchScreen) -> None:
         if self._legend_level == 2:
             # The symbols panel has its own keys: close it, and scroll it.
-            describe_bindings(self._bindings.key_to_bindings, _SCREEN_LOCALE_KEYS, shown=_LEGEND_KEYS)
-            describe_bindings(self._bindings.key_to_bindings, {"escape": _CLOSE_LOCALE_KEY}, shown=_LEGEND_KEYS)
+            describe_bindings(self._bindings.key_to_bindings, SCREEN_LOCALE_KEYS, shown=LEGEND_KEYS)
+            describe_bindings(self._bindings.key_to_bindings, {"escape": CLOSE_LOCALE_KEY}, shown=LEGEND_KEYS)
             self.query_one(SymbolsPanel).describe_keys()
             self.refresh_bindings()
             return
         shown = self._footer_keys(self._width())
-        describe_bindings(self._bindings.key_to_bindings, _SCREEN_LOCALE_KEYS, shown=shown)
+        describe_bindings(self._bindings.key_to_bindings, SCREEN_LOCALE_KEYS, shown=shown)
         self.query_one(CasillaList).describe_keys(self._list_locale_keys(), shown=shown)
         self.refresh_bindings()

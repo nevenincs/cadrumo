@@ -38,17 +38,17 @@ from .file_flow_test_support import calculation_ports_for_test
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PROFILE_ID = "10000000-0000-4000-8000-000000000476"
-_YEAR = 2025
-_PERIOD = Period.from_year_and_code(_YEAR, "0A")
+PROFILE_ID = "10000000-0000-4000-8000-000000000476"
+YEAR = 2025
+_PERIOD = Period.from_year_and_code(YEAR, "0A")
 _CLOCK = datetime(2026, 5, 21, 10, tzinfo=UTC)
-_REQUIRED_MANUAL_BINDING = "renta-modelo-100-estimacion-directa-es-normal"
+REQUIRED_MANUAL_BINDING = "renta-modelo-100-estimacion-directa-es-normal"
 
 
-def _profile() -> None:
+def work_missing_input_publication_profile() -> None:
     record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
-        profile_id=_PROFILE_ID,
+        profile_id=PROFILE_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="identity.name", value="Test"),
@@ -71,7 +71,7 @@ def _inputs(snapshot: RegistrySnapshot, *, omit_required: bool) -> WorkCalculate
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
         if binding.id != "renta-profile-tax-residence-ccaa"
-        and (not omit_required or binding.id != _REQUIRED_MANUAL_BINDING)
+        and (not omit_required or binding.id != REQUIRED_MANUAL_BINDING)
         and binding.source != "profile"
         and binding.source not in BUCKET_AGGREGATION_LOCK_SOURCES
         and binding.provider.kind != "retencion_soportada"
@@ -88,7 +88,7 @@ def _inputs(snapshot: RegistrySnapshot, *, omit_required: bool) -> WorkCalculate
     )
 
 
-def _work_and_repositories(
+def work_and_repositories(
     operation: PinnedAuthorityOperation,
     *,
     modelo: str = "100",
@@ -99,7 +99,7 @@ def _work_and_repositories(
     revision_repo = CalculationRevisionCatalogueRepository()
     event_repo = BucketEventHistoryRepository()
     unit = create_work_unit(
-        bucket_id=_PROFILE_ID,
+        bucket_id=PROFILE_ID,
         modelo=modelo,
         filing_year=period.filing_year,
         period=period,
@@ -114,16 +114,16 @@ def _work_and_repositories(
 def test_real_missing_manual_binding_stops_before_revision_publication(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID):
-        _profile()
-        snapshot = operation.snapshot("100", filing_year=_YEAR, period="0A")
-        required = next(binding for binding in snapshot.revision.bindings if binding.id == _REQUIRED_MANUAL_BINDING)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=PROFILE_ID):
+        work_missing_input_publication_profile()
+        snapshot = operation.snapshot("100", filing_year=YEAR, period="0A")
+        required = next(binding for binding in snapshot.revision.bindings if binding.id == REQUIRED_MANUAL_BINDING)
         assert required.provider.kind == "manual_input"
-        unit, work_repo, revision_repo, event_repo = _work_and_repositories(operation)
+        unit, work_repo, revision_repo, event_repo = work_and_repositories(operation)
         inputs = _inputs(snapshot, omit_required=True)
         with (
             calculation_ports_for_test(
-                bucket_id=_PROFILE_ID,
+                bucket_id=PROFILE_ID,
                 work_unit_repository=work_repo,
                 calculation_repository=revision_repo,
                 bucket_event_repository=event_repo,
@@ -139,7 +139,7 @@ def test_real_missing_manual_binding_stops_before_revision_publication(
                 ports=ports,
                 clock=_CLOCK,
             )
-        assert refused.value.binding_id == _REQUIRED_MANUAL_BINDING
+        assert refused.value.binding_id == REQUIRED_MANUAL_BINDING
         assert refused.value.translated_message in {
             "errors.calc.binding_value_missing",
             "errors.calc.bound_casilla_binding_value_missing",
@@ -154,11 +154,11 @@ def test_real_missing_manual_binding_stops_before_revision_publication(
 def test_same_tag_after_publication_remains_generic_and_published(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, operation: PinnedAuthorityOperation
 ) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID):
-        _profile()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=PROFILE_ID):
+        work_missing_input_publication_profile()
         m123_period = Period.from_year_and_code(2025, "2T")
         m123_snapshot = operation.snapshot("123", filing_year=2025, period="2T")
-        unit, work_repo, revision_repo, event_repo = _work_and_repositories(
+        unit, work_repo, revision_repo, event_repo = work_and_repositories(
             operation, modelo="123", period=m123_period, revision_id=m123_snapshot.revision.id
         )
         inputs = WorkCalculateInputBundle.build(
@@ -174,13 +174,13 @@ def test_same_tag_after_publication_remains_generic_and_published(
             raise RegistryValidationError(
                 "injected post-publication diagnostic failure",
                 translated_message="errors.calc.binding_value_missing",
-                context={"binding_id": _REQUIRED_MANUAL_BINDING},
+                context={"binding_id": REQUIRED_MANUAL_BINDING},
             )
 
         monkeypatch.setattr(calculate_input, "modelo_202_modality_for_record", fail_modality)
         with (
             calculation_ports_for_test(
-                bucket_id=_PROFILE_ID,
+                bucket_id=PROFILE_ID,
                 work_unit_repository=work_repo,
                 calculation_repository=revision_repo,
                 bucket_event_repository=event_repo,

@@ -35,13 +35,13 @@ from cadrumo.domain.modelos.participation_index import TransactionRevisionPartic
 
 from .filing_report_support import seed_filing_gate_report
 from .test_participation_co_emission import (
-    _BUCKET_ID,
-    _T0,
-    _TAXPAYER_NIF,
-    _TX_A,
-    _TX_B,
-    _seed_borrador,
-    _seed_verified_participation,
+    BUCKET_ID,
+    T0,
+    TAXPAYER_NIF,
+    TX_A,
+    TX_B,
+    seed_borrador,
+    seed_verified_participation,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -71,7 +71,7 @@ def test_stale_rebuild_conflicts_after_canonical_filing_co_commit_and_fresh_rebu
     """A file co-commit wins over an older rebuild snapshot and survives its prune."""
     with (
         bundled_indexed_authority().operation() as operation,
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile,
     ):
         calculations = CalculationRevisionCatalogueRepository(objects=profile.repository)
         work_units = WorkUnitCatalogueRepository(objects=profile.repository)
@@ -80,14 +80,14 @@ def test_stale_rebuild_conflicts_after_canonical_filing_co_commit_and_fresh_rebu
 
         # Reuse the authority-grounded revision and genuine verification/index
         # co-write exercised by the existing participation persistence test.
-        draft, work_unit = _seed_borrador(cr_repo=calculations, wu_repo=work_units)
-        _seed_verified_participation(
+        draft, work_unit = seed_borrador(cr_repo=calculations, wu_repo=work_units)
+        seed_verified_participation(
             target=draft,
             work_unit=work_unit,
             calculation_repository=calculations,
             participation_index_repository=participation,
             actor="aeat.cli.modelo.verify",
-            now=_T0.replace(hour=12),
+            now=T0.replace(hour=12),
         )
         stale_source_revisions = _source_revisions(
             calculations=calculations,
@@ -110,7 +110,7 @@ def test_stale_rebuild_conflicts_after_canonical_filing_co_commit_and_fresh_rebu
             work_units=work_units.load(),
             notes=None,
             actor="aeat.cli.modelo.file",
-            now=_T0.replace(hour=13),
+            now=T0.replace(hour=13),
             calculation_repository=calculations,
             filing_repository=filings,
             verification_repository=verification_reports,
@@ -121,12 +121,12 @@ def test_stale_rebuild_conflicts_after_canonical_filing_co_commit_and_fresh_rebu
             participation_index_repository=participation,
             prorrata_register_repository=ProrrataRegisterRepository(objects=profile.repository),
             result_disposition=ResultDisposition.INGRESO,
-            taxpayer_nif=_TAXPAYER_NIF,
+            taxpayer_nif=TAXPAYER_NIF,
             operation=operation,
         )
 
-        expected_a = participation.load(_TX_A)
-        expected_b = participation.load(_TX_B)
+        expected_a = participation.load(TX_A)
+        expected_b = participation.load(TX_B)
         assert expected_a.participations[0].revision_state == "presentado"
         assert expected_a.participations[0].filing_record_id == filed.filing_record_id
         assert expected_b.participations[0].filing_record_id == filed.filing_record_id
@@ -148,8 +148,8 @@ def test_stale_rebuild_conflicts_after_canonical_filing_co_commit_and_fresh_rebu
 
         assert raised.value.context is not None
         assert raised.value.context["namespace"] == MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace
-        assert participation.load(_TX_A) == expected_a
-        assert participation.load(_TX_B) == expected_b
+        assert participation.load(TX_A) == expected_a
+        assert participation.load(TX_B) == expected_b
 
         ports = ParticipationIndexRebuildPorts(
             calculation_repository=calculations,
@@ -176,13 +176,13 @@ def test_stale_rebuild_conflicts_after_canonical_filing_co_commit_and_fresh_rebu
         assert stats.revision_count == 1
         assert stats.stale_removed_count == 0
         assert after_fresh_rebuild == before_fresh_rebuild
-        assert participation.load(_TX_A) == expected_a
-        assert participation.load(_TX_B) == expected_b
+        assert participation.load(TX_A) == expected_a
+        assert participation.load(TX_B) == expected_b
 
 
 def test_first_filing_catalogue_insert_invalidates_an_absent_source_snapshot(tmp_path: Path) -> None:
     """An observed absent singleton is asserted, so its first insertion blocks replacement."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
         calculations = CalculationRevisionCatalogueRepository(objects=profile.repository)
         work_units = WorkUnitCatalogueRepository(objects=profile.repository)
         filings = ModeloRecordCatalogueRepository(objects=profile.repository)
@@ -201,11 +201,11 @@ def test_first_filing_catalogue_insert_invalidates_an_absent_source_snapshot(tmp
         _, inserted_filing_revision = filings.load_revisioned()
         assert inserted_filing_revision != ABSENT_SECURE_OBJECT_REVISION_ID
 
-        preserved_index = TransactionRevisionParticipationIndex(transaction_id=_TX_A)
+        preserved_index = TransactionRevisionParticipationIndex(transaction_id=TX_A)
         participation.save(preserved_index)
         with pytest.raises(SecureObjectRevisionConflictError) as raised:
             participation.replace_all((), source_revisions=absent_source_revisions)
 
         assert raised.value.context is not None
         assert raised.value.context["namespace"] == MODELO_FILING_RECORD_CATALOGUE_NAMESPACE.namespace
-        assert participation.load(_TX_A) == preserved_index
+        assert participation.load(TX_A) == preserved_index

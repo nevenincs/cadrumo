@@ -18,11 +18,11 @@ import pytest
 
 from ......core.async_cleanup import AsyncResourceCleanupError, async_cleanup_failures
 from ......core.config import Settings
-from .. import _kdf_worker_observation as observation
-from .. import _kdf_worker_supervision as supervision
-from .._kdf_worker_supervision import _SupervisedKdfWorker
+from .. import kdf_worker_observation as observation
+from .. import kdf_worker_supervision as supervision
 from ..errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
 from ..kdf_supervision import ProfileKdfPrewarm
+from ..kdf_worker_supervision import SupervisedKdfWorker
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -85,7 +85,7 @@ def test_partial_start_closes_every_acquired_descriptor_once(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    worker = _SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=Settings(cadrumo_storage_root=tmp_path))
+    worker = SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=Settings(cadrumo_storage_root=tmp_path))
     primary = (
         KeyboardInterrupt("synthetic startup interruption") if interrupted else OSError("synthetic startup failure")
     )
@@ -151,9 +151,9 @@ def test_failed_enter_retains_real_pipe_cleanup_until_reader_settles(
     """A failed context entry cannot abandon a reader or start a fallback worker."""
     release = threading.Event()
     started = threading.Event()
-    captured: list[tuple[_SupervisedKdfWorker, int, int, Path]] = []
+    captured: list[tuple[SupervisedKdfWorker, int, int, Path]] = []
 
-    def start(worker: _SupervisedKdfWorker) -> None:
+    def start(worker: SupervisedKdfWorker) -> None:
         request_read, worker._request_fd = os.pipe()
         worker._result_fd, result_write = os.pipe()
         os.close(request_read)
@@ -173,17 +173,17 @@ def test_failed_enter_retains_real_pipe_cleanup_until_reader_settles(
         assert started.wait(5)
         captured.append((worker, worker._request_fd, result_fd, Path(worker._neutral_directory.name)))
 
-    def no_ready(_worker: _SupervisedKdfWorker) -> tuple[int, bytes]:
+    def no_ready(_worker: SupervisedKdfWorker) -> tuple[int, bytes]:
         raise TimeoutError("synthetic readiness failure")
 
-    monkeypatch.setattr(_SupervisedKdfWorker, "_start", start)
-    monkeypatch.setattr(_SupervisedKdfWorker, "_read_response_frame", no_ready)
+    monkeypatch.setattr(SupervisedKdfWorker, "_start", start)
+    monkeypatch.setattr(SupervisedKdfWorker, "_read_response_frame", no_ready)
     settings = Settings(cadrumo_storage_root=tmp_path)
     prewarm = ProfileKdfPrewarm(settings=settings) if prewarmed else None
     try:
         if prewarm is None:
             with pytest.raises(ProfileCustodyRefusedError) as caught:
-                _SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=settings).__enter__()
+                SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=settings).__enter__()
         else:
             prewarm._launch()
             with pytest.raises(ProfileCustodyRefusedError) as caught:

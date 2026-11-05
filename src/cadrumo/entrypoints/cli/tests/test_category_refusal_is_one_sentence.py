@@ -29,8 +29,8 @@ import typer
 import yaml
 
 from ....domain.categories.spending_category_catalogue import spending_category_tokens
-from .._ledger_support import validate_category_id as rules_validator
-from .._ledger_support import validate_category_id as support_validator
+from ..ledger_support import validate_category_id as rules_validator
+from ..ledger_support import validate_category_id as support_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 

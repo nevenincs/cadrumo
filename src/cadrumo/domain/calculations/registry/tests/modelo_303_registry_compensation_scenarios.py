@@ -13,12 +13,12 @@ from ..bindings_previous_filing import previous_filing_binding_source_casilla_id
 from ..schema import ModeloDefinition
 from ..schema_catalogues import RegistryCatalogues
 from .modelo_303_registry_constants import (
-    _M303_COMPENSACION_APLICADA_CASILLA,
-    _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
-    _M303_DISPONIBLE_CASILLA,
-    _M303_GENERADA_CASILLA,
-    _M303_POSTERIOR_CASILLA,
-    _M303_RESULTADO_CASILLA,
+    M303_COMPENSACION_APLICADA_CASILLA,
+    M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+    M303_DISPONIBLE_CASILLA,
+    M303_GENERADA_CASILLA,
+    M303_POSTERIOR_CASILLA,
+    M303_RESULTADO_CASILLA,
 )
 from .registry_observations import registry_grounded_modelo_observation
 from .snapshot_support import build_snapshot
@@ -33,13 +33,13 @@ def check_modelo_303_compensation_chain_uses_current_record_design_casillas(
     binding = next(item for item in revision.bindings if item.id == "modelo-303-compensacion-pendiente-anteriores")
     provider = binding.provider
 
-    assert casillas[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA].number == "110"
-    assert casillas[_M303_COMPENSACION_APLICADA_CASILLA].number == "78"
-    assert casillas[_M303_POSTERIOR_CASILLA].number == "87"
-    assert casillas[_M303_RESULTADO_CASILLA].number == "69"
+    assert casillas[M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA].number == "110"
+    assert casillas[M303_COMPENSACION_APLICADA_CASILLA].number == "78"
+    assert casillas[M303_POSTERIOR_CASILLA].number == "87"
+    assert casillas[M303_RESULTADO_CASILLA].number == "69"
     assert provider.kind == "previous_filing"
     assert provider.source_modelo == "303"
-    assert previous_filing_binding_source_casilla_ids(binding) == (_M303_DISPONIBLE_CASILLA,)
+    assert previous_filing_binding_source_casilla_ids(binding) == (M303_DISPONIBLE_CASILLA,)
     assert isinstance(provider.temporal, TargetPeriodOffset)
     assert provider.temporal.periods == -1
     assert provider.temporal.within_filing_year is False
@@ -61,13 +61,13 @@ def check_modelo_303_previous_quarter_compensation_binding_resolves_from_source_
             modelo="303",
             filing_year=2025,
             period="1T",
-            casilla_values={_M303_DISPONIBLE_CASILLA: Decimal("1200.00")},
+            casilla_values={M303_DISPONIBLE_CASILLA: Decimal("1200.00")},
         ),
     )
 
     binding_requirements = previous_filing_observation_requirements(revision, filing_year=2025, period="2T")
     assert [(item.periods, item.source_casilla_ids) for item in binding_requirements] == [
-        (("1T",), (_M303_DISPONIBLE_CASILLA,)),
+        (("1T",), (M303_DISPONIBLE_CASILLA,)),
     ]
 
     assert resolve_previous_filing_binding_values(
@@ -93,13 +93,13 @@ def check_modelo_303_first_quarter_compensation_resolves_from_previous_year_four
             modelo="303",
             filing_year=2025,
             period="4T",
-            casilla_values={_M303_DISPONIBLE_CASILLA: Decimal("450.00")},
+            casilla_values={M303_DISPONIBLE_CASILLA: Decimal("450.00")},
         ),
     )
 
     binding_requirements = previous_filing_observation_requirements(revision, filing_year=2026, period="1T")
     assert [(item.filing_year, item.periods, item.source_casilla_ids) for item in binding_requirements] == [
-        (2025, ("4T",), (_M303_DISPONIBLE_CASILLA,)),
+        (2025, ("4T",), (M303_DISPONIBLE_CASILLA,)),
     ]
 
     assert resolve_previous_filing_binding_values(
@@ -168,27 +168,27 @@ def check_modelo_303_compensation_calculation_applies_available_balance_and_carr
 
     # Structural wiring: all compensation casillas must be present in the result.
     compensation_casillas = {
-        _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
-        _M303_COMPENSACION_APLICADA_CASILLA,
-        _M303_POSTERIOR_CASILLA,
-        _M303_RESULTADO_CASILLA,
-        _M303_GENERADA_CASILLA,
-        _M303_DISPONIBLE_CASILLA,
+        M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+        M303_COMPENSACION_APLICADA_CASILLA,
+        M303_POSTERIOR_CASILLA,
+        M303_RESULTADO_CASILLA,
+        M303_GENERADA_CASILLA,
+        M303_DISPONIBLE_CASILLA,
     }
     for casilla_id in compensation_casillas:
         assert casilla_id in result.values, f"{casilla_id!r} must be computed by the compensation chain"
 
     # Compensation balance constraint: applied + remainder must equal the incoming balance.
     # This is a structural invariant of the compensation mechanism, not a hand-computed value.
-    pendiente_anteriores = result.values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA]
-    aplicada = result.values[_M303_COMPENSACION_APLICADA_CASILLA]
-    pendiente_posteriores = result.values[_M303_POSTERIOR_CASILLA]
+    pendiente_anteriores = result.values[M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA]
+    aplicada = result.values[M303_COMPENSACION_APLICADA_CASILLA]
+    pendiente_posteriores = result.values[M303_POSTERIOR_CASILLA]
     assert aplicada + pendiente_posteriores == pendiente_anteriores, "applied + remainder must equal incoming balance"
 
     # When compensation exceeds IVA output, resultado must be zero (no tax due).
     # The binding carries compensacion_pendiente_anteriores=1200 > repercutido=1000,
     # so the full repercutido is absorbed and resultado must be 0.
-    assert result.values[_M303_RESULTADO_CASILLA] == Decimal("0.00"), (
+    assert result.values[M303_RESULTADO_CASILLA] == Decimal("0.00"), (
         "resultado must be zero when compensation balance exceeds IVA output"
     )
 
@@ -196,4 +196,4 @@ def check_modelo_303_compensation_calculation_applies_available_balance_and_carr
     assert aplicada <= binding_values["modelo-303-iva-repercutido-general-cuota"]
 
     # Disponible at end of period equals the remainder carried forward.
-    assert result.values[_M303_DISPONIBLE_CASILLA] == pendiente_posteriores
+    assert result.values[M303_DISPONIBLE_CASILLA] == pendiente_posteriores

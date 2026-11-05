@@ -50,12 +50,12 @@ from ....domain.calculations.registry.schema_references import RegistrySnapshotR
 from ....domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from ..pdf.extracted_casilla import ExtractedCasilla
 from ..pdf.label_regex import PRESENTADOR_NIF_LABEL, SPANISH_AMOUNT_GROUP, TEXT_VALUE_GROUP, parse_spanish_decimal
-from ..pdf.redaction import INPUT_PDF_SOURCE_LABEL as _INPUT_PDF_SOURCE_LABEL
+from ..pdf.redaction import INPUT_PDF_SOURCE_LABEL
 from ..pdf.source_provenance import sha256_file, source_pdf_reference_path
-from ._detect import detect_template_revision, detect_template_revision_from_pages
-from ._parsers.pdfplumber_backend import extract_pages_text, extract_pages_text_from_bytes
 from .bbox_extraction import find_bbox_casilla_hits
+from .detect import detect_template_revision, detect_template_revision_from_pages
 from .errors import DeclaracionParseError, TemplateNotDetectedError
+from .parsers.pdfplumber_backend import extract_pages_text, extract_pages_text_from_bytes
 from .schema import InboundDeclaracionObservation, TemplateRevision
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-PDFWORD: pdfplumber's Page.extract_words()
@@ -66,12 +66,12 @@ from .schema import InboundDeclaracionObservation, TemplateRevision
 # within this adapter module.  This alias is correct-by-containment: it
 # documents the caller's expectations without over-constraining the library
 # boundary.
-_PdfWord = dict[str, Any]
+PdfWord = dict[str, Any]
 
 _logger = get_logger(__name__)
 
 
-def _pdf_word_text(word: _PdfWord) -> str:
+def _pdf_word_text(word: PdfWord) -> str:
     """Return the textual value required from a pdfplumber word."""
     value = word.get("text")
     if not isinstance(value, str):
@@ -280,9 +280,9 @@ def _parse_declaracion_pages(
         operation=operation,
     )
     _validate_snapshot_matches_template(snapshot, template)
-    profile = _select_extraction_profile(snapshot, extraction_profile_id=extraction_profile_id)
-    tax_id = _extract_tax_id(text)
-    values = _extract_profile_values(
+    profile = select_extraction_profile(snapshot, extraction_profile_id=extraction_profile_id)
+    tax_id = extract_tax_id(text)
+    values = extract_profile_values(
         pages,
         profile,
         revision=snapshot.revision,
@@ -431,7 +431,7 @@ def _template_from_missing_detection(
     if not (modelo_override is not None and modelo_override) or not (año_override is not None and año_override):
         raise TemplateNotDetectedError(
             translated_message="adapters.inbound.declaracion.errors.template_not_detected",
-            context={"path": _INPUT_PDF_SOURCE_LABEL},
+            context={"path": INPUT_PDF_SOURCE_LABEL},
         )
     return TemplateRevision(
         modelo=modelo_override,
@@ -491,7 +491,7 @@ def _resolve_period(text: str, *, period_override: str | None) -> str:
     return period.upper()
 
 
-def _extract_tax_id(text: str) -> str:
+def extract_tax_id(text: str) -> str:
     match = _TAX_ID_RE.search(text)
     if match is not None:
         return _validated_tax_id(re.sub(r"\s+", "", match.group("tax_id").strip().rstrip(".")))
@@ -591,7 +591,7 @@ def _validate_snapshot_matches_template(snapshot: RegistrySnapshot, template: Te
         )
 
 
-def _select_extraction_profile(
+def select_extraction_profile(
     snapshot: RegistrySnapshot,
     *,
     extraction_profile_id: str | None,
@@ -629,7 +629,7 @@ def _select_extraction_profile(
 
 
 @dataclass(frozen=True, slots=True)
-class _TargetClassification:
+class TargetClassification:
     """One target's extraction outcome: a value, or a single failure category.
 
     Exactly one field is populated. ``value`` carries the extracted casilla on
@@ -677,14 +677,14 @@ def _is_own_box_number_of_blank_box(raw: str, printed_number: str | None) -> boo
     return token == printed_number.strip()
 
 
-def _classify_target(
+def classify_target(
     target: ExtractionTargetDefinition,
     *,
     pages: tuple[str, ...],
-    pages_words: tuple[list[_PdfWord], ...] | None,
+    pages_words: tuple[list[PdfWord], ...] | None,
     numeric_anchors: dict[CasillaId, str],
     printed_box_numbers: dict[CasillaId, str] | None = None,
-) -> _TargetClassification:
+) -> TargetClassification:
     """Resolve one target's hits into a value or a failure category.
 
     Mirrors the per-target arm of :func:`_extract_profile_values`: bbox targets
@@ -702,9 +702,9 @@ def _classify_target(
         printed_number=printed_number,
     )
     if hits is None or not hits:
-        return _TargetClassification(missing=casilla_id)
+        return TargetClassification(missing=casilla_id)
     if len(hits) > 1:
-        return _TargetClassification(ambiguous=casilla_id)
+        return TargetClassification(ambiguous=casilla_id)
     page_number, raw_value = hits[0]
     if target.value_kind != "amount":
         # "text" and "enum" value kinds: store the raw captured token as-is.
@@ -715,7 +715,7 @@ def _classify_target(
         # absent, not corrupt, so it is reported missing (coverage decides
         # whether that is tolerable) rather than malformed (which raises hard).
         if target.match_strategy == "named_label" and _is_own_box_number_of_blank_box(raw_value, printed_number):
-            return _TargetClassification(missing=casilla_id)
+            return TargetClassification(missing=casilla_id)
         # Only the `casilla` strategy's regex embeds SPANISH_AMOUNT_GROUP and so
         # guarantees the ``,NN`` tail that makes a printed Spanish amount
         # unambiguous. `bbox_anchored` takes the raw PDF word text and
@@ -725,11 +725,11 @@ def _classify_target(
         # two-way reading rather than guess; the box is reported malformed, which
         # is what an unreadable printed value is.
         if european_thousands_reading_is_ambiguous(raw_value.strip()):
-            return _TargetClassification(malformed=casilla_id)
+            return TargetClassification(malformed=casilla_id)
         parsed = parse_spanish_decimal(raw_value)
         if parsed is None:
-            return _TargetClassification(malformed=casilla_id)
-    return _TargetClassification(
+            return TargetClassification(malformed=casilla_id)
+    return TargetClassification(
         value=ExtractedCasilla(
             casilla_id=casilla_id,
             printed_value=parsed,
@@ -744,7 +744,7 @@ def _target_hits(
     target: ExtractionTargetDefinition,
     *,
     pages: tuple[str, ...],
-    pages_words: tuple[list[_PdfWord], ...] | None,
+    pages_words: tuple[list[PdfWord], ...] | None,
     numeric_anchors: dict[CasillaId, str],
     printed_number: str | None,
 ) -> list[tuple[int, str]] | None:
@@ -767,9 +767,9 @@ _LINE_Y_TOLERANCE_POINTS: float = 3.0
 """Maximum vertical distance (points) between words treated as one printed line."""
 
 
-def _words_by_line(words: list[_PdfWord]) -> list[list[_PdfWord]]:
+def _words_by_line(words: list[PdfWord]) -> list[list[PdfWord]]:
     """Group one page's words into printed lines, each sorted left to right."""
-    lines: list[tuple[float, list[_PdfWord]]] = []
+    lines: list[tuple[float, list[PdfWord]]] = []
     for word in sorted(words, key=lambda w: (float(w["top"]), float(w["x0"]))):
         top = float(word["top"])
         for line_top, line in lines:
@@ -782,7 +782,7 @@ def _words_by_line(words: list[_PdfWord]) -> list[list[_PdfWord]]:
 
 
 def _find_named_label_word_hits(
-    pages_words: tuple[list[_PdfWord], ...],
+    pages_words: tuple[list[PdfWord], ...],
     target: ExtractionTargetDefinition,
     *,
     printed_number: str | None,
@@ -829,7 +829,7 @@ def _find_named_label_word_hits(
     return hits
 
 
-def _named_label_line_value(line: list[_PdfWord], *, printed_number: str | None) -> str:
+def _named_label_line_value(line: list[PdfWord], *, printed_number: str | None) -> str:
     """Pick the value word from one matched ``named_label`` line.
 
     The value is the line's last word, as on the text path. When that word is
@@ -873,7 +873,7 @@ def _raise_extraction_failed(
     )
 
 
-def _extract_profile_values(
+def extract_profile_values(
     pages: tuple[str, ...],
     profile: ExtractionProfileDefinition,
     *,
@@ -895,12 +895,12 @@ def _extract_profile_values(
     # a separate token. Prefer in-memory bytes so decrypted declaration PDFs never
     # touch disk; fall back to a real source file only when bytes are not
     # supplied. A profile with neither kind of target never pays for the pass.
-    pages_words = _load_pages_words(profile, source_pdf_path=source_pdf_path, pdf_bytes=pdf_bytes)
-    numeric_anchors = _numeric_casilla_anchors(profile, revision)
-    printed_box_numbers = _printed_box_numbers(profile, revision)
+    pages_words = load_pages_words(profile, source_pdf_path=source_pdf_path, pdf_bytes=pdf_bytes)
+    numeric_anchors = numeric_casilla_anchors(profile, revision)
+    printed_box_numbers = parser_printed_box_numbers(profile, revision)
 
-    outcomes = _partition_target_outcomes(
-        _classify_target(
+    outcomes = partition_target_outcomes(
+        classify_target(
             target,
             pages=pages,
             pages_words=pages_words,
@@ -926,12 +926,12 @@ def _extract_profile_values(
     return tuple(outcomes.values)
 
 
-def _load_pages_words(
+def load_pages_words(
     profile: ExtractionProfileDefinition,
     *,
     source_pdf_path: Path | None,
     pdf_bytes: bytes | None,
-) -> tuple[list[_PdfWord], ...] | None:
+) -> tuple[list[PdfWord], ...] | None:
     """Load word-position data, but only for a profile whose targets need it.
 
     ``bbox_anchored`` resolves entirely in word space, and ``named_label``
@@ -951,7 +951,7 @@ def _load_pages_words(
     if pdf_bytes is not None:
         return _extract_pages_words_from_bytes(pdf_bytes)
     if source_pdf_path is not None and source_pdf_path.is_file():
-        return _extract_pages_words(source_pdf_path)
+        return extract_pages_words(source_pdf_path)
     return None
 
 
@@ -965,7 +965,7 @@ class _ExtractionOutcomes:
     ambiguous: list[CasillaId]
 
 
-def _partition_target_outcomes(classifications: Iterable[_TargetClassification]) -> _ExtractionOutcomes:
+def partition_target_outcomes(classifications: Iterable[TargetClassification]) -> _ExtractionOutcomes:
     """Sort each target's classification into its report bucket."""
     outcomes = _ExtractionOutcomes(values=[], missing=[], malformed=[], ambiguous=[])
     for outcome in classifications:
@@ -980,7 +980,7 @@ def _partition_target_outcomes(classifications: Iterable[_TargetClassification])
     return outcomes
 
 
-def _numeric_casilla_anchors(
+def numeric_casilla_anchors(
     profile: ExtractionProfileDefinition,
     revision: ModeloRevision,
 ) -> dict[CasillaId, str]:
@@ -1030,7 +1030,7 @@ def _numeric_casilla_anchors(
     return anchors
 
 
-def _printed_box_numbers(
+def parser_printed_box_numbers(
     profile: ExtractionProfileDefinition,
     revision: ModeloRevision,
 ) -> dict[CasillaId, str]:
@@ -1081,7 +1081,7 @@ def _printed_box_numbers(
     return numbers
 
 
-def _extract_pages_words(pdf_path: Path) -> tuple[list[_PdfWord], ...]:
+def extract_pages_words(pdf_path: Path) -> tuple[list[PdfWord], ...]:
     """Extract per-page word-position dicts from ``pdf_path`` using pdfplumber.
 
     Returns a tuple with one list of word dicts per page in source order.
@@ -1102,7 +1102,7 @@ def _extract_pages_words(pdf_path: Path) -> tuple[list[_PdfWord], ...]:
         return ()
 
 
-def _extract_pages_words_from_bytes(pdf_bytes: bytes) -> tuple[list[_PdfWord], ...]:
+def _extract_pages_words_from_bytes(pdf_bytes: bytes) -> tuple[list[PdfWord], ...]:
     """Extract per-page word-position dicts from in-memory PDF bytes.
 
     Mirrors :func:`_extract_pages_words` but opens an in-memory

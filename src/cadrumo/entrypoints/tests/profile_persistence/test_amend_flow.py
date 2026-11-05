@@ -26,7 +26,7 @@ from cadrumo.adapters.inbound.pdf.source_provenance import source_pdf_reference_
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
 from cadrumo.domain.justificante.schema import Justificante
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -94,8 +94,7 @@ from ....domain.modelos.filing_record import (
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.modelos.work_unit import WorkUnit
 from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.write_unit_recorder import WriteUnitRecorder
 from ...adapter_composition_work_ports import (
     build_amendment_action_ports,
@@ -165,13 +164,13 @@ def _amend_runtime(tmp_path: Path) -> Generator[_AmendRuntime]:
         objects = profile.repository
         with bundled_indexed_authority().operation():
             seed_test_profile_record(
-                _create_profile_record_for_test(
+                create_user_profile_record(
                     setup_state=ProfileSetupState.COMPLETE,
                     profile_id=_PROFILE_ID,
                     facts=_READY_PROFILE_FACTS,
                     created_at=_T0,
                     updated_at=_T0,
-                    context=_profile_creation_context_for_test(),
+                    context=profile_creation_context_for_test(),
                 ),
             )
         yield _AmendRuntime(

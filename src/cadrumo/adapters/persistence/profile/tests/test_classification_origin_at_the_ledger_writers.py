@@ -49,7 +49,7 @@ from .classification_origin_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_PROPOSED_BY = "llm:local-text:synthetic"
+PROPOSED_BY = "llm:local-text:synthetic"
 _ACTORS = pytest.mark.parametrize(
     ("actor", "origin"),
     [(PERSON, ClassificationOrigin.PERSON), (AUTOMATION, ClassificationOrigin.AUTOMATION)],
@@ -63,7 +63,7 @@ def ledger(tmp_path: Path) -> Generator[Ledger]:
         yield composed
 
 
-def _derive(ledger: Ledger, transaction_id: str, *, actor: str, category: str = "domestic_general") -> None:
+def derive(ledger: Ledger, transaction_id: str, *, actor: str, category: str = "domestic_general") -> None:
     derive_operator_iva_substrate(
         bucket_id=BUCKET_ID,
         transaction_id=transaction_id,
@@ -107,18 +107,18 @@ def _classified_split(ledger: Ledger, transaction_id: str, *, actor: str) -> Non
         child_classifications=tuple(
             ManualLedgerTransactionPatch(business_classification=BusinessClassification.BUSINESS) for _ in _PARTS
         ),
-        classified_by=_PROPOSED_BY,
+        classified_by=PROPOSED_BY,
         actor=actor,
         source_command="aeat app ledger split --llm",
         ports=ledger.ports,
     )
 
 
-def _accept_proposal(ledger: Ledger, transaction_id: str, *, actor: str) -> None:
+def accept_proposal(ledger: Ledger, transaction_id: str, *, actor: str) -> None:
     apply_llm_classification(
         LLMClassificationSuggestion(
             transaction_id=transaction_id,
-            provenance=_PROPOSED_BY,
+            provenance=PROPOSED_BY,
             classification=BusinessClassification.PERSONAL,
             confidence=Decimal("0.9000"),
             reason="synthetic proposal",
@@ -146,14 +146,14 @@ def test_a_first_classification_records_who_ran_the_write(
     later = add_row(ledger, description="classified later")
     classify_row(ledger, later, actor=actor)
     accepted = add_row(ledger, description="accepted from a model")
-    _accept_proposal(ledger, accepted, actor=actor)
+    accept_proposal(ledger, accepted, actor=actor)
     excluded = add_row(ledger, description="excluded")
     _exclude(ledger, excluded, actor=actor)
     unprocessed = add_row(ledger, description="left unprocessed", actor=actor)
 
     for transaction_id in (at_creation, later, accepted, excluded):
         assert ledger.row(transaction_id).classification_origin is origin, ledger.row(transaction_id).raw.description
-    assert ledger.row(accepted).classified_by == _PROPOSED_BY
+    assert ledger.row(accepted).classified_by == PROPOSED_BY
     assert ledger.row(unprocessed).classification_origin is None
 
 
@@ -165,7 +165,7 @@ def test_a_rules_classification_is_nobodys_whoever_ran_the_rules_and_a_derivatio
     classify_row(ledger, by_rule, actor=actor, stamp="rule:synthetic")
     assert ledger.row(by_rule).classification_origin is ClassificationOrigin.AUTOMATIC
 
-    _derive(ledger, by_rule, actor=actor)
+    derive(ledger, by_rule, actor=actor)
 
     derived = ledger.row(by_rule)
     assert derived.classified_by == "derived:iva-category"
@@ -221,9 +221,9 @@ def test_a_split_child_classified_in_the_split_records_who_ran_it_and_the_parent
 
 _Write = Callable[..., None]
 _WRITES_IN_PLACE: tuple[tuple[str, _Write], ...] = (
-    ("derive", _derive),
+    ("derive", derive),
     ("reclassify", _reclassify),
-    ("accept-proposal", _accept_proposal),
+    ("accept-proposal", accept_proposal),
     ("exclude", _exclude),
 )
 _SPLITS: tuple[tuple[str, _Write], ...] = (("split", _split), ("classified-split", _classified_split))

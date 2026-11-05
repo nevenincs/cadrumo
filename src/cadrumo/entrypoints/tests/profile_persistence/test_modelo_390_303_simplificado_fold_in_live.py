@@ -58,7 +58,7 @@ from cadrumo.core.filing_projection_ref import M303RegimenSimplificadoFact
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority as authority_indexed_authority_for_test,
 )
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
@@ -109,10 +109,9 @@ from cadrumo.domain.modelos.verification_report import (
 from cadrumo.domain.modelos.verification_repository import upsert_verification_report
 from cadrumo.domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_filing_action_ports,
     build_verification_repository_bundle,
@@ -182,7 +181,7 @@ def _summary_casilla_ids() -> tuple[CasillaId, ...]:
 
 def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:
     seed_test_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
@@ -205,7 +204,7 @@ def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:
             ),
             created_at=_T0,
             updated_at=_T0,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         )
     )
 
@@ -324,7 +323,7 @@ def _persist_presentado_source(
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     filing_repo = ModeloRecordCatalogueRepository(objects=secure_objects)
     snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period="4T")
-    with _indexed_authority_for_test().operation() as operation:
+    with authority_indexed_authority_for_test().operation() as operation:
         source_work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="303",
@@ -519,7 +518,7 @@ def _calculate_m390_annual(
     filings: ModeloRecordCatalogueRepository,
 ):
     snapshot = published_authority_operation().snapshot("390", filing_year=_YEAR, period="0A")
-    with _indexed_authority_for_test().operation() as operation:
+    with authority_indexed_authority_for_test().operation() as operation:
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="390",
@@ -676,7 +675,7 @@ def test_m390_refuses_a_source_when_current_calculation_pointer_diverges_from_fi
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A filed source is invalid as soon as the live pointer no longer names it."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with authority_indexed_authority_for_test().operation() as _authority_operation_for_test:
         _store_ready_profile(secure_objects)
         work_units, calculations, filings, source = _persist_presentado_source(secure_objects, operation=operation)
         target = _calculate_m390_annual(
@@ -717,7 +716,7 @@ def test_m390_refuses_a_non_presentado_source_calculation_revision(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """VERIFICADO_COMPLETO is not a substitute for the filed PRESENTADO source."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with authority_indexed_authority_for_test().operation() as _authority_operation_for_test:
         _store_ready_profile(secure_objects)
         work_units, calculations, filings, source = _persist_presentado_source(secure_objects, operation=operation)
         target = _calculate_m390_annual(
@@ -757,7 +756,7 @@ def test_m390_refuses_post_calculate_non_vigente_source_filing_record(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """A target draft cannot be verified after its filed source receipt is superseded."""
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+    with authority_indexed_authority_for_test().operation() as _authority_operation_for_test:
         _store_ready_profile(secure_objects)
         work_units, calculations, filings, source = _persist_presentado_source(secure_objects, operation=operation)
         target = _calculate_m390_annual(
@@ -862,7 +861,7 @@ def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_f
     )
 
     with (
-        _indexed_authority_for_test().operation() as operation,
+        authority_indexed_authority_for_test().operation() as operation,
         pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="no longer matches"),
     ):
         verify_modelo_revision_with_preconditions(
@@ -930,7 +929,7 @@ def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_f
         )
     with (
         pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="no longer matches"),
-        _indexed_authority_for_test().operation() as operation,
+        authority_indexed_authority_for_test().operation() as operation,
     ):
         export_modelo_revision(
             ModeloExportCommand(

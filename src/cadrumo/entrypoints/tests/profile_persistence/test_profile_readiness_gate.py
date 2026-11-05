@@ -38,9 +38,7 @@ from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-)
-from cadrumo.domain.calculations.registry.authority import (
-    bundled_indexed_authority as _indexed_authority_for_test,
+    bundled_indexed_authority,
 )
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
@@ -54,10 +52,14 @@ from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
+    profile_creation_context_for_test,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.domain.user_profile.values import (
+    ProfileSetupState,
+    UserProfileFact,
+    UserProfileRecord,
+    create_user_profile_record,
+)
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
 from .general_iva_profile_facts_support import general_iva_profile_facts
@@ -77,7 +79,7 @@ _NONRESIDENT_PROFILE_ID = "20000000-0000-4000-8000-000000000002"
 
 def test_modelo_baseline_accepts_canonical_repeatable_activity_row() -> None:
     """The TUI's indexed activity row satisfies the shared filing baseline."""
-    record = _create_profile_record_for_test(
+    record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_OPERATOR_PROFILE_ID,
         facts=(
@@ -86,7 +88,7 @@ def test_modelo_baseline_accepts_canonical_repeatable_activity_row() -> None:
         ),
         created_at=_NOW,
         updated_at=_NOW,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
 
     assert modelo_work_profile_baseline_missing_paths(record, modelo="130") == ()
@@ -94,45 +96,45 @@ def test_modelo_baseline_accepts_canonical_repeatable_activity_row() -> None:
 
 def _seed_profile_record(record: UserProfileRecord) -> None:
     """Persist one fixture record while its governed validation authority is pinned."""
-    with _indexed_authority_for_test().operation():
+    with bundled_indexed_authority().operation():
         seed_test_profile_record(record)
 
 
 def _replace_profile_record(record: UserProfileRecord) -> UserProfileRecord:
     """Replace one fixture record under the same pinned validation authority."""
-    with _indexed_authority_for_test().operation():
+    with bundled_indexed_authority().operation():
         return replace_test_profile_record(record)
 
 
 def _store_incomplete_profile(bucket_id: str) -> None:
     _seed_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
             created_at=_NOW,
             updated_at=_NOW,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 
 
 def _store_profile_with_no_facts_whatsoever(bucket_id: str) -> None:
     _seed_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(),
             created_at=_NOW,
             updated_at=_NOW,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 
 
 def _store_profile_without_activity(bucket_id: str) -> None:
     _seed_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(
@@ -153,7 +155,7 @@ def _store_profile_without_activity(bucket_id: str) -> None:
             ),
             created_at=_NOW,
             updated_at=_NOW,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 
@@ -165,7 +167,7 @@ def _store_ready_profile(
     setup_state: ProfileSetupState = ProfileSetupState.COMPLETE,
 ) -> None:
     _seed_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=setup_state,
             profile_id=bucket_id,
             facts=general_iva_profile_facts(
@@ -176,14 +178,14 @@ def _store_ready_profile(
             ),
             created_at=_NOW,
             updated_at=_NOW,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 
 
 def _store_nonresident_legal_entity_profile(bucket_id: str) -> None:
     _seed_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(
@@ -204,7 +206,7 @@ def _store_nonresident_legal_entity_profile(bucket_id: str) -> None:
             ),
             created_at=_NOW,
             updated_at=_NOW,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 
@@ -218,7 +220,7 @@ def _store_nonresident_natural_person_profile(bucket_id: str) -> None:
     Renta).
     """
     _seed_profile_record(
-        _create_profile_record_for_test(
+        create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(
@@ -243,7 +245,7 @@ def _store_nonresident_natural_person_profile(bucket_id: str) -> None:
             ),
             created_at=_NOW,
             updated_at=_NOW,
-            context=_profile_creation_context_for_test(),
+            context=profile_creation_context_for_test(),
         ),
     )
 
@@ -319,7 +321,7 @@ def test_create_work_unit_service_refuses_incomplete_profile(tmp_path: Path) -> 
 
         with (
             pytest.raises(ModeloProfileReadinessError),
-            _indexed_authority_for_test().operation() as operation,
+            bundled_indexed_authority().operation() as operation,
         ):
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
@@ -343,7 +345,7 @@ def test_create_work_unit_service_refuses_profile_missing_activity(tmp_path: Pat
 
         with (
             pytest.raises(ModeloProfileReadinessError) as excinfo,
-            _indexed_authority_for_test().operation() as operation,
+            bundled_indexed_authority().operation() as operation,
         ):
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
@@ -391,7 +393,7 @@ def test_create_work_unit_service_refuses_profile_declaring_no_facts_whatsoever(
 
         with (
             pytest.raises(ModeloProfileReadinessError),
-            _indexed_authority_for_test().operation() as operation,
+            bundled_indexed_authority().operation() as operation,
         ):
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
@@ -417,7 +419,7 @@ def test_create_work_unit_service_refuses_period_year_mismatch_with_typed_error(
 
         with (
             pytest.raises(WorkUnitMutationRefusedError) as excinfo,
-            _indexed_authority_for_test().operation() as operation,
+            bundled_indexed_authority().operation() as operation,
         ):
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
@@ -461,7 +463,7 @@ def test_create_work_unit_service_refuses_nonresident_legal_entity_m200(tmp_path
 
         with (
             pytest.raises(ModeloProfileReadinessError) as excinfo,
-            _indexed_authority_for_test().operation() as operation,
+            bundled_indexed_authority().operation() as operation,
         ):
             create_work_unit(
                 bucket_id=_NONRESIDENT_PROFILE_ID,
@@ -682,9 +684,9 @@ def test_m100_applicability_gate_distinguishes_resident_from_nonresident_natural
     returns ``None`` (applicable, no refusal) for a resident IRPF natural
     person whose only differing fact is the residency axis.
     """
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        profile_context = _profile_creation_context_for_test()
-        nonresident = _create_profile_record_for_test(
+    with bundled_indexed_authority().operation() as _authority_operation_for_test:
+        profile_context = profile_creation_context_for_test()
+        nonresident = create_user_profile_record(
             context=profile_context,
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_NONRESIDENT_PROFILE_ID,
@@ -698,7 +700,7 @@ def test_m100_applicability_gate_distinguishes_resident_from_nonresident_natural
             created_at=_NOW,
             updated_at=_NOW,
         )
-        resident = _create_profile_record_for_test(
+        resident = create_user_profile_record(
             context=profile_context,
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_OPERATOR_PROFILE_ID,
@@ -742,7 +744,7 @@ def test_create_work_unit_service_refuses_pre_activity_m303_and_persists_no_work
 
         with (
             pytest.raises(ModeloProfileReadinessError) as excinfo,
-            _indexed_authority_for_test().operation() as operation,
+            bundled_indexed_authority().operation() as operation,
         ):
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
@@ -777,7 +779,7 @@ def test_create_work_unit_service_refuses_pre_activity_m130_and_persists_no_work
 
         with (
             pytest.raises(ModeloProfileReadinessError) as excinfo,
-            _indexed_authority_for_test().operation() as operation,
+            bundled_indexed_authority().operation() as operation,
         ):
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
@@ -907,7 +909,7 @@ def test_first_active_m303_period_allows_create_and_calculate(
         calculation_repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
         wallet_repository = IvaWalletDecisionRepository(objects=profile.repository)
 
-        with _indexed_authority_for_test().operation() as operation:
+        with bundled_indexed_authority().operation() as operation:
             work_unit = create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo("303").value,
@@ -960,7 +962,7 @@ def test_visible_target_ensure_refuses_reused_pre_activity_m303_before_rename(tm
         )
 
         with (
-            _indexed_authority_for_test().operation() as operation,
+            bundled_indexed_authority().operation() as operation,
             pytest.raises(ModeloProfileReadinessError) as excinfo,
         ):
             ensure_modelo_work_unit_for_active_target(
@@ -1002,7 +1004,7 @@ def test_create_work_unit_service_refuses_a_setup_incomplete_profile(tmp_path: P
 
         with (
             pytest.raises(ModeloProfileReadinessError) as excinfo,
-            _indexed_authority_for_test().operation() as operation,
+            bundled_indexed_authority().operation() as operation,
         ):
             create_work_unit(
                 bucket_id=_OPERATOR_PROFILE_ID,
@@ -1046,7 +1048,7 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID):
         _seed_profile_record(
-            _create_profile_record_for_test(
+            create_user_profile_record(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_OPERATOR_PROFILE_ID,
                 facts=(
@@ -1055,7 +1057,7 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
                 ),
                 created_at=_NOW,
                 updated_at=_NOW,
-                context=_profile_creation_context_for_test(),
+                context=profile_creation_context_for_test(),
             ),
         )
         repository = WorkUnitCatalogueRepository()
@@ -1108,7 +1110,7 @@ def _reversed_declaration_order_record() -> UserProfileRecord:
     Both facts are live at one effective-dated path, so declaration order and
     ``valid_from`` order disagree and the two readers can be told apart.
     """
-    return _create_profile_record_for_test(
+    return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_OPERATOR_PROFILE_ID,
         facts=(
@@ -1125,7 +1127,7 @@ def _reversed_declaration_order_record() -> UserProfileRecord:
         ),
         created_at=_NOW,
         updated_at=_NOW,
-        context=_profile_creation_context_for_test(),
+        context=profile_creation_context_for_test(),
     )
 
 

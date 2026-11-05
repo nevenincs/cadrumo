@@ -48,7 +48,7 @@ from ..core.i18n.render import clear_output_language_cache
 from ..core.storage_environment import prepare_temporary_directory
 from .collection_storage_root import SETTINGS_STEM
 
-_SETTINGS_STORAGE_DIRECTORIES: list[TemporaryDirectory[str]] = []
+SETTINGS_STORAGE_DIRECTORIES: list[TemporaryDirectory[str]] = []
 """Temporary storage roots minted for returned Settings instances, held open.
 
 The strong reference is deliberate: a returned :class:`Settings` names this
@@ -75,8 +75,8 @@ def release_settings_storage_directories() -> None:
     legitimate reason for cleanup to fail. The reference is dropped either way,
     so a directory that resists removal is not retried forever.
     """
-    while _SETTINGS_STORAGE_DIRECTORIES:
-        directory = _SETTINGS_STORAGE_DIRECTORIES.pop()
+    while SETTINGS_STORAGE_DIRECTORIES:
+        directory = SETTINGS_STORAGE_DIRECTORIES.pop()
         try:
             directory.cleanup()
         except OSError:
@@ -130,7 +130,7 @@ def settings_without_env_file(**overrides: Any) -> Settings:
         and "cadrumo_storage_root" not in os.environ
     ):
         temporary_directory = TemporaryDirectory(prefix=SETTINGS_STEM, dir=prepare_temporary_directory())
-        _SETTINGS_STORAGE_DIRECTORIES.append(temporary_directory)
+        SETTINGS_STORAGE_DIRECTORIES.append(temporary_directory)
         overrides = {**overrides, "cadrumo_storage_root": temporary_directory.name}
     return _EnvFileFreeSettings(**overrides)
 
@@ -428,12 +428,12 @@ def scoped_product_storage_environment() -> Generator[None]:
             else:
                 os.environ[name] = value
         if changed:
-            from cadrumo.core import logging as _logging_mod
+            from cadrumo.core import logging
             from cadrumo.core.config import reset_settings_cache
 
             reset_settings_cache()
-            _logging_mod._configured = False
-            _logging_mod.configure_logging()
+            logging.configured = False
+            logging.configure_logging()
 
 
 @contextmanager

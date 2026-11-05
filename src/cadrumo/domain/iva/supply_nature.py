@@ -127,7 +127,7 @@ def registry_citation_catalogue(
     from ..calculations.registry.governed_fact_scope import governed_facts_in_scope
     from ..calculations.registry.iva_category_catalogue import require_iva_category
     from ..calculations.registry.schema_base import DateAxis
-    from ._fact_mapping_entries import mapping_entries
+    from .fact_mapping_entries import mapping_entries
 
     selected_authority = authority or governed_facts_in_scope()
     if selected_authority is None:

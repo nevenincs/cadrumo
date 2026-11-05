@@ -11,20 +11,20 @@ from .....domain.calculations.registry.tests.published_authority import (
     published_snapshot,
     published_supported_filing_years,
 )
-from ._verification_chain_m100_support import (
-    _M100_ANNUAL_PERIOD,
-    _M100_BASE_LIQUIDABLE_GENERAL_CASILLA,
-    _M100_CLOSURE_ASSERTION_CASILLAS,
-    _M100_CUOTA_AUTONOMICA_CASILLA,
-    _M100_CUOTA_ESTATAL_CASILLA,
-    _M100_INGRESOS_EXPLOTACION_CASILLA,
-    _m100_bound_extracted_values,
-    _m100_corpus_years,
-    _m100_manual_casillas,
-    _neutral_m100_bindings,
-    _parse_m100_corpus,
+from .verification_chain_m100_support import (
+    M100_ANNUAL_PERIOD,
+    M100_BASE_LIQUIDABLE_GENERAL_CASILLA,
+    M100_CLOSURE_ASSERTION_CASILLAS,
+    M100_CUOTA_AUTONOMICA_CASILLA,
+    M100_CUOTA_ESTATAL_CASILLA,
+    M100_INGRESOS_EXPLOTACION_CASILLA,
+    m100_bound_extracted_values,
+    m100_corpus_years,
+    m100_manual_casillas,
+    neutral_m100_bindings,
+    parse_m100_corpus,
 )
-from ._verification_chain_support import _calculate_engine_values_from_inputs
+from .verification_chain_support import calculate_engine_values_from_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
@@ -34,7 +34,7 @@ _HAS_ECONOMIC_ACTIVITY = "renta-profile-has-economic-activity"
 
 def _admitted_corpus_years() -> tuple[int, ...]:
     support = published_supported_filing_years()
-    return tuple(year for year in _m100_corpus_years() if support is None or support.admits_filing_year(year))
+    return tuple(year for year in m100_corpus_years() if support is None or support.admits_filing_year(year))
 
 
 @pytest.mark.parametrize("year", _admitted_corpus_years())
@@ -82,16 +82,16 @@ def test_verification_chain_m100_engine_corpus_limited(year: int) -> None:
 
     Legal grounding: Ley 35/2006 arts. 50, 62-68; RD 439/2007 Disposicion Final.
     """
-    label = f"M100/{year}-{_M100_ANNUAL_PERIOD} corpus-limited"
-    extracted = _parse_m100_corpus(year, label)
-    revision = published_snapshot("100", filing_year=year, period=_M100_ANNUAL_PERIOD).revision
+    label = f"M100/{year}-{M100_ANNUAL_PERIOD} corpus-limited"
+    extracted = parse_m100_corpus(year, label)
+    revision = published_snapshot("100", filing_year=year, period=M100_ANNUAL_PERIOD).revision
 
-    bindings = _neutral_m100_bindings(revision, ccaa=_CCAA)
-    bindings.decimals.update(_m100_bound_extracted_values(revision, extracted))
+    bindings = neutral_m100_bindings(revision, ccaa=_CCAA)
+    bindings.decimals.update(m100_bound_extracted_values(revision, extracted))
     # The specimen declares activity income, so its filer carries on an economic activity.
     if _HAS_ECONOMIC_ACTIVITY in bindings.booleans:
         bindings.booleans[_HAS_ECONOMIC_ACTIVITY] = True
-    manual = _m100_manual_casillas(revision)
+    manual = m100_manual_casillas(revision)
     inputs = {
         casilla_id: value
         for casilla_id, value in extracted.items()
@@ -102,10 +102,10 @@ def test_verification_chain_m100_engine_corpus_limited(year: int) -> None:
         "renta-modelo-130-pagos-fraccionados": Decimal("0"),
         "renta-modelo-131-pagos-fraccionados": Decimal("0"),
     }
-    engine_values = _calculate_engine_values_from_inputs(
+    engine_values = calculate_engine_values_from_inputs(
         modelo="100",
         year=year,
-        period=_M100_ANNUAL_PERIOD,
+        period=M100_ANNUAL_PERIOD,
         label=label,
         inputs=inputs,
         binding_values=bindings.decimals,
@@ -115,21 +115,21 @@ def test_verification_chain_m100_engine_corpus_limited(year: int) -> None:
         boolean_binding_values=bindings.booleans,
     )
 
-    for closure_id in _M100_CLOSURE_ASSERTION_CASILLAS:
+    for closure_id in M100_CLOSURE_ASSERTION_CASILLAS:
         assert engine_values.get(closure_id) is not None, (
             f"FORMULA-MISMATCH [{label}]: casilla {closure_id!r} absent "
             f"from engine result - formula evaluation order issue."
         )
 
-    engine_0545 = engine_values[_M100_CUOTA_ESTATAL_CASILLA]
-    engine_0546 = engine_values[_M100_CUOTA_AUTONOMICA_CASILLA]
-    extracted_0545 = extracted.get(_M100_CUOTA_ESTATAL_CASILLA)
-    extracted_0546 = extracted.get(_M100_CUOTA_AUTONOMICA_CASILLA)
+    engine_0545 = engine_values[M100_CUOTA_ESTATAL_CASILLA]
+    engine_0546 = engine_values[M100_CUOTA_AUTONOMICA_CASILLA]
+    extracted_0545 = extracted.get(M100_CUOTA_ESTATAL_CASILLA)
+    extracted_0546 = extracted.get(M100_CUOTA_AUTONOMICA_CASILLA)
 
-    engine_0505 = engine_values.get(_M100_BASE_LIQUIDABLE_GENERAL_CASILLA)
+    engine_0505 = engine_values.get(M100_BASE_LIQUIDABLE_GENERAL_CASILLA)
     assert isinstance(engine_0505, Decimal) and engine_0505 > Decimal("0"), (
         f"CORPUS-LIMITED [{label}]: the extracted activity income "
-        f"0171={extracted.get(_M100_INGRESOS_EXPLOTACION_CASILLA)!r} should reach the base "
+        f"0171={extracted.get(M100_INGRESOS_EXPLOTACION_CASILLA)!r} should reach the base "
         f"liquidable general, got 0505={engine_0505!r}"
     )
     assert isinstance(engine_0545, Decimal) and engine_0545 >= Decimal("0"), (
@@ -145,10 +145,10 @@ def test_verification_chain_m100_engine_corpus_limited(year: int) -> None:
         f"{extracted_0546!r} - same probe guard as 0545."
     )
 
-    assert _M100_INGRESOS_EXPLOTACION_CASILLA in extracted, (
+    assert M100_INGRESOS_EXPLOTACION_CASILLA in extracted, (
         f"PARSER-GAP [{label}]: casilla '0171' absent from extracted values."
     )
-    assert isinstance(extracted[_M100_INGRESOS_EXPLOTACION_CASILLA], Decimal), (
+    assert isinstance(extracted[M100_INGRESOS_EXPLOTACION_CASILLA], Decimal), (
         f"PARSER-GAP [{label}]: casilla '0171' is not Decimal: "
-        f"{type(extracted[_M100_INGRESOS_EXPLOTACION_CASILLA]).__name__!r}"
+        f"{type(extracted[M100_INGRESOS_EXPLOTACION_CASILLA]).__name__!r}"
     )

@@ -88,14 +88,14 @@ from cadrumo.domain.invoices.rule_findings import (
 
 from .supervision_support import run_to_settlement
 from .supervisor_test_support import (
-    _SENSITIVE_EXCEPTION_DETAIL,
+    SENSITIVE_EXCEPTION_DETAIL,
     SupervisorRequest,
     SupervisorResult,
     UnexpectedFailureExecutor,
-    _assert_sensitive_detail_absent_from_operation_bytes,
-    _capabilities,
+    assert_sensitive_detail_absent_from_operation_bytes,
     operation_repositories,
     operation_supervisor,
+    supervisor_capabilities,
     supervisor_registry,
     supervisor_request,
 )
@@ -289,7 +289,7 @@ def test_an_unexpected_failure_records_no_detail_and_keeps_its_prose_out_of_stor
         supervisor_registry(
             executor_type=UnexpectedFailureExecutor,
             build=lambda: executor,
-            capabilities=_capabilities(
+            capabilities=supervisor_capabilities(
                 owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK}),
                 permitted_effects=frozenset({OperationEffect.NONE, OperationEffect.UPDATED, OperationEffect.UNKNOWN}),
             ),
@@ -302,8 +302,8 @@ def test_an_unexpected_failure_records_no_detail_and_keeps_its_prose_out_of_stor
     assert receipt is not None and receipt.error_detail_ref is None and receipt.diagnostic_ref is not None
     assert isinstance(case.detail, OperationResultProjectionRefusalV1)
     assert case.detail.code is OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE
-    assert _SENSITIVE_EXCEPTION_DETAIL not in case.terminal.model_dump_json()
-    _assert_sensitive_detail_absent_from_operation_bytes(case.storage_root)
+    assert SENSITIVE_EXCEPTION_DETAIL not in case.terminal.model_dump_json()
+    assert_sensitive_detail_absent_from_operation_bytes(case.storage_root)
 
 
 def test_the_detail_is_read_only_under_its_own_schema_identity(

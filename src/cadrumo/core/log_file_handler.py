@@ -73,10 +73,10 @@ def append_signal_name(directory: str, sid: str) -> str:
     """
     # Windows path rules on every platform: the signal only exists on Windows.
     text = ntpath.abspath(directory).removeprefix("\\\\?\\").replace("/", "\\").rstrip("\\")
-    return f"Local\\cadrumo-log-append-{sid}-{_fnv1a(text.encode('utf-8').lower()):016x}"
+    return f"Local\\cadrumo-log-append-{sid}-{fnv1a(text.encode('utf-8').lower()):016x}"
 
 
-def _fnv1a(data: bytes) -> int:
+def fnv1a(data: bytes) -> int:
     """64-bit FNV-1a, which the desktop's platform crate computes alike."""
     digest = _FNV_OFFSET
     for byte in data:
