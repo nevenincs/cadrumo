@@ -146,11 +146,7 @@ def _serve() -> None:
                 # as EOF. The final cleanup path still owns service teardown.
                 pass
             finally:
-                try:
-                    service.request_close()
-                finally:
-                    stop.set()
-                    wake.set()
+                _end_lifetime(service, stop, wake)
 
         Thread(target=lifetime_ended, name="agent-service-lifetime", daemon=True).start()
         connected = client.connected
@@ -182,6 +178,20 @@ def _serve() -> None:
         _close_service(service, server, client, relay, bearer, gateway_bearer)
 
 
+def _end_lifetime(service: AgentService, stop: Event, wake: Event) -> None:
+    """End the service at its parent's close, marking the end before the connection closes.
+
+    Closing the service also closes its runtime connection, which cuts short
+    any exchange the service loop has in flight; marking the end first lets
+    the loop read that cut as this ending rather than as the runtime's refusal.
+    """
+    stop.set()
+    try:
+        service.request_close()
+    finally:
+        wake.set()
+
+
 def _run_service_loop(client: InstalledServiceClient, service: AgentService, stop: Event, wake: Event) -> None:
     admitted = False
     started = False
@@ -190,7 +200,7 @@ def _run_service_loop(client: InstalledServiceClient, service: AgentService, sto
         wake.clear()
         if _wait_out_recovery(service, wake):
             continue
-        claimed, lease = _claim_or_retry(client, wake)
+        claimed, lease = _claim_or_retry(client, wake, stop)
         if not claimed:
             continue
         if lease is None:
@@ -206,10 +216,15 @@ def _run_service_loop(client: InstalledServiceClient, service: AgentService, sto
         wake.wait()
 
 
-def _claim_or_retry(client: InstalledServiceClient, wake: Event) -> tuple[bool, ServiceLease | None]:
+def _claim_or_retry(client: InstalledServiceClient, wake: Event, stop: Event) -> tuple[bool, ServiceLease | None]:
     try:
         lease = client.claim()
     except RefusalError as error:
+        if error.reason is RefusalCode.CONNECTION_CLOSED and stop.is_set():
+            # The service's own lifetime ended and closed this connection
+            # under the claim: an orderly end, not a runtime refusal.
+            _LOGGER.info("agent service lifetime ended during a lease claim")
+            return False, None
         # A claim that ran out of time while the connection stayed open
         # was queued behind another exchange: the admission stands and
         # the tree keeps running. One that closed the connection ended
