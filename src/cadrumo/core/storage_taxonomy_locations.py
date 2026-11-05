@@ -272,6 +272,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         StorageCategory.AUTHORITY_ADMISSION_RECEIPTS,
         "cache/authority-admissions",
         consumer_module="domain/calculations/registry/authority_store.py",
+        materialised=True,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.CACHE,
         fingerprint_participation=FingerprintParticipation.EXCLUDED,

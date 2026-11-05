@@ -107,8 +107,8 @@ def test_a_modelo_mixing_grammars_is_reported_and_one_that_does_not_is_not(
     planted = dataclasses.replace(
         authority,
         modelos=modelos,
-        _modelos_by_id={modelo.id: modelo for modelo in modelos},
-        _snapshots={},
+        modelos_by_id={modelo.id: modelo for modelo in modelos},
+        snapshots={},
     )
 
     uses = screen_authority(planted, ("036", "111"))

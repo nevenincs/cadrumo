@@ -33,7 +33,7 @@ def test_temporal_coverage_reselects_every_registered_revision_and_checks_its_de
     authority = replace(
         full_authority,
         modelos=(full_authority.modelo("036"),),
-        _snapshots={},
+        snapshots={},
     )
     report = compose_temporal_coverage(authority=authority)
     assessment_horizon = coverage_assessment_horizon(authority.catalogues)
@@ -641,8 +641,8 @@ def _authority_with_single_model(
     return replace(
         authority,
         modelos=(composed_modelo,),
-        _modelos_by_id={composed_modelo.id: resolved_lookup_modelo},
-        _snapshots={} if snapshots is None else snapshots,
+        modelos_by_id={composed_modelo.id: resolved_lookup_modelo},
+        snapshots={} if snapshots is None else snapshots,
     )
 
 
