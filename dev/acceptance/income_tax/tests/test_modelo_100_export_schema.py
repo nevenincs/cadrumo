@@ -137,7 +137,9 @@ def _seed_filer(*, criterion: str, family: tuple[UserProfileFact, ...] = ()) -> 
                     *single,
                     *family,
                     *dated,
-                )
+                ),
+                # The persona's own dated election would stand beside the criterion this suite states.
+                without={fact.path for fact in dated},
             ),
             created_at=T0,
             updated_at=T0,

@@ -101,11 +101,11 @@ def published_work_profile_declaring_activities(
 
     The ready baseline declares one activity as the setup wizard writes it, unindexed; each
     further activity takes the next indexed row. ``facts`` replace the baseline at their paths
-    and are all kept, so one path may hold several dated windows.
+    and are all kept, so one path may hold several dated windows; a dated fact alone therefore
+    leaves the path undeclared outside its window.
     """
     if activities < 1:
         raise ValueError("a work profile declares at least the activity its readiness baseline holds")
-    stated = {fact.path for fact in facts}
     rows = tuple(
         UserProfileFact(path=f"activities.{row}.description", value=f"Synthetic activity {row}")
         for row in range(1, activities)
@@ -114,7 +114,7 @@ def published_work_profile_declaring_activities(
         record = create_user_profile_record(
             context=operation.profile_create_context(),
             profile_id=WITHHOLDING_FILER_PROFILE_ID,
-            facts=(*(fact for fact in MODELO_READY_PROFILE_FACTS if fact.path not in stated), *rows, *facts),
+            facts=(*persona_facts_beneath(facts, without={fact.path for fact in facts}), *rows),
             setup_state=ProfileSetupState.COMPLETE,
             created_at=_CLOCK,
             updated_at=_CLOCK,
