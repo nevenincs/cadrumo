@@ -1,10 +1,10 @@
 import { servedLimits } from "./support/servedLimits";
+import { windowFixture } from "./support/windowFixtures";
 import { holdRecordedPeriods } from "../src/dev/periodRecording";
 import { holdLedgerLimits } from "../src/shell/ledgerLimits";
 import { holdLedgerPeriods } from "../src/shell/ledgerPeriods";
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { readLocaleDecimal } from "../src/shared/numbers";
 import type {
   CatalogueInvoice,
@@ -48,12 +48,7 @@ type Recording = {
 const recorded = (
   JSON.parse(
     readFileSync(
-      fileURLToPath(
-        new URL(
-          "../src/dev/fixtures/ledgerInvoicePreview.json",
-          import.meta.url,
-        ),
-      ),
+      windowFixture("ledger-recordings", "ledgerInvoicePreview"),
       "utf8",
     ),
   ) as { recordings: Record<string, Recording> }

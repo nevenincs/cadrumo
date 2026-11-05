@@ -1,7 +1,7 @@
 import type { Decorator, Preview } from "@storybook/react-vite";
 import { useEffect } from "react";
 import { Frame, type Surface } from "../src/dev/catalogue/Frame";
-import servedEntryOptions from "../src/dev/fixtures/ledgerEntryOptions.json" with { type: "json" };
+import servedEntryOptions from "@fixtures/ledger-entry-options/ledgerEntryOptions.json" with { type: "json" };
 import "../src/dev/index.css";
 import { holdLedgerClassifications } from "../src/shell/ledgerClassifications";
 import { holdRecordedPeriods } from "../src/dev/periodRecording";

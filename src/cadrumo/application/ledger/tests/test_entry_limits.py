@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-import json
 import re
 from collections.abc import Callable
 from decimal import Decimal
-from pathlib import Path
 from typing import Final, get_args
 
 import pytest
@@ -34,10 +32,6 @@ from ..split_operation import LedgerSplitChildRequest, LedgerSplitRequest
 from ..update_contracts import LedgerUpdatePatch
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_RECORDING: Final = Path(__file__).resolve().parents[5] / (
-    "native/desktop/frontend/src/dev/fixtures/ledgerEntryOptions.json"
-)
 
 
 def _rule(name: str) -> LedgerEntryDecimalRule:
@@ -135,11 +129,6 @@ def test_an_evidence_rate_is_on_the_points_scale_the_field_is_served_on() -> Non
     assert LedgerEvidenceUpdatePatch(iva_rate="100").iva_rate == "100"
     with pytest.raises(ValidationError):
         LedgerEvidenceUpdatePatch(iva_rate="100.5")
-
-
-def test_the_recorded_limits_are_what_the_backend_answers() -> None:
-    recorded = json.loads(_RECORDING.read_text(encoding="utf-8"))
-    assert recorded["limits"] == ledger_entry_limits().model_dump(mode="json")
 
 
 def _text(length: int) -> str:

@@ -54,4 +54,5 @@ def emit(rendered: Mapping[Path, str], arguments: ProducerOptions, *, remedy: st
         raise SystemExit(f"--output {output} is not an existing directory")
     for path, text in rendered.items():
         target = path if output is None else output / path.name
+        target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(text, encoding="utf-8", newline="\n")

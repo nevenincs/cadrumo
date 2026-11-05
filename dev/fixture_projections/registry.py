@@ -1,9 +1,9 @@
 """Every generated fixture family, declared once: producer, inputs, outputs and check.
 
-A family's output root is data. While the projections are committed in place
-the root is their source directory and the family is not removable; moving the
-projections into the build tree changes the root and the ``committed`` flag
-here, not the code that seeds, stamps or checks them.
+A family's output root is data. A generated family writes into the host's build
+tree and is removable; a family whose outputs were committed in place would name
+its source directory and set ``committed``, and the code that seeds, stamps or
+checks them would not change.
 
 Commands are argument vectors. ``{python}`` stands for the interpreter running
 this tooling, and ``{output}`` for the scratch directory a determinism run
@@ -85,7 +85,6 @@ class FixtureFamily:
 
 
 FRONTEND: Final[str] = "native/desktop/frontend"
-FIXTURE_ROOT: Final[str] = f"{FRONTEND}/src/dev/fixtures"
 PERSONA_ROOT: Final[str] = "dev/fixtures/personas"
 
 _SCRIPTS: Final[str] = f"{FRONTEND}/scripts"
@@ -111,10 +110,6 @@ def _python_module(module: str, *arguments: str) -> tuple[str, ...]:
     return (PYTHON, "-B", "-m", module, *arguments)
 
 
-def _pytest(*targets: str) -> tuple[str, ...]:
-    return _python_module("pytest", "-q", "-n0", "-p", "no:cacheprovider", *targets)
-
-
 def _common(*producer: str) -> tuple[InputGroup, ...]:
     return (InputGroup("producer", (*producer, *_TOOLING)), _PERSONAS, _PRODUCT, _LOCK)
 
@@ -127,9 +122,11 @@ def _python_producer(
     summary: str,
     *,
     questions: str | None = None,
-    extra_checks: tuple[Command, ...] = (),
 ) -> FixtureFamily:
-    """A Python producer: it writes in place, checks the stored text with ``--check``, redirects with ``--output``."""
+    """A Python producer: it writes into its folder of the window projections.
+
+    ``--check`` compares the stored text and ``--output`` redirects the same bytes.
+    """
     inputs = _common(*sources)
     if questions is not None:
         inputs = (*inputs, InputGroup("questions", (questions,)))
@@ -138,9 +135,10 @@ def _python_producer(
         summary=summary,
         inputs=inputs,
         producer=Command(entry),
-        check=(Command((*entry, "--check")), *extra_checks),
-        output_root=FIXTURE_ROOT,
-        outputs=outputs,
+        check=(Command((*entry, "--check")),),
+        output_root=window_projections(),
+        outputs=tuple(f"{name}/{output}" for output in outputs),
+        committed=False,
         determinism=Command((*entry, "--output", OUTPUT)),
         check_proves_outputs=True,
     )
@@ -158,7 +156,6 @@ def _script(
     *,
     questions: str | None = None,
     support: tuple[str, ...] = (),
-    extra_checks: tuple[Command, ...] = (),
 ) -> FixtureFamily:
     path = f"{_SCRIPTS}/{script}"
     return _python_producer(
@@ -168,7 +165,6 @@ def _script(
         outputs,
         summary,
         questions=questions,
-        extra_checks=extra_checks,
     )
 
 
@@ -282,14 +278,9 @@ FAMILIES: Final[tuple[FixtureFamily, ...]] = (
         "ledger-entry-options",
         "ledger_entry_options.py",
         ("ledgerEntryOptions.json",),
-        "The periods the ledger's period read answers, recorded into the entry options.",
+        "The entry options the ledger serves: vocabularies, classification rules, limits and periods.",
         questions="dev/fixtures/ledger-entry-option-questions",
         support=(f"{_LEDGER_TESTS}/entry_option_periods_recording_support.py",),
-        # The producer writes only the periods; these read-only tests hold the
-        # fixture's other sections to what the backend serves.
-        extra_checks=(
-            Command(_pytest(f"{_LEDGER_TESTS}/test_entry_options.py", f"{_LEDGER_TESTS}/test_entry_limits.py")),
-        ),
     ),
     FixtureFamily(
         name="docs-sequence-seeds",

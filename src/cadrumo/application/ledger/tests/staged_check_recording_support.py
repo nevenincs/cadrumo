@@ -28,7 +28,6 @@ from ..staged_check_contracts import LedgerStagedDraft, LedgerStagedRow, LedgerS
 from ..staged_check_words import blocker_words, share_refusal_words
 
 _REPOSITORY: Final = Path(__file__).resolve().parents[5]
-RECORDING: Final = _REPOSITORY / "native/desktop/frontend/src/dev/fixtures/ledgerStagedCheck.json"
 QUESTIONS: Final = _REPOSITORY / "dev/fixtures/ledger-staged-check-questions/questions.jsonl"
 NOTE: Final = (
     "What ledger.staged.check answered for each stored movement and staged request the fixtures ask about, keyed "

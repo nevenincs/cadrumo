@@ -580,7 +580,9 @@ cache/
 # Local initialization report
 /.init-report.json
 
-# Generated window projections: the Modelo scenario envelopes are build output in
+# Generated window projections: every generated family is build output in
 # build/<preset>/fixtures/window, written by `just fixtures-seed` and never committed.
 # The old source-tree location stays ignored so a stale copy cannot be committed.
 /native/desktop/frontend/src/dev/fixtures/modelo/
+# Every other generated projection used to sit as a JSON file beside the hand-written mocks.
+/native/desktop/frontend/src/dev/fixtures/*.json

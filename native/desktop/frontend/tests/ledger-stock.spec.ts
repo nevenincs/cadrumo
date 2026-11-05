@@ -1,4 +1,5 @@
 import "./support/servedLimits";
+import { windowFixture } from "./support/windowFixtures";
 import { expect, test } from "@playwright/test";
 import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
@@ -86,9 +87,7 @@ const LANGUAGES = ["en", "es", "ca", "hu"] as const;
 const SERVED_WORDS = (
   JSON.parse(
     readFileSync(
-      fileURLToPath(
-        new URL("../src/dev/fixtures/ledgerServedWords.json", import.meta.url),
-      ),
+      windowFixture("ledger-served-words", "ledgerServedWords"),
       "utf8",
     ),
   ) as { inventory: Record<string, Record<string, string>> }

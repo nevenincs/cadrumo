@@ -24,9 +24,10 @@ from .rule_trial_support import RULE_TRIAL_PROFILE, recorded_rule_trial_answer, 
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_RECORDING: Final = (
-    Path(__file__).resolve().parents[5] / "native/desktop/frontend/src/dev/fixtures/ledgerRuleTrial.json"
-)
+_QUESTIONS: Final = Path(__file__).resolve().parents[5] / "dev/fixtures/ledger-recording-questions/ledgerRuleTrial.json"
+#: The committed patterns no engine can take, and the one whose nested repetition overruns on a near miss.
+_INVALID: Final = frozenset({"[unclosed", "a{99999999999}"})
+_OVERRUN: Final = frozenset({"(.+)+#"})
 
 
 @pytest.fixture(name="rows")
@@ -88,11 +89,19 @@ def test_the_answer_is_the_engines_own_match(pattern: str, description: str, fou
     assert bool(re.search(pattern, description, re.IGNORECASE)) is found
 
 
-def test_every_recorded_answer_is_the_engines() -> None:
-    recorded = json.loads(_RECORDING.read_text(encoding="utf-8"))
-    assert recorded["answers"]
-    for answer in recorded["answers"]:
-        assert recorded_rule_trial_answer(recorded["descriptions"], answer["description_pattern"]) == answer
+def test_every_committed_pattern_is_answered_as_the_standard_matcher_finds_it() -> None:
+    asked = json.loads(_QUESTIONS.read_text(encoding="utf-8"))
+    assert asked["patterns"]
+    for pattern in asked["patterns"]:
+        answer = recorded_rule_trial_answer(asked["descriptions"], pattern)
+        assert answer["description_pattern"] == pattern
+        if pattern in _INVALID:
+            assert (answer["outcome"], answer["matches"]) == ("invalid_pattern", []), pattern
+        elif pattern in _OVERRUN:
+            assert (answer["outcome"], answer["matches"]) == ("overrun", []), pattern
+        else:
+            found = [text for text in asked["descriptions"] if re.search(pattern, text, re.IGNORECASE)]
+            assert (answer["outcome"], answer["matches"]) == ("matched", found), pattern
 
 
 def test_the_number_the_window_recording_refuses_is_refused_and_its_correction_is_taken() -> None:

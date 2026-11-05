@@ -1,6 +1,6 @@
 // `ledger.invoice.match` for the fixtures. Stories stage links and change
 // movements freely over a generated ledger, so a recording cannot hold each
-// question: this stand-in works the answer out. `fixtures/ledgerInvoiceMatch.json`
+// question: this stand-in works the answer out. the generated `ledgerInvoiceMatch.json`
 // holds what the real backend answered, a test in the owning Python package
 // holds that recording to the live rule, and a test here holds this stand-in to it.
 

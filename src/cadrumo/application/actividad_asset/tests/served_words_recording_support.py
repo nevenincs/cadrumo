@@ -26,7 +26,6 @@ from ..schedule_walk import M100GapKind
 from ..served_words import left_out_entry, m100_gap_words, partial_words, reason_words, remedy_words
 
 _REPOSITORY: Final = Path(__file__).resolve().parents[5]
-RECORDING: Final = _REPOSITORY / "native/desktop/frontend/src/dev/fixtures/assetsServedWords.json"
 QUESTIONS: Final = _REPOSITORY / "dev/fixtures/assets-served-words-questions/questions.jsonl"
 NOTE: Final = (
     "What the activity-asset register said for each reason with its facts, remedy, handoff interval and "

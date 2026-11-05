@@ -4,7 +4,7 @@ import type {
   CatalogueInvoice,
   LedgerInvoiceDuplicateRequest,
 } from "../src/shell/ledger";
-import recorded from "../src/dev/fixtures/ledgerInvoiceDuplicate.json" with { type: "json" };
+import recorded from "@fixtures/ledger-recordings/ledgerInvoiceDuplicate.json" with { type: "json" };
 
 // The stand-in stories use for `ledger.invoice.duplicate`, held to what the real
 // backend answered over the same catalogue. A test in the owning Python package

@@ -12,14 +12,13 @@ fixtures could not answer to that file and run ``just fixtures-seed assets-serve
 
 from __future__ import annotations
 
+from dev.fixture_projections.location import family_directory
 from dev.fixture_projections.producer_output import emit, producer_arguments
 from dev.prettier_json import dump_json
 
-from cadrumo.application.actividad_asset.tests.served_words_recording_support import (
-    RECORDING,
-    committed_questions,
-    recording,
-)
+from cadrumo.application.actividad_asset.tests.served_words_recording_support import committed_questions, recording
+
+RECORDING = family_directory("assets-served-words") / "assetsServedWords.json"
 
 
 def main() -> None:

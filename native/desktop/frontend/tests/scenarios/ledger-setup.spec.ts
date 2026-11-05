@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { windowFixture } from "../support/windowFixtures";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
@@ -30,7 +31,7 @@ declare global {
 const PRORRATA_WORDS = (
   JSON.parse(
     readFileSync(
-      new URL("../../src/dev/fixtures/ledgerServedWords.json", import.meta.url),
+      windowFixture("ledger-served-words", "ledgerServedWords"),
       "utf8",
     ),
   ) as { prorrata: Record<string, Record<string, string>> }
@@ -42,10 +43,7 @@ const prorrataRefused = (reason: string) => PRORRATA_WORDS[reason]!.en!;
  * fixture holds them. */
 const REFUSAL_WORDS = JSON.parse(
   readFileSync(
-    new URL(
-      "../../src/dev/fixtures/ledgerWithholdingRefusalWords.json",
-      import.meta.url,
-    ),
+    windowFixture("desktop-withholding-refusal-words", "ledgerWithholdingRefusalWords"),
     "utf8",
   ),
 ) as Record<

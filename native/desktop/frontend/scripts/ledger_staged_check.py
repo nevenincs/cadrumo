@@ -12,15 +12,14 @@ lines to the questions file and run ``just fixtures-seed ledger-staged-check``:
 
 from __future__ import annotations
 
+from dev.fixture_projections.location import family_directory
 from dev.fixture_projections.producer_output import emit, producer_arguments
 from dev.prettier_json import dump_json
 
-from cadrumo.application.ledger.tests.staged_check_recording_support import (
-    RECORDING,
-    committed_questions,
-    recording,
-)
+from cadrumo.application.ledger.tests.staged_check_recording_support import committed_questions, recording
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
+RECORDING = family_directory("ledger-staged-check") / "ledgerStagedCheck.json"
 
 
 def main() -> None:

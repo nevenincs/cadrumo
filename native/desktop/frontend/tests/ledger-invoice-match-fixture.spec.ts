@@ -6,7 +6,7 @@ import type {
   LedgerInvoiceMatchPair,
   LedgerRow,
 } from "../src/shell/ledger";
-import recorded from "../src/dev/fixtures/ledgerInvoiceMatch.json" with { type: "json" };
+import recorded from "@fixtures/ledger-recordings/ledgerInvoiceMatch.json" with { type: "json" };
 import { catalogueInvoice, hexId, movement } from "./support/ledger";
 
 // The stand-in stories use for `ledger.invoice.match`, held to what the real

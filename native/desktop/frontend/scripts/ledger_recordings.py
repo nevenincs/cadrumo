@@ -19,12 +19,13 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any
 
+from dev.fixture_projections.location import family_directory
 from dev.fixture_projections.producer_output import emit, producer_arguments
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 
 SCRIPTS = Path(__file__).resolve().parent
-FIXTURES = SCRIPTS.parent / "src" / "dev" / "fixtures"
+FIXTURES = family_directory("ledger-recordings")
 QUESTIONS = SCRIPTS.parents[3] / "dev" / "fixtures" / "ledger-recording-questions"
 
 _WIDTH = 80
@@ -160,7 +161,7 @@ def render_fixtures() -> dict[str, str]:
 
 
 def main() -> None:
-    """Write, verify or redirect the checked-in browser fixtures."""
+    """Write, verify or redirect the browser fixtures."""
     arguments = producer_arguments(__doc__)
     rendered = render_fixtures()
     emit(

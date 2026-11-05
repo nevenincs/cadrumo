@@ -1,4 +1,4 @@
-import recorded from "../../src/dev/fixtures/ledgerEntryOptions.json" with { type: "json" };
+import recorded from "@fixtures/ledger-entry-options/ledgerEntryOptions.json" with { type: "json" };
 
 type Row = { kind: string; name_words: string; period: { code: string } };
 const years = recorded.periods.years as unknown as Record<

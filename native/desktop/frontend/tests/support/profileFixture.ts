@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { windowFixture } from "./windowFixtures";
 import type { UserProfile } from "../../src/shell/userProfile";
 
 /** The profile the scenario host serves, as dev.desktop_profile_fixture
@@ -6,7 +7,7 @@ import type { UserProfile } from "../../src/shell/userProfile";
 const profile = (
   JSON.parse(
     readFileSync(
-      new URL("../../src/dev/fixtures/userProfile.json", import.meta.url),
+      windowFixture("desktop-profile", "userProfile"),
       "utf8",
     ),
   ) as { en: UserProfile }

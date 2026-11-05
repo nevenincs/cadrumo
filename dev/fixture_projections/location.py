@@ -9,7 +9,10 @@ running the tooling; a host with no enrolled preset has no projection tree.
 from __future__ import annotations
 
 import platform
+from pathlib import Path
 from typing import Final
+
+from .._paths import REPO_ROOT
 
 #: The configure preset the repository enrols for each host, by operating system and machine.
 HOST_PRESETS: Final[dict[tuple[str, str], str]] = {
@@ -39,3 +42,8 @@ def host_preset() -> str:
 def window_projections() -> str:
     """The window projections' directory relative to the repository root, in the host's build tree."""
     return f"build/{host_preset()}/{WINDOW_BELOW_BUILD}"
+
+
+def family_directory(family: str) -> Path:
+    """The directory a window family's projections are written into: its own folder in the projection directory."""
+    return REPO_ROOT / window_projections() / family

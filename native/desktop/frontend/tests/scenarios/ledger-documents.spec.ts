@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { windowFixture } from "../support/windowFixtures";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { VALUE_COLUMN_MIN_PX } from "../../src/components/ledger/documents/documentsModel";
@@ -9,12 +10,7 @@ import { label } from "../support/strings";
 const SERVED_REASONS = (
   JSON.parse(
     readFileSync(
-      fileURLToPath(
-        new URL(
-          "../../src/dev/fixtures/ledgerServedWords.json",
-          import.meta.url,
-        ),
-      ),
+      windowFixture("ledger-served-words", "ledgerServedWords"),
       "utf8",
     ),
   ) as { confirmation_block: Record<string, Record<string, string>> }

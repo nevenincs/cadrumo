@@ -9,9 +9,9 @@ text of its own. Run after changing the served refusal catalogue keys or the rea
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
+from dev.fixture_projections.location import family_directory
 from dev.fixture_projections.producer_output import emit, producer_arguments
 from dev.prettier_json import dump_json
 
@@ -92,12 +92,9 @@ def render_fixture() -> str:
 
 
 def main() -> None:
-    """Write, verify or redirect the checked-in browser fixture."""
+    """Write, verify or redirect the browser fixture."""
     arguments = producer_arguments(__doc__)
-    target = (
-        Path(__file__).resolve().parents[1]
-        / "native/desktop/frontend/src/dev/fixtures/ledgerWithholdingRefusalWords.json"
-    )
+    target = family_directory("desktop-withholding-refusal-words") / "ledgerWithholdingRefusalWords.json"
     emit(
         {target: render_fixture()},
         arguments,

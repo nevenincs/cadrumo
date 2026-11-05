@@ -1,4 +1,4 @@
-import fixtures from "./fixtures/imputationElection.json";
+import fixtures from "@fixtures/desktop-imputation-election/imputationElection.json";
 import type {
   ElectionAnswer,
   ImputationElection,

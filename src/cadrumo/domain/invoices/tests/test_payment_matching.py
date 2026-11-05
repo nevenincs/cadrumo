@@ -1,7 +1,7 @@
 """Which movement settles which invoice: the flow, currency and amount a link needs, and the ranking.
 
 Every expected value is worked out by hand from the rule as written, not read back from a run. The
-recording the window's stand-in is held to is checked against the live rule at the end.
+scenarios the window's stand-in is asked about are run through the live rule at the end.
 """
 
 from __future__ import annotations
@@ -40,8 +40,8 @@ from .payment_matching_support import build_invoice, build_movement, day, moveme
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_RECORDING: Final = (
-    Path(__file__).resolve().parents[5] / "native/desktop/frontend/src/dev/fixtures/ledgerInvoiceMatch.json"
+_QUESTIONS: Final = (
+    Path(__file__).resolve().parents[5] / "dev/fixtures/ledger-recording-questions/ledgerInvoiceMatch.json"
 )
 
 
@@ -414,13 +414,82 @@ def test_a_link_counts_the_other_movements_holding_the_invoice_and_not_itself() 
     assert link_differences(row, build_invoice("H-2", linked=(row.transaction_id,))) == ()
 
 
-# -- the recording the window's stand-in is held to -------------------------------------------------
+# -- the scenarios the window's stand-in is asked about --------------------------------------------
 
 
-_RECORDED: Final = json.loads(_RECORDING.read_text(encoding="utf-8"))
+_ASKED: Final = json.loads(_QUESTIONS.read_text(encoding="utf-8"))
+
+#: The (movement, invoice) pairs each committed scenario must suggest, in order, worked from the rule its name states.
+_SUGGESTED: Final[dict[str, list[tuple[str, str]]]] = {
+    "a retencion invoice is settled by the net transfer within a cent, on its flow and currency": [("paid", "F-1")],
+    "linked invoices, cited movements and retired movements are never suggested": [("free", "L-2")],
+    "the number in the description outranks the gap": [("m", "PT-0412")],
+    "without a number the shorter gap outranks the counterparty": [("p", "B-1")],
+    "a payment more than three days before the invoice ranks after every payment made after it": [("p", "D-1")],
+    "a payment three days before the invoice still ranks by its gap": [("p", "E-3")],
+    "the nearer amount wins among otherwise equal candidates": [("c", "D-2")],
+    "each invoice is offered to one movement": [("first", "ONE-1")],
+    "tied invoices for one movement are ambiguous": [("row", "AA-118")],
+    "tied movements for one invoice point at each other": [("a", "N-5"), ("b", "N-5")],
+    "a staged link withdraws every suggestion that uses its invoice or movement": [("b", "N-6")],
+    "a movement is offered the invoices of its flow, those that settle it first by day": [("row", "S-1")],
+    "an invoice no movement settles is offered the open movements near its day": [],
+    "nothing to match": [],
+    "a bare legal form names no counterparty, so it does not lift a candidate": [("bare", "F-1"), ("named", "F-2")],
+    "a link states where its sides differ: the settlement within a cent, a shared currency, the movement's own counterparty, other holders": [],
+}
+
+_RETENCION, _OPEN_NEAR = 0, 12
+#: What the focused scenarios offer the other side, as (name, settles) in the offered order: a 1500.00 base under a
+#: retention of 225.00 and 21% IVA is settled by 1590.00 within a cent, and 48.26 with 21% IVA is 58.39, which is
+#: settled by that amount, a cent either way, and by nothing further off.
+_MOVEMENT_CHOICES: Final = {
+    _RETENCION: [("paid", True), ("off", False), ("gross", False)],
+    _OPEN_NEAR: [
+        ("before", True),
+        ("exact", True),
+        ("near", True),
+        ("edge_before", False),
+        ("far", False),
+    ],
+}
+_TOTALS: Final = {_RETENCION: {"F-1": ("1815.00", "1590.00")}}
 
 
-@pytest.mark.parametrize("scenario", _RECORDED["scenarios"], ids=lambda scenario: cast(str, scenario["name"]))
-def test_every_recorded_answer_is_the_rules(scenario: dict[str, Any]) -> None:
-    asked = {key: value for key, value in scenario.items() if key not in {"totals", "settlements", "answer"}}
-    assert recorded_scenario(asked) == scenario
+def test_the_committed_scenarios_are_the_ones_the_expectations_state() -> None:
+    assert [scenario["name"] for scenario in _ASKED["scenarios"]] == list(_SUGGESTED)
+
+
+@pytest.mark.parametrize("scenario", _ASKED["scenarios"], ids=lambda scenario: cast(str, scenario["name"]))
+def test_every_committed_scenario_is_answered_as_its_rule_says(scenario: dict[str, Any]) -> None:
+    answer = recorded_scenario(scenario)["answer"]
+
+    assert [(found["movement"], found["invoice"]) for found in answer["suggestions"]] == _SUGGESTED[scenario["name"]]
+
+
+@pytest.mark.parametrize("at", sorted(_MOVEMENT_CHOICES))
+def test_a_focused_scenario_offers_the_movements_that_settle_first(at: int) -> None:
+    answer = recorded_scenario(_ASKED["scenarios"][at])["answer"]
+
+    assert [(item["movement"], item["settles"]) for item in answer["movement_choices"]] == _MOVEMENT_CHOICES[at]
+
+
+def test_a_focused_movement_is_offered_the_invoices_of_its_flow_that_settle_it_first() -> None:
+    scenario = next(item for item in _ASKED["scenarios"] if item.get("focus") == {"movement": "row"})
+
+    answer = recorded_scenario(scenario)["answer"]
+
+    assert [(item["invoice"], item["settles"]) for item in answer["invoice_choices"]] == [
+        ("O-1", False),
+        ("S-1", True),
+        ("S-2", True),
+        ("S-3", True),
+    ]
+
+
+@pytest.mark.parametrize("at", sorted(_TOTALS))
+def test_a_retention_invoice_totals_and_settles_as_its_figures_say(at: int) -> None:
+    recorded = recorded_scenario(_ASKED["scenarios"][at])
+
+    for number, (total, settlement) in _TOTALS[at].items():
+        assert (recorded["totals"][number], recorded["settlements"][number]) == (total, settlement)

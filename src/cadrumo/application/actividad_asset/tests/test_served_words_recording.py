@@ -1,44 +1,52 @@
 """The sentences the desktop fixtures serve for the register are what the register says.
 
-The recording holds exactly the committed questions, and each recorded sentence is
-the register's own in every language. The producer
-``native/desktop/frontend/scripts/assets_served_words.py`` writes the recording; this
-test only reads it.
+Each committed question is answered in every language. The producer
+``native/desktop/frontend/scripts/assets_served_words.py`` records the answers into the build
+tree; these tests ask the register the same questions directly.
 """
 
 from __future__ import annotations
 
 import json
-from typing import Any
 
 import pytest
 
 from ....core.external_constants import OutputLanguage
-from .served_words_recording_support import RECORDING, answers, committed_questions, parse_questions
+from .served_words_recording_support import answers, committed_questions, parse_questions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _recording() -> dict[str, Any]:
-    return json.loads(RECORDING.read_text(encoding="utf-8"))
+def test_questions_are_committed() -> None:
+    assert committed_questions(), "no question is committed"
 
 
-def test_the_recording_holds_exactly_the_committed_questions() -> None:
-    questions = committed_questions()
-
-    assert questions, "no question is committed"
-    assert sorted(_recording()["entries"]) == sorted(questions)
-
-
-def test_every_recorded_sentence_is_what_the_register_says() -> None:
-    entries = _recording()["entries"]
+def test_every_committed_question_is_answered_in_every_supported_language() -> None:
     for question in committed_questions():
-        assert entries[question] == answers(question), question
+        said = answers(question)
+        assert set(said) == {language.value for language in OutputLanguage}, question
+        if json.loads(question)["kind"] == "gap":
+            assert all(said.values()), question
 
 
-def test_a_recorded_question_names_a_language_for_every_supported_one() -> None:
-    for question_text, said in _recording()["entries"].items():
-        assert set(said) == {language.value for language in OutputLanguage}, question_text
+def test_a_gap_sentence_names_the_asset_the_span_and_the_amount_in_each_language() -> None:
+    question = next(
+        text
+        for text in committed_questions()
+        if (asked := json.loads(text))["kind"] == "gap"
+        and asked["name"] == "Compresor de taller"
+        and asked["covered_from"] == "2027-01-01"
+    )
+
+    said = answers(question)
+
+    assert said["en"] is not None
+    assert said["en"].startswith(
+        "Modelo 100: Compresor de taller has no depreciation charge recorded from Jan 1, 2027 to Dec 31, 2027."
+    )
+    assert said["es"] is not None
+    assert "Compresor de taller" in said["es"]
+    assert "360,00" in said["es"]
 
 
 def test_a_question_of_an_unknown_kind_is_refused() -> None:

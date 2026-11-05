@@ -6,7 +6,7 @@ import json
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Final
+from typing import Final, cast
 
 import pytest
 from pydantic import ValidationError
@@ -22,8 +22,28 @@ from .split_check_support import SPLIT_CHECK_PROFILE, recorded_split_answer, spl
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_RECORDING: Final = (
-    Path(__file__).resolve().parents[5] / "native/desktop/frontend/src/dev/fixtures/ledgerSplitCheck.json"
+_QUESTIONS: Final = (
+    Path(__file__).resolve().parents[5] / "dev/fixtures/ledger-recording-questions/ledgerSplitCheck.json"
+)
+
+#: What each committed question must answer, in the file's order, worked from the split rules: the one part left
+#: without an amount takes what the others leave and must come out positive, an amount has at most two decimals
+#: and is positive, the parts must add up to the parent, a part needs a description, and there are two or more.
+#: Each is the parent amount, the remainder, the problem's kind and part index, and the children's amounts.
+_EXPECTED: Final[tuple[tuple[str, str | None, str | None, int | None, tuple[str, ...]], ...]] = (
+    ("59.99", None, "amount", 0, ()),
+    ("59.99", "39.99", None, None, ("20", "39.99")),
+    ("59.99", "39.99", None, None, ("20", "39.99")),
+    ("100", "50", None, None, ("40.5", "9.5", "50")),
+    ("10.20", "0.1", None, None, ("10.1", "0.1")),
+    ("10", None, "amount", 1, ()),
+    ("10", None, "sum", None, ()),
+    ("10", None, "amount", 0, ()),
+    ("10", None, "sum", None, ()),
+    ("10", None, "sum", None, ()),
+    ("10", None, "amount", 0, ()),
+    ("10", "5", "description", 1, ()),
+    ("10", None, "count", None, ()),
 )
 
 
@@ -201,9 +221,21 @@ def test_a_movement_gone_or_not_active_is_not_split() -> None:
         )
 
 
-def test_every_recorded_answer_is_the_live_one() -> None:
-    recording = json.loads(_RECORDING.read_text(encoding="utf-8"))
-    assert recording["answers"]
-    for entry in recording["answers"]:
-        live = recorded_split_answer(entry["parent_amount"], entry["parts"])
-        assert live == entry["answer"], entry["parts"]
+def test_the_committed_questions_are_the_ones_the_expectations_state() -> None:
+    asked = json.loads(_QUESTIONS.read_text(encoding="utf-8"))["answers"]
+
+    assert [entry["parent_amount"] for entry in asked] == [expected[0] for expected in _EXPECTED]
+
+
+def test_every_committed_question_is_answered_as_the_split_rules_say() -> None:
+    asked = json.loads(_QUESTIONS.read_text(encoding="utf-8"))["answers"]
+    assert len(asked) == len(_EXPECTED)
+    for entry, (_, remainder, kind, index, amounts) in zip(asked, _EXPECTED, strict=True):
+        answer = recorded_split_answer(entry["parent_amount"], entry["parts"])
+        problem = cast(dict[str, object] | None, answer["problem"])
+        children = cast(list[dict[str, str]], answer["children"])
+        assert answer["remainder"] == remainder, entry["parts"]
+        assert (None if problem is None else (problem["kind"], problem["index"])) == (
+            None if kind is None else (kind, index)
+        ), entry["parts"]
+        assert tuple(child["amount"] for child in children) == amounts, entry["parts"]

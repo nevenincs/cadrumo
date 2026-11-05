@@ -1,7 +1,7 @@
 import { appendFileSync } from "node:fs";
 import type { LedgerRow } from "../../src/shell/ledger";
 import { answerStagedCheck } from "../../src/dev/ledgerStagedCheckFixture";
-import recorded from "../../src/dev/fixtures/ledgerStagedCheck.json" with { type: "json" };
+import recorded from "@fixtures/ledger-staged-check/ledgerStagedCheck.json" with { type: "json" };
 import {
   indexCheck,
   stagedCheckRequest,

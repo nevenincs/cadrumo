@@ -12,3 +12,15 @@ import { windowFixtures } from "../../scripts/fixture-paths.mjs";
 export const MODELO_FIXTURES = pathToFileURL(
   `${resolve(windowFixtures(), "modelo")}/`,
 );
+
+/**
+ * One generated window projection, as a file URL: `family` is the folder its
+ * producer writes into and `name` the file without its extension.
+ *
+ * Like the envelopes, these are build output and never committed; a spec that
+ * reads one without it seeded fails on the missing file, and
+ * `just fixtures-seed` writes it.
+ */
+export function windowFixture(family: string, name: string): URL {
+  return pathToFileURL(resolve(windowFixtures(), family, `${name}.json`));
+}

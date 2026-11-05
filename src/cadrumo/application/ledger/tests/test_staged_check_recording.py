@@ -1,20 +1,18 @@
-"""The desktop fixtures' recorded staged-check answers stay what the backend answers.
+"""The questions the desktop's staged-check recording asks are answered as the check's rules say.
 
-The recording holds exactly the committed questions, and each recorded answer is
-what ``ledger.staged.check`` answers now. The producer
-``native/desktop/frontend/scripts/ledger_staged_check.py`` writes the recording; this
-test only reads it.
+The questions are committed in ``dev/fixtures/ledger-staged-check-questions``; the producer
+``native/desktop/frontend/scripts/ledger_staged_check.py`` records the answers into the build tree, and
+these tests ask the check the same questions directly.
 """
 
 from __future__ import annotations
 
 import json
-from typing import Any
 
 import pytest
 
+from ....core.external_constants import OutputLanguage
 from .staged_check_recording_support import (
-    RECORDING,
     absent_answer,
     committed_questions,
     draft_answer,
@@ -26,39 +24,59 @@ from .staged_check_recording_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
 
-def _recording() -> dict[str, Any]:
-    return json.loads(RECORDING.read_text(encoding="utf-8"))
-
-
-def test_the_recording_holds_exactly_the_committed_questions() -> None:
+def test_questions_of_both_kinds_are_committed() -> None:
     questions = committed_questions()
-    recording = _recording()
 
     assert questions.rows, "no row question is committed"
     assert questions.drafts, "no draft question is committed"
-    assert sorted(recording["rows"]) == sorted(questions.rows)
-    assert sorted(recording["drafts"]) == sorted(questions.drafts)
 
 
-def test_every_recorded_answer_is_what_the_backend_answers() -> None:
-    recording = _recording()
-    assert recording["absent"] == absent_answer()
+def test_every_committed_row_question_is_answered_as_found_or_refused_with_a_blocker_list() -> None:
     for question in committed_questions().rows:
-        assert recording["rows"][question] == row_answer(question), question
+        answer = row_answer(question)
+        assert answer["found"] is True, question
+        assert isinstance(answer["blockers"], list), question
 
 
-def test_the_recorded_sentences_are_what_the_backend_says_in_every_language() -> None:
-    assert _recording()["words"] == served_words()
+def test_a_personal_active_row_is_classified_and_skips_the_tax_set_as_personal() -> None:
+    personal = next(
+        question
+        for question in committed_questions().rows
+        if json.loads(question)["stored"]["business_classification"] == "PERSONAL"
+        and json.loads(question)["lifecycle"] == "ACTIVE"
+    )
+
+    answer = row_answer(personal)
+
+    assert (answer["classified"], answer["tax_set_skip"], answer["blockers"]) == (True, "personal", [])
 
 
-def test_every_recorded_draft_is_what_the_backend_answers() -> None:
-    recording = _recording()
-    for question in committed_questions().drafts:
-        assert recording["drafts"][question] == draft_answer(question), question
+def test_an_empty_draft_is_incomplete_in_the_five_fields_a_movement_needs_and_a_full_one_is_not() -> None:
+    empty = draft_answer("[]")
+    assert [(blocker["kind"], sorted(blocker["fields"])) for blocker in empty["blockers"]] == [
+        ("draft_incomplete", ["amount", "booked_date", "currency", "description", "direction"])
+    ]
+    full = next(
+        question
+        for question in committed_questions().drafts
+        if {entry["field"] for entry in json.loads(question)}
+        >= {"amount", "booked_date", "currency", "description", "direction"}
+    )
+    assert "draft_incomplete" not in {blocker["kind"] for blocker in draft_answer(full)["blockers"]}
+
+
+def test_the_served_sentences_name_every_language_for_every_kind() -> None:
+    languages = {language.value for language in OutputLanguage}
+    for kind, said in served_words()["blockers"].items():
+        assert set(said) == languages, kind
+        assert all(sentence["words"] and sentence["fix_words"] for sentence in said.values()), kind
 
 
 def test_an_absent_row_is_answered_as_not_found() -> None:
-    assert absent_answer()["found"] is False
+    answer = absent_answer()
+
+    assert answer["found"] is False
+    assert answer["blockers"] == []
 
 
 @pytest.mark.parametrize(

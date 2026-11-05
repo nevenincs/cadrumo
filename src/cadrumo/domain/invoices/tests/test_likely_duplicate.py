@@ -18,12 +18,24 @@ from .duplicate_recording_support import recorded_duplicate_answer, stored_invoi
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_RECORDING: Final = (
-    Path(__file__).resolve().parents[5] / "native/desktop/frontend/src/dev/fixtures/ledgerInvoiceDuplicate.json"
+_QUESTIONS: Final = (
+    Path(__file__).resolve().parents[5] / "dev/fixtures/ledger-recording-questions/ledgerInvoiceDuplicate.json"
 )
+_ASKED: Final = json.loads(_QUESTIONS.read_text(encoding="utf-8"))
 
-
-_RECORDED: Final = json.loads(_RECORDING.read_text(encoding="utf-8"))
+#: What each committed question must answer, worked from the rules: a stated number matches under the same
+#: tax id, or under none stated, in the same direction; without a number the party, day and total must all
+#: agree, and nothing stated matches nothing.
+_EXPECTED: Final[dict[str, tuple[str | None, str | None]]] = {
+    "the number comes first": ("b-same-number", "number"),
+    "the party, day and total where no number matches": (None, None),
+    "a number under a disagreeing tax id is not one": (None, None),
+    "a number with no stated tax id is one": ("b-same-number", "number"),
+    "the other direction is not one": (None, None),
+    "another day is not one": (None, None),
+    "no stated total is not one": (None, None),
+    "nothing stated is not one": (None, None),
+}
 
 
 @pytest.fixture(autouse=True)
@@ -32,11 +44,16 @@ def _authority_operation() -> Iterator[None]:
         yield
 
 
-@pytest.mark.parametrize("entry", _RECORDED["answers"], ids=lambda entry: entry["name"])
-def test_every_recorded_answer_is_the_rules(entry: dict[str, object]) -> None:
-    question = cast(dict[str, str | None], entry["question"])
+def test_the_committed_questions_are_the_ones_the_expectations_state() -> None:
+    assert sorted(entry["name"] for entry in _ASKED["answers"]) == sorted(_EXPECTED)
 
-    assert recorded_duplicate_answer(_RECORDED["invoices"], question) == entry["answer"]
+
+@pytest.mark.parametrize("entry", _ASKED["answers"], ids=lambda entry: entry["name"])
+def test_every_committed_question_is_answered_as_the_rules_say(entry: dict[str, object]) -> None:
+    question = cast(dict[str, str | None], entry["question"])
+    invoice_id, basis = _EXPECTED[cast(str, entry["name"])]
+
+    assert recorded_duplicate_answer(_ASKED["invoices"], question) == {"invoice_id": invoice_id, "basis": basis}
 
 
 def test_the_same_total_written_differently_is_the_same_total() -> None:

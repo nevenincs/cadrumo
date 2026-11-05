@@ -1,11 +1,11 @@
 // The periods `ledger.entry-options` serves, answered from the recording of that
-// read in `fixtures/ledgerEntryOptions.json`, which a backend test holds to the
+// read in the generated `ledgerEntryOptions.json`, which a backend test holds to the
 // ledger's own period read. Nothing here works a period out: a year's table is
 // the recorded one, and a day or a span is answered by finding the recorded
 // periods whose recorded days hold it. What the recording holds no answer for
 // is not answered, as a read that failed.
 
-import servedEntryOptions from "./fixtures/ledgerEntryOptions.json" with { type: "json" };
+import servedEntryOptions from "@fixtures/ledger-entry-options/ledgerEntryOptions.json" with { type: "json" };
 import { holdLedgerPeriods } from "../shell/ledgerPeriods";
 import type {
   LedgerEntryOptionsRequest,

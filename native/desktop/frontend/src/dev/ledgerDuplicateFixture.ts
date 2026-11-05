@@ -1,6 +1,6 @@
 // `ledger.invoice.duplicate` for the fixtures. Stories correct readings freely
 // over a generated catalogue, so a recording cannot hold each question: this
-// stand-in works the answer out. `fixtures/ledgerInvoiceDuplicate.json` holds what
+// stand-in works the answer out. the generated `ledgerInvoiceDuplicate.json` holds what
 // the real backend answered, a test in the owning Python package holds that
 // recording to the live answer, and a test here holds this stand-in to it.
 

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { windowFixture } from "../support/windowFixtures";
 import { readFileSync } from "node:fs";
 import type { ImputationElection } from "../../src/shell/profileHousehold";
 import { label } from "../support/strings";
@@ -15,7 +16,7 @@ type Served = {
 };
 const served = JSON.parse(
   readFileSync(
-    new URL("../../src/dev/fixtures/imputationElection.json", import.meta.url),
+    windowFixture("desktop-imputation-election", "imputationElection"),
     "utf8",
   ),
 ) as Served;

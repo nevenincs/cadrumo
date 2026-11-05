@@ -15,14 +15,14 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Callable, Mapping
-from pathlib import Path
 from typing import cast, get_args
 
+from dev.fixture_projections.location import family_directory
 from dev.fixture_projections.producer_output import emit, producer_arguments
 from pydantic import TypeAdapter
 
 LANGUAGES = ("en", "es", "ca", "hu")
-TARGET = Path(__file__).resolve().parents[1] / "src" / "dev" / "fixtures" / "ledgerServedWords.json"
+TARGET = family_directory("ledger-served-words") / "ledgerServedWords.json"
 
 #: A sentence in each language, by reason, by operation family.
 _Words = dict[str, dict[str, dict[str, str]]]
@@ -157,7 +157,7 @@ def render_fixture() -> str:
 
 
 def main() -> None:
-    """Write, verify or redirect the checked-in browser fixture."""
+    """Write, verify or redirect the browser fixture."""
     emit(
         {TARGET: render_fixture()},
         producer_arguments(__doc__),

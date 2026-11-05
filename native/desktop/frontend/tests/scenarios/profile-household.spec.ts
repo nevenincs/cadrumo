@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { windowFixture } from "../support/windowFixtures";
 import { readFileSync } from "node:fs";
 import { label } from "../support/strings";
 import { PROFILE_SURNAMES } from "../support/profileFixture";
@@ -27,7 +28,7 @@ type Served = {
 };
 const served = JSON.parse(
   readFileSync(
-    new URL("../../src/dev/fixtures/household.json", import.meta.url),
+    windowFixture("desktop-household", "household"),
     "utf8",
   ),
 ) as Served;
