@@ -90,7 +90,7 @@ P01 Steps are independent and may run in parallel. P02 follows P01.S01. P03.S07 
 
 ## Verification
 
-- Every generator output is byte-identical across two consecutive runs (`fixtures-check`).
+- Every generator output is byte-identical across two consecutive runs (`fixtures-check-determinism`, run at plan close); `fixtures-check` stays the fast check.
 - No tracked file under `native/desktop/frontend/src/dev/fixtures/modelo/` or other declared projection paths; no hand copy of a projection anywhere.
 - One identity per role: no persona identity appears in a second role across `dev/fixtures/personas/`, tests, docs or window fixtures.
 - No persona is seeded by a direct storage write; no year literal in persona files.
