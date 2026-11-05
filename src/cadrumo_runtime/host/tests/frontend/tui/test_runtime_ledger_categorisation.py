@@ -143,7 +143,6 @@ from cadrumo.application.operations.operation_definition import OperationDefinit
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
 from cadrumo.application.operations.public_scalar import PublicDecimal
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionContractV1,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
@@ -152,6 +151,7 @@ from cadrumo.application.operations.subject_reference import expected_operation_
 from cadrumo.application.review.filter import LedgerReviewStatus
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
 )

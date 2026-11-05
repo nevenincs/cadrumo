@@ -45,11 +45,12 @@ from ...application.operations.frontend_requests import (
 from ...application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...application.operations.persistence.journal import OperationPersistedSnapshot
 from ...application.operations.projection_services import OperationResultProjectionService
-from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
+from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,

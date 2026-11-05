@@ -6,8 +6,8 @@ import asyncio
 
 import typer
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
+from cadrumo.core.operations import OperationFrontendProjection
 
 from ..contracts.contracts import RefusalError
 from ..contracts.sign_in import SignInPresence

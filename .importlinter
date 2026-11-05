@@ -57,7 +57,7 @@ type = layers
 name = Every agent service source package has a declared lane
 containers = cadrumo_agent_service
 layers =
-    adapters : host : installed_client : main : providers : service : gateway_credentials : service_administration : service_attachment_admin : service_scheduling : service_startup : service_support : admin : contracts : (locales)
+    bootstrap : adapters : host : installed_client : main : providers : service : gateway_credentials : service_administration : service_attachment_admin : service_scheduling : service_startup : service_support : admin : contracts : (locales)
 exhaustive = True
 
 [importlinter:contract:closed-dev-classification]
@@ -351,6 +351,29 @@ forbidden_modules =
     cadrumo_client.transport
     cadrumo_client.logging
     cadrumo_runtime
+allow_indirect_imports = False
+
+# Every client consumer loads these frame contracts at start through
+# cadrumo_client.transport.frame_io, whose own reply transfers reach operation
+# contracts only from function and TYPE_CHECKING scope.  The operation
+# registry's definition and executor closure is not needed to frame a
+# document, report a session event or name a frontend.
+[importlinter:contract:client-frame-contracts-are-registry-free]
+type = forbidden
+name = Client frame contracts do not load the operation registry
+source_modules =
+    cadrumo_client.contracts.contracts
+    cadrumo_client.contracts.session_events
+    cadrumo_client.contracts.submission_payload
+    cadrumo_client.contracts.access_refusals
+    cadrumo_client.contracts.access_vocabulary
+    cadrumo_client.contracts.sign_in_outcomes
+    cadrumo_client.contracts.model_runs
+    cadrumo_client.transport.transport_cleanup
+forbidden_modules =
+    cadrumo.application.operations.registry
+    cadrumo.application.operations.operation_definition
+    cadrumo.application.operations.owner
 allow_indirect_imports = False
 
 # ---------------------------------------------------------------------------

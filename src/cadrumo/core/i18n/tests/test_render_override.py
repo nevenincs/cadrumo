@@ -115,7 +115,7 @@ def test_locale_load_failure_is_logged_with_traceback(caplog: pytest.LogCaptureF
     """A missing locale file falls back, but leaves a debug traceback."""
 
     with caplog.at_level(logging.DEBUG, logger="cadrumo.core.i18n.render"):
-        rendered = _render._lookup_translation("not-supported-locale", "cli.missing.key", default="fallback")
+        rendered = _render.resolve_translation("not-supported-locale", "cli.missing.key", default="fallback")
 
     assert rendered == "fallback"
     records = [
@@ -142,17 +142,17 @@ def test_profile_language_resolver_returning_an_unsupported_code_falls_back() ->
     settings default instead of asking the renderer for a catalogue that is not
     there.
     """
-    prior_resolver = _render._profile_language_resolver
+    prior_resolver = _render.profile_language_resolver
 
     try:
         _render.register_profile_language_resolver(lambda: "zz")
-        assert _render._active_profile_output_language() is None
+        assert _render.active_profile_output_language() is None
 
         supported = next(iter(SUPPORTED_OUTPUT_LANGUAGES))
         _render.register_profile_language_resolver(lambda: supported)
-        assert _render._active_profile_output_language() == supported
+        assert _render.active_profile_output_language() == supported
     finally:
-        _render._profile_language_resolver = prior_resolver
+        _render.profile_language_resolver = prior_resolver
 
 
 def test_profile_language_resolver_failure_logs_type_not_secret_message(
@@ -160,7 +160,7 @@ def test_profile_language_resolver_failure_logs_type_not_secret_message(
 ) -> None:
     """Resolver exceptions fall back without placing raw exception text in the message."""
 
-    prior_resolver = _render._profile_language_resolver
+    prior_resolver = _render.profile_language_resolver
 
     def raising_resolver() -> str | None:
         raise RuntimeError("oauth_refresh_token=abc-secret-xyz")
@@ -168,9 +168,9 @@ def test_profile_language_resolver_failure_logs_type_not_secret_message(
     try:
         _render.register_profile_language_resolver(raising_resolver)
         with caplog.at_level(logging.DEBUG, logger="cadrumo.core.i18n.render"):
-            resolved = _render._active_profile_output_language()
+            resolved = _render.active_profile_output_language()
     finally:
-        _render._profile_language_resolver = prior_resolver
+        _render.profile_language_resolver = prior_resolver
 
     assert resolved is None
     records = [

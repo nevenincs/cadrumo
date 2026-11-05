@@ -8,8 +8,8 @@ from uuid import uuid4
 import pytest
 import typer
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.i18n.render import tr
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.commands import profile_binding as binding
 from cadrumo_client.contracts.session_events import LifecycleNotice
 from cadrumo_client.transport.frontend_client import FrontendClient

@@ -13,7 +13,7 @@ import pytest
 from textual.widgets import Button
 
 from cadrumo.application.auth.sync_readiness import AuthSyncReadiness, AuthSyncRequirement
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
+from cadrumo.application.operations.registry import OperationPublicContractSetV1
 from cadrumo.application.user_profile.overview import ProfileOverview, ProfileSectionView
 from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfileCompleteSetupOperationProjection,
@@ -35,7 +35,7 @@ from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.identity.digest import ContentDigest
-from cadrumo.core.operations import OperationEffect
+from cadrumo.core.operations import OperationEffect, OperationFrontendProjection
 from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.tui.aeat_sync.models import AeatSyncOperationHandoffV1, AeatSyncOperationRequestV1

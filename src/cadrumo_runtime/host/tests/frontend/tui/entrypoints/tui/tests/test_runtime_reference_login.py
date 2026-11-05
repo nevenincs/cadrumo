@@ -22,9 +22,9 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
     administration_subject,
 )
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import SessionKind
 from cadrumo.application.user_profile.login_interaction import ProfileLoginChoice
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tui.tests.settled_click import click_when_laid_out
 from cadrumo.entrypoints.tui.tests.settling import settle, settle_until

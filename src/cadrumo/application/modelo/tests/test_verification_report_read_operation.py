@@ -20,7 +20,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     OperationAccessRequest,
 )
 
-from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -42,7 +42,7 @@ from ....domain.modelos.verification_report import (
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...tests.operation_host_fakes import RecordingEvents, RecordingOperands
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import verification_report_read_capture as capture_module

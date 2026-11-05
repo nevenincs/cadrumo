@@ -24,10 +24,10 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
     changed,
 )
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import AutomationGrant
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage
 from cadrumo.core.config import override_settings
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.contracts import ClientHello

@@ -20,12 +20,16 @@ from cadrumo.application.modelo.work_create_operation import (
 from cadrumo.application.modelo.work_create_policy import modelo_work_create_refusal_locale_key
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
 from cadrumo.application.operations.public_period import PublicPeriod
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.application.operator_actions.models import DeclaredNextAction
 from cadrumo.application.workbench_generation_contracts import WorkbenchGenerationV1
 from cadrumo.core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from cadrumo.core.period import Period
 from cadrumo.entrypoints.tui.declarations.models import (
     CalendarRecoveryHandoffV1,

@@ -5,8 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from uuid import UUID
 
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
+from cadrumo.application.operations.registry import OperationPublicContractSetV1
 from cadrumo.application.user_profile.proof_cancellation import ProfileProofCancellation
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_vocabulary import AccessScope
 from cadrumo_client.contracts.login import LoginEvidence
 from cadrumo_client.contracts.transport import ConnectionContext

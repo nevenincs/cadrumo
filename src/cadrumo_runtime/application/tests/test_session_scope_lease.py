@@ -19,7 +19,7 @@ from uuid import UUID
 import pytest
 from pydantic import SecretBytes
 
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_contracts import (
     AccessEvaluationContext,
     AccessSession,
@@ -41,6 +41,7 @@ from cadrumo.application.user_profile.operations import (
 )
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID
 from cadrumo.application.user_profile.view_operation import PROFILE_VIEW_OPERATION_DEFINITION_ID
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import (

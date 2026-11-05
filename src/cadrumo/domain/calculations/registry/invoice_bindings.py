@@ -17,11 +17,6 @@ from ....core.filing_year import FilingYear
 from ....core.identity.tax_id import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
 from ...invoices.party_limits import INVOICE_COUNTERPARTY_NAME_MAX_LENGTH
-from ._invoice_row_materialization import (
-    InvoiceGrouping,
-    build_invoice_rows,
-    normalise_m349_nif_export_rows,
-)
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
     intracommunity_clave_validator,
@@ -35,6 +30,11 @@ from .binding_selector_utils import (
 from .errors import RegistryValidationError
 from .form_codes import form_for_role
 from .ids import BindingId
+from .invoice_row_materialization import (
+    InvoiceGrouping,
+    build_invoice_rows,
+    normalise_m349_nif_export_rows,
+)
 from .m347_threshold import M347DeclarableSet, m347_declarable_party_buckets, resolve_counterpart_operation_claves
 from .schema_base import coerce_enum_member
 from .schema_exports import ExportFieldDataType

@@ -19,19 +19,14 @@ from cadrumo_client.contracts.access_vocabulary import (
     OperationAccessRequest,
 )
 
-from ...core.operations import profile_operation_subject
+from ...core.operations import OperationFrontendProjection, profile_operation_subject
 from ...core.period import Period
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .access_port import OperationAccessResolver
 from .frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from .models import OperationRequest
 from .operation_definition import OperationDefinition
-from .registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionContractV1,
-    OperationPublicDefinitionRegistrationV1,
-    OperationRegistry,
-)
+from .registry import OperationPublicDefinitionContractV1, OperationPublicDefinitionRegistrationV1, OperationRegistry
 
 if TYPE_CHECKING:
     from collections.abc import Callable

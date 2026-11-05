@@ -34,15 +34,12 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionDescriptionV1,
-    OperationRegistry,
-)
+from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1, OperationRegistry
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,

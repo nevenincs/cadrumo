@@ -32,13 +32,13 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.tests.secure_sql import reap_profile_session_keys
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.profile_pointer import (
     active_profile_pointer_transaction,
     observe_active_profile_pointer,
 )
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from cadrumo.tests.audited_process import run_audited_process
 from cadrumo.tests.call_time_refusing_keyring import CALL_TIME_REFUSING_KEYRING

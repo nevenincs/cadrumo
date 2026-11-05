@@ -8,8 +8,8 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind, AutomationDenialReceipt
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_management import (
     AutomationDenied,
     AutomationDeny,

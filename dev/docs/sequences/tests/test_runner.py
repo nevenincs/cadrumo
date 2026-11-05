@@ -31,7 +31,6 @@ from pydantic import JsonValue, SecretStr
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyPasswordError
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.capsule_record import ProfileRecordSession, ProfileRecordStore
 from cadrumo.application.user_profile.custody_ports import (
     load_profile_custody_password_material,
@@ -39,6 +38,7 @@ from cadrumo.application.user_profile.custody_ports import (
 )
 from cadrumo.core.bucket_pointer import read_pointer_selection
 from cadrumo.core.config import load_settings, override_settings
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.redaction.rules import redact_structured_for_cli_output
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.env_scope import derived_storage_settings, scoped_env_var

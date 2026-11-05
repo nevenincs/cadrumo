@@ -21,8 +21,8 @@ from uuid import UUID
 import pytest
 from click.testing import Result
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.config import load_settings
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.entrypoints.cli.tests.cli_fixture_worlds import CliWorldProvider, bind_cli_fixture_ports
 from cadrumo.tests.cli_fixture_ports import CliInvocation
 from cadrumo_client.transport.installed_client import open_installed_client

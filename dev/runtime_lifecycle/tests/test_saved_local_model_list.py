@@ -17,7 +17,7 @@ from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
     EXTENSION_SETTINGS_NAMESPACE,
     LOCAL_MODEL_LIST_NAMESPACE,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo_agent_service.adapters.agent_provider_catalog import AgentProviderCatalogSource
 from cadrumo_agent_service.admin import AdminServer

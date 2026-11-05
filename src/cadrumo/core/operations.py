@@ -178,6 +178,16 @@ class OperationInteractionKind(StrEnum):
     REJECT = "reject"
 
 
+class OperationFrontendProjection(StrEnum):
+    """Authenticated human and delegated frontend identities."""
+
+    CLI = "cli"
+    TUI = "tui"
+    DESKTOP = "desktop"
+    EXTERNAL_CLIENT = "external-client"
+    INSTALLED_SERVICE = "installed-service"
+
+
 def profile_operation_subject(profile_id: str) -> str:
     """Return the operation subject naming one profile.
 
@@ -195,6 +205,7 @@ __all__ = [
     "OperationDurability",
     "OperationEffect",
     "OperationEventKind",
+    "OperationFrontendProjection",
     "OperationInteractionKind",
     "OperationLifecycle",
     "OperationTerminalCondition",

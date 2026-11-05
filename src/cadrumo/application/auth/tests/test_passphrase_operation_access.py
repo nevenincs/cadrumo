@@ -25,7 +25,7 @@ from cadrumo.application.auth.protocols import BrowserSessionPort
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_contracts import (
     AccessEvaluationContext,
     AccessSession,
@@ -43,7 +43,12 @@ from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedE
 from cadrumo.application.user_profile.operation_access_policy import evaluate_operation_access
 from cadrumo.application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 from cadrumo.core.config import Settings
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,

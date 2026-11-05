@@ -6,6 +6,7 @@ from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from contextvars import ContextVar
 from datetime import date
+from functools import cache
 from typing import Annotated, Final, Literal
 
 from pydantic import Field, TypeAdapter, model_validator
@@ -331,7 +332,11 @@ ResolvedGovernedFact = Annotated[
     Field(discriminator="family"),
 ]
 
-_RESOLVED_FACT_ADAPTER: TypeAdapter[ResolvedGovernedFact] = TypeAdapter(ResolvedGovernedFact)
+
+@cache
+def _resolved_fact_adapter() -> TypeAdapter[ResolvedGovernedFact]:
+    """Build the resolved-fact union validator on first use; constructing it compiles a whole schema."""
+    return TypeAdapter(ResolvedGovernedFact)
 
 
 def required_mapping_entry(entries: Mapping[str, str], key: str, *, subject: str) -> str:
@@ -653,7 +658,7 @@ def _materialize_resolved_fact(
     projection_direction: TemporalProjectionDirection,
     projected_from_date: date | None,
 ) -> ResolvedGovernedFact:
-    return _RESOLVED_FACT_ADAPTER.validate_python(
+    return _resolved_fact_adapter().validate_python(
         {
             "family": fact.family,
             "fact_id": fact.fact_id,

@@ -11,7 +11,7 @@ from time import monotonic
 from typing import Any, Final
 from uuid import UUID
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import AccessAction

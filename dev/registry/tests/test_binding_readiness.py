@@ -250,8 +250,8 @@ def _authority_carrying_the_planted_modelo(
     return replace(
         authority,
         catalogues=catalogues,
-        _modelos_by_id={**authority._modelos_by_id, planted.id: planted},
-        _snapshots={},
+        modelos_by_id={**authority.modelos_by_id, planted.id: planted},
+        snapshots={},
     )
 
 

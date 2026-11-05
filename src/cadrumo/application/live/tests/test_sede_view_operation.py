@@ -45,6 +45,7 @@ from ....core.operations import (
     OperationClosePolicy,
     OperationDeadline,
     OperationEffect,
+    OperationFrontendProjection,
     profile_operation_subject,
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -61,7 +62,7 @@ from ...operations.capabilities import OperationOwnedResource, OperationReplayPo
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.person_acts import operation_is_persons_act
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...tests.operation_host_fakes import RecordingEvents
 from ...tests.operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 from ...user_profile.access_errors import ProfileAccessRefusedError

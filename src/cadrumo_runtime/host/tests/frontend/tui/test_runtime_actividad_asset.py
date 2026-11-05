@@ -31,15 +31,12 @@ from cadrumo.application.operations.frontend_projection import (
     OperationPublicProjectionV1,
 )
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionContractV1,
-    OperationRegistry,
-)
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1, OperationRegistry
 from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationTerminalCondition,
     profile_operation_subject,
 )

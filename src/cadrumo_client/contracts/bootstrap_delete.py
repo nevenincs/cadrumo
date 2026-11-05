@@ -8,12 +8,12 @@ from uuid import UUID
 from pydantic import BaseModel, model_validator
 
 from cadrumo.application.bucket_deletion_contracts import BucketDeletionFingerprint
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.custody_transactions import (
     ProfileCustodyDeleteConfirmation,
     ProfileCustodyTransactionReceipt,
 )
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from cadrumo.core.operations import OperationFrontendProjection
 
 
 class ProfileDeletePrepare(BaseModel):

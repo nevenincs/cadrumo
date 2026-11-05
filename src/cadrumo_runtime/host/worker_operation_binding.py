@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.provenance import OperationAdmissionProvenance
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.operations import OperationFrontendProjection
 
 
 @dataclass(frozen=True, slots=True)

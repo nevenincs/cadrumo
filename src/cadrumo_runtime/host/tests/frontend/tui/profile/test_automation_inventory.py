@@ -14,7 +14,6 @@ from textual.content import Content
 from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Input, Static
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_projections import PublicAccessSession
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationGrantProjection,
@@ -28,7 +27,7 @@ from cadrumo.application.user_profile.automation_enrollment import (
     EnrollmentStage,
 )
 from cadrumo.core.i18n.render import tr
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
+from cadrumo.core.operations import OperationEffect, OperationFrontendProjection, OperationTerminalCondition
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.tests.settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus

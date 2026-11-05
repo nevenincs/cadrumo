@@ -65,11 +65,7 @@ from cadrumo.application.ledger.structured_invoice_ports import StructuredInvoic
 from cadrumo.application.operations.error_detail import OperationErrorDetailV1, build_operation_error_detail
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1
 from cadrumo.application.operations.public_scalar import PublicDecimal
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionContractV1,
-    OperationRegistry,
-)
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1, OperationRegistry
 from cadrumo.application.tests.agent_refusal_support import model_not_installed_verdict
 from cadrumo.core.config import override_settings
 from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
@@ -80,6 +76,7 @@ from cadrumo.core.field_origin import FieldOrigin
 from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,

@@ -15,9 +15,9 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
 )
 from cadrumo.application.operations.models import OperationId
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
-from cadrumo.core.operations import OperationTerminalCondition
+from cadrumo.core.operations import OperationFrontendProjection, OperationTerminalCondition
 from cadrumo_client.commands.registered_operation_contracts import (
     RegisteredOperationCompletion,
     RegisteredOperationProgress,

@@ -20,7 +20,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosurePermission,
 )
 
-from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...ledger.persistence_ports import LedgerPersistenceConflictError
@@ -28,7 +28,7 @@ from ...ledger.tests.unused_repository_ports import ProfileOnlyCatalogueReposito
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
 from ...operations.owner import OperationExecutorContext
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...tests.operation_host_fakes import RecordingEvents
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import projection_operation

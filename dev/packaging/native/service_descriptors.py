@@ -59,7 +59,7 @@ def stage_service_descriptors(root: Path, layout: dict[str, Any], images: tuple[
     service: dict[str, Any] = {
         "service_id": "cadrumo-agent-service",
         "launch_image": entrypoints["cadrumo-agent-service"],
-        "launch_module": "cadrumo_agent_service.main",
+        "launch_module": "cadrumo_agent_service.bootstrap",
         "image_digest": digest(root / entrypoints["cadrumo-agent-service"]),
         "record_capabilities": [
             {

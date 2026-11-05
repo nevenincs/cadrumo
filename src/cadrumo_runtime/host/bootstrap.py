@@ -18,6 +18,7 @@ def _runtime_environment() -> dict[str, str]:
     environment = {
         key: value for key, value in os.environ.items() if not key.upper().startswith(("PYTHON", "LD_", "DYLD_"))
     }
+    # Literal on purpose: no tax module may load before the arguments are parsed.
     environment["PYDANTIC_DISABLE_PLUGINS"] = "__all__"
     return environment
 

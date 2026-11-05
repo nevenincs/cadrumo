@@ -37,9 +37,9 @@ from ....application.operations.access_resolution import OperationAccessContext,
 from ....application.operations.execution_actor import OperationExecutionCaller, OperationExecutionCallerReader
 from ....application.operations.models import OperationIdentity, OperationRequest
 from ....application.operations.owner import OperationExecutorContext
-from ....application.operations.registry import OperationFrontendProjection, OperationRegistry
+from ....application.operations.registry import OperationRegistry
 from ....application.user_profile.access_contracts import SessionKind
-from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....core.secure_object_write import SecureObjectWrite
 from .evidence_mutation_support import EVIDENCE_MUTATION_PROFILE, evidence_mutation_record
 from .unused_repository_ports import UnusedBucketEventRepository, UnusedEvidenceAttachmentIngestor

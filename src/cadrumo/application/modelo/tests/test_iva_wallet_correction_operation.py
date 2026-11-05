@@ -23,6 +23,7 @@ from cadrumo.domain.modelos.work_unit import WorkUnitCatalogue
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
+from ....core.operations import OperationFrontendProjection
 from ...calculations.observations_repository import CalculationObservationPorts
 from ...ledger.tests.unused_repository_ports import ProfileOnlyCatalogueRepository, UnusedBucketEventRepository
 from ...operations.access_resolution import OperationAccessContext
@@ -30,7 +31,6 @@ from ...operations.capabilities import OperationRequestStoragePolicy, OperationS
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.public_period import PublicPeriod
-from ...operations.registry import OperationFrontendProjection
 from ...tests.operation_host_fakes import IrreversibleSectionGrant, RecordingEvents
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..iva_wallet_correction_operation import (

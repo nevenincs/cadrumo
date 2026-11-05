@@ -21,9 +21,8 @@ import pytest
 from ...application.bucket_event_repository import bucket_event_history_repository
 from ...application.operations.execution_actor import OperationExecutionCaller, OperationExecutionCallerReader
 from ...application.operations.models import OperationIdentity
-from ...application.operations.registry import OperationFrontendProjection
 from ...application.user_profile.access_contracts import SessionKind
-from ...core.operations import OperationTerminalCondition
+from ...core.operations import OperationFrontendProjection, OperationTerminalCondition
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from . import registered_executor_case_support as conformance
 

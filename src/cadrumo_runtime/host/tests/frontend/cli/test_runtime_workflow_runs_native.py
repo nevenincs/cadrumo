@@ -18,7 +18,6 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.operations.public_period import PublicPeriod
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.workflow.persistence import load_run, save_run
 from cadrumo.application.workflow.run_models import WorkflowObligationFacts, WorkflowResult, WorkflowStage
@@ -29,7 +28,7 @@ from cadrumo.application.workflow.run_read_operation import (
     WorkflowRunReadRequest,
 )
 from cadrumo.core.modelo import Modelo
-from cadrumo.core.operations import OperationEffect
+from cadrumo.core.operations import OperationEffect, OperationFrontendProjection
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.deadlines.models import ObligationStatus

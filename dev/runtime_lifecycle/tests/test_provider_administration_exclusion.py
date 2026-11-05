@@ -20,8 +20,8 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.config import override_settings
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo.entrypoints.operation_composition import build_manifest_operation_registry
 from cadrumo_client.contracts.access_refusals import AccessDenialCode

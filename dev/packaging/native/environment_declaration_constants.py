@@ -29,15 +29,15 @@ PATH_ENTRIES = frozenset({"executable", "external", "native", "external_defaults
 PIN_KINDS = ("root", "temporary", "authority")
 
 # Declared names reach C and Rust string literals and process environments unescaped.
-_NAME = re.compile(r"[A-Z][A-Z0-9_]*")
+NAME = re.compile(r"[A-Z][A-Z0-9_]*")
 # Operating-system names keep their platform spelling, such as PROGRAMFILES(X86) or http_proxy.
-_BASE_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]*(\([A-Za-z0-9]+\))?")
-_PROFILE = re.compile(r"[a-z][a-z0-9]*(-[a-z0-9]+)*")
-_SLOT = re.compile(r"[a-z][a-z0-9_]*")
+BASE_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]*(\([A-Za-z0-9]+\))?")
+PROFILE = re.compile(r"[a-z][a-z0-9]*(-[a-z0-9]+)*")
+SLOT = re.compile(r"[a-z][a-z0-9_]*")
 # Literal arguments become C and Rust string literals; keep them printable ASCII without quotes.
-_LITERAL = re.compile(r"[A-Za-z0-9_.:/=+-]+")
-_OPTION = re.compile(r"--[a-z][a-z0-9]*(-[a-z0-9]+)*")
+LITERAL = re.compile(r"[A-Za-z0-9_.:/=+-]+")
+OPTION = re.compile(r"--[a-z][a-z0-9]*(-[a-z0-9]+)*")
 # An opaque revision is bounded printable ASCII that cannot be read as an option or a path.
-_REVISION = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}")
-_IDENTIFIER = re.compile(r"[a-z][a-z0-9_]{0,63}")
-_PATH_COMPONENT = re.compile(r"[A-Za-z0-9._-]+")
+REVISION = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}")
+IDENTIFIER = re.compile(r"[a-z][a-z0-9_]{0,63}")
+PATH_COMPONENT = re.compile(r"[A-Za-z0-9._-]+")

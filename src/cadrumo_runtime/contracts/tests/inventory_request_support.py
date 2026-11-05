@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from uuid import UUID, uuid4
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.automation_operations import AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
     Availability,

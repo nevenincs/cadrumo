@@ -68,7 +68,6 @@ from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.persistence.journal import OperationSecureReferenceStore
 from cadrumo.application.operations.projection_services import OperationResponseCapability
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
     OperationSchemaBindingV1,
@@ -88,6 +87,7 @@ from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,

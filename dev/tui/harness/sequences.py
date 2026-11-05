@@ -46,11 +46,11 @@ from cadrumo.application.modelo.work_form_models import (
     confirmable,
 )
 from cadrumo.application.modelo.work_form_next_step import ModeloFormNextAction
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.config import load_settings
 from cadrumo.core.config_support import TuiAppearance
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import output_language
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tui.components.dialogs import ConfirmScreen

@@ -10,9 +10,9 @@ from threading import Event, RLock
 from typing import Literal, Self, cast, override
 from uuid import UUID, uuid4
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.logging import get_logger
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 
 from ..contracts.access_refusals import AccessDenialCode

@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Protocol
 
 from cadrumo.core.package_interpreter import interpreter_command
+from cadrumo.core.pydantic_plugins import PYDANTIC_PLUGINS_DISABLED, PYDANTIC_PLUGINS_VARIABLE
 from cadrumo_client.contracts.contracts import RefusalError
 
 from ..adapters.macos_coalition import read_macos_resource_coalition, terminate_macos_coalition
@@ -24,7 +25,12 @@ from ..adapters.macos_process import (
 from ..adapters.worker_arguments import validated_worker_arguments, worker_interpreter_arguments
 from ..adapters.worker_environment import worker_path_environment_names
 
-_CLEAN_ENVIRONMENT = {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C", "PYDANTIC_DISABLE_PLUGINS": "__all__"}
+_CLEAN_ENVIRONMENT = {
+    "PATH": "/usr/bin:/bin",
+    "LANG": "C",
+    "LC_ALL": "C",
+    PYDANTIC_PLUGINS_VARIABLE: PYDANTIC_PLUGINS_DISABLED,
+}
 _TERMINATION_SECONDS = 5.0
 _POLL_SECONDS = 0.2
 

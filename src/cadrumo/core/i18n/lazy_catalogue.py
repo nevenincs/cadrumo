@@ -21,6 +21,8 @@ from .routing import route_key_to_shard
 
 _LOGGER = logging.getLogger(__name__)
 
+_STREAMED_SHARD_PARENT = Path("modelo") / "schema"
+
 if not yaml.__with_libyaml__:
     # The pure-Python scanner is roughly ten times slower on these catalogues;
     # falling back to it silently would turn every rendered message into a
@@ -44,17 +46,17 @@ def _flat_value(value: object) -> str | None:
     return None if value is None else str(value)
 
 
-def _flatten_dict(value: object, prefix: str = "") -> dict[str, str | None]:
+def flatten_dict(value: object, prefix: str = "") -> dict[str, str | None]:
     """Recursively flatten nested mappings to dot-separated keys."""
     if is_object_mapping(value):
         flattened: dict[str, str | None] = {}
         for key, child in value.items():
-            flattened.update(_flatten_dict(child, _child_path(prefix, key)))
+            flattened.update(flatten_dict(child, _child_path(prefix, key)))
         return flattened
     return {prefix: _flat_value(value)}
 
 
-class _UnscannableShardError(yaml.YAMLError):
+class UnscannableShardError(yaml.YAMLError):
     """The event scan met a construct only a full load interprets faithfully.
 
     A YAML error rather than a registered failure: it never leaves this module,
@@ -89,7 +91,7 @@ def _scalar_value(event: yaml.ScalarEvent) -> object:
     if tag is None or tag == "!":
         tag = cast(_ScalarTagResolver, _SCAN_RESOLVER).resolve(yaml.ScalarNode, event.value, event.implicit)
     if tag == "tag:yaml.org,2002:merge":
-        raise _UnscannableShardError
+        raise UnscannableShardError
     node = yaml.ScalarNode(tag, event.value, style=event.style)
     # A fresh constructor per scalar: ``construct_document`` resets its memo, and
     # nothing is shared between threads resolving keys at once.
@@ -103,14 +105,14 @@ class _MappingFrame:
     pending_path: str | None = None
 
 
-def _scan_shard_for_key(handle: IO[str], key: str) -> str | None:
+def scan_shard_for_key(handle: IO[str], key: str) -> str | None:
     """Return one flattened scalar value by streaming the shard up to its key.
 
     A listing asks one key of a large shard, and a full load constructs every
     entry to answer it. Catalogue authoring refuses duplicate keys, so the first
     match is the value a full load keeps. Anything a full load would read
     differently -- an anchor or alias, a merge key, a complex key, a collection
-    at the key itself, a second document -- raises :class:`_UnscannableShardError`, as
+    at the key itself, a second document -- raises :class:`UnscannableShardError`, as
     does a key the shard lacks.
     """
     state = _ShardScanState(key)
@@ -118,7 +120,7 @@ def _scan_shard_for_key(handle: IO[str], key: str) -> str | None:
         found, value = state.consume(event)
         if found:
             return value
-    raise _UnscannableShardError
+    raise UnscannableShardError
 
 
 @dataclass(slots=True)
@@ -141,7 +143,7 @@ class _ShardScanState:
     def _count_document(self) -> None:
         self.documents += 1
         if self.documents > 1:
-            raise _UnscannableShardError
+            raise UnscannableShardError
 
     def _consume_opaque_event(self, event: yaml.Event) -> None:
         if isinstance(event, yaml.CollectionStartEvent):
@@ -182,7 +184,7 @@ class _ShardScanState:
         event: yaml.CollectionStartEvent,
     ) -> None:
         if frame is not None and frame.pending_path == self.key:
-            raise _UnscannableShardError
+            raise UnscannableShardError
         if isinstance(event, yaml.SequenceStartEvent):
             # A sequence flattens to one stringified value, so nothing under it is a key.
             self.opaque_depth = 1
@@ -192,12 +194,12 @@ class _ShardScanState:
 
 def _reject_unsupported_scan_event(event: yaml.Event) -> None:
     if isinstance(event, yaml.AliasEvent) or getattr(event, "anchor", None) is not None:
-        raise _UnscannableShardError
+        raise UnscannableShardError
 
 
 def _set_pending_mapping_key(frame: _MappingFrame, event: yaml.Event) -> None:
     if not isinstance(event, yaml.ScalarEvent | yaml.MappingEndEvent):
-        raise _UnscannableShardError
+        raise UnscannableShardError
     if isinstance(event, yaml.ScalarEvent):
         frame.pending_path = _child_path(frame.path, _scalar_value(event))
 
@@ -221,10 +223,11 @@ class LazyLocaleCatalogue(Mapping[str, str | None]):
         *,
         shard_dir: Path | None = None,
     ) -> None:
+        """Bind the catalogue to one locale's shard directory, failing when it is absent."""
         self.locale = locale
         self.shard_dir = shard_dir
-        self._key_cache: dict[str, str | None] = {}
-        self._loaded_shards: set[Path] = set()
+        self.key_cache: dict[str, str | None] = {}
+        self.loaded_shards: set[Path] = set()
         self._scanned_shards: set[Path] = set()
         self._all_shards_loaded: bool = False
 
@@ -232,9 +235,9 @@ class LazyLocaleCatalogue(Mapping[str, str | None]):
             raise FileNotFoundError(f"Locale catalogue shard directory not found for {locale}: {shard_dir}")
 
     def _load_shard_file(self, rel_shard: Path) -> None:
-        if rel_shard in self._loaded_shards:
+        if rel_shard in self.loaded_shards:
             return
-        self._loaded_shards.add(rel_shard)
+        self.loaded_shards.add(rel_shard)
         if self.shard_dir is None:
             return
         shard_file = self.shard_dir / rel_shard
@@ -243,8 +246,8 @@ class LazyLocaleCatalogue(Mapping[str, str | None]):
         try:
             with shard_file.open("r", encoding=UTF_8_ENCODING) as handle:
                 parsed = load_yaml_handle(handle)
-            flattened = _flatten_dict(parsed)
-            self._key_cache.update(flattened)
+            flattened = flatten_dict(parsed)
+            self.key_cache.update(flattened)
         except Exception:
             _LOGGER.warning(
                 "Failed to parse locale shard %s for %s",
@@ -263,9 +266,12 @@ class LazyLocaleCatalogue(Mapping[str, str | None]):
                 self._load_shard_file(rel_shard)
 
     def _scan_shard_file(self, rel_shard: Path, key: str) -> bool:
-        # Streaming pays off for a shard asked one key; a shard asked a second
-        # uncached key is being read broadly, and one full load serves the rest.
-        if rel_shard in self._scanned_shards or rel_shard in self._loaded_shards:
+        # Streaming pays off only for a shard asked one key, which is how the
+        # per-Modelo schema shards are read. Any other shard is read broadly, and
+        # scanning it first would parse it a second time for its next key.
+        if rel_shard.parent != _STREAMED_SHARD_PARENT:
+            return False
+        if rel_shard in self._scanned_shards or rel_shard in self.loaded_shards:
             return False
         self._scanned_shards.add(rel_shard)
         if self.shard_dir is None:
@@ -275,13 +281,13 @@ class LazyLocaleCatalogue(Mapping[str, str | None]):
             return False
         try:
             with shard_file.open("r", encoding=UTF_8_ENCODING) as handle:
-                self._key_cache[key] = _scan_shard_for_key(handle, key)
+                self.key_cache[key] = scan_shard_for_key(handle, key)
         except yaml.YAMLError:
             return False
         return True
 
     def _resolve_key(self, key: str) -> None:
-        if key in self._key_cache:
+        if key in self.key_cache:
             return
         rel_shard = route_key_to_shard(key)
         if not self._scan_shard_file(rel_shard, key):
@@ -290,8 +296,8 @@ class LazyLocaleCatalogue(Mapping[str, str | None]):
     @override
     def __getitem__(self, key: str) -> str | None:
         self._resolve_key(key)
-        if key in self._key_cache:
-            return self._key_cache[key]
+        if key in self.key_cache:
+            return self.key_cache[key]
         raise KeyError(key)
 
     @override
@@ -299,17 +305,17 @@ class LazyLocaleCatalogue(Mapping[str, str | None]):
         if not isinstance(key, str):
             return False
         self._resolve_key(key)
-        return key in self._key_cache
+        return key in self.key_cache
 
     @override
     def __iter__(self) -> Iterator[str]:
         self._load_all()
-        return iter(self._key_cache)
+        return iter(self.key_cache)
 
     @override
     def __len__(self) -> int:
         self._load_all()
-        return len(self._key_cache)
+        return len(self.key_cache)
 
 
 __all__ = [

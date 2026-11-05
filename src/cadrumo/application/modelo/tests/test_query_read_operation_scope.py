@@ -18,7 +18,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     OperationAccessRequest,
 )
 
-from ....core.operations import profile_operation_subject
+from ....core.operations import OperationFrontendProjection, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...operations.access_resolution import (
@@ -30,7 +30,7 @@ from ...operations.access_resolution import (
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
 from ...operations.public_period import PublicPeriod
-from ...operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from ...operations.registry import OperationPublicDefinitionContractV1
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..query_read_contracts import ModeloBindingsListRequest, ModeloReadinessOperationRequest
 from ..query_read_operation import (

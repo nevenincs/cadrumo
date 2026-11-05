@@ -13,10 +13,9 @@ from uuid import UUID
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.person_acts import operation_is_persons_act
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.logging import get_logger
-from cadrumo.core.operations import OperationEffect, OperationLifecycle
+from cadrumo.core.operations import OperationEffect, OperationFrontendProjection, OperationLifecycle
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError

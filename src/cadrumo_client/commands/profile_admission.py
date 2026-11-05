@@ -8,7 +8,6 @@ from uuid import UUID
 
 import typer
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.profile_preconditions import (
     profile_password_channel_failure_verdict,
     profile_session_failure_verdict,
@@ -16,6 +15,7 @@ from cadrumo.application.profile_preconditions import (
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.i18n.render import tr
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo_client.commands import profile_selection
 from cadrumo_client.commands.errors import CliRefusedBoundaryError, attach_cli_policy_verdict

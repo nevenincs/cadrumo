@@ -16,13 +16,18 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...modelo.tests.m036_operation_support import INSTANT, PROFILE_ID, policy_decision
 from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from .. import archive_operation as module
 from ..access_errors import ProfileAccessRefusedError
 from ..archive_operation_ports import (

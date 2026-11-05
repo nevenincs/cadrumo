@@ -13,10 +13,10 @@ import pytest
 from textual.app import App
 from textual.widgets import Button, Input
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.login_interaction import ProfileLoginChoice
 from cadrumo.core.diagnostic_log import DiagnosticFormatter
 from cadrumo.core.logging import LOG_FILE_FORMAT, get_logger
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import ProfileStatus

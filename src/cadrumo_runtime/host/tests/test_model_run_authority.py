@@ -41,11 +41,7 @@ from cadrumo.application.operations.models import (
 )
 from cadrumo.application.operations.operation_definition import build_single_phase_definition
 from cadrumo.application.operations.owner import OperationExecutorContext
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationRegistry,
-)
+from cadrumo.application.operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
 from cadrumo.application.operations.subject_reference import OperationSubjectReferenceV1
 from cadrumo.application.user_profile.access_contracts import (
     AccessSession,
@@ -54,6 +50,7 @@ from cadrumo.application.user_profile.access_contracts import (
     SessionState,
 )
 from cadrumo.core.model_roles import ModelRole
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability
 from cadrumo_client.contracts.model_runs import (

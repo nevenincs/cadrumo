@@ -19,8 +19,9 @@ from cadrumo_client.contracts.access_vocabulary import (
     OperationAccessRequest,
 )
 
+from ...core.operations import OperationFrontendProjection
 from ..operations.access_resolution import ResolvedOperationAccess
-from ..operations.registry import OperationFrontendProjection, OperationRegistry
+from ..operations.registry import OperationRegistry
 from ..user_profile.access_contracts import (
     AccessEvaluationContext,
     AccessSession,

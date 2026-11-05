@@ -16,6 +16,7 @@ from cadrumo.core.async_cleanup import AsyncResourceCleanupError
 from cadrumo.core.diagnostic_log import diagnostic_event
 from cadrumo.core.logging import get_logger
 from cadrumo.core.package_interpreter import interpreter_command
+from cadrumo.core.pydantic_plugins import PYDANTIC_PLUGINS_DISABLED, PYDANTIC_PLUGINS_VARIABLE
 from cadrumo.core.storage_environment import ChildEnvironmentProfile, child_environment
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.contracts import ChannelWake, RefusalCode, RefusalError, ServerHello
@@ -143,8 +144,8 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
             endpoint.listen()
             operation_endpoint.listen()
             proof_endpoint.listen()
-            environment = _worker_launch_environment(storage_root=storage_root, profile_id=identity.binding.profile_id)
-            environment["PYDANTIC_DISABLE_PLUGINS"] = "__all__"
+            environment = worker_launch_environment(storage_root=storage_root, profile_id=identity.binding.profile_id)
+            environment[PYDANTIC_PLUGINS_VARIABLE] = PYDANTIC_PLUGINS_DISABLED
             product_version = version("cadrumo")
             worker_entrypoint = (
                 ("-m", "cadrumo_runtime.host.worker")
@@ -409,7 +410,7 @@ def _direct_windows_interpreter(interpreter: str, environment: dict[str, str]) -
     return base
 
 
-def _worker_launch_environment(*, storage_root: Path, profile_id: UUID) -> dict[str, str]:
+def worker_launch_environment(*, storage_root: Path, profile_id: UUID) -> dict[str, str]:
     """Pin the storage root and keep operator storage controls across the isolated worker boundary.
 
     POSIX workers start from a fixed noncredential environment; Windows workers

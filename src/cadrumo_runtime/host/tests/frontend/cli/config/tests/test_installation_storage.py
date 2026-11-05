@@ -13,12 +13,12 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.storage_management.documents import ConfigStorageListResult, ConfigStorageViewResult
 from cadrumo.application.storage_management.errors import StorageReclaimRefusedError, StorageReclaimUnconfirmedError
 from cadrumo.application.storage_management.models import StorageCheckIssueKind
 from cadrumo.application.storage_management.service import RECLAIMABLE_LIFECYCLES, collect_storage_area_inventory
 from cadrumo.core.errors.error_codes import get_registered_error_code
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.storage_taxonomy import StorageArea, StorageScope
 from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY, storage_path
 from cadrumo.tests.env_scope import derived_storage_settings

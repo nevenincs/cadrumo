@@ -10,14 +10,13 @@ from uuid import UUID
 import pytest
 
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfilePlantillaMediaOperationProjection,
     ProfilePlantillaMediaOperationRequest,
     ProfilePlantillaMediaRemove,
     ProfilePlantillaMediaSet,
 )
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
+from cadrumo.core.operations import OperationEffect, OperationFrontendProjection, OperationTerminalCondition
 from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState
 from cadrumo.domain.user_profile.values import UserProfileRecord
 from cadrumo_client.transport.frontend_client import FrontendClient

@@ -28,10 +28,9 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.application.ledger.invoice_evidence_extract_operation import (
     LEDGER_EVIDENCE_EXTRACT_OPERATION_DEFINITION_ID,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.config import override_settings
 from cadrumo.core.config_support import LLMProvider
-from cadrumo.core.operations import profile_operation_subject
+from cadrumo.core.operations import OperationFrontendProjection, profile_operation_subject
 from cadrumo_client.contracts.operation_access import OperationSubmit, OperationSubmitted
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installed_client import open_installed_client

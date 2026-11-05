@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 
-def _table_rows(artifact: Path, query: str, columns: int) -> list[tuple[str, ...]]:
+def table_rows(artifact: Path, query: str, columns: int) -> list[tuple[str, ...]]:
     """Query the MSI database in read-only mode, closing every native handle."""
     if sys.platform != "win32":
         raise ValueError("MSI database verification requires a native Windows host")
@@ -65,13 +65,13 @@ def _table_rows(artifact: Path, query: str, columns: int) -> list[tuple[str, ...
 def _sequence_rows(artifact: Path) -> dict[str, tuple[int, str]]:
     return {
         action: (int(sequence), condition)
-        for action, sequence, condition in _table_rows(
+        for action, sequence, condition in table_rows(
             artifact, "SELECT `Action`, `Sequence`, `Condition` FROM `InstallExecuteSequence`", 3
         )
     }
 
 
-def _verify_feature_rows(
+def verify_feature_rows(
     features: list[tuple[str, ...]], components: list[tuple[str, ...]], links: list[tuple[str, ...]]
 ) -> None:
     """Require complete, mandatory local feature ownership in the actual tables."""
@@ -119,7 +119,7 @@ def _verify_feature_links(tree: dict[str, tuple[str, ...]], owned: set[str], lin
         raise ValueError("MSI components are detached from mandatory features")
 
 
-def _verify_component_rows(components: list[tuple[str, ...]], registry: list[tuple[str, ...]]) -> None:
+def verify_component_rows(components: list[tuple[str, ...]], registry: list[tuple[str, ...]]) -> None:
     """Reserve one costing entry per registry keypath in addition to authored components."""
     keys = {row[0]: row[1:] for row in registry}
     if _repeated_component_rows(keys, registry, components):
@@ -148,22 +148,22 @@ def _valid_registry_keypath(keys: dict[str, tuple[str, ...]], keypath: str, comp
 
 def verify_feature_ownership(artifact: Path) -> None:
     """Reject oversized or unselected actual MSI features before publication."""
-    components = _table_rows(artifact, "SELECT `Component`, `Attributes`, `KeyPath` FROM `Component`", 3)
-    tables = {row[0] for row in _table_rows(artifact, "SELECT `Name` FROM `_Tables`", 1)}
-    _verify_component_rows(
+    components = table_rows(artifact, "SELECT `Component`, `Attributes`, `KeyPath` FROM `Component`", 3)
+    tables = {row[0] for row in table_rows(artifact, "SELECT `Name` FROM `_Tables`", 1)}
+    verify_component_rows(
         components,
-        _table_rows(artifact, "SELECT `Registry`, `Root`, `Component_` FROM `Registry`", 3)
+        table_rows(artifact, "SELECT `Registry`, `Root`, `Component_` FROM `Registry`", 3)
         if "Registry" in tables
         else [],
     )
-    _verify_feature_rows(
-        _table_rows(artifact, "SELECT `Feature`, `Feature_Parent`, `Display`, `Level`, `Attributes` FROM `Feature`", 5),
+    verify_feature_rows(
+        table_rows(artifact, "SELECT `Feature`, `Feature_Parent`, `Display`, `Level`, `Attributes` FROM `Feature`", 5),
         [(row[0],) for row in components],
-        _table_rows(artifact, "SELECT `Feature_`, `Component_` FROM `FeatureComponents`", 2),
+        table_rows(artifact, "SELECT `Feature_`, `Component_` FROM `FeatureComponents`", 2),
     )
-    if "Condition" in tables and _table_rows(artifact, "SELECT `Feature_` FROM `Condition`", 1):
+    if "Condition" in tables and table_rows(artifact, "SELECT `Feature_` FROM `Condition`", 1):
         raise ValueError("MSI mandatory feature selection can be changed by a condition")
-    levels = _table_rows(artifact, "SELECT `Value` FROM `Property` WHERE `Property` = 'INSTALLLEVEL'", 1)
+    levels = table_rows(artifact, "SELECT `Value` FROM `Property` WHERE `Property` = 'INSTALLLEVEL'", 1)
     if any(not row[0].isdigit() or int(row[0]) < 1 for row in levels):
         raise ValueError("MSI installation level disables mandatory features")
 

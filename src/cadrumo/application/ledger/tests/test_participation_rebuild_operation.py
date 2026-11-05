@@ -18,7 +18,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     OperationAccessPolicy,
 )
 
-from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.participation_index import TransactionRevisionParticipationIndex
 from ....domain.modelos.protocols import (
@@ -34,11 +34,7 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
-from ...operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationRegistry,
-)
+from ...operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
 from ...tests.operation_host_fakes import IrreversibleSectionGrant, RecordingEvents
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..participation_rebuild_operation import (

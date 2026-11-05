@@ -18,7 +18,12 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ....core.external_constants import OutputLanguage
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -28,7 +33,7 @@ from ....domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryP
 from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import borrador_100_comparison_operation as module
 from ..borrador_100_comparison import (

@@ -9,8 +9,8 @@ from importlib.metadata import PackageNotFoundError
 from pathlib import Path
 from uuid import UUID
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.paths import effective_storage_root
 from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
 

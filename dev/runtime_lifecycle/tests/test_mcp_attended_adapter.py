@@ -28,12 +28,12 @@ import pytest
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.person_acts import ACCESS_ADMINISTRATION_OPERATIONS
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID
 from cadrumo.core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import canonical_json_bytes
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.installed_client import open_installed_client

@@ -13,11 +13,11 @@ from uuid import uuid4
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import SessionKind, SessionState
 from cadrumo.application.user_profile.access_projections import PublicAccessSession
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_management import SessionInventory, SessionInventoryReply, SessionInventoryTransfer
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import (

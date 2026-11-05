@@ -15,7 +15,12 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.iva.schema import InvoiceKind
 from ...exchange_rate_provider import exchange_rate_provider
@@ -23,11 +28,7 @@ from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
-from ...operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationRegistry,
-)
+from ...operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..catalogue_creation import build_catalogue_invoice
 from ..catalogue_read_operation import (

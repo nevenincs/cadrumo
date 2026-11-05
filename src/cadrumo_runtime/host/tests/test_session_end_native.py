@@ -16,9 +16,8 @@ from cadrumo.adapters.persistence.storage.custody.automation_store import Automa
 from cadrumo.application.operations.models import OperationReconciliationOutcome, OperationRequest
 from cadrumo.application.operations.persistence.events import OperationReconciliationEvent
 from cadrumo.application.operations.persistence.leases import operation_conflict_scope_reference
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
+from cadrumo.core.operations import OperationEffect, OperationFrontendProjection, OperationTerminalCondition
 from cadrumo.core.time.clock import now
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from cadrumo_client.contracts.contracts import ExitReason, RefusalError

@@ -16,7 +16,7 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest, new_operation_id
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_contracts import SessionKind
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentTransition
@@ -27,7 +27,7 @@ from cadrumo.application.user_profile.automation_operations import (
     build_automation_operation_registrations,
 )
 from cadrumo.core.config import override_settings
-from cadrumo.core.operations import profile_operation_subject
+from cadrumo.core.operations import OperationFrontendProjection, profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.tests.audited_process import run_audited_process

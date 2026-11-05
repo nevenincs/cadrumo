@@ -9,10 +9,10 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import SecretStr, ValidationError
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import SessionKind, SessionState
 from cadrumo.application.user_profile.access_projections import PublicAccessSession
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind, AutomationDenialReceipt
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.period import Period
 from cadrumo_client.commands.access_management_payloads import (
     ConfigProfileAutomationChangeResult,

@@ -10,7 +10,7 @@ from pydantic import ValidationError
 
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.operations import (
     USER_PROFILE_OPERATION_DEFINITIONS,
     build_user_profile_operation_registrations,
@@ -20,7 +20,7 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfilePlantillaMediaOperationRequest,
     ProfilePlantillaMediaSet,
 )
-from cadrumo.core.operations import profile_operation_subject
+from cadrumo.core.operations import OperationFrontendProjection, profile_operation_subject
 from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 

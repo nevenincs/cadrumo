@@ -7,8 +7,8 @@ from uuid import UUID
 
 import typer
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.commands.custody_payloads import ConfigActivityResult
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.output import activate_subcommand_output_language

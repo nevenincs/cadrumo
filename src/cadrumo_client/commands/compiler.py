@@ -11,7 +11,7 @@ from __future__ import annotations
 import inspect
 from collections.abc import Callable, Mapping
 from enum import Enum
-from functools import cache
+from functools import cache, partial
 from types import GenericAlias
 from typing import Any, Final, cast, override
 
@@ -471,8 +471,8 @@ def _lazy_children(
                 if child.handler is not None
                 else frozenset(),
             ),
-            help=tr(child.help_key.value),
-            short_help=None if child.short_help_key is None else tr(child.short_help_key.value),
+            help=partial(tr, child.help_key.value),
+            short_help=None if child.short_help_key is None else partial(tr, child.short_help_key.value),
             hidden=child.invocation.hidden,
         )
         for child in children

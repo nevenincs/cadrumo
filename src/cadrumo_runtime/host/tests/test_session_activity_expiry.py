@@ -11,7 +11,7 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.contracts.session_events import ConnectionEvent, SessionEvent, SignInChanged

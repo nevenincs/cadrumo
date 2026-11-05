@@ -17,14 +17,13 @@ from cadrumo.application.operations.composition import OperationComposedServices
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.persistence.leases import OperationOwnerLease
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory
 from cadrumo.application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.core.config import override_settings
-from cadrumo.core.operations import OperationLifecycle, OperationTerminalCondition
+from cadrumo.core.operations import OperationFrontendProjection, OperationLifecycle, OperationTerminalCondition
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.operation_composition import compose_operation_dependencies

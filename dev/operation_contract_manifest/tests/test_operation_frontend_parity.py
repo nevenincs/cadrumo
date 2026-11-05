@@ -52,7 +52,6 @@ from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.operation_definition import OperationDefinition
 from cadrumo.application.operations.person_acts import operation_is_persons_act
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionContractV1,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
@@ -63,7 +62,7 @@ from cadrumo.application.user_profile.operation_access_policy import evaluate_op
 from cadrumo.core.capabilities import ServiceCapability
 from cadrumo.core.config_support import LLMProvider
 from cadrumo.core.errors.hierarchy import CadrumoError
-from cadrumo.core.operations import profile_operation_subject
+from cadrumo.core.operations import OperationFrontendProjection, profile_operation_subject
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.tests.registered_executor_case_support import (

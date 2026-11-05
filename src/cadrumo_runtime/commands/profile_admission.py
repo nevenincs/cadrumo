@@ -10,13 +10,13 @@ from uuid import UUID
 import typer
 
 from cadrumo.application.cli_exception_preconditions import CliExceptionPrecondition, cli_exception_no_recovery_verdict
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.login_session import resolve_login_target
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import clear_output_language_cache, tr
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.output_rendering import OutputFormat
 from cadrumo_client.commands.errors import CliRefusedBoundaryError, attach_cli_policy_verdict
 from cadrumo_client.commands.profile_authentication import ProfileAuthenticationMethod

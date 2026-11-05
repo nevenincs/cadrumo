@@ -21,9 +21,9 @@ from cadrumo.adapters.persistence.storage.custody.automation_native_identity imp
 from cadrumo.adapters.persistence.storage.custody.automation_profile import current_automation_profile_binding
 from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage
 from cadrumo.core.config import override_settings
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.transport.automation_decision import run_automation_decision
 from cadrumo_client.transport.automation_inventory import read_automation_inventory

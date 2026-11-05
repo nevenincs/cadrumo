@@ -19,7 +19,6 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     upsert_test_profile_facts,
 )
 from cadrumo.application.modelo.profile_readiness_gate import modelo_work_profile_baseline_missing_paths
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
@@ -30,6 +29,7 @@ from cadrumo.application.user_profile.view_operation import (
     ProfileViewStatusItem,
 )
 from cadrumo.application.workflow.profile_health import ProfileHealthStatus, assess_profile_record_health
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo_client.transport.frontend_client import FrontendClient

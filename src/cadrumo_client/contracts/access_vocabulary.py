@@ -15,11 +15,11 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from cadrumo.application.operations.models import OperationDefinitionId
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operations.schema_identity import OperationPublicSchemaId
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.period import Period
 
 

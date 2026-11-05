@@ -14,9 +14,9 @@ from textual.await_complete import AwaitComplete
 from textual.pilot import Pilot
 from textual.widgets import Input, Select
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.login_interaction import ProfileLoginChoice
 from cadrumo.core.async_cleanup import close_async_resources
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo.entrypoints.tui.tests.settling import SETTLE_TIMEOUT_SECONDS, settle_until
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus

@@ -67,8 +67,8 @@ def _authority_with_revision(
     return dataclasses.replace(
         authority,
         modelos=modelos,
-        _modelos_by_id={modelo.id: modelo for modelo in modelos},
-        _snapshots={},
+        modelos_by_id={modelo.id: modelo for modelo in modelos},
+        snapshots={},
     )
 
 

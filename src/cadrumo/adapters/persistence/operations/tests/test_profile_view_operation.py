@@ -17,7 +17,7 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.custody_ports import profile_custody_secure_object_repository
@@ -47,7 +47,7 @@ from cadrumo.application.user_profile.view_operation import (
 from cadrumo.application.user_profile.view_reader import read_profile_view_page
 from cadrumo.application.wizard.catalogue import build_setup_flow
 from cadrumo.application.workflow.profile_health import ProfileHealthStatus, assess_profile_record_health
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
+from cadrumo.core.operations import OperationEffect, OperationFrontendProjection, OperationTerminalCondition
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo_client.contracts.access_refusals import AccessDenialCode

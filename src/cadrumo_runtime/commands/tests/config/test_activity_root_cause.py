@@ -10,9 +10,9 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.login_session_port import profile_login_session_port
 from cadrumo.core.bucket_pointer import BucketPointer
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.commands import profile_selection
 from cadrumo_client.contracts.profile_access import ProfileStatus

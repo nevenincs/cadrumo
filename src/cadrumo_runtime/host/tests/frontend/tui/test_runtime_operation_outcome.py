@@ -80,7 +80,6 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.application.operations.operation_definition import OperationDefinition
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionContractV1,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
@@ -90,6 +89,7 @@ from cadrumo.core.errors.error_codes import get_registered_error_code, resolve_e
 from cadrumo.core.errors.hierarchy import RecordedRegisteredError
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,
