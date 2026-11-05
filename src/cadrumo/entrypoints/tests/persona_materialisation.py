@@ -19,7 +19,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
-from collections.abc import Generator, Mapping
+from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, time, timedelta
@@ -390,7 +390,10 @@ def _public_result(world: PersonaWorld, terminal: OperationPublicProjectionV1) -
             model,
         )
     )
-    return resolved.projection if isinstance(resolved, OperationResultProjectionSuccessV1) else None
+    if not isinstance(resolved, OperationResultProjectionSuccessV1):
+        return None
+    projection = resolved.projection
+    return projection if isinstance(projection, BaseModel) else None
 
 
 def load_profile_record(world: PersonaWorld) -> UserProfileRecord:
@@ -454,7 +457,7 @@ def _carries_iva_amount(row: LedgerRow) -> bool:
     return row.recargo_amount is None
 
 
-def _statement(rows: list[LedgerRow], envelope: YearEnvelope) -> str:
+def _statement(rows: Sequence[LedgerRow], envelope: YearEnvelope) -> str:
     """Bank movements in the statement columns ``app ledger import --file`` reads."""
     lines = [_STATEMENT_HEADER]
     balance = Decimal("0.00")

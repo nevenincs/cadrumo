@@ -22,7 +22,7 @@ from datetime import date
 from decimal import Decimal
 from functools import cache
 from pathlib import Path
-from typing import Literal, cast
+from typing import Literal, cast, override
 
 from ..core.decimal.grammar import try_parse_canonical_decimal
 from .inventory import REPO_ROOT
@@ -103,6 +103,7 @@ class YearToken:
             raise PersonaCatalogueError(f"year token {self} resolves outside the supported envelope")
         return year
 
+    @override
     def __str__(self) -> str:
         return self.anchor if self.offset == 0 else f"{self.anchor}{self.offset:+d}"
 
@@ -139,8 +140,8 @@ class Identity:
 
     def field(self, name: IdentityField) -> str:
         """Return one field of the identity, refusing a field it does not carry."""
-        found: str | None = getattr(self, name)
-        if found is None:
+        found = getattr(self, name)
+        if not isinstance(found, str):
             raise PersonaCatalogueError(f"identity {self.role} carries no {name}")
         return found
 

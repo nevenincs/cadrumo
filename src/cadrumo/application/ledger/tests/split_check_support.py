@@ -57,4 +57,5 @@ def recorded_split_answer(parent_amount: str, parts: Sequence[Mapping[str, str |
     """What the check answered for unsaved ``parts`` of an active parent movement of ``parent_amount``."""
     asked = tuple(LedgerSplitCheckPart(amount=part["amount"], description=str(part["description"])) for part in parts)
     answer = check_split(SPLIT_CHECK_PROFILE, split_parent(parent_amount), asked)
-    return answer.model_dump(mode="json", exclude={"profile_id"})
+    dumped: dict[str, object] = dict(answer.model_dump(mode="json", exclude={"profile_id"}))
+    return dumped

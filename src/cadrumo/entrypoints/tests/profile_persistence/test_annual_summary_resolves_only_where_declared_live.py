@@ -164,4 +164,6 @@ def test_a_revision_declaring_the_summary_binding_still_refuses_an_iva_filer_wit
     with pytest.raises(ModeloProfileReadinessError) as refusal:
         _calculate("390", secure_objects)
 
-    assert "ley-37-1992:art-122" in str(refusal.value.context["profile_requirements"])
+    context = refusal.value.context
+    assert context is not None
+    assert "ley-37-1992:art-122" in str(context["profile_requirements"])
