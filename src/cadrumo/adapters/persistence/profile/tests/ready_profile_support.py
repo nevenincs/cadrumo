@@ -1,8 +1,7 @@
 """A complete natural-person profile seeded for work-unit suites, stated by the autonomo-fontanero persona.
 
 The identity, activity and tax-axis facts are the persona's own answers, read
-through the core persona reader and placed on the profile paths the wizard
-questions write to.
+through the core persona reader and stored under the profile paths the production setup flow assigns.
 """
 
 from __future__ import annotations
@@ -10,6 +9,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.application.wizard.catalogue import build_setup_flow
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
@@ -20,32 +20,37 @@ from cadrumo.tests.personas import IdentityRef, Persona, YearEnvelope, read_pers
 
 _PERSONA_ID = "autonomo-fontanero"
 
-_ANSWER_PATHS: tuple[tuple[str, str], ...] = (
-    ("tax-id", "identity.tax_id"),
-    ("name", "identity.name"),
-    ("surnames", "identity.surnames"),
-    ("tax-residence-ccaa", "tax_residence.ccaa"),
-    ("tax-residence-jurisdiction-scope", "tax_residence.jurisdiction_scope"),
-    ("iva-regime", "iva.regime"),
-    ("iva-m303-regime-composition", "iva.m303_regime_composition"),
-    ("iva-redeme-enrolled", "iva.redeme_enrolled"),
-    ("iva-cash-accounting-regime-enrolled", "iva.cash_accounting_regime_enrolled"),
-    ("iva-voluntary-sii-enrolled", "iva.voluntary_sii_enrolled"),
-    (
-        "iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
-        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
-    ),
-    ("entity-type", "taxpayer_type.entity_type"),
-    ("irpf-income-categories", "taxpayer_type.irpf_income_categories"),
-    ("irpf-estimation-regime", "irpf.estimation_regime"),
+_ANSWER_IDS: tuple[str, ...] = (
+    "tax-id",
+    "name",
+    "surnames",
+    "tax-residence-ccaa",
+    "tax-residence-jurisdiction-scope",
+    "iva-regime",
+    "iva-m303-regime-composition",
+    "iva-redeme-enrolled",
+    "iva-cash-accounting-regime-enrolled",
+    "iva-voluntary-sii-enrolled",
+    "iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
+    "entity-type",
+    "irpf-income-categories",
+    "irpf-estimation-regime",
 )
-"""Persona wizard answer to the profile path it is stored under."""
+"""The persona answers a ready profile carries; the setup flow owns the profile path each is stored under."""
 
 
-def _persona() -> Persona:
+def _persona_and_paths() -> tuple[Persona, dict[str, str]]:
     with bundled_indexed_authority().operation() as operation:
         support = operation.supported_filing_years()
-        return read_persona(_PERSONA_ID, envelope=YearEnvelope(floor=support.floor, horizon=support.horizon))
+        persona = read_persona(_PERSONA_ID, envelope=YearEnvelope(floor=support.floor, horizon=support.horizon))
+        flow = build_setup_flow(operation)
+    paths = {
+        question.id: question.profile_key
+        for section in flow.sections
+        for question in section.questions
+        if question.profile_key is not None
+    }
+    return persona, paths
 
 
 def _stated(persona: Persona, answer_id: str) -> UserProfileFactValue:
@@ -60,9 +65,9 @@ def _stated(persona: Persona, answer_id: str) -> UserProfileFactValue:
 
 
 def _ready_profile_facts() -> tuple[UserProfileFact, ...]:
-    persona = _persona()
+    persona, paths = _persona_and_paths()
     return (
-        *(UserProfileFact(path=path, value=_stated(persona, answer_id)) for answer_id, path in _ANSWER_PATHS),
+        *(UserProfileFact(path=paths[answer_id], value=_stated(persona, answer_id)) for answer_id in _ANSWER_IDS),
         UserProfileFact(path="activities.description", value=dict(persona.activities[0].values)["description"]),
         UserProfileFact(path="provenance.source", value="manual_cli"),
         # Modelo 111 refuses a defaulted colegio-concertado declaration; the persona
