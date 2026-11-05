@@ -26,7 +26,7 @@ from ..type_guards import is_object_mapping
 if TYPE_CHECKING:
     import logging
 
-    from ._lazy_catalogue import LazyLocaleCatalogue
+    from .lazy_catalogue import LazyLocaleCatalogue
 
 # Importing this module must stay cheap: every entrypoint reaches it before it
 # has parsed a command. The catalogue parser, the python-i18n fallback, the
@@ -107,7 +107,7 @@ class MissingTranslationError(CoreError):
 # Application-layer hook: set by cadrumo.application at startup to allow the i18n
 # layer to read the active-profile output language without importing application
 # modules directly. Remains None until explicitly registered.
-_profile_language_resolver: Callable[[], str | None] | None = None
+profile_language_resolver: Callable[[], str | None] | None = None
 _PROFILE_LANGUAGE_PRECEDENCE: ContextVar[bool] = ContextVar("cadrumo_profile_language_precedence", default=False)
 
 
@@ -132,8 +132,8 @@ def register_profile_language_resolver(fn: Callable[[], str | None]) -> None:
     read profile-level language preferences without importing application
     modules directly.
     """
-    global _profile_language_resolver
-    _profile_language_resolver = fn
+    global profile_language_resolver
+    profile_language_resolver = fn
 
 
 def _logger() -> logging.Logger:
@@ -312,10 +312,10 @@ def _cached_output_language(_cache_key: tuple[object, ...]) -> str:
 def _resolve_output_language() -> str:
     """Resolve the language from settings and the active profile, uncached."""
     if _PROFILE_LANGUAGE_PRECEDENCE.get():
-        profile_language = _active_profile_output_language()
+        profile_language = active_profile_output_language()
         if profile_language is not None:
             return profile_language
-    if _profile_language_resolver is None and _active_settings_override() is None:
+    if profile_language_resolver is None and _active_settings_override() is None:
         return _resolve_output_language_before_profile_composition()
     from ..config import load_settings
     from ..config_state_root import FormerProductStateError
@@ -334,7 +334,7 @@ def _resolve_output_language() -> str:
         explicit = normalise_supported_language(settings.cadrumo_output_language)
         if explicit is not None:
             return explicit
-    profile_language = _active_profile_output_language()
+    profile_language = active_profile_output_language()
     if profile_language is not None:
         return profile_language
     return normalise_supported_language(settings.cadrumo_output_language) or DEFAULT_OUTPUT_LANGUAGE
@@ -386,7 +386,7 @@ def _resolve_output_language_before_profile_composition() -> str:
     return normalise_supported_language(_environment_setting(OUTPUT_LANGUAGE_ENV_VAR)) or DEFAULT_OUTPUT_LANGUAGE
 
 
-def _active_profile_output_language() -> str | None:
+def active_profile_output_language() -> str | None:
     """Return active profile language without mutating workflow state.
 
     Delegates to the application-registered resolver if one has been
@@ -394,7 +394,7 @@ def _active_profile_output_language() -> str | None:
     gracefully to ``None`` (settings-level language) when no resolver is
     registered or the resolver raises.
     """
-    resolver = _profile_language_resolver
+    resolver = profile_language_resolver
     if resolver is None:
         return None
     try:
@@ -433,7 +433,7 @@ def tr(translation_key: str, /, **kwargs: object) -> str:
         kwargs["locale"] = output_language()
     locale = normalise_supported_language(kwargs["locale"]) or "en"
     default = kwargs.pop("default", None)
-    looked_up = _lookup_translation(locale, translation_key, default=default)
+    looked_up = resolve_translation(locale, translation_key, default=default)
     interpolation = {key: value for key, value in kwargs.items() if key not in {"locale", "default"}}
     if interpolation:
         interpolated, format_succeeded = _interpolate_with_status(translation_key, looked_up, interpolation)
@@ -581,7 +581,7 @@ def override_locales_root(root: Path) -> Generator[None]:
     """Resolve catalogues from ``root`` instead of the packaged resources.
 
     The renderer's miss semantics — an absent key and a key-echo value are
-    both misses (:func:`_lookup_translation`) — can only be exercised
+    both misses (:func:`resolve_translation`) — can only be exercised
     against a catalogue that carries the defect, and the shipped
     catalogues are gated echo-free. This override is the sanctioned seam
     for pointing resolution at a fixture catalogue, mirroring
@@ -596,7 +596,7 @@ def override_locales_root(root: Path) -> Generator[None]:
 
 
 def locale_map(locale: str) -> Mapping[str, str | None]:
-    from ._lazy_catalogue import LazyLocaleCatalogue, load_yaml_handle
+    from .lazy_catalogue import LazyLocaleCatalogue, load_yaml_handle
 
     override = _I18N_LOCALES_ROOT.get()
     if override is not None:
@@ -612,7 +612,7 @@ def locale_map(locale: str) -> Mapping[str, str | None]:
 
 @cache
 def _packaged_locale_map(locale: str) -> LazyLocaleCatalogue:
-    from ._lazy_catalogue import LazyLocaleCatalogue
+    from .lazy_catalogue import LazyLocaleCatalogue
 
     resource = importlib.resources.files(PRODUCT_IDENTITY.python_package).joinpath("locales")
     locales_root = Path(str(resource))
@@ -661,7 +661,7 @@ def lookup_translation_entry(translation_key: str, /, *, locale: str) -> tuple[b
     return True, rendered
 
 
-def _lookup_translation(locale: str, translation_key: str, *, default: object | None = None) -> str:
+def resolve_translation(locale: str, translation_key: str, *, default: object | None = None) -> str:
     from yaml import YAMLError
 
     rendered: str | None

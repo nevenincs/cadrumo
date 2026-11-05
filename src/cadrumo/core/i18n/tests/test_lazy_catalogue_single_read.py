@@ -7,8 +7,8 @@ from typing import IO
 
 import pytest
 
-from .. import _lazy_catalogue
-from .._lazy_catalogue import LazyLocaleCatalogue
+from .. import lazy_catalogue
+from ..lazy_catalogue import LazyLocaleCatalogue
 
 pytestmark = [pytest.mark.hex_core]
 
@@ -27,8 +27,8 @@ def _catalogue_with_parse_log(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -
     shard.parent.mkdir(parents=True)
     shard.write_text(_SHARD_TEXT, encoding="utf-8")
     parses: list[str] = []
-    real_scan = _lazy_catalogue._scan_shard_for_key
-    real_load = _lazy_catalogue.load_yaml_handle
+    real_scan = lazy_catalogue.scan_shard_for_key
+    real_load = lazy_catalogue.load_yaml_handle
 
     def counting_scan(handle: IO[str], key: str) -> str | None:
         parses.append("scan")
@@ -38,8 +38,8 @@ def _catalogue_with_parse_log(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -
         parses.append("load")
         return real_load(handle)
 
-    monkeypatch.setattr(_lazy_catalogue, "_scan_shard_for_key", counting_scan)
-    monkeypatch.setattr(_lazy_catalogue, "load_yaml_handle", counting_load)
+    monkeypatch.setattr(lazy_catalogue, "scan_shard_for_key", counting_scan)
+    monkeypatch.setattr(lazy_catalogue, "load_yaml_handle", counting_load)
     return LazyLocaleCatalogue("es", shard_dir=tmp_path / "es"), parses
 
 
