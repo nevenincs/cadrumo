@@ -259,6 +259,12 @@ withholding as Modelo 115 evidence, with the row's transaction as the payment
 event. The reader checks the two Catastro control letters of the cadastral
 reference.
 
+Every other received ledger row that carries a retención pays a professional's
+fees, since the personas have no employees: in the `HISTORY` replay its
+withholding is captured as Modelo 111 evidence of the payment's quarter, the
+professional being a resident individual under the IRPF, with the row's
+transaction as the payment event.
+
 ### Declarative blocks without an operation
 
 `[[rental_properties]]` and `[[officers]]` record scenario facts that
@@ -317,7 +323,7 @@ for IRPF.
 | `path` | repository path of an existing specimen; files are referenced, never copied |
 | `generator` | instead of `path`: `facturae` renders the document from its single `attach_to` row and the identity catalogue (`cadrumo.tests.persona_invoices`), so its number, date, parties, base, rate, cuota and retención are the row's; the row's `document` column names it |
 | `media_type` | MIME type |
-| `attach_to` | ledger refs |
+| `attach_to` | ledger refs; the replay attaches the document to each as its purchase-invoice evidence, so only received-invoice rows are named, and an issued-invoice specimen names none (`[]`) |
 | `relation` | `specimen`: the document exercises the evidence path but its printed facts are not the row's facts and must not be confirmed into it; `source`: the document is the row's source and its facts match |
 
 A persona without documents writes `documents = []`.
@@ -331,7 +337,11 @@ expectation defect; it is resolved by re-deriving, not by copying output.
 
 `[[obligations]]`: `modelo`, `periods` (`1T`..`4T`, `1P`..`3P`, `0A`), `year`
 (token), `applicable` (bool, or `"unknown"` when the scenario cannot decide),
-`reason`, `legal_ref`, `grounding`.
+`reason`, `legal_ref`, `grounding`, and optional `calendar_advice` for an owed
+modelo whose window the calendar cannot show: `applicable_window_missing` (the
+provision that fixes the window, such as the annual Orden, is not yet published)
+or `applicability_undetermined`. The test then asserts that the calendar advises
+the modelo with that reason and shows no window row for it.
 
 `[[deadlines]]`: `modelo`, `period`, `year`, `statutory_end` (date), optional
 `note`. `statutory_end` is the last day the provision gives, before any shift.
@@ -345,6 +355,13 @@ whose casilla is not re-derived here), optional `parameters` (statutory rates
 and caps the derivation used, so a reader can detect a year whose parameter
 differs), `derivation`, `legal_ref`, `grounding`, and `reason` when grounding
 is `unverified`.
+
+A value may state `refusal`, the error code (`ERROR_…` or `REFUSED_…`) the
+application settles the period's calculation with, and then needs a `reason`
+saying why: a refusal by design, or an application defect named for its fix.
+The test asserts that refusal instead of the casillas, which keep recording
+what the law gives, so the expectation fails once the application calculates
+the period and its casillas can be asserted again.
 
 `legal_ref` entries are legal-source keys of the registry legal catalogue
 (`ley-35-2006:art-58`, `rd-1065-2007:art-33.2.i`); each must exist there.
@@ -368,7 +385,7 @@ result are not asserted anywhere: they need inputs the scenarios do not fix.
 | `src/cadrumo/application/modelo/tests/profile_fixture_values.py` `MODELO_READY_PROFILE_FACTS` | `autonomo-fontanero` profile |
 | `src/cadrumo/domain/user_profile/tests/general_regime_facts.py` `GENERAL_REGIME_NATURAL_PERSON_FACTS` | `autonomo-fontanero` profile |
 | same module, `RENTA_UNMARRIED_TAXPAYER_FACTS` | `traductora-profesional` or `minorista-recargo` (unmarried natural persons) |
-| `native/desktop/frontend/src/dev/fixtures/userProfile.json`, `household.json` | `asalariada-familia` |
+| `userProfile.json` and `household.json`, generated into `build/<preset>/fixtures/window/desktop-profile/` and `build/<preset>/fixtures/window/desktop-household/` (`dev/fixture_projections/location.py`) | `asalariada-familia` |
 | `native/desktop/frontend/scripts/modelo_fixtures.py` seeded profiles and `RENTA_FILERS` | `autonomo-fontanero` (303/130), `asalariada-familia` and `arrendador-jubilado` (Renta filers) |
 | `native/desktop/frontend/src/dev/fixtures/ledger.ts` studio ledger | `autonomo-fontanero` ledger |
 | `src/cadrumo/entrypoints/tests/profile_persistence/renta_persona_support.py` Renta persona seeder | `asalariada-familia`, `arrendador-jubilado` |

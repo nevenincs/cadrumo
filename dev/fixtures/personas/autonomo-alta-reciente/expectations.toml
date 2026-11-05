@@ -36,9 +36,10 @@ modelo = "100"
 periods = ["0A"]
 year = "horizon"
 applicable = true
-reason = "Titular de rendimientos de actividades económicas: obligada a declarar con independencia de su cuantía."
-legal_ref = ["ley-35-2006:art-96"]
+reason = "Titular de rendimientos de actividades económicas: obligada a declarar con independencia de su cuantía. El plazo de presentación lo fija la orden anual del modelo, que para este ejercicio aún no se ha publicado, así que el calendario la advierte sin ventana."
+legal_ref = ["ley-35-2006:art-96", "ley-35-2006:art-97"]
 grounding = "verified"
+calendar_advice = "applicable_window_missing"
 
 [[obligations]]
 modelo = "347"

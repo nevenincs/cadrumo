@@ -128,6 +128,8 @@ Resultado = 428.40 - 59.85 = 368.55.
 """
 legal_ref = ["ley-37-1992:art-69", "ley-37-1992:art-84", "ley-37-1992:art-90", "ley-37-1992:art-92"]
 grounding = "cited"
+reason = "The calculation refuses because the cloud-subscription invoices, received under inversión del sujeto pasivo, are withheld for want of a deduction authority: the application derives a deduction's evidence only for the invoice authority and nothing produces the intra-EU self-assessment kind, although LIVA art. 97.Uno.4.º makes the supplier's invoice the justifying document of such a deduction. An application defect."
+refusal = "ERROR_FINANCIAL_AGGREGATION_VALIDATION"
 
 [[values]]
 modelo = "303"
@@ -138,6 +140,8 @@ concepts = { resultado_regimen_general = "452.55" }
 derivation = "07 = DEV-ES-2 2200.00; 10/11 = DEV-NUBE-04..06; 28/29 = DEV-TEL-2; 59 = DEV-FR-1 2400.00 + DEV-DE-2 7500.00. Resultado = 512.40 - 59.85 = 452.55."
 legal_ref = ["ley-37-1992:art-69", "ley-37-1992:art-84", "ley-37-1992:art-90", "ley-37-1992:art-92"]
 grounding = "cited"
+reason = "The calculation refuses because the cloud-subscription invoices, received under inversión del sujeto pasivo, are withheld for want of a deduction authority: the application derives a deduction's evidence only for the invoice authority and nothing produces the intra-EU self-assessment kind, although LIVA art. 97.Uno.4.º makes the supplier's invoice the justifying document of such a deduction. An application defect."
+refusal = "ERROR_FINANCIAL_AGGREGATION_VALIDATION"
 
 [[values]]
 modelo = "303"
@@ -148,6 +152,8 @@ concepts = { resultado_regimen_general = "242.55" }
 derivation = "07 = DEV-ES-3 1200.00; 10/11 = DEV-NUBE-07..09; 28/29 = DEV-TEL-3; 59 = DEV-DE-3 6000.00. Resultado = 302.40 - 59.85 = 242.55."
 legal_ref = ["ley-37-1992:art-69", "ley-37-1992:art-84", "ley-37-1992:art-90", "ley-37-1992:art-92"]
 grounding = "cited"
+reason = "The calculation refuses because the cloud-subscription invoices, received under inversión del sujeto pasivo, are withheld for want of a deduction authority: the application derives a deduction's evidence only for the invoice authority and nothing produces the intra-EU self-assessment kind, although LIVA art. 97.Uno.4.º makes the supplier's invoice the justifying document of such a deduction. An application defect."
+refusal = "ERROR_FINANCIAL_AGGREGATION_VALIDATION"
 
 [[values]]
 modelo = "303"
@@ -158,6 +164,8 @@ concepts = { resultado_regimen_general = "211.05" }
 derivation = "07 = DEV-ES-4 1500.00; 10/11 = DEV-NUBE-10..12; 28 = DEV-TEL-4 45.00 + DEV-CUR-1 450.00 = 495.00, 29 = 9.45 + 94.50 = 103.95; 59 = DEV-FR-2 3100.00 + DEV-DE-4 8000.00. Resultado = 365.40 - 154.35 = 211.05."
 legal_ref = ["ley-37-1992:art-69", "ley-37-1992:art-84", "ley-37-1992:art-90", "ley-37-1992:art-92"]
 grounding = "cited"
+reason = "The calculation refuses because the cloud-subscription invoices, received under inversión del sujeto pasivo, are withheld for want of a deduction authority: the application derives a deduction's evidence only for the invoice authority and nothing produces the intra-EU self-assessment kind, although LIVA art. 97.Uno.4.º makes the supplier's invoice the justifying document of such a deduction. An application defect."
+refusal = "ERROR_FINANCIAL_AGGREGATION_VALIDATION"
 
 [[values]]
 modelo = "349"
@@ -291,6 +299,8 @@ parameters = { provision_rate = "0.05", provision_cap = "2000.00", pago_rate = "
 derivation = "01 = 9300.00 + 2200 + 2400 + 7500; gastos = 2334.00; provisión = 953.30; 06 = 270.00 + 330.00 cumulative; 07 = 3622.54 - 1275.27 - 600.00."
 legal_ref = ["rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"
+reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses for that missing input; these figures are what the filed earlier quarters would carry forward."
+refusal = "ERROR_MODELO_WORK_INPUT_REQUIRED"
 
 [[values]]
 modelo = "130"
@@ -301,6 +311,8 @@ parameters = { provision_rate = "0.05", provision_cap = "2000.00", pago_rate = "
 derivation = "01 = 21400.00 + 1200 + 6000; gastos = 3501.00; provisión = 1254.95; 05 = 1275.27 + 1747.27; 06 = 780.00 cumulative."
 legal_ref = ["rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"
+reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses for that missing input; these figures are what the filed earlier quarters would carry forward."
+refusal = "ERROR_MODELO_WORK_INPUT_REQUIRED"
 
 [[values]]
 modelo = "130"
@@ -311,6 +323,8 @@ parameters = { provision_rate = "0.05", provision_cap = "2000.00", pago_rate = "
 derivation = "01 = 28600.00 + 3100 + 1500 + 8000; gastos = 5118.00 (incl. curso 450.00); provisión = 5 % of 36082.00 = 1804.10 (under the cap); 05 = 3022.54 + 966.27; 06 = 1005.00."
 legal_ref = ["rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"
+reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses for that missing input; these figures are what the filed earlier quarters would carry forward."
+refusal = "ERROR_MODELO_WORK_INPUT_REQUIRED"
 
 [[values]]
 modelo = "100"
@@ -324,3 +338,5 @@ Rendimiento neto = 41200.00 - 5118.00 - 1804.10 = 34277.90.
 """
 legal_ref = ["ley-35-2006:art-28", "ley-35-2006:art-57", "rd-439-2007:art-30"]
 grounding = "verified"
+reason = "The calculation refuses for casilla 0168, the estimación directa normal indicator, which the application asks as a calculation input instead of deriving it from the stated estimation regime: an application defect to fix by deriving the indicator from the profile."
+refusal = "ERROR_MODELO_WORK_INPUT_REQUIRED"

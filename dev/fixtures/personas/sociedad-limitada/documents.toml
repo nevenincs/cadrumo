@@ -5,6 +5,38 @@ persona = "sociedad-limitada"
 id = "factura-emitida-serie"
 path = "src/cadrumo/application/ledger/tests/_evidence_corpus/facturae_32_series_and_parties_invoice.xml"
 media_type = "application/xml"
-attach_to = ["SOC-VTA-1"]
+attach_to = []
 relation = "specimen"
-note = "A synthetic Facturae 3.2 invoice with an invoice series and full party blocks, exercising issued-invoice evidence for a company. Its parties and amounts are not SOC-VTA-1's facts."
+note = "A synthetic Facturae 3.2 invoice with an invoice series and full party blocks, exercising issued-invoice evidence for a company. Its parties and amounts are no row's facts, and it is attached to none: the replay attaches a document as purchase-invoice evidence, which an issued invoice is not."
+
+[[documents]]
+id = "factura-soc-alq-1"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["SOC-ALQ-1"]
+relation = "source"
+note = "The supplier's invoice PV-001 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-soc-alq-2"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["SOC-ALQ-2"]
+relation = "source"
+note = "The supplier's invoice PV-002 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-soc-alq-3"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["SOC-ALQ-3"]
+relation = "source"
+note = "The supplier's invoice PV-003 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-soc-alq-4"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["SOC-ALQ-4"]
+relation = "source"
+note = "The supplier's invoice PV-004 this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."

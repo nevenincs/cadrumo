@@ -55,7 +55,6 @@ as_of = { year = "horizon", month = 4, day = 1 }
 "irpf-estimation-regime" = "directa_simplificada"
 "irpf-codigo-comercio-accounting" = false
 "does-intracomunitario" = false
-"third-party-transactions-above-347-threshold" = false
 
 [[activities]]
 description = "Servicios de limpieza de interiores de oficinas"

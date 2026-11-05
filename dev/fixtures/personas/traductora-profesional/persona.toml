@@ -55,6 +55,9 @@ as_of = { year = "horizon", month = 2, day = 16 }
 
 [fields]
 "irpf.activity_kind" = "profesional"
+# She withholds on her tax adviser's fees, so she files Modelo 111, whose header
+# asks whether the withholder is a colegio concertado; a translator is not one.
+"withholding.colegio_concertado" = "false"
 
 [[activities]]
 description = "Traducción e interpretación"
@@ -64,3 +67,21 @@ iae_epigraph = "774"
 question = "irpf-activity-income-imputation-criterion"
 value = "devengo"
 year = "horizon-1"
+
+# Her own copy of the previous year's Renta: no negative general base was left
+# pending to offset, so the four-year carry of casilla 1380 starts from zero.
+[[local_observations]]
+modelo = "100"
+year = "horizon-2"
+period = "0A"
+casillas = { "1384" = "0.00", "1387" = "0.00", "1390" = "0.00", "1391" = "0.00" }
+reason = "Bases liquidables generales negativas pendientes en la declaración de la renta del ejercicio anterior"
+
+# At the clock every quarterly IVA return of the fiscal year is past its window,
+# so she has filed each one. Every quarter was to pay, so no compensation was
+# pending before the first quarter.
+[[filed_returns]]
+modelo = "303"
+year = "horizon-1"
+periods = ["1T", "2T", "3T", "4T"]
+iva_compensation_carried_in = "0.00"

@@ -273,6 +273,8 @@ derivation = """
 """
 legal_ref = ["ley-35-2006:art-28", "rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"
+reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses for that missing input; these figures are what the filed earlier quarters would carry forward."
+refusal = "ERROR_MODELO_WORK_INPUT_REQUIRED"
 
 [[values]]
 modelo = "130"
@@ -286,6 +288,8 @@ derivation = """
 """
 legal_ref = ["ley-35-2006:art-28", "rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"
+reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses for that missing input; these figures are what the filed earlier quarters would carry forward."
+refusal = "ERROR_MODELO_WORK_INPUT_REQUIRED"
 
 [[values]]
 modelo = "130"
@@ -299,6 +303,8 @@ derivation = """
 """
 legal_ref = ["ley-35-2006:art-28", "rd-439-2007:art-30", "rd-439-2007:art-110"]
 grounding = "verified"
+reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses for that missing input; these figures are what the filed earlier quarters would carry forward."
+refusal = "ERROR_MODELO_WORK_INPUT_REQUIRED"
 
 [[values]]
 modelo = "347"
@@ -353,3 +359,5 @@ Mínimo personal 5550.00 (under 65). Cuota and resultado are not asserted: they 
 """
 legal_ref = ["ley-35-2006:art-28", "ley-35-2006:art-57", "rd-439-2007:art-30"]
 grounding = "verified"
+reason = "The calculation refuses for casilla 0168, the estimación directa normal indicator, which the application asks as a calculation input instead of deriving it from the stated estimation regime: an application defect to fix by deriving the indicator from the profile."
+refusal = "ERROR_MODELO_WORK_INPUT_REQUIRED"

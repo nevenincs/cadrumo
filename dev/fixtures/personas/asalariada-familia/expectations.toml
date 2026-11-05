@@ -42,6 +42,8 @@ The art. 20 reduction is zero because the net exceeds the top of its band.
 """
 legal_ref = ["ley-35-2006:art-17", "ley-35-2006:art-19", "ley-35-2006:art-20"]
 grounding = "verified"
+reason = "The calculation refuses for casilla 1380, the general negative base pending from four years before, although the persona's own copy of the previous year's Renta is recorded as a local observation that states its pending bases 1384, 1387, 1390 and 1391 at zero: an application defect, the previous-filing binding does not take the recorded observation."
+refusal = "ERROR_MODELO_WORK_INPUT_REQUIRED"
 
 [[values]]
 modelo = "100"

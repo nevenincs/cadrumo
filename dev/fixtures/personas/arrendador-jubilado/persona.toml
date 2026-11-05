@@ -58,3 +58,12 @@ amortization_base = "108000.00"
 amortization_rate = "0.03"
 amortization_base_note = "Construction share of the acquisition value by inheritance, which exceeds the construction share of the valor catastral."
 reduccion_art_23_2 = "tier-50"
+
+# His own copy of the previous year's Renta: no negative general base was left
+# pending to offset, so the four-year carry of casilla 1380 starts from zero.
+[[local_observations]]
+modelo = "100"
+year = "horizon-2"
+period = "0A"
+casillas = { "1384" = "0.00", "1387" = "0.00", "1390" = "0.00", "1391" = "0.00" }
+reason = "Bases liquidables generales negativas pendientes en la declaración de la renta del ejercicio anterior"

@@ -5,6 +5,38 @@ persona = "traductora-profesional"
 id = "factura-retencion"
 path = "src/cadrumo/application/ledger/tests/_evidence_corpus/facturae_32_retencion_suplidos_invoice.xml"
 media_type = "application/xml"
-attach_to = ["TRA-ING-01"]
+attach_to = []
 relation = "specimen"
-note = "A synthetic Facturae 3.2 invoice carrying an IRPF retención, exercising the structured e-invoice evidence path for withheld professional income. Its parties and amounts are not TRA-ING-01's facts."
+note = "A synthetic Facturae 3.2 invoice carrying an IRPF retención, exercising the structured e-invoice evidence path for withheld professional income. Its parties and amounts are no row's facts, and it is attached to none: the replay attaches a document as purchase-invoice evidence, which an issued invoice is not."
+
+[[documents]]
+id = "factura-tra-ase-1"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["TRA-ASE-1"]
+relation = "source"
+note = "The tax adviser's invoice AF-01 this row states, with its IRPF retención, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-tra-ase-2"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["TRA-ASE-2"]
+relation = "source"
+note = "The tax adviser's invoice AF-02 this row states, with its IRPF retención, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-tra-ase-3"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["TRA-ASE-3"]
+relation = "source"
+note = "The tax adviser's invoice AF-03 this row states, with its IRPF retención, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-tra-ase-4"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["TRA-ASE-4"]
+relation = "source"
+note = "The tax adviser's invoice AF-04 this row states, with its IRPF retención, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."

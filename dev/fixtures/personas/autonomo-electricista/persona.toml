@@ -81,3 +81,13 @@ year = "horizon-1"
 [household]
 descendants = []
 ascendants = []
+
+
+# At the clock every quarterly IVA return of the fiscal year is past its window,
+# so he has filed each one. Every quarter was to pay, so no compensation was
+# pending before the first quarter.
+[[filed_returns]]
+modelo = "303"
+year = "horizon-1"
+periods = ["1T", "2T", "3T", "4T"]
+iva_compensation_carried_in = "0.00"
