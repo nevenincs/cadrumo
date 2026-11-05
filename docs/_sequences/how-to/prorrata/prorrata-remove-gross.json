@@ -14,7 +14,8 @@
         "--amount",
         "400.00",
         "--evidence",
-        "operator-evidence:303-1T"
+        "operator-evidence:303-1T",
+        "--replace"
       ],
       "captures": [],
       "envelope": null,

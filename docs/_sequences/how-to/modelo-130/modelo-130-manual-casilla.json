@@ -324,13 +324,13 @@
         "--year",
         "2026",
         "--period",
-        "1T"
+        "2T"
       ],
       "captures": [
         {
           "json_path": "result.work_unit_id",
           "name": "work_unit_id",
-          "value": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
+          "value": "aea64c0c7dea1b79e865a6472819fa461e44f1bed91bf5b062c59d90cccb8735"
         }
       ],
       "envelope": {
@@ -358,22 +358,22 @@
           "filed_calculation_revision_id": null,
           "filing_year": 2026,
           "modelo": "130",
-          "name": "130-2026-1T",
+          "name": "130-2026-2T",
           "name_applied": null,
           "operation": "modelo.work.create",
           "period": {
-            "code": "1T",
+            "code": "2T",
             "filing_year": 2026
           },
           "revision_id": "2019-y-siguientes",
           "short_current_calculation_revision_id": null,
           "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "3d88172f4204",
+          "short_work_unit_id": "9d90cccb8735",
           "state": "borrador",
           "status": "created",
           "status_message": "New declaration created.",
           "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
+          "work_unit_id": "aea64c0c7dea1b79e865a6472819fa461e44f1bed91bf5b062c59d90cccb8735"
         },
         "schema_version": "2",
         "status": "warning"
@@ -393,7 +393,7 @@
         "modelo",
         "work",
         "calculate",
-        "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204",
+        "aea64c0c7dea1b79e865a6472819fa461e44f1bed91bf5b062c59d90cccb8735",
         "--casilla",
         "06=100.00",
         "--binding",
@@ -407,7 +407,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "b151767b200754ce2ab7ebf6e552528884cc9db61a5a2a32c32d2851b2c16d99"
+          "value": "6e948b7f70f78573979fef52ac9a2cb4b0673a53bef32afcb2e6228964b02e01"
         }
       ],
       "envelope": {
@@ -451,7 +451,7 @@
             "modelo-130-retenciones-agrarias": "0",
             "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "b151767b200754ce2ab7ebf6e552528884cc9db61a5a2a32c32d2851b2c16d99",
+          "calculation_revision_id": "6e948b7f70f78573979fef52ac9a2cb4b0673a53bef32afcb2e6228964b02e01",
           "casilla_values": {
             "01": "1000.00",
             "02": "525.00",
@@ -479,12 +479,12 @@
           },
           "created_at": "2026-04-01T09:00:00+00:00",
           "deadline": {
-            "closes_on": "2026-04-20",
+            "closes_on": "2026-07-20",
             "conditional_recargo_preview": null,
             "days_overdue": null,
-            "days_remaining": 19,
+            "days_remaining": 110,
             "holiday_coverage": "national_only",
-            "nominal_closes_on": "2026-04-20"
+            "nominal_closes_on": "2026-07-20"
           },
           "detail_rows": [],
           "filed_at": null,
@@ -528,7 +528,7 @@
           "registry_snapshot_ref": {
             "modelo": "130",
             "modelo_year": 2026,
-            "period": "1T",
+            "period": "2T",
             "revision_id": "2019-y-siguientes"
           },
           "relation_overrides": {},
@@ -601,7 +601,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision b151767b200754ce2ab7ebf6e552528884cc9db61a5a2a32c32d2851b2c16d99 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 6e948b7f70f78573979fef52ac9a2cb4b0673a53bef32afcb2e6228964b02e01 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -645,7 +645,7 @@
           "verified_at": null,
           "verified_by": null,
           "words_language": "en",
-          "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
+          "work_unit_id": "aea64c0c7dea1b79e865a6472819fa461e44f1bed91bf5b062c59d90cccb8735"
         },
         "schema_version": "2",
         "status": "warning"
@@ -665,7 +665,7 @@
         "modelo",
         "work",
         "revision",
-        "b151767b200754ce2ab7ebf6e552528884cc9db61a5a2a32c32d2851b2c16d99"
+        "6e948b7f70f78573979fef52ac9a2cb4b0673a53bef32afcb2e6228964b02e01"
       ],
       "captures": [],
       "envelope": {
@@ -692,7 +692,7 @@
             "modelo-130-retenciones-agrarias": "0",
             "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "b151767b200754ce2ab7ebf6e552528884cc9db61a5a2a32c32d2851b2c16d99",
+          "calculation_revision_id": "6e948b7f70f78573979fef52ac9a2cb4b0673a53bef32afcb2e6228964b02e01",
           "casilla_values": {
             "01": "1000.00",
             "02": "525.00",
@@ -761,7 +761,7 @@
           "registry_snapshot_ref": {
             "modelo": "130",
             "modelo_year": 2026,
-            "period": "1T",
+            "period": "2T",
             "revision_id": "2019-y-siguientes"
           },
           "relation_overrides": {},
@@ -873,7 +873,7 @@
           "updated_at": "2026-04-01T09:00:00+00:00",
           "verified_at": null,
           "verified_by": null,
-          "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
+          "work_unit_id": "aea64c0c7dea1b79e865a6472819fa461e44f1bed91bf5b062c59d90cccb8735"
         },
         "schema_version": "2",
         "status": "warning"

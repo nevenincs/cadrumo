@@ -22,154 +22,13 @@
     {
       "argv": [
         "aeat",
-        "--format",
-        "json",
         "app",
         "ledger",
-        "add",
-        "--date",
-        "2026-02-10",
-        "--amount",
-        "1210.00",
-        "--direction",
-        "INCOMING",
-        "--description",
-        "Cobro factura limpieza de oficinas enero",
-        "--currency",
-        "EUR",
-        "--counterparty",
-        "Asesores Inmobiliarios Chamberí, S.L.",
-        "--classification",
-        "BUSINESS",
-        "--iva-category",
-        "domestic_general",
-        "--taxable-base",
-        "1000.00",
-        "--iva-rate",
-        "0.21",
-        "--iva-amount",
-        "210.00",
-        "--idempotency-key",
-        "ALT-VTA-01"
-      ],
-      "captures": [
-        {
-          "json_path": "result.transaction_id",
-          "name": "alt_vta_01",
-          "value": "fcd9d7ce87ab885ff0fdb3b1f1041c2640b0c4e2927f43b79da5d9d4fcd36990"
-        }
-      ],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": null
-    },
-    {
-      "argv": [
-        "aeat",
-        "--format",
-        "json",
-        "app",
-        "ledger",
-        "add",
-        "--date",
-        "2026-02-11",
-        "--amount",
-        "605.00",
-        "--direction",
-        "OUTGOING",
-        "--description",
-        "Compra de material de oficina",
-        "--currency",
-        "EUR",
-        "--counterparty",
-        "Papelería Central, S.L.",
-        "--classification",
-        "BUSINESS",
-        "--category-id",
-        "material_oficina",
-        "--iva-category",
-        "domestic_general",
-        "--taxable-base",
-        "500.00",
-        "--iva-rate",
-        "0.21",
-        "--iva-amount",
-        "105.00",
-        "--deduction-kind",
-        "domestic_current",
-        "--idempotency-key",
-        "ALT-MAT-01"
-      ],
-      "captures": [
-        {
-          "json_path": "result.transaction_id",
-          "name": "alt_mat_01",
-          "value": "c866d7043d518f43f8d261b5c7d6437f1363d6dc16be0d68184bc64e5b0a9860"
-        }
-      ],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": null
-    },
-    {
-      "argv": [
-        "aeat",
-        "--format",
-        "json",
-        "app",
-        "ledger",
-        "invoice",
-        "add",
-        "--kind",
-        "issued",
-        "--counterparty-name",
-        "Asesores Inmobiliarios Chamberí, S.L.",
-        "--counterparty-nif",
-        "B00000141",
-        "--country-code",
-        "ES",
-        "--invoice-number",
-        "F-0001",
-        "--invoice-date",
-        "2026-02-10",
-        "--currency",
-        "EUR",
-        "--taxable-base",
-        "1000.00",
-        "--iva-rate",
-        "21",
-        "--iva-category",
-        "domestic_general"
-      ],
-      "captures": [
-        {
-          "json_path": "result.invoice_id",
-          "name": "alt_vta_01_invoice",
-          "value": "fb6e7958a359941aa9c093e7950098a3a1be27723c6b8fa18422c78ad089bb73"
-        }
-      ],
-      "envelope": null,
-      "envelope_source": null,
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": null
-    },
-    {
-      "argv": [
-        "aeat",
-        "app",
-        "ledger",
-        "link",
-        "fcd9d7ce87ab885ff0fdb3b1f1041c2640b0c4e2927f43b79da5d9d4fcd36990",
-        "--invoice-id",
-        "fb6e7958a359941aa9c093e7950098a3a1be27723c6b8fa18422c78ad089bb73"
+        "import",
+        "--file",
+        "fixtures/movimientos-2026-1t.csv",
+        "--provider",
+        "csv"
       ],
       "captures": [],
       "envelope": null,
@@ -182,40 +41,20 @@
     {
       "argv": [
         "aeat",
-        "--format",
-        "json",
         "app",
         "ledger",
-        "invoice",
-        "add",
-        "--kind",
-        "received",
-        "--counterparty-name",
-        "Papelería Central, S.L.",
-        "--counterparty-nif",
-        "B00000158",
-        "--country-code",
-        "ES",
-        "--invoice-number",
-        "C-0087",
-        "--invoice-date",
-        "2026-02-11",
-        "--currency",
-        "EUR",
+        "classify",
+        "21853f4f",
+        "--classification",
+        "BUSINESS",
         "--taxable-base",
-        "500.00",
+        "1000",
         "--iva-rate",
-        "21",
-        "--iva-category",
-        "domestic_general"
+        "0.21",
+        "--iva-amount",
+        "210"
       ],
-      "captures": [
-        {
-          "json_path": "result.invoice_id",
-          "name": "alt_mat_01_invoice",
-          "value": "f6888ddbf0e289edbcd4c0b6f0559c75c4a216c35ca50334379da698b18a52fd"
-        }
-      ],
+      "captures": [],
       "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
@@ -228,10 +67,20 @@
         "aeat",
         "app",
         "ledger",
-        "link",
-        "c866d7043d518f43f8d261b5c7d6437f1363d6dc16be0d68184bc64e5b0a9860",
-        "--invoice-id",
-        "f6888ddbf0e289edbcd4c0b6f0559c75c4a216c35ca50334379da698b18a52fd"
+        "classify",
+        "1703f840",
+        "--classification",
+        "BUSINESS",
+        "--category-id",
+        "material_oficina",
+        "--taxable-base",
+        "500",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "105",
+        "--deduction-kind",
+        "domestic_current"
       ],
       "captures": [],
       "envelope": null,
@@ -250,15 +99,27 @@
         "ledger",
         "evidence",
         "add",
-        "fixtures/personas/autonomo-alta-reciente/factura-alt-mat-01.xml",
+        "fixtures/factura-material-oficina.pdf",
+        "--supplier",
+        "Papeleria Central SL",
+        "--invoice-number",
+        "C-2026-0087",
+        "--invoice-date",
+        "2026-02-11",
+        "--taxable-base",
+        "500",
+        "--iva-rate",
+        "21",
+        "--iva-amount",
+        "105",
         "--idempotency-key",
-        "persona-autonomo-alta-reciente-factura-alt-mat-01"
+        "fq-factura"
       ],
       "captures": [
         {
           "json_path": "result.evidence_id",
-          "name": "factura_alt_mat_01_evidence",
-          "value": "0021fb5b1e7a777c"
+          "name": "evidence_id",
+          "value": "02f887c6ff8a69c5"
         }
       ],
       "envelope": null,
@@ -274,9 +135,9 @@
         "app",
         "ledger",
         "attach",
-        "c866d7043d518f43f8d261b5c7d6437f1363d6dc16be0d68184bc64e5b0a9860",
+        "1703f840",
         "--purchase-invoice-evidence-id",
-        "0021fb5b1e7a777c"
+        "02f887c6ff8a69c5"
       ],
       "captures": [],
       "envelope": null,
@@ -477,7 +338,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "e69234a953970db983411c8b12d44f66e6a2da3054335f8db6252d454694b447"
+          "value": "83bee3c53daf9eec09fb5dad532fa05b6617501586501268440eb8d4fdae74a4"
         }
       ],
       "envelope": {
@@ -505,9 +366,9 @@
             "modelo-130-retenciones-agrarias": "0",
             "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "e69234a953970db983411c8b12d44f66e6a2da3054335f8db6252d454694b447",
+          "calculation_revision_id": "83bee3c53daf9eec09fb5dad532fa05b6617501586501268440eb8d4fdae74a4",
           "casilla_values": {
-            "01": "1000.00",
+            "01": "1000",
             "02": "1500.00",
             "03": "-500.00",
             "04": "0.00",
@@ -526,7 +387,7 @@
             "17": "-100.00",
             "18": "0",
             "19": "-100.00",
-            "gastos-deducibles-previos": "1500.00",
+            "gastos-deducibles-previos": "1500",
             "provisiones-gastos-dificil-justificacion": "0.00",
             "rendimiento-neto-reducible-art-32-1": "0",
             "saldo-negativo-fin-periodo": "100.00"
@@ -554,9 +415,9 @@
           "modality": null,
           "modality_reason": null,
           "observations": [
-            {"absent_by_design":false,"casilla_id":"01","formula_id":null,"legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95","ley-35-2006:art-27","ley-35-2006:art-28"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"1000.00"},
-            {"absent_by_design":false,"casilla_id":"02","formula_id":"modelo-130-gastos","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-28","ley-35-2006:art-30","rd-439-2007:art-30"],"op":"add","operand_casilla_refs":["gastos-deducibles-previos","provisiones-gastos-dificil-justificacion"],"operand_refs":["gastos-deducibles-previos","provisiones-gastos-dificil-justificacion"],"operand_values":["1500.00","0.00"],"source_refs":["aeat-modelo-130-instructions"],"value":"1500.00"},
-            {"absent_by_design":false,"casilla_id":"03","formula_id":"modelo-130-rendimiento-neto","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95","ley-35-2006:art-32-2015"],"op":"subtract","operand_casilla_refs":["01","02","rendimiento-neto-reducible-art-32-1"],"operand_refs":["01","02","rendimiento-neto-reducible-art-32-1","irpf.art-32-1-reduction-ceiling","irpf.art-32-1-reduction-rate"],"operand_values":["1000.00","1500.00","0","300000","30"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"-500.00"},
+            {"absent_by_design":false,"casilla_id":"01","formula_id":null,"legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95","ley-35-2006:art-27","ley-35-2006:art-28"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"1000"},
+            {"absent_by_design":false,"casilla_id":"02","formula_id":"modelo-130-gastos","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-28","ley-35-2006:art-30","rd-439-2007:art-30"],"op":"add","operand_casilla_refs":["gastos-deducibles-previos","provisiones-gastos-dificil-justificacion"],"operand_refs":["gastos-deducibles-previos","provisiones-gastos-dificil-justificacion"],"operand_values":["1500","0.00"],"source_refs":["aeat-modelo-130-instructions"],"value":"1500.00"},
+            {"absent_by_design":false,"casilla_id":"03","formula_id":"modelo-130-rendimiento-neto","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95","ley-35-2006:art-32-2015"],"op":"subtract","operand_casilla_refs":["01","02","rendimiento-neto-reducible-art-32-1"],"operand_refs":["01","02","rendimiento-neto-reducible-art-32-1","irpf.art-32-1-reduction-ceiling","irpf.art-32-1-reduction-rate"],"operand_values":["1000","1500.00","0","300000","30"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"-500.00"},
             {"absent_by_design":false,"casilla_id":"04","formula_id":"modelo-130-pago-fraccionado-directa","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":"max","operand_casilla_refs":["03"],"operand_refs":["03","irpf.direct_estimation_fractional_payment_rate"],"operand_values":["-500.00","20"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"05","formula_id":null,"legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"06","formula_id":null,"legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"0"},
@@ -573,8 +434,8 @@
             {"absent_by_design":false,"casilla_id":"17","formula_id":"modelo-130-diferencia","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":"subtract","operand_casilla_refs":["14","15","16"],"operand_refs":["14","15","16"],"operand_values":["-100.00","0.00","0"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"-100.00"},
             {"absent_by_design":false,"casilla_id":"18","formula_id":null,"legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"19","formula_id":"modelo-130-resultado-final","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":"subtract","operand_casilla_refs":["17","18"],"operand_refs":["17","18"],"operand_values":["-100.00","0"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"-100.00"},
-            {"absent_by_design":false,"casilla_id":"gastos-deducibles-previos","formula_id":null,"legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95","ley-35-2006:art-28","ley-35-2006:art-30"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"1500.00"},
-            {"absent_by_design":false,"casilla_id":"provisiones-gastos-dificil-justificacion","formula_id":"modelo-130-provisiones-gastos-dificil-justificacion","legal_refs":["rd-439-2007:art-30","ley-35-2006:art-30","ley-35-2006:da-56","rd-439-2007:art-110"],"op":"if_then_else","operand_casilla_refs":["01","gastos-deducibles-previos"],"operand_refs":["modelo-130-estimacion-directa-modalidad","01","gastos-deducibles-previos","irpf.art-30-2-provision-rate","irpf.art-30-2-provision-annual-cap"],"operand_values":["1","1000.00","1500.00","5","2000"],"source_refs":["aeat-modelo-130-instructions"],"value":"0.00"},
+            {"absent_by_design":false,"casilla_id":"gastos-deducibles-previos","formula_id":null,"legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95","ley-35-2006:art-28","ley-35-2006:art-30"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"1500"},
+            {"absent_by_design":false,"casilla_id":"provisiones-gastos-dificil-justificacion","formula_id":"modelo-130-provisiones-gastos-dificil-justificacion","legal_refs":["rd-439-2007:art-30","ley-35-2006:art-30","ley-35-2006:da-56","rd-439-2007:art-110"],"op":"if_then_else","operand_casilla_refs":["01","gastos-deducibles-previos"],"operand_refs":["modelo-130-estimacion-directa-modalidad","01","gastos-deducibles-previos","irpf.art-30-2-provision-rate","irpf.art-30-2-provision-annual-cap"],"operand_values":["1","1000","1500","5","2000"],"source_refs":["aeat-modelo-130-instructions"],"value":"0.00"},
             {"absent_by_design":false,"casilla_id":"rendimiento-neto-reducible-art-32-1","formula_id":null,"legal_refs":["ley-35-2006:art-32-2015"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-modelo-130-instructions"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"saldo-negativo-fin-periodo","formula_id":"modelo-130-saldo-negativo-fin-periodo","legal_refs":["rd-439-2007:art-110","orden-eha-672-2007:art-1","ley-35-2006:art-99","rd-439-2007:art-95"],"op":"add","operand_casilla_refs":["15","19"],"operand_refs":["modelo-130-resultados-negativos-anteriores","15","19"],"operand_values":["0","0.00","-100.00"],"source_refs":["aeat-dr-130-2019-v12","aeat-modelo-130-instructions"],"value":"100.00"}
           ],
@@ -655,7 +516,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision e69234a953970db983411c8b12d44f66e6a2da3054335f8db6252d454694b447 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 83bee3c53daf9eec09fb5dad532fa05b6617501586501268440eb8d4fdae74a4 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -666,7 +527,7 @@
               "parent_source_ref": null,
               "resolved_binding_source": "ledger_renta_income_aggregation",
               "resolver_id": "ledger_renta_income_aggregation",
-              "source_ref": "transaction:fcd9d7ce87ab885ff0fdb3b1f1041c2640b0c4e2927f43b79da5d9d4fcd36990"
+              "source_ref": "transaction:21853f4f5ebb8a636d83ff9d60f410bb414634032df9a120a98691ca1e5c0e80"
             },
             {
               "contributor_binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
@@ -677,7 +538,7 @@
               "parent_source_ref": null,
               "resolved_binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
               "resolver_id": "ledger_renta_gastos_pago_fraccionado_aggregation",
-              "source_ref": "transaction:c866d7043d518f43f8d261b5c7d6437f1363d6dc16be0d68184bc64e5b0a9860"
+              "source_ref": "transaction:1703f84035f8f1b9e95d99784e08d3a3fd56d526fb555e3d71d59887f5082e3e"
             },
             {
               "contributor_binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
@@ -730,7 +591,7 @@
         "modelo",
         "work",
         "verify",
-        "e69234a953970db983411c8b12d44f66e6a2da3054335f8db6252d454694b447"
+        "83bee3c53daf9eec09fb5dad532fa05b6617501586501268440eb8d4fdae74a4"
       ],
       "captures": [],
       "envelope": {
@@ -758,7 +619,7 @@
             "action": null,
             "code": "modelo.work.verify.finding.advisory",
             "context": {
-              "binding_id": "fcd9d7ce87ab885ff0fdb3b1f1041c2640b0c4e2927f43b79da5d9d4fcd36990",
+              "binding_id": "21853f4f5ebb8a636d83ff9d60f410bb414634032df9a120a98691ca1e5c0e80",
               "diagnostic_reason_code": "missing_transaction_evidence",
               "kind": "advisory",
               "legal_refs": "ley-37-1992:art-97, rd-1619-2012:art-2",
@@ -778,7 +639,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "e69234a953970db983411c8b12d44f66e6a2da3054335f8db6252d454694b447",
+          "calculation_revision_id": "83bee3c53daf9eec09fb5dad532fa05b6617501586501268440eb8d4fdae74a4",
           "completeness_status": "complete",
           "findings": [
             {
@@ -824,7 +685,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "da8f0abdd9a77876cdd3eb1667440595871236689e580bedeeac866277c48d8d",
+          "verification_report_id": "c612267aef9977d9b7ea13dd52d9713763278240da09c687eebbceeed7cfb60f",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

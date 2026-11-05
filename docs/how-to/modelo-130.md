@@ -84,8 +84,8 @@ adjust the figure; and box `19` is the final result. A negative balance in box
 
 Your records feed the cumulative income, expense, and withholding figures
 through the rules that fill each box; earlier filings feed the carries. Boxes
-`06`, `08`, `10`, `16`, and `18` are manual inputs for the cases that apply to
-you (withholdings, second-activity volume, home habitual deduction, prior
+`06`, `08`, `10`, `16`, and `18` are inputs for the cases that apply to you
+(withholdings, second-activity volume, home habitual deduction, prior
 complementary results). Inspect which boxes are filled in, missing, or manual:
 
 ```{cli-sequence} modelo-130-inspect-boxes
@@ -94,10 +94,17 @@ complementary results). Inspect which boxes are filled in, missing, or manual:
 
 ## Supply a manual box value
 
-Box `06` (Retenciones e ingresos a cuenta) is a manual box: your records do not
-fill it, so you supply it by hand with `--casilla`. Pass it in the same `calculate`
-call as the first-period `--binding` values, then review the saved calculation to
-confirm your value landed:
+Box `06` (Retenciones e ingresos a cuenta) takes the withholdings you record in
+the ledger with `aeat app ledger retencion-soportada record`; with none recorded
+it is 0. You can also supply it by hand with `--casilla`. A hand value that
+differs from the recorded withholdings is a disagreement between two sources:
+Cadrumo uses the one that takes precedence, and the check waits until you
+record the withholding that agrees or accept the value in use with `aeat app
+modelo work accept-disagreement`. The example therefore supplies the value on
+a second-quarter draft, so it does not carry into the first-quarter chain that
+the next sections check and file. Pass it in the same `calculate` call as the
+zero `--binding` values, then review the saved calculation to confirm your value
+landed:
 
 ```{cli-sequence} modelo-130-manual-casilla
 :verify: Confirm the manual value you supplied appears in the saved calculation.

@@ -48,13 +48,15 @@
         "--iva-rate",
         "21",
         "--iva-amount",
-        "105"
+        "105",
+        "--idempotency-key",
+        "irpf-q1-factura"
       ],
       "captures": [
         {
           "json_path": "result.evidence_id",
           "name": "evidence_id",
-          "value": "3445d70497fc89d7"
+          "value": "30466dcba3b4298e"
         }
       ],
       "envelope": {
@@ -72,11 +74,11 @@
         "result": {
           "attachment_id": "725afbe3c64d4e96faaed8b63b83ed2e7df161334681d98d8b877bd7cddbfc16",
           "bucket_event_ids": [
-            "68f3a36c339c42ee24b1d0f632747b61c97d9130c4f559e5a30722927c758275"
+            "edf423ac3ab4449a70ec54efb5f9a6837ede9191c212fc3178dd56944d7cabc0"
           ],
           "bucket_id": "<bucket-id>",
           "created_at": "2026-04-01T09:00:00Z",
-          "evidence_id": "3445d70497fc89d7",
+          "evidence_id": "30466dcba3b4298e",
           "invoice_date": "2026-02-11",
           "invoice_number": "C-2026-0087",
           "iva_amount": "105",
@@ -156,7 +158,7 @@
         "--iva-amount",
         "105",
         "--purchase-invoice-evidence-id",
-        "3445d70497fc89d7",
+        "30466dcba3b4298e",
         "--idempotency-key",
         "irpf-q1-compra"
       ],
