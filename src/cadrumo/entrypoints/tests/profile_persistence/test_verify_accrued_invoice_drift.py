@@ -174,7 +174,8 @@ def _facts(criterion: str, regime: str) -> tuple[UserProfileFact, ...]:
             UserProfileFact(path="irpf.estimation_regime", value=regime),
             dated(_ACCOUNTING, False),
             dated(_CRITERION, criterion),
-        )
+        ),
+        without=(_ACCOUNTING, _CRITERION),
     )
 
 
