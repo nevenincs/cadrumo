@@ -6,7 +6,7 @@ from collections.abc import Callable, Mapping, Sequence
 from pathlib import PurePath, PurePosixPath, PureWindowsPath
 from typing import Any
 
-from .environment_declaration_constants import _IDENTIFIER, _REVISION, NUMERIC_ARGUMENT_KINDS
+from .environment_declaration_constants import IDENTIFIER, NUMERIC_ARGUMENT_KINDS, REVISION
 from .environment_models import ApplicationEnvironment, ExternalPathDefault, Invocation, InvocationArgument
 
 
@@ -23,9 +23,9 @@ class LaunchRefusedError(Exception):
 def _argument_value(kind: str, minimum: int, text: str, family: str) -> int | str | None:
     """Bind numeric capabilities or bounded metadata to their declared argument kind."""
     if kind == "revision":
-        return text if _REVISION.fullmatch(text) else None
+        return text if REVISION.fullmatch(text) else None
     if kind == "identifier":
-        return text if _IDENTIFIER.fullmatch(text) else None
+        return text if IDENTIFIER.fullmatch(text) else None
     return _numeric_argument_value(kind, minimum, text, family)
 
 

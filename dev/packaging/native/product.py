@@ -159,7 +159,7 @@ def _capture_authority(
             (candidate / original.name).replace(destination / original.name)
 
 
-def _stage_product_authority(root: Path, source: Path) -> None:
+def stage_product_authority(root: Path, source: Path) -> None:
     """Capture the selected pair before publication and retire old snapshot generations."""
     originals = selected_published_authority(root)
     expected = {path.name: digest(path) for path in originals}
@@ -369,7 +369,7 @@ def build_product(
     with timings.phase("source-snapshot") if timings is not None else nullcontext(), digest_cache(output.parent):
         capture_product_source_snapshot(REPO_ROOT, source, inputs)
     with timings.phase("published-authority-staging") if timings is not None else nullcontext():
-        _stage_product_authority(REPO_ROOT, source)
+        stage_product_authority(REPO_ROOT, source)
     embedded_client = source / "src/cadrumo/_data/google/oauth_client.json"
     embedded_client.parent.mkdir(parents=True, exist_ok=True)
     encoded_client = client.get_secret_value().encode()

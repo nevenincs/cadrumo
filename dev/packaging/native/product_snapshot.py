@@ -19,7 +19,7 @@ from .hashing import digest, transformed_digest
 _PRODUCT_INPUT_EXCLUSIONS = frozenset({"__pycache__", ".git", "tests"})
 
 
-def _product_source_roots(root: Path) -> tuple[str, ...]:
+def product_source_roots(root: Path) -> tuple[str, ...]:
     """Read the package roots from the same declarations used by CMake."""
     project = parse_toml((root / "pyproject.toml").read_text(encoding="utf-8"))
     paths = [project["tool"]["uv"]["sources"][name]["path"] for name in PRODUCT_IDENTITY.companion_distributions]
@@ -100,7 +100,7 @@ def _framed_digest(digests: Mapping[str, str]) -> str:
     return framed.hexdigest()
 
 
-def _source_digest(root: Path, files: tuple[str, ...]) -> str:
+def source_digest(root: Path, files: tuple[str, ...]) -> str:
     """``source_tree.content_digest`` of ``files``, answered from the digest cache where it can be."""
     policies = line_ending_policies(root, files)
     return _framed_digest({relative: _normalised_digest(root, relative, policies[relative]) for relative in files})
@@ -128,7 +128,7 @@ def _check_current_members(
     package_members: frozenset[str],
     manifest_members: frozenset[str] | None,
 ) -> None:
-    current_roots = _product_source_roots(root)
+    current_roots = product_source_roots(root)
     current_package_members = frozenset(
         name for name in repository_files(root, under=current_roots) if not _excluded_product_input(name)
     )
@@ -151,7 +151,7 @@ def _check_captured_members(destination: Path, source_roots: tuple[str, ...], pa
 def capture_product_source_snapshot(root: Path, destination: Path, inputs: Path | None) -> None:
     """Capture and verify one coherent, enrolled source set before building any wheel."""
     root = root.resolve()
-    source_roots = _product_source_roots(root)
+    source_roots = product_source_roots(root)
     metadata = ("pyproject.toml", "uv.lock", "README.md", "LICENSE", "NOTICE", ".gitignore", ".gitattributes")
     # One census names the package members; the snapshot adds the project's metadata files.
     package_members = frozenset(
@@ -162,14 +162,14 @@ def capture_product_source_snapshot(root: Path, destination: Path, inputs: Path 
 
     manifest_members = _input_manifest_members(root, inputs)
     enrolled_members = _enrolled_members(package_members, file_members, manifest_members)
-    before = _source_digest(root, enrolled_members)
+    before = source_digest(root, enrolled_members)
 
-    _sync_source_snapshot(root, files, destination)
+    sync_source_snapshot(root, files, destination)
     captured = _framed_digest({name: digest(destination / name) for name in enrolled_members})
     _check_captured_members(destination, source_roots, package_members)
 
     _check_current_members(root, source_roots, package_members, manifest_members)
-    after = _source_digest(root, enrolled_members)
+    after = source_digest(root, enrolled_members)
     if before != captured or captured != after:
         raise RuntimeError(
             "Enrolled product source content changed while capturing the wheel inputs; "
@@ -202,7 +202,7 @@ def _remove_obsolete_snapshot_files(destination: Path, files: tuple[str, ...]) -
             path.unlink()
 
 
-def _sync_source_snapshot(root: Path, files: tuple[str, ...], destination: Path) -> None:
+def sync_source_snapshot(root: Path, files: tuple[str, ...], destination: Path) -> None:
     """Preserve unchanged normalized source files and remove obsolete snapshot members."""
     _check_snapshot_links(destination)
     if not destination.exists():

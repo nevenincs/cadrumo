@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from ..product_snapshot import _sync_source_snapshot
+from ..product_snapshot import sync_source_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -27,6 +27,6 @@ def test_snapshot_refuses_links_before_changing_any_member(tmp_path: Path, linke
     except OSError:
         pytest.skip("Symlink creation is unavailable")
     with pytest.raises(ValueError, match="snapshot contains a linked member"):
-        _sync_source_snapshot(root, ("changed.py",), destination)
+        sync_source_snapshot(root, ("changed.py",), destination)
     assert (destination / "changed.py").read_text(encoding="utf-8") == "old"
     assert target.exists()

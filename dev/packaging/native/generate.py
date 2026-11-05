@@ -304,7 +304,8 @@ def project_manager_strings(destination: Path) -> Path:
     return output
 
 
-def _manager_strings(source: Path | None) -> Mapping[str, Mapping[str, str]]:
+def load_manager_strings(source: Path | None) -> Mapping[str, Mapping[str, str]]:
+    """Return the manager strings from the bundled catalogue, or from ``source`` when one is given."""
     if source is None:
         from dev.locales.manager_chrome import manager_chrome_strings
 
@@ -363,7 +364,7 @@ def generate(
             f"pub const MANAGER_LANGUAGE_DEFAULT: &str = {_rust_string(components['language_default'])};",
             f"pub const LOCAL_AI_ADDRESS: &str = {_rust_string(components['local_ai_address'])};",
             "pub const MANAGER_STRINGS_JSON: &str = "
-            f"{_rust_string(json.dumps(_manager_strings(manager_strings), ensure_ascii=False, sort_keys=True))};",
+            f"{_rust_string(json.dumps(load_manager_strings(manager_strings), ensure_ascii=False, sort_keys=True))};",
             f"pub const LOG_MAX_BYTES: u64 = {contract['desktop_defaults']['log_max_bytes']};",
             f"pub const LOG_BACKUPS: u32 = {contract['desktop_defaults']['log_backups']};",
         ]

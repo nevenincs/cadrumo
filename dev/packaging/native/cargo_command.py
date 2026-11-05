@@ -44,7 +44,8 @@ def _check_cargo_members(build: Path, selected: Path) -> None:
             raise ValueError("Native Cargo target directory contains a linked member")
 
 
-def _selected_target_directory(native: Path, command: list[str]) -> Path:
+def selected_target_directory(native: Path, command: list[str]) -> Path:
+    """Return the Cargo target directory the command selects, defaulting to ``native``."""
     selected = native
     for index, argument in enumerate(command):
         if argument == "--":
@@ -69,7 +70,7 @@ def _cargo_directory(build: Path, command: list[str]) -> tuple[Path, Path]:
         raise ValueError("Native Cargo command requires its declared absolute target directory")
     # The exported directory is only checked against the build's own; every
     # path written below derives from the build layout.
-    selected = _selected_target_directory(native, command)
+    selected = selected_target_directory(native, command)
     if not selected.is_absolute() or not selected.resolve().is_relative_to(native):
         raise ValueError("Native Cargo target override escapes its owning binary directory")
     _check_cargo_members(build, selected)

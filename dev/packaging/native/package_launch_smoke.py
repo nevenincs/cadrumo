@@ -48,9 +48,10 @@ def _require_health_running(process: WindowsOwnedProcess, root: Path, deadline: 
         raise AssertionError("Packaged health did not restore verified runtime supervision within its deadline")
 
 
-def _recover_runtime(
+def recover_runtime(
     process: WindowsOwnedProcess, scope: WindowsProcessScope, executable: Path, root: Path, deadline: float
 ) -> None:
+    """Inject a runtime failure after the desktop is ready and require its supervised recovery."""
     import win32api
     import win32con
     import win32event
@@ -217,7 +218,7 @@ def verify_health(executable: Path, storage_variable: str, *, scratch_root: Path
             # Observe the existing 180s admission ceiling, 60s health hold and
             # bounded owned shutdown; individual IPC/probe budgets stay unchanged.
             deadline = time.monotonic() + 300
-            _recover_runtime(process, scope, executable, root, deadline)
+            recover_runtime(process, scope, executable, root, deadline)
             code = process.wait(timeout=max(0, deadline - time.monotonic()))
             if code != 0:
                 raise AssertionError(f"Packaged runtime health failed: exit={code}")
@@ -247,7 +248,7 @@ def verify_health(executable: Path, storage_variable: str, *, scratch_root: Path
     print("Packaged supervision and verified runtime IPC passed without installation; exact runtime crash recovered")
 
 
-def _require_public_kit_file(path: Path) -> None:
+def require_public_kit_file(path: Path) -> None:
     """Refuse private scratch ACLs retained on published Windows kit files."""
     if sys.platform != "win32":
         return
@@ -268,7 +269,7 @@ def verify_installation_kit(package: Path) -> None:
     definition = manifest["layout"]["installation"]["bootstrap"]
     directory = member(package.parent, definition["directory"])
     descriptor = member(directory, definition["manifest"])
-    _require_public_kit_file(descriptor)
+    require_public_kit_file(descriptor)
     kit = json.loads(descriptor.read_text(encoding="utf-8"))
     maintenance = kit["maintenance"]
     if (
@@ -282,7 +283,7 @@ def verify_installation_kit(package: Path) -> None:
         raise AssertionError("Desktop installation kit lacks its scope-aware release product")
     for artifact in (kit["runner"], *kit["artifacts"].values()):
         path = member(directory, artifact["path"])
-        _require_public_kit_file(path)
+        require_public_kit_file(path)
         if digest(path) != artifact["sha256"]:
             raise AssertionError("Desktop installation kit contains a missing or changed artifact")
 

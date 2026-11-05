@@ -35,9 +35,7 @@ def test_unrecognized_cargo_commands_are_refused_before_launch(tmp_path: Path, a
 
 def test_test_program_target_dir_is_not_a_cargo_override(tmp_path: Path) -> None:
     native = tmp_path / "cargo"
-    assert (
-        cargo_command._selected_target_directory(native, ["cargo", "test", "--", "--target-dir", "outside"]) == native
-    )
+    assert cargo_command.selected_target_directory(native, ["cargo", "test", "--", "--target-dir", "outside"]) == native
 
 
 @pytest.mark.parametrize(

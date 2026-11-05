@@ -16,11 +16,24 @@ from pathlib import Path
 BYTECODE_WORKERS = 12
 """Threads publishing package bytecode; the work is mostly reading, hashing and linking files."""
 
+UNCHECKED_HASH_FLAGS = 0b01
+"""PEP 552 hash-based bytecode without the source-check bit.
+
+The installed image is immutable and its inventory is verified as a whole, so
+the loader need not read and hash each source to admit its cache. Sources still
+ship beside the caches; only the per-import freshness probe is dropped.
+"""
+
 
 def bytecode(source: bytes, name: str, *, prefix: str = "python.zip") -> bytes:
-    """Compile checked-hash bytecode with a portable package-relative filename."""
+    """Compile unchecked-hash bytecode with a portable package-relative filename."""
     code = compile(source, f"{prefix}/{name}", "exec", dont_inherit=True, optimize=0)
-    return importlib.util.MAGIC_NUMBER + struct.pack("<I", 3) + importlib.util.source_hash(source) + marshal.dumps(code)
+    return (
+        importlib.util.MAGIC_NUMBER
+        + struct.pack("<I", UNCHECKED_HASH_FLAGS)
+        + importlib.util.source_hash(source)
+        + marshal.dumps(code)
+    )
 
 
 def compiler_identity() -> str:
@@ -47,7 +60,9 @@ def _reusable_bytecode(old: Path | None, expected: str | None, content: bytes) -
         and not any(path.is_symlink() or path.is_junction() for path in (old, *old.parents))
     ):
         cached = old.read_bytes()
-        header = importlib.util.MAGIC_NUMBER + struct.pack("<I", 3) + importlib.util.source_hash(content)
+        header = (
+            importlib.util.MAGIC_NUMBER + struct.pack("<I", UNCHECKED_HASH_FLAGS) + importlib.util.source_hash(content)
+        )
         if cached[:16] == header and hashlib.sha256(cached).hexdigest() == expected:
             return cached
     return None

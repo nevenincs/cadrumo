@@ -11,7 +11,7 @@ import pytest
 from dev.source_tree import content_digest
 
 from ..hashing import digest_cache, transformed_digest
-from ..product_snapshot import _source_digest
+from ..product_snapshot import source_digest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -36,22 +36,22 @@ def _repository(root: Path, attributes: bytes) -> tuple[str, ...]:
 def test_the_cached_source_digest_is_the_repositorys_content_digest(tmp_path: Path) -> None:
     files = _repository(tmp_path / "repo", b"* text=auto\n*.cmd text eol=crlf\n*.bin binary\n")
     expected = content_digest(tmp_path / "repo", files)
-    assert _source_digest(tmp_path / "repo", files) == expected
+    assert source_digest(tmp_path / "repo", files) == expected
     with digest_cache(tmp_path / "build"):
-        assert _source_digest(tmp_path / "repo", files) == expected
+        assert source_digest(tmp_path / "repo", files) == expected
     with digest_cache(tmp_path / "build"):
-        assert _source_digest(tmp_path / "repo", files) == expected
+        assert source_digest(tmp_path / "repo", files) == expected
 
 
 def test_a_changed_line_ending_rule_is_not_answered_from_the_cache(tmp_path: Path) -> None:
     root = tmp_path / "repo"
     files = _repository(root, b"* text=auto\n")
     with digest_cache(tmp_path / "build"):
-        before = _source_digest(root, files)
+        before = source_digest(root, files)
     # The same bytes, now to be checked out with CRLF: the recorded content changes.
     _write(root / ".gitattributes", b"* text=auto\n*.py text eol=crlf\n")
     with digest_cache(tmp_path / "build"):
-        after = _source_digest(root, files)
+        after = source_digest(root, files)
     assert after == content_digest(root, files) != before
 
 

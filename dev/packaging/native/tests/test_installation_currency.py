@@ -61,7 +61,7 @@ def _forbid_materialization(monkeypatch: pytest.MonkeyPatch) -> None:
     def forbidden(*args: object, **kwargs: object) -> None:
         raise AssertionError("An unchanged or refused stage must not copy or construct a candidate")
 
-    monkeypatch.setattr(installation, "_prepare_fresh", forbidden)
+    monkeypatch.setattr(installation, "prepare_fresh", forbidden)
     monkeypatch.setattr(installation.shutil, "copytree", forbidden)
     monkeypatch.setattr(installation.shutil, "copy2", forbidden)
     monkeypatch.setattr(distribution_prepare, "public_directory", forbidden)

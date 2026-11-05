@@ -534,7 +534,7 @@ def test_the_package_identity_moves_only_with_what_the_stage_ships(build: Path, 
     # A checkout edit that changes no staged byte moves the payload's input fingerprint, not the package.
     payload("b")
     assert package(staged(b"VALUE = 1\n")) == first
-    # Touching a staged source without changing it keeps its checked-hash bytecode, and the package.
+    # Touching a staged source without changing it keeps its unchecked-hash bytecode, and the package.
     os.utime(stage / "lib/mod.py", ns=(1_600_000_000_000_000_000, 1_600_000_000_000_000_000))
     assert package(staged(b"VALUE = 1\n")) == first
     # A changed staged byte moves the package; reverting it restores the identity even after

@@ -91,7 +91,7 @@ def test_health_retains_primary_and_evidence_before_failed_process_settlement(
 
     monkeypatch.setattr(health, "TemporaryDirectory", temporary)
     monkeypatch.setattr(health, "WindowsProcessScope", Scope)
-    monkeypatch.setattr(health, "_recover_runtime", recover)
+    monkeypatch.setattr(health, "recover_runtime", recover)
     with pytest.raises(AssertionError) as caught:
         health.verify_health(executable, "CADRUMO_STORAGE_ROOT", scratch_root=tmp_path)
     assert caught.value is primary
