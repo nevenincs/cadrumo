@@ -5,7 +5,7 @@ tags:
 date: '2026-11-04'
 modified: '2026-11-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:baf994b634cc393daaf3ce83ab4e0ae0190b4264d8b6f6f18f4691e8926a189a'
+body_hash: 'sha256:92901ab4ad50547d3151b3be458387adfe576ac62438a66058fd33324a1cab80'
 related:
   - "[[2026-11-04-fixture-canonicalization-plan]]"
 ---
@@ -1077,6 +1077,17 @@ related:
 - `S28` `verify:` `test_personas 31, test_persona_materialisation 12 incl. HISTORY, seeding parity/invoices/retencion 30` -> `pass`
 - `S28` `verify:` `ruff, lint-imports, ty on touched files` -> `pass`
 - `S28` `by:` `sonnet`
+- `S16` `A` `src/cadrumo/application/user_profile/tests/persona_profile_facts.py`
+- `S16` `A` `src/cadrumo/adapters/persistence/profile/tests/taxpayer_persona_support.py`
+- `S16` `M` `src/cadrumo/application`
+- `S16` `M` `src/cadrumo/adapters`
+- `S16` `M` `src/cadrumo/entrypoints`
+- `S16` `M` `src/cadrumo_runtime/host/tests`
+- `S16` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S16` `M` `dev/identity/catalogue_gate.py`
+- `S16` `verify:` `converted non-runtime-host modules 567 passed after drift fix; consumers and runtime-host modules 164 passed` -> `pass`
+- `S16` `verify:` `lint-imports 30 kept; dev.quality.types --full 0 diagnostics` -> `pass`
+- `S16` `by:` `sonnet`
 
 ## Notes
 
@@ -1104,3 +1115,4 @@ related:
 - `S06` desktop job not yet run on a real runner and kept out of verdict.needs; stagedCheck.ts tsc/eslint/prettier deferred under the CHECKS2 machine conditions
 - `S17` no code change: every taxpayer seeder writes through the production repository writers; remaining direct SQL is storage-layer subject or fault injection; hand-built fact tuples restating taxpayer meaning belong to S16
 - `S28` HISTORY replay files 303/115 1T-4T and 180 locally; 130 1T calculated only and 2T-4T refuse by design without a filed 1T; 0168 directa-normal indicator is a product defect; 0604 fold-in unconfirmable without AEAT-captured prior-year evidence; runtime-host edits deferred to the full gates
+- `S16` kept local: non-resident and IRNR shapes (no persona states a non-resident filer), attribution-entity and public-administration counterparties, profiles without an IVA regime, schema-boundary tests, CLI plumbing, and two first-year tests whose child process asserts the wizard is never imported

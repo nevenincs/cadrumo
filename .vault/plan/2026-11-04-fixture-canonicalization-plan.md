@@ -11,7 +11,7 @@ related:
   - '[[2026-10-23-desktop-modelo-workspace-adr]]'
 modified: '2026-11-05'
 body_schema: body-v2
-body_hash: 'sha256:b3a5d61b4f7d69d040aa779807ff96be8d98175585ff88159ad93f284ed98449'
+body_hash: 'sha256:51002543612a6fc9ec9ea351920417709826f079c47b380e8d6447fab626ae3d'
 ---
 
 # `fixture-canonicalization` plan
@@ -72,7 +72,7 @@ Generate window and Rust fixture projections into the build tree and stop commit
 Move the backend test profile builders onto the persona catalogue and remove restated facts.
 
 - [x] `P05.S15` - Migrate the shared profile builders and their consumers onto personas and remove the duplicate ready-profile seeder and string boolean placeholders; `src/cadrumo user_profile, profile_persistence and profile persistence test support`.
-- [ ] `P05.S16` - Migrate private profile helpers package by package onto personas; `src and dev test packages`.
+- [x] `P05.S16` - Migrate private profile helpers package by package onto personas; `src and dev test packages`.
 - [x] `P05.S17` - Stop seeding personas through direct test storage writes; `src test support`.
 - [ ] `P05.S20` - Extend the identity gate's blocking scope to tests and fixtures, accept a match only by the catalogue convention, flag any catalogue value used outside its bound persona role, and replace the remaining hand-made identifiers; `dev/identity and test and fixture identifiers`.
 - [x] `P05.S28` - Close the persona gaps the builder migration found: author an estimación directa normal autónomo, state the fontanero household and Renta attestations and the sociedad-limitada tributación al Estado percentage truthfully, and an established filer with prior-year activity start and Modelo 130 history, then repoint the remaining local builders and remove the interim fact overlays; `dev/fixtures/personas and src test support`.
