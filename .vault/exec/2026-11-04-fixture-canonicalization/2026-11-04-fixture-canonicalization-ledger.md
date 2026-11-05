@@ -5,7 +5,7 @@ tags:
 date: '2026-11-04'
 modified: '2026-11-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:32f2cec6c6b0eddb5b6d9208be8edc2b58c14e20532ac954caba455c74d48e9c'
+body_hash: 'sha256:baf994b634cc393daaf3ce83ab4e0ae0190b4264d8b6f6f18f4691e8926a189a'
 related:
   - "[[2026-11-04-fixture-canonicalization-plan]]"
 ---
@@ -1063,6 +1063,20 @@ related:
 - `S17` `M` `.vault/plan/2026-11-04-fixture-canonicalization-plan.md`
 - `S17` `verify:` `sweep of src and dev tests for direct taxpayer storage writes` -> `pass`
 - `S17` `by:` `sonnet`
+- `S28` `A` `dev/fixtures/personas/autonomo-electricista`
+- `S28` `M` `dev/fixtures/personas/autonomo-fontanero`
+- `S28` `M` `dev/fixtures/personas/sociedad-limitada`
+- `S28` `M` `dev/fixtures/personas/README.md`
+- `S28` `M` `src/cadrumo/tests/personas.py`
+- `S28` `M` `src/cadrumo/entrypoints/tests/persona_materialisation.py`
+- `S28` `M` `src/cadrumo/application/aggregation/retencion_soportada_source.py`
+- `S28` `A` `src/cadrumo/application/user_profile/tests/persona_profile_facts.py`
+- `S28` `A` `src/cadrumo/adapters/persistence/profile/tests/taxpayer_persona_support.py`
+- `S28` `M` `src/cadrumo/entrypoints/tests`
+- `S28` `M` `src/cadrumo_runtime/host/tests/frontend/cli`
+- `S28` `verify:` `test_personas 31, test_persona_materialisation 12 incl. HISTORY, seeding parity/invoices/retencion 30` -> `pass`
+- `S28` `verify:` `ruff, lint-imports, ty on touched files` -> `pass`
+- `S28` `by:` `sonnet`
 
 ## Notes
 
@@ -1089,3 +1103,4 @@ related:
 - `S24` Generic uses moved off catalogue values bound to fontanero, alta and electricista roles; the tabular specimen sidecar digest was already stale before this change
 - `S06` desktop job not yet run on a real runner and kept out of verdict.needs; stagedCheck.ts tsc/eslint/prettier deferred under the CHECKS2 machine conditions
 - `S17` no code change: every taxpayer seeder writes through the production repository writers; remaining direct SQL is storage-layer subject or fault injection; hand-built fact tuples restating taxpayer meaning belong to S16
+- `S28` HISTORY replay files 303/115 1T-4T and 180 locally; 130 1T calculated only and 2T-4T refuse by design without a filed 1T; 0168 directa-normal indicator is a product defect; 0604 fold-in unconfirmable without AEAT-captured prior-year evidence; runtime-host edits deferred to the full gates
