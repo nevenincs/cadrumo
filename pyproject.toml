@@ -138,7 +138,7 @@ dependencies = [
 ]
 
 [project.scripts]
-aeat = "cadrumo_runtime.host.frontend.cli.bootstrap:main"
+aeat = "cadrumo_runtime.host.frontend.cli.bootstrap:console_main"
 cadrumo-mcp = "cadrumo_mcp.mcp.main:main"
 cadrumo-runtime = "cadrumo_runtime.host.bootstrap:main"
 cadrumo-agent-service = "cadrumo_agent_service.bootstrap:main"
