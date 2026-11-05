@@ -1,5 +1,5 @@
 ref,year,month,day,description,amount,currency,counterparty,classification,category_id,irpf_category,iva_category,taxable_base,iva_rate,iva_amount,recargo_amount,deduction_kind,invoice_kind,invoice_number,retencion_rate,retencion_amount,document
-MIN-COM-1,horizon-1,1,10,Compra de prendas a mayorista textil,-8581.60,EUR,minorista.mayorista,BUSINESS,suministros_cliente_directos,,recargo_equivalencia,6800.00,0.21,1428.00,353.60,,received,TM-0001,,,factura-recargo
+MIN-COM-1,horizon-1,1,10,Compra de prendas a mayorista textil,-8581.60,EUR,minorista.mayorista,BUSINESS,suministros_cliente_directos,,recargo_equivalencia,6800.00,0.21,1428.00,353.60,,received,TM-0001,,,factura-min-com-1
 MIN-RETA-01,horizon-1,1,28,Cuota RETA trabajador autonomo,-294.00,EUR,,BUSINESS,cuotas_autonomos_ss,,operacion_no_sujeta,294.00,0,0.00,,,,,,,
 MIN-TPV-01,horizon-1,1,28,Liquidacion mensual de ventas al por menor,4850.00,EUR,,BUSINESS,,actividad_economica,recargo_equivalencia,4850.00,,,,,,,,,
 MIN-RETA-02,horizon-1,2,27,Cuota RETA trabajador autonomo,-294.00,EUR,,BUSINESS,cuotas_autonomos_ss,,operacion_no_sujeta,294.00,0,0.00,,,,,,,

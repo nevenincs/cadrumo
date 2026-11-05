@@ -51,6 +51,7 @@ def test_every_generated_invoice_reads_back_as_its_row(operation: PinnedAuthorit
             rate, cuota = (Decimal(0), Decimal("0.00")) if row.reverse_charge else (row.iva_rate, row.iva_amount)
             assert parsed.iva_amount == cuota, where
             assert parsed.iva_breakdown == [(rate * 100, row.taxable_base, cuota)], where
+            assert parsed.recargo_amount == row.recargo_amount, where
             # Facturae always states TotalTaxesWithheld, so a row withholding nothing reads as a stated zero.
             assert parsed.retencion_amount == (row.retencion_amount or Decimal("0.00")), where
             expected_rate = None if row.retencion_rate is None else row.retencion_rate * 100
@@ -66,6 +67,23 @@ def test_the_rent_invoice_states_the_retencion_the_row_withholds(operation: Pinn
     # 600.00 base, 21 % IVA 126.00, 19 % IRPF 114.00: the tenant pays 612.00.
     assert (parsed.taxable_base, parsed.iva_amount) == (Decimal("600.00"), Decimal("126.00"))
     assert (parsed.retencion_rate, parsed.retencion_amount) == (Decimal("19.00"), Decimal("114.00"))
+
+
+def test_a_recargo_invoice_states_the_surcharge_beside_the_cuota(operation: PinnedAuthorityOperation) -> None:
+    envelope = year_envelope(operation)
+    persona = read_persona("minorista-recargo", envelope=envelope)
+    document = next(document for document in persona.documents if document.attach_to == ("MIN-COM-1",))
+    rendered = render_facturae(persona, document, envelope).text
+    parsed = parse_einvoice_document(rendered.encode("utf-8"))
+
+    # 6800.00 base, 21 % IVA 1428.00, 5.2 % recargo 353.60: the retailer pays 8581.60.
+    assert (parsed.taxable_base, parsed.iva_amount, parsed.recargo_amount) == (
+        Decimal("6800.00"),
+        Decimal("1428.00"),
+        Decimal("353.60"),
+    )
+    assert "<EquivalenceSurcharge>5.20</EquivalenceSurcharge>" in rendered
+    assert "<InvoiceTotal>8581.60</InvoiceTotal>" in rendered
 
 
 def test_a_reverse_charge_invoice_repercutes_no_cuota(operation: PinnedAuthorityOperation) -> None:

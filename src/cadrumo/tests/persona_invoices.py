@@ -4,7 +4,7 @@ A persona document declared with ``generator = "facturae"`` is the invoice its
 single attached ledger row states. This module turns that row and the identity
 catalogue into a Facturae 3.2.2 invoice, so the document agrees with its row by
 construction: number, issue date, parties, taxable base, IVA rate and cuota,
-and any IRPF retención. The text is deterministic, so a consumer may commit it
+any recargo de equivalencia, and any IRPF retención. The text is deterministic, so a consumer may commit it
 and check it for drift.
 
 A row that self-assesses its cuota under inversión del sujeto pasivo (LIVA
@@ -87,7 +87,26 @@ def _party(identity: Identity, role_tag: str) -> list[str]:
     return lines
 
 
-def _tax(type_code: str, rate: Decimal, base: Decimal, amount: Decimal, indent: str) -> list[str]:
+def _tax(
+    type_code: str,
+    rate: Decimal,
+    base: Decimal,
+    amount: Decimal,
+    indent: str,
+    *,
+    surcharge: tuple[Decimal, Decimal] | None = None,
+) -> list[str]:
+    """One ``Tax`` element; ``surcharge`` is the recargo de equivalencia rate and amount beside the cuota."""
+    surcharge_lines = (
+        []
+        if surcharge is None
+        else [
+            f"{indent}  <EquivalenceSurcharge>{_percentage(surcharge[0])}</EquivalenceSurcharge>",
+            f"{indent}  <EquivalenceSurchargeAmount>",
+            f"{indent}    <TotalAmount>{_money(surcharge[1])}</TotalAmount>",
+            f"{indent}  </EquivalenceSurchargeAmount>",
+        ]
+    )
     return [
         f"{indent}<Tax>",
         f"{indent}  <TaxTypeCode>{type_code}</TaxTypeCode>",
@@ -98,6 +117,7 @@ def _tax(type_code: str, rate: Decimal, base: Decimal, amount: Decimal, indent: 
         f"{indent}  <TaxAmount>",
         f"{indent}    <TotalAmount>{_money(amount)}</TotalAmount>",
         f"{indent}  </TaxAmount>",
+        *surcharge_lines,
         f"{indent}</Tax>",
     ]
 
@@ -112,6 +132,8 @@ class _InvoiceFacts:
     base: Decimal
     rate: Decimal
     cuota: Decimal
+    recargo_rate: Decimal | None
+    recargo: Decimal | None
     retencion_rate: Decimal | None
     retencion: Decimal | None
     reverse_charge: bool
@@ -124,14 +146,18 @@ def _facts(row: LedgerRow, envelope: YearEnvelope, where: str) -> _InvoiceFacts:
         raise PersonaCatalogueError(f"{where}: the row states no invoice number or counterparty")
     if row.taxable_base is None or row.iva_rate is None or row.iva_amount is None:
         raise PersonaCatalogueError(f"{where}: the row states no taxable base, IVA rate or cuota")
+    recargo_rate = None
     if row.recargo_amount is not None:
-        raise PersonaCatalogueError(f"{where}: a recargo de equivalencia invoice is not generated")
+        # The row states the recargo amount only; its rate is the one that yields it on the base.
+        recargo_rate = (row.recargo_amount / row.taxable_base).quantize(Decimal("0.0001"))
+        if (row.taxable_base * recargo_rate).quantize(_CENT) != row.recargo_amount:
+            raise PersonaCatalogueError(f"{where}: the recargo {row.recargo_amount} is no whole rate of the base")
     if (row.retencion_rate is None) != (row.retencion_amount is None):
         raise PersonaCatalogueError(f"{where}: the row states a retención rate without its amount, or the reverse")
     cuota = Decimal(0) if row.reverse_charge else row.iva_amount
-    total = row.taxable_base + cuota - (row.retencion_amount or Decimal(0))
+    total = row.taxable_base + cuota + (row.recargo_amount or Decimal(0)) - (row.retencion_amount or Decimal(0))
     if total != abs(row.amount):
-        raise PersonaCatalogueError(f"{where}: base + cuota - retención {total} differs from the movement")
+        raise PersonaCatalogueError(f"{where}: base + cuota + recargo - retención {total} differs from the movement")
     return _InvoiceFacts(
         seller_role=row.counterparty,
         number=row.invoice_number,
@@ -141,6 +167,8 @@ def _facts(row: LedgerRow, envelope: YearEnvelope, where: str) -> _InvoiceFacts:
         base=row.taxable_base,
         rate=Decimal(0) if row.reverse_charge else row.iva_rate,
         cuota=cuota,
+        recargo_rate=recargo_rate,
+        recargo=row.recargo_amount,
         retencion_rate=row.retencion_rate,
         retencion=row.retencion_amount,
         reverse_charge=row.reverse_charge,
@@ -164,7 +192,9 @@ def render_facturae(persona: Persona, document: PersonaDocument, envelope: YearE
     seller = persona.identities.role(facts.seller_role)
     buyer = persona.identities.role(persona.taxpayer)
     withheld = facts.retencion if facts.retencion is not None else Decimal(0)
-    invoice_total = facts.base + facts.cuota - withheld
+    surcharge = None if facts.recargo is None or facts.recargo_rate is None else (facts.recargo_rate, facts.recargo)
+    output_tax = facts.cuota + (facts.recargo or Decimal(0))
+    invoice_total = facts.base + output_tax - withheld
     lines = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         f'<fe:Facturae xmlns:fe="{_FACTURAE_NAMESPACE}">',
@@ -205,7 +235,7 @@ def render_facturae(persona: Persona, document: PersonaDocument, envelope: YearE
         "        <LanguageName>es</LanguageName>",
         "      </InvoiceIssueData>",
         "      <TaxesOutputs>",
-        *_tax(_IVA_TAX_TYPE, facts.rate, facts.base, facts.cuota, "        "),
+        *_tax(_IVA_TAX_TYPE, facts.rate, facts.base, facts.cuota, "        ", surcharge=surcharge),
         "      </TaxesOutputs>",
     ]
     if facts.retencion is not None and facts.retencion_rate is not None:
@@ -221,7 +251,7 @@ def render_facturae(persona: Persona, document: PersonaDocument, envelope: YearE
             "      <InvoiceTotals>",
             f"        <TotalGrossAmount>{_money(facts.base)}</TotalGrossAmount>",
             f"        <TotalGrossAmountBeforeTaxes>{_money(facts.base)}</TotalGrossAmountBeforeTaxes>",
-            f"        <TotalTaxOutputs>{_money(facts.cuota)}</TotalTaxOutputs>",
+            f"        <TotalTaxOutputs>{_money(output_tax)}</TotalTaxOutputs>",
             f"        <TotalTaxesWithheld>{_money(withheld)}</TotalTaxesWithheld>",
             f"        <InvoiceTotal>{_money(invoice_total)}</InvoiceTotal>",
             f"        <TotalOutstandingAmount>{_money(invoice_total)}</TotalOutstandingAmount>",
@@ -235,7 +265,7 @@ def render_facturae(persona: Persona, document: PersonaDocument, envelope: YearE
             f"          <TotalCost>{_money(facts.base)}</TotalCost>",
             f"          <GrossAmount>{_money(facts.base)}</GrossAmount>",
             "          <TaxesOutputs>",
-            *_tax(_IVA_TAX_TYPE, facts.rate, facts.base, facts.cuota, "            "),
+            *_tax(_IVA_TAX_TYPE, facts.rate, facts.base, facts.cuota, "            ", surcharge=surcharge),
             "          </TaxesOutputs>",
             "        </InvoiceLine>",
             "      </Items>",
