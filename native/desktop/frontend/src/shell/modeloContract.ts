@@ -5115,6 +5115,22 @@ export type ModeloFormVerdict = {
 };
 
 /**
+ * Whether the declaration's filing year is carried across from another
+ * edition, as the registry resolves it.
+ *
+ * `direction` is `authored` when the selected edition authors the filing year,
+ * otherwise `forward` or `backward` for the nearest edition carried across;
+ * `authored_filing_year` is the year that edition authors and
+ * `reachable_grade` the rung of authority the year reaches. The registry's
+ * temporal resolver and grade rule supply all three; a surface renders them.
+ */
+export type ModeloFormYearProjection = {
+  direction: TemporalProjectionDirection;
+  authored_filing_year: number;
+  reachable_grade: RegistryAuthorityGrade;
+};
+
+/**
  * One box a change passes through, written as the filer reads it ("[07]").
  */
 export type ModeloHelpBoxV1 = {
@@ -8179,6 +8195,7 @@ export type PublicModeloWorkForm = {
   filing_year: number;
   period: PublicPeriod;
   registry_revision_id: string;
+  year_projection: ModeloFormYearProjection;
   work_unit_id: string;
   calculation_revision_id: string | null;
   language: OutputLanguage;
@@ -8487,6 +8504,19 @@ export type RecordedCalculationNote = {
 export type RefundElection = "compensar" | "devolver";
 
 /**
+ * How far one modelo registry revision's declared authority reaches.
+ *
+ * The members form a ladder of increasing claim, each rung requiring
+ * everything the rung below it requires. Which families a rung demands is a
+ * question about *dispositions*, not raw population - a family may be honestly
+ * resolved as not applicable, with a reason and legal references - so an
+ * informative modelo carrying export layouts and no formulas can legitimately
+ * reach `FILING`. Registry build validation owns that rule; this enum owns
+ * only the vocabulary.
+ */
+export type RegistryAuthorityGrade = "applicability" | "calculation" | "filing";
+
+/**
  * Closed reason catalogue for typed formula outcomes with no Decimal value.
  */
 export type RegistryUnresolvedOutcomeReason =
@@ -8674,6 +8704,11 @@ export type TaxationRecommendation = "conjunta" | "individual" | "indifferent";
  */
 export type TaxationRecommendationReason =
   "conjunta_lower_result" | "individual_lower_result" | "below_materiality";
+
+/**
+ * How a resolved coordinate relates to the declaration supplying it.
+ */
+export type TemporalProjectionDirection = "authored" | "backward" | "forward";
 
 export type TransactionId = string;
 
