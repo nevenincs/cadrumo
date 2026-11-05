@@ -10,7 +10,10 @@ copied: nothing here edits an expected value to agree with a run.
 
 An expectation grounded ``unverified`` is a known gap and is not asserted. A
 value stated only as named concepts, or per counterparty, carries no registry
-casilla and is not re-derived here.
+casilla and is not re-derived here. A value that states a ``refusal`` asserts
+that the application refuses the period with that error code; an obligation that
+states a ``calendar_advice`` asserts that the calendar advises it instead of
+showing a window row.
 """
 
 from __future__ import annotations
@@ -125,13 +128,17 @@ def _value_years(persona: Persona) -> set[int]:
     return {
         value.year.resolve(envelope)
         for value in persona.expectations.values
-        if value.casillas and value.grounding != "unverified"
+        if (value.casillas or value.refusal) and value.grounding != "unverified"
     }
 
 
 def _scope(persona: Persona) -> ReplayScope:
-    """The history scope when the persona holds returns the replay files or calculates, else the full ledger."""
-    return ReplayScope.HISTORY if persona.filed_returns or persona.calculated_returns else ReplayScope.FULL
+    """The history scope when the persona holds returns or observations of earlier years, else the full ledger."""
+    return (
+        ReplayScope.HISTORY
+        if persona.filed_returns or persona.calculated_returns or persona.local_observations
+        else ReplayScope.FULL
+    )
 
 
 def _read(world: PersonaWorld, request: OverviewReadRequest) -> OverviewReadProjection:
@@ -158,6 +165,7 @@ def test_the_overview_resolves_the_obligations_a_persona_has_and_lacks(tmp_path:
 
     problems: list[str] = []
     entries: dict[tuple[str, str], OverviewCalendarEntrySnapshot] = {}
+    advised: set[tuple[str, str]] = set()
     verdicts: dict[str, tuple[ApplicabilityVerdict, bool]] = {}
     with materialised_persona(case.persona_id, tmp_path, _scope(persona), reuse=True) as materialised:
         world = materialised.world
@@ -182,6 +190,7 @@ def test_the_overview_resolves_the_obligations_a_persona_has_and_lacks(tmp_path:
                 for entry in calendar_read.calendar.entries
                 if entry.filing_year == case.year
             }
+            advised = {(item.modelo, item.reason.value) for item in calendar_read.calendar.coverage.advised}
         for item in obligations:
             try:
                 explained = _read(
@@ -214,7 +223,19 @@ def test_the_overview_resolves_the_obligations_a_persona_has_and_lacks(tmp_path:
                 f"expected {expected_verdict} ({item.legal_ref})"
             )
         # A modelo the persona must file has a window row for each period; one it lacks, or cannot decide, has none.
-        if entries or not any("calendar read was refused" in each for each in problems):
+        if item.calendar_advice is not None:
+            if (item.modelo, item.calendar_advice) not in advised:
+                problems.append(
+                    f"Modelo {item.modelo} {case.year}: calendar does not advise {item.calendar_advice} "
+                    f"({item.legal_ref})"
+                )
+            problems.extend(
+                f"Modelo {item.modelo} {case.year} {period}: calendar row present, expected the "
+                f"{item.calendar_advice} advice instead ({item.legal_ref})"
+                for period in item.periods
+                if (item.modelo, period) in entries
+            )
+        elif entries or not any("calendar read was refused" in each for each in problems):
             problems.extend(
                 f"Modelo {item.modelo} {case.year} {period}: calendar row {'absent' if item.applicable is True else 'present'}, "
                 f"expected {'present' if item.applicable is True else 'absent'} ({item.legal_ref})"
@@ -333,19 +354,29 @@ def test_the_application_calculates_the_casillas_a_persona_expects(tmp_path: Pat
     stated = [
         value
         for value in persona.expectations.values
-        if value.casillas and value.grounding != "unverified" and value.year.resolve(envelope) == case.year
+        if (value.casillas or value.refusal)
+        and value.grounding != "unverified"
+        and value.year.resolve(envelope) == case.year
     ]
     expected = {
         (value.modelo, value.period): {casilla: _decimal(amount) for casilla, amount in value.casillas}
         for value in stated
     }
     legal_refs = {(value.modelo, value.period): value.legal_ref for value in stated}
+    refusals = {(value.modelo, value.period): value.refusal for value in stated if value.refusal is not None}
 
     problems: list[str] = []
     with materialised_persona(case.persona_id, tmp_path, _scope(persona), reuse=True) as materialised:
         for (modelo, period), casillas in expected.items():
             calculated = _calculated_casillas(materialised, modelo, case.year, period)
             where = f"Modelo {modelo} {case.year} {period} ({legal_refs[modelo, period]})"
+            if (refusal := refusals.get((modelo, period))) is not None:
+                if refusal not in str(calculated.get("refusal", "")):
+                    problems.append(
+                        f"{where}: expected the stated refusal {refusal}, got "
+                        f"{calculated.get('refusal', 'a calculation')}"
+                    )
+                continue
             if "refusal" in calculated:
                 problems.append(f"{where}: calculation refused: {calculated['refusal']}")
                 continue

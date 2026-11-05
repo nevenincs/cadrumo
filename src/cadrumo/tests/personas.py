@@ -49,6 +49,10 @@ BIOGRAPHICAL_DATE_KEYS: frozenset[str] = frozenset(
 DECLARATIVE_BLOCKS: tuple[str, ...] = ("rental_properties", "officers")
 """Persona blocks no production operation records; a materialiser reports them as not loaded."""
 
+#: An application error or refusal code, the token a refused operation settles with.
+_ERROR_CODE: Final = re.compile(r"(?:ERROR|REFUSED)(?:_[A-Z0-9]+)+")
+#: A calendar coverage advice the overview gives for a modelo it cannot place in a window.
+_CALENDAR_ADVICE: Final = ("applicable_window_missing", "applicability_undetermined")
 _YEAR_TOKEN = re.compile(r"(?P<anchor>horizon|floor)(?:(?P<sign>[+-])(?P<offset>[0-9]+))?")
 _REVERSE_CHARGE_SUFFIX = "_reverse_charge"
 _IDENTITY_FIELDS = ("value", "name", "surnames", "legal_name")
@@ -404,6 +408,9 @@ class ExpectedObligation:
     reason: str
     legal_ref: tuple[str, ...]
     grounding: Literal["verified", "cited", "unverified"]
+    #: The coverage advice the calendar gives instead of a window row, when the law owes the
+    #: modelo but its window is not yet published or its applicability is not yet decidable.
+    calendar_advice: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -434,6 +441,9 @@ class ExpectedValue:
     legal_ref: tuple[str, ...]
     grounding: Literal["verified", "cited", "unverified"]
     reason: str | None
+    #: The error code the application refuses this period's calculation with; ``reason``
+    #: states why. The casillas then record what the law gives, and are not compared.
+    refusal: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -1162,10 +1172,16 @@ def _expectations(document: _Table, where: str, persona_id: str, roles: _Roles) 
             table,
             here,
             required=frozenset({"modelo", "periods", "year", "applicable", "reason", "legal_ref", "grounding"}),
+            optional=frozenset({"calendar_advice"}),
         )
         applicable = table["applicable"]
         if not isinstance(applicable, bool) and applicable != "unknown":
             raise _fail(here, 'applicable must be a boolean or "unknown"')
+        calendar_advice = _optional_string(table, "calendar_advice", here)
+        if calendar_advice is not None:
+            calendar_advice = _choice(calendar_advice, _CALENDAR_ADVICE, f"{here}.calendar_advice")
+            if applicable is not True:
+                raise _fail(here, "a calendar advice stands in for the window row of an owed modelo")
         obligations.append(
             ExpectedObligation(
                 modelo=_string(table, "modelo", here),
@@ -1175,6 +1191,7 @@ def _expectations(document: _Table, where: str, persona_id: str, roles: _Roles) 
                 reason=_string(table, "reason", here),
                 legal_ref=_strings(table, "legal_ref", here),
                 grounding=_choice(_string(table, "grounding", here), _GROUNDING, here),
+                calendar_advice=calendar_advice,
             )
         )
     deadlines: list[ExpectedDeadline] = []
@@ -1206,12 +1223,20 @@ def _expectations(document: _Table, where: str, persona_id: str, roles: _Roles) 
             table,
             here,
             required=frozenset({"modelo", "period", "year", "legal_ref", "grounding"}),
-            optional=frozenset({"counterparty", "casillas", "concepts", "parameters", "derivation", "reason"}),
+            optional=frozenset(
+                {"counterparty", "casillas", "concepts", "parameters", "derivation", "reason", "refusal"}
+            ),
         )
         grounding = _choice(_string(table, "grounding", here), _GROUNDING, here)
         reason = _optional_string(table, "reason", here)
         if grounding == "unverified" and reason is None:
             raise _fail(here, "an unverified expectation says what is missing in its reason")
+        refusal = _optional_string(table, "refusal", here)
+        if refusal is not None:
+            if _ERROR_CODE.fullmatch(refusal) is None:
+                raise _fail(here, "a refusal names the application error code")
+            if reason is None:
+                raise _fail(here, "a refusal says in its reason why the application refuses")
         values.append(
             ExpectedValue(
                 modelo=_string(table, "modelo", here),
@@ -1225,6 +1250,7 @@ def _expectations(document: _Table, where: str, persona_id: str, roles: _Roles) 
                 legal_ref=_strings(table, "legal_ref", here),
                 grounding=grounding,
                 reason=reason,
+                refusal=refusal,
             )
         )
     return Expectations(obligations=tuple(obligations), deadlines=tuple(deadlines), values=tuple(values))

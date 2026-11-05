@@ -249,3 +249,66 @@ def test_an_inventory_book_with_no_movement_is_admitted() -> None:
 def test_a_malformed_inventory_book_is_refused(books: tuple[dict[str, object], ...], message: str) -> None:
     with pytest.raises(PersonaCatalogueError, match=message):
         _parse(_with_inventory(*books))
+
+
+def _expectations_with(*, obligation: dict[str, object] | None = None, value: dict[str, object] | None = None) -> Any:
+    document = copy.deepcopy(_document("expectations.toml"))
+    if obligation is not None:
+        document["obligations"][0].update(obligation)
+    if value is not None:
+        document["values"][0].update(value)
+    return parse_persona(
+        _PERSONA,
+        persona_document=_document("persona.toml"),
+        ledger_text=(PERSONAS_ROOT / _PERSONA / "ledger.csv").read_text(encoding="utf-8"),
+        documents_document=_document("documents.toml"),
+        expectations_document=document,
+        catalogue=identity_catalogue(),
+        envelope=_ENVELOPE,
+    ).expectations
+
+
+def test_a_stated_refusal_names_the_error_code_and_its_reason() -> None:
+    expectations = _expectations_with(
+        value={"refusal": "ERROR_MODELO_WORK_INPUT_REQUIRED", "reason": "Casilla pendiente de un dato manual"}
+    )
+    assert expectations.values[0].refusal == "ERROR_MODELO_WORK_INPUT_REQUIRED"
+
+
+@pytest.mark.parametrize(
+    ("value", "message"),
+    [
+        ({"refusal": "input required", "reason": "Casilla pendiente"}, "names the application error code"),
+        ({"refusal": "ERROR_MODELO_WORK_INPUT_REQUIRED"}, "says in its reason why"),
+    ],
+)
+def test_a_malformed_refusal_is_refused(value: dict[str, object], message: str) -> None:
+    document = copy.deepcopy(_document("expectations.toml"))
+    document["values"][0].pop("reason", None)
+    with pytest.raises(PersonaCatalogueError, match=message):
+        parse_persona(
+            _PERSONA,
+            persona_document=_document("persona.toml"),
+            ledger_text=(PERSONAS_ROOT / _PERSONA / "ledger.csv").read_text(encoding="utf-8"),
+            documents_document=_document("documents.toml"),
+            expectations_document={**document, "values": [{**document["values"][0], **value}]},
+            catalogue=identity_catalogue(),
+            envelope=_ENVELOPE,
+        )
+
+
+def test_a_calendar_advice_stands_in_for_an_owed_window() -> None:
+    expectations = _expectations_with(obligation={"applicable": True, "calendar_advice": "applicable_window_missing"})
+    assert expectations.obligations[0].calendar_advice == "applicable_window_missing"
+
+
+@pytest.mark.parametrize(
+    ("obligation", "message"),
+    [
+        ({"applicable": True, "calendar_advice": "window_late"}, "is not one of"),
+        ({"applicable": False, "calendar_advice": "applicable_window_missing"}, "window row of an owed modelo"),
+    ],
+)
+def test_a_malformed_calendar_advice_is_refused(obligation: dict[str, object], message: str) -> None:
+    with pytest.raises(PersonaCatalogueError, match=message):
+        _expectations_with(obligation=obligation)
