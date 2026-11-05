@@ -160,6 +160,9 @@ def _seed_ready_profile(bucket_id: str, objects: SecureObjectRepository | None =
         UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
         UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
         UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+        # The taxpayer pays an employee and rent with retencion, so the payer modelos 111, 115, 180 and 190 apply.
+        UserProfileFact(path="withholding.has_employees", value=True),
+        UserProfileFact(path="withholding.pays_rent_with_retencion", value=True),
         UserProfileFact(path="provenance.source", value="manual_cli"),
         UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
     ]

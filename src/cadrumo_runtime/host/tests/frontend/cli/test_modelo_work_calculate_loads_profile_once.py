@@ -117,6 +117,18 @@ def profile_decrypts(monkeypatch: pytest.MonkeyPatch) -> list[str]:
     return decrypts
 
 
+# The operator pays an employee and a rented workshop with retencion, so the
+# payer modelos 111 and 115 apply to the profile.
+_PAYER_FACTS: dict[str, str] = {
+    "withholding.has_employees": "true",
+    "withholding.pays_rent_with_retencion": "true",
+}
+_PAYER_PROFILE_FACTS = (
+    UserProfileFact(path="withholding.has_employees", value=True),
+    UserProfileFact(path="withholding.pays_rent_with_retencion", value=True),
+)
+
+
 @contextmanager
 def _operator_session(
     tmp_path: Path, authority_operation: PinnedAuthorityOperation, run_cadrumo_cli
@@ -126,7 +138,10 @@ def _operator_session(
     def prepare(profile_id: UUID, root: Path) -> None:
         facts = complete_profile_facts(
             authority_operation.profile_schema(),
-            tuple(UserProfileFact(path=path, value=value) for path, value in operator_profile_facts().items()),
+            tuple(
+                UserProfileFact(path=path, value=value)
+                for path, value in {**operator_profile_facts(), **_PAYER_FACTS}.items()
+            ),
         )
         populated = upsert_test_profile_facts(profile_id, facts, root=root)
         with bound_test_profile_record(profile_id, root=root) as repository:
@@ -361,7 +376,9 @@ def test_the_hosted_calculate_executor_decrypts_the_profile_once(
     tmp_path: Path, profile_decrypts: list[str], modelo: str, filing_year: int, period_code: str
 ) -> None:
     """The production executor the worker hosts reads one decrypted record for the whole calculation."""
-    with seeded_operator_work(tmp_path, modelo=modelo, filing_year=filing_year, period_code=period_code) as work:
+    with seeded_operator_work(
+        tmp_path, modelo=modelo, filing_year=filing_year, period_code=period_code, extra_facts=_PAYER_PROFILE_FACTS
+    ) as work:
         if modelo == "111":
             _store_one_m111_retencion(work.work_unit.bucket_id, work.work_unit.period)
         profile_decrypts.clear()
@@ -373,7 +390,9 @@ def test_the_hosted_calculate_executor_decrypts_the_profile_once(
 
 def test_the_readiness_gate_hands_back_the_profile_it_checked(tmp_path: Path) -> None:
     """Consumers downstream of the gate read the very record the gate refused or admitted."""
-    with seeded_operator_work(tmp_path, modelo="111", filing_year=2025, period_code="1T") as work:
+    with seeded_operator_work(
+        tmp_path, modelo="111", filing_year=2025, period_code="1T", extra_facts=_PAYER_PROFILE_FACTS
+    ) as work:
         bucket_id = resolve_active_bucket_id()
         assert bucket_id is not None
         operation = work.operation
