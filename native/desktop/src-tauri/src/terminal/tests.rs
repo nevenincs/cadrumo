@@ -488,6 +488,94 @@ fn terminal_open_answers_for_the_document_that_sent_it() {
     assert!(get_ipc_response(&window, open_request("not a channel")).is_err());
 }
 
+/// Real IPC dispatch retains one failure with the addressed session identity,
+/// and missing-session admission failures remain observable.
+#[test]
+fn terminal_ipc_records_a_session_failure_once_with_its_identity() {
+    let state = Arc::new(TerminalState::new(unit_launch()));
+    let diagnostics = state.launch.diagnostics.clone();
+    let session = state
+        .registry
+        .lock()
+        .unwrap()
+        .open(Kind::Console, || {
+            Session::start(
+                chatty_program(),
+                80,
+                24,
+                Arc::new(|_| Ok(())),
+                diagnostics.clone(),
+            )
+        })
+        .unwrap();
+    let app = mock_builder()
+        .manage(state.clone())
+        .invoke_handler(ipc::handler())
+        .build(mock_context(noop_assets()))
+        .unwrap();
+    let window = WebviewWindowBuilder::new(&app, "main", Default::default())
+        .build()
+        .unwrap();
+    let request = |command: &str, body| {
+        let mut request = open_request("__CHANNEL__:1");
+        request.cmd = command.into();
+        request.body = InvokeBody::Json(body);
+        request
+    };
+    let after = diagnostics.snapshot(0).events.last().unwrap().sequence;
+    let refused = get_ipc_response(
+        &window,
+        request(
+            "terminal_ack",
+            serde_json::json!({"session": session, "offset": u64::MAX}),
+        ),
+    )
+    .unwrap_err();
+    assert_eq!(refused["code"], "invalid_arguments");
+    let failures: Vec<_> = diagnostics
+        .snapshot(after)
+        .events
+        .into_iter()
+        .filter(|event| event.sequence > after && event.failure.is_some())
+        .collect();
+    assert_eq!(
+        failures.len(),
+        1,
+        "one IPC refusal must produce one diagnostic"
+    );
+    let event = serde_json::to_value(&failures[0]).unwrap();
+    assert_eq!(event["terminalSession"], session);
+    assert_eq!(event["process"], event["status"]["id"]);
+    assert_eq!(event["failure"]["operation"], "terminal");
+    assert_eq!(event["failure"]["code"], "invalid_arguments");
+
+    for command in ["terminal_ack", "terminal_close"] {
+        let after = diagnostics.snapshot(0).events.last().unwrap().sequence;
+        let refused = get_ipc_response(
+            &window,
+            request(
+                command,
+                serde_json::json!({"session": session + 1, "offset": 0}),
+            ),
+        )
+        .unwrap_err();
+        assert_eq!(refused["code"], "session_unavailable");
+        let failures: Vec<_> = diagnostics
+            .snapshot(after)
+            .events
+            .into_iter()
+            .filter(|event| event.sequence > after && event.failure.is_some())
+            .collect();
+        assert_eq!(
+            failures.len(),
+            1,
+            "{command} must retain its admission failure"
+        );
+        assert!(failures[0].process.is_none());
+    }
+    state.close(session).unwrap();
+}
+
 /// Only the start of a new top-frame document replaces the current one.
 #[test]
 fn a_page_load_start_replaces_the_document() {
