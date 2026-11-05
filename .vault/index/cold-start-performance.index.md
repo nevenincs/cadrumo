@@ -6,12 +6,13 @@ tags:
 date: '2026-11-05'
 modified: '2026-11-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:193012d5fbd18093b7da93b75b05771ae536735487441a76cd6ee9d6a18f7410'
+body_hash: 'sha256:60e916c91b32001cc70a34ddf76aff0e7da31720eb8ca8868acfc49be74ec8f7'
 related:
   - '[[2026-11-05-cold-start-performance-cli-exit-state-reference]]'
   - '[[2026-11-05-cold-start-performance-cli-fast-exit-adr]]'
   - '[[2026-11-05-cold-start-performance-registry-model-definitions-adr]]'
   - '[[2026-11-05-cold-start-performance-registry-model-definitions-reference]]'
+  - '[[2026-11-05-cold-start-performance-secure-storage-core-adr]]'
 ---
 
 # `cold-start-performance` feature index
@@ -24,6 +25,7 @@ Auto-generated index of all documents tagged with `#cold-start-performance`.
 
 - `2026-11-05-cold-start-performance-cli-fast-exit-adr` - `cold-start-performance` adr: `Settled fast exit for the one-shot aeat console process` | (**status:** `accepted`)
 - `2026-11-05-cold-start-performance-registry-model-definitions-adr` - `cold-start-performance` adr: `Shared strict-frozen configurations defer schema construction` | (**status:** `accepted`)
+- `2026-11-05-cold-start-performance-secure-storage-core-adr` - `cold-start-performance` adr: `Secure-object storage on SQLAlchemy Core` | (**status:** `accepted`)
 
 ### reference
 
