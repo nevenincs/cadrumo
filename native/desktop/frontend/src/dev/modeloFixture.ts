@@ -909,7 +909,11 @@ export function modeloFixture(options: Options): ModeloPort {
             if (shape !== "wallet") return unserved();
             const mode = definition.slice("modelo.iva-wallet.".length);
             const before =
-              mode === "seed" ? "empty" : mode === "correct" ? "seed" : "correct";
+              mode === "seed"
+                ? "empty"
+                : mode === "correct"
+                  ? "seed"
+                  : "correct";
             // A write is answered when it carries what the written one did.
             const result = await envelope<JsonObject>(`iva-wallet-${mode}`);
             if (!result || walletStage !== before) return unserved();

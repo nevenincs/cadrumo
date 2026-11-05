@@ -22,10 +22,7 @@ import { MODELO_FIXTURES } from "./support/windowFixtures";
 const envelope = (last = false) =>
   ({
     ...JSON.parse(
-      readFileSync(
-        new URL("modelo-303-1T-en.json", MODELO_FIXTURES),
-        "utf8",
-      ),
+      readFileSync(new URL("modelo-303-1T-en.json", MODELO_FIXTURES), "utf8"),
     ),
     asks_m303_evidence: true,
     asks_modelo_390: last,

@@ -247,10 +247,7 @@ for (const language of LANGUAGES) {
 const servedDraft = (state: string, language: Language): BorradorComparison =>
   JSON.parse(
     readFileSync(
-      new URL(
-        `borrador-100-0A-${state}-${language}.json`,
-        MODELO_FIXTURES,
-      ),
+      new URL(`borrador-100-0A-${state}-${language}.json`, MODELO_FIXTURES),
       "utf8",
     ),
   );

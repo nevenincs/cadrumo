@@ -27,10 +27,7 @@ type Served = {
   refusals: Record<string, Record<string, { refusal_words: string }>>;
 };
 const served = JSON.parse(
-  readFileSync(
-    windowFixture("desktop-household", "household"),
-    "utf8",
-  ),
+  readFileSync(windowFixture("desktop-household", "household"), "utf8"),
 ) as Served;
 
 const LANGUAGES = ["en", "es", "ca", "hu"] as const;
@@ -43,9 +40,11 @@ const PATH = "renta_family.convive_con_otro_progenitor";
 /** The values of one group's first served row in the masked read, by leaf. */
 const maskedFirstRow = (group: string) =>
   Object.fromEntries(
-    served.reads.masked!.items.en!.find(
-      (item) => item.kind === "family_row" && item.group_key === group,
-    )!.facts!.map((fact) => [fact.leaf, fact.value]),
+    served.reads
+      .masked!.items.en!.find(
+        (item) => item.kind === "family_row" && item.group_key === group,
+      )!
+      .facts!.map((fact) => [fact.leaf, fact.value]),
   );
 
 /** The question the product served for a scenario, in a language. */

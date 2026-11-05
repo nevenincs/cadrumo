@@ -6,10 +6,7 @@ import type { UserProfile } from "../../src/shell/userProfile";
  * projected the catalogue persona into the generated fixture. */
 const profile = (
   JSON.parse(
-    readFileSync(
-      windowFixture("desktop-profile", "userProfile"),
-      "utf8",
-    ),
+    readFileSync(windowFixture("desktop-profile", "userProfile"), "utf8"),
   ) as { en: UserProfile }
 ).en;
 

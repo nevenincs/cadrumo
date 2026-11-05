@@ -13,10 +13,7 @@ import { MODELO_FIXTURES } from "./support/windowFixtures";
 // replaces JSX in the files it loads.
 
 const served = JSON.parse(
-  readFileSync(
-    new URL("calculate-130.json", MODELO_FIXTURES),
-    "utf8",
-  ),
+  readFileSync(new URL("calculate-130.json", MODELO_FIXTURES), "utf8"),
 ) as ModeloWorkCalculatePublicResultV3;
 
 type Draw = (props: { bindings: unknown[]; casillas: unknown[] }) => string;

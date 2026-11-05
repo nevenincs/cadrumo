@@ -10,10 +10,7 @@ import { MODELO_FIXTURES } from "./support/windowFixtures";
 const list = (language: string) =>
   JSON.parse(
     readFileSync(
-      new URL(
-        `declarations-${language}.json`,
-        MODELO_FIXTURES,
-      ),
+      new URL(`declarations-${language}.json`, MODELO_FIXTURES),
       "utf8",
     ),
   ) as ModeloDeclarationsListProjectionV1;

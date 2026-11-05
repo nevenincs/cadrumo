@@ -35,10 +35,7 @@ import type {
 
 const envelope = (name: string) =>
   JSON.parse(
-    readFileSync(
-      new URL(`${name}.json`, MODELO_FIXTURES),
-      "utf8",
-    ),
+    readFileSync(new URL(`${name}.json`, MODELO_FIXTURES), "utf8"),
   ) as ModeloWorkbenchFormProjectionV1;
 
 const m130 = envelope("modelo-130-1T-en");

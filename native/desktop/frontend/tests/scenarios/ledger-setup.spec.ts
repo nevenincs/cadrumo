@@ -43,7 +43,10 @@ const prorrataRefused = (reason: string) => PRORRATA_WORDS[reason]!.en!;
  * fixture holds them. */
 const REFUSAL_WORDS = JSON.parse(
   readFileSync(
-    windowFixture("desktop-withholding-refusal-words", "ledgerWithholdingRefusalWords"),
+    windowFixture(
+      "desktop-withholding-refusal-words",
+      "ledgerWithholdingRefusalWords",
+    ),
     "utf8",
   ),
 ) as Record<

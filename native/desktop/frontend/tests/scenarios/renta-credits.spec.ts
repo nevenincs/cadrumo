@@ -166,10 +166,7 @@ type ServedStep =
 const servedRefusal = (refusal: string, language: Language) =>
   JSON.parse(
     readFileSync(
-      new URL(
-        `refusal-${refusal}-${language}.json`,
-        MODELO_FIXTURES,
-      ),
+      new URL(`refusal-${refusal}-${language}.json`, MODELO_FIXTURES),
       "utf8",
     ),
   ) as {

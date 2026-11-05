@@ -146,10 +146,7 @@ test("an account's number and bank code are offered nothing and keep out of brow
 
 test("every profile detail asks the browser to remember nothing", async () => {
   const { en } = JSON.parse(
-    readFileSync(
-      windowFixture("desktop-profile", "userProfile"),
-      "utf8",
-    ),
+    readFileSync(windowFixture("desktop-profile", "userProfile"), "utf8"),
   ) as { en: UserProfile };
   const details = en.sections.flatMap((section) => section.fields);
   expect(details.length).toBeGreaterThan(20);

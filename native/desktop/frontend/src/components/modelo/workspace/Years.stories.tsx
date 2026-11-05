@@ -183,10 +183,7 @@ export const EveryYearOffersWhatItServes: Story = {
       );
       await userEvent.click(ask);
       const filer = filerOf(served.shape);
-      const answer =
-        comparisons[
-          `compare-100-0A-${filer}-${locale}`
-        ];
+      const answer = comparisons[`compare-100-0A-${filer}-${locale}`];
       if (answer) {
         const projection = await answer();
         const result = await waitFor(
@@ -212,10 +209,7 @@ export const EveryYearOffersWhatItServes: Story = {
         expect(result.closest("[data-taxation-comparison]")).not.toBeNull();
         continue;
       }
-      const refusal =
-        refusals[
-          `refusal-compare-100-0A-${filer}-${locale}`
-        ];
+      const refusal = refusals[`refusal-compare-100-0A-${filer}-${locale}`];
       if (!refusal) throw new Error(`No comparison is stored for ${filer}`);
       const detail = await refusal();
       const token = String(

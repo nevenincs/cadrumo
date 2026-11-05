@@ -21,10 +21,7 @@ const REASON = "The ledger misses an invoice booked late.";
 
 const stored = <T>(name: string): T =>
   JSON.parse(
-    readFileSync(
-      new URL(`${name}.json`, MODELO_FIXTURES),
-      "utf8",
-    ),
+    readFileSync(new URL(`${name}.json`, MODELO_FIXTURES), "utf8"),
   ) as T;
 
 /** A command line, flag or markup an action would show had it not been

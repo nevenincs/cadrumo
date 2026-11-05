@@ -44,7 +44,9 @@ test("the palette starts the one Censo flow from a page that is not the profile"
 }) => {
   await openApp(page);
   await chooseFromPalette(page);
-  await expect(page.locator(".user-profile-page")).toContainText(PROFILE_SURNAMES);
+  await expect(page.locator(".user-profile-page")).toContainText(
+    PROFILE_SURNAMES,
+  );
   await expect(
     band(page).getByRole("button", {
       name: label("desktop.profile.censo.review_count", { count: 3 }),
@@ -78,7 +80,9 @@ test("the palette lists the Censo pull once on the profile page and starts it th
       exact: true,
     })
     .click();
-  await expect(page.locator(".user-profile-page")).toContainText(PROFILE_SURNAMES);
+  await expect(page.locator(".user-profile-page")).toContainText(
+    PROFILE_SURNAMES,
+  );
   await page.keyboard.press("Control+k");
   await page.keyboard.type("census");
   await expect(pullOption(page)).toHaveCount(1);
@@ -147,7 +151,9 @@ test("choosing it after leaving a review reads that pull first and starts no sec
     window.__scenarioCenso!.readinessChecks(),
   );
   await chooseFromPalette(page);
-  await expect(page.locator(".user-profile-page")).toContainText(PROFILE_SURNAMES);
+  await expect(page.locator(".user-profile-page")).toContainText(
+    PROFILE_SURNAMES,
+  );
   await expect
     .poll(() => page.evaluate(() => window.__scenarioCenso!.readinessChecks()))
     .toBeGreaterThan(checks);

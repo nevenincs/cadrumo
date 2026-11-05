@@ -1,6 +1,11 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { label } from "../support/strings";
-import { PROFILE_NAME, PROFILE_SECTION_TITLES, PROFILE_SURNAMES, profileStated } from "../support/profileFixture";
+import {
+  PROFILE_NAME,
+  PROFILE_SECTION_TITLES,
+  PROFILE_SURNAMES,
+  profileStated,
+} from "../support/profileFixture";
 import { SCENARIO_PASSWORD } from "../../src/dev/fixtures/password";
 
 async function open(page: Page, scenario = "user-profile", language = "en") {
@@ -14,7 +19,9 @@ async function open(page: Page, scenario = "user-profile", language = "en") {
       exact: true,
     })
     .click();
-  await expect(page.locator(".user-profile-page")).toContainText(PROFILE_SURNAMES);
+  await expect(page.locator(".user-profile-page")).toContainText(
+    PROFILE_SURNAMES,
+  );
   return page.locator(".user-profile-page");
 }
 
@@ -102,7 +109,9 @@ test("the summary names the taxpayer and filters to what is required and missing
 }) => {
   const profile = await open(page);
   const header = profile.locator("header");
-  await expect(header.getByRole("heading", { level: 3 })).toHaveText(PROFILE_NAME);
+  await expect(header.getByRole("heading", { level: 3 })).toHaveText(
+    PROFILE_NAME,
+  );
   await expect(header).toContainText(profileStated("identity.email"));
   await expect(header).toContainText(
     `${profileStated("contact.fiscal_address")} · ${profileStated("contact.postcode")}`,
@@ -132,7 +141,9 @@ test("search, show, group and sort arrange the saved details", async ({
   page,
 }) => {
   const profile = await open(page);
-  await profile.getByRole("searchbox").fill(profileStated("contact.fiscal_address").split(/[ ,]+/).pop()!);
+  await profile
+    .getByRole("searchbox")
+    .fill(profileStated("contact.fiscal_address").split(/[ ,]+/).pop()!);
   await expect(row(profile, "contact.fiscal_address")).toBeVisible();
   await expect(profile.getByRole("region", { name: /^Identity/ })).toHaveCount(
     0,
@@ -655,7 +666,9 @@ test("full schema, collapsible sections, section index and browser autofill", as
     .getByRole("button", { name: "Contact and fiscal address" })
     .click();
   await expect(row(profile, "contact.contact_person_phone")).toBeInViewport();
-  await expect(profile).toContainText(profileStated("contact.contact_person_phone"));
+  await expect(profile).toContainText(
+    profileStated("contact.contact_person_phone"),
+  );
 });
 
 test("Censo checks saved prerequisites and edits the missing identity", async ({

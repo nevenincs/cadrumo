@@ -129,7 +129,9 @@ const SURFACES: {
           exact: true,
         })
         .click();
-      await expect(target.locator(".user-profile-page")).toContainText(PROFILE_SURNAMES);
+      await expect(target.locator(".user-profile-page")).toContainText(
+        PROFILE_SURNAMES,
+      );
       if (editing)
         await target
           .locator(".user-profile-page")
@@ -151,7 +153,9 @@ const SURFACES: {
           exact: true,
         })
         .click();
-      await expect(target.locator(".user-profile-page")).toContainText(PROFILE_SURNAMES);
+      await expect(target.locator(".user-profile-page")).toContainText(
+        PROFILE_SURNAMES,
+      );
       await target
         .locator(".user-profile-page")
         .getByRole("button", {

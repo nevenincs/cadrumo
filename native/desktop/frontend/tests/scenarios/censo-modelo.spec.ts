@@ -32,7 +32,9 @@ test("the Modelo page's census entry starts the one Censo flow on the profile pa
     label("desktop.profile.censo.title"),
   );
   await page.locator(".declarations-census").click();
-  await expect(page.locator(".user-profile-page")).toContainText(PROFILE_SURNAMES);
+  await expect(page.locator(".user-profile-page")).toContainText(
+    PROFILE_SURNAMES,
+  );
   await expect(review(page)).toBeVisible();
   expect(await page.evaluate(() => window.__scenarioCenso!.starts())).toBe(1);
 });

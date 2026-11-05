@@ -24,10 +24,9 @@ import { byName } from "@/dev/globByName";
 const UNIT = "b1c431589384a105701ba15942606b5f5667cb677d6fa62e743cd0293f9baee4";
 
 const envelopes = byName(
-  import.meta.glob<Comparison>(
-    "@fixtures/modelo/borrador-100-0A-*.json",
-    { import: "default" },
-  ),
+  import.meta.glob<Comparison>("@fixtures/modelo/borrador-100-0A-*.json", {
+    import: "default",
+  }),
 );
 
 const language = (globals: Record<string, unknown>) =>

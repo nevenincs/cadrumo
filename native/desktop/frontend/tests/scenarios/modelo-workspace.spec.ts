@@ -39,10 +39,7 @@ test("the header states the read model's result, deadline and next action", asyn
   page: target,
 }) => {
   const served = JSON.parse(
-    readFileSync(
-      new URL("modelo-130-1T-en.json", MODELO_FIXTURES),
-      "utf8",
-    ),
+    readFileSync(new URL("modelo-130-1T-en.json", MODELO_FIXTURES), "utf8"),
   ) as ModeloWorkbenchFormProjectionV1;
   await openDeclaration(target, "130");
   const header = workspace(target).locator("header").first();
@@ -181,10 +178,7 @@ test("what the calculation noted about a box is said beside it, at its level", a
 }) => {
   const read = JSON.parse(
     readFileSync(
-      new URL(
-        "modelo-130-1T-income-en.json",
-        MODELO_FIXTURES,
-      ),
+      new URL("modelo-130-1T-income-en.json", MODELO_FIXTURES),
       "utf8",
     ),
   ) as ModeloWorkbenchFormProjectionV1;

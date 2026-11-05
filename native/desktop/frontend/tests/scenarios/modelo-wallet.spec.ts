@@ -28,17 +28,15 @@ type Written = {
 };
 const served = <T>(name: string): T =>
   JSON.parse(
-    readFileSync(
-      new URL(`${name}.json`, MODELO_FIXTURES),
-      "utf8",
-    ),
+    readFileSync(new URL(`${name}.json`, MODELO_FIXTURES), "utf8"),
   ) as T;
 const SEEDED = served<Written>("iva-wallet-seed");
 const CORRECTED = served<Written>("iva-wallet-correct");
 const OVERRIDDEN = served<Written>("iva-wallet-override");
 /** The year the scenario's balance was read at. */
-const AS_OF_YEAR = served<{ as_of_year: number }>("iva-wallet-balance-empty")
-  .as_of_year;
+const AS_OF_YEAR = served<{ as_of_year: number }>(
+  "iva-wallet-balance-empty",
+).as_of_year;
 const words = (key: string, language: Language = "en") =>
   label(`workspace.modelo.iva_wallet.${key}`, {}, language);
 const wallet = (page: Page, language: Language = "en") =>
@@ -270,7 +268,9 @@ test("wallet records exact amounts, preserves separate drafts, and does not reca
     "",
   );
   await sourcePeriod(dialog);
-  await dialog.getByLabel(words("amount"), { exact: true }).fill(CORRECTED.amount);
+  await dialog
+    .getByLabel(words("amount"), { exact: true })
+    .fill(CORRECTED.amount);
   await expect(
     dialog.getByRole("button", { name: words("mode.correct"), exact: true }),
   ).toBeDisabled();
@@ -289,7 +289,9 @@ test("wallet records exact amounts, preserves separate drafts, and does not reca
   await dialog
     .getByLabel(words("action"), { exact: true })
     .selectOption("override");
-  await dialog.getByLabel(words("amount"), { exact: true }).fill(OVERRIDDEN.amount);
+  await dialog
+    .getByLabel(words("amount"), { exact: true })
+    .fill(OVERRIDDEN.amount);
   await dialog
     .getByLabel(words("reason"), { exact: true })
     .fill(OVERRIDDEN.reason!);
@@ -316,7 +318,9 @@ test("wallet records exact amounts, preserves separate drafts, and does not reca
     })
     .click();
   await expect(fact(wallet(page), "lot_count")).toHaveText("1");
-  await expect(fact(wallet(page), "active_balance")).toContainText(CORRECTED.amount);
+  await expect(fact(wallet(page), "active_balance")).toContainText(
+    CORRECTED.amount,
+  );
   const sent = await page.evaluate(() => window.__walletTest!.sent);
   expect(
     sent
