@@ -68,6 +68,8 @@ from ...core.modelo import Modelo
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.period import Period
 from ...core.time.clock import now
+from ...domain.calculations.registry.applicability import derive_modelo_applicability
+from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
@@ -97,6 +99,7 @@ from ...domain.calculations.registry.relations import (
     relation_source_requirements,
 )
 from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
+from ...domain.deadlines.errors import ProfileError
 from ..aggregation.source_mesh import (
     CalculationSourceContext,
     CalculationSourceProvenance,
@@ -106,6 +109,7 @@ from ..aggregation.source_resolution_operations import storage_degradation_resol
 from ..persistence_errors import PersistenceDegradationError
 from ..storage.calc_sheets.records import RelationValue, RelationValues, SheetRelationProvenance
 from ..user_profile.profile_read_ports import ProfilePathValuesReadPort, ProfileReadPorts
+from ..user_profile.projections import projection_for_taxpayer
 from .m111_no_retenciones import (
     is_m111_no_retenciones_period,
     m111_no_retenciones_periods_for_bucket,
@@ -330,6 +334,37 @@ def _not_applicable_source_modelos_for_bucket(
     if estimation_regime == irpf_estimation_regime_objetiva_token():
         return candidates & frozenset({str(Modelo("130"))})
     return frozenset[str]()
+
+
+def _registry_not_applicable_source_modelos(
+    snapshot: RegistrySnapshot,
+    context: CalculationSourceContext,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> frozenset[str]:
+    """Return the conditional sources the registry's applicability rule positively excludes for the profile.
+
+    The rule is the one the overview reads, so a source modelo the taxpayer is exempt from for the
+    whole ejercicio (RIRPF art. 109.1 for Modelo 130) resolves its relation to a proven zero the way
+    a pre-activity source does. Only a positive ``NOT_APPLICABLE`` verdict counts: an incomplete or
+    undetermined verdict, a derivation that cannot run, or a context with no profile leaves the
+    relation unresolved.
+    """
+    if context.profile is None:
+        return frozenset[str]()
+    try:
+        taxpayer = projection_for_taxpayer(context.profile.record, schema=operation.profile_schema())
+    except ProfileError:
+        return frozenset[str]()
+    excluded: set[str] = set()
+    for modelo in sorted(_economic_activity_conditional_source_modelos(snapshot)):
+        try:
+            verdict = derive_modelo_applicability(taxpayer, modelo, operation=operation).verdict
+        except (TypeError, ValueError, RegistryValidationError):
+            continue
+        if verdict is ApplicabilityVerdict.NOT_APPLICABLE:
+            excluded.add(modelo)
+    return frozenset(excluded)
 
 
 def _parse_canonical_iso_date(raw: str | None) -> date | None:
@@ -938,7 +973,8 @@ def _relation_prefill_context_inputs(
             snapshot,
             bucket_id,
             profile_path_values_reader=profile_path_values_reader,
-        ),
+        )
+        | _registry_not_applicable_source_modelos(snapshot, context, operation=operation),
         modelo_202_first_year_cuota=(
             context.modelo == str(Modelo("200"))
             and _first_year_modalidad_cuota_no_m202(
