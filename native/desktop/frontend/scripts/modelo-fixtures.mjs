@@ -122,9 +122,7 @@ if (wireTypes) {
   if (values.check) {
     for (const [path, text] of targets) {
       const stored = existsSync(path)
-        ? readFileSync(path, "utf8").replaceAll("
-", "
-")
+        ? readFileSync(path, "utf8").replaceAll("\r\n", "\n")
         : "";
       if (stored !== text) {
         console.error(
