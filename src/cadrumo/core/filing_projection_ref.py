@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from enum import StrEnum
+from functools import cache
 from typing import Annotated, Final, Literal, TypeIs, cast, get_args
 
 from pydantic import BaseModel, Field, TypeAdapter, model_validator
@@ -892,7 +893,13 @@ FilingProjectionRef = Annotated[
 ]
 """Strict core-owned union for every repeated-row filing projection."""
 
-_FILING_PROJECTION_REF_ADAPTER: TypeAdapter[FilingProjectionRef] = TypeAdapter(FilingProjectionRef)
+
+@cache
+def _filing_projection_ref_adapter() -> TypeAdapter[FilingProjectionRef]:
+    """Build the projection-reference union validator on first use; constructing it compiles a whole schema."""
+    return TypeAdapter(FilingProjectionRef)
+
+
 #: The typed members a compiled projection reference can be. Derived from the
 #: annotated union rather than restated, so a new member cannot be forgotten
 #: here: ``get_args`` on the Annotated alias yields the union first, whose own
@@ -962,7 +969,7 @@ def compile_filing_projection_ref(value: object) -> FilingProjectionRef:
     payload = _normalise_filing_projection_ref_payload(value)
     _validate_filing_projection_ref_strings(payload)
     _validate_filing_projection_ref_integers(payload)
-    return _FILING_PROJECTION_REF_ADAPTER.validate_python(payload, strict=False)
+    return _filing_projection_ref_adapter().validate_python(payload, strict=False)
 
 
 def hydrate_filing_projection_ref(value: object) -> FilingProjectionRef:
