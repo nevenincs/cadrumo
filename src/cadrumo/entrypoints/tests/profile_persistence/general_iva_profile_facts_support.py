@@ -44,3 +44,23 @@ def renta_single_taxpayer_facts(*, birth_date: date) -> tuple[UserProfileFact, .
         UserProfileFact(path="renta_family.cotizaciones_ss_madre_2024", value=Decimal("0")),
         UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
     )
+
+
+def no_household_renta_facts() -> tuple[UserProfileFact, ...]:
+    """Return the renta facts derived for a filer with no spouse and no dependants.
+
+    A single persona states its sex, marital status, birth date and declaration type;
+    these are the marriage and family quantities the Renta bindings read from a household
+    that has no members, so each is a true zero.
+    """
+    return (
+        UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
+        UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
+        UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
+        UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+        UserProfileFact(path="renta_family.descendientes_count", value=Decimal("0")),
+        UserProfileFact(path="renta_family.cotizaciones_ss_madre_2024", value=Decimal("0")),
+        UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+        UserProfileFact(path="renta_family.unidad_familiar_otros_miembros_base", value=Decimal("0")),
+        UserProfileFact(path="renta_family.madrid_nacimiento_adopcion_eligible_count", value=Decimal("0")),
+    )

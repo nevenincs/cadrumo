@@ -39,16 +39,12 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Iterator
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 from pydantic import AnyHttpUrl
-
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from ....adapters.outbound.aeat.sede.schema import (
     FiledDeclaracionArtefact,
@@ -61,9 +57,9 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_persona_profile
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.observations_repository import ObservationSourceKind
 from ....application.live.filed_observation_persistence import persist_filed_calculation_observation
@@ -83,13 +79,11 @@ from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
 )
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ...live_state_composition import compose_filed_observation_persistence_ports
 from .file_flow_test_support import calculation_ports_for_test
-from .general_iva_profile_facts_support import renta_single_taxpayer_facts
+from .general_iva_profile_facts_support import no_household_renta_facts
 from .observation_seeding_support import save_stamped_observation
+from .ready_profile_taxpayer import ready_profile_tax_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -120,7 +114,7 @@ _M100_ANEXO_C_CARRY_CASILLAS: tuple[CasillaId, ...] = tuple(
 )
 _RELATION_PREFILL_SOURCE = "relation_prefill"
 _M130_PAGOS_RELATION_ID = "renta-modelo-130-pagos-fraccionados"
-_SYNTHETIC_TAX_ID = "12345678Z"
+_SYNTHETIC_TAX_ID = ready_profile_tax_id()
 
 
 def _synthetic_register_row(period_code: str) -> FiledDeclaracionObservation:
@@ -201,27 +195,6 @@ def _pull_the_m130_history(
     )
 
 
-def _seed_taxpayer_profile(*, bucket_id: str) -> None:
-    """Seed the declared profile facts the annual M100 revision's profile bindings need."""
-    record = _create_profile_record_for_test(
-        setup_state=ProfileSetupState.COMPLETE,
-        profile_id=bucket_id,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value=_SYNTHETIC_TAX_ID),
-            UserProfileFact(path="identity.name", value="Test"),
-            UserProfileFact(path="identity.surnames", value="Operator"),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-            *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
-        ),
-        created_at=_T0,
-        updated_at=_T0,
-        context=_profile_creation_context_for_test(),
-    )
-    seed_test_profile_record(record)
-
-
 def _seed_prior_year_m100_zero_carry(secure_objects: SecureObjectRepository) -> None:
     """Zero the prior-year negative-base carry both poles share.
 
@@ -285,7 +258,7 @@ def _calculate_m100_annual(
     authority and passed to work-unit creation, which asserts rather than selects
     on it, so the law determines which revision computes.
     """
-    _seed_taxpayer_profile(bucket_id=bucket_id)
+    seed_persona_profile("autonomo-fontanero", bucket_id=bucket_id, at=_T0, facts=no_household_renta_facts())
     _seed_prior_year_m100_zero_carry(secure_objects)
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
