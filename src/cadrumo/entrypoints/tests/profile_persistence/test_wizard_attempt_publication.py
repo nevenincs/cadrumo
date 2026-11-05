@@ -42,7 +42,7 @@ from ....domain.calculations.registry.errors import RegistryValidationError
 from .file_flow_test_support import calculation_ports_for_test
 from .test_work_missing_input_publication import (
     _PROFILE_ID,
-    _REQUIRED_MANUAL_BINDING,
+    _REQUIRED_BINDING,
     _YEAR,
     _profile,
     _work_and_repositories,
@@ -145,7 +145,7 @@ def test_real_missing_input_attempt_persists_encrypted_needs_input_without_revis
         binding_values: dict[str, str] = {
             str(binding.id): "0"
             for binding in snapshot.revision.bindings
-            if binding.source is BindingSourceKind.MANUAL_INPUT and binding.id != _REQUIRED_MANUAL_BINDING
+            if binding.source is BindingSourceKind.PREVIOUS_FILING and binding.id != _REQUIRED_BINDING
         }
         request = _real_request(unit.work_unit_id, binding_values=binding_values)
         operands = operation_secure_reference_repository(objects=profile.repository)
@@ -159,7 +159,7 @@ def test_real_missing_input_attempt_persists_encrypted_needs_input_without_revis
             )
         result = asyncio.run(operands.resolve(reference, ModeloWorkWizardAttemptProjection))
         assert result.outcome.kind == "needs_input"
-        assert _REQUIRED_MANUAL_BINDING not in binding_values
+        assert _REQUIRED_BINDING not in binding_values
         assert result.outcome.step.key not in binding_values
         declared = next(
             row
@@ -199,7 +199,7 @@ def test_real_calculated_attempt_keeps_ordinary_public_result_and_updated_effect
             )
         result = asyncio.run(operands.resolve(reference, ModeloWorkWizardAttemptProjection))
         assert result.outcome.kind == "calculated"
-        assert result.outcome.result.result_version == 2
+        assert result.outcome.result.result_version == 3
         assert result.outcome.result.revision_published
         assert result.outcome.result.work_unit_id == unit.work_unit_id
         assert events.effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
@@ -222,7 +222,7 @@ def test_postpublication_same_tag_does_not_persist_needs_input(
             raise RegistryValidationError(
                 "injected post-publication diagnostic failure",
                 translated_message="errors.calc.binding_value_missing",
-                context={"binding_id": _REQUIRED_MANUAL_BINDING},
+                context={"binding_id": _REQUIRED_BINDING},
             )
 
         monkeypatch.setattr(calculate_input, "modelo_202_modality_for_record", fail_after_publication)
