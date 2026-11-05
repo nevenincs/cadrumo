@@ -35,14 +35,25 @@ fn live() -> Option<Live> {
     })
 }
 
-/// The form read the desktop frontend's generated Modelo 303 envelope holds.
-/// This is the only place the envelope's location is named.
-const MODELO_303_ENVELOPE: &str =
-    include_str!("../../../desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-en.json");
+/// The form read the desktop frontend's generated Modelo 303 envelope holds, read from the
+/// build tree's fixtures. This is the only place the envelope's location is named; a test
+/// never writes it, and a missing one stops the test with the command that produces it.
+fn modelo_303_envelope() -> String {
+    const DIRECTORY: &str = "CADRUMO_WINDOW_FIXTURES";
+    let directory = std::env::var_os(DIRECTORY)
+        .unwrap_or_else(|| panic!("{DIRECTORY} names the generated window fixtures"));
+    let path = std::path::PathBuf::from(directory).join("modelo/modelo-303-1T-en.json");
+    std::fs::read_to_string(&path).unwrap_or_else(|error| {
+        panic!(
+            "the window fixture {} is unreadable ({error}); run `just fixtures-seed modelo-envelopes`",
+            path.display()
+        )
+    })
+}
 
 /// The edit baseline that envelope's form read admitted, taken whole.
 fn admitted_baseline() -> Value {
-    let envelope: Value = serde_json::from_str(MODELO_303_ENVELOPE).unwrap();
+    let envelope: Value = serde_json::from_str(&modelo_303_envelope()).unwrap();
     let baseline = envelope["admitted_baseline"].clone();
     assert!(baseline.is_object(), "the envelope admitted a baseline");
     baseline

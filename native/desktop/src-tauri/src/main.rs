@@ -17,6 +17,8 @@ mod startup_alert;
 mod startup_logging;
 mod startup_outcome;
 mod terminal;
+#[cfg(test)]
+mod window_fixtures;
 
 use cadrumo_application::{
     child::ChildConfiguration,
