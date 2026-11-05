@@ -17,12 +17,12 @@ from ..cohort_attestation import (
     make_test_command_spec_attestation,
 )
 from ..command_spec_attestation import (
-    _artifact_command_projection,
-    _assert_probe_reads_are_wheel_members,
-    _cached_artifact_command_projection,
-    _command_spec_attestation,
-    _install_relative_probe_reads,
-    _validate_command_spec_attestation,
+    artifact_command_projection,
+    assert_probe_reads_are_wheel_members,
+    cached_artifact_command_projection,
+    command_spec_attestation,
+    install_relative_probe_reads,
+    validate_command_spec_attestation,
 )
 from ..hashing import sha256_path
 from ..python_cohort import digest_install_target, load_python_cohort
@@ -191,13 +191,13 @@ def test_attestation_refuses_an_origin_the_root_wheel_does_not_ship(tmp_path: Pa
         ("wheel", "cadrumo/locales/en/application.yml"),
         ("source", "src/cadrumo/tests/helper.py"),
     )
-    projection = _install_relative_probe_reads(
+    projection = install_relative_probe_reads(
         _projection_over(site_root, ("cadrumo/__init__.py", "cadrumo/tests/helper.py")),
         site_root=site_root,
     )
 
     with pytest.raises(SystemExit, match="does not ship"):
-        _assert_probe_reads_are_wheel_members(projection, artifact_projection)
+        assert_probe_reads_are_wheel_members(projection, artifact_projection)
 
 
 def test_attestation_refuses_packaged_data_the_root_wheel_does_not_ship(tmp_path: Path) -> None:
@@ -220,7 +220,7 @@ def test_attestation_refuses_packaged_data_the_root_wheel_does_not_ship(tmp_path
         ("wheel", "cadrumo/locales/en/application.yml"),
         ("source", "src/cadrumo/locales/es/application.yml"),
     )
-    projection = _install_relative_probe_reads(
+    projection = install_relative_probe_reads(
         _projection_over(
             site_root,
             ("cadrumo/__init__.py",),
@@ -230,7 +230,7 @@ def test_attestation_refuses_packaged_data_the_root_wheel_does_not_ship(tmp_path
     )
 
     with pytest.raises(SystemExit, match="does not ship") as refusal:
-        _assert_probe_reads_are_wheel_members(projection, artifact_projection)
+        assert_probe_reads_are_wheel_members(projection, artifact_projection)
 
     assert "cadrumo/locales/es/application.yml" in str(refusal.value)
 
@@ -245,13 +245,13 @@ def test_attestation_refuses_a_projection_that_read_no_packaged_data(tmp_path: P
     """
     site_root = tmp_path / "src"
     (site_root / "cadrumo").mkdir(parents=True)
-    projection = _install_relative_probe_reads(
+    projection = install_relative_probe_reads(
         _projection_over(site_root, ("cadrumo/__init__.py",), resources=()),
         site_root=site_root,
     )
 
     with pytest.raises(SystemExit, match="no packaged resource file"):
-        _assert_probe_reads_are_wheel_members(projection, (("wheel", "cadrumo/__init__.py"),))
+        assert_probe_reads_are_wheel_members(projection, (("wheel", "cadrumo/__init__.py"),))
 
 
 def test_attestation_accepts_origins_and_data_the_root_wheel_carries(tmp_path: Path) -> None:
@@ -272,13 +272,13 @@ def test_attestation_accepts_origins_and_data_the_root_wheel_carries(tmp_path: P
         archive.addfile(info, io.BytesIO(b""))
     source_archive = _wheel_carrying(tmp_path / "cadrumo-source.zip", ("pyproject.toml",))
 
-    artifact_projection = _artifact_command_projection(root_wheel, root_sdist, source_archive)
-    projection = _install_relative_probe_reads(
+    artifact_projection = artifact_command_projection(root_wheel, root_sdist, source_archive)
+    projection = install_relative_probe_reads(
         _projection_over(site_root, members[:2], resources=members[2:]),
         site_root=site_root,
     )
 
-    _assert_probe_reads_are_wheel_members(projection, artifact_projection)
+    assert_probe_reads_are_wheel_members(projection, artifact_projection)
 
 
 def test_attestation_names_probe_reads_by_install_member_not_build_location(tmp_path: Path) -> None:
@@ -299,15 +299,15 @@ def test_attestation_names_probe_reads_by_install_member_not_build_location(tmp_
     for build in ("build-a", "build-b"):
         site_root = tmp_path / build / "src"
         site_root.mkdir(parents=True)
-        projection = _install_relative_probe_reads(
+        projection = install_relative_probe_reads(
             _projection_over(site_root, members[:1], resources=members[1:]),
             site_root=site_root,
         )
         assert projection["origins"] == [["cadrumo.__init__.py", "cadrumo/__init__.py"]]
         assert projection["packaged_resources"] == ["cadrumo/locales/en/application.yml"]
-        _assert_probe_reads_are_wheel_members(projection, artifact_projection)
+        assert_probe_reads_are_wheel_members(projection, artifact_projection)
         envelopes.append(
-            _command_spec_attestation(
+            command_spec_attestation(
                 projection,
                 artifact_projection,
                 source_digest="a" * 64,
@@ -328,7 +328,7 @@ def test_attestation_refuses_an_origin_outside_the_probe_tree(tmp_path: Path) ->
     elsewhere.mkdir()
 
     with pytest.raises(SystemExit, match="escaped its probe tree"):
-        _install_relative_probe_reads(
+        install_relative_probe_reads(
             _projection_over(elsewhere, ("cadrumo/__init__.py",)),
             site_root=site_root,
         )
@@ -351,7 +351,7 @@ def test_attestation_refuses_packaged_data_outside_the_probe_tree(tmp_path: Path
     }
 
     with pytest.raises(SystemExit, match="escaped its probe tree"):
-        _install_relative_probe_reads(projection, site_root=site_root)
+        install_relative_probe_reads(projection, site_root=site_root)
 
 
 def test_attestation_binds_the_digests_it_is_handed(tmp_path: Path) -> None:
@@ -368,7 +368,7 @@ def test_attestation_binds_the_digests_it_is_handed(tmp_path: Path) -> None:
     }
     digests = ("1" * 64, "2" * 64, "3" * 64)
 
-    attestation = _command_spec_attestation(
+    attestation = command_spec_attestation(
         projection,
         (("wheel", "cadrumo/__init__.py"),),
         source_digest="a" * 64,
@@ -384,7 +384,7 @@ def test_attestation_binds_the_digests_it_is_handed(tmp_path: Path) -> None:
     # Revalidating the sealed envelope against its own bindings is the proof
     # the digests were threaded rather than recomputed from unrelated bytes.
     assert (
-        _validate_command_spec_attestation(
+        validate_command_spec_attestation(
             attestation,
             expected_source_digest="a" * 64,
             expected_root_wheel_sha256=digests[0],
@@ -412,11 +412,11 @@ def test_artifact_projection_is_reused_for_one_artifact_triple(tmp_path: Path) -
     source_archive = _wheel_carrying(tmp_path / "cadrumo-source.zip", ("pyproject.toml",))
     digests = (sha256_path(root_wheel), sha256_path(root_sdist), sha256_path(source_archive))
 
-    first = _cached_artifact_command_projection(root_wheel, root_sdist, source_archive, digests=digests)
+    first = cached_artifact_command_projection(root_wheel, root_sdist, source_archive, digests=digests)
     for artifact in (root_wheel, root_sdist, source_archive):
         artifact.unlink()
 
-    assert _cached_artifact_command_projection(root_wheel, root_sdist, source_archive, digests=digests) == first
+    assert cached_artifact_command_projection(root_wheel, root_sdist, source_archive, digests=digests) == first
     assert ("wheel", "cadrumo/__init__.py") in first
 
 

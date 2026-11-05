@@ -452,5 +452,5 @@ checks locally with `just docs-availability-check`.
 - `.github/workflows/release.yml` — sole proof and publication authority
 - `.github/workflows/merge-gate.yml` — the required pull request verdict, reused by the prove phase
 - `dev/smoke/smoke_check.py` — the check that proves an installed artifact
-- `dev/packaging/_distribution_limits.py` — the index file cap, declared once
+- `dev/packaging/distribution_limits.py` — the index file cap, declared once
 - `SECURITY.md` — private security reporting

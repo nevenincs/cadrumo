@@ -111,7 +111,7 @@ def _serve_from_cache(cache: Path | None, wheel: LockedWheel, destination: Path)
     return True
 
 
-def _store_in_cache(cache: Path | None, wheel: LockedWheel, source: Path) -> None:
+def store_in_cache(cache: Path | None, wheel: LockedWheel, source: Path) -> None:
     """Publish verified bytes into the cache, tolerating any storage refusal.
 
     Written to a neighbour unique to this WRITE and moved into place, so a
@@ -145,7 +145,7 @@ def _acquire(wheel: LockedWheel, destination: Path, cache: Path | None) -> bool:
     if _serve_from_cache(cache, wheel, destination):
         return True
     _download(wheel, destination)
-    _store_in_cache(cache, wheel, destination)
+    store_in_cache(cache, wheel, destination)
     return False
 
 
@@ -179,7 +179,7 @@ def _acquire_group(wheel: LockedWheel, destinations: Sequence[Path], cache: Path
         shutil.copyfile(primary, copy)
 
 
-def _acquire_all(
+def acquire_all(
     plans: Sequence[RuntimeWheelhousePlan],
     wheel_dir: Path,
     cache: Path | None,

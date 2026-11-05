@@ -30,14 +30,14 @@ from ..linux_desktop_runtime import (
 from ..linux_packages import PREINSTALL, author_gates, inspect_artifact
 from ..platforms import linux
 from .binary_fixtures import elf_image
-from .test_distribution_prepare import _configure_distribution, _paths
+from .test_distribution_prepare import configure_distribution, distribution_prepare_paths
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 @pytest.mark.parametrize("target", ["linux-x86-64", "linux-aarch64"])
 def test_generated_native_package_dependencies_use_same_payload_policy(tmp_path: Path, target: str) -> None:
-    payload, _, build = _configure_distribution(tmp_path, target)
+    payload, _, build = configure_distribution(tmp_path, target)
     manifest = json.loads((payload / "data/package-manifest.json").read_text(encoding="utf-8"))
     assert validate_payload(payload, manifest)
     policy = json.loads((payload / MANIFEST).read_text(encoding="utf-8"))
@@ -158,7 +158,7 @@ def test_real_native_artifact_requires_its_inventory_bound_desktop_policy(
         pytest.skip("native package tools required")
     payload, identity_file = payload_fixture(tmp_path, "linux-x86-64")
     build = tmp_path / "build"
-    _paths(build)
+    distribution_prepare_paths(build)
     refresh(payload, identity_file, build)
     stage = build / "installation/stage"
     (build / "packages").mkdir()

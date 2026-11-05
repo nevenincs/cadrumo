@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ..assembly_staging import _prune_local_install_records
+from ..assembly_staging import prune_local_install_records
 from ..portable_provenance import checkout_relative, shipped_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -64,7 +64,7 @@ def test_installer_records_of_build_host_wheels_are_dropped_and_listed(tmp_path:
         directory.mkdir(parents=True)
         (directory / "direct_url.json").write_text(json.dumps({"url": url}), encoding="utf-8")
 
-    pruned = _prune_local_install_records(packages, root)
+    pruned = prune_local_install_records(packages, root)
 
     assert [entry["file"] for entry in pruned] == ["site-packages/cadrumo-1.0.dist-info/direct_url.json"]
     assert not (local / "direct_url.json").exists()

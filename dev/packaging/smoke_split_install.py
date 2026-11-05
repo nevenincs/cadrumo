@@ -45,7 +45,7 @@ from .lane_verification_core import (
 from .proof_ledger import record_proof
 from .python_cohort import assert_installed_cohort, load_python_cohort
 
-_COHORT_PROBE = """
+COHORT_PROBE = """
 from importlib.metadata import requires, version
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
@@ -72,7 +72,7 @@ print(f"four-wheel-cohort-ok: {root_version}")
 """
 
 
-_INSTALLED_CORPUS_PROBE = """
+INSTALLED_CORPUS_PROBE = """
 import hashlib
 import json
 import sys
@@ -103,7 +103,7 @@ def _validate_corpus_path(logical_path: str) -> None:
         raise SystemExit(f"companion corpus member has an unsafe logical path: {logical_path!r}")
 
 
-def _companion_corpus_hashes(data_wheels: Sequence[Path]) -> dict[str, str]:
+def companion_corpus_hashes(data_wheels: Sequence[Path]) -> dict[str, str]:
     """Hash every supplied companion corpus member without trusting installed files."""
     if len(data_wheels) != len(PRODUCT_IDENTITY.companion_distributions):
         raise SystemExit("corpus verification requires every mandatory companion wheel")
@@ -126,7 +126,7 @@ def _companion_corpus_hashes(data_wheels: Sequence[Path]) -> dict[str, str]:
     return dict(sorted(expected.items()))
 
 
-def _install_cohort_with_pip(work_dir: Path, wheel: Path, data_wheels: Sequence[Path], venv_path: Path) -> None:
+def install_cohort_with_pip(work_dir: Path, wheel: Path, data_wheels: Sequence[Path], venv_path: Path) -> None:
     """Install the four local wheels in one pip transaction and validate dependencies."""
     install_targets_with_pip(
         work_dir,
@@ -161,14 +161,14 @@ def main(argv: list[str] | None = None) -> int:
     data_wheels = list(cohort.companion_wheels)
     corpus_hashes = work_dir / "companion-corpus-sha256.json"
     corpus_hashes.write_text(
-        json.dumps(_companion_corpus_hashes(data_wheels), indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        json.dumps(companion_corpus_hashes(data_wheels), indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     print("using supplied immutable Python cohort", flush=True)
     record_proof("supplied immutable Python cohort")
 
     print("creating stdlib venv and installing the complete four-wheel cohort", flush=True)
     venv_path = create_pip_venv(work_dir, args.python)
-    _install_cohort_with_pip(work_dir, wheel, data_wheels, venv_path)
+    install_cohort_with_pip(work_dir, wheel, data_wheels, venv_path)
     assert_installed_cohort(
         venv_python_path(venv_path),
         cohort,
@@ -178,12 +178,12 @@ def main(argv: list[str] | None = None) -> int:
 
     print("verifying exact dependency cohort and byte-identical source authority", flush=True)
     run_checked(
-        [str(venv_python_path(venv_path)), "-c", _COHORT_PROBE],
+        [str(venv_python_path(venv_path)), "-c", COHORT_PROBE],
         cwd=work_dir,
         env=isolated_product_env(work_dir / "cohort-import-state"),
     )
     run_checked(
-        [str(venv_python_path(venv_path)), "-c", _INSTALLED_CORPUS_PROBE, str(corpus_hashes)],
+        [str(venv_python_path(venv_path)), "-c", INSTALLED_CORPUS_PROBE, str(corpus_hashes)],
         cwd=work_dir,
         env=isolated_product_env(work_dir / "corpus-import-state"),
     )

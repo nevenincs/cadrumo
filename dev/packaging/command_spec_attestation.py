@@ -38,7 +38,7 @@ _ATTESTATION_DIGEST_FIELDS: Final[tuple[str, ...]] = (
 )
 
 
-_FORBIDDEN_COMMAND_ARTIFACT_NAMES: Final[frozenset[str]] = frozenset(
+FORBIDDEN_COMMAND_ARTIFACT_NAMES: Final[frozenset[str]] = frozenset(
     {
         "app_lazy_manifest.v1.json",
         "command_registration_metadata.v1.json",
@@ -292,7 +292,7 @@ def projection_digest(value: object) -> str:
     return sha256_text(payload)
 
 
-def _artifact_command_projection(
+def artifact_command_projection(
     root_wheel: Path, root_sdist: Path, source_archive: Path
 ) -> tuple[tuple[str, str], ...]:
     """Return the exact normalized root artifact member cohort."""
@@ -329,7 +329,7 @@ a process that has touched five cohorts is not going to reuse the first.
 """
 
 
-def _cached_artifact_command_projection(
+def cached_artifact_command_projection(
     root_wheel: Path,
     root_sdist: Path,
     source_archive: Path,
@@ -353,19 +353,19 @@ def _cached_artifact_command_projection(
     cached = _ARTIFACT_PROJECTION_CACHE.get(digests)
     if cached is not None:
         return cached
-    projection = _artifact_command_projection(root_wheel, root_sdist, source_archive)
+    projection = artifact_command_projection(root_wheel, root_sdist, source_archive)
     if len(_ARTIFACT_PROJECTION_CACHE) >= _ARTIFACT_PROJECTION_CACHE_LIMIT:
         _ARTIFACT_PROJECTION_CACHE.clear()
     _ARTIFACT_PROJECTION_CACHE[digests] = projection
     return projection
 
 
-def _forbidden_command_artifacts(
+def forbidden_command_artifacts(
     projection: tuple[tuple[str, str], ...],
 ) -> tuple[tuple[str, str], ...]:
     """Return every projected member whose filename names a command authority artifact."""
     return tuple(
-        (kind, member) for kind, member in projection if PurePosixPath(member).name in _FORBIDDEN_COMMAND_ARTIFACT_NAMES
+        (kind, member) for kind, member in projection if PurePosixPath(member).name in FORBIDDEN_COMMAND_ARTIFACT_NAMES
     )
 
 
@@ -396,7 +396,7 @@ def _validate_attestation_bindings(value: dict[str, Any], comparisons: dict[str,
             raise SystemExit(f"Python cohort CommandSpec attestation {field} does not bind its cohort")
 
 
-def _validate_command_spec_attestation(
+def validate_command_spec_attestation(
     value: object,
     *,
     expected_source_digest: str | None = None,
@@ -432,7 +432,7 @@ def _validate_command_spec_attestation(
     return {str(key): item for key, item in value.items()}
 
 
-def _probe_installed_command_specs(*, site_root: Path, work_root: Path) -> dict[str, Any]:
+def probe_installed_command_specs(*, site_root: Path, work_root: Path) -> dict[str, Any]:
     """Run every CommandSpec probe mode against one importable Cadrumo tree.
 
     ``site_root`` is the directory added to the probe's import path, and the
@@ -509,7 +509,7 @@ def _probe_installed_command_specs(*, site_root: Path, work_root: Path) -> dict[
     return projection
 
 
-def _install_relative_probe_reads(
+def install_relative_probe_reads(
     projection: dict[str, Any],
     *,
     site_root: Path,
@@ -552,7 +552,7 @@ def _install_relative_probe_reads(
     }
 
 
-def _assert_probe_reads_are_wheel_members(
+def assert_probe_reads_are_wheel_members(
     projection: dict[str, Any],
     artifact_projection: tuple[tuple[str, str], ...],
 ) -> None:
@@ -591,7 +591,7 @@ def _assert_probe_reads_are_wheel_members(
         )
 
 
-def _command_spec_attestation(
+def command_spec_attestation(
     projection: dict[str, Any],
     artifact_projection: tuple[tuple[str, str], ...],
     *,
@@ -615,14 +615,14 @@ def _command_spec_attestation(
         "root_sdist_sha256": root_sdist_sha256,
         "source_archive_sha256": source_archive_sha256,
         "artifact_members_sha256": projection_digest(artifact_projection),
-        "forbidden_artifacts_absent": not _forbidden_command_artifacts(artifact_projection),
+        "forbidden_artifacts_absent": not forbidden_command_artifacts(artifact_projection),
         **{
             f"{field}_sha256": projection_digest(projection[field])
             for field in ("identities", "locales", "policies", "schemas", "import_budgets", "origins")
         },
     }
     attestation["envelope_sha256"] = projection_digest(attestation)
-    return _validate_command_spec_attestation(
+    return validate_command_spec_attestation(
         attestation,
         expected_source_digest=source_digest,
         expected_root_wheel_sha256=root_wheel_sha256,
@@ -671,19 +671,19 @@ def attest_command_specs(
     Returns:
         The validated attestation envelope.
     """
-    projection = _install_relative_probe_reads(
-        _probe_installed_command_specs(site_root=site_root, work_root=work_root),
+    projection = install_relative_probe_reads(
+        probe_installed_command_specs(site_root=site_root, work_root=work_root),
         site_root=site_root,
     )
     resolved = digests or (sha256_path(root_wheel), sha256_path(root_sdist), sha256_path(source_archive))
-    artifact_projection = _cached_artifact_command_projection(
+    artifact_projection = cached_artifact_command_projection(
         root_wheel,
         root_sdist,
         source_archive,
         digests=resolved,
     )
-    _assert_probe_reads_are_wheel_members(projection, artifact_projection)
-    return _command_spec_attestation(
+    assert_probe_reads_are_wheel_members(projection, artifact_projection)
+    return command_spec_attestation(
         projection,
         artifact_projection,
         source_digest=source_digest,

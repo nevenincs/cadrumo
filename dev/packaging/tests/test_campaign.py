@@ -12,21 +12,21 @@ import pytest
 from dev.paths import REPO_ROOT
 
 from ..campaign import (
-    _LANES,
-    _PREFLIGHT_PASSES,
-    _TEST_WORKERS_ENV,
     COHORT_DIR,
+    LANES,
+    PREFLIGHT_PASSES,
     PROFILES,
+    TEST_WORKERS_ENV,
     PytestPass,
-    _adopt_cohort,
-    _attempt_step,
-    _run_step,
-    _test_worker_count,
+    adopt_cohort,
+    attempt_step,
     campaign_pytest_argv,
+    campaign_test_worker_count,
     preflight_basetemp_root,
     preflight_pass_failures,
     pytest_pass_argv,
     resolve_form,
+    run_step,
     serial_pass_modules,
 )
 
@@ -75,7 +75,7 @@ def test_profiles_reference_registered_forms_only() -> None:
 def test_every_registered_form_is_selected_by_some_profile() -> None:
     """A form no profile runs is dead capacity, which is what the flat registry hid."""
     selected = {selector for selectors in PROFILES.values() for selector in selectors}
-    registered = {f"{lane.name}/{form.name}" for lane in _LANES.values() for form in lane.forms}
+    registered = {f"{lane.name}/{form.name}" for lane in LANES.values() for form in lane.forms}
     assert registered == selected, f"forms never run: {sorted(registered - selected)}"
 
 
@@ -105,7 +105,7 @@ def test_profiles_resolve_to_the_pinned_executed_set() -> None:
 
 def test_only_the_developer_lane_skips_the_shared_cohort() -> None:
     """Every install-surface form consumes the one built cohort; dev builds its own env."""
-    for lane in _LANES.values():
+    for lane in LANES.values():
         for form in lane.forms:
             takes_cohort = f"--cohort-dir {COHORT_DIR}" in " ".join(form.command())
             expected = lane.name != "dev"
@@ -114,10 +114,10 @@ def test_only_the_developer_lane_skips_the_shared_cohort() -> None:
 
 def test_campaign_python_children_suppress_checkout_bytecode() -> None:
     """The controlled interpreter entrypoints must not create checkout pycache."""
-    for lane in _LANES.values():
+    for lane in LANES.values():
         for form in lane.forms:
             assert form.command()[:3] == [sys.executable, "-B", "-m"]
-    for pytest_pass in _PREFLIGHT_PASSES:
+    for pytest_pass in PREFLIGHT_PASSES:
         assert pytest_pass_argv(pytest_pass, REPO_ROOT, None)[:4] == [sys.executable, "-B", "-m", "pytest"]
 
 
@@ -157,19 +157,19 @@ def test_preflight_test_workers_resolve_flag_then_env_then_local_auto() -> None:
     per physical machine, so ``-n auto`` over-subscribes); ``None`` leaves the
     local addopts default untouched.
     """
-    assert _test_worker_count(4) == 4
-    original = os.environ.get(_TEST_WORKERS_ENV)
-    os.environ[_TEST_WORKERS_ENV] = "8"
+    assert campaign_test_worker_count(4) == 4
+    original = os.environ.get(TEST_WORKERS_ENV)
+    os.environ[TEST_WORKERS_ENV] = "8"
     try:
-        assert _test_worker_count(None) == 8
-        assert _test_worker_count(2) == 2  # CLI flag beats env
+        assert campaign_test_worker_count(None) == 8
+        assert campaign_test_worker_count(2) == 2  # CLI flag beats env
     finally:
         if original is None:
-            del os.environ[_TEST_WORKERS_ENV]
+            del os.environ[TEST_WORKERS_ENV]
         else:
-            os.environ[_TEST_WORKERS_ENV] = original
-    if _TEST_WORKERS_ENV not in os.environ:
-        assert _test_worker_count(None) is None
+            os.environ[TEST_WORKERS_ENV] = original
+    if TEST_WORKERS_ENV not in os.environ:
+        assert campaign_test_worker_count(None) is None
 
 
 @pytest.mark.parametrize("test_workers", [None, 8], ids=["local-auto", "ci-width"])
@@ -223,7 +223,7 @@ def test_aggregates_route_through_the_campaign_driver() -> None:
 
 def test_a_lane_with_a_behavioural_proof_names_a_real_reference_form() -> None:
     """The reference form must exist on its own lane, and pair with a proof."""
-    for lane in _LANES.values():
+    for lane in LANES.values():
         assert (lane.behavioural_proof is None) == (lane.reference_form is None), (
             f"lane {lane.name} pairs a behavioural proof with a reference form, or declares neither"
         )
@@ -263,7 +263,7 @@ def test_the_behavioural_proof_runs_on_the_reference_form_and_nowhere_else() -> 
     above already uses.
     """
     oracle = "run_installed_tax_oracle"
-    for lane in _LANES.values():
+    for lane in LANES.values():
         reference = lane.reference()
         for form in lane.forms:
             module_path = _PACKAGING / f"{form.module.rsplit('.', 1)[-1]}.py"
@@ -289,14 +289,14 @@ def test_lane_names_are_distinct_so_manifest_rows_stay_distinguishable() -> None
     forms writing the same lane name would collapse separate proofs into
     indistinguishable rows, silently, with every other gate still green.
     """
-    names = [lane.name for lane in _LANES.values()]
+    names = [lane.name for lane in LANES.values()]
     assert len(names) == len(set(names)), f"lane names must discriminate manifest rows: {names}"
     assert all(name and name.strip() == name for name in names), f"lane names must be non-empty: {names}"
 
 
 def test_a_failing_step_is_described_rather_than_raised(tmp_path: Path) -> None:
     """`_attempt_step` reports a failure so a caller can keep going."""
-    failure = _attempt_step([sys.executable, "-c", "raise SystemExit(3)"], tmp_path, "probe")
+    failure = attempt_step([sys.executable, "-c", "raise SystemExit(3)"], tmp_path, "probe")
 
     assert failure is not None
     assert "probe" in failure
@@ -305,7 +305,7 @@ def test_a_failing_step_is_described_rather_than_raised(tmp_path: Path) -> None:
 
 def test_a_succeeding_step_reports_nothing(tmp_path: Path) -> None:
     """The other direction: silence must mean success, not an inert check."""
-    assert _attempt_step([sys.executable, "-c", ""], tmp_path, "probe") is None
+    assert attempt_step([sys.executable, "-c", ""], tmp_path, "probe") is None
 
 
 def test_run_step_still_ends_the_campaign_on_a_failure(tmp_path: Path) -> None:
@@ -315,7 +315,7 @@ def test_run_step_still_ends_the_campaign_on_a_failure(tmp_path: Path) -> None:
     because a cohort built on a broken tree is worse than no cohort.
     """
     with pytest.raises(SystemExit) as excinfo:
-        _run_step([sys.executable, "-c", "raise SystemExit(4)"], tmp_path, "probe")
+        run_step([sys.executable, "-c", "raise SystemExit(4)"], tmp_path, "probe")
 
     assert "probe" in str(excinfo.value)
 
@@ -370,7 +370,7 @@ def test_passes_that_all_succeed_report_nothing(tmp_path: Path) -> None:
 
 def test_a_parallel_pass_is_never_split() -> None:
     """xdist already isolates a crash into a worker; splitting buys nothing."""
-    parallel = next(p for p in _PREFLIGHT_PASSES if p.parallel)
+    parallel = next(p for p in PREFLIGHT_PASSES if p.parallel)
 
     assert serial_pass_modules(parallel, REPO_ROOT) == ()
 
@@ -383,7 +383,7 @@ def test_a_serial_pass_splits_across_every_module_it_would_have_collected() -> N
     provided their union is exactly what the directory pass would have
     collected, which is what this asserts.
     """
-    serial = next(p for p in _PREFLIGHT_PASSES if not p.parallel)
+    serial = next(p for p in PREFLIGHT_PASSES if not p.parallel)
     modules = serial_pass_modules(serial, REPO_ROOT)
     expected = {
         path.relative_to(REPO_ROOT).as_posix()
@@ -402,7 +402,7 @@ def test_a_held_out_module_stays_held_out_after_the_split() -> None:
     passes would run it and the directory's ownership invariant would break
     silently -- both passes would still be green.
     """
-    serial = next(p for p in _PREFLIGHT_PASSES if not p.parallel)
+    serial = next(p for p in PREFLIGHT_PASSES if not p.parallel)
 
     assert serial.ignore, "this case is vacuous unless the pass holds something out"
     for held in serial.ignore:
@@ -412,7 +412,7 @@ def test_a_held_out_module_stays_held_out_after_the_split() -> None:
 def test_a_missing_prebuilt_cohort_is_refused_before_any_step(tmp_path: Path) -> None:
     """A cohort path that does not exist refuses rather than falling back to a build."""
     with pytest.raises(FileNotFoundError):
-        _adopt_cohort(tmp_path / "absent", tmp_path)
+        adopt_cohort(tmp_path / "absent", tmp_path)
     assert not (tmp_path / COHORT_DIR).exists()
 
 
@@ -429,6 +429,6 @@ def test_an_unverifiable_prebuilt_cohort_is_refused_and_never_placed(tmp_path: P
     destination = REPO_ROOT / COHORT_DIR
     before = sorted(p.name for p in destination.iterdir()) if destination.is_dir() else None
     with pytest.raises(SystemExit, match="verify-cohort"):
-        _adopt_cohort(bogus, REPO_ROOT)
+        adopt_cohort(bogus, REPO_ROOT)
     after = sorted(p.name for p in destination.iterdir()) if destination.is_dir() else None
     assert after == before

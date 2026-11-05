@@ -13,8 +13,7 @@ from .layout import load_layout
 from .windows_msi_components import add_files, add_machine_service, add_registration
 from .windows_msi_contract import MAINTENANCE_GATE, WIX_NAMESPACE
 from .windows_msi_identity import InstallationScope, MsiIdentity, ProductRole, msi_identity
-from .windows_msi_paths import literal as _literal
-from .windows_msi_paths import source_path as _source_path
+from .windows_msi_paths import literal, source_path
 from .windows_msi_single import OWNER_GATE
 
 
@@ -95,8 +94,8 @@ def msi_source(
     package = SubElement(
         wix,
         "Package",
-        Name=_literal(f"{value.name} {value.version} {role} ({scope})"),
-        Manufacturer=_literal(value.publisher),
+        Name=literal(f"{value.name} {value.version} {role} ({scope})"),
+        Manufacturer=literal(value.publisher),
         Version=value.version,
         ProductCode=product.product_code,
         UpgradeCode=product.upgrade_code,
@@ -151,7 +150,7 @@ def msi_source(
         package,
         "Feature",
         Id="ProductFeature",
-        Title=_literal(value.name),
+        Title=literal(value.name),
         Level="1",
         Display="hidden",
         InstallDefault="local",
@@ -290,7 +289,7 @@ def _admission(package: Element, value: DistributionIdentity, scope: Installatio
         + [value.upgrade_code],
     }
     SubElement(package, "Property", Id="CadrumoAdmission", Value=json.dumps(request, separators=(",", ":")))
-    SubElement(package, "Binary", Id="CadrumoInstaller", SourceFile=_source_path(adapter))
+    SubElement(package, "Binary", Id="CadrumoInstaller", SourceFile=source_path(adapter))
     SubElement(
         package,
         "CustomAction",

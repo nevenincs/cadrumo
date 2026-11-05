@@ -114,7 +114,7 @@ def _resolve_brew(override: Path | None) -> Path:
     return Path(found).resolve(strict=True)
 
 
-def _homebrew_storage_environment() -> dict[str, str]:
+def homebrew_storage_environment() -> dict[str, str]:
     """Bind Homebrew caches, logs and build scratch beneath Cadrumo storage."""
     locations = {
         name: Path(value)
@@ -126,7 +126,7 @@ def _homebrew_storage_environment() -> dict[str, str]:
     return {name: str(path) for name, path in locations.items()}
 
 
-def _require_homebrew_temp_volume(*, environment: dict[str, str], brew_prefix: Path) -> None:
+def require_homebrew_temp_volume(*, environment: dict[str, str], brew_prefix: Path) -> None:
     """Refuse a Homebrew temp path on a different filesystem from its prefix."""
     temporary_root = Path(environment["HOMEBREW_TEMP"])
     if temporary_root.stat().st_dev != brew_prefix.stat().st_dev:
@@ -160,7 +160,7 @@ def _homebrew_formula(info: CommandResult, qualified: str) -> dict[str, Any]:
 
 
 def _prepare_homebrew_prefix(brew: Path, run_root: Path, logs: Path, timeout_seconds: float) -> None:
-    homebrew_environment = _homebrew_storage_environment()
+    homebrew_environment = homebrew_storage_environment()
     os.environ.update(homebrew_environment)
     prefix_result = _run(
         brew,
@@ -172,7 +172,7 @@ def _prepare_homebrew_prefix(brew: Path, run_root: Path, logs: Path, timeout_sec
     if prefix_result.returncode != 0:
         raise AcquisitionError(f"brew --prefix failed: {prefix_result.stderr.strip()[:200]}")
     brew_prefix = require_homebrew_installation_prefix(prefix_result.stdout)
-    _require_homebrew_temp_volume(environment=homebrew_environment, brew_prefix=brew_prefix)
+    require_homebrew_temp_volume(environment=homebrew_environment, brew_prefix=brew_prefix)
 
 
 def run_homebrew_acquisition(
@@ -327,7 +327,7 @@ def run_homebrew_acquisition(
     return evidence_path
 
 
-def _parser() -> argparse.ArgumentParser:
+def parser() -> argparse.ArgumentParser:
     """Return the argument parser for the Homebrew reacquisition check."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cohort-dir", required=True, type=Path, help="Promoted Python cohort directory.")
@@ -357,7 +357,7 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     """Run the Homebrew reacquisition verification from the command line."""
-    args = _parser().parse_args(argv)
+    args = parser().parse_args(argv)
     evidence = run_homebrew_acquisition(
         cohort_dir=args.cohort_dir,
         evidence_dir=args.evidence_dir,

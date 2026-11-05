@@ -34,9 +34,9 @@ from .lane_verification_core import (
 )
 from .proof_ledger import record_proof
 from .python_cohort import (
-    _validate_companion_pins,
     assert_installed_cohort,
     load_python_cohort,
+    validate_companion_pins,
 )
 from .source_data_contract import assert_wheel_contains_source_data, expected_wheel_data_paths
 from .wheel_metadata import read_wheel_metadata
@@ -68,7 +68,7 @@ def _companion_identities(named_companions: dict[str, Path]) -> dict[str, tuple[
     return identities
 
 
-def _assert_complete_wheel_cohort(
+def assert_complete_wheel_cohort(
     wheel: Path,
     *,
     data_wheel_manuals: Path,
@@ -91,7 +91,7 @@ def _assert_complete_wheel_cohort(
             f"companion versions do not match cadrumo {root_version!r}: {mismatched!r}",
         )
     requirements, _extras = wheel_metadata(wheel)
-    _validate_companion_pins(tuple(requirements), version=root_version, artifact_kind="wheel")
+    validate_companion_pins(tuple(requirements), version=root_version, artifact_kind="wheel")
     record_proof("complete exact-version four-wheel cohort")
     return root_version
 
@@ -136,7 +136,7 @@ def main(argv: list[str] | None = None) -> int:
         expected_wheel_data_paths(repo_root),
     )
     assert_wheel_metadata_matches_pyproject(repo_root, wheel)
-    cohort_version = _assert_complete_wheel_cohort(
+    cohort_version = assert_complete_wheel_cohort(
         wheel,
         data_wheel_manuals=data_wheel_manuals,
         data_wheel_official=data_wheel_official,

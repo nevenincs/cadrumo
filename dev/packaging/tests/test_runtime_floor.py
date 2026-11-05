@@ -10,7 +10,7 @@ from cadrumo.core.toml import parse_toml
 from dev.ci.python_runtime_matrix import load_runtime_inventory
 from dev.paths import REPO_ROOT, UTF_8
 
-from .._base_image import linux_base_image
+from ..base_image import linux_base_image
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

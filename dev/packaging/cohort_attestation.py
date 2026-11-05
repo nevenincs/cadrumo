@@ -12,7 +12,7 @@ from typing import Final
 
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 
-from .command_spec_attestation import _artifact_command_projection, projection_digest
+from .command_spec_attestation import artifact_command_projection, projection_digest
 from .hashing import sha256_path
 
 
@@ -108,10 +108,10 @@ def make_test_command_spec_attestation(
     root_sdist = directory / artifacts["cadrumo-sdist"]
     source_archive = directory / artifacts["source-archive"]
     if not artifacts_are_unreadable:
-        member_digest = projection_digest(_artifact_command_projection(root_wheel, root_sdist, source_archive))
+        member_digest = projection_digest(artifact_command_projection(root_wheel, root_sdist, source_archive))
     else:
         try:
-            _artifact_command_projection(root_wheel, root_sdist, source_archive)
+            artifact_command_projection(root_wheel, root_sdist, source_archive)
         except (OSError, tarfile.TarError, zipfile.BadZipFile):
             member_digest = _UNREADABLE_MEMBERS
         else:

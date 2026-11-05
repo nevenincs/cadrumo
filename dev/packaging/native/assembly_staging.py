@@ -126,7 +126,7 @@ def stage_dependencies(
                 copy_function=reuse.copy,
             )
             tools["node"] = declaration["node_version"]
-    pruned = [*_prune_packages(interpreter, contract, packages, root), *_prune_local_install_records(packages, root)]
+    pruned = [*_prune_packages(interpreter, contract, packages, root), *prune_local_install_records(packages, root)]
     return tools, pruned
 
 
@@ -262,7 +262,7 @@ def _prune_packages(interpreter: bool, contract: dict[str, Any], packages: Path,
     return pruned
 
 
-def _prune_local_install_records(packages: Path, root: Path) -> list[dict[str, str]]:
+def prune_local_install_records(packages: Path, root: Path) -> list[dict[str, str]]:
     """Drop each installer record that names a wheel file on the build host."""
     pruned: list[dict[str, str]] = []
     for record in sorted(packages.glob("*.dist-info/direct_url.json")):

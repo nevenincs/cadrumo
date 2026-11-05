@@ -49,7 +49,7 @@ def record_discovered_inputs(root: Path = REPO_ROOT) -> None:
             opened.add(path)
 
     sys.addaudithook(audit)
-    atexit.register(_write_discovered_inputs, Path(target), root.resolve(), opened)
+    atexit.register(write_discovered_inputs, Path(target), root.resolve(), opened)
 
 
 def _is_read_open(mode: object, flags: object) -> bool:
@@ -75,7 +75,7 @@ def _audited_read_path(event: str, arguments: tuple[object, ...]) -> str | None:
     return os.path.abspath(os.fsdecode(cast("str | bytes | os.PathLike[str]", path)))
 
 
-def _write_discovered_inputs(target: Path, root: Path, opened: set[str]) -> None:
+def write_discovered_inputs(target: Path, root: Path, opened: set[str]) -> None:
     files = set(opened)
     files.update(
         os.path.abspath(module_file)

@@ -16,8 +16,8 @@ import pytest
 
 from dev.paths import REPO_ROOT
 
-from ..runtime_wheel_acquisition import _acquire_all, _store_in_cache, grouped_wheel_requests
-from ..runtime_wheel_selection import _runtime_rows, plan_runtime_wheelhouses
+from ..runtime_wheel_acquisition import acquire_all, grouped_wheel_requests, store_in_cache
+from ..runtime_wheel_selection import plan_runtime_wheelhouses, runtime_rows
 from ..runtime_wheelhouse_contract import (
     PLATFORM_FLOORS,
     SUPPORTED_TARGETS,
@@ -164,15 +164,15 @@ def test_runtime_rows_come_only_from_the_canonical_inventory(tmp_path: Path) -> 
     staged.parent.mkdir(parents=True)
     staged.write_bytes(inventory.read_bytes())
 
-    assert _runtime_rows(tmp_path, None) == _runtime_rows(REPO_ROOT, None)
+    assert runtime_rows(tmp_path, None) == runtime_rows(REPO_ROOT, None)
 
     staged.unlink()
     with pytest.raises(SystemExit, match="runtime inventory cannot drive wheelhouse construction"):
-        _runtime_rows(tmp_path, None)
+        runtime_rows(tmp_path, None)
 
     staged.write_text('{"schema": "cadrumo.python-runtime-matrix.v1"}', encoding="utf-8")
     with pytest.raises(SystemExit, match="runtime inventory cannot drive wheelhouse construction"):
-        _runtime_rows(tmp_path, None)
+        runtime_rows(tmp_path, None)
 
 
 def _locked_wheel(payload: bytes, url: str) -> LockedWheel:
@@ -253,7 +253,7 @@ def test_one_universal_wheel_selected_by_three_runtimes_is_fetched_once(tmp_path
 
     with _CountingIndex(payload) as index:
         wheel = _locked_wheel(payload, index.url)
-        _acquire_all([_plan(runtime, wheel) for runtime in runtimes], wheel_dir, cache)
+        acquire_all([_plan(runtime, wheel) for runtime in runtimes], wheel_dir, cache)
 
         assert index.requests == 1
 
@@ -281,7 +281,7 @@ def test_a_concurrent_cache_store_leaves_no_partial_entry(tmp_path: Path) -> Non
 
     def store() -> None:
         barrier.wait(timeout=10)
-        _store_in_cache(cache, wheel, source)
+        store_in_cache(cache, wheel, source)
 
     with ThreadPoolExecutor(max_workers=4) as pool:
         for future in [pool.submit(store) for _ in range(4)]:

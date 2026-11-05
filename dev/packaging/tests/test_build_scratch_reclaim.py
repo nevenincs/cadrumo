@@ -39,8 +39,8 @@ from ..build_scratch_reclaim import (
     RELEASE_STAGING_FAMILY,
     VAR_SCRATCH_FAMILIES,
     ScratchFamily,
-    _owning_pid,
     matching_family,
+    owning_pid,
     remove_scratch,
     remove_source_snapshot,
     remove_tree,
@@ -660,7 +660,7 @@ def test_every_minted_name_lands_in_the_family_it_was_minted_from() -> None:
     assert {family: matching_family(name) for family, name in minted.items()} == {
         family: family for family in VAR_SCRATCH_FAMILIES
     }
-    assert {_owning_pid(name, family) for family, name in minted.items()} == {os.getpid()}
+    assert {owning_pid(name, family) for family, name in minted.items()} == {os.getpid()}
 
 
 def test_a_minted_name_needs_a_body_to_distinguish_it() -> None:
@@ -695,7 +695,7 @@ def test_an_unreadable_owner_token_is_no_owner_rather_than_a_refusal(owner: str)
     name = f"{family.prefix}{owner}-body{family.suffix}"
 
     assert matching_family(name) is family
-    assert _owning_pid(name, family) is None
+    assert owning_pid(name, family) is None
 
 
 def test_a_legacy_ownerless_name_is_read_as_carrying_no_owner() -> None:
@@ -704,7 +704,7 @@ def test_a_legacy_ownerless_name_is_read_as_carrying_no_owner() -> None:
     name = _legacy_ownerless_name()
 
     assert matching_family(name) is family
-    assert _owning_pid(name, family) is None
+    assert owning_pid(name, family) is None
 
 
 def test_remove_scratch_takes_a_file_as_well_as_a_tree(tmp_path: Path) -> None:

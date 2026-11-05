@@ -18,7 +18,7 @@ from dev.paths import REPO_ROOT
 from .. import lane_verification_core
 from ..command_execution import CommandResult, run_command
 from ..proof_ledger import recorded_proofs, reset_proof_ledger
-from ..smoke_split_install import _INSTALLED_CORPUS_PROBE, _companion_corpus_hashes, _install_cohort_with_pip
+from ..smoke_split_install import INSTALLED_CORPUS_PROBE, companion_corpus_hashes, install_cohort_with_pip
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -48,11 +48,11 @@ def test_split_pip_proofs_require_successful_install_and_dependency_check(
     reset_proof_ledger()
     try:
         if failed_command is None:
-            _install_cohort_with_pip(tmp_path, wheel, companions, venv)
+            install_cohort_with_pip(tmp_path, wheel, companions, venv)
             assert recorded_proofs() == ("exact local cohort install with pip", "pip dependency check")
         else:
             with pytest.raises(SystemExit) as failure:
-                _install_cohort_with_pip(tmp_path, wheel, companions, venv)
+                install_cohort_with_pip(tmp_path, wheel, companions, venv)
             assert failure.value.code == 19
             assert recorded_proofs() == ()
         assert commands[0] == (
@@ -98,7 +98,7 @@ def _namespace_fixture(tmp_path: Path) -> tuple[list[Path], list[Path], dict[str
 @pytest.mark.parametrize("mutation", [None, "missing_normative", "changed_normative"])
 def test_installed_probe_checks_normative_bytes_through_public_resources(tmp_path: Path, mutation: str | None) -> None:
     wheels, portions, binaries = _namespace_fixture(tmp_path)
-    expected = _companion_corpus_hashes(wheels)
+    expected = companion_corpus_hashes(wheels)
     assert len(expected) == 3
     assert hashlib.sha256(binaries["normatives"].read_bytes()).hexdigest() in expected.values()
     census = tmp_path / "wheel-corpus-sha256.json"
@@ -108,7 +108,7 @@ def test_installed_probe_checks_normative_bytes_through_public_resources(tmp_pat
     elif mutation == "changed_normative":
         binaries["normatives"].write_bytes(b"substituted installed normative evidence")
     result = run_command(
-        [sys.executable, "-c", _INSTALLED_CORPUS_PROBE, str(census)],
+        [sys.executable, "-c", INSTALLED_CORPUS_PROBE, str(census)],
         cwd=tmp_path,
         environment={**os.environ, "PYTHONPATH": os.pathsep.join(str(path) for path in (REPO_ROOT / "src", *portions))},
         errors="strict",
@@ -125,7 +125,7 @@ def test_installed_probe_checks_normative_bytes_through_public_resources(tmp_pat
 def test_wheel_census_refuses_an_absent_normative_companion(tmp_path: Path) -> None:
     wheels, _portions, _binaries = _namespace_fixture(tmp_path)
     with pytest.raises(SystemExit, match="every mandatory companion"):
-        _companion_corpus_hashes(wheels[:2])
+        companion_corpus_hashes(wheels[:2])
 
 
 def test_wheel_census_refuses_overlapping_binary_ownership(tmp_path: Path) -> None:
@@ -136,4 +136,4 @@ def test_wheel_census_refuses_overlapping_binary_ownership(tmp_path: Path) -> No
     with zipfile.ZipFile(wheels[2], "a") as archive:
         archive.writestr(member.filename, content)
     with pytest.raises(SystemExit, match="duplicate ownership"):
-        _companion_corpus_hashes(wheels)
+        companion_corpus_hashes(wheels)

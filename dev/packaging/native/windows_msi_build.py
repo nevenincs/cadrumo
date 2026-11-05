@@ -26,7 +26,7 @@ from .windows_msi_permissions import public_install_permissions
 from .windows_msi_verify import verify_database
 
 
-def _run(wix: Path, arguments: list[str], directory: Path) -> str:
+def run(wix: Path, arguments: list[str], directory: Path) -> str:
     result = run_command([str(wix), *arguments], cwd=directory, timeout_seconds=300)
     if result.returncode:
         raise ValueError(f"WiX failed ({result.returncode}): {result.stdout}{result.stderr}")
@@ -78,9 +78,9 @@ def _compile_sources(
     artifacts: dict[str, str] = {}
     for name, source in sources.items():
         artifact = work / Path(name).with_suffix(".msi").name
-        _run(wix, ["build", "-arch", "x64", "-wx", "-o", str(artifact), str(source)], work)
+        run(wix, ["build", "-arch", "x64", "-wx", "-o", str(artifact), str(source)], work)
         database = work / name
-        _run(wix, ["msi", "decompile", "-o", str(database), str(artifact)], work)
+        run(wix, ["msi", "decompile", "-o", str(database), str(artifact)], work)
         verify_database(source, database)
         verify_feature_ownership(artifact)
         verify_upgrade_order(artifact, version_product=source.stem.endswith("-version") or source.stem == "application")
@@ -137,7 +137,7 @@ def _compile_products(
     directory = member(paths["packages"], "msi")
     directory.mkdir(parents=True, exist_ok=True)
     receipt = member(directory, "compiled.json")
-    version = _run(wix, ["--version"], build)
+    version = run(wix, ["--version"], build)
     if not version.split(".", 1)[0].isdigit() or int(version.split(".", 1)[0]) < 5:
         receipt.unlink(missing_ok=True)
         raise ValueError("Scoped MSI products require WiX 5 or newer")
@@ -161,9 +161,9 @@ def _compile_products(
         _check_compilation_inputs(paths, before, stable_inputs, inputs, sources, authoring, authoring_hash)
         for name in artifacts:
             os.replace(work / name, member(directory, name))
-        _retire(directory, retired, legacy)
+        retire(directory, retired, legacy)
         authored = json.loads(authoring.read_text(encoding="utf-8"))
-        _retire(
+        retire(
             authoring.parent,
             cast(dict[str, str], authored.get("retired_sources", {})),
             {Path(name).with_suffix(".wxs").name for name in legacy},
@@ -181,7 +181,7 @@ def _compile_products(
         retirement.unlink(missing_ok=True)
 
 
-def _retire(directory: Path, recorded: dict[str, str], permitted: set[str]) -> None:
+def retire(directory: Path, recorded: dict[str, str], permitted: set[str]) -> None:
     """Remove only unchanged outputs whose previous producer recorded ownership."""
     paths: list[Path] = []
     for name, checksum in recorded.items():
@@ -309,7 +309,7 @@ def bootstrap_kit(
             for name in artifacts
         }
     )
-    return _deliver_kit(directory, descriptor, sources, json.dumps(document, indent=2) + "\n")
+    return deliver_kit(directory, descriptor, sources, json.dumps(document, indent=2) + "\n")
 
 
 def _retired_kit_artifacts(descriptor: Path, sources: dict[str, tuple[Path, str]]) -> dict[str, str]:
@@ -342,7 +342,7 @@ def _copy_kit_sources(directory: Path, work: Path, sources: dict[str, tuple[Path
         os.replace(pending, destination)
 
 
-def _deliver_kit(directory: Path, descriptor: Path, sources: dict[str, tuple[Path, str]], document: str) -> Path:
+def deliver_kit(directory: Path, descriptor: Path, sources: dict[str, tuple[Path, str]], document: str) -> Path:
     """Copy admitted inputs and publish their descriptor only after every hash matches."""
     # mkdtemp's 0700 directory gives Windows artifacts a private, protected DACL.
     # These public installation files must inherit their destination's permissions.
@@ -351,7 +351,7 @@ def _deliver_kit(directory: Path, descriptor: Path, sources: dict[str, tuple[Pat
     retired = _retired_kit_artifacts(descriptor, sources)
     try:
         _copy_kit_sources(directory, work, sources)
-        _retire(directory, retired, set(retired))
+        retire(directory, retired, set(retired))
         # Publish the descriptor last; incomplete or mixed copies cannot pass admission.
         if not (
             descriptor.is_file()

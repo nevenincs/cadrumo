@@ -63,7 +63,7 @@ import pytest
 from dev.ci.python_runtime_matrix import load_runtime_inventory
 from dev.paths import REPO_ROOT, UTF_8
 
-from .._base_image import linux_base_image
+from ..base_image import linux_base_image
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -147,7 +147,7 @@ def _toolchain_floor_minors(root: Path, *, base_image: str) -> dict[str, str]:
 
     ``base_image`` is injected rather than re-parsed here: the ``ARG
     PYTHON_BASE_IMAGE`` line is already the single declaration point read back
-    by :func:`dev.packaging._base_image.linux_base_image`, and a second parse of
+    by :func:`dev.packaging.base_image.linux_base_image`, and a second parse of
     it in this module would be the very duplication the gate exists to refuse.
     """
     declared = _file_floor_minors(root)

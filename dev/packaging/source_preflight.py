@@ -20,7 +20,7 @@ class SourceDataSummary(TypedDict):
     roots: dict[str, int]
 
 
-def _root_for(path: str) -> str:
+def root_for(path: str) -> str:
     """Return the configured source-data root that owns ``path``."""
     for root in SOURCE_DATA_ROOTS:
         if path.startswith(f"{root}/") or path == root:
@@ -28,9 +28,9 @@ def _root_for(path: str) -> str:
     return "<outside-source-data-roots>"
 
 
-def _summary(paths: set[str]) -> SourceDataSummary:
+def source_preflight_summary(paths: set[str]) -> SourceDataSummary:
     """Build a stable source-data summary for humans and automation."""
-    counts = Counter(_root_for(path) for path in paths)
+    counts = Counter(root_for(path) for path in paths)
     return {
         "ok": True,
         "source_file_count": len(paths),
@@ -46,7 +46,7 @@ def main(argv: list[str] | None = None) -> int:
 
     repo_root = find_repo_root()
     paths = source_data_paths(repo_root)
-    summary = _summary(paths)
+    summary = source_preflight_summary(paths)
     if args.json:
         print(json.dumps(summary, indent=2, sort_keys=True))
         return 0

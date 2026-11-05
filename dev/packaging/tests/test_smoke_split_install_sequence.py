@@ -20,7 +20,7 @@ from ..lane_verification_core import (
     venv_python_path,
 )
 from ..shared_cohort import shared_cohort
-from ..smoke_split_install import _COHORT_PROBE, _install_cohort_with_pip
+from ..smoke_split_install import COHORT_PROBE, install_cohort_with_pip
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -59,7 +59,7 @@ def pip_installed_cohort(
     wheel, companions = real_cohort_wheels
     work = tmp_path_factory.mktemp("pip-installed-cohort")
     venv = create_pip_venv(work, f"{sys.version_info.major}.{sys.version_info.minor}")
-    _install_cohort_with_pip(work, wheel, companions, venv)
+    install_cohort_with_pip(work, wheel, companions, venv)
     return venv
 
 
@@ -100,11 +100,11 @@ def test_real_wheels_form_one_complete_authority_cohort(
 
     venv = pip_installed_cohort
     run_checked(
-        [str(venv_python_path(venv)), "-c", _COHORT_PROBE],
+        [str(venv_python_path(venv)), "-c", COHORT_PROBE],
         cwd=tmp_path,
         env=isolated_product_env(tmp_path / "test-cohort-state"),
     )
 
-    assert 'requires("cadrumo")' in _COHORT_PROBE
-    assert "bundled_indexed_authority" in _COHORT_PROBE
+    assert 'requires("cadrumo")' in COHORT_PROBE
+    assert "bundled_indexed_authority" in COHORT_PROBE
     assert venv_cadrumo_path(venv).name == ("aeat.exe" if os.name == "nt" else "aeat")

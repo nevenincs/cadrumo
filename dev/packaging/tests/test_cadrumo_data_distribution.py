@@ -55,7 +55,7 @@ from cadrumo.core.toml import load_toml
 from dev.paths import REPO_ROOT
 from dev.source_tree import repository_files
 
-from .._distribution_limits import PYPI_FILE_CAP_BYTES
+from ..distribution_limits import PYPI_FILE_CAP_BYTES
 from ..hashing import sha256_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

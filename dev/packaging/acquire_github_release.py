@@ -141,7 +141,7 @@ def run_github_release_acquisition(
     return evidence_path
 
 
-def _parser() -> argparse.ArgumentParser:
+def parser() -> argparse.ArgumentParser:
     """Return the argument parser for the GitHub release reacquisition check."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cohort-dir", required=True, type=Path, help="Promoted release cohort directory.")
@@ -154,7 +154,7 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     """Run the GitHub release reacquisition verification from the command line."""
-    args = _parser().parse_args(argv)
+    args = parser().parse_args(argv)
     evidence = run_github_release_acquisition(
         cohort_dir=args.cohort_dir,
         evidence_dir=args.evidence_dir,

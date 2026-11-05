@@ -44,7 +44,7 @@ def _assert_browser_extra_metadata(wheel: Path) -> None:
     record_proof("browser extra wheel metadata")
 
 
-def _browser_env(work_dir: Path) -> dict[str, str]:
+def browser_env(work_dir: Path) -> dict[str, str]:
     """Return an isolated environment for browser provisioning and health."""
     browser_cache = work_dir / "playwright-browsers"
     browser_cache.mkdir(parents=True, exist_ok=True)
@@ -164,7 +164,7 @@ def main(argv: list[str] | None = None) -> int:
     repo_root = REPO_ROOT
     uv = require_executable("uv")
     work_dir = resolve_work_dir(repo_root, args.work_dir, prefix="browser")
-    env = _browser_env(work_dir)
+    env = browser_env(work_dir)
     print(f"browser packaging smoke work dir: {work_dir}", flush=True)
 
     cohort = load_python_cohort(args.cohort_dir)

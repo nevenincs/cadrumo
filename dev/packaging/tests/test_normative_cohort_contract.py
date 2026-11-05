@@ -12,7 +12,7 @@ import pytest
 
 from .. import python_cohort as owner
 from ..cohort_attestation import make_minimal_test_python_cohort
-from ..smoke_core import _assert_complete_wheel_cohort
+from ..smoke_core import assert_complete_wheel_cohort
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -52,9 +52,9 @@ def _replace_metadata(artifact: Path, *, version: str, requirements: tuple[str, 
 
 def _validate(cohort: owner.PythonCohort, kind: str) -> None:
     if kind == "wheel":
-        assert owner._validate_wheel_contract(*cohort.product_wheels) == _VERSION
+        assert owner.validate_wheel_contract(*cohort.product_wheels) == _VERSION
     else:
-        owner._validate_sdist_contract(
+        owner.validate_sdist_contract(
             cohort.root_sdist,
             cohort.manuals_sdist,
             cohort.official_sdist,
@@ -131,7 +131,7 @@ def test_root_requires_an_unconditional_exact_normative_pin(
         _validate(cohort, kind)
     if kind == "wheel":
         with pytest.raises(SystemExit, match="cadrumo-data-normatives"):
-            _assert_complete_wheel_cohort(
+            assert_complete_wheel_cohort(
                 cohort.root_wheel,
                 data_wheel_manuals=cohort.manuals_wheel,
                 data_wheel_official=cohort.official_wheel,
@@ -160,7 +160,7 @@ def test_normative_installed_origin_is_mandatory_and_digest_bound(tmp_path: Path
             strict=True,
         )
     }
-    owner._verify_direct_urls(urls, cohort, cohort.root_wheel)
+    owner.verify_direct_urls(urls, cohort, cohort.root_wheel)
     if mutation == "missing":
         del urls["cadrumo-data-normatives"]
     elif mutation == "recorded_digest":
@@ -168,4 +168,4 @@ def test_normative_installed_origin_is_mandatory_and_digest_bound(tmp_path: Path
     else:
         cohort.normatives_wheel.write_bytes(b"substituted after installation")
     with pytest.raises(SystemExit, match="cadrumo-data-normatives"):
-        owner._verify_direct_urls(urls, cohort, cohort.root_wheel)
+        owner.verify_direct_urls(urls, cohort, cohort.root_wheel)

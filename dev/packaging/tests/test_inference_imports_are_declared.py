@@ -50,7 +50,7 @@ from cadrumo.core.toml import load_toml
 from dev.paths import REPO_ROOT
 
 from ..distribution_names import normalise_distribution_name
-from ._import_names_support import top_level_imports
+from .import_names_support import top_level_imports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

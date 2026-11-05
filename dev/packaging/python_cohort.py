@@ -28,7 +28,6 @@ from dev.paths import REPO_ROOT, UTF_8
 from dev.source_tree import member_content_digest, repository_files, snapshot
 from dev.temporary_output import prepare_temp_root, resolve_temporary_output
 
-from ._distribution_limits import PYPI_FILE_CAP_BYTES
 from .authority_staging import stage_published_authority
 from .build_scratch_reclaim import (
     COHORT_BUILD_TREE_FAMILY,
@@ -40,12 +39,13 @@ from .build_scratch_reclaim import (
 )
 from .build_storage import build_storage
 from .command_spec_attestation import (
-    _cached_artifact_command_projection,
-    _forbidden_command_artifacts,
-    _validate_command_spec_attestation,
     attest_command_specs,
+    cached_artifact_command_projection,
+    forbidden_command_artifacts,
     projection_digest,
+    validate_command_spec_attestation,
 )
+from .distribution_limits import PYPI_FILE_CAP_BYTES
 from .distribution_names import normalise_distribution_name
 from .hashing import sha256_path
 from .proof_ledger import record_proof
@@ -194,7 +194,7 @@ def _sdist_identity(sdist: Path) -> tuple[str, str, tuple[str, ...]]:
     )
 
 
-def _validate_companion_pins(
+def validate_companion_pins(
     requirements: tuple[str, ...],
     *,
     version: str,
@@ -217,7 +217,7 @@ def _validate_companion_pins(
             )
 
 
-def _validate_wheel_contract(
+def validate_wheel_contract(
     root_wheel: Path,
     manuals_wheel: Path,
     official_wheel: Path,
@@ -238,7 +238,7 @@ def _validate_wheel_contract(
             "Python cohort distribution identities or versions drifted: "
             f"expected {{name: {version!r} for name in {_DISTRIBUTIONS!r}}}, got {observed!r}",
         )
-    _validate_companion_pins(
+    validate_companion_pins(
         requirements,
         version=version,
         artifact_kind="wheel",
@@ -251,7 +251,7 @@ def _validate_wheel_contract(
     return version
 
 
-def _validate_sdist_contract(
+def validate_sdist_contract(
     root_sdist: Path,
     manuals_sdist: Path,
     official_sdist: Path,
@@ -274,7 +274,7 @@ def _validate_sdist_contract(
         raise SystemExit(
             f"Python cohort sdist identities or versions drifted: expected {expected!r}, got {observed!r}",
         )
-    _validate_companion_pins(
+    validate_companion_pins(
         requirements,
         version=expected_version,
         artifact_kind="sdist",
@@ -300,7 +300,7 @@ def _safe_recreate(directory: Path, *, repo_root: Path) -> None:
     resolved.mkdir(parents=True)
 
 
-def _archive_source_snapshot(
+def archive_source_snapshot(
     build_root: Path, files: Sequence[str], destination: Path, *, expected_source_digest: str
 ) -> Path:
     """Archive an already-extracted source snapshot into one flat-member zip.
@@ -398,7 +398,7 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
         snapshot(root, source_files, build_root)
         source_digest = member_content_digest(source_files, lambda relative: (build_root / relative).read_bytes())
         with build_storage(output.parent / "work", repo_root=root):
-            return _build_python_cohort_from_snapshot(
+            return build_python_cohort_from_snapshot(
                 build_root=build_root,
                 output=output,
                 source_files=source_files,
@@ -433,7 +433,7 @@ def build_python_cohort_from_clean_snapshot(
     output = output.absolute()
     scratch_root = prepare_temp_root()
     with build_storage(root / "build" / "cohort-work", repo_root=root):
-        return _build_python_cohort_from_snapshot(
+        return build_python_cohort_from_snapshot(
             build_root=root,
             output=output,
             source_files=source_files,
@@ -456,7 +456,7 @@ def _produce_cohort_artifacts(
     # The ordinary builder made this snapshot just before entering here;
     # the release builder has already verified its clean snapshot. The
     # retained archive is written from those same normalized source bytes.
-    _archive_source_snapshot(build_root, source_files, archive, expected_source_digest=source_digest)
+    archive_source_snapshot(build_root, source_files, archive, expected_source_digest=source_digest)
     stage_build_client(build_root, build_client_json(authority_source_root or build_root))
     if authority_source_root is not None:
         # The published authority is absent from the source archive but is
@@ -520,7 +520,7 @@ def _produce_cohort_artifacts(
     return wheelhouse
 
 
-def _build_python_cohort_from_snapshot(
+def build_python_cohort_from_snapshot(
     *,
     build_root: Path,
     output: Path,
@@ -577,13 +577,13 @@ def _build_python_cohort_from_snapshot(
             "cadrumo_data_normatives-*.tar.gz",
             label="normatives sdist",
         )
-        version = _validate_wheel_contract(
+        version = validate_wheel_contract(
             root_wheel,
             manuals_wheel,
             official_wheel,
             normatives_wheel,
         )
-        _validate_sdist_contract(
+        validate_sdist_contract(
             root_sdist,
             manuals_sdist,
             official_sdist,
@@ -732,14 +732,14 @@ def load_python_cohort(directory: Path) -> PythonCohort:
     root_wheel_digest = str(sha256["cadrumo"])
     root_sdist_digest = str(sha256["cadrumo-sdist"])
     source_archive_digest = str(sha256["source-archive"])
-    command_spec_attestation = _validate_command_spec_attestation(
+    command_spec_attestation = validate_command_spec_attestation(
         command_spec_attestation_value,
         expected_source_digest=source_digest,
         expected_root_wheel_sha256=root_wheel_digest,
         expected_root_sdist_sha256=root_sdist_digest,
         expected_source_archive_sha256=source_archive_digest,
     )
-    projection = _cached_artifact_command_projection(
+    projection = cached_artifact_command_projection(
         resolved["cadrumo"],
         resolved["cadrumo-sdist"],
         resolved["source-archive"],
@@ -747,7 +747,7 @@ def load_python_cohort(directory: Path) -> PythonCohort:
     )
     if command_spec_attestation["artifact_members_sha256"] != projection_digest(projection):
         raise SystemExit("Python cohort CommandSpec attestation artifact member projection drifted")
-    forbidden_members = _forbidden_command_artifacts(projection)
+    forbidden_members = forbidden_command_artifacts(projection)
     if forbidden_members:
         raise SystemExit(f"Python cohort contains forbidden command authority artifacts: {forbidden_members!r}")
 
@@ -756,7 +756,7 @@ def load_python_cohort(directory: Path) -> PythonCohort:
         expected_lock_sha256=_sealed_lock_digest(resolved["source-archive"]),
     )
 
-    observed_version = _validate_wheel_contract(
+    observed_version = validate_wheel_contract(
         resolved["cadrumo"],
         resolved["cadrumo-data-manuals"],
         resolved["cadrumo-data-official"],
@@ -766,7 +766,7 @@ def load_python_cohort(directory: Path) -> PythonCohort:
         raise SystemExit(
             f"cohort manifest version {version!r} != wheel version {observed_version!r}",
         )
-    _validate_sdist_contract(
+    validate_sdist_contract(
         resolved["cadrumo-sdist"],
         resolved["cadrumo-data-manuals-sdist"],
         resolved["cadrumo-data-official-sdist"],
@@ -890,7 +890,7 @@ def _installed_artifact_digest(cohort: PythonCohort, name: str, artifact: Path) 
     return cohort.sha256[name]
 
 
-def _verify_direct_urls(
+def verify_direct_urls(
     direct_urls: object,
     cohort: PythonCohort,
     root_artifact: Path,
@@ -964,7 +964,7 @@ def assert_installed_cohort(
         raise SystemExit(
             f"installed root metadata lost companion pins: {requirements!r}",
         )
-    _verify_direct_urls(document.get("direct_urls"), cohort, root_artifact)
+    verify_direct_urls(document.get("direct_urls"), cohort, root_artifact)
     record_proof("all installed origins and digests match the supplied cohort")
     record_proof("root metadata declares all exact mandatory companion requirements")
     record_proof("all four installed distributions share one version")

@@ -8,14 +8,14 @@ from pathlib import Path
 import pytest
 
 from ..command_execution import run_command
-from ..smoke_browser import _browser_env
+from ..smoke_browser import browser_env
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_browser_smoke_environment_reaches_canonical_settings(tmp_path: Path) -> None:
     """The smoke selects installed Chromium through the production Settings boundary."""
-    env = _browser_env(tmp_path)
+    env = browser_env(tmp_path)
     code = "\n".join(
         (
             "from cadrumo.core.config import load_settings",

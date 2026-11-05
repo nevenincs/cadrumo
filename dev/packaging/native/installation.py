@@ -226,10 +226,10 @@ def prepare(
 
         refresh(payload, identity_file, build, desktop, bundle)
         return root
-    return _prepare_fresh(payload, identity_file, root, metadata, desktop, copy_file=copy_file, bundle=bundle)
+    return prepare_fresh(payload, identity_file, root, metadata, desktop, copy_file=copy_file, bundle=bundle)
 
 
-def _prepare_fresh(
+def prepare_fresh(
     payload: Path,
     identity_file: Path,
     root: Path,

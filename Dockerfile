@@ -16,7 +16,7 @@
 # ── One base, declared once ──────────────────────────────────────────────
 # `PYTHON_BASE_IMAGE` is the single declaration point for the Linux base
 # every Cadrumo container shares, read back by
-# `dev/packaging/_base_image.py:linux_base_image`. Nothing may restate it:
+# `dev/packaging/base_image.py:linux_base_image`. Nothing may restate it:
 # `dev/packaging/tests/test_container_base_image_singularity.py` WALKS the
 # tree and fails on any surface that binds a bare `python:3.13-*` literal
 # instead of deriving it from here — a comment asserting singularity is what

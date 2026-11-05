@@ -34,14 +34,14 @@ def relocate(images: list[Path], root: Path, contract: dict[str, Any]) -> None:
     signing_identity = contract["native_signing_identity"]
     if not isinstance(signing_identity, str) or not signing_identity:
         raise ValueError("Mach-O relocation requires an explicit sealing identity")
-    vendor, owned = _split_vendor_images(images, root)
+    vendor, owned = split_vendor_images(images, root)
     for path in owned:
         select_arm64(path)
     names = load_targets(owned)
     system = set(contract["native_system_libraries"])
     desktop = _desktop_sealing_targets(contract, root, owned)
     for path in vendor:
-        _require_relocatable_as_shipped(path, floor, system)
+        require_relocatable_as_shipped(path, floor, system)
     for path in owned:
         _relocate_image(
             path,
@@ -77,7 +77,7 @@ def _require_embedded_identity(path: Path, expected: bytes) -> None:
         raise ValueError(f"Desktop image does not embed the generated identity property list: {path}")
 
 
-def _split_vendor_images(images: list[Path], root: Path) -> tuple[list[Path], list[Path]]:
+def split_vendor_images(images: list[Path], root: Path) -> tuple[list[Path], list[Path]]:
     """Separate images inside the trees a runtime receipt pins from the images this build owns.
 
     The agent runtime ships the vendor's executable under a receipt that names its exact
@@ -94,7 +94,7 @@ def _split_vendor_images(images: list[Path], root: Path) -> tuple[list[Path], li
     return vendor, [path for path in images if path not in vendor]
 
 
-def _require_relocatable_as_shipped(path: Path, floor: tuple[int, ...], system: set[str]) -> None:
+def require_relocatable_as_shipped(path: Path, floor: tuple[int, ...], system: set[str]) -> None:
     image = inspect_macho(path)
     if image.minimum > floor:
         raise ValueError(f"Mach-O exceeds canonical deployment floor: {path}")

@@ -18,7 +18,7 @@ from .. import windows_msi_build
 from ..hashing import digest
 from ..windows_msi_build import bootstrap_kit, compile_products, maintenance_plan
 from ..windows_msi_contract import MAINTENANCE_GATE
-from ..windows_msi_database import _table_rows, verify_admission_order
+from ..windows_msi_database import table_rows, verify_admission_order
 from ..windows_msi_paths import source_path
 
 NS = {"w": "http://wixtoolset.org/schemas/v4/wxs"}
@@ -132,14 +132,14 @@ def assert_manager_components(root: Tree, components: dict[str, Element], shared
 def assert_compiled_ownership_tables(build: Path, receipt: dict[str, Any]) -> None:
     for name in receipt["artifacts"]:
         compiled = build / "packages/msi" / name
-        file_rows = _table_rows(compiled, "SELECT `File`, `Component_` FROM `File`", 2)
-        component_rows = _table_rows(compiled, "SELECT `Component`, `Attributes`, `KeyPath` FROM `Component`", 3)
+        file_rows = table_rows(compiled, "SELECT `File`, `Component_` FROM `File`", 2)
+        component_rows = table_rows(compiled, "SELECT `Component`, `Attributes`, `KeyPath` FROM `Component`", 3)
         assert len(file_rows) == len({row[0] for row in file_rows})
         counts = {row[0]: sum(file[1] == row[0] for file in file_rows) for row in component_rows}
         assert max(counts.values()) > 1
         keys = {
             row[0]: row[1:]
-            for row in _table_rows(compiled, "SELECT `Registry`, `Root`, `Component_` FROM `Registry`", 3)
+            for row in table_rows(compiled, "SELECT `Registry`, `Root`, `Component_` FROM `Registry`", 3)
         }
         files = {row[0]: row[1] for row in file_rows}
         for component, attributes, keypath in component_rows:
@@ -208,7 +208,7 @@ def assert_modified_stage_is_refused(
     manager.write_bytes(original_manager + b"changed")
     try:
         with monkeypatch.context() as patch:
-            patch.setattr(windows_msi_build, "_run", compiler_not_entered)
+            patch.setattr(windows_msi_build, "run", compiler_not_entered)
             with pytest.raises(ValueError, match=r"^Staged installation file has changed: cadrumo-manager$"):
                 compile_products(build, identity, wix, "cadrumo", adapter, runner)
         assert {path: path.read_bytes() for path in published} == published

@@ -273,7 +273,7 @@ def _require_isolation_fields(data: dict[str, Any], *, kind: str, fields: tuple[
         )
 
 
-def _tax_evidence_from_mapping(data: dict[str, Any]) -> InstalledTaxEvidence:
+def tax_evidence_from_mapping(data: dict[str, Any]) -> InstalledTaxEvidence:
     """Reconstruct installed-CLI oracle evidence from its ``to_jsonable`` mapping.
 
     Used by the CLI so a lane that already wrote ``tax-evidence.json`` (e.g. the
@@ -345,7 +345,7 @@ def main(argv: list[str] | None = None) -> int:
     from .cohort_manifest import load_release_cohort
 
     args = _parser().parse_args(argv)
-    tax_evidence = _tax_evidence_from_mapping(json.loads(args.tax_evidence.read_text(encoding=_UTF_8)))
+    tax_evidence = tax_evidence_from_mapping(json.loads(args.tax_evidence.read_text(encoding=_UTF_8)))
     cohort = load_release_cohort(args.release_cohort_dir)
     path = emit_installed_oracle_evidence(
         directory=args.distribution_evidence_dir,

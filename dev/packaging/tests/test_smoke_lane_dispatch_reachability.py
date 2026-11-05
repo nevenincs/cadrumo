@@ -49,14 +49,14 @@ import pytest
 
 from cadrumo.core.directory_scan import iter_directory, scan_directory
 from dev.ci.workflow_run_text import executed_text
-from dev.paths import REPO_ROOT as _REPO_ROOT
+from dev.paths import REPO_ROOT
 
-from ..campaign import _LANES
+from ..campaign import LANES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _PACKAGING = Path(__file__).resolve().parents[1]
-_WORKFLOWS = _REPO_ROOT / ".github" / "workflows"
+_WORKFLOWS = REPO_ROOT / ".github" / "workflows"
 
 
 #: Both spellings a lane module in this package uses. A single ``smoke_*.py``
@@ -90,7 +90,7 @@ def _dispatch_sources() -> dict[str, str]:
     dispatch. :func:`~dev.ci.workflow_run_text.executed_text` drops exactly
     those lines and nothing else.
     """
-    sources = {"justfile": executed_text((_REPO_ROOT / "justfile").read_text(encoding="utf-8"))}
+    sources = {"justfile": executed_text((REPO_ROOT / "justfile").read_text(encoding="utf-8"))}
     for workflow in scan_directory(_WORKFLOWS, pattern="*.yml"):
         sources[f"workflow:{workflow.name}"] = executed_text(workflow.read_text(encoding="utf-8"))
     return sources
@@ -98,7 +98,7 @@ def _dispatch_sources() -> dict[str, str]:
 
 def _campaign_registered_stems() -> frozenset[str]:
     """Return the module stems the campaign lane registry dispatches."""
-    return frozenset(form.module.rsplit(".", 1)[-1] for lane in _LANES.values() for form in lane.forms)
+    return frozenset(form.module.rsplit(".", 1)[-1] for lane in LANES.values() for form in lane.forms)
 
 
 def unreachable_lane_modules(

@@ -34,7 +34,7 @@ from .transport_contract import rust_transport, transport_section
 CONTRACT_SCHEMA = 1
 
 
-def _rust_string(value: str) -> str:
+def rust_string(value: str) -> str:
     value.encode("utf-8")  # Native OS strings have explicit fixture encodings.
     escapes = {"\\": "\\\\", '"': '\\"', "\n": "\\n", "\r": "\\r", "\t": "\\t"}
     return (
@@ -48,11 +48,11 @@ def _rust_string(value: str) -> str:
 
 
 def _rust_strings(values: Iterable[str]) -> str:
-    return "&[" + ",".join(map(_rust_string, values)) + "]"
+    return "&[" + ",".join(map(rust_string, values)) + "]"
 
 
 def _rust_option(value: str | None) -> str:
-    return "None" if value is None else f"Some({_rust_string(value)})"
+    return "None" if value is None else f"Some({rust_string(value)})"
 
 
 # The kinds the filtering hosts validate for a received host pin.
@@ -98,12 +98,12 @@ class _PathVector(TypedDict):
 
 def _rust_path_vectors(lines: list[str], vectors: list[_PathVector]) -> None:
     for vector in vectors:
-        links = ",".join(f"({_rust_string(name)},{_rust_string(target)})" for name, target in vector["links"])
+        links = ",".join(f"({rust_string(name)},{rust_string(target)})" for name, target in vector["links"])
         expected = (
             "None" if vector["expected_components"] is None else f"Some({_rust_strings(vector['expected_components'])})"
         )
         lines.append(
-            f"StoragePathVector {{ name: {_rust_string(vector['name'])}, "
+            f"StoragePathVector {{ name: {rust_string(vector['name'])}, "
             f"components: {_rust_strings(vector['components'])}, directories: {_rust_strings(vector['directories'])}, "
             f"files: {_rust_strings(vector['files'])}, links: &[{links}], "
             f"expected_components: {expected}, refusal: {_rust_option(vector['refusal'])} }},"
@@ -120,53 +120,53 @@ def _rust_root_and_environment(contract: dict[str, Any]) -> list[str]:
         "    pub home_variable: &'static str,",
         "}",
         f"pub const CONTRACT_SCHEMA: u32 = {contract['schema']};",
-        f"pub const BUILD_CHANNEL: &str = {_rust_string(contract['channel']['build'])};",
-        f"pub const ROOT_VARIABLE: &str = {_rust_string(root['variable'])};",
-        f"pub const PRODUCT_DIRECTORY: &str = {_rust_string(root['channel']['product_directory'])};",
-        f"pub const STABLE_CHANNEL: &str = {_rust_string(root['channel']['stable'])};",
-        f"pub const CHANNEL_SEPARATOR: &str = {_rust_string(root['channel']['separator'])};",
+        f"pub const BUILD_CHANNEL: &str = {rust_string(contract['channel']['build'])};",
+        f"pub const ROOT_VARIABLE: &str = {rust_string(root['variable'])};",
+        f"pub const PRODUCT_DIRECTORY: &str = {rust_string(root['channel']['product_directory'])};",
+        f"pub const STABLE_CHANNEL: &str = {rust_string(root['channel']['stable'])};",
+        f"pub const CHANNEL_SEPARATOR: &str = {rust_string(root['channel']['separator'])};",
         f"pub const POSIX_DIRECTORY_MODE: u32 = {root['posix_directory_mode']:#o};",
         f"pub const ROOT_REFUSALS: &[&str] = {_rust_strings(root['refusals'])};",
         "pub const INSTALLED_DEFAULTS: &[InstalledDefault] = &[",
     ]
     lines.pop()  # The installed-default array follows scalar declarations.
     lines.extend(
-        f"pub const ROOT_REFUSAL_{refusal.upper()}: &str = {_rust_string(refusal)};" for refusal in root["refusals"]
+        f"pub const ROOT_REFUSAL_{refusal.upper()}: &str = {rust_string(refusal)};" for refusal in root["refusals"]
     )
     lines.extend(
         f"pub const STORAGE_{name.upper()}: bool = {str(value).lower()};" for name, value in root["path_rules"].items()
     )
     lines.extend(
-        f"pub const INHERITED_KIND_{name}: &str = {_rust_string(kind)};" for name, kind in _INHERITED_KINDS.items()
+        f"pub const INHERITED_KIND_{name}: &str = {rust_string(kind)};" for name, kind in _INHERITED_KINDS.items()
     )
     lines.append("pub const INSTALLED_DEFAULTS: &[InstalledDefault] = &[")
     for rule in root["installed_defaults"]:
         candidates = ", ".join(
-            f"InstalledBaseCandidate {{ variable: {_rust_string(candidate['variable'])}, "
+            f"InstalledBaseCandidate {{ variable: {rust_string(candidate['variable'])}, "
             f"subpath: {_rust_strings(candidate['subpath'])} }}"
             for candidate in rule["candidates"]
         )
         lines.append(
-            f"    InstalledDefault {{ platform: {_rust_string(rule['platform'])}, candidates: &[{candidates}], "
-            f"home_variable: {_rust_string(rule['home_variable'])} }},"
+            f"    InstalledDefault {{ platform: {rust_string(rule['platform'])}, candidates: &[{candidates}], "
+            f"home_variable: {rust_string(rule['home_variable'])} }},"
         )
     lines.append("];")
     lines += [
         f"pub const CLEARED_PREFIXES: &[&str] = {_rust_strings(environment['cleared']['prefixes'])};",
         f"pub const CLEARED_NAMES: &[&str] = {_rust_strings(environment['cleared']['names'])};",
-        f"pub const NAMESPACE_PREFIX: &str = {_rust_string(environment['cleared']['namespace_prefix'])};",
+        f"pub const NAMESPACE_PREFIX: &str = {rust_string(environment['cleared']['namespace_prefix'])};",
         f"pub const PINNED_ENV: &[&str] = {_rust_strings(environment['pinned'])};",
         f"pub const HOST_INHERITED_ENV: &[&str] = {_rust_strings(environment['host_inherited']['all'])};",
         f"pub const WINDOWS_HOST_INHERITED_ENV: &[&str] = {_rust_strings(environment['host_inherited']['windows'])};",
         "pub struct InheritedEnvironmentField { pub name: &'static str, pub kind: &'static str }",
         "pub const HOST_INHERITED_FIELDS: &[InheritedEnvironmentField] = &["
         + ",".join(
-            f"InheritedEnvironmentField {{ name: {_rust_string(field['name'])}, kind: {_rust_string(field['kind'])} }}"
+            f"InheritedEnvironmentField {{ name: {rust_string(field['name'])}, kind: {rust_string(field['kind'])} }}"
             for field in environment["host_inherited"]["fields"]
         )
         + "];",
-        f"pub const PACKAGE_MANIFEST: &str = {_rust_string(package['package_manifest'])};",
-        f"pub const PACKAGE_ROOT_FROM_EXECUTABLE: &str = {_rust_string(package['package_root_from_executable'])};",
+        f"pub const PACKAGE_MANIFEST: &str = {rust_string(package['package_manifest'])};",
+        f"pub const PACKAGE_ROOT_FROM_EXECUTABLE: &str = {rust_string(package['package_root_from_executable'])};",
     ]
     lines += [
         f"pub const INVALID_NATIVE_PATH_BYTES: &[u8] = &{list(INVALID_NATIVE_PATH_BYTES)};",
@@ -200,13 +200,13 @@ def _rust_root_vectors(vectors: list[dict[str, Any]]) -> list[str]:
     ]
     for vector in vectors:
         pairs = ", ".join(
-            f"({_rust_string(name)}, {_rust_string(value)})" for name, value in sorted(vector["environment"].items())
+            f"({rust_string(name)}, {rust_string(value)})" for name, value in sorted(vector["environment"].items())
         )
         lines.append(
             "    StorageRootVector { "
-            f"name: {_rust_string(vector['name'])}, platform: {_rust_string(vector['platform'])}, "
+            f"name: {rust_string(vector['name'])}, platform: {rust_string(vector['platform'])}, "
             f"environment: &[{pairs}], known_folder: {_rust_option(vector['known_folder'])}, "
-            f"channel: {_rust_string(vector['channel'])}, expected_root: {_rust_option(vector['expected_root'])}, "
+            f"channel: {rust_string(vector['channel'])}, expected_root: {_rust_option(vector['expected_root'])}, "
             f"refusal: {_rust_option(vector['refusal'])}, "
             f"invalid_environment: {_rust_strings(vector['invalid_environment'])}, "
             f"invalid_known_folder: {str(vector['invalid_known_folder']).lower()} }},"
@@ -304,7 +304,7 @@ def project_manager_strings(destination: Path) -> Path:
     return output
 
 
-def _manager_strings(source: Path | None) -> Mapping[str, Mapping[str, str]]:
+def generate_manager_strings(source: Path | None) -> Mapping[str, Mapping[str, str]]:
     if source is None:
         from dev.locales.manager_chrome import manager_chrome_strings
 
@@ -353,22 +353,23 @@ def generate(
         f"pub const DEFAULT_ORCHESTRATION_TIMEOUT_SECONDS: u64 = {int(DEFAULT_TIMEOUT_POLICY.timeout_seconds)};",
     ]
     discovery = {"layout": layout, "installation_identity": contract["installation_identity"]}
-    rust.append(f"pub const INSTALLATION_CONTRACT: &str = {_rust_string(json.dumps(discovery))};")
+    rust.append(f"pub const INSTALLATION_CONTRACT: &str = {rust_string(json.dumps(discovery))};")
     rust.extend(
         [
-            f"pub const MANAGER_LOG: &str = {_rust_string(components['manager_log_file'])};",
-            f"pub const MANAGER_PREFERENCES: &str = {_rust_string(components['manager_preferences'])};",
-            f"pub const MANAGER_FAILED_VERSIONS: &str = {_rust_string(components['manager_failed_versions'])};",
-            f"pub const MANAGER_LANGUAGE_ENV: &str = {_rust_string(components['language_variable'])};",
-            f"pub const MANAGER_LANGUAGE_DEFAULT: &str = {_rust_string(components['language_default'])};",
-            f"pub const LOCAL_AI_ADDRESS: &str = {_rust_string(components['local_ai_address'])};",
+            f"pub const MANAGER_LOG: &str = {rust_string(components['manager_log_file'])};",
+            f"pub const MANAGER_PREFERENCES: &str = {rust_string(components['manager_preferences'])};",
+            f"pub const MANAGER_FAILED_VERSIONS: &str = {rust_string(components['manager_failed_versions'])};",
+            f"pub const MANAGER_LANGUAGE_ENV: &str = {rust_string(components['language_variable'])};",
+            f"pub const MANAGER_LANGUAGE_DEFAULT: &str = {rust_string(components['language_default'])};",
+            f"pub const LOCAL_AI_ADDRESS: &str = {rust_string(components['local_ai_address'])};",
             "pub const MANAGER_STRINGS_JSON: &str = "
-            f"{_rust_string(json.dumps(_manager_strings(manager_strings), ensure_ascii=False, sort_keys=True))};",
+            f"{rust_string(json.dumps(generate_manager_strings(manager_strings), ensure_ascii=False, sort_keys=True))}"
+            ";",
             f"pub const LOG_MAX_BYTES: u64 = {contract['desktop_defaults']['log_max_bytes']};",
             f"pub const LOG_BACKUPS: u32 = {contract['desktop_defaults']['log_backups']};",
         ]
     )
-    rust.extend(f"pub const {key}: &str = {_rust_string(value)};" for key, value in package_strings.items())
+    rust.extend(f"pub const {key}: &str = {rust_string(value)};" for key, value in package_strings.items())
     # Declared entrypoint images live in NATIVE; the platform context maps them back to the package root.
     entrypoints = _entrypoint_names(layout)
     rust.append(f"pub const ENTRYPOINT_FILES: &[&str] = {_rust_strings(entrypoints)};")

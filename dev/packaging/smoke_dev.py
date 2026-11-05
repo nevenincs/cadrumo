@@ -24,7 +24,7 @@ from .lane_verification_core import (
 )
 from .proof_ledger import record_proof
 
-_DEV_COMMANDS: tuple[tuple[str, ...], ...] = (
+DEV_COMMANDS: tuple[tuple[str, ...], ...] = (
     ("ruff", "--version"),
     ("pytest", "--version"),
     ("ty", "--version"),
@@ -105,10 +105,10 @@ def _sync_dev_environment(repo_root: Path, work_dir: Path, uv: str, python: str)
     return venv
 
 
-def _assert_dev_commands(
+def assert_dev_commands(
     work_dir: Path,
     venv: Path,
-    commands: tuple[tuple[str, ...], ...] = _DEV_COMMANDS,
+    commands: tuple[tuple[str, ...], ...] = DEV_COMMANDS,
 ) -> None:
     """Verify the declared developer command surface starts in the clean venv.
 
@@ -168,7 +168,7 @@ def main(argv: list[str] | None = None) -> int:
     venv = _sync_dev_environment(repo_root, work_dir, uv, args.python)
 
     print("verifying developer command surface", flush=True)
-    _assert_dev_commands(work_dir, venv)
+    assert_dev_commands(work_dir, venv)
     _assert_dev_imports(work_dir, venv)
     _assert_dev_cli(work_dir, venv)
     assert_installed_data(work_dir, venv)

@@ -169,10 +169,10 @@ def test_abandoned_stage_is_preserved_and_never_treated_as_success(isolated_home
 
 def test_real_directory_publication_cannot_clobber_a_concurrent_target(isolated_home: Path) -> None:
     expected = _resources()
-    with linux_gnome_installation._extensions_directory(create=True) as parent:
+    with linux_gnome_installation.extensions_directory(create=True) as parent:
         with (
             pytest.raises(RefusalError) as caught,
-            linux_gnome_installation._StagedProducer(parent) as staged,
+            linux_gnome_installation.StagedProducer(parent) as staged,
         ):
             for name, payload in expected.items():
                 staged.write(name, payload)
@@ -192,12 +192,12 @@ def test_preparation_exception_cleans_only_current_owned_stage(isolated_home: Pa
     class PreparationStoppedError(Exception):
         pass
 
-    with linux_gnome_installation._extensions_directory(create=True) as parent:
+    with linux_gnome_installation.extensions_directory(create=True) as parent:
         unrelated = _target(isolated_home).parent / "unrelated-extension"
         unrelated.mkdir(mode=0o700)
         with (
             pytest.raises(PreparationStoppedError),
-            linux_gnome_installation._StagedProducer(parent) as staged,
+            linux_gnome_installation.StagedProducer(parent) as staged,
         ):
             staged.write("extension.js", _resources()["extension.js"])
             raise PreparationStoppedError

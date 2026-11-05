@@ -36,7 +36,7 @@ def test_source_and_authority_changes_refuse_completion(
     inputs.write_text(f"{source}\n{configuration}\n", encoding="utf-8")
     destination, shared = build / "docs", build / "work/user-docs"
     monkeypatch.setattr(docs_build, "selected_published_authority", lambda _root: tuple(selected))
-    monkeypatch.setattr(docs_build, "_index_site", lambda _root, _languages, _work: None)
+    monkeypatch.setattr(docs_build, "index_site", lambda _root, _languages, _work: None)
 
     def produce(root: Path, _work: Path, _languages: tuple[str, ...]) -> None:
         root.mkdir(parents=True, exist_ok=True)
@@ -50,7 +50,7 @@ def test_source_and_authority_changes_refuse_completion(
             successor.write_bytes(authority.read_bytes())
             selected[:] = [successor, database]
 
-    monkeypatch.setattr(docs_build, "_compile_roots", produce)
+    monkeypatch.setattr(docs_build, "compile_roots", produce)
     original_receipt = b""
     if change in {"none", "reuse"}:
         docs_build.build_roots(build, inputs, target="windows-x86-64")
@@ -60,13 +60,13 @@ def test_source_and_authority_changes_refuse_completion(
             return
         original_receipt = (shared / "ready").read_bytes()
         (destination / "ready").unlink()
-        copy = docs_build._copy_site
+        copy = docs_build.copy_site
 
         def changed_copy(origin: Path, target: Path) -> None:
             copy(origin, target)
             source.write_text("edited while copying the shared site", encoding="utf-8")
 
-        monkeypatch.setattr(docs_build, "_copy_site", changed_copy)
+        monkeypatch.setattr(docs_build, "copy_site", changed_copy)
 
     with pytest.raises(DocsPackagingError, match="inputs changed") as refusal:
         docs_build.build_roots(build, inputs, target="windows-x86-64")

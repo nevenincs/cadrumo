@@ -25,7 +25,7 @@ import pathlib
 import pytest
 
 from ..acquire_common import AcquisitionError
-from ..oracle_emit_cohort import _parser, _resolve_uv
+from ..oracle_emit_cohort import parser, resolve_uv
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -40,7 +40,7 @@ def test_an_explicit_override_is_resolved_to_an_absolute_path(tmp_path: pathlib.
     """The path is handed to a subprocess with a different cwd, so it must be absolute."""
     override = _executable(tmp_path)
 
-    assert _resolve_uv(override) == override.resolve()
+    assert resolve_uv(override) == override.resolve()
 
 
 def test_a_relative_override_is_made_absolute(tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -48,7 +48,7 @@ def test_a_relative_override_is_made_absolute(tmp_path: pathlib.Path, monkeypatc
     override = _executable(tmp_path)
     monkeypatch.chdir(tmp_path)
 
-    resolved = _resolve_uv(pathlib.Path("uv"))
+    resolved = resolve_uv(pathlib.Path("uv"))
 
     assert resolved.is_absolute()
     assert resolved == override.resolve()
@@ -65,7 +65,7 @@ def test_an_override_that_does_not_exist_refuses_instructively(tmp_path: pathlib
     missing = tmp_path / "not-installed" / "uv"
 
     with pytest.raises(AcquisitionError) as refusal:
-        _resolve_uv(missing)
+        resolve_uv(missing)
 
     assert "--uv" in str(refusal.value)
 
@@ -75,7 +75,7 @@ def test_an_absent_uv_on_path_names_the_flag_that_fixes_it(monkeypatch: pytest.M
     monkeypatch.setenv("PATH", "")
 
     with pytest.raises(AcquisitionError) as refusal:
-        _resolve_uv(None)
+        resolve_uv(None)
 
     assert "--uv" in str(refusal.value)
 
@@ -88,7 +88,7 @@ def test_the_leg_defining_options_are_all_required() -> None:
     omission silent rather than fatal.
     """
     with pytest.raises(SystemExit):
-        _parser().parse_args(["--row-id", "python-linux-x86-64", "--work-dir", "work"])
+        parser().parse_args(["--row-id", "python-linux-x86-64", "--work-dir", "work"])
 
 
 def test_the_optional_defaults_are_the_same_on_every_leg() -> None:
@@ -98,7 +98,7 @@ def test_the_optional_defaults_are_the_same_on_every_leg() -> None:
     timeout that varies per leg reintroduces the per-OS divergence by another
     route.
     """
-    parsed = _parser().parse_args(
+    parsed = parser().parse_args(
         ["--release-cohort-dir", "cohort", "--row-id", "python-linux-x86-64", "--work-dir", "work"],
     )
 
@@ -110,7 +110,7 @@ def test_the_optional_defaults_are_the_same_on_every_leg() -> None:
 
 def test_the_path_options_are_parsed_as_paths_rather_than_strings() -> None:
     """They are joined and resolved downstream, where a string would not behave."""
-    parsed = _parser().parse_args(
+    parsed = parser().parse_args(
         [
             "--release-cohort-dir",
             "cohort",
@@ -131,7 +131,7 @@ def test_the_path_options_are_parsed_as_paths_rather_than_strings() -> None:
 def test_the_timeout_is_numeric_so_a_typo_refuses_rather_than_running_forever() -> None:
     """A string timeout would reach the subprocess call and fail late, mid-install."""
     with pytest.raises(SystemExit):
-        _parser().parse_args(
+        parser().parse_args(
             [
                 "--release-cohort-dir",
                 "cohort",

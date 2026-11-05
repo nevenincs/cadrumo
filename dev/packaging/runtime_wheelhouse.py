@@ -12,7 +12,7 @@ from typing import Any
 from dev.temporary_output import prepare_temp_root
 
 from .hashing import sha256_path
-from .runtime_wheel_acquisition import _acquire_all, prune_wheel_cache, wheel_cache_dir
+from .runtime_wheel_acquisition import acquire_all, prune_wheel_cache, wheel_cache_dir
 from .runtime_wheel_selection import plan_runtime_wheelhouses
 from .runtime_wheelhouse_contract import (
     PLATFORM_FLOORS,
@@ -88,7 +88,7 @@ def build_runtime_wheelhouse(
         wheel_dir = Path(temporary)
         for plan in plans:
             (wheel_dir / plan.python_version).mkdir()
-        _acquire_all(plans, wheel_dir, cache)
+        acquire_all(plans, wheel_dir, cache)
         prune_wheel_cache(cache)
         with zipfile.ZipFile(output, mode="x", compression=zipfile.ZIP_STORED) as archive:
             manifest_info = zipfile.ZipInfo(WHEELHOUSE_MANIFEST, date_time=_ZIP_TIMESTAMP)

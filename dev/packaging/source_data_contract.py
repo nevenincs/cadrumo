@@ -32,7 +32,7 @@ _WHEEL_DATA_PREFIX = "cadrumo/_data"
 # carries a binary suffix, so the wheel-bundling parity check must not expect it
 # in the
 # ``cadrumo`` archive.
-_CORPUS_SOURCE_PREFIX = "src/cadrumo/_data/corpus/"
+CORPUS_SOURCE_PREFIX = "src/cadrumo/_data/corpus/"
 
 
 _COMPANION_HOOKS = (
@@ -47,7 +47,7 @@ _COMPANION_HOOKS = (
 # tree it is meant to police cannot detect that tree losing a member. Covering
 # Renta alone would leave the IVA and Sociedades manuals free to drop out of the
 # shipped inventory with this floor still green.
-_MANUAL_PDF_PRESENCE_FLOOR = (
+MANUAL_PDF_PRESENCE_FLOOR = (
     {
         f"src/cadrumo/_data/corpus/manuals/renta/{year}/part1/source.pdf"
         for year in ("2020", "2021", "2022", "2023", "2024", "2025")
@@ -72,7 +72,7 @@ def _format_path_sample(paths: list[str], *, limit: int = 20) -> str:
     return f"{sample!r}; plus {len(paths) - limit} more"
 
 
-def _validated_source_data_inventory(source_root: Path, inventory: set[str], *, origin: str) -> set[str]:
+def validated_source_data_inventory(source_root: Path, inventory: set[str], *, origin: str) -> set[str]:
     """Validate one shipped-data inventory against the source tree that must carry it."""
     if not inventory:
         raise SystemExit(f"{origin} reported no shipped data under {_SOURCE_DATA_PREFIX} in {source_root}")
@@ -92,8 +92,8 @@ def _validated_source_data_inventory(source_root: Path, inventory: set[str], *, 
 def source_data_paths(repo_root: Path) -> set[str]:
     """Return repository-visible shipped-data paths relative to the repository root."""
     source_paths = set(repository_files(repo_root, under=SOURCE_DATA_ROOTS))
-    source_paths = _validated_source_data_inventory(repo_root, source_paths, origin="the repository file enumeration")
-    missing_floor = sorted(_MANUAL_PDF_PRESENCE_FLOOR - source_paths)
+    source_paths = validated_source_data_inventory(repo_root, source_paths, origin="the repository file enumeration")
+    missing_floor = sorted(MANUAL_PDF_PRESENCE_FLOOR - source_paths)
     if missing_floor:
         raise SystemExit(f"source data is missing required manual PDFs: {missing_floor!r}")
     return source_paths
@@ -111,13 +111,13 @@ def build_source_data_paths(source_root: Path) -> set[str]:
     files, so reading either one this way answers the same question.
     """
     inventory = set(repository_files(source_root, under=SOURCE_DATA_ROOTS))
-    return _validated_source_data_inventory(source_root, inventory, origin="the repository file enumeration")
+    return validated_source_data_inventory(source_root, inventory, origin="the repository file enumeration")
 
 
-def _configured_corpus_binary_suffixes(repo_root: Path) -> tuple[str, ...]:
+def configured_corpus_binary_suffixes(repo_root: Path) -> tuple[str, ...]:
     """Return corpus suffixes excluded by the root wheel configuration."""
     excluded = wheel_exclude_globs(repo_root / "pyproject.toml")
-    prefix = f"{_CORPUS_SOURCE_PREFIX}**/*"
+    prefix = f"{CORPUS_SOURCE_PREFIX}**/*"
     suffixes = tuple(sorted({Path(pattern).suffix.lower() for pattern in excluded if pattern.startswith(prefix)}))
     if not suffixes or "" in suffixes:
         raise SystemExit("root wheel config declares no precise corpus binary suffix exclusions")
@@ -161,9 +161,9 @@ def _companion_corpus_ownership(repo_root: Path) -> dict[str, frozenset[str]]:
     return ownership
 
 
-def _is_corpus_source_binary(source_relative: str, suffixes: tuple[str, ...]) -> bool:
+def is_corpus_source_binary(source_relative: str, suffixes: tuple[str, ...]) -> bool:
     """Return True for a source ``_data/corpus`` path that is an excluded source binary."""
-    return source_relative.startswith(_CORPUS_SOURCE_PREFIX) and source_relative.lower().endswith(suffixes)
+    return source_relative.startswith(CORPUS_SOURCE_PREFIX) and source_relative.lower().endswith(suffixes)
 
 
 def _assert_split_files_have_companion_owners(repo_root: Path, paths: set[str]) -> None:
@@ -171,7 +171,7 @@ def _assert_split_files_have_companion_owners(repo_root: Path, paths: set[str]) 
     ownership = _companion_corpus_ownership(repo_root)
     unowned: list[str] = []
     for path in sorted(paths):
-        relative = path.removeprefix(_CORPUS_SOURCE_PREFIX)
+        relative = path.removeprefix(CORPUS_SOURCE_PREFIX)
         subdir = relative.partition("/")[0]
         if Path(path).suffix.lower() not in ownership.get(subdir, frozenset()):
             unowned.append(path)
@@ -214,7 +214,7 @@ def expected_wheel_data_paths_from_source_tree(source_root: Path) -> set[str]:
     return _expected_wheel_data_paths(source_root, build_source_data_paths(source_root))
 
 
-def _is_configured_exclusion(path: str, patterns: tuple[str, ...]) -> bool:
+def is_configured_exclusion(path: str, patterns: tuple[str, ...]) -> bool:
     """Return whether one source path is shed by a declared wheel exclusion."""
     candidate = PurePosixPath(path)
     return any(candidate.full_match(pattern) or candidate.is_relative_to(pattern) for pattern in patterns)
@@ -222,9 +222,9 @@ def _is_configured_exclusion(path: str, patterns: tuple[str, ...]) -> bool:
 
 def _expected_wheel_data_paths(repo_root: Path, source_paths: set[str]) -> set[str]:
     """Project source data and the selected published authority into wheel paths."""
-    suffixes = _configured_corpus_binary_suffixes(repo_root)
+    suffixes = configured_corpus_binary_suffixes(repo_root)
     split_owned = {
-        path for path in source_paths if not is_test_source(path) and _is_corpus_source_binary(path, suffixes)
+        path for path in source_paths if not is_test_source(path) and is_corpus_source_binary(path, suffixes)
     }
     _assert_split_files_have_companion_owners(repo_root, split_owned)
     # The build sheds authoring inputs by directory as well as by suffix, so an
@@ -237,7 +237,7 @@ def _expected_wheel_data_paths(repo_root: Path, source_paths: set[str]) -> set[s
             continue
         if is_test_source(path):
             continue
-        if _is_configured_exclusion(path, exclusions):
+        if is_configured_exclusion(path, exclusions):
             continue
         expected.add(f"{_WHEEL_DATA_PREFIX}/{path.removeprefix(_SOURCE_DATA_PREFIX)}")
     descriptor, database = selected_published_authority(repo_root)

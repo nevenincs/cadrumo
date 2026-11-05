@@ -5,7 +5,7 @@ through the cohort builder, and it runs before any development dependency is
 installed. It therefore needs a check that reaches the same limit as every
 other consumer while importing nothing beyond the standard library: a workflow
 step that inlined the number would be exactly the drifting copy
-:mod:`dev.packaging._distribution_limits` exists to prevent, and one that
+:mod:`dev.packaging.distribution_limits` exists to prevent, and one that
 imported the cohort builder would fail on its unresolved third-party imports.
 
 The cap is inclusive. PyPI rejects a file *at* the limit as well as over it, so
@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 from typing import Final
 
-from ._distribution_limits import PYPI_FILE_CAP_BYTES
+from .distribution_limits import PYPI_FILE_CAP_BYTES
 
 __all__ = ["built_distributions", "main", "oversize_distributions"]
 

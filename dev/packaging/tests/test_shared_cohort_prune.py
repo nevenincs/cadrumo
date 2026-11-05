@@ -8,7 +8,7 @@ import pytest
 
 from .. import shared_cohort as cohort_module
 from ..build_scratch_reclaim import SHARED_COHORT_WORK_FAMILY, reclaimable_scratch, var_scratch_name
-from ..shared_cohort import _prune
+from ..shared_cohort import prune
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -23,7 +23,7 @@ def test_prune_keeps_current_and_recent_entries_and_live_locks(tmp_path: Path) -
         (tmp_path / f".{index}.lock").touch()
     (tmp_path / ".orphan.lock").touch()
 
-    _prune(tmp_path, "0")
+    prune(tmp_path, "0")
 
     assert {path.name for path in tmp_path.iterdir() if path.is_dir()} == {"0", "2", "3", "4"}
     assert (tmp_path / ".0.lock").exists()
@@ -71,11 +71,11 @@ def test_cohort_retains_failed_work_and_preserves_other_builds(
 
     monkeypatch.setattr(cohort_module, "dev_cache_dir", lambda _name: tmp_path)
     monkeypatch.setattr(cohort_module, "cohort_key", lambda *_args, **_kwargs: key)
-    monkeypatch.setattr(cohort_module, "_verified_entry", lambda *_args: None)
+    monkeypatch.setattr(cohort_module, "verified_entry", lambda *_args: None)
     monkeypatch.setattr(cohort_module, "build_root_snapshot", snapshot)
-    monkeypatch.setattr(cohort_module, "_build_from", build)
-    monkeypatch.setattr(cohort_module, "_publish", lambda *_args: result)
-    monkeypatch.setattr(cohort_module, "_prune", lambda *_args: None)
+    monkeypatch.setattr(cohort_module, "build_from", build)
+    monkeypatch.setattr(cohort_module, "publish", lambda *_args: result)
+    monkeypatch.setattr(cohort_module, "prune", lambda *_args: None)
     cohort_module.shared_cohort.cache_clear()
     try:
         if fail:

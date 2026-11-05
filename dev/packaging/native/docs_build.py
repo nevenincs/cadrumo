@@ -162,8 +162,8 @@ def build_roots(build: Path, inputs: Path, *, target: str | None = None, shared_
         languages = declared_languages(layout)
 
         def produce(destination: Path) -> None:
-            _compile_roots(destination, paths["user_docs_work"], languages)
-            _index_site(destination, languages, paths["user_docs_work"])
+            compile_roots(destination, paths["user_docs_work"], languages)
+            index_site(destination, languages, paths["user_docs_work"])
 
         built = take_shared_site(
             build_root,
@@ -243,18 +243,18 @@ def take_shared_site(
     with action_lock(shared.parent, shared.name):
         if current(shared, identity):
             validate_inputs()
-            _copy_site(shared, build_root)
+            copy_site(shared, build_root)
             validate_inputs()
             return False
         produce(build_root)
         validate_inputs()
-        _copy_site(build_root, shared)
+        copy_site(build_root, shared)
         validate_inputs()
         completed(shared, identity)
         return True
 
 
-def _copy_site(source: Path, destination: Path) -> None:
+def copy_site(source: Path, destination: Path) -> None:
     """Replace *destination* with the site in *source*, leaving completion to the caller.
 
     The completion marker binds a directory's inventory to the identity its own
@@ -278,7 +278,7 @@ def _raise_compile_failure(log: Path, returncode: int) -> None:
     raise SystemExit(f"User documentation compile failed: exit {returncode}")
 
 
-def _compile_roots(build_root: Path, work: Path, languages: tuple[str, ...]) -> None:
+def compile_roots(build_root: Path, work: Path, languages: tuple[str, ...]) -> None:
     """Write every declared language root from ONE compile of the documentation.
 
     One compile replaces one Sphinx build per language, so the staged site costs
@@ -323,7 +323,7 @@ def _compile_roots(build_root: Path, work: Path, languages: tuple[str, ...]) -> 
         )
 
 
-def _index_site(build_root: Path, languages: tuple[str, ...], work: Path) -> None:
+def index_site(build_root: Path, languages: tuple[str, ...], work: Path) -> None:
     """Build the site's ONE search index over every built root.
 
     Runs after every root has built, because the index spans all of them: each

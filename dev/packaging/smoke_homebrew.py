@@ -54,7 +54,7 @@ _RELEASE_ARTIFACT = re.compile(
 _TAP_NAME = re.compile(r"[a-z0-9][a-z0-9_-]*/[a-z0-9][a-z0-9_-]*")
 
 
-def _require_valid_tap_name(tap_name: str) -> None:
+def require_valid_tap_name(tap_name: str) -> None:
     """Accept one lowercase ``user/repository`` tap pair as Homebrew itself does.
 
     A Homebrew tap name maps to a ``homebrew-<repository>`` GitHub repository, so
@@ -176,7 +176,7 @@ def localize_formula(
     return localized, dict(sorted(replacements.items()))
 
 
-def _new_run_root(evidence_dir: Path) -> Path:
+def new_run_root(evidence_dir: Path) -> Path:
     evidence = resolve_storage_path(evidence_dir)
     evidence.mkdir(parents=True, exist_ok=True)
     run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ")
@@ -185,7 +185,7 @@ def _new_run_root(evidence_dir: Path) -> Path:
     return run_root
 
 
-def _homebrew_storage_environment() -> dict[str, str]:
+def homebrew_storage_environment() -> dict[str, str]:
     """Bind Homebrew caches, logs and build scratch beneath Cadrumo storage."""
     locations = {
         name: Path(value)
@@ -197,7 +197,7 @@ def _homebrew_storage_environment() -> dict[str, str]:
     return {name: str(path) for name, path in locations.items()}
 
 
-def _require_homebrew_temp_volume(*, environment: dict[str, str], brew_prefix: Path) -> None:
+def require_homebrew_temp_volume(*, environment: dict[str, str], brew_prefix: Path) -> None:
     """Refuse a Homebrew temp path on a different filesystem from its prefix.
 
     Homebrew requires its build temporary directory to share a filesystem with
@@ -235,7 +235,7 @@ def _write_json(path: Path, document: object) -> None:
     )
 
 
-def _assert_oracle_evidence(*, tax_document: dict[str, object]) -> None:
+def assert_oracle_evidence(*, tax_document: dict[str, object]) -> None:
     """Refuse a Homebrew keg whose installed CLI does not reproduce the oracle.
 
     The formula installs the ``cadrumo`` distribution, which declares both the
@@ -354,7 +354,7 @@ def _run_homebrew_oracles(
     tax_document = json.loads(tax_evidence.read_text(encoding=_UTF_8))
     aeat_sha256 = sha256_path(aeat)
     aeat_path_sha256 = sha256_text(str(aeat))
-    _assert_oracle_evidence(tax_document=tax_document)
+    assert_oracle_evidence(tax_document=tax_document)
     return version, tax_evidence, aeat_sha256, aeat_path_sha256
 
 
@@ -466,7 +466,7 @@ def _smoke_evidence(
 
 
 def _prepare_smoke_prefix(brew: Path, run_root: Path, logs: Path) -> None:
-    homebrew_environment = _homebrew_storage_environment()
+    homebrew_environment = homebrew_storage_environment()
     os.environ.update(homebrew_environment)
     prefix_text = _run(
         [str(brew), "--prefix"],
@@ -475,7 +475,7 @@ def _prepare_smoke_prefix(brew: Path, run_root: Path, logs: Path) -> None:
         label="brew-prefix-root",
     ).stdout.strip()
     brew_prefix = require_homebrew_installation_prefix(prefix_text)
-    _require_homebrew_temp_volume(environment=homebrew_environment, brew_prefix=brew_prefix)
+    require_homebrew_temp_volume(environment=homebrew_environment, brew_prefix=brew_prefix)
 
 
 def _install_smoke_formula(
@@ -551,7 +551,7 @@ def run_homebrew_smoke(
     if not brew.is_file():
         raise SystemExit(f"Homebrew executable is not a file: {brew}")
     repo = repo_root.resolve(strict=True)
-    _require_valid_tap_name(tap_name)
+    require_valid_tap_name(tap_name)
     _require_homebrew_platform()
     os.environ["HOMEBREW_NO_AUTO_UPDATE"] = "1"
     brew_prefix = brew.parent.parent
@@ -559,7 +559,7 @@ def run_homebrew_smoke(
         (str(brew_prefix / "bin"), str(brew_prefix / "sbin"), os.environ["PATH"]),
     )
 
-    run_root = _new_run_root(evidence_dir)
+    run_root = new_run_root(evidence_dir)
     logs = run_root / "logs"
     logs.mkdir()
     _prepare_smoke_prefix(brew, run_root, logs)
@@ -844,7 +844,7 @@ def run_deferred_cleanup(state_path: Path) -> int:
     run_root = resolved_state.parent
     logs = run_root / "logs"
     logs.mkdir(exist_ok=True)
-    os.environ.update(_homebrew_storage_environment())
+    os.environ.update(homebrew_storage_environment())
     prefix_text = _run(
         [str(state["brew"]), "--prefix"],
         cwd=run_root,
@@ -870,7 +870,7 @@ def run_deferred_cleanup(state_path: Path) -> int:
     return 1 if cleanup_errors else 0
 
 
-def _parser() -> argparse.ArgumentParser:
+def parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--formula", required=True, type=Path)
     parser.add_argument("--cohort-dir", required=True, type=Path)
@@ -911,7 +911,7 @@ def main(argv: list[str] | None = None) -> int:
     if "--cleanup-state" in arguments:
         cleanup_args = _cleanup_parser().parse_args(arguments)
         return run_deferred_cleanup(cleanup_args.cleanup_state)
-    args = _parser().parse_args(arguments)
+    args = parser().parse_args(arguments)
     evidence = run_homebrew_smoke(
         formula_path=args.formula,
         cohort_dir=args.cohort_dir,

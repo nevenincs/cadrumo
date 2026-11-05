@@ -15,7 +15,7 @@ from .runtime_wheelhouse_contract import (
     WHEELHOUSE_PREFIX,
     WHEELHOUSE_SCHEMA,
     RuntimeWheelhouse,
-    _canonical_python_minor,
+    canonical_python_minor,
 )
 
 _UTF_8 = "utf-8"
@@ -41,7 +41,7 @@ def _manifest_runtimes(manifest: dict[str, Any], expected_python: str | None) ->
     if not isinstance(runtimes, dict) or not runtimes:
         raise SystemExit("runtime wheelhouse declares no runtimes")
     if expected_python is not None:
-        expected_runtime = _canonical_python_minor(expected_python)
+        expected_runtime = canonical_python_minor(expected_python)
         if expected_runtime not in runtimes:
             raise SystemExit(f"runtime wheelhouse has no entry for Python {expected_runtime}")
         selected = runtimes[expected_runtime]
@@ -51,7 +51,7 @@ def _manifest_runtimes(manifest: dict[str, Any], expected_python: str | None) ->
 
 
 def _validate_runtime_identity(python_version: Any, runtime: Any) -> None:
-    canonical_runtime = _canonical_python_minor(python_version) if isinstance(python_version, str) else ""
+    canonical_runtime = canonical_python_minor(python_version) if isinstance(python_version, str) else ""
     if canonical_runtime != python_version or not isinstance(runtime, dict):
         raise SystemExit(f"runtime wheelhouse runtime declaration is invalid: {python_version!r}")
     if runtime.get("python") != python_version:
@@ -195,7 +195,7 @@ def extract_runtime_wheelhouse(
             raise SystemExit("runtime-specific wheelhouse extraction requires --python-version")
         selected_runtime = ready[0]
     else:
-        selected_runtime = _canonical_python_minor(python_version)
+        selected_runtime = canonical_python_minor(python_version)
     runtime = runtimes.get(selected_runtime)
     if not isinstance(runtime, dict) or runtime.get("status") != "ready":
         raise SystemExit(f"runtime wheelhouse has no ready entry for Python {selected_runtime}")

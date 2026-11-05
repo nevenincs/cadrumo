@@ -30,7 +30,7 @@ from ..installed_wheel_binding import (
     installed_python_for_cli,
     sealed_wheel_payload_sha256,
 )
-from ..release_cohort_support import _real_companion_wheels, _real_product_wheel, _uv_executable, client_venv_template
+from ..release_cohort_support import client_venv_template, real_companion_wheels, real_product_wheel, uv_executable
 
 # Serial and integration for the same reason as the sibling evidence suite:
 # these cases install the real product wheel into a real environment, which is
@@ -50,7 +50,7 @@ def _install_product_wheel(root: Path) -> Path:
     building path appears; only the environment is new.
     """
     venv = root / ".venv"
-    uv = _uv_executable()
+    uv = uv_executable()
     interpreter = venv_bin_dir(venv) / ("python.exe" if os.name == "nt" else "python")
     for argv in (
         [uv, "venv", "--python", sys.executable, str(venv)],
@@ -60,8 +60,8 @@ def _install_product_wheel(root: Path) -> Path:
             "install",
             "--python",
             str(interpreter),
-            str(_real_product_wheel()),
-            *(str(wheel) for wheel in _real_companion_wheels()),
+            str(real_product_wheel()),
+            *(str(wheel) for wheel in real_companion_wheels()),
         ],
     ):
         completed = run_command(
@@ -128,7 +128,7 @@ def test_a_genuine_install_attests_equal_to_the_sealed_wheel_and_refuses_displac
     """A real install of the sealed wheel attests to it, and stops attesting once it moves."""
     venv = _install_product_wheel(tmp_path)
     cli = venv_executable(venv, "aeat").resolve(strict=True)
-    sealed = sealed_wheel_payload_sha256(_real_product_wheel())
+    sealed = sealed_wheel_payload_sha256(real_product_wheel())
 
     installed = installed_distribution_payload_sha256(cli, "cadrumo")
     assert installed == sealed, "a genuine install of the sealed wheel must attest to that wheel"

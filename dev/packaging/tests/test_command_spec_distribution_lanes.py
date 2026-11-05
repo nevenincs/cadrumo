@@ -19,7 +19,7 @@ from dev.source_tree import repository_files, snapshot
 
 from ..authority_staging import stage_published_authority
 from ..command_execution import run_command
-from ..command_spec_attestation import _FORBIDDEN_COMMAND_ARTIFACT_NAMES
+from ..command_spec_attestation import FORBIDDEN_COMMAND_ARTIFACT_NAMES
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
@@ -30,8 +30,8 @@ _REPOSITORY = Path(__file__).resolve().parents[3]
 #: this one reads the members of a real built wheel and sdist -- so a copy kept
 #: here would leave a newly forbidden artefact refused at build time and shipped
 #: unnoticed in the archive.
-_FORBIDDEN_NAMES = _FORBIDDEN_COMMAND_ARTIFACT_NAMES
-_PROBE = r"""
+_FORBIDDEN_NAMES = FORBIDDEN_COMMAND_ARTIFACT_NAMES
+PROBE = r"""
 import dataclasses
 import importlib
 import json
@@ -225,7 +225,7 @@ def _install_and_probe(*, uv: str, artifact: Path, target: Path, checkout: Path)
     dependency_site = next(path for path in map(Path, sys.path) if path.name == "site-packages" and path.is_dir())
     environment["AEAT_DEPENDENCY_SITE"] = str(dependency_site)
     completed = run_command(
-        [sys.executable, "-S", "-c", _PROBE],
+        [sys.executable, "-S", "-c", PROBE],
         cwd=checkout.parent,
         environment=environment,
     )
@@ -233,7 +233,7 @@ def _install_and_probe(*, uv: str, artifact: Path, target: Path, checkout: Path)
     return cast("dict[str, object]", json.loads(completed.stdout))
 
 
-def _assert_probe(payload: dict[str, object]) -> None:
+def assert_probe(payload: dict[str, object]) -> None:
     assert isinstance(payload["nodes"], int) and payload["nodes"] > 0
     assert cast("dict[str, int]", payload["kinds"])["root"] > 0
     assert cast("dict[str, int]", payload["kinds"])["group"] > 0
@@ -286,7 +286,7 @@ def test_wheel_sdist_and_sdist_wheel_preserve_command_spec_authority(tmp_path: P
             target=tmp_path / f"installed-{label}",
             checkout=checkout,
         )
-        _assert_probe(payload)
+        assert_probe(payload)
         lane_payloads.append(payload)
     assert len({cast(int, payload["nodes"]) for payload in lane_payloads}) == 1
     assert len({json.dumps(payload["kinds"], sort_keys=True) for payload in lane_payloads}) == 1

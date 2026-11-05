@@ -1,6 +1,6 @@
 """Digest-assertion fail-closed tests for the cohort installer-verification loop.
 
-Tests drive :func:`dev.packaging.python_cohort._verify_direct_urls` and
+Tests drive :func:`dev.packaging.python_cohort.verify_direct_urls` and
 :func:`dev.packaging.python_cohort.digest_install_target` directly with real
 on-disk artifact files and synthetic ``direct_url.json`` documents, avoiding
 the subprocess ``_INSTALLED_PROBE`` dependency while exercising the same
@@ -16,8 +16,8 @@ import pytest
 
 from ..python_cohort import (
     PythonCohort,
-    _verify_direct_urls,
     digest_install_target,
+    verify_direct_urls,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -133,14 +133,14 @@ def test_uv_style_url_fragment_passes(tmp_path: Path) -> None:
     """Uv's empty archive_info + fragment channel is accepted for every member."""
     cohort, root_artifact = _make_artifacts(tmp_path)
     urls = _uv_direct_urls(cohort, root_artifact)
-    _verify_direct_urls(urls, cohort, root_artifact)  # must not raise
+    verify_direct_urls(urls, cohort, root_artifact)  # must not raise
 
 
 def test_pip_style_archive_info_passes(tmp_path: Path) -> None:
     """Pip's archive_info.hashes channel is accepted for every member."""
     cohort, root_artifact = _make_artifacts(tmp_path)
     urls = _pip_direct_urls(cohort, root_artifact)
-    _verify_direct_urls(urls, cohort, root_artifact)  # must not raise
+    verify_direct_urls(urls, cohort, root_artifact)  # must not raise
 
 
 def test_drifted_recorded_digest_is_refused(tmp_path: Path) -> None:
@@ -156,7 +156,7 @@ def test_drifted_recorded_digest_is_refused(tmp_path: Path) -> None:
         "archive_info": {},
     }
     with pytest.raises(SystemExit, match="installed digest drifted"):
-        _verify_direct_urls(modified, cohort, root_artifact)
+        verify_direct_urls(modified, cohort, root_artifact)
 
 
 def test_drifted_origin_bytes_is_refused(tmp_path: Path) -> None:
@@ -167,7 +167,7 @@ def test_drifted_origin_bytes_is_refused(tmp_path: Path) -> None:
     urls = _uv_direct_urls(cohort, root_artifact)
     root_artifact.write_bytes(b"tampered content replaces original wheel bytes")
     with pytest.raises(SystemExit, match="origin bytes drifted after install"):
-        _verify_direct_urls(urls, cohort, root_artifact)
+        verify_direct_urls(urls, cohort, root_artifact)
 
 
 def test_unrelated_origin_url_is_refused(tmp_path: Path) -> None:
@@ -183,7 +183,7 @@ def test_unrelated_origin_url_is_refused(tmp_path: Path) -> None:
         "archive_info": {},
     }
     with pytest.raises(SystemExit, match="unrelated origin"):
-        _verify_direct_urls(modified, cohort, root_artifact)
+        verify_direct_urls(modified, cohort, root_artifact)
 
 
 # ---------------------------------------------------------------------------

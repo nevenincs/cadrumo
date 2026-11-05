@@ -288,7 +288,7 @@ def matching_family(name: str) -> ScratchFamily | None:
     return None
 
 
-def _owning_pid(name: str, family: ScratchFamily) -> int | None:
+def owning_pid(name: str, family: ScratchFamily) -> int | None:
     """Return the process identifier ``name`` carries, or ``None`` if it carries none.
 
     ``None`` is the answer that leaves the mtime ceiling as the only rule, and
@@ -352,7 +352,7 @@ def _is_reclaimable(
         return False
     if not family.auto_reclaim_on_dead_owner:
         return False
-    pid = _owning_pid(candidate.name, family)
+    pid = owning_pid(candidate.name, family)
     return pid is not None and not process_is_live(pid)
 
 

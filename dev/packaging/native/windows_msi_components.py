@@ -9,8 +9,7 @@ from xml.etree.ElementTree import Element, SubElement
 from .identity import DistributionIdentity
 from .installation import member
 from .windows_msi_identity import MsiIdentity
-from .windows_msi_paths import literal as _literal
-from .windows_msi_paths import source_path as _source_path
+from .windows_msi_paths import literal, source_path
 
 
 def add_component(parent: Element, feature: Element, product: MsiIdentity, resource: str) -> Element:
@@ -50,7 +49,7 @@ def _resource_parent(
         if directory not in directories:
             code = product.component_code(directory)
             directories[directory] = SubElement(
-                parent, "Directory", Id="D_" + code.replace("-", ""), Name=_literal(name)
+                parent, "Directory", Id="D_" + code.replace("-", ""), Name=literal(name)
             )
         parent = directories[directory]
     return parent
@@ -75,8 +74,8 @@ def _add_resource_files(
             component,
             "File",
             Id=file_id,
-            Name=_literal(PurePosixPath(relative).name),
-            Source=_source_path(native_marker[1] if relative == native_marker[0] else member(stage, relative)),
+            Name=literal(PurePosixPath(relative).name),
+            Source=source_path(native_marker[1] if relative == native_marker[0] else member(stage, relative)),
             KeyPath="no" if product.scope == "user" else "yes",
         )
 
@@ -93,7 +92,7 @@ def add_files(
 ) -> Element:
     """Author the ordered MSI file components and directories."""
     standard = SubElement(package, "StandardDirectory", Id=product.root_directory)
-    root = SubElement(standard, "Directory", Id="INSTALL_ROOT", Name=_literal(value.name))
+    root = SubElement(standard, "Directory", Id="INSTALL_ROOT", Name=literal(value.name))
     directories = {"": root}
     groups = _group_resources(members, product, individual_names)
     for relatives in groups.values():
@@ -128,7 +127,7 @@ def add_machine_service(component: Element, value: DistributionIdentity) -> None
         "ServiceInstall",
         Id="CadrumoMachineManager",
         Name=value.manager_id,
-        DisplayName=_literal(value.manager_name),
+        DisplayName=literal(value.manager_name),
         Description="Starts and supervises Cadrumo managers in their real user logons.",
         Type="ownProcess",
         Start="auto",
@@ -192,13 +191,13 @@ def add_registration(
         )
     if desktop is not None and desktop:
         menu = SubElement(package, "StandardDirectory", Id="ProgramMenuFolder")
-        folder = SubElement(menu, "Directory", Id="CADRUMO_MENU", Name=_literal(value.name))
+        folder = SubElement(menu, "Directory", Id="CADRUMO_MENU", Name=literal(value.name))
         shortcut_component = add_component(folder, feature, product, "menu/desktop")
         shortcut = SubElement(
             shortcut_component,
             "Shortcut",
             Id="CADRUMO_LAUNCH",
-            Name=_literal(value.name),
+            Name=literal(value.name),
             Target=f"[INSTALL_ROOT]{product.version_directory}\\{value.version}\\" + desktop.replace("/", "\\"),
             WorkingDirectory="INSTALL_ROOT",
         )

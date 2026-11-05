@@ -213,7 +213,7 @@ def _cohort_in(entry: Path, key: str) -> SharedCohort:
     )
 
 
-def _verified_entry(entry: Path, key: str) -> SharedCohort | None:
+def verified_entry(entry: Path, key: str) -> SharedCohort | None:
     """Serve a published entry only when every recorded artifact still hashes to its record."""
     try:
         manifest = json.loads((entry / _MANIFEST).read_text(encoding=UTF_8))
@@ -230,7 +230,7 @@ def _verified_entry(entry: Path, key: str) -> SharedCohort | None:
     return cohort
 
 
-def _build_from(build_root: Path, work: Path, repo_root: Path, staged: Path, key: str) -> SharedCohort:
+def build_from(build_root: Path, work: Path, repo_root: Path, staged: Path, key: str) -> SharedCohort:
     """Build every artifact from ``build_root`` and stage it, with its manifest, in ``staged``."""
     uv = _uv()
     build_wheel(repo_root, work, uv, build_root=build_root)
@@ -248,10 +248,10 @@ def _build_from(build_root: Path, work: Path, repo_root: Path, staged: Path, key
     return cohort
 
 
-def _publish(cache: Path, staged: Path, key: str) -> SharedCohort:
+def publish(cache: Path, staged: Path, key: str) -> SharedCohort:
     """Move ``staged`` into place under ``key``, keeping an equal entry another writer published first."""
     entry = cache / key
-    existing = _verified_entry(entry, key)
+    existing = verified_entry(entry, key)
     if existing is not None:
         shutil.rmtree(staged, ignore_errors=True)
         return existing
@@ -260,7 +260,7 @@ def _publish(cache: Path, staged: Path, key: str) -> SharedCohort:
     return _cohort_in(entry, key)
 
 
-def _prune(cache: Path, keep: str) -> None:
+def prune(cache: Path, keep: str) -> None:
     """Drop older content keys, newest first retained, never the entry in use."""
     entries = [
         path
@@ -299,7 +299,7 @@ def shared_cohort(repo_root: Path = REPO_ROOT) -> SharedCohort:
     cache.mkdir(parents=True, exist_ok=True)
     requested = cohort_key(repo_root)
     with action_lock(cache, requested):
-        cohort = _verified_entry(cache / requested, requested)
+        cohort = verified_entry(cache / requested, requested)
         if cohort is not None:
             os.utime(cache / requested / _MANIFEST)
             return cohort
@@ -314,8 +314,8 @@ def shared_cohort(repo_root: Path = REPO_ROOT) -> SharedCohort:
         try:
             build_root = build_root_snapshot(repo_root, work)
             built = cohort_key(build_root, client_root=repo_root)
-            _build_from(build_root, work, repo_root, work / "entry", built)
-            cohort = _publish(cache, work / "entry", built)
+            build_from(build_root, work, repo_root, work / "entry", built)
+            cohort = publish(cache, work / "entry", built)
         except BaseException as error:
             if work.exists():
                 message = f"shared cohort work remains for review: {work}"
@@ -324,7 +324,7 @@ def shared_cohort(repo_root: Path = REPO_ROOT) -> SharedCohort:
                     print(message, file=sys.stderr)
             raise
         remove_source_snapshot(work)
-        _prune(cache, built)
+        prune(cache, built)
         return cohort
 
 

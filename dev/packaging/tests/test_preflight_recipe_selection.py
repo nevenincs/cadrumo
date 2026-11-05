@@ -84,7 +84,7 @@ from dev.paths import REPO_ROOT
 
 from ..campaign import PytestPass, campaign_pytest_argv, pytest_pass_argv
 from ..command_execution import run_command
-from ._justfile_recipes import Recipe, packaging_pytest_recipes
+from .justfile_recipes import Recipe, packaging_pytest_recipes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

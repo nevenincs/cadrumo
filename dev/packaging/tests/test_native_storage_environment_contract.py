@@ -77,7 +77,7 @@ def test_desktop_defaults_project_the_package_declaration(tmp_path: Path) -> Non
     assert _rust_strings(generated, "MANAGER_LANGUAGE_ENV") == [components["language_variable"]]
     assert _rust_strings(generated, "MANAGER_LANGUAGE_DEFAULT") == [components["language_default"]]
     strings = json.dumps(manager_chrome_strings(), ensure_ascii=False, sort_keys=True)
-    assert f"pub const MANAGER_STRINGS_JSON: &str = {generator_module._rust_string(strings)};" in generated
+    assert f"pub const MANAGER_STRINGS_JSON: &str = {generator_module.rust_string(strings)};" in generated
     assert f"pub const LOG_MAX_BYTES: u64 = {components['log_max_bytes']};" in generated
     assert f"pub const LOG_BACKUPS: u32 = {components['log_backups']};" in generated
 

@@ -85,7 +85,7 @@ def test_clean_builder_subprocess_is_package_correct_and_detector_bites(
             raise _CleanBuilderInvocationObservedError
         return subprocess.CompletedProcess(argv, 0, stdout="", stderr="")
 
-    monkeypatch.setattr(release_cohort_module, "_run", fake_run)
+    monkeypatch.setattr(release_cohort_module, "run", fake_run)
 
     with pytest.raises(_CleanBuilderInvocationObservedError):
         build_release_cohort(
@@ -120,7 +120,7 @@ def test_clean_builder_subprocess_is_package_correct_and_detector_bites(
 
 def test_direct_clean_builder_keeps_validation_and_snapshot_defaults() -> None:
     """Only the release parent can opt into its already-verified source path."""
-    parser = release_cohort_module._parser()
+    parser = release_cohort_module.parser()
     direct = parser.parse_args(
         [
             "build-clean",
@@ -168,7 +168,7 @@ def test_parent_defers_only_the_validation_it_repeats_after_the_move(
     monkeypatch.setattr(release_cohort_module, "load_release_cohort", fake_load)
 
     assert (
-        release_cohort_module._complete_release_cohort(
+        release_cohort_module.complete_release_cohort(
             output=output,
             manifest_path=manifest_path,
             manifest=manifest,
@@ -176,7 +176,7 @@ def test_parent_defers_only_the_validation_it_repeats_after_the_move(
         )
         is loaded
     )
-    deferred = release_cohort_module._complete_release_cohort(
+    deferred = release_cohort_module.complete_release_cohort(
         output=output,
         manifest_path=manifest_path,
         manifest=manifest,
@@ -232,7 +232,7 @@ def test_python_cohort_copy_checks_artifacts_without_reloading_metadata(
         sha256={name: sha256_path(artifact) for name, artifact in artifacts.items()},
     )
 
-    copied = release_cohort_module._copy_python_cohort(cohort, tmp_path / "copied")
+    copied = release_cohort_module.copy_python_cohort(cohort, tmp_path / "copied")
 
     assert copied.directory == (tmp_path / "copied").resolve()
     assert copied.manifest.read_text(encoding="utf-8") == "not parsed during transfer"
@@ -248,7 +248,7 @@ def test_python_cohort_copy_checks_artifacts_without_reloading_metadata(
 
     monkeypatch.setattr(release_cohort_module.shutil, "copytree", corrupting_copytree)
     with pytest.raises(SystemExit, match="copied Python cohort artifact digest mismatch"):
-        release_cohort_module._copy_python_cohort(cohort, tmp_path / "corrupted")
+        release_cohort_module.copy_python_cohort(cohort, tmp_path / "corrupted")
 
 
 _COMMIT: Final[str] = "0123456789abcdef0123456789abcdef01234567"
@@ -273,7 +273,7 @@ def test_clean_builder_subprocess_carries_the_requested_source_commit(
         captured.append(argv)
         raise _CleanBuilderInvocationObservedError
 
-    monkeypatch.setattr(release_cohort_module, "_run", fake_run)
+    monkeypatch.setattr(release_cohort_module, "run", fake_run)
 
     with pytest.raises(_CleanBuilderInvocationObservedError):
         build_release_cohort(repo_root=repo_root, output_dir=repo_root / "build" / "cohort", source_commit=_COMMIT)
@@ -307,7 +307,7 @@ def test_release_cohort_refuses_output_outside_the_canonical_build_root(tmp_path
     outside = tmp_path / "release-cohort"
 
     with pytest.raises(SystemExit, match="beneath"):
-        release_cohort_module._safe_new_output(outside, repo_root=repo_root)
+        release_cohort_module.safe_new_output(outside, repo_root=repo_root)
 
     assert not outside.exists()
 
@@ -427,7 +427,7 @@ def test_release_builder_identity_is_the_exact_checked_in_cpython_pin(monkeypatc
 
     monkeypatch.setattr(release_cohort_module.platform, "python_implementation", lambda: "CPython")
     monkeypatch.setattr(release_cohort_module.platform, "python_version", lambda: pin)
-    identity = release_cohort_module._build_identity(REPO_ROOT)
+    identity = release_cohort_module.build_identity(REPO_ROOT)
 
     assert identity.implementation == "dev.packaging.release_cohort"
     assert identity.python == pin
@@ -448,7 +448,7 @@ def test_release_builder_refuses_a_non_exact_cpython_identity(
     monkeypatch.setattr(release_cohort_module.platform, "python_version", lambda: version)
 
     with pytest.raises(SystemExit, match="release cohort requires"):
-        release_cohort_module._build_identity(REPO_ROOT)
+        release_cohort_module.build_identity(REPO_ROOT)
 
 
 def test_clean_builder_selects_the_declared_patch_without_replacing_the_callers_environment(
@@ -457,7 +457,7 @@ def test_clean_builder_selects_the_declared_patch_without_replacing_the_callers_
     monkeypatch.setattr(release_cohort_module.platform, "python_implementation", lambda: "CPython")
     monkeypatch.setattr(release_cohort_module.platform, "python_version", lambda: "3.13.99")
     monkeypatch.setattr(release_cohort_module.shutil, "which", lambda _name: "uv")
-    command = release_cohort_module._clean_builder_command()
+    command = release_cohort_module.clean_builder_command()
     assert command == [
         "uv",
         "run",
@@ -470,6 +470,6 @@ def test_clean_builder_selects_the_declared_patch_without_replacing_the_callers_
     ]
     monkeypatch.setattr(release_cohort_module.shutil, "which", lambda _name: None)
     with pytest.raises(SystemExit, match="pinned release-cohort builder"):
-        release_cohort_module._clean_builder_command()
+        release_cohort_module.clean_builder_command()
     monkeypatch.setattr(release_cohort_module.platform, "python_version", lambda: REQUIRED_PYTHON_VERSION)
-    assert release_cohort_module._clean_builder_command() == [release_cohort_module.sys.executable]
+    assert release_cohort_module.clean_builder_command() == [release_cohort_module.sys.executable]

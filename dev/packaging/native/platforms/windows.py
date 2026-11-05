@@ -317,7 +317,7 @@ def resources(
         f"entrypoint-{name}": description for name, description in entrypoints.items()
     }
     for stem, description in descriptions.items():
-        resource = _version_resource(shared, numeric, version, stamp, publisher, _rc_string(description))
+        resource = version_resource(shared, numeric, version, stamp, publisher, _rc_string(description))
         write_text(destination / f"{stem}.rc", resource)
 
 
@@ -347,7 +347,7 @@ def _rc_string(value: str) -> str:
     return json.dumps(value, ensure_ascii=True)[:-1] + '\\0"'
 
 
-def _version_resource(
+def version_resource(
     destination: Path, numeric: str, version: str, stamp: BuildStamp, publisher: str, description: str
 ) -> str:
     """Render one VERSIONINFO; the compiler's ``CADRUMO_BUILD_DEBUG`` selects the build type strings."""

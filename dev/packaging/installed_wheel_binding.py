@@ -74,7 +74,7 @@ def _pe_align(value: int, alignment: int) -> int:
     return ((value + alignment - 1) // alignment) * alignment
 
 
-def _launcher_stub_projection(image: bytes) -> bytes:
+def launcher_stub_projection(image: bytes) -> bytes:
     """Compare every launcher byte except UV's separately checked script resource.
 
     UV stores its Windows console script as ``RCDATA/UV_SCRIPT_DATA`` in the
@@ -494,7 +494,7 @@ def _assert_windows_launcher(resolved: Path, entry_point: str, expected_script: 
         peer_expected_value = _WINDOWS_CONSOLE_ENTRY_POINTS[Path(peer_name).stem]
         peer_python = installed_python_for_cli(peer)
         _assert_windows_launcher_script(peer, _windows_entry_point_script(peer_python, peer_expected_value))
-        if _launcher_stub_projection(resolved.read_bytes()) != _launcher_stub_projection(peer.read_bytes()):
+        if launcher_stub_projection(resolved.read_bytes()) != launcher_stub_projection(peer.read_bytes()):
             raise RuntimeError("console entry-point launcher stub drifted")
     except (OSError, struct.error, zipfile.BadZipFile) as exc:
         raise RuntimeError("console entry-point launcher is malformed") from exc

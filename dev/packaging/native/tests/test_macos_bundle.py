@@ -297,7 +297,7 @@ def test_runtime_role_refuses_a_bundle_that_does_not_report_ready(tmp_path: Path
 def test_runtime_role_refuses_a_role_that_ignores_closed_input(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     bundle, main = _bundle(tmp_path)
     tool, _ = _recording_codesign(tmp_path)
-    monkeypatch.setattr(macos_bundle, "_RUNTIME_STOP_SECONDS", 1)
+    monkeypatch.setattr(macos_bundle, "RUNTIME_STOP_SECONDS", 1)
     _runtime_main(main, tmp_path / "ran", "ignore_close")
     with pytest.raises(ValueError, match="did not stop"):
         verify_runtime_role(tool, bundle, identity("macos-arm64").application_id, scratch_root=tmp_path)
@@ -340,8 +340,8 @@ def test_package_scratch_is_build_owned_and_cleaned_after_verification(
             return real_run_command([sys.executable, "-c", "pass"], **kwargs)
         raise AssertionError(argv)
 
-    monkeypatch.setattr(macos_bundle, "_run", run)
-    monkeypatch.setattr(macos_bundle, "_verify_copy", verify)
+    monkeypatch.setattr(macos_bundle, "run", run)
+    monkeypatch.setattr(macos_bundle, "verify_copy", verify)
     monkeypatch.setattr(macos_bundle, "run_command", detach)
     if refuse_seal:
         with pytest.raises(ValueError, match="refused seal"):
@@ -368,7 +368,7 @@ def test_runtime_health_uses_the_explicit_build_testing_root(tmp_path: Path, mon
         (root / "state").write_text("private", encoding="utf-8")
         return "1.2.3"
 
-    monkeypatch.setattr(macos_bundle, "_serve_until_ready", ready)
+    monkeypatch.setattr(macos_bundle, "serve_until_ready", ready)
     assert verify_runtime_role(tool, bundle, identity("macos-arm64").application_id, scratch_root=scratch) == "1.2.3"
     assert roots and not roots[0].exists()
 

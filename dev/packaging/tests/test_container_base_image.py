@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .._base_image import dockerfile_path, linux_base_image
+from ..base_image import dockerfile_path, linux_base_image
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

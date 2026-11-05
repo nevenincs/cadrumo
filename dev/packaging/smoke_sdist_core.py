@@ -32,8 +32,8 @@ from .python_cohort import (
     load_python_cohort,
 )
 from .source_data_contract import (
-    _configured_corpus_binary_suffixes,
-    _is_configured_exclusion,
+    configured_corpus_binary_suffixes,
+    is_configured_exclusion,
     source_data_paths,
 )
 
@@ -42,14 +42,14 @@ def _assert_sdist_contains_data(repo_root: Path, sdist: Path) -> None:
     """Verify every repository-visible shipped-data file appears in the source distribution."""
     configuration = load_toml(repo_root / "pyproject.toml")
     exclusions = tuple(configuration["tool"]["hatch"]["build"]["targets"]["sdist"]["exclude"])
-    expected = {path for path in source_data_paths(repo_root) if not _is_configured_exclusion(path, exclusions)}
+    expected = {path for path in source_data_paths(repo_root) if not is_configured_exclusion(path, exclusions)}
     descriptor, database = selected_published_authority(repo_root)
     expected.update(f"src/cadrumo/_data/registry/authority/{path.name}" for path in (descriptor, database))
     expected.add(GOOGLE_OAUTH_RESOURCE)
-    _assert_sdist_contains_expected_data(
+    assert_sdist_contains_expected_data(
         sdist,
         expected,
-        corpus_binary_suffixes=_configured_corpus_binary_suffixes(repo_root),
+        corpus_binary_suffixes=configured_corpus_binary_suffixes(repo_root),
         excluded_patterns=exclusions,
     )
 
@@ -64,7 +64,7 @@ def _assert_no_corpus_leaks(names: set[str], corpus_binary_suffixes: tuple[str, 
         )
 
 
-def _assert_sdist_contains_expected_data(
+def assert_sdist_contains_expected_data(
     sdist: Path,
     expected: set[str],
     *,
@@ -88,7 +88,7 @@ def _assert_sdist_contains_expected_data(
     excluded = sorted(
         name
         for name in names
-        if _is_configured_exclusion(
+        if is_configured_exclusion(
             PurePosixPath(name).relative_to(PurePosixPath(name).parts[0]).as_posix(), excluded_patterns
         )
     )

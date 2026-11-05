@@ -44,7 +44,7 @@ def _product_tree(root: Path) -> tuple[Path, Path]:
     unrelated.write_text("export const value = 1;\n", encoding="utf-8")
 
     inputs = root.parent / "inputs-product.txt"
-    roots = product_snapshot._product_source_roots(root)
+    roots = product_snapshot.product_source_roots(root)
     enrolled = (*repository_files(root, under=roots), "pyproject.toml", "uv.lock")
     inputs.write_text("\n".join(str(root / name) for name in enrolled) + "\n", encoding="utf-8")
     return inputs, package_file
@@ -145,7 +145,7 @@ def test_product_source_snapshot_enrolls_a_module_added_after_the_manifest_was_w
     root = tmp_path / "checkout"
     _product_tree(root)
     inputs = root.parent / "inputs-trees.txt"
-    entries = [f"tree\tproduct\t{root}\t{name}" for name in product_snapshot._product_source_roots(root)]
+    entries = [f"tree\tproduct\t{root}\t{name}" for name in product_snapshot.product_source_roots(root)]
     entries.extend((str(root / "pyproject.toml"), str(root / "uv.lock")))
     inputs.write_text("\n".join(entries) + "\n", encoding="utf-8")
     new_module = root / "src/cadrumo_client/transport/profile_language.py"
@@ -307,7 +307,7 @@ def _staged_old_authority(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tu
     monkeypatch.setattr(product, "selected_published_authority", lambda _: (descriptor, current[0]))
     source = tmp_path / "snapshot"
     source.mkdir()
-    product._stage_product_authority(authoring, source)
+    product.stage_product_authority(authoring, source)
     return authoring, descriptor, old, current, source
 
 
@@ -316,14 +316,14 @@ def test_product_authority_snapshot_retires_only_previous_snapshot_generation(
 ) -> None:
     authoring, descriptor, old, current, source = _staged_old_authority(tmp_path, monkeypatch)
     unchanged_mtime = (source / ".authority" / old.name).stat().st_mtime_ns
-    product._stage_product_authority(authoring, source)
+    product.stage_product_authority(authoring, source)
     assert (source / ".authority" / old.name).stat().st_mtime_ns == unchanged_mtime
 
     new = authoring / "authority-new.sqlite3"
     new.write_bytes(b"new authority")
     current[0] = new
     descriptor.write_text(new.name, encoding="utf-8")
-    product._stage_product_authority(authoring, source)
+    product.stage_product_authority(authoring, source)
 
     assert {path.name for path in (source / ".authority").iterdir()} == {descriptor.name, new.name}
     assert (source / ".authority" / new.name).read_bytes() == b"new authority"
@@ -348,7 +348,7 @@ def test_product_authority_capture_failure_preserves_previous_selected_pair(
 
     monkeypatch.setattr(product.shutil, "copy2", mutate_after_capture)
     with pytest.raises(RuntimeError, match="authority changed"):
-        product._stage_product_authority(authoring, source)
+        product.stage_product_authority(authoring, source)
     assert {path.name for path in (source / ".authority").iterdir()} == {descriptor.name, old.name}
     assert (source / ".authority" / descriptor.name).read_text(encoding="utf-8") == old.name
     assert not list(source.glob(".authority-capture-*"))

@@ -80,7 +80,7 @@ REQUIRED_PYTHON_VERSION: Final[str] = (
 _BUILD_CONSTRAINTS: Final[Path] = Path("packaging/build-system-constraints.txt")
 
 
-def _run(
+def run(
     argv: list[str],
     *,
     cwd: Path,
@@ -100,7 +100,7 @@ def _run(
     return completed
 
 
-def _safe_new_output(output_dir: Path, *, repo_root: Path) -> Path:
+def safe_new_output(output_dir: Path, *, repo_root: Path) -> Path:
     root = repo_root.resolve(strict=True)
     build = root / "build"
     try:
@@ -140,7 +140,7 @@ def deterministic_zip_tree(source: Path, destination: Path) -> Path:
     return destination.resolve(strict=True)
 
 
-def _copy_python_cohort(cohort: PythonCohort, destination: Path) -> PythonCohort:
+def copy_python_cohort(cohort: PythonCohort, destination: Path) -> PythonCohort:
     if destination.exists():
         raise FileExistsError(destination)
     shutil.copytree(cohort.directory, destination)
@@ -206,7 +206,7 @@ def _copy_python_cohort(cohort: PythonCohort, destination: Path) -> PythonCohort
     )
 
 
-def _complete_release_cohort(
+def complete_release_cohort(
     *,
     output: Path,
     manifest_path: Path,
@@ -231,7 +231,7 @@ def _generate_channel_artifacts(
     env: dict[str, str],
 ) -> tuple[Path, Path]:
     scoop = output / "scoop" / "cadrumo.json"
-    _run(
+    run(
         [
             sys.executable,
             "-B",
@@ -247,7 +247,7 @@ def _generate_channel_artifacts(
         env=env,
     )
     homebrew_dir = output / "homebrew"
-    _run(
+    run(
         [
             sys.executable,
             "-B",
@@ -302,11 +302,11 @@ def _source_commit(requested: str | None) -> str | None:
     return requested
 
 
-def _build_identity(clean_root: Path) -> BuildIdentity:
+def build_identity(clean_root: Path) -> BuildIdentity:
     uv = shutil.which("uv")
     if uv is None:
         raise SystemExit("uv is required to construct the release cohort")
-    uv_version = _run([uv, "--version"], cwd=clean_root).stdout.strip()
+    uv_version = run([uv, "--version"], cwd=clean_root).stdout.strip()
     observed_uv = uv_version.split(maxsplit=2)
     # Any uv builds the cohort. The version is RECORDED rather than pinned, so
     # reproducibility is an auditable coordinate instead of a precondition: two
@@ -397,9 +397,9 @@ def build_from_clean_source(
         raise SystemExit(
             f"clean source digest drifted: expected {expected_source_digest}, got {observed_digest}",
         )
-    output = _safe_new_output(output_dir, repo_root=root)
+    output = safe_new_output(output_dir, repo_root=root)
 
-    builder = _build_identity(root)
+    builder = build_identity(root)
     _configure_builder_environment(root)
 
     try:
@@ -428,7 +428,7 @@ def build_from_clean_source(
                     "captured Python cohort source differs from the requested release source: "
                     f"expected {expected_source_digest}, got {python_cohort.source_digest}",
                 )
-            cohort = _copy_python_cohort(python_cohort, output / "python")
+            cohort = copy_python_cohort(python_cohort, output / "python")
         finally:
             if python_work.exists():
                 shutil.rmtree(python_work)
@@ -508,7 +508,7 @@ def build_from_clean_source(
     _assert_release_inventory(output, declared)
     if use_prepared_source:
         _assert_prepared_source_unchanged(root, source_files, expected_source_digest)
-    return _complete_release_cohort(
+    return complete_release_cohort(
         output=output,
         manifest_path=manifest_path,
         manifest=manifest,
@@ -516,7 +516,7 @@ def build_from_clean_source(
     )
 
 
-def _clean_builder_command() -> list[str]:
+def clean_builder_command() -> list[str]:
     """Select the declared builder without changing the caller's development environment."""
     if platform.python_implementation() == "CPython" and platform.python_version() == REQUIRED_PYTHON_VERSION:
         return [sys.executable]
@@ -543,7 +543,7 @@ def build_release_cohort(
     """Snapshot the current source tree and execute that clean copy's builder once."""
     root = repo_root.resolve(strict=True)
     _source_commit(source_commit)
-    output = _safe_new_output(output_dir, repo_root=root)
+    output = safe_new_output(output_dir, repo_root=root)
     source_files = repository_files(root)
     digest = content_digest(root, source_files)
     try:
@@ -598,7 +598,7 @@ def build_release_cohort(
             env[GOOGLE_OAUTH_ENV] = build_client_json(root).get_secret_value()
             env["PYTHONPATH"] = os.pathsep.join((str(clean_root / "src"), str(clean_root)))
             argv = [
-                *_clean_builder_command(),
+                *clean_builder_command(),
                 "-m",
                 "dev.packaging.release_cohort",
                 "build-clean",
@@ -614,7 +614,7 @@ def build_release_cohort(
             if source_commit is not None:
                 argv.extend(("--source-commit", source_commit))
             try:
-                _run(argv, cwd=clean_root, env=env)
+                run(argv, cwd=clean_root, env=env)
                 child_staging.replace(staging)
                 staging.replace(output)
             except (OSError, SystemExit):
@@ -632,7 +632,7 @@ def build_release_cohort(
     return cohort
 
 
-def _parser() -> argparse.ArgumentParser:
+def parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
     build = subparsers.add_parser("build")
@@ -653,7 +653,7 @@ def _parser() -> argparse.ArgumentParser:
 
 def main() -> int:
     """Build from a clean snapshot, run the internal assembly, or verify bytes."""
-    args = _parser().parse_args()
+    args = parser().parse_args()
     if args.command == "build":
         cohort = build_release_cohort(
             repo_root=_REPO_ROOT,

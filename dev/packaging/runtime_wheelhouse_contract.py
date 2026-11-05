@@ -113,7 +113,7 @@ class RuntimeWheelhouse:
     manifest: dict[str, Any]
 
 
-def _canonical_python_minor(value: str) -> str:
+def canonical_python_minor(value: str) -> str:
     """Return one canonical ``3.N`` runtime key from a selector or minor."""
     match = _PYTHON_MINOR_RE.fullmatch(value) or re.fullmatch(r"3\.(?P<minor>[0-9]+)\.[0-9]+", value)
     if match is None:

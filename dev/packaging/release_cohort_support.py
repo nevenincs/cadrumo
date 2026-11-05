@@ -64,7 +64,7 @@ DEFAULT_COHORT_BUILD_CONSTRAINTS_SHA256 = "d" * 64
 DEFAULT_COHORT_CREATED_AT = datetime(2026, 1, 1, tzinfo=UTC)
 
 
-def _uv_executable() -> str:
+def uv_executable() -> str:
     """Resolve the uv executable these fixtures build and install through."""
     uv = shutil.which("uv")
     if uv is None:
@@ -73,7 +73,7 @@ def _uv_executable() -> str:
     return uv
 
 
-def _real_product_wheel() -> Path:
+def real_product_wheel() -> Path:
     """Return the genuine product wheel; never counterfeit it from installed files.
 
     One wheel, because the harness ships inside it. It comes from the shared,
@@ -83,7 +83,7 @@ def _real_product_wheel() -> Path:
     return shared_cohort().wheel
 
 
-def _real_companion_wheels() -> tuple[Path, Path, Path]:
+def real_companion_wheels() -> tuple[Path, Path, Path]:
     """Return the mandatory data companions built beside the genuine core wheel."""
     return shared_cohort().companions
 
@@ -137,7 +137,7 @@ def client_venv_template() -> Path:
         # dropping it keeps the explicit --python selection unambiguous under a
         # pytest run that is itself executing inside an activated environment.
         environment = {name: value for name, value in os.environ.items() if name != "VIRTUAL_ENV"}
-        uv = _uv_executable()
+        uv = uv_executable()
         interpreter = venv_bin_dir(template) / ("python.exe" if os.name == "nt" else "python")
         for argv in (
             [uv, "venv", "--python", sys.executable, str(template)],
@@ -189,7 +189,7 @@ def release_cohort(
         path = root / "artifacts" / f"{name}.bin"
         path.parent.mkdir(exist_ok=True)
         if name == "cadrumo-wheel":
-            shutil.copy2(_real_product_wheel(), path)
+            shutil.copy2(real_product_wheel(), path)
             if payload_suffix:
                 with zipfile.ZipFile(path, "a") as archive:
                     archive.writestr("cadrumo/_foreign_cohort_plant.py", payload_suffix)

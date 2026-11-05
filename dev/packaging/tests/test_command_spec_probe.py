@@ -14,10 +14,10 @@ from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from dev.paths import REPO_ROOT
 
 from ..command_execution import run_command
-from ..command_spec_attestation import _probe_installed_command_specs
-from .test_command_spec_distribution_lanes import _PROBE as DISTRIBUTION_PROBE
-from .test_command_spec_distribution_lanes import _assert_probe
-from .test_command_spec_source_lanes import _assert_complete_projection, _run_probe
+from ..command_spec_attestation import probe_installed_command_specs
+from .test_command_spec_distribution_lanes import PROBE as DISTRIBUTION_PROBE
+from .test_command_spec_distribution_lanes import assert_probe
+from .test_command_spec_source_lanes import assert_complete_projection, run_probe
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -27,7 +27,7 @@ def test_current_command_contracts_execute_in_every_packaging_probe(tmp_path: Pa
     """Resolve the real graph, targets, locales and schemas without a facade import."""
     source_root = REPO_ROOT / "src"
     if probe == "attestation":
-        projection = _probe_installed_command_specs(site_root=source_root, work_root=tmp_path)
+        projection = probe_installed_command_specs(site_root=source_root, work_root=tmp_path)
         assert len(projection["identities"]) == len(COMMAND_GRAPH.nodes())
         assert projection["locales"]
         assert projection["packaged_resources"]
@@ -39,8 +39,8 @@ def test_current_command_contracts_execute_in_every_packaging_probe(tmp_path: Pa
             "aeat app modelo work calculate",
         }
     elif probe == "source":
-        payload = _run_probe(python=Path(sys.executable), pythonpath=(source_root,), cwd=tmp_path)
-        _assert_complete_projection(payload, checkout=REPO_ROOT)
+        payload = run_probe(python=Path(sys.executable), pythonpath=(source_root,), cwd=tmp_path)
+        assert_complete_projection(payload, checkout=REPO_ROOT)
     else:
         dependency_site = next(path for path in map(Path, sys.path) if path.name == "site-packages" and path.is_dir())
         result = run_command(
@@ -55,4 +55,4 @@ def test_current_command_contracts_execute_in_every_packaging_probe(tmp_path: Pa
             errors="strict",
         )
         assert result.returncode == 0, result.stderr
-        _assert_probe(cast("dict[str, object]", json.loads(result.stdout)))
+        assert_probe(cast("dict[str, object]", json.loads(result.stdout)))
