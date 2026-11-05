@@ -25,6 +25,7 @@ from ...core.period import Period
 from ...domain.calculations.registry.cash_election_minimum_years import cash_election_minimum_years
 from ...domain.calculations.registry.errors import GovernedFactNotApplicableError
 from ...domain.calculations.registry.invoice_legal_classification import advance_payment_received_role
+from ...domain.categories.spending_category import SpendingCategory
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.models import Invoice
 from ...domain.iva.schema import InvoiceKind
@@ -533,6 +534,16 @@ def linked_accrual_date(invoice: Invoice | None, *, kind: InvoiceKind) -> date |
     return invoice_accrual_date(invoice) if invoice is not None and invoice.kind is kind else None
 
 
+def _accrues_when_charged(row: Transaction) -> bool:
+    """Whether the row is an expense that accrues in the month it is charged, with no invoice to say so.
+
+    A self-employed Seguridad Social cuota covers a calendar month and falls due within it, so its
+    charge date is its accrual (LIRPF art. 14.1.b, RIRPF art. 7); the TGSS receipt, not an invoice,
+    justifies it. The rule is keyed on the canonical category.
+    """
+    return row.category_id == SpendingCategory.from_registry("cuotas_autonomos_ss").value
+
+
 def row_accrual_date(
     row: Transaction, invoice: Invoice | None, *, kind: InvoiceKind
 ) -> date | ImputationUnresolved | None:
@@ -547,6 +558,8 @@ def row_accrual_date(
     linked = linked_accrual_date(invoice, kind=kind)
     stated = row.accrual_date
     if stated is None:
+        if linked is None and kind is InvoiceKind.RECEIVED and _accrues_when_charged(row):
+            return row.raw.value_date or row.raw.booked_date
         return linked
     if linked is None or linked == stated:
         return stated
