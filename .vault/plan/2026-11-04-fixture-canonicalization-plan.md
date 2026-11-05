@@ -11,7 +11,7 @@ related:
   - '[[2026-10-23-desktop-modelo-workspace-adr]]'
 modified: '2026-11-05'
 body_schema: body-v2
-body_hash: 'sha256:5e23572556bf02b0b22095aa77999ab533dffbb38ccebb409d22562c1cec6682'
+body_hash: 'sha256:f2682401b90f04216c3158336135a15914617cd3f228c6140ac55e862613bb42'
 ---
 
 # `fixture-canonicalization` plan
@@ -75,6 +75,7 @@ Move the backend test profile builders onto the persona catalogue and remove res
 - [ ] `P05.S16` - Migrate private profile helpers package by package onto personas; `src and dev test packages`.
 - [ ] `P05.S17` - Stop seeding personas through direct test storage writes; `src test support`.
 - [ ] `P05.S20` - Extend the identity gate's blocking scope to tests and fixtures, accept a match only by the catalogue convention, flag any catalogue value used outside its bound persona role, and replace the remaining hand-made identifiers; `dev/identity and test and fixture identifiers`.
+- [ ] `P05.S28` - Close the persona gaps the builder migration found: author an estimación directa normal autónomo, state the fontanero household and Renta attestations and the sociedad-limitada tributación al Estado percentage truthfully, and an established filer with prior-year activity start and Modelo 130 history, then repoint the remaining local builders and remove the interim fact overlays; `dev/fixtures/personas and src test support`.
 
 ### Phase `P06` - Obligation simulation
 

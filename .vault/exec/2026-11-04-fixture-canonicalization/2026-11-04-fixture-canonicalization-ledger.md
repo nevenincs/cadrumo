@@ -5,7 +5,7 @@ tags:
 date: '2026-11-04'
 modified: '2026-11-05'
 body_schema: 'body-v2'
-body_hash: 'sha256:83c7658feca8a834fa741ea8d40e9ecc204946abf6f8ff9b4d3303beec38c73b'
+body_hash: 'sha256:e2a96f4e36ebbb876e11e4e5f862e2d317366e4bd89f047f85388b3896d9caaf'
 related:
   - "[[2026-11-04-fixture-canonicalization-plan]]"
 ---
@@ -816,6 +816,118 @@ related:
 - `S15` `verify:` `lint-imports` -> `pass`
 - `S15` `verify:` `dev.quality.types on touched files` -> `pass`
 - `S15` `by:` `vaultspec-standard-executor`
+- `S16` `A` `src/cadrumo/entrypoints/tests/profile_persistence/ready_profile_taxpayer.py`
+- `S16` `A` `src/cadrumo/entrypoints/tests/test_persona_profile_seeding.py`
+- `S16` `M` `dev/ci/tests/test_domain_modelos_work_unit.py`
+- `S16` `M` `dev/ci/tests/test_ledger_scale_benchmark.py`
+- `S16` `M` `dev/ci/tests/test_ledger_tui_reads_benchmark.py`
+- `S16` `M` `dev/mcp_eval/tests/test_under_declaration_golden.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/profile/tests/ready_profile_support.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/profile/tests/test_lifecycle_event_atomicity.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/profile/tests/test_revision_id_d1_contract.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/storage/tests/locked_profile_support.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/storage/tests/test_profile_health.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/general_iva_profile_facts_support.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/ledger_drift_support.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/ready_profile_taxpayer.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_bucket_aggregation_flow.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_declaration_period_binding.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m303_recargo_cross_period.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_history.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_m111_retenciones_observation_live.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_cross_year_carry_continuity.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_negative_general_base_carry_live.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_130_cross_year_carry_continuity.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_130_prior_payment_advisory.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_200_accounting_input_guard.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_202_sociedades_fold_in_live.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_303_deductible_evidence_gate.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_303_official_box_under_declaration.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_390_303_fold_in_live.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_390_fifo_carried_pending.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_projection_compare.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_pull_path_calculate_path_casilla_parity.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_pulled_history_reaches_calculate.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_relation_fold_in_live.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_renta_annual_reconciliations_fold_in_live.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_source_boundary_and_enrollment.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/_cli_surface_support.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/_ledger_llm_support.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/_overview_native_support.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/_profile_cli_support.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_atomic_create_roundtrip.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_audit_remediation.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_bienes_inversion_cli.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_cli_workflow_verification.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_config_custody_profile_lifecycle.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_inventory_verbs.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_invoice_preview_verb.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_allocate_classification.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_bulk_classify.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_classify_fixture.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_classify_ux.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_corpus_review.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_cross_profile_unlock.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_evidence_followup_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_list_filter.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_llm_saturate.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_m145_communication_cli.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_maternidad_meses_reach_the_calculate_path.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_100_descendiente_entry_surface.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_100_readiness_missing_bindings.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_190_withholding_detail_gate.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_200_stored_calculation_drift_cli.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_action_recovery.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_discovery_defects.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_period_consistency.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_registry_bindings_surface.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_work_natural_key.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_work_report_pdf_verb.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_overview_explain_verb.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_overview_pipeline_verb.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_overview_status_no_aeat_history_notice.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_participation_cli_surface.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_profile_archive_roundtrip.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_profile_create_taxpayer_type_paths.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_profile_lifecycle_navigation.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_profile_lifecycle_verbs.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_root_help_shape.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_collab_recipient_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_invoice_add.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_invoice_intake_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_ledger_add_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_ledger_attachment_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_ledger_evidence_add_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_ledger_export_link_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_ledger_invoice_evidence_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_ledger_lifecycle_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_ledger_prefix_refusals_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_ledger_reads_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_ledger_rules_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_m303_attestation_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_modelo_dependencies_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_modelo_export_review_package_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_modelo_m036_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_modelo_m145_communication_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_modelo_projection_history_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_modelo_query_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_modelo_review_package_exchange_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_modelo_work_create_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_modelo_work_history_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_modelo_work_inventory_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_modelo_work_review_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_quickfile_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_review_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_workflow_runs_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_staged_check_verb.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_work_resume.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/native_profile_facts.py`
+- `S16` `verify:` `persona seeding parity, all 8 personas` -> `pass`
+- `S16` `verify:` `migrated host modules (440 plus 177)` -> `pass`
+- `S16` `verify:` `migrated entrypoints and adapters modules` -> `pass`
+- `S16` `verify:` `lint-imports` -> `pass`
+- `S16` `verify:` `dev.quality.types` -> `fail`
+- `S16` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -835,3 +947,4 @@ related:
 - `S09` TS specs and prettier not run, `node_modules` absent. Envelopes replay personas at ReplayScope.PROFILE and seed activity income synthetically; carried to S27
 - `S26` Proven at horizon-1 only; per-year registry population runs at S19. Received `domestic_exempt` rows still raise the `unrouted_declarable_quantity` advisory
 - `S15` `register_minimal_profile` and `register_cli_profile` (125 consumers) and about 15 private ready-profile helpers move in S16
+- `S16` Partial: types fail on 6 pre-existing diagnostics outside S16 files. `test_ledger_list_filter` `(FAIL_EXCHANGE_RATE_PROVIDER)` and `test_staged_check_verb` (extra inputs in LedgerStagedCheckEnvelope) fail on pre-migration content too. Remaining local builders wait for S28.
