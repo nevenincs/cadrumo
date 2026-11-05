@@ -26,6 +26,20 @@ source_refs = ["aeat-renta-2020-manual-parte1"]
 [[revisions."2020".bindings.source_citations]]
 source_ref = "aeat-renta-2020-manual-parte1"
 required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa"]
+# The estimacion directa block exists only for a filer whose regime is direct estimation
+# (LIRPF arts. 28 and 30): an estimacion objetiva filer has none, so its net income and
+# modality are not read.
+[[revisions."2020".bindings]]
+id = "renta-profile-estimacion-directa"
+provider = { kind = "profile", profile_key = "irpf.estimation_directa" }
+value = { data_type = "boolean", channel = "boolean" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-renta-2020-manual-parte1"]
+
+[[revisions."2020".bindings.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa"]
 [[revisions."2020".bindings]]
 id = "renta-profile-tax-residence-ccaa"
 provider = { kind = "profile", profile_model = "TaxResidenceProfile", field = "ccaa", xsd_attribute = "codigoCADeclaracion", dictionary_field = "ZCCAD" }

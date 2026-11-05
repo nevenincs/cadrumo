@@ -160,6 +160,8 @@ def inject_derived_estimation_modality_fact(
     simplified = str(irpf_estimation_regime_directa_simplificada_token(authority=operation))
     if regime in {normal, simplified}:
         fact_index["irpf.estimation_directa_normal"] = regime == normal
+    if regime:
+        fact_index["irpf.estimation_directa"] = regime in {normal, simplified}
 
 
 def inject_derived_cash_election_fact(

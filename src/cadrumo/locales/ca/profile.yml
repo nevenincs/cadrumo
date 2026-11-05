@@ -275,6 +275,8 @@ profile:
           label: Compleix l'excepció del 70 % de l'art. 109 RIRPF
         codigo_comercio_accounting:
           label: Portes comptabilitat ajustada al Código de Comercio
+        estimation_directa:
+          label: El règim d'estimació és l'estimació directa
         estimation_directa_normal:
           label: Modalitat normal de l'estimació directa
         estimation_regime:

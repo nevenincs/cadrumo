@@ -217,6 +217,7 @@ def test_modelo_100_renta_ledger_expense_bindings_resolve_to_bound_casillas(
             # profile resolver supplies this predicate as 1/0 from
             # taxpayer_type.irpf_income_categories.
             "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-profile-estimacion-directa": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             # declaration-type=1 → individual filing (per Orden HAC/277/2026 art. 3
             # TIPOTRIBUTACION code 1; the joint-filing code is 2)

@@ -164,6 +164,7 @@ def test_build_draft_replay_routes_m100_tax_residence_ccaa_string_enum() -> None
             _M100_BIRTH_DATE_BINDING: "1975-06-15",
             _M100_ESTIMACION_DIRECTA_NORMAL_BINDING: "1",
             "renta-profile-has-economic-activity": "1",
+            "renta-profile-estimacion-directa": "1",
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": False,
             "renta-profile-incremento-guarderia": Decimal("0"),

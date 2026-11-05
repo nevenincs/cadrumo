@@ -76,6 +76,7 @@ def prior_base_binding_values(
 ) -> dict[BindingId, Decimal]:
     values: dict[BindingId, Decimal] = {
         "renta-profile-has-economic-activity": Decimal("1"),
+        "renta-profile-estimacion-directa": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-profile-declaration-type": Decimal("1"),
         "renta-profile-family-minor-children-in-unit": Decimal("0"),
@@ -109,6 +110,7 @@ def reviewed_base_binding_values(*, certificado_trabajo: Decimal | None = None) 
         # The production profile resolver supplies this predicate as 1/0 from
         # taxpayer_type.irpf_income_categories; the scenario models a directa filer.
         "renta-profile-has-economic-activity": Decimal("1"),
+        "renta-profile-estimacion-directa": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-profile-declaration-type": Decimal("1"),
         "renta-profile-family-minor-children-in-unit": Decimal("0"),

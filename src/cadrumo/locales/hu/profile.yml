@@ -276,6 +276,8 @@ profile:
           label: Megfelel a RIRPF 109. cikk 70%-os kivételének
         codigo_comercio_accounting:
           label: A Código de Comercio szerinti könyvvitelt vezetsz
+        estimation_directa:
+          label: A becslési rendszer közvetlen becslés
         estimation_directa_normal:
           label: A közvetlen becslés normál módja
         estimation_regime:

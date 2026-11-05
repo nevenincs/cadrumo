@@ -99,6 +99,7 @@ def _chain(claim_amount: Decimal = _CLAIM, *, expected: Decimal = _RENDIMIENTO_N
                 "renta-profile-family-minor-children-in-unit": Decimal("0"),
                 "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
                 "renta-profile-has-economic-activity": Decimal("1"),
+                "renta-profile-estimacion-directa": Decimal("1"),
             },
             enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
             relation_values={

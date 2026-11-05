@@ -1038,6 +1038,7 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
     snapshot = published_snapshot("100", filing_year=2024, period="0A", revision_id="2024")
     binding_values: dict[BindingId, Decimal] = {
         "renta-profile-has-economic-activity": Decimal("1"),
+        "renta-profile-estimacion-directa": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-profile-declaration-type": Decimal("1"),
         "renta-profile-family-minor-children-in-unit": Decimal("0"),

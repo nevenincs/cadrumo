@@ -235,6 +235,7 @@ def _scenario(*, es_normal: Decimal, expected_0226: Decimal, scenario_id: str) -
         binding_values={
             "renta-modelo-100-estimacion-directa-es-normal": es_normal,
             "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-profile-estimacion-directa": Decimal("1"),
         },
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values=_RELATION_VALUES,

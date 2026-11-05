@@ -48,6 +48,7 @@ _NEGATIVE_BASE_BOXES = frozenset({_EARLIER_NEGATIVE_BASE_BOX, *_OLDER_NEGATIVE_B
 _DIRECT_ESTIMATION_BOX = "0168"
 _DIRECT_ESTIMATION: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
 _ECONOMIC_ACTIVITY: BindingId = "renta-profile-has-economic-activity"
+_DIRECT_REGIME: BindingId = "renta-profile-estimacion-directa"
 
 
 def _calculation_snapshot(operation: PinnedAuthorityOperation, year: int = _YEAR) -> RegistrySnapshot:
@@ -55,7 +56,7 @@ def _calculation_snapshot(operation: PinnedAuthorityOperation, year: int = _YEAR
 
 
 def _calculate_without(
-    snapshot: RegistrySnapshot, *, activity: bool, omitted: BindingId | None, year: int = _YEAR
+    snapshot: RegistrySnapshot, *, activity: bool, omitted: BindingId | None, year: int = _YEAR, directa: bool = True
 ) -> None:
     """Run the engine over every binding's neutral answer, leaving ``omitted`` unanswered."""
     decimals, booleans, dates, enums = neutral_binding_values(
@@ -63,6 +64,7 @@ def _calculate_without(
     )
     booleans[_ECONOMIC_ACTIVITY] = activity
     booleans[_DIRECT_ESTIMATION] = True
+    booleans[_DIRECT_REGIME] = directa
     decimals["renta-profile-declaration-type"] = Decimal(1)
     if omitted is not None:
         decimals.pop(omitted, None)
@@ -115,7 +117,7 @@ def test_the_engine_refuses_without_any_earlier_negative_base_whoever_the_filer_
 def test_the_engine_refuses_without_the_direct_estimation_answer_only_for_a_filer_with_an_activity(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """An employee calculates without the modality and an autonomo still needs it, in every supported year."""
+    """An employee or an objetiva filer calculates without the modality and a direct filer still needs it, in every supported year."""
     support = published_supported_filing_years()
     assert support is not None
     checked = 0
@@ -126,6 +128,8 @@ def test_the_engine_refuses_without_the_direct_estimation_answer_only_for_a_file
             continue
         assert _refused_binding(snapshot, activity=True, omitted=_DIRECT_ESTIMATION, year=year) == _DIRECT_ESTIMATION
         _calculate_without(snapshot, activity=False, omitted=_DIRECT_ESTIMATION, year=year)
+        # An estimacion objetiva filer has an activity but no direct-estimation block, so no modality is read.
+        _calculate_without(snapshot, activity=True, omitted=_DIRECT_ESTIMATION, year=year, directa=False)
         checked += 1
     assert checked
 

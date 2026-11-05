@@ -277,6 +277,8 @@ profile:
           label: Meets Art. 109 RIRPF 70% exception
         codigo_comercio_accounting:
           label: Keeps Código de Comercio accounting
+        estimation_directa:
+          label: Estimation regime is direct estimation
         estimation_directa_normal:
           label: Direct estimation modality is normal
         estimation_regime:

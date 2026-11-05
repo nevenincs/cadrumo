@@ -622,6 +622,7 @@ def test_a_recorded_m130_modality_reaches_the_text_channel(
 
 
 _M100_MODALITY_BINDING = "renta-modelo-100-estimacion-directa-es-normal"
+_M100_DIRECT_BINDING = "renta-profile-estimacion-directa"
 
 
 def _m100_supported_years() -> tuple[int, ...]:
@@ -653,6 +654,7 @@ def test_casilla_0168_follows_the_declared_direct_estimation_modality_in_every_s
         )
 
         assert resolved.boolean_binding_values[_M100_MODALITY_BINDING] is is_normal, year
+        assert resolved.boolean_binding_values[_M100_DIRECT_BINDING] is True, year
         assert _M100_MODALITY_BINDING not in resolved.unresolved_binding_ids, year
 
 
@@ -670,3 +672,22 @@ def test_casilla_0168_stays_unresolved_when_the_regime_is_not_direct_estimation(
         )
 
         assert _M100_MODALITY_BINDING not in resolved.boolean_binding_values, year
+
+
+@pytest.mark.parametrize(
+    ("facts", "stated"),
+    [((UserProfileFact(path="irpf.estimation_regime", value="objetiva"),), False), ((), None)],
+)
+def test_the_direct_estimation_block_is_read_only_under_a_declared_direct_regime_in_every_supported_year(
+    authority_operation: PinnedAuthorityOperation, facts: tuple[UserProfileFact, ...], stated: bool | None
+) -> None:
+    """An objetiva filer states no direct-estimation block, and an undeclared regime states nothing."""
+    for year in _m100_supported_years():
+        resolved = resolve_profile_sourced_bindings(
+            published_snapshot("100", filing_year=year, period=_PERIOD),
+            bucket_id=_BUCKET_ID,
+            profile_record=_m130_record(*facts),
+            operation=authority_operation,
+        )
+
+        assert resolved.boolean_binding_values.get(_M100_DIRECT_BINDING) is stated, year

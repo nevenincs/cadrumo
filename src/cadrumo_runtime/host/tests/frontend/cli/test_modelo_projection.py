@@ -232,6 +232,7 @@ _ORACLE_TYPED_PROFILE_BINDINGS = frozenset(
         "renta-profile-marriage-full-year",
         "renta-maritime-path-rebeca",
         "renta-profile-has-economic-activity",
+        "renta-profile-estimacion-directa",
     }
 )
 _SUFFERED_WITHHOLDING_PREFIX = "renta-retencion-soportada-"
@@ -666,6 +667,8 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
                 "renta-maritime-path-rebeca": False,
                 # The seeded profile records the actividad_economica income category.
                 "renta-profile-has-economic-activity": True,
+                # ...and its regime is a direct estimation.
+                "renta-profile-estimacion-directa": True,
             }.items()
             if key in declared_bindings
         },

@@ -114,6 +114,7 @@ RELATION_VALUES_2024: dict[RelationId, Decimal] = {
 def binding_values() -> dict[BindingId, Decimal]:
     return {
         "renta-profile-has-economic-activity": Decimal("1"),
+        "renta-profile-estimacion-directa": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         # declaration_type = 1 (individual) → 0461 computed = 0
         "renta-profile-declaration-type": Decimal("1"),

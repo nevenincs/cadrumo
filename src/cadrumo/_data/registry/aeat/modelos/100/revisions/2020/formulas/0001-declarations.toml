@@ -910,17 +910,24 @@ expression = { op = "if_then_else", args = [
     ] },
     { op = "if_then_else", args = [
         { op = "equal", args = [
-            { binding = "renta-modelo-100-estimacion-directa-es-normal" },
+            { binding = "renta-profile-estimacion-directa" },
             { literal = "1" },
         ] },
-        { op = "subtract", args = [
-            { casilla_id = "0180" },
-            { casilla_id = "0220" },
+        { op = "if_then_else", args = [
+            { op = "equal", args = [
+                { binding = "renta-modelo-100-estimacion-directa-es-normal" },
+                { literal = "1" },
+            ] },
+            { op = "subtract", args = [
+                { casilla_id = "0180" },
+                { casilla_id = "0220" },
+            ] },
+            { op = "subtract", args = [
+                { casilla_id = "0180" },
+                { casilla_id = "0223" },
+            ] },
         ] },
-        { op = "subtract", args = [
-            { casilla_id = "0180" },
-            { casilla_id = "0223" },
-        ] },
+        { literal = "0" },
     ] },
     { literal = "0" },
 ] }
