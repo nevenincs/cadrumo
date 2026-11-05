@@ -37,6 +37,7 @@ from cadrumo.application.calculations.tests.filing_evidence import general_m303_
 from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
@@ -83,8 +84,6 @@ from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFac
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.tests.aeat_literal_fixtures import justificante_cotejo_url
 
-from .....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
-
 _PROFILE_ID = "39039039-0390-4390-8390-390390390390"
 _BUCKET_ID = _PROFILE_ID
 _M390_YEAR = 2025
@@ -114,12 +113,13 @@ def _store_ready_profile(
             _create_profile_record_for_test(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=profile_id,
-                facts=(
-                    UserProfileFact(path="identity.tax_id", value=tax_id),
-                    UserProfileFact(path="identity.name", value="Ready"),
-                    UserProfileFact(path="identity.surnames", value="Operator"),
-                    UserProfileFact(path="activities.description", value="test activity"),
-                    *GENERAL_REGIME_NATURAL_PERSON_FACTS,
+                facts=persona_facts_beneath(
+                    (
+                        UserProfileFact(path="identity.tax_id", value=tax_id),
+                        UserProfileFact(path="identity.name", value="Ready"),
+                        UserProfileFact(path="identity.surnames", value="Operator"),
+                        UserProfileFact(path="activities.description", value="test activity"),
+                    )
                 ),
                 created_at=_CLOCK,
                 updated_at=_CLOCK,

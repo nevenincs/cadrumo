@@ -21,6 +21,7 @@ from cadrumo.application.calculations.observations_repository import APP_FILING_
 from cadrumo.application.modelo.metadata_read_operation import MODELO_WORK_METADATA_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_create_operation import MODELO_WORK_CREATE_OPERATION_DEFINITION_ID
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -30,7 +31,6 @@ from cadrumo.domain.calculations.registry.tests.published_authority import (
     published_snapshot,
 )
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
 
@@ -80,21 +80,23 @@ _CATEGORIES_FACT = UserProfileFact(path="taxpayer_type.irpf_income_categories", 
 
 #: The categories fact follows the general-regime defaults, and the activity's IAE epigraph is not an
 #: urban-rental group, so the rental-activity credit in 0598 is a proven zero.
-_RESOLVED_PROFILE_FACTS = (
-    *_IDENTITY_FACTS,
-    *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-    _CATEGORIES_FACT,
-    UserProfileFact(path="activities.iae_epigraph", value="844"),
-    *_TAXPAYER_FACTS,
+_RESOLVED_PROFILE_FACTS = persona_facts_beneath(
+    (
+        *_IDENTITY_FACTS,
+        _CATEGORIES_FACT,
+        UserProfileFact(path="activities.iae_epigraph", value="844"),
+        *_TAXPAYER_FACTS,
+    )
 )
 
 #: The categories fact precedes the general-regime defaults, which replace it with an activity that has
 #: no IAE epigraph, so whether the activity is an urban rental is unknown.
-_UNKNOWN_RENTAL_PROFILE_FACTS = (
-    *_IDENTITY_FACTS,
-    _CATEGORIES_FACT,
-    *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-    *_TAXPAYER_FACTS,
+_UNKNOWN_RENTAL_PROFILE_FACTS = persona_facts_beneath(
+    (
+        *_IDENTITY_FACTS,
+        _CATEGORIES_FACT,
+        *_TAXPAYER_FACTS,
+    )
 )
 
 _OPERATIONS = frozenset(

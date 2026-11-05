@@ -10,6 +10,7 @@ Real encrypted catalogues, real registry snapshot, the live calculation mesh.
 
 from __future__ import annotations
 
+from collections.abc import Collection
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -30,10 +31,10 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -64,22 +65,27 @@ def bucket_id() -> str:
     return _BUCKET_ID
 
 
-def _seed_profile(*extra_facts: UserProfileFact) -> None:
-    """Store a complete natural-person profile with the facts a test adds to the common ones."""
+def _seed_profile(*extra_facts: UserProfileFact, persona_without: Collection[str] | None = None) -> None:
+    """Store a complete natural-person profile with the facts a test adds to the common ones.
+
+    ``persona_without`` puts the canonical directa normal persona beneath the profile, leaving out
+    the paths it names.
+    """
+    stated = (
+        UserProfileFact(path="identity.tax_id", value="12345678Z"),
+        UserProfileFact(path="identity.name", value="Test"),
+        UserProfileFact(path="identity.surnames", value="Operator"),
+        UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+        UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+        *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
+        *extra_facts,
+    )
     seed_test_profile_record(
         _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
-                *extra_facts,
-            ),
+            facts=stated if persona_without is None else persona_facts_beneath(stated, without=persona_without),
             created_at=_T0,
             updated_at=_T0,
             context=_profile_creation_context_for_test(),
@@ -158,7 +164,7 @@ def test_a_revision_declaring_the_summary_binding_still_refuses_an_iva_filer_wit
     # An IVA filer who never stated how the regimes compose: Modelo 390 applies to them, but the composition is absent.
     _seed_profile(
         UserProfileFact(path="activities.description", value="activity"),
-        *(fact for fact in GENERAL_REGIME_NATURAL_PERSON_FACTS if fact.path != "iva.m303_regime_composition"),
+        persona_without=("iva.m303_regime_composition",),
     )
 
     with pytest.raises(ModeloProfileReadinessError) as refusal:

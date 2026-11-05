@@ -16,13 +16,13 @@ from __future__ import annotations
 from pathlib import Path
 from uuid import UUID
 
-from cadrumo.adapters.persistence.profile.tests.ready_profile_support import persona_profile_facts
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     identity_seeded_custody_envelope,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_profile_facts
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from .....core.bucket_pointer import BucketPointer, write_pointer

@@ -68,6 +68,7 @@ from cadrumo.application.modelo.action_errors import ModeloAggregationBindingErr
 from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.package_version import PACKAGE_VERSION
 from cadrumo.core.period import Period
@@ -92,7 +93,6 @@ from ....adapters.persistence.profile.tests.published_authority_support import p
 from ....adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
 from ....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
 from ....core.retencion_soportada import RetencionSoportadaClase
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from ....domain.user_profile.tests.imputation_criterion_facts import cash_criterion_facts
 from .general_iva_profile_facts_support import renta_single_taxpayer_facts
 from .m130_m100_annual_support import (
@@ -281,17 +281,18 @@ def _seed_taxpayer_profile() -> None:
         context=profile_creation_context_for_test(),
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=BUCKET_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value=TAX_ID),
-            UserProfileFact(path="identity.name", value="Annual"),
-            UserProfileFact(path="identity.surnames", value="Renta Tester"),
-            UserProfileFact(path="activities.description", value="design services"),
-            # An IAE epigraph outside group 861, so no urban rental is carried on as an activity.
-            UserProfileFact(path="activities.iae_epigraph", value="844"),
-            *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-            *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
-            *cash_criterion_facts(YEAR),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value=TAX_ID),
+                UserProfileFact(path="identity.name", value="Annual"),
+                UserProfileFact(path="identity.surnames", value="Renta Tester"),
+                UserProfileFact(path="activities.description", value="design services"),
+                # An IAE epigraph outside group 861, so no urban rental is carried on as an activity.
+                UserProfileFact(path="activities.iae_epigraph", value="844"),
+                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
+                *cash_criterion_facts(YEAR),
+            )
         ),
         created_at=T0,
         updated_at=T0,

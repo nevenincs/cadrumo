@@ -40,7 +40,6 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.user_profile.values import UserProfileFact
 from .file_flow_test_support import calculation_ports_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -178,12 +177,7 @@ def _calculate_m200(
     casilla_inputs: dict[CasillaId, Decimal] | None = None,
     operation: PinnedAuthorityOperation,
 ) -> tuple[BucketAggregationCalculationResult, CalculationRevisionCatalogueRepository]:
-    seed_persona_profile(
-        "sociedad-limitada",
-        bucket_id=_BUCKET_ID,
-        at=_T0,
-        facts=(UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),),
-    )
+    seed_persona_profile("sociedad-limitada", bucket_id=_BUCKET_ID, at=_T0)
     wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     event_repo = BucketEventHistoryRepository(objects=secure_objects)

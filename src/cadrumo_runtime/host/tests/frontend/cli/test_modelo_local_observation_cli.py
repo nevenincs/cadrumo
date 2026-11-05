@@ -23,13 +23,13 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from cadrumo.domain.calculations.registry.casilla_membership import casillas_by_id
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from cadrumo.domain.user_profile.values import (
     ProfileSetupState,
     UserProfileFact,
@@ -72,13 +72,14 @@ def _natural_person_record(
         context=operation.profile_create_context(),
         profile_id=runtime_profile.bucket_id,
         setup_state=ProfileSetupState.COMPLETE,
-        facts=(
-            UserProfileFact(path="identity.name", value="Sofia"),
-            UserProfileFact(path="identity.surnames", value="Scratch"),
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="activities.description", value="professional services"),
-            *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-            UserProfileFact(path="provenance.source", value="manual_cli"),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.name", value="Sofia"),
+                UserProfileFact(path="identity.surnames", value="Scratch"),
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="activities.description", value="professional services"),
+                UserProfileFact(path="provenance.source", value="manual_cli"),
+            )
         ),
     )
 

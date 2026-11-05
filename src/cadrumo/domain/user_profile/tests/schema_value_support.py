@@ -11,7 +11,6 @@ from collections.abc import Mapping
 from ....core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI
 from ..schema import NUMERIC_PROFILE_FIELD_TYPES, ProfileFieldDefinition, ProfileFieldType
 from ..values import UserProfileFactValue
-from .general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 
 # This is a stable, schema-valid test identifier.  Keep test data independent
 # of the registry authority so importing schema-only fixtures remains pure.
@@ -44,12 +43,27 @@ def _numeric_placeholder(field: ProfileFieldDefinition) -> str:
     return "1"
 
 
+_TAX_AXIS_PLACEHOLDERS: Mapping[str, UserProfileFactValue] = {
+    "tax_residence.ccaa": "madrid",
+    "tax_residence.jurisdiction_scope": "common_regime",
+    "iva.regime": "GENERAL",
+    "iva.m303_regime_composition": "general",
+    "iva.redeme_enrolled": False,
+    "iva.cash_accounting_regime_enrolled": False,
+    "iva.voluntary_sii_enrolled": False,
+    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": False,
+    "taxpayer_type.entity_type": "natural_person",
+    "taxpayer_type.irpf_income_categories": "actividad_economica",
+    "irpf.estimation_regime": "directa_normal",
+}
+# The domain layer cannot read a persona, and these only fill the schema's required axes for an unrelated test.
+
 REQUIRED_PROFILE_PLACEHOLDERS: Mapping[str, UserProfileFactValue] = {
     "identity.name": "Test Operator",
     "identity.surnames": "Test Operator",
     "activities.description": "economic activity",
     "provenance.source": PROVENANCE_SOURCE_MANUAL_CLI,
-    **{fact.path: fact.value for fact in GENERAL_REGIME_NATURAL_PERSON_FACTS},
+    **_TAX_AXIS_PLACEHOLDERS,
 }
 
 

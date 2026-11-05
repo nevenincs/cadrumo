@@ -42,6 +42,7 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -78,7 +79,6 @@ from ....domain.calculations.registry.tests.registry_observations import (
 )
 from ....domain.modelos.filing_kind_evidence import ObservedFilingKind, observed_filing_kind_for_local_revision
 from ....domain.modelos.filing_record import FilingDeclarationKind
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ._fold_in_assertions_support import _assert_distinct_positive
@@ -336,26 +336,27 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
     record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="identity.name", value="Test"),
-            UserProfileFact(path="identity.surnames", value="Operator"),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            # Advertising services (IAE group 844) is an activity and not an urban rental.
-            UserProfileFact(path="activities.iae_epigraph", value="844"),
-            *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo,actividad_economica"),
-            UserProfileFact(path="censo.activity_start_date", value=date(_YEAR - 5, 1, 1)),
-            UserProfileFact(path="withholding.colegio_concertado", value=False),
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(_YEAR - 45, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.sex", value="H"),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-            UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-            UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-            UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                # Advertising services (IAE group 844) is an activity and not an urban rental.
+                UserProfileFact(path="activities.iae_epigraph", value="844"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo,actividad_economica"),
+                UserProfileFact(path="censo.activity_start_date", value=date(_YEAR - 5, 1, 1)),
+                UserProfileFact(path="withholding.colegio_concertado", value=False),
+                UserProfileFact(path="renta_taxpayer.birth_date", value=date(_YEAR - 45, 3, 15)),
+                UserProfileFact(path="renta_taxpayer.sex", value="H"),
+                UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
+                UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
+                UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
+                UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
+                UserProfileFact(path="renta_filing.declaration_type", value="1"),
+                UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+                UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+            )
         ),
         created_at=_T0,
         updated_at=_T0,

@@ -52,6 +52,7 @@ from cadrumo.application.tests.operation_host_fakes import (
     executor_context,
     profile_operation_request,
 )
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.retencion_soportada import RetencionSoportadaClase
@@ -75,7 +76,6 @@ from cadrumo.domain.transactions.own_accounts import (
     OwnBankAccountDetails,
 )
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.retencion_soportada_absence_composition import build_retencion_soportada_absence_ports
@@ -178,18 +178,19 @@ def seed_profile(persona: Persona) -> None:
             context=profile_creation_context_for_test(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value=TAX_ID),
-                UserProfileFact(path="identity.name", value="Persona"),
-                UserProfileFact(path="identity.surnames", value="Renta Tester"),
-                UserProfileFact(path="activities.description", value="synthetic persona"),
-                UserProfileFact(path="activities.iae_epigraph", value=persona.iae_epigraph),
-                *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value=persona.categories),
-                UserProfileFact(path="irpf.estimation_regime", value=persona.regime),
-                UserProfileFact(path="censo.activity_start_date", value=persona.activity_start),
-                *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
-                *criterion_facts,
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.tax_id", value=TAX_ID),
+                    UserProfileFact(path="identity.name", value="Persona"),
+                    UserProfileFact(path="identity.surnames", value="Renta Tester"),
+                    UserProfileFact(path="activities.description", value="synthetic persona"),
+                    UserProfileFact(path="activities.iae_epigraph", value=persona.iae_epigraph),
+                    UserProfileFact(path="taxpayer_type.irpf_income_categories", value=persona.categories),
+                    UserProfileFact(path="irpf.estimation_regime", value=persona.regime),
+                    UserProfileFact(path="censo.activity_start_date", value=persona.activity_start),
+                    *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
+                    *criterion_facts,
+                )
             ),
             created_at=T0,
             updated_at=T0,

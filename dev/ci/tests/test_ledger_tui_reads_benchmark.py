@@ -48,7 +48,6 @@ from pydantic import BaseModel
 
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.ledger_classification_rules import LedgerClassificationRuleRepository
-from cadrumo.adapters.persistence.profile.tests.ready_profile_support import persona_profile_facts
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.profile.usage_ratios import save_usage_ratios_with_secure_object_writes
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import upsert_test_profile_facts
@@ -126,6 +125,7 @@ from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.overview.home import HomeAccountSession, HomeSessionPosture
 from cadrumo.application.prorrata_register.operation_requests import ProrrataListRequest
 from cadrumo.application.prorrata_register.projection_contracts import ProrrataListProjection
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_profile_facts
 from cadrumo.application.workbench_generation_projection import project_workbench_generation
 from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import OutputLanguage

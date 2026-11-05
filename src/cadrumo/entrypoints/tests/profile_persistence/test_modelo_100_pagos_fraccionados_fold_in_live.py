@@ -41,6 +41,7 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -69,7 +70,6 @@ from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
 )
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from .file_flow_test_support import calculation_ports_for_test
@@ -214,16 +214,17 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
     record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="identity.name", value="Test"),
-            UserProfileFact(path="identity.surnames", value="Operator"),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            # An IAE epigraph outside group 861, so no urban rental is carried on as an activity.
-            UserProfileFact(path="activities.iae_epigraph", value="844"),
-            *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-            *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                # An IAE epigraph outside group 861, so no urban rental is carried on as an activity.
+                UserProfileFact(path="activities.iae_epigraph", value="844"),
+                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
+            )
         ),
         created_at=_T0,
         updated_at=_T0,

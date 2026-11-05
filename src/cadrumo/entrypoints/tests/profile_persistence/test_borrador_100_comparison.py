@@ -25,6 +25,7 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -74,7 +75,6 @@ from ....domain.calculations.registry.ids import BindingId, RelationId
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.user_profile.tests.general_regime_facts import (
-    GENERAL_REGIME_NATURAL_PERSON_FACTS,
     RENTA_UNMARRIED_TAXPAYER_FACTS,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
@@ -249,13 +249,14 @@ def _seed_taxpayer() -> None:
         _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value=_TAX_ID),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="economic activity"),
-                *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-                *RENTA_UNMARRIED_TAXPAYER_FACTS,
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.tax_id", value=_TAX_ID),
+                    UserProfileFact(path="identity.name", value="Test"),
+                    UserProfileFact(path="identity.surnames", value="Operator"),
+                    UserProfileFact(path="activities.description", value="economic activity"),
+                    *RENTA_UNMARRIED_TAXPAYER_FACTS,
+                )
             ),
             created_at=datetime(2026, 4, 1, tzinfo=UTC),
             updated_at=datetime(2026, 4, 1, tzinfo=UTC),

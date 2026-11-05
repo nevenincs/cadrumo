@@ -50,7 +50,6 @@ from ....domain.calculations.registry.tests.registry_observations import (
 )
 from ....domain.contribuyente.inventory.records import InventoryLedgerDocument
 from ...adapter_composition_work_ports import build_calculation_action_ports
-from .general_iva_profile_facts_support import no_household_renta_facts
 from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -195,7 +194,7 @@ def test_m100_prior_negative_general_base_carries_without_manual_0501_input(
 ) -> None:
     """Prior M100 Art. 50.3 1391 auto-fills current 1388 without transcribing 0501."""
     obs_repo = CalculationObservationRepository(objects=secure_objects)
-    seed_persona_profile("autonomo-fontanero", bucket_id=_BUCKET_ID, at=_CLOCK, facts=no_household_renta_facts())
+    seed_persona_profile("autonomo-fontanero", bucket_id=_BUCKET_ID, at=_CLOCK)
     binding_id: BindingId = "renta-base-liquidable-negativa-general-anterior"
     _seed_prior_m100_generated_pending(obs_repo, source_year=filing_year - 1, value=prior_pending)
     _seed_zero_pagos_quarters(obs_repo, filing_year=filing_year)
@@ -221,7 +220,7 @@ def test_m100_anexo_c_applied_amount_reduces_base_liquidable_not_base_imponible(
     liquidable general before it and 0505 is the base after it.
     """
     obs_repo = CalculationObservationRepository(objects=secure_objects)
-    seed_persona_profile("autonomo-fontanero", bucket_id=_BUCKET_ID, at=_CLOCK, facts=no_household_renta_facts())
+    seed_persona_profile("autonomo-fontanero", bucket_id=_BUCKET_ID, at=_CLOCK)
     # The filer carries on an economic activity, so its Anexo D inventory rows
     # feed the general base: without the year's ledger they are unresolved and
     # so is every base that sums them.
@@ -269,7 +268,7 @@ def test_m100_negative_general_base_is_carried_in_1391_and_taxes_nothing(
     Box 1391 holds this year's own negative base pending for the next four years.
     """
     obs_repo = CalculationObservationRepository(objects=secure_objects)
-    seed_persona_profile("autonomo-fontanero", bucket_id=_BUCKET_ID, at=_CLOCK, facts=no_household_renta_facts())
+    seed_persona_profile("autonomo-fontanero", bucket_id=_BUCKET_ID, at=_CLOCK)
     InventoryLedgerRepository(objects=secure_objects).save(
         InventoryLedgerDocument(ledgers=(inventory_ledger("actividad"),))
     )
@@ -299,7 +298,7 @@ def test_m100_prior_return_without_the_older_remainders_refuses_naming_them(
     return does not show is unknown, so the stock it opens cannot read as zero.
     """
     obs_repo = CalculationObservationRepository(objects=secure_objects)
-    seed_persona_profile("autonomo-fontanero", bucket_id=_BUCKET_ID, at=_CLOCK, facts=no_household_renta_facts())
+    seed_persona_profile("autonomo-fontanero", bucket_id=_BUCKET_ID, at=_CLOCK)
     _save_observation(
         obs_repo,
         modelo="100",

@@ -19,9 +19,12 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.user_profile.login_session import resolve_login_target
+from cadrumo.application.user_profile.tests.persona_profile_facts import (
+    COLEGIO_CONCERTADO_ATTESTATION,
+    persona_facts_beneath,
+)
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.cross_period_seeding import resolved_revision
@@ -102,13 +105,11 @@ def test_native_modelo_history_project_compare_reuse_real_stored_revisions(
                 context=profile_authority_contexts()[0],
                 profile_id=bucket_id,
                 setup_state=ProfileSetupState.COMPLETE,
-                facts=(
-                    *MODELO_READY_PROFILE_FACTS,
-                    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                    UserProfileFact(path="renta_filing.declaration_type", value="1"),
-                    UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 1, 1)),
+                facts=persona_facts_beneath(
+                    (
+                        COLEGIO_CONCERTADO_ATTESTATION,
+                        UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 1, 1)),
+                    )
                 ),
             )
         )

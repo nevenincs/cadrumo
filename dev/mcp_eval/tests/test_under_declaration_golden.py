@@ -49,8 +49,9 @@ from typing import Any
 import pytest
 from click.testing import Result
 
-from cadrumo.adapters.persistence.profile.tests.ready_profile_support import persona_profile_facts, seed_persona_profile
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import seed_persona_profile
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_profile_facts
 from cadrumo.entrypoints.cli.tests.cli_fixture_worlds import CliWorldProvider, bind_cli_fixture_ports
 from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
 from cadrumo.tests.cli_envelope import parse_json_object, require_error_document, require_schema_envelope

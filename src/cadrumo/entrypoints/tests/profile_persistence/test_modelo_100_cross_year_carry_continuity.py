@@ -75,7 +75,6 @@ from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
 )
 from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
-from .general_iva_profile_facts_support import no_household_renta_facts
 from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -187,7 +186,7 @@ def test_modelo_100_opening_pending_resolves_from_prior_year_saldo(tmp_path: Pat
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         obs_repo = CalculationObservationRepository()
-        seed_persona_profile("autonomo-fontanero", bucket_id=_PROFILE_ID, at=_CLOCK, facts=no_household_renta_facts())
+        seed_persona_profile("autonomo-fontanero", bucket_id=_PROFILE_ID, at=_CLOCK)
         _seed_prior_year_saldo(source_year=2023, saldo=_SALDO_BY_SOURCE_YEAR[2023], obs_repo=obs_repo)
         revision = _calculate_100(filing_year=_YEAR_N, obs_repo=obs_repo)
     assert Decimal(revision.casilla_values[_PENDIENTE_INICIO]) == _SALDO_BY_SOURCE_YEAR[2023]
@@ -214,7 +213,7 @@ def test_modelo_100_base_liquidable_negativa_enrolls_two_renta_years(tmp_path: P
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         obs_repo = CalculationObservationRepository()
-        seed_persona_profile("autonomo-fontanero", bucket_id=_PROFILE_ID, at=_CLOCK, facts=no_household_renta_facts())
+        seed_persona_profile("autonomo-fontanero", bucket_id=_PROFILE_ID, at=_CLOCK)
         _seed_prior_year_saldo(source_year=2023, saldo=_SALDO_BY_SOURCE_YEAR[2023], obs_repo=obs_repo)
         _seed_prior_year_saldo(source_year=2024, saldo=_SALDO_BY_SOURCE_YEAR[2024], obs_repo=obs_repo)
 

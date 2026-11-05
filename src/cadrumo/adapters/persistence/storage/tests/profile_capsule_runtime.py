@@ -18,7 +18,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from .....application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from .....application.user_profile.capsule_record import ProfileRecordSession
 from .....application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from .....application.user_profile.profile_record_repository import (
@@ -402,31 +401,6 @@ def set_active_test_profile_facts(
     return upsert_test_profile_facts(active, facts, root=root)
 
 
-def _facts_with_tax_id(tax_id: str) -> tuple[UserProfileFact, ...]:
-    """Return the modelo readiness baseline under a different taxpayer id."""
-    return tuple(
-        UserProfileFact(path="identity.tax_id", value=tax_id) if fact.path == "identity.tax_id" else fact
-        for fact in MODELO_READY_PROFILE_FACTS
-    )
-
-
-def seed_modelo_ready_profile_record(
-    profile_id: str, *, clock: datetime, tax_id: str | None = None
-) -> UserProfileRecord:
-    """Seed one profile carrying the modelo readiness baseline."""
-    create_context, _ = profile_authority_contexts()
-    return seed_test_profile_record(
-        create_user_profile_record(
-            context=create_context,
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=profile_id,
-            facts=_facts_with_tax_id(tax_id) if (tax_id is not None and tax_id) else MODELO_READY_PROFILE_FACTS,
-            created_at=clock,
-            updated_at=clock,
-        )
-    )
-
-
 def seed_test_profile_record(
     record: UserProfileRecord,
     *,
@@ -481,7 +455,6 @@ __all__ = [
     "open_test_profile_session",
     "provision_test_profile_bucket_session",
     "publish_test_profile_capsule",
-    "seed_modelo_ready_profile_record",
     "seed_test_profile_record",
     "set_active_test_profile_facts",
     "upsert_test_profile_facts",

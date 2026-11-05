@@ -32,9 +32,9 @@ from cadrumo.application.ledger.participation_rebuild_operation import (
     LEDGER_PARTICIPATION_REBUILD_OPERATION_DEFINITION_ID,
 )
 from cadrumo.application.ledger.tests.manual_transaction_support import create_manual_transaction
-from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
+from cadrumo.application.user_profile.tests.persona_profile_facts import directa_normal_tax_id, persona_fact_strings
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -160,7 +160,7 @@ def _calculate_and_verify_303(
     )
     IvaWalletDecisionRepository().save_decision(
         IvaCompensationReconciliationDecision(
-            taxpayer_nif="12345678Z",
+            taxpayer_nif=directa_normal_tax_id(),
             target_year=2025,
             target_period=period,
             target_registry_snapshot_ref=published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,
@@ -344,11 +344,7 @@ def test_native_participation_reads_canonical_index_rebuilds_and_requires_commit
     """Lookup preserves the verified index; rebuild prunes stale cache under COMMIT authority."""
 
     def prepare_profile(profile_id: UUID, root: Path) -> dict[str, str]:
-        facts_by_path = {
-            fact.path: (str(fact.value).lower() if isinstance(fact.value, bool) else str(fact.value))
-            for fact in MODELO_READY_PROFILE_FACTS
-        }
-        facts_by_path["censo.activity_start_date"] = "2025-01-01"
+        facts_by_path = persona_fact_strings({"censo.activity_start_date": "2025-01-01"})
         facts = complete_profile_facts(
             authority_operation.profile_schema(),
             facts=tuple(UserProfileFact(path=path, value=value) for path, value in facts_by_path.items()),

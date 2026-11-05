@@ -29,10 +29,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.taxpayer_persona_support import seed_modelo_ready_profile
+
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.aggregation.source_mesh import CalculationSourceResolution
 from ....application.calculations.observations_repository import ResultDispositionProjection
@@ -162,7 +163,7 @@ def _resolve_m303(tmp_path: Path, period_code: str) -> CalculationSourceResoluti
     period = Period.from_year_and_code(_FILING_YEAR, period_code)
     work_unit = _work_unit(revision_id=snapshot.revision.id, period=period)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CREATED_AT)
+        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_CREATED_AT)
         ProrrataRegisterRepository(bucket_id=_BUCKET_ID).save(_register_with_carried_prior())
         with calculation_ports_for_test(bucket_id=work_unit.bucket_id) as calculation_ports:
             return resolve_bucket_source_mesh(
@@ -215,7 +216,7 @@ def test_source_mesh_m390_restates_the_filed_settlement_casilla_44(tmp_path: Pat
     work_unit = _work_unit(revision_id=snapshot.revision.id, modelo=ModeloCode("390"), period=period)
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CREATED_AT)
+        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_CREATED_AT)
         ProrrataRegisterRepository(bucket_id=_BUCKET_ID).save(_register_with_carried_prior())
         _save_filed_settlement_observation(CalculationObservationRepository(objects=profile.repository))
         with calculation_ports_for_test(bucket_id=work_unit.bucket_id) as calculation_ports:

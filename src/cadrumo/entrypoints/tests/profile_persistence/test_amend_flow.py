@@ -24,6 +24,7 @@ from sqlalchemy.engine import Engine
 
 from cadrumo.adapters.inbound.pdf.source_provenance import source_pdf_reference_path
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.justificante.schema import Justificante
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
@@ -93,7 +94,6 @@ from ....domain.modelos.filing_record import (
 )
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.modelos.work_unit import WorkUnit
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ....tests.write_unit_recorder import WriteUnitRecorder
@@ -127,12 +127,13 @@ _T3 = datetime(2026, 4, 15, 15, 0, 0, tzinfo=UTC)
 _T4 = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
 _PROFILE_ID = "10000000-0000-4000-8000-000000000130"
 _PROFILE_LABEL = "Test runtime profile"
-_READY_PROFILE_FACTS = (
-    UserProfileFact(path="identity.tax_id", value="X1234567L"),
-    UserProfileFact(path="identity.name", value="Ready"),
-    UserProfileFact(path="identity.surnames", value="Operator"),
-    UserProfileFact(path="activities.description", value="file-flow"),
-    *GENERAL_REGIME_NATURAL_PERSON_FACTS,
+_READY_PROFILE_FACTS = persona_facts_beneath(
+    (
+        UserProfileFact(path="identity.tax_id", value="X1234567L"),
+        UserProfileFact(path="identity.name", value="Ready"),
+        UserProfileFact(path="identity.surnames", value="Operator"),
+        UserProfileFact(path="activities.description", value="file-flow"),
+    )
 )
 
 

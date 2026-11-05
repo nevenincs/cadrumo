@@ -16,9 +16,12 @@ from cadrumo.application.aggregation.withholding_filing_cadence import (
     resolve_withholding_filer_cadence,
 )
 from cadrumo.application.aggregation.withholding_producer import WithholdingEvidenceCaptureCommand
-from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.application.modelo.work_profile import ModeloWorkProfile
 from cadrumo.application.user_profile.projections import projection_for_taxpayer
+from cadrumo.application.user_profile.tests.persona_profile_facts import (
+    COLEGIO_CONCERTADO_ATTESTATION,
+    persona_facts_beneath,
+)
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 
@@ -41,9 +44,7 @@ REDEME_FACTS: Final[tuple[UserProfileFact, ...]] = (UserProfileFact(path="iva.re
 
 
 def _facts(overrides: tuple[UserProfileFact, ...]) -> tuple[UserProfileFact, ...]:
-    replaced = {fact.path: fact for fact in overrides}
-    merged = [replaced.pop(fact.path, fact) for fact in MODELO_READY_PROFILE_FACTS]
-    return (*merged, *replaced.values())
+    return persona_facts_beneath((COLEGIO_CONCERTADO_ATTESTATION, *overrides))
 
 
 def withholding_work_profile(

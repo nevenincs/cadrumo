@@ -20,6 +20,7 @@ from cadrumo.application.calculations.observations_repository import APP_FILING_
 from cadrumo.application.modelo.metadata_read_operation import MODELO_WORK_METADATA_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_create_operation import MODELO_WORK_CREATE_OPERATION_DEFINITION_ID
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -29,7 +30,6 @@ from cadrumo.domain.calculations.registry.tests.published_authority import (
     published_snapshot,
 )
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
 
@@ -52,29 +52,30 @@ _CAPTURED_AT = datetime(2026, 6, 29, 12, 0, tzinfo=UTC)
 _CERTIFIED_RETENCION = Decimal("4200")
 
 
-_M100_PROFILE_FACTS = (
-    UserProfileFact(path="identity.tax_id", value="12345678Z"),
-    UserProfileFact(path="identity.name", value="Ana"),
-    UserProfileFact(path="identity.surnames", value="Retenciones"),
-    UserProfileFact(path="activities.description", value="economic activity"),
-    *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-    # Activity and salary: the certificate below credits 0596, and the declared categories prove
-    # the capital mobiliario and ganancia patrimonial credits zero. The activity's IAE epigraph is
-    # not an urban-rental group, so the rental-activity credit in 0598 is a proven zero too; a
-    # later fact replaces the general-regime default categories.
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica,trabajo"),
-    UserProfileFact(path="activities.iae_epigraph", value="844"),
-    UserProfileFact(path="censo.activity_start_date", value=date(_REVIEWED_EDITION - 5, 1, 1)),
-    UserProfileFact(path="renta_taxpayer.birth_date", value=date(_REVIEWED_EDITION - 45, 3, 15)),
-    UserProfileFact(path="renta_taxpayer.sex", value="H"),
-    UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-    UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-    UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-    UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-    UserProfileFact(path="renta_filing.declaration_type", value="1"),
-    UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-    UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
-    UserProfileFact(path="provenance.source", value="manual_cli"),
+_M100_PROFILE_FACTS = persona_facts_beneath(
+    (
+        UserProfileFact(path="identity.tax_id", value="12345678Z"),
+        UserProfileFact(path="identity.name", value="Ana"),
+        UserProfileFact(path="identity.surnames", value="Retenciones"),
+        UserProfileFact(path="activities.description", value="economic activity"),
+        # Activity and salary: the certificate below credits 0596, and the declared categories prove
+        # the capital mobiliario and ganancia patrimonial credits zero. The activity's IAE epigraph is
+        # not an urban-rental group, so the rental-activity credit in 0598 is a proven zero too; a
+        # later fact replaces the general-regime default categories.
+        UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica,trabajo"),
+        UserProfileFact(path="activities.iae_epigraph", value="844"),
+        UserProfileFact(path="censo.activity_start_date", value=date(_REVIEWED_EDITION - 5, 1, 1)),
+        UserProfileFact(path="renta_taxpayer.birth_date", value=date(_REVIEWED_EDITION - 45, 3, 15)),
+        UserProfileFact(path="renta_taxpayer.sex", value="H"),
+        UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
+        UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
+        UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
+        UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
+        UserProfileFact(path="renta_filing.declaration_type", value="1"),
+        UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+        UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+        UserProfileFact(path="provenance.source", value="manual_cli"),
+    )
 )
 
 

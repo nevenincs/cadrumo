@@ -39,7 +39,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.application.calculations.tests.cross_period_verdict_support import has_non_official_local_chain
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.imputation_criterion_facts import cash_criterion_facts
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
@@ -289,15 +289,16 @@ def _seed_first_year_activity_profile(repos_: _Repos) -> None:
     profile = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="identity.name", value="Test"),
-            UserProfileFact(path="identity.surnames", value="Autonomo"),
-            *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-            UserProfileFact(path="activities.description", value="economic activity"),
-            UserProfileFact(path="provenance.source", value="manual_cli"),
-            UserProfileFact(path="censo.activity_start_date", value="2026-01-01"),
-            *cash_criterion_facts(2026),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Autonomo"),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="provenance.source", value="manual_cli"),
+                UserProfileFact(path="censo.activity_start_date", value="2026-01-01"),
+                *cash_criterion_facts(2026),
+            )
         ),
         created_at=_T1,
         updated_at=_T1,

@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.application.modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.general_regime_facts import (
-    GENERAL_REGIME_NATURAL_PERSON_FACTS,
     RENTA_UNMARRIED_TAXPAYER_FACTS,
 )
 
@@ -49,15 +49,16 @@ def _profile() -> None:
     record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="identity.name", value="Test"),
-            UserProfileFact(path="identity.surnames", value="Operator"),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-            *RENTA_UNMARRIED_TAXPAYER_FACTS,
-            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-            UserProfileFact(path="withholding.colegio_concertado", value=False),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                *RENTA_UNMARRIED_TAXPAYER_FACTS,
+                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                UserProfileFact(path="withholding.colegio_concertado", value=False),
+            )
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,

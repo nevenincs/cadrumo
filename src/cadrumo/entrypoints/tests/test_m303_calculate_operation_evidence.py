@@ -13,10 +13,10 @@ import pytest
 
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.taxpayer_persona_support import seed_modelo_ready_profile
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     bound_test_profile_record,
-    seed_modelo_ready_profile_record,
     upsert_test_profile_facts,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -170,7 +170,7 @@ def test_m303_calculation_persists_exact_authored_evidence(
 ) -> None:
     period = Period.from_year_and_code(2025, period_code)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID):
-        seed_modelo_ready_profile_record(_PROFILE_ID, clock=_CLOCK)
+        seed_modelo_ready_profile(bucket_id=_PROFILE_ID, at=_CLOCK)
         # This synthetic taxpayer's declared activity begins in the selected
         # quarter; the canonical wallet gate can prove no earlier IVA period.
         upsert_test_profile_facts(
@@ -211,7 +211,7 @@ def test_other_modelo_calculates_without_m303_evidence(
     operation: PinnedAuthorityOperation,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID):
-        seed_modelo_ready_profile_record(_PROFILE_ID, clock=_CLOCK)
+        seed_modelo_ready_profile(bucket_id=_PROFILE_ID, at=_CLOCK)
         with bound_test_profile_record(_PROFILE_ID):
             work_unit = _work_unit(operation, modelo="130", period=Period.from_year_and_code(2025, "1T"))
             # First-quarter prior-period answers are genuinely zero for this

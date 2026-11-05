@@ -31,7 +31,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import o
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
-from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
+from cadrumo.application.user_profile.tests.persona_profile_facts import directa_normal_tax_id
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.tests.published_authority import (
@@ -76,11 +76,7 @@ def _invoke(args: list[str]) -> Result:
 
 def _seed_operator(request: pytest.FixtureRequest) -> None:
     """A general-regime filer active from 1 January, with no compensation carried into 1T."""
-    facts = {
-        fact.path: (str(fact.value).lower() if isinstance(fact.value, bool) else str(fact.value))
-        for fact in MODELO_READY_PROFILE_FACTS
-    }
-    facts.update(operator_profile_facts(activity_start_date=f"{_year()}-01-01"))
+    facts = operator_profile_facts(activity_start_date=f"{_year()}-01-01")
     seeded_profile = cast(ProfileSeeder, request.getfixturevalue(seed_profile.__name__))
     seeded_profile(label="operator", facts=facts)
     bucket_id = resolve_active_bucket_id()
@@ -90,7 +86,7 @@ def _seed_operator(request: pytest.FixtureRequest) -> None:
     with open_test_profile_session(bucket_id):
         IvaWalletDecisionRepository().save_decision(
             IvaCompensationReconciliationDecision(
-                taxpayer_nif="12345678Z",
+                taxpayer_nif=directa_normal_tax_id(),
                 target_year=_year(),
                 target_period=_period(),
                 target_registry_snapshot_ref=snapshot_ref,

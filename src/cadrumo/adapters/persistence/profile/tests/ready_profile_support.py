@@ -14,15 +14,13 @@ from datetime import datetime
 from pathlib import Path
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.application.user_profile.section_rows import next_section_row_index, section_row_facts
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_profile_facts
 from cadrumo.application.user_profile.validation import reject_invalid_profile_facts
 from cadrumo.application.wizard.catalogue import build_setup_flow
-from cadrumo.application.wizard.imputation_election import YEAR_QUESTION_ID
-from cadrumo.application.wizard.patch_edit import validate_profile_patch
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.tests.personas import IdentityRef, Persona, ProfileValue, YearEnvelope, read_persona
+from cadrumo.tests.personas import IdentityRef, Persona, YearEnvelope, read_persona
 
 _PERSONA_ID = "autonomo-fontanero"
 
@@ -81,55 +79,6 @@ def ready_profile_fact_values() -> dict[str, str | bool]:
         for answer_id in _ANSWER_IDS
         if answer_id not in _IDENTITY_ANSWER_IDS
     }
-
-
-def _submitted(persona: Persona, value: ProfileValue, envelope: YearEnvelope) -> str:
-    """Render one ``[profile]`` value as the profile patch takes it."""
-    if isinstance(value, bool):
-        return "true" if value else "false"
-    if isinstance(value, str):
-        return value
-    if isinstance(value, tuple):
-        return ",".join(value)
-    if isinstance(value, IdentityRef):
-        return persona.identity(value)
-    return value.resolve(envelope).isoformat()
-
-
-def _patch_answers(persona: Persona, envelope: YearEnvelope) -> dict[str, str]:
-    """Every wizard answer the persona's patch submits: its answers, then its elections and their year."""
-    answers = {answer.question_id: _submitted(persona, answer.value, envelope) for answer in persona.profile}
-    years = {str(election.year.resolve(envelope)) for election in persona.elections}
-    if len(years) > 1:
-        raise ValueError(f"{persona.id}: one patch states one election year, found {sorted(years)}")
-    answers.update((election.question, election.value) for election in persona.elections)
-    answers.update((YEAR_QUESTION_ID, year) for year in years)
-    return answers
-
-
-def persona_profile_facts(persona_id: str) -> tuple[UserProfileFact, ...]:
-    """The facts a persona's profile holds: its answers through the patch judge, its fields and its activity rows."""
-    with bundled_indexed_authority().operation() as operation:
-        support = operation.supported_filing_years()
-        envelope = YearEnvelope(floor=support.floor, horizon=support.horizon)
-        persona = read_persona(persona_id, envelope=envelope)
-        flow = build_setup_flow(operation)
-        changes = validate_profile_patch(
-            flow=flow,
-            current_values={},
-            setup_state=ProfileSetupState.INCOMPLETE,
-            supplied=_patch_answers(persona, envelope),
-            colegio_concertado=None,
-            operation=operation,
-        )
-        facts = [fact for fact in changes if fact.value is not None]
-        facts.extend(UserProfileFact(path=field.path, value=field.value) for field in persona.fields)
-        sections = {section.key: section for section in operation.profile_schema().sections}
-        for activity in persona.activities:
-            section = sections["activities"]
-            index = next_section_row_index(section.key, (fact.path for fact in facts))
-            facts.extend(section_row_facts(section, row_index=index, values=dict(activity.values)))
-        return tuple(facts)
 
 
 def seed_persona_profile(

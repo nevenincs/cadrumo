@@ -14,6 +14,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -42,7 +44,6 @@ from ....domain.calculations.registry.tests.authored_editions import (
     newest_authored_edition,
 )
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from ....domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from .file_flow_test_support import calculation_ports_for_test
@@ -65,28 +66,28 @@ def objects(tmp_path: Path) -> Generator[SecureObjectRepository]:
 
 
 def _seed_profile(year: int, categories: str) -> None:
-    general = tuple(fact for fact in GENERAL_REGIME_NATURAL_PERSON_FACTS if fact.path != _CATEGORIES)
     seed_test_profile_record(
         create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value=_TAXPAYER),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="economic activity"),
-                # A consulting activity, so no urban rental is carried on as an activity.
-                UserProfileFact(path="activities.iae_epigraph", value="844"),
-                *general,
-                UserProfileFact(path=_CATEGORIES, value=categories),
-                UserProfileFact(path="censo.activity_start_date", value=date(year - 5, 1, 1)),
-                UserProfileFact(path="renta_taxpayer.birth_date", value=date(year - 45, 3, 15)),
-                UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-                UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-                UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-                UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-                UserProfileFact(path="renta_filing.declaration_type", value="1"),
-                UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.tax_id", value=_TAXPAYER),
+                    UserProfileFact(path="identity.name", value="Test"),
+                    UserProfileFact(path="identity.surnames", value="Operator"),
+                    UserProfileFact(path="activities.description", value="economic activity"),
+                    # A consulting activity, so no urban rental is carried on as an activity.
+                    UserProfileFact(path="activities.iae_epigraph", value="844"),
+                    UserProfileFact(path=_CATEGORIES, value=categories),
+                    UserProfileFact(path="censo.activity_start_date", value=date(year - 5, 1, 1)),
+                    UserProfileFact(path="renta_taxpayer.birth_date", value=date(year - 45, 3, 15)),
+                    UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
+                    UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
+                    UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
+                    UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
+                    UserProfileFact(path="renta_filing.declaration_type", value="1"),
+                    UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+                )
             ),
             created_at=datetime(year + 1, 4, 1, tzinfo=UTC),
             updated_at=datetime(year + 1, 4, 1, tzinfo=UTC),

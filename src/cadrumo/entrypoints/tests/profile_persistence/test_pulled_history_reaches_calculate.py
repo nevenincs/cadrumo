@@ -81,7 +81,6 @@ from ....domain.calculations.registry.tests.registry_observations import (
 )
 from ...live_state_composition import compose_filed_observation_persistence_ports
 from .file_flow_test_support import calculation_ports_for_test
-from .general_iva_profile_facts_support import no_household_renta_facts
 from .observation_seeding_support import save_stamped_observation
 from .ready_profile_taxpayer import ready_profile_tax_id
 
@@ -258,7 +257,7 @@ def _calculate_m100_annual(
     authority and passed to work-unit creation, which asserts rather than selects
     on it, so the law determines which revision computes.
     """
-    seed_persona_profile("autonomo-fontanero", bucket_id=bucket_id, at=_T0, facts=no_household_renta_facts())
+    seed_persona_profile("autonomo-fontanero", bucket_id=bucket_id, at=_T0)
     _seed_prior_year_m100_zero_carry(secure_objects)
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)

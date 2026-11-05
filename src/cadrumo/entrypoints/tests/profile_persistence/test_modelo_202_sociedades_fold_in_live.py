@@ -115,7 +115,6 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from ....domain.user_profile.values import UserProfileFact
 from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -252,12 +251,7 @@ def _calculate_m200(secure_objects: SecureObjectRepository) -> BucketAggregation
     caller channel, so ``DP200014B:00599`` (cuota a ingresar) resolves to zero
     and ``DP200014B:00611`` (cuota diferencial) == 0 − sum(M202 pagos).
     """
-    seed_persona_profile(
-        "sociedad-limitada",
-        bucket_id=_BUCKET_ID_M200,
-        at=_T0,
-        facts=(UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),),
-    )
+    seed_persona_profile("sociedad-limitada", bucket_id=_BUCKET_ID_M200, at=_T0)
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     snapshot = published_authority_operation().snapshot(
         _M200,

@@ -28,7 +28,10 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
+from cadrumo.application.user_profile.tests.persona_profile_facts import (
+    COLEGIO_CONCERTADO_ATTESTATION,
+    persona_facts_beneath,
+)
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -115,4 +118,4 @@ def test_a_profile_seeded_incomplete_is_left_incomplete(tmp_path: Path) -> None:
 
 def _complete_facts():
     """Return the fact set a completed profile carries, from a real seeding caller."""
-    return MODELO_READY_PROFILE_FACTS
+    return persona_facts_beneath((COLEGIO_CONCERTADO_ATTESTATION,))
