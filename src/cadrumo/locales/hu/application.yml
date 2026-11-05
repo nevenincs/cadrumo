@@ -2531,10 +2531,6 @@ application:
         %{transaction_currency} összegű tételhez a behozatal vámáru-nyilatkozata szükséges.
         A Cadrumo ezt egyelőre nem tudja rögzíteni, ezért a bevallás nem mehet át
         az ellenőrzésen. Nyújtsd be ezt a bevallást más módon.
-      iva_intra_eu_self_assessment_unrecordable: A %{transaction_date} dátumú, %{transaction_amount}
-        %{transaction_currency} összegű tételhez a közösségen belüli beszerzés önadózási
-        bizonylata szükséges. A Cadrumo ezt egyelőre nem tudja rögzíteni, ezért a
-        bevallás nem mehet át az ellenőrzésen. Nyújtsd be ezt a bevallást más módon.
       iva_reagp_document_unrecordable: A %{transaction_date} dátumú, %{transaction_amount}
         %{transaction_currency} összegű tételhez a mezőgazdasági, állattenyésztési
         és halászati különleges rendszer (REAGP) szerinti bizonylat szükséges. A Cadrumo

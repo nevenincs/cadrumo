@@ -404,3 +404,101 @@ def test_a_converted_foreign_invoice_is_compared_in_euro() -> None:
 
     assert covered == Decimal("0")
     assert short == Decimal("36.00")
+
+
+_INTRA_EU_SERVICE = IvaCategory("intra_community_service_acquisition_reverse_charge")
+_INTRA_EU_CUOTA = Decimal("420.00")
+
+
+def _received_intra_eu_service(*, linked_to: str | None = None) -> Invoice:
+    """A service bought from a supplier established in another Member State.
+
+    The supplier invoices the base alone; the line carries the rate and cuota
+    the recipient self-assesses under LIVA art. 84.Uno.2.º.
+    """
+    return Invoice.model_validate(
+        {
+            "bucket_id": "29292929-2929-4929-8929-292929292929",
+            "kind": InvoiceKind.RECEIVED.value,
+            "invoice_number": "CL-2026-0003",
+            "issued_at": _DAY.isoformat(),
+            "counterparty_name": "Cloud Example GmbH",
+            "counterparty_tax_id": "DE123456789",
+            "counterparty_country": "DE",
+            "base_total": format(_BASE, "f"),
+            "iva_total": format(_INTRA_EU_CUOTA, "f"),
+            "grand_total": format(_BASE + _INTRA_EU_CUOTA, "f"),
+            "currency": "EUR",
+            "payment_status": "PENDING",
+            "iva_category": _INTRA_EU_SERVICE.value,
+            "linked_transaction_ids": () if linked_to is None else (linked_to,),
+            "lines": [
+                {
+                    "description": "Alojamiento en la nube",
+                    "quantity": "1",
+                    "unit_price": format(_BASE, "f"),
+                    "subtotal": format(_BASE, "f"),
+                    "iva_rate": IvaRate.from_registry("RATE_21").value,
+                    "iva_amount": format(_INTRA_EU_CUOTA, "f"),
+                },
+            ],
+        },
+    )
+
+
+def _intra_eu_ledger_authority() -> IvaLedgerObservation:
+    """The ledger row the supplier's invoice substantiates (LIVA art. 97.Uno.4.º)."""
+    return IvaLedgerObservation(
+        ledger_id="c" * 64,
+        transaction_date=_DAY,
+        category=_INTRA_EU_SERVICE,
+        rate_kind=IvaRateKind("general"),
+        flow_direction=IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
+        base_amount=_BASE,
+        iva_amount=_INTRA_EU_CUOTA,
+        applied_rate=Decimal("0.21"),
+        deduction_fact_kind=IvaDeductionFactKind.from_registry("intra_eu_current"),
+        deduction_provenance=IvaDeductionClassificationProvenance(
+            authority=IvaDeductionEvidenceAuthority.from_registry("intra_eu_self_assessment"),
+            source_locator="evidence:intra-eu-service",
+            evidence_digest="b" * 64,
+        ),
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
+    )
+
+
+def test_a_cuota_bearing_intra_eu_invoice_keeps_its_declared_self_assessment(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """The self-assessed cuota is not read as domestic soportado from its rate slot.
+
+    The rate slot alone would make the line a domestic purchase, a category the
+    linked intra-EU deduction cannot pair with. The declared category governs, so
+    the invoice describes what the ledger row describes and the two feeds reach
+    the same casillas.
+    """
+    authority = _intra_eu_ledger_authority()
+    invoice = _received_intra_eu_service(linked_to=authority.ledger_id)
+
+    screened = _screened_invoice_iva_result(invoice, ledger_observations=(authority,), operation=_pinned_operation())
+
+    assert screened.deduction_authority_missing is False
+    (observation,) = screened.observations
+    assert observation.category == _INTRA_EU_SERVICE
+    assert observation.flow_direction == IvaFlowDirection.from_registry("inversion_sujeto_pasivo")
+    assert observation.deduction_provenance == authority.deduction_provenance
+    revision = published_snapshot("303", filing_year=2025, period="1T").revision
+    from_invoice = resolve_iva_ledger_binding_values(revision, (observation,), operation=authority_operation)
+    from_ledger = resolve_iva_ledger_binding_values(revision, (authority,), operation=authority_operation)
+    assert any(from_ledger.values())
+    assert from_invoice == from_ledger
+
+
+def test_an_unlinked_intra_eu_invoice_is_withheld() -> None:
+    """Without the ledger row's deduction authority the self-assessed input is not invented."""
+    screened = _screened_invoice_iva_result(
+        _received_intra_eu_service(), ledger_observations=(), operation=_pinned_operation()
+    )
+
+    assert screened.deduction_authority_missing is True
+    assert screened.observations == ()

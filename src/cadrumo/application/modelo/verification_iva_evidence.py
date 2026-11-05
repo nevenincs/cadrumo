@@ -207,14 +207,6 @@ def unrecordable_deduction_document_finding(document: UnrecordableDeductionDocum
         "transaction_currency": transaction.raw.currency,
         "required_evidence_authority": document.authority.value,
     }
-    if document.scenario_code == "intra_eu_self_assessment_unrecordable":
-        return ModeloVerificationFinding(
-            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-            severity=ModeloVerificationFindingSeverity.BLOCKING,
-            message_locale_key="application.modelo.findings.iva_intra_eu_self_assessment_unrecordable",
-            message_facts=facts,
-            legal_refs=WORKFLOW_GATE_LEGAL_REFS,
-        )
     if document.scenario_code == "import_document_unrecordable":
         return ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.BLOCKING_RULE,

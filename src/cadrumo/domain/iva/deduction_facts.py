@@ -97,6 +97,35 @@ def required_deduction_evidence_authority(kind: IvaDeductionFactKind) -> IvaDedu
         raise IvaValidationError(str(exc)) from exc
 
 
+def supplier_invoice_deduction_authority(kind: IvaDeductionFactKind) -> IvaDeductionEvidenceAuthority | None:
+    """Return the authority ``kind`` requires when the supplier's invoice justifies it, else ``None``.
+
+    LIVA art. 97.Uno names the documents that justify a deduction. The
+    supplier's invoice justifies a domestic purchase (1.º), an intra-community
+    acquisition of goods (2.º) and an operation whose recipient is the sujeto
+    pasivo under art. 84.Uno.2.º, among them a service acquired from a supplier
+    established in another Member State (4.º). In the last two the invoice
+    justifies the deduction only while the operation is consigned in the
+    recipient's own declaración-liquidación: the intra-EU family's category and
+    flow pair, which :func:`validate_iva_deduction_fact` enforces, makes the
+    same row accrue the self-assessed cuota it deducts, so deduction and
+    devengo reach the one return together. An import rests on the customs
+    liquidation (3.º), a REAGP compensation on the farmer's receipt (5.º) and a
+    rectification on its rectifying document (art. 97.Dos), none of which is
+    the original purchase invoice the row links, so those kinds answer ``None``.
+    """
+    required = required_deduction_evidence_authority(kind)
+    catalogue = resolve_iva_deduction_catalogue(effective_date=today_madrid())
+    try:
+        invoice = catalogue.authority_for_role("invoice")
+        self_assessed = catalogue.projection("kind.intra_eu")
+    except RegistryValidationError as exc:
+        raise IvaValidationError(str(exc)) from exc
+    if required == invoice or kind in self_assessed:
+        return required
+    return None
+
+
 def _validate_required_authority(
     kind: IvaDeductionFactKind,
     provenance: IvaDeductionClassificationProvenance,
@@ -313,5 +342,6 @@ __all__ = [
     "admits_iva_deduction_classification",
     "deduction_evidence_authority_for_row",
     "required_deduction_evidence_authority",
+    "supplier_invoice_deduction_authority",
     "validate_iva_deduction_fact",
 ]

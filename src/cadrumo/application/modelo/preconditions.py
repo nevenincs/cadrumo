@@ -477,16 +477,9 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.verify.iva_selected_scope_evidence.complete",
         "modelo.work.verify.iva_selected_scope_evidence.unresolved",
     ),
-    # TERMINAL: the deduction on an intra-EU acquisition rests on the
-    # self-assessment, which no ledger write can record, so nothing the operator
-    # does inside the product lets the same declaration pass. It is filed
-    # another way.
-    _profile(
-        "modelo.work.verify",
-        "modelo.work.verify.iva_selected_scope_evidence.complete",
-        "modelo.work.verify.iva_selected_scope_evidence.intra_eu_self_assessment_unrecordable",
-        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
-    ),
+    # TERMINAL: these deductions rest on a document no ledger write can record,
+    # so nothing the operator does inside the product lets the same declaration
+    # pass. It is filed another way.
     _profile(
         "modelo.work.verify",
         "modelo.work.verify.iva_selected_scope_evidence.complete",

@@ -170,7 +170,6 @@ def test_application_result_requires_exact_ordered_finding_projection() -> None:
     ("evidence_family", "scenario_code", "no_recovery_outcome"),
     [
         ("iva_selected_scope_evidence", "unresolved", NoRecoveryOutcome.OPERATOR_DECISION),
-        ("iva_selected_scope_evidence", "intra_eu_self_assessment_unrecordable", NoRecoveryOutcome.TERMINAL),
         ("iva_selected_scope_evidence", "import_document_unrecordable", NoRecoveryOutcome.TERMINAL),
         ("iva_selected_scope_evidence", "reagp_document_unrecordable", NoRecoveryOutcome.TERMINAL),
         ("iva_selected_scope_evidence", "rectification_document_unrecordable", NoRecoveryOutcome.TERMINAL),

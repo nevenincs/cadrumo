@@ -77,7 +77,6 @@ LEDGER_TRANSACTION_SOURCE_REF_PREFIX: Final = "transaction:"
 
 
 UNRECORDABLE_DEDUCTION_SCENARIOS: Final = {
-    "intra_eu_self_assessment": "intra_eu_self_assessment_unrecordable",
     "customs_declaration": "import_document_unrecordable",
     "reagp_receipt": "reagp_document_unrecordable",
     "rectification_evidence": "rectification_document_unrecordable",

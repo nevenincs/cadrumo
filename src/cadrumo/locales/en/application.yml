@@ -2437,10 +2437,6 @@ application:
         %{transaction_currency} needs a customs declaration for the import. Cadrumo
         cannot yet record it, so this declaration cannot pass the check. File this
         declaration another way.
-      iva_intra_eu_self_assessment_unrecordable: The entry dated %{transaction_date}
-        for %{transaction_amount} %{transaction_currency} needs a supporting self-assessment
-        document for an intra-EU purchase. Cadrumo cannot yet record it, so this declaration
-        cannot pass the check. File this declaration another way.
       iva_reagp_document_unrecordable: The entry dated %{transaction_date} for %{transaction_amount}
         %{transaction_currency} needs a receipt for the special agriculture, livestock
         and fishing regime (REAGP). Cadrumo cannot yet record it, so this declaration

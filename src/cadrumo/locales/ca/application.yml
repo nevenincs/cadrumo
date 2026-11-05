@@ -2584,11 +2584,6 @@ application:
         %{transaction_currency} necessita la declaració duanera de la importació.
         Cadrumo encara no pot registrar-la, de manera que aquesta declaració no pot
         superar la comprovació. Presenta aquesta declaració per una altra via.
-      iva_intra_eu_self_assessment_unrecordable: L'apunt del %{transaction_date} per
-        %{transaction_amount} %{transaction_currency} necessita el justificant d'autoliquidació
-        de l'adquisició intracomunitària. Cadrumo encara no pot registrar-lo, de manera
-        que aquesta declaració no pot superar la comprovació. Presenta aquesta declaració
-        per una altra via.
       iva_reagp_document_unrecordable: L'apunt del %{transaction_date} per %{transaction_amount}
         %{transaction_currency} necessita el rebut del règim especial de l'agricultura,
         la ramaderia i la pesca (REAGP). Cadrumo encara no pot registrar-lo, de manera

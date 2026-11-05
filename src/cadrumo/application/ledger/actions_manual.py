@@ -31,10 +31,9 @@ from ...domain.attachments.service import link_attachment_transaction
 from ...domain.buckets.event import BucketEvent, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
-from ...domain.calculations.registry.iva_deduction_catalogue import invoice_evidence_authority
 from ...domain.currency.service import CurrencyNormalizationService
 from ...domain.invoices.errors import InvoiceLinkError
-from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance, required_deduction_evidence_authority
+from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance, supplier_invoice_deduction_authority
 from ...domain.transactions.classification_effects import takes_changes, takes_invoice
 from ...domain.transactions.classification_origin import (
     ClassificationOrigin,
@@ -396,16 +395,17 @@ def _invoice_evidence_provenance(
     whose content-addressed ``attachment_id`` is the immutable digest the
     provenance contract asks for.
 
-    Only the invoice-evidence authority is derivable here. A customs
-    declaration, an intra-EU self-assessment, a REAGP receipt or a
-    bienes-inversion regularisation is established by a record this link cannot
-    see, so those kinds resolve to ``None`` and refuse downstream rather than
-    being stamped with an invoice digest that did not establish them.
+    The supplier's invoice establishes a domestic deduction and, while the row
+    self-assesses the cuota it deducts, an intra-EU one; the domain names which
+    kinds it justifies and under which authority. A customs declaration, a
+    REAGP receipt or a rectification is established by a record this link
+    cannot see, so those kinds resolve to ``None`` and refuse downstream rather
+    than being stamped with an invoice digest that did not establish them.
     """
     if command.deduction_fact_kind is None or command.purchase_invoice_evidence_id is None:
         return None
-    invoice_authority = invoice_evidence_authority()
-    if required_deduction_evidence_authority(command.deduction_fact_kind) != invoice_authority:
+    authority = supplier_invoice_deduction_authority(command.deduction_fact_kind)
+    if authority is None:
         return None
     evidence_id = command.purchase_invoice_evidence_id
     record = next(
@@ -415,7 +415,7 @@ def _invoice_evidence_provenance(
     if record is None:
         return None
     return IvaDeductionClassificationProvenance(
-        authority=invoice_authority,
+        authority=authority,
         source_locator=record.evidence_id,
         evidence_digest=record.attachment_id,
     )

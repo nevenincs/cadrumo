@@ -2578,11 +2578,6 @@ application:
         %{transaction_currency} necesita la declaración aduanera de la importación.
         Cadrumo todavía no puede registrarla, por lo que esta declaración no puede
         superar la comprobación. Presenta esta declaración por otra vía.
-      iva_intra_eu_self_assessment_unrecordable: El apunte del %{transaction_date}
-        por %{transaction_amount} %{transaction_currency} necesita el justificante
-        de autoliquidación de la adquisición intracomunitaria. Cadrumo todavía no
-        puede registrarlo, por lo que esta declaración no puede superar la comprobación.
-        Presenta esta declaración por otra vía.
       iva_reagp_document_unrecordable: El apunte del %{transaction_date} por %{transaction_amount}
         %{transaction_currency} necesita el recibo del régimen especial de la agricultura,
         ganadería y pesca (REAGP). Cadrumo todavía no puede registrarlo, por lo que

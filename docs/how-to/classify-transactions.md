@@ -108,7 +108,7 @@ Other sources use other kinds, each with its own required proof:
 - `import_current` and `import_investment` - imports, with the customs
   declaration as proof.
 - `intra_eu_current` and `intra_eu_investment` - intra-EU acquisitions, with
-  your own self-assessment as proof.
+  the supplier's invoice as proof; the row self-assesses the VAT it deducts.
 - `reagp_compensation` - the compensation of the REAGP regime, with the REAGP
   receipt as proof.
 - `rectification` - a corrected invoice, with proof of the rectification.
