@@ -250,6 +250,7 @@ def authenticated_identity_matches_expected(
     authenticated_identity: str | None,
     expected_tax_id: str | None,
 ) -> bool:
+    """Return whether the authenticated identity matches the expected tax ID, or no tax ID is expected."""
     if not (expected_tax_id is not None and expected_tax_id):
         return True
     return same_tax_identifier(authenticated_identity, expected_tax_id)

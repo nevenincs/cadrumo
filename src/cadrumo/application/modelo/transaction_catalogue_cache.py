@@ -23,6 +23,7 @@ class MemoizedTransactionCatalogueRepository:
     __slots__ = ("_catalogue", "_date_range_catalogues", "_id_catalogues", "_partition_catalogues", "_repository")
 
     def __init__(self, repository: TransactionCatalogueRepositoryProtocol) -> None:
+        """Wrap the repository and start with every catalogue view uncached."""
         self._repository = repository
         self._catalogue: TransactionCatalogue | None = None
         self._date_range_catalogues: dict[tuple[date, date], TransactionCatalogue] = {}

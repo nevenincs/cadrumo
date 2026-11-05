@@ -795,6 +795,7 @@ def retention_decision_from_record(
     assessment: RetentionFloorAssessment | None,
     recorded: ConfigResetRetentionDecision | None,
 ) -> ConfigResetRetentionDecision:
+    """Return the retention decision to apply, keeping an override only where still valid."""
     if assessment is None:
         return _retention_decision(
             None,

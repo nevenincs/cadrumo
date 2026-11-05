@@ -47,6 +47,7 @@ class Wakes:
     """Why the watch woke; each flag is set by its own source and taken once."""
 
     def __init__(self) -> None:
+        """Create the wake flags with nothing cued and the stopping event clear."""
         self._guard = Lock()
         self._event = Event()
         self._cued = False
@@ -55,6 +56,7 @@ class Wakes:
         self.stopping = Event()
 
     def cue(self) -> None:
+        """Mark the watcher as cued and wake its loop."""
         with self._guard:
             self._cued = True
         self._event.set()
@@ -66,16 +68,19 @@ class Wakes:
         self._event.set()
 
     def take_forced(self) -> bool:
+        """Return whether a forced refresh was requested, clearing the request."""
         with self._guard:
             forced, self._forced = self._forced, False
         return forced
 
     def pointer_moved(self) -> None:
+        """Record that the profile pointer moved and wake the loop."""
         with self._guard:
             self._pointer = True
         self._event.set()
 
     def stop(self) -> None:
+        """Request the watch loop to stop and wake it."""
         self.stopping.set()
         self._event.set()
 
@@ -90,6 +95,7 @@ class Wakes:
 
 
 def emit(document: Mapping[str, object]) -> None:
+    """Write one compact JSON document line to standard output."""
     sys.stdout.write(json.dumps(document, separators=(",", ":")) + "\n")
     sys.stdout.flush()
 
@@ -236,6 +242,7 @@ def _observe(client: FrontendClient, profile_id: UUID, label: str | None, wakes:
 
 
 def watch(wakes: Wakes) -> int:
+    """Watch the selected profile and sessions, emitting an observation on each change."""
     previous: list[dict[str, object]] = []
 
     def publish(observation: dict[str, object]) -> None:

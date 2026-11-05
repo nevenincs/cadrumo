@@ -91,6 +91,7 @@ def verify_post_cutover_target(
     expected_manifest_sha256: str,
     expected_manifest: ExportFragmentProvenanceManifest,
 ) -> None:
+    """Check the published export tree against the validated candidate manifest digest."""
     if (
         export_provenance_file_sha256(target_export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME)
         != expected_manifest_sha256
@@ -126,6 +127,7 @@ def verify_recovery_package_against_current_authorities(
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
 ) -> ExportFragmentProvenanceManifest:
+    """Verify a recovered export package against the current registry authorities."""
     package_manifest = verify_generated_export_package(export_root)
     loaded = load_modelo_directory(modelo_root)
     revision_id = str(context.validation.target.revision_id)
@@ -213,6 +215,7 @@ def _copy_and_fsync_regular_file(source: Path, destination: Path) -> None:
 
 
 def delete_verified_staged_candidate_if_present(staging: Path) -> None:
+    """Delete a verified staged export directory when present and confirm nothing remains."""
     if staging.exists():
         require_complete_regular_tree(staging, subject="generated export staging directory")
         try:
@@ -224,6 +227,7 @@ def delete_verified_staged_candidate_if_present(staging: Path) -> None:
 
 
 def require_complete_regular_tree(path: Path, *, subject: str) -> None:
+    """Refuse a directory tree that is linked, empty or holds non-regular members."""
     if is_link_like(path) or not path.is_dir():
         raise RegistryValidationError(f"{subject} must be a non-linked directory: {path}")
     children = scan_directory(path)

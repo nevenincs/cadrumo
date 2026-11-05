@@ -26,6 +26,7 @@ def missing_or_empty_output_refs(
     expected_ids: frozenset[WorkbookOutputId],
     refs: Mapping[WorkbookOutputId, tuple[str, ...]],
 ) -> tuple[WorkbookOutputId, ...]:
+    """Return the sorted expected output ids that have no references or an empty list."""
     return tuple(sorted(output_id for output_id in expected_ids if not bool(refs.get(output_id))))
 
 
@@ -33,6 +34,7 @@ def workbook_output_id_set(
     surface: str,
     values: Mapping[WorkbookOutputId, object],
 ) -> frozenset[WorkbookOutputId]:
+    """Return a surface's workbook output ids as a set, refusing invalid registry ids."""
     invalid = sorted(repr(output_id) for output_id in values if not is_registry_id(output_id))
     if invalid:
         raise RegistryValidationError(f"{surface} contains invalid workbook output ids: {invalid!r}")
@@ -45,6 +47,7 @@ def require_matching_output_ids(
     right_name: str,
     right: Mapping[WorkbookOutputId, object],
 ) -> None:
+    """Require two surfaces to declare the same workbook output ids."""
     left_ids = workbook_output_id_set(left_name, left)
     right_ids = workbook_output_id_set(right_name, right)
     if left_ids != right_ids:
@@ -57,6 +60,7 @@ def raise_output_id_mismatch(
     right_name: str,
     right_ids: frozenset[WorkbookOutputId],
 ) -> None:
+    """Raise a refusal naming the output ids present on only one of two surfaces."""
     missing_from_left = sorted(right_ids.difference(left_ids))
     missing_from_right = sorted(left_ids.difference(right_ids))
     raise RegistryValidationError(

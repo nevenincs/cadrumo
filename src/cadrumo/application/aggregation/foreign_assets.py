@@ -541,6 +541,7 @@ def _declaration_advisories(
 def registry_observation_from_foreign_asset(
     observation: ForeignAssetIngestObservation,
 ) -> Modelo720RowObservation:
+    """Convert a foreign asset ingest observation into a modelo 720 row observation."""
     # Already admitted by the same authority at observation construction; this
     # is the string -> date lift the registry row shape needs, not a second gate.
     acquisition_date = require_iso8601_date(observation.acquisition_date)

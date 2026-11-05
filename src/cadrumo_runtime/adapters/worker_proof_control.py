@@ -20,6 +20,8 @@ from .profile_worker_operation_client import ProfileWorkerOperationClient
 
 @dataclass
 class ProofCommand:
+    """A pending proof control command with its deadline, completion event and failure."""
+
     request: ProofControlRequest
     deadline: float
     finished: Event = field(default_factory=Event)

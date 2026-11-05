@@ -492,6 +492,7 @@ def _resolve_period(text: str, *, period_override: str | None) -> str:
 
 
 def extract_tax_id(text: str) -> str:
+    """Extract a validated tax ID from text, whether it follows or precedes its label."""
     match = _TAX_ID_RE.search(text)
     if match is not None:
         return _validated_tax_id(re.sub(r"\s+", "", match.group("tax_id").strip().rstrip(".")))

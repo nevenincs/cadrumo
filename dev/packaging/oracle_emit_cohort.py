@@ -140,6 +140,7 @@ def run_oracle_emit_cohort(
 
 
 def parser() -> argparse.ArgumentParser:
+    """Build the argument parser for the oracle cohort emission."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--release-cohort-dir", required=True, type=Path, help="Full release-cohort directory.")
     parser.add_argument("--row-id", required=True, help="Distribution row this OS proves (e.g. python-linux-x86-64).")

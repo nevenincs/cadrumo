@@ -148,6 +148,7 @@ def profile_from_authority_fact(
     year: int,
     materialise_schedule: bool = True,
 ) -> CategoryProfile:
+    """Build a profile from a resolved authority mapping fact for the year."""
     values = {str(entry.key): entry.value for entry in resolved.payload.entries}
     category = str(resolved.matched_selectors[0].value)
     citations = _category_citations(values, resolved=resolved, root="citation")

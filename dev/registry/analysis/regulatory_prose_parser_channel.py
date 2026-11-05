@@ -77,6 +77,7 @@ class ProseParserEnrolment:
 
 
 def iter_scanned_modules() -> Iterator[Path]:
+    """Yield the production first-party Python modules scanned by the prose parser gate."""
     for root in FIRST_PARTY_ROOTS:
         for path in sorted((REPO_ROOT / root).rglob("*.py")):
             if is_production_source(path, root=REPO_ROOT):

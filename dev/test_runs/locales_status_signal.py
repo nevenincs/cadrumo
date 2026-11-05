@@ -85,6 +85,7 @@ class LocalesStatusSignalProcessor:
         self._decode_error: str | None = None
 
     def consume(self, line: str) -> None:
+        """Collect one output line of the locales status run."""
         self.lines.append(line)
 
     def _payload(self) -> dict[str, object] | None:
@@ -126,6 +127,7 @@ class LocalesStatusSignalProcessor:
         started: datetime,
         finished: datetime,
     ) -> dict[str, object]:
+        """Build the locales status result envelope from the collected output."""
         decoded = self._payload()
         error: dict[str, str] | None = None
         if decoded is None:

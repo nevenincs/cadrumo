@@ -556,6 +556,7 @@ def layout_failure(
     source_refs: Mapping[str, SourceReference],
     constants_by_binding: Mapping[str, str] | None = None,
 ) -> str | None:
+    """Build the failure message for an export layout that lacks coverage, if any."""
     design_sources = record_join.design_sources(layout, source_refs)
     if not design_sources:
         return _missing_design_source_failure(prefix, layout)

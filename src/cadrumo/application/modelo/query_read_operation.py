@@ -182,6 +182,7 @@ def _listing_rows_for_report(
 def read_bindings_list(
     payload: ModeloBindingsListRequest, *, operation: PinnedAuthorityOperation
 ) -> ModeloBindingsListProjection:
+    """Build the modelo bindings list projection for a request."""
     known_codes = registry_modelo_codes(operation=operation)
     if payload.catalogue_only:
         return ModeloBindingsListProjection(

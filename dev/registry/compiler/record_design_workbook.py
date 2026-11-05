@@ -122,6 +122,7 @@ def extract_sheet_rows(
     corrections: CorrectionIndex = EMPTY_CORRECTIONS,
     header_correction: RecordDesignHeaderCellCorrection | None = None,
 ) -> RecordDesignSheet:
+    """Extract the rows of a record design worksheet, applying header and cell corrections."""
     # AEAT Diseño workbooks occasionally carry surrounding whitespace on a
     # sheet tab (e.g. 'DP200026 '). The sheet name is the record-segment
     # identity that segment-qualified casillas and the calculation-

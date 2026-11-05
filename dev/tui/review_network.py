@@ -106,6 +106,7 @@ def is_wildcard_host(host: str) -> bool:
 
 
 def first_line(text: str) -> str:
+    """Return the first non-blank line of text, stripped, or an empty string."""
     for line in text.splitlines():
         if line.strip():
             return line.strip()

@@ -382,6 +382,7 @@ def _leaf_selection(spec: CommandSpec, arguments: Mapping[str, object]) -> Machi
 
 
 def preflight_sources(*, root: ProfileSecretSelection | None, leaf: MachineSecretSelection | None) -> None:
+    """Refuse when the root and leaf secret selections share one stdin or descriptor."""
     if root is None or leaf is None:
         return
     root_descriptor = 0 if root.channel is ProfileSecretChannel.STDIN else root.descriptor
@@ -418,6 +419,7 @@ def read_and_stage_leaf(
     selection: MachineSecretSelection | None,
     resolver: TargetResolver,
 ) -> None:
+    """Read the leaf machine secret and stage it when a selection is supplied."""
     if selection is None:
         return
 

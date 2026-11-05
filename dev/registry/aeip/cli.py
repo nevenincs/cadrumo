@@ -33,6 +33,7 @@ def _modelos_root() -> Path:
 
 
 def load(modelo_id: str, adjudications_path: Path | None) -> tuple[AeipInventory, ChainPlan, AdjudicationSet]:
+    """Load the inventory, chain plan and adjudications for a modelo."""
     path = adjudications_path or Path(__file__).resolve().parent / DEFAULT_ADJUDICATIONS_FILENAME
     adjudications = load_adjudications(path)
     occurrences, category_counts = extract_occurrences(_modelos_root(), modelo_id=modelo_id)

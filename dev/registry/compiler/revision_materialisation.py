@@ -519,6 +519,7 @@ def _materialise_one_family(
 
 
 def raw_casilla_rows(source_path: Path, revision_id: str, table: Mapping[str, object]) -> tuple[object, ...]:
+    """Return the raw casilla rows of a revision table, refusing when not an array."""
     rows = as_toml_array(table.get(INHERITED_SECTION, ()))
     if rows is None:
         raise RegistryLoadError(f"{source_path}: revision {revision_id!r} casillas must be an array")

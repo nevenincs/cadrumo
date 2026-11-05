@@ -127,6 +127,7 @@ def run[ProjectionT: BaseModel](
     result_type: type[ProjectionT],
     allow_refusal_detail: bool,
 ) -> RegisteredOperationCompletion[ProjectionT]:
+    """Submit a ledger inventory request as a registered operation and project the result."""
     client = _client_for_request(ctx, request)
     completed = run_registered_operation(
         client,
@@ -190,6 +191,7 @@ def _collapse_public_decimal_objects(value: _JsonValue) -> _JsonValue:
 
 
 def ledger_payload_json(ledger: InventoryLedgerProjection, *, outcome: str | None = None) -> str:
+    """Serialize the ledger projection to JSON without advisories, requiring an object."""
     # Pydantic serialized this strict projection; the standard decoder exposes its
     # result as Any, so restore the closed JSON value type at this boundary.
     # Diagnostics ride on envelope notices; the worker projection retains them

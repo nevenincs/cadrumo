@@ -118,6 +118,7 @@ class GeneratedExportTreeValidationContext:
     source_chain_non_export_sha256: str | None = None
 
     def __post_init__(self) -> None:
+        """Refuse an empty period, an inconsistent source chain, or a target named as supporting."""
         self._validate_source_chain()
         if not self.period.strip():
             raise RegistryValidationError("generated-tree validation requires a non-empty filing period")
@@ -685,6 +686,7 @@ def require_isolated_target_context(
     baseline_revisions: tuple[str, ...] = (),
     source_chain_revisions: tuple[str, ...] = (),
 ) -> tuple[Path, Path, Path]:
+    """Validate the isolated registry tree for a target and return its roots."""
     modelos_root = _require_directory(registry_root / "modelos", subject="generated registry modelos root")
     modelo_root = modelos_root / modelo_id
     _require_exact_children(

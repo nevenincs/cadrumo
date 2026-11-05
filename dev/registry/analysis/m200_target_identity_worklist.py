@@ -485,6 +485,7 @@ def printed_identity_state(
     *,
     proposal: str | None,
 ) -> M200PrintedIdentityState:
+    """Classify a printed M200 identity against the owner and any proposed identity."""
     if printed is None:
         return M200PrintedIdentityState.MISSING_OFFICIAL_PRINTED_IDENTITY
     if printed == owner or _same_box_number(printed, owner.rsplit(":", 1)[-1]):

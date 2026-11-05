@@ -87,6 +87,7 @@ class PendingReceiptRetirementDocument(BaseModel):
 
 
 def document_from_record(record: acceleration_receipt_crypto.PersistedProfileSession) -> AccelerationReceiptDocument:
+    """Build the acceleration receipt document from a persisted profile session record."""
     return AccelerationReceiptDocument(
         schema_version=record.schema_version,
         profile_id=record.profile_id,

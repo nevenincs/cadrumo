@@ -23,6 +23,7 @@ def column_form_heading_key(modelo_id: str, key: str) -> str:
 
 
 def unique(base: str, used: set[str]) -> str:
+    """Return a key unique among those used by appending a counter to the base."""
     candidate, counter = base, 2
     while candidate in used:
         candidate = f"{base}-{counter}"

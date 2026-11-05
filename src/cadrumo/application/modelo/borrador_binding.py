@@ -453,6 +453,7 @@ def _assert_registry_snapshot_axis(
 
 
 def decimal_value(binding_id: BindingId, value: Decimal | str) -> Decimal:
+    """Parse a decimal string for a borrador binding or refuse with a binding error."""
     return decimal_from_string(
         binding_id,
         value,

@@ -104,6 +104,7 @@ def gnome_observation(
     *,
     deadline: float | None = None,
 ) -> tuple[GnomeLockBinding, GnomeLockState]:
+    """Observe a GNOME session's lock state against an expected binding."""
     deadline = deadline if deadline is not None else time.monotonic() + linux_logind_bus.BUS_TIMEOUT_SECONDS
     require_gnome_login_producer(uid)
     path = gnome_user_bus_path(uid)

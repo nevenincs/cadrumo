@@ -57,6 +57,7 @@ def choose_drops(
     tuple[str, ...],
     bool,
 ]:
+    """Choose which inherited rows an edition delta drops relative to the full rows."""
     del definition  # Materialisation and identity are supplied by the typed source rows.
     if _unretired_withdrawal(inherited, full_rows, source, storage_only):
         return [edition_delta_types.BlockedCause.UNRETIRED_WITHDRAWAL], set(), Counter(), [], (), (), (), (), (), False

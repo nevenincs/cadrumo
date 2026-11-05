@@ -35,10 +35,12 @@ class OperationJournalRecord(BaseModel):
 
     @property
     def operation_id(self) -> str:
+        """Return the operation identifier of the snapshot."""
         return self.snapshot.operation_id
 
     @property
     def started_at(self) -> datetime:
+        """Return when the operation started."""
         return self.snapshot.started_at
 
     @model_validator(mode="after")

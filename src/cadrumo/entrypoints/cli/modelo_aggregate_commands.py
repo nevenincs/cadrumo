@@ -270,6 +270,7 @@ def _aggregate_invoice_evidence(
 
 
 def refuse_m123_invoice(modelo: str, received_invoice_retencion: list[str] | None) -> None:
+    """Refuse received invoice retencion for modelos that take ledger payments only."""
     if (
         received_invoice_retencion is not None
         and len(received_invoice_retencion) > 0

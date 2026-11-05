@@ -138,6 +138,7 @@ def _selected_scope_iva_evidence_language(issue: IvaLedgerAggregationIssue) -> O
 
 
 def selected_scope_iva_evidence_message(issue: IvaLedgerAggregationIssue) -> str:
+    """Explain a failed selected-scope IVA evidence issue, keeping its own figure detail."""
     if issue.reason in _IVA_SELECTED_SCOPE_FIGURE_REASONS:
         return issue.detail
     marker = f"selected-scope IVA evidence failure: {issue.reason.value}"

@@ -319,6 +319,7 @@ def published_legal_evidence_text(reference: LegalReference, *, source_root: Pat
 
 
 def validate_manual_legal_reference(reference: LegalReference, source_root: Path) -> None:
+    """Check a manual legal reference against its corpus section, skipping missing files."""
     path = (source_root / reference.corpus_ref.split("#", 1)[0]).resolve()
     if not path.is_file():
         return

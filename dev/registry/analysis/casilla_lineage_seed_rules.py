@@ -149,9 +149,11 @@ def _section_overlap(previous: ModeloRevision, successor: ModeloRevision) -> flo
 
 
 def slug(value: str) -> str:
+    """Normalize text to a lowercase slug of at most 128 characters."""
     slug = re.sub(r"[^a-z0-9_-]+", "-", value.lower()).strip("-_")
     return slug[:128].rstrip("-_")
 
 
 def role_derived(role: str) -> str:
+    """Convert a role name to its lowercase hyphenated form."""
     return role.lower().replace("_", "-")

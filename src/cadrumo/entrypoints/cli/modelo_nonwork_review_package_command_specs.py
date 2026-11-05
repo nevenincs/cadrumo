@@ -1,3 +1,5 @@
+"""Declarative command specs for the modelo review package commands outside a work unit."""
+
 from __future__ import annotations
 
 from typing import Final

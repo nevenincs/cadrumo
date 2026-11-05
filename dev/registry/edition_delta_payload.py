@@ -100,6 +100,7 @@ def _sequence_equal(left: object, right: object) -> bool:
 
 
 def model_value(value: object) -> object:
+    """Dump a model to Python values without its inherited-from marker, else return the value."""
     dump = getattr(value, "model_dump", None)
     return dump(mode="python", exclude={"inherited_from"}) if callable(dump) else value
 
@@ -184,6 +185,7 @@ def existing_storage_removals(baseline: Mapping[str, object], removed_fields: Se
 
 
 def thaw(value: object) -> object:
+    """Return a value with mappings and sequences converted to plain dicts and lists."""
     if isinstance(value, Mapping):
         return {str(key): thaw(item) for key, item in value.items()}
     if isinstance(value, list | tuple):

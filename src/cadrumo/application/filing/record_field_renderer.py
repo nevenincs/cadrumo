@@ -351,6 +351,7 @@ def binding_field_value(
     binding_values: dict[tuple[BindingId, int | None], object],
     row_index: int | None,
 ) -> object:
+    """Return the value an export field takes from its binding and row index."""
     if field.binding is None:
         raise FilingExportValidationError(f"export field {field.id!r} must declare binding")
     value = binding_values.get((field.binding, row_index))
@@ -379,6 +380,7 @@ def projection_field_value(
 
 
 def header_field_value(field: ExportFieldDefinition, headers: Mapping[FilingProducerKey, object]) -> object:
+    """Return the value an export field takes from the header producers, enforcing requirement."""
     if field.producer_key is None:
         raise FilingExportValidationError(f"export field {field.id!r} must declare producer_key")
     value = headers.get(field.producer_key)

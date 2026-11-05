@@ -13,6 +13,7 @@ SESSION_PATH = re.compile(rb"/org/freedesktop/login1/session/[A-Za-z0-9_]{1,192}
 
 
 def unavailable() -> RefusalError:
+    """Return the refusal that reports the login service as unavailable."""
     return RefusalError(RefusalCode.UNAVAILABLE)
 
 
@@ -71,6 +72,7 @@ class SessionRecord:
     locked_hint: bool
 
     def __post_init__(self) -> None:
+        """Refuse a record whose identifiers, generation, labels or lock hint are not valid."""
         if not _valid_session_identifier(self.session_id):
             raise unavailable()
         if not _valid_owner_id(self.uid):
@@ -111,11 +113,14 @@ class SessionRecord:
 
 @dataclass(frozen=True)
 class SessionReference:
+    """A login session identified by its id, owner uid and bus object path."""
+
     session_id: str
     uid: int
     object_path: bytes
 
     def __post_init__(self) -> None:
+        """Refuse a reference whose identifier, owner or bus object path is not valid."""
         if not _valid_session_identifier(self.session_id):
             raise unavailable()
         if not _valid_owner_id(self.uid):

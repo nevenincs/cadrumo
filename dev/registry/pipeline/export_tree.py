@@ -351,6 +351,7 @@ def render_records(
     negative_amount_note: NoteNegativeAmountDeclaration | None = None,
     scheme_period_fields: DesignSchemePeriodFieldsDeclaration | None = None,
 ) -> tuple[tuple[ExportRecordDefinition, ...], tuple[ExportFieldDerivation, ...]]:
+    """Render the joined records into export record definitions and field derivations."""
     records: list[ExportRecordDefinition] = []
     derivations: list[ExportFieldDerivation] = []
     record_ids: set[str] = set()

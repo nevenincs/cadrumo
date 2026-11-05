@@ -249,6 +249,7 @@ def simplificada_tax_id_notices(
 
 
 def catalogue_invoice_lines(invoice: Invoice | CatalogueInvoiceRecordPayload) -> list[str]:
+    """Render a catalogue invoice as tab-separated field lines."""
     return [
         f"invoice_id\t{invoice.invoice_id}",
         f"kind\t{invoice.kind.value}",
@@ -497,6 +498,7 @@ def invoice_wizard(
 
 
 def invoice_import_summary_lines(bucket_id: str, result: InvoiceImportProjection) -> list[str]:
+    """Render the row, creation and duplicate counts of an invoice import as lines."""
     return [
         f"bucket\t{bucket_id}",
         f"rows\t{result.rows}",
@@ -507,6 +509,7 @@ def invoice_import_summary_lines(bucket_id: str, result: InvoiceImportProjection
 
 
 def invoice_import_refusal_lines(result: InvoiceImportProjection) -> list[str]:
+    """Render each refused import row with its row number, field and reason."""
     return [
         f"  refused\trow={failure.row_number}\tfield={failure.field}\treason={failure.reason}"
         for failure in result.refused
@@ -516,6 +519,7 @@ def invoice_import_refusal_lines(result: InvoiceImportProjection) -> list[str]:
 def invoice_import_unmapped_report(
     unmapped_column_headers: tuple[str, ...],
 ) -> tuple[str, Notice] | None:
+    """Build the notice reporting unmapped column headers, or None when all are mapped."""
     if not unmapped_column_headers:
         return None
     headers = ", ".join(unmapped_column_headers)
@@ -535,6 +539,7 @@ def invoice_import_unmapped_report(
 
 
 def invoice_import_mapping_reports(mapping_reasons: Sequence[str]) -> tuple[list[str], list[Notice]]:
+    """Build the lines and notices that report the positional column mapping reasons."""
     lines: list[str] = []
     notices: list[Notice] = []
     for index, reason in enumerate(mapping_reasons):
@@ -561,6 +566,7 @@ def invoice_import_mapping_reports(mapping_reasons: Sequence[str]) -> tuple[list
 def invoice_import_all_refused_report(
     result: InvoiceImportProjection,
 ) -> tuple[str, Notice] | None:
+    """Build the report for an import where every row was refused, else None."""
     if not (result.rows > 0 and result.created == 0 and result.skipped_duplicate == 0 and bool(result.refused)):
         return None
     message = tr(
@@ -578,6 +584,7 @@ def invoice_import_all_refused_report(
 
 
 def invoice_import_payload(result: InvoiceImportProjection) -> dict[str, object]:
+    """Build the structured payload of an invoice import result."""
     return {
         "bucket_id": str(result.profile_id),
         "rows": result.rows,

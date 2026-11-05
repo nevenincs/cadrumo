@@ -38,6 +38,7 @@ _M349_EXPORT_NIF_COUNTRY_BINDINGS: dict[BindingId, BindingId] = {
 def normalise_m349_nif_export_rows(
     rows: dict[tuple[BindingId, int], Decimal | str],
 ) -> dict[tuple[BindingId, int], Decimal | str]:
+    """Normalise the M349 export NIF values using the country value of the same row."""
     normalised = dict(rows)
     for (binding_id, row_index), value in rows.items():
         country_binding = _M349_EXPORT_NIF_COUNTRY_BINDINGS.get(binding_id)
@@ -56,6 +57,7 @@ def build_invoice_rows(
     *,
     m347_threshold_filter: Callable[[tuple[InvoiceObservation, ...]], tuple[InvoiceObservation, ...]],
 ) -> tuple[Mapping[str, Decimal | str], ...]:
+    """Build the invoice rows for a grouping, refusing a grouping that is not supported."""
     if grouping == "operator_clave":
         return _build_operator_clave_rows(observations)
     if grouping == "operator_clave_period":

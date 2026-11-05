@@ -280,6 +280,7 @@ def reviewed_pull_outcomes(
     tuple[CensoPullDivergencePayload, ...],
     str,
 ]:
+    """Derive the fact outcomes of a reviewed census pull from its effective values."""
     from ....core.config import Settings
 
     fields = reviewed.projection.fields

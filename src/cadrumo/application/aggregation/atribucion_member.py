@@ -50,6 +50,8 @@ _SOCIOS_SECTION_KEY = "attribution_entity_socios"
 
 @dataclass(frozen=True, slots=True)
 class SocioFacts:
+    """The index and field values of one attribution entity member in the profile."""
+
     index: int
     values: Mapping[str, object]
 
@@ -215,6 +217,7 @@ def _project_attribution_socio_facts(
 
 
 def missing_fields(socio: SocioFacts) -> frozenset[str]:
+    """Return the required fields that are blank for a socio."""
     return frozenset(field for field in REQUIRED_FIELDS if _blank(socio.values.get(field)))
 
 
@@ -257,6 +260,7 @@ def _invalid_value_diagnostic(socio: SocioFacts, refusals: tuple[str, ...]) -> C
 
 
 def missing_field_diagnostic(socio: SocioFacts) -> CalculationSourceDiagnostic:
+    """Build the diagnostic for a socio missing required M184 fields."""
     missing = ", ".join(sorted(missing_fields(socio)))
     return _diagnostic(
         f"attribution_entity_socios.{socio.index} is incomplete for M184; missing {missing}. "
@@ -274,6 +278,7 @@ def _diagnostic(message: str) -> CalculationSourceDiagnostic:
 
 
 def observation_from_socio(socio: SocioFacts, *, filing_year: int) -> AtributionMemberObservation:
+    """Build the M184 member observation for a socio and filing year."""
     shared = _shared_member_values(socio)
     return AtributionMemberObservation(
         source_id=f"profile:attribution_entity_socios:{socio.index}",
@@ -306,6 +311,7 @@ def _x_flag(value: bool | None) -> str | None:
 
 
 def detail_row_from_socio(socio: SocioFacts) -> Modelo184MemberRow:
+    """Build the Modelo 184 member detail row from a socio."""
     shared = _shared_member_values(socio)
     return Modelo184MemberRow(
         nif=tax_id_identity_token(str(socio.values["nif"])),
@@ -382,6 +388,7 @@ def _optional_clave_declarado(value: object) -> str | None:
 
 
 def optional_bool(value: object) -> bool | None:
+    """Coerce a value to an optional boolean, returning None when it is absent."""
     if value is None:
         return None
     if isinstance(value, bool):

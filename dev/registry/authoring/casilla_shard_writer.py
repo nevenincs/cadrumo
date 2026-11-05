@@ -18,6 +18,7 @@ from .casilla_shard_types import GenerationRefusedError, GenerationReport, WaveS
 
 
 def finalize_emission(spec: WaveSpec, report: GenerationReport, *, write: bool) -> None:
+    """Refuse or finalize a casilla shard emission, checking duplicates and attestations."""
     if report.refusals:
         raise GenerationRefusedError(
             f"{len(report.refusals)} row(s) need adjudication: " + "; ".join(report.refusals[:5])

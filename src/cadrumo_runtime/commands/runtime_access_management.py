@@ -66,6 +66,7 @@ class AutomationApprovalSecrets(MachineSecretPayload):
 def runtime_access_management_client(
     ctx: typer.Context, *, requested_language: OutputLanguage | None
 ) -> FrontendClient:
+    """Return the active profile runtime client with the output language resolved."""
     pointer = require_active_profile_pointer()
     client = require_profile_client(ctx, expected_profile_id=UUID(str(pointer.bucket_id)))
     language = resolve_runtime_profile_output_language(client, requested=requested_language)
@@ -78,6 +79,7 @@ def _refused(error: FrontendRefusedError) -> CliRefusedBoundaryError:
 
 
 def session_payload(session: PublicAccessSession, *, instant: datetime) -> RuntimeSessionPayload:
+    """Project a public access session into a runtime session payload with remaining seconds."""
     return RuntimeSessionPayload(
         session_id=session.session_id,
         profile_id=session.profile_id,
@@ -252,6 +254,7 @@ def _review_not_found() -> CliRefusedBoundaryError:
 
 
 def runtime_access_management_review_digest(review: AutomationReviewProjection, supplied: str) -> None:
+    """Refuse an automation review when the supplied digest differs from the receipt's."""
     if supplied != review.receipt.review_digest:
         raise CliRefusedBoundaryError(
             translated_message="cli.config.profile.automation.review_digest_mismatch",
@@ -319,6 +322,7 @@ def automation_inspect(ctx: typer.Context, request_id: UUID, output_language: Ou
 
 
 def approval_password(*, secrets_stdin: bool, secrets_fd: int | None) -> bytearray:
+    """Read the approval passphrase from a protected channel or prompt, as a mutable buffer."""
     selection = select_machine_secret_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
     if selection is None:
         return bytearray(prompt_secret_no_echo(tr("cli.config.custody.current_passphrase_prompt")).encode("utf-8"))
@@ -503,6 +507,7 @@ def profile_lock(
 
 
 def resume_password(*, secrets_stdin: bool, secrets_fd: int | None) -> bytearray:
+    """Read the resume passphrase from a protected channel or prompt, as a mutable buffer."""
     selection = select_machine_secret_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
     if selection is None:
         return bytearray(prompt_secret_no_echo(tr("cli.config.custody.current_passphrase_prompt")).encode("utf-8"))

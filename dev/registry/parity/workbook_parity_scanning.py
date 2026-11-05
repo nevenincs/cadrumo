@@ -303,6 +303,7 @@ def assert_workbook_scan_clean(report: WorkbookBackendVerificationReport) -> Non
 
 
 def build_modelo_coverage(reports: Iterable[WorkbookArtefactReport]) -> tuple[WorkbookModeloCoverage, ...]:
+    """Group workbook reports by modelo and total their workbook kinds into coverage rows."""
     buckets: dict[str, list[WorkbookArtefactReport]] = {}
     for report in reports:
         modelo = report.modelo or "unknown"
@@ -328,6 +329,7 @@ def build_modelo_coverage(reports: Iterable[WorkbookArtefactReport]) -> tuple[Wo
 
 
 def infer_modelo(relative_path: str) -> str | None:
+    """Infer the modelo number from a corpus relative path, or None when it has none."""
     match = _MODELO_PATTERN.search(relative_path)
     if match is None:
         return None
@@ -344,10 +346,12 @@ def raise_if_timed_out(cpu_started: float, timeout_seconds: float, relative: str
 
 
 def elapsed_decimal(started: float) -> Decimal:
+    """Return the seconds elapsed since a monotonic start as a Decimal."""
     return coerce_decimal(round(time.monotonic() - started, 6), default=Decimal("0"))
 
 
 def classify_xlsx(relative: str, formulas: Iterable[WorkbookCellRef]) -> WorkbookKind:
+    """Classify an xlsx workbook as validation hints, record design, formula form or static."""
     formula_count = sum(1 for _ in formulas)
     lowered = relative.lower()
     if "valid" in lowered or "valida" in lowered:
@@ -364,6 +368,7 @@ def _is_record_design_path(lowered_relative_path: str) -> bool:
 
 
 def evidence_for_workbook_kind(kind: WorkbookKind) -> tuple[EvidenceTier | None, tuple[EvidenceTier, ...]]:
+    """Return the primary evidence tier and the excluded tiers for a workbook kind."""
     legal, guidance = EvidenceTier.LEGAL_AUTHORITY, EvidenceTier.OFFICIAL_SOURCE_GUIDANCE
     parity, layout = EvidenceTier.EXECUTABLE_PARITY_EVIDENCE, EvidenceTier.LAYOUT_AUTHORITY
     if kind == WorkbookKind.FORMULA_FORM:
@@ -376,6 +381,7 @@ def evidence_for_workbook_kind(kind: WorkbookKind) -> tuple[EvidenceTier | None,
 
 
 def formula_references(sheet: str, formula: str, remaining: int) -> tuple[WorkbookCellRef, ...]:
+    """Extract cell references from a formula, limited to the remaining budget."""
     if remaining <= 0:
         return ()
     # Both imported before the ``try``: ``TokenizerError`` is named in the
@@ -409,6 +415,7 @@ def formula_references(sheet: str, formula: str, remaining: int) -> tuple[Workbo
 
 
 def dedupe_cells(cells: Iterable[WorkbookCellRef]) -> tuple[WorkbookCellRef, ...]:
+    """Drop repeated cell references, keeping the first occurrence of each sheet and cell."""
     seen: set[tuple[str, str]] = set()
     deduped: list[WorkbookCellRef] = []
     for cell in cells:

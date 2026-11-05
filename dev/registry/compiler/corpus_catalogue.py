@@ -293,6 +293,7 @@ def _record_design_manifest_identities(bundle_root: Path, manifest_path: PurePos
 
 
 def validate_source_corpus_tier_declaration(source: GeneratedArtifactSource, path: Path) -> None:
+    """Validate a source's corpus tier declaration against its corpus path."""
     if source.corpus_tier is None:
         return
     if not source.corpus_path.startswith(_NORMATIVES_TREE_PREFIX):

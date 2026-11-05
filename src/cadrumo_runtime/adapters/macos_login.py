@@ -139,6 +139,7 @@ def observe_macos_session(session_id: int) -> MacosSessionObservation | None:
 
 
 def session_observation(session_id: int, status: int, observed: int, attributes: int) -> MacosSessionObservation | None:
+    """Return the macOS session observation, None when no session, or refuse when inconsistent."""
     # SessionGetInfo forwards audit session flags, including bsm/audit.h's
     # console-access (0x2000) and authenticated (0x4000) facts. Neither is
     # proof of an unlocked desktop or unattended eligibility.

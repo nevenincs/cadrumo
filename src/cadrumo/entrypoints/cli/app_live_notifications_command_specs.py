@@ -1,3 +1,5 @@
+"""Declarative command specs for the live notifications CLI commands."""
+
 from __future__ import annotations
 
 from typing import Final

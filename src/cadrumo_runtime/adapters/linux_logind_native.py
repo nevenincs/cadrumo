@@ -13,6 +13,7 @@ from .linux_login_models import SESSION_ID, unavailable
 
 
 def boot_id() -> UUID:
+    """Read the kernel boot id from procfs, refusing malformed content."""
     with open("/proc/sys/kernel/random/boot_id", "rb") as source:
         value = source.read(38)
     if len(value) != 37 or value[-1:] != b"\n":
@@ -24,6 +25,7 @@ def boot_id() -> UUID:
 
 
 def ensure_pidfd_alive(pidfd: int) -> None:
+    """Require a non-inheritable pidfd whose process has not yet exited."""
     if sys.platform == "linux":
         if type(pidfd) is not int or pidfd < 0 or os.get_inheritable(pidfd):
             raise unavailable()
@@ -42,6 +44,7 @@ class NativeLogin:
     libc: ctypes.CDLL
 
     def __init__(self) -> None:
+        """Load the systemd and libc libraries and declare their native signatures."""
         if sys.platform != "linux":
             raise unavailable()
         self.library = ctypes.CDLL("libsystemd.so.0")
@@ -84,6 +87,7 @@ class NativeLogin:
             function.restype = result
 
     def peer_session(self, pidfd: int) -> tuple[str, int]:
+        """Return the logind session id and user id of the process behind a pidfd."""
         session = ctypes.c_void_p()
         uid = ctypes.c_uint32()
         try:
@@ -105,6 +109,7 @@ class NativeLogin:
                 self.libc.free(session)
 
     def session(self, session_id: str) -> linux_login_models.LinuxSessionObservation:
+        """Observe a logind session by id through the login service over the bus."""
         if not SESSION_ID.fullmatch(session_id):
             raise unavailable()
         with linux_logind_bus.SessionBus(self.library) as bus:

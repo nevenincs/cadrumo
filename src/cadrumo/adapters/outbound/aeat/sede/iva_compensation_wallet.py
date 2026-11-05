@@ -154,6 +154,7 @@ def raise_if_wallet_auth_gate(
     expected_url: str,
     surface: str,
 ) -> None:
+    """Refuse with an auth gate error when the page was redirected to the AEAT login."""
     if is_aeat_auth_gate_redirect(page.url):
         raise SedeNavigationError(
             message,
@@ -754,6 +755,7 @@ async def wait_for_wallet_execute_initial_shape(
     expected_path: str,
     timeout_ms: int,
 ) -> tuple[str, str]:
+    """Poll the wallet execute page until its initial shape appears or the timeout elapses."""
     deadline = now().timestamp() + timeout_ms / 1000
     last_html = await _read_wallet_html(content)
     last_status = wallet_execute_gate_status(last_html, expected_path=expected_path)
@@ -1017,10 +1019,12 @@ def _assert_read_landing(page: Page) -> None:
 
 
 def assert_read_http(method: str, url: str) -> None:
+    """Check an HTTP method and URL against the IVA wallet read policy."""
     assert_read_http_for(IVA_COMPENSATION_WALLET_READ_POLICY, method, url)
 
 
 def assert_read_browser_action(action: str) -> None:
+    """Check a browser action against the IVA wallet read policy."""
     assert_query_browser_action_for(IVA_COMPENSATION_WALLET_READ_POLICY, action)
 
 

@@ -88,6 +88,7 @@ class OperationResponseAuthorityBrokerMixin(_AuthorityHost):
     """Implementation of process-local REVIEW bearer custody."""
 
     def __init__(self) -> None:
+        """Start with no reserved response entries."""
         self._entries: dict[
             OperationId,
             tuple[OperationActorReference, ContentDigest, OperationPendingInteraction | None, bytearray | None],

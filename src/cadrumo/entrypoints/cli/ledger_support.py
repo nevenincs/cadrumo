@@ -52,14 +52,17 @@ def ledger_cli_no_recovery[ErrorT: CadrumoError](
 
 
 def invoice_link_error_bad_parameter() -> typer.BadParameter:
+    """Return the bad-parameter error for an invalid invoice link."""
     return bad(tr("errors.error.error_financial_invoices_invoice_link"))
 
 
 def parse_decimal_option(raw: str | None, *, label: str) -> Decimal | None:
+    """Parse an optional decimal option value, returning None when it is absent."""
     return parse_optional_decimal_amount(raw, label=label)
 
 
 def parse_required_decimal(raw: str, *, label: str) -> Decimal:
+    """Parse a required decimal option value."""
     return parse_decimal_amount(raw, label=label)
 
 

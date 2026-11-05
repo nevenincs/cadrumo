@@ -560,6 +560,7 @@ def calendar_entry_from_obligation(
     operation: PinnedAuthorityOperation,
     censo_enrolment_states: dict[str, OverviewCensoEnrolmentState] | None = None,
 ) -> OverviewCalendarEntry:
+    """Build an overview calendar entry from a modelo obligation and its filing evidence."""
     deadline = effective_filing_deadline(
         obligation.closes_on,
         modelo=obligation.modelo,

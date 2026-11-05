@@ -52,6 +52,7 @@ def linux_process_start_identity(pid: int) -> str:
 
 
 def unit_properties(unit: str) -> dict[str, str]:
+    """Return the properties of a systemd user unit, refusing a failed query."""
     result = run_containment_command_sync(
         ContainmentCommand.SYSTEMCTL,
         ("--user", "--no-pager", "--no-ask-password", "show", unit, "--property=" + ",".join(sorted(_PROPERTIES))),
@@ -70,6 +71,7 @@ def unit_properties(unit: str) -> dict[str, str]:
 
 
 def unit_absent(unit: str) -> bool:
+    """Report whether systemd no longer knows the user unit."""
     result = run_containment_command_sync(
         ContainmentCommand.SYSTEMCTL,
         (
@@ -87,6 +89,7 @@ def unit_absent(unit: str) -> bool:
 
 
 def cgroup_for(pid: int) -> str:
+    """Return the unified cgroup path of a process, refusing unexpected formats."""
     try:
         lines = (Path("/proc") / str(pid) / "cgroup").read_text(encoding="ascii").splitlines()
         if len(lines) != 1 or not lines[0].startswith("0::/"):
@@ -97,6 +100,7 @@ def cgroup_for(pid: int) -> str:
 
 
 def pidfd_alive(descriptor: int) -> bool:
+    """Report whether the process behind a pidfd is still alive."""
     if sys.platform == "linux":
         poller = select.poll()
         poller.register(descriptor, select.POLLIN | select.POLLERR | select.POLLHUP)

@@ -57,6 +57,7 @@ def emit_record(
     segmento: str,
     report: GenerationReport,
 ) -> None:
+    """Emit the casilla shard for one record sheet of a design, refusing on audit problems."""
     sheet = sheets.get(segmento)
     if sheet is None:
         raise GenerationRefusedError(f"{segmento}: no such sheet in the design")

@@ -222,6 +222,7 @@ def _environment_value(environ: Mapping[str, str], name: str, platform: StorageP
 
 
 def normalized_absolute(path: PurePath) -> PurePath:
+    """Return an absolute storage path with dot segments normalized, refusing relative paths."""
     _checked_path_value(str(path))
     if not path.is_absolute():
         _refuse(StorageRootRefusal.NON_ABSOLUTE_PIN, "Storage path must be absolute.")

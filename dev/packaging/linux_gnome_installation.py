@@ -42,6 +42,7 @@ def _directory_flags() -> int:
 
 @contextmanager
 def extensions_directory(*, create: bool) -> Generator[int]:
+    """Open the GNOME extensions directory by descriptor, optionally creating it."""
     if sys.platform != "linux":
         raise _refusal()
     uid = os.getuid()
@@ -197,6 +198,7 @@ class StagedProducer:
     """Own only this invocation's staging directory and exclusively created files."""
 
     def __init__(self, parent: int) -> None:
+        """Bind the staging producer to the parent directory descriptor."""
         self.parent = parent
         self.name = _STAGING_PREFIX + uuid4().hex
         self.directory: int | None = None
@@ -205,6 +207,7 @@ class StagedProducer:
         self.published = False
 
     def __enter__(self) -> StagedProducer:
+        """Create the private staging directory and return the producer."""
         os.mkdir(self.name, mode=0o700, dir_fd=self.parent)
         try:
             self.directory = os.open(self.name, _directory_flags(), dir_fd=self.parent)
@@ -272,6 +275,7 @@ class StagedProducer:
                 self.directory = None
 
     def __exit__(self, *_: object) -> None:
+        """Close the staging producer."""
         self.close()
 
 

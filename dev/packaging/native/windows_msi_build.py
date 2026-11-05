@@ -27,6 +27,7 @@ from .windows_msi_verify import verify_database
 
 
 def run(wix: Path, arguments: list[str], directory: Path) -> str:
+    """Run a WiX command in a directory and return its output, raising on failure."""
     result = run_command([str(wix), *arguments], cwd=directory, timeout_seconds=300)
     if result.returncode:
         raise ValueError(f"WiX failed ({result.returncode}): {result.stdout}{result.stderr}")

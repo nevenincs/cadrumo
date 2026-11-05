@@ -166,6 +166,7 @@ def _bound_ports(profile_id: UUID, factory: WorkflowRunReadPortsFactory) -> Work
 
 
 def read_exact_run(payload: WorkflowRunReadRequest, ports: WorkflowRunReadPorts) -> WorkflowResult:
+    """Load the requested workflow run, verifying its identifier and expected period."""
     run = ports.runs.load(payload.run_id)
     if run.run_id != payload.run_id:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)

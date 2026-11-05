@@ -596,6 +596,7 @@ def registry_readiness_refusal(
     period_token: str,
     exc: Exception,
 ) -> str:
+    """Describe the refusal when the registry snapshot for modelo readiness cannot resolve."""
     from ..core.errors.error_codes import resolve_error_message
     from ..core.i18n.render import tr
 
@@ -621,6 +622,7 @@ def registry_readiness_revision_mismatch_refusal(
     period_token: str,
     resolved_revision_id: RevisionId,
 ) -> str:
+    """Describe a refusal when the resolved registry revision differs from the requested one."""
     from ..core.i18n.render import tr
 
     return tr(

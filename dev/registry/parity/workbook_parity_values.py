@@ -19,12 +19,14 @@ if TYPE_CHECKING:
 
 
 def excel_value(value: Decimal | int | str | bool) -> str | int | bool:
+    """Convert a workbook input value to a string, integer or boolean for Excel."""
     if isinstance(value, Decimal):
         return str(value)
     return value
 
 
 def coerce_excel_result(value: object) -> Decimal | int | str | bool | None:
+    """Coerce a workbook result cell to a Decimal, integer, string, boolean or None."""
     if value is None or isinstance(value, str | bool):
         return value
     if isinstance(value, int):

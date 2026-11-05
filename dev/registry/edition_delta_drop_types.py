@@ -76,6 +76,8 @@ class DropPlan:
 
 @dataclass
 class FamilyDropState:
+    """The dropped, kept and lineage-attested members recorded for a family during a drop."""
+
     dropped: list[str] = field(default_factory=list)
     kept_new: list[str] = field(default_factory=list)
     kept_differs: list[str] = field(default_factory=list)

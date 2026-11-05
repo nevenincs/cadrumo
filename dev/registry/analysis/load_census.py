@@ -925,6 +925,7 @@ def _is_unreferenced_module(module: str, graph: RuntimeImportGraph, reference_ma
 
 
 def trace_script(regime: str) -> str:
+    """Return the Python script that traces module loads for a registry regime."""
     snapshot_block = ""
     if regime == "inspection_snapshot":
         snapshot_block = """

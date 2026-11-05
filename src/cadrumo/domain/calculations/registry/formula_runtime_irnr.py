@@ -202,6 +202,7 @@ def _raise_m210_unresolved_outcome(
 
 
 def irnr_resolve_tipo_gravamen_args(expression: FormulaExpression) -> _IrnrResolveTipoGravamenArgs:
+    """Validate and unpack the five arguments of the IRNR tipo de gravamen formula operation."""
     op = "irnr_resolve_tipo_gravamen"
     if len(expression.args) != 5:
         raise RegistryValidationError(f"formula op {op!r} expects 5 args, got {len(expression.args)}")
@@ -484,6 +485,7 @@ def m210_allows_art_24_6_expenses(
     country_code: str,
     effective_date: date | None,
 ) -> bool:
+    """Return whether a modelo 210 income allows the article 24.6 expense deduction."""
     return tipo_renta == tipo_renta_ue_residente_token(effective_date=effective_date) or is_ue_eea_country_code(
         country_code,
         effective_date=effective_date,

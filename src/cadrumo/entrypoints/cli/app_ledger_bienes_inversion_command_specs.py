@@ -1,3 +1,5 @@
+"""Declare the command specs for the ledger bienes de inversion commands."""
+
 from __future__ import annotations
 
 from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec

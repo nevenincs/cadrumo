@@ -261,6 +261,7 @@ def select_record_design_source(
     filing_year: int,
     period: str | None,
 ) -> tuple[SourceRefId, str]:
+    """Select the record design source used by a revision's render check."""
     _validate_requested_administrative_period(
         selected, modelo=modelo, revision=revision, filing_year=filing_year, period=period
     )
@@ -424,6 +425,7 @@ def render_transport(
     selected_source_ref: SourceRefId,
     bootstrap_transport: GeneratedExportBootstrapTransport | None,
 ) -> tuple[str, Literal["crlf", "lf", "none"]]:
+    """Build the render transport check for the selected revision and its sources."""
     if bootstrap_transport is not None:
         return _bootstrap_render_transport(
             selected,

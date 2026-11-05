@@ -24,6 +24,7 @@ def run_child(
     passphrase: str,
     year: int,
 ) -> dict[str, object]:
+    """Run the continuation acceptance child process for a direction and return its receipt."""
     receipt = scratch / f"{direction}.json"
     evidence = run_installed_tui_child_process(
         python_executable=python_executable,

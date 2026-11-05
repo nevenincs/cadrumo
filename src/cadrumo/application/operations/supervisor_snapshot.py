@@ -40,6 +40,7 @@ def advance_events(
     revision: int,
     now: datetime,
 ) -> tuple[OperationEvent, ...]:
+    """Restamp events with the new revision, the next cursor sequence numbers and the given time."""
     return tuple(
         event.model_copy(update={"revision": revision, "sequence": snapshot.event_cursor + index + 1, "timestamp": now})
         for index, event in enumerate(events)
@@ -63,6 +64,7 @@ def advanced_snapshot(
     now: datetime,
     emitted: tuple[OperationEvent, ...],
 ) -> OperationPersistedSnapshot:
+    """Return the snapshot advanced to a new revision, lifecycle and event cursor with the emitted events."""
     return snapshot.model_copy(
         update={
             "revision": revision,

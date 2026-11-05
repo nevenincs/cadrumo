@@ -223,6 +223,7 @@ def sample_gnome_lock(
 
 @contextmanager
 def shell_pidfd(pid: int, uid: int) -> Generator[int]:
+    """Pin the GNOME shell process by pidfd, requiring the expected user, and yield it."""
     if sys.platform != "linux":
         raise _unavailable()
     pidfd = open_linux_pidfd(pid)

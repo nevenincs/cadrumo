@@ -57,6 +57,7 @@ def readiness_summary(
     factory: ModeloQueryReadPortsFactory,
     operation: PinnedAuthorityOperation,
 ) -> ModeloReadinessSummaryProjection:
+    """Summarize modelo readiness for the request from the canonical reader's axes."""
     # The canonical reader constructs all axes once. Its human prose stays in
     # worker memory and never enters the automation result operand.
     source = read_modelo_readiness(payload, factory, operation=operation)

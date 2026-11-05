@@ -20,6 +20,7 @@ def add_and_link(
     invoice_ids: dict[str, str],
     transaction_ids: dict[str, str],
 ) -> None:
+    """Add a transaction fixture through the CLI and link it to its invoices."""
     created = result(
         run(
             (

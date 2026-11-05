@@ -129,7 +129,8 @@ class LocateHelper(Protocol):
         description: str,
         timeout_ms: int,
         /,
-    ) -> Coroutine[Any, Any, Locator]: ...
+    ) -> Coroutine[Any, Any, Locator]:
+        """Wait for the first of ``selectors`` on ``page`` and return its locator."""
 
 
 class SedeCheckerModel(BaseModel):

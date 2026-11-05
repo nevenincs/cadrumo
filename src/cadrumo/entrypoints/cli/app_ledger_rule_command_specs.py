@@ -1,3 +1,5 @@
+"""Declarative command specs for the ledger rule CLI commands with machine secret input."""
+
 from __future__ import annotations
 
 from cadrumo_client.commands.parameters import OptionSpec

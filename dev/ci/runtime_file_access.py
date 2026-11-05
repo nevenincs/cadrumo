@@ -174,6 +174,7 @@ class FileOpenTrace:
 
 
 def scenario(name: str, arguments: list[str]) -> dict[str, object]:
+    """Run the named runtime file-access scenario and return its result document."""
     if name == "registry":
         from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 

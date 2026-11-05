@@ -197,6 +197,8 @@ class ReviewPackageRecipientRemoveProjection(BaseModel):
 
 
 class RecipientAddExecutionResult(BaseModel):
+    """The strict frozen result of a recipient add operation for one profile."""
+
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
@@ -204,6 +206,8 @@ class RecipientAddExecutionResult(BaseModel):
 
 
 class RecipientListExecutionResult(BaseModel):
+    """The strict frozen result of a recipient list operation for one profile."""
+
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
@@ -219,6 +223,8 @@ class _RecipientRemoveExecutionResult(BaseModel):
 
 @dataclass(frozen=True, slots=True)
 class RecipientPorts:
+    """The registry and event history factories the recipient executors need."""
+
     registry_factory: RecipientFingerprintRegistryPortsFactory
     event_repository_factory: BucketEventHistoryRepositoryFactory
 

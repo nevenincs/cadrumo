@@ -678,6 +678,7 @@ def _provider_transaction_id(command: ManualLedgerTransactionCommand, *, occurre
 
 
 def source_sha256(command: ManualLedgerTransactionCommand, *, occurred_at: datetime) -> str:
+    """Compute the source SHA-256 of a manual ledger transaction command."""
     payload = {
         name: value
         for name, value in command.model_dump(mode="json").items()

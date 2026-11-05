@@ -23,6 +23,7 @@ _CLEARED_FAMILIES_FIELD = "cleared_families"
 
 
 def patch_family_table(context: str, value: object, fields: Mapping[str, object], removed: tuple[str, ...]) -> object:
+    """Return a family table with replacement fields applied and removed paths deleted."""
     table = as_toml_table(value)
     if table is None:
         raise RegistryLoadError(f"{context}: selected family member is not a table")

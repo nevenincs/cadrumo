@@ -42,6 +42,7 @@ _PROPERTY_SIGNATURES = {
 
 
 def check(result: int, *, required: bool = False) -> None:
+    """Refuse as unavailable when an sd-bus result is negative, or zero where one is required."""
     if result < 0 or (required and result == 0):
         raise unavailable()
 
@@ -52,6 +53,7 @@ class SessionBus:
     def __init__(
         self, library: ctypes.CDLL, *, path: Path | None = None, peer_uid: int = 0, deadline: float | None = None
     ) -> None:
+        """Bind the bus library, socket path, expected peer uid and overall call deadline."""
         self.library = library
         self.bus = ctypes.c_void_p()
         self.path = path or Path("/run/dbus/system_bus_socket")
@@ -59,12 +61,14 @@ class SessionBus:
         self.deadline = deadline if deadline is not None else time.monotonic() + BUS_TIMEOUT_SECONDS
 
     def remaining_usec(self) -> int:
+        """Return microseconds left before the deadline, refusing once it has passed."""
         remaining = int((self.deadline - time.monotonic()) * 1_000_000)
         if remaining <= 0:
             raise unavailable()
         return remaining
 
     def __enter__(self) -> SessionBus:
+        """Connect to the system bus, verify the peer credentials and return the open bus."""
         if sys.platform == "linux":
             connection = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             try:
@@ -105,17 +109,20 @@ class SessionBus:
         raise unavailable()
 
     def close(self) -> None:
+        """Close and release the bus handle if it is open."""
         if self.bus.value is not None and self.bus.value:
             self.library.sd_bus_close_unref(self.bus)
             self.bus = ctypes.c_void_p()
 
     def __exit__(self, *_: object) -> None:
+        """Close the bus on leaving the context."""
         self.close()
 
     @contextmanager
     def call(
         self, destination: bytes, path: bytes, interface: bytes, method: bytes, argument: bytes | None = None
     ) -> Generator[ctypes.c_void_p]:
+        """Call a bus method and yield its reply, releasing request and reply afterwards."""
         request, reply = ctypes.c_void_p(), ctypes.c_void_p()
         try:
             check(
@@ -144,6 +151,7 @@ class SessionBus:
                 self.library.sd_bus_message_unref(request)
 
     def login_owner(self) -> bytes:
+        """Resolve the unique bus name that owns the login service."""
         with self.call(BUS_DESTINATION, BUS_PATH, BUS_DESTINATION, b"GetNameOwner", _LOGIN_DESTINATION) as reply:
             owner = self.read_string(reply, b"s", maximum=64)
             self.require_end(reply)
@@ -152,6 +160,7 @@ class SessionBus:
             return owner
 
     def read_string(self, reply: ctypes.c_void_p, kind: bytes, *, maximum: int = 128) -> bytes:
+        """Read a string from a reply, refusing null, oversize or NUL-containing text."""
         value = ctypes.c_char_p()
         check(self.library.sd_bus_message_read_basic(reply, kind, ctypes.byref(value)), required=True)
         raw = value.value
@@ -160,18 +169,22 @@ class SessionBus:
         return raw
 
     def read_integer(self, reply: ctypes.c_void_p, kind: bytes) -> int:
+        """Read an unsigned integer of the given basic kind from a reply."""
         value = ctypes.c_uint64() if kind == b"t" else ctypes.c_uint32()
         check(self.library.sd_bus_message_read_basic(reply, kind, ctypes.byref(value)), required=True)
         return value.value
 
     def require_end(self, reply: ctypes.c_void_p) -> None:
+        """Require that the reply message holds no further content."""
         check(self.library.sd_bus_message_at_end(reply, 0), required=True)
 
     def sessions(self, owner: bytes) -> tuple[SessionReference, ...]:
+        """List the login sessions known to the login service owner."""
         with self.call(owner, _LOGIN_MANAGER, b"org.freedesktop.login1.Manager", b"ListSessions") as reply:
             return self.read_sessions(reply)
 
     def read_sessions(self, reply: ctypes.c_void_p) -> tuple[SessionReference, ...]:
+        """Read the session array of a ListSessions reply, refusing duplicate ids or paths."""
         rows: list[SessionReference] = []
         seen: set[str] = set()
         seen_paths: set[bytes] = set()
@@ -203,6 +216,7 @@ class SessionBus:
         return tuple(sorted(rows, key=lambda row: (row.session_id, row.uid, row.object_path)))
 
     def session_record(self, owner: bytes, session_id: str, *, expected_path: bytes | None = None) -> SessionRecord:
+        """Fetch and validate one login session record by id, optionally matching its path."""
         with self.call(
             owner, _LOGIN_MANAGER, b"org.freedesktop.login1.Manager", b"GetSession", session_id.encode()
         ) as reply:
@@ -217,6 +231,7 @@ class SessionBus:
         return observation
 
     def read_session_record(self, reply: ctypes.c_void_p) -> SessionRecord:
+        """Read a session's properties from a reply and build its validated record."""
         values = self._read_session_properties(reply)
         return self._build_session_record(values)
 

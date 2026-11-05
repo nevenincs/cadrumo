@@ -88,6 +88,7 @@ def row_drafts(build: Build, items: Sequence[Item]) -> list[RowDraft | Item]:
 
 
 def page_sections_signature(columns: Sequence[str]) -> tuple[str, ...]:
+    """Build a column signature from shared column keys or slugs."""
     return tuple(shared_column_key(column) or node_slug(column) for column in columns)
 
 
@@ -97,6 +98,7 @@ def _is_subsequence(candidate: Sequence[str], whole: Sequence[str]) -> bool:
 
 
 def section_slug(key: Sequence[str]) -> str:
+    """Build a section slug from its key, or the general section when it is empty."""
     return node_slug("-".join(key)) if key else GENERAL_SECTION
 
 
@@ -190,6 +192,7 @@ def section_blocks(
     repeating: Mapping[str, ExportRecordDefinition],
     emitted_repeating: set[str],
 ) -> list[FormBlockDefinition]:
+    """Build the form blocks of a section draft."""
     blocks: list[FormBlockDefinition] = []
     block_ids: set[str] = set()
     plain = repeating_section_items(build, draft, repeating, emitted_repeating, blocks, block_ids)

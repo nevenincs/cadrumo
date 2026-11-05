@@ -221,6 +221,7 @@ class LazyLocaleCatalogue(Mapping[str, str | None]):
         *,
         shard_dir: Path | None = None,
     ) -> None:
+        """Bind the locale and its shard directory, refusing a missing shard directory."""
         self.locale = locale
         self.shard_dir = shard_dir
         self._key_cache: dict[str, str | None] = {}

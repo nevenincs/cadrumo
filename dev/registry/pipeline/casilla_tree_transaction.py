@@ -359,6 +359,7 @@ def _require_regular_tree(path: Path, *, subject: str) -> None:
 
 
 def casilla_tree_transaction_replace_tree(source: Path, destination: Path) -> None:
+    """Replace the destination tree with the source and sync the parent directory."""
     os.replace(source, destination)
     fsync_parent_dir(destination)
 

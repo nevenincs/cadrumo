@@ -331,6 +331,7 @@ def walk_annotation(
     discriminator: str | None,
     record_terminal: bool = True,
 ) -> None:
+    """Walk a model field annotation, recording manifest nodes while guarding against cycles."""
     if _walk_type_alias(
         annotation=annotation,
         path=path,
@@ -812,6 +813,7 @@ def manifest_digest(
     roots: tuple[_Path, ...],
     entries: tuple[ModeloWorkspaceFieldManifestEntryV1, ...],
 ) -> ContentDigest:
+    """Compute the content digest of the manifest from its roots and entries."""
     return content_hash_hex(
         {
             "manifest_version": _MANIFEST_VERSION,

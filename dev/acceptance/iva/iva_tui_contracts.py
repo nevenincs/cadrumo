@@ -139,6 +139,7 @@ class CaptureChildReceipt:
     unexercised: tuple[str, ...]
 
     def to_dict(self) -> dict[str, object]:
+        """Return the receipt as a plain dictionary."""
         return cast(dict[str, object], asdict(self))
 
 
@@ -161,4 +162,5 @@ class ReopenChildReceipt:
     public_control_handles: tuple[str, ...]
 
     def to_dict(self) -> dict[str, object]:
+        """Return the receipt as a plain dictionary."""
         return cast(dict[str, object], asdict(self))

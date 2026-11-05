@@ -146,36 +146,46 @@ def _close_on_exit(close: Callable[[], None]) -> Generator[None]:
 
 
 def u32(value: int) -> bytes:
+    """Encode an unsigned integer as four big-endian bytes."""
     return struct.pack(">I", value)
 
 
 def ulong(value: int) -> bytes:
+    """Encode an unsigned integer as eight big-endian bytes."""
     return struct.pack(">Q", value)
 
 
 def blob(value: bytes) -> bytes:
+    """Encode bytes behind a four-byte big-endian length prefix."""
     return u32(len(value)) + value
 
 
 class Reader:
+    """A bounds-checked cursor over a big-endian metadata RPC reply."""
+
     def __init__(self, data: bytes) -> None:
+        """Wrap the reply bytes with a cursor positioned at the start."""
         self.data, self.offset = data, 0
 
     def take(self, length: int) -> bytes:
+        """Consume and return the next length bytes, refusing a read past the end."""
         _require(0 <= length <= len(self.data) - self.offset)
         value = self.data[self.offset : self.offset + length]
         self.offset += length
         return value
 
     def number(self, size: int = 4) -> int:
+        """Read a big-endian unsigned integer of the given byte size."""
         return int.from_bytes(self.take(size), "big")
 
     def blob(self, maximum: int = MAX_FRAME) -> bytes:
+        """Read a length-prefixed byte string no longer than the given maximum."""
         length = self.number()
         _require(length <= maximum)
         return self.take(length)
 
     def handles(self, maximum: int) -> tuple[int, ...]:
+        """Read a flagged list of distinct nonzero 64-bit handles bounded by maximum."""
         _require(self.take(1) == b"\x01")
         count = self.number()
         _require(count <= maximum)
@@ -185,6 +195,7 @@ class Reader:
         return result
 
     def finish(self) -> None:
+        """Require that the whole reply has been consumed."""
         _require(self.offset == len(self.data))
 
 
@@ -229,6 +240,7 @@ class MetadataRpc:
     sock: _MetadataSocketProtocol
 
     def __init__(self, directory_fd: int, *, provider_pid: int, deadline: float) -> None:
+        """Connect to the provider's metadata socket under the shared deadline, refusing off Linux."""
         if sys.platform != "linux":
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
         self.deadline = deadline
@@ -257,11 +269,13 @@ class MetadataRpc:
             raise
 
     def remaining(self) -> float:
+        """Return the seconds left before the deadline, refusing once it has passed."""
         remaining = self.deadline - time.monotonic()
         _require(remaining > 0, AutomationCustodyCode.UNAVAILABLE)
         return remaining
 
     def receive(self, length: int) -> bytes:
+        """Read exactly length bytes from the socket within the deadline."""
         data = bytearray()
         while len(data) < length:
             self.sock.settimeout(self.remaining())
@@ -271,6 +285,7 @@ class MetadataRpc:
         return bytes(data)
 
     def call(self, name: str, payload: bytes = b"") -> Reader:
+        """Send a named metadata RPC call and return a reader over its validated reply."""
         _require(name in CALLS)
         call_id, signature, response = CALLS[name]
         data = u32(call_id) + blob(signature) + payload
@@ -290,9 +305,11 @@ class MetadataRpc:
         return reply
 
     def empty(self, name: str, payload: bytes = b"") -> None:
+        """Run a call whose reply must carry no payload."""
         self.call(name, payload).finish()
 
     def close(self) -> None:
+        """Close the underlying socket."""
         self.sock.close()
 
 

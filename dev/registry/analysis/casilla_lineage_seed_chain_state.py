@@ -39,6 +39,7 @@ class ChainState:
 
     @classmethod
     def of(cls, modelo: ModeloDefinition) -> ChainState:
+        """Build the chain state of a modelo from its ordered revisions."""
         revisions = ordered_revisions(modelo)
         state = cls(
             ids={},
@@ -54,6 +55,7 @@ class ChainState:
         return state
 
     def ids_in(self, revision: str) -> set[str]:
+        """Return the chain ids assigned to the rows of a revision."""
         return {chain for (rev, _), chain in self.ids.items() if rev == revision}
 
     def _role_exempt(self, row: _Row, occurrences: set[_Row], links: Mapping[_Row, tuple[_Row, bool]]) -> bool:
@@ -89,12 +91,14 @@ class ChainState:
         return f"chain {chain!r} has role {role!r} unique in every revision and must be {role_derived(role)!r}"
 
     def link(self, chain: str, rows: Iterable[_Row]) -> None:
+        """Assign a chain to those rows that are not yet linked."""
         for row in rows:
             if row not in self.ids:
                 self.ids[row] = chain
                 self.members[chain].append(row)
 
     def record_link(self, predecessor: _Row, successor: _Row, grounded: bool) -> None:
+        """Record the predecessor of a successor row and whether the link is grounded."""
         self.predecessor_of[successor] = predecessor
         self.grounded_link[successor] = grounded
 

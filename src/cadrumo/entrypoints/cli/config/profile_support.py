@@ -35,6 +35,7 @@ def unknown_profile_refusal(name: str) -> ProfileNotFoundError:
 
 
 def resolve_profile_by_label(name: str) -> ProfileBucketPointer:
+    """Return the profile pointer for a label, refusing an ambiguous or unknown label."""
     from cadrumo_client.commands.errors import CliRefusedBoundaryError
 
     from ....application.workflow.errors import ProfileLabelAmbiguousError
@@ -54,6 +55,7 @@ def resolve_profile_by_label(name: str) -> ProfileBucketPointer:
 
 
 def resolve_active_profile_pointer() -> ProfileBucketPointer | None:
+    """Return the active profile pointer, or None when no profile is selected."""
     from ....application.workflow.profile_bucket_scan import read_profile_bucket_by_id
     from ....core.bucket_pointer import resolve_active_bucket_id
 

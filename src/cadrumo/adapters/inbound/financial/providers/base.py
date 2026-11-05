@@ -215,6 +215,7 @@ def _resolved_source_path(path: Path) -> Path:
 
 @lru_cache(maxsize=256)
 def resolved_absolute_source_path(absolute_path: str) -> Path:
+    """Return the absolute source path in resolved form."""
     return Path(absolute_path).resolve()
 
 

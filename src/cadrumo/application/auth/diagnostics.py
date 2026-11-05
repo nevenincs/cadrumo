@@ -437,6 +437,7 @@ def _phone_state_projection(payload: DiagnosticPayload) -> _DiagnosticPhoneState
 
 
 def summary_from_payload(payload: DiagnosticPayload) -> AuthDiagnosticSummary:
+    """Build an authentication diagnostic summary from a payload, requiring a capture time."""
     captured_at = payload.captured_at
     if not captured_at:
         raise AuthDiagnosticPayloadError(

@@ -125,14 +125,16 @@ class SupervisorHost:
             now: datetime,
         ) -> OperationOwnerLease: ...
 
-        async def inspect(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
+        async def inspect(self, operation_id: OperationId) -> OperationPersistedSnapshot:
+            """Return the current persisted snapshot of one operation."""
 
         async def request_cancel(
             self,
             operation_id: OperationId,
             *,
             expected_revision: int | None = None,
-        ) -> OperationPersistedSnapshot: ...
+        ) -> OperationPersistedSnapshot:
+            """Request cooperative cancellation of one operation, optionally at an exact revision."""
 
         def _require_cleanup_timeout(self, cancellation: OperationCancellation) -> None: ...
 
@@ -144,7 +146,8 @@ class SupervisorHost:
             self,
             operation_id: OperationId,
             receipt: OperationTerminalReceipt,
-        ) -> OperationPersistedSnapshot: ...
+        ) -> OperationPersistedSnapshot:
+            """Persist the terminal receipt that settles one operation."""
 
         def _validate_cancelled_settlement(self, snapshot: OperationPersistedSnapshot) -> None: ...
 
@@ -188,7 +191,8 @@ class SupervisorHost:
             executor: Coroutine[None, None, OperationExecutorResult],
         ) -> OperationPersistedSnapshot: ...
 
-        async def settled(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
+        async def settled(self, operation_id: OperationId) -> OperationPersistedSnapshot:
+            """Return the snapshot of one started operation once it has settled."""
 
         async def submit[RequestPayloadT: BaseModel](
             self,
@@ -196,7 +200,8 @@ class SupervisorHost:
             *,
             operation_id: OperationId | None = None,
             provenance: OperationAdmissionProvenance | None = None,
-        ) -> OperationId: ...
+        ) -> OperationId:
+            """Admit one typed registered-operation request and return its operation id."""
 
         async def _authorize_submission[RequestPayloadT: BaseModel](
             self,
@@ -236,9 +241,11 @@ class SupervisorHost:
             provenance: OperationAdmissionProvenance | None,
         ) -> OperationId: ...
 
-        async def drain(self, timeout: timedelta) -> OperationDrainResult: ...
+        async def drain(self, timeout: timedelta) -> OperationDrainResult:
+            """Stop admissions and wait up to the timeout for owned operations to close."""
 
-        async def shutdown(self) -> OperationDrainResult: ...
+        async def shutdown(self) -> OperationDrainResult:
+            """Close within the default bound and report any remaining ownership."""
 
         def _schedule_drain_settlement_closes(self, deadline: float) -> None: ...
 
@@ -268,13 +275,15 @@ class SupervisorHost:
 
         async def _load_pinned_snapshot(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
 
-        async def start(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
+        async def start(self, operation_id: OperationId) -> OperationPersistedSnapshot:
+            """Admit one owned operation executor and return its running snapshot."""
 
         async def submit_ephemeral_secret(
             self,
             requirement: OperationSecretRequirement,
             secret: bytearray,
-        ) -> None: ...
+        ) -> None:
+            """Accept the mutable secret for one secret requirement of the operation."""
 
         async def _resolve_request_payload(
             self,
@@ -347,12 +356,14 @@ class SupervisorHost:
             result_ref: OperationExecutorResult,
         ) -> OperationPersistedSnapshot: ...
 
-        async def await_terminal(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
+        async def await_terminal(self, operation_id: OperationId) -> OperationPersistedSnapshot:
+            """Wait for one operation to reach a terminal snapshot."""
 
         async def respond(
             self,
             response: OperationApplyResponse | OperationRejectResponse,
-        ) -> OperationConsumedInteraction: ...
+        ) -> OperationConsumedInteraction:
+            """Consume one pending interaction response and resume the operation when its policy permits."""
 
         def _schedule_continuation(
             self,

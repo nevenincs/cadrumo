@@ -18,12 +18,14 @@ from .environment_declaration_primitives import (
 
 
 def environment_components_temporary_member(raw: object) -> dict[str, Any]:
+    """Validate the temporary-member pin table and return its relative default path."""
     entry = environment_declaration_primitives_table(raw, "pins.temporary_member")
     keys(entry, "pins.temporary_member", {"default"})
     return {"default": relative(entry["default"], "pins.temporary_member.default")}
 
 
 def host_classes(raw: object) -> dict[str, Any]:
+    """Validate the host class table and return its prefix and cleared names."""
     entry = environment_declaration_primitives_table(raw, "host_classes")
     keys(entry, "host_classes", {"cleared_prefixes", "cleared_names", "namespace_prefix"})
     prefix = entry["namespace_prefix"]
@@ -37,6 +39,7 @@ def host_classes(raw: object) -> dict[str, Any]:
 
 
 def environment_components_native_host(raw: object) -> dict[str, Any]:
+    """Validate the native host table and return its owner and slot range."""
     entry = environment_declaration_primitives_table(raw, "native_host")
     keys(entry, "native_host", {"owner", "first", "last", "launch_profile_refused", "refusals"})
     if not isinstance(entry["owner"], str) or not SLOT.fullmatch(entry["owner"]):
@@ -82,6 +85,7 @@ _LOCAL_AI_UPSTREAM_PORT = 11434
 
 
 def components(raw: object, names: Mapping[str, Mapping[str, str]]) -> dict[str, Any]:
+    """Validate the components table, its relative paths and its values."""
     entry = environment_declaration_primitives_table(raw, "components")
     keys(entry, "components", {*_COMPONENT_PATHS, *_COMPONENT_VALUES})
     components: dict[str, Any] = {key: relative(entry[key], f"components.{key}") for key in _COMPONENT_PATHS}

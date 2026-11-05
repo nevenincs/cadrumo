@@ -1,3 +1,5 @@
+"""Declarative command specs for the modelo 145 communication commands."""
+
 from __future__ import annotations
 
 from typing import Final

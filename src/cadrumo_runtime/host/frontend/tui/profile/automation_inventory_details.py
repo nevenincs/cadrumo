@@ -22,6 +22,7 @@ def _detail(label: str, value: object) -> str:
 
 
 def scope(scope: AutomationScopeProjection) -> tuple[str, ...]:
+    """Build the detail lines describing an automation grant's scope."""
     counted = ", ".join(f"{item.category.value} {item.count}" for item in scope.disclosure_summary)
     categories = ", ".join(f"{item.category.value} ({item.destination_id})" for item in scope.disclosure_categories)
     if scope.periods is None:
@@ -42,6 +43,7 @@ def scope(scope: AutomationScopeProjection) -> tuple[str, ...]:
 
 
 def grant_detail(item: AutomationGrantProjection) -> str:
+    """Render the detail text of an automation grant."""
     return "\n".join(
         (
             _detail("id", item.grant_id),
@@ -57,6 +59,7 @@ def grant_detail(item: AutomationGrantProjection) -> str:
 
 
 def key_detail(item: AutomationKeyProjection) -> str:
+    """Render the detail text of an automation key."""
     return "\n".join(
         (
             _detail("id", item.key_id),
@@ -69,6 +72,7 @@ def key_detail(item: AutomationKeyProjection) -> str:
 
 
 def request_detail(item: AutomationReviewProjection) -> str:
+    """Render the detail text of an automation enrollment request for review."""
     return "\n".join(
         (
             _detail("profile", item.receipt.profile_id),

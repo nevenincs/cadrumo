@@ -44,11 +44,13 @@ def read_family_fragments(edition_dir: Path, section: str) -> tuple[MemberFragme
 
 
 def identity_of(member: Mapping[str, object], family: edition_delta_drop_scope.DroppableFamily) -> str | None:
+    """Return the identity a member states for a droppable family, or None if not a string."""
     value = member.get(family.identity)
     return value if isinstance(value, str) else None
 
 
 def materialised_members(table: Mapping[str, object], section: str) -> tuple[edition_delta_source.Row, ...]:
+    """Return a table section's members as edition delta rows."""
     raw = table.get(section, ())
     return tuple(edition_delta_source.as_row(member) for member in (raw if isinstance(raw, list | tuple) else ()))
 

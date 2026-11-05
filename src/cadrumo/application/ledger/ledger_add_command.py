@@ -210,6 +210,7 @@ def _resolve_ledger_add_jurisdiction(
 
 
 def resolve_ledger_add_flow(payload: LedgerAddRequest) -> tuple[BusinessClassification, TransactionDirection]:
+    """Validate and return the business classification and direction of a ledger add request."""
     try:
         classification = BusinessClassification(payload.business_classification)
         direction = TransactionDirection(payload.direction)

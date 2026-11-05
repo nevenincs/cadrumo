@@ -175,6 +175,7 @@ def project_review_item(
 
 
 def resolve_internal_kinds(kinds: Iterable[str]) -> frozenset[ReviewItemKind] | None:
+    """Map accepted review kind names to internal kinds, refusing unknown ones."""
     internal: set[ReviewItemKind] = set()
     accepted = tuple(kind.strip() for kind in kinds if kind.strip())
     if not accepted:
@@ -199,6 +200,7 @@ def row_matches(
     accepted_kinds: frozenset[str],
     accepted_source_kinds: frozenset[str],
 ) -> bool:
+    """Return whether a review queue row matches the accepted kinds and source kinds."""
     kind_matches = not accepted_kinds or row.kind in accepted_kinds
     source_matches = not accepted_source_kinds or (
         row.source_kind is not None and row.source_kind in accepted_source_kinds
@@ -207,6 +209,7 @@ def row_matches(
 
 
 def to_row(item: ReviewItem, *, state: ReviewState, bucket_id: str) -> ReviewQueueRow:
+    """Convert a review item into a review queue row."""
     if isinstance(item, TransactionReviewItem):
         return ReviewQueueRow(
             item_id=item.item_id,

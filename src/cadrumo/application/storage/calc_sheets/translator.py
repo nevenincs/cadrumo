@@ -41,6 +41,7 @@ class TranslationError(CadrumoError):
     """A registry expression has no closed-form Sheets equivalent."""
 
     def __init__(self, *, op: str | None = None, hint: str | None = None) -> None:
+        """Record the offending operation, when supported, and an optional operator hint."""
         context: dict[str, object] = {"reason": "formula_translation_failed"}
         if op is not None and op in _SUPPORTED_OPS:
             context["op"] = op

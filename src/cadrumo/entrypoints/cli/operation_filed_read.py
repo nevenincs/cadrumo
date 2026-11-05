@@ -55,6 +55,7 @@ def _period(year: int, token: str | None) -> Period | None:
 
 
 def listing_row(row: FiledListingRowPublicV1) -> FiledDataListingRow:
+    """Convert a public filed-listing row into a filed data listing row."""
     return FiledDataListingRow(
         modelo=row.modelo,
         year=row.year,
@@ -69,6 +70,7 @@ def listing_row(row: FiledListingRowPublicV1) -> FiledDataListingRow:
 
 
 def listing_failure(row: FiledListingFailurePublicV1) -> FiledDataCaptureFailureRow:
+    """Convert a public filed-listing failure into a capture failure row."""
     return FiledDataCaptureFailureRow(
         modelo=row.modelo,
         year=row.year,
@@ -107,6 +109,7 @@ def _filed_listing_request_differs(projection: FiledListPublicResultV1, request:
 
 
 def discover_report(projection: FiledDiscoverPublicResultV1) -> FiledHistoryDiscoveryReport:
+    """Convert a public discovery result into a filed history discovery report."""
     return FiledHistoryDiscoveryReport(
         pairs=tuple(
             FiledHistoryDiscoveryPair(

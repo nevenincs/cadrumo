@@ -203,6 +203,7 @@ def optional_text(value: str | None) -> str:
 
 
 def ledger_export_row(*, bucket_id: str, transaction: Transaction) -> LedgerExportRow:
+    """Project a transaction into a ledger export row for the bucket."""
     raw = transaction.raw
     effective_date = raw.value_date or raw.booked_date
     return LedgerExportRow(

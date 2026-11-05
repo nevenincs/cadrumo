@@ -141,6 +141,7 @@ def _validate_telematic_transport_alternatives(rule: _TelematicTransportChoice, 
 
 
 def validate_telematic_transport_condition(folded: str) -> None:
+    """Require a telematic transport choice to carry the official telematic condition."""
     if re.search(r"'T'\s*:\s*(?:Transmisi[oó]n|Si es presentaci[oó]n) telem[aá]tica", folded, re.IGNORECASE) is None:
         raise RegistryValidationError("telematic transport choice lacks the official telematic condition")
 

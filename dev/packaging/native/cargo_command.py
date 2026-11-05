@@ -45,6 +45,7 @@ def _check_cargo_members(build: Path, selected: Path) -> None:
 
 
 def selected_target_directory(native: Path, command: list[str]) -> Path:
+    """Resolve the Cargo target directory selected by the command, defaulting to native."""
     selected = native
     for index, argument in enumerate(command):
         if argument == "--":

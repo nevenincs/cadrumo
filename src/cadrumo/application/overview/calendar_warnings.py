@@ -204,6 +204,7 @@ def derive_gating_fields(
     revision_inventory: Iterable[tuple[str, ModeloRevision]] | None = None,
     modelos: Iterable[str] | None = None,
 ) -> MappingProxyType[str, tuple[tuple[str, ...], str, str]]:
+    """Derive the gating fields keyed by applicability rules across the published modelos."""
     key_to_modelos: dict[str, set[str]] = {}
     key_to_meta: dict[str, tuple[str, str]] = {}
     for rule in iter_modelo_applicability_rules(operation=operation):

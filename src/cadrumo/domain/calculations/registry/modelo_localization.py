@@ -379,6 +379,7 @@ type LocalizationLookup = Callable[[str, str], str | None]
 
 
 def catalogue_lookup(key: str, locale: str) -> str | None:
+    """Return the translation for a key in a locale, or None when missing."""
     return lookup_translation(key, locale=locale)
 
 

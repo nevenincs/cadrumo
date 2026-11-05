@@ -1,3 +1,5 @@
+"""Declarative command specs for the ledger inventory CLI commands."""
+
 from __future__ import annotations
 
 from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec

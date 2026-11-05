@@ -658,6 +658,7 @@ def _iva_optional_selector_axes_match(
 
 
 def iva_build_matcher(selector: LedgerIvaProvider) -> Callable[[IvaSelectorAxesProtocol], bool]:
+    """Build a predicate matching IVA ledger observations to a selector's categories and rates."""
     categories = set(selector.categories)
     rate_kinds = set(selector.rate_kinds)
 

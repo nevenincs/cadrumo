@@ -72,6 +72,7 @@ def assert_fresh_process_filing_readback(
     calculation_revision_id: str,
     filing_record_id: str,
 ) -> None:
+    """Check that a fresh process reads back the filed revision and local filing record."""
     work = unique_row(work_listing, "work_units", "work_unit_id", work_unit_id)
     if work.get("filed_calculation_revision_id") != calculation_revision_id:
         raise IvaCliJourneyError("fresh-process work list lost the filed calculation revision")
@@ -91,6 +92,7 @@ def assert_fresh_process_filing_readback(
 def seed_first_period(
     *, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, journey_year: IvaJourneyYear
 ) -> None:
+    """Seed the first period's IVA wallet carry through the CLI."""
     run(
         cli,
         receipts,
@@ -121,6 +123,7 @@ def file_quarter(
     period: str,
     expected: Decimal,
 ) -> IvaQuarterlyLocalFilingReceipt:
+    """File one quarter locally through the CLI and return its receipt for the expected result."""
     created = result(
         run(
             cli,
@@ -274,6 +277,7 @@ def assert_local_quarter_chain(
     filings: tuple[IvaQuarterlyLocalFilingReceipt, ...],
     journey_year: IvaJourneyYear,
 ) -> None:
+    """Check that the work units and filing records form the complete local quarter chain."""
     if tuple(item.period for item in filings) not in (("1T",), QUARTERS):
         raise IvaCliJourneyError("quarterly source chain is incomplete or out of order")
     work_listing = result(run(cli, receipts, artifact, ("app", "modelo", "work", "list"), result_keys=()))

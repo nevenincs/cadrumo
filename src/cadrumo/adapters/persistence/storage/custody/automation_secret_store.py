@@ -41,6 +41,7 @@ class WindowsCredentialError(CadrumoError):
     """Retain only a native error code for internal status mapping."""
 
     def __init__(self, winerror: int) -> None:
+        """Store the native error code."""
         self.winerror = winerror
         super().__init__()
 
@@ -61,6 +62,7 @@ class WindowsCredentialManager:
     _cred_free: Any
 
     def __init__(self) -> None:
+        """Bind the Windows credential API, refusing any other platform."""
         if sys.platform != "win32":
             raise OSError
 

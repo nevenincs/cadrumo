@@ -22,6 +22,7 @@ def served_locale(
     locale: str,
     values: Values | None = None,
 ) -> str | None:
+    """Return a casilla catalogue field in the locale, falling back to the served default."""
     source = modelo_localization_source(
         catalogue.occurrences[index].chain(field_name),
         locale=locale,

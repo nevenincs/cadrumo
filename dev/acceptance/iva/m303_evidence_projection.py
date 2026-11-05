@@ -13,12 +13,14 @@ if TYPE_CHECKING:
 
 
 def mapping(value: object, *, label: str) -> Mapping[str, object]:
+    """Return the value as a mapping, refusing anything else."""
     if not isinstance(value, Mapping):
         raise IvaInstalledM303Error(f"{label} returned no object")
     return cast(Mapping[str, object], value)
 
 
 def text(value: object, *, label: str) -> str:
+    """Return the value as non-empty text, refusing anything else."""
     if not isinstance(value, str) or not value:
         raise IvaInstalledM303Error(f"{label} returned no text")
     return value

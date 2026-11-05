@@ -141,6 +141,7 @@ asyncio.run(request())
 
 
 def tui(harness: LifecycleHarness, profile: Profile, *, admitted: bool) -> None:
+    """Probe the packaged TUI protected overview and check it is admitted or refused."""
     result = run_command(
         [str(harness.package / "python.exe"), "-I", "-c", _TUI_READ, str(profile.profile_id)],
         cwd=harness.root,
@@ -180,6 +181,7 @@ def tui(harness: LifecycleHarness, profile: Profile, *, admitted: bool) -> None:
 def observe_read(
     connection: Connection, operation_id: OperationId, definition_id: str = "auth.local-read"
 ) -> OperationObservationSuccessV1:
+    """Observe a submitted durable read operation and return its successful observation."""
     reply = connection.client.operation(
         OperationObserve(
             request_id=uuid4(),
@@ -201,6 +203,7 @@ def observe_read(
 
 
 def submit_read(connection: Connection, *, diagnostics: bool = False) -> OperationId:
+    """Submit a local read or diagnostics read operation and return its operation id."""
     deadline = time.monotonic() + 60
     client = connection.client
     submitted = client.operation(
@@ -224,6 +227,7 @@ def submit_read(connection: Connection, *, diagnostics: bool = False) -> Operati
 
 
 def execute_read(connection: Connection, operation_id: OperationId | None = None) -> OperationId:
+    """Run a protected read operation to completion, optionally continuing an existing one."""
     # Abrupt owner loss retains the production ten-minute lease. Fresh authority
     # cannot steal it; only the canonical expired-lease path admits continuation.
     deadline = time.monotonic() + (660 if operation_id is not None else 60)
@@ -336,6 +340,7 @@ def _start_protected_read(
 
 
 def read(connection: Connection) -> None:
+    """Check that the protected profile status view and local auth read contract are served."""
     result = connection.client.read_profile_view((ProfileViewPageKind.STATUS,), timeout=60)
     if not (result.profile_id == connection.client.profile_id):
         raise AssertionError("Protected application probe failed")
@@ -350,6 +355,7 @@ def read(connection: Connection) -> None:
 
 
 def private_request(connection: Connection, session_id: UUID, *, profile_id: UUID | None = None) -> object:
+    """Send a local auth read request bound to a given session and optional profile."""
     return connection.wire.operation(
         OperationContract(
             request_id=uuid4(),
@@ -362,6 +368,7 @@ def private_request(connection: Connection, session_id: UUID, *, profile_id: UUI
 
 
 def refused(reply: object) -> None:
+    """Check that a reply is a server-originated access refusal with an expected code."""
     # A denial must originate at the server, not a cleared frontend attribute.
     if not (isinstance(reply, AccessRefusal)):
         raise AssertionError("Protected application probe failed")

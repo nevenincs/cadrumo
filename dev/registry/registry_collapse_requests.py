@@ -124,6 +124,7 @@ def selection_result(
     coordinate: RequestCoordinate,
     support: SupportedFilingYearsCatalogue,
 ) -> Mapping[str, object]:
+    """Select a revision for a request coordinate and report the selection result."""
     try:
         selected = select_revision(
             modelo,

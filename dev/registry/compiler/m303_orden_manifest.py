@@ -422,6 +422,7 @@ def single_annual_orden_source_for_year(
     *,
     ejercicio: int,
 ) -> SourceReference:
+    """Return the single annual Orden source applicable to the ejercicio, refusing otherwise."""
     filing_start = date(ejercicio, 1, 1)
     filing_end = date(ejercicio, 12, 31)
     candidates = tuple(

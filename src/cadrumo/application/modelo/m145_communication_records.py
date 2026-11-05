@@ -413,6 +413,7 @@ def snapshot_for_scope(
     period_token: M145CommunicationPeriod,
     operation: PinnedAuthorityOperation,
 ) -> RegistrySnapshot:
+    """Return the registry snapshot for a modelo 145 communication year and period."""
     contract = build_m145_communication_service_contract(
         filing_year=communication_year,
         period_token=period_token,

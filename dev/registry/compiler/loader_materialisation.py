@@ -52,6 +52,7 @@ def load_modelo_directory_cached(
     fingerprints: RegistryPathFingerprints,
     tax_id_format: object | None = None,
 ) -> ModeloDefinition:
+    """Load and cache a modelo definition from a directory, keyed by tree fingerprints."""
     del fingerprints
     resolved = Path(directory)
     manifest_data = load_modelo_manifest(resolved)
@@ -136,6 +137,7 @@ def load_catalogue_file_cached(
     modified_ns: int,
     content_digest: str,
 ) -> RegistryCatalogues:
+    """Load and cache the registry catalogues file, keyed by its size, time and digest."""
     del byte_count, modified_ns, content_digest
     source_path = Path(path)
     data = freeze_toml(read_toml(source_path, error_factory=RegistryLoadError))
@@ -231,6 +233,7 @@ def refresh_modelo_directory_fingerprints_after_load_error(
     resolved: Path,
     initial_error: RegistryLoadError,
 ) -> RegistryPathFingerprints:
+    """Recollect modelo directory fingerprints after a load error, refusing if unstable."""
     try:
         return collect_modelo_directory_fingerprints(resolved)
     except RegistryLoadError as refresh_error:
@@ -252,6 +255,7 @@ def refresh_registry_tree_fingerprints_after_load_error(
     resolved: Path,
     initial_error: RegistryLoadError,
 ) -> RegistryPathFingerprints:
+    """Recollect registry tree fingerprints after a load error, refusing if unstable."""
     try:
         return collect_registry_tree_fingerprints(resolved, use_cache=False)
     except RegistryLoadError as refresh_error:

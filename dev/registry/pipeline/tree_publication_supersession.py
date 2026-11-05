@@ -377,6 +377,7 @@ def cut_over_supersession_revision(
     source_sha256: str,
     candidate_revision_sha256: str,
 ) -> GeneratedExportPublicationJournal:
+    """Cut the staged supersession revision over the target, keeping a backup for recovery."""
     context.replace_export_directory(target_revision_root, backup_revision_root)
     fsync_parent_dir(target_revision_root)
     journal = journal.model_copy(update={"state": "backup_staged"})
@@ -404,6 +405,7 @@ def commit_supersession_revision(
     transaction_paths: GeneratedExportTransactionPaths,
     source_sha256: str,
 ) -> GeneratedExportPublicationJournal:
+    """Commit the cut-over supersession revision by journaling it and settling the backup."""
     # The commit record is the point of no rollback. A failure writing it is
     # ambiguous, so leave the live candidate, backup and journal for recovery.
     journal = journal.model_copy(update={"state": "committed"})

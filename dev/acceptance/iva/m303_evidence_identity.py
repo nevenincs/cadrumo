@@ -41,6 +41,7 @@ def installed_identity(python: Path) -> tuple[str, str, str, str]:
 
 
 def authority(authority_root: Path) -> tuple[str, str]:
+    """Read the authority descriptor and return its identity pair, refusing if unavailable."""
     descriptor_path = authority_root / AUTHORITY_DESCRIPTOR_FILENAME
     try:
         descriptor = AuthorityDescriptor.read(descriptor_path)

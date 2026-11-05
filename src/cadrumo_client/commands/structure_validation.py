@@ -26,6 +26,7 @@ def _raise_first(checks: tuple[tuple[bool, str], ...]) -> None:
 
 
 def validate_recovery_directions(handoff_direction: str, verification_direction: str) -> None:
+    """Require the recovery handoff to write and the verification to read."""
     _raise_first(
         (
             (
@@ -43,6 +44,7 @@ def validate_recovery_parameters(
     *,
     require_identifier: Callable[..., None],
 ) -> None:
+    """Require valid recovery parameter names that do not collide with each other."""
     for value in (handoff_parameter, verification_parameter, *collides_with_parameters):
         require_identifier(value, field="recovery handoff parameter")
     _raise_first(
@@ -55,6 +57,7 @@ def validate_recovery_json_fields(
     *,
     require_identifier: Callable[..., None],
 ) -> None:
+    """Require non-empty, unique and valid recovery handoff JSON field names."""
     _raise_first(
         (
             (
@@ -75,6 +78,7 @@ def validate_recovery_limits(
     descriptors_closed: bool,
     descriptors_must_differ: bool,
 ) -> None:
+    """Require a positive size bound and the strict handoff guarantees to be declared."""
     _raise_first(((maximum_bytes <= 0, "recovery handoff maximum bytes must be positive"),))
     if not all(
         isinstance(value, bool)
@@ -90,6 +94,7 @@ def validate_recovery_limits(
 
 
 def validate_recovery_reserved_descriptors(reserved_descriptors: tuple[int, ...]) -> None:
+    """Require non-empty, non-negative and unique reserved descriptors."""
     _raise_first(
         (
             (
@@ -105,6 +110,7 @@ def validate_recovery_reserved_descriptors(reserved_descriptors: tuple[int, ...]
 
 
 def validate_windows_handle_bootstrap(windows_handle_bootstrap: str) -> None:
+    """Require the Windows handle bootstrap to be a non-empty token without whitespace."""
     _raise_first(
         (
             (
@@ -287,6 +293,7 @@ def validate_command_spec(
 
 
 def validate_recovery_presence(parameter_names: tuple[str, ...], recovery_handoff: object) -> None:
+    """Require a recovery handoff spec when recovery descriptor parameters are declared."""
     recovery_parameter_names = {"recovery_handoff_fd", "recovery_verification_fd"}
     declared_recovery_parameters = recovery_parameter_names.intersection(parameter_names)
     _raise_first(
@@ -300,6 +307,7 @@ def validate_recovery_presence(parameter_names: tuple[str, ...], recovery_handof
 
 
 def validate_recovery_shape(kind: object, recovery_handoff: object) -> None:
+    """Require recovery handoff specs to appear only on command leaves."""
     _raise_first(
         (
             (
@@ -311,6 +319,7 @@ def validate_recovery_shape(kind: object, recovery_handoff: object) -> None:
 
 
 def recovery_references(parameter_names: tuple[str, ...], recovery_handoff: RecoveryHandoffSpec) -> set[str]:
+    """Return the parameter names a recovery handoff references, requiring each to be declared."""
     referenced = {
         recovery_handoff.handoff_parameter,
         recovery_handoff.verification_parameter,
@@ -323,6 +332,7 @@ def recovery_references(parameter_names: tuple[str, ...], recovery_handoff: Reco
 
 
 def recovery_descriptor_parameters(parameters: tuple[Any, ...], referenced: set[str]) -> dict[str, Any]:
+    """Return the referenced parameters by name, requiring them to be command options."""
     descriptor_parameters = dict(
         (parameter.name, parameter)
         for parameter in parameters
@@ -343,6 +353,7 @@ def _target_matches(annotation: object) -> bool:
 
 
 def validate_recovery_integer_options(descriptor_parameters: dict[str, Any]) -> None:
+    """Require the recovery descriptor parameters to be integer options."""
     _raise_first(
         (
             (
@@ -361,6 +372,7 @@ def validate_recovery_handoff_contract(
     *,
     require_identifier: Callable[..., None],
 ) -> None:
+    """Validate a command's recovery handoff spec against its kind and parameters."""
     validate_recovery_presence(parameter_names, recovery_handoff)
     if recovery_handoff is None:
         return

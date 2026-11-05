@@ -154,6 +154,7 @@ def _pointer_entry_signature(target: Path) -> tuple[str, int, int] | None:
 
 
 def open_pointer_descriptor(target: Path) -> int:
+    """Open the active-profile pointer file safely, refusing link-like targets."""
     from .link_safety import is_link_like
 
     if is_link_like(target):

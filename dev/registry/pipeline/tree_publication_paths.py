@@ -121,6 +121,7 @@ def _require_supersession_source_receipt(
 
 
 def require_narrow_root(path: Path, *, subject: str) -> Path:
+    """Return a resolved existing non-linked directory that is narrow enough to publish into."""
     if is_link_like(path) or not path.is_dir():
         raise RegistryValidationError(f"{subject} must be an existing non-linked directory: {path}")
     resolved = path.resolve()
@@ -190,6 +191,7 @@ def _require_existing_link_free_path(path: Path, *, root: Path, subject: str) ->
 
 
 def require_no_stale_sibling_manifest(revision_root: Path, *, subject: str) -> None:
+    """Refuse publication when a stale legacy provenance manifest sits beside the revision."""
     stale = revision_root / LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME
     if stale.exists() or is_link_like(stale):
         raise RegistryValidationError(f"{subject} refuses stale sibling provenance manifest: {stale}")

@@ -183,6 +183,7 @@ async def until[T](
     output_dir: Path,
     refusal: Callable[[], str | None] | None = None,
 ) -> None:
+    """Poll until a predicate holds, capturing a failure and refusing when a refusal appears."""
     while not predicate():
         refused = None if refusal is None else refusal()
         if refused is not None and refused:

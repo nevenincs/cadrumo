@@ -72,6 +72,7 @@ def _matching_bootstrap_targets(
 
 
 def bootstrap_target_from_row(row: Mapping[str, object]) -> GeneratedExportBootstrapTarget:
+    """Build a generated export bootstrap target from a validated manifest row."""
     accepted_line_ending = _accepted_bootstrap_line_ending(row)
     supersedes_layout_id = _validated_superseded_layout_id(row)
     superseded_construct_references = _validated_superseded_construct_references(row, supersedes_layout_id)

@@ -208,6 +208,8 @@ def _irnr_income_target_casilla(context: CalculationSourceContext) -> CasillaId:
 
 
 def modelo_bindings_activity_category_matcher(operation: PinnedAuthorityOperation) -> Callable[[Transaction], bool]:
+    """Build a predicate matching transactions with an activity IRPF category."""
+
     def matcher(transaction: Transaction) -> bool:
         return has_activity_irpf_category(
             transaction.irpf_category,
@@ -219,6 +221,8 @@ def modelo_bindings_activity_category_matcher(operation: PinnedAuthorityOperatio
 
 
 def modelo_bindings_employment_category_matcher(operation: PinnedAuthorityOperation) -> Callable[[Transaction], bool]:
+    """Build a predicate matching transactions with an employment IRPF category."""
+
     def matcher(transaction: Transaction) -> bool:
         return has_employment_irpf_category(
             transaction.irpf_category,

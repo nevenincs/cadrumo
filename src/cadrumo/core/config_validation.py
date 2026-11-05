@@ -19,6 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def validate_live_iva_timeout_hierarchy(settings: Settings) -> Settings:
+    """Require the IVA declaration capture timeout to stay below the IVA surface timeout."""
     if settings.cadrumo_live_iva_declaration_capture_timeout_ms >= settings.cadrumo_live_iva_surface_timeout_ms:
         raise CoreValidationError(
             translated_message="errors.integrity.integrity_cadrumo_core_validation",

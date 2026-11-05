@@ -209,6 +209,7 @@ def ensure_profile_session_directory(path: Path) -> None:
 
 
 def receipt_bytes(record: acceleration_receipt_crypto.PersistedProfileSession) -> bytes:
+    """Return the canonical bytes of a persisted profile session receipt."""
     return canonical_document_bytes(document_from_record(record))
 
 
@@ -227,6 +228,7 @@ def decode_receipt(payload: bytes) -> DecodedReceipt:
 
 
 def current_record(decoded: DecodedReceipt) -> acceleration_receipt_crypto.PersistedProfileSession | None:
+    """Return the decoded receipt when it is a current-schema record, else None."""
     return decoded if isinstance(decoded, acceleration_receipt_crypto.PersistedProfileSession) else None
 
 

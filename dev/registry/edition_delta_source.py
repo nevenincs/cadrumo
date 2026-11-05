@@ -42,6 +42,8 @@ class _Fragment:
 
 @dataclass(frozen=True, slots=True)
 class EditionSource:
+    """An edition's revision id, manifest, materialised table and fragments read for migration."""
+
     revision_id: str
     manifest_text: str
     manifest: Row
@@ -56,10 +58,12 @@ class EditionSource:
     family_defaults: Mapping[str, tuple[str, ...]]
 
     def stated_rows(self) -> tuple[Row, ...]:
+        """Return the rows stated across the edition's fragments, in block order."""
         return tuple(block.row for fragment in self.fragments for block in fragment.blocks)
 
 
 def as_row(value: object) -> Row:
+    """Thaw a value into a string-keyed row, refusing anything but a table."""
     thawed = edition_delta_payload.thaw(value)
     if not isinstance(thawed, dict):
         raise edition_delta_errors.MigrationRefusedError(f"expected a table, found {type(value).__name__}")
@@ -90,6 +94,7 @@ def split_blocks(text: str, header: re.Pattern[str] = edition_delta_fields.ROW_H
 
 
 def block_row(block: str, section: str = edition_delta_fields.CASILLAS) -> Row:
+    """Parse a TOML block that declares exactly one revision into its row."""
     revisions = parse_toml(block).get("revisions")
     if not isinstance(revisions, dict) or len(revisions) != 1:
         raise edition_delta_errors.MigrationRefusedError(
@@ -113,6 +118,7 @@ def _read_fragments(edition_dir: Path) -> tuple[_Fragment, ...]:
 
 
 def manifest_table(text: str, revision_id: str) -> Row:
+    """Return the revision table that a manifest declares for the revision id."""
     revisions = parse_toml(text).get("revisions")
     if not isinstance(revisions, dict) or revision_id not in revisions:
         raise edition_delta_errors.MigrationRefusedError(f"revision.toml does not declare [revisions.{revision_id!r}]")
@@ -120,6 +126,7 @@ def manifest_table(text: str, revision_id: str) -> Row:
 
 
 def read_edition(modelo_dir: Path, revision_id: str) -> EditionSource:
+    """Read an edition's manifest and materialised casilla rows from the modelo directory."""
     edition_dir = modelo_dir / "revisions" / revision_id
     manifest_text = (edition_dir / edition_delta_fields.MANIFEST).read_text(encoding="utf-8")
     materialised = resolve_edition(modelo_dir, revision_id)
@@ -146,6 +153,8 @@ def read_edition(modelo_dir: Path, revision_id: str) -> EditionSource:
 
 @dataclass(frozen=True, slots=True)
 class Defaults:
+    """The manifest defaults for source references and orden that rows inherit."""
+
     source_refs: tuple[str, ...] | None
     orden: tuple[str, ...]
 
@@ -192,11 +201,13 @@ def edition_delta_source_effective(
 
 
 def lineage(row: Mapping[str, object]) -> str | None:
+    """Return a row's lineage identifier when it is text, otherwise None."""
     value = row.get(edition_delta_fields.LINEAGE)
     return value if isinstance(value, str) else None
 
 
 def row_id(row: Mapping[str, object]) -> str:
+    """Return a row's identifier as text."""
     return str(row["id"])
 
 
@@ -258,6 +269,7 @@ def _lifted_table(table: Mapping[str, object], lift: TableLift) -> Row:
 
 
 def edition_delta_source_lift(row: Row, *, source_default: tuple[str, ...] | None, orden: tuple[str, ...]) -> Lift:
+    """Lift a row's shared source and orden values into defaults, constraints included."""
     row_lift = _table_lift(row, source_default=source_default, orden=orden)
     lifted = _lifted_table(row, row_lift)
     constraint_lift = TableLift()
@@ -367,6 +379,7 @@ def _family_source_default(table: Mapping[str, object], section: str) -> tuple[s
 def members(
     raw: Mapping[str, object], section: str, *, singleton: bool = False
 ) -> tuple[Mapping[str, object], ...] | None:
+    """Read the member tables of a section from a raw table, optionally as a singleton."""
     value = raw.get(section)
     if value is None:
         return ()

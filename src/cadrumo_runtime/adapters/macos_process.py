@@ -22,6 +22,8 @@ _MAXIMUM_NATIVE_ID = 0xFFFFFFFF
 
 
 class BsdProcessInfo(ctypes.Structure):
+    """The ctypes layout of the macOS BSD process info structure."""
+
     _fields_ = (
         ("flags", ctypes.c_uint32),
         ("status", ctypes.c_uint32),
@@ -49,6 +51,8 @@ class BsdProcessInfo(ctypes.Structure):
 
 
 class UniqueIdentifierInfo(ctypes.Structure):
+    """The ctypes layout of the macOS unique process identifier info structure."""
+
     _fields_ = (
         ("executable_uuid", ctypes.c_uint8 * 16),
         ("unique_id", ctypes.c_uint64),

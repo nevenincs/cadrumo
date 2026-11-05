@@ -65,6 +65,7 @@ def finding_kind_failures(
     operator: VerificationPredicateOperator,
     finding_kind: VerificationFindingKind,
 ) -> list[str]:
+    """Report a verification predicate authored under a finding kind its operator cannot serve."""
     if finding_kind is VerificationFindingKind.BLOCKING_RULE and operator in ADVISORY_ONLY_OPERATORS:
         return [
             f"{prefix}: {owner} {operator.value} is advisory-only and cannot be authored as a "
@@ -104,6 +105,7 @@ def casilla_list_predicate_failures(
     casillas: set[CasillaId],
     casilla_by_id: Mapping[CasillaId, CasillaDefinition],
 ) -> list[str]:
+    """Report failures in a casilla list predicate expression and its casilla references."""
     operator = VerificationPredicateOperator(operator_name)
     parsed = _parsed_expression(expression, operator)
     if parsed is None:
@@ -178,6 +180,7 @@ def casilla_equals_implies_numeric_predicate_failures(
     *,
     operator: VerificationPredicateOperator,
 ) -> list[str]:
+    """Report failures in a casilla-equals-implies-numeric predicate expression."""
     parsed = _parsed_expression(expression, operator)
     if parsed is None:
         return [
@@ -207,6 +210,7 @@ def casilla_equals_implies_profile_flag_predicate_failures(
     casillas: set[CasillaId],
     casilla_by_id: Mapping[CasillaId, CasillaDefinition],
 ) -> list[str]:
+    """Report failures in a casilla-equals-implies-profile-flag predicate expression."""
     operator = VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_PROFILE_FLAG
     parsed = _parsed_expression(expression, operator)
     if parsed is None:
@@ -238,6 +242,7 @@ def casilla_equals_implies_diverges_predicate_failures(
     casillas: set[CasillaId],
     casilla_by_id: Mapping[CasillaId, CasillaDefinition],
 ) -> list[str]:
+    """Report failures in a casilla-equals-implies-diverges predicate expression."""
     operator = VerificationPredicateOperator.CASILLA_EQUALS_IMPLIES_DIVERGES
     parsed = _parsed_expression(expression, operator)
     if parsed is None:
@@ -271,6 +276,7 @@ def deduccion_requires_adquisicion_before_predicate_failures(
     casillas: set[CasillaId],
     casilla_by_id: Mapping[CasillaId, CasillaDefinition],
 ) -> list[str]:
+    """Report failures in a deduccion-requires-adquisicion-before predicate expression."""
     operator = VerificationPredicateOperator.DEDUCCION_REQUIRES_ADQUISICION_BEFORE
     parsed = _parsed_expression(expression, operator)
     if parsed is None:
@@ -313,6 +319,7 @@ def advisory_when_ratio_ge_predicate_failures(
     casillas: set[CasillaId],
     casilla_by_id: Mapping[CasillaId, CasillaDefinition],
 ) -> list[str]:
+    """Report failures in an advisory-when-ratio-ge predicate expression."""
     operator = VerificationPredicateOperator.ADVISORY_WHEN_RATIO_GE
     parsed = _parsed_expression(expression, operator)
     if parsed is None:
@@ -337,6 +344,7 @@ def advisory_when_ratio_ge_predicate_failures(
 
 
 def profile_field_required_predicate_failures(prefix: str, owner: str, expression: str) -> list[str]:
+    """Report failures in a profile-field-required predicate expression."""
     operator = VerificationPredicateOperator.PROFILE_FIELD_REQUIRED
     if _parsed_expression(expression, operator) is not None:
         return []
@@ -347,6 +355,7 @@ def profile_field_required_predicate_failures(prefix: str, owner: str, expressio
 
 
 def profile_flag_enabled_predicate_failures(prefix: str, owner: str, expression: str) -> list[str]:
+    """Report failures in a profile-flag-enabled predicate, including unsupported fields."""
     operator = VerificationPredicateOperator.PROFILE_FLAG_ENABLED
     parsed = _parsed_expression(expression, operator)
     if parsed is None:

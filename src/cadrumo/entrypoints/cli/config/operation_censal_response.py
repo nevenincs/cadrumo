@@ -101,6 +101,7 @@ def respond(
     apply: bool,
     deadline: float,
 ) -> None:
+    """Answer the pending censal review interaction after checking its response authority."""
     actor_ref = f"session:{session_id}"
     expected_intent = _require_response_authority(
         client, profile_id, session_id, operation_id, pending, actor_ref, apply, deadline

@@ -45,6 +45,7 @@ class _IndexLinkParser(HTMLParser):
 
 
 def index_links(html: str, source_page: str) -> tuple[tuple[str, str], ...]:
+    """Extract the titled links of an index page as absolute URLs."""
     parser = _IndexLinkParser()
     parser.feed(html)
     return tuple((title, urljoin(source_page, href)) for title, href in parser.links)
@@ -59,6 +60,7 @@ def _supported_modelo_from_title(title: str, supported_modelos: set[str]) -> str
 
 
 def raw_artifact_for_url(manifest: Manifest, url: str) -> Artifact | None:
+    """Return the manifest artefact whose file type matches the URL, or None."""
     url_suffix = Path(urlparse(url).path).suffix.lower()
     return next(
         (
@@ -75,6 +77,7 @@ def supported_index_urls(
     page_keys: tuple[str, ...],
     supported_modelos: set[str],
 ) -> dict[str, str]:
+    """Collect the URLs of supported modelos from the index page links."""
     urls: dict[str, str] = {}
     for page_key in page_keys:
         for url, title in links_by_page[PAGES[page_key]].items():

@@ -55,6 +55,7 @@ class Finding:
 
 
 def canonical_bounds(repo: Path) -> tuple[int, int, int | None]:
+    """Return the supported filing years floor, horizon and hard ceiling from the registry."""
     payload = parse_toml((repo / AUTHORITY).read_text(encoding="utf-8"))
     catalogue = SupportedFilingYearsCatalogue.model_validate(payload.get("supported_filing_years"))
     return catalogue.floor, catalogue.horizon, catalogue.hard_ceiling

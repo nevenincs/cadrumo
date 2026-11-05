@@ -188,6 +188,7 @@ def draft_input_channels(
     snapshot: RegistrySnapshot,
     inputs: ModeloInputs,
 ) -> _DraftInputChannels:
+    """Partition the supplied modelo inputs into the draft channels the revision declares."""
     casilla_ids = set(declared_casilla_ids(snapshot.revision))
     text_casilla_data_types = _text_casilla_data_types(snapshot)
     date_casilla_ids = _date_casilla_ids(snapshot)
@@ -494,6 +495,7 @@ def filing_period_date(period: Period) -> date:
 
 
 def formula_binding_ids(snapshot: RegistrySnapshot) -> set[BindingId]:
+    """Collect the binding ids referenced by the revision's formula expressions."""
     return {
         binding_id
         for formula in snapshot.revision.formulas
@@ -502,6 +504,7 @@ def formula_binding_ids(snapshot: RegistrySnapshot) -> set[BindingId]:
 
 
 def snapshot_bound_casilla_binding_ids(snapshot: RegistrySnapshot) -> set[BindingId]:
+    """Collect the binding ids consumed by the revision's bound casillas."""
     return {
         binding_id
         for casilla in snapshot.revision.casillas
@@ -718,6 +721,7 @@ def _text_inputs_for_ids(inputs: ModeloInputs, input_data_types: Mapping[Casilla
 
 
 def string_inputs_for_ids(inputs: ModeloInputs, input_ids: frozenset[BindingId]) -> dict[BindingId, str]:
+    """Select the string-valued inputs among the given binding ids, skipping absent ones."""
     # Enum-channel bindings carry string values; skip None and non-string entries.
     string_inputs: dict[BindingId, str] = {}
     for binding_id in input_ids:
@@ -836,6 +840,7 @@ def _refuse_binding_row_index(binding_id: BindingId, row_key: object) -> ModeloA
 
 
 def binding_row_index(binding_id: BindingId, row_key: object) -> int:
+    """Normalize a binding row key to an integer index, refusing booleans and non-numeric keys."""
     if isinstance(row_key, bool):
         raise _refuse_binding_row_index(binding_id, row_key)
     if isinstance(row_key, int):
@@ -957,6 +962,7 @@ def _refuse_decimal_input(input_id: str, value: object) -> ModeloApplicationErro
 
 
 def decimal_input(input_id: str, value: object) -> Decimal:
+    """Coerce an input value to Decimal, refusing booleans and unparseable values."""
     if isinstance(value, bool):
         raise _refuse_decimal_input(input_id, value)
     if isinstance(value, Decimal):

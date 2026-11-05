@@ -235,6 +235,7 @@ async def _handle_lease_control(context: WorkerControl, request: ProfileWorkerLe
 
 
 async def handle_custody_control(context: WorkerControl, request: object) -> _ControlDisposition | None:
+    """Handle a custody control request such as a lease or retirement, or return None."""
     if isinstance(request, ProfileWorkerLeaseRequest):
         await _handle_lease_control(context, request)
         return "status"
@@ -362,6 +363,7 @@ async def _handle_human_control(context: WorkerControl, request: object) -> _Con
 
 
 async def handle_action_control(context: WorkerControl, request: object) -> _ControlDisposition | None:
+    """Handle an activity or other action control request for the worker, or return None."""
     if not isinstance(request, ProfileWorkerControlRequest):
         return None
     if request.action == "activity":
@@ -557,6 +559,7 @@ def _is_observational_control(request: object) -> bool:
 async def serve_control_requests(
     context: WorkerControl, input_executor: ThreadPoolExecutor, ready: asyncio.Event | None = None
 ) -> None:
+    """Serve worker control requests until a stop disposition or failure."""
     if ready is not None:
         ready.set()
     while not context.failed.is_set():
@@ -716,6 +719,7 @@ async def serve(
     human: ProfileWorkerHumanLogin,
     operations: ProfileWorkerOperationHost,
 ) -> None:
+    """Run the profile worker's control, operation and proof channels until stopped."""
     stop, failed, changed = asyncio.Event(), asyncio.Event(), asyncio.Event()
     control_ready, operation_ready, proof_ready = asyncio.Event(), asyncio.Event(), asyncio.Event()
     # The channels may wait concurrently without occupying the executor

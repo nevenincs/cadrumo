@@ -37,6 +37,7 @@ _USERDOMAIN_ENV_VAR: Final[str] = "USERDOMAIN"
 
 
 def operator_account_candidates() -> list[str]:
+    """List the candidate operator account names, including domain-qualified forms."""
     username = getpass.getuser()
     # os.environ.get allowlist: USERDOMAIN is a Windows OS-integration
     # variable, not AEAT-prefixed config, so it is read from the environment

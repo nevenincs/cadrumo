@@ -317,6 +317,7 @@ def source_text_cache_key(
     source_root: Path,
     source_stat: os.stat_result,
 ) -> _SourceTextCacheKey:
+    """Build the cache key for a source's extracted text from its path, suffix and file stat."""
     suffix = source_path.suffix.casefold()
     extraction_contract = (
         f"{source.kind}:properties-text-v1"

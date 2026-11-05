@@ -92,6 +92,7 @@ def launch_lease_worker(*, neutral_root: Path, lease_fd: int, owner_fd: int, res
 
 
 def kdf_process_environment_keys(launch_kwargs: dict[str, object]) -> frozenset[str]:
+    """Return the environment variable names the worker launch will expose."""
     # Native hosts pin these package-declared names after receiving our neutral
     # environment. The bootstrap projects names only, never publisher values.
     fixed = getattr(sys, "cadrumo_build", {}).get("fixed_environment_names", ())
@@ -128,6 +129,7 @@ def worker_command(
     request_read: int,
     result_write: int,
 ) -> tuple[list[str], dict[str, object]]:
+    """Build the isolated worker command line and subprocess keyword arguments."""
     neutral_cwd = str(neutral_root.resolve())
     command = [*isolated_interpreter_command(), "-m", "cadrumo.adapters.persistence.storage.custody.kdf_worker"]
     environment = worker_environment(neutral_root=neutral_root)
@@ -177,6 +179,7 @@ def worker_command(
 
 
 def worker_environment(*, neutral_root: Path) -> dict[str, str]:
+    """Return the strict, minimal environment for the KDF worker rooted at the neutral directory."""
     # The strict profile pins a neutral root and carries no operator override.
     environment = child_environment(ChildEnvironmentProfile.STRICT, neutral_root / "state", base={})
     environment.update(
@@ -203,6 +206,7 @@ def worker_environment(*, neutral_root: Path) -> dict[str, str]:
 
 
 def apply_posix_worker_limits() -> None:
+    """Apply the POSIX address-space, CPU-time and core-dump limits to the worker before it executes."""
     import resource
 
     resource_module = cast(Any, resource)
@@ -218,6 +222,7 @@ def apply_posix_worker_limits() -> None:
 
 
 def terminate_process_tree(process: subprocess.Popen[bytes], job: WindowsJob | None) -> None:
+    """Kill the worker's whole process tree through its job or process group and reap it."""
     if job is not None:
         job.close()
     elif sys.platform != "win32":

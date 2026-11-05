@@ -39,6 +39,7 @@ def apoderado_status(
     ctx: typer.Context,
     output_language: OutputLanguage | None = None,
 ) -> None:
+    """Report the offline apoderado configuration status."""
     activate_subcommand_output_language(ctx, output_language)
     from cadrumo_client.commands.payloads import ApoderadoStatusResult
 
@@ -143,6 +144,7 @@ def apoderado_clear(
     ctx: typer.Context,
     output_language: OutputLanguage | None = None,
 ) -> None:
+    """Clear the stored apoderado configuration of the bound profile."""
     activate_subcommand_output_language(ctx, output_language)
     from cadrumo_client.commands.payloads import ApoderadoClearResult
 
@@ -161,6 +163,7 @@ def apoderado_check(
     ctx: typer.Context,
     output_language: OutputLanguage | None = None,
 ) -> None:
+    """Refuse the apoderado live check, which is not wired to live AEAT reads."""
     activate_subcommand_output_language(ctx, output_language)
     # ``check`` is the live-verification verb. The live AEAT-read path is not
     # wired (live reads are refused at this boundary per the safety gate), so

@@ -74,6 +74,7 @@ def _is_open_file_descriptor(descriptor: int) -> bool:
 
 
 def expected_kdf_worker_limits(platform: str) -> dict[str, int]:
+    """Return the resource limits a KDF worker must attest on the given platform."""
     limits: dict[str, int] = {
         "cpu_seconds": PROFILE_CUSTODY_KDF_WORKER_CPU_SECONDS,
         "max_processes": PROFILE_CUSTODY_KDF_WORKER_MAX_PROCESSES,
@@ -86,6 +87,7 @@ def expected_kdf_worker_limits(platform: str) -> dict[str, int]:
 
 
 def parse_ready_attestation(value: bytes) -> dict[str, object]:
+    """Decode the worker's ready frame into a JSON object, refusing any other JSON shape."""
     parsed = json.loads(value.decode(KDF_TRANSPORT_ENCODING, errors="strict"))
     if not isinstance(parsed, dict):
         raise ValueError("profile KDF ready payload is invalid")
@@ -93,6 +95,7 @@ def parse_ready_attestation(value: bytes) -> dict[str, object]:
 
 
 def validate_ready_attestation_shape(payload: dict[str, object], expected_platform: str) -> None:
+    """Refuse a ready attestation whose fields, platform, protocol, transport or limits differ from expected."""
     expected_fields = {"cwd", "environment_keys", "limits", "platform", "protocol", "transport"}
     if expected_platform != "win32":
         expected_fields.add("open_file_descriptors")

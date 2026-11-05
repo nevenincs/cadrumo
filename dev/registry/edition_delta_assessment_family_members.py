@@ -22,6 +22,7 @@ def compare_authored_members(
     inherited_by_id: Mapping[object, object],
     current_by_id: Mapping[object, object],
 ) -> set[object]:
+    """Compare authored family members against the baseline and the inherited members."""
     authored_ids: set[object] = set()
     for member in authored:
         _compare_authored_member(family, baseline, member, inherited_by_id, current_by_id, authored_ids)
@@ -192,6 +193,7 @@ def count_inherited_payload(
     inherited_by_id: Mapping[object, object],
     authored_ids: set[object],
 ) -> None:
+    """Count the inherited payload members of a family that no authored member overrides."""
     if current_members is None:
         return
     for member in current_members:

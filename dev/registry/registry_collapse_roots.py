@@ -304,4 +304,5 @@ def _equal_raw_overlap_fields(
 
 
 def root_gaps(rows: Sequence[Mapping[str, object]]) -> tuple[Mapping[str, object], ...]:
+    """Select the rows whose status marks a candidate or unresolved root."""
     return tuple(row for row in rows if row.get("status") in {RootEligibility.CANDIDATE, RootEligibility.UNRESOLVED})

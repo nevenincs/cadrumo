@@ -92,6 +92,7 @@ def _required_change_kind(kind: object) -> EnrollmentKind:
 
 
 def matching_change_payload(payload: AutomationChangeInput, kind: object) -> EnrollmentProposal:
+    """Return the proposal in a change payload, refusing when its kind does not match."""
     if payload.proposal.kind is not _required_change_kind(kind):
         raise CliRefusedBoundaryError(translated_message="cli.config.custody.errors.automation_change_kind_mismatch")
     return payload.proposal
@@ -110,6 +111,7 @@ def refuse_missing_create_proposal(*, proposal_supplied: bool) -> None:
 
 
 def runtime_automation_request_create_proposal(selection: MachineSecretSelection | None) -> _CreateProposal:
+    """Read the protected create proposal and return a function binding it to a destination."""
     refuse_missing_create_proposal(proposal_supplied=selection is not None)
     if selection is None:
         raise CliRefusedBoundaryError(

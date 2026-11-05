@@ -26,6 +26,7 @@ def exchange(
     *,
     deadline: float,
 ) -> OperationReply:
+    """Send a request over the client session and await the exchange within the deadline."""
     _require_session(client, session_id)
     reply = client.operation(request, deadline=deadline)
     _require_session(client, session_id)

@@ -788,6 +788,7 @@ class PayloadSink:
     payload: bytes = b""
 
     def consume_validated_payload(self, payload: FilingExportValidatedPayload) -> None:
+        """Retain the validated export payload."""
         self.payload = payload.payload
 
 

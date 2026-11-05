@@ -200,6 +200,7 @@ def _check_required_exclusions(exclusion_urls: list[str], failures: list[str]) -
 
 
 def load_manifests() -> dict[str, Manifest]:
+    """Load the manifest of each record design corpus modelo directory."""
     manifests: dict[str, Manifest] = {}
     for model_dir in scan_directory(CORPUS, pattern="modelo_*"):
         path = model_dir / "manifest.json"

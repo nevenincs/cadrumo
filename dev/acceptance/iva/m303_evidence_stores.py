@@ -39,6 +39,7 @@ if TYPE_CHECKING:
 def tui_led_store(
     args: argparse.Namespace, journey_year: IvaJourneyYear, export_positions: tuple[str, str, str]
 ) -> StoreEvidence:
+    """Build the store evidence for the TUI-led M303 scenario."""
     store, passphrase, cli, work_unit_id = setup_store(args, journey_year, "tui-led")
     wrong_id, wrong_sha = attest(
         cli, year=journey_year.year, period=WRONG_PERIOD, observed_at=year_end_observed_at(journey_year.year)
@@ -113,6 +114,7 @@ def tui_led_store(
 
 
 def continuation_store(args: argparse.Namespace, journey_year: IvaJourneyYear) -> StoreEvidence:
+    """Build the store evidence for the continuation scenario."""
     store, passphrase, cli, work_unit_id = setup_store(args, journey_year, "continuation")
     attachment_id, sha256 = attest(
         cli, year=journey_year.year, period=PERIOD, observed_at=year_end_observed_at(journey_year.year)

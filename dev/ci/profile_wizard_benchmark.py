@@ -173,6 +173,7 @@ def observe_profile_boundaries(patch: pytest.MonkeyPatch, recorder: RuntimeBench
 
 
 def observe(patch: pytest.MonkeyPatch, recorder: RuntimeBenchmarkRecorder, owner: Any, name: str, label: str) -> None:
+    """Wrap an owner's callable so the recorder measures each call under a label."""
     original = getattr(owner, name)
     if inspect.iscoroutinefunction(original):
 

@@ -128,6 +128,7 @@ _CANONICAL_TRANSLATION_MODULES = frozenset({"cadrumo.core.i18n", "cadrumo.core.i
 
 
 def cli_entrypoints_root() -> Path:
+    """Return the directory holding the CLI entrypoint modules."""
     return SRC_DIR / "entrypoints" / "cli"
 
 

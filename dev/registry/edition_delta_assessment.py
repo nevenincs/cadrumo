@@ -109,6 +109,7 @@ class MigrationAssessment:
 
 
 def file_fingerprints(modelo_dir: Path) -> tuple[Mapping[str, str], ...]:
+    """Return the relative path and SHA-256 digest of every file under the modelo directory."""
     return tuple(
         {
             "path": path.relative_to(modelo_dir).as_posix(),
@@ -265,4 +266,5 @@ def _finding_class(finding: RoundTripFinding) -> AcceptanceCheckClass:
 
 
 def is_source_finding(finding: RoundTripFinding) -> bool:
+    """Report whether a round-trip finding belongs to the source-reconstruction check class."""
     return _finding_class(finding) is AcceptanceCheckClass.SOURCE_RECONSTRUCTION

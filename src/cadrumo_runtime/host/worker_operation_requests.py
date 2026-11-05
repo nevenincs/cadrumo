@@ -254,6 +254,7 @@ async def dispatch_request(
     request: object,
     uploads: WorkerSubmissionStaging,
 ) -> None:
+    """Route a worker request to the submission staging or the operation host."""
     if isinstance(
         request,
         ProfileWorkerSubmitRequest

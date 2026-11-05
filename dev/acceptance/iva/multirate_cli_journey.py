@@ -362,6 +362,7 @@ def _calculate_multirate_quarter(
 def create_profile(
     *, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, journey_year: IvaJourneyYear
 ) -> None:
+    """Create the journey profile through the CLI and record its two command receipts."""
     profile_start = len(cli.commands)
     try:
         cli.create_profile(year=journey_year.year)
@@ -383,6 +384,7 @@ def create_profile(
 
 
 def add_purchase_evidence(*, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path) -> str:
+    """Add purchase evidence through the CLI and return its evidence id."""
     evidence = result(
         run(
             cli,
@@ -409,6 +411,7 @@ def add_transaction(
     iva_category: str,
     idempotency_key: str,
 ) -> str:
+    """Add a ledger transaction with its IVA fields through the CLI and return its id."""
     transaction = result(
         run(
             cli,
@@ -505,6 +508,7 @@ def add_purchase_transaction(
     evidence_id: str,
     journey_year: IvaJourneyYear,
 ) -> str:
+    """Add the purchase transaction linked to evidence through the CLI and return its id."""
     transaction = result(
         run(
             cli,
@@ -570,6 +574,7 @@ def add_purchase_transaction(
 def add_purchase_invoice(
     *, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, journey_year: IvaJourneyYear
 ) -> str:
+    """Add the purchase invoice through the CLI and return its invoice id."""
     invoice = result(
         run(
             cli,

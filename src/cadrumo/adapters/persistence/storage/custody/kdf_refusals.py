@@ -6,6 +6,7 @@ from .errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
 
 
 def resource_refusal() -> ProfileCustodyRefusedError:
+    """Return the custody refusal for a KDF request that exceeds its resource limit."""
     return ProfileCustodyRefusedError(
         ProfileCustodyRefusal.KDF_RESOURCE_LIMIT,
         translated_message="errors.refused.refused_profile_custody_kdf_resource_limit",
@@ -13,6 +14,7 @@ def resource_refusal() -> ProfileCustodyRefusedError:
 
 
 def supervision_refusal() -> ProfileCustodyRefusedError:
+    """Return the custody refusal for a KDF worker whose supervision is unavailable."""
     return ProfileCustodyRefusedError(
         ProfileCustodyRefusal.KDF_SUPERVISION_UNAVAILABLE,
         translated_message="errors.refused.refused_profile_custody_kdf_supervision_unavailable",

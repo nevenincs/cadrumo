@@ -39,6 +39,7 @@ def _fact_projection(value: object) -> object:
 
 
 def fact_queries(authority: ValidatedRegistryAuthority) -> tuple[GovernedFactQuery, ...]:
+    """Enumerate the distinct governed-fact queries over every variant window of the authority."""
     catalogue = authority.catalogues.facts
     envelope = authority.catalogues.require_supported_filing_years().date_envelope()
     queries: dict[str, GovernedFactQuery] = {}
@@ -84,6 +85,7 @@ def _fact_query_for_variant(
 
 
 def fact_result(resolve: Callable[[GovernedFactQuery], object], query: GovernedFactQuery) -> Mapping[str, object]:
+    """Resolve a governed-fact query and report either its projected value or its refusal."""
     try:
         value = resolve(query)
         digest = getattr(value, "authority_digest", None)
@@ -103,6 +105,7 @@ def snapshot_result(
     *,
     indexed_form_layout: Callable[[str, str], FormLayoutDefinition | None] | None = None,
 ) -> Mapping[str, object]:
+    """Resolve a modelo snapshot at a request coordinate and report its projection or refusal."""
     try:
         value = snapshot(
             modelo_id,
@@ -176,6 +179,7 @@ def indexed_selection_result(
     modelo_id: str,
     coordinate: RequestCoordinate,
 ) -> Mapping[str, object]:
+    """Select the revision for a request coordinate and report the selection or refusal."""
     try:
         directory = operation.modelo_directory(modelo_id)
         selected = operation.revision_for_context(
@@ -205,6 +209,7 @@ def indexed_selection_result(
 
 
 def revision_inventory(modelo: ModeloDefinition) -> tuple[Mapping[str, object], ...]:
+    """Describe each revision of a modelo with its validity window and supported years."""
     return tuple(
         {
             "revision": str(revision.id),

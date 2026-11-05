@@ -68,6 +68,7 @@ def assessment_coverage_gaps(
 
 
 def assessment_accounting(results: Sequence[Mapping[str, object]], key: str) -> Mapping[str, int]:
+    """Total the accounting counts under an assessment key across the results."""
     totals = _empty_accounting()
     for result in results:
         assessment = result.get(key)

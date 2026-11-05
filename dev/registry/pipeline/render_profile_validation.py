@@ -9,6 +9,7 @@ from .render_profile_model_base import RenderProfileAnchor
 
 
 def field_anchor(field: RecordDesignIntermediateField) -> RenderProfileAnchor:
+    """Build a render profile anchor from a parsed design field, deriving ordinal absence."""
     # ``ordinal_absent`` is DERIVED here rather than authored: this anchor is
     # built from the parser field itself, so a missing ordinal is an observed
     # fact about the design and not an authoring claim. The authored side keeps
@@ -25,6 +26,7 @@ def field_anchor(field: RecordDesignIntermediateField) -> RenderProfileAnchor:
 
 
 def render_profile_validation_duplicates[T](values: Iterable[T]) -> tuple[T, ...]:
+    """Return the sorted values that occur more than once."""
     seen: set[T] = set()
     duplicates: set[T] = set()
     for value in values:
@@ -52,6 +54,7 @@ def anchor_key(anchor: RenderProfileAnchor) -> tuple[str, int, int, str, str, st
 
 
 def anchor_key_tuple(anchor: RenderProfileAnchor) -> tuple[str, int, str | None, str | None, str, int | None]:
+    """Return the tuple of anchor fields used to compare anchors."""
     return (
         anchor.sheet,
         anchor.source_row,

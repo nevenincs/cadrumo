@@ -48,6 +48,7 @@ def validate_environment(
     neutral_directory: tempfile.TemporaryDirectory[str] | None,
     environment_keys: frozenset[str] | None,
 ) -> None:
+    """Check that the KDF worker reported a neutral working directory and expected environment."""
     if neutral_directory is None or environment_keys is None:
         raise ValueError("profile KDF neutral directory is unavailable")
     if not _is_neutral_directory(payload["cwd"], neutral_directory.name):

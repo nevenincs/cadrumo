@@ -544,6 +544,7 @@ def assemble_modelo_work_review(
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     calculation_catalogue: CalculationRevisionCatalogue | None = None,
 ) -> ModeloWorkReview:
+    """Assemble the casilla-level review of a work unit from its snapshot, calculation revision and verification."""
     snapshot = operation.snapshot(
         modelo,
         filing_year=filing_year,

@@ -128,6 +128,7 @@ class RevisionInputsProvider:
     """Load immutable :class:`CalculationRevision` inputs for the workflow gate."""
 
     def __init__(self, *, revision: CalculationRevision, work_unit: WorkUnit) -> None:
+        """Bind the calculation revision and work unit whose inputs the gate loads."""
         self._revision = revision
         self._work_unit = work_unit
         self._modelo = work_unit.modelo

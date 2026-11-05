@@ -18,6 +18,7 @@ from .posix import posix_owner_uid
 
 
 def linux_peer_credentials(sock: socket.socket) -> tuple[int, int, int]:
+    """Return the Linux peer process, user and group ids of a connected socket."""
     if sys.platform == "linux":
         return struct.unpack("3i", sock.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12))
     raise RefusalError(RefusalCode.UNAVAILABLE)
@@ -38,6 +39,7 @@ def linux_peer_pidfd_socket_option() -> int:
 
 
 def linux_peer_pidfd(sock: socket.socket) -> int:
+    """Return the kernel pidfd of a socket's peer, refusing when unavailable or invalid."""
     option = linux_peer_pidfd_socket_option()
     try:
         descriptor = sock.getsockopt(socket.SOL_SOCKET, option)
@@ -49,6 +51,7 @@ def linux_peer_pidfd(sock: socket.socket) -> int:
 
 
 def require_live_linux_pidfd(descriptor: int) -> None:
+    """Refuse a peer pidfd that is already readable, meaning the peer process has exited."""
     if sys.platform == "linux":
         try:
             poller = select.poll()
@@ -115,6 +118,7 @@ def _darwin_peer_credentials(sock: socket.socket) -> tuple[int, int]:
 
 
 def peer(sock: socket.socket) -> Peer:
+    """Return the verified same-user peer of a connected POSIX socket, refusing otherwise."""
     if sys.platform == "win32":
         raise RefusalError(RefusalCode.UNAVAILABLE)
     try:

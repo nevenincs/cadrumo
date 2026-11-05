@@ -272,6 +272,7 @@ def _worker_bucket[T: BaseModel](
 def activity_asset_executors_refusal(
     error: Exception, language: OutputLanguage | None = None
 ) -> ActivityAssetRefusalResult | None:
+    """Convert an activity asset error into a translated refusal result, else None."""
     if not isinstance(error, ActividadAssetError):
         return None
     reason_key = error.translated_message

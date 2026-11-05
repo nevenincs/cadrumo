@@ -8,6 +8,7 @@ from .continuation_contracts import InstalledContinuationError
 
 
 def require_empty(path: Path, *, label: str) -> Path:
+    """Require the directory to be absent or empty, then create and resolve it."""
     if path.exists() and any(path.iterdir()):
         raise InstalledContinuationError(f"{label} must be fresh and empty")
     path.mkdir(parents=True, exist_ok=True)
@@ -15,6 +16,7 @@ def require_empty(path: Path, *, label: str) -> Path:
 
 
 def annual_schema(workspace_root: Path, year: int) -> Path:
+    """Locate the Modelo 100 XSD schema for the ejercicio in the workspace corpus."""
     candidates = tuple(
         (workspace_root / "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_100/files").glob(
             f"*-100-esquema-xsd-ejercicio-{year}-*.xsd"

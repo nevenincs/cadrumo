@@ -57,6 +57,7 @@ def literal_derivation(
     source_defects: tuple[SourceDefectDeclaration, ...] = (),
     literal_notes: tuple[NoteLiteralDeclaration, ...] = (),
 ) -> ExportFieldDerivation:
+    """Derive the export field derivation for a literal field from its joined record design."""
     parser_field = joined_field.parser_field
     if (
         parser_field.source_cell is None

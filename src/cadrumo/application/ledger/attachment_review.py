@@ -32,6 +32,7 @@ class AttachmentReviewItem(BaseModel):
 
 
 def project(attachment: Attachment) -> AttachmentReviewItem:
+    """Project an attachment into a review item with a provider locator and pending state."""
     provider_locator = "not-exposed"
     if attachment.source is AttachmentSource.GOOGLE_DRIVE:
         provider_locator = _drive_provider_locator(attachment.source_reference)

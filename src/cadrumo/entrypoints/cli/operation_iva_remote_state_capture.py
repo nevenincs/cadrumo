@@ -83,6 +83,7 @@ def operation_iva_remote_state_capture_report(
     *,
     request: IvaRemoteStateCaptureRequest,
 ) -> IvaRemoteStateAcquisitionReport:
+    """Check an IVA remote state capture result against its request and build the report."""
     if (
         projection.output_root != str(request.output_root)
         or projection.year_from != request.year_from

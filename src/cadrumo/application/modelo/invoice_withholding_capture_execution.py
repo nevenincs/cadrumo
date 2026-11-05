@@ -373,6 +373,8 @@ class ModeloInvoiceWithholdingCaptureExecutor:
 
 @dataclass(frozen=True, slots=True)
 class PreparedCapture:
+    """The ports, cadence, capture and aggregation command prepared for a withholding capture."""
+
     ports: ModeloInvoiceWithholdingCapturePorts
     cadence: WithholdingFilerCadence
     capture: InvoiceWithholdingCapture

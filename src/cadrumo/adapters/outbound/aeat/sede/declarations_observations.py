@@ -133,6 +133,7 @@ def register_row_artefact(
     *,
     source_url: AnyHttpUrl,
 ) -> tuple[FiledDeclaracionArtefact, bytes]:
+    """Build the register-row artefact and its canonical JSON bytes for a declaration."""
     payload = canonical_json_bytes(declaration.model_dump(mode="json"))
     captured_at = now()
     return (
@@ -155,6 +156,7 @@ def store_artefact(
     artefact: FiledDeclaracionArtefact,
     body: bytes,
 ) -> FiledDeclaracionArtefact:
+    """Pass an artefact and body to the sink when one is supplied, else return the artefact."""
     if artefact_sink is None:
         return artefact
     return artefact_sink(observation_key, artefact, body)
@@ -165,6 +167,7 @@ def registry_snapshot_for_declaration(
     *,
     operation: PinnedAuthorityOperation,
 ) -> RegistrySnapshot:
+    """Return the registry snapshot for a declaration or refuse when none exists."""
     try:
         return operation.snapshot(
             declaration.modelo,
@@ -200,6 +203,7 @@ def published_layout_source_payloads(
 
 
 def read_guard_policy_from_snapshot(snapshot: RegistrySnapshot) -> RemoteStateGuardPolicy:
+    """Derive the declarations read guard policy from the snapshot's live cross reference."""
     listing_host = urlsplit(_LISTING_URL).hostname
     if listing_host is None:
         raise RegistryValidationError(f"invalid declarations listing URL: {_LISTING_URL!r}")
@@ -560,6 +564,7 @@ def observed_casillas_from_declaration_pdf(
     declaration: ExpedientesDeclaration,
     body: bytes,
 ) -> tuple[ObservedCasillaValue, ...]:
+    """Parse a declaration PDF in memory into observed casilla values against a snapshot."""
     declaration_period = declaration.period.registry_token
     try:
         # The decrypted declaration bytes are parsed entirely in memory, including
@@ -623,6 +628,7 @@ def verify_submitted_file_context(
     *,
     declaration: ExpedientesDeclaration,
 ) -> None:
+    """Check that a submitted file's modelo, year and period match the declaration."""
     expected = {
         "modelo": declaration.modelo,
         "filing_year": str(declaration.ejercicio),

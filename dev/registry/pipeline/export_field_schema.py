@@ -28,6 +28,7 @@ from .joined_record_design import JoinedRecordDesignField
 
 
 def require_numeric_extent(joined_field: JoinedRecordDesignField, *, expected_length: int) -> None:
+    """Require an official numeric field's parsed byte length to equal the declared length."""
     actual_length = joined_field.parser_field.length
     if actual_length != expected_length:
         raise RegistryValidationError(
@@ -53,6 +54,7 @@ def schema_field(
     allowed_values: tuple[str, ...] | None = None,
     minimum_year: int | None = None,
 ) -> ExportFieldDerivation:
+    """Build an export schema field from a joined design field with its type and layout."""
     parser_field = joined_field.parser_field
     semantic_entry = joined_field.semantic_entry
     required, required_for = combined_requirement(joined_field, design_required=required)

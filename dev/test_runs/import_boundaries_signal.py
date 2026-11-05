@@ -104,6 +104,7 @@ class ImportBoundariesProcessor:
         self._health_payload: dict[str, object] | None = None
 
     def consume(self, line: str) -> None:
+        """Consume one log line, routing it to the health, contract, census or diagnostic parser."""
         text = line.rstrip("\r\n")
         try:
             structured = json.loads(text)
@@ -161,6 +162,7 @@ class ImportBoundariesProcessor:
         started: datetime,
         finished: datetime,
     ) -> dict[str, object]:
+        """Build the import boundaries result envelope from the consumed log lines and run data."""
         broken = self.contracts["broken"]
         diagnostic_total = sum(self.diagnostics.values())
         contract_deductions = contract_path_deductions(self)

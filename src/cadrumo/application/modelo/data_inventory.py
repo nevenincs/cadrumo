@@ -310,6 +310,7 @@ def collect_inventory_buckets(
     revision: ModeloRevision,
     bindings_by_id: dict[BindingId, BindingDefinition],
 ) -> _DataInventoryBuckets:
+    """Group the revision's bindings into data inventory buckets by requirement kind."""
     buckets = _DataInventoryBuckets(
         required_manual=[],
         optional_manual=[],

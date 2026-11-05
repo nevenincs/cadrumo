@@ -141,6 +141,7 @@ def emit_wizard_result(
     *,
     language: OutputLanguage,
 ) -> None:
+    """Emit the wizard calculation result with its saved confirmation and prompted answers."""
     snapshot = calculation_result.calculation
     saved_confirmation = tr(
         "cli.app.modelo.work.wizard_saved",

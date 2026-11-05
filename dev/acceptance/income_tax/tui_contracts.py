@@ -23,7 +23,8 @@ class TuiJourneyError(RuntimeError):
 class TuiScreen(Protocol):
     """The public Textual screen operation used by the installed adapter."""
 
-    def query_one(self, selector: str) -> object: ...
+    def query_one(self, selector: str) -> object:
+        """Return the widget matched by ``selector``."""
 
 
 @dataclass(frozen=True, slots=True)

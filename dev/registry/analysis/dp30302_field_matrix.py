@@ -305,6 +305,7 @@ def measure_dp30302_epoch(
     *,
     epoch: str,
 ) -> tuple[DP30302EpochFieldMatrix, set[str], dict[str, set[int]]]:
+    """Measure the DP30302 field partition counts, semantics and cardinalities for an epoch."""
     sheet = next((sheet for sheet in intermediate.sheets if sheet.record_identity == "DP30302"), None)
     if sheet is None:
         raise RegistryValidationError(f"official design {intermediate.source.source_ref!r} carries no DP30302 sheet")

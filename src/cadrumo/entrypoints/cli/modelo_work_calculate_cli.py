@@ -127,6 +127,7 @@ def run_work_calculate(
     m303_exonerado_390_sha256: str | None,
     output_language: OutputLanguage | None,
 ) -> None:
+    """Run the modelo work calculation command through the registered operation bridge."""
     activate_subcommand_output_language(ctx, output_language)
     target = resolve_active_bucket_id()
     if target is None:

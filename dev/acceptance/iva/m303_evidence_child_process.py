@@ -38,6 +38,7 @@ def child(
     work_unit_id: str,
     extra: Sequence[str] = (),
 ) -> tuple[ChildHandle, tuple[TuiOutcome, ...], ReopenReadback | None]:
+    """Launch a child process for the M303 evidence scenario in the given mode."""
     receipt_path = args.output_root / f"{store.name}-{mode}.json"
     process = run_installed_tui_child_process(
         python_executable=args.python,

@@ -79,6 +79,7 @@ def _toml_table_id(value: object) -> str | None:
 
 
 def reject_local_catalogues(path: Path, data: Mapping[str, object]) -> None:
+    """Refuse a modelo file that defines local legal or source catalogues."""
     forbidden = {"source", "sources", "legal", "legal_refs_catalogue"}
     present = sorted(forbidden.intersection(data))
     if present:

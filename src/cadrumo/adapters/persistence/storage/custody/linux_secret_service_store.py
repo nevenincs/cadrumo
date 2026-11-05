@@ -60,6 +60,7 @@ def _attributes(namespace: str, account: str) -> dict[str, str]:
 
 @contextmanager
 def native_bus() -> Generator[DeadlineSecretBus]:
+    """Open the user's secret-service bus under the operation deadline, verifying its owner."""
     try:
         bus = DeadlineSecretBus(user_secret_bus_path(), time.monotonic() + OPERATION_SECONDS)
         try:
@@ -138,6 +139,7 @@ def _find(bus: DeadlineSecretBus, collection: str, attributes: dict[str, str]) -
 
 @contextmanager
 def linux_secret_service_store_session(bus: DeadlineSecretBus) -> Generator[Any]:
+    """Open an encrypted secret-service session on the bus and close it afterwards."""
     from secretstorage.dhcrypto import DH_PRIME_1024, Session
 
     session = Session()
@@ -171,6 +173,7 @@ def linux_secret_service_store_session(bus: DeadlineSecretBus) -> Generator[Any]
 
 
 def read_item(bus: DeadlineSecretBus, path: str, session: Any) -> bytes:
+    """Fetch an item's secret over the session and return its validated plaintext bytes."""
     (secret,) = secret_reply_body(bus.call(path, ITEM_IFACE, "GetSecret", "o", (session.object_path,)), 1)
     session_path, iv, ciphertext, content_type = secret_reply_body(secret, 4)
     if (

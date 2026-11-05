@@ -19,6 +19,7 @@ def compare_family_override_operations(
     inherited_by_id: Mapping[object, object],
     current_by_id: Mapping[object, object],
 ) -> None:
+    """Compare the recorded family override operations with the inherited and current members."""
     operations = family.raw.get("family_overrides", ())
     if isinstance(operations, list | tuple):
         for operation in operations:
@@ -103,6 +104,7 @@ def compare_casilla_overrides(
     family: FamilyRun,
     predecessor: ModeloRevision,
 ) -> None:
+    """Compare the recorded casilla overrides with the predecessor's casillas."""
     baseline_rows = {str(item.id): item for item in predecessor.casillas}
     overrides = source.members(family.raw, "casilla_overrides") or ()
     for override in overrides:

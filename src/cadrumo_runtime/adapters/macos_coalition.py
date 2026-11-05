@@ -32,6 +32,8 @@ _PASS_INTERVAL_SECONDS = 0.002
 
 
 class CoalitionInfo(ctypes.Structure):
+    """The native macOS coalition record holding the resource and task coalition ids."""
+
     _fields_ = (("coalition_ids", ctypes.c_uint64 * 2), ("reserved", ctypes.c_uint64 * 3))
 
 

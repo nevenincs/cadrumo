@@ -61,6 +61,7 @@ def resolve_rate_category_mapping(
     rate_catalogue: IvaRateKindCatalogue,
     category_catalogue: IvaCategoryCatalogue,
 ) -> dict[IvaRateKind, IvaCategory]:
+    """Map each rate kind to its IVA category from the ``rate_categories.`` mapping entries."""
     rate_categories: dict[IvaRateKind, IvaCategory] = {}
     for key, raw_category in entries.items():
         if not key.startswith("rate_categories."):
@@ -82,6 +83,7 @@ def resolve_rate_territories(
     entries: Mapping[str, str],
     vocabulary: IvaClassificationCatalogue,
 ) -> frozenset[IvaTerritorialScope]:
+    """Resolve the non-empty set of territorial scopes the rate classification applies to."""
     from .classification import required_classification_entry
 
     rate_territories = frozenset(
@@ -103,6 +105,7 @@ def resolve_classification_rules(
     effective_date: date,
     operation: PinnedAuthorityOperation,
 ) -> tuple[IvaClassificationRule, ...]:
+    """Build the ordered IVA classification rules declared by the mapping for the effective date."""
     from .classification import classification_csv
 
     reverse_charge_by_category = _registry_reverse_charge_by_category(operation)
@@ -204,6 +207,7 @@ def first_matching_classification(
     rate_territories: frozenset[IvaTerritorialScope] | None,
     operation: PinnedAuthorityOperation,
 ) -> IvaClassificationResult | None:
+    """Return the result of the first rule whose predicate matches the criteria, or None."""
     for rule in rules:
         if rule.category is not None:
             category_catalogue.require(rule.category)
@@ -286,6 +290,7 @@ def fallback_classification(
     category_catalogue: IvaCategoryCatalogue,
     operation: PinnedAuthorityOperation,
 ) -> IvaClassificationResult:
+    """Return the classification of the fallthrough rule, refusing when the rules declare none."""
     from .classification import IvaClassificationResult
 
     fallback = next((rule for rule in rules if rule.rule_id == "R99_fallthrough"), None)

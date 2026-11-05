@@ -22,6 +22,7 @@ class RegistryHealthProcessor:
         self.lines: list[str] = []
 
     def consume(self, line: str) -> None:
+        """Collect one output line of the registry health run."""
         self.lines.append(line)
 
     def envelope(
@@ -34,6 +35,7 @@ class RegistryHealthProcessor:
         started: datetime,
         finished: datetime,
     ) -> dict[str, object]:
+        """Build the registry health result envelope from the collected output."""
         payload = _registry_health_payload(self.lines)
         if payload is None:
             diagnostic = next(

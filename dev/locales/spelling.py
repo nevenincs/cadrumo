@@ -46,6 +46,7 @@ class SpellingToolError(RuntimeError):
     """Describe a spell-check setup or dictionary-load failure."""
 
     def __init__(self, *, kind: str, detail: str, next_action: str) -> None:
+        """Store the failure kind, detail and the operator's next action."""
         super().__init__(detail)
         self.kind = kind
         self.detail = detail

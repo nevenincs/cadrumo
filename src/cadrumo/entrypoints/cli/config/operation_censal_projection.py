@@ -94,6 +94,7 @@ def _expected_schema(
 def validate_contract(
     client: FrontendClient, request: CensalOperationRequest, deadline: float
 ) -> OperationPublicDefinitionContractV1:
+    """Validate the censal operation's public contract against its request and result schemas."""
     contract = client.contract(CENSAL_OPERATION_DEFINITION_ID, deadline=deadline)
     expected_request = _expected_schema(
         definition_id=CENSAL_OPERATION_DEFINITION_ID,
@@ -129,6 +130,7 @@ def resolve_review(
     deadline: float,
     contract: OperationPublicDefinitionContractV1,
 ) -> CensalReviewProjectionV1:
+    """Resolve the review of a censal operation through the client."""
     request = OperationReview(
         request_id=uuid4(),
         profile_id=profile_id,
@@ -172,6 +174,7 @@ def validate_terminal(
     apply: bool,
     deadline: float,
 ) -> None:
+    """Validate the terminal observation of a censal operation against its contract and review."""
     expected_outcome = CensalOperationOutcome.APPLIED if apply else CensalOperationOutcome.REJECTED
     permitted_effects = {OperationEffect.UPDATED} if apply else {OperationEffect.NONE, OperationEffect.UPDATED}
     projection = observed.projection

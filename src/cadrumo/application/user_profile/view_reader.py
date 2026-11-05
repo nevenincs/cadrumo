@@ -58,6 +58,8 @@ _STATUS_FACT_PATHS = frozenset({"identity.tax_id", "activities.description", "iv
 
 
 class ProfileViewCommon(TypedDict):
+    """The fields shared by every profile view page result."""
+
     profile_id: UUID
     page_kind: ProfileViewPageKind
     record_revision: int
@@ -290,6 +292,7 @@ def paginate_source(
     common: ProfileViewCommon,
     source: tuple[ProfileViewItem, ...],
 ) -> ProfileViewOperationResult:
+    """Return one page of the profile view items, refusing a cursor past the end."""
     if request.cursor > len(source):
         # An out-of-range cursor cannot masquerade as a completed page.
         return _refused_page(common, ProfileViewRefusalCode.STALE_REVISION, total_items=len(source))

@@ -919,6 +919,7 @@ def classify(
     catalogue_anchor: str = "",
     boe_block: str = "",
 ) -> Finding:
+    """Classify a legal excerpt against its current text and oracle evidence."""
     current_clauses = clause_chunks(current_text)
     if not current_clauses:
         return Finding(entry_id, Verdict.ORACLE_INDETERMINATE, "resolved provision contains no comparable body")

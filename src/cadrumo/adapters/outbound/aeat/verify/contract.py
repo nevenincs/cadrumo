@@ -280,6 +280,7 @@ def response_confirms_valid_csv(body: str, *, expected_csv: str, final_url: str)
 
 
 def assert_verify_http(method: str, url: str) -> None:
+    """Preflight an HTTP method and URL against the verification guard policy."""
     assert_remote_operation_allowed(
         _VERIFY_GUARD_POLICY,
         RemoteOperation(kind="http", method=method, url=AnyUrl(url)),

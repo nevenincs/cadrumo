@@ -39,6 +39,7 @@ def verify_one(
     ceiling: int,
     converter: Callable[[Path, Path], Mapping[str, object]] = canonical_converter,
 ) -> dict[str, object]:
+    """Verify one modelo source against its collapse candidate across the supported years."""
     before_files = fingerprint_tree(source)
     static_scope_gaps = assessor_scope_gaps()
     roots = root_eligibility(source)
@@ -294,6 +295,7 @@ def _verified_modelo_result(
 
 
 def replace_candidate_modelo(registry_candidate: Path, modelo: Mapping[str, object]) -> None:
+    """Replace the candidate modelo tree with the verified one when its readiness passed."""
     if modelo.get("source_apply_readiness") != CheckStatus.PASSED:
         return
     source = Path(str(modelo["candidate_path"]))

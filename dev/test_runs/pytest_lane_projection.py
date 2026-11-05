@@ -143,6 +143,7 @@ def lane_tool_failed(data: dict[str, object]) -> bool:
 
 
 def only_collection_errors(errors: int, passed: int, failures: int) -> bool:
+    """Return whether a lane has collection errors and no passed or failed tests."""
     return bool(errors and not (passed or failures))
 
 

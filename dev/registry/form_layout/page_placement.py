@@ -22,6 +22,7 @@ from .position_anchoring import casilla_box
 
 
 def block_casillas(blocks: Iterable[FormBlockDefinition]) -> set[str]:
+    """Collect the casilla ids placed in the form blocks."""
     return {casilla_id for block in blocks for casilla_id in _casillas_in_block(block)}
 
 
@@ -36,6 +37,7 @@ def _casillas_in_block(block: FormBlockDefinition) -> set[str]:
 
 
 def block_bindings(blocks: Iterable[FormBlockDefinition]) -> set[str]:
+    """Collect the binding ids placed in the form blocks."""
     return {binding_id for block in blocks for binding_id in _bindings_in_block(block)}
 
 
@@ -110,5 +112,6 @@ def placements(
     shown: set[str],
     continued_aliases: Mapping[str, tuple[FormAliasPosition, ...]],
 ) -> tuple[FormPlacementDefinition, ...]:
+    """Build the form placement definitions for shown casillas from sections and aliases."""
     ordered = sorted(build.revision.casillas, key=lambda item: item.id)
     return tuple(_placement_for_casilla(build, casilla, section_of, shown, continued_aliases) for casilla in ordered)

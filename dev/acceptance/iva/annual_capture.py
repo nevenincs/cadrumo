@@ -20,6 +20,7 @@ from .filing_year import IvaJourneyYear
 def add_issued_invoice(
     *, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, journey_year: IvaJourneyYear
 ) -> str:
+    """Add the issued invoice for the annual capture journey and return its id."""
     invoice = result(
         run(
             cli,
@@ -52,6 +53,7 @@ def add_documented_ledger_facts(
     purchase_evidence_id: str,
     journey_year: IvaJourneyYear,
 ) -> tuple[str, ...]:
+    """Add the documented sales and purchase ledger facts for the annual capture journey."""
     year = journey_year.year
     sales = (
         ("1T", journey_year.iso_date(2, 10), "2420.00", "2000.00", "420.00"),

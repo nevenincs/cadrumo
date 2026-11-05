@@ -75,10 +75,12 @@ class LibreOfficeConversionError(RuntimeError):
     """Failure raised once a resolved LibreOffice runner is asked to convert a workbook."""
 
     def __init__(self, cause: LibreOfficeFailureCause, message: str) -> None:
+        """Store the failure cause alongside the message."""
         super().__init__(message)
         self.cause = cause
 
     def as_registry_error(self) -> RegistryValidationError:
+        """Convert the conversion error into a registry validation error carrying its cause."""
         return RegistryValidationError(str(self), context={LIBREOFFICE_FAILURE_CONTEXT_KEY: self.cause.value})
 
 

@@ -43,6 +43,7 @@ def work_address_for_cli(
     revision: str | None,
     bucket_id: str | None = None,
 ) -> ModeloWorkAddress:
+    """Build the Modelo work address from the operator's CLI selectors."""
     exact_id = validate_work_unit_selector(work_unit_id) if work_unit_id is not None else None
     typed_period = resolve_optional_cli_period(year=year, period=period, modelo=modelo)
     try:

@@ -100,6 +100,7 @@ def _fold(text: str) -> str:
 
 
 def terminology_root() -> Path:
+    """Return the bundled terminology directory."""
     return bundled_path(*_TERMINOLOGY_PARTS)
 
 
@@ -220,6 +221,7 @@ def _hydrated_lifecycle(token: str, *, concept_id: str) -> ConceptLifecycle:
 
 
 def project_concept(payload: dict[str, object], *, locale: str) -> TerminologyConcept | None:
+    """Project a terminology concept payload into its typed concept for the locale."""
     concept = _as_str_object_dict(payload.get("concept"))
     if concept is None:
         return None

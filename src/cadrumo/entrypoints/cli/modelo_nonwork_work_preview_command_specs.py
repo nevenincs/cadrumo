@@ -1,3 +1,5 @@
+"""Declare the command specs for the non-work modelo work preview commands."""
+
 from __future__ import annotations
 
 from cadrumo_client.commands.parameters import OptionSpec

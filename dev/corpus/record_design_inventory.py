@@ -38,6 +38,8 @@ RECORD_DESIGN_SUFFIXES = frozenset({".pdf", ".xls", ".xlsx", ".xlsm", ".xsd"})
 
 @dataclass(frozen=True)
 class RequiredArtifact:
+    """A required official record-design artefact with its title, URL and index page key."""
+
     modelo: str
     title: str
     relative_url: str
@@ -52,10 +54,12 @@ class RequiredArtifact:
 
     @property
     def url(self) -> str:
+        """Return the absolute AEAT URL of the artefact."""
         return f"{STATIC}/{self.relative_url}"
 
     @property
     def source_page(self) -> str | None:
+        """Return the official index page URL the artefact was found on, or None if unrecorded."""
         return None if self.page_key is None else PAGES[self.page_key]
 
 

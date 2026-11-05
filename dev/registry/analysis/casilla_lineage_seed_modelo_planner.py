@@ -27,6 +27,8 @@ from .casilla_lineage_seed_types import (
 
 
 class ModeloPlanner:
+    """A planner that walks each judged revision pair of a modelo to build its casilla lineage."""
+
     def __init__(
         self,
         modelo_id: str,
@@ -35,6 +37,7 @@ class ModeloPlanner:
         rulings: list[Ruling],
         forbidden: frozenset[str],
     ) -> None:
+        """Bind the modelo, its design oracle, rulings and forbidden identifiers."""
         self.forbidden = forbidden
         self.modelo_id = modelo_id
         self.modelo = modelo
@@ -86,14 +89,17 @@ class ModeloPlanner:
     # -- identifier-wide stamping
 
     def settle_partial_stamps(self) -> frozenset[str]:
+        """Settle which partially stamped casillas of the modelo remain unsettled."""
         return settle_partial_stamps(self)
 
     def partial_stamp_records(self, unsettled: frozenset[str]) -> tuple[PartialStamping, ...]:
+        """Return the partial-stamping records for the given unsettled casillas."""
         return partial_stamp_records(self, unsettled)
 
     # -- pair walk
 
     def run(self) -> LineagePlan:
+        """Walk every judged revision pair and return the lineage plan, refusing orphan rulings."""
         pairs = judged_pairs(self.modelo, ordered_revisions(self.modelo))
         for previous, successor in pairs:
             walk_pair(self, previous, successor)

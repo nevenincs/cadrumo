@@ -312,6 +312,7 @@ def restore_backup_or_raise(
     publish_error: OSError,
     replace_export_directory: Callable[[Path, Path], None],
 ) -> None:
+    """Restore the backup export directory after a failed publish, or raise."""
     if not backup_export_root.exists():
         raise RegistryValidationError(f"generated export publication failed: {publish_error}") from publish_error
     try:
@@ -359,6 +360,7 @@ def _delete_opaque_rollback_if_present(backup_export_root: Path) -> None:
 
 
 def delete_opaque_rollback_tree(backup_export_root: Path) -> None:
+    """Delete a complete regular rollback directory and confirm nothing remains."""
     require_complete_regular_tree(backup_export_root, subject="generated export rollback directory")
     try:
         shutil.rmtree(backup_export_root)

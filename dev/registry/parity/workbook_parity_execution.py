@@ -143,6 +143,7 @@ def detect_workbook_runner() -> WorkbookRunnerAvailability:
 
 
 def execution_runner_availability(executable: str | None) -> WorkbookRunnerAvailability:
+    """Resolve the workbook runner availability from the executable or by detection."""
     if executable is None:
         return detect_workbook_runner()
     runner = resolve_libreoffice_runner(executable)

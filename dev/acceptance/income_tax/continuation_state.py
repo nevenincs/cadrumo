@@ -34,6 +34,7 @@ def oracle_fingerprint(year: int) -> str:
 def continuation_state(
     *, generation: str, year: int, periods: Sequence[str], filed: Sequence[str], annual_exported: bool
 ) -> ContinuationStateEvidence:
+    """Build continuation state evidence from the sorted unique quarter and filed periods."""
     quarter_periods = tuple(sorted(set(periods)))
     filed_periods = tuple(sorted(set(filed)))
     return ContinuationStateEvidence(
@@ -56,6 +57,7 @@ def continuation_state(
 
 
 def parse_child_state(document: dict[str, object], key: str) -> ContinuationStateEvidence:
+    """Parse the continuation state evidence stored under a key in a child receipt."""
     raw = document.get(key)
     if not isinstance(raw, dict):
         raise InstalledContinuationError(f"TUI continuation receipt has no {key}")

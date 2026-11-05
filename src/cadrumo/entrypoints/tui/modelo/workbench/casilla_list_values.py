@@ -120,6 +120,7 @@ def fit(text: str, width: int) -> str:
 
 
 def right(text: str, width: int) -> str:
+    """Right-align text within a cell width."""
     fitted = fit(text, width).rstrip()
     return " " * (width - cell_len(fitted)) + fitted
 
@@ -145,6 +146,7 @@ def label_width(entry: CasillaListEntry, columns: Columns) -> int:
 
 
 def box_mark(field: ModeloFormField) -> str:
+    """Return a field's casilla box mark in brackets, or the no-box marker."""
     return f"[{field.box}]" if (field.box is not None and field.box) else _NO_BOX
 
 
@@ -319,6 +321,7 @@ _SECTION_ROLES: Final[Mapping[str, str]] = MappingProxyType(
 
 
 def heading_role(heading: CasillaListHeading) -> str:
+    """Return the display role of a casilla list heading."""
     if heading.level:
         return "subheading"
     return "heading" if heading.mark is None else _SECTION_ROLES.get(heading.mark.glyph, "heading")

@@ -14,6 +14,7 @@ from .edition_delta_assessment_state import FamilyRun
 
 
 def family_bytes(family: FamilyRun) -> int:
+    """Return the total bytes of the family's section files in a revision directory."""
     revision_dir = family.run.modelo_dir / "revisions" / family.revision_id
     return sum(
         path.stat().st_size
@@ -25,6 +26,7 @@ def family_bytes(family: FamilyRun) -> int:
 
 
 def count_authored_payload(family: FamilyRun, authored: tuple[Mapping[str, object], ...]) -> None:
+    """Count the authored payload fields and operations of a family run."""
     for member in authored:
         _add_field_counts(family, member)
     _count_casilla_operations(family)

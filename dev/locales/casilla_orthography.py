@@ -145,6 +145,7 @@ class UnaccentedWord:
 
 
 def restorations(word: str, table: Mapping[str, str], known: Callable[[str], bool]) -> tuple[str, ...]:
+    """Return the known spellings of a word with its accents or enye restored."""
     bases = [word]
     if "n" in table and "ni" in word:
         bases.append(word.replace("ni", "ñ"))

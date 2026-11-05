@@ -28,6 +28,7 @@ def declaration_finding(
     authority: ValidatedRegistryAuthority,
     pins: tuple[TemporalEnrollmentExclusionPin, ...],
 ) -> LiteralEnrollmentFinding | None:
+    """Build the enrollment finding for a literal declaration, or None when it has no drift."""
     declared, duplicates, absent = _declared_subject_drift(declaration, authority=authority)
     duplicate_pins, active_pins, dormant_pins = _declaration_pin_drift(
         declaration,

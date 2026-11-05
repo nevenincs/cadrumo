@@ -398,6 +398,7 @@ def cross_period_clean_state_non_filer_modelos(
     taxpayer_files_economic_activity: bool | None,
     not_applicable_source_modelos: frozenset[str] | None,
 ) -> frozenset[str]:
+    """Return the source modelos the taxpayer is not expected to file."""
     return frozenset(
         classification.source_modelo
         for classification in snapshot.revision.dependency_classifications

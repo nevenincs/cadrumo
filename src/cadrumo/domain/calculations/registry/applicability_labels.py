@@ -1,3 +1,5 @@
+"""Translated labels for incomplete payer facts used in applicability findings."""
+
 from __future__ import annotations
 
 from ....core.i18n.render import tr

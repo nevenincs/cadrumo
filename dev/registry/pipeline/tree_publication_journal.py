@@ -26,6 +26,7 @@ def journal_supersession_candidate_revision_path(
     journal: GeneratedExportPublicationJournal,
     transaction_paths: GeneratedExportTransactionPaths,
 ) -> Path:
+    """Return the journal's candidate staging path, refusing one that is not a staging sibling."""
     candidate = transaction_paths.transaction_root / journal.candidate_export
     if not candidate.name.startswith(transaction_paths.bundle_staging_prefix):
         raise RegistryValidationError("generated supersession candidate is not a transaction-root staging sibling")
@@ -38,6 +39,7 @@ def journal_supersession_backup_revision_path(
     journal: GeneratedExportPublicationJournal,
     transaction_paths: GeneratedExportTransactionPaths,
 ) -> Path:
+    """Return the journal's backup path, refusing one that is not a backup sibling."""
     backup = transaction_paths.transaction_root / journal.backup_export
     if not backup.name.startswith(transaction_paths.bundle_backup_prefix):
         raise RegistryValidationError("generated supersession backup is not a transaction-root backup sibling")
@@ -47,6 +49,7 @@ def journal_supersession_backup_revision_path(
 
 
 def matches_journal_candidate(export_root: Path, journal: GeneratedExportPublicationJournal) -> bool:
+    """Return whether an export root verifies and matches the journal candidate digest."""
     try:
         verify_generated_export_package(export_root)
         return (
@@ -62,6 +65,7 @@ def journal_backup_path(
     target_export_root: Path,
     target_root: Path,
 ) -> Path:
+    """Return the journal's backup path, refusing a name outside the transaction scope."""
     backup = target_root / journal.backup_export
     backup_prefix = GeneratedExportTransactionPaths(
         target_root=target_root,
@@ -74,6 +78,7 @@ def journal_backup_path(
 
 
 def journal_staged_candidate_path(journal: GeneratedExportPublicationJournal, target_root: Path) -> Path:
+    """Return the journal's staged candidate path, refusing a non-staging or linked one."""
     candidate = target_root / journal.candidate_export
     prefix = GeneratedExportTransactionPaths(
         target_root=target_root,
@@ -160,6 +165,7 @@ def _require_clearance_journal_shape(journal: GeneratedExportPublicationJournal)
 
 
 def delete_journal(path: Path) -> None:
+    """Delete a publication journal file and sync its directory when it exists."""
     if path.exists():
         path.unlink()
         fsync_parent_dir(path)

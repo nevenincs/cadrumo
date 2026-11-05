@@ -222,6 +222,7 @@ def build_pages(
     repeating: Mapping[str, ExportRecordDefinition],
     continued: ContinuedLayout | None,
 ) -> tuple[list[FormPageDefinition], dict[int, tuple[str, str]], set[str], set[str]]:
+    """Build the form pages, their section references and the manual and repeating sets."""
     pages, refs = _position_indexes(build)
     continued_pages = _continued_pages(continued)
     state = _PageBuildState(

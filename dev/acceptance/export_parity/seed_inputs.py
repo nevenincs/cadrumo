@@ -13,10 +13,12 @@ from .scenario import (
 
 
 def money(value: Decimal) -> str:
+    """Format a Decimal as a two-decimal amount string."""
     return f"{value:.2f}"
 
 
 def rate(value: Decimal) -> str:
+    """Format a Decimal rate without trailing zeros or an exponent."""
     return f"{value.normalize():f}"
 
 
@@ -38,6 +40,7 @@ def m303_opening_balance_args(year: int, period: str) -> tuple[str, ...]:
 
 
 def is_investment_good(item: ReceivedInvoice) -> bool:
+    """Report whether the invoice's asset is an IVA investment good."""
     return any(asset.asset_id == item.asset_id and asset.is_iva_investment_good for asset in ASSETS)
 
 
@@ -49,6 +52,7 @@ def investment_asset_args(item: ReceivedInvoice) -> tuple[str, ...]:
 
 
 def binding_ids(document: object) -> Iterator[str]:
+    """Yield every binding_id string found in a nested document."""
     if isinstance(document, dict):
         for key, value in document.items():
             if key == "binding_id" and isinstance(value, str):
@@ -61,6 +65,7 @@ def binding_ids(document: object) -> Iterator[str]:
 
 
 def modelo_190_detail(item: ReceivedInvoice, request: dict[str, object]) -> dict[str, object]:
+    """Build the Modelo 190 perceptor detail row for a received invoice allocation."""
     zero = "0.00"
     return {
         "source_id": request["invoice_id"],
@@ -90,6 +95,7 @@ def modelo_190_detail(item: ReceivedInvoice, request: dict[str, object]) -> dict
 
 
 def modelo_180_property(year: int) -> dict[str, object]:
+    """Build the synthetic Modelo 180 rented-property detail for the filing year."""
     return {
         "property_key": "office-madrid",
         "situation": "1",

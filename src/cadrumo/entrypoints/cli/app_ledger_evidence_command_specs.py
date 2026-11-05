@@ -1,3 +1,5 @@
+"""Declarative command specs for the ledger evidence CLI commands."""
+
 from __future__ import annotations
 
 from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec

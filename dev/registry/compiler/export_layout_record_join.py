@@ -629,6 +629,7 @@ def design_sources(
     layout: ExportLayoutDefinition,
     source_refs: Mapping[str, SourceReference],
 ) -> tuple[SourceReference, ...]:
+    """Return the record design sources among a layout's source references."""
     return tuple(
         source
         for ref in layout.source_refs

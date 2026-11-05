@@ -16,6 +16,7 @@ from .edition_family_delta_difference import difference
 
 
 def append_common_overrides(revision: RevisionState, family: FamilyState, counts: FamilyCounts) -> None:
+    """Append the override for each member the family shares with its successor."""
     for identity, successor_identity in sorted(family.common.items()):
         _append_member_override(revision, family, counts, identity, successor_identity)
 
@@ -169,4 +170,5 @@ def _append_override_details(
 
 
 def skip_empty_scope(revision: RevisionState, spec: KeyedFamilySpec, family: FamilyState) -> bool:
+    """Report whether a scoped family is absent from the revision and keeps every new member."""
     return spec.scoped and spec.section not in revision.scoped_families and family.keep >= set(family.new)

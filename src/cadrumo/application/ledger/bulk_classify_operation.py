@@ -239,6 +239,7 @@ def _require_refusal_receipt(receipt: OperationTerminalReceipt) -> None:
 
 
 def project_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
+    """Project a bulk classify result, checking its identity and receipt effect."""
     projection = _require_matching_result_identity(result, receipt)
     if projection.outcome == "classified":
         expected_effect = (

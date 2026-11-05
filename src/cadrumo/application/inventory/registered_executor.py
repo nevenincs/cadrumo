@@ -625,6 +625,7 @@ def refusal_for_error(
     request: BaseModel,
     error: Exception,
 ) -> InventoryOperationRefusalDetail | None:
+    """Return the refusal detail an inventory error maps to, or None when unmapped."""
     identity = _refusal_identity_for_error(error)
     if identity is None:
         return None

@@ -425,6 +425,7 @@ def _operation_result(
 
 
 def project_operation_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
+    """Project a ledger split result after matching it to its terminal receipt."""
     if type(result) is not LedgerSplitExecutionResult or not terminal_receipt_matches(
         receipt,
         definition_id=LEDGER_SPLIT_OPERATION_DEFINITION_ID,

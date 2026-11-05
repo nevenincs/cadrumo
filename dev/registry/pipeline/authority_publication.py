@@ -566,6 +566,7 @@ def publish_sqlite_authority_candidate(
 
 
 def require_candidate_receipt(candidate: PreparedAuthorityCandidate) -> None:
+    """Require the candidate's registry and source roots to still match its captured receipt."""
     current = capture_receipt(
         candidate.registry_root,
         candidate.source_root,

@@ -111,6 +111,7 @@ def modelo_readiness_commands_readiness_result(
     revision_id: RevisionId,
     filing_year: int,
 ) -> ModeloReadinessResult:
+    """Build the modelo readiness result for the report, authority generation and revision."""
     return ModeloReadinessResult(
         authority_generation=authority_generation,
         profile_id=str(report.profile_id),

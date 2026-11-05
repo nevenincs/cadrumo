@@ -46,6 +46,7 @@ def _box_key(value: str) -> str:
 
 
 def casilla_box(casilla_number: str, form_number: str | None) -> str | None:
+    """Return the box number from the casilla or form number, otherwise None."""
     if _is_box_number(casilla_number):
         return casilla_number
     return form_number if _is_box_number(form_number) else None
@@ -67,6 +68,7 @@ def manual_scalar_bindings(revision: ModeloRevision) -> dict[str, bool]:
 
 
 def fixed_width_records(layouts: Sequence[ExportLayoutDefinition]) -> list[ExportRecordDefinition]:
+    """Return the fixed-width export records of the layouts in record order."""
     records = [
         record for layout in layouts if layout.format is ExportLayoutFormat.FIXED_WIDTH for record in layout.records
     ]

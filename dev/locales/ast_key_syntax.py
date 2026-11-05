@@ -210,6 +210,7 @@ def collect_dotted_literals(node: ast.expr | None, findings: set[str]) -> None:
 
 
 def callee_name(callee: ast.expr) -> str | None:
+    """Return the called function name of a call target, or None for other expressions."""
     if isinstance(callee, ast.Name):
         return callee.id
     if isinstance(callee, ast.Attribute):

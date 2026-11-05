@@ -48,6 +48,7 @@ def _installed_default(raw: object, where: str) -> dict[str, Any]:
 
 
 def environment_root(entry: Mapping[str, Any], names: Mapping[str, Mapping[str, str]]) -> dict[str, Any]:
+    """Build the validated root declaration from an environment entry."""
     keys(entry, "root", _ROOT_KEYS, {"vectors"})
     variable = entry["variable"]
     if names.get(variable, {}).get("role") != "location":
@@ -144,6 +145,7 @@ def _vector_values(
 
 
 def vectors(raw: object, root: Mapping[str, Any]) -> tuple[dict[str, Any], ...]:
+    """Parse the root vectors, refusing repeated vector names."""
     vectors = tuple(
         _vector(item, f"root.vectors[{index}]", root)
         for index, item in enumerate(

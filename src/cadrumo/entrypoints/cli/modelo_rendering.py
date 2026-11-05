@@ -318,6 +318,7 @@ def _effective_work_unit_state(unit: WorkUnit) -> str:
 
 
 def work_unit_payload(unit: WorkUnit) -> WorkUnitPayload:
+    """Project a work unit into its payload."""
     return WorkUnitPayload(
         work_unit_id=unit.work_unit_id,
         short_work_unit_id=short_id(unit.work_unit_id) or "",
@@ -343,6 +344,7 @@ def work_unit_payload(unit: WorkUnit) -> WorkUnitPayload:
 
 
 def work_unit_lines(unit: WorkUnit, *, include_bucket_id: bool = True) -> list[str]:
+    """Render a work unit as tab-separated key and value lines."""
     lines = [
         f"work_unit_id\t{unit.work_unit_id}",
         f"short_work_unit_id\t{_short_id_text(unit.work_unit_id)}",
@@ -375,6 +377,7 @@ def work_unit_lines(unit: WorkUnit, *, include_bucket_id: bool = True) -> list[s
 
 
 def work_unit_list_lines(units: Sequence[WorkUnit], *, include_discarded: bool) -> list[str]:
+    """Render the work-unit listing as a header followed by one line per unit."""
     lines = [
         "operation\tmodelo.work.list",
         f"include_discarded\t{include_discarded}",

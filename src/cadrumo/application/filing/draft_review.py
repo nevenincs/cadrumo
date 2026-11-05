@@ -754,6 +754,7 @@ def _draft_review_fingerprint(draft: ModeloDraft) -> str:
 
 
 def transaction_catalogue_fingerprint(catalogue: TransactionCatalogue) -> str:
+    """Fingerprint the transaction catalogue by hashing its normalized transactions by id."""
     payload = [
         _normalize_transaction(transaction)
         for transaction in sorted(catalogue.values(), key=lambda item: item.transaction_id)

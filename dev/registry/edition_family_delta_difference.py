@@ -8,6 +8,7 @@ from collections.abc import Mapping, Sequence
 def difference(
     left: Mapping[str, object], right: Mapping[str, object], *, identity: str
 ) -> tuple[dict[str, object], list[str], dict[str, list[object]], dict[str, list[int]], dict[str, list[int]]]:
+    """Compute the field differences, removals, additions and order changes between mappings."""
     fields: dict[str, object] = {}
     removed: list[str] = []
     additions: dict[str, list[object]] = {}

@@ -30,6 +30,7 @@ def chain_id_is_wellformed(candidate: str) -> bool:
 
 
 def normalise(text: str) -> str:
+    """Fold text to a case-folded, whitespace-collapsed form without trailing punctuation."""
     folded = unicodedata.normalize("NFKC", text).casefold()
     return _WHITESPACE.sub(" ", folded).strip().rstrip(".,;:")
 

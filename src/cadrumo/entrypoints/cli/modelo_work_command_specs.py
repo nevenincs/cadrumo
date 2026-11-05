@@ -148,6 +148,7 @@ def o(
     transport_shape: TransportShape = TransportShape.NOT_APPLICABLE,
     transport_role: TransportRole = TransportRole.NOT_APPLICABLE,
 ) -> OptionSpec:
+    """Build an option spec for a work command with its translated help."""
     literal_default = False if flag and default is None else (() if multiple else default)
     return OptionSpec(
         name,
@@ -165,6 +166,7 @@ def o(
 
 
 def a(name: str, *, help_name: str | None = None, required: bool = False) -> ArgumentSpec:
+    """Build a text argument spec for a work command."""
     return ArgumentSpec(
         name,
         TEXT_VALUE,

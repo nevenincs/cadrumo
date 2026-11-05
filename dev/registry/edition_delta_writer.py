@@ -15,6 +15,7 @@ from . import (
 
 
 def write_edition(edition_dir: Path, work: edition_delta_source.EditionWork) -> None:
+    """Write an edition directory's casilla fragments and manifest, removing unrendered ones."""
     casillas = edition_dir / edition_delta_fields.CASILLAS
     originals = {fragment.path.name: fragment.path.read_text(encoding="utf-8") for fragment in work.source.fragments}
     rendered = _render_fragments(work)

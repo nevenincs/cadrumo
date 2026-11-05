@@ -21,6 +21,7 @@ app = typer.Typer(
 
 
 def default_manager() -> NewModeloScaffoldManager:
+    """Return the new modelo scaffold manager over the registry modelos root."""
     # cli.py lives at dev/registry/newmodelo/cli.py; parents[3] is the repo root.
     repo_root = REPO_ROOT
     modelos_root = repo_root / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"

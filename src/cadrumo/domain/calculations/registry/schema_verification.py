@@ -947,6 +947,7 @@ def parse_verification_predicate_expression(expression: str) -> ParsedVerificati
 
 @lru_cache(maxsize=_PARSED_PREDICATE_CACHE_SIZE)
 def parse_verification_predicate_expression_memo(expression: str) -> ParsedVerificationPredicate:
+    """Parse a verification predicate expression into its operator and parsed form."""
     operator_name = verification_predicate_operator_name(expression)
     if operator_name is None:
         raise RegistryValidationError("verification predicate expression names no operator")

@@ -51,6 +51,7 @@ def _require_health_running(process: WindowsOwnedProcess, root: Path, deadline: 
 def recover_runtime(
     process: WindowsOwnedProcess, scope: WindowsProcessScope, executable: Path, root: Path, deadline: float
 ) -> None:
+    """Inject a runtime fault in the packaged desktop and check that it recovers."""
     import win32api
     import win32con
     import win32event

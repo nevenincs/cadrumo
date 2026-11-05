@@ -1,3 +1,5 @@
+"""Declare the command specs for the live verify commands."""
+
 from __future__ import annotations
 
 from typing import Final

@@ -152,14 +152,17 @@ def cotejo_document_url(origin: str, csv: str) -> str:
 
 
 def get_form_interaction_timeout_ms() -> int:
+    """Return the configured form interaction timeout in milliseconds."""
     return load_settings().cadrumo_browser_form_interaction_timeout_ms
 
 
 def get_buscar_settle_ms() -> int:
+    """Return the configured settle delay after the search action in milliseconds."""
     return load_settings().cadrumo_browser_buscar_settle_ms
 
 
 def get_ver_click_timeout_ms() -> int:
+    """Return the configured timeout for clicking a row's view button in milliseconds."""
     return load_settings().cadrumo_browser_ver_click_timeout_ms
 
 
@@ -227,6 +230,7 @@ async def capture_row_pdf_artefact(
     kind: Literal["justificante_pdf", "declaration_pdf"],
     read_policy: RemoteStateGuardPolicy,
 ) -> tuple[FiledDeclaracionArtefact, bytes]:
+    """Open a row's cotejo PDF and return its artefact record with the bytes fetched in memory."""
     button = row_locator.locator(".z-listcell").nth(cell_index).locator(".z-button").first
     try:
         async with context.expect_page(timeout=get_ver_click_timeout_ms()) as new_page_info:
@@ -308,6 +312,7 @@ async def capture_submitted_file_artefact(
     #     authenticated request context -- the identical shape
     #     `capture_row_pdf_artefact` uses for the cotejo PDF.
     # (sensitive-financial-data-secure-storage-only)
+    """Download a row's submitted file and return its artefact record with the bytes fetched in memory."""
     button = row_locator.locator(".z-listcell").nth(cell_index).locator(".z-button").first
     try:
         async with page.expect_download(timeout=get_ver_click_timeout_ms()) as download_info:
@@ -364,6 +369,7 @@ def assert_declarations_read_http(
     *,
     policy: RemoteStateGuardPolicy = READ_GUARD_POLICY,
 ) -> None:
+    """Refuse an HTTP request that the declarations read policy does not admit."""
     assert_read_http_for(policy, method, url)
 
 
@@ -372,4 +378,5 @@ def assert_declarations_read_browser_action(
     *,
     policy: RemoteStateGuardPolicy = READ_GUARD_POLICY,
 ) -> None:
+    """Refuse a browser action that the declarations read policy does not admit."""
     assert_query_browser_action_for(policy, action)

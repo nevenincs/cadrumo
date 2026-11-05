@@ -95,6 +95,7 @@ def diagnostics_root(ctx: typer.Context) -> None:
 
 
 def parse_iso_date(value: str | None, option: str) -> _date | None:
+    """Parse an optional ISO date option, returning None when it is absent."""
     if value is None:
         return None
     from .date_parsing import parse_iso_date

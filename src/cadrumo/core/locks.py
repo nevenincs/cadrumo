@@ -116,6 +116,7 @@ else:  # POSIX
     import fcntl
 
     def try_lock(fd: int) -> bool:
+        """Try a non-blocking exclusive lock on the descriptor and report whether it was taken."""
         try:
             fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
             return True
@@ -123,6 +124,7 @@ else:  # POSIX
             return False
 
     def release_lock(fd: int, *, log_events: bool = True) -> None:
+        """Release the lock on the descriptor, logging a failed release when requested."""
         try:
             fcntl.flock(fd, fcntl.LOCK_UN)
         except OSError:

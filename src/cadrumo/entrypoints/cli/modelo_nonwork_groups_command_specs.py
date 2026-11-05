@@ -1,3 +1,5 @@
+"""Declare the command specs for the non-work modelo command groups."""
+
 from __future__ import annotations
 
 from cadrumo_client.commands.shared_contracts import ResultSchemaSpec, SchemaState, TranslationKey

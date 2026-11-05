@@ -57,6 +57,7 @@ def _validate_filing_year(year: int) -> None:
 
 
 def guard_unsupported_work_modelo(modelo: str) -> None:
+    """Refuse creating work for a modelo that has a registered work-creation refusal."""
     from cadrumo_client.commands.errors import CliRefusedBoundaryError
 
     modelo_code = modelo.strip()
@@ -101,6 +102,7 @@ def emit_work_create_result(
     advisory_keys: tuple[str, ...] = (),
     quiet: bool = False,
 ) -> None:
+    """Emit the result of creating or reusing a modelo work unit."""
     status = "reused" if reused else "created"
     if reused:
         status_message, operation = _reused_work_status_message(name=name, name_applied=name_applied)

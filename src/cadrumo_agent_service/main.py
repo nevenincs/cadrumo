@@ -193,6 +193,7 @@ def end_lifetime(service: AgentService, stop: Event, wake: Event) -> None:
 
 
 def run_service_loop(client: InstalledServiceClient, service: AgentService, stop: Event, wake: Event) -> None:
+    """Run the agent service loop that claims leases and serves until stopped."""
     admitted = False
     started = False
     while not stop.is_set():

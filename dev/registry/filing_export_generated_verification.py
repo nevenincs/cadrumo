@@ -35,6 +35,8 @@ from .pipeline.semantic_map_validation import verify_requirement_statements
 
 @dataclass(frozen=True, slots=True)
 class ConformanceGenerationEntry:
+    """A modelo revision, design epoch and filing year recorded for generated export checks."""
+
     modelo: ModeloId
     revision: RevisionId
     design_epoch: str

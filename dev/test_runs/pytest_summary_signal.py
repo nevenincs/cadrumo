@@ -61,6 +61,7 @@ class PytestSummaryProcessor:
         )
 
     def consume(self, line: str) -> dict[str, object] | None:
+        """Process one pytest output line, returning a lane event or summary once one completes."""
         text = line.strip()
         marker = lane_marker(text)
         if marker is not None:
@@ -118,6 +119,7 @@ class PytestSummaryProcessor:
         started: datetime,
         finished: datetime,
     ) -> dict[str, object]:
+        """Build the summary signal envelope for a finished pytest run."""
         failures = self.counts["failed"]
         errors = self.counts["error"]
         completed, blocked, expected, complete = self._completion()

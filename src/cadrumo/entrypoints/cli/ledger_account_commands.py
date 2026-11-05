@@ -126,6 +126,7 @@ def _profile_id() -> UUID:
 
 
 def date_option(value: str | None, *, option: str) -> date | None:
+    """Parse an optional ISO date for a ledger account option."""
     if value is None:
         return None
     return parse_iso_date(value, label=option, translation_key="cli.ledger.account.errors.invalid_date")

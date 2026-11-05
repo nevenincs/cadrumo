@@ -504,6 +504,7 @@ def _admits_spanish_identity(normalised: str, structurally_shaped: Callable[[obj
 
 
 def apply_one(rule: RedactionRule, value: str) -> str:
+    """Apply one redaction rule to a string while protecting timestamps and identifiers."""
     from ..classification.policies import RedactionStrategy
 
     pattern = _compiled_rule_pattern(rule.pattern)
@@ -975,6 +976,7 @@ def _redact_cli_string_cached(text: str, reveal_identifiers: bool, admission: Ha
 
 
 def redact_cli_string_uncached(text: str, reveal_identifiers: bool) -> str:
+    """Redact a CLI output string without the cache, exempting the spreadsheet URL line."""
     # This named success-output line is an artifact locator, not an OAuth URL.
     # Keep the exemption out of the generic log/error URL rule entirely.
     sheet_label = "spreadsheet_url\t"

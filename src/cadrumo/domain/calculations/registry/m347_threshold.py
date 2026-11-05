@@ -170,6 +170,7 @@ def resolve_m347_floor_fact(
     effective_date: date,
     authority: GovernedFactSource,
 ) -> ResolvedScalarFact:
+    """Resolve the scalar governed fact giving a modelo 347 floor at a date."""
     resolved = authority.resolve_governed_fact(
         ScalarFactQuery(
             fact_id=fact_id,

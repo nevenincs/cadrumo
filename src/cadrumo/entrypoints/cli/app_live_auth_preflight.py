@@ -11,6 +11,7 @@ from ...core.terminal_encoding import encode_terminal_text
 
 
 def metric_line(key: str, value: object) -> str:
+    """Format one preflight metric as a ``key=value`` line."""
     return f"{key}={value}"
 
 
@@ -40,6 +41,7 @@ def emit_live_auth_preflight(
 
 
 def live_auth_preflight_lines(report: LiveAuthPreflightReport) -> tuple[str, ...]:
+    """Build the redacted metric lines of a live authentication preflight report."""
     return (
         metric_line("auth_preflight", "redacted"),
         metric_line("auth_provider", report.provider),

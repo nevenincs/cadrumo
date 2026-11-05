@@ -139,6 +139,7 @@ def _prompt_field(client: FrontendClient, path: str) -> None:
 
 
 def censo_authentication_configure(client: FrontendClient, readiness: AuthSyncReadiness) -> None:
+    """Prompt for and save the census authentication provider configuration."""
     choices = known_auth_provider_ids()
     provider = typer.prompt(
         tr("cli.censo_auth.method"),
@@ -189,6 +190,7 @@ def _prompt_provider_fields(client: FrontendClient, kind: AuthProviderKind, rout
 
 
 def save_password(client: FrontendClient, provider: AuthProviderKind) -> None:
+    """Prompt for a password and save it as the provider credential through the operation."""
     import json
 
     from ....application.auth.credential_operations import (

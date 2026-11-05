@@ -95,6 +95,7 @@ def _options_trail(arguments: Sequence[InvocationArgument], where: str) -> None:
 
 
 def environment_profiles_invocations(raw: object) -> tuple[Invocation, ...]:
+    """Parse the declared invocations array into invocation records."""
     if not isinstance(raw, list):
         raise fail("invocations must be an array of tables")
     invocations: list[Invocation] = []
@@ -145,6 +146,7 @@ def environment_profiles_fixed(
     role: str,
     allow_build_setting: bool = False,
 ) -> FixedValue:
+    """Parse a fixed environment value that has exactly one source."""
     entry = environment_declaration_primitives_table(raw, where)
     allowed = {"value", "layout_path", "image"}
     if allow_build_setting:
@@ -165,6 +167,7 @@ def environment_profiles_fixed(
 def environment_profiles(
     raw: object, names: Mapping[str, Mapping[str, str]], groups: Mapping[str, tuple[str, ...]], root_variable: str
 ) -> dict[str, dict[str, Any]]:
+    """Parse the declared environment profiles into a profile mapping."""
     profiles: dict[str, dict[str, Any]] = {}
     for profile, item in environment_declaration_primitives_table(raw, "profiles").items():
         profiles[profile] = _profile(profile, item, names, groups, root_variable)

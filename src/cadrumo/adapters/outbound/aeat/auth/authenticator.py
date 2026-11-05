@@ -128,6 +128,7 @@ def require_exact_active_certificate_session(
     session: AeatSession,
     active_session: AeatSession | None,
 ) -> None:
+    """Refuse a session that is not the exact active certificate session with its identity."""
     if (
         not is_exact_active_provider_session(
             session,

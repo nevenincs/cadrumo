@@ -130,6 +130,7 @@ def _assert_read_landing(page: Page) -> None:
 
 
 def assert_query_browser_action(action: str) -> None:
+    """Check a browser action against the NIF-IVA read guard policy."""
     assert_query_browser_action_for(READ_GUARD_POLICY, action)
 
 

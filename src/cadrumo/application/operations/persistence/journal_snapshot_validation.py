@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 
 
 def validate_request_storage(snapshot: OperationPersistedSnapshot) -> None:
+    """Check that the snapshot's request storage policy agrees with whether it holds an inline journal request."""
     journal_request = snapshot.credential_free_request_json
     if snapshot.request_storage is OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL:
         if journal_request is None or not journal_request:
@@ -30,6 +31,7 @@ def validate_request_storage(snapshot: OperationPersistedSnapshot) -> None:
 
 
 def validate_secret_state(snapshot: OperationPersistedSnapshot) -> None:
+    """Check the snapshot's secret requirement and executor entry for consistency."""
     requirement = snapshot.secret_requirement
     entered_at = snapshot.executor_entered_at
     validate_executor_entry(snapshot, entered_at)
@@ -154,12 +156,14 @@ def validate_cancellation_acknowledgement(
 
 
 def validate_checkpoint_state(snapshot: OperationPersistedSnapshot) -> None:
+    """Check the snapshot's idempotency claim and its pending and consumed interactions."""
     validate_idempotency_claim(snapshot)
     validate_pending_interaction(snapshot)
     validate_consumed_interactions(snapshot)
 
 
 def validate_idempotency_claim(snapshot: OperationPersistedSnapshot) -> None:
+    """Check that the idempotency claim matches the persisted operation and request identity."""
     claim = snapshot.idempotency_claim
     if claim is None:
         return
@@ -170,6 +174,7 @@ def validate_idempotency_claim(snapshot: OperationPersistedSnapshot) -> None:
 
 
 def validate_pending_interaction(snapshot: OperationPersistedSnapshot) -> None:
+    """Check that a pending interaction matches the lifecycle, identity and revision of the persisted operation."""
     pending = snapshot.pending_interaction
     if pending is None:
         return
@@ -180,6 +185,7 @@ def validate_pending_interaction(snapshot: OperationPersistedSnapshot) -> None:
 
 
 def validate_consumed_interactions(snapshot: OperationPersistedSnapshot) -> None:
+    """Check that consumed interaction identities are unique and exclude the pending interaction."""
     consumed_ids = tuple(item.interaction_id for item in snapshot.consumed_interactions)
     if len(set(consumed_ids)) != len(consumed_ids):
         raise ValueError("consumed interaction identities must be unique")

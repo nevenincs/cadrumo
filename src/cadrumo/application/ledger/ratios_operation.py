@@ -511,6 +511,7 @@ def _copy_result[T: BaseModel](result: BaseModel, expected_type: type[T]) -> T:
 
 
 def project_list_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> LedgerRatiosListProjection:
+    """Project a ratios list result after matching it to its terminal receipt."""
     private = _copy_result(result, LedgerRatiosListResult)
     refused = private.outcome == "censo_mismatch"
     _receipt_matches(
@@ -525,6 +526,7 @@ def project_list_result(result: BaseModel, receipt: OperationTerminalReceipt, /)
 
 
 def project_set_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> LedgerRatiosSetProjection:
+    """Project a ratios set result after matching it to its terminal receipt."""
     private = _copy_result(result, LedgerRatiosSetResult)
     _receipt_matches(
         receipt,
@@ -536,6 +538,7 @@ def project_set_result(result: BaseModel, receipt: OperationTerminalReceipt, /) 
 
 
 def project_unset_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> LedgerRatiosUnsetProjection:
+    """Project a ratios unset result after matching it to its terminal receipt."""
     private = _copy_result(result, LedgerRatiosUnsetResult)
     refused = private.outcome == "no_override"
     expected = OperationEffect.NONE if refused else OperationEffect.UPDATED

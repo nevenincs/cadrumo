@@ -21,6 +21,7 @@ def environment_path_external_path_defaults(
     raw: object,
     base: Mapping[str, Mapping[str, tuple[str, ...]]],
 ) -> tuple[ExternalPathDefault, ...]:
+    """Parse and validate the external installation path defaults, refusing repeats."""
     defaults: list[ExternalPathDefault] = []
     seen: set[tuple[str, str | None, str, tuple[str, ...]]] = set()
     for index, item in enumerate(environment_declaration_primitives_list(raw, "path.external_defaults")):

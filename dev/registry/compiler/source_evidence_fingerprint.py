@@ -94,6 +94,7 @@ def collect_source_evidence_fingerprints(
 
 
 def walk_source_evidence(roots: tuple[Path, ...]) -> SourceEvidenceFingerprint:
+    """Fingerprint the source evidence files under the roots by path, size and mtime."""
     fingerprints: list[tuple[str, int, int]] = []
     for root in roots:
         for path in scan_directory(

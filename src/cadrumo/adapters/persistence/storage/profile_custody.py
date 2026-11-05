@@ -209,7 +209,10 @@ class _PersistenceProfileBucketStorage:
 
 
 class PersistenceProfileRecordCrypto:
+    """Profile record cryptography backed by the persistence layer's key derivation and AEAD."""
+
     def passphrase_kdf_policy(self) -> ProfilePassphraseKdfPolicy:
+        """Return the Argon2 passphrase key-derivation policy bounds."""
         return ProfilePassphraseKdfPolicy(
             version=ARGON2_VERSION,
             minimum_memory_cost_kib=MIN_MEMORY_COST_KIB,
@@ -229,6 +232,7 @@ class PersistenceProfileRecordCrypto:
         parallelism: int,
         salt: bytes,
     ) -> bool:
+        """Report whether the given Argon2 cost parameters fall inside the accepted window."""
         policy = self.passphrase_kdf_policy()
         return (
             policy.minimum_memory_cost_kib <= memory_cost <= policy.maximum_memory_cost_kib
@@ -244,6 +248,7 @@ class PersistenceProfileRecordCrypto:
         key: bytes,
         associated_data: bytes | None = None,
     ) -> ProfileRecordEncryptedBlob:
+        """Encrypt a profile record under the key with optional associated data."""
         try:
             blob = encrypt_record(plaintext, key=key, associated_data=associated_data)
             return ProfileRecordEncryptedBlob(nonce=blob.nonce, ciphertext=blob.ciphertext)
@@ -257,6 +262,7 @@ class PersistenceProfileRecordCrypto:
         key: bytes,
         associated_data: bytes | None = None,
     ) -> bytes:
+        """Decrypt a profile record blob under the key with optional associated data."""
         try:
             adapter_blob = EncryptedBlob(nonce=blob.nonce, ciphertext=blob.ciphertext)
             return decrypt_record(adapter_blob, key=key, associated_data=associated_data)
@@ -270,6 +276,7 @@ class PersistenceProfileRecordCrypto:
         passphrase: bytes,
         associated_data: bytes,
     ) -> ProfilePassphraseEncryptedRecord:
+        """Encrypt plaintext under a key derived from the passphrase."""
         try:
             parameters = KdfParams.default()
             sealing_key = derive_kek_with_params(

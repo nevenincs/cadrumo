@@ -225,6 +225,7 @@ def _resolve_viewports(names: list[str] | None) -> tuple[viewports.Viewport, ...
 
 
 def resolve_themes(names: list[str] | None) -> tuple[ThemeName, ...]:
+    """Resolve the named themes, refusing unknown ones, or return all themes."""
     if not (names is not None and names):
         return THEMES
     chosen: list[ThemeName] = []

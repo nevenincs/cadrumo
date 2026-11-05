@@ -61,6 +61,7 @@ def store_acquired_payload(
 
 
 def sha256_bytes(data: bytes) -> str:
+    """Return the SHA-256 hex digest of the given bytes."""
     return hashlib.sha256(data).hexdigest()
 
 

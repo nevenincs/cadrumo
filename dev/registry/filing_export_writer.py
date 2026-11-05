@@ -26,6 +26,7 @@ def export(
     output_path: Path,
     schema_provider: RegistrySchemaAccessor,
 ) -> DeclaracionExportResult:
+    """Export a filing draft from a conformance or replay proof input."""
     return export_draft(
         proof_input.draft,
         output_path=output_path,
@@ -38,4 +39,5 @@ def export(
 
 
 def dictionary_mapping(values: tuple[FilingExportDictionaryValue, ...]) -> Mapping[str, object] | None:
+    """Return the dictionary values as a field id mapping, or None when empty."""
     return {item.field_id: item.value for item in values} or None

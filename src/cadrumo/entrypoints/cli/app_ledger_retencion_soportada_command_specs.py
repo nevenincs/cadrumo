@@ -1,3 +1,5 @@
+"""Declare the command specs for the retencion soportada ledger commands."""
+
 from __future__ import annotations
 
 from typing import Final

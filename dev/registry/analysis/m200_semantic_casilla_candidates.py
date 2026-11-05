@@ -201,6 +201,7 @@ def classify_sibling(
     authored_token: CasillaId,
     target_ids_by_number: Mapping[str, tuple[CasillaId, ...]],
 ) -> tuple[M200CasillaDisposition, str, str | None, str | None]:
+    """Classify a sibling record design field relative to a target for casilla candidates."""
     printed_number = _printed_number(target_field)
     if printed_number is None or printed_number.lstrip("0") != authored_token.lstrip("0"):
         return (

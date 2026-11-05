@@ -47,6 +47,8 @@ class WindowsDesktopLogon:
 
 @dataclass(frozen=True, slots=True, repr=False)
 class TokenSnapshot:
+    """An immutable snapshot of the Windows token facts that identify a desktop logon."""
+
     os_owner_id: str
     authentication_id: int
     session_id: int
@@ -59,6 +61,8 @@ class TokenSnapshot:
 
 @dataclass(frozen=True, slots=True, repr=False)
 class StationSnapshot:
+    """An immutable snapshot of the Windows window station facts bound to a desktop logon."""
+
     name: str
     kind: str
     flags: int
@@ -97,6 +101,7 @@ def validated_witness(
     after_token: TokenSnapshot,
     after_station: StationSnapshot,
 ) -> WindowsDesktopLogon:
+    """Return the desktop logon witness once both snapshots agree and native checks pass."""
     if before_token != after_token or before_station != after_station:
         raise _unavailable()
     token, station = before_token, before_station
@@ -117,6 +122,7 @@ def _windows_library(name: str) -> ctypes.CDLL:
 
 @contextmanager
 def owned_handle(handle: int, close: Callable[[int], bool]) -> Generator[int]:
+    """Yield a native handle and close it on exit, refusing if closing fails."""
     primary: BaseException | None = None
     try:
         yield handle
@@ -216,6 +222,7 @@ def _object_bytes(user: ctypes.CDLL, station: int, index: int, maximum: int) -> 
 
 
 def object_text(payload: bytes) -> str:
+    """Decode a NUL-terminated UTF-16 native object name or refuse when malformed."""
     if not 2 <= len(payload) <= _TEXT_MAX_BYTES or len(payload) % 2:
         raise _unavailable()
     try:

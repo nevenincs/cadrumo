@@ -59,10 +59,12 @@ class SingleExportCoverage:
 
     @property
     def reached_count(self) -> int:
+        """Return one when the export was reached, otherwise zero."""
         return 1 if self._reached else 0
 
     @property
     def divergences(self) -> tuple[object, ...]:
+        """Return an empty tuple, since a single export records no divergences."""
         return ()
 
 
@@ -79,6 +81,7 @@ class _CalcSheetsApplyResult(Protocol):
 
 
 def export_scope_description(plan: SheetExportPlan) -> str:
+    """Describe the scope of an export as its modelo, period and filing year."""
     metadata = plan.metadata
     return bounded_scope_description(
         (f"{metadata.modelo_id}-{metadata.period.registry_token}-{metadata.filing_year}",),

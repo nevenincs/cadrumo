@@ -716,6 +716,7 @@ def persist_prepared_ledger_source_import(
 
 
 def resolve_financial_provider(provider: str, path: Path, *, ports: LedgerImportPorts) -> FinancialProviderProtocol:
+    """Resolve the financial provider for an import from its name and file path."""
     try:
         provider_id = LedgerProviderID(provider.strip().lower())
     except ValueError as exc:

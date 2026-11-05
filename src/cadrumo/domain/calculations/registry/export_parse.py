@@ -363,6 +363,7 @@ def parse_field_value(
     field: ExportFieldDefinition,
     raw: str,
 ) -> ParsedExportPolicyValue:
+    """Parse one fixed-width export field value from its raw text."""
     if field.presence_marker is not None:
         # Preserve the ordinary-return blank as its actual text token rather
         # than converting it to None, which would fail required-slot replay.

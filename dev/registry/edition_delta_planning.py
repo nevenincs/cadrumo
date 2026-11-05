@@ -35,6 +35,7 @@ def edition_delta_planning_plan(
     modelo_dir: Path,
     definition: ModeloDefinition,
 ) -> tuple[edition_delta_types.MigrationPlan, tuple[edition_delta_source.EditionWork, ...]]:
+    """Plan the edition delta migration of a modelo and read each edition's work."""
     ordered = tuple(ordered_revisions(definition))
     sources = {
         str(revision.id): edition_delta_source.read_edition(modelo_dir, str(revision.id)) for revision in ordered

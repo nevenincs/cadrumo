@@ -93,6 +93,7 @@ class ProfileBareModelSecurePersistence[DocumentT: BaseModel]:
         write_provenance: str = DEFAULT_WRITE_PROVENANCE,
         mutation_writer: Callable[[Callable[[], None]], None] | None = None,
     ) -> None:
+        """Bind the repository, namespace definition, model type, write provenance and mutation writer."""
         self._objects = objects
         self._definition = definition
         self._model_type = model_type

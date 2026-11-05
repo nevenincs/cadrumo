@@ -487,6 +487,7 @@ async def hold(
     frontend: OperationFrontendProjection = OperationFrontendProjection.DESKTOP,
     persist_receipt: bool = False,
 ) -> int:
+    """Sign in and hold a profile session open, returning the process exit status."""
     client = await open_installed_client(profile_id=profile_id, frontend=frontend)
     try:
         stdin_fd = sys.stdin.fileno()

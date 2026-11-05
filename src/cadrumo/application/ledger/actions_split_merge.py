@@ -976,6 +976,7 @@ def build_merged_transaction(
     actor: str,
     source_command: str,
 ) -> Transaction:
+    """Build the merged transaction that rejoins the children of a split group."""
     # Its content-addressed id varies from the parent's because the
     # synthesized provider_id is unique.
     parent_raw = parent.raw

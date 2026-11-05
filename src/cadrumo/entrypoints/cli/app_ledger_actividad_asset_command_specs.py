@@ -107,6 +107,7 @@ def read_leaf(
     token: str,
     parameters: tuple[ArgumentSpec | OptionSpec, ...] = (),
 ) -> CommandSpec:
+    """Build a read-only leaf command spec for a token with the given parameters."""
     name = token.replace("-", "_")
     return _leaf(
         f"app_ledger_actividad_asset_{name}",

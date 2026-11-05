@@ -65,6 +65,7 @@ def _existing_request_transition(
 def proposal_is_allowed(
     proposal: EnrollmentProposal, facts: AdministrationFacts, requester: EnrollmentRequester
 ) -> bool:
+    """Return whether an enrollment proposal stays within the profile scope and is unexpired."""
     return (
         scope_is_subset(proposal.scope, facts.profile.scope)
         and proposal.expires_at > facts.context.now

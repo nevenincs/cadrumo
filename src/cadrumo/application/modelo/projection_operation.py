@@ -630,6 +630,7 @@ def valid_execution[Payload: BaseModel](
     profile_id: UUID,
     definition_id: str,
 ) -> bool:
+    """Return whether a request and context both address the given definition and profile."""
     subject = profile_operation_subject(str(profile_id))
     return (
         request.definition_id == definition_id

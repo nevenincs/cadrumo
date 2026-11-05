@@ -28,6 +28,7 @@ def start(
     resources: ExitStack,
     runtime_scope: AbstractContextManager[object] | None = None,
 ) -> tuple[InstalledCli, list[SanitizedCommandReceipt], Path]:
+    """Start the installed CLI against a fresh storage root and create the journey profile."""
     if storage_root.exists() and any(storage_root.iterdir()):
         raise IvaCliJourneyError(f"storage root must be fresh and empty: {storage_root}")
     storage_root.mkdir(parents=True, exist_ok=True)
@@ -48,6 +49,7 @@ def start(
 
 
 def reopen(cli: InstalledCli, authority_root: Path, storage_root: Path) -> InstalledCli:
+    """Return a new installed CLI handle over the given authority and storage roots."""
     return InstalledCli(
         cli.executable, storage_root=storage_root, authority_root=authority_root, passphrase=cli.passphrase
     )

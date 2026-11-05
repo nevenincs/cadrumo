@@ -144,6 +144,7 @@ def _copy_ref(run_token: str, slot: str) -> str:
 
 
 def value_page_id(casilla_id: str) -> str:
+    """Return the amendment wizard page id for a casilla value."""
     return f"value:{casilla_id}"
 
 

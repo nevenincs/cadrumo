@@ -75,10 +75,12 @@ REVIEWED: dict[tuple[str, str], tuple[str, str, str, str]] = {
 
 
 def sha(path: Path) -> str:
+    """Return the SHA-256 hex digest of a file's bytes."""
     return sha256(path.read_bytes()).hexdigest()
 
 
 def other_files(root: Path, modelo: str, revision: str, *, transaction_backup: Path | None = None) -> dict[str, str]:
+    """Map the other generated files of a revision's export tree to their digests."""
     prefix = f"modelos/{modelo}/revisions/{revision}/export/"
     form = f"modelos/{modelo}/revisions/{revision}/form_layouts/0001-form-layout.toml"
     return {

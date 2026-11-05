@@ -21,6 +21,7 @@ class DeadWeightSignalProcessor:
         self.lines: list[str] = []
 
     def consume(self, line: str) -> None:
+        """Record one output line."""
         self.lines.append(line)
 
     def envelope(
@@ -33,6 +34,7 @@ class DeadWeightSignalProcessor:
         started: datetime,
         finished: datetime,
     ) -> dict[str, object]:
+        """Build the dead-weight summary signal envelope for a finished run."""
         summary: dict[str, object]
         try:
             decoded = json.loads("".join(self.lines))

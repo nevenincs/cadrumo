@@ -213,6 +213,7 @@ def filed_discover_cmd(ctx: typer.Context) -> None:
 
 
 def filed_discover_result_and_lines(report: FiledHistoryDiscoveryReport) -> tuple[Any, tuple[str, ...]]:
+    """Build the filed-history discovery result and its metric lines from the report."""
     from .app_live_filed_results import FiledDiscoverResult, FiledHistoryDiscoveryPairPayload
 
     lines = [
@@ -327,6 +328,7 @@ def filed_pull_all_cmd(
 
 
 def filed_pull_all_result_and_lines(run: FiledHistoryOnboardingRun) -> tuple[Any, tuple[str, ...]]:
+    """Build the filed-history onboarding result and its metric lines from the run."""
     from .app_live_filed_results import FiledHistoryOnboardingResult, FiledHistoryPairOutcomePayload
 
     refused = run.refused_pairs

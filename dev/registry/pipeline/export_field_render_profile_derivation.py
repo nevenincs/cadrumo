@@ -76,6 +76,7 @@ def render_profile_numeric_derivation(
     *,
     export_record_id: str,
 ) -> ExportFieldDerivation:
+    """Derive an export field's numeric derivation from the render profile."""
     anchor = render_profile_anchor(joined_field)
     # The sign subdivision is stated in the cell prose, so a composite governs
     # its anchor even where the naturaleza column prints the slot as numeric.
@@ -134,6 +135,7 @@ def profile_singleton_derivation(
     *,
     export_record_id: str,
 ) -> ExportFieldDerivation:
+    """Derive an export field's derivation from a singleton numeric rule."""
     data_type, padding, justification, date_format, decimals, signed = _singleton_numeric_shape(rule)
     allowed_values = rule.allowed_values or None if rule.value_policy is ExportValuePolicy.ENUMERATED_DIGITS else None
     return schema_field(
@@ -193,6 +195,7 @@ def profile_signed_composite_derivation(
     *,
     export_record_id: str,
 ) -> ExportFieldDerivation:
+    """Derive an export field's derivation from a signed monetary composite rule."""
     return schema_field(
         joined_field,
         data_type="money",
@@ -207,6 +210,7 @@ def profile_signed_composite_derivation(
 
 
 def render_profile_anchor(joined_field: JoinedRecordDesignField) -> RenderProfileAnchor:
+    """Build the render profile anchor from the parser field's observed position."""
     field = joined_field.parser_field
     # DERIVED, not authored: this anchor is built from the parser field, so a
     # missing ordinal is an observed fact about the design rather than a claim,

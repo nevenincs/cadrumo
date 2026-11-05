@@ -97,6 +97,7 @@ def ledger_classify_bulk_csv(
     file: str,
     actor: str | None,
 ) -> None:
+    """Classify ledger transactions in bulk from a CSV file, refusing invalid input."""
     _validate_bulk_classification_route(transaction_id, classification)
     from .operation_ledger_bulk_classify import run_ledger_bulk_classify
 

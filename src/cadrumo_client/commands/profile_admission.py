@@ -46,6 +46,7 @@ from cadrumo_client.transport.installed_client import open_installed_client
 def password(
     client: FrontendClient, *, selection: ProfileSecretSelection | None, not_persisted: Callable[[], None]
 ) -> None:
+    """Read the profile passphrase from a protected channel or prompt and submit it."""
     from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 
     if selection is None:

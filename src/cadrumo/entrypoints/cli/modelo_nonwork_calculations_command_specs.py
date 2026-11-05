@@ -1,3 +1,5 @@
+"""Declarative command specs for the modelo calculation commands outside a work unit."""
+
 from __future__ import annotations
 
 from cadrumo_client.commands.parameters import OptionSpec

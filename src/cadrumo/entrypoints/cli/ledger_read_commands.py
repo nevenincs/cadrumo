@@ -148,6 +148,7 @@ def _llm_diagnostics_lines_and_notices(report: LlmDiagnosticsReport) -> tuple[li
 
 
 def parse_iso_date(value: str | None, option: str) -> date | None:
+    """Parse an optional ISO date for a ledger diagnostics option."""
     if value is None:
         return None
     from .date_parsing import parse_iso_date

@@ -35,6 +35,7 @@ CONTRACT_SCHEMA = 1
 
 
 def rust_string(value: str) -> str:
+    """Render a string as a Rust string literal with escaped special characters."""
     value.encode("utf-8")  # Native OS strings have explicit fixture encodings.
     escapes = {"\\": "\\\\", '"': '\\"', "\n": "\\n", "\r": "\\r", "\t": "\\t"}
     return (
@@ -305,6 +306,7 @@ def project_manager_strings(destination: Path) -> Path:
 
 
 def generate_manager_strings(source: Path | None) -> Mapping[str, Mapping[str, str]]:
+    """Load the manager chrome strings from the bundled locales or a supplied document."""
     if source is None:
         from dev.locales.manager_chrome import manager_chrome_strings
 

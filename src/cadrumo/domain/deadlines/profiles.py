@@ -552,6 +552,7 @@ def _resolve_modelo_iva_profile(canonical: Mapping[str, str], typed: SetupAnswer
 
 
 def profiles_parse_date(raw: str | None) -> date | None:
+    """Parse an ISO date from the censo or refuse with a profile error."""
     try:
         return dates_parse_date_canonical(raw, fmt="iso8601", on_error="raise")
     except ValueError as exc:

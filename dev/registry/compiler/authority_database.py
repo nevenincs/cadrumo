@@ -458,6 +458,7 @@ def decoded_fact_dependencies(
 
 
 def create_schema(connection: sqlite3.Connection) -> None:
+    """Create the authority database tables and constraints."""
     connection.executescript(
         """
         CREATE TABLE authority_manifest (
@@ -511,6 +512,7 @@ def _insert_components(connection: sqlite3.Connection, components: tuple[_Compil
 
 
 def insert_dependencies(connection: sqlite3.Connection, components: tuple[_CompiledComponent, ...]) -> None:
+    """Insert each compiled component's dependency rows into the authority database."""
     for component in components:
         kind, key = authority_component_identity(component.query)
         for ordinal, dependency in enumerate(component.dependencies):

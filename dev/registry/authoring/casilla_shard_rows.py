@@ -24,6 +24,7 @@ def render_row(
     data_type: str,
     legal_refs: str,
 ) -> str:
+    """Render one casilla row as registry TOML from its record design field."""
     segmento_line = f'segmento = "{segmento}"\n' if (segmento is not None and segmento) else ""
     return (
         f"{group_comment(members, caption)}\n"

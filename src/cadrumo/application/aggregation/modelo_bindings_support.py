@@ -25,6 +25,7 @@ STORAGE_DEGRADATION_ERRORS: Final[tuple[type[Exception], ...]] = (
 
 
 def revision_has_binding_source(revision: ModeloRevision, source: str) -> bool:
+    """Report whether the revision declares a binding on the given source."""
     return any(binding.source == source for binding in revision.bindings)
 
 
@@ -32,4 +33,5 @@ def empty_source_resolution(
     resolver_id: str,
     owned_sources: tuple[BindingSourceKind, ...],
 ) -> CalculationSourceResolution:
+    """Return a source resolution that owns the given sources and carries no values."""
     return CalculationSourceResolution(resolver_id=resolver_id, owned_sources=owned_sources)

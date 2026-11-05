@@ -669,6 +669,7 @@ def issues_for_transaction(
     censo_ratio_mismatch_detail: str | None = None,
     missing_home_office_afectacion_detail: str | None = None,
 ) -> tuple[LedgerPreflightIssue, ...]:
+    """Return the preflight issues found on one transaction for a period."""
     if transaction.direction not in {
         TransactionDirection.INCOMING,
         TransactionDirection.OUTGOING,
@@ -993,10 +994,12 @@ if _detailless := IVA_LEDGER_MISSING_FACT_REASONS - set(PREFLIGHT_DETAIL_BY_IVA_
 
 
 def preflight_reason_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> LedgerPreflightIssueReason:
+    """Map an IVA aggregation issue reason to its ledger preflight reason."""
     return PREFLIGHT_REASON_BY_IVA_ISSUE[reason]
 
 
 def preflight_detail_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> str:
+    """Return the preflight detail text for an IVA aggregation issue reason."""
     return PREFLIGHT_DETAIL_BY_IVA_ISSUE[reason]
 
 

@@ -113,6 +113,7 @@ ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PER
 
 
 def catalogue(entries: Mapping[str, str]) -> CalendarCcaaCatalogue:
+    """Build the calendar CCAA catalogue from its entry mapping."""
     definitions: list[CalendarCcaaDefinition] = []
     for raw_code in unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT):
         definitions.append(_territory_definition(entries, raw_code))

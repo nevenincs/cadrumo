@@ -122,6 +122,7 @@ def _prepare_update(
 
 
 def manual_patch_values(payload: LedgerUpdateRequest, *, operation: PinnedAuthorityOperation) -> dict[str, object]:
+    """Collect and normalize the patch values of a manual ledger update request."""
     patch_values: dict[str, object] = {name: getattr(payload.patch, name) for name in payload.patch_fields}
     _normalise_update_dates(patch_values)
     _normalise_update_amounts(patch_values)

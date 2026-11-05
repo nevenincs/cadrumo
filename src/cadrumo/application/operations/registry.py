@@ -223,6 +223,8 @@ class OperationEffectReceipt(BaseModel):
 
 @dataclass(frozen=True, slots=True)
 class SchemaBindingIdentitySeed:
+    """The schema id and version used to seed an operation schema binding identity."""
+
     schema_id: OperationPublicSchemaId
     schema_version: int
 

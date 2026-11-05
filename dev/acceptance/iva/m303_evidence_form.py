@@ -63,6 +63,7 @@ def fill_evidence_form(
     answer: bool = True,
     asks_modelo_390: bool = True,
 ) -> None:
+    """Fill the modelo 303 evidence form fields in the TUI."""
     from textual.widgets import Input, Select
 
     if answer:
@@ -124,6 +125,7 @@ async def form_refusals(pilot: Any, *, work_unit_id: str, observed_at: str) -> l
 async def calculate_and_verify(
     pilot: Any, *, work_unit_id: str, form: Mapping[str, str], asks_modelo_390: bool = True
 ) -> list[TuiOutcome]:
+    """Open the evidence form, fill it, then calculate and verify, collecting TUI outcomes."""
     outcomes: list[TuiOutcome] = []
     await open_evidence_form(pilot, work_unit_id=work_unit_id)
     fill_evidence_form(

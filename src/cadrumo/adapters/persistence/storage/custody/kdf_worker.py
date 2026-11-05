@@ -48,6 +48,7 @@ _WORKER_OPTIONS = frozenset(
 
 
 def main() -> int:
+    """Run the KDF worker: attest readiness, serve exactly one framed request and return the exit status."""
     args = _parse_worker_options(sys.argv[1:])
     request_fd, result_fd = _worker_fds(args)
     _close_unallowlisted_posix_file_descriptors(
@@ -148,6 +149,7 @@ def _worker_fds(args: Mapping[str, int]) -> tuple[int, int]:
 
 
 def parse_request(value: bytes) -> dict[str, object]:
+    """Parse and validate a profile KDF worker request, checking fields per operation."""
     payload = json.loads(value.decode(KDF_TRANSPORT_ENCODING))
     if not isinstance(payload, dict):
         raise ValueError("profile KDF request is invalid")
@@ -177,6 +179,7 @@ def derive_calibration(payload: Mapping[str, object]) -> bytes:
 
 
 def unwrap(payload: Mapping[str, object], *, recovery: bool = False) -> bytes:
+    """Unwrap a wrapped profile DEK with a password or recovery secret."""
     kdf = kdf_parameters_from_wire(payload["kdf"])
     wrapped_dek = wrapped_dek_from_wire(payload["wrapped_dek"])
     encoded = _decode_b64(payload["password_b64"])
@@ -191,6 +194,7 @@ def unwrap(payload: Mapping[str, object], *, recovery: bool = False) -> bytes:
 
 
 def wrap(payload: Mapping[str, object], *, recovery: bool = False) -> bytes:
+    """Wrap a DEK under a password or recovery secret and return the encoded record."""
     kdf = kdf_parameters_from_wire(payload["kdf"])
     encoded = _decode_b64(payload["secret_b64"])
     secret = decode_recovery_secret(encoded) if recovery else decode_profile_password(encoded)

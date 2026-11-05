@@ -6,6 +6,7 @@ from collections.abc import Mapping
 
 
 def same_typed_value(left: object, right: object) -> bool:
+    """Report whether two values have the same types, contents and ordering."""
     if type(left) is not type(right):
         return False
     if isinstance(left, Mapping) and isinstance(right, Mapping):

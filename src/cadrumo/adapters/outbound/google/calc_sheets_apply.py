@@ -259,6 +259,7 @@ def build_structural_cleanup_requests(
     spreadsheet: Mapping[str, Any],
     plan: AnySheetExportPlan,
 ) -> list[Request]:
+    """Build the requests that clear stale developer metadata and protected ranges."""
     return _build_developer_metadata_cleanup_requests(spreadsheet) + _build_protected_range_cleanup_requests(
         spreadsheet,
         plan,
@@ -456,6 +457,7 @@ def apply_plan_structural_requests(
     plan: AnySheetExportPlan,
     sheet_id_by_tab: Mapping[str, int],
 ) -> None:
+    """Apply the structural requests of a sheet export plan to the spreadsheet."""
     # Apply structural metadata: protected ranges + developer
     # metadata for engine + registry identity + cell-level
     # constraint validation rules + cell notes carrying the

@@ -66,7 +66,10 @@ def _private_identity(descriptor: int) -> tuple[int, int]:
 
 
 class Namespace:
+    """A pinned Darwin per-user cache directory held by descriptor and identity."""
+
     def __init__(self, base: Path) -> None:
+        """Open the base directory by descriptor and pin its owner and mode identity."""
         self.base = base
         self.path = base / PRODUCT_IDENTITY.python_package
         self.base_fd = _open_directory(base)
@@ -90,6 +93,7 @@ class Namespace:
             os.close(descriptor)
 
     def verify(self, *, create: bool) -> Path:
+        """Verify the pinned base directory and return the socket directory, optionally created."""
         if sys.platform == "win32":
             raise OSError("Native POSIX directory custody is unavailable on Windows")
         with self.lock:
@@ -121,6 +125,7 @@ class Namespace:
 
 @cache
 def namespace() -> Namespace:
+    """Return the Darwin user cache namespace, refusing when it is not an absolute directory."""
     value = _user_cache_directory()
     if not (value is not None and value) or not Path(value).is_absolute():
         raise OSError("Darwin user cache query returned no absolute directory")

@@ -141,6 +141,7 @@ def normalise_cell(
     note_governed_amounts: tuple[NoteGovernedAmountDeclaration, ...] = (),
     applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...] = (),
 ) -> ExportFieldDerivation:
+    """Derive an export field from a joined design cell, normalised for its transport profile."""
     semantic_entry = joined_field.semantic_entry
     require_safe_identifier(str(semantic_entry.export_field_id), subject="export field id")
     year_derivation = _source_year_derivation(

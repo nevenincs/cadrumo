@@ -47,11 +47,13 @@ if sys.platform == "win32":
         """A required kill-on-close Windows process-tree and resource boundary."""
 
         def __init__(self, handle: int, kernel32: ctypes.CDLL) -> None:
+            """Bind the job object handle and the kernel32 library that owns it."""
             self._handle = handle
             self._kernel32 = kernel32
 
         @classmethod
         def create(cls) -> WindowsJob:
+            """Create a kill-on-close job object carrying the KDF worker's CPU, process-count and memory limits."""
             kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
             kernel32.CreateJobObjectW.restype = wintypes.HANDLE
             handle = kernel32.CreateJobObjectW(None, None)
@@ -80,6 +82,7 @@ if sys.platform == "win32":
             return cls(int(handle), kernel32)
 
         def assign(self, process: subprocess.Popen[bytes]) -> None:
+            """Place the launched worker process in this job object."""
             process_handle = int(cast(Any, process)._handle)
             if not self._kernel32.AssignProcessToJobObject(
                 wintypes.HANDLE(self._handle),
@@ -139,6 +142,7 @@ if sys.platform == "win32":
             }
 
         def close(self) -> None:
+            """Close the job handle, which kills any process still in the job."""
             if self._handle:
                 self._kernel32.CloseHandle(wintypes.HANDLE(self._handle))
                 self._handle = 0
@@ -154,22 +158,28 @@ else:
         """
 
         def __init__(self, handle: int, kernel32: ctypes.CDLL) -> None:
+            """Refuse construction because this platform has no job object."""
             raise supervision_refusal()
 
         @classmethod
         def create(cls) -> WindowsJob:
+            """Refuse creation because this platform has no job object."""
             raise supervision_refusal()
 
         def assign(self, process: subprocess.Popen[bytes]) -> None:
+            """Refuse assignment because this platform has no job object."""
             raise supervision_refusal()
 
         def contains(self, process: subprocess.Popen[bytes]) -> bool:
+            """Refuse the membership proof because this platform has no job object."""
             raise supervision_refusal()
 
         def limits(self) -> dict[str, int]:
+            """Refuse the limits report because this platform has no job object."""
             raise supervision_refusal()
 
         def close(self) -> None:
+            """Refuse closing because this platform has no job object."""
             raise supervision_refusal()
 
 

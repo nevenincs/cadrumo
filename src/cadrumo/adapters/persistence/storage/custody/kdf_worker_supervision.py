@@ -68,6 +68,7 @@ class SupervisedKdfWorker(KdfWorkerCleanup):
         absolute_deadline: bool = False,
         cancellation: ProfileProofCancellation | None = None,
     ) -> None:
+        """Store the worker's deadline, deadline mode and cancellation and initialize its lifecycle state."""
         self._deadline = deadline
         self._absolute_deadline = absolute_deadline
         self._cancellation = cancellation
@@ -94,6 +95,7 @@ class SupervisedKdfWorker(KdfWorkerCleanup):
         self._operation: KdfOperation | None = None
 
     def __enter__(self) -> SupervisedKdfWorker:
+        """Launch the worker and wait for its verified ready attestation, closing it again on any failure."""
         self._started_ns = time.monotonic_ns()
         self._adopted_ns = None
         self._phase_elapsed_ms = dict.fromkeys(KDF_WORKER_PHASE_FIELDS)
@@ -156,6 +158,7 @@ class SupervisedKdfWorker(KdfWorkerCleanup):
         return True
 
     def __exit__(self, exc_type: object, exc_value: object, _traceback: object) -> None:
+        """Close the worker, recording the caller's failure for the diagnostic."""
         primary = exc_value if isinstance(exc_value, BaseException) else None
         if primary is not None and self._failure_type is None:
             self._failure_stage = "caller"
@@ -192,6 +195,7 @@ class SupervisedKdfWorker(KdfWorkerCleanup):
         associated_data: bytes,
         recovery: bool = False,
     ) -> bytes | None:
+        """Unwrap a wrapped profile DEK in the supervised worker, returning None on failure."""
         kind, result = self._exchange(
             {
                 "associated_data_b64": base64.b64encode(associated_data).decode("ascii"),
@@ -219,6 +223,7 @@ class SupervisedKdfWorker(KdfWorkerCleanup):
         associated_data: bytes,
         recovery: bool = False,
     ) -> ProfileCustodyWrappedDek | None:
+        """Wrap a profile DEK under a secret in the supervised worker, returning None on failure."""
         kind, result = self._exchange(
             {
                 "associated_data_b64": base64.b64encode(associated_data).decode("ascii"),

@@ -282,6 +282,7 @@ def publish_after_worker_drain(recorder: JournalRecorder) -> Generator[None]:
 
 
 def worker_script(output: Path) -> Path:
+    """Write a worker script derived from the runtime fixture to the output path."""
     from dev.docs.sequences import runtime_fixture
 
     source = Path(runtime_fixture.__file__).read_text(encoding=UTF_8)

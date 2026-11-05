@@ -967,6 +967,7 @@ def _trimmed_observation(
 
 
 def resolve_annual_period(period: Period) -> Period:
+    """Return the period when it is annual, else refuse."""
     resolved = period
     if resolved.kind is not PeriodKind.ANNUAL:
         raise AggregationPeriodError(
@@ -982,6 +983,7 @@ def renta_ledger_casilla_aggregation(
     *,
     modelo: str,
 ) -> CasillaAggregation:
+    """Total deductible amounts by target casilla and build their provenance rows."""
     totals: dict[CasillaId, Decimal] = {}
     provenance_rows: list[CasillaProvenance] = []
     grouped: dict[tuple[CasillaId, SpendingCategory], list[RentaDeductibleExpenseObservation]] = {}

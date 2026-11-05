@@ -404,6 +404,7 @@ def validate_command_spec_attestation(
     expected_root_sdist_sha256: str | None = None,
     expected_source_archive_sha256: str | None = None,
 ) -> dict[str, object]:
+    """Validate a CommandSpec attestation document and return it as a mapping."""
     if not isinstance(value, dict):
         raise SystemExit("Python cohort CommandSpec attestation must be a JSON object")
     expected = {

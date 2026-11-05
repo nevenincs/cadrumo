@@ -370,6 +370,7 @@ def guarderia_shape_advisory(
     casilla_id: CasillaId,
     scope: RegistryScope,
 ) -> CalculationSourceDiagnostic:
+    """Build the advisory that guardería spend cannot be split when a child turns three."""
     return CalculationSourceDiagnostic(
         reason="source_issue",
         source_kind=_GUARDERIA_SHAPE_SOURCE_KIND,
@@ -477,6 +478,7 @@ def guarderia_madre_meses_advisory(
     casilla_id: CasillaId,
     scope: RegistryScope,
 ) -> CalculationSourceDiagnostic:
+    """Build the advisory that guardería spend needs the mother's qualifying months."""
     return CalculationSourceDiagnostic(
         reason="source_issue",
         source_kind=_GUARDERIA_MADRE_MESES_SOURCE_KIND,

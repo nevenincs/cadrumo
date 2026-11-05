@@ -268,6 +268,7 @@ def order_lines(
     restorations: Sequence[OrderRestoration],
     reordered: Sequence[tuple[str, str]],
 ) -> list[str]:
+    """Build the report lines for restored and baseline-following order."""
     restored = {(item.revision_id, item.family) for item in restorations}
     lines = [
         f"order modelo={modelo_id} revision={item.revision_id} family={item.family} restored=stated_order "

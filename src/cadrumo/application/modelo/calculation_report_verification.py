@@ -244,6 +244,7 @@ class DocumentReading(BaseModel):
 
     @property
     def refused(self) -> bool:
+        """Report whether any check refuses the document reading."""
         return any(check.refuses for check in self.checks)
 
 

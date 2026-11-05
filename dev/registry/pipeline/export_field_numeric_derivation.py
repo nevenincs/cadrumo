@@ -183,6 +183,7 @@ def numeric_derivation(
     export_record_id: str,
     note_governed_amounts: tuple[NoteGovernedAmountDeclaration, ...] = (),
 ) -> ExportFieldDerivation:
+    """Derive a numeric export field from its official design content."""
     parser_field = joined_field.parser_field
     content = parser_field.content
     if content is None:

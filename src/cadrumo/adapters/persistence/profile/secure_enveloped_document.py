@@ -71,6 +71,7 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
         empty_document: Callable[[], DocumentT],
         serialization_context: Mapping[str, object] | None = None,
     ) -> None:
+        """Bind the repository, namespace definition, model type and empty-document factory."""
         self._objects = objects
         self._definition = definition
         self._model_type = model_type

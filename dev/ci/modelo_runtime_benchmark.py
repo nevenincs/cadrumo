@@ -58,6 +58,8 @@ _AGGREGATE_FLUSH_BOUNDARIES = frozenset(
 
 @dataclass
 class Total:
+    """Accumulated call count and wall, CPU and thread CPU seconds for one boundary."""
+
     calls: int = 0
     wall_seconds: float = 0.0
     cpu_seconds: float = 0.0
@@ -373,6 +375,7 @@ def _observe_startup_functions(patch: pytest.MonkeyPatch, recorder: RuntimeBench
 
 
 def observe_logging(patch: pytest.MonkeyPatch, recorder: RuntimeBenchmarkRecorder) -> None:
+    """Wrap the standard logger to record its calls in the benchmark recorder."""
     patch.setattr(logging.Logger, "_log", recorder.wrap(logging.Logger._log, "diagnostics.logger_log", aggregate=True))
 
 

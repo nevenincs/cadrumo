@@ -143,6 +143,7 @@ def project_public_value(
     public: object,
     omissions: Mapping[type[BaseModel], frozenset[str]],
 ) -> object:
+    """Project a canonical value onto its public mirror annotation, recursing through mappings, tuples and models."""
     canonical, public = public_mirror.bare_annotation(canonical), public_mirror.bare_annotation(public)
     if public is public_mirror.PublicScalarValueV1:
         return _scalar(value)

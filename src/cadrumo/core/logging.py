@@ -834,7 +834,10 @@ def _handle_by_own_handlers(record: logging.LogRecord) -> None:
 
 
 class AsyncDiagnosticHandler(logging.Handler):
+    """A logging handler that forwards record snapshots to a sink on a background worker."""
+
     def __init__(self, sink: logging.Handler) -> None:
+        """Bind the sink and start the background worker that writes records to it."""
         super().__init__(logging.NOTSET)
         self.sink = sink
         self._worker = DiagnosticDispatch(
@@ -847,6 +850,7 @@ class AsyncDiagnosticHandler(logging.Handler):
 
     @override
     def handle(self, record: logging.LogRecord) -> bool:
+        """Divert records from foreign loggers into the diagnostic queue before filters run."""
         # Foreign loggers bypass logger-attached filters during propagation.
         # Intercept before handler filters can enter redaction or registry I/O.
         if _active_record.get() is not record:
@@ -865,6 +869,7 @@ class AsyncDiagnosticHandler(logging.Handler):
 
     @override
     def emit(self, record: logging.LogRecord) -> None:
+        """Queue a snapshot of the active record for the sink when it meets the sink level."""
         if _active_record.get() is record:
             if record.levelno < self.sink.level:
                 return
@@ -876,6 +881,7 @@ class AsyncDiagnosticHandler(logging.Handler):
 
     @override
     def close(self) -> None:
+        """Close the background worker without waiting, then close the handler."""
         self._worker.close(timeout=0)
         super().close()
 

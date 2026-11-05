@@ -41,6 +41,7 @@ async def _admit_session(pilot: Any, *, passphrase: str, seconds: float = 300.0)
 
 
 def run_child(args: argparse.Namespace, *, passphrase: str) -> ChildReceipt:
+    """Run the modelo 303 evidence child process in its mode and return its receipt."""
     product = installed_product_evidence(workspace_root=args.workspace_root)
     mode = cast(ChildMode, args.child)
     work_unit_id = cast(str, args.work_unit_id)

@@ -97,6 +97,7 @@ def abbreviated_wording(text: str) -> str:
 
 
 def is_derived_help(key: str, value: str) -> bool:
+    """Report whether a locale key is a help entry whose value matches a derived pattern."""
     return key.endswith(".help") and any(pattern.match(value) for pattern in DERIVED_HELP)
 
 

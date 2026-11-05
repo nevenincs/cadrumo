@@ -158,6 +158,7 @@ def run_registration_screen() -> bool:
 
 
 async def open_client(profile_id: UUID, *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
+    """Open an installed runtime client for the profile as the TUI frontend."""
     return await open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.TUI, timeout=timeout)
 
 
@@ -301,6 +302,7 @@ def _registration_completed(headless: bool) -> bool:
 
 
 def runtime_session_refusal(error: FrontendRefusedError | RefusalError) -> int:
+    """Convert a runtime session refusal to a numeric status, re-raising unsettled cleanup."""
     if any(
         isinstance(error.__dict__.get(name), AsyncResourceCleanupError)
         for name in ("async_cleanup_error", "cleanup_error")
@@ -329,6 +331,7 @@ def attempt_runtime_session(
     auto_pilot: AutopilotCallbackType | None,
     auto_resume: bool = True,
 ) -> AccountRecomposeRequiredV1 | int | None:
+    """Attempt to establish a runtime session for the profile from its login inventory."""
     try:
         return asyncio.run(
             _run_runtime_session(

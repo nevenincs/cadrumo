@@ -63,6 +63,7 @@ def _paragraph(text: str, style: str = "") -> Text | None:
 
 
 def issue_prompt(line: IssueLine, *, expanded: bool, technical: bool) -> RenderableType:
+    """Render an issue line's location, message, action and detail as a prompt entry."""
     action = None if line.level is IssueLevel.INFO else _action_with_key(line)
     return _entry(
         _paragraph(f"[{line.box}] {line.where}" if line.action_targets_box and line.box != "·" else line.where, "bold"),
@@ -120,6 +121,7 @@ class IssueList(OptionList):
     """The grouped list, able to describe its own Enter key."""
 
     def describe_enter(self, locale_key: str) -> None:
+        """Update the list's Enter key binding description."""
         describe_bindings(self._bindings.key_to_bindings, {"enter": locale_key})
         self.refresh_bindings()
 

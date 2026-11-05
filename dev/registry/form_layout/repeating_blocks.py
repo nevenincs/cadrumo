@@ -40,6 +40,7 @@ def repeating_section_items(
     blocks: list[FormBlockDefinition],
     block_ids: set[str],
 ) -> list[Item]:
+    """Return the section items with repeating records gathered into blocks."""
     plain: list[Item] = []
     for item in draft.items:
         record = _repeating_record(build.positions[item.position], repeating)

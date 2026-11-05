@@ -6,6 +6,8 @@ from typing import NotRequired, TypedDict
 
 
 class Artifact(TypedDict):
+    """A typed record of one bundled official design artefact in a modelo manifest."""
+
     modelo: str
     title: str
     #: ``None`` where no official index page was established for the artefact.
@@ -24,6 +26,8 @@ class Artifact(TypedDict):
 
 
 class Manifest(TypedDict):
+    """A typed per-modelo design manifest listing its source pages and artefacts."""
+
     source: str
     modelo: str
     retrieved_at: str
@@ -33,11 +37,15 @@ class Manifest(TypedDict):
 
 
 class ModeloRow(TypedDict):
+    """A per-modelo artefact count row of the root design manifest."""
+
     modelo: str
     artefact_count: int
 
 
 class RootAggregate(TypedDict):
+    """The census fields of the root design manifest derived from the per-modelo manifests."""
+
     supported_corpus_modelos: list[str]
     model_count: int
     artefact_count: int
@@ -45,6 +53,8 @@ class RootAggregate(TypedDict):
 
 
 class HistoricalExclusions(TypedDict):
+    """A typed record of historical design URLs deliberately excluded from the corpus."""
+
     schema_version: int
     disposition: str
     source_pages: list[str]
@@ -52,6 +62,7 @@ class HistoricalExclusions(TypedDict):
 
 
 def artifact_urls(artifact: Artifact) -> set[str]:
+    """Return the primary URL of an artefact together with its URL aliases."""
     return {str(artifact["url"]), *(str(url) for url in artifact.get("url_aliases", []))}
 
 

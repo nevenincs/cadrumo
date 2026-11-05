@@ -1,3 +1,5 @@
+"""Declarative command specs for modelo reconciliation commands outside a work unit."""
+
 from __future__ import annotations
 
 from typing import Final

@@ -273,6 +273,7 @@ def _open_authenticated_profile(
 
 
 def open_recovery_profile(ctx: typer.Context, profile_id: UUID) -> None:
+    """Open an installed runtime client for recovery and bind it to the profile."""
     from cadrumo_client.commands.profile_binding import bind_profile_client
     from cadrumo_client.transport.installed_client import open_installed_client
 

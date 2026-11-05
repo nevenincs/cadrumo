@@ -360,6 +360,7 @@ def _with_rationale(locus: str, rationale: str) -> str:
 
 
 def cite(design: DesignInventory | None, line: int | None) -> str:
+    """Return a citation of the design file, line and short digest, or a generic phrase."""
     if design is None:
         return "the record design"
     where = design.relative_path if line is None else f"{design.relative_path}:{line}"
@@ -391,6 +392,7 @@ def grounded_evidence(
     succ_design: DesignInventory | str,
     rationale: str,
 ) -> str | None:
+    """Return the evidence that a casilla continues from a previous row to a successor row."""
     before, after = _row_locus(previous, prev_design), _row_locus(successor, succ_design)
     if before is None or after is None:
         return None
@@ -403,6 +405,7 @@ def ruled_new_evidence(
     succ_design: DesignInventory | str,
     rationale: str,
 ) -> str | None:
+    """Return the evidence that a casilla is new in the successor design, or None."""
     locus = _row_locus(casilla, succ_design)
     box = printed_box(casilla)
     if locus is None or not isinstance(prev_design, DesignInventory):

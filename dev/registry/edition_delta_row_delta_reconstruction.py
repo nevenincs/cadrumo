@@ -139,6 +139,7 @@ def effective_simulated_row(
     defaults: edition_delta_source.Defaults,
     declarations: edition_delta_source.Declarations,
 ) -> edition_delta_source.Row | None:
+    """Compute the effective row an edition delta simulates for a placed inherited row."""
     simulated_row = dict(placed.row)
     if edition_delta_source.lineage(row) in attested_lineages:
         for claim_field in LINEAGE_CLAIM_FIELDS:

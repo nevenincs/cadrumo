@@ -86,6 +86,7 @@ def run(
     cwd: Path,
     env: dict[str, str] | None = None,
 ) -> CommandResult:
+    """Run a command in a directory with an optional environment and return its result."""
     completed = run_command(
         argv,
         cwd=cwd,
@@ -101,6 +102,7 @@ def run(
 
 
 def safe_new_output(output_dir: Path, *, repo_root: Path) -> Path:
+    """Resolve a new output directory confined under the repository build tree."""
     root = repo_root.resolve(strict=True)
     build = root / "build"
     try:
@@ -141,6 +143,7 @@ def deterministic_zip_tree(source: Path, destination: Path) -> Path:
 
 
 def copy_python_cohort(cohort: PythonCohort, destination: Path) -> PythonCohort:
+    """Copy a Python cohort directory to a new destination, refusing an existing one."""
     if destination.exists():
         raise FileExistsError(destination)
     shutil.copytree(cohort.directory, destination)
@@ -303,6 +306,7 @@ def _source_commit(requested: str | None) -> str | None:
 
 
 def build_identity(clean_root: Path) -> BuildIdentity:
+    """Capture the build identity of a clean checkout, requiring the expected uv version."""
     uv = shutil.which("uv")
     if uv is None:
         raise SystemExit("uv is required to construct the release cohort")
@@ -633,6 +637,7 @@ def build_release_cohort(
 
 
 def parser() -> argparse.ArgumentParser:
+    """Build the argument parser for the release cohort commands."""
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
     build = subparsers.add_parser("build")

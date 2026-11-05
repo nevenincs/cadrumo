@@ -110,6 +110,7 @@ async def admit_attestation(
     observed_at: datetime,
     expected_session_id: UUID,
 ) -> M303Exonerado390ApplicabilityAttestationAdmission:
+    """Admit an M303 exonerado 390 applicability attestation for a declaration reference."""
     work_unit_id = str(declaration.work_unit_id)
     if client.session_id != expected_session_id:
         raise RefusalError(RefusalCode.CONNECTION_CLOSED)

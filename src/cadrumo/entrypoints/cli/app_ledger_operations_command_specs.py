@@ -1,3 +1,5 @@
+"""Declarative command specs for the ledger operations CLI commands."""
+
 from __future__ import annotations
 
 from dataclasses import replace

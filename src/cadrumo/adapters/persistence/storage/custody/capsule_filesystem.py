@@ -44,6 +44,7 @@ _CAPSULE_PUBLICATION_CONTENTION_POLL_SECONDS: Final = 0.025
 
 
 def remove_posix_staging_if_same(parent_fd: int, name: str, identity: os.stat_result) -> None:
+    """Remove an unpublished staging tree only when it is still the directory first observed."""
     try:
         current = os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
     except FileNotFoundError:
@@ -56,6 +57,7 @@ def remove_posix_staging_if_same(parent_fd: int, name: str, identity: os.stat_re
 
 
 def remove_posix_tree(parent_fd: int, name: str) -> None:
+    """Remove the directory ``name`` and everything beneath it relative to ``parent_fd``."""
     target_fd = posix_open_child_directory(parent_fd, name)
     try:
         with os.scandir(target_fd) as entries:
@@ -70,6 +72,7 @@ def remove_posix_tree(parent_fd: int, name: str) -> None:
 
 
 def fsync_directory(path: Path) -> None:
+    """Flush a directory's metadata to disk where the platform supports it."""
     if os.name == "nt":
         # Windows does not expose a directory FlushFileBuffers contract. Every
         # staged file is already fsynced; publication uses MoveFileEx
@@ -281,6 +284,7 @@ def remove_windows_unpublished_staging(
 
 
 def windows_delete_exact_entry(target: Path, expected: tuple[int, int, bool]) -> None:
+    """Delete the entry at ``target`` only when it still has the expected identity."""
     ctypes, wintypes, kernel32, create_file = windows_create_file_api()
     file_information_type = windows_file_information_type()
     handle = create_file(str(target), 0x00010000, 0x00000001 | 0x00000002, None, 3, 0x02000000 | 0x00200000, None)

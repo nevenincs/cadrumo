@@ -1,3 +1,5 @@
+"""Classify the operator input channel of a binding missing from a readiness projection."""
+
 from __future__ import annotations
 
 

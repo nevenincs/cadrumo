@@ -583,6 +583,7 @@ def invoice_add_args(
     iva_category: str,
     line: str,
 ) -> tuple[str, ...]:
+    """Build the argv for adding a ledger invoice through the public CLI."""
     return (
         "app",
         "ledger",
@@ -608,6 +609,7 @@ def invoice_add_args(
 
 
 def invoice_line(*, description: str, subtotal: str, iva_amount: str) -> str:
+    """Serialize one synthetic 21 percent IVA invoice line as compact sorted JSON."""
     return json.dumps(
         {
             "description": description,
@@ -643,6 +645,7 @@ def _assert_reopened_identities(
 
 
 def row_ids(payload: dict[str, object], key: str) -> set[str]:
+    """Collect the string values of a key across the rows of a public list result."""
     rows_raw = payload.get("rows")
     if not isinstance(rows_raw, list):
         raise IvaCliJourneyError(f"public list returned no rows for {key}")
@@ -719,6 +722,7 @@ def command_receipt(
     redacted_paths: Mapping[Path, str] | None = None,
     cli_argument_prefix: tuple[str, ...] = (),
 ) -> SanitizedCommandReceipt:
+    """Build a sanitized receipt for one CLI command, redacting artifact paths in its argv."""
     return SanitizedCommandReceipt(
         argv=(*cli_argument_prefix, "--format", "json", *_sanitize_argv(args, artifact, redacted_paths)),
         returncode=int(evidence.returncode),
@@ -740,6 +744,7 @@ def _sanitize_argv(
 
 
 def result(document: dict[str, object]) -> dict[str, object]:
+    """Return the object result of a public command document or refuse when it has none."""
     result = document.get("result")
     if not isinstance(result, dict):
         raise IvaCliJourneyError("public command returned no object result")
@@ -801,6 +806,7 @@ def _object_mapping(value: object) -> Mapping[str, object]:
 
 
 def required_id(payload: dict[str, object], key: str) -> str:
+    """Return the non-empty string id stored under a key or refuse when absent."""
     value = payload.get(key)
     if not isinstance(value, str) or not value:
         raise IvaCliJourneyError(f"public command returned no {key}")
@@ -808,6 +814,7 @@ def required_id(payload: dict[str, object], key: str) -> str:
 
 
 def required_text(payload: Mapping[str, object], key: str) -> str:
+    """Return the non-empty string stored under a key or refuse when absent."""
     value = payload.get(key)
     if not isinstance(value, str) or not value:
         raise IvaCliJourneyError(f"public command returned no {key}")
@@ -815,10 +822,12 @@ def required_text(payload: Mapping[str, object], key: str) -> str:
 
 
 def sha256_path(path: Path) -> str:
+    """Return the SHA-256 hex digest of a file's bytes."""
     return sha256_hex(path.read_bytes())
 
 
 def checkout_source_identity() -> str:
+    """Resolve the checked-out source commit identity by reading the repository HEAD."""
     root = Path(__file__).resolve().parents[3]
     dot_git = root / ".git"
     if dot_git.is_file():
@@ -835,6 +844,7 @@ def checkout_source_identity() -> str:
 
 
 def installed_package_identity() -> str:
+    """Return the installed cadrumo distribution name and version or refuse when unavailable."""
     try:
         return f"cadrumo=={version('cadrumo')}"
     except PackageNotFoundError as exc:

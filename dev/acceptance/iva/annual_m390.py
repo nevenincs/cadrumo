@@ -23,6 +23,7 @@ from .filing_year import IvaJourneyYear
 def calculate_and_verify_m390(
     *, cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, journey_year: IvaJourneyYear
 ) -> tuple[str, str, str, str, dict[str, Decimal]]:
+    """Create, calculate and verify the annual modelo 390 and return its ids and totals."""
     created = result(
         run(
             cli,

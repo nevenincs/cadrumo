@@ -122,6 +122,7 @@ def _later_period_adjustments(entries: Mapping[str, str]) -> dict[str, date]:
 
 
 def amendment_regime_policy(entries: Mapping[str, str]) -> AmendmentRegimePolicy:
+    """Build the amendment regime policy from the governed fact entries."""
     pre_kinds, post_kinds = _procedure_kinds(entries)
     boundaries = {modelo: _boundary_date(entries, modelo) for modelo in _boundary_models(entries)}
     return AmendmentRegimePolicy(

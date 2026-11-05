@@ -386,6 +386,7 @@ def _header_names_one_column(cell: str, expected: str) -> bool:
 
 
 def optional_header_index(values: tuple[object, ...], *header_names: str) -> int | None:
+    """Return the index of the first column matching any of the header names, or None."""
     expected = [_header_token(name) for name in header_names]
     for index, value in enumerate(values):
         cell = _header_token(_normalise_header_cell(value))

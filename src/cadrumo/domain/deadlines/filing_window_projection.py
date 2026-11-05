@@ -466,6 +466,7 @@ def project_scheduled_window(
     schedule: ModeloScheduleDefinition,
     calendars: tuple[HolidayCalendar, ...],
 ) -> ProjectedFilingWindowResolution | None:
+    """Project the filing window of a scheduled modelo period from its registry clause."""
     clause_resolution = resolve_filing_window_clause(operation, modelo=modelo, period=period)
     if clause_resolution is None:
         return None

@@ -108,6 +108,7 @@ def _contains_whole_sequence(paths: Sequence[str], sequence: str) -> bool:
 
 
 def digest(root: Path) -> str:
+    """Return the SHA-256 digest over the relative paths and bytes of a tree's files."""
     digest = hashlib.sha256()
     for path in sorted(item for item in root.rglob("*") if item.is_file()):
         digest.update(path.relative_to(root).as_posix().encode())
@@ -116,6 +117,7 @@ def digest(root: Path) -> str:
 
 
 def effective(value: object) -> object:
+    """Return a value with representation-only fields removed from nested mappings and lists."""
     if isinstance(value, Mapping):
         return {key: effective(item) for key, item in value.items() if key not in _REPRESENTATION_FIELDS}
     if isinstance(value, list | tuple):
@@ -133,6 +135,7 @@ def _plain(value: object) -> object:
 
 
 def payload_field_count(value: object) -> int:
+    """Count the leaf fields in a nested payload."""
     if isinstance(value, Mapping):
         return sum(payload_field_count(item) for item in value.values())
     if isinstance(value, list | tuple):
@@ -149,6 +152,7 @@ def remove_members(
     *,
     singleton: bool,
 ) -> None:
+    """Remove family members not in the keep set from a revision directory."""
     section_dir = revision_dir / family
     if not section_dir.is_dir():
         return
@@ -204,6 +208,7 @@ def state_members(revision_dir: Path, revision_id: str, family: str, members: Se
 
 
 def table(value: Mapping[str, object]) -> object:
+    """Build a TOML inline table from a mapping."""
     table = tomlkit.inline_table()
     for key, item in value.items():
         table[key] = item
@@ -265,6 +270,7 @@ def family_baseline(authored: Mapping[str, object], planned: Mapping[str, object
 
 
 def family_members(table: Mapping[str, object], spec: KeyedFamilySpec) -> tuple[Mapping[str, object], ...]:
+    """Return the member mappings of a keyed family section in a table."""
     raw = table.get(spec.section)
     candidates: tuple[object, ...] = (raw,) if spec.singleton else tuple(raw) if isinstance(raw, list | tuple) else ()
     members: list[Mapping[str, object]] = []
@@ -275,6 +281,7 @@ def family_members(table: Mapping[str, object], spec: KeyedFamilySpec) -> tuple[
 
 
 def selector_id(operation: object) -> str | None:
+    """Return the selector id of an operation, or None when it has none."""
     selector = operation.get("selector") if isinstance(operation, Mapping) else None
     member = selector.get("id") if isinstance(selector, Mapping) else None
     return None if member is None else str(member)

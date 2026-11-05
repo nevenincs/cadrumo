@@ -71,6 +71,7 @@ def fingerprint_digest(entries: Iterable[FingerprintEntry]) -> str:
 
 
 def file_change_count(before: tuple[FingerprintEntry, ...], after: tuple[FingerprintEntry, ...]) -> int:
+    """Count the paths whose content digest differs between two fingerprints."""
     left = {item.path: item.sha256 for item in before}
     right = {item.path: item.sha256 for item in after}
     return sum(left.get(path) != right.get(path) for path in set(left) | set(right))

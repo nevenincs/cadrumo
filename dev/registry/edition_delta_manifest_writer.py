@@ -177,6 +177,7 @@ def _rewritten_assignment(match: re.Match[str], value: object) -> str:
 
 
 def replace_authored_overrides(text: str, work: edition_delta_source.EditionWork) -> str:
+    """Replace the authored casilla override blocks in manifest text with their migrated forms."""
     replacements = work.casilla_override_replacements
     if not replacements:
         return text

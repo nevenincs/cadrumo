@@ -308,6 +308,7 @@ call, and every call re-reads and re-hashes every source.
 
 
 def parsed_import_statements(module: str, source: bytes, digest: str) -> tuple[_ImportStatement, ...]:
+    """Parse the import statements of a module's source, caching them by source digest."""
     cached = import_statements_cache.get(module)
     if cached is not None and cached[0] == digest:
         return cached[1]

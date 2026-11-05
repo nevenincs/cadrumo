@@ -97,6 +97,7 @@ def ensure_corpus_index(settings: Settings | None = None) -> Path:
 
 
 def corpus_identity(corpus_root: Path) -> str:
+    """Compute the content identity of the corpus from its schema versions and files."""
     digest = hashlib.sha256()
     for token in (_INDEX_SCHEMA_VERSION, _EXTRACTOR_SCHEMA_VERSION):
         encoded = token.encode("utf-8")
@@ -113,6 +114,7 @@ def corpus_identity(corpus_root: Path) -> str:
 
 
 def stored_identity(database_path: Path) -> str | None:
+    """Read the corpus identity stored in the index database, or None when it is absent."""
     if not database_path.is_file():
         return None
     try:

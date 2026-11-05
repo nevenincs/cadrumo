@@ -95,6 +95,7 @@ def _contract() -> OperationPublicDefinitionContractV1:
 
 
 def exact_profile(projection: AutomationInventoryProjection, profile_id: UUID) -> bool:
+    """Report whether every grant, key and request in the projection belongs to the profile."""
     return (
         all(item.profile_id == profile_id for item in projection.grants)
         and all(item.profile_id == profile_id for item in projection.keys)

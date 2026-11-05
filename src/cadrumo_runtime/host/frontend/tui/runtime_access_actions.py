@@ -103,6 +103,8 @@ class _RuntimeAccessActionHost(Protocol):
 
 
 class RuntimeAccessActionsMixin:
+    """A mixin that performs runtime access actions such as resume on its host."""
+
     async def _perform(self: _RuntimeAccessActionHost, action: _Action) -> None:
         if self._busy or not self._active():
             return

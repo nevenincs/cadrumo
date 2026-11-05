@@ -659,6 +659,7 @@ def _selected_work_unit(*, work_unit_id: str, catalogue: WorkUnitCatalogue, buck
 
 
 def revision_for_work_unit(work_unit: WorkUnit, *, operation: PinnedAuthorityOperation) -> ModeloRevision:
+    """Return the registry revision of a work unit at calculation grade."""
     from .calculation_helpers import resolve_registry_snapshot_for_work_unit
 
     # The calculate path needs the rung that computes amounts, not the

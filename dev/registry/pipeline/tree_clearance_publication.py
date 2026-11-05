@@ -36,6 +36,7 @@ from .tree_validation import ValidatedGeneratedExportTree, ValidatedHistoricalSt
 
 
 def has_export_clearance(revision_root: Path, revision_id: str) -> bool:
+    """Return whether a revision clears the export layouts family."""
     metadata = revision_root / "revision.toml"
     if not metadata.is_file():
         return False
@@ -78,6 +79,7 @@ def publish_export_clearance_bundle(
     candidate_manifest_sha256: str,
     staged_candidate_export_root: Path,
 ) -> PublishedGeneratedExportTree:
+    """Publish a generated export tree that retires an export layout clearance."""
     revision_root = target_export_root.parent
     revision_id = str(context.validation.target.revision_id)
     if target_export_root.exists():

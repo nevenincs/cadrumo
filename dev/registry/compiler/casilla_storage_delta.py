@@ -180,7 +180,7 @@ def apply_casilla_positions[OriginT](
     origins: list[OriginT],
     successor: Mapping[str, object],
 ) -> tuple[list[object], list[OriginT]]:
-
+    """Apply a successor's casilla position changes to the rows and their origins."""
     raw = as_toml_array(successor.get("casilla_positions", ())) or ()
 
     try:

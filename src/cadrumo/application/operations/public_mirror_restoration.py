@@ -170,6 +170,7 @@ def restore_public_value(
     withheld: frozenset[tuple[type[object], str]],
     complete: _MirrorCompletion | None,
 ) -> object:
+    """Restore a canonical value from its public mirror form, refusing an invalid decimal."""
     if value is None:
         return None
     canonical, public = public_mirror.bare_annotation(canonical), public_mirror.bare_annotation(public)

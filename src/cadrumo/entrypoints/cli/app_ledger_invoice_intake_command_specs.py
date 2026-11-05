@@ -1,3 +1,5 @@
+"""Declarative command specs for the ledger invoice intake CLI commands."""
+
 from __future__ import annotations
 
 from dataclasses import replace

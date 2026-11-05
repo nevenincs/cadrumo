@@ -112,6 +112,7 @@ def parse_m130_artifact(*, path: Path, year: int, period: str, expected: dict[st
 
 
 def financial_lifecycle_workbench_notice(workbench: ModeloWorkbenchScreen) -> str:
+    """Return the workbench notice text currently rendered on the screen."""
     from textual.widgets import Static
 
     return str(workbench.query_one(WORKBENCH_NOTICE, Static).render()).strip()

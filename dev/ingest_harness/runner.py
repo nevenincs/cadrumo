@@ -36,6 +36,7 @@ class HarnessReport:
     """
 
     def __init__(self, key: CorpusKey) -> None:
+        """Bind the report to its pinned corpus key with no rows."""
         self._key = key
         self._rows: list[ResultRow] = []
 

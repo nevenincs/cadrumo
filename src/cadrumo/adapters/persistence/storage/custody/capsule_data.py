@@ -82,6 +82,7 @@ def validated_data_path(value: str) -> PurePosixPath:
 
 
 def validate_data_file_inventory(data_files: Mapping[str, bytes]) -> None:
+    """Refuse a capsule data inventory that exceeds its entry or file size limits."""
     if len(data_files) > PROFILE_CUSTODY_DATA_MAX_ENTRIES:
         raise ProfileCustodyRecordError("profile capsule data inventory exceeds its entry limit")
     for relative_name, payload in data_files.items():
@@ -95,6 +96,7 @@ def read_password_envelope(
     *,
     trace: list[ProfileCustodyPasswordReadOperation],
 ) -> ProfileCustodyEnvelope:
+    """Read and parse the password envelope at ``path``."""
     from .records import PROFILE_CUSTODY_ENVELOPE_MAX_BYTES, parse_profile_custody_envelope
 
     return parse_profile_custody_envelope(
@@ -108,6 +110,7 @@ def read_password_envelope_fd(
     display_path: Path,
     trace: list[ProfileCustodyPasswordReadOperation],
 ) -> ProfileCustodyEnvelope:
+    """Read and parse the password envelope inside the directory ``parent_fd``."""
     from .records import PROFILE_CUSTODY_ENVELOPE_MAX_BYTES, parse_profile_custody_envelope
 
     return parse_profile_custody_envelope(
@@ -126,6 +129,7 @@ def read_sentinel(
     *,
     trace: list[ProfileCustodyPasswordReadOperation],
 ) -> ProfileCustodySentinelRecord:
+    """Read and parse the DEK sentinel record at ``path``."""
     return parse_profile_custody_sentinel_record(
         read_regular_file(
             path,
@@ -141,6 +145,7 @@ def read_sentinel_fd(
     display_path: Path,
     trace: list[ProfileCustodyPasswordReadOperation],
 ) -> ProfileCustodySentinelRecord:
+    """Read and parse the DEK sentinel record inside the directory ``parent_fd``."""
     return parse_profile_custody_sentinel_record(
         read_regular_file_fd(
             parent_fd,
@@ -153,6 +158,7 @@ def read_sentinel_fd(
 
 
 def write_posix_data_files(data_fd: int, data_files: Mapping[str, bytes]) -> None:
+    """Write the capsule data files beneath ``data_fd``, refusing oversized inventories and the sentinel name."""
     if len(data_files) > PROFILE_CUSTODY_DATA_MAX_ENTRIES:
         raise ProfileCustodyRecordError("profile capsule data inventory exceeds its entry limit")
     for relative_name, payload in sorted(data_files.items()):

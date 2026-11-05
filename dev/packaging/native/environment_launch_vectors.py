@@ -123,6 +123,7 @@ def _launch_refusal(entry: dict[str, Any], where: str, native_host: Mapping[str,
 def launch_vectors(
     raw: object, profiles: Mapping[str, Mapping[str, Any]], native_host: Mapping[str, Any]
 ) -> tuple[dict[str, Any], ...]:
+    """Build the environment launch vectors, checked against the profiles and native host."""
     vectors = tuple(
         _launch_vector(item, f"launch_vectors[{index}]", profiles, native_host)
         for index, item in enumerate(environment_declaration_primitives_list(raw, "launch_vectors"))

@@ -121,6 +121,7 @@ def _matches_lineage(row: object, attestation: Mapping[object, object]) -> bool:
 
 
 def first_difference(left: object, right: object, path: str = "$") -> Mapping[str, object] | None:
+    """Return the first location where two nested values differ, or None when equal."""
     if type(left) is not type(right):
         return {"location": path, "before": left, "after": right, "reason": "type_changed"}
     if isinstance(left, Mapping) and isinstance(right, Mapping):

@@ -69,6 +69,7 @@ def local_failure_verdict(
 
 
 def validate_namespace(namespace: str) -> str:
+    """Return the stripped storage namespace, refusing a blank or invalid one."""
     cleaned = namespace.strip()
     if not cleaned:
         raise OutboundStorageValidationError(
@@ -100,6 +101,7 @@ def _validate_hmac(object_key_hmac: str) -> str:
 
 
 def sidecar_filename(object_key_hmac: str, label: str) -> str:
+    """Build the sidecar object file name from the key HMAC and label."""
     return build_provider_object_name(object_key_hmac, label, extension=SIDECAR_EXTENSION)
 
 

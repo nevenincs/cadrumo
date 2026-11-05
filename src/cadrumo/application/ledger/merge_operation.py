@@ -306,6 +306,7 @@ def operation_result(
 
 
 def project_operation_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
+    """Project a ledger merge result after matching it to its terminal receipt."""
     if type(result) is not LedgerMergeExecutionResult or not terminal_receipt_matches(
         receipt,
         definition_id=LEDGER_MERGE_OPERATION_DEFINITION_ID,

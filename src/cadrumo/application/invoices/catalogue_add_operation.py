@@ -405,6 +405,7 @@ def prepare_invoice_add(
     profile: str,
     authority_operation: PinnedAuthorityOperation,
 ) -> tuple[CatalogueCreationPorts, Invoice, bool]:
+    """Build the invoice, ports and advisory flag for an invoice add request."""
     # The transport carries plain text; re-enter the domain owner before port creation.
     business_premises_lease = invoice_add_lease(payload, authority_operation=authority_operation)
     ports = factory(bucket_id=profile)

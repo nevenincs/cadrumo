@@ -73,6 +73,7 @@ def public_work_units(cli: InstalledCli, *, year: int) -> dict[str, dict[str, ob
 
 
 def cli_public_readback(cli: InstalledCli, *, generation: str, year: int) -> ContinuationStateEvidence:
+    """Read the installed CLI's public ledger and work state into continuation evidence."""
     ledger = command_result(cli.run(("app", "ledger", "list")))
     rows = ledger.get("rows")
     if not isinstance(rows, list) or len(rows) != 8:
@@ -92,6 +93,7 @@ def cli_public_readback(cli: InstalledCli, *, generation: str, year: int) -> Con
 def cli_complete(
     *, cli: InstalledCli, workspace_root: Path, output_dir: Path, generation: str, year: int
 ) -> tuple[ContinuationStateEvidence, dict[str, object]]:
+    """Complete the remaining quarters and the annual modelo 100 through the installed CLI."""
     existing_units = public_work_units(cli, year=year)
     for oracle in build_scenario(year).quarter_oracle[1:]:
         work_id = str(existing_units[oracle.period]["work_unit_id"])

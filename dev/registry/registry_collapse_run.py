@@ -31,6 +31,8 @@ from .registry_collapse_models import MODELOS, CheckStatus, FingerprintEntry, Mo
 
 @dataclass(frozen=True, slots=True)
 class RunContext:
+    """The paths, sources and fingerprints that frame one registry collapse readiness run."""
+
     registry_root: Path
     source_root: Path
     work_dir: Path
@@ -112,6 +114,7 @@ def copy_registry_snapshots(
     snapshot_registry: Path,
     registry_candidate: Path,
 ) -> None:
+    """Copy the registry into a snapshot and a candidate tree for the run."""
     shutil.copytree(registry_root, snapshot_registry)
     shutil.copytree(snapshot_registry, registry_candidate)
 
@@ -120,6 +123,7 @@ def selected_sources(
     snapshot_registry: Path,
     modelos: Sequence[str],
 ) -> tuple[tuple[ModeloSource, ...], int]:
+    """Discover the modelo sources in the snapshot and narrow them to the requested ones."""
     sources = discover_modelo_sources(snapshot_registry / MODELOS)
     if len({source.modelo_id for source in sources}) != len(sources):
         raise RuntimeError("modelo discovery returned duplicate identities")
@@ -139,6 +143,7 @@ def prepare_run_context(
     authority_root: Path | None,
     modelos: Sequence[str],
 ) -> RunContext:
+    """Validate the run paths, snapshot the registry and fingerprint its inputs for a run."""
     registry_root, source_root, work_dir = _validated_run_paths(registry_root, source_root, work_dir)
     snapshot_registry, snapshot_source_root, registry_candidate = _snapshot_paths(work_dir)
     live_registry_before = fingerprint_tree(registry_root)
@@ -199,6 +204,7 @@ def _require_snapshots_match_inputs(
 
 
 def run_support(snapshot_registry: Path) -> tuple[SupportedFilingYearsCatalogue, int]:
+    """Return the supported filing years catalogue and its effective ceiling year."""
     support = load_shared_catalogues(snapshot_registry).supported_filing_years
     if support is None:
         raise RuntimeError("registry has no global supported filing range")
@@ -304,6 +310,7 @@ def fingerprint_run_inputs(
     tuple[FingerprintEntry, ...],
     tuple[FingerprintEntry, ...],
 ]:
+    """Fingerprint the live registry, tools, source dependencies and published authority."""
     return (
         fingerprint_tree(context.registry_root),
         tool_fingerprints(REPO_ROOT),
@@ -323,6 +330,7 @@ def registry_collapse_run_inputs_stable(
     tools_after: tuple[FingerprintEntry, ...],
     dependencies_after: tuple[FingerprintEntry, ...],
 ) -> bool:
+    """Return whether the registry, tools and source dependencies are unchanged."""
     return (
         context.live_registry_before == registry_after
         and context.tools_before == tools_after
@@ -335,6 +343,7 @@ def registry_collapse_run_no_live_mutation(
     registry_after: tuple[FingerprintEntry, ...],
     published_after: tuple[FingerprintEntry, ...],
 ) -> bool:
+    """Return whether neither the live registry nor the published authority changed."""
     return context.live_registry_before == registry_after and context.published_before == published_after
 
 
@@ -362,6 +371,7 @@ def run_summary(
     inputs_stable: bool,
     no_live_mutation: bool,
 ) -> dict[str, object]:
+    """Build the readiness summary of a registry collapse run from its results."""
     outcome_counts = {status.value: sum(item["outcome"] == status for item in results) for status in ModeloOutcome}
     complete = _run_is_complete(context.sources, results, authority, inputs_stable, no_live_mutation)
     return {

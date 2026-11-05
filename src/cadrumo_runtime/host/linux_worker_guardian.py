@@ -79,6 +79,7 @@ def _is_same_parent(options: argparse.Namespace, parent: Path, watcher: _ParentP
 
 
 def launch_worker(worker_arguments: tuple[str, ...]) -> subprocess.Popen[bytes] | None:
+    """Launch the worker with a fixed minimal environment and return its process."""
     from ..adapters.worker_environment import worker_path_environment_names
 
     environment = {

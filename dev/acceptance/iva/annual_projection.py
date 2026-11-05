@@ -12,6 +12,7 @@ from .cli_journey import (
 
 
 def decimal_casilla(payload: Mapping[str, object], casilla_id: str) -> Decimal:
+    """Read a casilla from the calculation payload as a two-decimal Decimal."""
     values = payload.get("casilla_values")
     if not isinstance(values, Mapping):
         raise IvaCliJourneyError("Modelo calculation returned no public casilla projection")
@@ -22,6 +23,7 @@ def decimal_casilla(payload: Mapping[str, object], casilla_id: str) -> Decimal:
 
 
 def period_code(value: object, *, filing_year: int) -> str | None:
+    """Return the period code when the value belongs to the given filing year, else None."""
     if not isinstance(value, Mapping) or value.get("filing_year") != filing_year:
         return None
     code = value.get("code")
@@ -31,6 +33,7 @@ def period_code(value: object, *, filing_year: int) -> str | None:
 def unique_row(
     payload: Mapping[str, object], collection_key: str, id_key: str, expected_id: str
 ) -> Mapping[str, object]:
+    """Return the single row whose identifier matches, refusing a missing or ambiguous match."""
     rows = payload.get(collection_key)
     if not isinstance(rows, list):
         raise IvaCliJourneyError("fresh-process public list returned no collection")

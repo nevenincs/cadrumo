@@ -19,6 +19,7 @@ if TYPE_CHECKING:
 
 
 def data_inventory_casilla_payload(entry: DataInventoryCasilla) -> DataInventoryCasillaPayload:
+    """Project a data-inventory casilla entry into its payload."""
     return DataInventoryCasillaPayload(
         casilla_id=entry.casilla_id,
         number=entry.number,
@@ -31,6 +32,7 @@ def data_inventory_casilla_payload(entry: DataInventoryCasilla) -> DataInventory
 
 
 def data_inventory_section_lines(title: str, rows: tuple[DataInventoryCasilla, ...]) -> list[str]:
+    """Render a data-inventory section as a title line followed by one line per casilla."""
     if not rows:
         return [f"{title}\t(none)"]
     lines = [f"{title}\t{len(rows)}"]
@@ -42,6 +44,7 @@ def data_inventory_section_lines(title: str, rows: tuple[DataInventoryCasilla, .
 
 
 def requires_notices(checklist: DataInventoryChecklist, *, operation: PinnedAuthorityOperation) -> tuple[Notice, ...]:
+    """Return the notices about the profile and unbucketed-source requirements of a checklist."""
     notices = [
         notice
         for notice in (
@@ -187,6 +190,7 @@ def _binding_scope_notice_context(
 
 
 def bindings_list_scope_notices(*, modelo: str | None, year: int | None, period: str | None) -> tuple[Notice, ...]:
+    """Return the warning notices for a bindings listing missing its year or period filter."""
     missing_filters = _binding_scope_missing_filters(year=year, period=period)
     if not missing_filters:
         return ()
@@ -209,6 +213,7 @@ def bindings_list_scope_notices(*, modelo: str | None, year: int | None, period:
 
 
 def notice_text_lines(notices: tuple[Notice, ...]) -> list[str]:
+    """Render notices as tab-separated text lines with their action target and bindings."""
     lines: list[str] = []
     for notice in notices:
         notice_action = notice.action
@@ -227,6 +232,7 @@ def notice_text_lines(notices: tuple[Notice, ...]) -> list[str]:
 
 
 def formula_lines(result: FormulasResult, *, explain: bool) -> list[str]:
+    """Render the formulas of a result, with their inputs and references when explaining."""
     if explain:
         return [
             "formula_id\ttarget_casilla_id\tinputs\tlegal_refs\tsource_refs",
@@ -248,10 +254,12 @@ def formula_lines(result: FormulasResult, *, explain: bool) -> list[str]:
 
 
 def mark(value: bool) -> str:
+    """Return ``Y`` for a true flag and ``-`` otherwise."""
     return "Y" if value else "-"
 
 
 def casillas_lines(result: ModeloCasillasResult, *, explain: bool) -> list[str]:
+    """Render the casillas of a result, with their help and references when explaining."""
     if explain:
         return [
             "casilla_id\tnumber\tinput\trequired\tlabel\thelp\tlegal_refs\tsource_refs",

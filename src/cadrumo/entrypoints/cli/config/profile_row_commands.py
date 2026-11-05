@@ -24,6 +24,7 @@ from .profile_mutation import execute_profile_mutation, mutation_deadline, read_
 
 
 def parse_values(tokens: list[str]) -> dict[str, str]:
+    """Parse field=value tokens into a field-to-value mapping."""
     values: dict[str, str] = {}
     for token in tokens:
         field, separator, value = token.partition("=")
@@ -42,6 +43,7 @@ def parse_values(tokens: list[str]) -> dict[str, str]:
 
 
 def parse_row_key(row: str) -> str:
+    """Normalize a row selector to the base row (empty) or a canonical decimal index."""
     row_key = row.strip().lower()
     if row_key == "base":
         return ""

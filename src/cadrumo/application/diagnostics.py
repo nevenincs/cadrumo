@@ -866,6 +866,7 @@ def _compact_exception(exc: BaseException) -> str:
 
 
 def overall_status(checks: tuple[DiagnosticCheck, ...]) -> DiagnosticStatusValue:
+    """Return the worst status among diagnostic checks."""
     if any(check.status == DiagnosticStatus.FAIL for check in checks):
         return DiagnosticStatus.FAIL
     if any(check.status == DiagnosticStatus.WARN for check in checks):

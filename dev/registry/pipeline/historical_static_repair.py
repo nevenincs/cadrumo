@@ -134,6 +134,7 @@ REVIEWED_TARGETS = {
 
 
 def validate_repair_findings(target: _RepairTarget, findings: tuple[str, ...]) -> None:
+    """Require repair findings to match the target's expected count and exact findings."""
     exact = target.exact_findings
     if len(findings) != target.finding_count or (
         frozenset(findings) != exact

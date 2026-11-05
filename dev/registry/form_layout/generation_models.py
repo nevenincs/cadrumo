@@ -58,6 +58,8 @@ class Build:
 
 @dataclass(slots=True)
 class SectionDraft:
+    """A draft of one manifest section with its key, heading, positions and items."""
+
     key: tuple[str, ...]
     heading: str | None
     positions: list[int] = field(default_factory=list)
@@ -66,6 +68,8 @@ class SectionDraft:
 
 @dataclass(slots=True)
 class RowDraft:
+    """A draft of one table row with its stem, columns and items."""
+
     stem: str
     columns: list[str]
     items: list[Item]

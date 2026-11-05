@@ -278,6 +278,7 @@ def _as_json_array(value: object) -> list[object] | None:
 
 
 def diff_paths(left: object, right: object, prefix: str = "") -> tuple[str, ...]:
+    """Return the paths at which two JSON values differ."""
     left_object = _as_json_object(left)
     right_object = _as_json_object(right)
     if left_object is not None and right_object is not None:

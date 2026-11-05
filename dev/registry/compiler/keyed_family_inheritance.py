@@ -349,6 +349,7 @@ def raw_keyed_members(
     table: Mapping[str, object],
     family: KeyedFamilySpec,
 ) -> tuple[object, ...]:
+    """Return the raw members of a keyed family section in a revision table."""
     raw = table.get(family.section)
     if family.singleton:
         if raw is None:

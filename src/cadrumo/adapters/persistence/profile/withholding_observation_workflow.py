@@ -450,6 +450,7 @@ class WithholdingObservationWorkflowAdapter:
 
 
 def entries_digest(entries: Iterable[WithholdingProjectionEntry]) -> str:
+    """Digest the withholding projection entries in canonical identity order."""
     values = sorted(
         (entry.model_dump(mode="json") for entry in entries),
         key=lambda value: withholding_canonical_json(value["identity"]),

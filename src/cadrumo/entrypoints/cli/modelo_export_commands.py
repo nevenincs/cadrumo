@@ -80,6 +80,7 @@ def _development_software_identity_notice(result: ModeloExportResult) -> Notice:
 
 
 def export_notices(result: ModeloExportResult) -> list[Notice]:
+    """Build the notices attached to a modelo export result."""
     notices = [_local_export_evidence_notice(result)]
     if result.software_identity_grade is AeatSoftwareIdentityGrade.DEVELOPMENT_MOCK:
         notices.append(_development_software_identity_notice(result))
@@ -92,6 +93,7 @@ def export_notices(result: ModeloExportResult) -> list[Notice]:
 
 
 def export_text_lines(result: ModeloExportResult) -> list[str]:
+    """Build the tab-separated text lines reporting a modelo export result."""
     return [
         "operation\tmodelo.export",
         f"work_unit_id\t{result.work_unit_id}",

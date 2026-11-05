@@ -791,6 +791,7 @@ def screened_invoice_iva_observations(
     ports: InvoiceCatalogueReadPorts,
     operation: PinnedAuthorityOperation | None = None,
 ) -> ScreenedInvoiceIva:
+    """Screen the invoice catalogue for the period's IVA observations, flagging a degraded or unreadable catalogue."""
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
             return screened_invoice_iva_observations(
@@ -1120,6 +1121,7 @@ def out_of_window_summary_diagnostics(
     source_kind: str,
     resolver_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Return the source diagnostics describing transactions outside the filing window, or none without a summary."""
     if summary is None:
         return ()
     return (

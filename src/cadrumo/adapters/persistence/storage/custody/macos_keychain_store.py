@@ -17,6 +17,7 @@ from .macos_login_keychain import LoginKeychain
 
 
 def native_api() -> KeychainApi:
+    """Open the macOS login keychain, refusing as unavailable when it cannot be reached."""
     try:
         return LoginKeychain()
     except (OSError, AttributeError, ValueError, KeyError):

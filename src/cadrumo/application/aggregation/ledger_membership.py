@@ -182,6 +182,7 @@ def collect_ledger_membership(
     ports: LedgerMembershipPorts,
     selected: frozenset[BindingSourceKind],
 ) -> LedgerSourceMembership:
+    """Collect the ledger membership of a work unit for the selected binding source kinds."""
     # Loading the existing investment register is read-only. Calculation's
     # migration capability is deliberately absent from these ports.
     investment = (

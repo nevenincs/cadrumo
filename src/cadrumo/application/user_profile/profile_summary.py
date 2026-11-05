@@ -198,6 +198,7 @@ def profile_listing(*, root: Path | None = None) -> ProfileListing:
 
 
 def observe_summary_inventory(root: Path) -> ProfileSummaryInventory:
+    """Observe the committed profile summaries, reporting concurrent change or degradation."""
     try:
         witnesses = profile_custody_port().list_committed_capsule_summaries(root=root)
     except ProfileCustodyConcurrentChangeError as exc:

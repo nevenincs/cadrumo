@@ -9,6 +9,7 @@ from .m303_orden_source import annual_orden_raw_activity_identity
 
 
 def annual_orden_legal_keys(census: M303AnnualOrdenSourceCensus) -> set[str]:
+    """Return every legal key the annual orden source census contributes."""
     return {
         *(activity_legal_key(annual_orden_raw_activity_identity(item)) for item in census.activities),
         *(agricultural_index_legal_key(index) for index, _ in enumerate(census.agricultural_indexes)),
@@ -25,28 +26,35 @@ def annual_orden_legal_keys(census: M303AnnualOrdenSourceCensus) -> set[str]:
 
 
 def activity_legal_key(identity: str) -> str:
+    """Return the legal key of one activity identity."""
     return f"activity:{identity}"
 
 
 def agricultural_index_legal_key(index: int) -> str:
+    """Return the legal key of one agricultural index by position."""
     return f"agricultural-index:{index}"
 
 
 def agricultural_ingreso_legal_key(index: int) -> str:
+    """Return the legal key of one agricultural ingreso a cuenta by position."""
     return f"agricultural-ingreso:{index}"
 
 
 def non_agricultural_ingreso_legal_key(index: int) -> str:
+    """Return the legal key of one non-agricultural ingreso a cuenta by position."""
     return f"iae-ingreso:{index}"
 
 
 def seasonal_index_legal_key(index: int) -> str:
+    """Return the legal key of one seasonal index by position."""
     return f"seasonal-index:{index}"
 
 
 def difficult_justification_legal_key(cohort: Literal["agricola", "no_agricola"]) -> str:
+    """Return the legal key of the difficult-justification entry for a cohort."""
     return f"difficult-justification:{cohort}"
 
 
 def lorca_reduction_legal_key() -> str:
+    """Return the legal key of the Lorca reduction."""
     return "lorca-reduction"

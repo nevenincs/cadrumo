@@ -32,6 +32,7 @@ from .common import (
 
 
 def live_iva_outcome_label(value: object) -> str:
+    """Return the translated label for a live IVA acquisition outcome mode."""
     token = getattr(value, "value", value)
     normalized = str(token or LiveIvaAcquisitionFailureMode.UNKNOWN.value)
     try:
@@ -513,6 +514,7 @@ def iva_wallet_pull_evidence_cmd(
 
 
 def iva_remote_state_capture_lines(report: IvaRemoteStateAcquisitionReport) -> tuple[str, ...]:
+    """Build the output lines reporting an IVA remote state capture."""
     lines = [
         *_IVA_WALLET_LIVE_SAFETY_LINES,
         metric_line("year_from", report.year_from),

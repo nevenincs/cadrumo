@@ -143,5 +143,6 @@ def _live_export_probe_field(
 
 
 def literal_bytes(field: ExportFieldDefinition, *, literal: str, encoding: str) -> bytes:
+    """Render a literal into a fixed-width export field and encode it as bytes."""
     rendered = render_fixed_width_export_field(field, literal)
     return rendered.encode(encoding)

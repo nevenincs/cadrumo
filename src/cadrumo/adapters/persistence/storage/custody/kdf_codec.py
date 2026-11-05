@@ -84,6 +84,7 @@ def read_kdf_frame_to_queue(fd: int, result_queue: queue.Queue[tuple[int, bytes]
 
 
 def read_kdf_frame(fd: int) -> tuple[int, bytes]:
+    """Read one framed KDF message from the descriptor and return its kind and payload."""
     header = _read_exact(fd, KDF_FRAME_HEADER.size)
     magic, version, kind, flags, length = KDF_FRAME_HEADER.unpack(header)
     if magic != KDF_FRAME_MAGIC or version != KDF_FRAME_VERSION or flags != 0:
@@ -96,6 +97,7 @@ def read_kdf_frame(fd: int) -> tuple[int, bytes]:
 
 
 def write_kdf_frame(fd: int, value: bytes, *, kind: int) -> None:
+    """Write one framed KDF message of the given kind, refusing an oversized payload or unknown kind."""
     if len(value) > _FRAME_MAX_BYTES:
         raise ValueError("profile KDF frame exceeds its bounded transport")
     if kind not in {KDF_FRAME_CONTROL, KDF_FRAME_DEK}:

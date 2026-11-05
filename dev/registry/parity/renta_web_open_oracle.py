@@ -423,6 +423,7 @@ def parse_decimal_text(value: str) -> Decimal | None:
 
 
 def overall_verdict(fields: tuple[ParityFieldComparison, ...]) -> ParityFieldVerdict:
+    """Reduce field comparisons to one verdict, mismatch before unverifiable before match."""
     if any(field.verdict == ParityVerdictKind.MISMATCH for field in fields):
         return ParityVerdictKind.MISMATCH
     if any(field.verdict == ParityVerdictKind.UNVERIFIABLE for field in fields):

@@ -67,6 +67,7 @@ def sealed_members(application: str, wrapper: ApplicationBundle, executable: str
 
 
 def run(tool: Path, *arguments: str) -> str:
+    """Run a macOS tool, returning its standard error and refusing on a non-zero exit."""
     result = run_command([str(tool), *arguments], cwd=Path.cwd(), timeout_seconds=900)
     if result.returncode != 0:
         detail = (result.stderr or result.stdout).strip()
@@ -297,6 +298,7 @@ class PackageTools:
 
 
 def verify_copy(tools: PackageTools, bundle: Path, application_id: str, label: str) -> None:
+    """Verify a bundle copy's code signature seal and Gatekeeper assessment."""
     verify_seal(tools.codesign, bundle, application_id)
     print(f"[cadrumo:bundle] {label}: seal valid")
     print(f"[cadrumo:bundle] {label}: gatekeeper {assess(tools.spctl, bundle)}")

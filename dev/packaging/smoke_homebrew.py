@@ -177,6 +177,7 @@ def localize_formula(
 
 
 def new_run_root(evidence_dir: Path) -> Path:
+    """Create a timestamped run directory under the evidence directory."""
     evidence = resolve_storage_path(evidence_dir)
     evidence.mkdir(parents=True, exist_ok=True)
     run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ")
@@ -871,6 +872,7 @@ def run_deferred_cleanup(state_path: Path) -> int:
 
 
 def parser() -> argparse.ArgumentParser:
+    """Build the argument parser for the Homebrew smoke run."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--formula", required=True, type=Path)
     parser.add_argument("--cohort-dir", required=True, type=Path)

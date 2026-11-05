@@ -16,6 +16,7 @@ async def declarations_page_shape_context_from_page(
     modelo: str | None = None,
     ejercicio: int | None = None,
 ) -> dict[str, object]:
+    """Project the live page's shape into a diagnostic context, tolerating an unreadable page."""
     try:
         html = await page.content()
     except PlaywrightError:

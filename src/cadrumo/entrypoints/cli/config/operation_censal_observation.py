@@ -43,6 +43,7 @@ def observe(
     operation_id: OperationId,
     deadline: float,
 ) -> OperationObservationSuccessV1:
+    """Observe an operation through the client and return its successful observation."""
     request = OperationObserve(
         request_id=uuid4(),
         profile_id=profile_id,
@@ -70,6 +71,7 @@ def validate_observation(
     subject_ref: str,
     contract: OperationPublicDefinitionContractV1,
 ) -> None:
+    """Validate an observation against its operation, subject and public definition contract."""
     projection = observed.projection
     if (
         projection.operation_id != operation_id
@@ -106,6 +108,7 @@ def review_interaction(
     contract: OperationPublicDefinitionContractV1,
     deadline: float,
 ) -> tuple[OperationObservationSuccessV1, OperationReviewAvailableInteractionV1 | None]:
+    """Answer the review interaction of a censal observation operation through the client."""
     with OperationChanges(client) as changes:
         while True:
             remaining_budget(deadline)

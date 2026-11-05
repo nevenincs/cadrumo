@@ -25,6 +25,7 @@ def load(registry_root: Path, modelo_id: str) -> ModeloDefinition:
 
 
 def inside(path: Path, root: Path) -> bool:
+    """Report whether a path resolves to a location inside the root."""
     return path.resolve().is_relative_to(root.resolve())
 
 

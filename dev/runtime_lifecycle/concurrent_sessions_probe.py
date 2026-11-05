@@ -512,6 +512,7 @@ _PHASES: dict[str, Callable[[Run, Context, list[Held]], Awaitable[None]]] = {
 
 
 def setup(run: Run, context: Context) -> bool:
+    """Create the two probe profiles for the concurrent sessions probe and record the check."""
     for name in ("A", "B"):
         try:
             context.profiles[name] = create_profile(context.programs, context.environment, f"probe-{name.lower()}")

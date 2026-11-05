@@ -51,12 +51,14 @@ def casillas_by_id(rows: tuple[object, ...]) -> dict[str, tuple[object, ...]]:
 
 
 def row_lineage(row: object) -> str | None:
+    """Return a casilla row's continuidad id, or None when it has no string one."""
     table = as_toml_table(row)
     lineage = None if table is None else table.get("continuidad_id")
     return lineage if isinstance(lineage, str) else None
 
 
 def casilla_identity_row_id(row: object) -> str | None:
+    """Return a casilla row's id, or None when it has no string one."""
     table = as_toml_table(row)
     row_id = None if table is None else table.get("id")
     return row_id if isinstance(row_id, str) else None

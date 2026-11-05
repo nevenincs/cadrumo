@@ -142,6 +142,7 @@ def _invoice_args(*, kind: str, number: str, subtotal: str, iva_amount: str, dat
 
 
 def attest(cli: _Cli, *, year: int, period: str, observed_at: str) -> tuple[str, str]:
+    """Attest the modelo 303 exoneration through the CLI, returning attachment id and digest."""
     attested = cli.run(
         (
             *("app", "modelo", "work", "attest-m303-exonerado-390", "--year", str(year)),
@@ -167,6 +168,7 @@ def calculate_args(
 
 
 def revision_ids(cli: _Cli, work_unit_id: str) -> tuple[str, ...]:
+    """Return the calculation revision ids listed for a work unit."""
     listed = cli.run(("app", "modelo", "work", "revisions", work_unit_id))
     rows = listed.get("revisions")
     if not isinstance(rows, list):
@@ -213,6 +215,7 @@ def setup_store(
     days: tuple[tuple[int, int], tuple[int, int]] = LAST_PERIOD_DAYS,
     monthly_filer: bool = False,
 ) -> tuple[Path, str, _Cli, str]:
+    """Create a synthetic store and journey profile for a modelo 303 evidence scenario."""
     store = cast(Path, args.output_root) / name
     store.mkdir(parents=True)
     artifact = args.output_root / f"{name}-synthetic-purchase.pdf"

@@ -110,12 +110,15 @@ class TrackedRuleRepository:
         self._tracker = tracker
 
     def save(self, payload: LedgerClassificationRule) -> None:
+        """Save a classification rule through the writer tracker."""
         self._tracker.call_writer(lambda: self._repository.save(payload))
 
     def list_rules(self) -> tuple[LedgerClassificationRule, ...]:
+        """Return the stored classification rules."""
         return self._repository.list_rules()
 
     def delete(self, identifier: str) -> bool:
+        """Delete a rule by identifier and report whether it existed."""
         return self._repository.delete(identifier)
 
 

@@ -156,6 +156,7 @@ def validate_extraction_profile_artefacts(
     scope: str,
     profile: ExtractionProfileDefinition,
 ) -> list[str]:
+    """Return failures when a profile's accepted artefact kinds do not match its surface."""
     expected_by_surface = {
         "borrador_pdf": {"declaration_pdf"},
         "declaracion_pdf": {"declaration_pdf"},

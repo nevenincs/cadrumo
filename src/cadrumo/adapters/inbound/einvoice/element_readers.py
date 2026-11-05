@@ -54,6 +54,7 @@ def find_all(root: Element, name: str) -> list[Element]:
 
 
 def first_text(parent: Element, name: str) -> str | None:
+    """Return the stripped text of the first matching descendant element, or None."""
     for node in parent.iter():
         if local_tag_name(node.tag) == name and (node.text is not None and node.text) and node.text.strip():
             return node.text.strip()

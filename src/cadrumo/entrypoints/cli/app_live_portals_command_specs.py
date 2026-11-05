@@ -1,3 +1,5 @@
+"""Declarative command specs for the live portals CLI commands."""
+
 from __future__ import annotations
 
 from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec

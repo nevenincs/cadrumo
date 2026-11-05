@@ -79,6 +79,7 @@ def register_timeline_changes(
     *,
     class_names: ClassNames,
 ) -> tuple[ActivityAssetTimelineChange, ...]:
+    """Build the field level timeline changes between two register states."""
     old = {} if before is None else flatten(before.model_dump(mode="json"))
     new = flatten(after.model_dump(mode="json"))
     old_names: Mapping[str, str] = dict[str, str]() if before is None else class_names(before)

@@ -279,6 +279,7 @@ def _private_result[T: ActivityAssetOperationResult](result: BaseModel, result_t
 
 
 def project_refusal(refusal: ActivityAssetRefusalResult | None) -> ActivityAssetRefusal | None:
+    """Project an activity asset refusal result into its public refusal form."""
     if refusal is None:
         return None
     return ActivityAssetRefusal(

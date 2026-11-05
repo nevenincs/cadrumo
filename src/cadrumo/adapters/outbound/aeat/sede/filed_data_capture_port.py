@@ -118,6 +118,8 @@ class _DeferredSedeObservation:
 
 @dataclass(slots=True)
 class DeferredSedeObservations:
+    """Source observations whose artefacts are staged and persisted once inside a fence."""
+
     observations: tuple[FiledDeclaracionObservation, ...]
     staged: list[tuple[tuple[str, int, Period, str], FiledDeclaracionArtefact, bytes]] = field(default_factory=list)
     consumed: bool = False

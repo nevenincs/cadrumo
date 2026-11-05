@@ -43,11 +43,13 @@ class _Completed:
 
 
 def fail(message: str) -> NoReturn:
+    """Print a failure message to standard error and exit with status 1."""
     print(f"FAIL: {message}", file=sys.stderr)
     sys.exit(1)
 
 
 def ok(message: str) -> None:
+    """Print a success line for a passed smoke check."""
     print(f"ok: {message}")
 
 

@@ -200,6 +200,7 @@ def validate_companion_pins(
     version: str,
     artifact_kind: str,
 ) -> None:
+    """Require the companion requirements to pin the cohort version exactly."""
     parsed = tuple(Requirement(row) for row in requirements)
     for companion in _DISTRIBUTIONS[1:]:
         matches = tuple(
@@ -223,6 +224,7 @@ def validate_wheel_contract(
     official_wheel: Path,
     normatives_wheel: Path,
 ) -> str:
+    """Validate that the four wheels share one version and pins, returning that version."""
     root_name, version, requirements = _wheel_identity(root_wheel)
     manuals_name, manuals_version, _ = _wheel_identity(manuals_wheel)
     official_name, official_version, _ = _wheel_identity(official_wheel)
@@ -259,6 +261,7 @@ def validate_sdist_contract(
     *,
     expected_version: str,
 ) -> None:
+    """Validate the four source distributions against the expected version and pins."""
     root_name, root_version, requirements = _sdist_identity(root_sdist)
     manuals_name, manuals_version, _ = _sdist_identity(manuals_sdist)
     official_name, official_version, _ = _sdist_identity(official_sdist)

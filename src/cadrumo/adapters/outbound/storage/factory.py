@@ -73,6 +73,7 @@ def _configuration_validation_verdict(
 
 
 def parse_kind(raw: str) -> ProviderKind:
+    """Parse a storage provider kind setting, refusing an empty or unknown value."""
     cleaned = raw.strip().lower()
     if not cleaned:
         raise OutboundStorageValidationError(

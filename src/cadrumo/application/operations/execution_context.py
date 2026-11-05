@@ -148,6 +148,7 @@ class DefinitionBoundContext:
         set_cancellation_deferred: Callable[[OperationPersistedSnapshot, bool], Awaitable[OperationPersistedSnapshot]],
         execution_authority: OperationExecutionAuthority | None = None,
     ) -> None:
+        """Bind the operation snapshot, registry, clock and transition callbacks for this executor view."""
         self.registry = registry
         self.clock = clock
         self.resources = resources
@@ -174,6 +175,7 @@ class DefinitionBoundContext:
         pending: OperationPendingInteraction | None = None,
         effect: OperationEffect | None = None,
     ) -> None:
+        """Persist one lifecycle transition with its events, interaction and effect, and adopt the new snapshot."""
         self.snapshot = await self.advance_transition(
             self.snapshot,
             SnapshotAdvance(lifecycle=lifecycle, events=events, pending=pending, effect=effect),

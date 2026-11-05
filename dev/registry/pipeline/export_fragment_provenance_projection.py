@@ -278,6 +278,7 @@ def loader_semantic_drift(recorded: Mapping[str, object], current: Mapping[str, 
 
 
 def omit_undeclared_field_keys(field: dict[str, object]) -> dict[str, object]:
+    """Drop field keys that are present only when declared and are None."""
     for key in _FIELD_KEYS_PRESENT_ONLY_WHEN_DECLARED:
         if field[key] is None:
             del field[key]
@@ -399,6 +400,7 @@ def _semantic_entry_sort_key(payload: Mapping[str, object]) -> tuple[str, int, s
 
 
 def normalise_semantic_map_record(payload: Mapping[str, object]) -> dict[str, object]:
+    """Validate and normalise a semantic map record, including its optional discriminator."""
     _require_exact_keys(payload, _SEMANTIC_MAP_RECORD_KEYS, subject="semantic-map record")
     discriminator = payload["discriminator"]
     normalised_discriminator: dict[str, object] | None = None

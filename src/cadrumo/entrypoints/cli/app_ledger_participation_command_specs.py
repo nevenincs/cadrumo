@@ -1,3 +1,5 @@
+"""Declarative command specs for the ledger participation CLI commands."""
+
 from __future__ import annotations
 
 from cadrumo_client.commands.shared_contracts import (
