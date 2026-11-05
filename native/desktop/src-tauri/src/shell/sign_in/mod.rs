@@ -823,6 +823,10 @@ impl SignIn {
     fn window_sign_out(&self) -> Option<SignOutResult> {
         let profile_id = self.watch.latest().ok()?.profile_id?;
         let held = self.person(&profile_id).ok()?;
+        // Resolve the held person before fencing: person() itself needs a fresh
+        // observation. Readers must then wait for a post-sign-out observation,
+        // rather than trying to restore the receipt this exchange retires.
+        let _mutation = self.watch.mutation();
         let out = held
             .lock()
             .unwrap_or_else(|e| e.into_inner())
