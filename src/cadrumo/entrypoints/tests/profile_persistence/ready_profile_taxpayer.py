@@ -11,3 +11,8 @@ _READY_PROFILE_ROLE = "fontanero.titular"
 def ready_profile_tax_id() -> str:
     """Return the tax identifier the ready profile is registered under."""
     return identity_catalogue().role(_READY_PROFILE_ROLE).value
+
+
+def persona_tax_id(role: str) -> str:
+    """Return the tax identifier of the catalogue identity ``role``, which a persona binds as its taxpayer."""
+    return identity_catalogue().role(role).value
