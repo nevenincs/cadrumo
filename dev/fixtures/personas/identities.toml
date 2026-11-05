@@ -319,6 +319,13 @@ value = "B00000075"
 legal_name = "Textil Mayorista del Ebro, S.L."
 
 [[identities]]
+role = "minorista.comercializadora-electrica"
+persona = "minorista-recargo"
+kind = "cif"
+value = "B00000323"
+legal_name = "Energía Vinalopó Comercializadora, S.L."
+
+[[identities]]
 role = "intracom.cliente-nacional"
 persona = "intracomunitario-desarrollador"
 kind = "cif"
@@ -442,6 +449,13 @@ kind = "vat_eu"
 country = "IE"
 value = "IE0000001A"
 legal_name = "Liffey Cloud Hosting Limited"
+
+[[identities]]
+role = "intracom.operador-telefonia"
+persona = "intracomunitario-desarrollador"
+kind = "cif"
+value = "B00000315"
+legal_name = "Telecomunicaciones Turia, S.L."
 
 # Refusal-test values. Checksum-invalid on purpose; never bound to a role and
 # never used by a persona. Tests that prove identifier refusal take them from

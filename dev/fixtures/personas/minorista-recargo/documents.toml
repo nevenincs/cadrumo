@@ -8,3 +8,35 @@ media_type = "application/xml"
 attach_to = ["MIN-COM-1"]
 relation = "specimen"
 note = "A synthetic Facturae 3.2 invoice charging IVA 21 % plus recargo de equivalencia 5.2 %, the same rate pair as MIN-COM-1. Its parties and amounts are not MIN-COM-1's facts."
+
+[[documents]]
+id = "factura-min-luz-1"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["MIN-LUZ-1"]
+relation = "source"
+note = "The electricity supplier's invoice for the shop premises this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-min-luz-2"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["MIN-LUZ-2"]
+relation = "source"
+note = "The electricity supplier's invoice for the shop premises this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-min-luz-3"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["MIN-LUZ-3"]
+relation = "source"
+note = "The electricity supplier's invoice for the shop premises this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-min-luz-4"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["MIN-LUZ-4"]
+relation = "source"
+note = "The electricity supplier's invoice for the shop premises this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."

@@ -82,6 +82,17 @@ year = "horizon-1"
 descendants = []
 ascendants = []
 
+# His own copy of the previous year's Renta: no negative general base was left
+# pending to offset, so the four-year carry of casilla 1380 starts from zero, and
+# the net income of the activity in estimación directa (casilla 0224) was 21000.00,
+# above the 12000.00 up to which RIRPF art. 110.3.c lets casilla 13 of Modelo 130
+# lower the quarterly payment.
+[[local_observations]]
+modelo = "100"
+year = "horizon-2"
+period = "0A"
+casillas = { "0224" = "21000.00", "1384" = "0.00", "1387" = "0.00", "1390" = "0.00", "1391" = "0.00" }
+reason = "Rendimiento neto de la actividad y bases liquidables generales negativas pendientes en la declaración de la renta del ejercicio anterior"
 
 # At the clock every quarterly IVA return of the fiscal year is past its window,
 # so he has filed each one. Every quarter was to pay, so no compensation was

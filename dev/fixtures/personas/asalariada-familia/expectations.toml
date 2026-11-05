@@ -32,7 +32,8 @@ note = "The annual order sets the campaign window; 30 June is the end it has fix
 modelo = "100"
 period = "0A"
 year = "horizon-1"
-casillas = { "0003" = "36000.00", "0013" = "2332.80", "0596" = "5412.00" }
+casillas = { "0596" = "5412.00" }
+not_sourced = { "0003" = "36000.00", "0013" = "2332.80" }
 concepts = { rendimiento_neto_previo_trabajo = "33667.20", otros_gastos_trabajo = "2000.00", reduccion_rendimientos_trabajo = "0.00", rendimiento_neto_reducido_trabajo = "31667.20" }
 derivation = """
 From the employer's certificate, as the taxpayer declares it (withholding_certificates): íntegro 36000.00, Seguridad Social 2332.80 (6.48 %), retención 5412.00.
@@ -42,8 +43,7 @@ The art. 20 reduction is zero because the net exceeds the top of its band.
 """
 legal_ref = ["ley-35-2006:art-17", "ley-35-2006:art-19", "ley-35-2006:art-20"]
 grounding = "verified"
-reason = "The calculation refuses for casilla 1380, the general negative base pending from four years before, although the persona's own copy of the previous year's Renta is recorded as a local observation that states its pending bases 1384, 1387, 1390 and 1391 at zero: an application defect, the previous-filing binding does not take the recorded observation."
-refusal = "ERROR_MODELO_WORK_INPUT_REQUIRED"
+reason = "The application sources neither figure from the employer's certificate: the recorded withholding feeds casilla 0596, but no binding reads the certificate's íntegro into 0003 (LIRPF art. 17), and nothing records the employee's Seguridad Social contributions or binds them to 0013 (LIRPF art. 19.2.a). An application gap pending a decision on how the certificate's income and contribution quantities are recorded."
 
 [[values]]
 modelo = "100"

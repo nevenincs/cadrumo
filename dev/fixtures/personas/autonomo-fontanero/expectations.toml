@@ -498,7 +498,8 @@ grounding = "verified"
 modelo = "100"
 period = "0A"
 year = "horizon-1"
-casillas = { "0599" = "0.00", "0604" = "1869.98" }
+casillas = { "0599" = "0.00" }
+not_sourced = { "0604" = "1869.98" }
 concepts = { ingresos_actividad = "30000.00", gastos_actividad = "20158.00", provision_dificil_justificacion = "492.10", rendimiento_neto_actividad = "9349.90", minimo_personal = "5550.00" }
 derivation = """
 Activity income is the 130 4T cumulative figure: 30000.00 - 20158.00 - 492.10 = 9349.90.
@@ -507,5 +508,4 @@ Mínimo personal 5550.00 (under 65). Cuota and resultado are not asserted: they 
 """
 legal_ref = ["ley-35-2006:art-28", "ley-35-2006:art-57", "rd-439-2007:art-30"]
 grounding = "verified"
-reason = "The figures are hand-derived; the history replay does not produce them. Its calculation refuses for casilla 0168, the estimación directa normal indicator, which the product asks as a calculation input instead of deriving it from his stated directa simplificada regime. Past that, 0604 still stays unresolved, because it reads his filed Modelo 130 quarters and he cannot verify, and so file, a 130 locally while his prior-year Renta is known only from his own copy."
-refusal = "ERROR_MODELO_WORK_INPUT_REQUIRED"
+reason = "Casilla 0604 sums the pagos fraccionados of this year's Modelo 130 returns as filed (LIRPF art. 99, RIRPF art. 110), and none is filed: the first quarter cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation leaves 0604 unresolved for that missing input; the figure is what the filed quarters would give."

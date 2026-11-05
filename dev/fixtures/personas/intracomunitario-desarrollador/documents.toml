@@ -8,3 +8,131 @@ media_type = "application/xml"
 attach_to = ["DEV-NUBE-01"]
 relation = "specimen"
 note = "A synthetic EN 16931 UBL invoice with a reverse-charge VAT category, exercising the structured e-invoice evidence path for an intra-community service acquisition. Its parties and amounts are not DEV-NUBE-01's facts."
+
+[[documents]]
+id = "factura-dev-nube-02"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["DEV-NUBE-02"]
+relation = "source"
+note = "The cloud provider's invoice for the monthly hosting this row states, under inversión del sujeto pasivo, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-dev-nube-03"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["DEV-NUBE-03"]
+relation = "source"
+note = "The cloud provider's invoice for the monthly hosting this row states, under inversión del sujeto pasivo, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-dev-tel-1"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["DEV-TEL-1"]
+relation = "source"
+note = "The telephone operator's quarterly invoice this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-dev-nube-04"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["DEV-NUBE-04"]
+relation = "source"
+note = "The cloud provider's invoice for the monthly hosting this row states, under inversión del sujeto pasivo, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-dev-nube-05"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["DEV-NUBE-05"]
+relation = "source"
+note = "The cloud provider's invoice for the monthly hosting this row states, under inversión del sujeto pasivo, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-dev-nube-06"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["DEV-NUBE-06"]
+relation = "source"
+note = "The cloud provider's invoice for the monthly hosting this row states, under inversión del sujeto pasivo, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-dev-tel-2"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["DEV-TEL-2"]
+relation = "source"
+note = "The telephone operator's quarterly invoice this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-dev-nube-07"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["DEV-NUBE-07"]
+relation = "source"
+note = "The cloud provider's invoice for the monthly hosting this row states, under inversión del sujeto pasivo, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-dev-nube-08"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["DEV-NUBE-08"]
+relation = "source"
+note = "The cloud provider's invoice for the monthly hosting this row states, under inversión del sujeto pasivo, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-dev-nube-09"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["DEV-NUBE-09"]
+relation = "source"
+note = "The cloud provider's invoice for the monthly hosting this row states, under inversión del sujeto pasivo, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-dev-tel-3"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["DEV-TEL-3"]
+relation = "source"
+note = "The telephone operator's quarterly invoice this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-dev-nube-10"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["DEV-NUBE-10"]
+relation = "source"
+note = "The cloud provider's invoice for the monthly hosting this row states, under inversión del sujeto pasivo, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-dev-nube-11"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["DEV-NUBE-11"]
+relation = "source"
+note = "The cloud provider's invoice for the monthly hosting this row states, under inversión del sujeto pasivo, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-dev-cur-1"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["DEV-CUR-1"]
+relation = "source"
+note = "The training academy's invoice for the course this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-dev-nube-12"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["DEV-NUBE-12"]
+relation = "source"
+note = "The cloud provider's invoice for the monthly hosting this row states, under inversión del sujeto pasivo, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-dev-tel-4"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["DEV-TEL-4"]
+relation = "source"
+note = "The telephone operator's quarterly invoice this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
