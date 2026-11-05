@@ -501,3 +501,4 @@ Mínimo personal 5550.00 (under 65). Cuota and resultado are not asserted: they 
 """
 legal_ref = ["ley-35-2006:art-28", "ley-35-2006:art-57", "rd-439-2007:art-30"]
 grounding = "verified"
+reason = "The figures are hand-derived; the history replay does not produce them. Its calculation refuses for casilla 0168, the estimación directa normal indicator, which the product asks as a calculation input instead of deriving it from his stated directa simplificada regime. Past that, 0604 still stays unresolved, because it reads his filed Modelo 130 quarters and he cannot verify, and so file, a 130 locally while his prior-year Renta is known only from his own copy."

@@ -9,6 +9,11 @@ from pathlib import Path
 
 import pytest
 
+from ...application.inventory.registered_projections import InventoryInspectProjection
+from ...application.inventory.registered_requests import (
+    INVENTORY_INSPECT_OPERATION_DEFINITION_ID,
+    InventoryInspectRequest,
+)
 from ...application.modelo.filing_record_list_contracts import (
     ModeloFilingRecordListProjection,
     ModeloFilingRecordListRequest,
@@ -104,6 +109,17 @@ def test_a_persona_replays_through_production_operations(
                 RetencionSoportadaListProjection,
             ).rows
         ]
+        books = {
+            book.activity: run_operation(
+                world,
+                INVENTORY_INSPECT_OPERATION_DEFINITION_ID,
+                InventoryInspectRequest(
+                    profile_id=world.profile_id, actividad_id=book.activity, year=book.year.resolve(world.envelope)
+                ),
+                InventoryInspectProjection,
+            ).ledger
+            for book in persona.inventory
+        }
     values = record_to_path_values(record)
     answers = dict(patch_answers(persona, world.envelope))
     election_years = {election.year.resolve(world.envelope) for election in persona.elections}
@@ -175,6 +191,19 @@ def test_a_persona_replays_through_production_operations(
         for certificate in persona.withholding_certificates
     }
     assert set(materialised.evidence) == {document.id for document in persona.documents}
+    # Each book opens at its stated stock, records no movement and holds the closing recorded on its movements.
+    assert {
+        activity: (
+            None
+            if ledger is None
+            else (
+                Decimal(ledger.opening_stock.decimal),
+                ledger.period_movements,
+                ledger.closing_authority_fingerprints is not None,
+            )
+        )
+        for activity, ledger in books.items()
+    } == {book.activity: (book.opening_stock, (), True) for book in persona.inventory}
     assert {item.block for item in materialised.not_loaded} == _NOT_LOADED[persona_id]
     # Every run registers the persona at the same identity, so what is read of it names the same profile.
     assert world.profile_id == persona_profile_id(persona_id)

@@ -60,6 +60,22 @@ from ...application.aggregation.withholding_recognition import (
     WithholdingRecipientTaxRegime,
     WithholdingRecipientTaxStatus,
 )
+from ...application.inventory.registered_evidence_operation import (
+    INVENTORY_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
+    InventoryEvidenceAddProjection,
+    InventoryEvidenceAddRequest,
+)
+from ...application.inventory.registered_projections import (
+    InventoryClosingAuthorityOperationProjection,
+    InventoryCreateProjection,
+)
+from ...application.inventory.registered_requests import (
+    INVENTORY_CLOSING_VALUE_RECORD_OPERATION_DEFINITION_ID,
+    INVENTORY_CREATE_OPERATION_DEFINITION_ID,
+    InventoryClosingValueFactsInput,
+    InventoryClosingValueRecordRequest,
+    InventoryCreateRequest,
+)
 from ...application.invoices.catalogue_add_contracts import (
     INVOICE_ADD_OPERATION_DEFINITION_ID,
     InvoiceAddRequest,
@@ -179,6 +195,13 @@ from ...core.time.clock import frozen_clock, now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ...domain.contribuyente.inventory.closing_foundations import (
+    InventoryClosingAuthority,
+    InventoryClosingDecisionEvidence,
+    InventoryClosingDecisionEvidenceRole,
+    PriorClosingContinuityEvidence,
+)
+from ...domain.filing_evidence import FilingEvidenceReference
 from ...domain.iva.schema import InvoiceKind
 from ...domain.renta.retencion_soportada import RetencionSoportadaOrigen
 from ...domain.user_profile.errors import ProfileSchemaValidationError
@@ -189,6 +212,7 @@ from ...tests.personas import (
     FiledReturns,
     HouseholdMember,
     IdentityRef,
+    InventoryBook,
     LeasedPremises,
     LedgerRow,
     Persona,
@@ -226,7 +250,7 @@ class ReplayScope(StrEnum):
     HOUSEHOLD = "household"
     """The profile scope and the descendant and ascendant replacements."""
     FULL = "full"
-    """The household scope, the declared withholding, the statement import, invoices and evidence."""
+    """The household scope, the declared withholding, the statement import, invoices, evidence and inventory books."""
     HISTORY = "history"
     """The full scope, then the persona's return history.
 
@@ -857,6 +881,80 @@ def _replay_documents(persona: Persona, world: PersonaWorld, transactions: Mappi
     return evidence
 
 
+def _inventory_statement(persona: Persona, book: InventoryBook, world: PersonaWorld) -> Path:
+    """The taxpayer's statement behind one inventory book, written to the workdir as the PDF evidence intake keeps."""
+    year = book.year.resolve(world.envelope)
+    target = world.workdir / "inventory" / f"{persona.id}-{book.activity}-{year}.pdf"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(f"%PDF-1.4\n% {book.statement} ({year})\n%%EOF\n".encode())
+    return target
+
+
+def _replay_inventory(persona: Persona, world: PersonaWorld) -> None:
+    """Open each inventory book and record its closing on its movements, evidenced by the taxpayer's statement.
+
+    The book records no movement, so its closing value is the opening stock.
+    The statement also evidences the prior year's closing the opening continues
+    from, since no earlier book holds one.
+    """
+    for book in persona.inventory:
+        year = book.year.resolve(world.envelope)
+        where = f"{persona.id} inventory {book.activity} {year}"
+        created = run_operation(
+            world,
+            INVENTORY_CREATE_OPERATION_DEFINITION_ID,
+            InventoryCreateRequest(
+                profile_id=world.profile_id,
+                actividad_id=book.activity,
+                year=year,
+                valuation_method=book.valuation_method,
+                opening_stock=PublicDecimal(decimal=_decimal_text(book.opening_stock)),
+            ),
+            InventoryCreateProjection,
+        )
+        if created.outcome != "created":
+            raise PersonaMaterialisationError(f"{where}: create refused: {created.model_dump_json()}")
+        source = _inventory_statement(persona, book, world)
+        stored = run_operation(
+            world,
+            INVENTORY_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
+            InventoryEvidenceAddRequest(
+                profile_id=world.profile_id, source_path=str(source), source_directory=str(source.parent)
+            ),
+            InventoryEvidenceAddProjection,
+        )
+        if stored.reference is None or stored.content_digest is None:
+            raise PersonaMaterialisationError(f"{where}: statement refused: {stored.model_dump_json()}")
+        reference = FilingEvidenceReference(reference=stored.reference)
+        recorded = run_operation(
+            world,
+            INVENTORY_CLOSING_VALUE_RECORD_OPERATION_DEFINITION_ID,
+            InventoryClosingValueRecordRequest(
+                profile_id=world.profile_id,
+                actividad_id=book.activity,
+                year=year,
+                facts=InventoryClosingValueFactsInput(
+                    decision_id=f"persona-{book.activity}-{year}",
+                    authority=InventoryClosingAuthority.MOVEMENT_DERIVED,
+                    reason=book.statement,
+                    decision_evidence=(
+                        InventoryClosingDecisionEvidence(
+                            reference=reference,
+                            role=InventoryClosingDecisionEvidenceRole.AUTHORITY_RECONCILIATION,
+                            content_digest=stored.content_digest,
+                        ),
+                    ),
+                    prior_evidence=(
+                        PriorClosingContinuityEvidence(reference=reference, content_digest=stored.content_digest),
+                    ),
+                ),
+            ),
+            InventoryClosingAuthorityOperationProjection,
+        )
+        if recorded.outcome != "recorded":
+            raise PersonaMaterialisationError(f"{where}: closing refused: {recorded.model_dump_json()}")
+
+
 def filing_key(modelo: str, year: int, period: str) -> str:
     """The key :attr:`MaterialisedPersona.filings` and :attr:`MaterialisedPersona.calculations` name one return by."""
     return f"{modelo}:{year}:{period}"
@@ -1230,6 +1328,7 @@ def materialise_persona(
             transactions = _imported_transactions(persona, world)
             invoices = _replay_ledger(persona, world, transactions)
             evidence = _replay_documents(persona, world, transactions)
+            _replay_inventory(persona, world)
         setup_complete = _complete_setup(world) if complete_setup else None
         if scope.includes(ReplayScope.HISTORY) and (persona.filed_returns or persona.calculated_returns):
             if setup_complete is not True:

@@ -136,6 +136,7 @@ appear in a persona; identifier-refusal tests take them from here.
 | `[[calculated_returns]]` | array | returns the history replay calculates without filing: `modelo`, `year`, `periods` |
 | `[[local_observations]]` | array | casilla values of a return the taxpayer knows from his own copy |
 | `[[leased_premises]]` | array | premises the taxpayer rents and on whose rent he withholds |
+| `[[inventory]]` | array | the existencias book of one activity for one year |
 
 ### `[profile]` answers
 
@@ -203,6 +204,21 @@ default (`custodia_compartida = false`, ordinary `relacion`).
 | `origin` | `payer_certificate` (the certificate's bytes back the record, so the persona must reference a certificate document) or `operator_declaration` (the taxpayer transcribes the figures; what the catalogue uses) |
 | `importe_integro`, `retencion` | amounts |
 | `cotizaciones_seguridad_social` | optional; employee contributions shown on the certificate. No operation records them, so the materialiser reports them as not materialised |
+
+### Inventory books
+
+`[[inventory]]` states the existencias book of one activity for one year, which
+the Modelo 100 rows of the stock variation and the purchases of existencias
+read. Keys: `activity` (the book's activity id), `year` (token),
+`valuation_method` (`fifo`, `pmp` or `coste_medio`), `opening_stock`,
+`closing_stock` and a Spanish `statement`. The book records no movement, so
+the reader refuses a `closing_stock` that differs from `opening_stock`, a
+negative stock, and a second book for the same activity and year. The `FULL`
+scope creates the book, stores the statement as a PDF in the profile's
+evidence custody, and records the closing on the book's movements with that
+statement as the evidence of the decision and of the prior year's closing.
+State a zero book for an activity that holds no existencias, so the rows read
+zero on the taxpayer's statement rather than stay unresolved.
 
 ### Return history
 

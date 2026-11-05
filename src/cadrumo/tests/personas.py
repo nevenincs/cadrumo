@@ -325,6 +325,24 @@ class LeasedPremises:
 
 
 @dataclass(frozen=True, slots=True)
+class InventoryBook:
+    """The existencias book of one activity for one year, which the Modelo 100 Anexo D rows read.
+
+    The book records no movement: it opens at ``opening_stock`` and closes on
+    its movements, so ``closing_stock`` equals it. ``statement`` is the text of
+    the taxpayer's statement that evidences both the closing and the prior
+    year's closing it continues from.
+    """
+
+    activity: str
+    year: YearToken
+    valuation_method: str
+    opening_stock: Decimal
+    closing_stock: Decimal
+    statement: str
+
+
+@dataclass(frozen=True, slots=True)
 class LedgerRow:
     """One bank movement with the invoice and classification facts behind it."""
 
@@ -457,6 +475,7 @@ class Persona:
     calculated_returns: tuple[CalculatedReturns, ...]
     local_observations: tuple[LocalObservation, ...]
     leased_premises: tuple[LeasedPremises, ...]
+    inventory: tuple[InventoryBook, ...]
     ledger: tuple[LedgerRow, ...]
     documents: tuple[PersonaDocument, ...]
     expectations: Expectations
@@ -658,6 +677,7 @@ _PERSONA_TABLES = frozenset(
         "calculated_returns",
         "local_observations",
         "leased_premises",
+        "inventory",
     }
 )
 _DESCENDANT_LEAVES = frozenset(
@@ -951,6 +971,28 @@ def _leased_premises(table: _Table, where: str, roles: _Roles) -> LeasedPremises
         else _cadastral_reference(reference, f"{where}.cadastral_reference"),
         modality=_string(table, "modality", where),
         address=tuple((key, cast(str, value)) for key, value in address.items()),
+    )
+
+
+def _inventory_book(table: _Table, where: str) -> InventoryBook:
+    _keys(
+        table,
+        where,
+        required=frozenset({"activity", "year", "valuation_method", "opening_stock", "closing_stock", "statement"}),
+    )
+    opening = _amount(table["opening_stock"], f"{where}.opening_stock")
+    closing = _amount(table["closing_stock"], f"{where}.closing_stock")
+    if opening < 0 or closing < 0:
+        raise _fail(where, "existencias are valued at a nonnegative amount")
+    if closing != opening:
+        raise _fail(where, "a book with no movement closes at its opening stock")
+    return InventoryBook(
+        activity=_string(table, "activity", where),
+        year=YearToken.parse(table["year"], where=f"{where}.year"),
+        valuation_method=_string(table, "valuation_method", where),
+        opening_stock=opening,
+        closing_stock=closing,
+        statement=_string(table, "statement", where),
     )
 
 
@@ -1291,6 +1333,10 @@ def parse_persona(
             _leased_premises(table, f"{where} leased_premises[{index}]", roles)
             for index, table in enumerate(_tables(persona_document.get("leased_premises"), where))
         ),
+        inventory=tuple(
+            _inventory_book(table, f"{where} inventory[{index}]")
+            for index, table in enumerate(_tables(persona_document.get("inventory"), where))
+        ),
         ledger=ledger,
         documents=_documents(
             documents_document, f"{persona_id}/documents.toml", persona_id, frozenset(row.ref for row in ledger)
@@ -1306,6 +1352,7 @@ def parse_persona(
         if document.generator is not None and any(named[ref] != document.id for ref in document.attach_to):
             raise _fail(f"{persona_id}/documents.toml", f"{document.id}: its row does not name it in ledger.csv")
     _check_returns(persona)
+    _check_inventory(persona)
     _check_years(persona, envelope)
     return persona
 
@@ -1319,6 +1366,13 @@ def _check_returns(persona: Persona) -> None:
             if key in seen:
                 raise _fail(persona.id, f"Modelo {block.modelo} {block.year} {period} is listed twice")
             seen.add(key)
+
+
+def _check_inventory(persona: Persona) -> None:
+    """Refuse two books for one activity and year."""
+    books = [(book.activity, str(book.year)) for book in persona.inventory]
+    if len(set(books)) != len(books):
+        raise _fail(persona.id, "an inventory activity and year is listed twice")
 
 
 def _dates(persona: Persona) -> list[PersonaDate]:
@@ -1340,6 +1394,7 @@ def _check_years(persona: Persona, envelope: YearEnvelope) -> None:
         *(filed.year for filed in persona.filed_returns),
         *(calculated.year for calculated in persona.calculated_returns),
         *(observation.year for observation in persona.local_observations),
+        *(book.year for book in persona.inventory),
         *(row.year for row in persona.ledger),
         *(item.year for item in persona.expectations.obligations),
         *(item.year for item in persona.expectations.deadlines),
@@ -1400,6 +1455,7 @@ __all__ = [
     "IdentityCatalogue",
     "IdentityRef",
     "IdentityRefusal",
+    "InventoryBook",
     "LeasedPremises",
     "LedgerRow",
     "LocalObservation",

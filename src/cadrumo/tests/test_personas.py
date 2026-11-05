@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import tomllib
+from decimal import Decimal
 from typing import Any
 
 import pytest
@@ -198,3 +199,53 @@ def test_a_local_observation_needs_canonical_casilla_amounts() -> None:
     document["local_observations"] = [{**observation, "casillas": {"0224": "12.846,30"}}]
     with pytest.raises(PersonaCatalogueError):
         _parse(document)
+
+
+def _with_inventory(*books: dict[str, object]) -> dict[str, Any]:
+    document = copy.deepcopy(_document("persona.toml"))
+    document["inventory"] = list(books)
+    return document
+
+
+_BOOK: dict[str, object] = {
+    "activity": "servicios",
+    "year": "horizon-1",
+    "valuation_method": "fifo",
+    "opening_stock": "0.00",
+    "closing_stock": "0.00",
+    "statement": "No existencias",
+}
+
+
+def test_an_inventory_book_with_no_movement_is_admitted() -> None:
+    persona = parse_persona(
+        _PERSONA,
+        persona_document=_with_inventory(_BOOK),
+        ledger_text=(PERSONAS_ROOT / _PERSONA / "ledger.csv").read_text(encoding="utf-8"),
+        documents_document=_document("documents.toml"),
+        expectations_document=_document("expectations.toml"),
+        catalogue=identity_catalogue(),
+        envelope=_ENVELOPE,
+    )
+    (book,) = persona.inventory
+    assert (book.activity, book.year.resolve(_ENVELOPE), book.opening_stock, book.closing_stock) == (
+        "servicios",
+        103,
+        Decimal("0.00"),
+        Decimal("0.00"),
+    )
+
+
+@pytest.mark.parametrize(
+    ("books", "message"),
+    [
+        (({**_BOOK, "closing_stock": "10.00"},), "closes at its opening stock"),
+        (({**_BOOK, "opening_stock": "-1.00", "closing_stock": "-1.00"},), "nonnegative"),
+        (({**_BOOK, "opening_stock": "0,00"},), "canonical decimal"),
+        (({**_BOOK, "year": "horizon+1"},), "outside the supported envelope"),
+        ((_BOOK, _BOOK), "listed twice"),
+    ],
+)
+def test_a_malformed_inventory_book_is_refused(books: tuple[dict[str, object], ...], message: str) -> None:
+    with pytest.raises(PersonaCatalogueError, match=message):
+        _parse(_with_inventory(*books))
