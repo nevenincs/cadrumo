@@ -61,9 +61,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -84,13 +81,13 @@ from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterR
 from ....adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from ....adapters.persistence.profile.tests.percepcion_observation_authoring import replace_percepcion_observations
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from ....adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     load_test_profile_record,
     replace_test_profile_record,
-    seed_test_profile_record,
 )
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.aggregation.retenciones import (
@@ -125,13 +122,12 @@ from ....domain.calculations.registry.tests.registry_observations import (
 )
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....domain.user_profile.values import UserProfileFact
 from ....tests.env_scope import ready_clave_settings
 from ._fold_in_assertions_support import _assert_distinct_positive
 from .file_flow_test_support import calculation_ports_for_test
 from .observation_seeding_support import save_stamped_observation
+from .ready_profile_taxpayer import ready_profile_tax_id
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
@@ -176,33 +172,8 @@ _M123_RETENCIONES_OUTPUT: CasillaId = validated_casilla_id("09", surface="_M123_
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     """Yield the active profile's real encrypted-SQLite object repository."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label=_PROFILE_LABEL) as profile:
-        _seed_ready_profile()
+        seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
         yield profile.repository
-
-
-def _seed_ready_profile() -> None:
-    """Persist a filing-ready withholding-operator profile for annual summaries."""
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="withholding operator activity"),
-                *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-                # Modelo 111 refuses a defaulted colegio-concertado declaration: the fichero
-                # carries the row as filer data, so it must be stated rather than assumed.
-                # False is the truthful value for this natural-person filer.
-                UserProfileFact(path="withholding.colegio_concertado", value=False),
-            ),
-            created_at=_T0,
-            updated_at=_T0,
-            context=_profile_creation_context_for_test(),
-        ),
-    )
 
 
 def _seed_quarterly_filing(
@@ -448,7 +419,7 @@ def _seed_retencion_perceptors(
 
 
 def workflow_profile() -> TaxpayerProfile:
-    return TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("GENERAL"))
+    return TaxpayerProfile(tax_id=ready_profile_tax_id(), iva_regime=IVARegime("GENERAL"))
 
 
 def test_m180_folds_in_four_m115_quarters_on_live_calculate(
@@ -647,7 +618,7 @@ def _seed_and_file_m111_1t(
             verification_repositories=build_test_verification_repository_bundle(),
             actor="test-operator",
             workflow_profile=workflow_profile(),
-            settings=ready_clave_settings("12345678Z"),
+            settings=ready_clave_settings(ready_profile_tax_id()),
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
@@ -765,7 +736,7 @@ def test_m190_verify_accepts_observation_backed_m111_cross_period_evidence(
             verification_repositories=build_test_verification_repository_bundle(),
             actor="test-operator",
             workflow_profile=workflow_profile(),
-            settings=ready_clave_settings("12345678Z"),
+            settings=ready_clave_settings(ready_profile_tax_id()),
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
@@ -824,7 +795,7 @@ def test_m190_verify_accepts_filed_1t_m111_and_attested_no_obligation_zero_quart
             verification_repositories=build_test_verification_repository_bundle(),
             actor="test-operator",
             workflow_profile=workflow_profile(),
-            settings=ready_clave_settings("12345678Z"),
+            settings=ready_clave_settings(ready_profile_tax_id()),
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
@@ -870,7 +841,7 @@ def test_m190_verify_refuses_a_work_income_row_missing_its_family_data(
             verification_repositories=build_test_verification_repository_bundle(),
             actor="test-operator",
             workflow_profile=workflow_profile(),
-            settings=ready_clave_settings("12345678Z"),
+            settings=ready_clave_settings(ready_profile_tax_id()),
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,

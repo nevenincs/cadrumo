@@ -49,20 +49,16 @@ is stabilised.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
 
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
-
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from ....adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -73,11 +69,9 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation,
 from ....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_RESULTADO_CASILLA,
 )
-from ....domain.user_profile.values import ProfileSetupState
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
-from .general_iva_profile_facts_support import general_iva_profile_facts
 from .observation_seeding_support import save_local_m303_compensacion_filings
+from .ready_profile_taxpayer import ready_profile_tax_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -95,7 +89,7 @@ def bucket_id() -> str:
 _T0 = datetime(2026, 1, 20, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 20, 11, 0, tzinfo=UTC)
 _YEAR = 2025
-_TAX_ID = "12345678Z"
+_TAX_ID = ready_profile_tax_id()
 
 
 # Seeded M303 casilla ids consumed by the three M390←M303 relations and the
@@ -222,23 +216,6 @@ def _seed_m303_quarters(*, obs_repo: CalculationObservationRepository) -> None:
     )
 
 
-def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
-            facts=general_iva_profile_facts(
-                tax_id=_TAX_ID,
-                activity_start_date=date(2020, 1, 1),
-                activity="activity",
-            ),
-            created_at=_T0,
-            updated_at=_T0,
-            context=_profile_creation_context_for_test(),
-        ),
-    )
-
-
 def _calculate_m390_annual(secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation):
     """Run the live M390/2025/0A calculate over the seeded bucket.
 
@@ -292,7 +269,7 @@ def test_m390_folds_m303_relations_and_compensation_partition_on_live_calculate(
     The asserted values derive from the seeded observations via the declared source mechanisms,
     never from the registry formula (non-tautological).
     """
-    _store_ready_profile(secure_objects)
+    seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
     obs_repo = CalculationObservationRepository()
     _seed_m303_quarters(obs_repo=obs_repo)
 

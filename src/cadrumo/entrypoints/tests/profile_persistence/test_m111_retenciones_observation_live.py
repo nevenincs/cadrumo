@@ -2,15 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
-
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -18,10 +14,10 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from ....adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.aggregation.retenciones import RetencionObservation
 from ....application.modelo.calculation_bucket_actions import (
@@ -37,9 +33,6 @@ from ....core.aggregation import (
 )
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from .file_flow_test_support import calculation_ports_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -90,30 +83,6 @@ def _administrador_wrong_rate_observation() -> RetencionObservation:
     )
 
 
-def _seed_ready_profile(objects: SecureObjectRepository) -> None:
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="withholding operator activity"),
-                *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-                # Modelo 111 refuses a defaulted colegio-concertado declaration: the fichero
-                # carries the row as filer data, so it must be stated rather than assumed.
-                # False is the truthful value for this natural-person filer.
-                UserProfileFact(path="withholding.colegio_concertado", value=False),
-            ),
-            created_at=_T0,
-            updated_at=_T0,
-            context=_profile_creation_context_for_test(),
-        ),
-    )
-
-
 def _calculate_with_observation(
     objects: SecureObjectRepository, operation: PinnedAuthorityOperation, observation: RetencionObservation
 ) -> BucketAggregationCalculationResult:
@@ -161,7 +130,7 @@ def test_m111_professional_retencion_observation_calculates_activity_boxes(
     """A persisted professional retención observation drives 07/08/09 and totals 28/30."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 retenciones") as profile:
         objects: SecureObjectRepository = profile.repository
-        _seed_ready_profile(objects)
+        seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
         result = _calculate_with_observation(objects, operation, _professional_observation())
 
     values = result.revision.casilla_values
@@ -184,7 +153,7 @@ def test_m111_administrador_retencion_observation_folds_into_trabajo_boxes(
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 retenciones") as profile:
         objects: SecureObjectRepository = profile.repository
-        _seed_ready_profile(objects)
+        seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
         result = _calculate_with_observation(objects, operation, _administrador_observation())
 
     values = result.revision.casilla_values
@@ -209,7 +178,7 @@ def test_m111_administrador_wrong_rate_surfaces_calculate_advisory(
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 retenciones") as profile:
         objects: SecureObjectRepository = profile.repository
-        _seed_ready_profile(objects)
+        seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
         result = _calculate_with_observation(objects, operation, _administrador_wrong_rate_observation())
 
     values = result.revision.casilla_values
