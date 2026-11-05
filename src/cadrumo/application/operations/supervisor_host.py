@@ -127,6 +127,7 @@ class SupervisorHost:
 
         async def inspect(self, operation_id: OperationId) -> OperationPersistedSnapshot:
             """Return the current persisted snapshot of one operation."""
+            ...
 
         async def request_cancel(
             self,
@@ -135,6 +136,7 @@ class SupervisorHost:
             expected_revision: int | None = None,
         ) -> OperationPersistedSnapshot:
             """Request cooperative cancellation of one operation, optionally at an exact revision."""
+            ...
 
         def _require_cleanup_timeout(self, cancellation: OperationCancellation) -> None: ...
 
@@ -148,6 +150,7 @@ class SupervisorHost:
             receipt: OperationTerminalReceipt,
         ) -> OperationPersistedSnapshot:
             """Persist the terminal receipt that settles one operation."""
+            ...
 
         def _validate_cancelled_settlement(self, snapshot: OperationPersistedSnapshot) -> None: ...
 
@@ -193,6 +196,7 @@ class SupervisorHost:
 
         async def settled(self, operation_id: OperationId) -> OperationPersistedSnapshot:
             """Return the snapshot of one started operation once it has settled."""
+            ...
 
         async def submit[RequestPayloadT: BaseModel](
             self,
@@ -202,6 +206,7 @@ class SupervisorHost:
             provenance: OperationAdmissionProvenance | None = None,
         ) -> OperationId:
             """Admit one typed registered-operation request and return its operation id."""
+            ...
 
         async def _authorize_submission[RequestPayloadT: BaseModel](
             self,
@@ -243,9 +248,11 @@ class SupervisorHost:
 
         async def drain(self, timeout: timedelta) -> OperationDrainResult:
             """Stop admissions and wait up to the timeout for owned operations to close."""
+            ...
 
         async def shutdown(self) -> OperationDrainResult:
             """Close within the default bound and report any remaining ownership."""
+            ...
 
         def _schedule_drain_settlement_closes(self, deadline: float) -> None: ...
 
@@ -277,6 +284,7 @@ class SupervisorHost:
 
         async def start(self, operation_id: OperationId) -> OperationPersistedSnapshot:
             """Admit one owned operation executor and return its running snapshot."""
+            ...
 
         async def submit_ephemeral_secret(
             self,
@@ -358,12 +366,14 @@ class SupervisorHost:
 
         async def await_terminal(self, operation_id: OperationId) -> OperationPersistedSnapshot:
             """Wait for one operation to reach a terminal snapshot."""
+            ...
 
         async def respond(
             self,
             response: OperationApplyResponse | OperationRejectResponse,
         ) -> OperationConsumedInteraction:
             """Consume one pending interaction response and resume the operation when its policy permits."""
+            ...
 
         def schedule_continuation(
             self,
@@ -384,6 +394,7 @@ class SupervisorHost:
             deferred: bool,
         ) -> OperationPersistedSnapshot:
             """Persist whether cancellation of the operation is deferred and return the updated snapshot."""
+            ...
 
         async def _cancel_pre_entry_secret(
             self,

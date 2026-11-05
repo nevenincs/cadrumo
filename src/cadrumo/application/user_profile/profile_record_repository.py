@@ -430,7 +430,7 @@ class ProfileRecordRepository:
 
         # The lifecycle names this deliberate repository-only collaboration private;
         # this explicit command owner is its sole cross-class caller.
-        ProfileCapsuleLifecycle(root=self._root)._replace_record_for_profile_command(  # pyright: ignore[reportPrivateUsage]
+        ProfileCapsuleLifecycle(root=self._root).replace_record_for_profile_command(
             profile_id=identity,
             record_session=self.session,
             replacement=replacement,
@@ -497,7 +497,7 @@ class ProfileRecordRepository:
 
         # The lifecycle names this deliberate repository-only collaboration private;
         # this explicit command owner is its sole cross-class caller.
-        ProfileCapsuleLifecycle(root=self._root)._replace_record_for_profile_command(  # pyright: ignore[reportPrivateUsage]
+        ProfileCapsuleLifecycle(root=self._root).replace_record_for_profile_command(
             profile_id=identity,
             record_session=self.session,
             replacement=replacement,

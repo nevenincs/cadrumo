@@ -13,11 +13,11 @@ from cadrumo.domain.categories.spending_category_catalogue import spending_categ
 from cadrumo_runtime.host.tests.frontend.cli.ledger_ux_support import (
     imported_transaction_id,
     invoke,
-    open_bucket_session,
+    ledger_ux_bucket_session,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-__all__ = ["open_bucket_session"]
+__all__ = ["ledger_ux_bucket_session"]
 
 
 def _category_tokens() -> tuple[SpendingCategory, ...]:

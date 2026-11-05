@@ -37,11 +37,11 @@ import pytest
 from cadrumo.core.toml import TomlDecodeError, parse_toml
 
 from ..stamp import (
-    Stamp,  # pyright: ignore[reportPrivateUsage]
-    assert_revision_is_compiled,  # pyright: ignore[reportPrivateUsage]
-    assert_schema_accepts,  # pyright: ignore[reportPrivateUsage]
+    Stamp,
+    assert_revision_is_compiled,
+    assert_schema_accepts,
     bundled_registry_root,
-    declared_governance,  # pyright: ignore[reportPrivateUsage]
+    declared_governance,
 )
 from ..stamp_toml import StampError
 

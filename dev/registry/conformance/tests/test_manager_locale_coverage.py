@@ -19,8 +19,8 @@ from cadrumo.core.external_constants import OutputLanguage
 
 from ..manager import (
     RevisionLocaleCoverage,
-    SharedModeloLocaleCoverageRecord,  # pyright: ignore[reportPrivateUsage]
-    locale_axis_summary,  # pyright: ignore[reportPrivateUsage]
+    SharedModeloLocaleCoverageRecord,
+    locale_axis_summary,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

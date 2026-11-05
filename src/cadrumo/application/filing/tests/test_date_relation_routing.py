@@ -37,12 +37,12 @@ from ....domain.calculations.registry.runtime_graph import enum_consumed_binding
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.submission.models import ModeloDraftStatus
 from ..draft_construction import (
-    bound_casilla_binding_ids,
     build_draft,
     date_inputs_for_ids,
     draft_construction_date_binding_ids,
     draft_construction_relation_ids,
     formula_binding_ids,
+    snapshot_bound_casilla_binding_ids,
     string_inputs_for_ids,
 )
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
@@ -118,7 +118,7 @@ def test_birth_date_excluded_from_decimal_channel() -> None:
     crash cannot reappear.
     """
     snap = _m100_snapshot()
-    calculation_binding_ids = formula_binding_ids(snap) | bound_casilla_binding_ids(snap)
+    calculation_binding_ids = formula_binding_ids(snap) | snapshot_bound_casilla_binding_ids(snap)
     enum_binding_ids = enum_consumed_binding_ids(snap.revision)
     date_binding_ids = draft_construction_date_binding_ids(snap)
     relation_ids = draft_construction_relation_ids(snap)
@@ -137,7 +137,7 @@ def test_tax_residence_ccaa_excluded_from_decimal_channel() -> None:
     exclude it from the Decimal id-set before calling ``_decimal_inputs_for_ids``.
     """
     snap = _m100_snapshot()
-    calculation_binding_ids = formula_binding_ids(snap) | bound_casilla_binding_ids(snap)
+    calculation_binding_ids = formula_binding_ids(snap) | snapshot_bound_casilla_binding_ids(snap)
     enum_binding_ids = enum_consumed_binding_ids(snap.revision)
     date_binding_ids = draft_construction_date_binding_ids(snap)
     relation_ids = draft_construction_relation_ids(snap)

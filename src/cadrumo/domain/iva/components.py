@@ -41,7 +41,7 @@ from .schema import (
     InvoiceKind,
     IvaCategory,
     IvaStrictFrozen,
-    RegistryLegalRef,  # pyright: ignore[reportPrivateUsage] -- intra-package reuse of this package's own constrained legal-ref alias
+    RegistryLegalRef,
 )
 
 

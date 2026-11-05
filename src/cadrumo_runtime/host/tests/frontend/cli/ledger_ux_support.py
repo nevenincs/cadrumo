@@ -86,7 +86,7 @@ def open_ledger_ux_session(tmp_path: Path) -> Generator[None]:
 
 
 @pytest.fixture(autouse=True)
-def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
+def ledger_ux_bucket_session(tmp_path: Path) -> Iterator[None]:
     with open_ledger_ux_session(tmp_path):
         yield
 
