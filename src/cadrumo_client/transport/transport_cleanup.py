@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import time
 from threading import RLock
 from typing import Protocol
@@ -49,6 +48,8 @@ class TransportCleanup:
 
     async def close(self) -> None:
         """Keep blocking native release off the event loop, including retries."""
+        import asyncio
+
         await asyncio.to_thread(self.close_now)
 
 
