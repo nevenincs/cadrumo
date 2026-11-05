@@ -42,8 +42,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
 
-from dev._paths import REPO_ROOT
-from dev.fixture_projections.location import window_projections
+from dev.fixture_projections.location import family_directory
 from dev.temporary_output import prepare_temp_root
 from pydantic import BaseModel
 from pydantic.json_schema import models_json_schema
@@ -59,7 +58,7 @@ if TYPE_CHECKING:
 
 FRONTEND = Path(__file__).resolve().parents[1]
 #: The scenario envelopes are build output in the host's build tree, never committed.
-FIXTURES = REPO_ROOT / window_projections() / "modelo"
+FIXTURES = family_directory("modelo")
 
 #: The host's closed list of admitted definitions, which the generated mirror is pinned to.
 ADMITTED = FRONTEND.parent / "src-tauri" / "src" / "shell" / "modelo" / "admitted.rs"
