@@ -107,7 +107,7 @@ from .applicability_models import (
     registry_applicability_reason,
 )
 from .applicability_payer_facts import (
-    PayerFactProjection,
+    payer_fact_is_three_state,
     resolve_payer_fact,
 )
 from .applicability_routes import TaxRoute, tax_route_for_entity_type
@@ -125,9 +125,10 @@ from .third_party_declaration_roles import resolve_third_party_declaration_role_
 
 
 def _hydrate_applicability_exclusion(fragment: ApplicabilityExclusionDefinition) -> ModeloApplicabilityExclusion:
-    """Hydrate one exclusion, refusing a fact that cannot tell a declared no from an unanswered one."""
+    """Hydrate one exclusion, refusing a declared-no reading of a fact that cannot tell no from unanswered."""
     payer_fact = resolve_payer_fact(fragment.payer_fact) if fragment.payer_fact is not None else None
-    if payer_fact is not None and not (isinstance(payer_fact, PayerFactProjection) and payer_fact.three_state):
+    three_state = payer_fact is not None and payer_fact_is_three_state(payer_fact)
+    if payer_fact is not None and not three_state and not fragment.payer_fact_declared:
         raise RegistryValidationError(
             f"exclusion {fragment.id!r} reads payer fact {fragment.payer_fact!r}, which cannot tell a declared no "
             "from an unanswered question",

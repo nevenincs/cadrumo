@@ -176,16 +176,16 @@ class _ProfileAxisFields(TypedDict):
 
 
 class _ProfileWithholdingFields(TypedDict):
-    has_employees: bool
+    has_employees: bool | None
     colegio_concertado: bool | None
-    pays_professionals_with_retencion: bool
+    pays_professionals_with_retencion: bool | None
     art109_activity_income_withholding_ge_70pct: bool
-    pays_rent_with_retencion: bool
+    pays_rent_with_retencion: bool | None
     pays_capital_income_with_retencion: bool
 
 
 class _ProfileObligationFields(TypedDict):
-    does_intracomunitario: bool
+    does_intracomunitario: bool | None
     third_party_transactions_above_347_threshold: bool | None
     bienes_extranjero_above_threshold: bool | None
     monedas_virtuales_extranjero_above_threshold: bool | None
@@ -309,11 +309,11 @@ def _resolve_profile_withholding_fields(typed: SetupAnswers) -> _ProfileWithhold
     """Project the withholding answers that are already typed by SetupAnswers."""
     colegio_concertado = typed.colegio_concertado if isinstance(typed.colegio_concertado, bool) else None
     return {
-        "has_employees": typed.has_employees,
+        "has_employees": _declared_bool(typed.has_employees),
         "colegio_concertado": colegio_concertado,
-        "pays_professionals_with_retencion": typed.pays_professionals_with_retencion,
+        "pays_professionals_with_retencion": _declared_bool(typed.pays_professionals_with_retencion),
         "art109_activity_income_withholding_ge_70pct": typed.art109_activity_income_withholding_ge_70pct,
-        "pays_rent_with_retencion": typed.pays_rent_with_retencion,
+        "pays_rent_with_retencion": _declared_bool(typed.pays_rent_with_retencion),
         "pays_capital_income_with_retencion": typed.pays_capital_income_with_retencion,
     }
 
@@ -326,7 +326,7 @@ def _declared_bool(value: object) -> bool | None:
 def _resolve_profile_obligation_fields(typed: SetupAnswers) -> _ProfileObligationFields:
     """Project the obligation flags that are already typed by SetupAnswers."""
     return {
-        "does_intracomunitario": typed.does_intracomunitario,
+        "does_intracomunitario": _declared_bool(typed.does_intracomunitario),
         "third_party_transactions_above_347_threshold": _declared_bool(
             typed.third_party_transactions_above_347_threshold,
         ),
