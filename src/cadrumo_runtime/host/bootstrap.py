@@ -10,8 +10,6 @@ import time
 from collections.abc import Callable, Mapping
 from typing import TYPE_CHECKING
 
-from cadrumo.core.pydantic_plugins import PYDANTIC_PLUGINS_DISABLED, PYDANTIC_PLUGINS_VARIABLE
-
 if TYPE_CHECKING:
     from argparse import Namespace
 
@@ -20,7 +18,8 @@ def _runtime_environment() -> dict[str, str]:
     environment = {
         key: value for key, value in os.environ.items() if not key.upper().startswith(("PYTHON", "LD_", "DYLD_"))
     }
-    environment[PYDANTIC_PLUGINS_VARIABLE] = PYDANTIC_PLUGINS_DISABLED
+    # Literal on purpose: no tax module may load before the arguments are parsed.
+    environment["PYDANTIC_DISABLE_PLUGINS"] = "__all__"
     return environment
 
 
