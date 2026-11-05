@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -167,34 +168,25 @@ def workflow_profile(incn: Decimal | None) -> TaxpayerProfile:
 
 
 def _seed_profile(*, bucket_id: str, incn: Decimal | None) -> None:
-    facts = [
+    stated = [
         UserProfileFact(path="identity.tax_id", value=_TAX_ID),
         UserProfileFact(path="identity.name", value="Ana"),
         UserProfileFact(path="identity.surnames", value="Sociedad Limitada"),
         UserProfileFact(path="identity.legal_name", value="Taller Sol Sociedad Limitada"),
         UserProfileFact(path="activities.description", value="taller mecanico"),
-        UserProfileFact(path="iva.regime", value="GENERAL"),
-        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-        UserProfileFact(path="iva.m303_regime_composition", value="general"),
-        UserProfileFact(path="iva.oss_enrolled", value=False),
-        UserProfileFact(path="iva.redeme_enrolled", value=False),
-        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-        UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-        UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-        UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
-        UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
-        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
         UserProfileFact(path="renta_filing.declaration_type", value="1"),
     ]
     if incn is not None:
-        facts.append(UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=incn))
+        stated.append(UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=incn))
     seed_test_profile_record(
         _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
-            facts=tuple(facts),
+            facts=persona_facts_beneath(
+                stated,
+                without=() if incn is not None else ("taxpayer_type.incn_prior_12_months",),
+                persona_id="sociedad-limitada",
+            ),
             created_at=_CLOCK,
             updated_at=_CLOCK,
             context=_profile_creation_context_for_test(),

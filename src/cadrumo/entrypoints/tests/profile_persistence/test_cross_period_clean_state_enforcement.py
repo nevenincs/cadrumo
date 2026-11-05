@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -194,28 +195,22 @@ def _seed_m100_profile_facts(bucket_id: str, objects: SecureObjectRepository | N
     record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=bucket_id,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="X1234567L"),
-            UserProfileFact(path="identity.name", value="Test"),
-            UserProfileFact(path="identity.surnames", value="Salaried"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="activities.description", value="salaried income"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="provenance.source", value="manual_cli"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            UserProfileFact(path="renta_taxpayer.sex", value="M"),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="X1234567L"),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Salaried"),
+                UserProfileFact(path="activities.description", value="salaried income"),
+                UserProfileFact(path="provenance.source", value="manual_cli"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
+                UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
+                UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
+                UserProfileFact(path="renta_taxpayer.sex", value="M"),
+                UserProfileFact(path="renta_filing.declaration_type", value="1"),
+                UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+                UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+            ),
+            without=("irpf.estimation_regime", "censo.activity_start_date"),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,

@@ -49,6 +49,7 @@ from cadrumo.application.invoices.source_resolver_ports import InvoiceSourceReso
 from cadrumo.application.modelo.action_errors import ModeloProfileReadinessError
 from cadrumo.application.modelo.calculation_action_ports import CalculationActionPorts
 from cadrumo.application.modelo.calculation_source_mesh_actions import resolve_bucket_source_mesh
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -176,21 +177,14 @@ def _seed_taxpayer_profile(*, setup_state: ProfileSetupState) -> None:
     """Publish a canonical profile with explicit facts relevant to Modelo 303."""
     authority = published_authority_operation()
     context = authority.profile_create_context()
-    explicit_facts = (
-        UserProfileFact(path="identity.tax_id", value="12345678Z"),
-        UserProfileFact(path="identity.name", value="Asset IVA Test"),
-        UserProfileFact(path="identity.surnames", value="Operator"),
-        UserProfileFact(path="activities.description", value="investment-goods source-mesh acceptance"),
-        UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-        UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-        UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-        UserProfileFact(path="iva.regime", value="GENERAL"),
-        UserProfileFact(path="iva.m303_regime_composition", value="general"),
-        UserProfileFact(path="iva.redeme_enrolled", value=False),
-        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+    explicit_facts = persona_facts_beneath(
+        (
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="identity.name", value="Asset IVA Test"),
+            UserProfileFact(path="identity.surnames", value="Operator"),
+            UserProfileFact(path="activities.description", value="investment-goods source-mesh acceptance"),
+            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+        )
     )
     seed_test_profile_record(
         create_user_profile_record(
