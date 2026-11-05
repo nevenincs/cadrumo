@@ -386,7 +386,7 @@ class RuntimeInstallationDoorMixin:
                 )
                 return
         try:
-            result = self._settle_installation_act(context, channel, request, lifecycle)
+            result = self.settle_installation_act(context, channel, request, lifecycle)
         finally:
             lifecycle.release()
         try:
@@ -396,13 +396,14 @@ class RuntimeInstallationDoorMixin:
             payload = installation_reply_payload(result)
         write_installation_reply(channel, result, payload, deadline=time.monotonic() + _REPLY_WRITE_SECONDS)
 
-    def _settle_installation_act(
+    def settle_installation_act(
         self: RuntimeProfileConnections,
         context: ConnectionContext,
         channel: ByteChannel,
         request: InstallationActRequest,
         lifecycle: _LifecycleHold,
     ) -> InstallationSettledReply:
+        """Run one installation act through its contract and return the settled reply."""
         act = installation_act_of(request)
         contract = INSTALLATION_ACT_CONTRACTS[act]
         exchange: InstallationActExchange | None = None

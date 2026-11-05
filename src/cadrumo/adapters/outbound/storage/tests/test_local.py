@@ -297,7 +297,7 @@ def test_local_provider_satisfies_runtime_protocol(provider: LocalFileSystemProv
 
 def test_local_sidecar_return_type_is_mapping() -> None:
     """The sidecar loader advertises its mapping boundary."""
-    return_hint = LocalFileSystemProvider._load_sidecar.__annotations__.get("return")
+    return_hint = LocalFileSystemProvider.load_sidecar.__annotations__.get("return")
 
     assert "Mapping" in str(return_hint)
 
@@ -308,7 +308,7 @@ def test_local_sidecar_runtime_returns_mapping(tmp_path: Path) -> None:
     payload: dict[str, object] = {"content_hash": "abc123", "byte_length": 42}
     sidecar.write_text(json.dumps(payload), encoding="utf-8")
 
-    result = LocalFileSystemProvider(root=tmp_path)._load_sidecar(sidecar)
+    result = LocalFileSystemProvider(root=tmp_path).load_sidecar(sidecar)
 
     assert isinstance(result, Mapping)
     assert result == payload

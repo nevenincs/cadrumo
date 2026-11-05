@@ -50,7 +50,7 @@ class _JoinedKdfWorker(SupervisedKdfWorker):
                 self.pool.shutdown(wait=True)
 
     @override
-    def _write_request(self, payload: dict[str, object]) -> None:
+    def write_request(self, payload: dict[str, object]) -> None:
         if self.response is not None:
             raise AssertionError("one joined KDF owner performs only one computation")
         encoded = canonical_frame_bytes(payload)
@@ -72,13 +72,13 @@ class _JoinedKdfWorker(SupervisedKdfWorker):
         self.response = self.pool.submit(compute)
 
     @override
-    def _read_response_frame(self) -> tuple[int, bytes]:
+    def read_response_frame(self) -> tuple[int, bytes]:
         if self.response is None:
             raise AssertionError("the joined KDF owner requires its request first")
         return self.response.result(timeout=max(0, self._deadline - time.monotonic()))
 
     @override
-    def _require_clean_worker_exit(self) -> None:
+    def require_clean_worker_exit(self) -> None:
         if self.response is None or not self.response.done():
             raise AssertionError("the joined KDF computation has not settled")
 

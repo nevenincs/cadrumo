@@ -344,7 +344,7 @@ def test_valid_result_with_delayed_exit_is_refused_and_cleanup_is_bounded(
     monkeypatch.setattr(process_boundary, "launch_worker_process", launch)
     caplog.set_level(logging.DEBUG, logger=supervision.__name__)
     worker = SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=settings)
-    require_exit = worker._require_clean_worker_exit
+    require_exit = worker.require_clean_worker_exit
     exit_started: float | None = None
 
     def require_exit_before_deadline() -> None:
@@ -355,7 +355,7 @@ def test_valid_result_with_delayed_exit_is_refused_and_cleanup_is_bounded(
         worker._deadline = exit_started + 0.05
         require_exit()
 
-    monkeypatch.setattr(worker, "_require_clean_worker_exit", require_exit_before_deadline)
+    monkeypatch.setattr(worker, "require_clean_worker_exit", require_exit_before_deadline)
     process: subprocess.Popen[bytes] | None = None
     with ExitStack() as cleanup:
         cleanup.callback(worker._close, failed=True)

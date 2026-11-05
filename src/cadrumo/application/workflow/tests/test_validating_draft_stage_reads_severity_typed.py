@@ -1,6 +1,6 @@
 """Stage 6 must block on ERROR findings, and must fail LOUD if it cannot read them.
 
-``_stage_validating_draft`` re-scans a built draft for ERROR-severity findings
+``stage_validating_draft`` re-scans a built draft for ERROR-severity findings
 and aborts the workflow when any exist. It previously read the severity through
 ``_enum_value(getattr(f, "severity", None))``, which is fail-OPEN: a renamed
 ``severity`` field yields ``None`` for every finding, ``_enum_value(None)``
@@ -46,7 +46,7 @@ class _Draft:
 
 def _run(draft: _Draft) -> list[WorkflowStep]:
     steps: list[WorkflowStep] = []
-    WorkflowEngine._stage_validating_draft(
+    WorkflowEngine.stage_validating_draft(
         cast(Any, None),
         draft=cast(Any, draft),
         steps=steps,

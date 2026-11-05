@@ -70,7 +70,7 @@ def test_the_dispatch_point_clears_a_parameter_the_model_refuses() -> None:
     """
     request = _request(model="picky-model", temperature=0.7)
 
-    cleared = LLMClient._omit_unsupported_parameters(_RefusesTemperature(), request)
+    cleared = LLMClient.omit_unsupported_parameters(_RefusesTemperature(), request)
 
     assert cleared.temperature is None
 
@@ -84,7 +84,7 @@ def test_the_dispatch_point_leaves_a_parameter_the_model_accepts() -> None:
     """
     request = _request(model="tolerant-model", temperature=0.7)
 
-    kept = LLMClient._omit_unsupported_parameters(_RefusesTemperature(), request)
+    kept = LLMClient.omit_unsupported_parameters(_RefusesTemperature(), request)
 
     assert kept.temperature == 0.7
 

@@ -184,7 +184,7 @@ class SupervisorSettlementMixin(SupervisorHost):
         )
 
     @override
-    async def _set_cancellation_deferred(
+    async def set_cancellation_deferred(
         self,
         context_snapshot: OperationPersistedSnapshot,
         deferred: bool,

@@ -297,7 +297,7 @@ def _forbid_the_in_process_reset(monkeypatch: pytest.MonkeyPatch) -> None:
     The dispatcher, handlers and application reset all still run for real.
     """
     serving: ContextVar[bool] = ContextVar("serving_installation_reset", default=False)
-    settle = RuntimeProfileConnections._settle_installation_act
+    settle = RuntimeProfileConnections.settle_installation_act
     start = config_reset.start_config_reset
     resume = config_reset.resume_config_reset
 
@@ -319,7 +319,7 @@ def _forbid_the_in_process_reset(monkeypatch: pytest.MonkeyPatch) -> None:
         require_serving()
         return resume(*arguments, **keywords)
 
-    monkeypatch.setattr(RuntimeProfileConnections, "_settle_installation_act", settle_in_serving_context)
+    monkeypatch.setattr(RuntimeProfileConnections, "settle_installation_act", settle_in_serving_context)
     monkeypatch.setattr(config_reset, "start_config_reset", served_start)
     monkeypatch.setattr(config_reset, "resume_config_reset", served_resume)
 

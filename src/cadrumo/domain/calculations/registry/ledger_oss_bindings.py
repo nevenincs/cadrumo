@@ -169,7 +169,7 @@ class LedgerOssProvider(BaseModel):
 
     @field_validator("transaction_kinds", mode="after")
     @classmethod
-    def _validate_registry_transaction_kinds(cls, value: tuple[TransactionKind, ...]) -> tuple[TransactionKind, ...]:
+    def validate_registry_transaction_kinds(cls, value: tuple[TransactionKind, ...]) -> tuple[TransactionKind, ...]:
         """Refuse binding transaction kinds absent from the classification fact."""
         authority = require_governed_fact_authority(None, subject="ledger OSS binding validation")
         return tuple(

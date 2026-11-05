@@ -124,7 +124,7 @@ def test_a_delayed_resume_cannot_sign_out_a_newly_selected_profile(
     )
     entered, release = Event(), Event()
     owners: list[RuntimeProfileConnections] = []
-    original = RuntimeProfileConnections._finish_login
+    original = RuntimeProfileConnections.finish_login
 
     def finish(
         self: RuntimeProfileConnections,
@@ -142,7 +142,7 @@ def test_a_delayed_resume_cannot_sign_out_a_newly_selected_profile(
             assert release.wait(90), "new profile handover did not complete"
         return result
 
-    monkeypatch.setattr(RuntimeProfileConnections, "_finish_login", finish)
+    monkeypatch.setattr(RuntimeProfileConnections, "finish_login", finish)
     with native_runtime(tmp_path) as (first_id, second_id, launch, _installation_id, root):
 
         def store_receipt(profile_id: UUID) -> None:
@@ -194,8 +194,8 @@ def test_overlapping_password_handovers_do_not_revoke_each_other(
     """A second admission cannot sweep after the first handover retired it."""
     first_finished, second_admitted, release = Event(), Event(), Event()
     with native_runtime(tmp_path) as (first_id, second_id, launch, _installation_id, _root):
-        original_finish = RuntimeProfileConnections._finish_login
-        original_admit = RuntimeProfileConnections._admit_human_login
+        original_finish = RuntimeProfileConnections.finish_login
+        original_admit = RuntimeProfileConnections.admit_human_login
 
         def finish(
             self: RuntimeProfileConnections,
@@ -226,8 +226,8 @@ def test_overlapping_password_handovers_do_not_revoke_each_other(
                 second_admitted.set()
             return result
 
-        monkeypatch.setattr(RuntimeProfileConnections, "_finish_login", finish)
-        monkeypatch.setattr(RuntimeProfileConnections, "_admit_human_login", admit)
+        monkeypatch.setattr(RuntimeProfileConnections, "finish_login", finish)
+        monkeypatch.setattr(RuntimeProfileConnections, "admit_human_login", admit)
         with (
             runtime_password_rotation_fresh_client(launch, first_id) as first,
             runtime_password_rotation_fresh_client(launch, second_id) as second,

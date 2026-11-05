@@ -207,7 +207,7 @@ def _suspended_without_a_request(runtime: StoredSignInRuntime, session_id: UUID)
 
 def _without_exit_watch(monkeypatch: pytest.MonkeyPatch) -> None:
     """Leave the loss to the runtime's other observations, as where no exit can be waited on."""
-    monkeypatch.setattr(ProfileWorkerProcess, "_watch_exit", lambda _worker, _exited: None)
+    monkeypatch.setattr(ProfileWorkerProcess, "watch_exit", lambda _worker, _exited: None)
 
 
 def test_a_killed_worker_suspends_its_sessions_with_no_request_or_heartbeat(

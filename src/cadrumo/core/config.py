@@ -762,12 +762,12 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
         names = {
             environment_name
             for field_name in cls.model_fields
-            for environment_name in cls._environment_names_for_field(field_name)
+            for environment_name in cls.environment_names_for_field(field_name)
         } | {STORAGE_ROOT.variable}
         return names - _NON_ENVIRONMENT_SELECTION_NAMES
 
     @classmethod
-    def _environment_names_for_field(cls, field_name: str) -> set[str]:
+    def environment_names_for_field(cls, field_name: str) -> set[str]:
         """Include each field's canonical name and explicit environment aliases."""
         names = {field_name.upper()}
         alias = cls.model_fields[field_name].validation_alias
@@ -799,7 +799,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
             environment_name
             for field_name in cls.model_fields
             if field_name.startswith("cadrumo_proxy_") and (secret_fields or not field_name.endswith("_secret"))
-            for environment_name in cls._environment_names_for_field(field_name)
+            for environment_name in cls.environment_names_for_field(field_name)
         )
 
     @staticmethod

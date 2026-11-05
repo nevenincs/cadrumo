@@ -365,23 +365,25 @@ class SupervisorHost:
         ) -> OperationConsumedInteraction:
             """Consume one pending interaction response and resume the operation when its policy permits."""
 
-        def _schedule_continuation(
+        def schedule_continuation(
             self,
             snapshot: OperationPersistedSnapshot,
             definition: OperationDefinition,
             continuation: OperationConsumedInteraction,
-        ) -> None: ...
+        ) -> None:
+            """Schedule the operation's continuation after a consumed interaction."""
 
         async def _acknowledge_cancellation(
             self,
             context_snapshot: OperationPersistedSnapshot,
         ) -> OperationPersistedSnapshot: ...
 
-        async def _set_cancellation_deferred(
+        async def set_cancellation_deferred(
             self,
             context_snapshot: OperationPersistedSnapshot,
             deferred: bool,
-        ) -> OperationPersistedSnapshot: ...
+        ) -> OperationPersistedSnapshot:
+            """Persist whether cancellation of the operation is deferred and return the updated snapshot."""
 
         async def _cancel_pre_entry_secret(
             self,

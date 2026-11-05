@@ -159,7 +159,7 @@ class ProfileConnectionSessionMixin:
         if _human_admission_cancelled(host, connection, control):
             return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
         if request.method in {"password", "receipt"}:
-            admitted = self._admit_human_login(connection, host, context, secret, control, deadline)
+            admitted = self.admit_human_login(connection, host, context, secret, control, deadline)
         else:
             admitted = self._admit_api_login(connection, host, context, request, secret, control)
             if isinstance(admitted, AccessDenied):
@@ -169,13 +169,13 @@ class ProfileConnectionSessionMixin:
             # saved sign-in the person logs in with. A command, a terminal start
             # or a hold resuming continues the sign-in, and sweeping there would
             # sign out a sign-in to another profile completing now.
-            return self._finish_login(connection, host, context, request, admitted)
+            return self.finish_login(connection, host, context, request, admitted)
         # Publish the ordinary handover and retire other profiles as one ordered
         # effect. Proof/KDF stays outside this lock and the profile-map lock is
         # never held across worker I/O. A concurrently admitted loser rechecks
         # its revoked lease before it can perform another cross-profile sweep.
         with self._human_handover_guard:
-            finished = self._finish_login(connection, host, context, request, admitted)
+            finished = self.finish_login(connection, host, context, request, admitted)
             if login_completed(finished):
                 signed_out = self._sign_out_other_profiles(keep=request.profile_id)
                 if request.persist_receipt or request.hand_over:
@@ -238,7 +238,7 @@ class ProfileConnectionSessionMixin:
             )
         return tuple(signed_out)
 
-    def _admit_human_login(
+    def admit_human_login(
         self: RuntimeProfileConnections,
         connection: ProfileConnection,
         host: RuntimeProfileHost,
@@ -247,6 +247,7 @@ class ProfileConnectionSessionMixin:
         control: HumanAdmissionControl,
         deadline: TimeoutDeadline,
     ) -> AccessSession | AccessDenied:
+        """Admit a human login on the connection by proving its secret before the deadline."""
         with host.guard:
             if not self._admitting():
                 raise RefusalError(RefusalCode.DRAINING)
@@ -292,7 +293,7 @@ class ProfileConnectionSessionMixin:
             )
             return _ApiKeyLogin(credential, intersect_scopes((operation_ceiling, grant.scope)))
 
-    def _finish_login(
+    def finish_login(
         self: RuntimeProfileConnections,
         connection: ProfileConnection,
         host: RuntimeProfileHost,
@@ -300,6 +301,7 @@ class ProfileConnectionSessionMixin:
         request: ProfileLogin,
         admitted: AccessSession | AccessDenied,
     ) -> ProfileStatus | AccessDenied:
+        """Bind an admitted session to the connection and return its profile status, or the denial."""
         with host.guard:
             if isinstance(admitted, AccessDenied):
                 return admitted

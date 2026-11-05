@@ -130,7 +130,8 @@ class NativeEnrollmentClient:
         # Pin before a native write: failure can follow a committed replacement.
         self._offer = offer
 
-    def _store_candidate(self, offer: EnrollmentCredentialBinding, secret: SecretBytes) -> None:
+    def store_candidate(self, offer: EnrollmentCredentialBinding, secret: SecretBytes) -> None:
+        """Pin the offer and store the candidate credential under its binding."""
         self._pin_offer(offer)
         self._store.replace(
             credential_reference=offer.credential_reference,
@@ -202,7 +203,7 @@ class NativeEnrollmentClient:
         reply = self._checked(
             self._connection.enrollment_poll(
                 request,
-                store=self._store_candidate,
+                store=self.store_candidate,
                 possession=self._possession,
                 deadline=deadline_after(timeout),
             ),

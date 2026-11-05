@@ -156,7 +156,7 @@ def test_cancellation_contains_and_reaps_the_secret_bearing_child_before_releasi
     assert spare is not None and spare._process is not None
     child = spare._process
     monkeypatch.setattr(prewarm, "refill", lambda: None)
-    write = SupervisedKdfWorker._write_request
+    write = SupervisedKdfWorker.write_request
 
     def stop_child_then_write(worker: SupervisedKdfWorker, payload: dict[str, object]) -> None:
         assert worker is spare
@@ -164,7 +164,7 @@ def test_cancellation_contains_and_reaps_the_secret_bearing_child_before_releasi
         write(worker, payload)
         sent.set()
 
-    monkeypatch.setattr(SupervisedKdfWorker, "_write_request", stop_child_then_write)
+    monkeypatch.setattr(SupervisedKdfWorker, "write_request", stop_child_then_write)
 
     def prove() -> None:
         with prewarm.bound():

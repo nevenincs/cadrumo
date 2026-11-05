@@ -253,10 +253,10 @@ class LocaleManager:
                 root=REPO_ROOT,
                 inputs=lambda: codebase_key_inputs(source_roots),
                 scanner=scanner,
-                compute=self._scan_codebase_keys,
+                compute=self.scan_codebase_keys,
             )
         else:
-            found, unread = self._scan_codebase_keys()
+            found, unread = self.scan_codebase_keys()
         report_unread(
             "locale key scan",
             "any key they use is absent from this set and would look unused",
@@ -265,7 +265,7 @@ class LocaleManager:
         self._codebase_keys = found
         return set(found)
 
-    def _scan_codebase_keys(self) -> tuple[frozenset[str], tuple[str, ...]]:
+    def scan_codebase_keys(self) -> tuple[frozenset[str], tuple[str, ...]]:
         """Run every discovery path; return the keys and the sources that could not be read."""
         from cadrumo_client.contracts.navigation import load_navigation_register
 

@@ -387,7 +387,7 @@ class LocalFileSystemProvider:
                 # a collision below.
                 resolved_path = entry
                 continue
-            sidecar = self._load_sidecar(sidecar_path)
+            sidecar = self.load_sidecar(sidecar_path)
             sidecar_hmac = sidecar.get("object_key_hmac")
             if sidecar_hmac != object_key_hmac:
                 raise OutboundStorageIntegrityError(
@@ -406,7 +406,8 @@ class LocalFileSystemProvider:
             resolved_path = entry
         return resolved_path
 
-    def _load_sidecar(self, sidecar_path: Path) -> Mapping[str, object]:
+    def load_sidecar(self, sidecar_path: Path) -> Mapping[str, object]:
+        """Read a sidecar file as a JSON object, refusing an unreadable, malformed or non-object sidecar."""
         try:
             raw = json.loads(sidecar_path.read_text(encoding=UTF_8_ENCODING))
         except (OSError, json.JSONDecodeError) as exc:
@@ -556,7 +557,7 @@ class LocalFileSystemProvider:
                     "storage.local.sidecar.present", facts={"operation": "get", "sidecar_present": False}
                 ),
             )
-        sidecar = self._load_sidecar(sidecar_path)
+        sidecar = self.load_sidecar(sidecar_path)
 
         try:
             payload = target_path.read_bytes()
@@ -693,7 +694,7 @@ class LocalFileSystemProvider:
         try:
             target_path.unlink(missing_ok=True)
         except OSError as exc:
-            self._restore_sidecar(sidecar_path, sidecar_backup)
+            self.restore_sidecar(sidecar_path, sidecar_backup)
             raise OutboundStoragePermissionError(
                 f"cannot delete object {target_path}: {exc}",
                 context={"path": str(target_path), "sidecar_path": str(sidecar_path)},
@@ -705,7 +706,7 @@ class LocalFileSystemProvider:
         return True
 
     @staticmethod
-    def _restore_sidecar(sidecar_path: Path, contents: str | None) -> None:
+    def restore_sidecar(sidecar_path: Path, contents: str | None) -> None:
         """Put a removed sidecar back after its partner's unlink failed.
 
         Best-effort by necessity: this runs while an error is already on its
@@ -781,7 +782,7 @@ class LocalFileSystemProvider:
                 # Skip orphan-without-sidecar; the coordinator's diff
                 # classifier surfaces it as an integrity issue elsewhere.
                 continue
-            sidecar = self._load_sidecar(sidecar_path)
+            sidecar = self.load_sidecar(sidecar_path)
             written_at = _parse_sidecar_written_at(sidecar.get("written_at"))
             byte_length = _parse_sidecar_byte_length(sidecar.get("byte_length"))
             yield ProviderObjectMetadata(

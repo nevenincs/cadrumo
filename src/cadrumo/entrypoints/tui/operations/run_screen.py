@@ -263,7 +263,7 @@ class OperationRunScreen(Screen[None]):
             return None
         return validation.payload, subject
 
-    def _take_secret(self) -> bytearray | None:
+    def take_secret(self) -> bytearray | None:
         """Move the entered secret into a buffer and clear its field at once."""
         field = self.query_one("#operation-secret", Input)
         secret = bytearray(field.value, "utf-8")
@@ -326,7 +326,7 @@ class OperationRunScreen(Screen[None]):
         payload, subject = prepared
         secret: bytearray | None = None
         if self._entry.contract.ephemeral_secret_required:
-            secret = self._take_secret()
+            secret = self.take_secret()
             if not (secret is not None and secret):
                 self._notice(tr("tui.operations.form.secret_required"))
                 return

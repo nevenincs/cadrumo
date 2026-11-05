@@ -177,7 +177,7 @@ def test_failed_enter_retains_real_pipe_cleanup_until_reader_settles(
         raise TimeoutError("synthetic readiness failure")
 
     monkeypatch.setattr(SupervisedKdfWorker, "_start", start)
-    monkeypatch.setattr(SupervisedKdfWorker, "_read_response_frame", no_ready)
+    monkeypatch.setattr(SupervisedKdfWorker, "read_response_frame", no_ready)
     settings = Settings(cadrumo_storage_root=tmp_path)
     prewarm = ProfileKdfPrewarm(settings=settings) if prewarmed else None
     try:

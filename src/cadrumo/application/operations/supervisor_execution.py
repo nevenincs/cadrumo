@@ -740,11 +740,11 @@ class SupervisorExecutionMixin(SupervisorHost):
         )
         definition = self._require_pinned_definition(snapshot)
         if definition.reconciliation_policy is OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT:
-            self._schedule_continuation(successor, definition, consumed)
+            self.schedule_continuation(successor, definition, consumed)
         return consumed
 
     @override
-    def _schedule_continuation(
+    def schedule_continuation(
         self: SupervisorHost,
         snapshot: OperationPersistedSnapshot,
         definition: OperationDefinition,

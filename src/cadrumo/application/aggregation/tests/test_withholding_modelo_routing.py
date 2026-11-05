@@ -92,4 +92,4 @@ def test_the_producer_refuses_a_scheme_of_another_income_kind() -> None:
 def test_a_ledger_payment_request_refuses_a_kind_its_payment_cannot_prove() -> None:
     assert WithholdingIncomeKind.URBAN_RENT not in LEDGER_PAID_INCOME_KINDS
     with pytest.raises(ValueError, match="work or ordinary movable capital"):
-        LedgerPaymentWithholdingEvidenceRequest._only_ledger_paid_income(WithholdingIncomeKind.URBAN_RENT)
+        LedgerPaymentWithholdingEvidenceRequest.only_ledger_paid_income(WithholdingIncomeKind.URBAN_RENT)

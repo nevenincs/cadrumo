@@ -86,7 +86,7 @@ def validate_iso_3166_jurisdiction(value: str | None) -> str | None:
 
     The shape policy itself is owned by
     :func:`~core.parsing.codes.normalise_iso_3166_alpha2_jurisdiction`, shared with
-    :meth:`domain.transactions.models.Transaction._validate_source_jurisdiction`, so
+    :meth:`domain.transactions.models.Transaction.validate_source_jurisdiction`, so
     the application and domain boundaries cannot drift apart on which
     jurisdiction tokens they accept. This wrapper exists only to keep the
     application-layer :class:`ValueError` boundary.

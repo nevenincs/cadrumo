@@ -162,7 +162,7 @@ def observe_native_runtime_failures(
     original_failed_set = server._failed.set
     original_exchange = ProfileWorkerProcess._exchange
     original_operation = profiles.operation
-    original_held_body = WorkerAuthorizationServer._held_body
+    original_held_body = WorkerAuthorizationServer.held_body
     original_close = ProfileWorkerProcess.close
     guard = Lock()
 
@@ -301,12 +301,12 @@ def observe_native_runtime_failures(
         exchange_patch.setattr(ProfileWorkerProcess, "_exchange", observe_worker_exchange)
         cast(Any, server._failed).set = observe_failed_set
         cast(Any, profiles).operation = observe_profile_operation
-        cast(Any, WorkerAuthorizationServer)._held_body = observe_held_body
+        cast(Any, WorkerAuthorizationServer).held_body = observe_held_body
         cast(Any, ProfileWorkerProcess).close = observe_worker_close
         yield
     finally:
         cast(Any, ProfileWorkerProcess).close = original_close
-        cast(Any, WorkerAuthorizationServer)._held_body = original_held_body
+        cast(Any, WorkerAuthorizationServer).held_body = original_held_body
         cast(Any, profiles).operation = original_operation
         cast(Any, server._failed).set = original_failed_set
         exchange_patch.undo()

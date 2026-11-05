@@ -347,7 +347,7 @@ class WorkflowEngine:
                 fail_on_warning=fail_on_warning,
                 steps=steps,
             )
-            self._stage_validating_draft(draft=draft, steps=steps)
+            self.stage_validating_draft(draft=draft, steps=steps)
             self._stage_running_preflight(
                 draft=draft,
                 today=today,
@@ -848,7 +848,7 @@ class WorkflowEngine:
         )
         return provider.get_subview(obligation.modelo).schema_version
 
-    def _stage_validating_draft(
+    def stage_validating_draft(
         self,
         *,
         draft: RegistryModeloDraftProtocol,

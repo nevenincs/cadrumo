@@ -172,7 +172,7 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
                 directory=storage_root,
                 environment=environment,
             )
-            self._watch_exit(exited)
+            self.watch_exit(exited)
             startup_watchdog = Timer(self._startup_deadline.remaining_seconds(), self._startup_expired.set)
             startup_watchdog.daemon = True
             startup_watchdog.start()
@@ -210,7 +210,7 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
             release_worker_resources(*owners, primary_error=error)
             raise
 
-    def _watch_exit(self, exited: Callable[[ProfileWorkerProcess], None] | None) -> None:
+    def watch_exit(self, exited: Callable[[ProfileWorkerProcess], None] | None) -> None:
         """Report an unrequested exit as soon as the process ends, not when a later exchange fails.
 
         Only a Windows process offers a wait handle independent of the scope's

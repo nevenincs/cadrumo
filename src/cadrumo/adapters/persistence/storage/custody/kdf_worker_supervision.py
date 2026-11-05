@@ -121,7 +121,7 @@ class SupervisedKdfWorker(KdfWorkerCleanup):
                 self._deadline += time.monotonic() - launch_started
             with self._phase("ready_wait"):
                 try:
-                    ready = self._read_response_frame()
+                    ready = self.read_response_frame()
                     # A late wake-up can return a frame that arrived after the budget
                     # ended; the budget ended before the child attested, whatever the
                     # scheduler did, and no request has been sent yet.
@@ -131,7 +131,7 @@ class SupervisedKdfWorker(KdfWorkerCleanup):
                     error.__dict__[_NEVER_ATTESTED] = True
                     raise
             with self._phase("ready_attestation"):
-                self._verify_ready_attestation(ready)
+                self.verify_ready_attestation(ready)
                 if self._absolute_deadline and time.monotonic() >= self._deadline:
                     raise TimeoutError("profile KDF worker timeout elapsed during attestation")
             return self
@@ -255,11 +255,11 @@ class SupervisedKdfWorker(KdfWorkerCleanup):
         operation = payload.get("operation")
         self._operation = operation if isinstance(operation, KdfOperation) else None
         with self._phase("request_write"):
-            self._write_request(payload)
+            self.write_request(payload)
         with self._phase("result_wait"):
-            response = self._read_response_frame()
+            response = self.read_response_frame()
         with self._phase("clean_exit"):
-            self._require_clean_worker_exit()
+            self.require_clean_worker_exit()
         return response
 
     def _close_with_diagnostic(self, *, failed: bool, primary_error: BaseException | None) -> None:
@@ -316,7 +316,8 @@ class SupervisedKdfWorker(KdfWorkerCleanup):
             except (OSError, subprocess.SubprocessError, ValueError):
                 raise supervision_refusal() from None
 
-    def _write_request(self, payload: dict[str, object]) -> None:
+    def write_request(self, payload: dict[str, object]) -> None:
+        """Write the canonical request frame to the worker before its deadline unless cancelled."""
         if self._request_fd is None:
             raise supervision_refusal()
         encoded = canonical_frame_bytes(payload)
@@ -329,7 +330,8 @@ class SupervisedKdfWorker(KdfWorkerCleanup):
         except OSError:
             raise supervision_refusal() from None
 
-    def _read_response_frame(self) -> tuple[int, bytes]:
+    def read_response_frame(self) -> tuple[int, bytes]:
+        """Read one worker frame before the deadline, raising on cancellation, timeout or a failed read."""
         if self._result_fd is None:
             raise supervision_refusal()
         remaining = self._deadline - time.monotonic()
@@ -365,7 +367,8 @@ class SupervisedKdfWorker(KdfWorkerCleanup):
             raise supervision_refusal() from item
         return item
 
-    def _verify_ready_attestation(self, frame: tuple[int, bytes]) -> None:
+    def verify_ready_attestation(self, frame: tuple[int, bytes]) -> None:
+        """Verify the worker's ready attestation against the expected process environment and retain it."""
         kind, value = frame
         if kind != KDF_FRAME_CONTROL:
             raise supervision_refusal()
@@ -386,7 +389,8 @@ class SupervisedKdfWorker(KdfWorkerCleanup):
         )
         self._ready_payload = payload
 
-    def _require_clean_worker_exit(self) -> None:
+    def require_clean_worker_exit(self) -> None:
+        """Wait for the worker to exit before the deadline and refuse anything but a clean exit."""
         process = self._process
         result_fd = self._result_fd
         if process is None or result_fd is None:

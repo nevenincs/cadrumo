@@ -239,7 +239,7 @@ class _ChildLines:
             self.finished.set()
 
 
-def _write_request(stream: IO[bytes], request: bytes) -> None:
+def write_request(stream: IO[bytes], request: bytes) -> None:
     # A child ended mid-request breaks this pipe; its supervisor already knows why.
     with contextlib.suppress(OSError, ValueError):
         stream.write(request)
@@ -282,7 +282,7 @@ def _search_in_child(
     # JSON's escapes carry every text exactly, a lone surrogate included.
     request = json.dumps({"patterns": list(patterns), "texts": list(texts)}).encode("ascii")
     writer = threading.Thread(
-        target=_write_request, args=(process.stdin, request), daemon=True, name="pattern-search-writer"
+        target=write_request, args=(process.stdin, request), daemon=True, name="pattern-search-writer"
     )
     writer.start()
     writer.join(_START_SECONDS)

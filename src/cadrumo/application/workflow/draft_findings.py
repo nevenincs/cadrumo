@@ -12,7 +12,7 @@ def draft_blocking_finding_codes(draft: RegistryModeloDraftProtocol) -> tuple[st
     typed ``tuple[WorkflowFindingLike, ...]``, and that Protocol declares both
     fields required, so a rename fails loud here. Read defensively, a renamed
     field would silently drop every finding from this diagnostic detail --
-    the same fail-open shape ``_stage_validating_draft`` and
+    the same fail-open shape ``stage_validating_draft`` and
     ``domain/submission/preflight.py`` carried, just feeding a reported
     detail on an already-decided abort rather than the abort decision itself.
     """

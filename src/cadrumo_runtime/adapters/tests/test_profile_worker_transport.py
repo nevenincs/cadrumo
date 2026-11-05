@@ -294,13 +294,13 @@ def test_stopped_worker_refusal_does_not_repeat_containment() -> None:
 
 def test_failed_exchange_is_fenced_before_retirement(monkeypatch: pytest.MonkeyPatch) -> None:
     worker = _worker(latency=transport.CONTROL_EXCHANGE_SECONDS + 1)
-    retiring = transport.ProfileWorkerTransport._retire_failed_exchange
+    retiring = transport.ProfileWorkerTransport.retire_failed_exchange
 
     def retire(self: transport.ProfileWorkerTransport, error: BaseException, deadline: float | None) -> None:
         assert self.stopping, "a queued request can borrow the failed stream before retirement"
         retiring(self, error, deadline)
 
-    monkeypatch.setattr(transport.ProfileWorkerTransport, "_retire_failed_exchange", retire)
+    monkeypatch.setattr(transport.ProfileWorkerTransport, "retire_failed_exchange", retire)
     with pytest.raises(RefusalError):
         worker.status()
     assert worker.contained

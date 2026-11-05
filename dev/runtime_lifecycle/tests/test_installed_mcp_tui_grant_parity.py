@@ -306,7 +306,7 @@ async def test_installed_sdk_reconnects_tui_rotated_native_reference_and_cli_rev
     original_preflight = RuntimeProfileHost.approval_preflight
     original_phase = RuntimeProfileHost.approval_phase
     original_publication = RuntimeProfileHost.approval_publication
-    original_store = NativeEnrollmentClient._store_candidate
+    original_store = NativeEnrollmentClient.store_candidate
     original_possession = NativeEnrollmentClient._possession
     original_poll = NativeEnrollmentClient.poll
     progress_guard = Lock()
@@ -541,7 +541,7 @@ async def test_installed_sdk_reconnects_tui_rotated_native_reference_and_cli_rev
                 assert enrollment.prepared.client_id == initial.client_id
                 assert enrollment.prepared.destination_id == initial.destination_id
                 progress("requester_prepared")
-                monkeypatch.setattr(NativeEnrollmentClient, "_store_candidate", traced_store)
+                monkeypatch.setattr(NativeEnrollmentClient, "store_candidate", traced_store)
                 monkeypatch.setattr(NativeEnrollmentClient, "_possession", traced_possession)
                 monkeypatch.setattr(NativeEnrollmentClient, "poll", traced_poll)
 

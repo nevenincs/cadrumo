@@ -134,7 +134,7 @@ def collect_cli(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]:
     environment_fields = {
         environment_name: field
         for field_name, field in fields.items()
-        for environment_name in Settings._environment_names_for_field(field_name)
+        for environment_name in Settings.environment_names_for_field(field_name)
     }
     settings = {
         name: kind_label(environment_fields[name].annotation) if name in environment_fields else None

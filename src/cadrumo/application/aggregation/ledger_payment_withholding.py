@@ -140,7 +140,7 @@ class LedgerPaymentWithholdingEvidenceRequest(BaseModel):
 
     @field_validator("income_kind")
     @classmethod
-    def _only_ledger_paid_income(cls, value: WithholdingIncomeKind) -> WithholdingIncomeKind:
+    def only_ledger_paid_income(cls, value: WithholdingIncomeKind) -> WithholdingIncomeKind:
         """Keep other income kinds on the producers whose evidence proves them."""
         if value not in LEDGER_PAID_INCOME_KINDS:
             raise ValueError("ledger payment withholding capture accepts work or ordinary movable capital income only")

@@ -113,7 +113,7 @@ def test_a_login_whose_method_and_option_belong_together_passes_the_login_rules_
     frontend: OperationFrontendProjection, method: str, persist_receipt: bool
 ) -> None:
     # Passing the rules admits nothing: the credential is still read and proven afterwards.
-    RuntimeProfileConnections._validate_login_request(_login(frontend, method, persist_receipt))
+    RuntimeProfileConnections.validate_login_request(_login(frontend, method, persist_receipt))
 
 
 @pytest.mark.parametrize(("frontend", "method", "persist_receipt"), _REFUSED)
@@ -123,7 +123,7 @@ def test_a_login_that_cannot_store_a_sign_in_and_asks_to_is_refused_before_any_c
     request = _login(frontend, method, persist_receipt)
 
     with pytest.raises(RefusalError) as refused:
-        RuntimeProfileConnections._validate_login_request(request)
+        RuntimeProfileConnections.validate_login_request(request)
 
     assert refused.value.reason is RefusalCode.INVALID_FRAME
     assert _refusal(tmp_path, request).code is RefusalCode.INVALID_FRAME
@@ -141,4 +141,4 @@ def test_a_sign_in_takes_no_narrowing_scope_from_any_frontend(
 
 @pytest.mark.parametrize("frontend", list(OperationFrontendProjection))
 def test_a_key_login_may_ask_for_a_narrower_scope_from_any_frontend(frontend: OperationFrontendProjection) -> None:
-    RuntimeProfileConnections._validate_login_request(_login(frontend, "api_key", False, scope=_NARROWING_SCOPE))
+    RuntimeProfileConnections.validate_login_request(_login(frontend, "api_key", False, scope=_NARROWING_SCOPE))

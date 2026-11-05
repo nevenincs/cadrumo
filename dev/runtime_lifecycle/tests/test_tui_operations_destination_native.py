@@ -491,7 +491,7 @@ def test_every_registered_operation_is_listed_and_a_read_a_change_and_a_secret_r
 ) -> None:
     caplog.set_level(logging.DEBUG)
     secret_buffers: list[bytearray] = []
-    take_secret = OperationRunScreen._take_secret
+    take_secret = OperationRunScreen.take_secret
 
     def observed_take_secret(screen: OperationRunScreen) -> bytearray | None:
         taken = take_secret(screen)
@@ -499,7 +499,7 @@ def test_every_registered_operation_is_listed_and_a_read_a_change_and_a_secret_r
             secret_buffers.append(taken)
         return taken
 
-    monkeypatch.setattr(OperationRunScreen, "_take_secret", observed_take_secret)
+    monkeypatch.setattr(OperationRunScreen, "take_secret", observed_take_secret)
 
     storage_root = tmp_path / "cadrumo-storage"
     storage_root.mkdir()

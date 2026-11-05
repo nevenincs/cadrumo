@@ -461,7 +461,7 @@ def test_ready_then_deadline_terminates_and_reaps_the_real_worker() -> None:
         assert process is not None
         # Only now, with the worker proven ready, does the deadline become short.
         worker._deadline = time.monotonic() + 0.5
-        worker._read_response_frame()
+        worker.read_response_frame()
 
     assert process is not None
     assert process.poll() is not None
@@ -565,7 +565,7 @@ def test_runtime_unlock_spends_one_absolute_timeout_budget_across_capacity_and_a
     monkeypatch.setattr(kdf_supervision, "time", clock)
     monkeypatch.setattr(worker_supervision, "time", clock)
     lease = kdf_supervision.profile_kdf_lease
-    verify = SupervisedKdfWorker._verify_ready_attestation
+    verify = SupervisedKdfWorker.verify_ready_attestation
     workers: list[SupervisedKdfWorker] = []
     children: list[subprocess.Popen[bytes]] = []
     deadlines: list[float] = []
@@ -588,7 +588,7 @@ def test_runtime_unlock_spends_one_absolute_timeout_budget_across_capacity_and_a
         clock.elapsed += 20.0
 
     monkeypatch.setattr(kdf_supervision, "profile_kdf_lease", delayed_capacity)
-    monkeypatch.setattr(SupervisedKdfWorker, "_verify_ready_attestation", delayed_attestation)
+    monkeypatch.setattr(SupervisedKdfWorker, "verify_ready_attestation", delayed_attestation)
     envelope, sentinel = unlock_inputs()
     settings = kdf_supervision_settings(tmp_path)
     timeout = clock.monotonic() + budget
@@ -633,7 +633,7 @@ def test_expired_owner_deadline_cannot_send_a_request_to_an_attested_spare(tmp_p
         assert process is not None
         worker._deadline = time.monotonic() - 1
         with pytest.raises(TimeoutError, match="before request"):
-            worker._write_request({"version": 1})
+            worker.write_request({"version": 1})
         assert worker._operation is None
     assert process.poll() is not None
 

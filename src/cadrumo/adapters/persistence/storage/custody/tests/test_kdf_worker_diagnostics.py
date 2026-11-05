@@ -51,10 +51,10 @@ def simulated_worker(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Supervi
         ((KDF_FRAME_CONTROL, _PRIVATE.encode()), (KDF_FRAME_CONTROL, calibration_frame_bytes(derivation_ns=125)))
     )
     monkeypatch.setattr(SupervisedKdfWorker, "_start", lambda _self: None)
-    monkeypatch.setattr(SupervisedKdfWorker, "_read_response_frame", lambda _self: next(frames))
-    monkeypatch.setattr(SupervisedKdfWorker, "_verify_ready_attestation", lambda _self, _frame: None)
-    monkeypatch.setattr(SupervisedKdfWorker, "_write_request", lambda _self, _payload: None)
-    monkeypatch.setattr(SupervisedKdfWorker, "_require_clean_worker_exit", lambda _self: None)
+    monkeypatch.setattr(SupervisedKdfWorker, "read_response_frame", lambda _self: next(frames))
+    monkeypatch.setattr(SupervisedKdfWorker, "verify_ready_attestation", lambda _self, _frame: None)
+    monkeypatch.setattr(SupervisedKdfWorker, "write_request", lambda _self, _payload: None)
+    monkeypatch.setattr(SupervisedKdfWorker, "require_clean_worker_exit", lambda _self: None)
     return worker
 
 
@@ -155,13 +155,13 @@ def test_failure_retains_the_exact_phase_type_and_primary_without_private_messag
                 raise primary
             return KDF_FRAME_CONTROL, _PRIVATE.encode()
 
-        monkeypatch.setattr(SupervisedKdfWorker, "_read_response_frame", read)
+        monkeypatch.setattr(SupervisedKdfWorker, "read_response_frame", read)
     else:
         method = {
             "start": "_start",
-            "ready_attestation": "_verify_ready_attestation",
-            "request_write": "_write_request",
-            "clean_exit": "_require_clean_worker_exit",
+            "ready_attestation": "verify_ready_attestation",
+            "request_write": "write_request",
+            "clean_exit": "require_clean_worker_exit",
         }[stage]
         monkeypatch.setattr(SupervisedKdfWorker, method, fail)
     with pytest.raises(type(primary)) as escaped, simulated_worker as worker:
@@ -182,7 +182,7 @@ def test_invalid_result_has_validation_failure_after_the_existing_clean_exit_seq
 ) -> None:
     caplog.set_level(logging.DEBUG, logger=supervision.__name__)
     monkeypatch.setattr(
-        SupervisedKdfWorker, "_read_response_frame", lambda _worker: (KDF_FRAME_CONTROL, _PRIVATE.encode())
+        SupervisedKdfWorker, "read_response_frame", lambda _worker: (KDF_FRAME_CONTROL, _PRIVATE.encode())
     )
     with pytest.raises(ProfileCustodyRefusedError), simulated_worker as worker:
         worker.calibrate(_kdf())
@@ -202,7 +202,7 @@ def test_refused_result_does_not_disclose_secret_or_associated_data(
         tag_b64=base64.b64encode(b"t" * 16).decode(),
     )
     monkeypatch.setattr(
-        SupervisedKdfWorker, "_read_response_frame", lambda _worker: (KDF_FRAME_CONTROL, KDF_FAILED_FRAME)
+        SupervisedKdfWorker, "read_response_frame", lambda _worker: (KDF_FRAME_CONTROL, KDF_FAILED_FRAME)
     )
     with simulated_worker as worker:
         assert (

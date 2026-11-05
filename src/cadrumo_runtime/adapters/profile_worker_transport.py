@@ -183,7 +183,7 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
             level=logging.WARNING,
             primary_error=error,
         )
-        self._retire_failed_exchange(error, deadline)
+        self.retire_failed_exchange(error, deadline)
 
     def prepare_api_admission(self, *, deadline: float) -> None:
         """Compose the pinned graph without receiving any secret or installing a lease."""
@@ -330,7 +330,7 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
         except BaseException as error:
             material[:] = bytes(len(material))
             if not undispatched:
-                self._retire_failed_exchange(error, deadline)
+                self.retire_failed_exchange(error, deadline)
             raise
         finally:
             self._lock.release()
@@ -423,7 +423,7 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
         self._unanswered_probe = None
         return reply
 
-    def _retire_failed_exchange(self, error: BaseException, deadline: float | None) -> None:
+    def retire_failed_exchange(self, error: BaseException, deadline: float | None) -> None:
         """Retain failed native cleanup without closing an already released channel twice."""
         self._stopping.set()
         released = error.__dict__.get("_transport_cleanup")

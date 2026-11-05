@@ -168,7 +168,7 @@ class ProfileConnectionAdmissionMixin:
         channel: ByteChannel,
         request: ProfileLogin,
     ) -> tuple[ProfileConnection, RuntimeProfileHost]:
-        self._validate_login_request(request)
+        self.validate_login_request(request)
         if self._nonhuman_peer(context, channel) and is_persons_frontend(request.frontend):
             raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="nonhuman_peer_person_frontend")
         if request.method in {"password", "receipt"}:
@@ -184,7 +184,7 @@ class ProfileConnectionAdmissionMixin:
         return connection, host
 
     @staticmethod
-    def _validate_login_request(request: ProfileLogin) -> None:
+    def validate_login_request(request: ProfileLogin) -> None:
         """Refuse a login whose method and options do not belong together, on any frontend.
 
         A sign-in holds the profile's whole ceiling, so neither a password nor

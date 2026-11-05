@@ -222,7 +222,7 @@ def _ledger_oss_observation_validator(authority: GovernedFactSource | None) -> o
 def _ledger_oss_transaction_kinds_validator(authority: GovernedFactSource | None) -> object:
     """Run the binding selector's transaction-kind validator itself, for the reason given above."""
     del authority
-    return LedgerOssProvider._validate_registry_transaction_kinds((TransactionKind("external_scheme_services"),))
+    return LedgerOssProvider.validate_registry_transaction_kinds((TransactionKind("external_scheme_services"),))
 
 
 _SCOPED_RESOLVERS: tuple[tuple[str, Callable[[GovernedFactSource | None], object]], ...] = (

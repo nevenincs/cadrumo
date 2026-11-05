@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_inbound_adapter]
 def test_ledger_provider_id_dispatch_resolves_real_provider(provider: str, expected_type: type[object]) -> None:
     """Explicit provider IDs construct the concrete parser owned by this adapter."""
 
-    resolved = FinancialProviderResolverAdapter._resolve_concrete_provider(
+    resolved = FinancialProviderResolverAdapter.resolve_concrete_provider(
         provider_id=provider,
         path=Path("statement.placeholder"),
     )
@@ -45,7 +45,7 @@ def test_ledger_provider_id_dispatch_refuses_tokens_that_name_no_parser(provider
     """A token that would silently run detection or a different parser is refused."""
 
     with pytest.raises(TransactionValidationError):
-        FinancialProviderResolverAdapter._resolve_concrete_provider(
+        FinancialProviderResolverAdapter.resolve_concrete_provider(
             provider_id=provider,
             path=Path("statement.placeholder"),
         )

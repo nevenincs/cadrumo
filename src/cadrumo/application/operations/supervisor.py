@@ -201,12 +201,12 @@ class OperationSupervisor(
         return await SupervisorSettlementMixin._acknowledge_cancellation(self, context_snapshot)
 
     @override
-    async def _set_cancellation_deferred(
+    async def set_cancellation_deferred(
         self,
         context_snapshot: OperationPersistedSnapshot,
         deferred: bool,
     ) -> OperationPersistedSnapshot:
-        return await SupervisorSettlementMixin._set_cancellation_deferred(self, context_snapshot, deferred)
+        return await SupervisorSettlementMixin.set_cancellation_deferred(self, context_snapshot, deferred)
 
     @override
     @staticmethod
@@ -440,7 +440,7 @@ class OperationSupervisor(
         return await self._admit(response.operation_id, lambda: SupervisorExecutionMixin.respond(self, response))
 
     @override
-    def _schedule_continuation(
+    def schedule_continuation(
         self,
         snapshot: OperationPersistedSnapshot,
         definition: OperationDefinition,
@@ -448,7 +448,7 @@ class OperationSupervisor(
     ) -> None:
         if not self._accepting_admissions:
             raise ValueError("operation owner is draining")
-        SupervisorExecutionMixin._schedule_continuation(self, snapshot, definition, continuation)
+        SupervisorExecutionMixin.schedule_continuation(self, snapshot, definition, continuation)
 
     @override
     async def submit_ephemeral_secret(self, requirement: OperationSecretRequirement, secret: bytearray) -> None:

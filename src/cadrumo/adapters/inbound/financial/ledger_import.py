@@ -71,13 +71,13 @@ class FinancialProviderResolverAdapter:
     def resolve(self, *, provider_id: str, path: Path) -> FinancialProviderProtocol | None:
         """Return a translated provider for ``provider_id`` and ``path``."""
         try:
-            provider = self._resolve_concrete_provider(provider_id=provider_id, path=path)
+            provider = self.resolve_concrete_provider(provider_id=provider_id, path=path)
         except FinancialProviderError as exc:
             raise _translate_provider_error(exc, operation="resolve", path=path) from exc
         return None if provider is None else FinancialProviderBoundary(provider)
 
     @staticmethod
-    def _resolve_concrete_provider(*, provider_id: str, path: Path) -> FinancialProvider | None:
+    def resolve_concrete_provider(*, provider_id: str, path: Path) -> FinancialProvider | None:
         """Select and construct the parser owned by this adapter package."""
         if provider_id == "auto":
             return detect_provider(path)

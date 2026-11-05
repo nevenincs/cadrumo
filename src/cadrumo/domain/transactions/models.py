@@ -788,7 +788,7 @@ class Transaction(BaseModel):
     @field_validator("source_jurisdiction")
     @classmethod
     @pydantic_validation_boundary
-    def _validate_source_jurisdiction(cls, value: str | None) -> str | None:
+    def validate_source_jurisdiction(cls, value: str | None) -> str | None:
         """Restrict source_jurisdiction to an ISO 3166-1 alpha-2 uppercase code.
 
         Carries the regulatory-source axis (Spanish-source vs foreign-source)

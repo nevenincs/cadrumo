@@ -282,7 +282,7 @@ class ProfileOverviewRenderingMixin:
                 fold=lambda key: self.query_one(f"#fold-{key}", DisclosureGroup),
                 fold_title=self._fold_title,
                 visible_fields=self._visible_fields,
-                rendered_row=self._rendered_row,
+                rendered_row=self.rendered_row,
             ):
                 await self._redraw_now()
                 return
@@ -304,7 +304,7 @@ class ProfileOverviewRenderingMixin:
         )
 
     @staticmethod
-    def _rendered_row(field: ProfileFieldView) -> tuple[str, str, str]:
+    def rendered_row(field: ProfileFieldView) -> tuple[str, str, str]:
         """The three cells a field occupies, as the single authority on both paths.
 
         The full rebuild and the incremental update must agree on what a row
@@ -449,7 +449,7 @@ async def _mount_profile_section_table(
     for field in visible:
         # ``height=None`` wraps long labels in the capped field column instead
         # of pushing the value column outside the viewport.
-        table.add_row(*screen._rendered_row(field), key=field.path, height=None)
+        table.add_row(*screen.rendered_row(field), key=field.path, height=None)
 
 
 async def _mount_profile_section_actions(
@@ -507,7 +507,7 @@ def _query_matches_section(query: str, section: ProfileSectionView) -> bool:
 
 def _query_matches_field(screen: ProfileManagerScreen, query: str, field: ProfileFieldView) -> bool:
     """Match the normalized query against the path and rendered row wording."""
-    return query in fold_for_matching(" ".join((field.path, *screen._rendered_row(field)[1:])))
+    return query in fold_for_matching(" ".join((field.path, *screen.rendered_row(field)[1:])))
 
 
 def _profile_requirement_text(screen: ProfileManagerScreen) -> str:

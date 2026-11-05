@@ -358,7 +358,7 @@ class LLMClient:
             images=request.images,
         )
         self._require_image_support(adapter, provider_request)
-        provider_request = self._omit_unsupported_parameters(adapter, provider_request)
+        provider_request = self.omit_unsupported_parameters(adapter, provider_request)
         run_started_at = now()
         run_clock_start = time.monotonic()
         try:
@@ -423,7 +423,7 @@ class LLMClient:
         return response
 
     @staticmethod
-    async def _await_shared_pacing(provider: LLMProvider, policy: LLMRetryPolicy) -> None:
+    async def await_shared_pacing(provider: LLMProvider, policy: LLMRetryPolicy) -> None:
         """Wait out any rate-limit window another dispatch already discovered.
 
         This is what makes the backoff apply ACROSS a run rather than within one
@@ -472,7 +472,7 @@ class LLMClient:
         policy = self.retry_policy
         started = time.monotonic()
         attempt = 1
-        await self._await_shared_pacing(adapter.provider, policy)
+        await self.await_shared_pacing(adapter.provider, policy)
         while True:
             try:
                 return await adapter.complete(provider_request)
@@ -600,7 +600,7 @@ class LLMClient:
         )
 
     @staticmethod
-    def _omit_unsupported_parameters(adapter: ProviderAdapter, request: ProviderRequest) -> ProviderRequest:
+    def omit_unsupported_parameters(adapter: ProviderAdapter, request: ProviderRequest) -> ProviderRequest:
         """Clear request parameters the resolved model does not accept.
 
         Enforced at the same single dispatch point as the image boundary, and

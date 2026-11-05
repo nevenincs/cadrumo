@@ -259,10 +259,10 @@ class _BlockedReaderCleanup:
             salt_b64=base64.b64encode(b"k" * 16).decode("ascii"),
             output_bytes=32,
         )
-        self.worker._write_request(
+        self.worker.write_request(
             {"version": 1, "operation": KdfOperation.CALIBRATE, "kdf": kdf.model_dump(mode="json")}
         )
-        assert self.worker._read_response_frame() == (KDF_FRAME_CONTROL, b"fixture-paused")
+        assert self.worker.read_response_frame() == (KDF_FRAME_CONTROL, b"fixture-paused")
 
     def observe_reader(self, descriptor: int, result_queue: queue.Queue[tuple[int, bytes] | BaseException]) -> None:
         self.reader_threads.append(threading.current_thread())
@@ -302,7 +302,7 @@ class _BlockedReaderCleanup:
         monkeypatch.setattr(cleanup_boundary, "close_fd", self.observe_close)
         self.worker._deadline = time.monotonic() + 0.05
         with pytest.raises(TimeoutError):
-            self.worker._read_response_frame()
+            self.worker.read_response_frame()
         assert self.entered_read.is_set() and self.reader_threads and self.reader_threads[0].is_alive()
 
     def run_cleanup_beside_rescue(self) -> None:

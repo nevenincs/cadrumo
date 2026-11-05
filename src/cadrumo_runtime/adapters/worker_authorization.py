@@ -284,7 +284,7 @@ class WorkerAuthorizationServer:
             try:
                 # A stage is never ended for the time it takes; it ends when the
                 # worker releases it, its channel dies, or the runtime stops.
-                self._held_body(channel, request, permit_id=permit_id)
+                self.held_body(channel, request, permit_id=permit_id)
             except BaseException as error:
                 # A lost release cannot prove the effect body stopped. Contain
                 # the owned job before dropping the fence.
@@ -393,7 +393,7 @@ class WorkerAuthorizationServer:
         if acknowledged.request_id != request.request_id:
             raise RefusalError(RefusalCode.INVALID_FRAME)
 
-    def _held_body(
+    def held_body(
         self,
         channel: WorkerChannel,
         request: WorkerAuthorityRequest | WorkerAutomationInventoryRequest,

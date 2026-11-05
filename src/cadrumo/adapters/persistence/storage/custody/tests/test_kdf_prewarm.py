@@ -150,7 +150,7 @@ def test_an_operation_arriving_while_the_spare_attests_adopts_that_child_instead
 def test_a_spare_that_fails_attestation_leaves_the_waiting_operation_a_fresh_child(
     settings: Settings, launches: list[subprocess.Popen[bytes]], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    verify = SupervisedKdfWorker._verify_ready_attestation
+    verify = SupervisedKdfWorker.verify_ready_attestation
     attested: list[SupervisedKdfWorker] = []
 
     def refuse_the_spare(worker: SupervisedKdfWorker, ready: tuple[int, bytes]) -> None:
@@ -159,7 +159,7 @@ def test_a_spare_that_fails_attestation_leaves_the_waiting_operation_a_fresh_chi
             raise ProfileCustodyRefusedError(ProfileCustodyRefusal.KDF_SUPERVISION_UNAVAILABLE)
         verify(worker, ready)
 
-    monkeypatch.setattr(SupervisedKdfWorker, "_verify_ready_attestation", refuse_the_spare)
+    monkeypatch.setattr(SupervisedKdfWorker, "verify_ready_attestation", refuse_the_spare)
     prewarm = ProfileKdfPrewarm(settings=settings)
     try:
         prewarm.refill()
@@ -178,7 +178,7 @@ def test_a_spare_that_fails_attestation_leaves_the_waiting_operation_a_fresh_chi
 def test_cancelling_an_operation_that_waits_for_the_spare_wakes_it_before_the_spare_settles(
     settings: Settings, launches: list[subprocess.Popen[bytes]], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    verify = SupervisedKdfWorker._verify_ready_attestation
+    verify = SupervisedKdfWorker.verify_ready_attestation
     cancellation = ProfileProofCancellation()
     release = threading.Event()
 
@@ -187,7 +187,7 @@ def test_cancelling_an_operation_that_waits_for_the_spare_wakes_it_before_the_sp
         release.wait()
         verify(worker, ready)
 
-    monkeypatch.setattr(SupervisedKdfWorker, "_verify_ready_attestation", cancel_then_hold)
+    monkeypatch.setattr(SupervisedKdfWorker, "verify_ready_attestation", cancel_then_hold)
     prewarm = ProfileKdfPrewarm(settings=settings)
     try:
         prewarm.refill()

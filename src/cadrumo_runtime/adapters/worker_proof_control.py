@@ -72,7 +72,7 @@ class ProfileWorkerProofControl(ProfileWorkerOperationClient):
                 command.failure = failure = self._proof_failure = error
                 self._stopping.set()
                 try:
-                    self._retire_failed_exchange(error, command.deadline)
+                    self.retire_failed_exchange(error, command.deadline)
                 except BaseException as retained:
                     command.failure = failure = self._proof_failure = retained
             finally:

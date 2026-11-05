@@ -98,13 +98,13 @@ def test_without_a_rate_limit_the_second_item_is_not_delayed(tmp_path: Path, mon
     pacing.
     """
     observed_windows: list[float] = []
-    gate = LLMClient._await_shared_pacing
+    gate = LLMClient.await_shared_pacing
 
     async def recording_gate(provider: LLMProvider, policy: LLMRetryPolicy) -> None:
         observed_windows.append(client_module.PROVIDER_PACING.remaining_s(provider))
         await gate(provider, policy)
 
-    monkeypatch.setattr(LLMClient, "_await_shared_pacing", staticmethod(recording_gate))
+    monkeypatch.setattr(LLMClient, "await_shared_pacing", staticmethod(recording_gate))
     client = _client(tmp_path)
     _dispatch(client, _answering(), "first item")
     _dispatch(client, _answering(), "second item")

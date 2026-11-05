@@ -309,7 +309,7 @@ class SupervisorReconciliationMixin(SupervisorHost):
             # Recovery acknowledges durable takeover before an already-approved
             # continuation waits on external input. The existing supervisor task
             # owns execution, lease renewal, settlement and shutdown.
-            self._schedule_continuation(resumed, definition, resume_checkpoint)
+            self.schedule_continuation(resumed, definition, resume_checkpoint)
             return resumed
         return await self._resume_from_checkpoint(resumed, definition, resume_checkpoint)
 
@@ -411,7 +411,7 @@ class SupervisorReconciliationMixin(SupervisorHost):
             resources=self._resources,
             advance=self._advance,
             acknowledge_cancellation=self._acknowledge_cancellation,
-            set_cancellation_deferred=self._set_cancellation_deferred,
+            set_cancellation_deferred=self.set_cancellation_deferred,
             execution_authority=self._execution_authority,
         )
 

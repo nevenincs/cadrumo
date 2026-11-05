@@ -40,7 +40,7 @@ _REFUSED: tuple[str, ...] = ("es", "Es", "E", "ESP", "E1", "", "  ")
 
 def _domain_jurisdiction(raw: str | None) -> str | None:
     """Run the real domain field validator in isolation."""
-    return Transaction._validate_source_jurisdiction(raw)
+    return Transaction.validate_source_jurisdiction(raw)
 
 
 @pytest.mark.parametrize(("raw", "expected"), _ACCEPTED)
@@ -91,11 +91,11 @@ def test_both_layers_are_wired_to_the_one_shared_normaliser() -> None:
     flips the moment a call site stops calling the shared helper.
     """
     # Unwrap the Pydantic translation boundary to read the validator body itself.
-    domain_validator = inspect.unwrap(Transaction.__dict__["_validate_source_jurisdiction"].__func__)
+    domain_validator = inspect.unwrap(Transaction.__dict__["validate_source_jurisdiction"].__func__)
     helper_name = normalise_iso_3166_alpha2_jurisdiction.__name__
 
     assert helper_name in domain_validator.__code__.co_names, (
-        "domain Transaction._validate_source_jurisdiction must call the shared core normaliser"
+        "domain Transaction.validate_source_jurisdiction must call the shared core normaliser"
     )
     assert helper_name in inspect.unwrap(validate_iso_3166_jurisdiction).__code__.co_names, (
         "application _validate_iso_3166_jurisdiction must call the shared core normaliser"
