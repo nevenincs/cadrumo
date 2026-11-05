@@ -40,3 +40,35 @@ media_type = "application/xml"
 attach_to = ["TRA-ASE-4"]
 relation = "source"
 note = "The tax adviser's invoice AF-04 this row states, with its IRPF retención, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-tra-sw-1"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["TRA-SW-1"]
+relation = "source"
+note = "The software supplier's invoice SW-01 for the quarterly licence this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-tra-sw-2"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["TRA-SW-2"]
+relation = "source"
+note = "The software supplier's invoice SW-02 for the quarterly licence this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-tra-sw-3"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["TRA-SW-3"]
+relation = "source"
+note = "The software supplier's invoice SW-03 for the quarterly licence this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."
+
+[[documents]]
+id = "factura-tra-sw-4"
+generator = "facturae"
+media_type = "application/xml"
+attach_to = ["TRA-SW-4"]
+relation = "source"
+note = "The software supplier's invoice SW-04 for the quarterly licence this row states, generated as a Facturae invoice from the row and the identity catalogue so it agrees with them."

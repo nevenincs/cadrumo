@@ -128,7 +128,7 @@ def _value_years(persona: Persona) -> set[int]:
     return {
         value.year.resolve(envelope)
         for value in persona.expectations.values
-        if (value.casillas or value.refusal) and value.grounding != "unverified"
+        if (value.casillas or value.refusal is not None) and value.grounding != "unverified"
     }
 
 
@@ -354,7 +354,7 @@ def test_the_application_calculates_the_casillas_a_persona_expects(tmp_path: Pat
     stated = [
         value
         for value in persona.expectations.values
-        if (value.casillas or value.refusal)
+        if (value.casillas or value.refusal is not None)
         and value.grounding != "unverified"
         and value.year.resolve(envelope) == case.year
     ]

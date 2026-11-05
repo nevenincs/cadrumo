@@ -185,7 +185,7 @@ from ...application.user_profile.profile_record_repository import ProfileRecordR
 from ...application.user_profile.registration import create_registered_profile
 from ...application.user_profile.validation import reject_invalid_profile_facts
 from ...application.wizard.imputation_election import YEAR_QUESTION_ID
-from ...core.aggregation import RetencionScheme
+from ...core.aggregation import RetencionClave, RetencionScheme
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import load_settings, override_settings
 from ...core.operations import OperationTerminalCondition, profile_operation_subject
@@ -195,6 +195,7 @@ from ...core.time.clock import frozen_clock, now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ...domain.contribuyente.inventory.closing_foundations import (
     InventoryClosingAuthority,
     InventoryClosingDecisionEvidence,
@@ -225,6 +226,7 @@ from ...tests.personas import (
     persona_inputs_digest,
     read_persona,
 )
+from ...tests.withholding_zero_blocks import zeroed_withholding_blocks
 from ..ledger_action_composition import compose_ledger_action_ports
 from ..operation_composition import build_production_operation_registry
 
@@ -1126,6 +1128,9 @@ def _capture_rent_withholding(
 
 _PROFESSIONAL_WITHHOLDING_MODELO = "111"
 _PROFESSIONAL_SCHEME = RetencionScheme("actividades_profesionales")
+#: Modelo 190 clave G, subclave 01: professional income withheld at the general rate of RIRPF art. 95.1.
+_PROFESSIONAL_CLAVE = "G"
+_PROFESSIONAL_GENERAL_RATE_SUBCLAVE = "01"
 
 
 def _professional_fee_payments(persona: Persona) -> list[LedgerRow]:
@@ -1157,9 +1162,16 @@ def _professional_fee_capture(
     """The withholding capture of one professional's invoice paid by the taxpayer, for the Modelo 111 of its quarter.
 
     The persona's professionals are resident individuals taxed under the IRPF,
-    the only recipients whose fees carry the retención of RIRPF art. 95.
+    the only recipients whose fees carry the retención of RIRPF art. 95, at its
+    general rate; the Modelo 190 annual detail names them under clave G,
+    subclave 01. Their domicile province is not stated, so it stays absent.
     """
-    if row.taxable_base is None or row.retencion_amount is None:
+    if (
+        row.counterparty is None
+        or row.taxable_base is None
+        or row.retencion_amount is None
+        or row.retencion_rate is None
+    ):
         raise PersonaMaterialisationError(f"{persona.id} {row.ref}: a professional fee states its base and retención")
     paid_on = row.operation_date(world.envelope)
     with validating_governed_facts(world.operation):
@@ -1176,6 +1188,21 @@ def _professional_fee_capture(
             allocated_withholding=row.retencion_amount,
             allocated_settlement=abs(row.amount),
             idempotency_key=f"{persona.id}:{row.ref}",
+            modelo_190_detail=WithholdingObservation(
+                source_id=invoices[row.ref],
+                source_allocation_id=row.ref,
+                perceptor_tax_id=persona.identities.role(row.counterparty).value,
+                perceptor_legal_name=_party_name(persona, row.counterparty),
+                country_code="ES",
+                transaction_date=paid_on,
+                clave=RetencionClave.from_registry(_PROFESSIONAL_CLAVE),
+                subclave=_PROFESSIONAL_GENERAL_RATE_SUBCLAVE,
+                percibido_dinerario=row.taxable_base,
+                retencion_practicada=row.retencion_amount,
+                **zeroed_withholding_blocks(),
+                base_retenciones=row.taxable_base,
+                porcentaje_retencion=(row.retencion_rate * _PERCENT).quantize(_CENTS),
+            ),
         )
     quarter = Period.from_year_and_code(paid_on.year, f"{(paid_on.month - 1) // 3 + 1}T")
     return ModeloInvoiceWithholdingCaptureRequest.from_inputs(
@@ -1201,6 +1228,15 @@ def _capture_professional_withholding(
                 f"{persona.id} {row.ref}: professional withholding refused ({captured.refusal_reason}, "
                 f"{captured.refusal_defects})"
             )
+
+
+def _finding_names(verified: ModeloWorkVerifyPublicResultV2) -> str:
+    """The verification findings by kind, severity, casilla and message key, named for a refusal message."""
+    return ", ".join(
+        f"{finding.kind}/{finding.severity} {finding.casilla_id or finding.expectation_id or '-'} "
+        f"{finding.message_locale_key}"
+        for finding in verified.verification.report.findings
+    )
 
 
 def _unresolved(calculated: ModeloWorkCalculatePublicResultV3) -> str:
@@ -1282,7 +1318,8 @@ def _replay_history(
             raise PersonaMaterialisationError(
                 f"{where}: verification did not complete ({verified.completeness_status}, "
                 f"{verified.finding_count} findings, "
-                f"{verified.missing_required_casilla_count} required casillas missing; unresolved: {unresolved or 'none'})"
+                f"{verified.missing_required_casilla_count} required casillas missing; unresolved: {unresolved or 'none'}; "
+                f"findings: {_finding_names(verified)})"
             )
         run_operation(
             world,

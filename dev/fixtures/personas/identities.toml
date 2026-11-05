@@ -305,6 +305,13 @@ value = "B00000067"
 legal_name = "Lingua Levante Traducciones, S.L."
 
 [[identities]]
+role = "traductora.proveedor-software"
+persona = "traductora-profesional"
+kind = "cif"
+value = "B00000307"
+legal_name = "Herramientas de Traducción Albufera, S.L."
+
+[[identities]]
 role = "minorista.mayorista"
 persona = "minorista-recargo"
 kind = "cif"
