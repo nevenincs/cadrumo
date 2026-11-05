@@ -47,6 +47,7 @@ _NOT_LOADED: dict[str, set[str]] = {
     "arrendador-jubilado": {"rental_properties"},
     "asalariada-familia": {"withholding_certificates.cotizaciones_seguridad_social"},
     "autonomo-alta-reciente": set(),
+    "autonomo-electricista": set(),
     "autonomo-fontanero": set(),
     "intracomunitario-desarrollador": set(),
     "minorista-recargo": {"ledger.recargo_amount", "setup"},

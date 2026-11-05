@@ -22,6 +22,7 @@ dev/fixtures/personas/
 | id | taxpayer | scenario | modelos |
 | --- | --- | --- | --- |
 | `autonomo-fontanero` | `fontanero.titular` (primary identity) | Plumber, estimación directa simplificada, IVA 21 % and 10 % (dwelling repairs), rents a workshop with 19 % retención | 303, 390, 130, 115, 180, 347, 100 |
+| `autonomo-electricista` | `electricista.titular` | Electrician billing companies at IVA 21 % without retención, estimación directa normal after a waiver of the simplified modality (Código de Comercio accounting, no 5 % provision) | 303, 390, 130, 347, 100 |
 | `autonomo-alta-reciente` | `alta.titular` | Office-cleaning business registered on 1 January of the horizon year, estimación directa simplificada by cobros y pagos, IVA 21 %, no retención on its income; the first quarter only | 303, 130, 390, 347, 100 |
 | `traductora-profesional` | `traductora.titular` | Translator whose income is over 70 % withheld (no 130), pays a natural-person tax adviser with 15 % retención | 303, 390, 111, 190, 100 |
 | `intracomunitario-desarrollador` | `intracom.titular` (NIE) | Software professional with EU B2B clients, an Irish cloud supplier (reverse charge), ROI enrolled | 303, 349, 390, 130, 100 |

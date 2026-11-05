@@ -195,6 +195,17 @@ value = "00000020C"
 name = "Clara"
 surnames = "Benítez Morales"
 
+# Counters 21 to 24 are skipped: tests outside the catalogue still state them
+# in other roles.
+
+[[identities]]
+role = "electricista.titular"
+persona = "autonomo-electricista"
+kind = "nif"
+value = "00000025W"
+name = "Alberto"
+surnames = "Requena Salinas"
+
 # Natural persons (NIE), counter zero of each prefix.
 
 [[identities]]
@@ -321,6 +332,34 @@ persona = "autonomo-alta-reciente"
 kind = "cif"
 value = "B00000158"
 legal_name = "Papelería Central, S.L."
+
+[[identities]]
+role = "electricista.promotora"
+persona = "autonomo-electricista"
+kind = "cif"
+value = "B00000166"
+legal_name = "Promociones Residenciales Henares, S.L."
+
+[[identities]]
+role = "electricista.cadena-hotelera"
+persona = "autonomo-electricista"
+kind = "cif"
+value = "B00000174"
+legal_name = "Hoteles Urbanos Alcalá, S.L."
+
+[[identities]]
+role = "electricista.proveedor"
+persona = "autonomo-electricista"
+kind = "cif"
+value = "B00000182"
+legal_name = "Material Eléctrico Corredor, S.L."
+
+[[identities]]
+role = "electricista.gestoria"
+persona = "autonomo-electricista"
+kind = "cif"
+value = "B00000190"
+legal_name = "Asesoría Contable Complutense, S.L."
 
 [[identities]]
 role = "fontanero.comunidad"
