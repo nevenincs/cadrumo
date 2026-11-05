@@ -13,7 +13,7 @@ from collections.abc import Callable
 from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING, cast
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .build_directory import require_enrolled_build
 from .build_paths import build_paths

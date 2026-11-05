@@ -48,8 +48,8 @@ from typing import Final
 import pytest
 
 from cadrumo.core.directory_scan import iter_directory, scan_directory
-from dev._paths import REPO_ROOT as _REPO_ROOT
 from dev.ci.workflow_run_text import executed_text
+from dev.paths import REPO_ROOT as _REPO_ROOT
 
 from ..campaign import _LANES
 

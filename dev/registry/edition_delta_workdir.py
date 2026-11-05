@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.registry.compiler.loader import load_modelo_directory
 
 from . import edition_delta_errors as _edition_delta_errors

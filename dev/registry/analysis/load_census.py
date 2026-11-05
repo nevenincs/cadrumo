@@ -64,9 +64,9 @@ import grimp
 
 import dev.first_party_source
 from cadrumo.core.directory_scan import scan_directory
-from dev._paths import REPO_ROOT
 from dev.first_party_source import DEVELOPMENT_TOOLING, PRODUCT_PACKAGE, is_test_module_name, is_test_source
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT
 from dev.quality.shared_scan import (
     SourceSnapshot,
     scanner_identity,

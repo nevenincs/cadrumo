@@ -18,8 +18,8 @@ from pathlib import Path, PurePosixPath
 import pytest
 
 from cadrumo.core.toml import parse_toml
-from dev._paths import REPO_ROOT
 from dev.first_party_source import SOURCE_PACKAGES
+from dev.paths import REPO_ROOT
 
 from ..unreachable_code import scan_unreachable_code
 from ..unreachable_models import Confidence, ModuleReach, SymbolKind, UnreachableCodeOutcome, UnreachableCodeResult

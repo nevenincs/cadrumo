@@ -6,8 +6,8 @@ import hashlib
 from collections.abc import Iterable
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
 from dev.packaging.authority_staging import authoring_authority_root
+from dev.paths import REPO_ROOT
 
 from .registry_collapse_models import FingerprintEntry
 

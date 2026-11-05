@@ -41,7 +41,7 @@ import unicodedata
 from pathlib import Path
 from typing import Final
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .parts import split_units_by_budget, write_part_sidecars
 from .schema import (

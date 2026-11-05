@@ -69,9 +69,9 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT, UTF_8
 from dev.ci.lane_recipe_commands import resolve_just_executable
 from dev.exit_codes import FINDINGS_CODES, OK
+from dev.paths import REPO_ROOT, UTF_8
 from dev.test_runs.paths import allocate_run_directory, test_log_root
 
 from .complexity import scan_complexity

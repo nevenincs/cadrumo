@@ -36,7 +36,7 @@ from typing import Final
 import pytest
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..i18n import (
     _DOC_SUFFIXES,

@@ -10,10 +10,10 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import UTF_8
 from dev.docs import i18n as _docs_i18n
 from dev.docs.build_paths import DOCS_SITE_PREFIX_ENV
 from dev.docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
+from dev.paths import UTF_8
 
 from .docs_delivery_contracts import CANONICAL_DOCS_BASE_URL
 

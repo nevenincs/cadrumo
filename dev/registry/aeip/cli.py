@@ -7,7 +7,7 @@ from typing import Annotated, Protocol
 
 import typer
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .adjudications import DEFAULT_ADJUDICATIONS_FILENAME, AdjudicationSet, load_adjudications
 from .apply_execution import apply_prepared_plan

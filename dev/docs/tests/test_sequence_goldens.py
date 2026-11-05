@@ -49,7 +49,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.tests.env_scope import derived_storage_settings, scoped_env_var
 from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, differing_paths
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..sequences.checks import (
     check_sequences,

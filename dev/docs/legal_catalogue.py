@@ -8,7 +8,7 @@ from typing import Final, cast
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.toml import TomlDecodeError, parse_toml
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .legal_catalogue_fields import _record_from_table, _validate_authored_text
 from .legal_note_languages import apply_legal_note_languages

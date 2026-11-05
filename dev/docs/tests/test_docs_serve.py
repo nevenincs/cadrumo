@@ -29,7 +29,7 @@ from typing import override
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..build_paths import docs_build_root, docs_html_root
 from ..i18n import TARGET_LANGUAGES

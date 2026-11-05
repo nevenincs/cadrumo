@@ -14,7 +14,7 @@ from email.parser import Parser
 from pathlib import Path, PurePosixPath
 from typing import override
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 _METADATA_SUFFIX = ".dist-info/METADATA"
 

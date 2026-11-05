@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..i18n import _stage_selected_templates, user_scope_source_pages, validated_pages
 

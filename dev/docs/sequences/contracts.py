@@ -12,7 +12,7 @@ import ntpath
 import re
 from pathlib import Path, PurePosixPath
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .errors import SequenceEngineError
 

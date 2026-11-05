@@ -50,7 +50,7 @@ import dev.registry.edition_delta_row_delta_preserving as edition_delta_row_delt
 import dev.registry.edition_delta_row_delta_reconstruction as edition_delta_row_delta_reconstruction
 import dev.registry.edition_delta_row_delta_selection as edition_delta_row_delta_selection
 import dev.registry.edition_delta_source as edition_delta_source
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.registry.compiler import (
     casilla_identity,
     casilla_inheritance,

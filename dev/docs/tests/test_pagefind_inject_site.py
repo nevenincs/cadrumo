@@ -18,7 +18,7 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..pagefind_index import SHARED_INDEX_LANGUAGE, build_search_index
 from ..pagefind_inject import (

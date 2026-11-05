@@ -18,11 +18,11 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
-from dev._paths import UTF_8
 from dev.packaging.build_scratch_reclaim import remove_source_snapshot, sweep_var_scratch
 from dev.packaging.build_storage import build_environment, build_storage
 from dev.packaging.command_execution import CommandResult, run_command
 from dev.packaging.google_oauth import GOOGLE_OAUTH_ENV, build_client_json
+from dev.paths import UTF_8
 from dev.temporary_output import prepare_temp_root, resolve_temporary_output
 
 _HERE = Path(__file__).resolve().parent

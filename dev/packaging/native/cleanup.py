@@ -7,7 +7,7 @@ import json
 import shutil
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .build_directory import require_enrolled_build
 from .build_log import BuildLog, display_path

@@ -20,7 +20,6 @@ import pytest
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
-from dev._paths import REPO_ROOT
 from dev.corpus.fetch_boe_normative import (
     ArticleRedaction,
     NormativeAcquisitionError,
@@ -30,6 +29,7 @@ from dev.corpus.fetch_boe_normative import (
 )
 from dev.corpus.text import resolve_anchored_extracted_unit
 from dev.docs.preprocess.normatives_html import build_xml_outputs
+from dev.paths import REPO_ROOT
 
 from ..legal_catalogue import LEGAL_DIR, load_legal_entries, required_text_by_entry
 from ..legal_citation_keys import candidate_keys, ordinal_spellings, structural_key

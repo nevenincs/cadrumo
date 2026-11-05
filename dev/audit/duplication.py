@@ -75,7 +75,6 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import ADVISORY_BROKEN, FAILED, OK
 from dev.first_party_source import (
     BUNDLED_DATA_DIRECTORY,
@@ -86,6 +85,7 @@ from dev.first_party_source import (
     production_exclusion_globs,
 )
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT, UTF_8
 
 from .duplication_declaration import intersects, site_span, source_span, span_is_declaration
 

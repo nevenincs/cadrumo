@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import argparse
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 
 def main() -> None:

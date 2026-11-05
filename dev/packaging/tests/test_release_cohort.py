@@ -13,8 +13,8 @@ from typing import Final
 import pytest
 from pydantic import ValidationError
 
-from dev._paths import REPO_ROOT, TEMP_ROOT
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT, TEMP_ROOT
 from dev.source_tree import content_digest, repository_files
 
 from .. import release_cohort as release_cohort_module

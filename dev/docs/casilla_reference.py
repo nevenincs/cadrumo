@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from cadrumo.core.directory_scan import scan_directory
-from dev._paths import REPO_ROOT, UTF_8
+from dev.paths import REPO_ROOT, UTF_8
 from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.compiler.authority_state import compiler_generation
 

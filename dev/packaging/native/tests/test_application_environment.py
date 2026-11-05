@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.package_interpreter import ROLE_IMAGE_OPTION, isolated_interpreter_command
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..application_environment import load_for_build, parse
 from ..environment_compile import compile_section

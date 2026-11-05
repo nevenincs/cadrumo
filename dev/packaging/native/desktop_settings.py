@@ -6,7 +6,7 @@ import argparse
 from collections.abc import Sequence
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .application_environment import load
 from .operational_settings import typescript_settings

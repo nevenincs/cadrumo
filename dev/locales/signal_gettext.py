@@ -6,7 +6,7 @@ from pathlib import Path
 
 from babel.messages.pofile import read_po
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 
 def read_gettext_messages(path: Path) -> dict[str, str] | None:

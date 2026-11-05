@@ -12,7 +12,7 @@ from typing import Final
 import yaml
 
 from cadrumo.core.directory_scan import scan_directory
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .lane_recipe_commands import _parameterless_recipes, _recipe_bodies, _recipe_closure
 from .workflow_job_gates import job_gate, narrowed_events

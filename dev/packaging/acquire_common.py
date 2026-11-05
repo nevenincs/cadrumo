@@ -26,7 +26,7 @@ from typing import TYPE_CHECKING, Final, NoReturn
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .cohort_manifest import LoadedReleaseCohort
 from .command_execution import run_command

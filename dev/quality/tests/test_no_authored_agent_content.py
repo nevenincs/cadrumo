@@ -36,8 +36,8 @@ from typing import Final
 
 import pytest
 
-from dev._paths import REPO_ROOT, UTF_8
 from dev.first_party_source import MCP_PACKAGE, PRODUCT_SOURCE_ROOTS, SERVICE_PACKAGE, is_production_source
+from dev.paths import REPO_ROOT, UTF_8
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

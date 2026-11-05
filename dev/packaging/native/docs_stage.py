@@ -12,7 +12,6 @@ from pathlib import Path, PurePosixPath
 from typing import cast
 
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import REPO_ROOT
 from dev.docs.build_paths import DOCS_BUILD_ROOT_ENV, docs_html_root
 from dev.docs.language_roots import (
     LANGUAGES_DIRECTORY,
@@ -23,6 +22,7 @@ from dev.docs.language_roots import (
     factor_roots,
     text_file,
 )
+from dev.paths import REPO_ROOT
 
 from . import docs_scan
 from .assembly_transaction import AssemblyReuse

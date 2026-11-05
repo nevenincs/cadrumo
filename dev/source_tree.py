@@ -36,7 +36,7 @@ from typing import Final, Literal
 
 import pathspec
 
-from ._paths import REPO_ROOT, UTF_8
+from .paths import REPO_ROOT, UTF_8
 
 __all__ = [
     "byte_preserving_paths",

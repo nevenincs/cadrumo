@@ -14,8 +14,8 @@ from pathlib import Path
 import playwright
 import pytest
 
-from dev._paths import COMPONENT_PINS_ROOT
 from dev.env.browser_archive_pins import PINS_FILE
+from dev.paths import COMPONENT_PINS_ROOT
 
 from ...runtime_wheelhouse_contract import SUPPORTED_TARGETS
 from ..browser_archive_coverage import BROWSER_PLATFORM_BY_TARGET, verify_browser_archive_coverage

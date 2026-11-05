@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import cast
 
 from cadrumo.core.toml import TomlDecodeError, parse_toml
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 from dev.quality.unread_inputs import format_unread_notice
 
 from .unreachable_memo import walked

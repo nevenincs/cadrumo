@@ -20,7 +20,7 @@ _NON_ENVIRONMENT_INPUTS = frozenset(
         "cadrumo.core.connection_transport",
         "cadrumo_client.contracts.contracts",
         "cadrumo_client.contracts.deadline_budget",
-        "dev._paths",
+        "dev.paths",
         "dev.locales.manager_chrome",
         "dev.packaging.runtime_wheelhouse_contract",
     }

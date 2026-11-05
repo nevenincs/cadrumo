@@ -213,7 +213,7 @@ def test_real_native_artifact_requires_its_inventory_bound_desktop_policy(
 
 @pytest.mark.parametrize("member", tuple(DEPENDENCY_INPUTS))
 def test_dependency_evidence_refuses_lock_and_owned_feature_drift(tmp_path: Path, member: str) -> None:
-    from dev._paths import REPO_ROOT
+    from dev.paths import REPO_ROOT
 
     for name in DEPENDENCY_INPUTS:
         target = tmp_path / name

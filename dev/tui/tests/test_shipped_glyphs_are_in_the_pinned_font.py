@@ -21,7 +21,7 @@ import pytest
 import yaml
 from PIL import ImageFont
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.source_tree import repository_files
 from dev.tui._raster import FONT_PATH, _mask_bytes
 

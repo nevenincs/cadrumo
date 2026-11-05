@@ -11,7 +11,7 @@ from typing import cast
 import pytest
 
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..command_execution import run_command
 from ..command_spec_attestation import _probe_installed_command_specs

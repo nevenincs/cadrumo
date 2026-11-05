@@ -17,7 +17,7 @@ from typing import IO, Any, Final
 import pytest
 
 from cadrumo.tests.env_loader import bridge_env_file_into_environ
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.temporary_output import resolve_temporary_output
 
 from .paths import (

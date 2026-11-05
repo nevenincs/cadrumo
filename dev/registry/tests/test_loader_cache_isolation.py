@@ -48,8 +48,8 @@ import pytest
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.tests.env_scope import scoped_env_var
-from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import CommandResult, run_command
+from dev.paths import REPO_ROOT
 
 from ..compiler.loader import (
     clear_registry_tree_cache,

@@ -9,7 +9,7 @@ from typing import Final
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 
 from cadrumo.domain.calculations.registry.ids import ModeloId, RevisionId, SourceRefId
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 __all__ = [
     "LiteralEnrollmentAudit",

@@ -7,8 +7,8 @@ from pathlib import Path
 from defusedxml import ElementTree
 
 from cadrumo.core.directory_scan import scan_directory
-from dev._paths import UTF_8
 from dev.docs import i18n as _docs_i18n
+from dev.paths import UTF_8
 
 from .docs_delivery_contracts import _REQUIRED_ROOT_ARTIFACTS, _REQUIRED_SITE_SEARCH_ARTIFACTS
 from .docs_site_languages import language_site_url, localized_languages

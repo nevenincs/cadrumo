@@ -29,7 +29,7 @@ from sphinx.errors import SphinxError
 from cadrumo.core.config import override_settings
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.tests.env_scope import scoped_env_var
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..cli_tree import default_cli_tree_path
 from ..sequence_build_gate import (

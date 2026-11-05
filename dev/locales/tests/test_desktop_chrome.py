@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .. import chrome_projection, desktop_chrome
 from .._paths import LOCALES_DIR

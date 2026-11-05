@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from ._paths import REPO_ROOT, TEMP_ROOT
+from .paths import REPO_ROOT, TEMP_ROOT
 
 
 def _native_preset_sources() -> dict[str, Path]:

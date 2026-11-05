@@ -14,7 +14,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, cast
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 # Entrypoint names reach C string literals, CMake target names and Python source.
 _ENTRYPOINT_NAME = re.compile(r"[a-z][a-z0-9]*(-[a-z0-9]+)*")

@@ -36,7 +36,7 @@ foreach(tree_directory src docs dev/docs)
   list(APPEND user_docs_trees "tree\tdocs\t${CADRUMO_SOURCE_ROOT}\t${tree_directory}")
 endforeach()
 file(GLOB user_docs_inputs CONFIGURE_DEPENDS "${CADRUMO_SOURCE_ROOT}/native/platforms/*.json")
-foreach(name pyproject.toml uv.lock native/package-layout.json dev/__init__.py dev/_paths.py dev/source_tree.py dev/cache_root.py
+foreach(name pyproject.toml uv.lock native/package-layout.json dev/__init__.py dev/paths.py dev/source_tree.py dev/cache_root.py
     dev/packaging/__init__.py dev/packaging/command_execution.py dev/packaging/authority_staging.py
     dev/packaging/native/__init__.py dev/packaging/native/docs_build.py dev/packaging/native/docs_stage.py
     dev/packaging/native/docs_scan.py dev/packaging/native/docs_errors.py

@@ -9,8 +9,8 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
-from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import TOOL_BROKEN
+from dev.paths import REPO_ROOT, UTF_8
 from dev.quality.import_authority import read_authority
 from dev.quality.import_binding_inventory import check_initializers, read_modules
 from dev.quality.import_check_models import Authority, CheckResult, Finding, ImportOccurrence

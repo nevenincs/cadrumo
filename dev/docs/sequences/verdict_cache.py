@@ -32,10 +32,10 @@ from pathlib import Path
 from typing import Final, Protocol
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
-from dev._paths import REPO_ROOT
 from dev.cache_root import dev_cache_dir
 from dev.first_party_source import PRODUCT_SOURCE_ROOTS
 from dev.locales.write_guard import LOCK_FILENAME as _CATALOGUE_WRITE_LOCK
+from dev.paths import REPO_ROOT
 
 from .authority_currency import require_current_authority
 from .errors import SequenceEngineError

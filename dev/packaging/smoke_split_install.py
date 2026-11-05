@@ -30,7 +30,7 @@ from collections.abc import Sequence
 from pathlib import Path, PurePosixPath
 
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .lane_verification_core import (
     create_pip_venv,

@@ -27,7 +27,7 @@ import pytest
 
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.toml import parse_toml
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..version_identity import (
     GATES,

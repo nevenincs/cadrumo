@@ -15,7 +15,7 @@ from cadrumo.domain.filing import software_identity
 from cadrumo.domain.filing.errors import FilingExportValidationError
 from cadrumo.tests.audited_process import run_audited_process
 from cadrumo.tests.authority_run_snapshot import freeze_authority_root
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..runtime_fixture import (
     _EXPORT_VERSION_FILE,

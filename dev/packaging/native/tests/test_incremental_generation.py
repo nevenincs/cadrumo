@@ -17,7 +17,7 @@ from typing import Any
 import pytest
 from PIL import Image
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ... import runtime_wheel_selection
 from ...command_execution import run_command

@@ -23,7 +23,7 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     WHOLLY_BUSINESS_STAGE_FACTS,
     AssetBasisStage,
 )
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

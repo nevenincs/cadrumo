@@ -31,7 +31,7 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.atomic_write import atomic_write_text
-from dev._paths import REPO_ROOT, UTF_8
+from dev.paths import REPO_ROOT, UTF_8
 
 CONF_PATH: Final[Path] = REPO_ROOT / "docs" / "conf.py"
 STYLESHEET_PATH: Final[Path] = REPO_ROOT / "docs" / "_static" / "cadrumo-docs.css"

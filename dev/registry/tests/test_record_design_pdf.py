@@ -11,8 +11,8 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT
 
 from ..compiler.record_design import (
     extract_record_design,

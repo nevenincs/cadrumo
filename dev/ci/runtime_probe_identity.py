@@ -9,9 +9,9 @@ from pathlib import Path
 from typing import Any, Final
 
 from cadrumo.core.hashing import sha256_hex
-from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.command_execution import run_command
 from dev.packaging.hashing import sha256_path
+from dev.paths import REPO_ROOT, UTF_8
 
 from .runtime_probe_contracts import _SHA256_RE, CompatibilityProbeError
 from .runtime_probe_environment import _isolated_environment

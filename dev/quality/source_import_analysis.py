@@ -23,8 +23,8 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.toml import parse_toml
-from dev._paths import REPO_ROOT, UTF_8
 from dev.first_party_source import is_test_module_name
+from dev.paths import REPO_ROOT, UTF_8
 
 SRC_ROOT = REPO_ROOT / "src"
 _UTF_8: Final[str] = UTF_8

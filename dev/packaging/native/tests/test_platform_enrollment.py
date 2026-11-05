@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ...runtime_wheelhouse_contract import SUPPORTED_TARGETS
 from ..layout import application_images, backend, distribution_target, load_layout

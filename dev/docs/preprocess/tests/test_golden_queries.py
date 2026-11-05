@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .._golden_queries import (
     GOLDEN_QUERIES,

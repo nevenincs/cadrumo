@@ -26,7 +26,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ._artifacts import now
 

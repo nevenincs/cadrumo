@@ -7,7 +7,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Final, TypeGuard
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 _UTF_8: Final[str] = UTF_8
 

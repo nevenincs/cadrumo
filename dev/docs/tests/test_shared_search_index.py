@@ -46,7 +46,7 @@ import pytest
 from pydantic import TypeAdapter
 
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..pagefind_index import SHARED_INDEX_LANGUAGE, IndexedRoot, build_shared_search_index
 from ..pagefind_inject import _inject_records, _Materialised

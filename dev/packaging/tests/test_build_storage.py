@@ -13,10 +13,10 @@ from threading import Barrier
 
 import pytest
 
-from dev._paths import REPO_ROOT, TEMP_ROOT
 from dev.packaging.build_scratch_reclaim import require_build_path
 from dev.packaging.build_storage import build_environment, build_storage
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT, TEMP_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

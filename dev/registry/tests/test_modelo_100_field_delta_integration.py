@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..edition_delta_migration import migrate_modelo
 from ..edition_round_trip import copy_registry_tree

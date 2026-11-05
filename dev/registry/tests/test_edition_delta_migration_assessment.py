@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.registry import edition_delta_assessment as delta_assessment
 from dev.registry import edition_delta_assessment_lineage as assessment_lineage
 from dev.registry import edition_delta_payload as delta_payload

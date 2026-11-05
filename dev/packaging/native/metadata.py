@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 
 from cadrumo.core.toml import parse_toml
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .build_directory import require_enrolled_output
 from .build_stamp import BuildStamp, display_version, load_identity

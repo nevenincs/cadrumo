@@ -27,7 +27,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.tests.inventory import python_files_under
-from dev._paths import REPO_ROOT as _REPOSITORY_ROOT
+from dev.paths import REPO_ROOT as _REPOSITORY_ROOT
 from dev.quality.unread_inputs import report_unread
 from dev.registry.compiler.identity import (
     REGISTRY_IDENTITY_STAMP_FILENAME,

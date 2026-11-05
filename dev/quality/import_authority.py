@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path, PurePosixPath
 from typing import Final
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 from dev.source_tree import repository_files
 
 from .import_check_models import (

@@ -16,9 +16,9 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
 from dev.audit.unreachable_code import run_unreachable_code_scan
 from dev.audit.unreachable_models import ModuleFinding, ModuleReach, UnreachableCodeOutcome, UnreachableCodeResult
+from dev.paths import REPO_ROOT
 
 _NOT_COMMAND_REACHED = frozenset(
     {ModuleReach.UNREACHABLE, ModuleReach.MODULE_EXEC_ONLY, ModuleReach.TYPE_ONLY},

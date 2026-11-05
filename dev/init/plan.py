@@ -33,7 +33,7 @@ from __future__ import annotations
 import sys
 from typing import Final
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .contract import Phase, Step
 from .probe import Requirement

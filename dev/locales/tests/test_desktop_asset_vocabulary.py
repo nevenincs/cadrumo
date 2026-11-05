@@ -56,7 +56,7 @@ from cadrumo.domain.renta.actividad_asset.vehicle_affectation import (
     VehicleListedUse,
     VehiclePrivateUse,
 )
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .._ast_scanner import scan_source_text
 from .._paths import LOCALES_DIR, SRC_DIR

@@ -6,7 +6,7 @@ import ast
 from collections.abc import Iterable, Mapping
 from pathlib import Path
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .import_check_models import Authority, Finding, ImportBinding, SourceModule
 from .import_consumer_trees import consumer_source_files

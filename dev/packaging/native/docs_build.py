@@ -14,7 +14,7 @@ from pathlib import Path
 
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..authority_staging import selected_published_authority
 from ..command_execution import run_command

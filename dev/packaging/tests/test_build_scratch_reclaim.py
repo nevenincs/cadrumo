@@ -27,7 +27,7 @@ from typing import Final
 
 import pytest
 
-from dev._paths import REPO_ROOT, UTF_8
+from dev.paths import REPO_ROOT, UTF_8
 
 from .. import build_scratch_reclaim
 from ..build_scratch_reclaim import (

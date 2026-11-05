@@ -21,7 +21,7 @@ from pathlib import Path
 
 from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.entrypoints.operation_composition import build_production_operation_contract_manifest
-from dev._paths import REPO_ROOT, UTF_8
+from dev.paths import REPO_ROOT, UTF_8
 
 
 def target_path(repo_root: Path | None = None) -> Path:

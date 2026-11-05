@@ -28,7 +28,7 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.facts.variants import GovernedFactVariant
 from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..compiler.fact_providers import (
     FACT_PROVIDER_REGISTRATIONS,

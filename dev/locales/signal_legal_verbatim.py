@@ -9,7 +9,7 @@ from html import escape
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .signal_tokens import filtered_translation_text
 

@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Any
 
 from cadrumo.core.hashing import sha256_hex
-from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.evidence import artifact_map_digest
 from dev.packaging.hashing import sha256_path
 from dev.packaging.lane_verification_core import (
@@ -21,6 +20,7 @@ from dev.packaging.lane_verification_core import (
     venv_python_path,
 )
 from dev.packaging.runtime_wheelhouse_reader import extract_runtime_wheelhouse, load_runtime_wheelhouse
+from dev.paths import REPO_ROOT, UTF_8
 
 from .runtime_probe_artifacts import _cohort_digests, _load_binary_artifacts, _source_artifacts
 from .runtime_probe_checks import _focused_runtime_tests, _installed_probe

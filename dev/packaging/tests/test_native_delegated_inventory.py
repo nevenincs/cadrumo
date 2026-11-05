@@ -13,12 +13,12 @@ from typing import Any
 
 import pytest
 
-from dev._paths import REPO_ROOT
 from dev.packaging.native.hashing import digest
 from dev.packaging.native.identity import identity
 from dev.packaging.native.installation import validate_payload
 from dev.packaging.native.layout import load_layout
 from dev.packaging.native.package_inventory import checked_member, package_inventory
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -13,7 +13,7 @@ from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 from packaging.version import Version
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..command_execution import run_command
 

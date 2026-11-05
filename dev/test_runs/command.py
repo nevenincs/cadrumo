@@ -13,8 +13,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Final
 
-from dev._paths import REPO_ROOT, UTF_8
 from dev.cache_root import dev_cache_root
+from dev.paths import REPO_ROOT, UTF_8
 from dev.tool_storage import storage_directory
 
 from .dead_weight_signal import _AUDIT_DEAD_WEIGHT_SIGNAL, _DeadWeightSignalProcessor

@@ -18,7 +18,7 @@ import pytest
 from PIL import Image
 from pydantic import ValidationError
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .. import _coverage, _diff, _harness, _inventory, _raster
 from .._artifacts import (

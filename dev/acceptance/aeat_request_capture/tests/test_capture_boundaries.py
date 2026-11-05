@@ -13,11 +13,11 @@ import pytest
 
 from cadrumo.core.config import Settings
 from cadrumo.entrypoints.cli.tests.live_command_validation import resolve_path
-from dev._paths import REPO_ROOT, UTF_8
 from dev.acceptance.aeat_request_capture import __main__ as command
 from dev.acceptance.aeat_request_capture import live_flows
 from dev.acceptance.aeat_request_capture.flows import READ_FLOWS, UnknownFlowSelectorError, select_flows
 from dev.packaging.command_execution import CommandResult, run_command
+from dev.paths import REPO_ROOT, UTF_8
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

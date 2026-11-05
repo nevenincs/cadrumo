@@ -18,8 +18,8 @@ from docutils.core import publish_doctree, publish_parts
 
 from cadrumo.core.directory_scan import iter_directory, scan_directory
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import REPO_ROOT
 from dev.locales.signal_documentation_inventory import inventory_generated_document_file
+from dev.paths import REPO_ROOT
 
 from ..legal_catalogue import load_legal_provisions
 from ..legal_page_rendering import _rst_escape

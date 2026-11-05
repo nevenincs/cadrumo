@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import json
 
-from dev._paths import REPO_ROOT
 from dev.exit_codes import ADVISORY_BROKEN, OK
+from dev.paths import REPO_ROOT
 
 from .dead_code import DeadCodeOutcome, DeadCodeResult, dead_code_scope, run_dead_code_scan
 from .duplication import DuplicationOutcome, DuplicationResult, run_duplication_scan

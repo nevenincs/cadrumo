@@ -47,7 +47,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import lookup_translation_entry
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.test_runs.paths import allocate_run_directory, test_log_root
 

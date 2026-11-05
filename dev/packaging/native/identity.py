@@ -11,8 +11,8 @@ from pathlib import Path
 from uuid import NAMESPACE_DNS, uuid5
 
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
-from dev._paths import REPO_ROOT
 from dev.packaging.runtime_wheelhouse_contract import SUPPORTED_TARGETS
+from dev.paths import REPO_ROOT
 
 from .build_directory import require_enrolled_output
 from .macos_info import DESKTOP_INFO_PLIST_NAME, render_identity_plist

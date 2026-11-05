@@ -44,10 +44,10 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final, TypeIs
 
-from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import ADVISORY_BROKEN, OK
 from dev.first_party_source import SOURCE_PACKAGES
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT, UTF_8
 
 _UTF_8: Final[str] = UTF_8
 _FINDING_CAP: Final[int] = 40

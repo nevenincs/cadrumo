@@ -23,7 +23,7 @@ if not (__package__ is not None and __package__):
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.storage_environment import STORAGE_ROOT, storage_root_override
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.temporary_output import prepare_temp_root
 
 from .apidocs.manager import API_SOURCE_PACKAGE, API_SOURCE_ROOTS, CLI_REFERENCE_SUBTREE, ApiStubManager, stub_filename

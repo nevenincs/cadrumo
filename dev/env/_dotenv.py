@@ -28,7 +28,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 #: `KEY=value`, optionally prefixed with `export`, as dotenv loaders read it.
 _ASSIGNMENT: Final = re.compile(r"^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=")

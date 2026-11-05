@@ -24,7 +24,7 @@ import cadrumo.domain.calculations.registry.modelo_localization as modelo_locali
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.registry.compiler.loader import load_registry_tree
 
 from .._casilla_keys import is_delta_keyed_leaf

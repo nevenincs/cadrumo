@@ -28,8 +28,8 @@ from typing import Annotated, TypeAliasType, get_args, get_origin
 import pytest
 from pydantic import BaseModel
 
-from dev._paths import REPO_ROOT
 from dev.operation_contract_manifest.tests.test_operation_catalogue import production_operation_registry
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -8,7 +8,7 @@ from typing import Annotated
 
 import typer
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .checklist import render_checklist
 from .manager import NewModeloError, NewModeloScaffoldManager, ScaffoldResult

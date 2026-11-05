@@ -15,7 +15,7 @@ import sys
 from collections.abc import Iterable, Mapping
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..authority_staging import selected_published_authority
 from .build_directory import require_enrolled_build

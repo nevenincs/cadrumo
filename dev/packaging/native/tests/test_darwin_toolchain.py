@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ...command_execution import run_command
 from ...runtime_wheelhouse_contract import target_platform

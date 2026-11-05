@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import pytest
 
-from dev._paths import REPO_ROOT
 from dev.first_party_source import is_test_source
+from dev.paths import REPO_ROOT
 
 from ..unreachable_code import run_unreachable_code_scan
 from ..unreachable_models import ModuleReach, UnreachableCodeOutcome

@@ -41,8 +41,8 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.toml import parse_toml
-from dev._paths import REPO_ROOT
 from dev.packaging.google_oauth import GOOGLE_OAUTH_RESOURCE
+from dev.paths import REPO_ROOT
 from dev.source_tree import repository_files
 
 SRC_CADRUMO = REPO_ROOT / "src" / "cadrumo"

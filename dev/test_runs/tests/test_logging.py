@@ -14,8 +14,8 @@ from typing import IO
 import pytest
 from coverage import CoverageData
 
-from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import CommandResult, run_command
+from dev.paths import REPO_ROOT
 from dev.test_runs.logging import RunLog, _redirect_collection_output
 from dev.test_runs.paths import (
     SCRATCH_PREFIX,

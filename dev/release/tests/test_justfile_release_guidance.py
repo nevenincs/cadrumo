@@ -6,9 +6,9 @@ import ast
 
 import pytest
 
-from dev._paths import REPO_ROOT
 from dev.ci.lane_recipe_commands import resolve_just_executable
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

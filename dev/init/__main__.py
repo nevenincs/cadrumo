@@ -46,8 +46,8 @@ import os
 import sys
 from pathlib import Path
 
-from dev._paths import REPO_ROOT as _DEV_REPO_ROOT
 from dev.exit_codes import INIT_HOST_TOOL_MISSING, INIT_STALE, OK
+from dev.paths import REPO_ROOT as _DEV_REPO_ROOT
 
 from . import plan
 from .contract import (

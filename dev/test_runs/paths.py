@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Final
 from uuid import uuid4
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.temporary_output import prepare_temp_root, resolve_temporary_output
 
 LOGS_STEM = "logs"

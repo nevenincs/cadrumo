@@ -52,7 +52,7 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.toml import load_toml
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.source_tree import repository_files
 
 from .._distribution_limits import PYPI_FILE_CAP_BYTES

@@ -27,10 +27,10 @@ import sys
 from dataclasses import dataclass
 from typing import Final
 
-from dev._paths import UTF_8
 from dev.ci.lane_recipe_commands import resolve_just_executable
 from dev.exit_codes import TOOL_BROKEN, TOOL_MISSING
 from dev.first_party_source import DEPENDENCY_DECLARATION_ROOTS
+from dev.paths import UTF_8
 
 _UTF_8: Final[str] = UTF_8
 

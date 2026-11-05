@@ -10,7 +10,7 @@ from babel.messages.catalog import Message
 from babel.messages.mofile import write_mo
 from babel.messages.pofile import read_po
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .signal_documentation_inventory import catalogue_in_localization_scope
 from .signal_gettext import po_message_identity, po_translation_strings

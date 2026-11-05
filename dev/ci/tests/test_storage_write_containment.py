@@ -24,7 +24,7 @@ from typing import Final
 
 import pytest
 
-from dev._paths import REPO_ROOT, UTF_8
+from dev.paths import REPO_ROOT, UTF_8
 from dev.source_tree import repository_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -1078,7 +1078,7 @@ def test_pytest_temp_bootstrap_requires_early_os_and_stdlib_bindings(tmp_path: P
 
 @pytest.mark.parametrize(
     ("module", "accepted"),
-    [("dev.temporary_output", True), ("dev._paths", False), ("unrelated", False)],
+    [("dev.temporary_output", True), ("dev.paths", False), ("unrelated", False)],
 )
 def test_pytest_temp_bootstrap_recognizes_only_the_current_temp_root_authority(
     tmp_path: Path, module: str, *, accepted: bool

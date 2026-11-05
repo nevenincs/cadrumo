@@ -40,7 +40,7 @@ from cadrumo.entrypoints.cli.tests.live_command_validation import (
     validate_cited_command,
     value_consuming_option_names,
 )
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

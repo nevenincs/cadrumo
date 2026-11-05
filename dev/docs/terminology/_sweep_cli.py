@@ -20,7 +20,7 @@ from typing import Annotated, Final
 
 import typer
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from ._query_aliases import load_query_alias_authority
 from ._wrangle import STRONG_SIGNAL_SCORE_FLOOR

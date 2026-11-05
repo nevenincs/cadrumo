@@ -7,10 +7,10 @@ from dataclasses import asdict, dataclass
 from enum import StrEnum
 from typing import Final, TypedDict, cast
 
-from dev._paths import UTF_8
 from dev.packaging.command_execution import CommandResult
 from dev.packaging.evidence import artifact_map_digest
 from dev.packaging.hashing import sha256_text
+from dev.paths import UTF_8
 
 _UTF_8: Final[str] = UTF_8
 

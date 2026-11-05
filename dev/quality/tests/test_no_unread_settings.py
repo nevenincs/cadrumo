@@ -64,8 +64,8 @@ import pytest
 
 from cadrumo.core.config import Settings
 from cadrumo.core.unread_settings import SETTINGS_OWNED_NAME_PREFIXES
-from dev._paths import REPO_ROOT
 from dev.first_party_source import PYTEST_CONFTEST, TEST_MODULE_PREFIXES
+from dev.paths import REPO_ROOT
 from dev.source_tree import repository_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

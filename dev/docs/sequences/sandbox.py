@@ -44,7 +44,7 @@ from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.pid_liveness import pid_is_alive
 from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.test_runs.paths import scratch_base
 
 from .errors import SequenceExecutionError

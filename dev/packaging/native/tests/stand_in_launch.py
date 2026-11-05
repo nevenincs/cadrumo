@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..generate import generate
 from ..layout import load_layout

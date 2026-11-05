@@ -6,7 +6,7 @@ from pathlib import Path, PurePath
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..application_environment import load
 from ..release_image_scan import RETIRED_STORAGE_VARIABLES, Finding, main, scan

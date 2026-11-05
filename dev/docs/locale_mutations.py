@@ -26,8 +26,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
 from dev.locales.write_guard import catalogue_write_guard
+from dev.paths import REPO_ROOT
 
 from .locale_catalogue_paths import _source_pages
 from .locale_catalogue_preparation import _prepare_catalogue_update

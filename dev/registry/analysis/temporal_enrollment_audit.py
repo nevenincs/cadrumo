@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..temporal_coverage import compose_temporal_coverage
 from .temporal_enrollment_findings import ENROLLMENT_EXCLUSION_PINS, _declaration_finding

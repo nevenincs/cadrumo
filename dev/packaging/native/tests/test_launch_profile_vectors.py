@@ -12,7 +12,7 @@ from typing import Any
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..application_environment import load, load_for_build
 from ..environment_compile import compile_section

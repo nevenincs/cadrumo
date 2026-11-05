@@ -13,7 +13,7 @@ from typing import Any
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ...command_execution import run_command
 from .. import artifact_verify, cpp_abi_inputs, linux_cxx_abi

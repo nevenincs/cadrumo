@@ -9,8 +9,8 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT
 
 TAILSCALE_TIMEOUT_SECONDS: Final[float] = 10.0
 

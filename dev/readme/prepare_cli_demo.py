@@ -20,8 +20,8 @@ from cadrumo.application.aggregation.withholding_recognition import (
     WithholdingRecipientTaxStatus,
 )
 from cadrumo.core.link_safety import is_link_like
-from dev._paths import AUTHORITY_ROOT_ENV, REPO_ROOT, UTF_8
 from dev.packaging.command_execution import run_command
+from dev.paths import AUTHORITY_ROOT_ENV, REPO_ROOT, UTF_8
 from dev.product_environment import ambient_product_settings_removed
 
 _UTF_8: Final[str] = UTF_8

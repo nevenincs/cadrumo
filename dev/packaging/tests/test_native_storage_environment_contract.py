@@ -21,7 +21,6 @@ from cadrumo.core.storage_environment import (
 )
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY
-from dev._paths import REPO_ROOT
 from dev.locales.manager_chrome import manager_chrome_strings
 from dev.packaging.native import generate as generator_module
 from dev.packaging.native.application_environment import load
@@ -30,6 +29,7 @@ from dev.packaging.native.layout import load_layout
 from dev.packaging.native.release_image_scan import RETIRED_STORAGE_VARIABLES
 from dev.packaging.native.storage_vectors import storage_path_vectors, storage_root_vectors
 from dev.packaging.native.verification_paths import verification_destination
+from dev.paths import REPO_ROOT
 from dev.tool_storage import TOOL_STORAGE_LOCATIONS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

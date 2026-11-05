@@ -8,7 +8,7 @@ import tarfile
 from pathlib import Path, PurePosixPath
 
 from cadrumo.core.toml import load_toml
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .authority_staging import selected_published_authority
 from .dependency_contract import validate_frozen_exports

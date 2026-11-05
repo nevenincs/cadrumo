@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..native.docs_errors import DocsPackagingError
 from ..native.docs_scan import ServedMediaTypes, css_references, scan_page, scan_stylesheet, served_media_types

@@ -52,8 +52,8 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING, Final, cast, override
 
-from dev._paths import REPO_ROOT
 from dev.exit_codes import FAILED, OK
+from dev.paths import REPO_ROOT
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence

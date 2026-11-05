@@ -10,7 +10,7 @@ from typing import Final, cast
 from pydantic import ValidationError
 
 from cadrumo.core.toml import TomlDecodeError, parse_toml
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .legal_reference_models import LegalNoteLanguageSpan, LegalProvisionRecord, LegalReferenceError
 

@@ -14,7 +14,7 @@ import pytest
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.toml import load_toml
 from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .._distribution_limits import PYPI_FILE_CAP_BYTES
 from ..authority_staging import authoring_authority_root

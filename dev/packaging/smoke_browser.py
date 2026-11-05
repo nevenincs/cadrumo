@@ -6,7 +6,7 @@ import argparse
 import os
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .dependency_contract import requirement_name, wheel_metadata
 from .lane_verification_core import (

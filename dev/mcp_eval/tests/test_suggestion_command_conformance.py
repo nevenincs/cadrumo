@@ -69,13 +69,13 @@ from cadrumo.core.operator_action_enums import ActionEvidenceProvenance
 from cadrumo.entrypoints.cli.tests.live_command_validation import (
     command_option_names,
 )
-from dev._paths import REPO_ROOT
 from dev.locales.locale_nodes import LocaleNode
 from dev.locales.locale_yaml import locale_catalogue_source
 from dev.locales.manager import LocaleManager
 from dev.mcp_eval._action_coverage import LeafConditionScenario, production_leaf_condition_scenario_matrix
 from dev.mcp_eval._models import ExitCodeScenario, ObservedProductionActionAssertion, observe_production_action
 from dev.mcp_eval._runner import check_exit_code_scenario
+from dev.paths import REPO_ROOT
 
 from ._real_cli_support import command_program_path, program_root_command
 

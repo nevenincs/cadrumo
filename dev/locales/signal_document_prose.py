@@ -9,7 +9,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .signal_command_paths import executable_command_paths
 from .signal_policy import LOCALES

@@ -26,8 +26,8 @@ from pathspec import PathSpec
 
 from cadrumo.core.directory_scan import iter_directory, scan_directory
 from cadrumo.core.toml import parse_toml
-from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT
 
 from ..hook import (
     UPSTREAM_SCHEMA_VERSION,

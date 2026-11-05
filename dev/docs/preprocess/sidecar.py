@@ -27,7 +27,7 @@ import re
 from pathlib import Path
 from typing import Final
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .schema import PreprocessOutput
 

@@ -22,8 +22,8 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT, UTF_8
 from dev.first_party_source import is_test_source
+from dev.paths import REPO_ROOT, UTF_8
 
 TUI_ROOT: Final[Path] = REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "tui"
 RUNTIME_TUI_ROOT: Final[Path] = REPO_ROOT / "src" / "cadrumo_runtime" / "host" / "frontend" / "tui"

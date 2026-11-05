@@ -16,8 +16,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT
 from dev.first_party_source import MCP_PACKAGE, PRODUCT_SOURCE_ROOTS
+from dev.paths import REPO_ROOT
 
 PRODUCT_SOURCE_DIRS: Final[tuple[Path, ...]] = tuple(REPO_ROOT / root for root in PRODUCT_SOURCE_ROOTS)
 SRC_DIR: Final[Path] = PRODUCT_SOURCE_DIRS[0]

@@ -30,7 +30,7 @@ from enum import StrEnum
 from hashlib import sha256
 from typing import Final
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 STATE_SEPARATOR: Final[str] = "--"
 SEQUENCE_PREFIX: Final[str] = "seq-"

@@ -11,7 +11,7 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any, cast
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..command_execution import run_command
 from ..google_oauth import build_client_json, client_build_identity

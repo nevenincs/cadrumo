@@ -14,8 +14,8 @@ from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.logging import get_logger
 from cadrumo.core.product_identity import normalise_product_identity_references
-from dev._paths import REPO_ROOT
 from dev.first_party_source import is_test_source
+from dev.paths import REPO_ROOT
 from dev.quality.shared_scan import scanner_identity, shared_scan_result
 
 from ._subtree_move import (

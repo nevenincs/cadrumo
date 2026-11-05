@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.directory_scan import scan_directory
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .lane_contracts import Lane
 from .lane_recipe_commands import _exclusions_of, _marker_expression_of, _paths_of

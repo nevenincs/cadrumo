@@ -6,7 +6,7 @@ import json
 import re
 from typing import Final
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .signal_values import _is_json_object
 

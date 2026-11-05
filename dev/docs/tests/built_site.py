@@ -28,8 +28,8 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.tests.run_artifact import file_inputs_digest, run_artifact, run_scoped_digest
-from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import CommandResult, run_command
+from dev.paths import REPO_ROOT
 
 from ..compile_once import WITNESS_LANGUAGE, witness_build
 from ..i18n import SITE_ROOT_LANGUAGES
@@ -79,7 +79,7 @@ _INPUT_FILES: Final = (
     "pyproject.toml",
     "uv.lock",
     "dev/__init__.py",
-    "dev/_paths.py",
+    "dev/paths.py",
     "dev/cache_root.py",
     "dev/first_party_source.py",
     "dev/temporary_output.py",

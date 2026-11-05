@@ -10,7 +10,7 @@ from typing import Any
 
 from packaging.requirements import Requirement
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .assembly_identity import (
     StagedRecords,

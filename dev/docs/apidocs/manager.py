@@ -13,9 +13,9 @@ from typing import Final
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.tests.run_artifact import run_artifact
-from dev._paths import REPO_ROOT
 from dev.cache_root import dev_cache_dir
 from dev.first_party_source import FIRST_PARTY_ROOTS
+from dev.paths import REPO_ROOT
 
 from .type_aliases import public_type_aliases, type_alias_declarations
 

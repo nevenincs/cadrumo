@@ -14,7 +14,7 @@ from typing import Any
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.source_tree import normalised_content
 
 from ...command_execution import run_command

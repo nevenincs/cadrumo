@@ -6,7 +6,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .dependency_contract import assert_wheel_metadata_matches_pyproject, validate_frozen_exports
 from .lane_verification_core import (

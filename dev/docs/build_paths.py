@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 from cadrumo.core.storage_environment import configured_storage_root, resolve_storage_path
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 DOCS_BUILD_ROOT_ENV = "CADRUMO_DOCS_BUILD_ROOT"
 DEFAULT_DOCS_BUILD_ROOT = Path("build") / "docs"

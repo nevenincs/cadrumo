@@ -10,7 +10,7 @@ from contextlib import nullcontext
 from pathlib import Path
 from typing import Any, cast
 
-from dev._paths import COMPONENT_PINS_ROOT, REPO_ROOT
+from dev.paths import COMPONENT_PINS_ROOT, REPO_ROOT
 
 from .agent_runtime import stage_agent_runtime
 from .agent_runtime_validation import load_runtime_declaration

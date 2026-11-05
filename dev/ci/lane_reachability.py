@@ -7,7 +7,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 
 from cadrumo.core.directory_scan import scan_directory
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .lane_configuration import configured_marker_expression, configured_testpaths
 from .lane_contracts import DirectoryCoverageReport, Lane, ReachabilityReport, UnreachableTest

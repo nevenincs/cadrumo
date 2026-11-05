@@ -6,8 +6,8 @@ import sys
 
 import pytest
 
-from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT
 
 from .. import prepare_cli_demo, render_cli_demo
 

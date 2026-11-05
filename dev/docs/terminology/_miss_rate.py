@@ -22,7 +22,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .term_relevance_mapping import SweepResult, TermRelevanceMapping
 

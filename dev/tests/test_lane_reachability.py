@@ -74,7 +74,6 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
 from dev.ci.lane_configuration import configured_testpaths
 from dev.ci.lane_contracts import Lane
 from dev.ci.lane_ctest_commands import CTEST_EXTERNAL_TOOL_RECIPE, CTEST_MODULE_DIR, CTEST_RECIPE
@@ -88,6 +87,7 @@ from dev.ci.lane_marker_inventory import (
 )
 from dev.ci.lane_reachability import analyse_directory_coverage, analyse_reachability, ci_invoked_lanes, declared_lanes
 from dev.ci.lane_workflow_graph import ci_invoked_recipes, workflow_triggers
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

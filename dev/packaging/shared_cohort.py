@@ -39,8 +39,8 @@ from typing import Final, Literal
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.toml import parse_toml
-from dev._paths import REPO_ROOT, UTF_8
 from dev.cache_root import dev_cache_dir
+from dev.paths import REPO_ROOT, UTF_8
 from dev.source_tree import normalised_contents, repository_files
 
 from .authority_staging import selected_published_authority

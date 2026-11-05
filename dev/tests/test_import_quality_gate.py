@@ -28,9 +28,9 @@ from pathlib import Path
 import psutil
 import pytest
 
-from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import FAILED, TOOL_BROKEN
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT, UTF_8
 from dev.quality.import_authority import read_authority
 from dev.quality.import_candidate_inventory import module_is_test_scoped
 from dev.quality.import_check_models import Authority, RootPackage

@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.json_contract import Notice, NoticeSeverity
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..chrome_projection import _catalogue_leaves
 

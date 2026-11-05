@@ -48,7 +48,7 @@ from cadrumo.adapters.outbound.google.tests.installation_client_support import (
     synthetic_installation_client,
     write_installation_client,
 )
-from dev._paths import REPO_ROOT, UTF_8
+from dev.paths import REPO_ROOT, UTF_8
 from dev.registry.compiler.identity import REGISTRY_IDENTITY_STAMP_FILENAME
 from dev.registry.compiler.verdict_cache import shipped_verdict_location
 

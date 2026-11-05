@@ -11,8 +11,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT, UTF_8
 from dev.first_party_source import PRODUCT_PACKAGE, is_production_source
+from dev.paths import REPO_ROOT, UTF_8
 from dev.source_tree import normalised_contents, repository_files
 
 _SOURCE_SUFFIXES: Final[frozenset[str]] = frozenset({".py", ".toml", ".json", ".md"})

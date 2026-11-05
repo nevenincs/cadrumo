@@ -20,8 +20,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT, UTF_8
 
 from ._artifacts import FrameFailureKind, SequenceProvenance, ThemeName
 from ._viewports import Viewport

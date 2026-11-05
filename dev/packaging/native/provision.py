@@ -15,7 +15,7 @@ from typing import Any, cast
 
 from packaging.utils import canonicalize_name
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..command_execution import run_command
 from ..runtime_wheel_selection import plan_target_wheels

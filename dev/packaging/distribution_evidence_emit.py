@@ -27,7 +27,7 @@ from typing import Any, Final
 
 from pydantic import JsonValue
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .cohort_manifest import LoadedReleaseCohort
 from .command_execution import CommandResult

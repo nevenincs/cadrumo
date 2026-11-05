@@ -18,8 +18,8 @@ from typing import TYPE_CHECKING
 import pytest
 
 from cadrumo.core.storage_environment import STORAGE_ROOT
-from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _PROBE = """
 import sys
 from pathlib import Path
-import dev._paths
+import dev.paths
 from dev.env._dotenv import provision
 import dev.init.plan
 root = Path(sys.argv[1])

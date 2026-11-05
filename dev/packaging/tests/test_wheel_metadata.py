@@ -8,13 +8,13 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.toml import load_toml
-from dev._paths import REPO_ROOT
 from dev.packaging.dependency_contract import (
     assert_wheel_metadata_matches_pyproject,
     pyproject_surfaces,
     wheel_metadata,
 )
 from dev.packaging.wheel_metadata import read_wheel_metadata
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

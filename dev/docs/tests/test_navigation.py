@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 from bs4 import BeautifulSoup
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 

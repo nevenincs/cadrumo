@@ -8,7 +8,7 @@ from typing import Final
 
 from cadrumo.core.toml import read_toml
 from cadrumo.core.type_guards import is_str_keyed_dict
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 _UTF_8: Final[str] = UTF_8
 

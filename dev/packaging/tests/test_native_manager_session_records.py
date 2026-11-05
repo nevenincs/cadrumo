@@ -19,7 +19,7 @@ from cadrumo.core.hashing import canonical_json_bytes, reject_duplicate_json_mem
 from cadrumo.core.storage_taxonomy import StorageScope
 from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY
 from cadrumo_runtime.adapters.boot_record import runtime_boot_record_path
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

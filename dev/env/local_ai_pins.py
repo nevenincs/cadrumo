@@ -46,7 +46,7 @@ from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.toml import parse_toml
 from cadrumo.core.type_guards import is_object_list
 from dev import exit_codes
-from dev._paths import COMPONENT_PINS_ROOT, REPO_ROOT
+from dev.paths import COMPONENT_PINS_ROOT, REPO_ROOT
 
 PINS_PATH: Final = COMPONENT_PINS_ROOT / "local_ai_program.toml"
 

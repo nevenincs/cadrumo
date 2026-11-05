@@ -5,10 +5,10 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
 from dev.locales._spelling import load_dictionaries
 from dev.locales.signal_spelling import spellcheck_catalogues
 from dev.locales.signal_spelling_enrollment import check_dictionary_spelling_words, is_project_spelling
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

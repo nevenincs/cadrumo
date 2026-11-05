@@ -160,7 +160,7 @@ def test_fabricated_marker_does_not_authorize_a_different_quote(tmp_path: Path) 
 
 
 def test_real_bundled_deaccented_wording_is_proven_without_changing_it() -> None:
-    from dev._paths import REPO_ROOT
+    from dev.paths import REPO_ROOT
 
     record = next(row for row in read_legal_provisions(REPO_ROOT) if row.legal_id == "trlirnr-rdleg-5-2004:art-24")
     index = next(i for i, text in enumerate(record.required_text) if "aplicacion" in text)
@@ -171,7 +171,7 @@ def test_real_bundled_deaccented_wording_is_proven_without_changing_it() -> None
 
 
 def test_real_xml_source_requires_its_exact_anchored_wording() -> None:
-    from dev._paths import REPO_ROOT
+    from dev.paths import REPO_ROOT
 
     record = next(row for row in read_legal_provisions(REPO_ROOT) if row.legal_id == "real-decreto-ley-8-2023:art-18")
     assert record.corpus_ref.endswith(".xml#a1-10")

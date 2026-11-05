@@ -47,7 +47,7 @@ from cadrumo.application.inventory.registered_requests import (
 from cadrumo.application.inventory.service import InventoryMovementCommand
 from cadrumo.domain.contribuyente.inventory.corrections import inventory_refusal_key
 from cadrumo.domain.contribuyente.inventory.records import MovementKind, MovementRecord, ValuationMethod
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

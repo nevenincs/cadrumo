@@ -5,8 +5,8 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
-from dev._paths import UTF_8
 from dev.locales.write_guard import CatalogueWriteGuard
+from dev.paths import UTF_8
 
 from .locale_catalogue_io import _parse_catalogue, _render_catalogue
 from .locale_catalogue_messages import _apply_messages

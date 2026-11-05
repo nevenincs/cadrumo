@@ -25,7 +25,7 @@ from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path, PurePath, PurePosixPath, PureWindowsPath
 from typing import Any, Final, cast
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..command_execution import run_command
 from .application_environment import bind_build_provisioning, parse

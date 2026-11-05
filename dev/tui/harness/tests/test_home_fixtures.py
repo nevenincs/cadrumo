@@ -18,7 +18,7 @@ from cadrumo.entrypoints.tui.tests.home_fixtures import (
     HomeFixtureScenario,
     build_home_projection_fixture,
 )
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

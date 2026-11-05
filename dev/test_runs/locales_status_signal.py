@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Final
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .pytest_transcript_syntax import _normalize_root_cause
 from .signal_values import _is_json_object, _write_json_lines

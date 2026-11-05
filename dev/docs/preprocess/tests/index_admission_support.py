@@ -8,7 +8,7 @@ from pathlib import Path
 
 from vaultspec_rag.api import scan_codebase
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 
 def assert_source_is_indexable(source: Path, text_path: Path, root: Path) -> None:

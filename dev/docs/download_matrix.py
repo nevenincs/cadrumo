@@ -49,8 +49,8 @@ from typing import TYPE_CHECKING, Final
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 
 from cadrumo.core.toml import parse_toml
-from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.cohort_manifest import ArtifactKind
+from dev.paths import REPO_ROOT, UTF_8
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

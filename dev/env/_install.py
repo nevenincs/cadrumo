@@ -8,7 +8,7 @@ import sys
 from collections.abc import Mapping
 from pathlib import Path
 
-from dev._paths import AUTHORITY_ROOT_ENV, DEFAULT_AUTHORITY_ROOT
+from dev.paths import AUTHORITY_ROOT_ENV, DEFAULT_AUTHORITY_ROOT
 
 from ._venv import VENV, guard
 

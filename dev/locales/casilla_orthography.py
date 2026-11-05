@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from itertools import combinations, product
 from typing import TYPE_CHECKING, Final
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ._spelling import load_dictionaries
 from .signal_spelling import is_search_keyword_surface

@@ -10,9 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
 from dev.docs.build_paths import DOCS_BUILD_ROOT_ENV, docs_build_root
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT
 from dev.product_environment import clean_product_env
 from dev.tool_storage import TOOL_STORAGE_LOCATIONS, tool_storage_environment
 
@@ -40,7 +40,7 @@ def test_source_bootstrap_retains_console_root_and_authority_from_another_cwd(tm
         (
             "import json, os, sys",
             f"sys.path.insert(0, {str(REPO_ROOT)!r})",
-            "import dev._paths",
+            "import dev.paths",
             "from cadrumo.core.storage_environment import configured_storage_root",
             "print(json.dumps({'root': str(configured_storage_root()),",
             "'authority': os.environ['CADRUMO_AUTHORITY_ROOT'],",

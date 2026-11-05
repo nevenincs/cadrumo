@@ -14,7 +14,7 @@ import re
 import pytest
 
 from cadrumo.application.operations.error_detail import operation_error_detail_schema
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

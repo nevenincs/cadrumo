@@ -37,7 +37,6 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import UTF_8
 from dev.docs.pagefind_index import (
     DECIDED_INJECTED_RECORD_KINDS,
     InjectCallback,
@@ -46,6 +45,7 @@ from dev.docs.pagefind_index import (
     injected_record_kinds_in_index,
 )
 from dev.docs.tests.built_site import built_documentation_site
+from dev.paths import UTF_8
 
 if TYPE_CHECKING:
     from pagefind.index import PagefindIndex

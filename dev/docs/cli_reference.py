@@ -54,7 +54,7 @@ from typing import TYPE_CHECKING
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
-from dev._paths import AUTHORITY_ROOT_ENV
+from dev.paths import AUTHORITY_ROOT_ENV
 from dev.product_environment import ambient_product_settings_removed
 from dev.temporary_output import prepare_temp_root
 

@@ -8,7 +8,7 @@ import re
 from pathlib import Path
 from typing import cast
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .build_paths import build_paths
 

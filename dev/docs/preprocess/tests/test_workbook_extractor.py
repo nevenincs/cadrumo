@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..parts import split_units_by_budget
 from ..schema import (

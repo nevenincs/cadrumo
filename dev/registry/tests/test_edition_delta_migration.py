@@ -41,8 +41,8 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
 )
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
-from dev._paths import REPO_ROOT
 from dev.locales.manager import LocaleManager
+from dev.paths import REPO_ROOT
 from dev.test_runs.paths import test_log_root as development_log_root
 
 from ..analysis.delta_minimality import restatement_differences

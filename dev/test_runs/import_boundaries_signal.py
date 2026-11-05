@@ -9,8 +9,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT, UTF_8
 from dev.first_party_source import is_test_source
+from dev.paths import REPO_ROOT, UTF_8
 
 from .import_signal_projection import (
     _contract_path_deductions,

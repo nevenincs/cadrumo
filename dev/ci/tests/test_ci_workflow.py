@@ -13,8 +13,8 @@ from typing import Any
 import pytest
 import yaml
 
-from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT
 
 from ..lane_reachability import declared_lanes
 from ..lane_recipe_commands import resolved_recipe_commands

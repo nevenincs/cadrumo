@@ -10,8 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from dev import _paths
-from dev._paths import REPO_ROOT, TEMP_ROOT
+from dev import paths as repo_paths
+from dev.paths import REPO_ROOT, TEMP_ROOT
 
 from .. import paths
 from ..paths import (
@@ -98,8 +98,8 @@ def test_allocator_refuses_linked_log_destination(tmp_path: Path, monkeypatch: p
     outside = tmp_path / "outside"
     outside.mkdir()
     (temp / "logs").symlink_to(outside, target_is_directory=True)
-    monkeypatch.setattr(_paths, "REPO_ROOT", root)
-    monkeypatch.setattr(_paths, "TEMP_ROOT", temp)
+    monkeypatch.setattr(repo_paths, "REPO_ROOT", root)
+    monkeypatch.setattr(repo_paths, "TEMP_ROOT", temp)
     monkeypatch.setattr(paths, "REPO_ROOT", root)
     monkeypatch.setenv("CADRUMO_TEST_LOG_ROOT", str(temp))
     with pytest.raises(ValueError, match="link"):
@@ -164,8 +164,8 @@ def test_run_bases_validate_and_discover_declared_native_outputs(
     (build / "build-paths.json").write_text(
         json.dumps({"source": str(root), "paths": {"testing": "testing"}}), encoding="utf-8"
     )
-    monkeypatch.setattr(_paths, "REPO_ROOT", root)
-    monkeypatch.setattr(_paths, "TEMP_ROOT", root / ".tmp")
+    monkeypatch.setattr(repo_paths, "REPO_ROOT", root)
+    monkeypatch.setattr(repo_paths, "TEMP_ROOT", root / ".tmp")
     monkeypatch.setattr(paths, "REPO_ROOT", root)
     monkeypatch.setenv("CADRUMO_TEST_LOG_ROOT", str(build / "testing" / "run-logs"))
     monkeypatch.setenv("CADRUMO_SCRATCH_BASE", str(build / "testing" / "scratch"))
@@ -179,8 +179,8 @@ def test_run_bases_validate_and_discover_declared_native_outputs(
 def test_run_bases_reject_traversal_before_allocation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     root = tmp_path / "checkout"
     root.mkdir()
-    monkeypatch.setattr(_paths, "REPO_ROOT", root)
-    monkeypatch.setattr(_paths, "TEMP_ROOT", root / ".tmp")
+    monkeypatch.setattr(repo_paths, "REPO_ROOT", root)
+    monkeypatch.setattr(repo_paths, "TEMP_ROOT", root / ".tmp")
     monkeypatch.setenv("CADRUMO_SCRATCH_BASE", str(root / ".tmp" / ".." / "escape"))
     with pytest.raises(ValueError, match="traversal"):
         allocate_scratch_directory()

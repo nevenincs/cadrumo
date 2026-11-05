@@ -13,7 +13,7 @@ from typer.testing import CliRunner
 
 from cadrumo.domain.calculations.registry.authority_artifact import AuthorityComponentCodecError
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.registry.analysis import generated_tree_state, registry_status
 from dev.registry.pipeline import cli as pipeline_cli
 from dev.registry.pipeline.authority_publication import AuthorityDatabaseCurrencyStatus

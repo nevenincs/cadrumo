@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
-from dev._paths import REPO_ROOT
 from dev.first_party_source import CLIENT_PACKAGE, FIRST_PARTY_ROOTS
+from dev.paths import REPO_ROOT
 
 from ..manager import (
     _NON_OWNER_GENERIC_IMPORTS,

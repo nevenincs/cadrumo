@@ -54,7 +54,6 @@ from pydantic import ValidationError
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.toml import parse_toml
-from dev._paths import REPO_ROOT, UTF_8
 from dev.docs.download_matrix import load_descriptor, required_evidence_rows
 from dev.packaging.cohort_manifest import load_release_cohort
 from dev.packaging.evidence import (
@@ -64,6 +63,7 @@ from dev.packaging.evidence import (
     load_distribution_evidence,
 )
 from dev.packaging.python_cohort import load_python_cohort
+from dev.paths import REPO_ROOT, UTF_8
 from dev.source_tree import content_digest, repository_files
 
 _UTF_8: Final = UTF_8

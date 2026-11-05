@@ -9,7 +9,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.registry.compiler.loader import load_shared_catalogues
 from dev.registry.compiler.loader_cache import ModeloSource, discover_modelo_sources
 

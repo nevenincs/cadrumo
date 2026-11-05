@@ -96,7 +96,7 @@ foreach(helper installation installation_plan installation_currency installation
 endforeach()
 if(CADRUMO_TARGET MATCHES "^linux-")
   execute_process(COMMAND "${CADRUMO_DEV_PYTHON}" -B -c
-    "from dev._paths import REPO_ROOT; from dev.packaging.native.linux_desktop_runtime import DEPENDENCY_INPUTS; print(';'.join((REPO_ROOT / name).as_posix() for name in DEPENDENCY_INPUTS))"
+    "from dev.paths import REPO_ROOT; from dev.packaging.native.linux_desktop_runtime import DEPENDENCY_INPUTS; print(';'.join((REPO_ROOT / name).as_posix() for name in DEPENDENCY_INPUTS))"
     WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}"
     OUTPUT_VARIABLE linux_desktop_dependency_inputs OUTPUT_STRIP_TRAILING_WHITESPACE
     COMMAND_ERROR_IS_FATAL ANY)

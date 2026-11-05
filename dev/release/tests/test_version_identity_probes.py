@@ -36,8 +36,8 @@ from typing import NamedTuple, override
 import pytest
 
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
-from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT, UTF_8
 
 from ..version_identity import VersionIdentityError, pypi_projects_owning
 from ._https_connection_double import install_https_connection

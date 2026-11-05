@@ -32,7 +32,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..i18n import (
     MAX_CATALOGUE_REMOVALS_PER_RUN,

@@ -50,8 +50,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from dev._paths import REPO_ROOT, UTF_8
 from dev.first_party_source import PRODUCT_PACKAGE
+from dev.paths import REPO_ROOT, UTF_8
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .casilla_projection import project_casilla_search_records

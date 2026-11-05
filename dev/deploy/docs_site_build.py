@@ -14,10 +14,10 @@ from pathlib import Path
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import UTF_8
 from dev.docs.build_paths import docs_html_root
 from dev.docs.pagefind_index import IndexedRoot
 from dev.packaging.command_execution import CommandResult, run_command
+from dev.paths import UTF_8
 from dev.temporary_output import prepare_temp_root
 
 from .docs_site_commands import command_label

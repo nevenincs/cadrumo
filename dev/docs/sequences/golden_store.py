@@ -56,7 +56,7 @@ from pydantic import BaseModel, Field, JsonValue, StringConstraints, ValidationE
 from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, MASK_SENTINEL
-from dev._paths import REPO_ROOT, UTF_8
+from dev.paths import REPO_ROOT, UTF_8
 
 from .errors import SequenceGoldenError
 from .export_evidence import normalise_ledger_export_evidence, normalise_modelo_export_evidence

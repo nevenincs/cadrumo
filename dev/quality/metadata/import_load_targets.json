@@ -4154,7 +4154,6 @@
       },
       "targets": [
         "dev",
-        "dev._paths",
         "dev.acceptance",
         "dev.acceptance.aeat_request_capture",
         "dev.acceptance.aeat_request_capture.__main__",
@@ -4932,6 +4931,7 @@
         "dev.packaging.source_preflight",
         "dev.packaging.uv_constraints",
         "dev.packaging.wheel_metadata",
+        "dev.paths",
         "dev.product_environment",
         "dev.quality",
         "dev.quality.cyclic_gc",

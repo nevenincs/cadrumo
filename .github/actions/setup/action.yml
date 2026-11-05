@@ -57,7 +57,7 @@ runs:
       # Self-hosted runner services can carry a workstation authority override,
       # and the editable build inside `uv sync` honours a foreign
       # `CADRUMO_AUTHORITY_ROOT` as named. The unset keeps setup on this
-      # checkout's own `.authority`. `dev/_paths.py` re-seeds the variable to
+      # checkout's own `.authority`. `dev/paths.py` re-seeds the variable to
       # that directory for every later `python -m dev.*` tool, so CI exercises
       # the CHECKOUT posture, never the packaged default.
       #

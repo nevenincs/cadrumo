@@ -11,7 +11,7 @@ from textual.widgets import DataTable
 
 from cadrumo.entrypoints.tui.tests.frame import geometry_band, screen_text
 from cadrumo.entrypoints.tui.tests.workbench_fixtures import WORKBENCH_FIXTURES, WorkbenchFixtureScenario
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

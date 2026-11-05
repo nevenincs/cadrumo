@@ -13,7 +13,7 @@ import re
 import pytest
 
 from cadrumo.application.inventory.registered_options_operation import INVENTORY_OPTION_FAMILIES
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..desktop_chrome import DESKTOP_CHROME_KEYS
 

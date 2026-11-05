@@ -22,7 +22,7 @@ import pathlib
 import pytest
 
 from cadrumo.core.toml import parse_toml
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..uv_constraints import (
     export_runtime_constraints,

@@ -39,9 +39,9 @@ from typing import Any, Final
 
 import pytest
 
-from dev._paths import REPO_ROOT
 from dev.audit.report import IMPORT_QUALITY_RECIPE, import_quality_command
 from dev.exit_codes import TOOL_BROKEN, TOOL_MISSING
+from dev.paths import REPO_ROOT
 
 from .. import suite
 from ..suite import GATES, run_gate

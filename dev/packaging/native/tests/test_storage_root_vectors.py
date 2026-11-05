@@ -23,7 +23,7 @@ from cadrumo.core.storage_environment import (
 from cadrumo.core.tests.storage_roots import resolve_storage_root
 from cadrumo.core.type_guards import is_str_keyed_dict
 from cadrumo.tests.audited_process import ensure_text_completed_process, run_audited_process
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..storage_vectors import StorageRootVector, invalid_native_path_value, storage_root_vectors
 

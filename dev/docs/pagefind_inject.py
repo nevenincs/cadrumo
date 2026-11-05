@@ -49,7 +49,7 @@ from typing import TYPE_CHECKING, Final
 from pydantic import ValidationError
 
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import REPO_ROOT, UTF_8
+from dev.paths import REPO_ROOT, UTF_8
 
 from .i18n import SITE_ROOT_LANGUAGES
 from .pagefind_index import SHARED_INDEX_LANGUAGE

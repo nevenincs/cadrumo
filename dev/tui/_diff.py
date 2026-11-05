@@ -17,7 +17,7 @@ from pathlib import Path
 
 from PIL import Image, ImageChops
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from ._artifacts import Manifest, RenderedFrame
 

@@ -9,7 +9,7 @@ from cadrumo.application.aggregation.invoice_retencion import InvoiceWithholding
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.output_rendering import OutputFormat
 
-from ..._paths import REPO_ROOT
+from ...paths import REPO_ROOT
 from ..signal_command_paths import command_path_pattern, executable_command_paths
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

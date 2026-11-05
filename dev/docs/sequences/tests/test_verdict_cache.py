@@ -100,8 +100,8 @@ def _engine_importing_helpers(root: Path) -> tuple[Path, Path]:
             "    from dev.lazy_helper import launch\n"
         ),
         "dev/packaging/__init__.py": "",
-        "dev/packaging/command_execution.py": "from dev._paths import REPO_ROOT\n",
-        "dev/_paths.py": "REPO_ROOT = None\n",
+        "dev/packaging/command_execution.py": "from dev.paths import REPO_ROOT\n",
+        "dev/paths.py": "REPO_ROOT = None\n",
         "dev/lazy_helper.py": "def launch() -> None: ...\n",
         "dev/typing_only.py": "class Shape: ...\n",
         "dev/registry/__init__.py": "",
@@ -121,7 +121,7 @@ def test_the_closure_follows_runtime_dev_imports_and_skips_typing_and_registry_t
     closure = engine_import_closure(repo)
 
     assert "dev/packaging/command_execution.py" in closure
-    assert "dev/_paths.py" in closure
+    assert "dev/paths.py" in closure
     assert "dev/lazy_helper.py" in closure
     assert "dev/packaging/__init__.py" in closure
     assert "dev/typing_only.py" not in closure
@@ -132,7 +132,7 @@ def test_the_closure_follows_runtime_dev_imports_and_skips_typing_and_registry_t
     ("relative", "changes_key"),
     [
         ("dev/packaging/command_execution.py", True),
-        ("dev/_paths.py", True),
+        ("dev/paths.py", True),
         ("dev/lazy_helper.py", True),
         ("dev/typing_only.py", False),
         ("dev/registry/pipeline/publication.py", False),

@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.directory_scan import scan_directory
-from dev._paths import UTF_8
 from dev.first_party_source import TEST_DIRECTORY
+from dev.paths import UTF_8
 from dev.source_tree import repository_files
 
 from .lane_contracts import TestMarkers

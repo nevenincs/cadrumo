@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..command_execution import run_command
 from ..lane_verification_core import installed_product_env, venv_bin_dir

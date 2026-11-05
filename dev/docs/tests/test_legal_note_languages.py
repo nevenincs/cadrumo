@@ -12,8 +12,8 @@ from pydantic import ValidationError
 
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
-from dev._paths import REPO_ROOT
 from dev.locales.signal_documentation_inventory import inventory_generated_document_file
+from dev.paths import REPO_ROOT
 
 from ..compile_slots import _educated, activate, deactivate
 from ..legal_catalogue import load_legal_provisions

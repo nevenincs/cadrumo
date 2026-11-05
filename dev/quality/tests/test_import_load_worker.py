@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.tests.module_target_inventory import assert_all_target_sets_current, load_all_target_sets
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.quality import import_load_worker
 from dev.quality.import_authority import read_authority
 from dev.quality.import_binding_inventory import read_modules

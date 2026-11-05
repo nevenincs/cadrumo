@@ -72,8 +72,8 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT, UTF_8
 from dev.first_party_source import PRODUCT_PACKAGE
+from dev.paths import REPO_ROOT, UTF_8
 from dev.product_environment import ambient_product_settings_removed
 from dev.temporary_output import prepare_temp_root
 

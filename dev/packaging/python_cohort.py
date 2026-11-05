@@ -22,9 +22,9 @@ from packaging.requirements import Requirement
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
-from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.command_execution import CommandResult, run_command
 from dev.packaging.google_oauth import build_client_json, stage_build_client
+from dev.paths import REPO_ROOT, UTF_8
 from dev.source_tree import member_content_digest, repository_files, snapshot
 from dev.temporary_output import prepare_temp_root, resolve_temporary_output
 

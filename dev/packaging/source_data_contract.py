@@ -6,8 +6,8 @@ import ast
 import zipfile
 from pathlib import Path, PurePosixPath
 
-from dev._paths import UTF_8
 from dev.first_party_source import is_test_source
+from dev.paths import UTF_8
 from dev.quality.source_import_analysis import wheel_exclude_globs
 from dev.source_tree import repository_files
 

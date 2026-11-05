@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.source_tree import repository_files, snapshot
 from dev.temporary_output import prepare_temp_root, resolve_temporary_output
 

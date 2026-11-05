@@ -48,7 +48,6 @@ import pathspec
 import pytest
 
 from cadrumo.core.toml import load_toml
-from dev._paths import REPO_ROOT, UTF_8
 from dev.first_party_source import (
     DEPENDENCY_DECLARATION_ROOTS,
     DEVELOPMENT_TOOLING,
@@ -57,6 +56,7 @@ from dev.first_party_source import (
     SOURCE_PACKAGES,
     is_production_source,
 )
+from dev.paths import REPO_ROOT, UTF_8
 from dev.quality.suite import GATES
 from dev.source_tree import repository_files
 

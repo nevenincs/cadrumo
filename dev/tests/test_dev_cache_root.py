@@ -14,8 +14,8 @@ import pytest
 
 from cadrumo.core.storage_environment import configured_storage_root
 from cadrumo.tests.env_scope import scoped_env_var
-from dev._paths import REPO_ROOT
 from dev.cache_root import DEFAULT_DEV_CACHE_ROOT, DEV_CACHE_ROOT_ENV, dev_cache_dir, dev_cache_root
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -42,7 +42,7 @@ from uuid import UUID
 import psutil
 
 from cadrumo_runtime.application.development_root import mark_development_root
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.temporary_output import prepare_temp_root
 
 from .backend_probe import logged_problems, runtime_alive, source_programs

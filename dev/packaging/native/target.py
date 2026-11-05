@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..runtime_wheelhouse_contract import target_platform
 

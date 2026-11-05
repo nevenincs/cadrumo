@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import AUTHORITY_ROOT_ENV, DEFAULT_AUTHORITY_ROOT
+from dev.paths import AUTHORITY_ROOT_ENV, DEFAULT_AUTHORITY_ROOT
 
 from .._install import sync_command, sync_environment
 

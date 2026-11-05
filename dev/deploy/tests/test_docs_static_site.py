@@ -23,12 +23,12 @@ import dev.docs.i18n as _docs_i18n
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.tests.env_scope import scoped_env_var
-from dev._paths import REPO_ROOT
 from dev.docs import compile_once as _compile_once
 from dev.docs.build import pagefind_index_mode
 from dev.docs.build_paths import docs_site_prefix
 from dev.docs.pagefind_index import DECIDED_INJECTED_RECORD_KINDS
 from dev.docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV, should_check_sequences
+from dev.paths import REPO_ROOT
 
 from .. import docs_delivery_activation as _docs_delivery_activation
 from .. import docs_site_build as _docs_site_build

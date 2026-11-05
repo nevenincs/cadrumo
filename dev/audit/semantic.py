@@ -17,8 +17,8 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import cast
 
-from dev._paths import REPO_ROOT
 from dev.first_party_source import is_test_source
+from dev.paths import REPO_ROOT
 
 
 def _json_object(value: object) -> dict[str, object] | None:

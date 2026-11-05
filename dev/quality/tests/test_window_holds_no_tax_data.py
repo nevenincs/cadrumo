@@ -126,7 +126,7 @@ from cadrumo.domain.invoices.enums import iva_rate_percentage, iva_rate_slots_on
 from cadrumo.domain.invoices.service import BARE_LEGAL_FORMS
 from cadrumo.domain.iva.errors import IvaRateNotFoundError
 from cadrumo.domain.transactions.enums import CLASSIFIED_STATES, TransactionDirection
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -179,7 +179,6 @@ from cadrumo.core.directory_scan import (
 )
 from cadrumo.core.errors.hierarchy import CorpusAnchorResolutionError
 from cadrumo.core.text_fold import normalise_corpus_text
-from dev._paths import REPO_ROOT, UTF_8
 from dev.corpus.fetch_boe_normative import (
     NormativeAcquisitionError,
     article_block_title,
@@ -188,6 +187,7 @@ from dev.corpus.fetch_boe_normative import (
 )
 from dev.corpus.text import resolve_anchored_extracted_unit
 from dev.docs.preprocess.normatives_html import render_normative_prose
+from dev.paths import REPO_ROOT, UTF_8
 
 from .legal_catalogue import load_legal_entries
 from .legal_citation_keys import candidate_keys, structural_key

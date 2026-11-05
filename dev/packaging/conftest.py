@@ -25,7 +25,7 @@ import contextlib
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .build_scratch_reclaim import sweep_build_scratch, sweep_var_scratch
 

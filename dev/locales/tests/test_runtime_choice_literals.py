@@ -26,7 +26,7 @@ from cadrumo.domain.contribuyente.inventory.records import MovementKind, Valuati
 from cadrumo.domain.modelos.filing_record import FilingDeclarationKind
 from cadrumo.domain.renta.actividad_asset.disposal import ADMITTED_DISPOSAL_REASONS
 from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..signal_command_paths import _command_graphs, executable_command_paths
 from ..signal_spelling_segments import translation_spelling_segments

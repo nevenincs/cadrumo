@@ -13,7 +13,7 @@ import json
 from pathlib import Path
 from typing import Final
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .dependency_contract import assert_wheel_metadata_matches_pyproject, validate_frozen_exports, wheel_metadata
 from .distribution_names import normalise_distribution_name

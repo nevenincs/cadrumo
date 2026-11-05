@@ -11,8 +11,8 @@ import pytest
 from cadrumo.core.errors.hierarchy import CorpusAnchorResolutionError
 from cadrumo.core.text_fold import normalise_corpus_text
 from cadrumo.tests.audited_process import run_audited_process
-from dev._paths import REPO_ROOT as _REPO_ROOT
 from dev.corpus.text import resolve_anchored_extracted_unit
+from dev.paths import REPO_ROOT as _REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

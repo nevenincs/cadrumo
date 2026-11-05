@@ -31,7 +31,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .action_cache import action_lock
 from .build_directory import require_enrolled_build

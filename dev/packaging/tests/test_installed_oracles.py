@@ -29,7 +29,7 @@ from typing import Any
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.product_environment import ambient_product_settings_removed, clean_product_env
 from dev.source_tree import repository_files, snapshot
 

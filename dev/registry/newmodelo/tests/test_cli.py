@@ -9,7 +9,7 @@ from typing import Final
 import pytest
 from typer.testing import CliRunner
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..checklist import CHECKLIST
 from ..cli import _default_manager, app

@@ -45,7 +45,7 @@ jobs:
           set -euo pipefail
           title='Documentation availability check failed'
           existing=$(gh issue list --state open --search "$title in:title" --json number,title --jq '.[] | select(.title == "Documentation availability check failed") | .number' | head -n 1)
-          alert="$(uv run --no-sync python -c 'from dev._paths import prepare_temporary_directory; print(prepare_temporary_directory() / "docs-alert.md")')"
+          alert="$(uv run --no-sync python -c 'from dev.paths import prepare_temporary_directory; print(prepare_temporary_directory() / "docs-alert.md")')"
           printf 'Public documentation verification failed. Inspect the HTTP checks and release identities.\n\nRun: %s\n' "$RUN_URL" > "$alert"
           if [ -n "$existing" ]; then
             gh issue edit "$existing" --body-file "$alert"

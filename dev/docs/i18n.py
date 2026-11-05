@@ -47,8 +47,8 @@ if not (__package__ is not None and __package__):
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import sha256_file
-from dev._paths import REPO_ROOT
 from dev.first_party_source import is_test_source
+from dev.paths import REPO_ROOT
 from dev.temporary_output import prepare_temp_root
 
 from .build import docs_build_jobs, ensure_isolated_storage_root

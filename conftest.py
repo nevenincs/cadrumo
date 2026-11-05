@@ -152,7 +152,7 @@ os.environ["CADRUMO_STORAGE_ROOT"] = str(_PURE_STDLIB_COLLECTION_ROOT)
 _PURE_STDLIB_AUTHORITY_ROOT = Path(__file__).resolve().parent / ".authority"
 """This checkout's published authority, kept outside the packaged tree.
 
-Mirrors ``dev._paths.DEFAULT_AUTHORITY_ROOT`` exactly. That module seeds the
+Mirrors ``dev.paths.DEFAULT_AUTHORITY_ROOT`` exactly. That module seeds the
 same variable for every ``python -m dev.*`` entry point, but it is private to
 ``dev`` and nothing this conftest already imports reaches it, so the value is
 spelled out here in pure stdlib for the same reason the collection storage root
@@ -164,7 +164,7 @@ A real ambient value stays authoritative, so a run pointed at another authority
 tree -- a release verification against staged bytes, say -- is not overridden by
 the checkout's own. A BLANK one does not count as ambient: ``Settings`` carries
 ``env_ignore_empty``, so an empty variable exported by a shell profile reads as
-unset there and would resolve the PACKAGED location, while ``dev._paths`` seeds
+unset there and would resolve the PACKAGED location, while ``dev.paths`` seeds
 the checkout's own for every other entry point. Testing the value rather than
 its mere presence is what keeps pytest and the dev tooling on one answer.
 """

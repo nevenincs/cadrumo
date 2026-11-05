@@ -56,8 +56,8 @@ from pathlib import Path
 from typing import Final, TextIO
 
 from cadrumo.core.link_safety import is_link_like
-from dev._paths import REPO_ROOT
 from dev.packaging.build_scratch_reclaim import matching_family, report_build_scratch, report_var_scratch
+from dev.paths import REPO_ROOT
 from dev.source_tree import ignored_paths
 from dev.test_runs.reaper import assess_run_directories, assess_scratch_directories
 

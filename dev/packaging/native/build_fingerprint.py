@@ -35,7 +35,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any, cast
 
 from cadrumo.core.toml import parse_toml
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .build_directory import require_enrolled_build
 from .build_paths import build_paths

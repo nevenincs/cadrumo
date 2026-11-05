@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Final, cast
 from urllib.parse import unquote
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..google_oauth import GOOGLE_OAUTH_RESOURCE
 

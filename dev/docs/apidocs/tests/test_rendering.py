@@ -28,7 +28,7 @@ from cadrumo_runtime.host.frontend.tui.secret.runtime_login_contracts import (
 from cadrumo_runtime.host.frontend.tui.secret.runtime_login_session import (
     RuntimeClientOpener as SessionRuntimeClientOpener,
 )
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..rendering import TypeHintsFormatter, format_type_hint
 from ..type_aliases import public_type_aliases

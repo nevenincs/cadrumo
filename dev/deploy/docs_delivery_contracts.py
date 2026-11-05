@@ -6,7 +6,6 @@ import re
 from dataclasses import dataclass
 from typing import Final
 
-from dev._paths import UTF_8
 from dev.deploy.cloudflare_api import (
     CloudflareAccount,
     WorkerRoute,
@@ -15,6 +14,7 @@ from dev.deploy.docs_asset_manifest import (
     STATIC_SCRIPT,
 )
 from dev.deploy.r2_objects import R2Bucket
+from dev.paths import UTF_8
 
 CANONICAL_DOCS_BASE_URL = "https://cadrumo.neve.md/docs"
 

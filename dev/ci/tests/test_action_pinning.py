@@ -31,7 +31,7 @@ import yaml
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.toml import parse_toml
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..workflow_run_text import executed_text
 

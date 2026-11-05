@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ...runtime_wheel_selection import marker_environment, plan_target_wheels
 from ...runtime_wheelhouse_contract import target_platform

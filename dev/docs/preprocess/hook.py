@@ -34,7 +34,7 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
-from dev._paths import REPO_ROOT, UTF_8
+from dev.paths import REPO_ROOT, UTF_8
 
 from .schema import ExtractionStatus, PreprocessOutput
 

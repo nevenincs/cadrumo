@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ...runtime_wheelhouse_contract import target_platform
 from ..agent_runtime import STAGED_RECEIPT_NAME, STAGED_RUNTIME_TREES

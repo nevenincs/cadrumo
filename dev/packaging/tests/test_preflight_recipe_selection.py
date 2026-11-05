@@ -80,7 +80,7 @@ from typing import Final
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..campaign import PytestPass, campaign_pytest_argv, pytest_pass_argv
 from ..command_execution import run_command

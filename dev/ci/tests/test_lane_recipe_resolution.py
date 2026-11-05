@@ -20,7 +20,7 @@ from typing import Final
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..lane_recipe_commands import _recipe_bodies, _recipes_invoked_by
 from ..lane_workflow_graph import _workflow_run_steps

@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from dataclasses import asdict
 from typing import cast
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 
 def _select_python_toolchain(

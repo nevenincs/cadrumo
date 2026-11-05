@@ -16,7 +16,7 @@ from hatchling.builders.config import BuilderConfig
 from hatchling.builders.sdist import SdistBuilder
 from hatchling.builders.wheel import WheelBuilder
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .test_google_oauth_provisioning import client_document
 

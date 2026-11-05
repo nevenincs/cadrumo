@@ -26,7 +26,7 @@ if str(_REPO_ROOT) not in sys.path:
 if not (__package__ is not None and __package__):
     __package__ = "dev.packaging"
 
-REPO_ROOT = importlib.import_module("dev._paths").REPO_ROOT
+REPO_ROOT = importlib.import_module("dev.paths").REPO_ROOT
 _STORAGE_ENVIRONMENT = importlib.import_module("cadrumo.core.storage_environment")
 resolve_storage_path = _STORAGE_ENVIRONMENT.resolve_storage_path
 tool_storage_environment = importlib.import_module("dev.tool_storage").tool_storage_environment

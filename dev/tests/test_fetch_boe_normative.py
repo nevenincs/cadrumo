@@ -28,7 +28,6 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
-from dev._paths import REPO_ROOT
 from dev.corpus import fetch_boe_normative
 from dev.corpus.fetch_boe_normative import (
     NormativeAcquisitionError,
@@ -42,6 +41,7 @@ from dev.corpus.fetch_boe_normative import (
     version_selections,
 )
 from dev.docs.preprocess.sidecar import PreprocessSidecarError, load_sidecar, sidecar_paths_for
+from dev.paths import REPO_ROOT
 from dev.registry.compiler.corpus_catalogue import verify_source_file
 from dev.registry.compiler.loader import load_shared_catalogues
 

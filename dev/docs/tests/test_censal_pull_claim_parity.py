@@ -27,7 +27,7 @@ import re
 import pytest
 
 from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

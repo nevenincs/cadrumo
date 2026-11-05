@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from cadrumo.core.toml import load_toml, parse_toml
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .distribution_names import normalise_distribution_name
 from .lane_verification_core import run_checked

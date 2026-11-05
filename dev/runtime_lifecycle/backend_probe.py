@@ -38,7 +38,7 @@ from typing import Any
 
 from cadrumo.core.errors.failure_report import failure_chain
 from cadrumo_runtime.application.development_root import mark_development_root
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.temporary_output import prepare_temp_root
 
 from .agent_service_session import agent_service_session

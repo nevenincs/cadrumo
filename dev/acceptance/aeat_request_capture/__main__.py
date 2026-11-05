@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Final
 from uuid import uuid4
 
-from dev._paths import REPO_ROOT, TEMP_ROOT
+from dev.paths import REPO_ROOT, TEMP_ROOT
 
 from .flows import ReadFlow, UnknownFlowSelectorError, select_flows
 

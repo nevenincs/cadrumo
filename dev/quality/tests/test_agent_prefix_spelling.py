@@ -56,7 +56,7 @@ import pytest
 
 from cadrumo.tests.audited_process import run_audited_process
 from cadrumo_agent_service.host.launch_environment import system_environment
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.source_tree import repository_files
 
 from ..unread_inputs import report_unread

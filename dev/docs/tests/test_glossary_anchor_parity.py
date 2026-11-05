@@ -36,7 +36,7 @@ from docutils.utils import new_document
 from sphinx.util.nodes import make_id
 
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..glossary_reference import render_glossary
 from ..pagefind_inject import _SUMMARY_MAX_CHARS, _summary_for

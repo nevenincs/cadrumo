@@ -13,7 +13,7 @@ from itertools import islice
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .duplication import DuplicationResult, run_duplication_scan
 

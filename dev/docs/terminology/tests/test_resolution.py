@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..resolution import ChunkHit, TargetResolver

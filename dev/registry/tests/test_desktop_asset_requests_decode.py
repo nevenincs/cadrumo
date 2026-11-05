@@ -63,7 +63,7 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     AssetBasisStage,
 )
 from cadrumo.domain.renta.actividad_asset.vehicle_affectation import VehicleCategory, VehiclePrivateUse
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

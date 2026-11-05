@@ -44,7 +44,7 @@ from typing import Literal
 import pytest
 from pydantic import BaseModel
 
-from dev._paths import REPO_ROOT, UTF_8
+from dev.paths import REPO_ROOT, UTF_8
 
 from .perf_measurement import process_tree_cpu
 

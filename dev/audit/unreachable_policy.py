@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from typing import Final
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 _UTF_8: Final[str] = UTF_8
 

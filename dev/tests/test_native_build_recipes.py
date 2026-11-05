@@ -31,9 +31,9 @@ from typing import Any
 
 import pytest
 
-from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import CommandResult, run_command
 from dev.packaging.runtime_wheelhouse_contract import target_platform
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 

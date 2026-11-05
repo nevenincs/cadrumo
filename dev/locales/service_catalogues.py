@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ._paths import LOCALES_DIR
 from .locale_nodes import LocaleNode

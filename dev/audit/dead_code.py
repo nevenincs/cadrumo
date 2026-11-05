@@ -51,10 +51,10 @@ from typing import Final
 import vulture
 from vulture.config import InputError, make_config
 
-from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import ADVISORY_BROKEN, OK
 from dev.first_party_source import DEVELOPMENT_TOOLING, PACKAGING_HOOKS, SOURCE_PACKAGES
 from dev.packaging.command_execution import CommandResult, run_command
+from dev.paths import REPO_ROOT, UTF_8
 from dev.quality.shared_scan import scanner_identity, shared_scan_result
 
 _UTF_8: Final[str] = UTF_8

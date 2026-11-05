@@ -43,7 +43,7 @@ from typing import Final
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..lane_contracts import Lane
 from ..lane_marker_inventory import expression_selects, marker_sets_in

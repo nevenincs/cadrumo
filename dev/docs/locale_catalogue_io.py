@@ -8,7 +8,7 @@ from pathlib import Path
 from babel.messages.catalog import Catalog, Message
 from babel.messages.pofile import read_po, write_po
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .locale_mutation_contracts import DocumentationLocaleMutationError
 

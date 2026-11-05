@@ -7,8 +7,8 @@ import shutil
 import sys
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import CommandResult, run_command
+from dev.paths import REPO_ROOT
 
 DOCS = REPO_ROOT / "docs"
 EXTERNAL_URL = "https://example.org/"

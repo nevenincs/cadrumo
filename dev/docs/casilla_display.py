@@ -6,7 +6,7 @@ import os
 import re
 from typing import TYPE_CHECKING, Final
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ._locale_chrome import docs_chrome
 from .legal_catalogue import load_legal_provisions

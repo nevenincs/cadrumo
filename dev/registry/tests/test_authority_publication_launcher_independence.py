@@ -28,7 +28,7 @@ from typer.testing import CliRunner
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..pipeline.authority_publication import authority_source_identity
 from ..pipeline.cli import app as pipeline_app

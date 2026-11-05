@@ -29,8 +29,8 @@ from typing import TYPE_CHECKING, Final
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev._paths import REPO_ROOT
 from dev.first_party_source import is_test_source
+from dev.paths import REPO_ROOT
 from dev.quality.shared_scan import shared_scan_result
 
 from ..compiler.compiler_source_tree import compiler_source_tree_digest

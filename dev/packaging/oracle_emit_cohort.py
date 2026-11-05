@@ -21,8 +21,8 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
-from dev._paths import UTF_8
 from dev.packaging.command_execution import run_command
+from dev.paths import UTF_8
 
 from .acquire_common import AcquisitionError, run_installed_cli_oracle, venv_executable
 from .cohort_manifest import load_release_cohort

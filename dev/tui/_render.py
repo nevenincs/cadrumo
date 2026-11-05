@@ -8,7 +8,7 @@ from pathlib import Path
 
 import typer
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from . import _harness, _raster, _viewports
 from ._artifacts import (

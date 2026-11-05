@@ -21,8 +21,8 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Regist
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormLayoutDefinition, FormPlacementDefinition
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
-from dev._paths import REPO_ROOT
 from dev.packaging import authority_staging
+from dev.paths import REPO_ROOT
 from dev.registry.compiler.loader import load_modelo_directory
 from dev.registry.edition_delta_assessment import MigrationAssessment, assess_migration_state
 from dev.registry.tests.test_restated_family_merge import _build_modelo

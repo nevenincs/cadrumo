@@ -9,8 +9,8 @@ from pathlib import Path
 from typing import cast
 
 from cadrumo.core.toml import parse_toml
-from dev._paths import REPO_ROOT, UTF_8
 from dev.first_party_source import DEVELOPMENT_TOOLING, PACKAGING_HOOKS, SOURCE_PACKAGES, is_test_source
+from dev.paths import REPO_ROOT, UTF_8
 from dev.quality.source_import_analysis import (
     is_shipped_module,
     module_name_for,

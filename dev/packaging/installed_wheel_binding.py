@@ -9,8 +9,8 @@ import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 
-from dev._paths import UTF_8
 from dev.packaging.command_execution import run_command
+from dev.paths import UTF_8
 
 _GENERATED_METADATA = frozenset({"INSTALLER", "RECORD", "REQUESTED", "direct_url.json", "uv_cache.json"})
 

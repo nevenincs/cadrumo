@@ -14,7 +14,7 @@ from typing import override
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..runtime_wheel_acquisition import _acquire_all, _store_in_cache, grouped_wheel_requests
 from ..runtime_wheel_selection import _runtime_rows, plan_runtime_wheelhouses

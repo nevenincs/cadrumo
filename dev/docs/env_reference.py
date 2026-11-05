@@ -37,7 +37,6 @@ from pydantic import SecretStr
 from pydantic_core import PydanticUndefined
 
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.native.application_environment import load
 from dev.packaging.native.environment_declaration_constants import BASE_GROUPS, NAME_ROLES
 from dev.packaging.native.environment_models import (
@@ -46,6 +45,7 @@ from dev.packaging.native.environment_models import (
     Invocation,
     InvocationArgument,
 )
+from dev.paths import REPO_ROOT, UTF_8
 
 from ._locale_chrome import docs_chrome
 from .build import docs_build_language

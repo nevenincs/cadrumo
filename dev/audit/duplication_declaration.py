@@ -7,7 +7,7 @@ import io
 import tokenize
 from pathlib import Path
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .duplication_declaration_rules import (
     declaration_docstring,

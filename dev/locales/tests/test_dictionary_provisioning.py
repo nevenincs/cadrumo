@@ -20,8 +20,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from dev._paths import REPO_ROOT
 from dev.init import plan
+from dev.paths import REPO_ROOT
 
 from .. import dictionary_provisioning as provisioning
 from .._spelling import DICTIONARY_SPECS, dictionary_roots, load_dictionaries

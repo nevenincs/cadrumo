@@ -21,7 +21,7 @@ from PIL import Image
 from cadrumo.core.storage_environment import STORAGE_ROOT
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_location
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..build_stamp import BuildStamp, display_version
 from ..hashing import digest

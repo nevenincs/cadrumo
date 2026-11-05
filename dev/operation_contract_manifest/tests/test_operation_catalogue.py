@@ -35,7 +35,7 @@ from cadrumo.entrypoints.tests.production_operation_registry import (
 )
 from cadrumo.entrypoints.tests.source_tree_support import SourceTree, module_level_bindings
 from cadrumo.tests.inventory import package_python_files, python_files_under, releases_parsed_sources
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

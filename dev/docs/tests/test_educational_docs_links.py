@@ -18,7 +18,7 @@ from tempfile import TemporaryDirectory
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
-from dev._paths import REPO_ROOT, UTF_8
+from dev.paths import REPO_ROOT, UTF_8
 
 from ..cli_reference import generate_cli_reference_in_subprocess
 

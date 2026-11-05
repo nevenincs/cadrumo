@@ -37,9 +37,9 @@ from typing import Final
 import grimp
 from grimp.exceptions import GrimpException
 
-from dev._paths import REPO_ROOT
 from dev.docs.sequences.verdict_cache import engine_import_closure
 from dev.first_party_source import DEVELOPMENT_TOOLING, PACKAGING_HOOKS, SOURCE_PACKAGES
+from dev.paths import REPO_ROOT
 
 __all__ = [
     "CHANGE_CLASS_RULES",

@@ -12,7 +12,7 @@ from yamllint.config import YamlLintConfig
 from yamllint.linter import run as run_yamllint
 
 from cadrumo.core.toml import TomlDecodeError, parse_toml
-from dev._paths import REPO_ROOT, UTF_8
+from dev.paths import REPO_ROOT, UTF_8
 from dev.source_tree import repository_files
 
 _SUFFIXES: Final[frozenset[str]] = frozenset({".toml", ".yaml", ".yml"})

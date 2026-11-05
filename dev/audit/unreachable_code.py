@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 from cadrumo.core.toml import TomlDecodeError
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .unreachable_findings import _FormCodes, _module_findings, _symbol_findings, _test_findings
 from .unreachable_form_codes import coded_enum_sources, declared_form_codes

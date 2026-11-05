@@ -37,7 +37,7 @@ from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import 
     synthetic_legal_identity,
 )
 from cadrumo.domain.user_profile.schema import ProfileSchemaDefinition
-from dev._paths import DEFAULT_AUTHORITY_ROOT, REPO_ROOT
+from dev.paths import DEFAULT_AUTHORITY_ROOT, REPO_ROOT
 
 from ..compiler import authority_database as authority_database_compiler
 from ..compiler.authority_database import build_authority_database, require_acyclic_authority_dependencies

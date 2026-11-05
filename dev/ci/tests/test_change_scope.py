@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..change_scope import (
     CHANGE_CLASS_RULES,
@@ -219,7 +219,7 @@ def test_unclassified_non_python_change_selects_only_the_contract_set(tmp_path: 
         "dev/docs/sequences/runner.py",
         "dev/docs/build.py",
         "dev/packaging/command_execution.py",
-        "dev/_paths.py",
+        "dev/paths.py",
         "src/cadrumo/entrypoints/cli/app.py",
         "src/cadrumo/_data/registry/aeat/modelo_303/2025.toml",
         "src/cadrumo/locales/es/LC_MESSAGES/cadrumo.po",

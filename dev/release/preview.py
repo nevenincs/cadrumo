@@ -17,7 +17,7 @@ import subprocess
 import sys
 
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
-from dev._paths import REPO_ROOT, UTF_8
+from dev.paths import REPO_ROOT, UTF_8
 
 #: Where the dry-run transcript is written for review.
 LOG_PATH = REPO_ROOT / "var" / "release" / "release-please.log"

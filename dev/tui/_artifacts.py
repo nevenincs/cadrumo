@@ -24,7 +24,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from dev._paths import TEMP_ROOT, UTF_8
+from dev.paths import TEMP_ROOT, UTF_8
 from dev.temporary_output import prepare_temp_root
 
 from ._inventory import InterfaceKind

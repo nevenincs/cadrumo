@@ -8,9 +8,9 @@ import shutil
 from pathlib import Path
 from typing import Final
 
-from dev._paths import UTF_8
 from dev.first_party_source import FIRST_PARTY_ROOTS
 from dev.packaging.command_execution import run_command
+from dev.paths import UTF_8
 from dev.test_runs.lanes import lane_command_parser
 
 from .lane_contracts import Lane

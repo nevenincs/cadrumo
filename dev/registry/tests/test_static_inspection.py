@@ -7,7 +7,7 @@ import ast
 import pytest
 
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..compiler.authority import compiled_bundled_authority
 

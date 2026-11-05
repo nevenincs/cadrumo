@@ -9,7 +9,7 @@ import pytest
 from babel.messages.catalog import Catalog
 from babel.messages.pofile import read_po, write_po
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .. import i18n
 from ..i18n import _EXCLUDED_FILES, prune_orphan_catalogues, relocate_template_locations, sync_catalogue_locations

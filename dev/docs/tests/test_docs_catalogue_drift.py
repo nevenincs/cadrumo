@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 from babel.messages.pofile import read_po
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..i18n import TARGET_LANGUAGES, extract_pot, user_scope_source_pages
 

@@ -32,7 +32,7 @@ import yaml
 
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import lookup_translation
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .._locale_chrome import docs_chrome
 from ..site_chrome import site_chrome, site_labels

@@ -26,7 +26,7 @@ from typing import Final
 
 from packaging.utils import canonicalize_name, parse_sdist_filename, parse_wheel_filename
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .package_index_probe import (
     EndpointQueryPolicy,

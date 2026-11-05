@@ -7,8 +7,8 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import CommandResult, run_command
+from dev.paths import REPO_ROOT
 
 
 def _repo_root() -> Path:

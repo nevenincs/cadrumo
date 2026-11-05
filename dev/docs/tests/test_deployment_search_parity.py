@@ -62,7 +62,6 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import REPO_ROOT
 from dev.deploy.docs_delivery_contracts import CANONICAL_DOCS_BASE_URL, MIRROR_DOCS_BASE_URL
 from dev.deploy.docs_delivery_probe import public_delivery_checks
 from dev.deploy.docs_site_build import indexed_roots
@@ -73,6 +72,7 @@ from dev.deploy.docs_site_languages import (
     source_root_build_environment,
     translated_roots_compile_command,
 )
+from dev.paths import REPO_ROOT
 
 from ..build import docs_build_language, pagefind_index_mode, resolve_record_injector
 from ..pagefind_index import DECIDED_INJECTED_RECORD_KINDS, SHARED_INDEX_LANGUAGE, build_shared_search_index

@@ -6,7 +6,7 @@ from collections import defaultdict
 from collections.abc import Mapping, Sequence, Sized
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .manager import (
     LocaleManager,

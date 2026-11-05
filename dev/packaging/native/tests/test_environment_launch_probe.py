@@ -18,7 +18,7 @@ from typing import Any
 import psutil
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .stand_in_launch import StandIn, build, generated_contract, host_command
 

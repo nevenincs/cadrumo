@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import COMPONENT_PINS_ROOT
 from dev.packaging.native.layout import entrypoint_files, load_layout
+from dev.paths import COMPONENT_PINS_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

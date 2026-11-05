@@ -12,9 +12,9 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
 from dev.packaging.tests.test_native_installation import payload_fixture
+from dev.paths import REPO_ROOT
 
 from ..distribution_prepare import refresh
 from ..hashing import digest

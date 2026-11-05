@@ -21,7 +21,7 @@ from packaging.utils import canonicalize_name
 
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.toml import parse_toml
-from dev._paths import AUTHORITY_ROOT_ENV, REPO_ROOT
+from dev.paths import AUTHORITY_ROOT_ENV, REPO_ROOT
 
 from ..authority_staging import selected_published_authority
 from ..command_execution import run_command

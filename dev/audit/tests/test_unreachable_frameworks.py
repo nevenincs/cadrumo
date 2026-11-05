@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..unreachable_definitions import source_definitions
 from ..unreachable_frameworks import framework_contracts

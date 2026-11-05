@@ -13,7 +13,7 @@ import sys
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .._key import INGEST_CORPUS_ROOT_ENV
 

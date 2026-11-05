@@ -33,7 +33,7 @@ from packaging.utils import canonicalize_name
 from packaging.version import Version
 
 from cadrumo.core.toml import parse_toml
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..command_execution import run_command
 from ..runtime_wheel_selection import active_requirements, marker_environment

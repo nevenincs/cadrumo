@@ -18,7 +18,7 @@ import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..casilla_reference import render_casilla_reference
 from ..casilla_reference_models import CasillaReferenceResult

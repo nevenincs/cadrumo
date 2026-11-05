@@ -34,8 +34,8 @@ from typing import Final
 
 from packaging.markers import InvalidMarker, Marker
 
-from dev._paths import UTF_8
 from dev.packaging.command_execution import run_command
+from dev.paths import UTF_8
 
 from .distribution_names import normalise_distribution_name
 

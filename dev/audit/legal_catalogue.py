@@ -30,11 +30,11 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.toml import freeze_toml, parse_toml
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 from dev.registry.compiler.loader_materialisation import validate_catalogue_section
 from dev.registry.compiler.runtime_catalogues import published_recargo_bands
 
-#: Sourced from ``dev._paths`` so the dev harness has one owner for it. The
+#: Sourced from ``dev.paths`` so the dev harness has one owner for it. The
 #: directory walk is imported from its canonical defining module above.
 _UTF_8: Final[str] = UTF_8
 

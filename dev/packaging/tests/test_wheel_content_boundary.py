@@ -45,12 +45,12 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.toml import parse_toml
-from dev._paths import REPO_ROOT
 from dev.packaging.authority_staging import (
     AUTHORING_AUTHORITY_DIRECTORY,
     AUTHORITY_ROOT_ENV,
     authoring_authority_root,
 )
+from dev.paths import REPO_ROOT
 from dev.source_tree import repository_files, snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

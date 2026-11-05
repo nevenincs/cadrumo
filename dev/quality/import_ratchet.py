@@ -8,7 +8,7 @@ from datetime import date
 from pathlib import Path
 from typing import Final, cast
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .import_check_models import Authority
 from .import_health_models import (

@@ -8,7 +8,7 @@ import json
 from collections.abc import Mapping, Sequence
 from typing import override
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .import_check_models import Authority, ImportOccurrence, SourceModule
 from .import_dynamic_aliases import DYNAMIC_TARGET_KEYWORDS, DynamicLoaderKind, dynamic_aliases

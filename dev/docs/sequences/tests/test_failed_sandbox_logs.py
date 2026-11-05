@@ -9,7 +9,7 @@ import pytest
 
 from cadrumo.core.logging import default_log_file_path, flush_logging
 from cadrumo.tests.env_scope import derived_storage_settings
-from dev._paths import TEMP_ROOT
+from dev.paths import TEMP_ROOT
 
 from ..checks import _with_notes
 from ..errors import SequenceExecutionError

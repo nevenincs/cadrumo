@@ -43,7 +43,7 @@ import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.modelo import Modelo
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..glossary_reference import generate_glossary_reference
 from ..pagefind_index import build_search_index

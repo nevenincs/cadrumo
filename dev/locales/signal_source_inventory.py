@@ -8,8 +8,8 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import cast
 
-from dev._paths import UTF_8
 from dev.first_party_source import is_test_source
+from dev.paths import UTF_8
 
 from .manager import (
     LocaleManager,

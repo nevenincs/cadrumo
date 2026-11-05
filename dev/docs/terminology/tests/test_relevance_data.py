@@ -34,7 +34,7 @@ from typing import TypedDict
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ...terminology_handbook.loader import load_terminology_handbook

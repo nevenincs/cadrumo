@@ -15,7 +15,7 @@ from typing import Any, override
 import pytest
 
 from cadrumo_agent_service.host.launch_environment import EXTERNAL_BIN_DIRECTORIES_VARIABLE
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from .. import environment_facts
 from ..environment_conformance import (

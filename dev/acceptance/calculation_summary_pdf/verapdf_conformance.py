@@ -48,10 +48,10 @@ from cadrumo.application.modelo.calculation_report import ModeloCalculationRepor
 from cadrumo.application.modelo.calculation_summary_pdf_ports import CSV_ATTACHMENT_NAME
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import sha256_file
-from dev._paths import REPO_ROOT
 from dev.cache_root import dev_cache_dir
 from dev.exit_codes import FAILED, OK, TOOL_MISSING
 from dev.packaging.command_execution import run_command
+from dev.paths import REPO_ROOT
 
 VERAPDF_VERSION: Final[str] = "1.28.2"
 VERAPDF_JAR_PATH: Final[str] = (

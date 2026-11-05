@@ -15,7 +15,7 @@ from urllib.parse import parse_qs, unquote, urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, ValidationError
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from ._review_catalogue import CatalogueFrame, ElementView, RunView
 from ._review_payloads import state_payload

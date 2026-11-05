@@ -10,8 +10,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from cadrumo.core.storage_environment import resolve_storage_path
-from dev._paths import UTF_8
 from dev.first_party_source import is_test_module_name
+from dev.paths import UTF_8
 
 from .import_check_models import Authority, ImportOccurrence
 from .import_health_models import (

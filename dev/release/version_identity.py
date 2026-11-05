@@ -93,7 +93,7 @@ from typing import Final
 from packaging.version import InvalidVersion, Version
 
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
-from dev._paths import REPO_ROOT, UTF_8
+from dev.paths import REPO_ROOT, UTF_8
 
 from .burned_versions import BurnedVersionLedgerError, burn_reason, canonical_version, is_burned
 from .package_index_probe import (

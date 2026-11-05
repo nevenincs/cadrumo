@@ -25,7 +25,7 @@ import time
 from dataclasses import dataclass
 from typing import IO, TYPE_CHECKING
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from .paths import allocate_run_directory, test_log_root
 

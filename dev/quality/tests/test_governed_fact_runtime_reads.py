@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.toml import parse_toml
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 from ..source_import_analysis import module_name_for, resolve_relative_import
 

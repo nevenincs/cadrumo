@@ -10,7 +10,7 @@ from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from pathlib import Path
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.temporary_output import prepare_temp_root, resolve_temporary_output
 
 from .build_scratch_reclaim import require_build_path

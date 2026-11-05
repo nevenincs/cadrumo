@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import sys
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 
 def _echo(text: str) -> None:

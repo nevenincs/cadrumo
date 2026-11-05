@@ -50,7 +50,7 @@ from cadrumo.core.concept_lifecycle import ConceptLifecycle
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.toml import TomlDecodeError, parse_toml
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 
 from ._locale_chrome import chrome_anchor, docs_chrome
 from .build import docs_build_language

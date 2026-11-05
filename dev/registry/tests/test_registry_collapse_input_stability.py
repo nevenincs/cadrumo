@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.registry.registry_collapse_inputs import _tool_input_paths
 from dev.registry.registry_collapse_run import _tool_fingerprints
 

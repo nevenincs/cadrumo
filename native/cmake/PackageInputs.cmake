@@ -22,7 +22,7 @@ function(cadrumo_product_inputs output source_root)
   endforeach()
   list(REMOVE_DUPLICATES trees)
   foreach(name README.md LICENSE NOTICE pyproject.toml uv.lock .gitignore .gitattributes
-      dev/.gitignore dev/.gitattributes dev/source_tree.py dev/_paths.py dev/__init__.py
+      dev/.gitignore dev/.gitattributes dev/source_tree.py dev/paths.py dev/__init__.py
       dev/packaging/__init__.py dev/packaging/authority_staging.py dev/packaging/command_execution.py
       dev/packaging/google_oauth.py dev/packaging/wheel_metadata.py dev/packaging/runtime_wheelhouse_contract.py)
     if(EXISTS "${source_root}/${name}")

@@ -29,13 +29,13 @@ from typing import Any, Literal, override
 
 import pytest
 
-from dev._paths import REPO_ROOT
 from dev.ci.modelo_runtime_benchmark import (
     RuntimeBenchmarkRecorder,
     _patch_function_aliases,
     _Total,
     record_runtime_tree,
 )
+from dev.paths import REPO_ROOT
 
 _JOURNEY = "src/cadrumo_runtime/host/tests/frontend/tui/test_profile_wizard_native.py"
 _CLI_JOURNEY = "src/cadrumo/entrypoints/cli/tests/test_censo_credentials_native.py"

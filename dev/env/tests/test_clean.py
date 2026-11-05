@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT, UTF_8
+from dev.paths import REPO_ROOT, UTF_8
 from dev.test_runs.reaper import PID_TRUST_CEILING_SECONDS
 
 from ..clean import (

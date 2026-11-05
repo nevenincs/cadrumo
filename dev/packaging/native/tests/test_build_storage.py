@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 from dev.tool_storage import tool_storage_environment
 
 from ...command_execution import run_command
@@ -32,7 +32,7 @@ def test_dev_paths_import_preserves_machine_caches_and_temporary_paths(tmp_path:
         "import os,sys; "
         f"sys.path.insert(0,{str(REPO_ROOT)!r}); "
         f"names={names!r}; before={{name:os.environ[name] for name in names}}; "
-        "import dev._paths; assert before == {name:os.environ[name] for name in names}"
+        "import dev.paths; assert before == {name:os.environ[name] for name in names}"
     )
     result = run_command([sys.executable, "-I", "-B", "-c", program], environment=environment, cwd=REPO_ROOT)
     assert result.returncode == 0, result.stderr

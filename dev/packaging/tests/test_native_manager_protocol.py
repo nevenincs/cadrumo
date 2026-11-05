@@ -28,7 +28,7 @@ from cadrumo_runtime.host.supervised_protocol import (
     decode_supervisor_command,
     encode_runtime_announcement,
 )
-from dev._paths import REPO_ROOT
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

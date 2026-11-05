@@ -85,7 +85,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from dev._paths import UTF_8
+from dev.paths import UTF_8
 from dev.sanitizer.residual_identity import ResidualKind, checksum_valid_spans, identity_authority_scope
 from dev.source_tree import is_nested_repository
 from dev.source_tree import repository_files as _visible_repository_files

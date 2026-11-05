@@ -13,7 +13,6 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core import config_google
-from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
 from dev.packaging.google_oauth import (
     GOOGLE_OAUTH_ENV,
@@ -22,6 +21,7 @@ from dev.packaging.google_oauth import (
     client_build_identity,
     stage_build_client,
 )
+from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
