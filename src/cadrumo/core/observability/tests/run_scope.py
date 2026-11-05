@@ -11,11 +11,12 @@ from datetime import datetime
 from ...config import load_settings
 from ...identity.digest import ContentDigest, ContentDigestOrAbsent
 from ...logging import get_logger
+from ...storage_taxonomy import RUN_EVENTS_FILENAME
 from ...time.clock import now
 from ..capture import CAPTURE_SINK
 from ..context import RUN_CONTEXT_VAR, STEP_CONTEXT_VAR, RunContextInfo
 from ..models import ArgumentRecord, RunEventKind, RunEventPayload, RunOutcome, RunTrace, StepBoundaryPayload
-from ..store import EVENTS_FILENAME, run_dir, save_envelope, save_trace, validate_run_id
+from ..store import run_dir, save_envelope, save_trace, validate_run_id
 from .fingerprint import compute_corpus_sha256, compute_data_root_sha256, read_cert_fingerprint
 from .sink import JsonlRunSink
 from .sink_scope import attach_run_sink, detach_run_sink
@@ -39,7 +40,7 @@ _log = get_logger(__name__)
 _DEFAULT_INITIAL_STEP = "step-0"
 
 
-def _mint_run_id() -> str:
+def mint_run_id() -> str:
     """Return a fresh 16-character lowercase hex run identifier."""
     return uuid.uuid4().hex[:16]
 
@@ -60,7 +61,7 @@ def _build_initial_context(
     buggy caller from escaping the configured runs directory through
     inputs like ``"../etc"``.
     """
-    effective_run_id = validate_run_id(run_id) if run_id is not None else _mint_run_id()
+    effective_run_id = validate_run_id(run_id) if run_id is not None else mint_run_id()
     # `load_settings()` honours `override_settings`; bare `Settings()`
     # bypasses the context-var so test-side corpus-sha overrides never
     # propagate to the run-context fingerprint.
@@ -119,7 +120,7 @@ def _nested_run_context(
     record_event: Callable[..., object],
 ) -> Generator[RecordedRunContextInfo]:
     """Push and pop one nested step while reusing the outer run metadata."""
-    nested_step = step_id or f"{outer.initial_step_id}.{_mint_run_id()[:8]}"
+    nested_step = step_id or f"{outer.initial_step_id}.{mint_run_id()[:8]}"
     step_token = STEP_CONTEXT_VAR.set(nested_step)
     try:
         record_event(
@@ -269,7 +270,7 @@ def _outer_run_context(
 ) -> Generator[RecordedRunContextInfo]:
     """Own the outer sink, context variables, boundary events, and teardown."""
     target = run_dir(info.run_id)
-    sink = JsonlRunSink(target / EVENTS_FILENAME, run_id=info.run_id)
+    sink = JsonlRunSink(target / RUN_EVENTS_FILENAME, run_id=info.run_id)
 
     # Arm result-envelope capture for the run so the emitted ``SchemaEnvelope``
     # is persisted as run evidence. Nesting-aware: an outer capture scope owns

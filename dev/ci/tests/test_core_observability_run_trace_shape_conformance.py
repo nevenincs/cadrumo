@@ -83,7 +83,7 @@ def test_a_non_conforming_run_id_shape_is_rejected_by_the_grammar(tmp_path: Path
     """Positive control: the matcher can still fail.
 
     An uppercase or short run id is not the 16-lowercase-hex shape
-    ``_mint_run_id`` produces -- exactly the drift this grammar exists to
+    ``mint_run_id`` produces -- exactly the drift this grammar exists to
     catch, and a real writer refuses it before this test would ever see a
     path, so the malformed path is constructed directly.
     """

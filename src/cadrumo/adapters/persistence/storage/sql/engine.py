@@ -27,6 +27,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 from threading import Lock
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.engine.interfaces import DBAPIConnection
@@ -34,7 +35,6 @@ from sqlalchemy.engine.url import URL, make_url
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.pool import ConnectionPoolEntry, QueuePool
 
-from .....core.config import Settings, classify_storage_route, load_settings
 from .....core.config_state_root import FORMER_PRODUCT_DATABASE_FILENAME
 from .....core.config_support import StorageRouteKind
 from .....core.diagnostic_log import diagnostic_phase
@@ -45,6 +45,9 @@ from .....core.paths import resolve_project_path
 from ..errors import StorageError
 from ..master_key.bucket_session import KEY_RELEASE_PHASE_EVENT
 from ..storage_path_definitions import BUCKETS_DIRNAME
+
+if TYPE_CHECKING:
+    from .....core.config import Settings
 
 _log = get_logger(__name__)
 # Cache key axes: ("bucket", <resolved storage root>, <bucket id>) for
@@ -279,6 +282,8 @@ def _engine_cache_key(settings: Settings) -> _EngineCacheKey:
     spelled; explicit database URLs and the root-fallback database keep the
     URL itself as the key (the settings-driven direct path).
     """
+    from .....core.config import classify_storage_route
+
     route = classify_storage_route(settings)
     if route.kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE and (route.bucket_id is not None and route.bucket_id):
         root = str(settings.cadrumo_storage_root.expanduser().resolve())
@@ -305,6 +310,8 @@ def get_engine(settings: Settings | None = None) -> Engine:
         The cached :class:`~sqlalchemy.engine.Engine` for the resolved
         route, creating it on first access.
     """
+    from .....core.config import load_settings
+
     resolved = settings or load_settings()
     key = _engine_cache_key(resolved)
     with _lock:
