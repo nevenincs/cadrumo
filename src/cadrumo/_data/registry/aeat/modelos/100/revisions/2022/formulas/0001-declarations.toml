@@ -412,6 +412,42 @@ source_refs = ["aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["cuota diferencial", "pagos a cuenta"]
 [[revisions."2022".formulas]]
+id = "renta-resultado-declaracion"
+target_casilla_id = "0670"
+# Orden HFP/310/2023 (BOE-A-2023-8118, p. 46627) prints 0670 with the 2020
+# and 2021 maternity-deduction catch-up casillas 1912, 1913, 1915 and 1916 all
+# subtracted; the 2022 AEAT record-design dictionary prints 1913 and 1916 as
+# added, against the form.
+expression = { op = "sum", args = [
+    { casilla_id = "0610" },
+    { op = "negate", args = [{ casilla_id = "0611" }] },
+    { casilla_id = "0612" },
+    { op = "negate", args = [{ casilla_id = "0613" }] },
+    { op = "negate", args = [{ casilla_id = "1912" }] },
+    { op = "negate", args = [{ casilla_id = "1913" }] },
+    { op = "negate", args = [{ casilla_id = "1915" }] },
+    { op = "negate", args = [{ casilla_id = "1916" }] },
+    { op = "negate", args = [{ casilla_id = "0623" }] },
+    { casilla_id = "0624" },
+    { op = "negate", args = [{ casilla_id = "0636" }] },
+    { casilla_id = "0637" },
+    { op = "negate", args = [{ casilla_id = "0248" }] },
+    { casilla_id = "0249" },
+    { op = "negate", args = [{ casilla_id = "0660" }] },
+    { casilla_id = "0661" },
+    { op = "negate", args = [{ casilla_id = "0662" }] },
+    { casilla_id = "0663" },
+    { casilla_id = "0664" },
+    { casilla_id = "0666" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-103", "ley-35-2006:art-99"]
+source_refs = ["aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["resultado de la declaracion", "cuota diferencial", "Incremento de la deducción (cantidades no aplicadas en el ejercicio 2020 o 2021)", "Incremento por gastos en guarderías o centros de educación infantil autorizados"]
+[[revisions."2022".formulas]]
 id = "renta-reduccion-art-84-conjunta"
 target_casilla_id = "0461"
 # Art. 84.2 LIRPF: reducción por tributación conjunta.

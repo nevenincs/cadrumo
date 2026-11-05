@@ -96,11 +96,12 @@ _UNPRINTED_FORMULA_OPERANDS: Mapping[str, frozenset[str]] = {
     "0598": frozenset({"binding:renta-retencion-soportada-arrendamiento-actividad"}),
 }
 
-# The official label of the resultado casilla signs these maternity-deduction
-# carry-ins for earlier ejercicios as additions, while the AEAT manual treats
-# them as increments of a deduction. An edition whose label names one of them
-# withholds the resultado formula until that contradiction is ruled on.
-_CONTESTED_RESULTADO_CARRY_INS = frozenset({"1912", "1913", "1915", "1916"})
+# The record-design dictionary prints some of these maternity-deduction catch-up
+# increments for earlier ejercicios as additions to the resultado. The approving
+# order's form and the AEAT manual subtract every one of them as an increment of
+# a deduction, and the order prevails, so the oracle corrects only a label term
+# whose sign disagrees with the form.
+_RESULTADO_DEDUCTION_INCREMENTS = frozenset({"1912", "1913", "1915", "1916"})
 
 _WORK_CERTIFICATE = "renta-retencion-soportada-trabajo"
 _WORK_RETENCIONES_CASILLA = "0596"
@@ -238,6 +239,26 @@ def _expression_coefficients(expression: FormulaExpression) -> dict[str, int]:
     return {key: value for key, value in total.items() if value}
 
 
+def _resultado_label_sign_corrections(official: Mapping[str, int]) -> dict[str, int]:
+    """The form's sign for each deduction increment the resultado label prints with the opposite sign."""
+    return {key: -1 for key in official.keys() & _RESULTADO_DEDUCTION_INCREMENTS if official[key] != -1}
+
+
+def test_the_resultado_label_sign_correction_fires_in_some_supported_edition(
+    edition: Callable[[int], RegistrySnapshot],
+    registry_tree: tuple[tuple[object, ...], RegistryCatalogues],
+) -> None:
+    """The correction stays only while a supported edition's label still disagrees with its form."""
+    corrected = {
+        filing_year
+        for filing_year in SUPPORTED_YEARS
+        if _resultado_label_sign_corrections(
+            _label_coefficients(_dictionary_labels(edition(filing_year), registry_tree[1])[_RESULTADO])
+        )
+    }
+    assert corrected
+
+
 @pytest.mark.parametrize("filing_year", SUPPORTED_YEARS)
 def test_settlement_formulas_reproduce_the_official_label_arithmetic(
     edition: Callable[[int], RegistrySnapshot],
@@ -252,9 +273,8 @@ def test_settlement_formulas_reproduce_the_official_label_arithmetic(
         official = _label_coefficients(labels[casilla_id])
         assert official, (filing_year, casilla_id, labels[casilla_id])
         formula = formulas.get(casilla_id)
-        if casilla_id == _RESULTADO and official.keys() & _CONTESTED_RESULTADO_CARRY_INS:
-            assert formula is None, (filing_year, "resultado is authored over a contested label")
-            continue
+        if casilla_id == _RESULTADO:
+            official |= _resultado_label_sign_corrections(official)
         assert formula is not None, (filing_year, casilla_id)
         assert formula.id == formula_id
         coefficients = _expression_coefficients(formula.expression)
@@ -323,14 +343,7 @@ def test_settlement_chain_credits_the_work_certificate_against_the_cuota(
     assert credited[_CUOTA_RESULTANTE] == resultante
     assert credited[_CUOTA_DIFERENCIAL] == resultante - retencion
 
-    formulas = {formula.target_casilla_id for formula in snapshot.revision.formulas}
-    if _RESULTADO in formulas:
-        assert credited[_RESULTADO] == credited[_CUOTA_DIFERENCIAL]
-    else:
-        # Withheld over a contested label, the resultado stays a manual box the
-        # filer must state; the engine never derives it.
-        resultado = next(item for item in snapshot.revision.casillas if item.id == _RESULTADO)
-        assert resultado.input_kind is InputKind.MANUAL, filing_year
+    assert credited[_RESULTADO] == credited[_CUOTA_DIFERENCIAL], filing_year
 
 
 @pytest.mark.parametrize("filing_year", SUPPORTED_YEARS)
