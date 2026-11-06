@@ -94,7 +94,9 @@ def test_country_refund_never_offsets_another_country_payment(revision):
 
 @pytest.mark.parametrize("country", ["US", "XI", "de", "", None])
 def test_invalid_or_missing_country_cannot_disappear_from_settlement(revision, country):
-    with pytest.raises(RegistryValidationError):
+    # A malformed country is refused; a missing one is an unknown fact, so the total stays unresolved.
+    expected = UnresolvedFormulaDependencyError if country is None else RegistryValidationError
+    with pytest.raises(expected):
         _scenario(revision, country=country)
 
 
