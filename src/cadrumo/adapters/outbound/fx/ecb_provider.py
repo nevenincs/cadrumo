@@ -21,7 +21,7 @@ A transport or protocol failure raises
 an unreachable ECB must not be indistinguishable from a currency the ECB does
 not publish, which would silently degrade ledger rows to a zero EUR value.
 
-The default transport (:func:`_https_fetch`) reaches the live European Central
+The default transport (:func:`https_fetch`) reaches the live European Central
 Bank host unconditionally, because reaching it is what this adapter is for.
 Holding a deterministic suite off that host is a TEST concern, carried by the
 ``aeat_live`` marker rather than by a production branch: a deterministic suite

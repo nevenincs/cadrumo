@@ -688,7 +688,7 @@ def classify_target(
 ) -> TargetClassification:
     """Resolve one target's hits into a value or a failure category.
 
-    Mirrors the per-target arm of :func:`_extract_profile_values`: bbox targets
+    Mirrors the per-target arm of :func:`extract_profile_values`: bbox targets
     without word data are ``missing``; no hits is ``missing``; multiple hits is
     ``ambiguous``; an unparseable amount is ``malformed``; otherwise the captured
     value is returned as an :class:`ExtractedCasilla`.
@@ -1000,7 +1000,7 @@ def numeric_casilla_anchors(
     same accident that hid the defect in the blank-box guard, and it would end the
     moment a semantically-named casilla is given this strategy.
 
-    Unlike :func:`_printed_box_numbers` this refuses rather than degrading. A
+    Unlike :func:`printed_box_numbers` this refuses rather than degrading. A
     missing printed number leaves the guard without a safety net, which is
     tolerable; here it means the target cannot be addressed at all, which is a
     registry-integrity error of the same kind as a target naming a casilla that
@@ -1038,7 +1038,7 @@ def parser_printed_box_numbers(
     """Map ``named_label`` target ids to their printed box number, where one exists.
 
     Feeds :func:`_is_own_box_number_of_blank_box`, which needs to recognise the
-    token a BLANK box leaves behind. Unlike :func:`_numeric_casilla_anchors` this
+    token a BLANK box leaves behind. Unlike :func:`numeric_casilla_anchors` this
     is lenient: a target whose printed number the registry does not record simply
     has no box number to compare against, and is left unguarded rather than
     refused.
@@ -1106,7 +1106,7 @@ def extract_pages_words(pdf_path: Path) -> tuple[list[PdfWord], ...]:
 def _extract_pages_words_from_bytes(pdf_bytes: bytes) -> tuple[list[PdfWord], ...]:
     """Extract per-page word-position dicts from in-memory PDF bytes.
 
-    Mirrors :func:`_extract_pages_words` but opens an in-memory
+    Mirrors :func:`extract_pages_words` but opens an in-memory
     :class:`~io.BytesIO` stream so decrypted declaration bytes never have to be
     written to a plaintext scratch file to satisfy ``pdfplumber.open``.
     """

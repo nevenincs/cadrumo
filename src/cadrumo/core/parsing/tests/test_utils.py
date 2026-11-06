@@ -1,6 +1,6 @@
 """Real-behaviour tests for :mod:`cadrumo.core.parsing.utils`.
 
-Contract under test, :func:`_parse_bool`:
+Contract under test, :func:`utils_parse_bool`:
 * Recognised truthy tokens  → True
 * Recognised falsy tokens   → False
 * Absent / empty / unknown  → None  (caller picks fallback)

@@ -543,7 +543,7 @@ NUMERIC_GROUNDING_BY_FORM: Mapping[InvoiceFieldForm, Callable[[str | None, str |
 }
 """Validators for the declared forms whose grounded value becomes a Decimal.
 
-Split from :data:`_TEXT_GROUNDING_BY_FORM` by RETURN TYPE, not by convenience:
+Split from :data:`TEXT_GROUNDING_BY_FORM` by RETURN TYPE, not by convenience:
 one table would have to be typed as a union and every call site would need a
 runtime narrow, trading a static guarantee for a dead branch. Together the two
 tables must cover :class:`~llm.invoice_field_contract.InvoiceFieldForm`

@@ -127,8 +127,8 @@ class ClaveMovilAuthProvider(ClaveMovilPageFlowMixin, ClaveMovilSessionSalvageMi
     configured non-QR confirmation flow or the alternate QR flow;
     resume runs headlessly because the stored cookies are sufficient.
 
-    The provider owns the lifecycle contract; :class:`_ClaveMovilPageFlowMixin`
-    supplies page-driving helpers, :class:`_ClaveMovilSessionSalvageMixin`
+    The provider owns the lifecycle contract; :class:`ClaveMovilPageFlowMixin`
+    supplies page-driving helpers, :class:`ClaveMovilSessionSalvageMixin`
     supplies the post-failure session-salvage helpers, and this class turns
     those browser outcomes into :class:`AeatSession`, :class:`AeatLoginAssertion`,
     and :class:`AuthProviderDescription` records.

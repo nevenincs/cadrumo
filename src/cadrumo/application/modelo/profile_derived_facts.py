@@ -329,7 +329,7 @@ def declared_profile_selectors(revision: ModeloRevision) -> frozenset[str]:
     A year the registry does not cover has no consuming binding, so the
     injector is a no-op rather than a silent wrong answer -- and if a binding
     IS declared and still resolves to nothing, the derived-scope advisory in
-    :func:`_derived_binding_diagnostics` reports it.
+    :func:`derived_binding_diagnostics` reports it.
 
     Takes ``revision`` as a :class:`ModeloRevision`.
     """

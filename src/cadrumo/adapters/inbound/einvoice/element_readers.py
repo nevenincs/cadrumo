@@ -64,7 +64,7 @@ def first_text(parent: Element, name: str) -> str | None:
 def direct_child_text(parent: Element, name: str) -> str | None:
     """Return the text of *parent*'s own child, never a deeper descendant.
 
-    The descendant walk :func:`_first_text` performs is right for a leaf stated
+    The descendant walk :func:`first_text` performs is right for a leaf stated
     once in a subtree, and wrong wherever the same local name is restated at a
     deeper level with a different meaning. A Facturae ``InvoiceHeader`` on a
     rectificativa carries the corrected invoice's identifier as
@@ -179,7 +179,7 @@ def ubl_country_code(party: Element) -> str | None:
     """Return a UBL party's stated country code (EN16931 BT-40 / BT-55).
 
     UBL carries it in ``cac:PostalAddress/cac:Country/cbc:IdentificationCode``,
-    beside the ``PostalZone`` :func:`_ubl_postal_code` already reads, and states
+    beside the ``PostalZone`` :func:`ubl_postal_code` already reads, and states
     it in ISO 3166-1 alpha-2. Carried verbatim for the same reason the Facturae
     code is: what a document states is a read, what a code MEANS is not the
     parser's question.
@@ -227,7 +227,7 @@ def cii_country_code(party: Element) -> str | None:
     """Return a CII party's stated country code (EN16931 BT-40 / BT-55).
 
     CII carries it in ``ram:PostalTradeAddress/ram:CountryID``, its own element
-    beside the ``PostcodeCode`` :func:`_cii_postal_code` already reads, and
+    beside the ``PostcodeCode`` :func:`cii_postal_code` already reads, and
     states it in ISO 3166-1 alpha-2 -- the system UBL uses, not Facturae's
     alpha-3. Carried verbatim regardless: resolving what a code MEANS belongs to
     the country authority, and doing it here would make this module a second one.

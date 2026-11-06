@@ -3,9 +3,9 @@
 The wizard walks an operator through a work unit's outstanding manual-input
 casillas and bindings/relations in plain language, then calls the same
 :func:`~application.modelo.calculate_input.calculate_modelo_work_revision` composition
-path :mod:`_modelo_work_calculate_cli` uses. This module documents the JSON
+path :mod:`modelo_work_calculate_cli` uses. This module documents the JSON
 transport shape only; the wizard's step-by-step prompting and calculation
-delegation live in :mod:`_modelo_work_wizard_cli`. Every payload here is an
+delegation live in :mod:`modelo_work_wizard_cli`. Every payload here is an
 :class:`OutputSchema` subclass exposed through the command specification.
 """
 
