@@ -36,8 +36,6 @@ from dev.fixture_projections.location import family_directory
 from dev.fixture_projections.producer_output import emit, producer_arguments
 from dev.prettier_json import dump_json
 
-RECORDING = family_directory("desktop-year-authority") / "yearAuthority.json"
-
 
 def _handoff_boxes(operation: PinnedAuthorityOperation, tax_year: int) -> dict[str, object]:
     """Name the boxes a year's handoff fills, as the register's handoff names them, in every language."""
@@ -111,7 +109,11 @@ def render_fixture() -> str:
 def main() -> None:
     """Write, verify or redirect the year-authority recording."""
     arguments = producer_arguments(__doc__)
-    emit({RECORDING: render_fixture()}, arguments, remedy="just fixtures-seed desktop-year-authority")
+    emit(
+        {family_directory("desktop-year-authority") / "yearAuthority.json": render_fixture()},
+        arguments,
+        remedy="just fixtures-seed desktop-year-authority",
+    )
 
 
 if __name__ == "__main__":

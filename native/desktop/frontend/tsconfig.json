@@ -19,6 +19,8 @@
       "@/*": ["./src/*"],
       "@fixtures/*": [
         "../../../build/windows-x64/fixtures/window/*",
+        "../../../build/windows-installers-x64/fixtures/window/*",
+        "../../../build/windows-tests-x64/fixtures/window/*",
         "../../../build/linux-x86-64/fixtures/window/*",
         "../../../build/linux-aarch64/fixtures/window/*",
         "../../../build/macos-arm64/fixtures/window/*"

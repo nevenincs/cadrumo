@@ -25,7 +25,6 @@ from dev.fixture_projections.producer_output import emit, producer_arguments
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 
 SCRIPTS = Path(__file__).resolve().parent
-FIXTURES = family_directory("ledger-recordings")
 QUESTIONS = SCRIPTS.parents[3] / "dev" / "fixtures" / "ledger-recording-questions"
 
 _WIDTH = 80
@@ -165,7 +164,7 @@ def main() -> None:
     arguments = producer_arguments(__doc__)
     rendered = render_fixtures()
     emit(
-        {FIXTURES / f"{name}.json": text for name, text in rendered.items()},
+        {family_directory("ledger-recordings") / f"{name}.json": text for name, text in rendered.items()},
         arguments,
         remedy="uv run --no-sync python native/desktop/frontend/scripts/ledger_recordings.py",
     )
