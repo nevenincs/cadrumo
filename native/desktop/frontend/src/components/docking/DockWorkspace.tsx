@@ -65,6 +65,8 @@ export function DockWorkspace({
   fullscreen,
   panes,
   minimumWidths,
+  besideWidths,
+  minimumHeights,
   onChange,
   onActivate,
   onFocusPane,
@@ -81,6 +83,12 @@ export function DockWorkspace({
   panes: DockContent[];
   /** Content widths in CSS pixels; fitting never rewrites the saved layout. */
   minimumWidths?: Partial<Record<DockPane, number>>;
+  /** The widths in CSS pixels panes need to stand side by side; narrower,
+   * their split is drawn stacked, and the saved layout is left as it is. */
+  besideWidths?: Partial<Record<DockPane, number>>;
+  /** Whole-pane heights in CSS pixels a stacked split keeps for each side
+   * where both fit; the saved ratios are left as they are. */
+  minimumHeights?: Partial<Record<DockPane, number>>;
   onChange: (update: (layout: DockLayout) => DockLayout) => void;
   onActivate: (pane: DockPane) => void;
   onFocusPane: (pane: DockPane) => void;
@@ -95,10 +103,13 @@ export function DockWorkspace({
   const [fit, setFit] = useState<{
     width: number;
     minimumWidths: Partial<Record<DockPane, number>>;
+    besideWidths?: Partial<Record<DockPane, number>>;
+    height: number;
+    minimumHeights?: Partial<Record<DockPane, number>>;
   }>();
   useLayoutEffect(() => {
     const element = surface.current;
-    if (!element || !minimumWidths) {
+    if (!element || (!minimumWidths && !besideWidths && !minimumHeights)) {
       setFit(undefined);
       return;
     }
@@ -108,7 +119,7 @@ export function DockWorkspace({
         "[data-dock-pane]",
       )) {
         const id = pane.dataset.dockPane;
-        if (!isDockPane(id) || minimumWidths[id] === undefined) continue;
+        if (!isDockPane(id) || minimumWidths?.[id] === undefined) continue;
         const style = getComputedStyle(pane);
         minimum[id] =
           minimumWidths[id]! +
@@ -118,18 +129,28 @@ export function DockWorkspace({
           parseFloat(style.paddingRight);
       }
       const width = element.clientWidth;
+      const height = element.clientHeight;
       setFit((before) =>
         before?.width === width &&
-        JSON.stringify(before.minimumWidths) === JSON.stringify(minimum)
+        before.height === height &&
+        JSON.stringify(before.minimumWidths) === JSON.stringify(minimum) &&
+        before.besideWidths === besideWidths &&
+        before.minimumHeights === minimumHeights
           ? before
-          : { width, minimumWidths: minimum },
+          : {
+              width,
+              minimumWidths: minimum,
+              besideWidths,
+              height,
+              minimumHeights,
+            },
       );
     };
     const observer = new ResizeObserver(measure);
     observer.observe(element);
     measure();
     return () => observer.disconnect();
-  }, [minimumWidths]);
+  }, [minimumWidths, besideWidths, minimumHeights]);
   const [dragged, setDragged] = useState<DockPane | null>(null);
   const [externalDrag, setExternalDrag] = useState(false);
   const [drop, setDrop] = useState<{
