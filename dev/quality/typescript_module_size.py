@@ -35,11 +35,10 @@ exemption.
 
 What this gate does not bound
 -----------------------------
-It measures whole modules only. The size of a single function, component or
-hook inside a module is not bounded by this gate or by any other check yet, so
-a module under the bound can still hold one oversized callable. A callable
-bound is an open item, to be set from measurements of the current sources
-rather than chosen here.
+The module bound is the only size bound implemented. No check bounds a single
+function, component or hook, so a module under the bound can still hold one
+very large callable. Whether any callable policy should exist is an undecided
+question. This gate neither implements one nor implies that one will follow.
 """
 
 from __future__ import annotations
