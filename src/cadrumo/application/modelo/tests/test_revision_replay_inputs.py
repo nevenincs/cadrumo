@@ -22,6 +22,7 @@ from cadrumo.domain.submission.models import ModeloDraftStatus
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.temporal import select_revision
@@ -52,6 +53,7 @@ from ...filing.producer_snapshot import (
     build_filing_producer_snapshot,
 )
 from ...filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
+from .. import revision_replay_inputs
 from ..revision_replay_inputs import revision_filing_replay_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -271,6 +273,55 @@ def test_revision_replay_inputs_keep_applicable_m100_pagos_relation_unresolved()
 
     assert "renta-modelo-130-pagos-fraccionados" not in replay_inputs
     assert replay_inputs["renta-modelo-131-pagos-fraccionados"] == "0"
+
+
+def test_revision_replay_inputs_reuse_the_callers_pinned_operation_for_relation_zero_applicability(
+    operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Relation-zero synthesis must reuse the caller's pinned operation, not reopen a default.
+
+    Before this fix, ``_not_applicable_relation_zero_ids`` called
+    ``derive_modelo_applicability`` without ``operation=``, so it leased a fresh
+    default authority generation instead of reusing the one the caller already
+    pinned -- mixing authority generations within a single operation. This
+    spies on the real applicability function to prove the exact pinned object
+    reaches it unchanged.
+    """
+    work_unit = _work_unit(modelo="100", filing_year=2025, period_code="0A")
+    revision = _revision(
+        work_unit,
+        relation_overrides={"renta-modelo-130-pagos-fraccionados": "123.45"},
+    )
+    profile = TaxpayerProfile(
+        tax_id="12345678Z",
+        entity_type=EntityType.from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("trabajo")}),
+        iva_regime=IVARegime("GENERAL"),
+    )
+    observed_operations: list[PinnedAuthorityOperation | None] = []
+    original = revision_replay_inputs.derive_modelo_applicability
+
+    def _spy(
+        profile_arg: TaxpayerProfile,
+        modelo_arg: str,
+        *,
+        operation: PinnedAuthorityOperation | None = None,
+    ) -> object:
+        observed_operations.append(operation)
+        return original(profile_arg, modelo_arg, operation=operation)
+
+    monkeypatch.setattr(revision_replay_inputs, "derive_modelo_applicability", _spy)
+
+    revision_filing_replay_inputs(
+        revision=revision,
+        work_unit=work_unit,
+        workflow_profile=profile,
+        operation=operation,
+    )
+
+    assert observed_operations
+    assert all(observed is operation for observed in observed_operations)
 
 
 @pytest.mark.parametrize("filing_year", _SALARY_CERTIFICATE_EDITIONS)
