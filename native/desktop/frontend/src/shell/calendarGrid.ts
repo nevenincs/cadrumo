@@ -85,9 +85,8 @@ export function calendarMonths(
     observed.set(day, [...(observed.get(day) ?? []), event]);
   }
 
-  const [firstYear = 1970, firstMonth = 1] = range.from_date
-    .split("-")
-    .map(Number);
+  const firstYear = Number(range.from_date.slice(0, 4));
+  const firstMonth = Number(range.from_date.slice(5, 7));
   // The months run to the range's last, and on to the month in which the
   // last window open in the range closes: its closing day is what the
   // calendar is for, and the list names that month. Never more than a year

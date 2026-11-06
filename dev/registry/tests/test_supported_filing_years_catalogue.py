@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import tomllib
 from datetime import date
 from pathlib import Path
 from typing import TypedDict
@@ -40,16 +41,21 @@ class _SociedadesCoverageFixtureOverrides(TypedDict, total=False):
 def test_bundled_tree_declares_one_ordered_supported_year_catalogue() -> None:
     _modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
 
-    assert catalogues.supported_filing_years == SupportedFilingYearsCatalogue(floor=2022, horizon=2026)
-    assert catalogues.supported_filing_years.years == (2022, 2023, 2024, 2025, 2026)
+    declared = tomllib.loads(
+        bundled_path("registry", "aeat", "legal", "supported-filing-years.toml").read_text(encoding="utf-8")
+    )["supported_filing_years"]
+    horizon = declared["horizon"]
+    floor = horizon - declared["filing_grade_years_before_horizon"]
+
+    # The catalogue is the TOML's bounds, resolved once: its years run from the floor to the horizon.
+    assert catalogues.supported_filing_years == SupportedFilingYearsCatalogue(floor=floor, horizon=horizon)
+    assert catalogues.supported_filing_years.years == tuple(range(floor, horizon + 1))
     coverage = catalogues.sociedades_annual_manual_coverage
     assert coverage is not None
     assert tuple(disposition.year for disposition in coverage.dispositions) == catalogues.supported_filing_years.years
+    # Every year's manual is published except the horizon's, which is not yet out.
     assert tuple(disposition.status for disposition in coverage.dispositions) == (
-        SociedadesAnnualManualCoverageStatus.AVAILABLE,
-        SociedadesAnnualManualCoverageStatus.AVAILABLE,
-        SociedadesAnnualManualCoverageStatus.AVAILABLE,
-        SociedadesAnnualManualCoverageStatus.AVAILABLE,
+        *(SociedadesAnnualManualCoverageStatus.AVAILABLE for _ in range(floor, horizon)),
         SociedadesAnnualManualCoverageStatus.UNPUBLISHED,
     )
 

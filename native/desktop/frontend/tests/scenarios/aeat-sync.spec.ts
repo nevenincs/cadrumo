@@ -784,18 +784,19 @@ test("retrying another year does not clear the original year's acknowledgement r
     button(filed, "desktop.aeat_sync.results.retry_named", {
       name: label("desktop.aeat_sync.results.part.year", { year: value }),
     });
-  await year(2025).click();
+  const [latest, earlier] = DEMO_BORRADOR_YEARS;
+  await year(latest!).click();
   await expect(results(page)).toContainText(
     label("desktop.aeat_sync.results.refresh_failed"),
   );
-  await year(2024).click();
+  await year(earlier!).click();
   await expect
     .poll(() => calls(target, "aeatSyncResults.retry"))
     .toHaveLength(2);
   await expect(results(page)).not.toContainText(
     label("desktop.aeat_sync.results.refresh_failed"),
   );
-  await year(2025).click();
+  await year(latest!).click();
   await expect(filed).toContainText(
     label("desktop.aeat_sync.progress.warn_unknown"),
   );

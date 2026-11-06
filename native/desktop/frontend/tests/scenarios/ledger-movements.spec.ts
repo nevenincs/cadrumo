@@ -2,6 +2,10 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { LEDGER_PAGE_SIZE } from "../../src/shell/ledgerWindow";
 import { label } from "../support/strings";
 import { servedPeriodName } from "../support/servedPeriods";
+import { LEDGER_FIXTURE_TODAY } from "../../src/dev/fixtures/ledger";
+
+/** The year of the scenario ledger's date, whose periods the scenarios open. */
+const scenarioYear = Number(LEDGER_FIXTURE_TODAY.slice(0, 4));
 
 // The Movements section over the scenario's ledger: the period read in
 // pages, the readiness strip whose every pill and chip filters exactly what
@@ -78,7 +82,7 @@ test("a period is read whole, in pages, before the grid draws it", async ({
   page: target,
 }) => {
   await openLedger(target);
-  await choosePeriod(target, 2026, "0A");
+  await choosePeriod(target, scenarioYear, "0A");
   await expect(count(target)).toHaveText(/\d/);
   const { shown, total } = await shownOf(target);
   // More than one page of the list: the window joined them.
@@ -96,7 +100,7 @@ test("each readiness pill and reason chip filters exactly what it counts", async
   page: target,
 }) => {
   await openLedger(target);
-  await choosePeriod(target, 2026, "0A");
+  await choosePeriod(target, scenarioYear, "0A");
   const strip = page(target).locator(".ledger-readiness");
   await expect(strip.locator("[data-readiness]")).not.toHaveCount(0);
   await expect(strip.locator("[data-readiness=unknown]")).toHaveCount(0);
@@ -128,7 +132,7 @@ test("a reason chip leads to the fix: its movements, its column and the first on
   page: target,
 }) => {
   await openLedger(target);
-  await choosePeriod(target, 2026, "0A");
+  await choosePeriod(target, scenarioYear, "0A");
   const chip = page(target).locator(
     ".ledger-reasons [data-reason=missing_category] button",
   );
@@ -167,7 +171,7 @@ test("the search matches words and figures, and says what other periods hold", a
   page: target,
 }) => {
   await openLedger(target);
-  await choosePeriod(target, 2026, "4T");
+  await choosePeriod(target, scenarioYear, "4T");
   const search = page(target).getByRole("searchbox", {
     name: label("desktop.ledger.search.label"),
   });
@@ -202,7 +206,7 @@ test("the filters narrow the grid and show as chips that take them off", async (
   page: target,
 }) => {
   await openLedger(target);
-  await choosePeriod(target, 2026, "0A");
+  await choosePeriod(target, scenarioYear, "0A");
   const all = (await shownOf(target)).total;
   await page(target)
     .getByRole("button", { name: label("desktop.ledger.filters.title") })
@@ -252,7 +256,7 @@ test("grouping by counterparty heads each group with its count, sums and actions
   page: target,
 }) => {
   await openLedger(target);
-  await choosePeriod(target, 2026, "4T");
+  await choosePeriod(target, scenarioYear, "4T");
   await page(target)
     .getByRole("button", {
       name: label("desktop.ledger.view.named", {
@@ -346,7 +350,7 @@ test("grouping by counterparty heads each group with its count, sums and actions
 
 test("choosing a grouping closes the Group menu", async ({ page: target }) => {
   await openLedger(target);
-  await choosePeriod(target, 2026, "4T");
+  await choosePeriod(target, scenarioYear, "4T");
   await page(target)
     .getByRole("button", { name: label("desktop.ledger.group.title") })
     .click();
@@ -363,7 +367,7 @@ test("a transfer's direction is its glyph, with the word in its name and tooltip
   page: target,
 }) => {
   await openLedger(target);
-  await choosePeriod(target, 2026, "4T");
+  await choosePeriod(target, scenarioYear, "4T");
   const transfer = dataRows(target)
     .filter({
       has: target.locator("[data-column=description]", {
@@ -408,7 +412,7 @@ test("sorting by a column header orders the stored figures", async ({
   page: target,
 }) => {
   await openLedger(target);
-  await choosePeriod(target, 2026, "4T");
+  await choosePeriod(target, scenarioYear, "4T");
   const amount = grid(target).getByRole("columnheader", {
     name: label("desktop.ledger.column.amount"),
   });
@@ -497,7 +501,7 @@ test("the header box selects what is shown, and a hidden selection is said", asy
   page: target,
 }) => {
   await openLedger(target);
-  await choosePeriod(target, 2026, "4T");
+  await choosePeriod(target, scenarioYear, "4T");
   const box = grid(target).getByRole("checkbox", {
     name: label("desktop.ledger.select.shown"),
   });
@@ -549,7 +553,7 @@ test("the grid's keys: typing never runs a command, Alt+B and F8 do, shell chord
   page: target,
 }) => {
   await openLedger(target);
-  await choosePeriod(target, 2026, "4T");
+  await choosePeriod(target, scenarioYear, "4T");
   await dataRows(target).first().locator("[data-column=description]").click();
   // A bare letter is typing: nothing on the page takes it.
   for (const key of ["b", "p", "m", "n", "/"]) await target.keyboard.press(key);
@@ -567,7 +571,7 @@ test("the grid's keys: typing never runs a command, Alt+B and F8 do, shell chord
   await expect(dialog).toHaveCount(0);
 
   // F8 goes to the next movement readiness found something on.
-  await choosePeriod(target, 2026, "0A");
+  await choosePeriod(target, scenarioYear, "0A");
   await dataRows(target).first().locator("[data-column=description]").click();
   await target.keyboard.press("F8");
   const focused = target.locator("[role=gridcell]:focus");
@@ -600,7 +604,7 @@ test("Business on income asks for no expense category, and on both says which is
   page: target,
 }) => {
   await openLedger(target);
-  await choosePeriod(target, 2026, "4T");
+  await choosePeriod(target, scenarioYear, "4T");
   // Income alone is staged at once: it takes no spending category.
   await rowWith(target, "FRA 2026-058").locator("[data-column=status]").click();
   await target.keyboard.press("Alt+KeyB");
@@ -647,7 +651,7 @@ test("the movement menus show the classify chords the page binds, and pressing t
   page: target,
 }) => {
   await openLedger(target);
-  await choosePeriod(target, 2026, "4T");
+  await choosePeriod(target, scenarioYear, "4T");
   const menu = target.getByRole("menu");
   const item = (key: string) =>
     menu.getByRole("menuitem", { name: label(key), exact: true });
@@ -694,7 +698,7 @@ test("Mixed asks its share and a category a share applies to; Enter stages, and 
   page: target,
 }) => {
   await openLedger(target);
-  await choosePeriod(target, 2026, "4T");
+  await choosePeriod(target, scenarioYear, "4T");
   await rowWith(target, "RECIBO TELEFONIA")
     .locator("[data-column=description]")
     .click();
@@ -738,7 +742,7 @@ test("Mixed says which movements get a configured usage ratio, and leads to the 
   page: target,
 }) => {
   await openLedger(target);
-  await choosePeriod(target, 2026, "4T");
+  await choosePeriod(target, scenarioYear, "4T");
   await rowWith(target, "RECIBO TELEFONIA")
     .locator("[data-column=description]")
     .click();
@@ -786,7 +790,7 @@ test("the classify chords work after a checkbox selection, and Shift+Space then 
   page: target,
 }) => {
   await openLedger(target);
-  await choosePeriod(target, 2026, "4T");
+  await choosePeriod(target, scenarioYear, "4T");
   await dataRows(target).nth(0).locator("input[type=checkbox]").click();
   await dataRows(target)
     .nth(2)
@@ -814,7 +818,7 @@ test("the classify chords work from the Ledger header, and never in a text field
   page: target,
 }) => {
   await openLedger(target);
-  await choosePeriod(target, 2026, "4T");
+  await choosePeriod(target, scenarioYear, "4T");
   await dataRows(target).nth(0).locator("input[type=checkbox]").click();
   for (const control of [
     head(target).locator(".ledger-period"),
@@ -838,7 +842,7 @@ test("a cell range over other rows than the selection is said, and can become it
   page: target,
 }) => {
   await openLedger(target);
-  await choosePeriod(target, 2026, "4T");
+  await choosePeriod(target, scenarioYear, "4T");
   await rowWith(target, "PAPELERIA TRAZO")
     .locator("[data-column=description]")
     .click();
@@ -925,7 +929,7 @@ test("compact status cells draw a state as its glyph, named, and widen for the m
   );
 
   // Archive a movement: its state then shows as a glyph, whole.
-  await choosePeriod(target, 2026, "4T");
+  await choosePeriod(target, scenarioYear, "4T");
   const description = "PAPELERIA TRAZO";
   await rowWith(target, description).locator("[data-column=status]").click();
   await target.keyboard.press("Alt+KeyI");
@@ -965,7 +969,7 @@ test("the tooltip of a cut-short cell goes away as the grid scrolls", async ({
   page: target,
 }) => {
   await openLedger(target);
-  await choosePeriod(target, 2026, "4T");
+  await choosePeriod(target, scenarioYear, "4T");
   const cell = rowWith(target, "SOFTNUBE IRELAND").locator(
     "[data-column=description]",
   );
@@ -1005,7 +1009,7 @@ test("where the review preset does not fit it gives up Group, and a cue names th
 }) => {
   await target.setViewportSize({ width: 1100, height: 800 });
   await openLedger(target);
-  await choosePeriod(target, 2026, "4T");
+  await choosePeriod(target, scenarioYear, "4T");
   const header = (name: string) =>
     grid(target).getByRole("columnheader", { name, exact: true });
   await expect(header(label("desktop.ledger.column.category"))).toHaveCount(1);
@@ -1052,7 +1056,7 @@ test("every row says its stored status to a screen reader with each cell", async
   page: target,
 }) => {
   await openLedger(target);
-  await choosePeriod(target, 2026, "4T");
+  await choosePeriod(target, scenarioYear, "4T");
   await pill(target, "to_classify").click();
   const cell = dataRows(target).first().locator("[data-column=description]");
   const described = await cell.getAttribute("aria-describedby");
@@ -1077,7 +1081,7 @@ test("five thousand movements of one period are read, drawn and scrolled", async
 }) => {
   test.setTimeout(120_000);
   await openLedger(target, "&ledger=large");
-  await choosePeriod(target, 2026, "4T");
+  await choosePeriod(target, scenarioYear, "4T");
   await expect
     .poll(async () => (await shownOf(target)).total, { timeout: 60_000 })
     .toBeGreaterThan(5_000);
@@ -1126,7 +1130,7 @@ test("a filter on the grid never changes what the readiness strip counts", async
     if (period === "all") {
       await head(target).locator(".ledger-period").click();
       await target.locator(".ledger-period-all").click();
-    } else await choosePeriod(target, 2026, period);
+    } else await choosePeriod(target, scenarioYear, period);
     const strip = page(target).locator(".ledger-readiness");
     await expect(strip.locator("[data-readiness]")).not.toHaveCount(0);
     await expect(
@@ -1186,7 +1190,7 @@ test("Personal over many movements classified otherwise asks once, and says how 
   page: target,
 }) => {
   await openLedger(target);
-  await choosePeriod(target, 2026, "4T");
+  await choosePeriod(target, scenarioYear, "4T");
   await grid(target)
     .getByRole("checkbox", { name: label("desktop.ledger.select.shown") })
     .click();

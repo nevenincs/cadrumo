@@ -1,5 +1,9 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { label } from "../support/strings";
+import { LEDGER_FIXTURE_TODAY } from "../../src/dev/fixtures/ledger";
+
+/** The year of the scenario ledger's date, whose periods the scenarios open. */
+const scenarioYear = Number(LEDGER_FIXTURE_TODAY.slice(0, 4));
 
 // The Ledger page's one write pause over the scenario's ledger: a write
 // whose outcome was not seen holds every write on the page, in any
@@ -375,11 +379,11 @@ test("movements a finalized declaration seals are counted as skipped for the sel
   const shown = periods.locator("[aria-live=polite]");
   for (let guard = 0; guard < 40; guard += 1) {
     const at = Number(await shown.textContent());
-    if (at === 2026) break;
+    if (at === scenarioYear) break;
     await periods
       .getByRole("button", {
         name: label(
-          at > 2026
+          at > scenarioYear
             ? "desktop.ledger.period.year_previous"
             : "desktop.ledger.period.year_next",
         ),

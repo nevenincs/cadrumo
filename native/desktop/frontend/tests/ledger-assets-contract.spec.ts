@@ -84,17 +84,30 @@ import {
   BASIS_STAGES,
   FURTHER_ACQUISITION_SHAPES,
   DISPOSAL_REASONS,
-  M130_PERIODS,
   OPENING_STATUSES,
   SEED_ELEMENTS,
   TABLE_GROUPS,
 } from "../src/dev/assetsSeed";
+import {
+  servedEditionOf,
+  servedHandoffOf,
+  servedM130PeriodsOf,
+  servedSupport,
+} from "../src/dev/servedYearAuthority";
 
 // The Assets tab's operations and the scenario ledger that answers them. No
 // page is opened. The scenario ledger needs a window; a bare one stands in
 // for it here. The seeded register is checked against the registry's own
 // amortization table and the linear schedule, worked out again here from
-// whole cents.
+// whole cents. The support envelope, editions and boxes are the backend's,
+// read from its recording: the first year past the horizon, and the last year
+// with an edition of its own, stand for the years the registry projects and
+// the years it reads unprojected.
+
+const beyondHorizon = servedSupport.horizon + 1;
+const lastAuthored = servedEditionOf(
+  servedSupport.horizon,
+)!.authored_filing_year;
 
 const stand = globalThis as unknown as { window?: unknown };
 stand.window = {
@@ -107,7 +120,13 @@ const {
   SERVED_ACTIVITIES,
   SERVED_METHOD_FACTS,
   SERVED_SHAPES,
+  TODAY,
 } = await import("../src/dev/assetsFixture");
+
+// The seeded register reads as of the scenario's date, so its rows are named by
+// that date's year and the one before it.
+const scenarioYear = Number(TODAY.slice(0, 4));
+const priorYear = scenarioYear - 1;
 
 const LIST = "ledger.actividad-asset.list";
 const PLAN = "ledger.actividad-asset.plan";
@@ -328,7 +347,7 @@ test("the list states the backend's fields, and the years on offer span the regi
   expect([...years].sort((a, b) => a - b)).toEqual(years);
   // The first served year is the first the registry supports, even for an
   // element in service before it.
-  expect(years[0]).toBe(2022);
+  expect(years[0]).toBe(servedSupport.floor);
   // An element with no recorded description is listed without a name.
   expect(rows.find((row) => row.asset_id === "herramienta")?.name).toBeNull();
   // An opening history never stated leaves the amounts unknown, never zero.
@@ -358,7 +377,7 @@ test("the pending amount is the formula, and a schedule that ended over unclaime
   );
   // A year no edition covers is neither claimed nor missing.
   const compressor = await planOf(portOf(), "compresor");
-  const early = compressor.filter((row) => row.tax_year < 2022);
+  const early = compressor.filter((row) => row.tax_year < servedSupport.floor);
   expect(early.length).toBeGreaterThan(0);
   for (const row of early) expect(row.claim_state).toBe("edition_unavailable");
   const counted = rows.find((row) => row.asset_id === "compresor")!;
@@ -441,7 +460,7 @@ test("a planned figure is the linear charge worked out again from whole cents", 
 test("years before the first supported edition state their absence, never an amount", () => {
   for (const seed of SEED_ELEMENTS)
     for (const row of seed.rows) {
-      if (row.tax_year >= 2022) continue;
+      if (row.tax_year >= servedSupport.floor) continue;
       // The opening amount covers its years; every other year has no edition.
       expect(
         ["edition_unavailable", "covered_by_opening"],
@@ -454,7 +473,7 @@ test("years before the first supported edition state their absence, never an amo
     }
   const plan = (id: string) =>
     SEED_ELEMENTS.find((seed) => seed.id === id)!.rows.filter(
-      (row) => row.tax_year < 2022,
+      (row) => row.tax_year < servedSupport.floor,
     );
   expect(plan("compresor").map((row) => row.absence)).toEqual([
     "edition_unavailable",
@@ -478,7 +497,10 @@ test("a plan states every absence with its figure null, and the years the tables
     for (const row of rows) {
       if (row.absence !== null)
         expect(row.planned, `${seed.id} ${row.tax_year}`).toBeNull();
-      if (row.edition) expect(row.edition.projected).toBe(row.tax_year > 2025);
+      if (row.edition)
+        expect(row.edition, `${seed.id} ${row.tax_year}`).toEqual(
+          servedEditionOf(row.tax_year),
+        );
       // What is claimed is the effective claims, to the cent.
       const total = row.claims
         .filter((claim) => claim.effective)
@@ -489,12 +511,10 @@ test("a plan states every absence with its figure null, and the years the tables
     }
   }
   const projected = (await planOf(port, "licencia")).find(
-    (row) => row.tax_year === 2027,
+    (row) => row.tax_year === beyondHorizon,
   )!;
-  expect(projected.edition).toMatchObject({
-    projected: true,
-    authored_filing_year: 2025,
-  });
+  expect(projected.edition).toEqual(servedEditionOf(beyondHorizon));
+  expect(projected.edition!.projected).toBe(true);
 });
 
 test("a plan past the maximum period states it, with the date it ended", async () => {
@@ -613,7 +633,7 @@ test("the options are the registry's methods and table classes for the kind and 
     await settled<LedgerResult<typeof OPTIONS>>(
       port.submit(OPTIONS, {
         asset_kind: "material",
-        tax_year: 2025,
+        tax_year: lastAuthored,
       }),
     )
   ).options!;
@@ -626,16 +646,13 @@ test("the options are the registry's methods and table classes for the kind and 
     (options as FormOptions).method_facts!.map((found) => found.method),
   ).toEqual(options.methods);
   expect(options.table_groups).toEqual(TABLE_GROUPS.material);
-  expect(options.edition).toEqual({
-    revision_id: "2025",
-    authored_filing_year: 2025,
-    projected: false,
-  });
+  expect(options.edition).toEqual(servedEditionOf(lastAuthored));
+  expect(options.edition.projected).toBe(false);
   const later = (
     await settled<LedgerResult<typeof OPTIONS>>(
       port.submit(OPTIONS, {
         asset_kind: "intangible",
-        tax_year: 2027,
+        tax_year: beyondHorizon,
       }),
     )
   ).options!;
@@ -646,12 +663,12 @@ test("the options are the registry's methods and table classes for the kind and 
   const before = await refused(
     port.submit(OPTIONS, {
       asset_kind: "material",
-      tax_year: 2021,
+      tax_year: servedSupport.floor - 1,
     }),
   );
   expect(before.detail.refusal).toMatchObject({
     reason_key: "ledger.actividad_asset.errors.tax_year_without_edition",
-    reason_facts: [{ key: "tax_year", value: "2021" }],
+    reason_facts: [{ key: "tax_year", value: String(servedSupport.floor - 1) }],
   });
 });
 
@@ -798,7 +815,7 @@ async function optionsOf(
   kind = "material",
 ): Promise<Options> {
   const read = await settled<LedgerResult<typeof OPTIONS>>(
-    port.submit(OPTIONS, { asset_kind: kind, tax_year: 2026 }),
+    port.submit(OPTIONS, { asset_kind: kind, tax_year: scenarioYear }),
   );
   return read.options!;
 }
@@ -912,13 +929,17 @@ test("adding an element sends the revision and descriptor the backend decodes, w
     missing_field_keys: ["opening_history.covered_through_tax_year"],
   });
   const early = await refused(
-    send({ opening_amount: "100.00", opening_through: "2025" }),
+    send({ opening_amount: "100.00", opening_through: String(priorYear) }),
   );
   expect(early.detail.refusal).toMatchObject({
     reason_key: "ledger.actividad_asset.errors.opening_year_before_in_service",
     reason_facts: [
-      { key: "in_service_tax_year", value: "2026", kind: "count" },
-      { key: "opening_tax_year", value: "2025", kind: "count" },
+      {
+        key: "in_service_tax_year",
+        value: String(scenarioYear),
+        kind: "count",
+      },
+      { key: "opening_tax_year", value: String(priorYear), kind: "count" },
     ],
   });
   const outside = await refused(
@@ -951,7 +972,7 @@ test("adding an element sends the revision and descriptor the backend decodes, w
   )!;
   const first = (await planOf(port, "made-2"))[0]!;
   expect(first).toMatchObject({
-    tax_year: 2026,
+    tax_year: scenarioYear,
     absence: null,
     service_days: 200,
     calendar_days: 365,
@@ -1153,7 +1174,7 @@ test("the filing handoff reads the seeded claims, and names the element it canno
   const port = portOf();
   const handoff = await settled<LedgerResult<typeof HANDOFF>>(
     port.submit(HANDOFF, {
-      tax_year: 2025,
+      tax_year: priorYear,
       output_language: "en",
       m130_period: "4T",
     }),
@@ -1163,7 +1184,7 @@ test("the filing handoff reads the seeded claims, and names the element it canno
     SEED_ELEMENTS.filter((seed) => seed.list.asset_kind === kind).flatMap(
       (seed) =>
         seed.rows
-          .filter((row) => row.tax_year === 2025)
+          .filter((row) => row.tax_year === priorYear)
           .flatMap((row) => row.claims.filter((claim) => claim.effective)),
     );
   for (const [kind, key] of [
@@ -1181,11 +1202,18 @@ test("the filing handoff reads the seeded claims, and names the element it canno
     expect(cents(projection[key]!.amount.decimal)).toBe(total);
     expect(projection[key]!.amount.decimal).not.toBe("0.00");
   }
-  expect(projection.material_m100!.target_casilla_id).toBe("0208");
-  expect(projection.intangible_m100!.target_casilla_id).toBe("0227");
-  // Every element of the year is behind casilla 02, and the one it cannot work out is named.
+  const boxes = servedHandoffOf(priorYear)!;
+  expect(projection.material_m100!.target_casilla_id).toBe(
+    boxes.m100.material!.casilla,
+  );
+  expect(projection.intangible_m100!.target_casilla_id).toBe(
+    boxes.m100.intangible!.casilla,
+  );
+  // Every element of the year is behind the quarter's box, and the one it cannot work out is named.
   const material130 = projection.material_m130!;
-  expect(material130.target_casilla_id).toBe("02");
+  expect(material130.target_casilla_id).toBe(
+    boxes.m130.find((box) => box.period === "4T")!.casilla,
+  );
   expect(material130.unavailable_asset_ids).toEqual(["estanteria"]);
   expect(
     material130.contributions.some(
@@ -1194,7 +1222,7 @@ test("the filing handoff reads the seeded claims, and names the element it canno
   ).toBe(true);
   const quarter = await settled<LedgerResult<typeof HANDOFF>>(
     port.submit(HANDOFF, {
-      tax_year: 2025,
+      tax_year: priorYear,
       output_language: "en",
       m130_period: "1T",
     }),
@@ -1315,7 +1343,7 @@ test("a baja ends the plan at the year of its last day, lists the element out of
     (found) => found.asset_id === "furgoneta",
   )!;
   expect(row).toMatchObject({ state: "out_of_service", revision_number: 2 });
-  expect((await planOf(port, "furgoneta")).at(-1)!.tax_year).toBe(2025);
+  expect((await planOf(port, "furgoneta")).at(-1)!.tax_year).toBe(priorYear);
   const event = (await eventsOf(port, "furgoneta")).at(-1)!;
   expect(event).toMatchObject({ kind: "baja", affects_calculation: true });
   expect(event.changes).toEqual([
@@ -1378,7 +1406,7 @@ test("the figures of a baja are the backend's: a stated baja previews and writes
       cents(preview.net_value.decimal),
   );
   expect(preview.transmission_value).toEqual(sale.proceeds);
-  expect(preview.years.at(-1)).toMatchObject({ tax_year: 2026 });
+  expect(preview.years.at(-1)).toMatchObject({ tax_year: scenarioYear });
   expect(
     preview.findings.every((finding) =>
       finding.label_key.startsWith("ledger.actividad_asset.disposal_finding."),
@@ -1481,7 +1509,7 @@ test("a forecast works out a span and records nothing; a claim is recorded once 
   expect(claimReused(again)).toBe(true);
   expect(again.claim_id).toBe(first.claim_id);
   const year = (await planOf(port, "furgoneta")).find(
-    (row) => row.tax_year === 2026,
+    (row) => row.tax_year === scenarioYear,
   )!;
   expect(year).toMatchObject({
     claim_state: "claimed",
@@ -1504,9 +1532,9 @@ test("a forecast works out a span and records nothing; a claim is recorded once 
   );
   expect(
     claimLanded(await planOf(port, "furgoneta"), {
-      tax_year: 2026,
-      from: "2026-07-01",
-      until: "2027-01-01",
+      tax_year: scenarioYear,
+      from: `${scenarioYear}-07-01`,
+      until: `${scenarioYear + 1}-01-01`,
       amount: forecast.amount.decimal,
     }),
   ).toBe("saved");
@@ -1610,7 +1638,12 @@ test("a baja over a year no edition covers leaves the minimum unresolved, and sa
         (finding) => finding.kind === "minimum_unresolved",
       )
       .map((finding) => finding.tax_year),
-  ).toEqual([2019, 2020, 2021]);
+  ).toEqual(
+    // The years before the first supported edition, for which no table gives a minimum.
+    seed
+      .disposal!.years.map((year) => year.tax_year)
+      .filter((year) => year < servedSupport.floor),
+  );
   // The reduction and the net value stay numbers.
   expect(seed.disposal!.reduction).not.toBeNull();
   expect(seed.disposal!.net_value).not.toBeNull();
@@ -1620,8 +1653,8 @@ test("a claim past the registry's last year is refused with the years it can tak
   const port = portOf();
   const forecast = (await port.submit(FORECAST, {
     asset_id: "furgoneta",
-    covered_from: "2027-01-01",
-    covered_through: "2027-12-31",
+    covered_from: `${beyondHorizon}-01-01`,
+    covered_through: `${beyondHorizon}-12-31`,
     requested_free_amount: null,
     supersedes_claim_id: null,
   })) as { result?: { forecast: never } };
@@ -1636,8 +1669,8 @@ test("a claim past the registry's last year is refused with the years it can tak
     code: "REFUSED_ACTIVIDAD_ASSET_UNSUPPORTED",
     reason_key: "ledger.actividad_asset.errors.claim_year_beyond_registry",
     reason_facts: [
-      { key: "last_admitted_year", value: "2026" },
-      { key: "tax_year", value: "2027" },
+      { key: "last_admitted_year", value: String(servedSupport.horizon) },
+      { key: "tax_year", value: String(beyondHorizon) },
     ],
   });
   // A claim recorded and then replaced cannot be recorded again.
@@ -1950,14 +1983,10 @@ function servidorRow(): AssetListRow {
 test("each act's fields and requests come from the backend's choices", () => {
   const methods = ["linear", "low_value_free"];
   const options: FormOptions = {
-    tax_year: 2026,
+    tax_year: servedSupport.horizon,
     asset_kind: "material",
     regime: "normal",
-    edition: {
-      revision_id: "2025",
-      authored_filing_year: 2025,
-      projected: true,
-    },
+    edition: servedEditionOf(servedSupport.horizon)!,
     acquisition_shapes: [...SERVED_SHAPES],
     declared_activities: [...SERVED_ACTIVITIES],
     methods,
@@ -1970,7 +1999,7 @@ test("each act's fields and requests come from the backend's choices", () => {
     opening_statuses: [...OPENING_STATUSES],
     acquired_conditions: [...ACQUIRED_CONDITIONS],
     further_acquisition_shapes: [...FURTHER_ACQUISITION_SHAPES],
-    m130_periods: [...M130_PERIODS[2026]!],
+    m130_periods: servedM130PeriodsOf(servedSupport.horizon),
   };
   const fields = fieldsFor(
     {
@@ -2006,7 +2035,7 @@ test("each act's fields and requests come from the backend's choices", () => {
     choices(classKey).map((choice) => [choice.family, choice.label]),
   ).toEqual(options.table_groups.map((group) => [null, group.class_label]));
   const plan = SEED_ELEMENTS.find((seed) => seed.id === "furgoneta")!.rows.find(
-    (row) => row.tax_year === 2026,
+    (row) => row.tax_year === scenarioYear,
   )!;
   const claim = claimFields(plan, null);
   expect(claim.map((found) => [found.key, found.current])).toEqual([
@@ -2186,15 +2215,17 @@ test("a held write is read against the register: found, not found, or not told",
   expect(correctionLanded(listed, "nobody", 1)).toBe("untold");
   const rows = await planOf(port, "furgoneta");
   const sent = {
-    tax_year: 2024,
-    from: "2024-01-01",
-    until: "2025-01-01",
+    tax_year: priorYear - 1,
+    from: `${priorYear - 1}-01-01`,
+    until: `${priorYear}-01-01`,
     amount: "2880",
   };
   // The same number however it is spelled; a different one is not found.
   expect(claimLanded(rows, sent)).toBe("saved");
   expect(claimLanded(rows, { ...sent, amount: "2880.01" })).toBe("not_saved");
-  expect(claimLanded(rows, { ...sent, until: "2024-06-30" })).toBe("not_saved");
+  expect(claimLanded(rows, { ...sent, until: `${priorYear - 1}-06-30` })).toBe(
+    "not_saved",
+  );
   expect(claimLanded(rows, { ...sent, tax_year: 1901 })).toBe("untold");
   expect(descriptorLanded([], 1)).toBe("not_saved");
 });
@@ -2267,7 +2298,7 @@ test("the list serves the years, and the pane opens on one that has begun", asyn
   expect(register.years).toEqual(served);
   expect(register.years).toEqual(assetFixtureYears());
   // No year before the first supported edition is served.
-  expect(Math.min(...register.years)).toBe(2022);
+  expect(Math.min(...register.years)).toBe(servedSupport.floor);
   // Every year of an element is a year of its plan.
   for (const row of register.rows ?? []) {
     const plan = (await planOf(port, row.asset_id)).map(
@@ -2275,20 +2306,24 @@ test("the list serves the years, and the pane opens on one that has begun", asyn
     );
     // The years the registry carries tables for, then the estimated ones.
     expect(row.years, row.asset_id).toEqual(
-      plan.filter((year) => year >= 2022 && year <= 2026),
+      plan.filter(
+        (year) => year >= servedSupport.floor && year <= servedSupport.horizon,
+      ),
     );
     expect(row.projected_years, row.asset_id).toEqual(
-      plan.filter((year) => year > 2026),
+      plan.filter((year) => year > servedSupport.horizon),
     );
   }
   expect(
     (register.rows ?? []).some((row) => row.projected_years.length > 0),
   ).toBe(true);
-  expect(Math.max(...register.years)).toBe(2026);
+  expect(Math.max(...register.years)).toBe(servedSupport.horizon);
   // The year the register opens on is the backend's to serve, never one the
   // computer's clock picks: the latest served year that has begun on the
   // scenario's date.
-  expect(register.default_year).toBe(2026);
+  expect(register.default_year).toBe(
+    Math.min(servedSupport.horizon, scenarioYear),
+  );
 });
 
 test("a table class is named as the backend serves it, in the options and in the plan", async () => {
@@ -2297,7 +2332,7 @@ test("a table class is named as the backend serves it, in the options and in the
     await settled<LedgerResult<typeof OPTIONS>>(
       port.submit(OPTIONS, {
         asset_kind: "material",
-        tax_year: 2025,
+        tax_year: priorYear,
       }),
     )
   ).options!;
@@ -2553,14 +2588,10 @@ test("a whole property states its parts, a vehicle its declaration, and a linear
 
 test("a method with a fact that has no form is not offered, and its repeated rows are never drawn", () => {
   const options: FormOptions = {
-    tax_year: 2026,
+    tax_year: servedSupport.horizon,
     asset_kind: "material",
     regime: "normal",
-    edition: {
-      revision_id: "2025",
-      authored_filing_year: 2025,
-      projected: true,
-    },
+    edition: servedEditionOf(servedSupport.horizon)!,
     disposal_reasons: [],
     methods: ["plain", "rows", "unworded"],
     acquisition_shapes: [...SERVED_SHAPES],
@@ -2620,7 +2651,7 @@ test("a method with a fact that has no form is not offered, and its repeated row
 test("the one dotación a refusal names as in the way is offered for correction; several, none or a plain refusal offer none", async () => {
   const port = portOf();
   const furgoneta = (await planOf(port, "furgoneta")).find(
-    (row) => row.tax_year === 2026,
+    (row) => row.tax_year === scenarioYear,
   )!;
   const recorded = furgoneta.claims.filter((found) => found.effective);
   expect(recorded.length).toBeGreaterThan(0);
@@ -2707,8 +2738,8 @@ test("a forecast states the last day covered, which the backend turns into its b
 
 test("a handoff for a year alone states the Modelo 100 boxes and no Modelo 130 side; a chosen quarter adds it", async () => {
   const port = portOf();
-  const alone = handoffRequest(2025, "", "es");
-  expect(alone).toEqual({ tax_year: 2025, output_language: "es" });
+  const alone = handoffRequest(priorYear, "", "es");
+  expect(alone).toEqual({ tax_year: priorYear, output_language: "es" });
   const year = await settled<LedgerResult<typeof HANDOFF>>(
     port.submit(HANDOFF, alone),
   );
@@ -2717,11 +2748,16 @@ test("a handoff for a year alone states the Modelo 100 boxes and no Modelo 130 s
     material_m130: null,
     intangible_m130: null,
   });
-  expect(year.filing_handoff!.material_m100!.target_casilla_id).toBe("0208");
-  expect(year.filing_handoff!.intangible_m100!.target_casilla_id).toBe("0227");
-  const quarter = handoffRequest(2025, "2T", "es");
+  const boxes = servedHandoffOf(priorYear)!.m100;
+  expect(year.filing_handoff!.material_m100!.target_casilla_id).toBe(
+    boxes.material!.casilla,
+  );
+  expect(year.filing_handoff!.intangible_m100!.target_casilla_id).toBe(
+    boxes.intangible!.casilla,
+  );
+  const quarter = handoffRequest(priorYear, "2T", "es");
   expect(quarter).toEqual({
-    tax_year: 2025,
+    tax_year: priorYear,
     output_language: "es",
     m130_period: "2T",
   });
@@ -2890,7 +2926,7 @@ test("a changed fact on the timeline is worded by the key the backend served for
 const claims = (casilla: string) => ({
   target_casilla_id: casilla,
   box_name: `Box ${casilla}`,
-  tax_year: 2025,
+  tax_year: priorYear,
   claim_ids: [],
   amount: { decimal: "0.00" },
 });
@@ -2900,7 +2936,7 @@ test("a handoff says what it leaves out as the backend served it, by the element
   const handoff = (
     await settled<LedgerResult<typeof HANDOFF>>(
       port.submit(HANDOFF, {
-        tax_year: 2025,
+        tax_year: priorYear,
         output_language: "en",
         m130_period: "4T",
       }),
@@ -2948,7 +2984,7 @@ test("the list serves the year a dotación form opens on, from what each element
       .map((year) => year.tax_year);
     // The latest year up to the scenario's with something left to record,
     // else the earliest later one, else none.
-    const elapsed = open.filter((year) => year <= 2026);
+    const elapsed = open.filter((year) => year <= scenarioYear);
     const expected =
       elapsed.length > 0
         ? Math.max(...elapsed)
@@ -3272,12 +3308,16 @@ test("an element bought outside the ledger can own a later ledger payment, which
 
 test("the Modelo 130 periods are the ones the options serve for the year", async () => {
   const port = portOf();
-  for (const year of [2022, 2026, 2027]) {
+  for (const year of [
+    servedSupport.floor,
+    servedSupport.horizon,
+    beyondHorizon,
+  ]) {
     const read = await settled<LedgerResult<typeof OPTIONS>>(
       port.submit(OPTIONS, { asset_kind: "material", tax_year: year }),
     );
     expect(read.options!.m130_periods, String(year)).toEqual(
-      M130_PERIODS[year],
+      servedM130PeriodsOf(year),
     );
   }
 });
@@ -3366,7 +3406,7 @@ test("the handoff marks an amount that leaves elements out with the sentence the
   const handoff = (
     await settled<LedgerResult<typeof HANDOFF>>(
       port.submit(HANDOFF, {
-        tax_year: 2025,
+        tax_year: priorYear,
         output_language: "en",
         m130_period: "4T",
       }),
@@ -3520,7 +3560,7 @@ test("the handoff names each box in the language asked, tells the two Modelo 130
     (
       await settled<LedgerResult<typeof HANDOFF>>(
         port.submit(HANDOFF, {
-          tax_year: 2025,
+          tax_year: priorYear,
           output_language: language,
           m130_period: "4T",
         } as never),

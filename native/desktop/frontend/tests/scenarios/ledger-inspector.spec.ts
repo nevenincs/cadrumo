@@ -3,6 +3,10 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { label } from "../support/strings";
 import { servedPeriodName } from "../support/servedPeriods";
+import { LEDGER_FIXTURE_TODAY } from "../../src/dev/fixtures/ledger";
+
+/** The year of the scenario ledger's date, whose periods the scenarios open. */
+const scenarioYear = Number(LEDGER_FIXTURE_TODAY.slice(0, 4));
 
 // The panel beside the Movements grid over the scenario's ledger: the
 // inspector of one movement, with its jump index, sections and actions,
@@ -946,7 +950,7 @@ test("removing is previewed by the ledger, and a movement a finalized declaratio
   expect(await trayCount(target)).toBe(1);
 
   // A movement of the first quarter, which a filed Modelo 303 cites.
-  await choosePeriod(target, 2026, "1T");
+  await choosePeriod(target, scenarioYear, "1T");
   await inspect(target, "CUOTA AUTONOMOS TGSS");
   await expect(panel(target).locator(".ledger-inspector-head")).toContainText(
     label("desktop.ledger.inspector.used.name", {

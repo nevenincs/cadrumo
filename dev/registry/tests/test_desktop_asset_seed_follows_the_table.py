@@ -13,7 +13,6 @@ from __future__ import annotations
 import re
 from decimal import Decimal
 from functools import cache
-from pathlib import Path
 
 import pytest
 
@@ -116,20 +115,6 @@ def test_the_seeded_methods_are_the_ones_the_registry_admits_for_the_kind(kind: 
 
     assert expected
     assert seeded == expected
-
-
-def test_the_scenario_edition_floor_is_the_registrys() -> None:
-    floor = re.search(
-        r"^floor\s*=\s*(\d+)",
-        (
-            REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "legal" / "supported-filing-years.toml"
-        ).read_text(encoding="utf-8"),
-        re.MULTILINE,
-    )
-    fixture = Path(_SEED.parent / "assetsFixture.ts").read_text(encoding="utf-8")
-
-    assert floor is not None
-    assert f"FIRST_SUPPORTED_YEAR = {floor.group(1)};" in fixture
 
 
 _NAMES = (

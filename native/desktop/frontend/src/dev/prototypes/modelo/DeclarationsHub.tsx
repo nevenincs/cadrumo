@@ -17,7 +17,13 @@ import {
   SegmentedControl,
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
-import { FIXTURE_TODAY, modeloTitle, type ListRow } from "./fixtures";
+import {
+  FIXTURE_FILING_YEAR,
+  FIXTURE_TODAY,
+  modeloTitle,
+  type ListRow,
+} from "./fixtures";
+import { servedSupport } from "@/dev/servedYearAuthority";
 import {
   coverageWords,
   dateWords,
@@ -29,6 +35,12 @@ import {
   type Tone,
 } from "./vocabulary";
 import { w } from "./words";
+
+/** The supported filing years, as the registry serves them. */
+const FILING_YEARS = Array.from(
+  { length: servedSupport.horizon - servedSupport.floor + 1 },
+  (_, at) => servedSupport.floor + at,
+);
 
 // Every declaration in one list, in the application's own work order: what
 // needs the filer, what is under way, what is ready, what is due and not
@@ -448,7 +460,7 @@ export function NewDeclarationDialog({
   initialModelo?: string | null;
 }) {
   const [modelo, setModelo] = useState<string | null>(initialModelo);
-  const [year, setYear] = useState(2026);
+  const [year, setYear] = useState(FIXTURE_FILING_YEAR);
   const [period, setPeriod] = useState<string>("4T");
   const [query, setQuery] = useState("");
   const existing = (m: string, code: string) =>
@@ -576,7 +588,7 @@ export function NewDeclarationDialog({
               onValueChange={(v) => setYear(Number(v))}
               className="self-start"
             >
-              {[2025, 2026, 2027].map((y) => (
+              {FILING_YEARS.map((y) => (
                 <SegmentedControlItem
                   key={y}
                   value={String(y)}

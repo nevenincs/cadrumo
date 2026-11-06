@@ -253,6 +253,12 @@ FAMILIES: Final[tuple[FixtureFamily, ...]] = (
         "The imputation election states read through the profile operations.",
     ),
     _desktop_fixture(
+        "desktop-year-authority",
+        "desktop_year_authority_fixture",
+        "yearAuthority.json",
+        "The year bounds, support envelope and per-year Modelo 100 editions the backend serves.",
+    ),
+    _desktop_fixture(
         "desktop-withholding-refusal-words",
         "desktop_withholding_refusal_words_fixture",
         "ledgerWithholdingRefusalWords.json",

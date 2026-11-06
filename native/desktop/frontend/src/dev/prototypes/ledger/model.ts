@@ -3,6 +3,7 @@ import { formatDay, formatTime } from "@/shared/dateFormats";
 import { formatDecimal } from "@/shared/numbers";
 import { ACCOUNT_LABEL, ACCOUNTS, daysIn, iso, quarterOf } from "./data";
 import type { IconName } from "./Icon";
+import { servedYearBounds } from "../../servedYearAuthority";
 import type {
   Cls,
   Direction,
@@ -157,7 +158,7 @@ export function parseDateIso(raw: Value): Parsed {
     const d = new Date(Date.UTC(+m[1]!, +m[2]! - 1, +m[3]!));
     if (d.getUTCMonth() !== +m[2]! - 1 || d.getUTCDate() !== +m[3]!)
       return { error: `${q} is not a calendar date.` };
-    if (+m[1]! < 1980 || +m[1]! > 2200)
+    if (+m[1]! < servedYearBounds.first || +m[1]! > servedYearBounds.last)
       return { error: `${q} is outside the years the ledger accepts.` };
     return { value: s };
   }
