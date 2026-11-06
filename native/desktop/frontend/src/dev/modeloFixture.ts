@@ -560,17 +560,20 @@ export function modeloFixture(options: Options): ModeloPort {
   /** The language the window last read a form in, which the application
    * words an estimate in. */
   let spoken: OutputLanguage = "en";
+  /** The written form a read of the declaration `name` is answered with
+   * now. */
+  const writtenRead = (name: string | null) =>
+    shape === "wallet" && name === "303-1T"
+      ? `303-1T-wallet-${walletStage}`
+      : name === LATER_STATES
+        ? laterState()
+        : name === RENTA
+          ? rentaForm(shape)
+          : name;
   const readForm = async (workUnitId: string, language: OutputLanguage) => {
     spoken = language;
     const name = await formName(workUnitId);
-    const read =
-      shape === "wallet" && name === "303-1T"
-        ? `303-1T-wallet-${walletStage}`
-        : name === LATER_STATES
-          ? laterState()
-          : name === RENTA
-            ? rentaForm(shape)
-            : name;
+    const read = writtenRead(name);
     const form =
       read &&
       (await envelope<ModeloWorkbenchFormProjectionV1>(
@@ -694,6 +697,8 @@ export function modeloFixture(options: Options): ModeloPort {
   // envelopes are many and some of them megabytes.
   let everyForm: Promise<void> | null = null;
   const readEveryForm = async () => {
+    // Seconds of reading: a check that waits on it can outlast its review.
+    say("modelo scan written forms");
     for (const name of Object.keys(catalogue)) {
       const read = /^modelo-(.+)-(?:en|es|ca|hu)$/.exec(name)?.[1];
       if (!read) continue;
@@ -964,6 +969,24 @@ export function modeloFixture(options: Options): ModeloPort {
             );
             if (!renewal) return unserved();
             renewals += 1;
+            // A granted renewal issues the baseline the declaration's next
+            // read admits, and the window may check on it before that read
+            // lands; it names that form now rather than through a scan of
+            // every written form.
+            const renewed = renewal.renewed_baseline;
+            if (renewed) {
+              const next = writtenRead(await formName(renewed.work_unit_id));
+              const read = next
+                ? await envelope<ModeloWorkbenchFormProjectionV1>(
+                    `modelo-${next}-${spoken}`,
+                  )
+                : undefined;
+              if (
+                next &&
+                read?.admitted_baseline?.baseline_id === renewed.baseline_id
+              )
+                admittedBy.set(renewed.baseline_id, next);
+            }
             return renewal;
           }
           case "modelo.edit.apply_prerequisite": {

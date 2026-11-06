@@ -1075,6 +1075,9 @@ test("staged edits survive a renewal of a baseline that went stale", async ({
   expect(await calls(target, "modelo submit modelo.edit.renew")).toHaveLength(
     1,
   );
+  // The check on the renewed baseline was answered for the form that admits
+  // it, which the renewal named, not found by reading every written form.
+  expect(await calls(target, "modelo scan written forms")).toHaveLength(0);
   await expect(dialog.getByRole("listitem")).toHaveCount(1);
   await expect(dialog.getByRole("listitem")).toContainText("06");
   // The check on the renewed baseline was evaluated: the edit may be applied.
