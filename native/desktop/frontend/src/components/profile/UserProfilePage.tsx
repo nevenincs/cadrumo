@@ -7,38 +7,17 @@ import {
   useRef,
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
-  type MouseEvent as ReactMouseEvent,
-  type ReactNode,
   type RefObject,
 } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/components/ui/cn";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Icon, type IconName } from "@/components/ui/icon";
-import { IconButton } from "@/components/ui/icon-button";
-import { Input } from "@/components/ui/input";
-import { Kbd } from "@/components/ui/kbd";
-import { Progress } from "@/components/ui/progress";
-import {
-  SegmentedControl,
-  SegmentedControlItem,
-} from "@/components/ui/segmented-control";
 import { Spinner } from "@/components/ui/spinner";
 import { chordMatches, type ChordKeys } from "@/shared/chords";
 import type { Action, Chord } from "../../shell/actions";
 import type { Host } from "../../shell/host";
 import type { ProfileView } from "../../shell/layout";
-import { facts, labelled, listed, noted } from "../../shell/compose";
+import { facts } from "../../shell/compose";
 import { useNavigationGuard } from "../../shell/navigation/hooks";
 import { useCensoSync, type CensoSnapshot } from "../../shell/profileCenso";
 import {
@@ -47,19 +26,12 @@ import {
   entries,
   aeatMethod,
   fieldAt,
-  initials,
   marked,
   matches,
   nameOf,
-  requiredSection,
   rowsOf,
-  sectionCounts,
-  shownValue,
   sorted,
-  type Group,
   type Row,
-  type Show,
-  type Sort,
 } from "../../shell/profileRows";
 import { useStrings } from "../../shell/strings";
 import {
@@ -74,16 +46,18 @@ import type { MenuEntry, OpenMenu } from "../ContextMenu";
 import { AeatAccessEditor } from "./AeatAccessEditor";
 import { Household } from "./Household";
 import { PasswordChange, ProfileShortcuts } from "./ProfileDialogs";
+import { ProfileDetails, STATUS_GROUPS } from "./ProfileDetails";
 import { ProfileEditor, type ProfileDraft } from "./ProfileEditor";
 import { PROFILE_KEYS } from "./profileKeys";
+import { ProfileSectionIndex } from "./ProfileSectionIndex";
+import { ProfileSummaryHeader } from "./ProfileSummaryHeader";
 import { ProfileSync } from "./ProfileSync";
+import { ProfileToolbar } from "./ProfileToolbar";
 import { ProfileCompletionNotice } from "./ProfileCompletionNotice";
 
 /** A profile action and, where the page runs it by a key of its own, that
  * key: the page's menus show it from the declaration its handlers match. */
 type PageAction = Action & { pageKey?: ChordKeys };
-
-const STATUS_GROUPS = ["required", "unset", "filled"] as const;
 
 // Drawn again only when what it is given changes: the window redraws far more
 // often than the profile does.
@@ -772,24 +746,10 @@ export const UserProfilePage = memo(function UserProfilePage({
     }
   };
 
-  // One stop in the tab order: the detail last focused, else the first.
-  let placed = false;
-  const navProps = (id: string, kind: "head" | "row", of?: string) => {
-    const first = !placed;
-    placed = true;
-    return {
-      "data-nav": id,
-      "data-kind": kind,
-      "data-of": of,
-      tabIndex: (active === null ? first : active === id) ? 0 : -1,
-      onFocus: () => setActive(id),
-    };
-  };
-
   // ── Summary header ──────────────────────────────────────────────────────
   const total = data ? counts(data) : null;
   const header = data && total && (
-    <SummaryHeader
+    <ProfileSummaryHeader
       name={nameOf(data)}
       full={maximized}
       facts={[
@@ -826,573 +786,33 @@ export const UserProfilePage = memo(function UserProfilePage({
   );
 
   // ── Toolbar ─────────────────────────────────────────────────────────────
-  const showOptions: { value: Show; label: string }[] = [
-    { value: "all", label: t("desktop.profile.view.show_all") },
-    { value: "unset", label: t("desktop.profile.view.show_unset") },
-    { value: "required", label: t("desktop.profile.view.show_required") },
-    { value: "filled", label: t("desktop.profile.view.show_filled") },
-  ];
-  const groupOptions: { value: Group; label: string }[] = [
-    { value: "section", label: t("desktop.profile.view.group_section") },
-    { value: "status", label: t("desktop.profile.view.group_status") },
-    { value: "none", label: t("desktop.profile.view.group_none") },
-  ];
-  const sortOptions: { value: Sort; label: string }[] = [
-    { value: "form", label: t("desktop.profile.view.sort_form") },
-    { value: "missing", label: t("desktop.profile.view.sort_missing") },
-    { value: "alpha", label: t("desktop.profile.view.sort_alpha") },
-  ];
-  const labelOf = <T extends string>(
-    options: { value: T; label: string }[],
-    value: T,
-  ) => options.find((option) => option.value === value)?.label ?? value;
-  const sectionsMenu = data && (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          size="sm"
-          variant="outline"
-          className={cn(maximized && "@2xl/profile:hidden")}
-        >
-          {t("desktop.profile.sections")}
-          <Icon name="chevronDown" size="xs" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="max-w-menu">
-        {data.sections.map((section) => (
-          <DropdownMenuItem
-            key={section.key}
-            onSelect={() => goToSection(section.key)}
-          >
-            <span className="min-w-0 flex-1 truncate">{section.title}</span>
-            {requiredSection(section) && <RequiredMark />}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
   const toolbar = data && (
-    <div
-      role="search"
-      aria-label={t("desktop.profile.search")}
-      className="sticky top-0 z-(--layer-pinned) flex flex-wrap items-center gap-2 border-b bg-background px-4 py-2"
-    >
-      <div className="relative min-w-0 flex-1 basis-44">
-        <Icon
-          name="search"
-          className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-faint"
-        />
-        <Input
-          ref={searchInput}
-          type="search"
-          aria-label={t("desktop.profile.search")}
-          aria-keyshortcuts="/"
-          placeholder={t("desktop.profile.search_placeholder")}
-          className="h-control-sm pr-8 pl-8"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Escape" && search) {
-              event.preventDefault();
-              event.stopPropagation();
-              setSearch("");
-            } else if (event.key === "ArrowDown" || event.key === "Enter") {
-              event.preventDefault();
-              page.current
-                ?.querySelector<HTMLElement>("[data-kind='row']")
-                ?.focus();
-            }
-          }}
-        />
-        {!search && (
-          <Kbd className="absolute top-1/2 right-2 -translate-y-1/2">/</Kbd>
-        )}
-      </div>
-      {maximized ? (
-        <>
-          <SegmentedControl
-            aria-label={t("desktop.profile.view.show")}
-            value={show}
-            onValueChange={(value) => setView({ show: value as Show })}
-          >
-            {showOptions.map((option) => (
-              <SegmentedControlItem
-                key={option.value}
-                value={option.value}
-                className="px-2.5 text-sm"
-              >
-                {option.label}
-              </SegmentedControlItem>
-            ))}
-          </SegmentedControl>
-          <ChoiceButton
-            label={t("desktop.profile.view.group")}
-            current={labelOf(groupOptions, group)}
-          >
-            <MenuChoice
-              label={t("desktop.profile.view.group")}
-              value={group}
-              options={groupOptions}
-              onChange={(value: Group) => setView({ group: value })}
-            />
-          </ChoiceButton>
-          <ChoiceButton
-            label={t("desktop.profile.view.sort")}
-            current={labelOf(sortOptions, sort)}
-          >
-            <MenuChoice
-              label={t("desktop.profile.view.sort")}
-              value={sort}
-              options={sortOptions}
-              onChange={(value: Sort) => setView({ sort: value })}
-            />
-          </ChoiceButton>
-        </>
-      ) : (
-        <ChoiceButton
-          label={t("desktop.profile.view.options")}
-          current={show === "all" ? null : labelOf(showOptions, show)}
-        >
-          <MenuChoice
-            label={t("desktop.profile.view.show")}
-            value={show}
-            options={showOptions}
-            onChange={(value: Show) => setView({ show: value })}
-          />
-          <DropdownMenuSeparator />
-          <MenuChoice
-            label={t("desktop.profile.view.group")}
-            value={group}
-            options={groupOptions}
-            onChange={(value: Group) => setView({ group: value })}
-          />
-          <DropdownMenuSeparator />
-          <MenuChoice
-            label={t("desktop.profile.view.sort")}
-            value={sort}
-            options={sortOptions}
-            onChange={(value: Sort) => setView({ sort: value })}
-          />
-        </ChoiceButton>
-      )}
-      {sectionsMenu}
-      <IconButton
-        size="sm"
-        variant="ghost"
-        label={t(
-          collapsed.size
-            ? "desktop.profile.action.expand"
-            : "desktop.profile.action.collapse",
-        )}
-        onClick={() =>
-          setView({ collapsed: collapsed.size ? [] : groupKeys() })
-        }
-      >
-        <Icon name={collapsed.size ? "expandAll" : "collapseAll"} />
-      </IconButton>
-      {profile.loading && (
-        <span
-          role="status"
-          className="flex items-center gap-1.5 text-xs text-muted-foreground"
-        >
-          <Spinner className="size-icon-xs" />
-          {t("desktop.profile.loading")}
-        </span>
-      )}
-      <span className="ml-auto text-xs whitespace-nowrap text-muted-foreground">
-        <span aria-hidden="true">* </span>
-        {t("desktop.profile.required")}
-      </span>
-      {filtering && (
-        <p
-          role="status"
-          className="flex w-full items-center gap-2 text-xs text-muted-foreground"
-        >
-          {t("desktop.profile.view.results", { count: visible.length })}
-          <Button
-            size="xs"
-            variant="ghost"
-            onClick={() => {
-              setSearch("");
-              setView({ show: "all" });
-            }}
-          >
-            <Icon name="close" size="xs" />
-            {t("desktop.profile.view.show_all")}
-          </Button>
-        </p>
-      )}
-    </div>
+    <ProfileToolbar
+      sections={data.sections}
+      onGoToSection={goToSection}
+      maximized={maximized}
+      search={search}
+      onSearch={setSearch}
+      searchInput={searchInput}
+      page={page}
+      show={show}
+      group={group}
+      sort={sort}
+      onView={setView}
+      collapsedCount={collapsed.size}
+      onToggleCollapsed={() =>
+        setView({ collapsed: collapsed.size ? [] : groupKeys() })
+      }
+      loading={profile.loading}
+      filtering={filtering}
+      results={visible.length}
+    />
   );
 
   // ── Details ─────────────────────────────────────────────────────────────
-  const renderRow = (row: Row, prefix?: string) => {
-    const { field } = row;
-    const change = incoming.get(field.path);
-    const replaced = !!change && !change.preserve && change.incoming !== null;
-    const required = marked(row);
-    return (
-      <li
-        key={row.id}
-        {...navProps(row.id, "row", row.section.key)}
-        aria-label={labelled(
-          t,
-          required
-            ? noted(t, field.label, t("desktop.profile.required"))
-            : field.label,
-          row.state === "filled"
-            ? (shownValue(field) ?? t("desktop.profile.not_set"))
-            : row.state === "required"
-              ? t("desktop.profile.missing")
-              : t("desktop.profile.not_set"),
-        )}
-        aria-keyshortcuts="Enter"
-        onDoubleClick={() => {
-          if (writable) editRow(row);
-        }}
-        onContextMenu={(event: ReactMouseEvent<HTMLElement>) => {
-          event.preventDefault();
-          event.currentTarget.focus();
-          setActive(row.id);
-          detailMenu({ x: event.clientX, y: event.clientY });
-        }}
-        className={cn(
-          "group/row relative flex min-h-control-xs cursor-default items-start gap-3 rounded-md px-2 py-0.5 break-inside-avoid outline-none",
-          "hover:bg-accent focus-visible:bg-selected focus-visible:ring-2 focus-visible:ring-ring",
-          change && "my-1 rounded-l-none border-l-2 border-foreground",
-        )}
-      >
-        <span
-          data-part="label"
-          className={cn(
-            "min-w-0 shrink-0 basis-2/5 pt-px text-muted-foreground",
-            row.state === "required" && "font-medium text-foreground",
-          )}
-        >
-          {prefix && (
-            <span className="block truncate text-xs text-faint">{prefix}</span>
-          )}
-          <span className="break-words">{field.label}</span>
-          {required && <RequiredMark />}
-        </span>
-        <span className="min-w-0 flex-1 pt-px break-words">
-          <span className={cn(replaced && "line-through decoration-1")}>
-            {row.state === "filled" ? (
-              <>
-                {shownValue(field)}
-                {fromAeat.has(field.path) && !change && (
-                  <span
-                    title={t("desktop.profile.censo.source")}
-                    className="ml-2 rounded-sm border px-1 text-2xs font-medium text-muted-foreground"
-                  >
-                    {t("desktop.profile.censo.incoming")}
-                  </span>
-                )}
-              </>
-            ) : row.state === "required" ? (
-              <span className="font-medium text-foreground italic">
-                {t("desktop.profile.missing")}
-              </span>
-            ) : (
-              <Unset />
-            )}
-          </span>
-          {change && (
-            <span className="mt-0.5 block text-sm">
-              <span className="mr-1.5 rounded-sm border border-border-strong px-1 text-xs font-medium">
-                {t("desktop.profile.censo.incoming")}
-              </span>
-              <span className={cn(!replaced && "text-muted-foreground")}>
-                {change.incoming ?? "–"}
-              </span>
-              <span className="ml-2 text-xs text-muted-foreground italic">
-                {t(
-                  change.preserve
-                    ? "desktop.profile.censo.preserve"
-                    : change.incoming === null
-                      ? "desktop.profile.censo.absent"
-                      : "desktop.profile.censo.adopt",
-                )}
-              </span>
-            </span>
-          )}
-        </span>
-        <button
-          type="button"
-          tabIndex={-1}
-          disabled={!writable}
-          aria-label={t("desktop.profile.edit_field", { field: field.label })}
-          onClick={() => editRow(row)}
-          className={cn(
-            "flex size-control-xs shrink-0 cursor-pointer items-center justify-center rounded-sm text-muted-foreground opacity-0 hover:bg-selected hover:text-foreground disabled:cursor-default",
-            "group-hover/row:opacity-100 group-focus-visible/row:opacity-100",
-          )}
-        >
-          <Icon name="edit" size="xs" />
-        </button>
-      </li>
-    );
-  };
-
-  const card = ({
-    key,
-    title,
-    required,
-    meta,
-    extra,
-    children,
-    sectionKey,
-  }: {
-    key: string;
-    title: string;
-    required?: boolean;
-    meta?: string;
-    extra?: ReactNode;
-    children: ReactNode;
-    sectionKey?: string;
-  }) => {
-    const open = !collapsed.has(key);
-    return (
-      <section
-        key={key}
-        data-section={sectionKey}
-        aria-labelledby={`profile-title-${key}`}
-        className="group/section scroll-mt-14 overflow-hidden rounded-lg border bg-card"
-      >
-        <h3 className="flex min-h-control-md items-center gap-2 border-b bg-chrome pr-2 pl-1">
-          <button
-            type="button"
-            {...navProps(`head:${key}`, "head")}
-            id={`profile-title-${key}`}
-            aria-expanded={open}
-            aria-controls={`profile-body-${key}`}
-            onClick={() => toggle(key)}
-            className="flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 rounded-sm px-1.5 py-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <Icon name={open ? "chevronDown" : "forward"} />
-            <span className="truncate font-semibold text-foreground">
-              {title}
-            </span>
-            {required && <RequiredMark />}
-          </button>
-          {extra}
-          {meta && (
-            <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
-              {meta}
-            </span>
-          )}
-        </h3>
-        <div id={`profile-body-${key}`} hidden={!open}>
-          {children}
-        </div>
-      </section>
-    );
-  };
-
-  const sectionMeta = (section: ProfileSection) => {
-    const c = sectionCounts(section, missing);
-    const needed = c.missing
-      ? t("desktop.profile.required_missing", { count: c.missing })
-      : "";
-    return section.repeatable
-      ? facts(t, [
-          c.entries
-            ? t("desktop.profile.entries_count", { count: c.entries })
-            : t("desktop.profile.entries_none"),
-          needed,
-        ])
-      : facts(t, [`${c.filled}/${c.total}`, needed]);
-  };
-
-  const detailList = (rows: Row[], prefix = false) => (
-    <ul className={cn("gap-x-6 p-1.5", maximized && "@4xl/profile:columns-2")}>
-      {rows.map((row) =>
-        renderRow(row, prefix ? row.section.title : undefined),
-      )}
-    </ul>
-  );
-
-  const entriesCard = (section: ProfileSection) => {
-    const rows = entries(section);
-    const shownRows = needle
-      ? rows.filter(([, fields]) =>
-          profileText(
-            [
-              section.title,
-              ...fields.map((field) =>
-                field.masked ? "" : (fieldValue(field) ?? ""),
-              ),
-            ].join(" "),
-          ).includes(needle),
-        )
-      : rows;
-    if (needle && !shownRows.length) return null;
-    const anyRequired = section.fields.some((field) => field.required);
-    return card({
-      key: section.key,
-      sectionKey: section.key,
-      title: section.title,
-      meta: sectionMeta(section),
-      extra: (
-        <Button
-          size="xs"
-          variant="ghost"
-          disabled={!writable}
-          className="opacity-0 group-focus-within/section:opacity-100 group-hover/section:opacity-100 focus-visible:opacity-100"
-          onClick={() => editEntry(section, null)}
-        >
-          <Icon name="plus" size="xs" />
-          {t("desktop.profile.add")}
-        </Button>
-      ),
-      children: (
-        <div className="p-1.5">
-          {shownRows.length ? (
-            <ul>
-              {shownRows.map(([entry, fields], index) => {
-                const [lead, ...rest] = fields;
-                const id = `entry:${section.key}:${entry}`;
-                const needs = fields.filter((field) => missing.has(field.path));
-                return (
-                  <li
-                    key={entry}
-                    {...navProps(id, "row", section.key)}
-                    aria-label={`${index + 1}. ${(lead && shownValue(lead)) || t("desktop.profile.not_set")}`}
-                    aria-keyshortcuts="Enter Delete"
-                    onDoubleClick={() => {
-                      if (writable) editEntry(section, entry);
-                    }}
-                    onContextMenu={(event) => {
-                      event.preventDefault();
-                      event.currentTarget.focus();
-                      setActive(id);
-                      detailMenu({ x: event.clientX, y: event.clientY });
-                    }}
-                    className="group/row flex items-center gap-3 rounded-md px-2 py-1 outline-none hover:bg-accent focus-visible:bg-selected focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    <span className="w-5 shrink-0 text-right text-xs text-faint tabular-nums">
-                      {index + 1}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-foreground">
-                        {(lead && shownValue(lead)) || <Unset />}
-                      </span>
-                      <span className="block truncate text-sm text-muted-foreground">
-                        {facts(
-                          t,
-                          rest.map((field) =>
-                            field.value
-                              ? labelled(
-                                  t,
-                                  field.label,
-                                  shownValue(field) ?? "",
-                                )
-                              : null,
-                          ),
-                        ) || "–"}
-                      </span>
-                      {needs.length > 0 && (
-                        <span className="block text-sm font-medium text-foreground italic">
-                          {labelled(
-                            t,
-                            t("desktop.profile.missing"),
-                            listed(
-                              t,
-                              needs.map((field) => field.label),
-                            ),
-                          )}
-                        </span>
-                      )}
-                    </span>
-                    <span className="flex shrink-0 gap-0.5 opacity-0 group-hover/row:opacity-100 group-focus-visible/row:opacity-100">
-                      <IconButton
-                        size="xs"
-                        variant="ghost"
-                        tabIndex={-1}
-                        disabled={!writable}
-                        label={t("desktop.profile.action.edit_entry")}
-                        onClick={() => editEntry(section, entry)}
-                      >
-                        <Icon name="edit" size="xs" />
-                      </IconButton>
-                      <IconButton
-                        size="xs"
-                        variant="ghost"
-                        tabIndex={-1}
-                        disabled={!writable}
-                        label={t("desktop.profile.remove")}
-                        onClick={() => removeEntry(section, entry)}
-                      >
-                        <Icon name="trash" size="xs" />
-                      </IconButton>
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <p className="px-2 py-1.5 text-muted-foreground">
-              {t("desktop.profile.entries_none")}
-              {anyRequired && (
-                <span className="ml-2 text-xs">
-                  {t("desktop.profile.entry_required")}
-                </span>
-              )}
-            </p>
-          )}
-        </div>
-      ),
-    });
-  };
-
   // Entries are listed with the details they belong beside, except where
   // the person asked only for what is missing.
   const listsEntries = show === "all" || show === "filled";
-  let body: ReactNode = null;
-  if (data && group === "section")
-    body = data.sections.map((section) => {
-      if (section.repeatable) return listsEntries ? entriesCard(section) : null;
-      const rows = visible.filter((row) => row.section.key === section.key);
-      if (!rows.length) return null;
-      return card({
-        key: section.key,
-        sectionKey: section.key,
-        title: section.title,
-        required: requiredSection(section),
-        meta: sectionMeta(section),
-        children: detailList(rows),
-      });
-    });
-  else if (data && group === "status")
-    body = [
-      ...STATUS_GROUPS.map((state) => {
-        const rows = visible.filter((row) => row.state === state);
-        if (!rows.length) return null;
-        return card({
-          key: `status-${state}`,
-          title: t(`desktop.profile.view.status_${state}`),
-          required: state === "required",
-          meta: String(rows.length),
-          children: detailList(rows, true),
-        });
-      }),
-      ...(listsEntries
-        ? data.sections.filter((s) => s.repeatable).map(entriesCard)
-        : []),
-    ];
-  else if (data)
-    body = [
-      visible.length
-        ? card({
-            key: "all",
-            title: t("desktop.profile.view.results", { count: visible.length }),
-            children: detailList(visible, true),
-          })
-        : null,
-      ...(listsEntries
-        ? data.sections.filter((s) => s.repeatable).map(entriesCard)
-        : []),
-    ];
   const nothing =
     !!data &&
     !visible.length &&
@@ -1404,37 +824,12 @@ export const UserProfilePage = memo(function UserProfilePage({
     );
 
   const index = data && maximized && (
-    <nav
-      aria-label={t("desktop.profile.sections")}
-      className="hidden w-menu shrink-0 overflow-y-auto border-r py-2 @2xl/profile:block"
-    >
-      <ul className="px-2">
-        {data.sections.map((section) => {
-          const c = sectionCounts(section, missing);
-          return (
-            <li key={section.key}>
-              <button
-                type="button"
-                aria-current={current === section.key ? "location" : undefined}
-                onClick={() => goToSection(section.key)}
-                className={cn(
-                  "flex w-full cursor-pointer items-baseline gap-2 rounded-md px-2 py-1 text-left text-sm text-muted-foreground hover:bg-accent hover:text-foreground",
-                  "aria-[current]:bg-selected aria-[current]:font-medium aria-[current]:text-foreground",
-                )}
-              >
-                <span className="flex min-w-0 flex-1 gap-1">
-                  <span className="truncate">{section.title}</span>
-                  {requiredSection(section) && <RequiredMark />}
-                </span>
-                <span className="shrink-0 text-xs text-faint tabular-nums">
-                  {section.repeatable ? c.entries : `${c.filled}/${c.total}`}
-                </span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
+    <ProfileSectionIndex
+      sections={data.sections}
+      missing={missing}
+      current={current}
+      onGoToSection={goToSection}
+    />
   );
 
   const errorKeys = {
@@ -1510,7 +905,26 @@ export const UserProfilePage = memo(function UserProfilePage({
                 key={data.profile_id}
                 profile={profile.loading || profile.error ? null : data}
               />
-              {body}
+              <ProfileDetails
+                data={data}
+                visible={visible}
+                group={group}
+                needle={needle}
+                listsEntries={listsEntries}
+                collapsed={collapsed}
+                onToggle={toggle}
+                missing={missing}
+                incoming={incoming}
+                fromAeat={fromAeat}
+                writable={writable}
+                maximized={maximized}
+                active={active}
+                onActive={setActive}
+                onEditRow={editRow}
+                onEditEntry={editEntry}
+                onRemoveEntry={removeEntry}
+                onMenu={detailMenu}
+              />
               {/* The household is not one of the profile's details: it is
                   the people the declaration lists, read and written as a
                   whole, so a text search of details does not hide it. */}
@@ -1579,199 +993,3 @@ export const UserProfilePage = memo(function UserProfilePage({
     </section>
   );
 });
-
-function RequiredMark() {
-  const t = useStrings();
-  return (
-    <>
-      <span aria-hidden="true" className="font-semibold text-foreground">
-        {" "}
-        *
-      </span>
-      <span className="sr-only"> ({t("desktop.profile.required")})</span>
-    </>
-  );
-}
-
-function Unset() {
-  const t = useStrings();
-  return (
-    <span className="text-faint" title={t("desktop.profile.not_set")}>
-      –<span className="sr-only">{t("desktop.profile.not_set")}</span>
-    </span>
-  );
-}
-
-function SummaryHeader({
-  name,
-  full,
-  facts,
-  missing,
-  filled,
-  total,
-  missingCount,
-  onMissing,
-  actions,
-}: {
-  name: string;
-  full: boolean;
-  /** Icon, field and, where it differs from the field's, the value shown. */
-  facts: [IconName, ProfileField | undefined, string?][];
-  missing: Set<string>;
-  filled: number;
-  total: number;
-  missingCount: number;
-  onMissing(): void;
-  actions: ReactNode;
-}) {
-  const t = useStrings();
-  const letters = initials(name);
-  return (
-    <header
-      className={cn(
-        "flex items-start gap-3 border-b px-4",
-        full ? "gap-4 py-4" : "py-3",
-      )}
-    >
-      <div
-        aria-hidden="true"
-        className={cn(
-          "flex shrink-0 items-center justify-center rounded-full border border-border-strong bg-secondary font-semibold text-foreground select-none",
-          full ? "size-16 text-lg" : "size-10 text-base",
-        )}
-      >
-        {letters || <Icon name="person" size={full ? "lg" : "md"} />}
-      </div>
-      <div className="min-w-0 flex-1">
-        <h3
-          className={cn(
-            "truncate font-semibold text-foreground",
-            full ? "text-lg" : "text-md",
-          )}
-        >
-          {name || t("desktop.profile.unnamed")}
-        </h3>
-        <dl
-          className={cn(
-            "mt-0.5 flex min-w-0 flex-wrap gap-x-4 gap-y-0.5 text-sm text-muted-foreground",
-            !full && "gap-x-3",
-          )}
-        >
-          {facts.map(([icon, field, shown], at) => {
-            if (!field) return null;
-            const value = shown || shownValue(field);
-            if (!full && at >= 2 && !value) return null;
-            return (
-              <div
-                key={field.path}
-                className="flex min-w-0 items-center gap-1.5"
-                title={field.label}
-              >
-                <dt className="flex items-center">
-                  <Icon name={icon} />
-                  <span className="sr-only">{field.label}</span>
-                </dt>
-                <dd className="min-w-0 truncate text-foreground">
-                  {value ||
-                    (missing.has(field.path) ? (
-                      <span className="font-medium italic">
-                        {t("desktop.profile.missing")}
-                      </span>
-                    ) : (
-                      <Unset />
-                    ))}
-                </dd>
-              </div>
-            );
-          })}
-        </dl>
-        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-          <span className="flex items-center gap-2">
-            <Progress
-              value={filled}
-              max={total || 1}
-              aria-label={t("desktop.profile.progress", { filled, total })}
-              className="w-24 text-foreground"
-            />
-            <span className="tabular-nums">
-              {t("desktop.profile.progress", { filled, total })}
-            </span>
-          </span>
-          {missingCount ? (
-            <button
-              type="button"
-              className="cursor-pointer font-medium text-foreground underline-offset-2 hover:underline"
-              onClick={onMissing}
-            >
-              <span aria-hidden="true">* </span>
-              {t("desktop.profile.required_missing", { count: missingCount })}
-            </button>
-          ) : (
-            <span className="flex items-center gap-1">
-              <Icon name="tick" size="xs" />
-              {t("desktop.profile.required_done")}
-            </span>
-          )}
-        </div>
-      </div>
-      <div className="flex shrink-0 items-center gap-1">{actions}</div>
-    </header>
-  );
-}
-
-function ChoiceButton({
-  label,
-  current,
-  children,
-}: {
-  label: string;
-  current: string | null;
-  children: ReactNode;
-}) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button size="sm" variant="outline" className="gap-1">
-          <span className={cn(current && "text-muted-foreground")}>
-            {label}
-            {current && ":"}
-          </span>
-          {current && <span>{current}</span>}
-          <Icon
-            name="chevronDown"
-            size="xs"
-            className="text-muted-foreground"
-          />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">{children}</DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-function MenuChoice<T extends string>({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: T;
-  options: { value: T; label: string }[];
-  onChange(value: T): void;
-}) {
-  return (
-    <DropdownMenuGroup label={label}>
-      <DropdownMenuRadioGroup
-        value={value}
-        onValueChange={(next) => onChange(next as T)}
-      >
-        {options.map((option) => (
-          <DropdownMenuRadioItem key={option.value} value={option.value}>
-            {option.label}
-          </DropdownMenuRadioItem>
-        ))}
-      </DropdownMenuRadioGroup>
-    </DropdownMenuGroup>
-  );
-}
