@@ -8,6 +8,7 @@ import pytest
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.deadlines.effective_close import effective_filing_deadline
 from ....domain.deadlines.models import ModeloDeadline, ObligationStatus
 from ..calendar import calendar_entry_from_obligation
 from ..calendar_models import (
@@ -42,11 +43,17 @@ def test_a_regional_holiday_close_survives_the_snapshot_round_trip(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     closes_on = date(2025, 9, 11)
+    effective = effective_filing_deadline(closes_on, modelo="303", operation=authority_operation)
     obligation = ModeloDeadline(
         modelo="303",
         period=Period.from_year_and_code(2025, "3T"),
         opens_on=closes_on.replace(day=1),
         closes_on=closes_on,
+        adjusted_closes_on=effective.closes_on,
+        holiday_coverage=effective.holiday_coverage,
+        shift_reason=effective.shift_reason,
+        shift_jurisdictions=effective.jurisdictions,
+        shift_holiday_refs=effective.holiday_refs,
         payment_cutoff_on=None,
         status=ObligationStatus.UPCOMING,
         boe_references=(),

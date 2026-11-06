@@ -275,12 +275,17 @@ class _RevisionDeadlineWindowChecker:
         self._engine = engine
 
     def is_window_open(self, modelo: str, period: Period, today: date) -> bool:
-        """Return whether the taxpayer has an open filing window."""
+        """Return whether the taxpayer has an open filing window.
+
+        The window runs to the close the filer actually has: a plazo ending on
+        a non-business day runs to the next business day, and reading the
+        nominal close called the window shut on a day filing was still timely.
+        """
         schedule = self._engine.compute(self._profile, period.filing_year, today=today)
         return any(
             obligation.modelo == modelo
             and obligation.period == period
-            and obligation.opens_on <= today <= obligation.closes_on
+            and obligation.opens_on <= today <= obligation.adjusted_closes_on
             for obligation in schedule.obligations
         )
 

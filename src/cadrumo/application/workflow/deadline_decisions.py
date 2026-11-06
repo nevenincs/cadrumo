@@ -15,8 +15,8 @@ from ...core.operator_action_enums import (
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.deadlines.effective_close import resolve_effective_filing_deadline, resolve_filing_timeliness
 from ...domain.deadlines.models import ModeloDeadline, ObligationStatus
-from ..modelo.effective_deadline import resolve_effective_filing_deadline, resolve_filing_timeliness
 from ..operator_actions.models import PreconditionVerdict
 from ..operator_actions.preconditions import no_action_precondition_verdict
 from .abort import WorkflowAbortReason
@@ -268,7 +268,9 @@ def _record_verify_deadline_context(
     if obligation is not None:
         if obligation.opens_on > today:
             window_state = FilingWindowState.FUTURE
-        elif obligation.closes_on >= today:
+        elif obligation.adjusted_closes_on >= today:
+            # The effective close, so the window is not reported shut on a day
+            # the filer may still file.
             window_state = FilingWindowState.OPEN
         else:
             window_state = FilingWindowState.CLOSED

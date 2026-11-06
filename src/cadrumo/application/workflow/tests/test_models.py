@@ -23,6 +23,7 @@ from ....core.operator_action_enums import (
     NoRecoveryOutcome,
 )
 from ....core.period import Period
+from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.deadlines.models import ModeloDeadline, ObligationStatus, RecargoBand, Recovery
 from ...operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..abort import WorkflowAbortReason
@@ -378,6 +379,10 @@ def test_workflow_obligation_projection_carries_stable_recovery_facts() -> None:
         period=_period(2025),
         opens_on=date(2025, 4, 1),
         closes_on=date(2025, 4, 20),
+        # The 20th is a Sunday, so the filer has until the Monday.
+        adjusted_closes_on=date(2025, 4, 21),
+        holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
+        shift_reason="domingo",
         payment_cutoff_on=date(2025, 4, 15),
         status=ObligationStatus.OVERDUE,
         boe_references=("orden-hfp-105-2017:art-1",),

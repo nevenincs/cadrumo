@@ -28,8 +28,8 @@ from ....core.filing_timeliness import FilingTimeliness
 from ....core.period import Period
 from ....core.time.clock import MADRID_TZ, now
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.deadlines.effective_close import resolve_effective_filing_deadline
 from ....domain.deadlines.models import ModeloDeadline, ObligationStatus
-from ...modelo.effective_deadline import resolve_effective_filing_deadline
 from ..deadline_decisions import decide_filing_deadline
 from ..run_models import WorkflowDeadlineContextDetails, WorkflowPurpose, WorkflowStage, WorkflowStep
 
@@ -52,6 +52,11 @@ def _registry_obligation(operation: PinnedAuthorityOperation) -> ModeloDeadline:
         period=period,
         opens_on=date(_FILING_YEAR, 4, 1),
         closes_on=deadline.nominal_closes_on,
+        adjusted_closes_on=deadline.closes_on,
+        holiday_coverage=deadline.holiday_coverage,
+        shift_reason=deadline.shift_reason,
+        shift_jurisdictions=deadline.jurisdictions,
+        shift_holiday_refs=deadline.holiday_refs,
         status=ObligationStatus.OVERDUE,
     )
 

@@ -46,6 +46,7 @@ from ...core.time.clock import now
 from ...domain.calculations.registry.applicability import derive_modelo_applicability, taxpayer_model_is_declared
 from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ...domain.deadlines.domiciliation_cutoff import resolve_payment_cutoff
+from ...domain.deadlines.effective_close import CALENDAR_UNAVAILABLE_SHIFT_REASON, effective_filing_deadline
 from ...domain.deadlines.engine import DeadlineEngine, ScheduleProducer, classify_obligation_status
 from ...domain.deadlines.errors import NoDeadlineWindowsError
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage
@@ -62,7 +63,6 @@ from ...domain.deadlines.models import (
 from ...domain.deadlines.plazo import resolve_filing_window
 from ...domain.deadlines.recargo import build_recovery_for_overdue
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitState
-from ..modelo.effective_deadline import CALENDAR_UNAVAILABLE_SHIFT_REASON, effective_filing_deadline
 from .calendar_evidence import (
     calendar_entry_filing_evidence,
     calendar_events_with_filing_evidence,
@@ -143,12 +143,9 @@ def entry_intersects_range(
         return (
             obligation.opens_on <= calendar_range.to_date and obligation.nominal_closes_on >= calendar_range.from_date
         )
-    return _window_intersects_range(
-        obligation.opens_on,
-        obligation.closes_on,
-        modelo=obligation.modelo,
-        calendar_range=calendar_range,
-        operation=operation,
+    del operation
+    return (
+        obligation.opens_on <= calendar_range.to_date and obligation.adjusted_closes_on >= calendar_range.from_date
     )
 
 
@@ -367,13 +364,21 @@ def _calendar_entry_from_work_unit(
         if entry.filing_evidence.aeat_filed:
             status = ObligationStatus.FILED
         return entry.model_copy(update={**work_unit_fields, "status": status, "user_state": user_state_for(status)})
+    effective = effective_filing_deadline(closes_on, modelo=str(unit.modelo), operation=operation)
     obligation = ModeloDeadline(
         modelo=Modelo(str(unit.modelo)),
         period=unit.period,
         opens_on=opens_on,
         closes_on=closes_on,
+        adjusted_closes_on=effective.closes_on,
+        holiday_coverage=effective.holiday_coverage,
+        shift_reason=effective.shift_reason,
+        shift_jurisdictions=effective.jurisdictions,
+        shift_holiday_refs=effective.holiday_refs,
         payment_cutoff_on=payment_cutoff_on,
-        status=local_work_unit_status(unit, closes_on, today, due_soon_days),
+        # Overview's filing-pointer gate runs first; every date boundary past it
+        # is judged against the close the filer actually has.
+        status=local_work_unit_status(unit, effective.closes_on, today, due_soon_days),
         boe_references=(),
         recovery=None,
     )
@@ -561,15 +566,16 @@ def calendar_entry_from_obligation(
     censo_enrolment_states: dict[str, OverviewCensoEnrolmentState] | None = None,
 ) -> OverviewCalendarEntry:
     """Build an overview calendar entry from a modelo obligation and its filing evidence."""
-    deadline = effective_filing_deadline(
-        obligation.closes_on,
-        modelo=obligation.modelo,
-        operation=operation,
-    )
-    adjusted = deadline.closes_on
-    holiday_coverage = deadline.holiday_coverage
+    # The obligation already carries the effective close and the status its
+    # producer classified against that close, on this same reference date.
+    # Resolving the shift or the boundaries again here could only disagree --
+    # and did, for a year whose holiday calendar is unpublished, where the
+    # producer reports UNKNOWN and a second classification said overdue.
+    # Overview's filing-evidence gate below is its own concern and stays here.
+    adjusted = obligation.adjusted_closes_on
+    holiday_coverage = obligation.holiday_coverage
     period = obligation.period
-    status = classify_obligation_status(adjusted, today, due_soon_days)
+    status = obligation.status
     evidence = calendar_entry_filing_evidence(
         modelo=obligation.modelo,
         filing_year=period.filing_year,
@@ -609,9 +615,9 @@ def calendar_entry_from_obligation(
         opens_on=obligation.opens_on,
         closes_on=obligation.closes_on,
         adjusted_closes_on=adjusted,
-        shift_reason=deadline.shift_reason,
-        holiday_refs=deadline.holiday_refs,
-        jurisdictions=deadline.jurisdictions,
+        shift_reason=obligation.shift_reason,
+        holiday_refs=obligation.shift_holiday_refs,
+        jurisdictions=obligation.shift_jurisdictions,
         holiday_coverage=holiday_coverage,
         payment_cutoff_on=obligation.payment_cutoff_on,
         evaluated_on=today,
