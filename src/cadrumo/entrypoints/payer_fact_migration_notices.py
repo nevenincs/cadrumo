@@ -19,6 +19,8 @@ from ..core.i18n.render import tr
 from ..core.json_contract import Notice, NoticeSeverity
 
 if TYPE_CHECKING:
+    from ..domain.calculations.registry.applicability_models import ModeloApplicabilityRule
+    from ..domain.calculations.registry.applicability_payer_facts import PayerFactValue
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..domain.user_profile.values import UserProfileRecord
 
@@ -80,8 +82,14 @@ def drain_payer_fact_migration_notices() -> tuple[Notice, ...]:
         return payer_fact_cleared_notices(paths, operation=operation)
 
 
-def _gated_modelos(path: str, *, operation: PinnedAuthorityOperation) -> frozenset[str]:
-    """Return the modelos whose payer-fact gate reads the profile field at ``path``."""
+def payer_fact_gated_modelos(path: str, *, operation: PinnedAuthorityOperation) -> frozenset[str]:
+    """Return the modelos whose payer-fact gate reads the profile field at ``path``.
+
+    A rule gates its modelo through the fact it requires and equally through
+    the fact an exclusion reads: the Art. 109 RIRPF coverage fact excludes
+    Modelo 130 rather than requiring it, and a cleared answer has to be asked
+    again on that modelo too.
+    """
     from ..domain.calculations.registry.applicability import iter_modelo_applicability_rules
     from ..domain.calculations.registry.applicability_payer_facts import payer_fact_profile_keys
 
@@ -89,11 +97,17 @@ def _gated_modelos(path: str, *, operation: PinnedAuthorityOperation) -> frozens
     return frozenset(
         str(rule.modelo)
         for rule in iter_modelo_applicability_rules()
-        if rule.required_payer_fact is not None
-        and any(
-            schema.path_for_model_selector(key) == path for key in payer_fact_profile_keys(rule.required_payer_fact)
-        )
+        for fact in _rule_payer_facts(rule)
+        if any(schema.path_for_model_selector(key) == path for key in payer_fact_profile_keys(fact))
     )
+
+
+def _rule_payer_facts(rule: ModeloApplicabilityRule) -> tuple[PayerFactValue, ...]:
+    """Return every payer fact one applicability rule reads, required or excluding."""
+    exclusion_facts = tuple(exclusion.payer_fact for exclusion in rule.exclusions if exclusion.payer_fact is not None)
+    if rule.required_payer_fact is None:
+        return exclusion_facts
+    return (rule.required_payer_fact, *exclusion_facts)
 
 
 def pending_payer_fact_notices(
@@ -119,7 +133,7 @@ def pending_payer_fact_notices(
     )
     paths = repository.pending_cleared_payer_fact_paths(record.profile_id)
     if modelo is not None:
-        paths = tuple(path for path in paths if modelo in _gated_modelos(path, operation=operation))
+        paths = tuple(path for path in paths if modelo in payer_fact_gated_modelos(path, operation=operation))
     return payer_fact_cleared_notices(paths, operation=operation)
 
 
@@ -127,5 +141,6 @@ __all__ = [
     "NOTICE_CODE",
     "drain_payer_fact_migration_notices",
     "payer_fact_cleared_notices",
+    "payer_fact_gated_modelos",
     "pending_payer_fact_notices",
 ]

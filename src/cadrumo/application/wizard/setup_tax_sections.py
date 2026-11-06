@@ -144,9 +144,9 @@ def _obligations_withholding_questions(
 ) -> tuple[WizardQuestion, ...]:
     """Build the withholding and estimation-regime questions of the obligations section."""
     return (
-        # The withholding payer facts gate Modelos 111, 115, 180, 190, 216,
-        # 296 and 349, so they carry no default: an unanswered question stays
-        # absent and reads as undeclared rather than as a "no".
+        # The withholding payer facts gate Modelos 111, 115, 130, 180, 190,
+        # 216, 296 and 349, so they carry no default: an unanswered question
+        # stays absent and reads as undeclared rather than as a "no".
         confirmation_question("has-employees", "withholding.has_employees", suffix="obligations", default=None),
         confirmation_question(
             "pays-professionals-with-retencion",
@@ -158,6 +158,7 @@ def _obligations_withholding_questions(
             "art109-activity-income-withholding-ge-70pct",
             "irpf.art109_activity_income_withholding_ge_70pct",
             suffix="obligations",
+            default=None,
         ),
         confirmation_question(
             "pays-rent-with-retencion",

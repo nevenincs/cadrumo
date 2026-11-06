@@ -6,9 +6,9 @@ source, so a profile that was not opened across one release still opens across
 two.
 
 - Schema 7 reads the dated payer facts (Modelos 347, 720, 721) as three-state.
-- Schema 8 reads the withholding and intracommunity payer facts the same way:
-  an absent fact is unanswered, ``True`` is a declared yes and ``False`` is a
-  declared no.
+- Schema 8 reads the withholding, intracommunity and Art. 109 coverage payer
+  facts the same way: an absent fact is unanswered, ``True`` is a declared yes
+  and ``False`` is a declared no.
 
 Before each of those bumps the setup wizard defaulted the affected questions
 to ``false`` and wrote the default as an ordinary ``manual_cli`` fact, so a
@@ -56,6 +56,7 @@ does not rewrite what schema 6 stored.
 
 PAYER_FACT_PATHS_CLEARED_FROM_V7: Final[frozenset[str]] = frozenset(
     {
+        "irpf.art109_activity_income_withholding_ge_70pct",
         "iva.does_intracomunitario",
         "withholding.has_employees",
         "withholding.pays_professionals_with_retencion",
@@ -64,11 +65,13 @@ PAYER_FACT_PATHS_CLEARED_FROM_V7: Final[frozenset[str]] = frozenset(
 )
 """Schema-7 payer-fact paths whose stored ``false`` is not a proven answer.
 
-These four gate Modelos 111, 115, 180, 190, 216, 296 and 349 through the
+These five gate Modelos 111, 115, 130, 180, 190, 216, 296 and 349 through the
 three-state payer facts, and schema 7 still defaulted each question to
-``false``. The two-state withholding facts and the cadence-only censo
-enrolments keep their stored values: neither can turn an unanswered question
-into a not-applicable verdict.
+``false``. The Art. 109 RIRPF coverage fact is the Modelo 130 exclusion: a
+stored ``false`` says the exception does not hold and leaves the pago
+fraccionado due, so it must be the taxpayer's own answer. The two-state
+withholding facts and the cadence-only censo enrolments keep their stored
+values: neither can turn an unanswered question into a not-applicable verdict.
 """
 
 _CLEARED_PATHS_BY_TRANSITION: Final[Mapping[int, frozenset[str]]] = MappingProxyType(
@@ -98,7 +101,7 @@ _PATHS_INTRODUCED_BY_VERSION: Final[Mapping[int, frozenset[str]]] = MappingProxy
         MIGRATED_PROFILE_SCHEMA_VERSION: frozenset[str](),
     },
 )
-"""Fields each version ADDED. Schema 8 adds none; it only re-reads four values."""
+"""Fields each version ADDED. Schema 8 adds none; it only re-reads five values."""
 
 SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS: Final[tuple[int, ...]] = tuple(sorted(_CLEARED_PATHS_BY_TRANSITION))
 """Every stored profile schema version this build still migrates forward.

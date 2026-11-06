@@ -5,7 +5,7 @@ tags:
 date: '2026-09-23'
 modified: '2026-11-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:0c0e24be971294dbbd3f2bc08be8c4ae4ddf17e407bd4634a64a72835053aca9'
+body_hash: 'sha256:20c687afd6b7b70e1356a6f8c6b6f9b94262b1ceca8376bf332f8620a30f1a8d'
 related:
   - "[[2026-09-23-calendar-obligations-holiday-jurisdiction-adr]]"
   - "[[2026-06-30-obligation-coverage-completeness-adr]]"
@@ -85,24 +85,27 @@ The three-state contract is the only option under which an operator who answered
 - The `includes` operation is available to any future per-period obligation. A quarter token that matches no window is inert, not an error, so declared quarters outside a window's range produce no row.
 - Docs sequence goldens that show setup flags, explain facts or applicability listings change with the new questions and must be regenerated in the same window.
 
-## Amendment 2026-11-06: the coded payer facts lose their defaults
+## Amendment 2026-11-06: the five coded payer facts lose their defaults
 
 Accepted 2026-11-06 on the user's explicit approval, given in the FIXTURES session after the triage of the Modelo 111 fixture regression.
 
-The disposition for a stored `false` was put to the operator as two options: clear it and re-ask, or keep it and notify the operator to reconfirm. The operator ruled on 2026-11-06, relayed verbatim by the coordinator for this lane: "yes drop old reask". Those words answer that question for the four paths below, so the accepted disposition is to drop a stored `false` on them and re-ask through the cleared-fact notice.
+The disposition for a stored `false` was put to the operator as two options: clear it and re-ask, or keep it and notify the operator to reconfirm. The operator ruled on 2026-11-06, relayed verbatim by the coordinator for this lane: "yes drop old reask". Those words answer that question for the five paths below, so the accepted disposition is to drop a stored `false` on them and re-ask through the cleared-fact notice.
+
+The same defect was then found on a fifth path, `irpf.art109_activity_income_withholding_ge_70pct`. The operator's directive of 2026-11-06, relayed verbatim by the coordinator for this lane, "please ensure you fix the known issues related to your lanes", applies the ruling above to it on the same terms: its stored `false` is dropped and re-asked, and its stored `true` is kept. That fact is the Modelo 130 exclusion, so its polarity is the reverse of the other four. RIRPF art. 109.1 exempts the taxpayer from pagos fraccionados when at least 70 per cent of the previous year's professional, agricultural, livestock or forestry activity income bore retención or ingreso a cuenta, so a declared yes makes Modelo 130 not applicable, a declared no leaves the pago fraccionado due, and an unanswered fact leaves it incomplete. A defaulted negative asserted an answer nobody gave and made the obligation read as settled.
 
 The Implementation section kept the coded payer facts (withholding, intracommunity) on their own evaluators. Those facts have since moved to the three-state contract: `_THREE_STATE_PAYER_FACTS` in `src/cadrumo/domain/calculations/registry/applicability_payer_facts.py`. Their setup defaults were never removed, though:
 
-- `src/cadrumo/_data/registry/aeat/facts/0096-ley-49-2002-profile-binding-catalogue.toml` still declares `|bool|false` for `iva.does_intracomunitario`, `withholding.has_employees`, `withholding.pays_professionals_with_retencion` and `withholding.pays_rent_with_retencion`;
+- `src/cadrumo/_data/registry/aeat/facts/0096-ley-49-2002-profile-binding-catalogue.toml` still declares `|bool|false` for `iva.does_intracomunitario`, `withholding.has_employees`, `withholding.pays_professionals_with_retencion`, `withholding.pays_rent_with_retencion` and `irpf.art109_activity_income_withholding_ge_70pct`;
 - the setup questions in `src/cadrumo/application/wizard/setup_tax_sections.py` still default to `"false"`.
 
-`setup_answer_projection.py` fills an absent path with that default. An unanswered profile therefore reaches the three-state evaluator as a declared no, and Modelos 111, 115, 180, 190, 216, 296 and 349 are refused as not applicable instead of reported as incomplete. That is the silent under-declaration this decision rejected.
+`setup_answer_projection.py` fills an absent path with that default. An unanswered profile therefore reaches the three-state evaluator as a declared no, so Modelos 111, 115, 180, 190, 216, 296 and 349 are refused as not applicable, and Modelo 130 is reported as applicable, instead of either being reported as incomplete. That is the silent under-declaration this decision rejected.
 
-The amendment extends the dated-fact contract to these four paths:
+The amendment extends the dated-fact contract to these five paths:
 
-- **Defaults:** the four catalogue entries and their setup questions carry no default, as `withholding.colegio_concertado` and the Modelo 347 and 720 questions already do. Only an interactive answer or an explicit CLI flag writes `true` or `false`.
-- **Migration:** profile schema version 8 records that a stored `false` on these paths is an answer. Its forward migration keeps every stored `true`, drops every stored `false` on the four paths, and leaves every other fact untouched. It runs atomically per profile inside the profile store's persistence boundary and is idempotent. It records the cleared facts, so the existing localized notice names each one and the step that answers it.
-- **Supported stored versions:** every version this build has ever migrated stays a supported stored source, so a profile that was not opened across a release is never locked out. Each transition owns the paths it clears: leaving schema 6 clears the three dated payer facts, and leaving schema 7 clears these four. A record stored at schema 6 crosses both transitions in one write and has both sets dropped, named together in its one cleared-fact history event, which also records the version it came from. A stored `false` on a dated payer fact is kept when the record is stored at schema 7, because that version did read it as an answer. The same door authenticates a restored or imported bundle at either version, so a portable profile takes the same migration on first open.
-- **Unchanged:** the two-state facts (`pays_capital_income_with_retencion`, `art109_activity_income_withholding_ge_70pct`) and the filing-cadence predicates (`censo.large_company`, `censo.public_administration_budget_gt_6000000`) keep their current treatment.
+- **Defaults:** the five catalogue entries and their setup questions carry no default, as `withholding.colegio_concertado` and the Modelo 347 and 720 questions already do. Only an interactive answer or an explicit CLI flag writes `true` or `false`.
+- **Migration:** profile schema version 8 records that a stored `false` on these paths is an answer. Its forward migration keeps every stored `true`, drops every stored `false` on the five paths, and leaves every other fact untouched. It runs atomically per profile inside the profile store's persistence boundary and is idempotent. It records the cleared facts, so the existing localized notice names each one and the step that answers it.
+- **Notice scope:** a rule gates its modelo through the fact it requires and equally through the fact an exclusion reads, so the modelo-scoped cleared-fact notice reads both. Without that, the Art. 109 fact would never be re-asked on Modelo 130, the only modelo it gates.
+- **Supported stored versions:** every version this build has ever migrated stays a supported stored source, so a profile that was not opened across a release is never locked out. Each transition owns the paths it clears: leaving schema 6 clears the three dated payer facts, and leaving schema 7 clears these five. A record stored at schema 6 crosses both transitions in one write and has both sets dropped, named together in its one cleared-fact history event, which also records the version it came from. A stored `false` on a dated payer fact is kept when the record is stored at schema 7, because that version did read it as an answer. The same door authenticates a restored or imported bundle at either version, so a portable profile takes the same migration on first open.
+- **Unchanged:** the remaining two-state fact (`pays_capital_income_with_retencion`) and the filing-cadence predicates (`censo.large_company`, `censo.public_administration_budget_gt_6000000`) keep their current treatment.
 
-The rationale is the original one: asking again costs the operator one question, while a kept defaulted negative could hide a withholding or intracommunity obligation.
+The rationale is the original one: asking again costs the operator one question, while a kept defaulted negative could hide a withholding, intracommunity or pago fraccionado obligation.
