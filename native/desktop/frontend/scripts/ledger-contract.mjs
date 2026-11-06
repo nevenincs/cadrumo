@@ -12,6 +12,7 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { format, resolveConfig } from "prettier";
 import { refuseOversizedModules } from "./generated-module-bound.mjs";
+import { producerEnvironment } from "./producer-environment.mjs";
 
 const { values } = parseArgs({
   options: {
@@ -27,8 +28,7 @@ const contract = values.target
   : resolve(frontend, "src/shell/ledgerContract.ts");
 const producer = resolve(frontend, "scripts/ledger_contract.py");
 
-const environment = { ...process.env };
-environment.PYTHONPATH = repository;
+const environment = producerEnvironment(repository);
 
 const run = spawnSync("uv", ["run", "--no-sync", "python", "-B", producer], {
   cwd: repository,

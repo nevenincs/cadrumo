@@ -513,3 +513,14 @@ def test_the_child_environment_drops_every_recording_switch() -> None:
     assert not set(RECORDING_SWITCHES) & set(environment)
     assert environment["KEPT"] == "1"
     assert environment["ADDED"] == "2"
+
+
+def test_the_child_environment_puts_the_checkout_source_before_any_inherited_path(tmp_path: Path) -> None:
+    inherited = {"PYTHONPATH": os.pathsep.join((str(tmp_path / "elsewhere"), str(tmp_path)))}
+
+    environment = child_environment(Command(("x",)), tmp_path, inherited)
+
+    parts = environment["PYTHONPATH"].split(os.pathsep)
+    assert parts[:2] == [str(tmp_path / "src"), str(tmp_path)]
+    assert parts.index(str(tmp_path / "src")) < parts.index(str(tmp_path / "elsewhere"))
+    assert len(parts) == len(set(parts))
