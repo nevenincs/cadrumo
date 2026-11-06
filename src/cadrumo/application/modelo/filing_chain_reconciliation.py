@@ -805,6 +805,7 @@ def _record_aeat_content(
         member_nif=entry.member_nif,
         amends_filing_record_id=baseline.filing_record_id if baseline is not None else None,
         aeat_register=entry.register,
+        operation=context.operation,
     )
     catalogue = upsert_filing_record(catalogue, new_record)
     result = _result(

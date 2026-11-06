@@ -50,6 +50,7 @@ from typing import TYPE_CHECKING
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.coercion import normalize_decimal_separators
+from ...core.filing_timeliness import FilingTimeliness
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.observed_header_fact import ObservedHeaderFact
 from ...core.period import Period
@@ -103,6 +104,7 @@ from ..workflow.active_profile import require_active_profile_bucket_id
 from .action_errors import ExternalModeloImportError
 from .calculation_helpers import external_filing_observations
 from .calculation_repository import calculation_revision_catalogue_repository
+from .effective_deadline import decide_filing_timeliness
 from .filing_repository import modelo_record_catalogue_repository
 from .justificante_repository import justificante_repository as resolve_justificante_repository
 from .registry_helpers import reject_unknown_import_casillas
@@ -863,6 +865,27 @@ def prepare_external_filing_revision[CasillaKey](
     )
 
 
+def _observed_filing_timeliness(
+    *,
+    work_unit: WorkUnit,
+    aeat_register: AeatRegisterRef | None,
+    declaration_kind: FilingDeclarationKind,
+    operation: PinnedAuthorityOperation,
+) -> FilingTimeliness:
+    """Judge the AEAT-observed presentation date against the period's filing window."""
+    presented_at = aeat_register.presented_at if aeat_register is not None else None
+    if presented_at is None:
+        return FilingTimeliness.UNKNOWN
+    return decide_filing_timeliness(
+        modelo=str(work_unit.modelo),
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        filed_at=presented_at,
+        operation=operation,
+        declaration_kind=declaration_kind,
+    )
+
+
 def build_external_filing_record(
     *,
     filing_record_id: str,
@@ -875,9 +898,18 @@ def build_external_filing_record(
     declaration_kind: FilingDeclarationKind,
     member_nif: str | None = None,
     amends_filing_record_id: str | None = None,
+    operation: PinnedAuthorityOperation,
     aeat_register: AeatRegisterRef | None = None,
 ) -> ModeloRecord:
-    """Build the in-force, AEAT-origin chain entry for externally presented content."""
+    """Build the in-force, AEAT-origin chain entry for externally presented content.
+
+    The plazo posture is decided from the AEAT-observed presentation date the
+    register carries, never from ``filed_at``: ``filed_at`` is when this import
+    ran, so judging on it would call every reconstruction of an old filing late.
+    Without an observed presentation date the posture stays unknown -- an import
+    that cannot say when the declaration was presented cannot say whether it was
+    presented in time.
+    """
     return ModeloRecord(
         filing_record_id=filing_record_id,
         work_unit_id=work_unit.work_unit_id,
@@ -893,6 +925,12 @@ def build_external_filing_record(
         origin=FilingOrigin.AEAT,
         confirmation=AeatConfirmationState.CONFIRMADA,
         declaration_kind=declaration_kind,
+        filing_timeliness=_observed_filing_timeliness(
+            work_unit=work_unit,
+            aeat_register=aeat_register,
+            declaration_kind=declaration_kind,
+            operation=operation,
+        ),
         aeat_register=aeat_register,
         amends_filing_record_id=amends_filing_record_id,
         status=ModeloRecordStatus.VIGENTE,
