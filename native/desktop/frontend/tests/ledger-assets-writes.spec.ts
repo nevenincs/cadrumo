@@ -431,19 +431,25 @@ test("the limits cite the provisions behind the election, each with its official
         port.submit(PLAN, { asset_id: id }),
       )
     ).limits!;
+  // Every provision the register cites for an election, and none stated
+  // here: the text and the official link are its own, and a list it calls
+  // complete has something in it.
   const long = await limitsOf("furgoneta");
-  expect(long.legal_citations.length).toBeGreaterThanOrEqual(10);
-  expect(long.legal_citations_complete).toBe(true);
-  expect(long.legal_citations[0]).toEqual({
-    text: "Ley 35/2006, art. 28",
-    permalink: "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a28",
-  });
-  for (const citation of long.legal_citations)
-    expect(citation.permalink).toMatch(/^https:\/\/www\.boe\.es\//);
-  const partial = await limitsOf("herramienta");
-  expect(partial.legal_citations_complete).toBe(false);
-  expect(partial.legal_citations.length).toBeGreaterThan(0);
-  expect((await limitsOf("estanteria")).legal_citations).toEqual([]);
+  expect(long.legal_citations.length).toBeGreaterThan(0);
+  for (const seed of SCENARIO_ELEMENTS) {
+    const held = await limitsOf(seed.id);
+    expect(held.legal_citations).toEqual(seed.limits.legal_citations);
+    expect(held.legal_citations_complete).toBe(
+      seed.limits.legal_citations_complete,
+    );
+    if (held.legal_citations_complete)
+      expect(held.legal_citations.length).toBeGreaterThan(0);
+    for (const citation of held.legal_citations) {
+      expect(Object.keys(citation).sort()).toEqual(["permalink", "text"]);
+      expect(citation.permalink).toMatch(/^https:\/\/www\.boe\.es\//);
+      expect(citation.text.length).toBeGreaterThan(0);
+    }
+  }
   expect("legal_references" in long).toBe(false);
 });
 

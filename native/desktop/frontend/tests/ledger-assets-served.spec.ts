@@ -638,11 +638,13 @@ test("an element bought outside the ledger can own a later ledger payment, which
   expect(build(outside, "made-5").revision.further_acquisitions).toEqual([]);
   const withPayment = OUTSIDE_WITH_LATER_PAYMENT;
   const request = build(withPayment, "made-6");
+  // The lineage names the payment the draft picked and the shape it chose, and
+  // carries no evidence of its own: the later payment is not the acquisition.
   expect(request.revision.further_acquisitions).toEqual([
     {
-      shape: "split_payment",
+      shape: withPayment[FURTHER_SHAPE],
       lineage: {
-        observed_transaction_id: scenarioPaymentId("t-silla"),
+        observed_transaction_id: withPayment[FURTHER_PURCHASE],
         invoice_evidence_id: "",
         evidence_fingerprint: null,
       },
@@ -654,7 +656,9 @@ test("an element bought outside the ledger can own a later ledger payment, which
     await settled<LedgerResult<typeof CANDIDATES>>(port.submit(CANDIDATES, {}))
   ).candidates!;
   expect(
-    left.some((found) => found.transaction_id === scenarioPaymentId("t-silla")),
+    left.some(
+      (found) => found.transaction_id === withPayment[FURTHER_PURCHASE],
+    ),
   ).toBe(false);
   // A payment the ledger does not hold, and one named twice, are refused.
   const unknown = build(withPayment, "made-7");

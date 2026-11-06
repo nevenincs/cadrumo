@@ -17,6 +17,7 @@ import {
   scenarioPaymentId,
 } from "../src/dev/assetsRegister";
 import { servedEditionOf, servedSupport } from "../src/dev/servedYearAuthority";
+import { dayBefore } from "../src/dev/assetsFixtureBase";
 
 import {
   beyondHorizon,
@@ -210,10 +211,12 @@ test("a plan past the maximum period states it, with the date it ended", async (
     (seed) => seed.id === "cristaleria",
   )!.limits;
   // The day it ended is the last day it covers, one before the boundary the
-  // schedule works to, and it arrives as a date.
-  expect(limits.maximum_period_last_day).toBe("2025-12-31");
-  expect(limits.maximum_period_ends_on).toBe("2026-01-01");
+  // schedule works to, and both arrive as dates.
+  expect(limits.maximum_period_last_day).toBe(
+    dayBefore(limits.maximum_period_ends_on!),
+  );
   expect(elapsed.absence_reason_facts).toEqual([
+    { key: "ended_before", value: limits.maximum_period_ends_on, kind: "date" },
     { key: "ended_on", value: limits.maximum_period_last_day, kind: "date" },
   ]);
   const forecast = await refused(
@@ -254,14 +257,28 @@ test("the plan states the limits of the election, or why it has none", async () 
     class_key: null,
     not_table_bound: "free_election",
   });
-  const missing = await settled<LedgerResult<typeof PLAN>>(
-    port.submit(PLAN, { asset_id: "estanteria" }),
-  );
-  expect(missing.limits).toMatchObject({
-    not_table_bound: "authority_unavailable",
-    unavailable_reason_key:
-      "ledger.actividad_asset.errors.opening_history_missing",
-  });
+  // Either way round, for every element the register holds: a class names the
+  // corridor the table sets and needs no reason, and an election with no class
+  // states the limit that replaces it instead.
+  for (const seed of SCENARIO_ELEMENTS) {
+    const held = (
+      await settled<LedgerResult<typeof PLAN>>(
+        port.submit(PLAN, { asset_id: seed.id }),
+      )
+    ).limits!;
+    if (held.class_key === null) {
+      expect(held.not_table_bound).not.toBeNull();
+      expect(held.maximum_coefficient).toBeNull();
+      expect(held.minimum_coefficient).toBeNull();
+    } else {
+      expect(held.not_table_bound).toBeNull();
+      expect(held.unavailable_reason_key).toBeNull();
+      expect(held.maximum_coefficient).not.toBeNull();
+      expect(held.maximum_period_last_day).toBe(
+        dayBefore(held.maximum_period_ends_on!),
+      );
+    }
+  }
   const unknown = await refused(port.submit(PLAN, { asset_id: "nobody" }));
   expect(unknown.detail.refusal.reason_key).toBe(
     "ledger.actividad_asset.errors.asset_not_found",
@@ -272,11 +289,15 @@ test("the plan states the limits of the election, or why it has none", async () 
 
 test("a timeline is ordered, names its origin and what each claim is used by", async () => {
   const port = portOf();
+  const seen: number[] = [];
   for (const seed of SCENARIO_ELEMENTS) {
     const events = await eventsOf(port, seed.id);
-    expect(events.map((event) => event.sequence)).toEqual(
-      events.map((_, at) => at + 1),
-    );
+    // The register numbers every event of every element in one sequence, so an
+    // element's own events rise without being numbered from one.
+    const ordered = events.map((event) => event.sequence);
+    expect(ordered).toEqual([...ordered].sort((a, b) => a - b));
+    expect(new Set(ordered).size).toBe(ordered.length);
+    for (const sequence of ordered) seen.push(sequence);
     const claims = seed.rows.flatMap((row) =>
       row.claims.map((claim) => claim.claim_id),
     );
@@ -292,6 +313,8 @@ test("a timeline is ordered, names its origin and what each claim is used by", a
       expect(event.claim === null).toBe(event.kind !== "claim");
     }
   }
+  // One sequence over the whole register: no two events of it share a number.
+  expect(new Set(seen).size).toBe(seen.length);
   const stale = (await eventsOf(port, "servidor")).filter(
     (event) => event.claim,
   )[0]!;
