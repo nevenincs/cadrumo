@@ -518,8 +518,9 @@ def test_work_file_defaults_to_current_verified_for_visible_target(seed_profile:
     assert file_payload["calculation_revision_id"] == revision_id
     assert file_payload["aeat_accepted"] is False
     # The declaration kind stays `original`, so the result has to name the
-    # lateness itself: a late filing carries the art. 27 LGT recargo
-    # consequence, and a JSON, MCP or agent consumer sees it only here.
+    # lateness itself: a late presentation carries a Ley 58/2003 consequence
+    # whose regime depends on the declaration, and a JSON, MCP or agent
+    # consumer sees the lateness only here.
     assert file_payload["declaration_kind"] == "original"
     assert file_payload["filing_timeliness"] == "extemporanea"
     filed_status = invoke_modelo_scenario_cli(

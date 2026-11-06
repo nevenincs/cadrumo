@@ -384,7 +384,7 @@ def work_file(
                 context={
                     "filing_record_id": record.filing_record_id,
                     "filing_timeliness": timeliness.value,
-                    "article_27_assessment_status": "unassessed",
+                    "late_filing_assessment_status": "unassessed",
                 },
             )
         )

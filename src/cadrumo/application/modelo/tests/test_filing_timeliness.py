@@ -2,7 +2,9 @@
 
 A declaration's legal kind says nothing about when it was presented: an
 ``original`` Modelo 130 filed in 2026 for 1T of 2024 is late, and lateness
-carries the Ley 58/2003 art. 27 recargo consequence. The timeliness axis is
+carries a Ley 58/2003 consequence whose regime depends on the declaration: the
+art. 27 recargo where it results in an amount payable, the art. 198 regime
+where no economic harm arises. The timeliness axis is
 that missing fact, and it is judged against the same effective close date the
 calculate posture, the declaration editor and the filing calendar read, so no
 surface can call a filing late that another calls in time.

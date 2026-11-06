@@ -58,11 +58,11 @@ class ModeloWorkFilePublicResultV2(BaseModel):
 
     ``filing_timeliness`` is the one fact ``declaration_kind`` cannot carry: an
     ``original`` declaration says nothing about whether it was presented inside
-    its plazo voluntario, and a late one carries the Ley 58/2003 art. 27
-    recargo consequence. It repeats the posture the record kept at filing time,
-    normalised so a caller outside this package always reads a value: a record
-    that kept no posture reads ``unknown``. It is a calendar posture, not an
-    art. 27 assessment.
+    its plazo voluntario, and a late one carries a Ley 58/2003 consequence whose
+    regime depends on the declaration. It repeats the posture the record kept at
+    filing time, normalised so a caller outside this package always reads a
+    value: a record that kept no posture reads ``unknown``. It is a calendar
+    posture, and assesses nothing.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)

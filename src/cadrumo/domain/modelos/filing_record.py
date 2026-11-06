@@ -516,13 +516,15 @@ class ModeloRecord(BaseModel):
     ``filing_timeliness`` is the posture against the plazo voluntario decided
     AT FILING TIME and kept. ``declaration_kind`` cannot carry it: an
     ``ORIGINAL`` declaration presented after its window closed is extemporánea,
-    which attaches the Ley 58/2003 art. 27 recargo consequence. It is stored
+    which carries a consequence under Ley 58/2003 -- the art. 27 recargo where
+    the declaration results in an amount payable, the art. 198 regime where no
+    economic harm arises. It is stored
     rather than recomputed on read because a filing window can be amended
     later, and a reread must report the posture the filing actually had.
     ``None`` means no posture was decided for this record -- a record written
     before the field existed, or a path that does not decide one -- and is
     reported as unknown rather than guessed from today's deadlines. Lateness
-    only; no recargo eligibility, amount or interest is asserted.
+    only; no regime, eligibility, amount or interest is asserted.
     """
 
     model_config = STRICT_FROZEN_CONFIG

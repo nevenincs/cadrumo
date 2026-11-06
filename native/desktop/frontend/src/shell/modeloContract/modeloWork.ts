@@ -309,11 +309,11 @@ export type FilingEvidenceReference = {
  *
  * Attributes: EN_PLAZO: Presented on or before the effective close date of the
  * voluntary filing window. EXTEMPORANEA: Presented after that close date. A
- * late filing remains admissible (Ley 58/2003 art. 27 attaches a recargo
- * rather than barring the declaration), which is why this is a posture and not
- * a refusal; the surcharge consequence is not assessed here. UNKNOWN: No
- * filing window resolves for the declaration's axis, or its close date is
- * unpublished, so timeliness cannot be judged.
+ * late filing remains admissible -- Ley 58/2003 attaches a consequence rather
+ * than barring the declaration -- which is why this is a posture and not a
+ * refusal. Which consequence, and whether any is due, is not assessed here.
+ * UNKNOWN: No filing window resolves for the declaration's axis, or its close
+ * date is unpublished, so timeliness cannot be judged.
  */
 export type FilingTimeliness = "en_plazo" | "extemporanea" | "unknown";
 
@@ -892,11 +892,11 @@ export type ModeloWorkFileApproval = {
  *
  * `filing_timeliness` is the one fact `declaration_kind` cannot carry: an
  * `original` declaration says nothing about whether it was presented inside
- * its plazo voluntario, and a late one carries the Ley 58/2003 art. 27 recargo
- * consequence. It repeats the posture the record kept at filing time,
- * normalised so a caller outside this package always reads a value: a record
- * that kept no posture reads `unknown`. It is a calendar posture, not an art.
- * 27 assessment.
+ * its plazo voluntario, and a late one carries a Ley 58/2003 consequence whose
+ * regime depends on the declaration. It repeats the posture the record kept at
+ * filing time, normalised so a caller outside this package always reads a
+ * value: a record that kept no posture reads `unknown`. It is a calendar
+ * posture, and assesses nothing.
  */
 export type ModeloWorkFilePublicResultV2 = {
   result_version: 2;

@@ -135,12 +135,13 @@ class ModeloFilingResult:
     ``filing_timeliness`` answers the question the record's
     :class:`~cadrumo.domain.modelos.filing_record.FilingDeclarationKind` cannot:
     an ``ORIGINAL`` declaration filed after its plazo voluntario closed is late,
-    and lateness carries the Ley 58/2003 art. 27 recargo consequence. It is the
-    posture the record kept from its own filing time, normalised so a caller
-    always reads a value; a record that kept none reads as
+    and a late presentation carries a Ley 58/2003 consequence whose regime
+    depends on the declaration. It is the posture the record kept from its own
+    filing time, normalised so a caller always reads a value; a record that kept
+    none reads as
     :attr:`~cadrumo.core.filing_timeliness.FilingTimeliness.UNKNOWN` rather than
-    being judged again against today's deadlines. No art. 27 eligibility,
-    recargo amount or interest is asserted.
+    being judged again against today's deadlines. No regime, eligibility,
+    amount or interest is asserted.
     """
 
     record: ModeloRecord

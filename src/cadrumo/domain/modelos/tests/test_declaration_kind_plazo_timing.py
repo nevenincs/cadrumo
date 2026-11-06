@@ -6,9 +6,11 @@ established for it or after that plazo ends, "siempre que no haya prescrito el
 derecho de la Administración para determinar la deuda tributaria. En este
 último caso tendrán el carácter de extemporáneas." Art. 27.1 attaches the
 recargo to the presentation of an autoliquidación or declaración "fuera de
-plazo sin requerimiento previo". So for an original, a complementaria and a
-sustitutiva the lateness question is the same one: the period's own window
-against the presentation date.
+plazo sin requerimiento previo", computed on the amount payable it results in
+(art. 27.2); art. 198.1 covers a late presentation that causes no economic
+harm. Either way the lateness question is the same one for an original, a
+complementaria and a sustitutiva: the period's own window against the
+presentation date. Which regime follows is not decided here.
 
 Art. 120.3 and the art. 120.4 added by Ley 13/2023 make the autoliquidación
 rectificativa the vehicle of the rectification procedure, replacing the

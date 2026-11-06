@@ -890,9 +890,10 @@ class WorkFileResult(ModeloRecordPayload):
 
     ``filing_timeliness`` carries the fact ``declaration_kind`` cannot: an
     ``original`` declaration filed after its plazo voluntario closed is
-    extemporánea, with the Ley 58/2003 art. 27 recargo consequence. This
-    command always populates it, with ``unknown`` where the filing kept no
-    posture; the backend decided it at filing time and no frontend computes it.
+    extemporánea, which carries a Ley 58/2003 consequence whose regime depends
+    on the declaration. This command always populates it, with ``unknown``
+    where the filing kept no posture; the backend decided it at filing time and
+    no frontend computes it.
     """
 
     operation: str = "modelo.work.file"
