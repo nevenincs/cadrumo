@@ -102,6 +102,7 @@ from .ports import (
 )
 from .register_reads import (
     RegisterReadContext,
+    beyond_last_admitted_year,
     default_register_year,
     election_limits,
     element_list,
@@ -806,7 +807,7 @@ class ActivityAssetOperations:
         ):
             return self._service.record_claim(claim)
         last_admitted_year = self._authority.last_admitted_year()
-        if forecast.tax_year > last_admitted_year:
+        if beyond_last_admitted_year(forecast.tax_year, last_admitted_year):
             raise ActividadAssetUnsupportedError(
                 context={"tax_year": forecast.tax_year, "last_admitted_year": last_admitted_year},
                 translated_message="ledger.actividad_asset.errors.claim_year_beyond_registry",

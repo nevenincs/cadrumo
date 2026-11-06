@@ -5,14 +5,15 @@ import { effDate, periodLabel, stepPeriod } from "./model";
 import { Button, IconButton, Popover } from "./Primitives";
 import { useStore } from "./store";
 import type { Period } from "./types";
+import { servedYearBounds } from "../../servedYearAuthority";
 import { MONTH_LABEL, MONTHS, PERIOD_CODES, TODAY } from "./vocab";
 
 /* ── The period selector (R21): one dropdown, any year. The trigger shows
    the period with ‹ › beside it; inside, ‹ year › navigates, then Year,
    the quarters, the months and All periods; the years that hold
    movements sit at the bottom for long jumps. ───────────────────────── */
-export const YEAR_MIN = 1980,
-  YEAR_MAX = 2200;
+export const YEAR_MIN = servedYearBounds.first,
+  YEAR_MAX = servedYearBounds.last;
 export const yearOk = (y: number) =>
   Number.isInteger(y) && y >= YEAR_MIN && y <= YEAR_MAX;
 const periodTrigger = (p: Period, yearOnly?: boolean) =>

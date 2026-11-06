@@ -18,6 +18,8 @@ import { AmortizationPlan } from "./AmortizationPlan";
 import { AssetTimeline } from "./AssetTimeline";
 import { bajaRequest, type RevisionBase } from "./assetRevision";
 import { ASSET_KEYS } from "./assetsWords";
+import { TODAY } from "@/dev/assetsFixture";
+import { servedSupport } from "@/dev/servedYearAuthority";
 
 // One element's amortization plan and its append-only timeline over the
 // scenario's register. Each story names the element whose plan or history
@@ -30,6 +32,10 @@ import { ASSET_KEYS } from "./assetsWords";
 // a person did, through the scenario's own writes, so the record shows what
 // those writes leave: a baja recorded, changed and removed, and a dotación a
 // later one replaced.
+
+const scenarioYear = Number(TODAY.slice(0, 4));
+/** A year past the horizon: the plan reads it on projected tables. */
+const projectedYear = servedSupport.horizon + 1;
 
 type Answer = "register" | "empty" | "refused" | "loading" | "unavailable";
 
@@ -449,13 +455,13 @@ const timeline = (extra: Partial<Story> = {}): Story => ({
 
 export const PlanPartlyClaimed: Story = plan({
   name: "Plan, a partly claimed year, years to come and rates carried forward",
-  args: { assetId: "furgoneta", year: 2026 },
+  args: { assetId: "furgoneta", year: scenarioYear },
   play: open(2026),
 });
 
 export const PlanLongListOfLegalBasis: Story = plan({
   name: "Plan, eleven provisions behind the election, collapsed with their count",
-  args: { assetId: "furgoneta", year: 2026 },
+  args: { assetId: "furgoneta", year: scenarioYear },
   play: async ({ canvasElement }: PlayContext) => {
     const disclosure = await waitFor(() => {
       const found = canvasElement.querySelector(
@@ -470,7 +476,11 @@ export const PlanLongListOfLegalBasis: Story = plan({
 
 export const PlanLongAndPartialLegalBasis: Story = plan({
   name: "Plan, eleven provisions and a list that is also partial",
-  args: { assetId: "furgoneta", year: 2026, tweak: "long_partial_citations" },
+  args: {
+    assetId: "furgoneta",
+    year: scenarioYear,
+    tweak: "long_partial_citations",
+  },
   play: async ({ canvasElement }: PlayContext) => {
     const disclosure = await waitFor(() => {
       const found = canvasElement.querySelector(
@@ -485,7 +495,7 @@ export const PlanLongAndPartialLegalBasis: Story = plan({
 
 export const PlanPartialListOfLegalBasis: Story = plan({
   name: "Plan, a legal basis that could not be resolved whole says it is partial",
-  args: { assetId: "herramienta", year: 2026 },
+  args: { assetId: "herramienta", year: scenarioYear },
 });
 
 export const PlanBeforeTheFirstEdition: Story = plan({
@@ -527,13 +537,13 @@ export const PlanCoveredByOpening: Story = plan({
 
 export const PlanProjectedRates: Story = plan({
   name: "Plan, estimated years carry their own glyph beside the year and each figure",
-  args: { assetId: "licencia", year: 2027 },
-  play: hint(ASSET_KEYS.plan.projected_note, { year: 2027 }),
+  args: { assetId: "licencia", year: projectedYear },
+  play: hint(ASSET_KEYS.plan.projected_note, { year: projectedYear }),
 });
 
 export const PlanMinimumAccumulated: Story = plan({
   name: "Plan, the minimum column is headed as accumulated to year end, with its note",
-  args: { assetId: "furgoneta", year: 2026 },
+  args: { assetId: "furgoneta", year: scenarioYear },
   play: hint(ASSET_KEYS.plan.column.minimum_note),
 });
 

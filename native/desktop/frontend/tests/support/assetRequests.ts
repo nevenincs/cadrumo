@@ -29,8 +29,10 @@ import {
   SERVED_ACTIVITIES,
   SERVED_METHOD_FACTS,
   SERVED_SHAPES,
+  TODAY,
 } from "../../src/dev/assetsFixture";
 import { TABLE_GROUPS } from "../../src/dev/assetsSeed";
+import { servedEditionOf } from "../../src/dev/servedYearAuthority";
 import type {
   AcquisitionCandidate,
   DisposalFacts,
@@ -115,11 +117,14 @@ const FURTHER: AcquisitionCandidate = {
   evidence_fingerprint: null,
 };
 
+/** The scenario's own year, read from its date. */
+const scenarioYear = Number(TODAY.slice(0, 4));
+
 const optionsFor = (kind: string, served: Served): FormOptions => ({
-  tax_year: 2026,
+  tax_year: scenarioYear,
   asset_kind: kind,
   regime: "normal",
-  edition: { revision_id: "2025", authored_filing_year: 2025, projected: true },
+  edition: servedEditionOf(scenarioYear)!,
   ...served,
   table_groups: [...(TABLE_GROUPS[kind] ?? [])],
 });

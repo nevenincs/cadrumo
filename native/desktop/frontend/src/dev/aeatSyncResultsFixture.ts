@@ -226,9 +226,13 @@ function served(mode: AeatSyncResultsMode): AeatSyncResults {
             outcome: "failed",
             new_count: 1,
             failed: [
-              { part: 1, year: 2025, reason: "session_ended" },
-              { part: 2, year: 2024, reason: "refused" },
-              { part: 3, year: 2023, reason: "other" },
+              {
+                part: 1,
+                year: DEMO_BORRADOR_YEARS[0]!,
+                reason: "session_ended",
+              },
+              { part: 2, year: DEMO_BORRADOR_YEARS[1]!, reason: "refused" },
+              { part: 3, year: DEMO_BORRADOR_YEARS[2]!, reason: "other" },
             ],
           }),
           summary("notifications", {
@@ -237,7 +241,9 @@ function served(mode: AeatSyncResultsMode): AeatSyncResults {
           }),
           summary("vat", {
             outcome: "failed",
-            failed: [{ part: 0, year: 2025, reason: "other" }],
+            failed: [
+              { part: 0, year: DEMO_BORRADOR_YEARS[0]!, reason: "other" },
+            ],
           }),
           summary("borrador", { outcome: "nothing_found", at: null }),
           summary("identity", {
