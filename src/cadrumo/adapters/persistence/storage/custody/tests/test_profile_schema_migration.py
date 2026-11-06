@@ -1,11 +1,16 @@
-"""Forward migration of a stored schema-6 profile record through the real capsule.
+"""Forward migration of every supported stored profile record through the real capsule.
 
 Every adapter is real: the capsule is published by the production lifecycle
-under a record session pinned to schema 6, exactly as a schema-6 build wrote
-it, and then opened by the schema-7 record repository. The migration must keep
-every stored ``true``, drop every stored ``false`` on the payer-fact paths,
-leave every other fact untouched, record what it cleared as typed history, run
-once, and leave a schema-7 record alone.
+under a record session pinned to the stored schema, exactly as that build wrote
+it, and then opened by the current record repository. Both supported stored
+versions are exercised, so a profile that was never opened across a release
+still opens: schema 6 crosses both transitions in one write and schema 7
+crosses one.
+
+The migration must keep every stored ``true``, drop every stored ``false`` on
+the payer-fact paths its own transitions clear and only those, leave every
+other fact untouched, record what it cleared as typed history, run once, and
+leave a current record alone.
 """
 
 from __future__ import annotations
@@ -42,37 +47,59 @@ from cadrumo.domain.user_profile.plantilla_media import (
     PlantillaMediaYear,
     plantilla_media_years,
 )
-from cadrumo.domain.user_profile.schema_migration import ProfileSchemaMigration
+from cadrumo.domain.user_profile.schema_migration import (
+    MIGRATED_PROFILE_SCHEMA_VERSION,
+    SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS,
+    ProfileSchemaMigration,
+)
 from cadrumo.domain.user_profile.values import (
     UserProfileFact,
     UserProfileRecord,
 )
 
 from .profile_record_boundary_support import PROFILE_ID
-from .profile_schema_v6_support import publish_capsule, publish_v6_capsule, record_session
+from .profile_schema_legacy_support import publish_capsule, publish_legacy_capsule, record_session
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _M347 = "obligations.third_party_transactions_above_347_threshold"
 _M720 = "obligations.bienes_extranjero_above_threshold"
-_M721 = "obligations.monedas_virtuales_extranjero_above_threshold"
 _M136 = "obligations.premio_loteria_gravamen_especial_sin_retencion"
+_INTRACOMUNITARIO = "iva.does_intracomunitario"
+_PAYS_PROFESSIONALS = "withholding.pays_professionals_with_retencion"
+_PAYS_RENT = "withholding.pays_rent_with_retencion"
+_HAS_EMPLOYEES = "withholding.has_employees"
 _MIGRATED_AT = datetime(2026, 9, 1, 10, 0, 0, tzinfo=UTC)
-_CLEARED = (_M721, _M347)
+
+_CLEARED_FROM_V7 = (_INTRACOMUNITARIO, _PAYS_PROFESSIONALS, _PAYS_RENT)
+_CLEARED_FROM_V6 = (_INTRACOMUNITARIO, _M347, _PAYS_PROFESSIONALS, _PAYS_RENT)
+_EXPECTED_CLEARED = {6: _CLEARED_FROM_V6, 7: _CLEARED_FROM_V7}
 
 _UNTOUCHED_FACTS = (
     UserProfileFact(path="identity.tax_id", value="X0001500M"),
     UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
     UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="withholding.has_employees", value=False),
     UserProfileFact(path="withholding.pays_capital_income_with_retencion", value=False),
+    UserProfileFact(path="censo.large_company", value=False),
 )
-_STORED_V6_PAYER_FACTS = (
+"""Facts no transition touches: a two-state payer fact and a cadence predicate."""
+
+_STORED_PAYER_FACTS = (
+    UserProfileFact(path=_HAS_EMPLOYEES, value=True),
     UserProfileFact(path=_M347, value=False),
     UserProfileFact(path=_M720, value=True),
-    UserProfileFact(path=_M721, value=False, valid_from=date(2024, 1, 1), valid_to=date(2024, 12, 31)),
-    UserProfileFact(path=_M721, value=False, valid_from=date(2025, 1, 1)),
+    UserProfileFact(path=_INTRACOMUNITARIO, value=False),
+    UserProfileFact(path=_PAYS_PROFESSIONALS, value=False),
+    UserProfileFact(path=_PAYS_RENT, value=False, valid_from=date(2024, 1, 1), valid_to=date(2024, 12, 31)),
+    UserProfileFact(path=_PAYS_RENT, value=False, valid_from=date(2025, 1, 1)),
 )
+"""Both supported stored versions could hold every one of these paths."""
+
+
+def _expected_kept(version: int) -> tuple[UserProfileFact, ...]:
+    """Return the facts a record stored at ``version`` keeps, in stored order."""
+    cleared = _EXPECTED_CLEARED[version]
+    return (*_UNTOUCHED_FACTS, *(fact for fact in _STORED_PAYER_FACTS if fact.path not in cleared))
 
 
 @pytest.fixture
@@ -95,88 +122,133 @@ def _publish(
     return publish_capsule(root, facts=facts, create_context=create_context, decode_context=decode_context)
 
 
-def _publish_v6(
+def _publish_legacy(
     root: Path,
     contexts: tuple[ProfileCreateContext, ProfileDecodeContext],
     facts: tuple[UserProfileFact, ...],
+    *,
+    version: int,
 ) -> UserProfileRecord:
     create_context, decode_context = contexts
-    return publish_v6_capsule(root, facts=facts, create_context=create_context, decode_context=decode_context)
+    return publish_legacy_capsule(
+        root,
+        facts=facts,
+        create_context=create_context,
+        decode_context=decode_context,
+        version=version,
+    )
 
 
-@pytest.fixture
-def v6_capsule(
+@pytest.fixture(params=SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS)
+def legacy_capsule(
+    request: pytest.FixtureRequest,
     tmp_path: Path,
     contexts: tuple[ProfileCreateContext, ProfileDecodeContext],
-) -> Iterator[tuple[ProfileRecordSession, UserProfileRecord, Path]]:
-    stored = _publish_v6(tmp_path, contexts, (*_UNTOUCHED_FACTS, *_STORED_V6_PAYER_FACTS))
-    assert stored.schema_version == 6
+) -> Iterator[tuple[ProfileRecordSession, UserProfileRecord, Path, int]]:
+    version = int(request.param)
+    stored = _publish_legacy(tmp_path, contexts, (*_UNTOUCHED_FACTS, *_STORED_PAYER_FACTS), version=version)
+    assert stored.schema_version == version
     session = _session(contexts[1])
     drain_migration_cleared_paths()
     try:
-        yield session, stored, tmp_path
+        yield session, stored, tmp_path, version
     finally:
         session.close()
         drain_migration_cleared_paths()
 
 
-def test_a_stored_v6_record_is_never_read_as_the_current_schema(
-    v6_capsule: tuple[ProfileRecordSession, UserProfileRecord, Path],
-) -> None:
-    session, _stored, root = v6_capsule
+def test_both_supported_stored_versions_are_older_than_the_current_schema() -> None:
+    """The declared window must name real earlier versions, not the current one."""
+    assert SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS == (6, 7)
+    assert max(SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS) < MIGRATED_PROFILE_SCHEMA_VERSION
 
-    with pytest.raises(ProfileRecordMigrationRequiredError, match="schema 6"):
+
+def test_a_stored_legacy_record_is_never_read_as_the_current_schema(
+    legacy_capsule: tuple[ProfileRecordSession, UserProfileRecord, Path, int],
+) -> None:
+    session, _stored, root, version = legacy_capsule
+
+    with pytest.raises(ProfileRecordMigrationRequiredError, match=f"schema {version}") as refusal:
         ProfileRecordStore(session=session, root=root).load()
 
+    assert refusal.value.stored_version == version
 
-def test_opening_a_v6_record_keeps_true_drops_false_payer_facts_and_leaves_the_rest(
-    v6_capsule: tuple[ProfileRecordSession, UserProfileRecord, Path],
+
+def test_opening_a_legacy_record_keeps_true_drops_false_payer_facts_and_leaves_the_rest(
+    legacy_capsule: tuple[ProfileRecordSession, UserProfileRecord, Path, int],
 ) -> None:
-    session, stored, root = v6_capsule
+    session, stored, root, version = legacy_capsule
+    expected_cleared = _EXPECTED_CLEARED[version]
 
     migrated = ProfileRecordRepository(session=session, root=root).load(PROFILE_ID)
 
-    assert migrated.schema_version == 7
+    assert migrated.schema_version == MIGRATED_PROFILE_SCHEMA_VERSION
     assert migrated.record_revision == stored.record_revision + 1
     assert migrated.previous_record_digest == stored.content_digest
     assert migrated.created_at == stored.created_at
-    assert migrated.facts == (*_UNTOUCHED_FACTS, UserProfileFact(path=_M720, value=True))
-    assert drain_migration_cleared_paths() == _CLEARED
+    assert migrated.facts == _expected_kept(version)
+    assert drain_migration_cleared_paths() == expected_cleared
 
     store = ProfileRecordStore(session=session, root=root)
-    assert store.schema_migrations() == (ProfileSchemaMigration(cleared_paths=_CLEARED),)
+    assert store.schema_migrations() == (
+        ProfileSchemaMigration(
+            from_version=version,
+            to_version=MIGRATED_PROFILE_SCHEMA_VERSION,
+            cleared_paths=expected_cleared,
+        ),
+    )
     migration_events = [
         event for event in store.history() if event.event_type is BucketEventType.PROFILE_SCHEMA_MIGRATED
     ]
     assert len(migration_events) == 1
-    assert migration_events[0].payload["schema_migration_cleared_paths"] == "|".join(_CLEARED)
+    assert migration_events[0].payload["schema_migration_from"] == str(version)
+    assert migration_events[0].payload["schema_migration_to"] == str(MIGRATED_PROFILE_SCHEMA_VERSION)
+    assert migration_events[0].payload["schema_migration_cleared_paths"] == "|".join(expected_cleared)
+
+
+def test_a_schema_7_answer_to_a_dated_payer_fact_survives(
+    legacy_capsule: tuple[ProfileRecordSession, UserProfileRecord, Path, int],
+) -> None:
+    """Schema 7 already read a stored dated-payer ``false`` as an answer, so 7 keeps it and 6 drops it."""
+    session, _stored, root, version = legacy_capsule
+
+    migrated = ProfileRecordRepository(session=session, root=root).load(PROFILE_ID)
+
+    stored_347 = [fact for fact in migrated.facts if fact.path == _M347]
+    assert stored_347 == ([] if version == 6 else [UserProfileFact(path=_M347, value=False)])
 
 
 def test_a_second_migration_run_is_a_no_op(
-    v6_capsule: tuple[ProfileRecordSession, UserProfileRecord, Path],
+    legacy_capsule: tuple[ProfileRecordSession, UserProfileRecord, Path, int],
 ) -> None:
-    session, _stored, root = v6_capsule
+    session, _stored, root, version = legacy_capsule
     first = migrate_profile_record_on_open(session, root=root)
     after_first = ProfileRecordStore(session=session, root=root).load().record
     drain_migration_cleared_paths()
 
     second = migrate_profile_record_on_open(session, root=root)
 
-    assert first == ProfileSchemaMigration(cleared_paths=_CLEARED)
+    assert first == ProfileSchemaMigration(
+        from_version=version,
+        to_version=MIGRATED_PROFILE_SCHEMA_VERSION,
+        cleared_paths=_EXPECTED_CLEARED[version],
+    )
     assert second is None
     assert ProfileRecordStore(session=session, root=root).load().record == after_first
     assert drain_migration_cleared_paths() == ()
     assert len(ProfileRecordStore(session=session, root=root).schema_migrations()) == 1
 
 
+@pytest.mark.parametrize("version", SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS)
 def test_the_migration_is_deterministic_across_capsules(
+    version: int,
     tmp_path: Path,
     contexts: tuple[ProfileCreateContext, ProfileDecodeContext],
 ) -> None:
     results: list[tuple[UserProfileFact, ...]] = []
     for name in ("first", "second"):
         root = tmp_path / name
-        _publish_v6(root, contexts, (*_UNTOUCHED_FACTS, *_STORED_V6_PAYER_FACTS))
+        _publish_legacy(root, contexts, (*_UNTOUCHED_FACTS, *_STORED_PAYER_FACTS), version=version)
         session = _session(contexts[1])
         try:
             migrate_profile_record_on_open(session, root=root)
@@ -186,14 +258,20 @@ def test_the_migration_is_deterministic_across_capsules(
             drain_migration_cleared_paths()
 
     assert results[0] == results[1]
+    assert results[0] == _expected_kept(version)
 
 
-def test_a_v7_record_is_read_unchanged_and_never_migrated(
+def test_a_current_record_is_read_unchanged_and_never_migrated(
     tmp_path: Path,
     contexts: tuple[ProfileCreateContext, ProfileDecodeContext],
 ) -> None:
     create_context, decode_context = contexts
-    facts = (*_UNTOUCHED_FACTS, UserProfileFact(path=_M347, value=False), UserProfileFact(path=_M136, value=False))
+    facts = (
+        *_UNTOUCHED_FACTS,
+        UserProfileFact(path=_INTRACOMUNITARIO, value=False),
+        UserProfileFact(path=_PAYS_PROFESSIONALS, value=False),
+        UserProfileFact(path=_M136, value=False),
+    )
     written = _publish(tmp_path, facts=facts, create_context=create_context, decode_context=decode_context)
     session = _session(decode_context)
     try:
@@ -206,14 +284,20 @@ def test_a_v7_record_is_read_unchanged_and_never_migrated(
         session.close()
 
 
-def test_a_v6_record_carrying_a_schema_7_path_is_refused(
+@pytest.mark.parametrize("path", (_M136, "irpf.plantilla_media.0.year"))
+def test_a_schema_6_record_carrying_a_later_schema_path_is_refused(
+    path: str,
     tmp_path: Path,
     contexts: tuple[ProfileCreateContext, ProfileDecodeContext],
 ) -> None:
-    stored = _publish_v6(tmp_path, contexts, (*_UNTOUCHED_FACTS, UserProfileFact(path=_M136, value=True)))
+    """Schema 6 declared neither field, so a schema-6 row carrying one was forged."""
+    value: object = 2024 if path.endswith("year") else True
+    stored = _publish_legacy(
+        tmp_path, contexts, (*_UNTOUCHED_FACTS, UserProfileFact(path=path, value=value)), version=6
+    )
     session = _session(contexts[1])
     try:
-        with pytest.raises(UserProfileValidationError, match="schema-7 paths"):
+        with pytest.raises(UserProfileValidationError, match="later-schema paths"):
             migrate_profile_record_on_open(session, root=tmp_path)
         with pytest.raises(ProfileRecordMigrationRequiredError):
             ProfileRecordStore(session=session, root=tmp_path).load()
@@ -222,23 +306,46 @@ def test_a_v6_record_carrying_a_schema_7_path_is_refused(
         session.close()
 
 
-def test_the_cleared_fact_stays_pending_until_answered_and_no_then_excludes_the_modelo(
-    v6_capsule: tuple[ProfileRecordSession, UserProfileRecord, Path],
+def test_a_schema_7_record_carrying_those_paths_migrates_because_schema_7_declared_them(
+    tmp_path: Path,
     contexts: tuple[ProfileCreateContext, ProfileDecodeContext],
 ) -> None:
-    session, _stored, root = v6_capsule
+    facts = (
+        *_UNTOUCHED_FACTS,
+        UserProfileFact(path=_M136, value=True),
+        UserProfileFact(path="obligations.premio_loteria_gravamen_especial_trimestres", value="2025-1T"),
+    )
+    _publish_legacy(tmp_path, contexts, facts, version=7)
+    session = _session(contexts[1])
+    try:
+        migration = migrate_profile_record_on_open(session, root=tmp_path)
+        migrated = ProfileRecordStore(session=session, root=tmp_path).load().record
+    finally:
+        session.close()
+        drain_migration_cleared_paths()
+
+    assert migration == ProfileSchemaMigration(from_version=7, to_version=MIGRATED_PROFILE_SCHEMA_VERSION)
+    assert migrated.facts == facts
+
+
+def test_the_cleared_fact_stays_pending_until_answered_and_no_then_excludes_the_modelo(
+    legacy_capsule: tuple[ProfileRecordSession, UserProfileRecord, Path, int],
+    contexts: tuple[ProfileCreateContext, ProfileDecodeContext],
+) -> None:
+    session, _stored, root, version = legacy_capsule
     repository = ProfileRecordRepository(session=session, root=root)
     migrated = repository.load(PROFILE_ID)
     schema = contexts[1].schema
+    still_pending = tuple(path for path in _EXPECTED_CLEARED[version] if path != _INTRACOMUNITARIO)
 
-    assert repository.pending_cleared_payer_fact_paths(PROFILE_ID) == _CLEARED
+    assert repository.pending_cleared_payer_fact_paths(PROFILE_ID) == _EXPECTED_CLEARED[version]
     with bundled_indexed_authority().operation():
-        undeclared = derive_modelo_applicability(projection_for_taxpayer(migrated, schema=schema), "347")
+        undeclared = derive_modelo_applicability(projection_for_taxpayer(migrated, schema=schema), "349")
     assert undeclared.verdict is ApplicabilityVerdict.INCOMPLETE
 
     answered = repository.apply_fact_changes(
         PROFILE_ID,
-        facts=(*migrated.facts, UserProfileFact(path=_M347, value=False)),
+        facts=(*migrated.facts, UserProfileFact(path=_INTRACOMUNITARIO, value=False)),
         expected_revision=migrated.record_revision,
         expected_content_digest=migrated.content_digest,
         event_type=BucketEventType.PROFILE_VALUES_UPDATED,
@@ -246,16 +353,23 @@ def test_the_cleared_fact_stays_pending_until_answered_and_no_then_excludes_the_
         now=_MIGRATED_AT,
     )
 
-    assert repository.pending_cleared_payer_fact_paths(PROFILE_ID) == (_M721,)
+    assert repository.pending_cleared_payer_fact_paths(PROFILE_ID) == still_pending
     with bundled_indexed_authority().operation():
-        declared_no = derive_modelo_applicability(projection_for_taxpayer(answered, schema=schema), "347")
+        declared_no = derive_modelo_applicability(projection_for_taxpayer(answered, schema=schema), "349")
     assert declared_no.verdict is ApplicabilityVerdict.NOT_APPLICABLE
 
 
-def test_a_restored_v6_capsule_is_accepted_and_migrates_on_first_open(
-    v6_capsule: tuple[ProfileRecordSession, UserProfileRecord, Path],
+def test_a_restored_legacy_capsule_is_accepted_and_migrates_on_first_open(
+    legacy_capsule: tuple[ProfileRecordSession, UserProfileRecord, Path, int],
 ) -> None:
-    session, stored, root = v6_capsule
+    """A bundle or archive restore stages its database through this one door, at either version.
+
+    ``ProfileCapsuleLifecycle._stage_and_validate_restore_database`` calls
+    ``validate_staged_profile_record_database``, which is this method, so an
+    imported portable profile is accepted as stored and then carried forward by
+    the same open-time migration as a profile that never left the machine.
+    """
+    session, stored, root, version = legacy_capsule
     store = ProfileRecordStore(session=session, root=root)
     database = root / "restore-stage" / storage_location(StorageCategory.BUCKET_DATABASE_FILE).relative_path()
     database.parent.mkdir(parents=True)
@@ -265,34 +379,36 @@ def test_a_restored_v6_capsule_is_accepted_and_migrates_on_first_open(
     staged = store.validate_staged_database(stage_path=root / "restore-stage")
 
     assert staged.record == stored
+    assert staged.record.schema_version == version
+    opened = ProfileRecordRepository(session=session, root=root).load(PROFILE_ID)
+    assert opened.schema_version == MIGRATED_PROFILE_SCHEMA_VERSION
+    assert opened.facts == _expected_kept(version)
 
 
-def test_a_migrated_v6_record_carries_no_average_workforce_instance(
-    v6_capsule: tuple[ProfileRecordSession, UserProfileRecord, Path],
+def test_the_migration_rewrites_the_record_row_and_appends_one_event_and_nothing_else(
+    legacy_capsule: tuple[ProfileRecordSession, UserProfileRecord, Path, int],
 ) -> None:
-    session, _stored, root = v6_capsule
+    """A filed revision, snapshot or any other stored object must not be rewritten.
 
-    migrated = ProfileRecordRepository(session=session, root=root).load(PROFILE_ID)
+    The migration's whole write is the one current record row plus one history
+    event, so every other event already in the bucket survives unchanged and in
+    order, and a second open adds nothing.
+    """
+    session, _stored, root, _version = legacy_capsule
+    store = ProfileRecordStore(session=session, root=root)
+    before = store.history()
 
-    assert not [fact for fact in migrated.facts if fact.path.startswith("irpf.plantilla_media")]
+    ProfileRecordRepository(session=session, root=root).load(PROFILE_ID)
+    after = store.history()
 
-
-def test_a_v6_record_carrying_an_average_workforce_instance_is_refused(
-    tmp_path: Path,
-    contexts: tuple[ProfileCreateContext, ProfileDecodeContext],
-) -> None:
-    _publish_v6(
-        tmp_path, contexts, (*_UNTOUCHED_FACTS, UserProfileFact(path="irpf.plantilla_media.0.year", value=2024))
-    )
-    session = _session(contexts[1])
-    try:
-        with pytest.raises(UserProfileValidationError, match="schema-7 paths"):
-            migrate_profile_record_on_open(session, root=tmp_path)
-    finally:
-        session.close()
+    assert after[: len(before)] == before
+    appended = after[len(before) :]
+    assert [event.event_type for event in appended] == [BucketEventType.PROFILE_SCHEMA_MIGRATED]
+    assert migrate_profile_record_on_open(session, root=root) is None
+    assert store.history() == after
 
 
-def test_a_v7_average_workforce_instance_round_trips_with_its_typed_meaning(
+def test_an_average_workforce_instance_round_trips_with_its_typed_meaning(
     tmp_path: Path,
     contexts: tuple[ProfileCreateContext, ProfileDecodeContext],
 ) -> None:

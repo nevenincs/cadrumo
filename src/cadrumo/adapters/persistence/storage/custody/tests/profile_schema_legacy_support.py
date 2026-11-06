@@ -1,8 +1,8 @@
-"""Publish real capsules as a schema-6 build wrote them, for migration tests.
+"""Publish real capsules as the one migratable earlier build wrote them.
 
-A schema-6 capsule is published through the production lifecycle under a
-record session pinned to the legacy schema, so its row, lineage and history
-event are exactly what that build persisted. Nothing is forged after the fact.
+A legacy capsule is published through the production lifecycle under a record
+session pinned to the legacy schema, so its row, lineage and history event are
+exactly what that build persisted. Nothing is forged after the fact.
 """
 
 from __future__ import annotations
@@ -63,15 +63,16 @@ def publish_capsule(
     return record
 
 
-def publish_v6_capsule(
+def publish_legacy_capsule(
     root: Path,
     *,
     facts: tuple[UserProfileFact, ...],
     create_context: ProfileCreateContext,
     decode_context: ProfileDecodeContext,
+    version: int,
 ) -> UserProfileRecord:
-    """Publish a capsule whose record is stored under profile schema 6."""
-    legacy = legacy_profile_schema(decode_context.schema)
+    """Publish a capsule whose record is stored under supported legacy schema ``version``."""
+    legacy = legacy_profile_schema(decode_context.schema, version=version)
     return publish_capsule(
         root,
         facts=facts,
@@ -80,4 +81,4 @@ def publish_v6_capsule(
     )
 
 
-__all__ = ["publish_capsule", "publish_v6_capsule", "record_session"]
+__all__ = ["publish_capsule", "publish_legacy_capsule", "record_session"]

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-23'
 modified: '2026-11-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:acb26c2275758b9ec25f9c5b19e9b4418ff79a121f34d8ac6379d722f3a9eadf'
+body_hash: 'sha256:0c0e24be971294dbbd3f2bc08be8c4ae4ddf17e407bd4634a64a72835053aca9'
 related:
   - "[[2026-09-23-calendar-obligations-holiday-jurisdiction-adr]]"
   - "[[2026-06-30-obligation-coverage-completeness-adr]]"
@@ -89,6 +89,8 @@ The three-state contract is the only option under which an operator who answered
 
 Accepted 2026-11-06 on the user's explicit approval, given in the FIXTURES session after the triage of the Modelo 111 fixture regression.
 
+The disposition for a stored `false` was put to the operator as two options: clear it and re-ask, or keep it and notify the operator to reconfirm. The operator ruled on 2026-11-06, relayed verbatim by the coordinator for this lane: "yes drop old reask". Those words answer that question for the four paths below, so the accepted disposition is to drop a stored `false` on them and re-ask through the cleared-fact notice.
+
 The Implementation section kept the coded payer facts (withholding, intracommunity) on their own evaluators. Those facts have since moved to the three-state contract: `_THREE_STATE_PAYER_FACTS` in `src/cadrumo/domain/calculations/registry/applicability_payer_facts.py`. Their setup defaults were never removed, though:
 
 - `src/cadrumo/_data/registry/aeat/facts/0096-ley-49-2002-profile-binding-catalogue.toml` still declares `|bool|false` for `iva.does_intracomunitario`, `withholding.has_employees`, `withholding.pays_professionals_with_retencion` and `withholding.pays_rent_with_retencion`;
@@ -99,7 +101,8 @@ The Implementation section kept the coded payer facts (withholding, intracommuni
 The amendment extends the dated-fact contract to these four paths:
 
 - **Defaults:** the four catalogue entries and their setup questions carry no default, as `withholding.colegio_concertado` and the Modelo 347 and 720 questions already do. Only an interactive answer or an explicit CLI flag writes `true` or `false`.
-- **Migration:** the next profile schema version records that a stored `false` on these paths is an answer. Its forward migration keeps every stored `true`, drops every stored `false` on the four paths, and leaves every other fact untouched. It runs atomically per profile inside the profile store's persistence boundary and is idempotent. It records the cleared facts, so the existing localized notice names each one and the step that answers it.
+- **Migration:** profile schema version 8 records that a stored `false` on these paths is an answer. Its forward migration keeps every stored `true`, drops every stored `false` on the four paths, and leaves every other fact untouched. It runs atomically per profile inside the profile store's persistence boundary and is idempotent. It records the cleared facts, so the existing localized notice names each one and the step that answers it.
+- **Supported stored versions:** every version this build has ever migrated stays a supported stored source, so a profile that was not opened across a release is never locked out. Each transition owns the paths it clears: leaving schema 6 clears the three dated payer facts, and leaving schema 7 clears these four. A record stored at schema 6 crosses both transitions in one write and has both sets dropped, named together in its one cleared-fact history event, which also records the version it came from. A stored `false` on a dated payer fact is kept when the record is stored at schema 7, because that version did read it as an answer. The same door authenticates a restored or imported bundle at either version, so a portable profile takes the same migration on first open.
 - **Unchanged:** the two-state facts (`pays_capital_income_with_retencion`, `art109_activity_income_withholding_ge_70pct`) and the filing-cadence predicates (`censo.large_company`, `censo.public_administration_budget_gt_6000000`) keep their current treatment.
 
 The rationale is the original one: asking again costs the operator one question, while a kept defaulted negative could hide a withholding or intracommunity obligation.

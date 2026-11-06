@@ -144,18 +144,27 @@ def _obligations_withholding_questions(
 ) -> tuple[WizardQuestion, ...]:
     """Build the withholding and estimation-regime questions of the obligations section."""
     return (
-        confirmation_question("has-employees", "withholding.has_employees", suffix="obligations"),
+        # The withholding payer facts gate Modelos 111, 115, 180, 190, 216,
+        # 296 and 349, so they carry no default: an unanswered question stays
+        # absent and reads as undeclared rather than as a "no".
+        confirmation_question("has-employees", "withholding.has_employees", suffix="obligations", default=None),
         confirmation_question(
             "pays-professionals-with-retencion",
             "withholding.pays_professionals_with_retencion",
             suffix="obligations",
+            default=None,
         ),
         confirmation_question(
             "art109-activity-income-withholding-ge-70pct",
             "irpf.art109_activity_income_withholding_ge_70pct",
             suffix="obligations",
         ),
-        confirmation_question("pays-rent-with-retencion", "withholding.pays_rent_with_retencion", suffix="obligations"),
+        confirmation_question(
+            "pays-rent-with-retencion",
+            "withholding.pays_rent_with_retencion",
+            suffix="obligations",
+            default=None,
+        ),
         confirmation_question(
             "pays-capital-income-with-retencion",
             "withholding.pays_capital_income_with_retencion",
@@ -257,9 +266,14 @@ def build_obligations_section(
                 visible_when=_impatriado_regime,
                 answer_type=str,
             ),
-            confirmation_question("does-intracomunitario", "iva.does_intracomunitario", suffix="obligations"),
             # Payer-fact questions carry no default: an unanswered question
             # stays absent, so it reads as undeclared rather than as a "no".
+            confirmation_question(
+                "does-intracomunitario",
+                "iva.does_intracomunitario",
+                suffix="obligations",
+                default=None,
+            ),
             confirmation_question(
                 "third-party-transactions-above-347-threshold",
                 "obligations.third_party_transactions_above_347_threshold",
