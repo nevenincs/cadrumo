@@ -404,6 +404,11 @@ def _creation(frame: dict[str, Any], elements: tuple[dict[str, Any], ...], made:
     return {
         "id": made["id"],
         "draft": resolved_payments(made["draft"], named),
+        # The request the window sends, which the fixture matches a create
+        # against. The register's own revision is the canonical one it holds
+        # afterwards: it states every optional fact the request leaves out, so
+        # it can never be what a window sends.
+        "request": {"revision": resolved_payments(made["revision"], named), "descriptor": descriptor},
         "list": row.model_dump(mode="json"),
     } | _element(operations, made["id"], today)
 

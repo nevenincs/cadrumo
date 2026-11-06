@@ -1,4 +1,4 @@
-"""The committed creation corpus is what the window's own form builders make of its drafts.
+"""The recorded creation key is what the window's own form builders make of its drafts.
 
 The register's recording answers a new element's plan, limits and forecasts for
 each request committed under ``dev/fixtures/assets-register-scenario/creations.json``.
@@ -6,8 +6,11 @@ The window never works that plan out: its fixture installs the recorded answer a
 refuses a request the corpus does not hold. So the corpus has to be the very request
 the window sends. This test runs the shipped form fields and request builders on each
 committed draft, through the frontend's own bundle under Node, and compares the result
-with the committed request field by field. A draft or a builder that moves fails here,
-loudly, instead of showing up in the window as a refused creation.
+field by field both with the committed request and with the key the recording publishes
+for it. A draft or a builder that moves fails here, loudly, instead of showing up in the
+window as a refused creation. The key matters as much as the corpus: matching a create
+against the register's own canonical revision never worked, because that revision states
+every optional fact a request leaves out.
 """
 
 from __future__ import annotations
@@ -30,6 +33,7 @@ from cadrumo.application.actividad_asset.tests.register_recording_support import
 )
 from cadrumo.application.ledger.entry_limits import ledger_entry_limits
 from cadrumo.domain.renta.actividad_asset.lifecycle import AssetKind
+from dev.fixture_projections.location import family_directory
 
 from .desktop_request_support import bundle, run
 
@@ -52,6 +56,13 @@ _DRAWN_FROM = (
 @cache
 def _committed() -> dict[str, dict[str, Any]]:
     return {made["id"]: made for made in committed_creations()}
+
+
+@cache
+def _recorded_creations() -> dict[str, dict[str, Any]]:
+    """What the register's recording publishes for each creation, as the window reads it."""
+    recording = json.loads((family_directory("assets-register") / "assetsRegister.json").read_text(encoding="utf-8"))
+    return {made["id"]: made for made in recording["register"]["creations"]}
 
 
 @cache
@@ -126,6 +137,31 @@ def test_the_corpus_holds_a_creation_for_every_shape_the_window_can_send() -> No
     assert any(made["revision"].get("further_acquisitions") for made in committed.values())
     assert any(made["revision"]["amortization"].get("shift_hours_per_day") for made in committed.values())
     assert any(made["revision"]["amortization"].get("used_original_price") for made in committed.values())
+
+
+@pytest.mark.parametrize("name", sorted(_committed()))
+def test_the_recording_publishes_the_request_the_form_builders_make_as_its_key(
+    built: dict[str, dict[str, Any]], name: str
+) -> None:
+    """The recording's own key is the request, not the revision the register keeps.
+
+    The window matches a create against the key the recording publishes, so that
+    key has to be what its builders produce. The register's canonical revision
+    states every optional fact a request leaves out and could never match.
+    """
+    published = _recorded_creations()[name]
+    answered = built[name]["request"]
+    key = {field: value for field, value in answered["revision"].items() if field != "asset_id"}
+
+    assert set(published["request"]["revision"]) == set(key), (
+        f"{name}: the recorded key states other fields than the form does"
+    )
+    for field in sorted(key):
+        assert published["request"]["revision"][field] == key[field], f"{name}: the recorded key's {field} differs"
+    assert published["request"]["descriptor"] == answered["descriptor"]
+    assert set(published["request"]["revision"]) != set(published["revisions"][0]["revision"]), (
+        f"{name}: the key and the register's own revision cannot be the same document"
+    )
 
 
 @pytest.mark.parametrize("name", sorted(_committed()))

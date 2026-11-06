@@ -993,10 +993,7 @@ export function makeRegister(
     );
 
   const recordedCreations = new Map(
-    SCENARIO_CREATIONS.map((made) => [
-      asRecorded(made.revisions[0]!.revision),
-      made,
-    ]),
+    SCENARIO_CREATIONS.map((made) => [asRecorded(made.request.revision), made]),
   );
 
   /** What the register answered for this very create request, or null where it

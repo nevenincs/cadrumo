@@ -105,6 +105,7 @@ type Recording = {
     creations: (RecordedElement & {
       id: string;
       draft: Record<string, string>;
+      request: { revision: JsonObject; descriptor: JsonObject };
       list: AssetListRow;
     })[];
     vocabulary: {
@@ -185,6 +186,10 @@ export const SCENARIO_ELEMENTS: readonly ScenarioElement[] = register.list.map(
  * through it. The window works no new element's plan out. */
 export type ScenarioCreation = ScenarioElement & {
   draft: Record<string, string>;
+  /** The request the window sends to make it, which a create is matched
+   * against. The register's own revision states every optional fact the
+   * request leaves out, so it is never what a window sends. */
+  request: { revision: JsonObject; descriptor: JsonObject };
 };
 
 export const SCENARIO_CREATIONS: readonly ScenarioCreation[] =
