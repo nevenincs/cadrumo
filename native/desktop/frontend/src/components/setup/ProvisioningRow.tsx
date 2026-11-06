@@ -11,7 +11,7 @@ import type {
   SetupRow,
   SetupRun,
   SetupStep,
-} from "../../ipc/contract";
+} from "../../ipc/componentSetup";
 import { useProvisioning } from "../../shell/provisioning";
 import { useStrings } from "../../shell/strings";
 import { formatSize } from "../../shared/numbers";

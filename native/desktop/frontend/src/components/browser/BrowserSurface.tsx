@@ -11,7 +11,7 @@ import {
   type Ref,
 } from "react";
 import { IS_MAC } from "@/shared/chords";
-import type { SedeViewInput } from "../../ipc/contract";
+import type { SedeViewInput } from "../../ipc/sedeViewMessages";
 import { sedeViewSize, type SedeViewSize } from "../../shell/sedeView";
 import {
   clickCount,

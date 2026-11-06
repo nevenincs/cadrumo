@@ -1,5 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
-import type { SedeViewDialogKind, SedeViewInput } from "../../src/ipc/contract";
+import type {
+  SedeViewDialogKind,
+  SedeViewInput,
+} from "../../src/ipc/sedeViewMessages";
 import {
   SEDE_VIEW_HOME,
   SEDE_VIEW_ORIGIN,

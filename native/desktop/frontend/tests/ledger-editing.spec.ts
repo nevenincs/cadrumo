@@ -22,10 +22,8 @@ import {
   type ChoiceLabels,
   type EditSubject,
 } from "../src/components/ledger/editing/editingModel";
-import type {
-  LedgerInvoiceMatchMismatch,
-  LedgerRow,
-} from "../src/shell/ledger";
+import type { LedgerInvoiceMatchMismatch } from "../src/shell/ledgerInvoiceOperations";
+import type { LedgerRow } from "../src/shell/ledger";
 import type { StepReport } from "../src/shell/ledgerApply";
 import {
   EMPTY_STAGE,

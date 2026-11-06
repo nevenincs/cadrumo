@@ -7,17 +7,14 @@
 // nothing, and a menu or clipboard it serves says nothing about the native
 // one: its answers are design and test evidence only.
 
+import type { DocsLanguage, DesktopLanguage } from "../ipc/environment";
 import type {
-  DocsLanguage,
-  DesktopLanguage,
   HostFailure,
   LogBatch,
   LogLevel,
-  ManagerStatus,
-  SignInSignal,
-  SignInStatus,
   WindowAction,
 } from "../ipc/contract";
+import type { ManagerStatus, SignInSignal, SignInStatus } from "../ipc/account";
 import { censoFixture } from "./censoFixture";
 import { ledgerFixture, type LedgerShape } from "./ledgerFixture";
 import { borradorFixture, type BorradorScenario } from "./borradorFixture";

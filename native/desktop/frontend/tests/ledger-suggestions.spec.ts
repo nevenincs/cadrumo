@@ -22,13 +22,13 @@ import {
   statesReference,
 } from "../src/components/ledger/assets/assetFields";
 import { shownSuggestions } from "../src/components/ui/suggestions";
+import type { CatalogueInvoice } from "../src/shell/ledgerInvoiceOperations";
 import type {
-  CatalogueInvoice,
   KnownCounterparty,
   KnownText,
   LedgerRow,
 } from "../src/shell/ledger";
-import type { CapitalGood } from "../src/shell/ledgerSetup";
+import type { CapitalGood } from "../src/shell/ledgerRegisterOperations";
 
 // What the ledger's own records offer a field. No page is opened.
 

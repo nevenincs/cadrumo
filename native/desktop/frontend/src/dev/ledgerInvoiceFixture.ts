@@ -9,12 +9,11 @@
 // outputs recorded from the real backend, and works out no figure: a draft
 // that was not recorded is answered as incomplete.
 
-import {
-  type CatalogueInvoice,
-  type CatalogueInvoiceLine,
-  type JsonObject,
-  type JsonValue,
-} from "../shell/ledger";
+import type {
+  CatalogueInvoice,
+  CatalogueInvoiceLine,
+} from "../shell/ledgerInvoiceOperations";
+import type { JsonObject, JsonValue } from "../shell/ledger";
 import {
   INVOICE_UPDATE_FIELDS,
   OPERATION_TYPES,

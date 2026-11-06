@@ -1,5 +1,5 @@
 import { Alert } from "@/components/ui/alert";
-import type { SetupPlanEntry, SetupReview } from "../../ipc/contract";
+import type { SetupPlanEntry, SetupReview } from "../../ipc/componentSetup";
 import { labelled, listed } from "../../shell/compose";
 import { useStrings, type Translate } from "../../shell/strings";
 import { formatSize } from "../../shared/numbers";

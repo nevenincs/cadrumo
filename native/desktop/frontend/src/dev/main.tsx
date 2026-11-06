@@ -7,7 +7,7 @@ import ReactDOM from "react-dom/client";
 import { identity } from "virtual:desktop-content";
 import { port as docsPort } from "virtual:docs-fixture";
 import { App } from "../App";
-import type { DocsLanguage } from "../ipc/contract";
+import type { DocsLanguage } from "../ipc/environment";
 import { LOG_LEVELS } from "../shell/records";
 import "./index.css";
 import { ScenarioBar, type HostCallLine } from "./ScenarioBar";

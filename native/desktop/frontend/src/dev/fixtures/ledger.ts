@@ -3,11 +3,8 @@
 // invented: the studio, its clients, its suppliers and its accounts. The
 // ledger is generated from a fixed seed, so every run sees the same rows.
 
-import type {
-  CatalogueInvoice,
-  LedgerTransaction,
-  PublicDecimal,
-} from "../../shell/ledger";
+import type { CatalogueInvoice } from "../../shell/ledgerInvoiceOperations";
+import type { LedgerTransaction, PublicDecimal } from "../../shell/ledger";
 import { exampleInvoices } from "./ledgerInvoices";
 import { settlementOf } from "../ledgerSettlement";
 

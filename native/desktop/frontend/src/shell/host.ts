@@ -10,21 +10,27 @@ import type {
   AboutInfo,
   DesktopEnvironment,
   DesktopLanguage,
+} from "../ipc/environment";
+import type {
   DesktopSetup,
+  SetupCheckMode,
+  SetupItemId,
+  SetupModelDownload,
+  SetupRemoval,
+} from "../ipc/componentSetup";
+import type {
   LogBatch,
+  WindowAction,
+  WindowPresentation,
+} from "../ipc/contract";
+import type {
   ManagerStatus,
   ManagerSignal,
   SignInStatus,
   SignInSignal,
   SignInResult,
   SignOutResult,
-  SetupCheckMode,
-  SetupItemId,
-  SetupModelDownload,
-  SetupRemoval,
-  WindowAction,
-  WindowPresentation,
-} from "../ipc/contract";
+} from "../ipc/account";
 import type { ProfileAccounts } from "./profiles";
 import type { AgentAccess } from "./agentAccess";
 import type { AgentSession } from "./agentSession";

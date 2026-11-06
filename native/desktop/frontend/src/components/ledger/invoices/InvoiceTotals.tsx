@@ -4,7 +4,7 @@ import { PercentEditor } from "@/components/editors/PercentEditor";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { formatAmount, heldDecimal } from "../../../shared/numbers";
-import type { InvoicePreviewRetention } from "../../../shell/ledger";
+import type { InvoicePreviewRetention } from "../../../shell/ledgerInvoiceOperations";
 import { compareDecimal } from "../../../shell/ledgerGrammar";
 import { useStrings } from "../../../shell/strings";
 import { FormField, wired } from "./InvoiceFields";

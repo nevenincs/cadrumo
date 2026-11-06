@@ -7,10 +7,9 @@
 
 import type {
   LedgerLlmSuggestion,
-  LedgerRow,
   LedgerStagedRowAnswer,
-  LedgerTransaction,
-} from "../../../shell/ledger";
+} from "../../../shell/ledgerMovementOperations";
+import type { LedgerRow, LedgerTransaction } from "../../../shell/ledger";
 import {
   FIELDS_DROPPED_BY_PERSONAL,
   takesChanges,
