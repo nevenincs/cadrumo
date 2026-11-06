@@ -204,8 +204,9 @@ def test_identity_cli_has_no_filesystem_write_surface() -> None:
         "spellings among the forbidden names are only visible in this set"
     )
     assert filesystem_writes.isdisjoint(called_attributes | called_bare)
-    assert not hasattr(identity_subject, "_write_review_output")
-    assert not hasattr(identity_subject, "_resolve_review_output_path")
+    for helper in ("write_review_output", "resolve_review_output_path"):
+        assert not hasattr(identity_subject, helper)
+        assert not hasattr(identity_subject, f"_{helper}")
 
 
 def _record_design_field(

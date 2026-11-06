@@ -38,6 +38,7 @@ def test_snapshot_resolver_is_exhaustive_over_the_core_producer_vocabulary() -> 
 
 def test_legacy_header_surfaces_are_deleted_instead_of_normalised() -> None:
     assert not hasattr(registry, "ExportHeaderKey")
+    assert not hasattr(export_module, "normalise_export_headers")
     assert not hasattr(export_module, "_normalise_export_headers")
     assert not hasattr(modelo_export_module, "compose_export_headers")
     assert "headers" not in inspect.signature(export_draft).parameters

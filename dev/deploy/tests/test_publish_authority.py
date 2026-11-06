@@ -28,9 +28,10 @@ _CREDENTIALS = {name: f"placeholder-{index}" for index, name in enumerate(DELIVE
 
 def test_an_automated_run_inside_the_delivery_environment_is_authorised() -> None:
     """An automated run carrying every delivery credential proceeds."""
-    assert not hasattr(docs_delivery_activation, "_require_human_publish_environment"), (
-        "the documentation publisher must not retain a human-only guard"
-    )
+    for guard in ("require_human_publish_environment", "_require_human_publish_environment"):
+        assert not hasattr(docs_delivery_activation, guard), (
+            "the documentation publisher must not retain a human-only guard"
+        )
     for marker in CI_MARKERS:
         require_authorized_publish_environment(environment={marker: "true", **_CREDENTIALS})
 

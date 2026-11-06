@@ -22,6 +22,7 @@ that the refusal keeps the property it was written to have.
 
 from __future__ import annotations
 
+import ast
 from pathlib import Path
 
 import pytest
@@ -29,7 +30,8 @@ import typer
 import yaml
 
 from ....domain.categories.spending_category_catalogue import spending_category_tokens
-from ..ledger_support import validate_category_id as validate_category_id
+from .. import ledger_commands, ledger_support
+from ..ledger_support import validate_category_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -47,9 +49,22 @@ def test_every_command_taking_the_flag_reaches_one_implementation() -> None:
     """The identity the duplication broke, stated as identity rather than equality.
 
     Two functions that merely behaved alike is exactly what was there before,
-    and it drifted. Only sameness of object rules that out.
+    and it drifted. Only sameness of object rules that out: the command module
+    holds the support module's function, and no other module of the command
+    package defines a function of that name.
     """
-    assert validate_category_id is validate_category_id
+    assert ledger_commands.validate_category_id is ledger_support.validate_category_id
+
+    cli_root = Path(__file__).resolve().parents[1]
+    definers = sorted(
+        path.name
+        for path in cli_root.glob("*.py")
+        if any(
+            isinstance(node, ast.FunctionDef) and node.name.lstrip("_") == "validate_category_id"
+            for node in ast.walk(ast.parse(path.read_text(encoding="utf-8")))
+        )
+    )
+    assert definers == ["ledger_support.py"]
 
 
 def test_a_known_category_is_returned_unchanged() -> None:

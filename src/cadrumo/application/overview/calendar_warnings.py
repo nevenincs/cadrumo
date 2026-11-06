@@ -33,6 +33,7 @@ from ...domain.calculations.registry.applicability import (
 )
 from ...domain.calculations.registry.applicability_models import ModeloApplicabilityRule
 from ...domain.calculations.registry.applicability_payer_facts import payer_fact_profile_keys
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.irpf_regimes import irpf_estimation_regime_objetiva_token
 from ...domain.calculations.registry.iva_regime_vocabulary import iva_regime_simplificado_token
 from ...domain.deadlines.models import IVARegime
@@ -325,6 +326,7 @@ _AEAT_EVIDENCE_CONFLICT_WARNING_LOCALE_KEY = "cli.overview.warning.aeat_evidence
 _M303_SIMPLIFICADO_FORFAIT_WARNING_CODE = "iva.regime.m303_simplificado_forfait_unavailable"
 _M303_SIMPLIFICADO_FORFAIT_WARNING_LOCALE_KEY = "cli.overview.warning.m303_simplificado_forfait_unavailable"
 _M303_SIMPLIFICADO_FORFAIT_ACTION_ID = "operator.modelo.describe"
+_PERIODIC_IVA_ROLE = "iva.periodic"
 _APPLICABILITY_DISAGREEMENT_WARNING_CODE = "applicability.evidence_disagreement"
 _APPLICABILITY_DISAGREEMENT_WARNING_LOCALE_KEY = "cli.overview.warning.applicability_evidence_disagreement"
 
@@ -538,7 +540,8 @@ def calendar_regime_incompatibility_warnings(
     """Return warnings where a surfaced modelo row lacks regime-specific calculation support."""
     if iva_regime != iva_regime_simplificado_token(authority=operation):
         return ()
-    if not any(entry.modelo == Modelo("303").value for entry in entries):
+    periodic_iva_modelo = form_for_role(_PERIODIC_IVA_ROLE, authority=operation)
+    if not any(entry.modelo == periodic_iva_modelo for entry in entries):
         return ()
     return (
         CalendarWarning(
@@ -546,9 +549,9 @@ def calendar_regime_incompatibility_warnings(
             message=_M303_SIMPLIFICADO_FORFAIT_WARNING_LOCALE_KEY,
             fix_action=declare_next_action(
                 _M303_SIMPLIFICADO_FORFAIT_ACTION_ID,
-                modelo=Modelo("303").value,
+                modelo=periodic_iva_modelo,
             ),
-            affected_modelos=(Modelo("303").value,),
+            affected_modelos=(periodic_iva_modelo,),
         ),
     )
 

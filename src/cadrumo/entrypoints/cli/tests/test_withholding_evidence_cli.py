@@ -212,8 +212,9 @@ def test_modelo_aggregate_module_no_longer_exposes_direct_retencion_persistence(
     """The 111/115/123 CLI module has no direct set-replace mutation helper."""
     from .. import modelo_aggregate_commands
 
-    assert not hasattr(modelo_aggregate_commands, "_persist_retencion_observations")
-    assert not hasattr(modelo_aggregate_commands, "_persist_cli_owned_observations")
+    for helper in ("persist_retencion_observations", "persist_cli_owned_observations"):
+        assert not hasattr(modelo_aggregate_commands, helper)
+        assert not hasattr(modelo_aggregate_commands, f"_{helper}")
 
 
 def test_modelo_aggregate_keeps_capital_out_of_the_raw_mutation_path() -> None:

@@ -22,13 +22,9 @@ from decimal import Decimal
 
 import pytest
 
-from ..calculation_resolution import build_calculation_replay_payloads, resolve_calculation_binding_channels
+from ..calculation_resolution import build_calculation_replay_payloads
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-def test_calculation_binding_channel_resolver_is_the_public_owner_identity() -> None:
-    assert resolve_calculation_binding_channels is resolve_calculation_binding_channels
 
 
 def test_replay_payloads_carry_a_folded_relation_value_once() -> None:
