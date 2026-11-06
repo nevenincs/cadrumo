@@ -3,6 +3,7 @@ import tseslint from "typescript-eslint";
 import hooks from "eslint-plugin-react-hooks";
 import globals from "globals";
 import designSystem from "./dev/eslint/design-system.mjs";
+import { MODULE_LINE_LIMIT } from "./scripts/module-line-limit.mjs";
 
 // Import boundaries. One rule holds one list per file, so each group of files
 // below gets the whole list that applies to it.
@@ -79,6 +80,17 @@ export default tseslint.config(
   {
     files: ["**/*.{js,mjs,ts,tsx}"],
     languageOptions: { globals: { ...globals.browser, ...globals.node } },
+  },
+  {
+    // Editing feedback for the repository's module-size gate: every physical
+    // line counts, blank lines and comments included.
+    files: ["**/*.{ts,tsx,mts,cts}"],
+    rules: {
+      "max-lines": [
+        "error",
+        { max: MODULE_LINE_LIMIT, skipBlankLines: false, skipComments: false },
+      ],
+    },
   },
   {
     files: ["src/**/*.{ts,tsx}"],
