@@ -1,8 +1,8 @@
 import { expect, type Page } from "@playwright/test";
 import { label } from "./strings";
 
-// The window never starts a terminal on launch: neither a stored layout nor a
-// sign-in shows the TUI. A spec that needs it asks for it as a person does,
+// A fresh layout and a sign-in leave the TUI closed; only a layout that saved
+// it shown brings it back. A spec that needs it asks for it as a person does,
 // from the rail, and the TUI takes the keyboard as it opens.
 
 const railTui = (target: Page, lang?: string) =>

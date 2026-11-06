@@ -369,7 +369,8 @@ async function signInHost(
     if (localStorage.getItem("cadrumo-shell-layout")) return;
     localStorage.setItem(
       "cadrumo-shell-layout",
-      JSON.stringify({ layout: { page: "docs", tuiShown: true } }),
+      // The TUI starts closed, so a test opens it as a person does.
+      JSON.stringify({ layout: { page: "docs", tuiShown: false } }),
     );
   });
   await serveDocs(target);
@@ -404,20 +405,11 @@ async function arrangement(target: Page): Promise<"row" | "column"> {
   throw new Error("The documentation and TUI overlap.");
 }
 
-test("a saved open and maximized TUI stays closed until asked for", async ({
-  page,
-}) => {
-  await seedLayout(page, {
-    prefs: { fontSize: "large" },
-    layout: {
-      page: "docs",
-      tuiShown: true,
-      maximized: "tui",
-      splitRatio: 0.7,
-      agentRatio: 0.3,
-    },
-  });
+test("a fresh layout keeps the TUI closed after sign-in", async ({ page }) => {
   await signInHost(page);
+  // Nothing arranged yet: every choice is the default.
+  await page.evaluate(() => localStorage.setItem("cadrumo-shell-layout", "{}"));
+  await page.reload();
   await page.evaluate(() =>
     Object.assign(
       (window as unknown as { __signInTest: object }).__signInTest,
@@ -433,8 +425,51 @@ test("a saved open and maximized TUI stays closed until asked for", async ({
   await expect(page.getByLabel(label("desktop.signin.password"))).toHaveCount(
     0,
   );
+  await expect(page.locator(".pane-tui")).toBeHidden();
+  expect((await signInState(page)).tuiStarts).toBe(0);
+});
+
+test("a saved open and maximized TUI comes back as saved, once signed in", async ({
+  page,
+}) => {
+  await seedLayout(page, {
+    prefs: { fontSize: "large" },
+    layout: {
+      page: "docs",
+      tuiShown: true,
+      maximized: "tui",
+      splitRatio: 0.7,
+      agentRatio: 0.3,
+    },
+  });
+  await signInHost(page);
+  // Signed out, the account withholds the TUI's session: nothing starts.
+  await expect(
+    page.getByLabel(label("desktop.signin.password"), { exact: true }),
+  ).toBeVisible();
   expect((await signInState(page)).tuiStarts).toBe(0);
   await expect(page.locator(".pane-tui .xterm")).toHaveCount(0);
+  await page.evaluate(() =>
+    Object.assign(
+      (window as unknown as { __signInTest: object }).__signInTest,
+      { submitCode: "" },
+    ),
+  );
+  await page
+    .getByLabel(label("desktop.signin.password"), { exact: true })
+    .fill("secret");
+  await page
+    .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
+    .click();
+  await expect(page.getByLabel(label("desktop.signin.password"))).toHaveCount(
+    0,
+  );
+  // Signed in, the saved arrangement stands: the TUI is open, maximized and
+  // started once, and nothing saved was rewritten.
+  await expect.poll(async () => (await signInState(page)).tuiStarts).toBe(1);
+  await expect(page.locator(".pane-tui .xterm")).toHaveCount(1);
+  await expect(page.locator(".pane-tui")).toBeVisible();
+  await expect(page.locator(".pane-docs")).toBeHidden();
   await expect
     .poll(() =>
       page.evaluate(() => {
@@ -448,9 +483,8 @@ test("a saved open and maximized TUI stays closed until asked for", async ({
         ];
       }),
     )
-    .toEqual([false, null, 0.7, 0.3, "large"]);
-  await revealTui(page);
-  await expect.poll(async () => (await signInState(page)).tuiStarts).toBe(1);
+    .toEqual([true, "tui", 0.7, 0.3, "large"]);
+  // Hiding and showing it again keeps the one session.
   await revealTui(page);
   await revealTui(page);
   expect((await signInState(page)).tuiStarts).toBe(1);
@@ -1906,7 +1940,8 @@ test("the remembered layout survives a reload", async ({ page: target }) => {
     )
     .toBe("python");
   await target.reload();
-  await revealTui(target);
+  // The TUI left shown is shown again, without being asked for.
+  await expect(target.locator(".pane-tui")).toBeVisible();
   await expect.poll(() => arrangement(target)).toBe("column");
   await expect(target.locator("section.panel")).toBeVisible();
   await expect(

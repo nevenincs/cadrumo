@@ -322,7 +322,7 @@ export function loadState(): { prefs: Prefs; layout: Layout } {
       ),
       maximized: pick(
         l.maximized,
-        ["agent", "docs", "panel", null] as const,
+        ["agent", "docs", "tui", "panel", null] as const,
         null,
       ),
       logLevel: pick(l.logLevel, [0, 1, 2, 3, 4, null], null),
@@ -351,8 +351,10 @@ export function loadState(): { prefs: Prefs; layout: Layout } {
           ? l.agentShown
           : DEFAULT_LAYOUT.agentShown,
       agentRatio: share(l.agentRatio, DEFAULT_LAYOUT.agentRatio, 0.1, 0.9),
-      // A restored layout must not start a terminal on launch.
-      tuiShown: false,
+      // A TUI the person left shown is part of their saved arrangement; the
+      // account still withholds its session until a profile is signed in.
+      tuiShown:
+        typeof l.tuiShown === "boolean" ? l.tuiShown : DEFAULT_LAYOUT.tuiShown,
       docsShown:
         typeof l.docsShown === "boolean"
           ? l.docsShown

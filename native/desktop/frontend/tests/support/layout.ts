@@ -7,9 +7,9 @@ type Seed = {
   layout?: Partial<Layout>;
 };
 
-/** The documentation shown, placed before the TUI, with no agent column. A
- * stored layout never starts a terminal, so a test of the two side by side
- * opens the TUI itself (`showTui`). */
+/** The documentation shown, placed before the TUI, with no agent column. It
+ * saves nothing about the TUI, which a fresh layout keeps closed, so a test
+ * of the two side by side opens the TUI itself (`showTui`). */
 export const DOCS_FIRST: Seed = {
   prefs: { order: "docs" },
   layout: { agentShown: false, docsShown: true, page: "docs" },
