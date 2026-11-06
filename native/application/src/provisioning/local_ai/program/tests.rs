@@ -3,7 +3,7 @@ use crate::{
     component::Cancellation,
     provisioning::{
         items::ItemId,
-        local_ai::fake_ollama::{HELPER_ARGUMENTS, HELPER_MODE, HELPER_VERSION},
+        local_ai::fake_ollama::{HELPER_ARGUMENTS, HELPER_GATE, HELPER_MODE, HELPER_VERSION},
         pins::ComponentPins,
         plan::PlanEntry,
         receipts::ReceiptReading,
@@ -189,6 +189,89 @@ pub(crate) fn stand_in(program: &mut Program, version: &str) {
             (OsString::from(HELPER_VERSION), OsString::from(version)),
         ],
     });
+}
+
+/// Writes a start-failure record as an earlier start, in any process, left it.
+fn earlier_failure(programs: &Path) {
+    fs::create_dir_all(programs).unwrap();
+    fs::write(
+        programs.join(START_FAILURE_RECORD),
+        br#"{"schema":1,"reason":"server_launch_failed"}"#,
+    )
+    .unwrap();
+}
+
+#[test]
+fn an_earlier_failed_start_is_not_read_as_the_cause_of_a_later_one() {
+    let bytes = archive(b"only");
+    let (certificate, publisher) = publisher(vec![("9.8.7".into(), bytes.clone())]);
+    let network = network_to(certificate.roots(), publisher.address(), None);
+    let hosts: BTreeSet<HostName> = [HostName::new("github.com").unwrap()].into();
+    let mut pacing = SystemPacing::default();
+    let cancellation = Cancellation::default();
+    let mut events = |_| {};
+    let mut transfer = Transfer {
+        network: &network,
+        hosts: &hosts,
+        policy: RetryPolicy::default(),
+        pacing: &mut pacing,
+        events: &mut events,
+        cancellation: &cancellation,
+    };
+    let root = tempfile::tempdir().unwrap();
+    let locations = Locations::under(root.path());
+    let pins = pins_for(&bytes, "9.8.7", EXECUTABLE);
+    let new_program = || {
+        Program::new(&pins, Platform::current().unwrap(), locations.clone())
+            .unwrap()
+            .unwrap()
+    };
+    let mut program = new_program();
+    let observer = new_program();
+
+    // Installing changes the program: a failure under the earlier one is forgotten.
+    earlier_failure(&locations.programs);
+    program.install(&mut transfer).unwrap();
+    assert_eq!(observer.latest_start_failure(), None);
+
+    // A new attempt that has begun and not finished has not failed.
+    earlier_failure(&locations.programs);
+    let gate = root.path().join("announce");
+    stand_in(&mut program, "9.8.7");
+    if let Some(stand_in) = program.serve_override.as_mut() {
+        stand_in
+            .environment
+            .push((OsString::from(HELPER_GATE), gate.clone().into_os_string()));
+    }
+    std::thread::scope(|scope| {
+        let starting = scope.spawn(|| {
+            program
+                .start(free_address(), &Uncontained, &ambient, None)
+                .map(|server| server.address())
+        });
+        let deadline = std::time::Instant::now() + Duration::from_secs(20);
+        while observer.latest_start_failure().is_some() && std::time::Instant::now() < deadline {
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        assert_eq!(
+            observer.latest_start_failure(),
+            None,
+            "the earlier failure is not this attempt's"
+        );
+        assert!(
+            observer.running_server().is_none(),
+            "the attempt has not finished"
+        );
+        fs::write(&gate, b"").unwrap();
+        starting.join().unwrap().expect("the gated start finishes");
+    });
+    assert_eq!(observer.latest_start_failure(), None);
+
+    // Removing the program forgets a failure under it too.
+    program.stop();
+    earlier_failure(&locations.programs);
+    program.remove().unwrap();
+    assert_eq!(observer.latest_start_failure(), None);
 }
 
 pub(crate) fn answers(address: SocketAddr) -> bool {

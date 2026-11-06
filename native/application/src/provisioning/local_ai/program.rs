@@ -830,6 +830,8 @@ impl Program {
             }
             remove_record(&self.locations.programs)?;
         }
+        // A start that failed under the program now changed says nothing of the next.
+        clear_start_failure(&self.locations.programs);
         Ok(change)
     }
 
@@ -868,6 +870,8 @@ impl Program {
         let Some(lease) = self.leases.try_serve()? else {
             return Err(LocalAiError::Engine(Error::Busy));
         };
+        // A new attempt begins: an earlier failure no longer says why no server runs.
+        clear_start_failure(&self.locations.programs);
         let fingerprint = proxy.map(ProxySettings::fingerprint);
         let command = self.serve_command(&active, address, ambient, proxy)?;
         self.start_with(command, containment, lease, fingerprint)
