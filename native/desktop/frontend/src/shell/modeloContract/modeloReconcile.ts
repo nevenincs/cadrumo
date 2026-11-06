@@ -233,23 +233,3 @@ export type ReconciliationExportXlsxRequest = {
 };
 
 export type SnapshotId = string;
-
-/** The `modelo.reconcile` definitions' share of `ModeloContracts`. */
-export type ModeloReconcileContracts = {
-  "modelo.reconcile.export-xlsx": {
-    request: ReconciliationExportXlsxRequest;
-    result: ReconciliationExportXlsxProjection;
-  };
-  "modelo.reconcile.import": {
-    request: ModeloReconciliationImportRequest;
-    result: ModeloReconciliationImportProjection;
-  };
-  "modelo.reconcile.list": {
-    request: ModeloReconciliationListRequest;
-    result: ModeloReconciliationListProjection;
-  };
-  "modelo.reconcile.pull": {
-    request: ModeloReconciliationPullRequest;
-    result: ModeloReconciliationImportProjection;
-  };
-};

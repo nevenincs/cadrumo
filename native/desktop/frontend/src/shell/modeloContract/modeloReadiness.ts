@@ -178,15 +178,3 @@ export type ModeloReadinessSummaryProjection = {
  */
 export type ModeloRegistryRefusalCause =
   "snapshot_unavailable" | "revision_mismatch";
-
-/** The `modelo.readiness` definitions' share of `ModeloContracts`. */
-export type ModeloReadinessContracts = {
-  "modelo.readiness": {
-    request: ModeloReadinessOperationRequest;
-    result: ModeloReadinessProjection;
-  };
-  "modelo.readiness.summary": {
-    request: ModeloReadinessOperationRequest;
-    result: ModeloReadinessSummaryProjection;
-  };
-};

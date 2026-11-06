@@ -2,7 +2,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import type { BorradorComparison } from "../../src/shell/borrador";
 import type { LedgerErrorDetail } from "../../src/shell/ledger";
-import type { ModeloTaxationComparisonProjection } from "../../src/shell/modeloContract/modeloWorkCompareTaxation";
+import type { ModeloTaxationComparisonProjection } from "../../src/shell/modeloContract/modeloWork";
 import { label } from "../support/strings";
 import { MODELO_FIXTURES } from "../support/windowFixtures";
 

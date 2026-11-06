@@ -60,11 +60,3 @@ export type ModeloCompareOperationRequest = {
   modelo: string;
   years: number[];
 };
-
-/** The `modelo.compare` definitions' share of `ModeloContracts`. */
-export type ModeloCompareContracts = {
-  "modelo.compare": {
-    request: ModeloCompareOperationRequest;
-    result: ModeloCompareOperationProjection;
-  };
-};

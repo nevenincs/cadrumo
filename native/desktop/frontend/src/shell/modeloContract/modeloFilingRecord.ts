@@ -492,19 +492,3 @@ export type RegistryUnresolvedOutcomeReason =
   | "m210-baseline-tipo-deferred"
   | "m210-convenio-rate-missing"
   | "waived-refund-result-unsupported";
-
-/** The `modelo.filing_record` definitions' share of `ModeloContracts`. */
-export type ModeloFilingRecordContracts = {
-  "modelo.filing_record.import": {
-    request: ModeloFilingRecordImportRequest;
-    result: ModeloFilingRecordImportProjection;
-  };
-  "modelo.filing_record.list": {
-    request: ModeloFilingRecordListRequest;
-    result: ModeloFilingRecordListProjection;
-  };
-  "modelo.filing_record.view": {
-    request: ModeloFilingRecordViewRequest;
-    result: ModeloFilingRecordViewProjection;
-  };
-};
