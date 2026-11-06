@@ -11,10 +11,9 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
-from dev.fixture_projections.location import family_directory
+from dev.fixture_projections.location import family_directory, producer_scratch
 from dev.fixture_projections.producer_output import emit, producer_arguments
 from dev.prettier_json import dump_json
-from dev.temporary_output import prepare_temp_root
 
 PERSONA_ID = "asalariada-familia"
 """The catalogue persona whose profile the demo shows."""
@@ -71,7 +70,7 @@ def main() -> None:
     """Write, verify or redirect the synthetic browser fixture."""
     arguments = producer_arguments(__doc__)
     target = family_directory("desktop-profile") / "userProfile.json"
-    with tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp:
+    with tempfile.TemporaryDirectory(dir=producer_scratch()) as tmp:
         rendered = render_fixture(Path(tmp))
     emit({target: rendered}, arguments, remedy="uv run --no-sync python -m dev.desktop_profile_fixture")
 

@@ -10,6 +10,10 @@ host's own configure preset, the one visible preset in ``CMakePresets.json``
 that inherits from no other and targets this machine. The frontend's readers
 always run inside a CMake build and read the same directory through the
 build-path manifest.
+
+A window producer's scratch follows the same selection: under CMake it is the
+selected build's own ``TEMPORARY`` directory, so a build writes nothing outside
+its tree; outside CMake it is the checkout's ``.tmp``.
 """
 
 from __future__ import annotations
@@ -24,12 +28,15 @@ from pathlib import Path, PurePosixPath
 from typing import Final, cast
 
 from ..packaging.runtime_wheelhouse_contract import target_platform
-from ..paths import REPO_ROOT
+from ..paths import REPO_ROOT, TEMP_ROOT
+from ..temporary_output import prepare_temp_root
 
 #: The environment variable naming the selected CMake binary directory.
 BINARY_DIRECTORY_VARIABLE: Final[str] = "CADRUMO_CMAKE_BINARY_DIR"
 #: The build-path registry's key for the window projections, and its name in ``build-paths.json``.
 WINDOW_FIXTURES_KEY: Final[str] = "WINDOW_FIXTURES"
+#: The build-path registry's key for a build's own temporary directory, where its producers write scratch.
+TEMPORARY_KEY: Final[str] = "TEMPORARY"
 #: Stands for the window projections' directory: as a family's output root and as a command argument.
 WINDOW_ROOT: Final[str] = "{window}"
 #: Written by a seed that leaves every window family fresh: each family's outputs and their sha256.
@@ -48,8 +55,8 @@ class WindowProjectionsUnavailableError(RuntimeError):
 
 
 @functools.cache
-def window_member() -> PurePosixPath:
-    """The window projections' directory below a binary directory, as the build-path registry declares it.
+def _declared_member(key: str) -> PurePosixPath:
+    """The directory below a binary directory that the build-path registry declares under ``key``.
 
     Raises:
         WindowProjectionsUnavailableError: When the registry declares no such directory.
@@ -57,10 +64,28 @@ def window_member() -> PurePosixPath:
     declaration = _DIRECTORIES.search(_BUILD_PATHS.read_text(encoding="utf-8"))
     words = declaration.group(1).split() if declaration else []
     members = dict(zip(words[::2], words[1::2], strict=True)) if len(words) % 2 == 0 else {}
-    member = members.get(WINDOW_FIXTURES_KEY)
+    member = members.get(key)
     if member is None or not _MEMBER.fullmatch(member):
-        raise WindowProjectionsUnavailableError(f"{_BUILD_PATHS} declares no {WINDOW_FIXTURES_KEY} build directory")
+        raise WindowProjectionsUnavailableError(f"{_BUILD_PATHS} declares no {key} build directory")
     return PurePosixPath(member)
+
+
+def window_member() -> PurePosixPath:
+    """The window projections' directory below a binary directory, as the build-path registry declares it.
+
+    Raises:
+        WindowProjectionsUnavailableError: When the registry declares no such directory.
+    """
+    return _declared_member(WINDOW_FIXTURES_KEY)
+
+
+def temporary_member() -> PurePosixPath:
+    """A build's own temporary directory below its binary directory, as the build-path registry declares it.
+
+    Raises:
+        WindowProjectionsUnavailableError: When the registry declares no such directory.
+    """
+    return _declared_member(TEMPORARY_KEY)
 
 
 def host_preset() -> str:
@@ -117,6 +142,28 @@ def window_projections(root: Path = REPO_ROOT, environment: Mapping[str, str] | 
         if target.is_symlink() or target.is_junction():
             raise WindowProjectionsUnavailableError(f"The window projections' directory is linked: {target}")
     return target
+
+
+def scratch_directory(root: Path = REPO_ROOT, environment: Mapping[str, str] | None = None) -> Path:
+    """Where a window producer writes scratch: the named build's temporary directory, else the checkout's ``.tmp``.
+
+    Raises:
+        WindowProjectionsUnavailableError: When the named directory is not ``build/<preset>`` of ``root``.
+    """
+    environment = os.environ if environment is None else environment
+    if not environment.get(BINARY_DIRECTORY_VARIABLE, ""):
+        return root / TEMP_ROOT.relative_to(REPO_ROOT)
+    return selected_build(root, environment).joinpath(*temporary_member().parts)
+
+
+def producer_scratch(root: Path = REPO_ROOT, environment: Mapping[str, str] | None = None) -> Path:
+    """Prepare and return the window producer scratch root, admitted as ``prepare_temp_root`` admits it.
+
+    Raises:
+        WindowProjectionsUnavailableError: When the named directory is not ``build/<preset>`` of the checkout.
+        ValueError: When the build's temporary directory is not a declared member of its build-path manifest.
+    """
+    return prepare_temp_root(override=scratch_directory(root, environment))
 
 
 def output_directory(output_root: str, root: Path) -> Path:

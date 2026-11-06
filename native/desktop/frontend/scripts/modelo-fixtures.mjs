@@ -297,7 +297,7 @@ if (scenarios) {
       "python",
       "-B",
       "-c",
-      "from dev.temporary_output import prepare_temp_root; print(prepare_temp_root())",
+      "from dev.fixture_projections.location import producer_scratch; print(producer_scratch())",
     ],
     { cwd: repository, env: environment, encoding: "utf8", windowsHide: true },
   );

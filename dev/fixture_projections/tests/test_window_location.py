@@ -8,10 +8,12 @@ from pathlib import Path, PurePosixPath
 
 import pytest
 
+from ... import temporary_output
 from ...packaging.runtime_wheelhouse_contract import target_platform
 from ...paths import REPO_ROOT
 from ..location import (
     BINARY_DIRECTORY_VARIABLE,
+    TEMPORARY_KEY,
     WINDOW_FIXTURES_KEY,
     WINDOW_INDEX,
     WINDOW_INDEX_FORMAT,
@@ -19,7 +21,10 @@ from ..location import (
     WindowProjectionsUnavailableError,
     host_preset,
     output_directory,
+    producer_scratch,
+    scratch_directory,
     selected_build,
+    temporary_member,
     window_member,
     window_projections,
 )
@@ -213,3 +218,65 @@ def test_every_cmake_target_that_type_checks_the_frontend_seeds_the_window_proje
     )
     assert wired is not None
     assert set(wired.group(1).split()) == {"build", "check", "test"}
+
+
+#: Every window producer's own source, beside the family commands that run them.
+_PRODUCER_SOURCES = (
+    _FRONTEND / "scripts" / "modelo-fixtures.mjs",
+    *sorted((_FRONTEND / "scripts").glob("*.py")),
+    *sorted((REPO_ROOT / "dev").glob("desktop_*_fixture.py")),
+)
+
+
+def test_the_build_path_registry_declares_a_temporary_directory_its_manifest_names() -> None:
+    source = (REPO_ROOT / "native" / "cmake" / "BuildPaths.cmake").read_text(encoding="utf-8")
+    assert re.search(rf"^\s+{TEMPORARY_KEY} {temporary_member()}$", source, re.MULTILINE)
+
+
+def test_under_cmake_a_producer_writes_scratch_inside_the_named_build(tmp_path: Path) -> None:
+    build = tmp_path / "build" / _other_preset()
+
+    scratch = scratch_directory(tmp_path, {BINARY_DIRECTORY_VARIABLE: str(build)})
+
+    assert scratch == build.joinpath(*temporary_member().parts)
+    assert scratch.is_relative_to(build)
+
+
+def test_outside_cmake_a_producer_writes_scratch_in_the_checkouts_tmp(tmp_path: Path) -> None:
+    assert scratch_directory(tmp_path, {}) == tmp_path / ".tmp"
+
+
+def test_the_build_scratch_is_prepared_only_where_its_build_manifest_declares_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = tmp_path / "checkout"
+    (root / "native" / "cmake" / "distribution").mkdir(parents=True)
+    presets = json.dumps({"configurePresets": [{"name": "windows-x64"}]})
+    (root / "CMakePresets.json").write_text(presets, encoding="utf-8")
+    (root / "native" / "cmake" / "distribution" / "CMakePresets.json").write_text(
+        json.dumps({"configurePresets": []}), encoding="utf-8"
+    )
+    monkeypatch.setattr(temporary_output, "REPO_ROOT", root)
+    monkeypatch.setattr(temporary_output, "TEMP_ROOT", root / ".tmp")
+    build = root / "build" / "windows-x64"
+    build.mkdir(parents=True)
+    environment = {BINARY_DIRECTORY_VARIABLE: str(build)}
+
+    with pytest.raises(ValueError, match="manifest"):
+        producer_scratch(root, environment)
+    (build / "build-paths.json").write_text(
+        json.dumps({"source": str(root), "paths": {TEMPORARY_KEY.lower(): str(temporary_member())}}),
+        encoding="utf-8",
+    )
+
+    scratch = producer_scratch(root, environment)
+
+    assert scratch == build.joinpath(*temporary_member().parts)
+    assert scratch.is_dir()
+    assert not (root / ".tmp").exists()
+
+
+@pytest.mark.parametrize("source", _PRODUCER_SOURCES, ids=lambda path: path.name)
+def test_no_window_producer_takes_the_checkouts_scratch_while_a_build_runs_it(source: Path) -> None:
+    # The checkout's scratch root ignores the selected build; a producer takes its scratch through the location.
+    assert "prepare_temp_root" not in source.read_text(encoding="utf-8")
