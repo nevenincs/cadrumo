@@ -255,8 +255,24 @@ cadrumo_build_step(step_comment desktop-frontend-generated GROUP desktop
 add_custom_target(desktop-frontend-generated
   DEPENDS desktop-frontend-settings desktop-frontend-chrome desktop-frontend-palette desktop-frontend-icons desktop-frontend-navigation
   COMMENT "${step_comment}")
+# The type check, stories and specs import the generated window projections
+# through @fixtures, and the frontend's type check reads them from the host
+# preset's build tree, so every target that type-checks the frontend produces
+# them first. Seeding is digest-stamped and leaves a current tree unchanged; a
+# producer that cannot run, for want of a published authority or the frontend
+# packages, fails this target and names its remedy. Only the generated window
+# families are selected: a committed family's outputs are source, never build
+# output.
+cadrumo_build_step(step_comment desktop-window-fixtures GROUP desktop
+  SUMMARY "seed the generated window projections the frontend imports"
+  OUTPUTS "${CADRUMO_WINDOW_FIXTURES}")
+add_custom_target(desktop-window-fixtures
+  COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment} ${desktop_node_path_arguments}
+    ${desktop_generator} dev.fixture_projections seed --window
+  WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
+add_dependencies(desktop-window-fixtures desktop-frontend-install registry_authority)
 foreach(action IN ITEMS build test check)
-  add_dependencies(desktop-frontend-${action} desktop-frontend-generated)
+  add_dependencies(desktop-frontend-${action} desktop-frontend-generated desktop-window-fixtures)
 endforeach()
 cadrumo_build_step(step_comment desktop-frontend-dev GROUP desktop
   SUMMARY "serve the development display from this build's generated inputs until stopped")

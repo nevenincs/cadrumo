@@ -297,6 +297,16 @@ FAMILIES: Final[tuple[FixtureFamily, ...]] = (
 )
 
 
+def window_families(families: tuple[FixtureFamily, ...] = FAMILIES) -> tuple[FixtureFamily, ...]:
+    """The generated families whose outputs are the window projections the desktop frontend imports."""
+    root = window_projections()
+    return tuple(
+        family
+        for family in families
+        if family.producer is not None and not family.committed and family.output_root == root
+    )
+
+
 def family_named(name: str, families: tuple[FixtureFamily, ...] = FAMILIES) -> FixtureFamily:
     """Return the family called ``name``.
 

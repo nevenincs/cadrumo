@@ -46,6 +46,18 @@ nothing. `desktop-frontend-dev` (what `just dev` builds), `desktop-frontend-buil
 and `desktop-frontend-test` depend on it; `npm run dev` only reads the build and
 never configures or builds it.
 
+The stories, specs and development tools import the generated window
+projections through the `@fixtures` alias. They are build output of the host
+preset's tree, `build/<preset>/fixtures/window`, never committed. The
+`desktop-window-fixtures` target seeds them, a no-op on a current tree, through
+`python -m dev.fixture_projections seed --window`, and `desktop-frontend-build`,
+`desktop-frontend-check` and `desktop-frontend-test` depend on it. The type
+check, `node scripts/typecheck.mjs`, which `npm run check` and `npm run build`
+run, binds the alias to the host preset's directory from
+`scripts/fixture-paths.mjs` and refuses to start when that directory is
+missing. A bare `tsc` reads only the editor's candidate list in
+`tsconfig.json`.
+
 The servers bind the address in `../development-server.json`. Another address
 is a configure option of the repository build, for example
 `cmake --preset windows-x64 -DCADRUMO_DESKTOP_BIND_ADDRESS=127.0.0.1`. Ports

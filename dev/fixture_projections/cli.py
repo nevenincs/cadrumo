@@ -30,7 +30,17 @@ from pathlib import Path
 from ..packaging.command_execution import run_command
 from ..paths import REPO_ROOT, TEMP_ROOT
 from ..temporary_output import prepare_temp_root
-from .registry import FAMILIES, OUTPUT, PERSONA_ROOT, PYTHON, RECORDING_SWITCHES, Command, FixtureFamily, family_named
+from .registry import (
+    FAMILIES,
+    OUTPUT,
+    PERSONA_ROOT,
+    PYTHON,
+    RECORDING_SWITCHES,
+    Command,
+    FixtureFamily,
+    family_named,
+    window_families,
+)
 from .stamps import (
     FixtureState,
     InputDigests,
@@ -135,7 +145,16 @@ def _unmet_prerequisites(workspace: Workspace, family: FixtureFamily) -> tuple[s
     )
 
 
-def _selected(workspace: Workspace, names: Sequence[str]) -> tuple[FixtureFamily, ...]:
+def _selected(workspace: Workspace, names: Sequence[str], *, window: bool = False) -> tuple[FixtureFamily, ...]:
+    if window:
+        # A build that imports the window projections names no family; an empty
+        # selection would let it go on to meet missing modules.
+        if names:
+            raise FixtureProjectionError("Name families or select the window projections, not both")
+        selected = window_families(workspace.families)
+        if not selected:
+            raise FixtureProjectionError("No generated family writes the window projections")
+        return selected
     try:
         return tuple(family_named(name, workspace.families) for name in names) if names else workspace.families
     except KeyError as exc:
@@ -180,13 +199,18 @@ def _adopted(workspace: Workspace, family: FixtureFamily, inputs: InputRecord) -
     return True
 
 
-def seed(names: Sequence[str], *, force: bool, workspace: Workspace | None = None) -> int:
-    """Run the producer of each selected family that is not fresh, or of each one under ``force``."""
+def seed(names: Sequence[str], *, force: bool, window: bool = False, workspace: Workspace | None = None) -> int:
+    """Run the producer of each selected family that is not fresh, or of each one under ``force``.
+
+    ``window`` selects the generated families whose outputs are the window
+    projections, the ones a frontend build imports, instead of named families.
+    """
     workspace = workspace or Workspace()
+    selected = _selected(workspace, names, window=window)
     digests = InputDigests(workspace.root)
     authority = workspace.authority()
     failed: list[str] = []
-    for family in _selected(workspace, names):
+    for family in selected:
         if family.producer is None:
             continue
         # Inputs are read before the producer runs: an input edited during the
@@ -344,6 +368,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     verbs = parser.add_subparsers(dest="verb", required=True)
     seeding = verbs.add_parser("seed", help="Produce or adopt families that are not fresh.")
     seeding.add_argument("--force", action="store_true", help="Produce every selected family.")
+    seeding.add_argument(
+        "--window", action="store_true", help="Select the generated families the desktop frontend imports."
+    )
     seeding.add_argument("families", nargs="*")
     for verb, summary in (
         ("status", "Report fresh, stale, unstamped or missing."),
@@ -358,7 +385,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         if args.verb == "seed":
-            return seed(args.families, force=args.force)
+            return seed(args.families, force=args.force, window=args.window)
         if args.verb == "status":
             return status(args.families)
         if args.verb == "check":

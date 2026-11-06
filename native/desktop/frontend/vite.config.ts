@@ -21,9 +21,9 @@ const source = fileURLToPath(new URL("./src", import.meta.url));
 const docsStatic = fileURLToPath(
   new URL("../../../docs/_static", import.meta.url),
 );
-// The generated window projections, which `just fixtures-seed` writes into the
-// host's build tree and which tsconfig.json resolves by the same alias. A
-// missing directory is reported by the file that imports from it.
+// The generated window projections, which the desktop-window-fixtures target
+// seeds into the host's build tree and which scripts/typecheck.mjs binds to the
+// same alias. A missing directory is reported by the file that imports from it.
 const fixtures = windowFixtures();
 
 // The shell's generated inputs, by the names the shell imports them

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -25,6 +26,7 @@ from ..cli import (
     seed,
     status,
 )
+from ..location import window_projections
 from ..registry import OUTPUT, PYTHON, RECORDING_SWITCHES, Command, FixtureFamily, InputGroup, Prerequisite
 from ..stamps import FixtureState, InputDigests, family_inputs, family_status, stamp_path
 
@@ -43,6 +45,9 @@ if "--random" in sys.argv:
 if "--fail" in sys.argv:
     sys.exit(3)
 target = Path("out/fixture.json")
+if "--into" in sys.argv:
+    target = Path(sys.argv[sys.argv.index("--into") + 1]) / "fixture.json"
+    target.parent.mkdir(parents=True, exist_ok=True)
 if "--output" in sys.argv:
     target = Path(sys.argv[sys.argv.index("--output") + 1]) / "fixture.json"
 # A leftover recording switch made an old recorder write even when checking.
@@ -153,6 +158,42 @@ def test_an_absent_prerequisite_refuses_seed_and_check_without_running_anything(
     (root / "node_modules").mkdir()
     assert seed([], force=False, workspace=workspace) == 0
     assert check([], determinism=False, workspace=workspace) == 0
+
+
+def test_seed_window_produces_only_the_generated_window_projections(tmp_path: Path) -> None:
+    root = _checkout(tmp_path / "repo")
+    projections = window_projections()
+    elsewhere = replace(_family(), name="elsewhere")
+    committed = replace(
+        _family(producer=("--into", projections), committed=True), name="committed", output_root=projections
+    )
+    window = replace(_family(producer=("--into", projections)), name="window", output_root=projections)
+    workspace = _workspace(root, elsewhere, committed, window)
+
+    assert seed([], force=False, window=True, workspace=workspace) == 0
+    assert _writes(root) == [f"--into {projections}"]
+    assert (root / projections / "fixture.json").read_text(encoding="utf-8") == "HELLO"
+    assert not (root / "out" / "fixture.json").exists()
+    assert _state(workspace, window) is FixtureState.FRESH
+
+
+def test_seed_window_refuses_when_no_family_writes_the_window_projections(tmp_path: Path) -> None:
+    root = _checkout(tmp_path / "repo")
+    workspace = _workspace(root, _family())
+
+    with pytest.raises(FixtureProjectionError, match="No generated family writes the window projections"):
+        seed([], force=False, window=True, workspace=workspace)
+    assert _writes(root) == []
+
+
+def test_seed_window_refuses_named_families_beside_it(tmp_path: Path) -> None:
+    root = _checkout(tmp_path / "repo")
+    projections = window_projections()
+    window = replace(_family(producer=("--into", projections)), name="window", output_root=projections)
+
+    with pytest.raises(FixtureProjectionError, match="not both"):
+        seed(["window"], force=False, window=True, workspace=_workspace(root, window))
+    assert _writes(root) == []
 
 
 def test_seed_adopts_unstamped_outputs_its_check_proves_without_producing(tmp_path: Path) -> None:

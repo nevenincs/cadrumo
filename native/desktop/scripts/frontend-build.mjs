@@ -5,6 +5,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildPath } from "./build-paths.mjs";
 import { contentBuild } from "./content-build.mjs";
+import { windowFixtures } from "../frontend/scripts/fixture-paths.mjs";
 
 const desktop = fileURLToPath(new URL("../", import.meta.url));
 const frontend = resolve(desktop, "frontend");
@@ -73,6 +74,8 @@ inputs.push(
   resolve(desktop, "../../docs/_static/cadrumo-icon.svg"),
   resolve(desktop, "development-server.json"),
   buildPath("desktop_frontend_generated"),
+  // The type check reads the window projections, so a reseed reruns it.
+  windowFixtures(),
   resolve(buildPath("generated"), "identity.json"),
   resolve(buildPath("generated"), "desktop-server.json"),
 );
