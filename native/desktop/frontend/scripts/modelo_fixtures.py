@@ -4,7 +4,9 @@ The modules under ``src/shell/modeloContract/`` are generated from the JSON
 schema of every request and result the desktop's admitted ``modelo.*``
 definitions register, plus the edit operator input the financial body carries.
 Each type is written once, in the module of the definitions that reach it (see
-``contract_modules``).
+``contract_modules``), and a module larger than ``_MODULE_LINE_BUDGET`` hands
+groups of its types to modules of their own; a module that cannot be split
+within the budget is refused, and nothing is written.
 ``src/shell/relayBounds.ts`` is generated from the host's relay bounds, as the
 Rust sources state them. The envelopes under
 ``build/<preset>/fixtures/window/modelo/`` are read through the application's own read path
@@ -13,7 +15,8 @@ published authority, with each scenario's own state stated over it through the
 profile operations.
 
 ``scripts/modelo-fixtures.mjs`` drives this module and formats what it writes;
-run that, not this. ``contract`` writes the unformatted modules to standard
+run that, not this. It refuses, writing nothing, when a formatted module would
+be longer than the repository's TypeScript module bound. ``contract`` writes the unformatted modules to standard
 output as one JSON object keyed by file name; ``bounds`` writes the
 unformatted relay bounds module; ``envelopes``
 writes the envelopes, stored compactly and the Modelo 100 forms as patches;

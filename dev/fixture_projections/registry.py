@@ -170,9 +170,11 @@ def _script(
 
 _MODELO_PRODUCER: Final = f"{_SCRIPTS}/modelo_fixtures.py"
 _MODELO_DRIVER: Final = f"{_SCRIPTS}/modelo-fixtures.mjs"
+#: The module bound the driver refuses a generated wire-type module past.
+_MODULE_LINE_LIMIT: Final = f"{_SCRIPTS}/module-line-limit.mjs"
 #: The Modelo wire types and the envelopes read the same application, host sources and personas.
 _MODELO_INPUTS: Final = (
-    *_common(_MODELO_PRODUCER, _MODELO_DRIVER),
+    *_common(_MODELO_PRODUCER, _MODELO_DRIVER, _MODULE_LINE_LIMIT),
     InputGroup(
         "host-source",
         (

@@ -8,6 +8,8 @@
 // tree (see fixture-paths.mjs) and never committed; with neither, both. The
 // envelopes are stored as the producer writes them, compact and the Modelo 100
 // forms as patches; `--pack` stores the ones already on disk that way.
+// The wire types are refused, none written or compared, when a formatted
+// module would be longer than the module bound in module-line-limit.mjs.
 // `--check` writes nothing: for the wire types it fails when they differ from
 // fresh output, a module is missing or left over, or the host's admitted list
 // differs from the registered family,
@@ -32,6 +34,7 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { format, resolveConfig } from "prettier";
 import { windowFixtures } from "./fixture-paths.mjs";
+import { refuseOversizedModules } from "./module-line-limit.mjs";
 
 const { values } = parseArgs({
   options: {
@@ -90,8 +93,6 @@ const CONTRACT_MODULES = [
   "src/shell/modeloContract/modeloWorkVerify.ts",
 ];
 const contractDirectory = resolve(frontend, "src/shell/modeloContract");
-// The most lines a formatted module may take.
-const MODULE_LINE_LIMIT = 1500;
 const bounds = resolve(frontend, "src/shell/relayBounds.ts");
 const fixtures = resolve(windowFixtures(), "modelo");
 const producer = resolve(frontend, "scripts/modelo_fixtures.py");
@@ -171,15 +172,10 @@ if (wireTypes) {
   const targets = [];
   for (const [name, source] of modules) {
     const path = resolve(directory, name);
-    const text = await formatted(source, resolve(contractDirectory, name));
-    const length = text.split("\n").length - 1;
-    if (length > MODULE_LINE_LIMIT) {
-      console.error(
-        `${name} takes ${length} lines, more than ${MODULE_LINE_LIMIT}; lower the producer's module line budget`,
-      );
-      process.exit(1);
-    }
-    targets.push([path, text]);
+    targets.push([
+      path,
+      await formatted(source, resolve(contractDirectory, name)),
+    ]);
   }
   const measured = python("bounds");
   if (measured.status !== 0) process.exit(measured.status);
@@ -188,6 +184,12 @@ if (wireTypes) {
     values.output ? resolve(values.output, "relayBounds.ts") : bounds,
     freshBounds,
   ]);
+  // Every generated module is held to the repository's module bound before
+  // any is written or compared.
+  refuseOversizedModules(
+    targets.map(([path, text]) => [basename(path), text]),
+    "lower the producer's module line budget",
+  );
   // A module the producer no longer writes is stale, not left to be imported.
   const leftover = existsSync(directory)
     ? readdirSync(directory).filter((name) => !listed.includes(name))
