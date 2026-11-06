@@ -575,11 +575,17 @@ def test_amend_inside_the_window_records_a_timely_complementaria(
     """A complementaria decides its own posture at its own presentation date.
 
     Ley 58/2003 art. 122.1 lets a complementaria be presented inside the plazo
-    or after it; only in the second case is it extemporánea. This one is filed
-    on 16 April 2026, inside the Modelo 303 1T 2026 window.
+    or after it; only in the second case is it extemporánea. The amend clock of
+    this module's fixture falls inside the window its own work unit addresses,
+    which the deadline resolved from that work unit confirms.
     """
     outcome = _drive_amend_creates_complementaria(repos, operation=operation)
-    deadline = resolve_effective_filing_deadline("303", 2026, outcome.work_unit.period, operation=operation)
+    deadline = resolve_effective_filing_deadline(
+        str(outcome.work_unit.modelo),
+        outcome.work_unit.filing_year,
+        outcome.work_unit.period,
+        operation=operation,
+    )
 
     assert deadline is not None
     assert _T4.astimezone(MADRID_TZ).date() <= deadline.closes_on
@@ -600,7 +606,12 @@ def test_amend_after_the_window_records_an_extemporanea_complementaria(
         casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000"), _AMEND_EXPENSE_CASILLA: Decimal("250")},
         operation=operation,
     )
-    deadline = resolve_effective_filing_deadline("303", 2026, work_unit.period, operation=operation)
+    deadline = resolve_effective_filing_deadline(
+        str(work_unit.modelo),
+        work_unit.filing_year,
+        work_unit.period,
+        operation=operation,
+    )
     assert deadline is not None
     filed_late = datetime(
         deadline.closes_on.year, deadline.closes_on.month, deadline.closes_on.day, 12, 0, 0, tzinfo=UTC
