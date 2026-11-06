@@ -51,6 +51,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _SYNTHETIC_BY_CONSTRUCTION: dict[str, str] = {
     "modelo_100_2025A.pdf": "built synthetic for the justificante parser tests; never a sanitised capture",
+    "modelo_111_2026Q1.pdf": "built synthetic for the receipt-total reconciliation and capture-confirmation tests",
     "modelo_130_2026Q1.pdf": "built synthetic for the parser, reconciliation and live-capture tests",
     "modelo_303_2026Q1.pdf": "built synthetic for the justificante parser tests; never a sanitised capture",
 }
