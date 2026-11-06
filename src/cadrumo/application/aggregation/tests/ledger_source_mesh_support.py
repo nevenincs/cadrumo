@@ -603,8 +603,9 @@ def resolve_m130(
     rows: tuple[Transaction, ...] = (),
     profile: ModeloWorkProfile | None = None,
     invoices: InvoiceCatalogueReader | None = None,
+    year: int = 2025,
 ) -> CalculationSourceResolution:
-    profile = profile or cash_criterion_profile(2025)
+    profile = profile or cash_criterion_profile(year)
     tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     tx_repo.save(TransactionCatalogue.from_transactions(rows))
     return LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
@@ -617,8 +618,8 @@ def resolve_m130(
         CalculationSourceContext(
             bucket_id=BUCKET_ID,
             modelo="130",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, period),
+            filing_year=year,
+            period=Period.from_year_and_code(year, period),
             revision=_revision("130", "2019-y-siguientes"),
             profile=profile,
         ),
