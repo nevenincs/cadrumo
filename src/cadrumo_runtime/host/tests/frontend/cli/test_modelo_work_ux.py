@@ -975,7 +975,7 @@ def test_overview_next_step_not_import_after_manual_ledger_entry(seed_profile: P
     status = invoke_modelo_scenario_cli(["app", "overview", "status"])
     assert status.exit_code == 0, status.output
     # The transaction is visible...
-    assert "1" in status.output
+    assert tr("cli.overview.status.transactions_present", locale="en", count=1) in status.output
     # ...and the next-step guidance points forward, never back at import.
     next_section = status.output.split("\n\n")[-1]
     # The operator pays retención, so overdue Modelo 111 quarters exist; their filing-obligation
