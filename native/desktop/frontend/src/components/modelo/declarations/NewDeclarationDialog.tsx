@@ -25,11 +25,11 @@ import {
 } from "../../../shell/modeloWriteHolds";
 import { runOperation } from "../dialogs/operationRun";
 import { WriteHoldNotice, useModeloWriteHold } from "../WriteHoldNotice";
+import type { PublicPeriod } from "../../../shell/modeloContract/modelo";
 import type {
   ModeloDeclarationCreationTargetV1 as Target,
   ModeloDeclarationListRowV1,
-  PublicPeriod,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloDeclarations";
 import { useStrings } from "../../../shell/strings";
 
 /** Where the dialog starts: a modelo, and a period within it. */

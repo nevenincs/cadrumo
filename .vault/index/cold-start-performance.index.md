@@ -4,15 +4,16 @@ tags:
   - '#index'
   - '#cold-start-performance'
 date: '2026-11-05'
-modified: '2026-11-05'
+modified: '2026-11-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:60e916c91b32001cc70a34ddf76aff0e7da31720eb8ca8868acfc49be74ec8f7'
+body_hash: 'sha256:c18f21a6e0363ece334bb1529deaf9865af154563045ea3bdeee34e040e7b0d8'
 related:
   - '[[2026-11-05-cold-start-performance-cli-exit-state-reference]]'
   - '[[2026-11-05-cold-start-performance-cli-fast-exit-adr]]'
   - '[[2026-11-05-cold-start-performance-registry-model-definitions-adr]]'
   - '[[2026-11-05-cold-start-performance-registry-model-definitions-reference]]'
   - '[[2026-11-05-cold-start-performance-secure-storage-core-adr]]'
+  - '[[2026-11-06-cold-start-performance-secure-storage-core-reference]]'
 ---
 
 # `cold-start-performance` feature index
@@ -31,3 +32,4 @@ Auto-generated index of all documents tagged with `#cold-start-performance`.
 
 - `2026-11-05-cold-start-performance-cli-exit-state-reference` - `cold-start-performance` reference: `Process state left at aeat command return`
 - `2026-11-05-cold-start-performance-registry-model-definitions-reference` - `cold-start-performance` reference: `Registry closure schema-build cost at import and first snapshot`
+- `2026-11-06-cold-start-performance-secure-storage-core-reference` - `cold-start-performance` reference: `secure storage core`

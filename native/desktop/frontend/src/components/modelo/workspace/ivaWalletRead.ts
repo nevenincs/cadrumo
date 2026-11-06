@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type { ModeloPort } from "../../../shell/modelo";
-import type {
-  ModeloIvaWalletBalanceProjection,
-  ModeloWorkbenchFormProjectionV1,
-} from "../../../shell/modeloContract";
+import type { ModeloIvaWalletBalanceProjection } from "../../../shell/modeloContract/modeloIvaWallet";
+import type { ModeloWorkbenchFormProjectionV1 } from "../../../shell/modeloContract/modeloWorkForm";
 import {
   walletWriteKey,
   type ModeloWriteHolds,

@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 
@@ -27,13 +28,15 @@ def form_context_value(
     block: FormContextFieldBlock,
     *,
     producer_snapshot: FilingProducerSnapshot | None = None,
+    producer_values: Mapping[FilingProducerKey, ModeloFormScalar] | None = None,
     revision: CalculationRevision | None = None,
 ) -> ModeloFormScalar:
     """Project only the addressed scalar; absent producer facts remain unknown.
 
-    No profile is opened here. The caller supplies an admitted filing snapshot
-    explicitly, and facts for a different modelo are refused even when the
-    requested field itself is a year or period.
+    No profile is opened here. The caller supplies admitted producer values or
+    a filing snapshot explicitly. A supplied snapshot takes precedence and
+    facts for a different modelo are refused even when the requested field
+    itself is a year or period. Missing keys never acquire default values.
 
     The ``revision`` parameter uses :class:`CalculationRevision`, which holds the saved calculation and its evidence.
     The ``snapshot`` parameter uses :class:`RegistrySnapshot`, which pins
@@ -48,7 +51,7 @@ def form_context_value(
         raise RegistryValidationError("binding context requires the saved binding or workbook projection")
     if field.draft_attribute in FORM_CONTEXT_DRAFT_ATTRIBUTES:
         return _draft_context_value(snapshot, field.draft_attribute)
-    return _producer_context_value(producer_snapshot, field.producer_key)
+    return _producer_context_value(producer_snapshot, field.producer_key, producer_values)
 
 
 def _draft_context_value(snapshot: RegistrySnapshot, attribute: ExportDraftAttribute | None) -> ModeloFormScalar:
@@ -67,15 +70,14 @@ def _draft_context_value(snapshot: RegistrySnapshot, attribute: ExportDraftAttri
 
 
 def _producer_context_value(
-    producer_snapshot: FilingProducerSnapshot | None, producer_key: FilingProducerKey | None
+    producer_snapshot: FilingProducerSnapshot | None,
+    producer_key: FilingProducerKey | None,
+    producer_values: Mapping[FilingProducerKey, ModeloFormScalar] | None,
 ) -> ModeloFormScalar:
-    if producer_snapshot is None:
+    if producer_key is None:
         return None
-    value = (
-        filing_producer_values(producer_snapshot).get(producer_key)
-        if (producer_key is not None and producer_key)
-        else None
-    )
+    values = filing_producer_values(producer_snapshot) if producer_snapshot is not None else producer_values
+    value = None if values is None else values.get(producer_key)
     if value is None or isinstance(value, (str, bool, int, Decimal, date)):
         return value
     raise RegistryValidationError("form context producer value is not a supported scalar")

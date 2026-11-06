@@ -40,7 +40,7 @@ from ...aggregation.tests.ledger_source_mesh_support import (
     resolve_m130,
 )
 from ..activity_asset_claim_consumers import calculation_revisions_consuming_claim
-from ..calculation_bucket_actions import source_provenance_refs
+from ..calculation_resolution import calculation_source_provenance_refs
 from ..ledger_drift_gate import ledger_drift_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -82,7 +82,7 @@ def _calculated_draft(
     resolution = resolve_m100(history) if modelo == "100" else resolve_m130(history, period_code)
     snapshot = published_snapshot(modelo, filing_year=2025, period=period_code)
     work_unit = _drift_work_unit(modelo, period_code, snapshot.revision.id)
-    provenance = source_provenance_refs(resolution)
+    provenance = calculation_source_provenance_refs(resolution.provenance)
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
         input_values_by_casilla_id={},

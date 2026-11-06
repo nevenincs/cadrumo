@@ -1,10 +1,10 @@
 import { createContext, useContext } from "react";
 import type { CommitKey } from "@/components/ui/dataGridModel";
+import type { SourceSurface } from "../../../shell/modeloContract/modeloWork";
 import type {
   ModeloWorkbenchFormProjectionV1,
   PublicModeloFormField,
-  SourceSurface,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloWorkForm";
 import type { BoxNotes } from "./boxNotes";
 import type { FormSession } from "./session";
 import type { EditRequest } from "./ValueCell";

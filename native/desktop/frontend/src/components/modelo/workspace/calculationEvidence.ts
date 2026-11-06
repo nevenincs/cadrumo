@@ -5,10 +5,8 @@ import {
   type ModeloPort,
   type ModeloResult,
 } from "../../../shell/modelo";
-import type {
-  ModeloWorkbenchFormProjectionV1,
-  ModeloWorkM303AttestationPublicResultV2,
-} from "../../../shell/modeloContract";
+import type { ModeloWorkM303AttestationPublicResultV2 } from "../../../shell/modeloContract/modeloWork";
+import type { ModeloWorkbenchFormProjectionV1 } from "../../../shell/modeloContract/modeloWorkForm";
 import type { ModeloWriteHolds } from "../../../shell/modeloWriteHolds";
 import type { OperationRun } from "../dialogs/operationRun";
 
