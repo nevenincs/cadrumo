@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { agentTurns, ask, settled } from "../support/agent";
 import { label } from "../support/strings";
-import { PROFILE_SURNAMES } from "../support/profileFixture";
+import { PROFILE_SURNAMES, profileStated } from "../support/profileFixture";
 import { windowToast } from "../support/toast";
 
 // The pages' own guards and focus targets under the window's navigator: a
@@ -83,7 +83,7 @@ test("an unchanged profile editor asks nothing, and showing a pane over a draft 
   await expect(prompt(page)).toHaveCount(0);
   await expect(field).toHaveValue("Borrador");
   // Typed back to what is stored, the draft holds nothing to lose.
-  await field.fill("Ana");
+  await field.fill(profileStated("identity.name"));
   await away.dispatchEvent("click");
   await expect(prompt(page)).toHaveCount(0);
   await expect(calendar(page)).toBeVisible();

@@ -1,6 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { agentTurns, ask, settled } from "../support/agent";
 import { showLedgerColumn } from "../support/ledgerPage";
+import { PROFILE_SURNAMES } from "../support/profileFixture";
 import { label } from "../support/strings";
 import { windowToast } from "../support/toast";
 
@@ -69,7 +70,7 @@ async function leavePromptWaiting(page: Page) {
     .locator(".rail")
     .getByRole("button", { name: label("desktop.profile.title"), exact: true })
     .click();
-  await expect(profile).toContainText("Soler Vidal");
+  await expect(profile).toContainText(PROFILE_SURNAMES);
   const link = await linkTo(page, "cadrumo://view/calendar");
   await profile
     .getByRole("button", {

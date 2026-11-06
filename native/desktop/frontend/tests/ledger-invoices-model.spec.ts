@@ -54,6 +54,8 @@ const recorded = (
   ) as { recordings: Record<string, Recording> }
 ).recordings;
 const answer = (name: string) => recorded[name]!.result;
+/** The counterparty's tax id the recorded drafts were asked with. */
+const RECORDED_TAX_ID = recorded.two_lines!.request.counterparty_tax_id!;
 
 function invoice(facts: Partial<CatalogueInvoice> = {}): CatalogueInvoice {
   return {
@@ -122,7 +124,7 @@ function filled(
     number: "F-2026-021",
     issuedAt: "2026-10-23",
     counterpartyName: "Norte Digital S. Coop.",
-    taxId: "B00010157",
+    taxId: RECORDED_TAX_ID,
     country: "es",
     currency: "eur",
     lines: [
@@ -312,7 +314,7 @@ test("an add carries the answer's figures, and only with an answer to this very 
   expect(check.request).toEqual({
     kind: "issued",
     counterparty_name: "Norte Digital S. Coop.",
-    counterparty_tax_id: "B00010157",
+    counterparty_tax_id: RECORDED_TAX_ID,
     counterparty_country: "ES",
     series: "F",
     invoice_number: "F-2026-021",
@@ -837,7 +839,7 @@ test("a stored date, series and rectified number take the ledger's verdict", () 
 
 test("a correction is asked about with the stored invoice it restates, and its answer says what is left to pay", () => {
   const stored = invoice({
-    counterparty_tax_id: "B00010157",
+    counterparty_tax_id: RECORDED_TAX_ID,
     base_total: { decimal: "1000" },
   });
   expect(
@@ -864,7 +866,7 @@ test("a correction is asked about with the stored invoice it restates, and its a
 
 test("a changed retención waits for the ledger's answer and takes its verdict", () => {
   const stored = invoice({
-    counterparty_tax_id: "B00010157",
+    counterparty_tax_id: RECORDED_TAX_ID,
     base_total: { decimal: "1000" },
     retention_rate: { decimal: "0.15" },
     retention_amount: { decimal: "150" },

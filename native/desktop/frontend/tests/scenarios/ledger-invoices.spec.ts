@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { formatDay } from "../../src/shared/dateFormats";
 import { label } from "../support/strings";
+import { windowFixture } from "../support/windowFixtures";
 
 // The Invoices section over the scenario's ledger: the whole catalogue,
 // filtered and sorted in the page, and the invoice editor. A new invoice
@@ -11,6 +12,19 @@ import { label } from "../support/strings";
 // stored one shows its identity as fixed and corrects only what the ledger
 // accepts. Writes are reviewed first, an unseen outcome is said to be
 // unknown, and leaving with edits asks first.
+
+/** The counterparty's tax id the recorded invoice drafts were asked with: the
+ * scenario's ledger answers a draft only when it is one of those. */
+const RECORDED_TAX_ID = (
+  JSON.parse(
+    readFileSync(
+      windowFixture("ledger-recordings", "ledgerInvoicePreview"),
+      "utf8",
+    ),
+  ) as {
+    recordings: Record<string, { request: { counterparty_tax_id: string } }>;
+  }
+).recordings.two_lines!.request.counterparty_tax_id;
 
 const open = (target: Page, extra = "") =>
   target.goto(`/scenarios.html?scenario=ledger&latency=0&bar=off${extra}`);
@@ -103,7 +117,7 @@ async function fillIssued(
     })
     .click();
   await field(target, "counterparty_name").fill("Norte Digital S. Coop.");
-  await field(target, "counterparty_tax_id").fill("B00010157");
+  await field(target, "counterparty_tax_id").fill(RECORDED_TAX_ID);
   await field(target, "counterparty_country").fill("es");
   await field(target, "series").fill("F");
   await field(target, "invoice_number").fill(number);

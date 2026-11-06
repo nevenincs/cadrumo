@@ -238,10 +238,11 @@ test("details open for editing by double click, Enter, F2 and the hover button",
   const profile = await open(page);
   const given = row(profile, "identity.name");
   const dialog = page.getByRole("dialog", { name: "Given name", exact: true });
-  for (const target of ["Given name", "Ana"]) {
+  const stored = profileStated("identity.name");
+  for (const target of ["Given name", stored]) {
     await given.getByText(target, { exact: true }).dblclick();
     await expect(dialog.getByLabel("Given name", { exact: true })).toHaveValue(
-      "Ana",
+      stored,
     );
     await page.keyboard.press("Escape");
     await expect(dialog).toHaveCount(0);
@@ -750,7 +751,8 @@ test("a Censo review is shown on the details it changes and saves only after app
   await expect(
     cadastral.getByTitle(label("desktop.profile.censo.source")),
   ).toBeVisible();
-  await expect(address).toContainText("Calle Larios 12");
+  // The address the review preserved is the one the profile already held.
+  await expect(address).toContainText(profileStated("contact.fiscal_address"));
   await expect(address).not.toContainText("Calle Nueva 1");
   expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(1);
   await region
