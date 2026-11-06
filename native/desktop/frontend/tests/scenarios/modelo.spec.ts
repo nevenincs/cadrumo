@@ -319,7 +319,9 @@ test("a calculated Modelo 130 shows its figures, and its held zeros as zero", as
       field.value_text &&
       field.value_text !== "0.00 €",
   );
-  const held = calculated.find((field) => field.box && field.held_zero);
+  const held = calculated.find(
+    (field) => field.box && field.held_zero && field.value_text,
+  );
   if (!figure?.value_text || !held?.value_text)
     throw new Error("the calculated 130 holds no figure and no held zero");
   await openDeclaration(target, "130", { shape: "income" });
@@ -337,12 +339,12 @@ test("a Modelo 130 recorded as filed shows its proven-zero quarter as zero", asy
   if (!zero?.value_text) throw new Error("the filed 130 holds no held zero");
   await openDeclaration(target, "130", { shape: "filed" });
   await expect(boxRow(target, zero.box!)).toContainText(zero.value_text);
-  // The header states the result the read model stated.
+  // The header states the result the read model stated: its amount where it
+  // served one, else its sentence.
   const result = filed.header.result;
-  if (!result?.short_text) throw new Error("the filed 130 states no result");
-  await expect(
-    target.getByText(result.short_text, { exact: true }).first(),
-  ).toBeVisible();
+  const stated = result?.amount_text ?? result?.short_text;
+  if (!stated) throw new Error("the filed 130 states no result");
+  await expect(target.getByText(stated, { exact: true }).first()).toBeVisible();
 });
 
 test("a box shows the help the read serves for it, and its details in words only", async ({
@@ -552,7 +554,9 @@ test("the check lists every finding under its level, in plain words only", async
     const level = target.getByRole("region", {
       name: label(`workspace.modelo.level.${line.level}`),
     });
-    const item = level.getByRole("listitem").filter({ hasText: line.message });
+    // Two findings may share a sentence; each is told apart by where it is.
+    const said = level.getByRole("listitem").filter({ hasText: line.message });
+    const item = line.where ? said.filter({ hasText: line.where }) : said;
     await expect(item).toContainText(line.action);
     // A calculation note's own account, worded for the filer, is drawn under
     // its sentence, as a finding's kind is.
@@ -1672,13 +1676,22 @@ for (const language of LANGUAGES)
       ),
     ).toBeVisible();
     const report = target.locator(".modelo-reconciliation");
-    for (const diff of imported.diffs) {
-      await expect(
-        report.getByText(diff.work_unit_value, { exact: true }),
-      ).toBeVisible();
-      await expect(
-        report.getByText(diff.evidence_value, { exact: true }),
-      ).toBeVisible();
+    // Each difference is a row of its own, its declaration's value beside the
+    // receipt's: two rows, or one row's two sides, may read the same.
+    const rows = report
+      .getByRole("region", {
+        name: label(
+          "workspace.modelo.filing.reconciliation.differences",
+          {},
+          language,
+        ),
+      })
+      .locator(":scope > ul > li");
+    await expect(rows).toHaveCount(imported.diffs.length);
+    for (const [index, diff] of imported.diffs.entries()) {
+      const sides = rows.nth(index).locator("dd");
+      await expect(sides.nth(0)).toHaveText(diff.work_unit_value);
+      await expect(sides.nth(1)).toHaveText(diff.evidence_value);
     }
     for (const advisory of imported.advisories) {
       const item = report
