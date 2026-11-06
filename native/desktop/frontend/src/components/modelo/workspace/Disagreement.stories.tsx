@@ -4,7 +4,7 @@ import { expect, userEvent, waitFor, within } from "storybook/test";
 import { modeloFixture, type ModeloShape } from "@/dev/modeloFixture";
 import { translator } from "../../../shell/strings";
 import type { ModeloPort } from "../../../shell/modelo";
-import type { OutputLanguage } from "../../../shell/modeloContract";
+import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
 import { WorkspaceScreen } from "./WorkspaceScreen";
 
 // A source disagreement answered in the real workspace, over the envelopes

@@ -5,11 +5,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import type { ModeloFormDeadlineTone } from "../../../shell/modeloContract/modelo";
 import type {
   ModeloFormAttention,
   ModeloFormAttentionCount,
-  ModeloFormDeadlineTone,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloWorkForm";
 
 // The workspace's succinct marks: a glyph and a count, the read model's
 // words in the tooltip and the accessible name.

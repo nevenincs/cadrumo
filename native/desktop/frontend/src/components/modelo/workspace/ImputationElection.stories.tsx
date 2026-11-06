@@ -10,7 +10,7 @@ import {
   type ElectionScenario,
 } from "@/dev/imputationElectionFixture";
 import type { ModeloPort } from "../../../shell/modelo";
-import type { OutputLanguage } from "../../../shell/modeloContract";
+import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
 import { translator } from "../../../shell/strings";
 import { ImputationElection } from "./ImputationElection";
 import { WorkspaceScreen } from "./WorkspaceScreen";

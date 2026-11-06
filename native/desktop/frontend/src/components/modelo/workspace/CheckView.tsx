@@ -6,7 +6,7 @@ import { Icon } from "@/components/ui/icon";
 import type {
   ModeloFormIssueLine,
   ModeloFormVerdict,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloWorkForm";
 import { useStrings } from "../../../shell/strings";
 import type { OpenableSurface } from "../details/Details";
 import { BoxNumber } from "../form/BoxNumber";

@@ -12,7 +12,7 @@ import type {
   Prefs,
   ProfileView,
 } from "../shell/layout";
-import type { OutputLanguage } from "../shell/modeloContract";
+import type { OutputLanguage } from "../shell/modeloContract/modelo";
 import type { useNavigator } from "../shell/navigation/useNavigator";
 import type { SignInController } from "../shell/signIn";
 import type { Translate } from "../shell/strings";

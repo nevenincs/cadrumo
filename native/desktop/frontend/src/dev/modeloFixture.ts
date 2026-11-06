@@ -30,21 +30,25 @@ import {
   type ModeloSaveFormat,
 } from "../shell/modelo";
 import { RELAY_PAYLOAD_LIMIT } from "../shell/relayBounds";
+import { type OutputLanguage } from "../shell/modeloContract/modelo";
+import { type ModeloDeclarationsListProjectionV1 } from "../shell/modeloContract/modeloDeclarations";
 import {
-  type CreditResolutionListProjection,
-  type ModeloCasillaHelpProjectionV1,
-  type ModeloDeclarationsListProjectionV1,
   type ModeloEditOperatorInputV2,
   type ModeloEditHeldChangeV1,
   type ModeloEditPreflightProjectionV1,
   type ModeloEditRenewalProjectionV1,
-  type ModeloExportPublicResultV3,
-  type ModeloFormIssueLine,
+} from "../shell/modeloContract/modeloEdit";
+import { type ModeloExportPublicResultV3 } from "../shell/modeloContract/modeloExport";
+import {
+  type CreditResolutionListProjection,
   type ModeloWorkCreateProjection,
+} from "../shell/modeloContract/modeloWork";
+import { type ModeloCasillaHelpProjectionV1 } from "../shell/modeloContract/modeloWorkCasillaHelp";
+import {
+  type ModeloFormIssueLine,
   type ModeloWorkbenchFormProjectionV1,
   type PublicModeloFormField,
-  type OutputLanguage,
-} from "../shell/modeloContract";
+} from "../shell/modeloContract/modeloWorkForm";
 import type { Translate } from "../shell/strings";
 import { ASSET_NOTES } from "./modeloAssetNotes";
 import { wholeEnvelopes } from "./modeloEnvelopePatch";
