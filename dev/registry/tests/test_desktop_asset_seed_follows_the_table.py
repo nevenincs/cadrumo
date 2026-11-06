@@ -285,11 +285,18 @@ def test_every_seeded_plan_row_states_what_the_backend_derives_of_its_absence_an
         assert remedy == remedy_field_key(key)
 
 
-def test_the_one_reason_the_plan_screen_compares_is_the_backends_no_table_minimum_reason() -> None:
+def test_the_scenario_no_table_reason_is_the_backends_and_no_screen_compares_one() -> None:
+    """The scenario derives ``minimum_has_no_table`` from the backend's key; a screen reads only the flag."""
     from cadrumo.application.actividad_asset.activity_asset_read_models import NO_TABLE_MINIMUM_REASON_KEY
 
-    words = REPO_ROOT / "native" / "desktop" / "frontend" / "src" / "components" / "ledger" / "assets" / "planWords.ts"
-    found = re.search(r'NO_TABLE_MINIMUM\s*=\s*"([^"]+)"', words.read_text(encoding="utf-8"))
+    found = re.search(r'NO_TABLE_MINIMUM_KEY\s*=\s*"([^"]+)"', _SEED.read_text(encoding="utf-8"))
 
     assert found is not None
     assert found[1] == NO_TABLE_MINIMUM_REASON_KEY
+    components = REPO_ROOT / "native" / "desktop" / "frontend" / "src" / "components"
+    comparing = [
+        path.relative_to(components).as_posix()
+        for path in (*components.rglob("*.ts"), *components.rglob("*.tsx"))
+        if not path.name.endswith(".stories.tsx") and NO_TABLE_MINIMUM_REASON_KEY in path.read_text(encoding="utf-8")
+    ]
+    assert comparing == [], comparing

@@ -45,6 +45,7 @@ from cadrumo.application.inventory.registered_requests import (
     InventoryRetireRequest,
 )
 from cadrumo.application.inventory.service import InventoryMovementCommand
+from cadrumo.application.ledger.entry_limits import ledger_entry_limits
 from cadrumo.domain.contribuyente.inventory.corrections import inventory_refusal_key
 from cadrumo.domain.contribuyente.inventory.records import MovementKind, MovementRecord, ValuationMethod
 from dev.paths import REPO_ROOT
@@ -90,13 +91,14 @@ _PROOFS = {
 }
 
 #: A purchase of 100 units for 1000.00 with 210.00 of IVA, all of it deductible, and nothing else.
+#: Its share is the fraction the percent editor holds, so all of it is 1.
 _PURCHASE = {
     "date": "2026-03-04",
     "kind": "purchase",
     "quantity": "100",
     "price": "1000.00",
     "iva": "210.00",
-    "share": "100",
+    "share": "1",
 }
 
 _DECIDED_AT = "2026-12-31T10:00:00.000Z"
@@ -178,7 +180,7 @@ _SCENARIOS: list[dict[str, Any]] = [
                 "kind": "freight",
                 "price": "100.00",
                 "iva": "21.00",
-                "share": "100",
+                "share": "1",
                 "proof": _kept("d", "transport_document"),
             },
         ],
@@ -196,14 +198,14 @@ _SCENARIOS: list[dict[str, Any]] = [
                 "kind": "freight",
                 "price": "100.00",
                 "iva": "21.00",
-                "share": "50",
+                "share": "0.5",
                 "proof": _kept("d", "transport_document"),
             },
             {
                 "kind": "insurance",
                 "price": "40.00",
                 "iva": "0.00",
-                "share": "100",
+                "share": "1",
                 "proof": _kept("e", "insurance_document"),
             },
         ],
@@ -379,7 +381,13 @@ def _options() -> dict[str, Any]:
 def _run(bundle: Path, scenarios: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     done = subprocess.run(  # noqa: S603 - fixed node program on a bundle built above
         [_node(), str(bundle)],
-        input=json.dumps({"options": _options(), "scenarios": scenarios}),
+        input=json.dumps(
+            {
+                "options": _options(),
+                "limits": json.loads(ledger_entry_limits().model_dump_json()),
+                "scenarios": scenarios,
+            }
+        ),
         check=True,
         capture_output=True,
         text=True,

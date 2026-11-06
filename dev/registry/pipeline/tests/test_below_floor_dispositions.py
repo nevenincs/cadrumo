@@ -16,7 +16,6 @@ import rtoml
 from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from cadrumo.domain.calculations.registry.temporal import select_revision
 
@@ -32,10 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def _declared_floor() -> int:
-    payload = parse_toml(
-        bundled_path("registry", "aeat", "legal", "supported-filing-years.toml").read_text("utf-8"),
-    )
-    return int(payload["supported_filing_years"]["floor"])
+    return compiled_bundled_authority().supported_filing_years().floor
 
 
 def _row(**overrides: object) -> dict[str, object]:
@@ -107,7 +103,8 @@ def test_repaired_m232_static_target_needs_no_drift_row_or_runtime_filing_admiss
     """The enrolled static tree reproduces its source while private filing stays below floor."""
     from ..generated_tree_inventory import generated_export_trees
 
-    assert _declared_floor() == 2022
+    m232 = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "232"))
+    assert max(m232.revisions["2016-2017"].period_selector.years) < _declared_floor()
     assert all(row.subject != "232/2016-2017" for row in below_floor_dispositions())
     trees = [tree for tree in generated_export_trees() if (tree.modelo, tree.revision) == ("232", "2016-2017")]
     assert len(trees) == 1
