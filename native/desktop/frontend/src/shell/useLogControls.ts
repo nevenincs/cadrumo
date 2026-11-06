@@ -13,8 +13,9 @@ import { saveLogs } from "./saveLogs";
 import type { Translate } from "./strings";
 import type { useDesktopEnvironment } from "./useDesktopEnvironment";
 
-/** The log view's filters, its level remembered with the layout, and what
- * the window does with the log's text: copy, reveal and export it. */
+/** The log view's filters, its level remembered with the layout, how many
+ * of its records are errors, and what the window does with the log's text:
+ * copy, reveal and export it. */
 export function useLogControls({
   host,
   environment,
@@ -30,6 +31,8 @@ export function useLogControls({
   say: (text: string) => void;
   t: Translate;
 }) {
+  // How many log records are errors, as the log view reports it.
+  const [errorCount, setErrorCount] = useState(0);
   const defaultFilters = useMemo(
     () => ({
       ...DEFAULT_FILTERS,
@@ -103,6 +106,8 @@ export function useLogControls({
     [host, say, t],
   );
   return {
+    errorCount,
+    setErrorCount,
     defaultFilters,
     filters,
     setFilters,
