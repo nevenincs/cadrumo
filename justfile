@@ -806,7 +806,8 @@ check-frontend CONFIGURATION="Debug": setup-desktop-frontend fixtures-seed (_nat
 # do nothing on a current tree.
 [doc('Install the frontend packages, seed the fixture projections, then run the desktop frontend checks and Playwright specs through CMake.')]
 [group('test')]
-test-frontend CONFIGURATION="Debug": setup-desktop-frontend fixtures-seed (_native-configure CONFIGURATION)
+test-frontend CONFIGURATION="Debug": registry-publish-authority-if-authority-stale setup-desktop-frontend fixtures-seed (_native-configure CONFIGURATION)
+    cmake --preset {{native_preset}} -DCADRUMO_DESKTOP_FRONTEND_TEST_WORKERS={{frontend_test_workers}}
     cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target desktop-frontend-check
     cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target desktop-frontend-test
 
@@ -1015,6 +1016,8 @@ tui-harness *ARGS:
 # ── Testing ──────────────────────────────────────────────────────────────────
 
 pytest_workers := env_var_or_default("CADRUMO_PYTEST_WORKERS", "auto")
+# Playwright takes a count, not "auto", and its default saturates a shared host.
+frontend_test_workers := env_var_or_default("CADRUMO_FRONTEND_TEST_WORKERS", "4")
 
 # The dedicated harness verdict's members: the ONE declaration of which proofs
 # own a child verification pool. Each path is written
@@ -1194,7 +1197,7 @@ _test-registry-conformance: _test-registry-seed
 [doc('Collect and load the registry first, then run calculation and conformance populations as one normalized signal.')]
 [group('test')]
 [no-exit-message]
-test-registry:
+test-registry: registry-publish-authority-if-authority-stale setup-desktop-frontend
     @uv run --no-sync python -m dev.test_runs.command --family test-runs --label test-registry --signal pytest-summary --expected-lane _test-registry-collect --expected-lane _test-registry-load --expected-lane _test-registry-calculations-parallel --expected-lane _test-registry-conformance -- uv run --no-sync python -m dev.test_runs lanes --json-events --no-evidence --preflight-count 2 --lane-kind _test-registry-collect=collection --lane-kind _test-registry-load=load _test-registry-collect _test-registry-load _test-registry-calculations-parallel _test-registry-conformance
 
 [doc('Run the tooling-owned test-policy, repository-contract, and CI-contract populations.')]
