@@ -311,7 +311,16 @@ def test_contact_reaches_encrypted_revision_form_and_export_with_caller_preceden
     assert header[67:107] != declared[35:75]
 
 
-@pytest.mark.parametrize("facts", [{}, {"contact.contact_person_phone": "900000000"}])
+@pytest.mark.parametrize(
+    "facts",
+    [
+        {},
+        {"contact.contact_person_phone": "900000000"},
+        # A blank or whitespace-only stored name is no answer: it stays absent.
+        {"contact.contact_person_phone": "900000000", "contact.contact_person_name": ""},
+        {"contact.contact_person_phone": "900000000", "contact.contact_person_name": "   "},
+    ],
+)
 def test_absent_contact_components_remain_absent_in_encrypted_replay(
     repos: Repos, operation: PinnedAuthorityOperation, facts: dict[str, str]
 ) -> None:
