@@ -14,7 +14,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from ....adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
+from ....adapters.persistence.profile.tests.ready_profile_support import WITHHOLDING_PAYER_PERSONA, seed_persona_profile
 from ....adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -130,7 +130,7 @@ def test_m111_professional_retencion_observation_calculates_activity_boxes(
     """A persisted professional retención observation drives 07/08/09 and totals 28/30."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 retenciones") as profile:
         objects: SecureObjectRepository = profile.repository
-        seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
+        seed_persona_profile(WITHHOLDING_PAYER_PERSONA, bucket_id=_BUCKET_ID, at=_T0)
         result = _calculate_with_observation(objects, operation, _professional_observation())
 
     values = result.revision.casilla_values
@@ -153,7 +153,7 @@ def test_m111_administrador_retencion_observation_folds_into_trabajo_boxes(
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 retenciones") as profile:
         objects: SecureObjectRepository = profile.repository
-        seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
+        seed_persona_profile(WITHHOLDING_PAYER_PERSONA, bucket_id=_BUCKET_ID, at=_T0)
         result = _calculate_with_observation(objects, operation, _administrador_observation())
 
     values = result.revision.casilla_values
@@ -178,7 +178,7 @@ def test_m111_administrador_wrong_rate_surfaces_calculate_advisory(
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 retenciones") as profile:
         objects: SecureObjectRepository = profile.repository
-        seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
+        seed_persona_profile(WITHHOLDING_PAYER_PERSONA, bucket_id=_BUCKET_ID, at=_T0)
         result = _calculate_with_observation(objects, operation, _administrador_wrong_rate_observation())
 
     values = result.revision.casilla_values

@@ -44,6 +44,12 @@ first = 1000
 last = 9999999
 
 [[convention.generic_pool.ranges]]
+kind = "prefixed_nif"
+letters = ["K", "L", "M"]
+first = 1000
+last = 9999999
+
+[[convention.generic_pool.ranges]]
 kind = "cif"
 letters = ["A", "B", "C", "D", "E", "F", "G", "H", "J", "N", "P", "Q", "R", "S", "U", "V", "W"]
 first = 1000
@@ -423,13 +429,13 @@ kind = "cif"
 value = "Q0000001H"
 legal_name = "Entidad Gestora de Pensiones Públicas (sintética)"
 
-# EU VAT identifiers of non-Spanish counterparties. Shaped to each member
+# NIF-IVA intracomunitario identifiers of non-Spanish counterparties. Shaped to each member
 # state's structure; never validated against VIES.
 
 [[identities]]
 role = "intracom.cliente-de"
 persona = "intracomunitario-desarrollador"
-kind = "vat_eu"
+kind = "nif_iva"
 country = "DE"
 value = "DE000000001"
 legal_name = "Nordlicht Plattformen GmbH"
@@ -437,7 +443,7 @@ legal_name = "Nordlicht Plattformen GmbH"
 [[identities]]
 role = "intracom.cliente-fr"
 persona = "intracomunitario-desarrollador"
-kind = "vat_eu"
+kind = "nif_iva"
 country = "FR"
 value = "FR15000000001"
 legal_name = "Atelier Numérique Garonne SARL"
@@ -445,7 +451,7 @@ legal_name = "Atelier Numérique Garonne SARL"
 [[identities]]
 role = "intracom.proveedor-nube"
 persona = "intracomunitario-desarrollador"
-kind = "vat_eu"
+kind = "nif_iva"
 country = "IE"
 value = "IE0000001A"
 legal_name = "Liffey Cloud Hosting Limited"

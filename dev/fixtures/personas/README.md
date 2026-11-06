@@ -82,11 +82,12 @@ guarantee: no official reserved NIF/NIE/CIF range exists.
 | `nif` | an eight-digit zero counter `00000001R`, `00000002W`, ... below `00001000` with the NIF control letter |
 | `nie` | `Y0000000Z` (counter zero) and `X0000001R` (counter one, because `X0000000T` is the registry's development mock developer identity) |
 | `cif` | letter + seven-digit counter from `0000001` + control: digit for A, B, E, H; letter for P, Q, R, S, N, W; C, D, F, G, J, U, V take either and this catalogue uses the digit (`B00000018`, `H00000018`, `Q0000001H`) |
-| `vat_eu` | member-state prefix + zeros + counter digit, shaped to that state's structure (`DE000000001`, `FR15000000001`, `IE0000001A`; the French key follows (12 + 3 * (SIREN mod 97)) mod 97); never validated against VIES |
+| `nif_iva` | member-state prefix + zeros + counter digit, shaped to that state's structure (`DE000000001`, `FR15000000001`, `IE0000001A`; the French key follows (12 + 3 * (SIREN mod 97)) mod 97); never validated against VIES |
 
 `[convention.generic_pool]` reserves values for tests that need any valid
 identifier and no persona: `12345678Z`, `00000000T` and counter ranges above
-every persona counter. `[convention.generated_projections]` lists the path
+every persona counter, including a `prefixed_nif` range for the K, L and M NIF
+of a natural person without a DNI. `[convention.generated_projections]` lists the path
 prefixes of projections derived from the personas. `just check-identity`
 accepts an identifier in tests and fixtures only as a role value inside its own
 persona or a projection, a pool member or a refusal.
@@ -97,11 +98,11 @@ persona or a projection, a pool member or a refusal.
 | --- | --- | --- |
 | `role` | string | `<persona-prefix>.<role>`; unique |
 | `persona` | string | owning persona id |
-| `kind` | `nif` \| `nie` \| `cif` \| `vat_eu` | identifier family |
+| `kind` | `nif` \| `nie` \| `cif` \| `nif_iva` | identifier family |
 | `value` | string | the identifier; unique across the file |
 | `name`, `surnames` | string | natural persons |
 | `legal_name` | string | entities |
-| `country` | string | `vat_eu` only, ISO 3166-1 alpha-2 |
+| `country` | string | `nif_iva` only, ISO 3166-1 alpha-2 |
 | `primary` | bool | only on `fontanero.titular` |
 
 Each value is bound to exactly one role and each role to one value. A new value
@@ -321,7 +322,7 @@ for IRPF.
 | --- | --- |
 | `id` | referenced from `ledger.csv` `document` |
 | `path` | repository path of an existing specimen; files are referenced, never copied |
-| `generator` | instead of `path`: `facturae` renders the document from its single `attach_to` row and the identity catalogue (`cadrumo.tests.persona_invoices`), so its number, date, parties, base, rate, cuota, recargo de equivalencia (as `EquivalenceSurcharge` and `EquivalenceSurchargeAmount` beside the cuota) and retención are the row's; the row's `document` column names it. A reverse-charge row (`iva_category` ending `_reverse_charge`) renders an invoice at a zero rate with no cuota and the inversión del sujeto pasivo literal, since its cuota is the recipient's own (LIVA art. 84.Uno.2.º); a seller identified by an EU VAT number is stated by that number as resident in the Union |
+| `generator` | instead of `path`: `facturae` renders the document from its single `attach_to` row and the identity catalogue (`cadrumo.tests.persona_invoices`), so its number, date, parties, base, rate, cuota, recargo de equivalencia (as `EquivalenceSurcharge` and `EquivalenceSurchargeAmount` beside the cuota) and retención are the row's; the row's `document` column names it. A reverse-charge row (`iva_category` ending `_reverse_charge`) renders an invoice at a zero rate with no cuota and the inversión del sujeto pasivo literal, since its cuota is the recipient's own (LIVA art. 84.Uno.2.º); a seller identified by a NIF-IVA intracomunitario is stated by that number as resident in the Union |
 | `media_type` | MIME type |
 | `attach_to` | ledger refs; the replay attaches the document to each as its purchase-invoice evidence, so only received-invoice rows are named, and an issued-invoice specimen names none (`[]`) |
 | `relation` | `specimen`: the document exercises the evidence path but its printed facts are not the row's facts and must not be confirmed into it; `source`: the document is the row's source and its facts match |

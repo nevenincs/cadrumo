@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -18,7 +18,11 @@ from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCata
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
-from cadrumo.adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import (
+    WITHHOLDING_PAYER_PERSONA,
+    seed_persona_profile,
+    seed_ready_profile,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.calculation_revision_queries import get_calculation_revision
 from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
@@ -75,19 +79,32 @@ _M111_ACTIVITY_WITHHELD_CASILLA: CasillaId = validated_casilla_id("27")
 _M111_TOTAL_WITHHELD_CASILLA: CasillaId = validated_casilla_id("29")
 
 
-@pytest.fixture
-def repos(tmp_path: Path) -> Iterator[_Repos]:
-    """Yield the five catalogue repositories over an encrypted SQLite db."""
-
+def _catalogue_repositories(tmp_path: Path, seed: Callable[[], None]) -> Iterator[_Repos]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
         objects = profile.repository
-        seed_ready_profile(bucket_id=_PROFILE_ID, at=_T0)
+        seed()
         wu = WorkUnitCatalogueRepository(objects=objects)
         cr = CalculationRevisionCatalogueRepository(objects=objects)
         fr = ModeloRecordCatalogueRepository(objects=objects)
         vr = VerificationReportCatalogueRepository(objects=objects)
         bv = BucketEventHistoryRepository(objects=objects)
         yield wu, cr, fr, vr, bv
+
+
+@pytest.fixture
+def repos(tmp_path: Path) -> Iterator[_Repos]:
+    """Yield the five catalogue repositories over an encrypted SQLite db."""
+
+    yield from _catalogue_repositories(tmp_path, lambda: seed_ready_profile(bucket_id=_PROFILE_ID, at=_T0))
+
+
+@pytest.fixture
+def withholding_payer_repos(tmp_path: Path) -> Iterator[_Repos]:
+    """Yield the repositories over a profile whose taxpayer pays withheld income, so Modelo 111 applies."""
+
+    yield from _catalogue_repositories(
+        tmp_path, lambda: seed_persona_profile(WITHHOLDING_PAYER_PERSONA, bucket_id=_PROFILE_ID, at=_T0)
+    )
 
 
 def _seed_work_unit(

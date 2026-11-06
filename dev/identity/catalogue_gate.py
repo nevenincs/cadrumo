@@ -62,6 +62,10 @@ FIXTURE_PREFIXES: Final[tuple[str, ...]] = (
 _NIF_SHAPE: Final[str] = "nif"
 _NIE_SHAPE: Final[str] = "nie"
 _CIF_SHAPE: Final[str] = "cif"
+#: The NIF issued to a natural person without a DNI: K, L or M, seven digits and
+#: the NIF control letter.
+_PREFIXED_NIF_SHAPE: Final[str] = "prefixed_nif"
+_PREFIXED_NIF_LEADERS: Final[str] = "KLM"
 _SPAIN_PREFIX: Final[str] = "ES"
 
 
@@ -86,10 +90,10 @@ class PoolRange:
     """A counter range of one identifier shape, reserved for generic tests.
 
     Attributes:
-        shape: ``nif``, ``nie`` or ``cif``.
+        shape: ``nif``, ``nie``, ``prefixed_nif`` or ``cif``.
         first: Lowest counter in the range.
         last: Highest counter in the range.
-        letters: The leading letters admitted (``nie`` and ``cif``); empty for ``nif``.
+        letters: The leading letters admitted (``nie``, ``prefixed_nif`` and ``cif``); empty for ``nif``.
     """
 
     shape: str
@@ -165,6 +169,8 @@ def _shape(value: str) -> str | None:
         return _NIF_SHAPE
     if len(value) == 9 and value[0] in "XYZ" and value[1:8].isdigit() and value[8].isalpha():
         return _NIE_SHAPE
+    if len(value) == 9 and value[0] in _PREFIXED_NIF_LEADERS and value[1:8].isdigit() and value[8].isalpha():
+        return _PREFIXED_NIF_SHAPE
     if len(value) == 9 and value[0].isalpha() and value[1:8].isdigit():
         return _CIF_SHAPE
     return None
@@ -187,8 +193,8 @@ def _pool_range(table: dict[str, object], where: str) -> PoolRange:
     first = table.get("first")
     last = table.get("last")
     letters = table.get("letters", [])
-    if not isinstance(shape, str) or shape not in {_NIF_SHAPE, _NIE_SHAPE, _CIF_SHAPE}:
-        raise CatalogueError(f"{where}: kind must be nif, nie or cif")
+    if not isinstance(shape, str) or shape not in {_NIF_SHAPE, _NIE_SHAPE, _PREFIXED_NIF_SHAPE, _CIF_SHAPE}:
+        raise CatalogueError(f"{where}: kind must be nif, nie, prefixed_nif or cif")
     if not isinstance(first, int) or not isinstance(last, int) or first > last:
         raise CatalogueError(f"{where}: first and last must be integers with first <= last")
     if not isinstance(letters, list) or not all(isinstance(letter, str) for letter in letters):

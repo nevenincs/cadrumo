@@ -91,8 +91,8 @@ _PLACEHOLDER_FILL = {
     ("candidate", "substituted"),
     (
         pytest.param("X1234567L", 1234567, id="x-prefix"),
-        pytest.param("Y0001007D", 10000002, id="y-small-counter-body"),
-        pytest.param("Z0001008R", 20000000, id="z-zero-body"),
+        pytest.param("Y0001007D", 10001007, id="y-small-counter-body"),
+        pytest.param("Z0001008R", 20001008, id="z-small-counter-body"),
         pytest.param("Y5678901P", 15678901, id="y-nonzero-body"),
         pytest.param("Z2345678M", 22345678, id="z-nonzero-body"),
     ),

@@ -30,6 +30,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.use
 
 _CCAA = "cataluna"
 _HAS_ECONOMIC_ACTIVITY = "renta-profile-has-economic-activity"
+_ESTIMACION_DIRECTA = "renta-profile-estimacion-directa"
 
 
 def _admitted_corpus_years() -> tuple[int, ...]:
@@ -88,9 +89,11 @@ def test_verification_chain_m100_engine_corpus_limited(year: int) -> None:
 
     bindings = _neutral_m100_bindings(revision, ccaa=_CCAA)
     bindings.decimals.update(_m100_bound_extracted_values(revision, extracted))
-    # The specimen declares activity income, so its filer carries on an economic activity.
-    if _HAS_ECONOMIC_ACTIVITY in bindings.booleans:
-        bindings.booleans[_HAS_ECONOMIC_ACTIVITY] = True
+    # The specimen declares activity income in the estimacion directa block (0171), so its
+    # filer carries on an economic activity under a direct-estimation regime.
+    for activity_binding in (_HAS_ECONOMIC_ACTIVITY, _ESTIMACION_DIRECTA):
+        if activity_binding in bindings.booleans:
+            bindings.booleans[activity_binding] = True
     manual = _m100_manual_casillas(revision)
     inputs = {
         casilla_id: value

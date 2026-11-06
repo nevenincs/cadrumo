@@ -22,9 +22,9 @@ def _with_generated_documents(envelope: YearEnvelope) -> list[Persona]:
 
 
 def _stated_tax_id(persona: Persona, role: str) -> str:
-    """The identifier as Facturae states it: an EU VAT number as it stands, a Spanish one behind ``ES``."""
+    """The identifier as Facturae states it: a NIF-IVA intracomunitario as it stands, a Spanish one behind ``ES``."""
     identity = persona.identities.role(role)
-    return identity.value if identity.kind == "vat_eu" else f"ES{identity.value}"
+    return identity.value if identity.kind == "nif_iva" else f"ES{identity.value}"
 
 
 def test_every_generated_invoice_reads_back_as_its_row(operation: PinnedAuthorityOperation) -> None:

@@ -151,13 +151,18 @@ def _work_and_target(
 
 
 def test_unrecordable_documents_are_separate_and_every_unclassified_issue_keeps_its_general_refusal() -> None:
-    """Repeated issue refs deduplicate; missing rows and unknown deductions remain blocked."""
+    """Repeated issue refs deduplicate; missing rows and unknown deductions remain blocked.
+
+    An intra-EU acquisition's deduction is substantiated by the supplier's invoice
+    under the self-assessment authority, a document the operator can record, so
+    its issue keeps the general refusal rather than a separate unrecordable one.
+    """
     transactions = (
-        _transaction("intra-one", "intra_eu_current", "intra_community_acquisition_reverse_charge"),
-        _transaction("intra-two", "intra_eu_current", "intra_community_acquisition_reverse_charge"),
         _transaction("customs", "import_current", "import_third_country", currency="USD"),
         _transaction("reagp", "reagp_compensation", "reagp_compensation"),
         _transaction("rectification", "rectification", "domestic_general"),
+        _transaction("intra-one", "intra_eu_current", "intra_community_acquisition_reverse_charge"),
+        _transaction("intra-two", "intra_eu_current", "intra_community_acquisition_reverse_charge"),
         _transaction("domestic", "domestic_current", "domestic_general"),
         _transaction("unknown", None, None),
         _transaction("register-owned", "investment_goods_regularisation", "domestic_general"),
@@ -182,14 +187,14 @@ def test_unrecordable_documents_are_separate_and_every_unclassified_issue_keeps_
         findings=findings,
         failures_by_finding_id=failures,
     )
-    assert len(findings) == 6
+    assert len(findings) == 4
     separate = {
         finding.message_facts["transaction_ids"]: finding
         for finding in findings
         if "transaction_ids" in finding.message_facts
     }
-    assert set(separate) == {transaction.transaction_id for transaction in transactions[:5]}
-    for transaction in transactions[:5]:
+    assert set(separate) == {transaction.transaction_id for transaction in transactions[:3]}
+    for transaction in transactions[:3]:
         finding = separate[transaction.transaction_id]
         assert finding.message_facts["transaction_count"] == 1
         assert finding.message_facts["transaction_date"] == "2026-02-15"
@@ -199,12 +204,12 @@ def test_unrecordable_documents_are_separate_and_every_unclassified_issue_keeps_
         assert failures[id(finding)].verdict.no_recovery_outcome is NoRecoveryOutcome.TERMINAL
         assert failures[id(finding)].verdict.action is None
         assert "description" not in finding.message_facts
-    assert separate[transactions[2].transaction_id].message_facts["transaction_currency"] == "USD"
+    assert separate[transactions[0].transaction_id].message_facts["transaction_currency"] == "USD"
     general = next(finding for finding in findings if "source_ref_ids" in finding.message_facts)
-    assert general.message_facts["source_ref_count"] == 4
+    assert general.message_facts["source_ref_count"] == 6
     assert general.message_facts["unidentified_source_count"] == 1
     refs = str(general.message_facts["source_ref_ids"]).split("|")
-    assert set(refs) == {f"transaction:{transaction.transaction_id}" for transaction in transactions[5:]} | {
+    assert set(refs) == {f"transaction:{transaction.transaction_id}" for transaction in transactions[3:]} | {
         f"transaction:{'f' * 64}"
     }
     assert failures[id(general)].verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION

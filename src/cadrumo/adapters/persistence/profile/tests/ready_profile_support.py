@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
+from typing import Final
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.user_profile.tests.persona_profile_facts import persona_profile_facts
@@ -23,6 +24,12 @@ from cadrumo.domain.user_profile.values import create_user_profile_record as _cr
 from cadrumo.tests.personas import IdentityRef, Persona, YearEnvelope, read_persona
 
 _PERSONA_ID = "autonomo-fontanero"
+
+WITHHOLDING_PAYER_PERSONA: Final = "traductora-profesional"
+"""The persona who withholds on a professional's fees, so she files Modelos 111 and 190; the ready profile pays none."""
+
+INTRACOMMUNITY_OPERATOR_PERSONA: Final = "intracomunitario-desarrollador"
+"""The persona enrolled in the ROI who trades with other Member States, so he files Modelo 349; the ready profile does not."""
 
 _ANSWER_IDS: tuple[str, ...] = (
     "tax-id",
@@ -133,3 +140,8 @@ def seed_ready_profile(*, bucket_id: str, at: datetime) -> None:
         at=at,
         facts=(UserProfileFact(path="withholding.colegio_concertado", value=False),),
     )
+
+
+def persona_taxpayer_tax_id(persona_id: str) -> str:
+    """Return the tax identifier ``persona_id``'s profile states for its taxpayer."""
+    return next(str(fact.value) for fact in persona_profile_facts(persona_id) if fact.path == "identity.tax_id")

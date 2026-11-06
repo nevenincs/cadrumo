@@ -68,9 +68,10 @@ from .import_flow_support import (
     _seed_local_filing_record,
     _seed_work_unit,
     repos,
+    withholding_payer_repos,
 )
 
-__all__ = ["repos"]
+__all__ = ["repos", "withholding_payer_repos"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -151,11 +152,11 @@ def test_external_import_refuses_m303_without_complete_filing_evidence(
 
 
 def test_amend_locally_filed_still_refused_after_import_path_exists(
-    repos: _Repos, *, operation: PinnedAuthorityOperation
+    withholding_payer_repos: _Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The import path does not loosen the local-filing amendment evidence gate."""
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, cr_repo, fr_repo, _, bv_repo = withholding_payer_repos
     work_unit = create_work_unit(
         bucket_id=_PROFILE_ID,
         modelo="111",

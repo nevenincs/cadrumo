@@ -10,7 +10,7 @@ and check it for drift.
 A row that self-assesses its cuota under inversión del sujeto pasivo (LIVA
 art. 84.Uno.2.º) evidences a supplier invoice that repercutes none: the invoice
 states the base at a zero rate and the legal literal, and the row's cuota stays
-the recipient's own. A seller identified by an EU VAT number is resident in
+the recipient's own. A seller identified by a NIF-IVA intracomunitario is resident in
 another Member State and is stated by that number as it stands.
 
 The persona states no postal addresses, so the parties carry none: the document
@@ -31,7 +31,7 @@ _CENT = Decimal("0.01")
 _FACTURAE_NAMESPACE = "http://www.facturae.gob.es/formato/Versiones/Facturaev3_2_2.xml"
 _IVA_TAX_TYPE = "01"
 _IRPF_TAX_TYPE = "04"
-_LEGAL_ENTITY_KINDS = frozenset({"cif", "vat_eu"})
+_LEGAL_ENTITY_KINDS = frozenset({"cif", "nif_iva"})
 _REVERSE_CHARGE_LITERAL = "Inversión del sujeto pasivo, art. 84.Uno.2.º LIVA"
 
 
@@ -54,8 +54,8 @@ def _percentage(fraction: Decimal) -> str:
 
 
 def _tax_identification(identity: Identity) -> str:
-    """The identifier as Facturae states it: an EU VAT number as it stands, a Spanish one behind ``ES``."""
-    return identity.value if identity.kind == "vat_eu" else f"ES{identity.value}"
+    """The identifier as Facturae states it: a NIF-IVA intracomunitario as it stands, a Spanish one behind ``ES``."""
+    return identity.value if identity.kind == "nif_iva" else f"ES{identity.value}"
 
 
 def _party(identity: Identity, role_tag: str) -> list[str]:
@@ -64,7 +64,7 @@ def _party(identity: Identity, role_tag: str) -> list[str]:
         f"    <{role_tag}>",
         "      <TaxIdentification>",
         f"        <PersonTypeCode>{'J' if legal_entity else 'F'}</PersonTypeCode>",
-        f"        <ResidenceTypeCode>{'U' if identity.kind == 'vat_eu' else 'R'}</ResidenceTypeCode>",
+        f"        <ResidenceTypeCode>{'U' if identity.kind == 'nif_iva' else 'R'}</ResidenceTypeCode>",
         f"        <TaxIdentificationNumber>{escape(_tax_identification(identity))}</TaxIdentificationNumber>",
         "      </TaxIdentification>",
     ]

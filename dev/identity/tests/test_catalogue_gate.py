@@ -46,6 +46,7 @@ _POOL_EXPLICIT = "12345678Z"
 _POOL_NIF_RANGE = "00001003Z"
 _POOL_CIF_RANGE = "B00010009"
 _POOL_NIE_RANGE = "Y0001000W"
+_POOL_PREFIXED_NIF_RANGE = "K0001000B"
 _UNBOUND = _nif(99)
 _LISTED_REFUSAL = _nif(28)
 
@@ -57,6 +58,7 @@ _CATALOGUE: dict[str, object] = {
             "ranges": [
                 {"kind": "nif", "first": 1003, "last": 99999999},
                 {"kind": "nie", "letters": ["X", "Y", "Z"], "first": 1000, "last": 9999999},
+                {"kind": "prefixed_nif", "letters": ["K", "L", "M"], "first": 1000, "last": 9999999},
                 {"kind": "cif", "letters": ["B"], "first": 1000, "last": 9999999},
             ],
         },
@@ -105,7 +107,9 @@ def test_an_es_prefixed_spelling_is_the_same_value(tmp_path: Path) -> None:
     assert _violations(tmp_path, "src/pkg/tests/test_c.py", f"ES{_ROLE_SECOND}") == [ConventionViolation.ROLE_REUSE]
 
 
-@pytest.mark.parametrize("value", [_POOL_EXPLICIT, _POOL_NIF_RANGE, _POOL_CIF_RANGE, _POOL_NIE_RANGE])
+@pytest.mark.parametrize(
+    "value", [_POOL_EXPLICIT, _POOL_NIF_RANGE, _POOL_CIF_RANGE, _POOL_NIE_RANGE, _POOL_PREFIXED_NIF_RANGE]
+)
 def test_a_generic_pool_member_is_accepted(tmp_path: Path, value: str) -> None:
     assert _violations(tmp_path, "src/pkg/tests/test_d.py", value) == []
 

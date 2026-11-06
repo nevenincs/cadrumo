@@ -77,6 +77,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET = "00000000-0000-4000-8000-000000000001"
 _SUBJECT = "00001005Q"
+_SUBJECT_AS_TYPED = f"{_SUBJECT[:-1]}-{_SUBJECT[-1].lower()}"
+"""The subject as an operator may type it, with a separator and a lowercase letter."""
 _NOW = datetime(2026, 9, 4, 10, 0, tzinfo=UTC)
 _CERTIFICATE_SECRET_BACKEND_FACTORY = InMemoryCertificateSecretBackendFactory()
 
@@ -388,7 +390,7 @@ def test_an_uncomposed_custody_reader_leaves_notifications_unobserved() -> None:
     assert row.local_observed_at is None
 
 
-@pytest.mark.parametrize("observed_nif", (_SUBJECT, "00000001-r"))
+@pytest.mark.parametrize("observed_nif", (_SUBJECT, _SUBJECT_AS_TYPED))
 def test_saved_census_is_available_and_compares_only_observed_facts(observed_nif: str) -> None:
     """A reopened workspace reads stored evidence without fabricating absent values."""
     from ...user_profile.censal_observation import (

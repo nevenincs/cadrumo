@@ -41,6 +41,19 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 _CATEGORY = SpendingCategory.from_registry("suministros_cliente_directos")
 
 
+def _iva_block(regime: str) -> tuple[UserProfileFact, ...]:
+    """The canonical IVA block of a common-territory filer under ``regime``, enrolled in no special scheme."""
+    return (
+        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+        UserProfileFact(path="iva.regime", value=regime),
+        UserProfileFact(path="iva.m303_regime_composition", value="general"),
+        UserProfileFact(path="iva.redeme_enrolled", value=False),
+        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+    )
+
+
 def _purchase(*, base: str, iva: str, recargo: str | None = None) -> Transaction:
     gross = Decimal(base) + Decimal(iva) + Decimal(recargo or "0")
     return ledger_expense_transaction(
@@ -56,7 +69,7 @@ def _purchase(*, base: str, iva: str, recargo: str | None = None) -> Transaction
 
 
 def _expense_box(regime: str, row: Transaction) -> Decimal:
-    profile = cash_criterion_profile(_YEAR, extra_facts=(UserProfileFact(path="iva.regime", value=regime),))
+    profile = cash_criterion_profile(_YEAR, extra_facts=_iva_block(regime))
     resolution = resolve_m130(ActivityAssetHistory(), "1T", rows=(row,), profile=profile)
     return resolution.binding_values[_m130_binding_id(_revision("130", "2019-y-siguientes"))]
 
@@ -118,9 +131,7 @@ def test_the_linked_invoice_states_the_iva_and_recargo_the_row_does_not_carry() 
     linked = bare.model_copy(update={"invoice_id": invoice.invoice_id})
     repository = _InMemoryInvoiceCatalogueRepository()
     repository.save(build_invoice_catalogue((invoice,)))
-    profile = cash_criterion_profile(
-        _YEAR, extra_facts=(UserProfileFact(path="iva.regime", value="RECARGO_EQUIVALENCIA"),)
-    )
+    profile = cash_criterion_profile(_YEAR, extra_facts=_iva_block("RECARGO_EQUIVALENCIA"))
 
     quarterly = resolve_m130(ActivityAssetHistory(), "1T", rows=(linked,), profile=profile, invoices=repository)
     unlinked = resolve_m130(ActivityAssetHistory(), "1T", rows=(bare,), profile=profile)

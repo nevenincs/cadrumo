@@ -57,7 +57,7 @@ _YEAR_TOKEN = re.compile(r"(?P<anchor>horizon|floor)(?:(?P<sign>[+-])(?P<offset>
 _REVERSE_CHARGE_SUFFIX = "_reverse_charge"
 _IDENTITY_FIELDS = ("value", "name", "surnames", "legal_name")
 
-type IdentityKind = Literal["nif", "nie", "cif", "vat_eu"]
+type IdentityKind = Literal["nif", "nie", "cif", "nif_iva"]
 type IdentityField = Literal["value", "name", "surnames", "legal_name"]
 type DocumentRelation = Literal["specimen", "source"]
 type DocumentGenerator = Literal["facturae"]
@@ -618,7 +618,7 @@ def _read_toml(path: Path) -> _Table:
 # -- identities ----------------------------------------------------------------------------------------------------
 
 
-_KINDS: tuple[IdentityKind, ...] = ("nif", "nie", "cif", "vat_eu")
+_KINDS: tuple[IdentityKind, ...] = ("nif", "nie", "cif", "nif_iva")
 
 
 def _identity(table: _Table, where: str) -> Identity:

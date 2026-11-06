@@ -138,6 +138,7 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.entrypoints.adapter_composition_ports import build_retencion_observation_ports
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
+from cadrumo.entrypoints.tests.profile_persistence.ready_profile_taxpayer import ready_profile_tax_id
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
@@ -370,7 +371,7 @@ def _m303_iva_transaction(
 
 def _m303_wallet_decision() -> IvaCompensationReconciliationDecision:
     return IvaCompensationReconciliationDecision(
-        taxpayer_nif="12345678Z",
+        taxpayer_nif=ready_profile_tax_id(),
         target_year=_PRORRATA_YEAR,
         target_period=_PRORRATA_PERIOD,
         target_registry_snapshot_ref=m303_registry_snapshot_ref(_PRORRATA_YEAR, _PRORRATA_PERIOD.registry_token),

@@ -340,6 +340,11 @@ _READY_PROFILE_FACTS = persona_facts_beneath(
         # carries the row as filer data, so it must be stated rather than assumed.
         # False is the truthful value for this natural-person filer.
         UserProfileFact(path="withholding.colegio_concertado", value=False),
+        # The flows file Modelo 180 and Modelo 349 for this operator, so it pays a rent
+        # subject to retención and trades with other Member States as a ROI registrant.
+        UserProfileFact(path="withholding.pays_rent_with_retencion", value=True),
+        UserProfileFact(path="iva.does_intracomunitario", value=True),
+        UserProfileFact(path="iva.roi_enrolled", value=True),
     )
 )
 

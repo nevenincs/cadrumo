@@ -40,6 +40,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.authored_editions import revision_before_first_declaring
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from cadrumo.domain.filing.software_identity import development_mock_software_identity
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -743,7 +744,7 @@ def test_a_fixed_record_envelope_reports_the_development_identity_it_stamps(
     assert "modelo.export.development_software_identity" in {notice["code"] for notice in envelope["notices"]}
     written = out.read_bytes()
     assert written[92:96] == b"0000"
-    assert written[100:109] == b"X0001003Z"
+    assert written[100:109] == development_mock_software_identity().developer_tax_id.encode("ascii")
 
 
 def _export_through_the_operation(

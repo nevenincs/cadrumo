@@ -43,7 +43,11 @@ from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCom
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from cadrumo.adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import (
+    INTRACOMMUNITY_OPERATOR_PERSONA,
+    seed_persona_profile,
+    seed_ready_profile,
+)
 from cadrumo.adapters.persistence.profile.tests.relation_prefill_support import empty_profile_read_ports
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -149,6 +153,14 @@ def _seed_attribution_entity_profile(*, bucket_id: str = _BUCKET_ID) -> None:
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
+        yield profile.repository
+
+
+@pytest.fixture
+def intracommunity_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
+    """The repository of a profile whose taxpayer trades with other Member States, so Modelo 349 applies."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        seed_persona_profile(INTRACOMMUNITY_OPERATOR_PERSONA, bucket_id=_BUCKET_ID, at=_T0)
         yield profile.repository
 
 
@@ -537,14 +549,14 @@ def test_s09_oss_ioss_resolver_enrolled_fires_on_m369(
 
 
 def test_s09_invoice_catalogue_resolver_enrolled_fires_on_m349(
-    secure_objects: SecureObjectRepository,
+    intracommunity_objects: SecureObjectRepository,
 ) -> None:
     """InvoiceCatalogueSourceResolver is enrolled and fires on M349.
 
     With an empty invoice catalogue the resolver returns an empty resolution but
     claims its owned sources so 'collectible_invoice' does not appear as unhandled.
     """
-    wu_repo, cr_repo, tx_repo, invoice_repo = _repos(secure_objects)
+    wu_repo, cr_repo, tx_repo, invoice_repo = _repos(intracommunity_objects)
     work_unit = _seed(wu_repo, modelo="349", filing_year=2026, period="1T", revision_id="2020-y-siguientes")
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,

@@ -157,7 +157,7 @@ class TestCifKindCatalogue:
     def test_current_prefixed_nif_variants_validate_as_nif(self) -> None:
         from ..tax_id import validate_spanish_tax_id
 
-        for candidate in ("X0001000B", "X0001001N", "X0001002J"):
+        for candidate in ("K0001000B", "L0001001N", "M0001002J"):
             assert validate_spanish_tax_id(candidate, SPANISH_TAX_ID_FORMAT) == candidate
             assert validate_identity(candidate) is IdentityDocument.NIF
 
