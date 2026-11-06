@@ -1,7 +1,7 @@
 """Boundary tests for the shared ISO-8601 date gate applied to CLI dates.
 
-Exercises the real :func:`_parse_iso_date` / :func:`_parse_iso_date_str` /
-:func:`_parse_optional_iso_date_str` helpers in
+Exercises the real :func:`parse_iso_date` / :func:`parse_iso_date_str` /
+:func:`parse_optional_iso_date_str` helpers in
 :mod:`cadrumo.entrypoints.cli.common` — the single owned ISO gate every
 date-typed CLI input (including ``--invoice-date`` on the business-invoice and
 evidence commands, research F5) now routes through. No mocks, no skips: each

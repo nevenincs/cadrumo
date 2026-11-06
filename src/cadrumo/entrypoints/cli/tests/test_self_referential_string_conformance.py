@@ -20,7 +20,7 @@ strings that embeds an ``aeat app`` /
   command on a failed draft.
 
 The hint-string extraction reuses the documented-command gate's command-line
-decomposition and live-tree resolution (``_parse_command_line``,
+decomposition and live-tree resolution (``parse_command_line``,
 ``resolve_path``, ``validate_cited_command``) so the two gates share one notion of
 "resolves against the live CLI".
 
@@ -165,7 +165,7 @@ def _command_span(after_aeat: str) -> str:
 def _cited_from_text(text: str) -> list[CitedCommand]:
     """Decompose every ``aeat ...`` command embedded in a free-text string.
 
-    Reuses the documented-command gate's :func:`_parse_command_line` for the
+    Reuses the documented-command gate's :func:`parse_command_line` for the
     final decomposition, after trimming sentence prose around the command span so
     a hint embedded in a sentence is validated as the command it cites, not the
     surrounding words.

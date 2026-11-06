@@ -940,7 +940,7 @@ def load_settings() -> Settings:
 
     Context-local overrides installed by :func:`override_settings` win inside
     their block; otherwise this returns the process-wide settings built once by
-    :func:`_constructed_settings`.
+    :func:`constructed_settings`.
     """
     override = settings_override.get()
     if override is not None:

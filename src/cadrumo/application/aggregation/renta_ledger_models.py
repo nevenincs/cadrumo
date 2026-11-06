@@ -28,7 +28,7 @@ class RentaLedgerAggregationIssueReason(StrEnum):
     ``UNSUPPORTED_CURRENCY``, ``UNCLASSIFIED_BUSINESS_STATE``,
     ``PERSONAL_TRANSACTION``, ``OUTSIDE_PERIOD``) are shared with
     :class:`~application.aggregation.iva_ledger.IvaLedgerAggregationIssueReason`
-    through :mod:`._shared_issue_reasons`. ``UNSUPPORTED_PERIOD`` is a
+    through :mod:`.shared_issue_reasons`. ``UNSUPPORTED_PERIOD`` is a
     Renta-only refusal raised against quarter-level requests; the
     remaining values describe Renta-specific deductibility checks.
     """

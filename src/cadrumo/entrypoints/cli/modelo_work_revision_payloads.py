@@ -14,7 +14,7 @@ selection, and Modelo 202 modality resolution; these classes only document the
 JSON transport shape that enters
 :class:`SchemaEnvelope` through
 :func:`emit_envelope`. They are imported directly by
-:mod:`_modelo_work_revision_cli`.
+:mod:`modelo_work_revision_cli`.
 """
 
 from __future__ import annotations
