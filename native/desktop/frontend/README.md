@@ -555,7 +555,7 @@ runs three Playwright projects, each on a server of its own that the run starts
 and that must not already be running:
 
 - `product` drives the production build through `vite preview`, with no host or
-  with a faked Tauri transport (`tests/desktop.spec.ts`), under the window's
+  with a faked Tauri transport (`tests/desktop-*.spec.ts`), under the window's
   own content security policy, and checks the built output
   (`tests/bundle.spec.ts`).
 - `scenarios` drives `/scenarios.html` (`tests/scenarios/`) from
