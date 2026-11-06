@@ -14,13 +14,15 @@ import { IconButton } from "@/components/ui/icon-button";
 import { Spinner } from "@/components/ui/spinner";
 import {
   ledgerFailure,
-  type LedgerLlmReviewMode,
-  type LedgerLlmReviewRequest,
-  type LedgerLlmSuggestion,
   type LedgerPort,
   type LedgerReview,
   type LedgerRow,
 } from "../../../shell/ledger";
+import type {
+  LedgerLlmReviewMode,
+  LedgerLlmReviewRequest,
+  LedgerLlmSuggestion,
+} from "../../../shell/ledgerMovementOperations";
 import { askReview, releaseReview } from "../../../shell/ledgerApply";
 import { parseFractionPercent } from "../../../shell/ledgerGrammar";
 import type { StageEvent, StagedAction } from "../../../shell/ledgerStage";

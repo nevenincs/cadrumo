@@ -3,7 +3,8 @@
 // writer would refuse. With no answer the split waits to be added.
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import type { LedgerPort, LedgerSplitCheckResult } from "./ledger";
+import type { LedgerPort } from "./ledger";
+import type { LedgerSplitCheckResult } from "./ledgerMovementOperations";
 import { LatestAnswerSession, type LatestAnswer } from "./ledgerLatestAnswer";
 import { readAnswer } from "./ledgerWindow";
 

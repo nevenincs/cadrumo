@@ -7,16 +7,15 @@ import { ReadSessionScheduler } from "./readSessionScheduler";
 // staged work stays and the action waits.
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import type { LedgerPort, LedgerRow } from "./ledger";
 import type {
-  LedgerPort,
-  LedgerRow,
   LedgerStagedCell,
   LedgerStagedCheckRequest,
   LedgerStagedCheckResult,
   LedgerStagedDraft,
   LedgerStagedRow,
   LedgerStagedRowAnswer,
-} from "./ledger";
+} from "./ledgerMovementOperations";
 import { ledgerLanguage } from "./ledgerLanguage";
 import { readAnswer } from "./ledgerWindow";
 import {

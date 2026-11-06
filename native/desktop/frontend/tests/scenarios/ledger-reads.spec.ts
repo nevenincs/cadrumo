@@ -1,9 +1,6 @@
 import { expect, test } from "@playwright/test";
-import type {
-  EvidenceListResult,
-  LedgerOutcome,
-  LedgerPort,
-} from "../../src/shell/ledger";
+import type { EvidenceListResult } from "../../src/shell/ledgerDocumentOperations";
+import type { LedgerOutcome, LedgerPort } from "../../src/shell/ledger";
 
 for (const mode of ["documents", "setup"] as const) {
   test(`${mode} reads follow payload availability and discard replaced answers`, async ({

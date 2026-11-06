@@ -14,16 +14,16 @@
 
 import type {
   AttachmentReviewItem,
-  CatalogueInvoice,
   ConfirmationBlocker,
   EvidenceDraft,
   FieldProvenance,
-  InvoiceKind,
-  JsonObject,
-  JsonValue,
   LabelReadingFallback,
-  PublicDecimal,
-} from "../shell/ledger";
+} from "../shell/ledgerDocumentOperations";
+import type {
+  CatalogueInvoice,
+  InvoiceKind,
+} from "../shell/ledgerInvoiceOperations";
+import type { JsonObject, JsonValue, PublicDecimal } from "../shell/ledger";
 import type {
   FixtureEvidence,
   FixtureLedger,

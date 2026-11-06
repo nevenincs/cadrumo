@@ -8,8 +8,8 @@
 import type { Suggestion } from "@/components/ui/suggestions";
 import { countryName, currencyName } from "../../../shared/codeNames";
 import { formatDay } from "../../../shared/dateFormats";
+import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
 import type {
-  CatalogueInvoice,
   KnownCounterparty,
   KnownText,
   LedgerRow,

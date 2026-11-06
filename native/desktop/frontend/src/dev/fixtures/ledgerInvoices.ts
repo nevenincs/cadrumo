@@ -9,7 +9,7 @@ import type {
   CatalogueInvoice,
   CatalogueInvoiceLine,
   InvoiceKind,
-} from "../../shell/ledger";
+} from "../../shell/ledgerInvoiceOperations";
 import type { PaymentStatus } from "../../shell/ledgerContract";
 import { settlementOf } from "../ledgerSettlement";
 

@@ -22,8 +22,8 @@ import {
   statesReference,
 } from "../src/components/ledger/assets/assetFields";
 import { shownSuggestions } from "../src/components/ui/suggestions";
+import type { CatalogueInvoice } from "../src/shell/ledgerInvoiceOperations";
 import type {
-  CatalogueInvoice,
   KnownCounterparty,
   KnownText,
   LedgerRow,

@@ -21,11 +21,11 @@ import { Spinner } from "@/components/ui/spinner";
 import { facts, listed } from "@/shell/compose";
 import {
   ledgerFailure,
-  type LedgerLlmSuggestion,
   type LedgerPort,
   type LedgerReview,
   type LedgerRow,
 } from "../../../shell/ledger";
+import type { LedgerLlmSuggestion } from "../../../shell/ledgerMovementOperations";
 import {
   CLASSIFY_KINDS,
   type ClassifyKind,

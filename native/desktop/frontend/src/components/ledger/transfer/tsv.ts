@@ -4,11 +4,8 @@
 // decimal stays a number. Tabs and line breaks inside a cell become spaces,
 // so a value never spills into the next cell or row.
 
-import type {
-  CatalogueInvoice,
-  LedgerRow,
-  PublicDecimal,
-} from "../../../shell/ledger";
+import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
+import type { LedgerRow, PublicDecimal } from "../../../shell/ledger";
 
 const FORMULA = /^\s*[=+\-@\t\r]/;
 const SIGNED_DECIMAL = /^[+-]?\d+(\.\d+)?$/;

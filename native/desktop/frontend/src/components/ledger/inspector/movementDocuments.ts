@@ -1,4 +1,5 @@
-import type { EvidenceRecord, LedgerTransaction } from "../../../shell/ledger";
+import type { EvidenceRecord } from "../../../shell/ledgerDocumentOperations";
+import type { LedgerTransaction } from "../../../shell/ledger";
 
 /** A purchase evidence reference and supplementary blob references are
  * independent canonical facts. Linking one never implies storing the other. */
