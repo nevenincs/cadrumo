@@ -37,6 +37,7 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { format, resolveConfig } from "prettier";
 import { refuseOversizedModules } from "./generated-module-bound.mjs";
+import { producerEnvironment } from "./producer-environment.mjs";
 
 const { values } = parseArgs({
   options: {
@@ -112,8 +113,7 @@ const producer = resolve(frontend, "scripts/modelo_fixtures.py");
 // Every envelope the producer wrote into its own scratch directory.
 const ENVELOPE = /^[A-Za-z0-9-]+\.json$/;
 
-const environment = { ...process.env };
-environment.PYTHONPATH = repository;
+const environment = producerEnvironment(repository);
 const authority = resolve(repository, ".authority");
 if (!environment.CADRUMO_AUTHORITY_ROOT && existsSync(authority))
   environment.CADRUMO_AUTHORITY_ROOT = authority;

@@ -149,8 +149,11 @@ def _argv(command: Command, root: Path, *, output: Path | None = None) -> list[s
 def child_environment(command: Command, root: Path, inherited: Mapping[str, str]) -> dict[str, str]:
     """The environment a command runs in: the inherited one without any recording switch, plus its own entries."""
     environment = {name: value for name, value in inherited.items() if name not in RECORDING_SWITCHES}
+    sources = (root / "src", root, REPO_ROOT / "src", REPO_ROOT)
     environment["PYTHONPATH"] = os.pathsep.join(
-        dict.fromkeys(part for part in (str(root), str(REPO_ROOT), environment.get("PYTHONPATH", "")) if part)
+        dict.fromkeys(
+            part for part in (*map(str, sources), *environment.get("PYTHONPATH", "").split(os.pathsep)) if part
+        )
     )
     environment.update(command.environment)
     return environment
