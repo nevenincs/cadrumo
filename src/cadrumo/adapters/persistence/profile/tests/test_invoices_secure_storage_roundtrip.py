@@ -152,7 +152,7 @@ def test_previous_encrypted_invoice_shape_loads_without_a_lease_family(tmp_path:
     """An old encrypted invoice defaults only the newly optional nested family."""
     from sqlalchemy import select
 
-    from ...storage.sql.orm import SecureObjectRow
+    from ...storage.sql.tables import secure_objects_table
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         invoice = _populated_invoice(
@@ -163,8 +163,8 @@ def test_previous_encrypted_invoice_shape_loads_without_a_lease_family(tmp_path:
         )
         repo = InvoiceCatalogueRepository()
         repo.save(InvoiceCatalogue(invoices={invoice.invoice_id: invoice}))
-        statement = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == INVOICE_CATALOGUE_NAMESPACE.namespace,
+        statement = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == INVOICE_CATALOGUE_NAMESPACE.namespace,
         )
 
         def remove_new_optional_field(envelope):
@@ -186,7 +186,7 @@ def test_previous_encrypted_invoice_shape_loads_without_a_lease_family(tmp_path:
 def test_encrypted_malformed_non_null_lease_family_refuses_catalogue_read(tmp_path: Path) -> None:
     from sqlalchemy import select
 
-    from ...storage.sql.orm import SecureObjectRow
+    from ...storage.sql.tables import secure_objects_table
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         invoice = _populated_invoice(
@@ -197,8 +197,8 @@ def test_encrypted_malformed_non_null_lease_family_refuses_catalogue_read(tmp_pa
         )
         repo = InvoiceCatalogueRepository()
         repo.save(InvoiceCatalogue(invoices={invoice.invoice_id: invoice}))
-        statement = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == INVOICE_CATALOGUE_NAMESPACE.namespace,
+        statement = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == INVOICE_CATALOGUE_NAMESPACE.namespace,
         )
 
         def set_invalid_situation(envelope) -> None:
@@ -220,7 +220,7 @@ def test_historical_encrypted_flat_lease_facts_survive_load_and_canonical_save(t
     """Read the actual old ciphertext shape without losing the recorded lease."""
     from sqlalchemy import select
 
-    from ...storage.sql.orm import SecureObjectRow
+    from ...storage.sql.tables import secure_objects_table
 
     lease = (
         BusinessPremisesLease(
@@ -234,8 +234,8 @@ def test_historical_encrypted_flat_lease_facts_survive_load_and_canonical_save(t
         invoice = _populated_invoice(invoice_number="F-2025-HISTORICAL-LEASE", business_premises_lease=lease)
         repo = InvoiceCatalogueRepository()
         repo.save(InvoiceCatalogue(invoices={invoice.invoice_id: invoice}))
-        statement = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == INVOICE_CATALOGUE_NAMESPACE.namespace,
+        statement = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == INVOICE_CATALOGUE_NAMESPACE.namespace,
         )
 
         def restore_historical_flat_shape(envelope) -> None:
@@ -300,7 +300,7 @@ def test_invoice_catalogue_tampered_identity_field_surfaces_at_load(tmp_path: Pa
     construction-time validator re-derives the id and refuses any
     record whose stored ``invoice_id`` doesn't match.
 
-    Persists a catalogue, reaches into ``SecureObjectRow`` via
+    Persists a catalogue, reaches into the ``secure_objects`` row via
     ``session_scope``, surgically mutates the persisted
     ``invoice_number`` from ``"F-2025-001"`` to ``"F-2025-999"``
     without recomputing ``invoice_id``, and asserts the load path
@@ -314,7 +314,7 @@ def test_invoice_catalogue_tampered_identity_field_surfaces_at_load(tmp_path: Pa
 
     from sqlalchemy import select
 
-    from ...storage.sql.orm import SecureObjectRow
+    from ...storage.sql.tables import secure_objects_table
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         invoice = _populated_invoice(invoice_number="F-2025-001")
@@ -322,8 +322,8 @@ def test_invoice_catalogue_tampered_identity_field_surfaces_at_load(tmp_path: Pa
         repo = InvoiceCatalogueRepository()
         repo.save(catalogue)
 
-        stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == INVOICE_CATALOGUE_NAMESPACE.namespace,
+        stmt = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == INVOICE_CATALOGUE_NAMESPACE.namespace,
         )
 
         def mutate(envelope):

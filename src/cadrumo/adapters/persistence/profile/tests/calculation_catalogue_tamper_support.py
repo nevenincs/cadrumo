@@ -18,8 +18,8 @@ from .....core.classification.policies import SensitivityClass
 from .....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionCatalogue
 from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ...storage.sql.engine import get_engine
-from ...storage.sql.orm import SecureObjectRow
 from ...storage.sql.secure_objects import SecureObjectRepository
+from ...storage.sql.tables import secure_objects_table
 from ...storage.tests.secure_sql import mutate_encrypted_secure_object_json
 
 
@@ -29,9 +29,9 @@ def plant_calculation_revision_unchecked(
 ) -> None:
     """Replace ``revision`` inside the active bucket's persisted catalogue row."""
     namespace = MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
-    statement = select(SecureObjectRow).where(
-        SecureObjectRow.namespace == namespace.namespace,
-        SecureObjectRow.object_key == namespace.require_default_object_key(),
+    statement = select(secure_objects_table).where(
+        secure_objects_table.c.namespace == namespace.namespace,
+        secure_objects_table.c.object_key == namespace.require_default_object_key(),
     )
     # Spliced as JSON: a tampered revision is exactly what the catalogue model
     # refuses to hold, so it cannot be built through that model first.

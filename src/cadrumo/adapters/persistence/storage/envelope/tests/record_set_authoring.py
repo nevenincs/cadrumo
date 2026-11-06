@@ -23,7 +23,7 @@ def replace_records[T: BaseModel](
     through leaves the store holding neither the old set nor the new one.
 
     An identifier that is BOTH stale and replaced is written, not deleted:
-    :meth:`adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.apply_batch`
+    :meth:`adapters.persistence.storage.sql.secure_object_writes.SecureObjectWriteOperations.apply_batch`
     applies writes before deletions, so a row carried across the replacement
     would otherwise be upserted and then removed in the same transaction.
 

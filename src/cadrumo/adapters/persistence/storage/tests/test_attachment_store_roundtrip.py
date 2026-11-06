@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import Any, override
 
 import pytest
-from sqlalchemy import select
+from sqlalchemy import Row, select, update
 
 from .....core.config import override_settings
 from .....core.errors.error_codes import build_error_envelope, resolve_error_message
@@ -50,8 +50,8 @@ from ..crypto.encrypted_columns import (
 )
 from ..secure_object_namespaces import ATTACHMENT_BLOB_NAMESPACE, ATTACHMENT_MANIFEST_NAMESPACE
 from ..sql.engine import get_engine
-from ..sql.orm import SecureObjectRow
 from ..sql.session import session_scope
+from ..sql.tables import secure_objects_table
 from .secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -81,7 +81,7 @@ _MALFORMED_MANIFEST_PAYLOAD_CASES: tuple[_MalformedManifestPayloadCase, ...] = (
 )
 
 
-def _row_payload_aad(row: SecureObjectRow) -> bytes:
+def _row_payload_aad(row: Row[Any]) -> bytes:
     """Reconstruct the row's payload AEAD associated data for corruption probes.
 
     The secure-object payload is encrypted with the row identity bound into the
@@ -92,25 +92,29 @@ def _row_payload_aad(row: SecureObjectRow) -> bytes:
     return secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
 
 
-def _decrypt_row_content(row: SecureObjectRow) -> bytes:
+def _decrypt_row_content(row: Row[Any]) -> bytes:
     return decrypt_secure_object_payload(bytes(row.payload), associated_data=_row_payload_aad(row))
 
 
-def _encrypt_row_content(row: SecureObjectRow, content: bytes) -> bytes:
+def _encrypt_row_content(row: Row[Any], content: bytes) -> bytes:
     return encrypt_secure_object_payload(content, associated_data=_row_payload_aad(row))
 
 
 def _manifest_row_statement(attachment_id: str) -> Any:
-    return select(SecureObjectRow).where(
-        SecureObjectRow.namespace == ATTACHMENT_MANIFEST_NAMESPACE.namespace,
-        SecureObjectRow.object_key == attachment_id,
+    return select(secure_objects_table).where(
+        secure_objects_table.c.namespace == ATTACHMENT_MANIFEST_NAMESPACE.namespace,
+        secure_objects_table.c.object_key == attachment_id,
     )
 
 
 def _replace_manifest_row_payload(engine: Any, attachment_id: str, payload: bytes) -> None:
     with session_scope(engine) as session:
-        row = session.execute(_manifest_row_statement(attachment_id)).scalar_one()
-        row.payload = _encrypt_row_content(row, payload)
+        row = session.execute(_manifest_row_statement(attachment_id)).one()
+        session.execute(
+            update(secure_objects_table)
+            .where(secure_objects_table.c.id == row.id)
+            .values(payload=_encrypt_row_content(row, payload)),
+        )
 
 
 def _make_attachment(*, sha256: str, bytes_size: int) -> Attachment:
@@ -253,7 +257,7 @@ def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(tmp_path: Path) ->
     sha256 is mutated post-save (without also rewriting
     attachment_id) must fail load via the model_validator.
 
-    Persists a manifest, reaches into ``SecureObjectRow`` via
+    Persists a manifest, reaches into the ``secure_objects`` row via
     ``session_scope``, surgically flips the sha256 field to a
     different digest while leaving attachment_id intact, and asserts
     the load path catches the drift.

@@ -13,10 +13,10 @@ from ......core.classification.policies import SensitivityClass
 from ......core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
 from ...errors import SecureObjectRevisionConflictError
 from ...tests.ephemeral_bucket_session import EphemeralBucketSession
-from .. import _secure_object_writes as writes_module
+from .. import secure_object_writes as writes_module
 from ..secure_object_records import SecureObjectRevisionAssertion
 from ..secure_objects import SecureObjectRepository
-from ._secure_objects_support import _repo_at
+from .secure_objects_support import repo_at
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _NAMESPACE = "cadrumo.quickfile.writer.test"
@@ -62,7 +62,7 @@ def test_encryption_precedes_admission_and_sql_commit_finishes_inside_it(
         commits.append(active)
 
     monkeypatch.setattr(writes_module, "encrypt_secure_object_payload", encrypt)
-    with EphemeralBucketSession(), _repo_at(tmp_path / "prepared.db") as base:
+    with EphemeralBucketSession(), repo_at(tmp_path / "prepared.db") as base:
         repository = SecureObjectRepository(engine=base.engine, mutation_writer=admitted)
         event.listen(base.engine, "commit", committed)
         try:
@@ -84,7 +84,7 @@ def test_assertions_and_empty_batches_never_request_mutation_admission(tmp_path:
     def forbidden(_write: Callable[[], None]) -> None:
         raise AssertionError("assertion-only or empty work cannot confirm a mutation")
 
-    with EphemeralBucketSession(), _repo_at(tmp_path / "assertions.db") as base:
+    with EphemeralBucketSession(), repo_at(tmp_path / "assertions.db") as base:
         base.save_many((_write("source"),))
         source = base.load(
             namespace=_NAMESPACE,
@@ -117,7 +117,7 @@ def test_rejected_batch_cas_rolls_back_sibling_rows_before_any_confirmation(tmp_
         write()
         confirmed += 1
 
-    with EphemeralBucketSession(), _repo_at(tmp_path / "cas.db") as base:
+    with EphemeralBucketSession(), repo_at(tmp_path / "cas.db") as base:
         base.save_many((_write("occupied"),))
         repository = SecureObjectRepository(engine=base.engine, mutation_writer=admitted)
         with pytest.raises(SecureObjectRevisionConflictError):

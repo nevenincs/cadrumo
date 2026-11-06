@@ -29,8 +29,8 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
     MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
 )
-from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.adapters.persistence.storage.sql.tables import secure_objects_table
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import mutate_encrypted_secure_object_json
 from cadrumo.application.calculations.m303_regimen_simplificado_annual_summary import (
@@ -630,9 +630,9 @@ def test_m390_encrypted_calculation_catalogue_refuses_a_corrupted_populated_hand
     assert handoff.values[_summary_casilla_ids()[0]] != Decimal("0")
 
     definition = MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
-    statement = select(SecureObjectRow).where(
-        SecureObjectRow.namespace == definition.namespace,
-        SecureObjectRow.object_key == definition.require_default_object_key(),
+    statement = select(secure_objects_table).where(
+        secure_objects_table.c.namespace == definition.namespace,
+        secure_objects_table.c.object_key == definition.require_default_object_key(),
     )
 
     def mutate(document: dict[str, object]) -> None:

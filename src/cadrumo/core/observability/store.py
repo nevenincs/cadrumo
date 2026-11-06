@@ -33,7 +33,7 @@ from ..config import Settings, load_settings
 from ..directory_scan import scan_directory
 from ..logging import get_logger
 from ..paths import directory_byte_total, select_filesystem_retention_survivors
-from ..storage_taxonomy import StorageCategory
+from ..storage_taxonomy import RUN_ENVELOPE_FILENAME, RUN_EVENTS_FILENAME, RUN_TRACE_FILENAME, StorageCategory
 from ..storage_taxonomy_locations import storage_path
 from ..time.clock import now
 from ..type_guards import is_object_mapping
@@ -43,15 +43,6 @@ from .redaction_rules import diagnostic_rules
 
 _logger = get_logger(__name__)
 
-
-TRACE_FILENAME = "trace.json"
-EVENTS_FILENAME = "events.jsonl"
-ENVELOPE_FILENAME = "envelope.json"
-"""Per-run artifact leaf names, owned by this module (see the ``run_trace`` /
-``run_events`` / ``run_envelope`` entries in
-:data:`~cadrumo.adapters.persistence.storage.storage_path_definitions.STORAGE_PATH_DEFINITIONS`, each
-declared ``owner="cadrumo.core.observability"`` and interpolating these
-constants into their grammar rather than re-typing the names)."""
 
 # Both the public direct append path and JsonlRunSink write the same per-run
 # JSONL artefacts.  One process-wide lock keeps their independent file handles
@@ -174,7 +165,7 @@ def save_trace(trace: RunTrace, *, settings: Settings | None = None) -> Path:
     """
     from ..redaction.rules import redact_structured
 
-    target = run_dir(trace.run_id, settings=settings) / TRACE_FILENAME
+    target = run_dir(trace.run_id, settings=settings) / RUN_TRACE_FILENAME
     redacted = redact_structured(trace.model_dump(mode="json"), rules=diagnostic_rules())
     try:
         atomic_write_text(target, json.dumps(redacted, indent=2, sort_keys=True), encoding="utf-8")
@@ -217,7 +208,7 @@ def load_trace(run_id: str, *, settings: Settings | None = None) -> RunTrace:
             validation, or when its embedded identity names another run.
     """
     validate_run_id(run_id)
-    target = runs_dir(settings) / run_id / TRACE_FILENAME
+    target = runs_dir(settings) / run_id / RUN_TRACE_FILENAME
     try:
         exists = target.exists()
     except OSError as exc:
@@ -262,7 +253,7 @@ def save_envelope(
     Returns:
         Absolute path of the written ``envelope.json`` file.
     """
-    target = run_dir(run_id, settings=settings) / ENVELOPE_FILENAME
+    target = run_dir(run_id, settings=settings) / RUN_ENVELOPE_FILENAME
     try:
         atomic_write_text(
             target,
@@ -297,7 +288,7 @@ def load_envelope_document(
             the file is missing, or its contents are not a JSON object.
     """
     validate_run_id(run_id)
-    target = runs_dir(settings) / run_id / ENVELOPE_FILENAME
+    target = runs_dir(settings) / run_id / RUN_ENVELOPE_FILENAME
     try:
         exists = target.exists()
     except OSError as exc:
@@ -355,7 +346,7 @@ def save_events_append(
     """
     from ..redaction.rules import redact_structured
 
-    target = run_dir(run_id, settings=settings) / EVENTS_FILENAME
+    target = run_dir(run_id, settings=settings) / RUN_EVENTS_FILENAME
     redacted = redact_structured(event.model_dump(mode="json"), rules=diagnostic_rules())
     line = json.dumps(redacted, sort_keys=True, separators=(",", ":")) + "\n"
     try:
@@ -390,7 +381,7 @@ def iter_events(
         An iterator of :class:`RunEvent` records in append order.
     """
     validate_run_id(run_id)
-    target = runs_dir(settings) / run_id / EVENTS_FILENAME
+    target = runs_dir(settings) / run_id / RUN_EVENTS_FILENAME
 
     def _stream() -> Iterator[RunEvent]:
         try:
@@ -437,7 +428,7 @@ def _load_listable_run_trace(entry: Path) -> RunTrace | None:
     """Load a listing trace, logging and skipping invalid or incomplete entries."""
     if not _is_listable_run_directory(entry):
         return None
-    trace_path = entry / TRACE_FILENAME
+    trace_path = entry / RUN_TRACE_FILENAME
     if not trace_path.exists():
         _logger.debug("iter_runs: skipping run directory %s without trace.json", entry.name)
         return None
@@ -609,9 +600,6 @@ def _rmtree_pairs(pairs: list[tuple[Path, float]]) -> int:
 
 
 __all__ = [
-    "ENVELOPE_FILENAME",
-    "EVENTS_FILENAME",
-    "TRACE_FILENAME",
     "iter_events",
     "iter_runs",
     "load_envelope_document",

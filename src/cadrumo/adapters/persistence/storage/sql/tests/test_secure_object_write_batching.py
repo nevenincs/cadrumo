@@ -34,7 +34,7 @@ from sqlalchemy import event
 from ......core.classification.policies import SensitivityClass
 from ......core.secure_object_write import SecureObjectWrite
 from ...errors import DecryptionError, SecureObjectRevisionConflictError
-from ._secure_objects_support import _ephemeral_secure_repo
+from .secure_objects_support import ephemeral_secure_repo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -87,7 +87,7 @@ def test_save_many_statement_budget_is_constant_per_batch(tmp_path: Path) -> Non
     replaced issued five statements per row, so a regression to per-row SQL
     is a count explosion this assertion catches deterministically.
     """
-    with _ephemeral_secure_repo(tmp_path, "statement-budget.db") as (_db_path, engine, repo):
+    with ephemeral_secure_repo(tmp_path, "statement-budget.db") as (_db_path, engine, repo):
         fresh = tuple(_write(f"budget-{i}", b"payload-%d" % i) for i in range(50))
         with _statement_log(engine) as statements:
             repo.save_many(fresh)
@@ -101,7 +101,7 @@ def test_save_many_statement_budget_is_constant_per_batch(tmp_path: Path) -> Non
 
 def test_in_batch_duplicate_key_chains_revisions_like_sequential_saves(tmp_path: Path) -> None:
     """A batch writing one key twice links the second revision to the first."""
-    with _ephemeral_secure_repo(tmp_path, "duplicate-chain.db") as (db_path, _engine, repo):
+    with ephemeral_secure_repo(tmp_path, "duplicate-chain.db") as (db_path, _engine, repo):
         repo.save_many(
             (
                 _write("dup-key", b"first-payload"),
@@ -142,7 +142,7 @@ def test_concurrent_mutation_between_read_and_guarded_update_is_refused(tmp_path
     revision conflict rather than silently dropping the concurrent revision
     from the chain.
     """
-    with _ephemeral_secure_repo(tmp_path, "guarded-update-race.db") as (db_path, engine, repo):
+    with ephemeral_secure_repo(tmp_path, "guarded-update-race.db") as (db_path, engine, repo):
         repo.save_many((_write("raced-key", b"initial-payload"),))
         forged_revision = "f" * 64
         fired: list[bool] = []
@@ -185,7 +185,7 @@ def test_concurrent_mutation_between_read_and_guarded_update_is_refused(tmp_path
 
 def test_exists_many_reports_exactly_the_stored_subset(tmp_path: Path) -> None:
     """Batch existence equals per-key existence over stored, absent, and empty inputs."""
-    with _ephemeral_secure_repo(tmp_path, "exists-many.db") as (_db_path, _engine, repo):
+    with ephemeral_secure_repo(tmp_path, "exists-many.db") as (_db_path, _engine, repo):
         repo.save_many((_write("present-a", b"a"), _write("present-b", b"b")))
         present = repo.exists_many(_NAMESPACE, ("present-a", "present-b", "absent-c"))
         assert present == frozenset({"present-a", "present-b"})
@@ -196,7 +196,7 @@ def test_exists_many_reports_exactly_the_stored_subset(tmp_path: Path) -> None:
 
 def test_batch_written_row_refuses_tampered_ciphertext(tmp_path: Path) -> None:
     """Anti-tautology proof: corrupt the stored wire bytes, and the load fails closed."""
-    with _ephemeral_secure_repo(tmp_path, "tampered-batch-row.db") as (db_path, _engine, repo):
+    with ephemeral_secure_repo(tmp_path, "tampered-batch-row.db") as (db_path, _engine, repo):
         repo.save_many((_write("tampered-key", b"authentic-payload"),))
         with sqlite3.connect(db_path) as con:
             (payload_wire,) = con.execute(

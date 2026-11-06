@@ -31,8 +31,8 @@ from ...errors import SecureObjectUnreadableError
 from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..secure_object_records import SecureObjectRecord, SecureObjectUnreadable
 from ..secure_objects import SecureObjectRepository
-from ._secure_objects_support import (
-    _repo_at,
+from .secure_objects_support import (
+    repo_at,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -45,7 +45,7 @@ _LINEAGE_REASON = "revision lineage self-consistency check failed"
 
 def _seed(db_path: Path) -> None:
     """Write one genuine row through the public repository."""
-    with _repo_at(db_path) as repo:
+    with repo_at(db_path) as repo:
         repo.save(
             namespace=_NAMESPACE,
             object_key=_KEY,
@@ -102,7 +102,7 @@ def test_stamped_row_round_trips_through_both_read_surfaces(tmp_path: Path) -> N
     db_path = tmp_path / "stamped.db"
     with EphemeralBucketSession():
         _seed(db_path)
-        with _repo_at(db_path) as repo:
+        with repo_at(db_path) as repo:
             record = _load(repo)
             assert record is not None
             assert record.payload == _PAYLOAD
@@ -127,7 +127,7 @@ def test_row_without_revision_metadata_is_refused_on_single_load(tmp_path: Path)
     with EphemeralBucketSession():
         _seed(db_path)
         _erase_revision_metadata(db_path)
-        with _repo_at(db_path) as repo, pytest.raises(SecureObjectUnreadableError):
+        with repo_at(db_path) as repo, pytest.raises(SecureObjectUnreadableError):
             _load(repo)
 
 
@@ -144,7 +144,7 @@ def test_row_without_revision_metadata_is_attributed_during_iteration(tmp_path: 
     with EphemeralBucketSession():
         _seed(db_path)
         _erase_revision_metadata(db_path)
-        with _repo_at(db_path) as repo:
+        with repo_at(db_path) as repo:
             items = _iterate(repo)
 
     assert len(items) == 1

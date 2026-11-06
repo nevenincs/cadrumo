@@ -7,10 +7,9 @@ from collections.abc import Callable, Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, NamedTuple, Protocol, cast
 
-from sqlalchemy import Table, bindparam, delete, insert, select, update
+from sqlalchemy import Connection, bindparam, delete, insert, select, update
 from sqlalchemy.engine import CursorResult
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
 
 from .....core.classification.policies import SensitivityClass
 from .....core.hashing import sha256_hex
@@ -27,11 +26,11 @@ from ..crypto.encrypted_columns import (
     secure_object_payload_aad,
 )
 from ..errors import RepositoryError, SecureObjectRevisionConflictError
-from ._secure_object_schema import build_revision_ancestor_ids, parse_revision_ancestor_ids
-from .orm import SecureObjectRow
 from .secure_object_crypto import derive_revision_id
 from .secure_object_records import SecureObjectDeletion, SecureObjectRevisionAssertion
+from .secure_object_schema import build_revision_ancestor_ids, parse_revision_ancestor_ids
 from .session import session_scope
+from .tables import secure_objects_table
 
 if TYPE_CHECKING:
     from sqlalchemy.engine import Engine
@@ -46,17 +45,6 @@ _CAS_CONFLICT_POLICY = "compare-and-swap"
 #: metadata, batch existence). Well under SQLite's bound-variable ceiling, and
 #: large enough that a 20k-row batch costs ~40 reads instead of 20k.
 OBJECT_KEY_SELECT_CHUNK = 500
-
-
-def _secure_objects_table() -> Table:
-    """Return the ``secure_objects`` :class:`~sqlalchemy.Table` for Core DML.
-
-    ``__table__`` is a ``Table`` at runtime, but the SQLAlchemy stubs widen
-    its declared type to ``FromClause``, which the ``insert``/``update``
-    constructors do not accept. The cast states that runtime type for the
-    checker without a guard that would vanish under ``python -O``.
-    """
-    return cast("Table", SecureObjectRow.__table__)
 
 
 class _PreviousRowMetadata(NamedTuple):
@@ -138,7 +126,7 @@ class SecureObjectWriteOperations:
         boundary. To upsert against a pre-computed digest (e.g. when
         restoring an archive bundle whose natural key was lost in the
         original HMAC), use
-        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations._save_internal`
+        :meth:`~adapters.persistence.storage.sql.secure_object_writes.SecureObjectWriteOperations._save_internal`
         instead.
 
         Args:
@@ -191,9 +179,9 @@ class SecureObjectWriteOperations:
         with session_scope(self._engine) as session:
             rows = session.execute(
                 select(
-                    SecureObjectRow.object_key,
-                    SecureObjectRow.payload_hash,
-                ).where(SecureObjectRow.namespace == namespace),
+                    secure_objects_table.c.object_key,
+                    secure_objects_table.c.payload_hash,
+                ).where(secure_objects_table.c.namespace == namespace),
             ).all()
         return {object_key: payload_hash for object_key, payload_hash in rows}
 
@@ -261,13 +249,15 @@ class SecureObjectWriteOperations:
         else:
             commit()
 
-    def _assert_batch_revisions(self, session: Session, assertions: tuple[SecureObjectRevisionAssertion, ...]) -> None:
+    def _assert_batch_revisions(
+        self, session: Connection, assertions: tuple[SecureObjectRevisionAssertion, ...]
+    ) -> None:
         """Check all source assertions inside the original serializable transaction before mutations."""
         for assertion in assertions:
             row = session.execute(
-                select(SecureObjectRow.revision_id).where(
-                    SecureObjectRow.namespace == assertion.namespace,
-                    SecureObjectRow.object_key == secure_object_key_digest(assertion.object_key),
+                select(secure_objects_table.c.revision_id).where(
+                    secure_objects_table.c.namespace == assertion.namespace,
+                    secure_objects_table.c.object_key == secure_object_key_digest(assertion.object_key),
                 ),
             ).one_or_none()
             current_revision = row[0] if row is not None else None
@@ -283,15 +273,15 @@ class SecureObjectWriteOperations:
                     current_revision_id=current_revision,
                 )
 
-    def _delete_batch_rows(self, session: Session, deletions: tuple[SecureObjectDeletion, ...]) -> None:
+    def _delete_batch_rows(self, session: Connection, deletions: tuple[SecureObjectDeletion, ...]) -> None:
         """Apply every digest-addressed CAS deletion in the same pending-write transaction."""
         for removal in deletions:
-            statement = delete(SecureObjectRow).where(
-                SecureObjectRow.namespace == removal.namespace,
-                SecureObjectRow.object_key == removal.hashed_object_key,
+            statement = delete(secure_objects_table).where(
+                secure_objects_table.c.namespace == removal.namespace,
+                secure_objects_table.c.object_key == removal.hashed_object_key,
             )
             if removal.expected_revision_id is not None:
-                statement = statement.where(SecureObjectRow.revision_id == removal.expected_revision_id)
+                statement = statement.where(secure_objects_table.c.revision_id == removal.expected_revision_id)
             result = cast(CursorResult[Any], session.execute(statement))
             if removal.expected_revision_id is not None and result.rowcount != 1:
                 raise self._revision_conflict(
@@ -318,7 +308,7 @@ class SecureObjectWriteOperations:
         Backs
         :meth:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.save`
         and
-        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations._save_internal`.
+        :meth:`~adapters.persistence.storage.sql.secure_object_writes.SecureObjectWriteOperations._save_internal`.
         """
         self._enforce_registered_write_policy(
             namespace=namespace,
@@ -405,7 +395,7 @@ class SecureObjectWriteOperations:
 
     def _write_pending_in_session(
         self,
-        session: Session,
+        session: Connection,
         pending: Sequence[_PendingSecureObjectWrite],
     ) -> None:
         """Single write funnel for save, save_many, apply_batch, and raw-key fixtures.
@@ -436,7 +426,7 @@ class SecureObjectWriteOperations:
 
     def _flush_pending_chunk(
         self,
-        session: Session,
+        session: Connection,
         chunk: Sequence[_PendingSecureObjectWrite],
     ) -> None:
         """Resolve lineage for one duplicate-free chunk and execute its DML."""
@@ -503,7 +493,7 @@ class SecureObjectWriteOperations:
 
     def _load_previous_metadata_for_chunk(
         self,
-        session: Session,
+        session: Connection,
         chunk: Sequence[_PendingSecureObjectWrite],
     ) -> dict[tuple[str, bytes], _PreviousRowMetadata]:
         """Read the revision lineage of every row this chunk supersedes.
@@ -522,14 +512,14 @@ class SecureObjectWriteOperations:
             for start in range(0, len(digests), OBJECT_KEY_SELECT_CHUNK):
                 rows = session.execute(
                     select(
-                        SecureObjectRow.id,
-                        SecureObjectRow.object_key,
-                        SecureObjectRow.revision_id,
-                        SecureObjectRow.revision_ancestor_ids,
-                        SecureObjectRow.payload_hash,
+                        secure_objects_table.c.id,
+                        secure_objects_table.c.object_key,
+                        secure_objects_table.c.revision_id,
+                        secure_objects_table.c.revision_ancestor_ids,
+                        secure_objects_table.c.payload_hash,
                     ).where(
-                        SecureObjectRow.namespace == namespace,
-                        SecureObjectRow.object_key.in_(
+                        secure_objects_table.c.namespace == namespace,
+                        secure_objects_table.c.object_key.in_(
                             digests[start : start + OBJECT_KEY_SELECT_CHUNK],
                         ),
                     ),
@@ -570,7 +560,7 @@ class SecureObjectWriteOperations:
 
     def _execute_insert_rows(
         self,
-        session: Session,
+        session: Connection,
         insert_rows: Sequence[dict[str, object]],
     ) -> None:
         """Insert every row the previous-metadata read proved absent.
@@ -586,7 +576,7 @@ class SecureObjectWriteOperations:
         if not insert_rows:
             return
         try:
-            session.execute(insert(_secure_objects_table()), list(insert_rows))
+            session.execute(insert(secure_objects_table), list(insert_rows))
         except IntegrityError as exc:
             if len(insert_rows) == 1:
                 # CAST-RATIONALE-SECURE-OBJECTS-INSERT-ROW-SHAPE: this funnel
@@ -616,7 +606,7 @@ class SecureObjectWriteOperations:
 
     def _execute_update_rows(
         self,
-        session: Session,
+        session: Connection,
         update_rows: Sequence[dict[str, object]],
     ) -> None:
         """Update every superseded row, guarded on the lineage the batch read.
@@ -651,11 +641,11 @@ class SecureObjectWriteOperations:
 
     def _execute_guarded_update_rows(
         self,
-        session: Session,
+        session: Connection,
         guarded: Sequence[dict[str, object]],
         all_rows: Sequence[dict[str, object]],
     ) -> None:
-        table = _secure_objects_table()
+        table = secure_objects_table
         stmt = (
             update(table)
             .where(
@@ -666,7 +656,7 @@ class SecureObjectWriteOperations:
         )
         try:
             # CAST-RATIONALE-SECURE-OBJECTS-SQLALCHEMY-CURSOR-UPDATE:
-            # SQLAlchemy types ``Session.execute()`` as ``Result[Any]``; a DML
+            # SQLAlchemy types ``Connection.execute()`` as ``Result[Any]``; a DML
             # UPDATE always yields a rowcount-bearing result, and pysqlite
             # accumulates executemany rowcounts across parameter sets.
             result = cast(RowcountResult, session.execute(stmt, guarded))
@@ -677,11 +667,11 @@ class SecureObjectWriteOperations:
 
     def _execute_unguarded_update_rows(
         self,
-        session: Session,
+        session: Connection,
         unguarded: Sequence[dict[str, object]],
         all_rows: Sequence[dict[str, object]],
     ) -> None:
-        table = _secure_objects_table()
+        table = secure_objects_table
         stmt = update(table).where(table.c.id == bindparam("b_id")).values(**self._update_row_values(all_rows))
         try:
             session.execute(stmt, unguarded)
@@ -714,7 +704,7 @@ class SecureObjectWriteOperations:
 
     def _raise_stale_guarded_update(
         self,
-        session: Session,
+        session: Connection,
         guarded: Sequence[dict[str, object]],
     ) -> None:
         """Name the row whose stored revision moved under a guarded update."""
@@ -724,8 +714,8 @@ class SecureObjectWriteOperations:
         row_ids = [cast(int, row["b_id"]) for row in guarded]
         stored: dict[int, str | None] = {}
         for stored_id, stored_revision_id in session.execute(
-            select(SecureObjectRow.id, SecureObjectRow.revision_id).where(
-                SecureObjectRow.id.in_(row_ids),
+            select(secure_objects_table.c.id, secure_objects_table.c.revision_id).where(
+                secure_objects_table.c.id.in_(row_ids),
             ),
         ):
             stored[int(stored_id)] = stored_revision_id

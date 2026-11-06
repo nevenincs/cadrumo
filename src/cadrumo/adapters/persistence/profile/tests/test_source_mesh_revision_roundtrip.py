@@ -58,8 +58,8 @@ from .....domain.modelos.codes import ModeloCode
 from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .....tests.log_records import delivered_text
 from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
-from ...storage.sql.orm import SecureObjectRow
 from ...storage.sql.secure_objects import SecureObjectRepository
+from ...storage.sql.tables import secure_objects_table
 from ...storage.tests.secure_sql import mutate_encrypted_secure_object_json
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
@@ -361,9 +361,10 @@ def test_row_source_identity_roundtrips_only_through_encrypted_revision(
 
 
 def _calculation_row_statement():
-    return select(SecureObjectRow).where(
-        SecureObjectRow.namespace == MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
-        SecureObjectRow.object_key == MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
+    return select(secure_objects_table).where(
+        secure_objects_table.c.namespace == MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+        secure_objects_table.c.object_key
+        == MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
     )
 
 

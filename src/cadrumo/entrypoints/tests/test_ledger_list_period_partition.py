@@ -17,11 +17,11 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from sqlalchemy import delete, select
+from sqlalchemy import String, delete, select, type_coerce
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...adapters.persistence.storage.sql import orm
 from ...adapters.persistence.storage.sql.session import session_scope
+from ...adapters.persistence.storage.sql.tables import transaction_date_index_table
 from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...application.ledger.list_query import (
     LedgerTransactionListPageV1,
@@ -213,19 +213,19 @@ def _index_is_complete(window: tuple[date, date]) -> bool:
 
 def _drop_index_rows(profile: TestRuntimeProfile, transaction_ids: frozenset[str]) -> None:
     """Remove date-index rows as a crash between the encrypted commit and the index sync would."""
-    condition = (orm.TransactionDateIndexRow.bucket_id == _BUCKET) & orm.TransactionDateIndexRow.transaction_id.in_(
-        sorted(transaction_ids)
-    )
+    condition = (
+        transaction_date_index_table.c.bucket_id == _BUCKET
+    ) & transaction_date_index_table.c.transaction_id.in_(sorted(transaction_ids))
     with session_scope(profile.repository.engine) as session:
-        session.execute(delete(orm.TransactionDateIndexRow).where(condition))
+        session.execute(delete(transaction_date_index_table).where(condition))
 
 
 def _indexed_ids(profile: TestRuntimeProfile) -> frozenset[str]:
     with session_scope(profile.repository.engine) as session:
         return frozenset(
             session.execute(
-                select(orm.TransactionDateIndexRow.transaction_id).where(
-                    orm.TransactionDateIndexRow.bucket_id == _BUCKET,
+                select(type_coerce(transaction_date_index_table.c.transaction_id, String)).where(
+                    transaction_date_index_table.c.bucket_id == _BUCKET,
                 ),
             ).scalars()
         )

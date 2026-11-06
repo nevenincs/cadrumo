@@ -148,7 +148,6 @@ def _operates_database_storage(tree: ast.AST) -> bool:
             in {
                 "create_engine_from_settings",
                 "get_engine",
-                "get_sessionmaker",
                 "session_scope",
             }
             or _call_sets_temp_database_url_env(node)

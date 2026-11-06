@@ -11,7 +11,7 @@ off that def and takes its namespace from the
 
 This is a write-path proof, not a bare constant-equality assertion: it persists
 one diagnostic row through the exact symbols the page-flow save uses, then reads
-the raw :class:`SecureObjectRow` back from the encrypted SQL backend and asserts
+the raw ``secure_objects`` row back from the encrypted SQL backend and asserts
 the persisted namespace, classification, and schema_version equal exactly what
 the registry def declares. If any auth consumer ever re-hardcoded a divergent
 namespace, sensitivity, or version, the persisted row would disagree with the
@@ -30,8 +30,8 @@ from sqlalchemy import select
 from ......core import external_constants
 from .....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from .....persistence.storage.secure_object_namespaces import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
-from .....persistence.storage.sql.orm import SecureObjectRow
 from .....persistence.storage.sql.session import session_scope
+from .....persistence.storage.sql.tables import secure_objects_table
 from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..clave_movil_support import mint_diagnostic_id
 
@@ -73,7 +73,7 @@ def test_persisted_diagnostic_row_carries_registry_declared_metadata(tmp_path: P
         with session_scope(profile.repository._engine) as session:
             rows = [
                 row
-                for row in session.execute(select(SecureObjectRow)).scalars().all()
+                for row in session.execute(select(secure_objects_table)).all()
                 if row.namespace == CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace
             ]
 
@@ -119,7 +119,7 @@ def test_rapid_diagnostic_captures_keep_distinct_encrypted_rows(tmp_path: Path) 
         with session_scope(profile.repository._engine) as session:
             rows = [
                 row
-                for row in session.execute(select(SecureObjectRow)).scalars().all()
+                for row in session.execute(select(secure_objects_table)).all()
                 if row.namespace == CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace
             ]
 

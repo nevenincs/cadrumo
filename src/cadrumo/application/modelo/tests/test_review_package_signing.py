@@ -38,8 +38,8 @@ from ..review_package_signing import (
     sign_review_package,
     verify_review_package_signature,
 )
-from ._review_package_bytes_support import build_package_path, review_package_revision, review_package_work_unit
 from ._review_package_signing_support import InMemoryReviewPackageSigningKeypairCapability
+from .review_package_bytes_support import build_package_path, review_package_revision, review_package_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

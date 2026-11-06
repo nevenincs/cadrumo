@@ -48,11 +48,13 @@ def _catalogue(payloads: list[dict[str, object]], *, bucket_id: str | None = Non
 def _mutate_stored(profile: TestRuntimeProfile, mutate: Callable[[dict[str, Any]], None]) -> None:
     from sqlalchemy import select
 
-    from ...storage.sql.orm import SecureObjectRow
+    from ...storage.sql.tables import secure_objects_table
 
     mutate_encrypted_secure_object_json(
         profile.repository._engine,
-        row_statement=select(SecureObjectRow).where(SecureObjectRow.namespace == INVOICE_CATALOGUE_NAMESPACE.namespace),
+        row_statement=select(secure_objects_table).where(
+            secure_objects_table.c.namespace == INVOICE_CATALOGUE_NAMESPACE.namespace
+        ),
         mutate=mutate,
     )
 

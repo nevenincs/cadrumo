@@ -93,7 +93,7 @@ def _associated_data(
     return _ASSOCIATED_DATA_PREFIX + b":" + json.dumps(fields, sort_keys=True, separators=(",", ":")).encode("ascii")
 
 
-def _recipient_encryption_key_object_key(bucket_id: str) -> str:
+def recipient_encryption_key_object_key(bucket_id: str) -> str:
     """Return the namespace-owned natural key for one bucket's keypair."""
     return f"review-package-recipient-encryption-key:{canonical_bucket_id(bucket_id)}"
 
@@ -171,7 +171,7 @@ class RecipientEncryptionAdapter:
     ) -> RecipientEncryptionKeypair:
         """Load or atomically mint one bucket-scoped X25519 keypair."""
         normalized_bucket_id = self._bound_bucket_id(bucket_id)
-        object_key = _recipient_encryption_key_object_key(normalized_bucket_id)
+        object_key = recipient_encryption_key_object_key(normalized_bucket_id)
         existing = self._load_keypair(bucket_id=normalized_bucket_id, object_key=object_key)
         if existing is not None:
             return existing

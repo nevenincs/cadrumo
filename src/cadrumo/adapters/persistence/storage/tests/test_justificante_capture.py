@@ -284,7 +284,7 @@ def test_dropped_superseded_pointer_surfaces_at_load(tmp_path: Path) -> None:
     from pydantic import ValidationError
     from sqlalchemy import select
 
-    from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
+    from cadrumo.adapters.persistence.storage.sql.tables import secure_objects_table
 
     bucket_id = _BUCKET_ID
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
@@ -304,9 +304,9 @@ def test_dropped_superseded_pointer_surfaces_at_load(tmp_path: Path) -> None:
         repo.save(predecessor)
 
         object_key = justificante_capture_snapshot_object_key(bucket_id, predecessor.snapshot_id)
-        stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE.namespace,
-            SecureObjectRow.object_key == object_key,
+        stmt = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE.namespace,
+            secure_objects_table.c.object_key == object_key,
         )
 
         def mutate(decoded):

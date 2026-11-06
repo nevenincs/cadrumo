@@ -184,7 +184,7 @@ def test_stamped_revision_id_anti_tautology_missing_refuses_load(tmp_path: Path)
     from sqlalchemy import select
 
     from ...storage.sql.engine import get_engine
-    from ...storage.sql.orm import SecureObjectRow
+    from ...storage.sql.tables import secure_objects_table
 
     namespace = CalculationObservationRepository.namespace
 
@@ -202,9 +202,9 @@ def test_stamped_revision_id_anti_tautology_missing_refuses_load(tmp_path: Path)
         )
 
         object_key = observation_key(_MODELO, _filing_period())
-        stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == namespace,
-            SecureObjectRow.object_key == object_key,
+        stmt = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == namespace,
+            secure_objects_table.c.object_key == object_key,
         )
 
         def mutate(envelope):
@@ -303,7 +303,7 @@ def test_carry_divergent_stamp_refuses_single_observation(
     from sqlalchemy import select
 
     from ...storage.sql.engine import get_engine
-    from ...storage.sql.orm import SecureObjectRow
+    from ...storage.sql.tables import secure_objects_table
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repo = CalculationObservationRepository()
@@ -319,9 +319,9 @@ def test_carry_divergent_stamp_refuses_single_observation(
         )
 
         object_key = observation_key("303", _filing_period(_M303_CARRY_YEAR, _M303_CARRY_SOURCE_PERIOD))
-        statement = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == CalculationObservationRepository.namespace,
-            SecureObjectRow.object_key == object_key,
+        statement = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == CalculationObservationRepository.namespace,
+            secure_objects_table.c.object_key == object_key,
         )
 
         def mutate(envelope) -> None:

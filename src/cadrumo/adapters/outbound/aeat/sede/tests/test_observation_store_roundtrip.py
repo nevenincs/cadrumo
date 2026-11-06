@@ -138,7 +138,7 @@ def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
     invalidate the entire content-addressing chain that proves the
     observation reflects what AEAT actually filed.
 
-    Persists an observation, reaches into ``SecureObjectRow`` via
+    Persists an observation, reaches into the ``secure_objects`` row via
     ``session_scope``, surgically empties the ``artefacts`` tuple in
     the encrypted JSON envelope, and asserts the load path catches
     the drift via the ``min_length=1`` constraint.
@@ -151,8 +151,8 @@ def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
 
     from sqlalchemy import select
 
-    from .....persistence.storage.sql.orm import SecureObjectRow
     from .....persistence.storage.sql.session import session_scope
+    from .....persistence.storage.sql.tables import secure_objects_table
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
@@ -172,14 +172,14 @@ def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
         logical_path = store.persist_observation(observation)
 
         with session_scope(profile.repository._engine) as session:
-            all_rows = session.execute(select(SecureObjectRow)).scalars().all()
+            all_rows = session.execute(select(secure_objects_table)).all()
             obs_rows = [r for r in all_rows if r.namespace == AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE.namespace]
             assert len(obs_rows) == 1, (
                 f"expected one observation row, found {len(obs_rows)} "
                 f"(namespaces: {sorted({r.namespace for r in all_rows})})"
             )
-        stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE.namespace,
+        stmt = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE.namespace,
         )
 
         def mutate(envelope):

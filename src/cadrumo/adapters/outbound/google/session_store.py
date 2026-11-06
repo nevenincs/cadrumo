@@ -156,7 +156,7 @@ def delete_session(profile: str) -> tuple[bool, bool]:
     credential that no longer exists, and the stale row survives the retry
     because the retry finds nothing to delete.
 
-    :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.apply_batch`
+    :meth:`~adapters.persistence.storage.sql.secure_object_writes.SecureObjectWriteOperations.apply_batch`
     already provides the all-or-nothing removal, and it addresses rows by the
     stored key digest, so the natural profile key is digested here through the
     same helper the write path uses.

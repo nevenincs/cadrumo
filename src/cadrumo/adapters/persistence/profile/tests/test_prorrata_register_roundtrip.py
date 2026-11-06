@@ -225,8 +225,8 @@ def test_register_outer_v2_row_carries_the_v3_document(tmp_path: Path) -> None:
         PROFILE_PRORRATA_REGISTER_NAMESPACE,
         SECURE_OBJECT_SCHEMA_VERSION_V2,
     )
-    from ...storage.sql.orm import SecureObjectRow
     from ...storage.sql.session import session_scope
+    from ...storage.sql.tables import secure_objects_table
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="f9d6d231-3774-48bb-a542-0a4bb1d1f5a6") as profile:
         engine = get_engine(profile.settings)
@@ -234,11 +234,12 @@ def test_register_outer_v2_row_carries_the_v3_document(tmp_path: Path) -> None:
 
         with session_scope(engine) as session:
             row = session.execute(
-                select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == PROFILE_PRORRATA_REGISTER_NAMESPACE.namespace,
-                    SecureObjectRow.object_key == PROFILE_PRORRATA_REGISTER_NAMESPACE.require_default_object_key(),
+                select(secure_objects_table).where(
+                    secure_objects_table.c.namespace == PROFILE_PRORRATA_REGISTER_NAMESPACE.namespace,
+                    secure_objects_table.c.object_key
+                    == PROFILE_PRORRATA_REGISTER_NAMESPACE.require_default_object_key(),
                 ),
-            ).scalar_one()
+            ).one()
             assert PROFILE_PRORRATA_REGISTER_NAMESPACE.schema_version == SECURE_OBJECT_SCHEMA_VERSION_V2
             assert row.schema_version == SECURE_OBJECT_SCHEMA_VERSION_V2
             plaintext = decrypt_secure_object_payload(
@@ -260,17 +261,17 @@ def test_register_v2_document_reads_unchanged_and_resaves_as_v3(tmp_path: Path) 
 
     from ...storage.crypto.encrypted_columns import decrypt_secure_object_payload, secure_object_payload_aad
     from ...storage.secure_object_namespaces import PROFILE_PRORRATA_REGISTER_NAMESPACE
-    from ...storage.sql.orm import SecureObjectRow
     from ...storage.sql.session import session_scope
+    from ...storage.sql.tables import secure_objects_table
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="0c1f8a52-6b0e-4f7e-9d43-5e2a7c91b3d8") as profile:
         engine = get_engine(profile.settings)
         repo = ProrrataRegisterRepository()
         written = _populated_register()
         repo.save(written)
-        stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == PROFILE_PRORRATA_REGISTER_NAMESPACE.namespace,
-            SecureObjectRow.object_key == PROFILE_PRORRATA_REGISTER_NAMESPACE.require_default_object_key(),
+        stmt = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == PROFILE_PRORRATA_REGISTER_NAMESPACE.namespace,
+            secure_objects_table.c.object_key == PROFILE_PRORRATA_REGISTER_NAMESPACE.require_default_object_key(),
         )
 
         def as_v2(document):
@@ -290,7 +291,7 @@ def test_register_v2_document_reads_unchanged_and_resaves_as_v3(tmp_path: Path) 
         repo.save(legacy)
         assert repo.load() == legacy
         with session_scope(engine) as session:
-            row = session.execute(stmt).scalar_one()
+            row = session.execute(stmt).one()
             plaintext = decrypt_secure_object_payload(
                 bytes(row.payload),
                 associated_data=secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version),
@@ -303,7 +304,7 @@ def test_register_v2_document_reads_unchanged_and_resaves_as_v3(tmp_path: Path) 
 
 def test_register_outer_v1_row_refuses_without_a_tolerant_read(tmp_path: Path) -> None:
     """A re-encrypted v1 SQL row is refused; no upgrader or implicit restamp exists."""
-    from sqlalchemy import select
+    from sqlalchemy import select, update
 
     from ...storage.crypto.encrypted_columns import (
         decrypt_secure_object_payload,
@@ -311,8 +312,8 @@ def test_register_outer_v1_row_refuses_without_a_tolerant_read(tmp_path: Path) -
         secure_object_payload_aad,
     )
     from ...storage.secure_object_namespaces import PROFILE_PRORRATA_REGISTER_NAMESPACE
-    from ...storage.sql.orm import SecureObjectRow
     from ...storage.sql.session import session_scope
+    from ...storage.sql.tables import secure_objects_table
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="c791265a-e7b5-4dcb-af93-d28e011972ca") as profile:
         engine = get_engine(profile.settings)
@@ -321,19 +322,26 @@ def test_register_outer_v1_row_refuses_without_a_tolerant_read(tmp_path: Path) -
 
         with session_scope(engine) as session:
             row = session.execute(
-                select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == PROFILE_PRORRATA_REGISTER_NAMESPACE.namespace,
-                    SecureObjectRow.object_key == PROFILE_PRORRATA_REGISTER_NAMESPACE.require_default_object_key(),
+                select(secure_objects_table).where(
+                    secure_objects_table.c.namespace == PROFILE_PRORRATA_REGISTER_NAMESPACE.namespace,
+                    secure_objects_table.c.object_key
+                    == PROFILE_PRORRATA_REGISTER_NAMESPACE.require_default_object_key(),
                 ),
-            ).scalar_one()
+            ).one()
             plaintext = decrypt_secure_object_payload(
                 bytes(row.payload),
                 associated_data=secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version),
             )
-            row.schema_version = 1
-            row.payload = encrypt_secure_object_payload(
-                plaintext,
-                associated_data=secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version),
+            session.execute(
+                update(secure_objects_table)
+                .where(secure_objects_table.c.id == row.id)
+                .values(
+                    schema_version=1,
+                    payload=encrypt_secure_object_payload(
+                        plaintext,
+                        associated_data=secure_object_payload_aad(row.namespace, bytes(row.object_key), 1),
+                    ),
+                ),
             )
 
         with pytest.raises(ProrrataRegisterError, match="unable to load prorrata register") as exc_info:
@@ -413,7 +421,7 @@ def test_register_secure_object_write_keeps_a_conflicted_batch_atomic(tmp_path: 
 def test_register_corrupted_percentage_surfaces_at_load(tmp_path: Path) -> None:
     """Anti-tautology: corrupting a persisted percentage must surface at load.
 
-    Persists a populated register, reaches into the encrypted SecureObjectRow,
+    Persists a populated register, reaches into the encrypted ``secure_objects`` row,
     rewrites the first entry's ``provisional_percentage`` to a different value,
     and asserts the strict-equality witness flags the drift after reload. If this
     ever passes silently, the register boundary is tautological.
@@ -421,7 +429,7 @@ def test_register_corrupted_percentage_surfaces_at_load(tmp_path: Path) -> None:
     from sqlalchemy import select
 
     from ...storage.secure_object_namespaces import PROFILE_PRORRATA_REGISTER_NAMESPACE
-    from ...storage.sql.orm import SecureObjectRow
+    from ...storage.sql.tables import secure_objects_table
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="519ac791-622a-4e61-b3c0-84d953c7cfee") as profile:
         engine = get_engine(profile.settings)
@@ -429,9 +437,9 @@ def test_register_corrupted_percentage_surfaces_at_load(tmp_path: Path) -> None:
         original = _populated_register()
         repo.save(original)
 
-        stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == PROFILE_PRORRATA_REGISTER_NAMESPACE.namespace,
-            SecureObjectRow.object_key == PROFILE_PRORRATA_REGISTER_NAMESPACE.require_default_object_key(),
+        stmt = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == PROFILE_PRORRATA_REGISTER_NAMESPACE.namespace,
+            secure_objects_table.c.object_key == PROFILE_PRORRATA_REGISTER_NAMESPACE.require_default_object_key(),
         )
 
         def mutate(document):
@@ -456,16 +464,16 @@ def test_register_missing_regime_surfaces_at_load(tmp_path: Path) -> None:
     from sqlalchemy import select
 
     from ...storage.secure_object_namespaces import PROFILE_PRORRATA_REGISTER_NAMESPACE
-    from ...storage.sql.orm import SecureObjectRow
+    from ...storage.sql.tables import secure_objects_table
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="3db70f92-5cec-4355-a65b-62dc53f15ada") as profile:
         engine = get_engine(profile.settings)
         repo = ProrrataRegisterRepository()
         repo.save(_populated_register())
 
-        stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == PROFILE_PRORRATA_REGISTER_NAMESPACE.namespace,
-            SecureObjectRow.object_key == PROFILE_PRORRATA_REGISTER_NAMESPACE.require_default_object_key(),
+        stmt = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == PROFILE_PRORRATA_REGISTER_NAMESPACE.namespace,
+            secure_objects_table.c.object_key == PROFILE_PRORRATA_REGISTER_NAMESPACE.require_default_object_key(),
         )
 
         def mutate(document):
@@ -483,16 +491,16 @@ def test_register_v1_document_refuses_at_encrypted_load(tmp_path: Path) -> None:
     from sqlalchemy import select
 
     from ...storage.secure_object_namespaces import PROFILE_PRORRATA_REGISTER_NAMESPACE
-    from ...storage.sql.orm import SecureObjectRow
+    from ...storage.sql.tables import secure_objects_table
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="91ee6d98-f877-42b0-8e13-c783a6209b37") as profile:
         engine = get_engine(profile.settings)
         repo = ProrrataRegisterRepository()
         repo.save(_populated_register())
 
-        stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == PROFILE_PRORRATA_REGISTER_NAMESPACE.namespace,
-            SecureObjectRow.object_key == PROFILE_PRORRATA_REGISTER_NAMESPACE.require_default_object_key(),
+        stmt = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == PROFILE_PRORRATA_REGISTER_NAMESPACE.namespace,
+            secure_objects_table.c.object_key == PROFILE_PRORRATA_REGISTER_NAMESPACE.require_default_object_key(),
         )
 
         def mutate(document):
