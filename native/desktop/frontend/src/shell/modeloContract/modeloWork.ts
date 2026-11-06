@@ -305,6 +305,19 @@ export type FilingEvidenceReference = {
 };
 
 /**
+ * Posture of one presentation date against its plazo voluntario.
+ *
+ * Attributes: EN_PLAZO: Presented on or before the effective close date of the
+ * voluntary filing window. EXTEMPORANEA: Presented after that close date. A
+ * late filing remains admissible (Ley 58/2003 art. 27 attaches a recargo
+ * rather than barring the declaration), which is why this is a posture and not
+ * a refusal; the surcharge consequence is not assessed here. UNKNOWN: No
+ * filing window resolves for the declaration's axis, or its close date is
+ * unpublished, so timeliness cannot be judged.
+ */
+export type FilingTimeliness = "en_plazo" | "extemporanea" | "unknown";
+
+/**
  * Independent refund-request, approval, and payment evidence state.
  */
 export type IvaSettlementRefundState =
@@ -530,6 +543,7 @@ export type ModeloFilingRecordSnapshot = {
   origin: FilingOrigin;
   confirmation: AeatConfirmationState;
   declaration_kind: FilingDeclarationKind;
+  filing_timeliness: FilingTimeliness | null;
   aeat_register: ModeloRegisterSnapshot | null;
   status: ModeloRecordStatus;
   superseded_at: string | null;
@@ -875,12 +889,21 @@ export type ModeloWorkFileApproval = {
  * `handoff_required` is always true and is part of the contract, not a
  * computed field: this operation records a filing locally and hands the
  * operator the artefacts to submit themselves. Nothing here reaches AEAT.
+ *
+ * `filing_timeliness` is the one fact `declaration_kind` cannot carry: an
+ * `original` declaration says nothing about whether it was presented inside
+ * its plazo voluntario, and a late one carries the Ley 58/2003 art. 27 recargo
+ * consequence. It repeats the posture the record kept at filing time,
+ * normalised so a caller outside this package always reads a value: a record
+ * that kept no posture reads `unknown`. It is a calendar posture, not an art.
+ * 27 assessment.
  */
 export type ModeloWorkFilePublicResultV2 = {
   result_version: 2;
   record: ModeloFilingRecordSnapshot;
   advisories: ModeloLifecycleAdvisories;
   published: boolean;
+  filing_timeliness: FilingTimeliness;
   filing_record_id: string;
   work_unit_id: string;
   calculation_revision_id: string;
