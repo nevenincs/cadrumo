@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import type {
   LedgerStagedCheckRequest,
   LedgerStagedCheckResult,
-} from "../src/shell/ledger";
+} from "../src/shell/ledgerMovementOperations";
 import {
   StagedCheckSession,
   type CheckReply,

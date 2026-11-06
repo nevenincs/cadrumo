@@ -4,12 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { Icon } from "@/components/ui/icon";
 import { facts, listed } from "@/shell/compose";
-import type {
-  EvidenceListResult,
-  LedgerPort,
-  LedgerRow,
-  LedgerStagedRowAnswer,
-} from "../../../shell/ledger";
+import type { EvidenceListResult } from "../../../shell/ledgerDocumentOperations";
+import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
+import type { LedgerStagedRowAnswer } from "../../../shell/ledgerMovementOperations";
 import {
   newIdempotencyKey,
   type StageEvent,

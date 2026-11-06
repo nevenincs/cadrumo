@@ -7,98 +7,161 @@
 // bytes of one call. Results and staged edits live in the page's memory
 // only: never in storage, a log line or an error message.
 
+import type { LedgerPreflightReason } from "./ledgerContract";
 import type {
-  LedgerPreflightReason,
-  EvidenceUpdateField,
-  InvoiceUpdateField,
-  LedgerUpdateField,
-  PaymentStatus,
-} from "./ledgerContract";
+  AttachmentQueueResult,
+  AttachmentViewRequest,
+  AttachmentViewResult,
+  EvidenceAddRequest,
+  EvidenceBatchRequest,
+  EvidenceBatchResult,
+  EvidenceConfirmRequest,
+  EvidenceConfirmResult,
+  EvidenceConsentListResult,
+  EvidenceExtractRequest,
+  EvidenceExtractResult,
+  EvidenceListResult,
+  EvidencePageRequest,
+  EvidencePageResult,
+  EvidenceRecordResult,
+  EvidenceRemoveRequest,
+  EvidenceReviewListRequest,
+  EvidenceReviewListResult,
+  EvidenceReviewViewRequest,
+  EvidenceReviewViewResult,
+  EvidenceUpdateRequest,
+  EvidenceViewRequest,
+  EvidenceViewResult,
+} from "./ledgerDocumentOperations";
 import type {
+  InvoiceAddRequest,
+  InvoiceAddResult,
+  InvoiceImportRequest,
+  InvoiceImportResult,
+  InvoiceListRequest,
+  InvoiceListResult,
+  InvoicePreviewRequest,
+  InvoicePreviewResult,
+  InvoiceRemoveRequest,
+  InvoiceRemoveResult,
+  InvoiceUpdateRequest,
+  InvoiceUpdateResult,
+  InvoiceViewRequest,
+  InvoiceViewResult,
+  LedgerAttachRequest,
+  LedgerAttachResult,
+  LedgerCheckRequest,
+  LedgerCheckResult,
+  LedgerDetachRequest,
+  LedgerInvoiceDuplicateRequest,
+  LedgerInvoiceDuplicateResult,
+  LedgerInvoiceMatchRequest,
+  LedgerInvoiceMatchResult,
+  LedgerLinkRequest,
+  LedgerLinkResult,
+} from "./ledgerInvoiceOperations";
+import type {
+  LedgerAddRequest,
+  LedgerAddResult,
+  LedgerAllocateRequest,
+  LedgerAllocateResult,
+  LedgerBulkClassifyRequest,
+  LedgerBulkClassifyResult,
+  LedgerClassifyRequest,
+  LedgerClassifyResult,
+  LedgerHistoryRequest,
+  LedgerHistoryTypedResult,
+  LedgerIvaDeriveRequest,
+  LedgerIvaDeriveResult,
+  LedgerLifecycleRequest,
+  LedgerLifecycleResult,
+  LedgerLlmReviewRequest,
+  LedgerMergeRequest,
+  LedgerMergeResult,
+  LedgerRemoveRequest,
+  LedgerRemoveResult,
+  LedgerRuleTrialRequest,
+  LedgerRuleTrialResult,
+  LedgerSplitCheckRequest,
+  LedgerSplitCheckResult,
+  LedgerSplitRequest,
+  LedgerSplitResult,
+  LedgerStagedCheckRequest,
+  LedgerStagedCheckResult,
+  LedgerTrackRequest,
+  LedgerTrackResult,
+  LedgerUpdateRequest,
+  LedgerUpdateResult,
+} from "./ledgerMovementOperations";
+import type {
+  ActivityAssetAcquisitionCandidatesResult,
   ActivityAssetChangeResult,
   ActivityAssetClaimRequest,
   ActivityAssetClaimResult,
-  ActivityAssetFilingRequest,
-  ActivityAssetFilingResult,
-  ActivityAssetForecastRequest,
-  ActivityAssetForecastResult,
-  ActivityAssetInspectRequest,
-  ActivityAssetInspectResult,
-  ActivityAssetAcquisitionCandidatesResult,
   ActivityAssetCorrectRequest,
   ActivityAssetCreateRequest,
   ActivityAssetDescribeRequest,
   ActivityAssetDisposalCalculateRequest,
-  ActivityAssetListRequest,
   ActivityAssetDisposalCalculateResult,
   ActivityAssetDisposeRequest,
+  ActivityAssetFilingRequest,
+  ActivityAssetFilingResult,
+  ActivityAssetForecastRequest,
+  ActivityAssetForecastResult,
   ActivityAssetFormOptionsRequest,
   ActivityAssetFormOptionsResult,
+  ActivityAssetInspectRequest,
+  ActivityAssetInspectResult,
+  ActivityAssetListRequest,
   ActivityAssetListResult,
   ActivityAssetPlanRequest,
   ActivityAssetPlanResult,
   ActivityAssetTimelineRequest,
   ActivityAssetTimelineResult,
-  CapitalGoodDeclareRequest,
-  CapitalGoodDeclareResult,
-  CapitalGoodsListResult,
   InventoryBookRequest,
   InventoryChangeResult,
   InventoryClosingAuthorityRequest,
   InventoryClosingAuthorityResult,
   InventoryClosingValueRequest,
-  InventoryEvidenceAddRequest,
-  InventoryEvidenceAddResult,
-  InventoryOptionsResult,
-  LedgerEntryOptionsRequest,
-  LedgerEntryOptionsResult,
   InventoryCorrectRequest,
   InventoryCreateRequest,
   InventoryCreateResult,
   InventoryDescribeRequest,
+  InventoryEvidenceAddRequest,
+  InventoryEvidenceAddResult,
   InventoryInspectResult,
   InventoryListResult,
   InventoryMovementAddRequest,
   InventoryMovementAddResult,
   InventoryMovementCorrectRequest,
   InventoryMovementReverseRequest,
+  InventoryOptionsResult,
   InventoryRestoreRequest,
   InventoryRetireRequest,
   InventoryValuationResult,
-  LedgerCounterpartyRequest,
-  LedgerCounterpartyResult,
-  LedgerLlmDiagnosticsRequest,
-  LedgerLlmDiagnosticsResult,
-  LedgerOwnAccountRequest,
-  LedgerOwnAccountResult,
+  LedgerEntryOptionsRequest,
+  LedgerEntryOptionsResult,
   LedgerParticipationRebuildResult,
-  LedgerRatiosEligibleRequest,
-  LedgerRatiosEligibleResult,
-  LedgerRatiosListResult,
-  LedgerRatiosSetRequest,
-  LedgerRatiosSetResult,
-  LedgerRatiosUnsetRequest,
-  LedgerRatiosUnsetResult,
-  LedgerRatiosValidateResult,
-  LedgerRatiosYearRequest,
   LedgerResetRequest,
   LedgerResetResult,
-  LedgerRuleAddRequest,
-  LedgerRuleAddResult,
-  LedgerRuleApplyRequest,
-  LedgerRuleApplyResult,
-  LedgerRuleListResult,
+} from "./ledgerSetup";
+import type {
+  CapitalGoodDeclareRequest,
+  CapitalGoodDeclareResult,
+  CapitalGoodsListResult,
+  LedgerOwnAccountRequest,
+  LedgerOwnAccountResult,
+  ProrrataDeclareGrossRequest,
   ProrrataDeclareSectorRequest,
   ProrrataElectEspecialRequest,
   ProrrataElectionRequest,
   ProrrataListResult,
   ProrrataMutationResult,
+  ProrrataRemoveGrossRequest,
   ProrrataRevokeEspecialRequest,
   ProrrataSeedRequest,
   ProrrataSeedSectorRequest,
   ProrrataSettleSectorRequest,
-  ProrrataDeclareGrossRequest,
-  ProrrataRemoveGrossRequest,
   WithholdingAbsenceListRequest,
   WithholdingAbsenceListResult,
   WithholdingAbsenceResult,
@@ -109,7 +172,27 @@ import type {
   WithholdingRecordRequest,
   WithholdingRemoveRequest,
   WithholdingWithdrawRequest,
-} from "./ledgerSetup";
+} from "./ledgerRegisterOperations";
+import type {
+  LedgerCounterpartyRequest,
+  LedgerCounterpartyResult,
+  LedgerLlmDiagnosticsRequest,
+  LedgerLlmDiagnosticsResult,
+  LedgerRatiosEligibleRequest,
+  LedgerRatiosEligibleResult,
+  LedgerRatiosListResult,
+  LedgerRatiosSetRequest,
+  LedgerRatiosSetResult,
+  LedgerRatiosUnsetRequest,
+  LedgerRatiosUnsetResult,
+  LedgerRatiosValidateResult,
+  LedgerRatiosYearRequest,
+  LedgerRuleAddRequest,
+  LedgerRuleAddResult,
+  LedgerRuleApplyRequest,
+  LedgerRuleApplyResult,
+  LedgerRuleListResult,
+} from "./ledgerClassificationSetup";
 
 /** The definitions the host admits, mirroring its closed list. */
 export const LEDGER_DEFINITIONS = [
@@ -236,13 +319,16 @@ export const LEDGER_DEFINITIONS = [
   "ledger.update",
   "ledger.view",
 ] as const;
+
 export type LedgerDefinitionId = (typeof LEDGER_DEFINITIONS)[number];
+
 export function isLedgerDefinition(id: string): id is LedgerDefinitionId {
   return (LEDGER_DEFINITIONS as readonly string[]).includes(id);
 }
 
 export type JsonValue =
   string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+
 export type JsonObject = { [key: string]: JsonValue };
 
 /** Why a ledger call did not answer an outcome. `unknown` is a write whose
@@ -260,7 +346,9 @@ export const LEDGER_FAILURE_CODES = [
   "invalid",
   "file_unavailable",
 ] as const;
+
 export type LedgerFailureCode = (typeof LEDGER_FAILURE_CODES)[number];
+
 /** Native-observed terminal failure; execution stopped, effects unresolved.
  * These words alone come from the definition's admitted error projection. */
 export type TerminalOperationFailure = {
@@ -277,6 +365,7 @@ export type LedgerFailure = {
   reason?: string;
   terminal_failure?: TerminalOperationFailure;
 };
+
 /** The typed failure of a rejected ledger call. A rejection that is not the
  * host's own answer never reached it, so nothing was sent. */
 export function ledgerFailure(error: unknown): LedgerFailure {
@@ -444,23 +533,29 @@ export type LedgerReview<Review = JsonObject> = {
   expires_at: string | null;
   review: Review;
 };
+
 export type LedgerDecision = "apply" | "reject";
 
 /** An opaque name for a file the person picked or dropped, valid only for
  * the signed-in session that it was issued for. */
 export type FileToken = string & { readonly __fileToken: unique symbol };
+
 export type FilePurpose =
   "bank_statements" | "invoice_books" | "documents" | "export";
+
 /** One file, several, or every file of the purpose's kinds in a folder. */
 export type FilePick = "file" | "files" | "folder";
+
 export type PickedFile = {
   token: FileToken;
   name: string;
   bytes: number | null;
 };
+
 /** The files a dialog or a drop gave the page, and how many were not of the
  * purpose's kinds. */
 export type FilePicks = { files: PickedFile[]; refused: number };
+
 export type LedgerDropSignal =
   { kind: "over" } | { kind: "left" } | ({ kind: "dropped" } & FilePicks);
 
@@ -469,9 +564,12 @@ export type LedgerDropSignal =
 // profile, which the host fills.
 
 export type PublicPeriod = { filing_year: number; code: string };
+
 export type PublicDecimal = { decimal: string };
+
 export type LedgerReviewStatus =
   "pending" | "reviewed" | "skipped" | "excluded";
+
 export type LedgerSortField =
   | "date"
   | "value_date"
@@ -482,7 +580,9 @@ export type LedgerSortField =
   | "classified_at"
   | "lifecycle_state"
   | "classification";
+
 export type LedgerSortOrder = "asc" | "desc";
+
 export type OutputLanguage = "es" | "en" | "ca" | "hu";
 
 export type LedgerM210Income = {
@@ -493,6 +593,7 @@ export type LedgerM210Income = {
   payer_id: string | null;
   asset_or_right_id: string | null;
 };
+
 /** One movement as the product projects it. Amounts are canonical decimal
  * text; the amount is a magnitude and `direction` carries its sense. */
 export type LedgerTransaction = {
@@ -537,6 +638,7 @@ export type LedgerTransaction = {
   created_at: string;
   modified_at: string;
 };
+
 export type LedgerRow = {
   transaction: LedgerTransaction;
   review_status: LedgerReviewStatus;
@@ -557,6 +659,7 @@ export type LedgerListRequest = {
   sort_order?: LedgerSortOrder;
   exclude_llm_rejected?: boolean;
 };
+
 export type LedgerListResult = {
   profile_id: string;
   rows: LedgerRow[];
@@ -575,7 +678,9 @@ export type LedgerKnownValueKind =
   | "m210_payer"
   | "m210_asset"
   | "asset_reference";
+
 export type LedgerKnownValuesRequest = { kinds: LedgerKnownValueKind[] };
+
 /** One party as the records name it. The tax id comes from an invoice; a
  * movement states none, and joins one only if its name can mean no other. */
 export type KnownCounterparty = {
@@ -586,12 +691,14 @@ export type KnownCounterparty = {
   uses: number;
   last_used: string;
 };
+
 export type KnownText = {
   text: string;
   uses: number;
   last_used: string;
   counterparty: string | null;
 };
+
 /** Each list is the newest of its kind; `truncated` names the kinds that hold
  * more than they show. */
 export type LedgerKnownValuesResult = {
@@ -606,6 +713,7 @@ export type LedgerKnownValuesResult = {
 };
 
 export type LedgerViewRequest = { transaction_prefix: string };
+
 export type LedgerViewResult = {
   profile_id: string;
   transaction_prefix: string;
@@ -614,679 +722,8 @@ export type LedgerViewResult = {
   latest_llm_rejection: { occurred_at: string; operator_reason: string } | null;
 };
 
-/** Editing the amount, description, date or own account gives the movement
- * a new `transaction_id`; the result names it. */
-export type LedgerUpdateRequest = {
-  transaction_id: string;
-  patch: Partial<Record<LedgerUpdateField, string | null>>;
-  patch_fields: LedgerUpdateField[];
-  actor?: string | null;
-};
-export type LedgerUpdateResult = {
-  outcome: "updated" | "validation_error";
-  profile_id: string;
-  source_transaction_id: string | null;
-  transaction: LedgerTransaction | null;
-  review_status: LedgerReviewStatus | null;
-  bucket_event_ids: string[];
-  group_label: string | null;
-  own_account_id: string | null;
-  validation_messages: string[];
-};
-
-export const LEDGER_CLASSIFY_FIELDS = [
-  "business_classification",
-  "business_pct",
-  "category_id",
-  "taxable_base",
-  "iva_rate",
-  "iva_amount",
-  "irpf_category",
-  "m210_income_classification",
-  "iva_category",
-  "deduction_fact_kind",
-  "investment_asset_id",
-  "counterparty_country",
-  "counterparty_identification_state",
-  "notes",
-] as const;
-export type LedgerClassifyField = (typeof LEDGER_CLASSIFY_FIELDS)[number];
-export type LedgerClassifyRequest = {
-  transaction_id: string;
-  patch: Partial<
-    Record<
-      Exclude<LedgerClassifyField, "m210_income_classification">,
-      string | null
-    >
-  >;
-  patch_fields: LedgerClassifyField[];
-  m210?: {
-    tipo_renta_code?: string | null;
-    gross_income_amount?: string | null;
-    applicable_rate?: string | null;
-    payer_mode?: string | null;
-    payer_id?: string | null;
-    asset_or_right_id?: string | null;
-  } | null;
-  actor?: string | null;
-  reaffirm?: boolean;
-};
-export type LedgerClassifyValidation =
-  "none" | "input" | "m210_incoming_only" | "m210_required_options";
-export type LedgerClassifyResult = {
-  outcome: "classified" | "validation_error";
-  profile_id: string;
-  transaction: LedgerTransaction | null;
-  deduction_fact_kind: string | null;
-  investment_asset_id: string | null;
-  review_status: LedgerReviewStatus | null;
-  bucket_event_ids: string[];
-  validation_kind: LedgerClassifyValidation;
-  validation_messages: string[];
-};
-
-/** The columns a bulk classification CSV may carry; `transaction_id` and
- * `classification` are required on every row. */
-export const LEDGER_BULK_CLASSIFY_COLUMNS = [
-  "transaction_id",
-  "classification",
-  "category_id",
-  "business_pct",
-  "usage_ratio_id",
-  "taxable_base",
-  "iva_rate",
-  "iva_amount",
-  "iva_category",
-  "irpf_category",
-  "notes",
-] as const;
-export type LedgerBulkClassifyRequest = {
-  csv_text: string;
-  actor?: string | null;
-  output_language?: OutputLanguage;
-};
-export type LedgerBulkClassifyResult = {
-  profile_id: string;
-  outcome: "classified" | "validation_error";
-  result: {
-    total: number;
-    applied: number;
-    skipped: number;
-    failures: { row_index: number; transaction_id: string; reason: string }[];
-    bucket_event_ids: string[];
-  } | null;
-  validation_messages: string[];
-};
-
-/** One manual movement. A retry with the same `idempotency_key` and the same
- * content returns the stored row instead of adding another. */
-export type LedgerAddRequest = {
-  booked_date: string;
-  amount: string;
-  direction: string;
-  description: string;
-  value_date?: string | null;
-  operation_date?: string | null;
-  accrual_date?: string | null;
-  currency?: string;
-  counterparty?: string | null;
-  business_classification?: string;
-  business_pct?: string | null;
-  category_id?: string | null;
-  taxable_base?: string | null;
-  iva_rate?: string | null;
-  iva_amount?: string | null;
-  iva_category?: string | null;
-  deduction_fact_kind?: string | null;
-  investment_asset_id?: string | null;
-  counterparty_country?: string | null;
-  counterparty_identification_state?: string | null;
-  recargo_amount?: string | null;
-  irpf_category?: string | null;
-  usage_ratio_id?: string | null;
-  prorrata_reference?: string | null;
-  art_104_tres_exclusion?: string | null;
-  input_classification?: string | null;
-  prorrata_sector?: string | null;
-  purchase_invoice_evidence_id?: string | null;
-  attachment_ids?: string[];
-  notes?: string;
-  actor?: string | null;
-  idempotency_key?: string | null;
-  source_jurisdiction?: string | null;
-  own_account_id?: string | null;
-};
-export type LedgerAddValidation =
-  | "source_jurisdiction_required_irnr"
-  | "source_jurisdiction_required_beckham"
-  | "invalid_command";
-export type LedgerAddResult = {
-  outcome: "created" | "validation_error";
-  profile_id: string;
-  transaction: LedgerTransaction | null;
-  review_status: LedgerReviewStatus | null;
-  bucket_event_ids: string[];
-  advisory_input_classification: string | null;
-  advisory_input_classification_inert: boolean;
-  advisory_sector_id: string | null;
-  advisory_sector_unmatched: boolean;
-  validation_code: LedgerAddValidation | null;
-  validation_messages: string[];
-};
-
-export type InvoiceKind = "issued" | "received";
-export type CatalogueInvoiceLine = {
-  description: string;
-  quantity: PublicDecimal;
-  unit_price: PublicDecimal;
-  subtotal: PublicDecimal;
-  iva_rate: string;
-  iva_amount: PublicDecimal;
-  spending_category_id: string | null;
-  oss_rate_kind: string | null;
-};
-export type CatalogueInvoice = {
-  invoice_id: string;
-  bucket_id: string | null;
-  kind: InvoiceKind;
-  invoice_number: string;
-  issued_at: string;
-  counterparty_name: string;
-  counterparty_tax_id: string | null;
-  counterparty_country: string;
-  base_total: PublicDecimal;
-  iva_total: PublicDecimal;
-  grand_total: PublicDecimal;
-  currency: string;
-  payment_status: PaymentStatus;
-  linked_transaction_ids: string[];
-  source_filename: string | null;
-  source_sha256: string | null;
-  source_row_index: number | null;
-  notes: string;
-  retention_rate: PublicDecimal | null;
-  retention_amount: PublicDecimal | null;
-  recargo_amount: PublicDecimal | null;
-  operation_type: string | null;
-  lines: CatalogueInvoiceLine[];
-  invoice_class: string;
-  series: string | null;
-  operation_date: string | null;
-  operation_date_role: string | null;
-  iva_category: string | null;
-  rectifies_invoice_number: string | null;
-  fx_rate: PublicDecimal | null;
-  fx_rate_date: string | null;
-  fx_rate_source: string | null;
-  base_total_eur: PublicDecimal | null;
-  iva_total_eur: PublicDecimal | null;
-  grand_total_eur: PublicDecimal | null;
-  /** The issued invoice's leased premises' cadastral reference, as the
-   * ledger holds it. */
-  referencia_catastral: string | null;
-  /** The cash the invoice settles for: its total less the retención withheld
-   * at source. */
-  settlement_amount: PublicDecimal;
-};
-/** The catalogue filters by kind only. */
-export type InvoiceListRequest = { kind?: InvoiceKind | null };
-export type InvoiceListResult = {
-  profile_id: string;
-  kind: InvoiceKind | null;
-  invoices: CatalogueInvoice[];
-};
-
-/** One structured line of a new invoice. `iva_rate` is the registry's rate
- * slot (`RATE_21`, `EXEMPT`, ...); subtotal and IVA must agree with the
- * quantity, price and rate to the cent. */
-export type InvoiceAddLine = {
-  description: string;
-  quantity: PublicDecimal;
-  unit_price: PublicDecimal;
-  subtotal: PublicDecimal;
-  iva_rate: string;
-  iva_amount: PublicDecimal;
-  spending_category_id?: string | null;
-  oss_rate_kind?: string | null;
-};
-/** A new invoice. Its kind, number, issue date, counterparty tax id,
- * currency and total are its identity, fixed once it is in the catalogue. */
-export type InvoiceAddRequest = {
-  kind: InvoiceKind;
-  counterparty_name: string;
-  counterparty_tax_id?: string | null;
-  counterparty_country: string;
-  invoice_number: string;
-  issued_at: string;
-  taxable_base?: PublicDecimal | null;
-  iva_rate?: PublicDecimal | null;
-  currency: string;
-  notes?: string;
-  iva_category?: string | null;
-  operation_type?: string | null;
-  operation_date?: string | null;
-  retention_rate?: PublicDecimal | null;
-  retention_amount?: PublicDecimal | null;
-  invoice_class?: string | null;
-  series?: string | null;
-  rectifies_invoice_number?: string | null;
-  recargo_amount?: PublicDecimal | null;
-  business_premises_lease?: {
-    situacion_inmueble?: string | null;
-    referencia_catastral?: string | null;
-  } | null;
-  lines?: InvoiceAddLine[];
-};
-export type InvoiceAddValidation = "invalid_invoice" | "duplicate_invoice";
-/** A created invoice. A refused one settles as a refusal whose detail is
- * this shape with `outcome: "validation_error"`. */
-export type InvoiceAddResult = {
-  outcome: "created" | "validation_error";
-  profile_id: string;
-  invoice: CatalogueInvoice | null;
-  /** The invoice already in the catalogue, for a duplicate. */
-  invoice_id: string | null;
-  bucket_event_ids: string[];
-  euro_value_pending: boolean;
-  simplificada_tax_id_advisory_required: boolean;
-  validation_code: InvoiceAddValidation | null;
-  /** Why a refused one was refused, as the backend served it. */
-  refusal_words?: string | null;
-  refusal_words_language?: string | null;
-};
-
-/** One line of a draft invoice. A figure the draft does not state yet is
- * left out, which is never the same as zero. `key` correlates the answer's
- * line to this one. */
-export type InvoicePreviewLine = {
-  key: string;
-  description?: string | null;
-  quantity?: PublicDecimal | null;
-  unit_price?: PublicDecimal | null;
-  iva_rate?: string | null;
-  subtotal?: PublicDecimal | null;
-  iva_amount?: PublicDecimal | null;
-  spending_category_id?: string | null;
-  oss_rate_kind?: string | null;
-};
-/** What a correction restates of the stored invoice it corrects. */
-export type InvoicePreviewStored = {
-  invoice_id: string;
-  grand_total: PublicDecimal;
-  operation_date_role?: string | null;
-};
-/** A draft invoice, every field optional because it is incomplete while it
- * is typed. It states `lines` or a bare `base_total`, never both; a correction
- * states the bare base with `stored`. */
-/** One staged change: a value to set, or a clear when `value` is null. */
-export type LedgerStagedCell = { field: string; value: string | null };
-export type LedgerStagedRow = {
-  transaction_id: string;
-  cells: LedgerStagedCell[];
-  evidence_staged: boolean;
-  m210_staged: boolean;
-};
-export type LedgerStagedDraft = {
-  key: string;
-  fields: { field: string; value: string }[];
-};
-/** Staged work and the movements asked about, answered the way the writers
- * would take them, plus the categories to judge a classification against. */
-export type LedgerRuleTrialRequest = {
-  description_pattern: string;
-  transaction_ids: string[];
-};
-/** Whether the rule engine reads a pattern, which of the movements named it
- * finds, and which of those it would classify now. */
-export type LedgerRuleTrialResult = {
-  profile_id: string;
-  outcome:
-    "matched" | "empty_pattern" | "invalid_pattern" | "too_long" | "overrun";
-  hits: string[];
-  pending: string[];
-};
-/** What a document states, as read or corrected. */
-export type LedgerInvoiceDuplicateRequest = {
-  kind: InvoiceKind;
-  invoice_number: string | null;
-  counterparty_tax_id: string | null;
-  invoice_date: string | null;
-  grand_total: string | null;
-};
-/** The stored invoice the document may already be, and what they share. */
-export type LedgerInvoiceDuplicateResult = {
-  profile_id: string;
-  invoice_id: string | null;
-  basis: "number" | "party_day_total" | null;
-};
-/** A link the person has staged and not saved. */
-export type LedgerInvoiceMatchStagedLink = {
-  transaction_id: string;
-  invoice_id: string;
-};
-/** What to propose given the staged links. With `invoice_id` only that invoice
- * is weighed and the open movements near its day come back as choices; with
- * `transaction_id` the invoices of that movement's flow come back as choices
- * and only its suggestion is returned. */
-export type LedgerInvoiceMatchRequest = {
-  staged: LedgerInvoiceMatchStagedLink[];
-  invoice_id?: string | null;
-  transaction_id?: string | null;
-  /** Links to state the differences of; they take nothing from the
-   * suggestions. */
-  judge?: LedgerInvoiceMatchStagedLink[];
-};
-/** One way a judged movement and invoice do not agree; the fields besides
- * `kind` are the kind's own and null otherwise. */
-export type LedgerInvoiceMatchMismatch = {
-  kind: "amount" | "currency" | "counterparty" | "linked_elsewhere";
-  /** `amount`: the magnitude of the movement's amount less what the invoice
-   * settles for. */
-  difference: { decimal: string } | null;
-  /** `currency`: the movement's currency. */
-  movement: string | null;
-  /** `currency`: the invoice's currency. */
-  invoice: string | null;
-  /** `linked_elsewhere`: how many other movements already hold the invoice. */
-  count: number | null;
-};
-/** What stands against one named link; `found` is false when the movement or
- * the invoice is gone. */
-export type LedgerInvoiceMatchJudgement = {
-  transaction_id: string;
-  invoice_id: string;
-  found: boolean;
-  mismatches: LedgerInvoiceMatchMismatch[];
-};
-/** One movement and one invoice that settle each other, and the evidence the
- * pair stands on. */
-export type LedgerInvoiceMatchPair = {
-  transaction_id: string;
-  invoice_id: string;
-  /** The description names the invoice's number. */
-  number: boolean;
-  /** Days from the invoice's date to the movement's; negative when paid first. */
-  gap: number;
-  /** The counterparty names overlap. */
-  counterparty: boolean;
-};
-/** A movement's best invoice, with what competes with it. */
-export type LedgerInvoiceMatchSuggestion = LedgerInvoiceMatchPair & {
-  ambiguous: boolean;
-  ties: LedgerInvoiceMatchPair[];
-  others: LedgerInvoiceMatchPair[];
-};
-/** The ledger's proposals, newest movement first, and the by-hand choices the
- * request asked for. */
-export type LedgerInvoiceMatchResult = {
-  profile_id: string;
-  suggestions: LedgerInvoiceMatchSuggestion[];
-  /** How many days either side of an invoice's issue day the movement
-   * choices reach. */
-  window_days: number;
-  invoice_choices:
-    | {
-        invoice_id: string;
-        settles: boolean;
-        staged_for: string | null;
-        linked: number;
-      }[]
-    | null;
-  movement_choices: { transaction_id: string; settles: boolean }[] | null;
-  /** One judgement per link named in `judge`, in the order named. */
-  judgements: LedgerInvoiceMatchJudgement[];
-};
-/** Unsaved parts of a movement. No amount on the last asks what the others leave. */
-export type LedgerSplitCheckRequest = {
-  transaction_id: string;
-  parts: { amount: string | null; description: string }[];
-};
-/** What is left for the last part, the first thing the split writer would
- * refuse, and the parts as it takes them. */
-export type LedgerSplitCheckResult = {
-  profile_id: string;
-  remainder: string | null;
-  problem: {
-    kind:
-      | "gone"
-      | "not_active"
-      | "count"
-      | "amount"
-      | "description"
-      | "description_long"
-      | "sum";
-    index: number | null;
-    max: number | null;
-    difference: string | null;
-    over: boolean | null;
-  } | null;
-  children: { amount: string; description: string }[];
-};
-export type LedgerStagedCheckRequest = {
-  rows: LedgerStagedRow[];
-  drafts: LedgerStagedDraft[];
-  categories: string[];
-  /** The language the answer's sentences are said in. */
-  output_language?: OutputLanguage;
-};
-export type LedgerStagedRoute = {
-  field: string;
-  route: "bulk" | "classify" | "update" | null;
-  refused: "cannot_clear" | "needs_classification" | null;
-};
-export type LedgerStagedBlocker = {
-  kind:
-    | "cannot_clear"
-    | "needs_classification"
-    | "mixed_needs_share"
-    | "share_needs_mixed"
-    | "transfer_with_tax"
-    | "draft_incomplete";
-  fields: string[];
-  /** The sentence saying why the staged work cannot be sent. */
-  words: string;
-  /** The sentence saying what puts it right. */
-  fix_words: string;
-  words_language: OutputLanguage;
-};
-export type LedgerStagedNote = {
-  kind: "sends_current_classification" | "sends_current_share" | "new_identity";
-  value: string | null;
-  fields: string[];
-};
-export type LedgerStagedRowAnswer = {
-  transaction_id: string;
-  found: boolean;
-  classified: boolean;
-  takes_expense_category: boolean;
-  takes_share: boolean;
-  category_askable: boolean;
-  category_settable: boolean;
-  category_on_income: boolean;
-  takes_changes: boolean;
-  takes_invoice: boolean;
-  evidence_advised: boolean;
-  lifecycle_actions: ("archive" | "stash" | "restore" | "exclude")[];
-  tax_set_skip: "transfer" | "personal" | null;
-  transfer_locked_fields: string[];
-  classifying_fields: string[];
-  identity_fields: string[];
-  routes: LedgerStagedRoute[];
-  blockers: LedgerStagedBlocker[];
-  notes: LedgerStagedNote[];
-};
-export type LedgerStagedCheckResult = {
-  profile_id: string;
-  input_digest: string;
-  rows: LedgerStagedRowAnswer[];
-  drafts: {
-    key: string;
-    takes_expense_category: boolean;
-    blockers: LedgerStagedBlocker[];
-  }[];
-  categories: { category: string; business: boolean; mixed: boolean }[];
-  /** The sentence shown beside a business share no percentage reads. */
-  share_refusal_words: string;
-  share_refusal_words_language: OutputLanguage;
-};
-
-export type InvoicePreviewRequest = {
-  operation_date?: string | null;
-  issued_at?: string | null;
-  lines?: InvoicePreviewLine[];
-  base_total?: PublicDecimal | null;
-  recargo_amount?: PublicDecimal | null;
-  retention_rate?: PublicDecimal | null;
-  retention_amount?: PublicDecimal | null;
-  printed_total?: PublicDecimal | null;
-  kind?: InvoiceKind | null;
-  invoice_number?: string | null;
-  counterparty_name?: string | null;
-  counterparty_tax_id?: string | null;
-  counterparty_country?: string | null;
-  currency?: string | null;
-  invoice_class?: string | null;
-  iva_category?: string | null;
-  operation_type?: string | null;
-  series?: string | null;
-  rectifies_invoice_number?: string | null;
-  notes?: string;
-  business_premises_lease?: {
-    situacion_inmueble?: string | null;
-    referencia_catastral?: string | null;
-  } | null;
-  stored?: InvoicePreviewStored | null;
-};
-export type InvoicePreviewOnDateSource =
-  "operation_date" | "issued_at" | "today";
-export type InvoicePreviewVerdict =
-  "incomplete" | "would_accept" | "would_refuse";
-export type InvoicePreviewFigureVerdict =
-  "equal" | "within_tolerance" | "refused" | "not_checked";
-export type InvoicePreviewSeverity = "refusal" | "warning";
-/** A rate slot's standing on the draft's date. `fraction` is null when no
- * rate applies; `label_key` names the slot's word. */
-export type InvoicePreviewRateSlot = {
-  slot: string;
-  fraction: PublicDecimal | null;
-  in_force: boolean;
-  coverage_gap: boolean;
-  label_key: string;
-};
-/** The backend's figure, the stated one with its verdict, and the one add
- * would store. */
-export type InvoicePreviewFigure = {
-  computed: PublicDecimal | null;
-  stated: PublicDecimal | null;
-  verdict: InvoicePreviewFigureVerdict | null;
-  submitted: PublicDecimal | null;
-};
-export type InvoicePreviewLineResult = {
-  key: string;
-  subtotal: InvoicePreviewFigure;
-  iva_amount: InvoicePreviewFigure;
-};
-/** A total is null until every part of it is known. */
-export type InvoicePreviewTotals = {
-  base: PublicDecimal | null;
-  iva: PublicDecimal | null;
-  recargo: PublicDecimal | null;
-  total: PublicDecimal | null;
-  net_of_retention: PublicDecimal | null;
-};
-export type InvoicePreviewRetention = {
-  rate: PublicDecimal | null;
-  amount: PublicDecimal | null;
-  implied: PublicDecimal | null;
-};
-/** One closed finding. `code` is stable, `values` are what it compared and
- * `label_key` names its word. */
-export type InvoicePreviewFinding = {
-  code: string;
-  severity: InvoicePreviewSeverity;
-  fields: string[];
-  line_key: string | null;
-  values: { key: string; value: string | number | boolean | PublicDecimal }[];
-  label_key: string;
-};
-/** What a verdict was reached over. `correction_facts` judged only what a
- * correction states: the update checks the whole stored record again and can
- * still refuse. */
-export type InvoicePreviewVerdictScope = "whole_draft" | "correction_facts";
-/** The backend's whole answer for one draft, bound to it by `input_digest`.
- * `would_accept` on a whole draft is acceptance's own verdict; a duplicate is
- * decided only when the invoice is added. `rule_findings` names the document
- * rules outside the figures, as far as an incomplete draft lets them be asked. */
-export type InvoicePreviewResult = {
-  profile_id: string;
-  input_digest: string;
-  on_date: string;
-  on_date_source: InvoicePreviewOnDateSource;
-  rate_slots: InvoicePreviewRateSlot[];
-  lines: InvoicePreviewLineResult[];
-  totals: InvoicePreviewTotals;
-  retention: InvoicePreviewRetention;
-  findings: InvoicePreviewFinding[];
-  missing_fields: string[];
-  verdict: InvoicePreviewVerdict;
-  refusal_code: string | null;
-  invoice_id: string | null;
-  rule_findings: InvoicePreviewFinding[];
-  verdict_scope: InvoicePreviewVerdictScope;
-};
-
-export type InvoiceUpdateValues = {
-  counterparty_name?: string | null;
-  counterparty_country?: string | null;
-  notes?: string | null;
-  payment_status?: PaymentStatus | null;
-  iva_category?: string | null;
-  operation_type?: string | null;
-  operation_date?: string | null;
-  retention_rate?: PublicDecimal | null;
-  retention_amount?: PublicDecimal | null;
-  series?: string | null;
-  invoice_class?: string | null;
-  rectifies_invoice_number?: string | null;
-  payment_id?: string | null;
-};
-/** A correction: `fields` names what changes, and a named field sent as
- * null clears it. A value outside `fields` is refused. */
-export type InvoiceUpdateRequest = {
-  invoice_id: string;
-  patch: { values: InvoiceUpdateValues; fields: InvoiceUpdateField[] };
-};
-export type InvoiceUpdateResult = {
-  profile_id: string;
-  invoice_id: string;
-  invoice: CatalogueInvoice;
-  bucket_event_ids: string[];
-};
-
-/** Removes an invoice that no movement is linked to. */
-export type InvoiceRemoveRequest = { invoice_id: string };
-export type InvoiceRemoveResult = {
-  profile_id: string;
-  invoice_id: string;
-  invoice: CatalogueInvoice;
-};
-
-/** One invoice by its id or an unambiguous prefix of it. A lookup that
- * finds none or several settles as a refusal whose detail is this shape. */
-export type InvoiceViewRequest = { invoice_id: string };
-export type InvoiceViewResult = {
-  profile_id: string;
-  invoice_id: string;
-  outcome:
-    | { kind: "success"; invoice: CatalogueInvoice }
-    | {
-        kind: "refused";
-        reason: "required" | "not_found" | "ambiguous";
-        candidate_ids: string[];
-      };
-};
-
 export type LedgerStatusRequest = { period?: PublicPeriod | null };
+
 export type LedgerStatusResult = {
   profile_id: string;
   period: PublicPeriod | null;
@@ -1330,6 +767,7 @@ export type LedgerStatusResult = {
 };
 
 export type LedgerPreflightRequest = { period: PublicPeriod };
+
 export type LedgerPreflightResult = {
   profile_id: string;
   period: PublicPeriod;
@@ -1345,6 +783,7 @@ export type LedgerPreflightResult = {
 
 export type LedgerProvider =
   "auto" | "csv" | "ofx" | "qfx" | "xlsx" | "xls" | "pdf";
+
 /** A bank statement import. Preview with `dry_run`, then apply naming the
  * previewed files' digests in `expected_source_sha256`: a file that changed
  * since the preview is refused. */
@@ -1358,10 +797,12 @@ export type LedgerImportRequest = {
   own_account_id?: string | null;
   expected_source_sha256?: string[] | null;
 };
+
 export type LedgerTransactionRef = {
   bucket_id: string;
   transaction_id: string;
 };
+
 export type LedgerImportRefusalCode =
   | "transaction_validation"
   | "own_account_mismatch"
@@ -1373,8 +814,10 @@ export type LedgerImportRefusalCode =
    * file's verdict names its setup when setting it up lets the file be
    * read. */
   | "reader_unavailable";
+
 export type LedgerImportDiagnosticKind =
   "original-file" | "gap" | "duplicate" | "parser";
+
 /** The translation keys a diagnostic names, from the product's closed set. */
 export type LedgerImportDiagnosticMessage =
   | "transactions.import.message_185962"
@@ -1384,6 +827,7 @@ export type LedgerImportDiagnosticMessage =
   | "transactions.import.message_829073"
   | "transactions.import.verified"
   | "transactions.import.unreadable";
+
 /** One import's outcome over every file it planned, without paths or
  * provider prose. A likely duplicate is imported and listed, never skipped;
  * `skipped` rows were already in the ledger. Each planned file's digest is
@@ -1425,6 +869,7 @@ export type LedgerImportResult = {
 };
 
 export type LedgerExportFormat = "csv" | "jsonl" | "xlsx";
+
 /** An export replaces the file the person chose in the save dialog, for
  * the same format. */
 export type LedgerExportRequest = {
@@ -1434,6 +879,7 @@ export type LedgerExportRequest = {
   period?: PublicPeriod | null;
   actor?: string | null;
 };
+
 export type LedgerExportResult = {
   profile_id: string;
   bucket_id: string;
@@ -1449,880 +895,6 @@ export type LedgerExportResult = {
   bucket_event_ids: string[];
   /** The file's name; the host keeps where it is. */
   output_path: string;
-};
-
-/** An invoice book, imported row by row: it has no dry run, and a refused
- * row leaves the others created. */
-export type InvoiceImportRequest = {
-  kind: InvoiceKind;
-  source_path: FileToken;
-  source_sha256?: string | null;
-  /** Two letters, for a book that has no country column. */
-  country?: string | null;
-};
-export type InvoiceImportResult = {
-  profile_id: string;
-  /** The digest of the bytes the import read. */
-  source_sha256: string;
-  rows: number;
-  created: number;
-  skipped_duplicate: number;
-  refused: { row_number: number; field: string; reason: string }[];
-  created_invoice_ids: string[];
-  unmapped_column_headers: string[];
-  mapping_reasons: string[];
-};
-
-/** Documents added as evidence in one direction, read on this computer. */
-export type EvidenceBatchRequest = {
-  sources: FileToken[];
-  direction: InvoiceKind;
-};
-export type EvidenceBatchItemStatus =
-  "ingested" | "no_op" | "refused" | "pending_review" | "paused";
-export type EvidenceBatchResult = {
-  profile_id: string;
-  write_count: number;
-  effect: "none" | "updated" | "partial" | "unknown";
-  direction: InvoiceKind;
-  run: {
-    items: {
-      content_address: string;
-      identity: string;
-      direction: InvoiceKind;
-      source_name: string;
-      status: EvidenceBatchItemStatus;
-      refusal_code: string | null;
-      needed_inference: boolean;
-    }[];
-    unresolved: { source_name: string; refusal_code: string }[];
-    inference_pause: JsonObject | null;
-  };
-};
-
-export type LedgerLlmReviewMode =
-  "classification" | "saturated" | "auto_split" | "split";
-export type LedgerLlmReviewRequest = {
-  transaction_id: string;
-  mode: LedgerLlmReviewMode;
-  origin:
-    | "classify_llm_apply"
-    | "classify_llm_reject"
-    | "classify_llm_saturate_apply"
-    | "classify_iva_category_saturate"
-    | "classify_auto_split"
-    | "split_llm";
-  business_pct?: string | null;
-  actor?: string | null;
-  read_evidence?: boolean;
-  reason?: string;
-  preview?: boolean;
-};
-/** A model's proposal for one movement: only the person applies it. */
-export type LedgerLlmSuggestion = {
-  projection_version: 1;
-  profile_id: string;
-  reviewed_proposal_digest: string;
-  suggestion: {
-    kind: "classification" | "saturated" | "split";
-    transaction_id: string;
-    provenance: string;
-    reason: string;
-    evidence_id: string | null;
-    classification: string | null;
-    category: string | null;
-    confidence: string | null;
-    multiple_components: boolean | null;
-    business_pct: string | null;
-    iva_category: string | null;
-    iva_rate: string | null;
-    taxable_base: string | null;
-    iva_amount: string | null;
-    rate_derivable: boolean;
-    derivation_note: string;
-    evidence_advisory: string;
-    parent_amount: string | null;
-    children: {
-      proportion: string;
-      amount: string;
-      description: string;
-      category: string | null;
-      iva_category: string | null;
-      iva_rate: string | null;
-      taxable_base: string | null;
-      iva_amount: string | null;
-      rate_derivable: boolean;
-      derivation_note: string;
-      evidence_citation: string;
-    }[];
-  };
-};
-
-/** A declaration revision a movement took part in, as the participation
- * index keeps it. */
-export type LedgerParticipation = {
-  calculation_revision_id: string;
-  work_unit_id: string;
-  modelo: string;
-  filing_year: number;
-  period: PublicPeriod;
-  revision_state: string;
-  filing_record_id: string | null;
-  justificante_reference: string | null;
-};
-/** One movement's lineage, where it came from and which finalized
- * declarations cite it. A current or a superseded id may be named. */
-export type LedgerTrackRequest = { transaction_prefix: string };
-export type LedgerTrackResult = {
-  profile_id: string;
-  transaction_prefix: string;
-  transaction: LedgerTransaction;
-  tracking: {
-    transaction_id: string;
-    created_event_id: string | null;
-    evidence_provenance: {
-      evidence_id: string;
-      evidence_kind: string;
-      actor: string;
-      source_command: string;
-      linked_at: string;
-      bucket_event_id: string | null;
-    }[];
-    edit_lineage: {
-      previous_transaction_id: string;
-      actor: string;
-      source_command: string;
-      edited_at: string;
-      bucket_event_id: string | null;
-    }[];
-    lifecycle_state: string;
-    lifecycle_lineage: {
-      previous_state: string;
-      state: string;
-      actor: string;
-      source_command: string;
-      changed_at: string;
-      reason: string;
-      bucket_event_id: string | null;
-    }[];
-  };
-  /** Set for an imported movement, null for one added by hand. */
-  imported_provenance: {
-    provider_name: string;
-    source_filename: string;
-    source_row_index: number;
-    ingested_at: string;
-    import_fingerprint: string | null;
-  } | null;
-  /** Null where the participation index was never built. */
-  participated_in: LedgerParticipation[] | null;
-};
-
-/** One movement's event chain, with its split siblings' where asked. */
-export type LedgerHistoryRequest = {
-  transaction_prefix: string;
-  include_split_siblings?: boolean;
-};
-export type LedgerHistoryEventDetails = Partial<
-  Record<
-    | "source_command"
-    | "mutation_kind"
-    | "direction"
-    | "amount"
-    | "currency"
-    | "business_pct"
-    | "usage_ratio_id"
-    | "prorrata_reference"
-    | "previous_transaction_id"
-    | "transaction_id"
-    | "classification"
-    | "category_id"
-    | "category"
-    | "iva_category"
-    | "classified_by"
-    | "provider"
-    | "provenance"
-    | "confidence"
-    | "suggestion_kind"
-    | "operator_reason"
-    | "reason"
-    | "lifecycle_state"
-    | "previous_lifecycle_state"
-    | "invoice_id"
-    | "linked"
-    | "media_kind"
-    | "source_sha256"
-    | "purchase_invoice_evidence_count"
-    | "attachment_count"
-    | "cascade_count"
-    | "import_batch_id"
-    | "provider_name"
-    | "source_format"
-    | "source_row_index"
-    | "imported_count"
-    | "skipped_count"
-    | "split_group_id"
-    | "parent_transaction_id"
-    | "merged_transaction_id"
-    | "child_count"
-    | "export_format"
-    | "include_inactive"
-    | "row_count"
-    | "byte_size"
-    | "sha256"
-    | "transaction_ids_sha256"
-    | "first_transaction_id"
-    | "last_transaction_id",
-    string | null
-  >
->;
-export type LedgerHistoryTypedResult = {
-  profile_id: string;
-  transaction_prefix: string;
-  include_split_siblings: boolean;
-  transaction_id: string;
-  /** The movement, its earlier ids and, where asked, its split siblings. */
-  object_ids: string[];
-  events: {
-    event_id: string;
-    event_type: string;
-    occurred_at: string;
-    actor: string;
-    object_type: string;
-    object_id: string;
-    details: LedgerHistoryEventDetails;
-    model_reason_withheld: boolean;
-    output_path_withheld: boolean;
-    undeclared_detail_count: number;
-  }[];
-  event_count: number;
-};
-
-/** A finalized or draft declaration revision a removal or a lifecycle
- * change meets. */
-export type LedgerRevisionReference = {
-  work_unit_id: string;
-  calculation_revision_id: string;
-  revision_state: string | null;
-  modelo: string;
-  filing_year: number;
-  period: string;
-};
-/** Removes a movement; `dry_run` reports what it would take with it and
- * what stops it, and changes nothing. */
-export type LedgerRemoveRequest = {
-  transaction_id: string;
-  reason?: string;
-  dry_run?: boolean;
-  actor?: string | null;
-};
-export type LedgerRemoveResult = {
-  profile_id: string;
-  report: {
-    bucket_id: string;
-    transaction_id: string;
-    removed: boolean;
-    dry_run: boolean;
-    actor: string;
-    reason: string;
-    cascaded_purchase_invoice_evidence_ids: string[];
-    cascaded_attachment_ids: string[];
-    /** Finalized declarations that stop the removal. */
-    blocking_modelo_references: LedgerRevisionReference[];
-    /** Draft revisions the removal makes stale. */
-    stale_draft_revision_references: LedgerRevisionReference[];
-    bucket_event_ids: string[];
-  };
-};
-
-/** Archive, set aside, restore or exclude one movement. */
-export type LedgerLifecycleRequest = {
-  transaction_id: string;
-  reason?: string;
-  actor?: string | null;
-};
-export type LedgerLifecycleResult = {
-  outcome: "updated" | "validation_error";
-  profile_id: string;
-  operation_id:
-    "ledger.archive" | "ledger.stash" | "ledger.restore" | "ledger.exclude";
-  result: {
-    profile_id: string;
-    transaction: LedgerTransaction;
-    review_status: LedgerReviewStatus;
-    bucket_event_ids: string[];
-  } | null;
-  validation: {
-    messages: string[];
-    blocking_reference: LedgerRevisionReference | null;
-  } | null;
-};
-
-/** Splits an active movement into two or more parts whose amounts add up
- * to its own, exactly. */
-export type LedgerSplitRequest = {
-  transaction_id: string;
-  children: { amount: string; description: string }[];
-  reason?: string;
-  actor?: string | null;
-};
-export type LedgerSplitResult = {
-  profile_id: string;
-  parent_transaction_id: string;
-  split_group_id: string;
-  /** In the order the parts were sent. */
-  child_transaction_ids: string[];
-  bucket_event_id: string;
-  parent_business_classification: string;
-  child_business_classification: string;
-  remerged_by: string[];
-};
-/** Merges every part of one split back into its parent. */
-export type LedgerMergeRequest = {
-  child_ids: string[];
-  reason?: string;
-  actor?: string | null;
-};
-export type LedgerMergeResult = {
-  profile_id: string;
-  split_group_id: string;
-  parent_transaction_id: string;
-  merged_transaction_id: string;
-  source_child_ids: string[];
-  bucket_event_id: string;
-};
-
-/** Works out and saves base, rate and IVA from the registry's rate for an
- * IVA category the person chose; a category with no single rate is
- * answered as not derivable and writes nothing. */
-export type LedgerIvaDeriveRequest = {
-  transaction_id: string;
-  iva_category: string;
-  actor?: string | null;
-};
-export type LedgerIvaDeriveResult = {
-  profile_id: string;
-  outcome: "derived" | "validation_error";
-  transaction_id: string;
-  iva_category: string;
-  derivable: boolean;
-  iva_rate: string | null;
-  taxable_base: string | null;
-  iva_amount: string | null;
-  note: string;
-  classification: LedgerClassifyResult | null;
-  validation_messages: string[];
-};
-/** Sets a movement's business share, as a fraction, with what it is
- * allocated by. */
-export type LedgerAllocateRequest = {
-  transaction_id: string;
-  business_pct: string;
-  category_id?: string | null;
-  usage_ratio_id?: string | null;
-  prorrata_reference?: string | null;
-  actor?: string | null;
-};
-export type LedgerAllocateResult = {
-  profile_id: string;
-  transaction: LedgerTransaction;
-  review_status: LedgerReviewStatus;
-  bucket_event_ids: string[];
-};
-
-// ---- Documents: evidence, reviewable drafts, consent and readers ---------
-
-export type EvidenceMediaKind = "pdf" | "image";
-/** One evidence record. `source_path` is the file's name only: the host
- * keeps where it is. `iva_rate` is a percentage, `21` for 21%. */
-export type EvidenceRecord = {
-  evidence_id: string;
-  bucket_id: string;
-  source_sha256: string;
-  attachment_id: string;
-  media_kind: EvidenceMediaKind;
-  supplier?: string | null;
-  invoice_number?: string | null;
-  invoice_date?: string | null;
-  taxable_base?: string | null;
-  iva_rate?: string | null;
-  iva_amount?: string | null;
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-  source_path: string;
-};
-/** Registers one document as evidence; the host fills its folder. */
-export type EvidenceAddRequest = {
-  source_path: FileToken;
-  supplier?: string | null;
-  invoice_number?: string | null;
-  invoice_date?: string | null;
-  taxable_base?: string | null;
-  iva_rate?: string | null;
-  iva_amount?: string | null;
-  notes?: string;
-  idempotency_key?: string | null;
-};
-/** A record added, corrected or removed. */
-export type EvidenceRecordResult = {
-  profile_id: string;
-  record: EvidenceRecord;
-  bucket_event_ids: string[];
-};
-export type EvidenceListResult = {
-  profile_id: string;
-  count: number;
-  rows: EvidenceRecord[];
-};
-export type EvidenceViewRequest = { evidence_id: string };
-export type EvidenceViewResult = {
-  result_version?: 2;
-  profile_id: string;
-  outcome:
-    | { kind: "success"; record: EvidenceRecord }
-    | { kind: "refused"; evidence_record_present: false };
-};
-/** A correction: `patch_fields` names what changes, and a named field sent
- * as null clears it. Decimals are in their shortest spelling. */
-export type EvidenceUpdateRequest = {
-  evidence_id: string;
-  patch: Partial<Record<EvidenceUpdateField, string | null>>;
-  patch_fields: EvidenceUpdateField[];
-};
-export type EvidenceRemoveRequest = { evidence_id: string };
-
-export type FieldOrigin =
-  | "exact_structured"
-  | "text_layer"
-  | "text_rules"
-  | "vision"
-  | "tabular_mapped"
-  | "operator"
-  | "derived";
-export type FieldGrounding =
-  "reconciled" | "anchored" | "unanchored" | "ambiguous" | "contradicted";
-export type AmbiguityCandidate = {
-  value: string;
-  anchor?: string | null;
-  note?: string;
-};
-/** Where one field of a reading came from, and whether the page agrees. */
-export type FieldProvenance = {
-  field: string;
-  origin: FieldOrigin;
-  grounding: FieldGrounding;
-  anchor?: string | null;
-  refused_anchor?: string | null;
-  candidates?: AmbiguityCandidate[];
-  anchor_self_reported?: boolean;
-  derived_from?: string[];
-  role_evidence?: string | null;
-  attribution_unverified?: boolean;
-  note?: string;
-};
-export type DraftDiscrepancyKind =
-  | "arithmetic_closure"
-  | "rate_inconsistent"
-  | "breakdown_inconsistent"
-  | "identity_unverified"
-  | "role_unresolved"
-  | "regime_contradicted"
-  | "direction_contradicted"
-  | "postal_code_unreadable"
-  | "party_attribution_contradicted"
-  | "invoice_class_unmodelled"
-  | "invoice_class_contradicted";
-export type DraftDiscrepancy = {
-  kind: DraftDiscrepancyKind;
-  field?: string | null;
-  detail?: string;
-  expected?: PublicDecimal | null;
-  observed?: PublicDecimal | null;
-};
-export type EvidenceDraftLine = {
-  description?: string | null;
-  quantity?: PublicDecimal | null;
-  unit_price?: PublicDecimal | null;
-  taxable_base?: PublicDecimal | null;
-  iva_rate?: PublicDecimal | null;
-  iva_amount?: PublicDecimal | null;
-  recargo_rate?: PublicDecimal | null;
-  recargo_amount?: PublicDecimal | null;
-};
-/** A reading of one invoice document, a proposal until it is confirmed.
- * Its rates are whole percentages, `21` for 21%. */
-export type EvidenceDraft = {
-  supplier_tax_id?: string | null;
-  supplier_name?: string | null;
-  customer_tax_id?: string | null;
-  customer_name?: string | null;
-  supplier_postal_code?: string | null;
-  customer_postal_code?: string | null;
-  supplier_country?: string | null;
-  customer_country?: string | null;
-  supplier_country_code?: string | null;
-  customer_country_code?: string | null;
-  supplier_stated_country_code?: string | null;
-  customer_stated_country_code?: string | null;
-  invoice_number?: string | null;
-  invoice_series?: string | null;
-  rectifies_invoice_number?: string | null;
-  proposed_supply_nature?: "goods" | "services" | null;
-  invoice_date?: string | null;
-  taxable_base?: PublicDecimal | null;
-  iva_rate?: PublicDecimal | null;
-  iva_amount?: PublicDecimal | null;
-  grand_total?: PublicDecimal | null;
-  currency?: string | null;
-  regime_legend?: string | null;
-  recargo_amount?: PublicDecimal | null;
-  retencion_rate?: PublicDecimal | null;
-  retencion_amount?: PublicDecimal | null;
-  suplidos_amount?: PublicDecimal | null;
-  lines?: EvidenceDraftLine[];
-  iva_breakdown?: {
-    iva_rate?: PublicDecimal | null;
-    taxable_base?: PublicDecimal | null;
-    iva_amount?: PublicDecimal | null;
-    recargo_rate?: PublicDecimal | null;
-    recargo_amount?: PublicDecimal | null;
-  }[];
-  iva_category?: string | null;
-  suggested_kind?: InvoiceKind | null;
-  transcription_sha256?: string | null;
-  provenance?: FieldProvenance[];
-  discrepancies?: DraftDiscrepancy[];
-  raw_text_length?: number;
-  facturae_invoice_class?: {
-    source_code: string;
-    kind: "ordinary" | "corrective" | "summary";
-  } | null;
-};
-/** Why some fields were left unread: the model fill did not run. */
-export type LabelReadingFallback = {
-  cause: "reader_unavailable" | "load_headroom_refused";
-  unread_fields: string[];
-  reader_error_type: string;
-};
-export type ConfirmationBlockReason =
-  | "closure_discrepancy"
-  | "ambiguous_identity"
-  | "unresolved_direction"
-  | "contradicted_regime"
-  | "undetermined_establishment"
-  | "unmodelled_invoice_class"
-  | "contradicted_invoice_class";
-/** A finding the person answers before the reading may be confirmed. Its
- * id is derived from what it is, so the same reading raises the same ids. */
-export type ConfirmationBlocker = {
-  blocker_id: string;
-  reason: ConfirmationBlockReason;
-  /** The sentence the backend serves for the reason, and its language. */
-  reason_words?: string | null;
-  reason_words_language?: string | null;
-  field?: string | null;
-  detail?: string;
-  candidates?: AmbiguityCandidate[];
-};
-export type ReviewAdvisoryKind =
-  "party_attribution" | "country_code_unassigned" | "country_code_uncatalogued";
-export type EvidenceReviewListRequest = {
-  reason?: ConfirmationBlockReason | null;
-  finding?: DraftDiscrepancyKind | null;
-  advisory?: ReviewAdvisoryKind | null;
-  blocking_only?: boolean;
-};
-/** One reading waiting for review. `evidence_reference` is the evidence
- * record's id, or the attachment's where the reading has no record. */
-export type EvidenceReviewRow = {
-  evidence_reference: string;
-  extractor: string;
-  drafted_at: string;
-  blocking_count: number;
-  reasons?: ConfirmationBlockReason[];
-  /** The sentence served for each reason, in the order of `reasons`. */
-  reason_words?: string[];
-  reason_words_language?: string | null;
-  advisory_count: number;
-  advisories?: ReviewAdvisoryKind[];
-};
-export type EvidenceReviewListResult = {
-  profile_id: string;
-  filters?: string[];
-  rows?: EvidenceReviewRow[];
-};
-export type EvidenceReviewViewRequest = { evidence_reference: string };
-export type EvidenceReviewViewResult = {
-  profile_id: string;
-  evidence_reference: string;
-  extractor: string;
-  drafted_at: string;
-  draft: EvidenceDraft;
-  label_reading_fallback?: LabelReadingFallback | null;
-  blockers?: ConfirmationBlocker[];
-  party_attribution_advisory?: {
-    parties: {
-      role: string;
-      fields?: string[];
-      scope_if_attributed?: string | null;
-    }[];
-  } | null;
-  country_vocabulary_advisory?: {
-    parties: {
-      role: string;
-      field: string;
-      stated_code: string;
-      status: "catalogued" | "unassigned" | "uncatalogued";
-      detail: string;
-    }[];
-  } | null;
-};
-/** Reads one document into a reviewable draft: on this computer, or off it
- * only with the provider named and acknowledged for this one call. */
-export type EvidenceExtractRequest = {
-  evidence_id?: string | null;
-  attachment_id?: string | null;
-  off_host_provider?: "AGENT" | null;
-  acknowledge_off_host?: boolean;
-};
-export type EvidenceExtractResult = {
-  profile_id: string;
-  evidence_id?: string | null;
-  attachment_id?: string | null;
-  source_sha256: string;
-  draft_review_sha256: string;
-  off_host_provider?: "AGENT" | "LOCAL" | null;
-  consent_audit_effect: "none" | "updated" | "partial" | "unknown";
-  draft: EvidenceDraft;
-  label_reading_fallback?: LabelReadingFallback | null;
-};
-export type FindingResolutionAction =
-  "choose_candidate" | "supply_value" | "attest";
-/** One finding answered: a reading chosen, a value supplied, or the value
- * as read attested with a note. */
-export type FindingResolution = {
-  blocker_id: string;
-  action: FindingResolutionAction;
-  value?: string | null;
-  note?: string;
-};
-/** Confirms one reading as a catalogue invoice. It is bound to the source
- * bytes and the reading the person reviewed: a changed file or reading is
- * refused. The country is always sent. */
-export type EvidenceConfirmRequest = {
-  evidence_id?: string | null;
-  attachment_id?: string | null;
-  expected_source_sha256: string;
-  expected_draft_review_sha256: string;
-  kind: InvoiceKind;
-  counterparty_country: string;
-  counterparty_tax_id?: string | null;
-  counterparty_name?: string | null;
-  invoice_number?: string | null;
-  invoice_date?: string | null;
-  taxable_base?: string | null;
-  iva_rate?: string | null;
-  iva_amount?: string | null;
-  currency?: string | null;
-  iva_category?: string | null;
-  operation_type?: string | null;
-  operation_date?: string | null;
-  retention_rate?: string | null;
-  retention_points?: string | null;
-  retention_amount?: string | null;
-  recargo_amount?: string | null;
-  invoice_class?: string | null;
-  supply_nature?: "goods" | "services" | null;
-  series?: string | null;
-  rectifies_invoice_number?: string | null;
-  notes?: string;
-  resolutions?: FindingResolution[];
-};
-export type EvidenceConfirmResult = {
-  profile_id: string;
-  evidence_id?: string | null;
-  attachment_id?: string | null;
-  source_sha256: string;
-  reviewed_draft_sha256: string;
-  confirmation: {
-    invoice: CatalogueInvoice;
-    draft: EvidenceDraft;
-    /** False where the catalogue already held this confirmation. */
-    created: boolean;
-    likely_duplicate_invoice_id?: string | null;
-    total_discrepancy?: {
-      printed_total: PublicDecimal;
-      recorded_total: PublicDecimal;
-      difference: PublicDecimal;
-    } | null;
-    /** A withheld figure the document reads that the record does not hold. */
-    retention_discrepancy?: {
-      read_rate?: PublicDecimal | null;
-      read_amount: PublicDecimal;
-      recorded_rate?: PublicDecimal | null;
-      recorded_amount?: PublicDecimal | null;
-    } | null;
-    confirmation_id?: string | null;
-    confirmed_provenance?: FieldProvenance[];
-    establishment?: JsonObject | null;
-    label_reading_fallback?: LabelReadingFallback | null;
-  };
-};
-export type AttachmentSource =
-  "LOCAL_FILE" | "GMAIL" | "GOOGLE_DRIVE" | "URL" | "INLINE";
-/** A stored attachment waiting for invoice review. Its `provider_locator`
- * may name a place, and the page never shows it. */
-export type AttachmentReviewItem = {
-  attachment_id: string;
-  sha256: string;
-  mime_type: string;
-  bytes_size: number;
-  source: AttachmentSource;
-  provider_locator: string;
-  captured_at: string;
-  linked_invoice_ids: string[];
-  pending_review: boolean;
-};
-export type AttachmentQueueResult = {
-  profile_id: string;
-  count: number;
-  rows?: AttachmentReviewItem[];
-};
-export type AttachmentViewRequest = { attachment_id: string };
-/** One page of a stored document, drawn as an image. Names exactly one of
- * the evidence record or the attachment; `page` counts from 1. */
-export type EvidencePageRequest = (
-  | { evidence_id: string; attachment_id?: never }
-  | { attachment_id: string; evidence_id?: never }
-) & { page: number; max_width: number };
-export type EvidencePageResult = {
-  profile_id: string;
-  evidence_id?: string | null;
-  attachment_id: string;
-  media_type: "application/pdf" | "image/jpeg" | "image/png";
-  page: number;
-  page_count: number;
-  width: number;
-  height: number;
-  source_sha256: string;
-  file_name?: string | null;
-  /** A `data:image/png;base64,` URL; held in memory only. */
-  image_data_url: string;
-};
-export type AttachmentViewResult = {
-  profile_id: string;
-  item: AttachmentReviewItem;
-};
-/** Every document that left this computer to be read, and what was made
- * from one. What was sent cannot be recalled. */
-export type EvidenceConsentListResult = {
-  profile_id: string;
-  survey: {
-    consented_dispatches?: {
-      profile_bucket_id: string;
-      evidence_content_address: string;
-      provider: string;
-      model: string;
-      surface: string;
-      recorded_at: string;
-    }[];
-    cloud_derived_artefacts?: {
-      evidence_reference: string;
-      provenance_stamp: string;
-      transport?: string | null;
-      drafted_at: string;
-    }[];
-    transmitted_bytes_are_unrecallable?: true;
-  };
-};
-
-// ---- Links between movements and invoices ---------------------------------
-
-/** Links one movement to one invoice, both sides at once. A link cannot be
- * removed. */
-export type LedgerLinkRequest = {
-  transaction_id: string;
-  invoice_id: string;
-  actor?: string | null;
-};
-export type LedgerLinkResult = {
-  profile_id: string;
-  transaction_id: string;
-  invoice_id: string;
-  outcome: "linked" | "refused";
-  projection?: {
-    profile_id: string;
-    operation?: "link";
-    bucket_id: string;
-    transaction_id: string;
-    invoice_id: string;
-    actor: string;
-    bucket_event_ids: string[];
-    review_status: LedgerReviewStatus;
-    transaction: LedgerTransaction;
-  } | null;
-  reason?:
-    | "missing_invoice"
-    | "cross_bucket_invoice"
-    | "transaction_takes_no_invoice"
-    | null;
-};
-/** Attaches evidence and attachments to one movement. */
-export type LedgerAttachRequest = {
-  transaction_id: string;
-  purchase_invoice_evidence_id?: string | null;
-  attachment_ids?: string[];
-  actor?: string | null;
-};
-export type LedgerDetachRequest = {
-  transaction_id: string;
-  attachment_ids: string[];
-  actor?: string | null;
-};
-export type LedgerAttachResult = {
-  outcome: "updated" | "validation_error";
-  profile_id: string;
-  operation_id: "ledger.attach" | "ledger.detach";
-  result?: {
-    profile_id: string;
-    operation_id: "ledger.attach" | "ledger.detach";
-    transaction: LedgerTransaction;
-    review_status: LedgerReviewStatus;
-    bucket_event_ids: string[];
-    stale_finalized_revisions?: {
-      work_unit_id: string;
-      calculation_revision_id: string;
-      revision_state: string;
-      modelo: string;
-      filing_year: number;
-      period: string;
-    }[];
-  } | null;
-  validation_messages?: string[];
-};
-/** Which side of a link cites the other without being cited back. */
-export type LinkInconsistencyDirection = "invoice-only" | "transaction-only";
-export type LedgerCheckRequest = { period?: PublicPeriod | null };
-/** The ledger's anomalies over every period a movement touches, and every
- * link the two catalogues disagree about. */
-export type LedgerCheckResult = {
-  profile_id: string;
-  period: PublicPeriod | null;
-  bucket_id: string;
-  periods: string[];
-  checked_transaction_count: number;
-  issues: {
-    transaction_id: string;
-    reason: LedgerPreflightReason;
-    detail: string;
-  }[];
-  link_inconsistencies: {
-    invoice_id: string;
-    transaction_id: string;
-    direction: LinkInconsistencyDirection;
-  }[];
-  ready: boolean;
 };
 
 export interface LedgerRequests {
@@ -2442,6 +1014,7 @@ export interface LedgerRequests {
   "ledger.participation.rebuild": Record<string, never>;
   "ledger.reset": LedgerResetRequest;
 }
+
 export interface LedgerResults {
   "ledger.known-values": LedgerKnownValuesResult;
   "ledger.list": LedgerListResult;
@@ -2557,8 +1130,10 @@ export interface LedgerResults {
   "ledger.participation.rebuild": LedgerParticipationRebuildResult;
   "ledger.reset": LedgerResetResult;
 }
+
 export type LedgerRequest<D extends LedgerDefinitionId> =
   D extends keyof LedgerRequests ? LedgerRequests[D] : JsonObject;
+
 export type LedgerResult<D extends LedgerDefinitionId> =
   D extends keyof LedgerResults ? LedgerResults[D] : JsonObject;
 
@@ -2577,6 +1152,7 @@ export type OwnAccountChange = {
   currency?: string;
   opened_on?: string;
 };
+
 /** The one document an own account change sends, as UTF-8 bytes. */
 export function ownAccountChange(change: OwnAccountChange): Uint8Array {
   return new TextEncoder().encode(JSON.stringify(change));

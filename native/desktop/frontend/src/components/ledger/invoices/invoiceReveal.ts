@@ -2,7 +2,7 @@
 // person's own filters, search or the period shown. Each is named exactly,
 // so showing the invoice clears only what hides it.
 
-import type { CatalogueInvoice } from "../../../shell/ledger";
+import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
 import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
 import {
   NO_FILTER,

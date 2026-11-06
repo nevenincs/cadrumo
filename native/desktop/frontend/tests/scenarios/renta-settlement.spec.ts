@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import type { PublicModeloFormElectionQuestion } from "../../src/shell/modeloContract";
+import type { PublicModeloFormElectionQuestion } from "../../src/shell/modeloContract/modeloWorkForm";
 import { label } from "../support/strings";
 
 // How the 2025 Modelo 100's result is settled, in the export view: the

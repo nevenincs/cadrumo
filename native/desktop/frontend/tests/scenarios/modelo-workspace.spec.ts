@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import type { ModeloWorkbenchFormProjectionV1 } from "../../src/shell/modeloContract";
+import type { ModeloWorkbenchFormProjectionV1 } from "../../src/shell/modeloContract/modeloWorkForm";
 import { label } from "../support/strings";
 import { MODELO_FIXTURES } from "../support/windowFixtures";
 

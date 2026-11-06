@@ -7,13 +7,11 @@
 // is not active, is refused as the product refuses it. Results are the flat
 // projections the host passes on. Everything it answers is synthetic.
 
+import type { JsonObject, JsonValue, LedgerTransaction } from "../shell/ledger";
 import type {
-  JsonObject,
-  JsonValue,
   LedgerParticipation,
   LedgerRevisionReference,
-  LedgerTransaction,
-} from "../shell/ledger";
+} from "../shell/ledgerMovementOperations";
 import {
   SEALED_PERIOD,
   cents,

@@ -31,16 +31,18 @@ import {
   type ModeloSaveFormat,
 } from "../../../shell/modelo";
 import type {
-  ExportLayoutFormat,
   ModeloExportArtefact,
-  ModeloExportRequest,
+  OutputLanguage,
+  RecordedCalculationNote,
+} from "../../../shell/modeloContract/modelo";
+import type { ModeloExportRequest } from "../../../shell/modeloContract/modeloExport";
+import type {
+  ExportLayoutFormat,
   ModeloExportRequestField,
   ModeloFormArtefactOption,
   ModeloFormElection,
   ModeloWorkbenchFormProjectionV1,
-  OutputLanguage,
-  RecordedCalculationNote,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloWorkForm";
 import { formatTime } from "../../../shared/dateFormats";
 import { AEAT_SEDE } from "../../../shell/links";
 import { useStrings } from "../../../shell/strings";

@@ -1,4 +1,4 @@
-import type { SetupItemId } from "../ipc/contract";
+import type { SetupItemId } from "../ipc/componentSetup";
 import type { LedgerOutcome, LedgerPort } from "./ledger";
 import type { CensoPort, CensoSnapshot } from "./profileCenso";
 

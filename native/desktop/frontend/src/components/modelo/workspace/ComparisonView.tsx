@@ -1,10 +1,8 @@
 import type { BorradorPort } from "../../../shell/borrador";
 import type { ModeloPort } from "../../../shell/modelo";
-import type {
-  ModeloFormAddressV1,
-  ModeloWorkbenchFormProjectionV1,
-  OutputLanguage,
-} from "../../../shell/modeloContract";
+import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
+import type { ModeloFormAddressV1 } from "../../../shell/modeloContract/modeloEditWork";
+import type { ModeloWorkbenchFormProjectionV1 } from "../../../shell/modeloContract/modeloWorkForm";
 import { useStrings } from "../../../shell/strings";
 import type { OpenableSurface } from "../details/Details";
 import type { FormSession } from "../form/session";

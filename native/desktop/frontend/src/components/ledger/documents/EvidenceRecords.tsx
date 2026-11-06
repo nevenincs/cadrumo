@@ -9,12 +9,11 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
 import { facts } from "../../../shell/compose";
-import {
-  type EvidenceRecord,
-  type EvidenceUpdateRequest,
-  type LedgerPort,
-  type LedgerRow,
-} from "../../../shell/ledger";
+import type {
+  EvidenceRecord,
+  EvidenceUpdateRequest,
+} from "../../../shell/ledgerDocumentOperations";
+import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
 import {
   EVIDENCE_UPDATE_FIELDS,
   type EvidenceUpdateField,

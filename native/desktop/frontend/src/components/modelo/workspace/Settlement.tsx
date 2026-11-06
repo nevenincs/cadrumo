@@ -6,7 +6,7 @@ import type {
   PublicModeloFormElectionFigure,
   PublicModeloFormElectionQuestion,
   ModeloFormElectionReason,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloWorkForm";
 import { useStrings } from "../../../shell/strings";
 
 // How the result is settled, as the export offer served it: each election the

@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Icon } from "@/components/ui/icon";
-import type { AboutComponent, AboutInfo, AboutNamed } from "../ipc/contract";
+import type { AboutComponent, AboutInfo, AboutNamed } from "../ipc/environment";
 import { aboutReport, versionLine, type AboutState } from "../shell/about";
 import { useStrings, type Translate } from "../shell/strings";
 

@@ -4,10 +4,8 @@ import { expect, userEvent, waitFor, within } from "storybook/test";
 import { modeloFixture, type ModeloShape } from "@/dev/modeloFixture";
 import { translator } from "../../../shell/strings";
 import type { ModeloPort } from "../../../shell/modelo";
-import type {
-  ModeloWorkbenchFormProjectionV1,
-  OutputLanguage,
-} from "../../../shell/modeloContract";
+import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
+import type { ModeloWorkbenchFormProjectionV1 } from "../../../shell/modeloContract/modeloWorkForm";
 import { OutlineNavigator } from "./OutlineNavigator";
 
 // The form's navigator over the outline the application served for a

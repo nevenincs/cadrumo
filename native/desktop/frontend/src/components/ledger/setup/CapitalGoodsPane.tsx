@@ -16,7 +16,7 @@ import {
 import type {
   CapitalGood,
   CapitalGoodDeclareResult,
-} from "../../../shell/ledgerSetup";
+} from "../../../shell/ledgerRegisterOperations";
 import { servedRefusalWords, type LedgerRow } from "../../../shell/ledger";
 import { takesCapitalGoodAcquisition } from "../../../shell/ledgerContract";
 import { LEDGER_PAGE_SIZE } from "../../../shell/ledgerWindow";

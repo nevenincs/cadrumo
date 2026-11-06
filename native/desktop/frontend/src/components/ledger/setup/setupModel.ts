@@ -24,7 +24,7 @@ import {
   type Parsed,
 } from "../../../shell/ledgerGrammar";
 import type { RuleSeed } from "../../../shell/ledgerCommands";
-import type { LedgerRuleRow } from "../../../shell/ledgerSetup";
+import type { LedgerRuleRow } from "../../../shell/ledgerClassificationSetup";
 import { normalisedDescription } from "../movements/movementsModel";
 
 // ---- Calls ---------------------------------------------------------------

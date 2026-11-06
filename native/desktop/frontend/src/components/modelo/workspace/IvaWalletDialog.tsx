@@ -21,7 +21,7 @@ import type {
   ModeloIvaWalletSeedProjection,
   ModeloIvaWalletCorrectionProjection,
   ModeloIvaWalletOverrideProjection,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloIvaWallet";
 import { useStrings } from "../../../shell/strings";
 import { PeriodSelector } from "../../ledger/PeriodSelector";
 import { periodText } from "../../ledger/ledgerWords";

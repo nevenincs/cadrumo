@@ -6,8 +6,8 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type {
   LedgerInvoiceDuplicateRequest,
   LedgerInvoiceDuplicateResult,
-  LedgerPort,
-} from "./ledger";
+} from "./ledgerInvoiceOperations";
+import type { LedgerPort } from "./ledger";
 import { LatestAnswerSession, type LatestAnswer } from "./ledgerLatestAnswer";
 import { readAnswer } from "./ledgerWindow";
 

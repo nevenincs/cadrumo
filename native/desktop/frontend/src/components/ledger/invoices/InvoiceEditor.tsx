@@ -8,7 +8,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import type { CatalogueInvoice, LedgerPort } from "../../../shell/ledger";
+import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
+import type { LedgerPort } from "../../../shell/ledger";
 import { useStrings } from "../../../shell/strings";
 import {
   Confirmation,

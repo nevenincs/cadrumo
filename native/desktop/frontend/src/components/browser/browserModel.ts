@@ -7,7 +7,7 @@ import type {
   SedeViewPhase,
   SedeViewPublication,
   SedeViewTransfer,
-} from "../../ipc/contract";
+} from "../../ipc/sedeViewMessages";
 import type { SedeViewEvent } from "../../shell/sedeView";
 
 // What the Browser page keeps of its view, and how the person's input becomes

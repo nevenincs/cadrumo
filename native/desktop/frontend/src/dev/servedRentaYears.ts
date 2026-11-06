@@ -1,10 +1,10 @@
 import { requireServed } from "./servedFixtures";
 import { modeloFixture, type ModeloShape } from "./modeloFixture";
+import type { OutputLanguage } from "../shell/modeloContract/modelo";
 import type {
   ModeloFormYearProjection,
   ModeloWorkbenchFormProjectionV1,
-  OutputLanguage,
-} from "../shell/modeloContract";
+} from "../shell/modeloContract/modeloWorkForm";
 import { translator } from "../shell/strings";
 
 // The filing years the stored Modelo 100 envelopes cover, read from what the

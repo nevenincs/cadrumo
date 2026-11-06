@@ -18,7 +18,7 @@ import type {
   LedgerRatiosEligibleResult,
   LedgerRatiosListResult,
   LedgerRatiosValidateResult,
-} from "../../../shell/ledgerSetup";
+} from "../../../shell/ledgerClassificationSetup";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold, type Landing } from "../WritePause";
 import { formatPercent, heldDecimal } from "../../../shared/numbers";

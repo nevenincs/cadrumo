@@ -4,9 +4,9 @@ import { Icon } from "@/components/ui/icon";
 import { facts, listed } from "@/shell/compose";
 import type {
   LedgerHistoryTypedResult,
-  LedgerRow,
   LedgerTrackResult,
-} from "../../../shell/ledger";
+} from "../../../shell/ledgerMovementOperations";
+import type { LedgerRow } from "../../../shell/ledger";
 import type { StagedRowChanges } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
 import { fieldName } from "../editing/editingWords";

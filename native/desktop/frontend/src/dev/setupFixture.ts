@@ -11,7 +11,7 @@ import type {
   SetupRow,
   SetupRun,
   SetupSnapshot,
-} from "../ipc/contract";
+} from "../ipc/componentSetup";
 import type { Setup } from "../shell/host";
 import { catalogLanes } from "../shell/localModelLanes";
 import {

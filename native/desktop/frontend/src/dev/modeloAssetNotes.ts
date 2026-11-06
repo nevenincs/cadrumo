@@ -1,4 +1,4 @@
-import type { RecordedCalculationNote } from "../shell/modeloContract";
+import type { RecordedCalculationNote } from "../shell/modeloContract/modelo";
 
 const GAP = "No dotación is recorded for part of the year.";
 

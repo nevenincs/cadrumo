@@ -10,7 +10,7 @@ import type {
   ProfileCreateResult,
   ProfileList,
   ProfileDeleteReview,
-} from "../ipc/contract";
+} from "../ipc/account";
 
 export interface ProfileAccounts {
   list(): Promise<ProfileList>;

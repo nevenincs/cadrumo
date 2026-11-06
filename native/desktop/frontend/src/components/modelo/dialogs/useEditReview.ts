@@ -7,14 +7,14 @@ import {
 } from "react";
 import { ledgerFailure, type LedgerFailureCode } from "../../../shell/ledger";
 import { modeloEditBody, type ModeloPort } from "../../../shell/modelo";
+import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
 import type {
-  ModeloEditApplyBaselineV1,
   ModeloEditApplyPrerequisiteV1,
   ModeloEditReviewFindingV1,
   ModeloFormRebaseEntryV1,
-  ModeloWorkbenchFormProjectionV1,
-  OutputLanguage,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloEdit";
+import type { ModeloEditApplyBaselineV1 } from "../../../shell/modeloContract/modeloEditWork";
+import type { ModeloWorkbenchFormProjectionV1 } from "../../../shell/modeloContract/modeloWorkForm";
 import { editKey, editSubmission, type FormSession } from "../form/session";
 import { useModeloOperation } from "../WriteScope";
 import { mayRenew } from "./operationRun";

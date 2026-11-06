@@ -1,6 +1,5 @@
 // The request and result shapes of the ledger operations the Setup sections
-// submit: rules, ratios, counterparties and model diagnostics; the own
-// account, prorrata, capital goods, inventory and activity asset registers;
+// submit for the inventory and activity asset registers, the entry options,
 // and the declaration-link rebuild and reset. The port's map in ./ledger
 // names each by its definition. Field names are the registered Python
 // contracts' own, and a request leaves out the profile, which the host
@@ -14,645 +13,13 @@ import type {
   PublicDecimal,
   PublicPeriod,
 } from "./ledger";
-import type {
-  WithholdingIncomeClass,
-  WithholdingOrigin,
-} from "./ledgerContract";
-
-// ---- Rules ---------------------------------------------------------------
-
-/** One stored rule. Its id is made of its pattern, classification and
- * category, so adding the same three again changes only its order. */
-export type LedgerRuleRow = {
-  rule_id: string;
-  /** A regular expression matched, ignoring case, anywhere in a
-   * movement's description. */
-  description_pattern: string;
-  classification: string;
-  category_id: string | null;
-  /** The lower number runs first; equal ones run oldest first. */
-  priority: number;
-  actor: string;
-  created_at: string;
-};
-export type LedgerRuleListResult = {
-  profile_id: string;
-  rules: LedgerRuleRow[];
-};
-export type LedgerRuleAddRequest = {
-  description_pattern: string;
-  classification: string;
-  category_id?: string | null;
-  priority?: number;
-  actor?: string | null;
-};
-export type LedgerRuleValidation =
-  | "empty_pattern"
-  | "invalid_pattern"
-  | "pattern_too_long"
-  | "pattern_overrun"
-  | "category"
-  | "invalid_command";
-export type LedgerRuleAddResult = {
-  profile_id: string;
-  outcome: "added" | "validation_error";
-  rule: LedgerRuleRow | null;
-  validation_code: LedgerRuleValidation | null;
-  validation_messages: string[];
-  category_example: string | null;
-};
-/** Runs every rule over the movements still to classify, or with
- * `reaffirm` over those a rule classified as well. A dry run writes
- * nothing and names what it would classify. */
-export type LedgerRuleApplyRequest = {
-  reaffirm?: boolean;
-  dry_run?: boolean;
-  actor?: string | null;
-};
-export type LedgerRuleApplyResult = {
-  profile_id: string;
-  outcome: "dry_run" | "applied" | "validation_error";
-  dry_run: true | null;
-  would_match:
-    | {
-        transaction_id: string;
-        description: string;
-        matched_rule_id: string;
-        classification: string;
-      }[]
-    | null;
-  count: number | null;
-  rules_evaluated: number | null;
-  transactions_scanned: number | null;
-  matched: number | null;
-  skipped_already_classified: number | null;
-  no_match: number | null;
-  applied:
-    | {
-        transaction_id: string;
-        matched_rule_id: string;
-        classification: string;
-      }[]
-    | null;
-  bucket_event_count: number;
-  validation_code: LedgerRuleValidation | null;
-  validation_messages: string[];
-  refused_rule_id: string | null;
-};
-
-// ---- Business-use ratios -------------------------------------------------
-
-export type LedgerRatiosYearRequest = { year: number };
-/** The eligible categories of a year, their wording said in the language
- * the window shows. */
-export type LedgerRatiosEligibleRequest = {
-  year: number;
-  output_language: OutputLanguage;
-};
-export type LedgerRatiosListResult = {
-  profile_id: string;
-  year: number;
-  /** A mismatch with the censo withholds the ratios rather than show stale
-   * ones. */
-  outcome: "available" | "censo_mismatch";
-  rows: { category: string; ratio: string }[];
-  count: number;
-};
-export type LedgerRatiosEligibleResult = {
-  profile_id: string;
-  year: number;
-  rows: {
-    category: string;
-    /** The registry's name for the category, in the requested language. */
-    label: string;
-    /** The registry's notes on how the category is deducted, in the
-     * requested language. */
-    notes: string;
-    proportionality_kind: string;
-    override_present: boolean;
-  }[];
-  count: number;
-};
-export type LedgerRatiosValidateResult = {
-  profile_id: string;
-  profile_present: boolean;
-  eligible_count: number;
-  overrides_count: number;
-  missing_overrides: string[];
-  findings: { category: string; kind: string; detail: string }[];
-};
-/** A ratio is a canonical fraction from 0 to 1. */
-export type LedgerRatiosSetRequest = {
-  category: string;
-  ratio: string;
-  year: number;
-};
-export type LedgerRatiosSetResult = {
-  profile_id: string;
-  requested_category: string;
-  category: string;
-  ratio: string;
-  prior_ratio: string | null;
-};
-/** Clears a category's override; one that has none is refused, with this
- * result as its detail. */
-export type LedgerRatiosUnsetRequest = { category: string };
-export type LedgerRatiosUnsetResult = {
-  profile_id: string;
-  requested_category: string;
-  category: string;
-  outcome: "cleared" | "no_override";
-  prior_ratio: string | null;
-};
-
-// ---- Counterparties ------------------------------------------------------
-
-export type LedgerCounterpartyRequest = {
-  action: "view" | "confirm" | "withdraw";
-  tax_identifier: string;
-  country_code?: string | null;
-  territorial_scope?: string | null;
-  identification_state?: string | null;
-  evidenced_scope?: string | null;
-  note?: string;
-  asserted_by?: string | null;
-};
-export type LedgerCounterpartyResult = {
-  profile_id: string;
-  action: "view" | "confirm" | "withdraw";
-  tax_identifier: string;
-  country_code: string | null;
-  evidenced_scope: string | null;
-  /** What the person confirmed, where anything stands. */
-  facts: {
-    counterparty_key: string;
-    canonical_tax_identifier: string;
-    territorial_scope: string | null;
-    identification_state: string | null;
-    asserted_by: string;
-    asserted_at: string;
-    note: string;
-  } | null;
-  /** What the ledger answers for it now, and where each answer comes from. */
-  resolution: {
-    territorial_scope: string | null;
-    territorial_source: string | null;
-    identification_state: string | null;
-    identification_source: string | null;
-    confirmed_scope: string | null;
-    evidenced_scope: string | null;
-    contradiction_detail: string | null;
-  } | null;
-  recorded: boolean | null;
-  withdrawn: boolean | null;
-  changed: boolean;
-  conflict_context: [string, string][] | null;
-};
-
-// ---- Model diagnostics ---------------------------------------------------
-
-export type LedgerLlmDiagnosticsRequest = {
-  since?: string | null;
-  until?: string | null;
-  low_confidence_threshold: PublicDecimal;
-};
-export type LedgerLlmDiagnosticsResult = {
-  profile_id: string;
-  since: string | null;
-  until: string | null;
-  low_confidence_threshold: PublicDecimal;
-  report: {
-    usage_providers: {
-      provider: string;
-      calls: number;
-      cache_hits: number;
-      input_tokens: number;
-      output_tokens: number;
-      total_tokens: number;
-      cost_estimate_usd: PublicDecimal | null;
-      unpriced_calls: number;
-    }[];
-    total_calls: number;
-    total_cache_hits: number;
-    total_input_tokens: number;
-    total_output_tokens: number;
-    total_cost_estimate_usd: PublicDecimal | null;
-    total_unpriced_calls: number;
-    confidence_providers: {
-      provider: string;
-      classified_count: number;
-      low_confidence_count: number;
-      medium_confidence_count: number;
-      high_confidence_count: number;
-      min_confidence: PublicDecimal | null;
-      max_confidence: PublicDecimal | null;
-      mean_confidence: PublicDecimal | null;
-    }[];
-    total_classified: number;
-    total_low_confidence: number;
-  };
-};
-
-// ---- Own accounts --------------------------------------------------------
-
-export type OwnAccountRole = "charge" | "refund";
-export type OwnAccountHolding = "titular" | "cotitular";
-/** An own account action without account details. Adding an account or
- * changing its details travels only as `changeOwnAccount`'s raw bytes. */
-export type LedgerOwnAccountRequest =
-  | { action: "list" }
-  | { action: "show"; own_account_id: string }
-  | { action: "update"; own_account_id: string; label: string }
-  | { action: "close"; own_account_id: string; closed_on: string }
-  | { action: "remove"; own_account_id: string }
-  | {
-      action: "designate";
-      own_account_id: string;
-      role: OwnAccountRole;
-      modelo?: string | null;
-    }
-  | { action: "undesignate"; role: OwnAccountRole; modelo?: string | null };
-/** An account as the product publishes it: its number masked, its bank
- * block only as whether there is one. */
-export type OwnAccount = {
-  own_account_id: string;
-  label: string;
-  holding: OwnAccountHolding;
-  masked_iban: string;
-  country_code: string;
-  sepa_marca: string;
-  has_swift_bic: boolean;
-  has_bank_block: boolean;
-  currency: string;
-  opened_on: string | null;
-  closed_on: string | null;
-};
-/** A designation without a modelo covers every modelo. */
-export type OwnAccountDesignation = {
-  role: OwnAccountRole;
-  modelo: string | null;
-  own_account_id: string;
-};
-export type LedgerOwnAccountResult = {
-  profile_id: string;
-  action: string;
-  own_account_id: string | null;
-  accounts: OwnAccount[];
-  designations: OwnAccountDesignation[];
-  changed: boolean;
-};
-
-// ---- Prorrata register ---------------------------------------------------
-
-export type ProrrataEntry = {
-  ejercicio: number;
-  regime: string;
-  especial_transition: { kind: string; evidence_reference: string } | null;
-  sector_id: string | null;
-  interrupted: boolean;
-  provisional_percentage: PublicDecimal | null;
-  provisional_provenance: string | null;
-  authorisation_reference: string | null;
-  definitive_percentage: PublicDecimal | null;
-  definitive_volume_con_derecho: PublicDecimal | null;
-  definitive_volume_sin_derecho: PublicDecimal | null;
-  source_observation_ref: string | null;
-  source_registry_snapshot_refs: {
-    modelo: string;
-    revision_id: string;
-    modelo_year: number;
-    period: string;
-  }[];
-  schema_version: string;
-};
-export type ProrrataSector = {
-  sector_id: string;
-  letra: string;
-  member_activity_codes: string[];
-};
-/** An entry as the register lists it, with the reference the backend gives
- * the percentage it holds in force; null where no reference can name it. */
-export type ProrrataListedEntry = ProrrataEntry & {
-  reference_id: string | null;
-  reference_kind: string | null;
-};
-/** A gross deductible cuota the operator declared for an earlier
- * liquidation the ledger holds no input for, with the evidence it rests on. */
-export type ProrrataGrossDeclaration = {
-  ejercicio: number;
-  period: string;
-  sector_id: string | null;
-  gross_cuota: PublicDecimal;
-  evidence_reference: string;
-  provenance: "operator_declared";
-  declared_at: string;
-};
-export type ProrrataListResult = {
-  profile_id: string;
-  entries: ProrrataListedEntry[];
-  sectors: ProrrataSector[];
-  gross_declarations: ProrrataGrossDeclaration[];
-  count: number;
-};
-export type ProrrataFinding = {
-  code: string;
-  blocking: boolean;
-  message: string;
-  source_modelo: string;
-  source_filing_year: number;
-  source_period: string;
-  stamped_revision_id: string;
-  selected_revision_id: string | null;
-};
-export type ProrrataRefusalReason =
-  | "validation"
-  | "provenance_required"
-  | "provenance_not_electable"
-  | "reference_required"
-  | "reference_not_permitted"
-  | "seed_source_absent"
-  | "seed_source_blocked"
-  | "seed_existing_blocked"
-  | "regulated_override_standing"
-  | "sector_prior_definitive_absent"
-  | "sector_settlement_entry_absent"
-  | "gross_declaration_duplicate"
-  | "gross_declaration_absent"
-  | "gross_declaration_sector_unknown";
-/** What a prorrata change did; a refused one is the refusal's detail. */
-export type ProrrataMutationResult = {
-  operation_id: string;
-  profile_id: string;
-  outcome: "success" | "refused";
-  entry: ProrrataEntry | null;
-  sector_definition: ProrrataSector | null;
-  gross_declaration: ProrrataGrossDeclaration | null;
-  seed_source: {
-    modelo: string;
-    filing_year: number;
-    period: string;
-    casilla_id: string;
-    stamped_revision_id: string;
-  } | null;
-  findings: ProrrataFinding[];
-  prior_ejercicio: number | null;
-  count: number | null;
-  refusal: {
-    code: string;
-    reason: ProrrataRefusalReason;
-    detail: string;
-    ejercicio: number | null;
-    sector_id: string | null;
-    findings: ProrrataFinding[];
-    accepted_provenances: string[];
-    existing_provenance: string | null;
-  } | null;
-};
-export type ProrrataSeedRequest = { ejercicio: number };
-export type ProrrataDeclareSectorRequest = {
-  sector_id: string;
-  letra: string;
-  member_activity_codes?: string[];
-};
-/** An operator-declared provisional percentage and where it comes from. */
-export type ProrrataElectionRequest = {
-  ejercicio: number;
-  percentage: PublicDecimal;
-  provenance?: string | null;
-  reference?: string | null;
-  sector_id?: string | null;
-};
-export type ProrrataElectEspecialRequest = ProrrataElectionRequest & {
-  evidence_reference?: string | null;
-};
-export type ProrrataRevokeEspecialRequest = ProrrataElectionRequest & {
-  evidence_reference: string;
-};
-export type ProrrataSeedSectorRequest = {
-  ejercicio: number;
-  sector_id: string;
-};
-export type ProrrataSettleSectorRequest = {
-  ejercicio: number;
-  sector_id: string;
-  con_derecho_volume: PublicDecimal;
-  sin_derecho_volume: PublicDecimal;
-};
-/** The gross deductible cuota of an earlier liquidation, before prorrata,
- * where the ledger holds no input for it; `replace` swaps a standing one. */
-export type ProrrataDeclareGrossRequest = {
-  ejercicio: number;
-  period: string;
-  sector_id?: string | null;
-  gross_cuota: PublicDecimal;
-  evidence_reference: string;
-  replace?: boolean;
-};
-export type ProrrataRemoveGrossRequest = {
-  ejercicio: number;
-  period: string;
-  sector_id?: string | null;
-};
-
-// ---- Withholding certificates --------------------------------------------
-
-/** One payer's certificate figures for an ejercicio and income class. The
- * payer is named by `payer_ref`, never by their tax identifier, which the
- * backend does not give back. `income_class_label` is the class in the
- * person's language where the backend serves it. */
-export type WithholdingRow = {
-  ejercicio: number;
-  income_class: WithholdingIncomeClass;
-  income_class_label?: string | null;
-  payer_ref: string;
-  payer_legal_name: string | null;
-  importe_integro_dinerario: PublicDecimal;
-  valoracion_especie: PublicDecimal;
-  retencion: PublicDecimal;
-  ingreso_a_cuenta: PublicDecimal;
-  ingreso_a_cuenta_repercutido: PublicDecimal;
-  pago_a_cuenta: PublicDecimal;
-  origin: WithholdingOrigin;
-  evidence_fingerprint: string | null;
-  revision_id: string;
-};
-export type WithholdingListRequest = { ejercicio: number };
-export type WithholdingListResult = {
-  profile_id: string;
-  ejercicio: number;
-  rows: WithholdingRow[];
-};
-/** Why a certificate change was refused before anything was stored. */
-export type WithholdingRefusalReason =
-  | "own_tax_id"
-  | "ejercicio_unsupported"
-  | "family_not_declared"
-  | "identity_mismatch"
-  | "stale_revision"
-  | "repercutido_exceeds_ingreso_a_cuenta"
-  | "certificate_fingerprint_required"
-  | "certificate_not_in_custody"
-  | "certificate_file_unreadable"
-  | "certificate_fingerprint_mismatch"
-  | "taxpayer_tax_id_unknown"
-  | "not_found"
-  | "validation";
-/** What a certificate change did; a refused one is the refusal's detail. */
-export type WithholdingMutationResult = {
-  outcome: "recorded" | "removed" | "refused";
-  profile_id: string;
-  ejercicio: number;
-  row: WithholdingRow | null;
-  count: number | null;
-  refusal: {
-    code:
-      | "REFUSED_RETENCION_SOPORTADA_WRITE"
-      | "REFUSED_RETENCION_SOPORTADA_REVISION_CONFLICT";
-    reason: WithholdingRefusalReason;
-    ejercicio: number;
-    /** The finished sentence the backend serves with every refusal, in its
-     * own language. */
-    refusal_words?: string | null;
-    refusal_words_language?: string | null;
-  } | null;
-};
-/** Records a payer's certificate. `payer_tax_id` is private input: it goes
- * in this request only and the backend never returns it. The certificate is
- * named by `source_path`, a token for the file the person picked, which the
- * backend reads and keeps in the profile's encrypted custody (the host fills
- * `source_directory`), or by `evidence_fingerprint` alone for bytes custody
- * already holds. Given with a file, the fingerprint only cross-checks the
- * bytes read. A refusal can leave the kept bytes behind: the operation
- * settles refused with a partial effect. */
-export type WithholdingRecordRequest = {
-  ejercicio: number;
-  income_class: WithholdingIncomeClass;
-  payer_tax_id: string;
-  payer_legal_name?: string | null;
-  importe_integro_dinerario: PublicDecimal;
-  valoracion_especie: PublicDecimal;
-  retencion: PublicDecimal;
-  ingreso_a_cuenta: PublicDecimal;
-  ingreso_a_cuenta_repercutido: PublicDecimal;
-  origin: WithholdingOrigin;
-  evidence_fingerprint?: string | null;
-  source_path?: FileToken | null;
-  expected_revision_id?: string | null;
-};
-export type WithholdingRemoveRequest = {
-  ejercicio: number;
-  income_class: WithholdingIncomeClass;
-  payer_ref: string;
-  expected_revision_id: string;
-};
-
-/** The person's attestation that no payer withheld on a class. A change's
- * answer carries the attestation as stored; only the listing words its
- * income class, in `income_class_label`, in the person's language. */
-export type WithholdingAbsence = {
-  ejercicio: number;
-  income_class: WithholdingIncomeClass;
-  note: string;
-  state: "active" | "withdrawn";
-  attested_at: string;
-  withdrawn_at: string | null;
-  revision_id: string;
-  income_class_label?: string | null;
-};
-/** Every attestation of an ejercicio, active and withdrawn. */
-export type WithholdingAbsenceListRequest = { ejercicio: number };
-export type WithholdingAbsenceListResult = {
-  profile_id: string;
-  ejercicio: number;
-  attestations: WithholdingAbsence[];
-};
-export type WithholdingAbsenceReason =
-  | "ejercicio_unsupported"
-  | "family_not_declared"
-  | "records_present"
-  | "already_attested"
-  | "not_attested"
-  | "stale_revision";
-export type WithholdingAbsenceResult = {
-  outcome: "attested" | "withdrawn" | "refused";
-  profile_id: string;
-  ejercicio: number;
-  attestation: WithholdingAbsence | null;
-  refusal: {
-    code:
-      | "REFUSED_RETENCION_SOPORTADA_ABSENCE"
-      | "REFUSED_RETENCION_SOPORTADA_REVISION_CONFLICT";
-    reason: WithholdingAbsenceReason;
-    ejercicio: number;
-    income_class: WithholdingIncomeClass;
-    /** The finished sentence the backend serves with every refusal, in its
-     * own language. */
-    refusal_words?: string | null;
-    refusal_words_language?: string | null;
-  } | null;
-};
-export type WithholdingAttestRequest = {
-  ejercicio: number;
-  income_class: WithholdingIncomeClass;
-  note: string;
-  expected_revision_id?: string | null;
-};
-export type WithholdingWithdrawRequest = {
-  ejercicio: number;
-  income_class: WithholdingIncomeClass;
-  expected_revision_id: string;
-};
-
-// ---- Bienes de inversión -------------------------------------------------
-
-export type CapitalGood = {
-  identifier: string;
-  description: string;
-  acquisition_year: number;
-  cuota_soportada: PublicDecimal;
-  prorrata_inicial_pct: PublicDecimal;
-  kind: string;
-  art108_elegible: boolean;
-  acquisition_ledger_id: string;
-  prorrata_sector_id: string | null;
-  disposal: { year: number; regime: string } | null;
-  deduccion_efectuada: PublicDecimal;
-  schema_version: string;
-};
-export type CapitalGoodsListResult = {
-  profile_id: string;
-  rows: CapitalGood[];
-};
-export type CapitalGoodDeclareRequest = {
-  identifier: string;
-  description: string;
-  acquisition_year: number;
-  acquisition_ledger_id: string;
-  cuota_soportada: PublicDecimal;
-  prorrata_inicial_pct: PublicDecimal;
-  kind: string;
-  art108_elegible?: boolean;
-  prorrata_sector_id?: string | null;
-  disposal_year?: number | null;
-  disposal_regime?: string | null;
-};
-export type CapitalGoodDeclareResult = {
-  outcome: "declared" | "refused";
-  profile_id: string;
-  record: CapitalGood | null;
-  count: number | null;
-  refusal: {
-    code: string;
-    reason: "validation" | "disposal_incomplete" | "duplicate_identifier";
-    missing: "year" | "regime" | null;
-    identifier: string | null;
-  } | null;
-};
 
 // ---- Inventory -----------------------------------------------------------
 
 export type ValuationMethod = "fifo" | "pmp" | "coste_medio";
+
 export type InventoryMovementKind = "opening" | "purchase" | "cogs" | "count";
+
 /** The kinds of proof a purchase or an extra cost can rest on, and the two
  * checks a purchase states it made. */
 export type InventoryProofKind =
@@ -664,6 +31,7 @@ export type InventoryProofKind =
   | "other_acquisition_evidence"
   | "attributable_cost_review"
   | "iva_recoverability_review";
+
 export type InventoryCostKind =
   | "freight"
   | "insurance"
@@ -671,8 +39,10 @@ export type InventoryCostKind =
   | "handling"
   | "professional_fee"
   | "other_directly_attributable";
+
 export type InventoryRetirementReason =
   "created_in_error" | "activity_ceased" | "no_stock_held";
+
 export type InventoryBookRow = {
   actividad_id: string;
   year: number;
@@ -686,6 +56,7 @@ export type InventoryBookRow = {
   correction_count?: number;
   advisories?: InventoryAdvisory[];
 };
+
 /** Something the person should know about a book: the sentence's key in the
  * backend's catalogue, filled in with the year. */
 export type InventoryAdvisory = {
@@ -693,10 +64,12 @@ export type InventoryAdvisory = {
   key: string;
   year: number;
 };
+
 export type InventoryListResult = {
   profile_id: string;
   rows: InventoryBookRow[];
 };
+
 export type InventoryRefusal = {
   code: string;
   reason:
@@ -727,6 +100,7 @@ export type InventoryRefusal = {
   reason_key?: string | null;
   reason_facts?: ReasonFact[];
 };
+
 /** The totals of a purchase's cost, as a movement shows them. */
 export type InventoryAcquisitionSummary = {
   consideration_excluding_iva: PublicDecimal;
@@ -738,6 +112,7 @@ export type InventoryAcquisitionSummary = {
   evidence_count: number;
   complete: true;
 };
+
 export type InventoryMovement = {
   movement_id: string;
   movement_date: string;
@@ -753,6 +128,7 @@ export type InventoryMovement = {
   /** What a purchase rests on, served by the inspect read alone. */
   acquisition_detail?: InventoryAcquisitionDetail | null;
 };
+
 export type InventoryAcquisitionDetail = {
   consideration_iva_amount: PublicDecimal;
   consideration_deductible_iva_ratio: PublicDecimal;
@@ -775,11 +151,13 @@ export type InventoryAcquisitionDetail = {
   attributable_cost_review_evidence: string;
   iva_recoverability_review_evidence: string;
 };
+
 export type InventoryCorrectionReason =
   | "keying_error"
   | "source_document_corrected"
   | "duplicate_entry"
   | "operation_did_not_occur";
+
 export type InventoryHistoryKind =
   | "described"
   | "opening_corrected"
@@ -787,10 +165,12 @@ export type InventoryHistoryKind =
   | "movement_reversed"
   | "retired"
   | "restored";
+
 export type InventoryDescriptor = {
   label: string;
   description: string | null;
 };
+
 /** One change kept with what it displaced. */
 export type InventoryHistoryEntry = {
   correction_id: string;
@@ -805,6 +185,7 @@ export type InventoryHistoryEntry = {
   prior_valuation_method: ValuationMethod | null;
   prior_descriptor: InventoryDescriptor | null;
 };
+
 export type InventoryBook = {
   actividad_id: string;
   year: number;
@@ -821,12 +202,14 @@ export type InventoryBook = {
   history?: InventoryHistoryEntry[];
   advisories?: InventoryAdvisory[];
 };
+
 export type InventoryCreateRequest = {
   actividad_id: string;
   year: number;
   valuation_method: string;
   opening_stock?: PublicDecimal;
 };
+
 export type InventoryCreateResult = {
   outcome: "created" | "refused";
   profile_id: string;
@@ -834,6 +217,7 @@ export type InventoryCreateResult = {
   bucket_event_ids: string[];
   refusal: InventoryRefusal | null;
 };
+
 export type InventoryMovementAddRequest = {
   actividad_id: string;
   year: number;
@@ -848,6 +232,7 @@ export type InventoryMovementAddRequest = {
    * and a purchase states no unit cost or taxable base beside it. */
   acquisition_cost?: InventoryAcquisitionCostRequest | null;
 };
+
 /** A named piece of proof: a fingerprint of the file the person attached,
  * under a reference minted for it. */
 export type InventoryProof = {
@@ -855,6 +240,7 @@ export type InventoryProof = {
   evidence_kind: string;
   content_digest: string;
 };
+
 /** A cost that goes into the purchase besides its price. */
 export type InventoryCostComponent = {
   component_id: string;
@@ -864,6 +250,7 @@ export type InventoryCostComponent = {
   deductible_iva_ratio: PublicDecimal;
   evidence_references: { reference: string }[];
 };
+
 export type InventoryAcquisitionCostRequest = {
   consideration_excluding_iva: PublicDecimal;
   consideration_iva_amount: PublicDecimal;
@@ -881,13 +268,16 @@ export type InventoryAcquisitionCostRequest = {
   recoverable_iva_excluded?: PublicDecimal;
   total_acquisition_cost?: PublicDecimal;
 };
+
 export type InventoryMovementAddResult = {
   outcome: "added" | "refused";
   profile_id: string;
   ledger: InventoryBook | null;
   refusal: InventoryRefusal | null;
 };
+
 export type InventoryBookRequest = { actividad_id: string; year: number };
+
 /** A preview: nothing is recorded. */
 export type InventoryValuationResult = {
   outcome: "previewed" | "refused";
@@ -902,6 +292,7 @@ export type InventoryValuationResult = {
   } | null;
   refusal: InventoryRefusal | null;
 };
+
 /** The closing authority's record: its decision, an optional physical
  * count and the link to the prior year's closing, as one document. */
 export type InventoryClosingAuthorityRequest = {
@@ -909,6 +300,7 @@ export type InventoryClosingAuthorityRequest = {
   year: number;
   authority_record: JsonObject;
 };
+
 export type InventoryClosingAuthorityResult = {
   outcome: "recorded" | "refused";
   record: {
@@ -932,6 +324,7 @@ export type InventoryOptionsResult = {
     options: { value: string; label_key: string; role?: string | null }[];
   }[];
 };
+
 /** What the entry options read is asked for besides the vocabularies: the
  * periods of one year (the year of the reference day when none is named), the
  * period that holds a span, and the periods that hold each of some days. */
@@ -944,8 +337,10 @@ export type LedgerEntryOptionsRequest = {
     days?: string[];
   };
 };
+
 /** The cadence of a served period. */
 export type LedgerServedPeriodKind = "annual" | "quarterly" | "monthly";
+
 /** One selectable period of a year as the backend serves it: its days, the
  * periods either side of it across year ends (null where there is none), and
  * its name and its label with the year, said in `name_words_language`. */
@@ -961,6 +356,7 @@ export type LedgerServedPeriod = {
   label_words: string;
   label_words_language: OutputLanguage;
 };
+
 /** The year, the quarter and the month that hold one day. */
 export type LedgerServedDay = {
   day: string;
@@ -968,6 +364,7 @@ export type LedgerServedDay = {
   quarterly: PublicPeriod;
   monthly: PublicPeriod;
 };
+
 /** The periods of one year, the periods of the reference day (today in Spain
  * when none was given) and what else was asked. */
 export type LedgerServedPeriods = {
@@ -985,6 +382,7 @@ export type LedgerServedPeriods = {
   } | null;
   days?: LedgerServedDay[];
 };
+
 /** What a ledger entry form offers. A code with no key is named by the window
  * with `Intl`; a code's list says what is known, not what is allowed. A
  * `group` is the family a value is filed under, as the spending categories
@@ -1005,6 +403,7 @@ export type LedgerEntryOptionsResult = {
   limits: LedgerEntryLimits;
   periods: LedgerServedPeriods;
 };
+
 /** What one classification takes, each flag the verdict of the predicate the
  * backend's writers enforce it with, except the advisory one. */
 export type LedgerEntryClassification = {
@@ -1027,6 +426,7 @@ export type LedgerEntryClassification = {
    * readiness holds an expense row that has none. */
   split_part_requires_category: boolean;
 };
+
 /** The limits an entry form holds typed text to; `shell/ledgerLimits` holds
  * them for the page. Figures are decimal text, unread here. */
 export type LedgerEntryLimits = {
@@ -1050,6 +450,7 @@ export type LedgerEntryLimits = {
   payment_id_pattern: string;
   text_limits: { name: TextLimitName; max: number }[];
 };
+
 /** What a served text limit bounds: the characters one entry takes, or, for
  * `split_parts`, the most parts one split makes. */
 export type TextLimitName =
@@ -1072,9 +473,11 @@ export type TextLimitName =
   | "own_account_label"
   | "own_account_currency"
   | "invoice_counterparty_name";
+
 /** A document the person chose, now kept: what a purchase or a closing
  * value names it by. */
 export type InventoryEvidenceAddRequest = { source_path: FileToken };
+
 export type InventoryEvidenceAddResult = {
   outcome: "stored" | "refused";
   profile_id: string;
@@ -1083,12 +486,14 @@ export type InventoryEvidenceAddResult = {
   /** Why the file was not kept, in the backend's own sentence. */
   refusal?: InventoryRefusal | null;
 };
+
 /** A document a closing value rests on. */
 export type InventoryClosingDocument = {
   reference: { reference: string };
   role: string;
   content_digest: string;
 };
+
 export type InventoryClosingValueRequest = {
   actividad_id: string;
   year: number;
@@ -1115,21 +520,25 @@ export type InventoryClosingValueRequest = {
 export type InventoryChangeRequest = InventoryBookRequest & {
   correction_id: string;
 };
+
 export type InventoryInspectResult = {
   outcome: "found" | "refused";
   profile_id: string;
   ledger: InventoryBook | null;
   refusal: InventoryRefusal | null;
 };
+
 export type InventoryDescribeRequest = InventoryChangeRequest & {
   label: string;
   description: string | null;
 };
+
 export type InventoryCorrectRequest = InventoryChangeRequest & {
   reason: string;
   opening_stock: PublicDecimal | null;
   valuation_method: string | null;
 };
+
 export type InventoryMovementCorrectRequest = InventoryChangeRequest & {
   target_movement_id: string;
   reason: string;
@@ -1141,14 +550,18 @@ export type InventoryMovementCorrectRequest = InventoryChangeRequest & {
   taxable_base?: PublicDecimal | null;
   acquisition_cost?: InventoryAcquisitionCostRequest | null;
 };
+
 export type InventoryMovementReverseRequest = InventoryChangeRequest & {
   target_movement_id: string;
   reason: string;
 };
+
 export type InventoryRetireRequest = InventoryChangeRequest & {
   reason: string;
 };
+
 export type InventoryRestoreRequest = InventoryChangeRequest;
+
 /** A change applied, or found already applied under the same reference. */
 export type InventoryChangeResult = {
   outcome: "applied" | "replayed" | "refused";
@@ -1167,12 +580,15 @@ export type ActivityAssetRevision = JsonObject & {
   revision_number: number;
   supersedes_revision_id?: string | null;
 };
+
 /** What a reason fact's value is, so a screen draws it by type: a date is an
  * ISO date, an amount a plain decimal, a percent a fraction, a count a whole
  * number such as a tax year, and a text is shown as it stands. */
 export type ReasonFactKind = "text" | "date" | "amount" | "percent" | "count";
+
 /** One fact that fills a reason's sentence. */
 export type ReasonFact = { key: string; value: string; kind: ReasonFactKind };
+
 /** Why the backend refused: a coarse code, and the catalogue key that says
  * why with the facts that fill it in. */
 export type ActivityAssetRefusal = {
@@ -1187,31 +603,37 @@ export type ActivityAssetRefusal = {
   refusal_words?: string | null;
   refusal_words_language?: OutputLanguage | null;
 };
+
 /** An amount the backend states or does not. Null is unknown and never
  * zero; a recorded zero is `{ decimal: "0.00" }`. */
 export type Amount = PublicDecimal | null;
+
 export type ActivityAssetResultBase = {
   profile_id: string;
   authority: { logical_generation: string; reader_incarnation: string };
   outcome: "succeeded" | "refused";
   refusal: ActivityAssetRefusal | null;
 };
+
 export type ActivityAssetHistory = {
   revisions: ActivityAssetRevision[];
   claims: JsonObject[];
   descriptors?: JsonObject[];
   events?: JsonObject[];
 };
+
 /** A recorded claim a correction replaces; the backend works out the new
  * figure, and a free method states the amount it asks for. */
 export type ActivityAssetSupersedingClaim = {
   supersedes_claim_id: string;
   requested_free_amount: PublicDecimal | null;
 };
+
 export type ActivityAssetCreateRequest = {
   revision: ActivityAssetRevision;
   descriptor: DescriptorFacts;
 };
+
 /** The revision a correction states: the one it supersedes, whole, with what
  * the person changed. Its number is left out, since the register numbers it;
  * its baja is always stated, another baja to replace the recorded one and null
@@ -1221,18 +643,23 @@ export type ActivityAssetCorrection = JsonObject & {
   supersedes_revision_id: string;
   disposal: JsonObject | null;
 };
+
 export type ActivityAssetCorrectRequest = {
   revision: ActivityAssetCorrection;
   superseding_claims: ActivityAssetSupersedingClaim[];
 };
+
 export type ActivityAssetChangeResult = ActivityAssetResultBase & {
   history: ActivityAssetHistory | null;
 };
+
 export type ActivityAssetInspectRequest = { asset_id: string };
+
 export type ActivityAssetInspectResult = ActivityAssetResultBase & {
   asset_id: string | null;
   revisions: { revision: ActivityAssetRevision; revision_id: string }[] | null;
 };
+
 export type ActivityAssetForecastRequest = {
   asset_id: string;
   covered_from: string;
@@ -1241,6 +668,7 @@ export type ActivityAssetForecastRequest = {
   requested_free_amount?: PublicDecimal | null;
   supersedes_claim_id?: string | null;
 };
+
 /** A scheduled charge: a forecast records nothing until it is claimed. */
 export type ActivityAssetForecast = JsonObject & {
   asset_id: string;
@@ -1254,14 +682,17 @@ export type ActivityAssetForecast = JsonObject & {
   calendar_days: number;
   amount: PublicDecimal;
 };
+
 export type ActivityAssetForecastResult = ActivityAssetResultBase & {
   forecast: ActivityAssetForecast | null;
 };
+
 export type ActivityAssetClaimRequest = {
   forecast: ActivityAssetForecast;
   /** The claim this one replaces, in the same write. */
   supersedes_claim_id: string | null;
 };
+
 export type ActivityAssetClaimResult = ActivityAssetResultBase & {
   claim_result: {
     history: ActivityAssetHistory;
@@ -1270,6 +701,7 @@ export type ActivityAssetClaimResult = ActivityAssetResultBase & {
   } | null;
   claim_id: string | null;
 };
+
 export type ActivityAssetFilingRequest = {
   tax_year: number;
   /** The language the boxes are named in. */
@@ -1278,6 +710,7 @@ export type ActivityAssetFilingRequest = {
    * are stated. */
   m130_period?: string;
 };
+
 /** What the effective claims of a year add up to in a Modelo 100 casilla. */
 export type ClaimProjection = {
   target_casilla_id: string;
@@ -1287,6 +720,7 @@ export type ClaimProjection = {
   claim_ids: string[];
   amount: PublicDecimal;
 };
+
 /** One amount behind Modelo 130 casilla 02: a recorded claim, or else the
  * element's schedule. */
 export type M130Contribution = {
@@ -1295,6 +729,7 @@ export type M130Contribution = {
   claim_id: string | null;
   schedule_fingerprint: string | null;
 };
+
 /** The accrual of one asset kind for Modelo 130. Elements it could not work
  * out are named: their share is missing from `amount`, not zero. Elements
  * whose method leaves an amount to the taxpayer, and those of an agricultural
@@ -1318,9 +753,11 @@ export type M130Projection = {
   partial_words?: string | null;
   words_language?: OutputLanguage | null;
 };
+
 /** What can be said about an interval of the year no claim covers. */
 export type M100GapKind =
   "accrued" | "free_method" | "unavailable" | "box_unbound";
+
 /** An interval of the year Modelo 100 leaves out of an element because no
  * claim records it, or because the edition has no box for its kind.
  * `accrued` is stated only where it can be worked out. */
@@ -1338,9 +775,11 @@ export type M100ClaimGap = {
   words?: string | null;
   words_language?: OutputLanguage | null;
 };
+
 /** What a reason leaves out of the Modelo 130 amounts. */
 export type M130LeftOutReason =
   "free_gap" | "agrarian_excluded" | "unavailable";
+
 /** The elements one reason leaves out of the handoff's Modelo 130 amounts,
  * said whole. */
 export type M130LeftOut = {
@@ -1349,6 +788,7 @@ export type M130LeftOut = {
   words: string;
   words_language: OutputLanguage;
 };
+
 export type ActivityAssetFilingResult = ActivityAssetResultBase & {
   tax_year: number | null;
   m130_period: string | null;
@@ -1529,6 +969,7 @@ export type PlanRow = {
 /** What the registry allows the element's election. A table method carries
  * its class and corridor; any other states the limit it has instead and why. */
 export type LegalCitation = { text: string; permalink: string };
+
 export type ElectionLimits = {
   class_key: string | null;
   /** The class's official name, as served; null where there is no class. */
@@ -1664,6 +1105,7 @@ export type MethodFactKind =
   | "share"
   | "decimal"
   | "rows";
+
 /** One fact an election of a method states, as the options serve it. */
 export type MethodFact = {
   /** From the election down to the fact. */
@@ -1805,39 +1247,52 @@ export type DisposalCalculation = {
 // ---- The register's reads and the baja, in the shapes the tab sends ---------
 
 export type ActivityAssetListResult = ActivityAssetResultBase & AssetListResult;
+
 /** The language the sentences of a register read are said in. */
 export type ActivityAssetWordsRequest = { output_language?: OutputLanguage };
+
 export type ActivityAssetListRequest = ActivityAssetWordsRequest;
+
 export type ActivityAssetPlanRequest = ActivityAssetWordsRequest & {
   asset_id: string;
 };
+
 export type ActivityAssetPlanResult = ActivityAssetResultBase & PlanResult;
+
 export type ActivityAssetTimelineRequest = { asset_id: string };
+
 export type ActivityAssetTimelineResult = ActivityAssetResultBase &
   TimelineResult;
+
 export type ActivityAssetFormOptionsRequest = {
   asset_kind: string;
   tax_year: number;
 };
+
 export type ActivityAssetFormOptionsResult = ActivityAssetResultBase & {
   options: FormOptions | null;
 };
+
 export type ActivityAssetAcquisitionCandidatesResult =
   ActivityAssetResultBase & { candidates: AcquisitionCandidate[] | null };
+
 export type ActivityAssetDescribeRequest = {
   asset_id: string;
   descriptor: DescriptorFacts;
 };
+
 export type ActivityAssetDisposeRequest = {
   asset_id: string;
   disposal: DisposalFacts;
 };
+
 export type ActivityAssetDisposalCalculateRequest =
   ActivityAssetWordsRequest & {
     asset_id: string;
     /** Null reads the recorded baja; a stated one is a preview. */
     disposal: DisposalFacts | null;
   };
+
 export type ActivityAssetDisposalCalculateResult = ActivityAssetResultBase & {
   asset_id: string | null;
   calculation: DisposalCalculation | null;
@@ -1852,11 +1307,13 @@ export type LedgerParticipationRebuildResult = {
   revision_count: number;
   stale_removed_count: number;
 };
+
 export type LedgerResetRequest = {
   reason?: string;
   dry_run?: boolean;
   actor?: string | null;
 };
+
 /** A finalized or draft declaration revision that cites movements. */
 export type LedgerRemovalBlocker = {
   work_unit_id: string;
@@ -1866,6 +1323,7 @@ export type LedgerRemovalBlocker = {
   filing_year: number;
   period: string;
 };
+
 export type LedgerResetResult = {
   profile_id: string;
   report: {

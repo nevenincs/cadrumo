@@ -8,13 +8,13 @@
 import type { Suggestion } from "@/components/ui/suggestions";
 import { countryName, currencyName } from "../../../shared/codeNames";
 import { formatDay } from "../../../shared/dateFormats";
+import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
 import type {
-  CatalogueInvoice,
   KnownCounterparty,
   KnownText,
   LedgerRow,
 } from "../../../shell/ledger";
-import type { CapitalGood } from "../../../shell/ledgerSetup";
+import type { CapitalGood } from "../../../shell/ledgerRegisterOperations";
 
 /** The sibling fields a counterparty pick can fill. */
 export type PartyFill = "name" | "tax_id" | "country";

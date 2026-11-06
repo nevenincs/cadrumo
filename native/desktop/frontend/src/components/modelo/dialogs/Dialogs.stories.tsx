@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import type { ModeloShape } from "../../../dev/modeloFixture";
 import { translator } from "../../../shell/strings";
-import type { ModeloWorkbenchFormProjectionV1 } from "../../../shell/modeloContract";
+import type { ModeloWorkbenchFormProjectionV1 } from "../../../shell/modeloContract/modeloWorkForm";
 import { StorySession, typedAmount } from "../details/Details.stories";
 import { FilingView } from "./FilingView";
 import { ReviewDialog } from "./ReviewDialog";

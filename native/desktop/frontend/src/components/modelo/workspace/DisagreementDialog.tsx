@@ -10,10 +10,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Icon } from "@/components/ui/icon";
-import type {
-  CreditResolutionRowProjection,
-  ModeloFormIssueLine,
-} from "../../../shell/modeloContract";
+import type { CreditResolutionRowProjection } from "../../../shell/modeloContract/modeloWork";
+import type { ModeloFormIssueLine } from "../../../shell/modeloContract/modeloWorkForm";
 import { useStrings } from "../../../shell/strings";
 import { BoxNumber } from "../form/BoxNumber";
 import { ScopedWriteHoldNotice } from "../WriteScope";

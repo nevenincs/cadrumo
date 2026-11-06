@@ -9,10 +9,9 @@ import { facts } from "@/shell/compose";
 import type {
   CatalogueInvoice,
   InvoiceListResult,
-  LedgerPort,
-  LedgerRow,
-  LedgerStagedRowAnswer,
-} from "../../../shell/ledger";
+} from "../../../shell/ledgerInvoiceOperations";
+import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
+import type { LedgerStagedRowAnswer } from "../../../shell/ledgerMovementOperations";
 import { useInvoiceMatches } from "../../../shell/ledgerInvoiceMatch";
 import type { StageEvent, StagedAction } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";

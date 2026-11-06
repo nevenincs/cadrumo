@@ -1,12 +1,11 @@
 import { Channel } from "@tauri-apps/api/core";
 import {
   TerminalFrameTag,
-  type HostFailure,
-  type ShellToken,
   type TerminalWriteBody,
   type TerminalWriteHeaders,
   type TerminalKind,
-} from "../ipc/contract";
+} from "../ipc/terminalFrames";
+import type { HostFailure, ShellToken } from "../ipc/contract";
 import type { TerminalEvent, TerminalSession } from "./host";
 import { observedInvoke, type HostCall } from "./hostCall";
 

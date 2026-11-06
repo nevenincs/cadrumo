@@ -6,7 +6,7 @@ import {
   parseFractionPercent,
   parseIsoDate,
 } from "../../../shell/ledgerGrammar";
-import type { LedgerLlmDiagnosticsResult } from "../../../shell/ledgerSetup";
+import type { LedgerLlmDiagnosticsResult } from "../../../shell/ledgerClassificationSetup";
 import { useStrings } from "../../../shell/strings";
 import {
   formatAmount,

@@ -5,7 +5,7 @@ import {
   DropdownMenuList,
 } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
-import type { GoogleAccount as GoogleAccountState } from "../ipc/contract";
+import type { GoogleAccount as GoogleAccountState } from "../ipc/componentSetup";
 import { useStrings } from "../shell/strings";
 import { canSignInGoogle, googleWords, refusalWords } from "./setup/setupWords";
 

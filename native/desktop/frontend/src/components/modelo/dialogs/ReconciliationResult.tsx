@@ -1,6 +1,6 @@
 import { Alert } from "@/components/ui/alert";
 import { Icon } from "@/components/ui/icon";
-import type { ModeloReconciliationImportProjection } from "../../../shell/modeloContract";
+import type { ModeloReconciliationImportProjection } from "../../../shell/modeloContract/modeloReconcile";
 import { useStrings } from "../../../shell/strings";
 
 export type ReconciliationReport = Pick<

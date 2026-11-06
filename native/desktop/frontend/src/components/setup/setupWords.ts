@@ -7,7 +7,7 @@ import type {
   SetupRetry,
   SetupRow,
   SetupStep,
-} from "../../ipc/contract";
+} from "../../ipc/componentSetup";
 import type { Translate } from "../../shell/strings";
 
 // The window's words for setup and the Google account. The host sends codes

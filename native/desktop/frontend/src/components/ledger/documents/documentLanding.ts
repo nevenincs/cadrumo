@@ -3,11 +3,9 @@
 // not saved, repeatable or untold. Null means the read did not answer, so
 // the write stays held.
 
-import type {
-  EvidenceUpdateRequest,
-  InvoiceKind,
-  LedgerPort,
-} from "../../../shell/ledger";
+import type { EvidenceUpdateRequest } from "../../../shell/ledgerDocumentOperations";
+import type { InvoiceKind } from "../../../shell/ledgerInvoiceOperations";
+import type { LedgerPort } from "../../../shell/ledger";
 import { readAnswer } from "../../../shell/ledgerWindow";
 import type { LandingCheck } from "../WritePause";
 import { holdsUpdate } from "./documentsModel";
