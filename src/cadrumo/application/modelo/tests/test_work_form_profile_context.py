@@ -11,6 +11,7 @@ import pytest
 from ....core.external_constants import OutputLanguage
 from ....core.filing_producer_key import FilingProducerKey
 from ....core.period import Period
+from ....core.text_bounds import FILING_TEXT_CAPACITY
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.export import derive_export_layouts_from_bindings
@@ -33,14 +34,14 @@ from ....domain.modelos.protocols import (
 from ....domain.modelos.verification_report import VerificationReportCatalogue
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ....domain.user_profile.errors import ProfileNotFoundError
+from ....domain.user_profile.errors import ProfileNotFoundError, ProfileSchemaValidationError
 from ....domain.user_profile.values import (
     ProfileSetupState,
     UserProfileFact,
     UserProfileRecord,
     create_user_profile_record,
 )
-from ...filing.export_producer import identity_contact_producer_values
+from ...filing.identity_contact_producer import identity_contact_producer_values
 from ...user_profile.profile_record_repository import ProfileRecordRepository
 from ..profile_export_binding import (
     resolve_declaration_contact,
@@ -290,6 +291,18 @@ def test_partial_profile_preserves_each_declared_component(
 def test_absent_profile_leaves_header_unknown(
     operation: PinnedAuthorityOperation, profile_store: _ProfileStore
 ) -> None:
+    form, snapshot = _load(operation, "130")
+    values = _context_values(form, snapshot, operation)
+    assert values[FilingProducerKey.TAXPAYER_TAX_ID] is None
+    assert values[FilingProducerKey.TAXPAYER_GIVEN_NAME] is None
+
+
+def test_stored_name_past_the_producer_bound_leaves_header_unknown_and_the_form_open(
+    operation: PinnedAuthorityOperation, profile_store: _ProfileStore
+) -> None:
+    profile_store.record = _record({**_IDENTITY, "identity.name": "N" * (FILING_TEXT_CAPACITY + 1)})
+    with pytest.raises(ProfileSchemaValidationError):
+        resolve_profile_identity_producer_values(bucket_id=_BUCKET, operation=operation)
     form, snapshot = _load(operation, "130")
     values = _context_values(form, snapshot, operation)
     assert values[FilingProducerKey.TAXPAYER_TAX_ID] is None
