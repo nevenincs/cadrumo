@@ -116,9 +116,17 @@ class EffectiveFilingDeadline:
         unknown close keeps its nominal date as a lower bound only: a
         presentation up to it is still in time, and nothing past it is judged.
 
+        A date whose shift calendar could not be resolved is the same case. The
+        kept date is then the unverified nominal one, which is a lower bound on
+        the day the filer has, so a presentation past it is UNKNOWN rather than
+        late. The obligation schedule reports such a window the same way, and
+        the deadline gate refuses to call it closed.
+
         This is a calendar posture, never an Article 27 assessment; see
         :class:`~cadrumo.core.filing_timeliness.FilingTimeliness`.
         """
+        if self.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE:
+            return FilingTimeliness.EN_PLAZO if presented_on <= self.closes_on else FilingTimeliness.UNKNOWN
         if self.days_overdue_on(presented_on) is not None:
             return FilingTimeliness.EXTEMPORANEA
         if self.days_remaining_on(presented_on) is not None:

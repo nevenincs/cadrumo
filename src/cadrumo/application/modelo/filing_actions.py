@@ -343,6 +343,7 @@ def _run_filing_workflow(
         today=now.astimezone(MADRID_TZ).date(),
         runs_dir=workflow_runs_dir,
         run_repository=ports.workflow_run_repository,
+        operation=operation,
     )
 
     _filing_phase("workflow_end")

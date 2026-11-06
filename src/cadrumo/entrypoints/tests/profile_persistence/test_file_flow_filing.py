@@ -28,6 +28,8 @@ from cadrumo.core.filing_timeliness import FilingTimeliness
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
+from cadrumo.domain.deadlines.effective_close import resolve_effective_filing_deadline
+from cadrumo.domain.deadlines.festivos import DeadlineHolidayCoverage
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
 from cadrumo.domain.modelos.filing_record import (
     AeatConfirmationState,
@@ -304,11 +306,23 @@ def test_file_records_verified_modelo_130_as_late_non_official_local_filing(repo
     assert filing.aeat_accepted is False
     assert filing.external_evidence is None
     # The declaration kind stays ``original``, so lateness has to be carried as
-    # its own fact or no consumer of the file result can see the art. 27 LGT
-    # consequence of a closed-window filing.
+    # its own fact or no consumer of the file result can see the late-filing
+    # consequence of a closed-window filing. Which fact the exercise supports
+    # depends on its own holiday calendar: without one the effective close is
+    # not established, and an unverified nominal close is only a lower bound,
+    # so the posture is unknown rather than late.
+    deadline = resolve_effective_filing_deadline(
+        str(work_unit.modelo),
+        work_unit.filing_year,
+        work_unit.period,
+        operation=published_authority_operation(),
+    )
+    assert deadline is not None
+    calendar_published = deadline.holiday_coverage is not DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
+    expected_timeliness = FilingTimeliness.EXTEMPORANEA if calendar_published else FilingTimeliness.UNKNOWN
     assert filing.declaration_kind is FilingDeclarationKind.ORIGINAL
-    assert filing.filing_timeliness is FilingTimeliness.EXTEMPORANEA
-    assert outcome.filing_timeliness is FilingTimeliness.EXTEMPORANEA
+    assert filing.filing_timeliness is expected_timeliness
+    assert outcome.filing_timeliness is expected_timeliness
     with calculation_ports_for_test(
         bucket_id=work_unit.bucket_id,
         work_unit_repository=wu_repo,
@@ -342,8 +356,10 @@ def test_file_records_verified_modelo_130_as_late_non_official_local_filing(repo
     computing = next(step for step in target_run.steps if step.stage is WorkflowStage.COMPUTING_DEADLINES)
     assert computing.success is True
     assert isinstance(computing.details, WorkflowDeadlineContextDetails)
-    assert computing.details.overdue is True
-    assert computing.details.extemporanea is True
+    # The gate and the receipt answer alike: a window the shift calendar cannot
+    # establish is never reported closed, so no overdue marker is recorded.
+    assert computing.details.overdue is (True if calendar_published else None)
+    assert computing.details.extemporanea is (True if calendar_published else None)
 
     assert target_filing_records(
         list_filing_records(

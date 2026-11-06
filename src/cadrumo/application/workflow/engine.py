@@ -125,9 +125,9 @@ class WorkflowEngine:
         certificate_bundle: CertificateBundleProtocol | None,
         inputs_provider: ModeloInputsProviderProtocol,
         settings: Settings,
+        authority_operation: PinnedAuthorityOperation,
         expedientes_source: ExpedientesSource | None = None,
         notifications_source: NotificationsSource | None = None,
-        authority_operation: PinnedAuthorityOperation | None = None,
     ) -> None:
         """Construct a :class:`WorkflowEngine`.
 
@@ -150,8 +150,8 @@ class WorkflowEngine:
                 inbox stage not wired; it must never default to a direct
                 outbound-adapter fetch.
             authority_operation: Caller-owned generation-pinned authority
-                operation, so the deadline stage judges lateness on the same
-                generation the rest of the caller's operation reads.
+                operation, required so the deadline stage judges lateness on the
+                same generation the rest of the caller's operation reads.
         """
         self._deadline_engine = deadline_engine
         self._filing_draft_builder = filing_draft_builder

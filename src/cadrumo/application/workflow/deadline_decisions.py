@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from contextlib import nullcontext
 from datetime import date, datetime
 
 from ...core.filing_timeliness import FilingTimeliness
+from ...core.logging import get_logger
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import (
     ActionEvidenceProvenance,
@@ -14,8 +14,11 @@ from ...core.operator_action_enums import (
 )
 from ...core.period import Period
 from ...core.time.clock import now
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ...domain.deadlines.effective_close import resolve_effective_filing_deadline, resolve_filing_timeliness
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.errors import RegistryError
+from ...domain.deadlines.effective_close import resolve_filing_timeliness
+from ...domain.deadlines.errors import DeadlineValidationError
+from ...domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...domain.deadlines.models import ModeloDeadline, ObligationStatus
 from ..operator_actions.models import PreconditionVerdict
 from ..operator_actions.preconditions import no_action_precondition_verdict
@@ -33,6 +36,8 @@ from .run_models import (
     WorkflowStage,
     WorkflowStep,
 )
+
+_LOG = get_logger(__name__)
 
 type WorkflowDeadlineTarget = ModeloDeadline | WorkflowObligationFacts
 
@@ -59,46 +64,51 @@ def _filing_window_closed_on(
     *,
     obligation: ModeloDeadline,
     today: date,
-    authority_operation: PinnedAuthorityOperation | None,
+    authority_operation: PinnedAuthorityOperation,
 ) -> date | None:
     """Return the effective close date when the window has genuinely closed, else ``None``.
 
-    The obligation carries the close date the registry declares. A declaration
-    whose window ends on a non-business day runs to the next business day (Ley
-    39/2015 art. 30.5 through Ley 58/2003 art. 7.2), so comparing the declared
-    date against ``today`` refuses a filing on the shifted day that the
+    The obligation already carries the close its filer actually has: the engine
+    resolves the business-day shift once (Ley 39/2015 art. 30.5 through Ley
+    58/2003 art. 7.2) and publishes it. Comparing the registry's declared close
+    against ``today`` instead refused a filing on the shifted day that the
     calculate posture, the declaration editor, the filing calendar and the
-    filing receipt all call in time. The decision therefore reads the one
-    shared effective-deadline projection, and the receipt's kept posture and
-    this gate cannot disagree.
+    filing receipt all call in time.
 
-    An effective close the projection cannot establish -- an unknown projected
-    close, or a window it does not resolve -- is not proof that the window has
-    closed, so it is reported as still open rather than as a late filing.
+    An effective close the engine could not establish is not proof that the
+    window has closed: an unknown close is only a lower bound, so the window is
+    reported as still open and nothing is judged after it.
+
+    ``authority_operation`` is the caller's pin, required so this decision can
+    never answer from a generation other than the one the run reads.
     """
-    if authority_operation is not None:
-        pin = nullcontext(authority_operation)
-    else:
-        pin = bundled_indexed_authority().operation()
-    with pin as pinned:
-        if (
-            resolve_filing_timeliness(
-                str(obligation.modelo),
-                obligation.period.filing_year,
-                obligation.period,
-                presented_on=today,
-                operation=pinned,
-            )
-            is not FilingTimeliness.EXTEMPORANEA
-        ):
-            return None
-        deadline = resolve_effective_filing_deadline(
+    if obligation.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE:
+        return None
+    try:
+        timeliness = resolve_filing_timeliness(
             str(obligation.modelo),
             obligation.period.filing_year,
             obligation.period,
-            operation=pinned,
+            presented_on=today,
+            operation=authority_operation,
         )
-    return deadline.closes_on if deadline is not None else obligation.closes_on
+    except (RegistryError, DeadlineValidationError):
+        # The registry or the shift could not be read, so lateness is unknown
+        # rather than established. The window stays open; the local filing
+        # receipt records its own posture as unknown for the same reason.
+        _LOG.debug(
+            "filing window lateness unresolved; treating the window as open",
+            extra={
+                "modelo": str(obligation.modelo),
+                "filing_year": obligation.period.filing_year,
+                "period": obligation.period.registry_token,
+            },
+            exc_info=True,
+        )
+        return None
+    if timeliness is not FilingTimeliness.EXTEMPORANEA:
+        return None
+    return obligation.adjusted_closes_on
 
 
 def decide_filing_deadline(
@@ -110,13 +120,13 @@ def decide_filing_deadline(
     started: datetime,
     steps: list[WorkflowStep],
     purpose: WorkflowPurpose,
-    authority_operation: PinnedAuthorityOperation | None = None,
+    authority_operation: PinnedAuthorityOperation,
 ) -> WorkflowDeadlineTarget:
     """Record the selected deadline and enforce the workflow purpose.
 
-    ``authority_operation`` keeps the lateness decision on the caller's pinned
-    authority generation; without one a bundled indexed operation is opened for
-    the decision alone.
+    ``authority_operation`` is required: the lateness decision reads the
+    registry, and a decision taken on a generation other than the run's own is
+    a different answer about the same filing.
     """
     if purpose is WorkflowPurpose.VERIFY:
         return _record_verify_deadline_context(
