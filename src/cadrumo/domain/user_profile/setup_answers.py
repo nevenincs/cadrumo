@@ -345,6 +345,10 @@ class SetupAnswers(BaseModel):
         return _parse_optional_bool_token(value, field_name="Modelo IVA boolean")
 
     @field_validator(
+        "has_employees",
+        "pays_professionals_with_retencion",
+        "pays_rent_with_retencion",
+        "does_intracomunitario",
         "third_party_transactions_above_347_threshold",
         "bienes_extranjero_above_threshold",
         "monedas_virtuales_extranjero_above_threshold",
