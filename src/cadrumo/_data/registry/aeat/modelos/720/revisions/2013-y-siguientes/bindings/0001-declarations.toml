@@ -4,16 +4,17 @@ provider = { kind = "manual_input", record = "type_1", field = "tipo-de-soporte"
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
 
-# The official PDF prints two distinct contact facts: 59-67 phone and 68-107 name.
+# The DR720 design and Orden HAP/72/2013 Anexo II print two distinct contact
+# facts: 59-67 phone and 68-107 name.
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720.type_1.telefono-contacto"
 provider = { kind = "profile", profile_key = "contact.contact_person_phone" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
-additional_source_refs = ["aeat-modelo-720-contact-instructions"]
+additional_source_refs = ["boe-modelo-720-2013-contact-guidance"]
 
 [[revisions."2013-y-siguientes".bindings.source_citations]]
-source_ref = "aeat-modelo-720-contact-instructions"
+source_ref = "boe-modelo-720-2013-contact-guidance"
 required_text = ["PERSONA CON QUIÉN RELACIONARSE", "59-67 TELÉFONO: Campo numérico de 9 posiciones"]
 
 [[revisions."2013-y-siguientes".bindings]]
@@ -21,10 +22,10 @@ id = "modelo-720.type_1.nombre-contacto"
 provider = { kind = "profile", profile_key = "contact.contact_person_name" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
-additional_source_refs = ["aeat-modelo-720-contact-instructions"]
+additional_source_refs = ["boe-modelo-720-2013-contact-guidance"]
 
 [[revisions."2013-y-siguientes".bindings.source_citations]]
-source_ref = "aeat-modelo-720-contact-instructions"
+source_ref = "boe-modelo-720-2013-contact-guidance"
 required_text = ["PERSONA CON QUIÉN RELACIONARSE", "68-107 APELLIDOS Y NOMBRE", "primer apellido, un espacio, el segundo apellido", "un espacio y el nombre completo"]
 
 [[revisions."2013-y-siguientes".bindings]]
