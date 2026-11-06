@@ -5,7 +5,7 @@ tags:
 date: '2026-11-06'
 modified: '2026-11-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:31e625efc02dbc6121e70c119048cbd65494fc007236d3cdb9092da9ecced489'
+body_hash: 'sha256:fe7ca24d2854c5240fc041b8a6f6073f9cb9b6011511ac6220d4cce4975e0a40'
 related:
   - "[[2026-08-22-source-casilla-integration-adr]]"
   - "[[2026-07-24-evidence-revision-identity-adr]]"
@@ -30,7 +30,7 @@ Today the calculation path hashes the whole loaded profile record, including its
 - `2026-07-24-evidence-revision-identity-adr` requires operator sign-off for any change to content-address derivation.
 - No consumer compares a stored profile fingerprint with the live profile. Header and contact export facts are read live. Whole-record sensitivity therefore protects no current check (reference).
 - Persisted revisions re-derive their ID from the stored fingerprint string, never from a profile. A new computation therefore rewrites no history (reference).
-- One test pins the whole-record behaviour today. `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_720_profile_contact.py:345` asserts that an edit to an unconsumed fact (`identity.email`) changes the Modelo 720 revision identity even when the contact values match. It came from the modelo-profile-bindings plan step S04, which was scoped to preserve existing fingerprint provenance and did not rule on node content (reference).
+- One test pins the whole-record behaviour today. `test_changed_profile_evidence_changes_revision_identity_even_when_contact_values_match` in `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_720_profile_contact.py` asserts that an edit to an unconsumed fact (`identity.email`) changes the Modelo 720 revision identity even when the contact values match. It came from the modelo-profile-bindings plan step S04, which was scoped to preserve existing fingerprint provenance and did not rule on node content (reference).
 
 ## Considered options
 
@@ -72,7 +72,9 @@ Required tests:
 - The terminal-origin audit still finds a non-null fingerprint on every connected profile primary.
 - A revision persisted under the whole-record scheme still loads and re-derives its stored ID.
 
-The pinned test at `test_modelo_720_profile_contact.py:345` is replaced in the same change by its inverse, because an unconsumed `identity.email` edit must keep the 720 identity. Its encrypted round trip is kept.
+The pinned test `test_changed_profile_evidence_changes_revision_identity_even_when_contact_values_match` in `test_modelo_720_profile_contact.py` is replaced in the same change by its inverse, because an unconsumed `identity.email` edit must keep the 720 identity. Its encrypted round trip is kept.
+
+Committed revision IDs: the CLI-sequence goldens under `docs/_sequences` hold content-derived `calculation_revision_id` values (46 files, 80 values at this writing). Every golden whose revision consumed a profile node changes ID under the new scheme, so the same change regenerates them through `just docs-generate-sequences` and passes `just test-sequence-goldens-gate`. No other committed fixture stores a derived revision ID: `native/desktop/src-tauri/src/shell/modelo/relay_contracts.json` and `src/cadrumo/_data/operations/contract_manifest.json` name the field without holding a value, and the registry `revision_id` entries in export provenance files are edition identifiers, not calculation identities.
 
 ## Rationale
 
