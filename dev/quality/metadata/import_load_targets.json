@@ -773,6 +773,7 @@
         "cadrumo.application.filing.history_models",
         "cadrumo.application.filing.history_ports",
         "cadrumo.application.filing.history_repository",
+        "cadrumo.application.filing.identity_contact_producer",
         "cadrumo.application.filing.m190_context_validation",
         "cadrumo.application.filing.m193_context_validation",
         "cadrumo.application.filing.m200_projection",
