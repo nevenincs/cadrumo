@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from contextlib import nullcontext
 from datetime import date, datetime
 
+from ...core.filing_timeliness import FilingTimeliness
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import (
     ActionEvidenceProvenance,
@@ -12,7 +14,9 @@ from ...core.operator_action_enums import (
 )
 from ...core.period import Period
 from ...core.time.clock import now
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.deadlines.models import ModeloDeadline, ObligationStatus
+from ..modelo.effective_deadline import resolve_effective_filing_deadline, resolve_filing_timeliness
 from ..operator_actions.models import PreconditionVerdict
 from ..operator_actions.preconditions import no_action_precondition_verdict
 from .abort import WorkflowAbortReason
@@ -51,6 +55,52 @@ def no_recovery_verdict(
     )
 
 
+def _filing_window_closed_on(
+    *,
+    obligation: ModeloDeadline,
+    today: date,
+    authority_operation: PinnedAuthorityOperation | None,
+) -> date | None:
+    """Return the effective close date when the window has genuinely closed, else ``None``.
+
+    The obligation carries the close date the registry declares. A declaration
+    whose window ends on a non-business day runs to the next business day (Ley
+    39/2015 art. 30.5 through Ley 58/2003 art. 7.2), so comparing the declared
+    date against ``today`` refuses a filing on the shifted day that the
+    calculate posture, the declaration editor, the filing calendar and the
+    filing receipt all call in time. The decision therefore reads the one
+    shared effective-deadline projection, and the receipt's kept posture and
+    this gate cannot disagree.
+
+    An effective close the projection cannot establish -- an unknown projected
+    close, or a window it does not resolve -- is not proof that the window has
+    closed, so it is reported as still open rather than as a late filing.
+    """
+    if authority_operation is not None:
+        pin = nullcontext(authority_operation)
+    else:
+        pin = bundled_indexed_authority().operation()
+    with pin as pinned:
+        if (
+            resolve_filing_timeliness(
+                str(obligation.modelo),
+                obligation.period.filing_year,
+                obligation.period,
+                presented_on=today,
+                operation=pinned,
+            )
+            is not FilingTimeliness.EXTEMPORANEA
+        ):
+            return None
+        deadline = resolve_effective_filing_deadline(
+            str(obligation.modelo),
+            obligation.period.filing_year,
+            obligation.period,
+            operation=pinned,
+        )
+    return deadline.closes_on if deadline is not None else obligation.closes_on
+
+
 def decide_filing_deadline(
     *,
     obligation: ModeloDeadline | None,
@@ -60,8 +110,14 @@ def decide_filing_deadline(
     started: datetime,
     steps: list[WorkflowStep],
     purpose: WorkflowPurpose,
+    authority_operation: PinnedAuthorityOperation | None = None,
 ) -> WorkflowDeadlineTarget:
-    """Record the selected deadline and enforce the workflow purpose."""
+    """Record the selected deadline and enforce the workflow purpose.
+
+    ``authority_operation`` keeps the lateness decision on the caller's pinned
+    authority generation; without one a bundled indexed operation is opened for
+    the decision alone.
+    """
     if purpose is WorkflowPurpose.VERIFY:
         return _record_verify_deadline_context(
             obligation=obligation,
@@ -108,7 +164,12 @@ def decide_filing_deadline(
         )
         raise WorkflowAbortSignalError(reason=WorkflowAbortReason.NO_PENDING_OBLIGATION)
 
-    if obligation.closes_on < today:
+    closed_on = _filing_window_closed_on(
+        obligation=obligation,
+        today=today,
+        authority_operation=authority_operation,
+    )
+    if closed_on is not None:
         if target_modelo is not None and target_period is not None:
             # A targeted but closed-window obligation that genuinely
             # existed is filed locally and late (extemporánea, con recargo)
@@ -124,7 +185,7 @@ def decide_filing_deadline(
                         kind="deadline_context",
                         modelo=obligation.modelo,
                         period=obligation.period,
-                        closes_on=obligation.closes_on,
+                        closes_on=closed_on,
                         overdue=True,
                         extemporanea=True,
                     ),
@@ -142,7 +203,7 @@ def decide_filing_deadline(
                     kind="deadline_context",
                     modelo=obligation.modelo,
                     period=obligation.period,
-                    closes_on=obligation.closes_on,
+                    closes_on=closed_on,
                 ),
                 precondition_verdict=no_recovery_verdict(
                     condition_id="workflow.deadline.filing_window_open",

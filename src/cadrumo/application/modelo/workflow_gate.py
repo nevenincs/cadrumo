@@ -356,7 +356,7 @@ def build_revision_workflow_engine(
         operation: Caller-owned generation-pinned indexed authority operation.
     """
     cfg = settings or load_settings()
-    deadline_engine = DeadlineEngine()
+    deadline_engine = DeadlineEngine(authority=operation)
     provider_kind = cfg.cadrumo_auth_provider if cfg.cadrumo_auth_provider is not None else AuthProviderKind.CERTIFICATE
     submission_engine = SubmissionEngine(
         auth_provider=select_provider(
@@ -388,6 +388,7 @@ def build_revision_workflow_engine(
             work_unit=work_unit,
         ),
         settings=cfg,
+        authority_operation=operation,
     )
 
 

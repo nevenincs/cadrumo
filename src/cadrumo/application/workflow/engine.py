@@ -20,6 +20,7 @@ from ...core.operator_action_enums import (
 from ...core.parsing.utils import enum_value
 from ...core.period import Period
 from ...core.time.clock import now, today_madrid
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.filing.errors import ModeloBuilderError
 from ...domain.filing.protocols import ModeloInputs
@@ -126,6 +127,7 @@ class WorkflowEngine:
         settings: Settings,
         expedientes_source: ExpedientesSource | None = None,
         notifications_source: NotificationsSource | None = None,
+        authority_operation: PinnedAuthorityOperation | None = None,
     ) -> None:
         """Construct a :class:`WorkflowEngine`.
 
@@ -147,6 +149,9 @@ class WorkflowEngine:
                 a bucket-scoped application capture. ``None`` leaves the
                 inbox stage not wired; it must never default to a direct
                 outbound-adapter fetch.
+            authority_operation: Caller-owned generation-pinned authority
+                operation, so the deadline stage judges lateness on the same
+                generation the rest of the caller's operation reads.
         """
         self._deadline_engine = deadline_engine
         self._filing_draft_builder = filing_draft_builder
@@ -157,6 +162,7 @@ class WorkflowEngine:
         self._settings = settings
         self.expedientes_source = expedientes_source
         self.notifications_source = notifications_source
+        self._authority_operation = authority_operation
         # Lazy run-id recomputation state. These are set at the start
         # of every ``_drive`` call and consumed by
         # ``_record_site_unavailable`` so an alert raised *after* the
@@ -480,6 +486,7 @@ class WorkflowEngine:
             started=started,
             steps=steps,
             purpose=purpose,
+            authority_operation=self._authority_operation,
         )
 
     async def _stage_checking_inbox(

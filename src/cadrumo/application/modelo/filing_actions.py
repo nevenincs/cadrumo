@@ -50,6 +50,7 @@ from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ...core.result_disposition import ResultDisposition
+from ...core.time.clock import MADRID_TZ
 from ...core.time.clock import now as clock_utc_now
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
@@ -336,7 +337,10 @@ def _run_filing_workflow(
         engine=gate_engine,
         profile=workflow_profile,
         work_unit=work_unit,
-        today=now.date(),
+        # The filing plazo is a Europe/Madrid civil boundary, the same date the
+        # receipt's kept posture is judged on; the UTC date reports the previous
+        # Spanish day for up to two hours every night.
+        today=now.astimezone(MADRID_TZ).date(),
         runs_dir=workflow_runs_dir,
         run_repository=ports.workflow_run_repository,
     )
