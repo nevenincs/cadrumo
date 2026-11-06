@@ -451,14 +451,18 @@ class ModeloApplicabilityRule(BaseModel):
                 return finding
         return next((finding for finding in findings if finding.answered), findings[0] if findings else None)
 
-    def _entity_type_result(self, profile: TaxpayerProfile) -> ModeloApplicability | None:
+    def _entity_type_result(
+        self,
+        profile: TaxpayerProfile,
+        operation: PinnedAuthorityOperation | None,
+    ) -> ModeloApplicability | None:
         if profile.entity_type in self.applicable_entity_types:
             return None
         if self.cuota_bearing and profile.entity_type == entity_type_attribution_entity_token():
             return ModeloApplicability(
                 modelo=self.modelo,
                 verdict=ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH,
-                reason=registry_applicability_reason("attribution_pass_through.reason"),
+                reason=registry_applicability_reason("attribution_pass_through.reason", operation=operation),
                 legal_refs=_ATTRIBUTION_PASS_THROUGH_LEGAL_REFS,
             )
         return self._not_applicable()
@@ -602,11 +606,15 @@ class ModeloApplicabilityRule(BaseModel):
             },
         )
 
-    def _positive_rule_gates_result(self, profile: TaxpayerProfile) -> ModeloApplicability | None:
+    def _positive_rule_gates_result(
+        self,
+        profile: TaxpayerProfile,
+        operation: PinnedAuthorityOperation | None,
+    ) -> ModeloApplicability | None:
         """Resolve the entity, residency, IVA, and natural-person gates in order."""
         if profile.entity_type is None:
             return incomplete_applicability(self.modelo, entity_type_declared=False)
-        if (result := self._entity_type_result(profile)) is not None:
+        if (result := self._entity_type_result(profile, operation)) is not None:
             return result
         if (
             self.applicable_fiscal_residencies
@@ -623,6 +631,7 @@ class ModeloApplicabilityRule(BaseModel):
         profile: TaxpayerProfile,
         *,
         ledger_payer_facts: Mapping[str, LedgerPayerFactDerivation] = NO_LEDGER_PAYER_FACTS,
+        operation: PinnedAuthorityOperation | None = None,
     ) -> ModeloApplicability:
         """Derive the :class:`ModeloApplicability` for ``profile``.
 
@@ -639,8 +648,14 @@ class ModeloApplicabilityRule(BaseModel):
             ledger_payer_facts: What the taxpayer's own records show about
                 payer facts for the filing year being decided, keyed by payer
                 fact token. Empty when no derivation is available.
+            operation: The caller's pinned authority operation, used for the
+                one verdict reason this rule resolves from the registry, the
+                attribution pass-through answer. Leaving it ``None`` makes
+                that resolution lease a fresh bundled authority of its own,
+                so a caller that holds a pin passes it to keep the whole
+                verdict on one generation.
         """
-        if (result := self._positive_rule_gates_result(profile)) is not None:
+        if (result := self._positive_rule_gates_result(profile, operation)) is not None:
             return result
         # The exclusion axis runs once the positive gates pass. A holding
         # exclusion decides the verdict outright; an undetermined one is held
