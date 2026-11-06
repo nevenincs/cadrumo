@@ -2,8 +2,11 @@
   "asset_id": "furgoneta",
   "purchase": {
     "booked_date": "2023-04-01",
+    "description": "Compra de la furgoneta",
     "taxable_base": "24000.00",
-    "iva_amount": "5040.00"
+    "iva_amount": "5040.00",
+    "input_classification": "exclusively_deductible",
+    "purchase_invoice_evidence_id": "cde40905354915ad2823fd4bc7fba932069a4af87d95140d1b1014819512d3de"
   },
   "steps": [
     {

@@ -308,9 +308,10 @@ _NOT_TABLE_BOUND = {
 }
 """The methods whose limit is not the amortization table; every other non-table method elects its amount."""
 
-_TABLE_METHODS = frozenset(
+TABLE_BOUND_METHODS = frozenset(
     {AmortizationMethod.LINEAR, AmortizationMethod.CONSTANT_PERCENTAGE, AmortizationMethod.SUM_OF_DIGITS},
 )
+"""The methods whose corridor is the registry's amortization table, so an election of one names a class."""
 
 
 def election_limits(
@@ -329,7 +330,7 @@ def election_limits(
     ends_on = authority.maximum_period_ends_on or authority.useful_life_ends_on
     if authority.sum_of_digits_period_years is not None:
         ends_on = add_years(revision.in_service_date, authority.sum_of_digits_period_years)
-    if election.method not in _TABLE_METHODS:
+    if election.method not in TABLE_BOUND_METHODS:
         twentieth = _NOT_TABLE_BOUND.get(election.method) is ActivityAssetNotTableBoundReason.TWENTIETH_LIMIT
         return ActivityAssetElectionLimits(
             class_key=election.authority_class_key,

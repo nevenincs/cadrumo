@@ -18,32 +18,32 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any, Final
 
-from cadrumo.application.actividad_asset.activity_asset_read_models import (
+from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.errors import RegistryError
+from ....domain.renta.actividad_asset.disposal import ActivityAssetDisposal, ActivityAssetDisposalReason
+from ....domain.renta.actividad_asset.election import DirectEstimationRegime
+from ....domain.renta.actividad_asset.errors import ActividadAssetError
+from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
+from ....domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
+from ....domain.renta.actividad_asset.schedule import AssetScheduleHistory, ScheduledAmortizationCharge
+from ....domain.transactions.models import Transaction
+from ...calculations.actividad_asset_schedule import forecast_activity_asset_charge
+from ..activity_asset_read_models import (
     NO_TABLE_MINIMUM_REASON_KEY,
     OPENING_REMEDY_REASON_KEYS,
     ActivityAssetFormOptionsView,
+    ActivityAssetListRow,
     remedy_field_key,
 )
-from cadrumo.application.actividad_asset.disposal_calculation import project_disposal_calculation
-from cadrumo.application.actividad_asset.fact_wording import timeline_field_paths
-from cadrumo.application.actividad_asset.operation_dtos import (
+from ..disposal_calculation import project_disposal_calculation
+from ..fact_wording import timeline_field_paths
+from ..operation_dtos import (
     ActivityAssetCorrectionRevisionSnapshot,
     ActivityAssetRevisionSnapshot,
 )
-from cadrumo.application.actividad_asset.operations import ActivityAssetOperations
-from cadrumo.application.actividad_asset.register_reads import register_years
-from cadrumo.application.actividad_asset.schedule_walk import NOT_APPLICABLE_ABSENCES
-from cadrumo.application.calculations.actividad_asset_schedule import forecast_activity_asset_charge
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.errors import RegistryError
-from cadrumo.domain.renta.actividad_asset.disposal import ActivityAssetDisposal, ActivityAssetDisposalReason
-from cadrumo.domain.renta.actividad_asset.election import DirectEstimationRegime
-from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetError
-from cadrumo.domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
-from cadrumo.domain.renta.actividad_asset.register_records import ActivityAssetDescriptorFacts
-from cadrumo.domain.renta.actividad_asset.schedule import AssetScheduleHistory, ScheduledAmortizationCharge
-from cadrumo.domain.transactions.models import Transaction
-
+from ..operations import ActivityAssetOperations
+from ..register_reads import TABLE_BOUND_METHODS, register_years
+from ..schedule_walk import NOT_APPLICABLE_ABSENCES
 from .ledger_support import MemoryLedger, acquisition_transaction
 from .register_support import MemoryRepository, memory_register_authority
 
@@ -93,6 +93,8 @@ def _payment(provider_id: str, facts: dict[str, Any]) -> Transaction:
         currency=facts.get("currency", "EUR"),
         booked_date=date.fromisoformat(facts["booked_date"]),
         description=facts.get("description", provider_id),
+        input_classification=facts.get("input_classification"),
+        purchase_invoice_evidence_id=facts.get("purchase_invoice_evidence_id"),
     )
 
 
@@ -176,22 +178,39 @@ def _replay_element(
 
 def replayed_register(
     frame: dict[str, Any], elements: tuple[dict[str, Any], ...]
-) -> tuple[ActivityAssetOperations, date]:
-    """Replay every element's steps into a fresh register standing on the scenario's day."""
+) -> tuple[ActivityAssetOperations, date, tuple[dict[str, Any], ...]]:
+    """Replay every element's steps into a fresh register standing on the scenario's day.
+
+    Returns:
+        The register, the day it stands on, and every ledger payment it was given
+        under the name the scenario calls it by, owned or loose.
+    """
     today = date.fromisoformat(frame["today"])
     owned = {element["asset_id"]: _payment(element["asset_id"], element["purchase"]) for element in elements}
-    loose = tuple(_payment(payment["provider_id"], payment) for payment in frame["payments"])
+    loose = {payment["provider_id"]: _payment(payment["provider_id"], payment) for payment in frame["payments"]}
     repository = MemoryRepository()
     operations = ActivityAssetOperations(
         repository=repository,
-        ledger=MemoryLedger(*owned.values(), *loose),
+        ledger=MemoryLedger(*owned.values(), *loose.values()),
         forecast_operation=_published_forecast,
         taxpayer_modality=lambda: DirectEstimationRegime(frame["modality"]),
         register_authority=memory_register_authority(today=today),
     )
     for element in elements:
         _replay_element(operations, repository, element, owned[element["asset_id"]].transaction_id)
-    return operations, today
+    payments = tuple(
+        {
+            "provider_id": provider_id,
+            "asset_id": asset_id,
+            "transaction_id": row.transaction_id,
+            "description": row.raw.description,
+        }
+        for asset_id, provider_id, row in (
+            *((element_id, element_id, row) for element_id, row in owned.items()),
+            *((None, provider_id, row) for provider_id, row in loose.items()),
+        )
+    )
+    return operations, today, payments
 
 
 def _dump(value: Any) -> Any:
@@ -255,6 +274,29 @@ def _element(operations: ActivityAssetOperations, asset_id: str, today: date) ->
     }
 
 
+def _candidates(operations: ActivityAssetOperations) -> tuple[Any, ...]:
+    """The payments the register offers, read under a pinned generation.
+
+    Reading a payment's non-deductible IVA resolves the art. 106 input vocabulary,
+    which refuses an unpinned scope the way the operation host pins one.
+    """
+    with bundled_indexed_authority().operation():
+        return operations.acquisition_candidates()
+
+
+def _answered_years(rows: tuple[ActivityAssetListRow, ...], documents: dict[str, dict[str, Any]]) -> tuple[int, ...]:
+    """Every tax year the register answers for, projected years included.
+
+    The register reads a projected year as well as an authored one, and a form
+    asks the options of any year its plan reaches, so the recording spans both
+    axes of the list row and every year a recorded plan names. Recording only
+    the readable years left the projected ones refused by the window's fixtures.
+    """
+    answered = {year for row in rows for year in (*row.years, *row.projected_years)}
+    answered.update(row["tax_year"] for element in documents.values() for row in element["rows"])
+    return tuple(sorted(answered))
+
+
 def _form_options(operations: ActivityAssetOperations, years: tuple[int, ...]) -> list[dict[str, Any]]:
     options: list[dict[str, Any]] = []
     for kind in AssetKind:
@@ -269,25 +311,25 @@ def _form_options(operations: ActivityAssetOperations, years: tuple[int, ...]) -
 
 def recording(frame: dict[str, Any], elements: tuple[dict[str, Any], ...]) -> dict[str, dict[str, Any]]:
     """What the register answers for the scenario, one document for the register and one per element."""
-    operations, today = replayed_register(frame, elements)
+    operations, today, payments = replayed_register(frame, elements)
     rows = operations.list_elements()
     years = register_years(rows)
+    documents = {row.asset_id: _element(operations, row.asset_id, today) for row in rows}
     register = {
         "_note": NOTE,
         "today": today.isoformat(),
         "list": _dump(rows),
         "years": list(years),
         "default_year": operations.default_register_year(years),
-        "candidates": _dump(operations.acquisition_candidates()),
-        "form_options": _form_options(operations, years),
+        "candidates": _dump(_candidates(operations)),
+        "payments": list(payments),
+        "form_options": _form_options(operations, _answered_years(rows, documents)),
         "vocabulary": {
+            "table_bound_methods": sorted(method.value for method in TABLE_BOUND_METHODS),
             "timeline_fact_paths": list(timeline_field_paths()),
             "not_applicable_absences": sorted(absence.value for absence in NOT_APPLICABLE_ABSENCES),
             "remedy_field_keys": {key: remedy_field_key(key) for key in sorted(OPENING_REMEDY_REASON_KEYS)},
             "no_table_minimum_key": NO_TABLE_MINIMUM_REASON_KEY,
         },
     }
-    documents = {"register": register}
-    for row in rows:
-        documents[row.asset_id] = {"_note": NOTE, **_element(operations, row.asset_id, today)}
-    return documents
+    return {"register": register, **{name: {"_note": NOTE, **element} for name, element in documents.items()}}

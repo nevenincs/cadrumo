@@ -7,14 +7,18 @@
       "booked_date": "2026-05-06",
       "description": "Portátil de trabajo",
       "taxable_base": "900.00",
-      "iva_amount": "189.00"
+      "iva_amount": "189.00",
+      "input_classification": "exclusively_deductible",
+      "purchase_invoice_evidence_id": "1f4ab5c6d70e8291a3b4c5d6e7f80912a3b4c5d6e7f8091a2b3c4d5e6f708192"
     },
     {
       "provider_id": "t-silla",
       "booked_date": "2026-02-11",
       "description": "Silla ergonómica",
       "taxable_base": "200.00",
-      "iva_amount": "42.00"
+      "iva_amount": "42.00",
+      "input_classification": "exclusively_deductible",
+      "purchase_invoice_evidence_id": "2a5bc6d7e81f9302b4c5d6e7f8091023b4c5d6e7f8091a2b3c4d5e6f70819203"
     },
     {
       "provider_id": "t-efectivo",
