@@ -13,6 +13,7 @@ import {
   isLifecycleState,
 } from "../../../shell/ledgerContract";
 import { takesBusinessShare } from "../../../shell/ledgerClassifications";
+import type { ClassifyBlock } from "../../../shell/ledgerCommands";
 import type { ServedVocabulary } from "../../../shell/ledgerServedVocabulary";
 import type { Translate } from "../../../shell/strings";
 import { wordOrToken } from "../../../shell/tokenWords";
@@ -140,4 +141,21 @@ export function accountLabel(
 ): string {
   if (id === null) return t("desktop.ledger.account.none");
   return accounts?.find((account) => account.id === id)?.label ?? id;
+}
+
+/** Why a classify command cannot run on its target, as said to the person. */
+export function blockText(t: Translate, block: ClassifyBlock): string {
+  switch (block.kind) {
+    case "nothing_selected":
+      return t("desktop.ledger.classify.nothing");
+    case "hidden":
+      return t("desktop.ledger.selection.hidden", {
+        hidden: block.hidden,
+        selected: block.selected,
+      });
+    case "transfers_only":
+      return t("desktop.ledger.classify.transfers_only");
+    case "inactive_only":
+      return t("desktop.ledger.classify.inactive_only");
+  }
 }

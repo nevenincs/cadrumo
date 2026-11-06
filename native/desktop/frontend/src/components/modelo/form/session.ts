@@ -1,24 +1,28 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ledgerFailure } from "../../../shell/ledger";
 import { modeloEditBody, type ModeloPort } from "../../../shell/modelo";
+import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
 import type {
-  ModeloEditApplyBaselineV1,
   ModeloEditNormalisation,
   ModeloEditOperatorInputV2,
   ModeloEditTypedEntryV1,
-  ModeloEditValueAddressV1,
-  ModeloEditValueGrammarV1,
-  ModeloEditWireScalar,
-  ModeloFormAddressV1,
   ModeloEditHeldAddressV1,
   ModeloEditHeldChangeV1,
   ModeloEditHeldKind,
   ModeloFormRebaseEntryV1,
+} from "../../../shell/modeloContract/modeloEdit";
+import type {
+  ModeloEditApplyBaselineV1,
+  ModeloEditValueAddressV1,
+  ModeloEditValueGrammarV1,
+  ModeloEditWireScalar,
+  ModeloFormAddressV1,
+} from "../../../shell/modeloContract/modeloEditWork";
+import type {
   ModeloWorkbenchFormProjectionV1,
-  OutputLanguage,
   PublicModeloFormField,
   PublicModeloWorkForm,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloWorkForm";
 import { takesEntry } from "./entryField";
 
 // The form's working state: the edits staged on it and the box chosen. It

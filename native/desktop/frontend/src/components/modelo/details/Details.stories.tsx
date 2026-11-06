@@ -5,10 +5,8 @@ import { ModeloEnvelope } from "../../../dev/ModeloEnvelope";
 import { formatAmount } from "../../../shared/numbers";
 import { translator } from "../../../shell/strings";
 import type { ModeloPort } from "../../../shell/modelo";
-import type {
-  ModeloWorkbenchFormProjectionV1,
-  OutputLanguage,
-} from "../../../shell/modeloContract";
+import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
+import type { ModeloWorkbenchFormProjectionV1 } from "../../../shell/modeloContract/modeloWorkForm";
 import { clearIntent, useFormSession, type FormSession } from "../form/session";
 import { Details } from "./Details";
 import { TodoRail } from "./TodoRail";

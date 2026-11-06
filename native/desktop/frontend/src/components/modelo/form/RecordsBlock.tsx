@@ -3,7 +3,7 @@ import { useTableView, type ViewColumn } from "@/components/ui/table-view";
 import type {
   PublicModeloFormContextFieldBlock,
   PublicModeloFormRepeatingBlock,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloWorkForm";
 import { useStrings } from "../../../shell/strings";
 import { calm, Label } from "./FieldRow";
 import { BoxNumber } from "./BoxNumber";

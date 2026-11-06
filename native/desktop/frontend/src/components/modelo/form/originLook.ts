@@ -1,5 +1,5 @@
 import type { IconName } from "@/components/ui/icon";
-import type { ModeloFormOrigin } from "../../../shell/modeloContract";
+import type { ModeloFormOrigin } from "../../../shell/modeloContract/modeloWorkForm";
 
 // How each origin the application reports is drawn: an icon and a tone that
 // reinforce its words, never replace them. The words are the field's own.

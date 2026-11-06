@@ -4,11 +4,11 @@ import { expect, userEvent, waitFor } from "storybook/test";
 import { modeloFixture, type ModeloShape } from "@/dev/modeloFixture";
 import { translator } from "../../../shell/strings";
 import type { ModeloPort } from "../../../shell/modelo";
+import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
 import type {
   ModeloFormElection,
   PublicModeloFormExportOffer,
-  OutputLanguage,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloWorkForm";
 import { Settlement } from "./Settlement";
 import { WorkspaceScreen } from "./WorkspaceScreen";
 import { byName } from "@/dev/globByName";

@@ -28,7 +28,7 @@ import type {
   KnownText,
   LedgerRow,
 } from "../src/shell/ledger";
-import type { CapitalGood } from "../src/shell/ledgerSetup";
+import type { CapitalGood } from "../src/shell/ledgerRegisterOperations";
 
 // What the ledger's own records offer a field. No page is opened.
 

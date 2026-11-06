@@ -25,13 +25,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { SourceSurface } from "../../../shell/modeloContract/modeloWork";
 import type {
   ModeloFormCounts,
   ModeloWorkbenchFormProjectionV1,
   PublicModeloFormField,
   PublicModeloWorkForm,
-  SourceSurface,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloWorkForm";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { boxNotes } from "./boxNotes";
 import { calm } from "./FieldRow";

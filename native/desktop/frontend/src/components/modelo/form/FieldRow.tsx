@@ -5,7 +5,7 @@ import { Icon } from "@/components/ui/icon";
 import type {
   ModeloFormText,
   PublicModeloFormField,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloWorkForm";
 import { useStrings } from "../../../shell/strings";
 import { BoxNoteList } from "./BoxNoteList";
 import { notesOf } from "./boxNotes";

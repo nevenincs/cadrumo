@@ -19,7 +19,7 @@ import type {
   ProrrataEntry,
   ProrrataGrossDeclaration,
   ProrrataMutationResult,
-} from "../../../shell/ledgerSetup";
+} from "../../../shell/ledgerRegisterOperations";
 import { vocabularyEmpty } from "../movements/movementWords";
 import { useVocabulary } from "../suggestions/SuggestionsProvider";
 import { useStrings } from "../../../shell/strings";
