@@ -11,8 +11,9 @@ is not exempt.
 
 What counts
 -----------
-Every ``.ts``, ``.tsx``, ``.mts`` and ``.cts`` file under ``native/desktop``,
-found on the filesystem, except installed dependencies under ``node_modules``.
+Every ``.ts``, ``.tsx``, ``.mts`` and ``.cts`` file under ``native/desktop``
+that the repository keeps, found on the filesystem under its ignore rules, so
+installed dependencies and ignored build output stay out.
 A physical line is a line of the file as stored, blank lines and comments
 included.
 
@@ -31,21 +32,22 @@ from pathlib import Path
 import pytest
 
 from dev.paths import REPO_ROOT
+from dev.source_tree import repository_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_DESKTOP = REPO_ROOT / "native" / "desktop"
+_DESKTOP = "native/desktop"
 _SUFFIXES = frozenset({".ts", ".tsx", ".mts", ".cts"})
 MAX_PHYSICAL_LINES = 1500
 
 
-def typescript_modules(root: Path) -> list[Path]:
-    """Every TypeScript module under ``root``, installed dependencies aside."""
-    return sorted(
-        path
-        for path in root.rglob("*")
-        if path.is_file() and path.suffix in _SUFFIXES and "node_modules" not in path.relative_to(root).parts
-    )
+def typescript_modules(root: Path) -> list[str]:
+    """Every TypeScript module the repository at ``root`` keeps under the desktop."""
+    return [
+        relative
+        for relative in repository_files(root, under=(_DESKTOP,), must_exist=True)
+        if Path(relative).suffix in _SUFFIXES
+    ]
 
 
 def physical_lines(path: Path) -> int:
@@ -56,27 +58,25 @@ def physical_lines(path: Path) -> int:
 def oversized(root: Path) -> list[tuple[str, int]]:
     """The modules under ``root`` longer than the bound, with their line counts."""
     return [
-        (path.relative_to(root).as_posix(), lines)
-        for path in typescript_modules(root)
-        if (lines := physical_lines(path)) > MAX_PHYSICAL_LINES
+        (relative, lines)
+        for relative in typescript_modules(root)
+        if (lines := physical_lines(root / relative)) > MAX_PHYSICAL_LINES
     ]
 
 
 def test_no_desktop_typescript_module_exceeds_the_bound() -> None:
-    modules = typescript_modules(_DESKTOP)
+    modules = typescript_modules(REPO_ROOT)
 
     # The walk reaches product code, generated contracts, specs and scripts.
-    assert _DESKTOP / "frontend" / "src" / "main.tsx" in modules
-    assert _DESKTOP / "frontend" / "playwright.config.ts" in modules
-    assert any(path.parent == _DESKTOP / "scripts" for path in modules)
-    found = oversized(_DESKTOP)
-    assert not found, "\n".join(
-        f"native/desktop/{path}: {lines} physical lines (bound {MAX_PHYSICAL_LINES})" for path, lines in found
-    )
+    assert f"{_DESKTOP}/frontend/src/main.tsx" in modules
+    assert f"{_DESKTOP}/frontend/playwright.config.ts" in modules
+    assert any(Path(relative).parent.as_posix() == f"{_DESKTOP}/scripts" for relative in modules)
+    found = oversized(REPO_ROOT)
+    assert not found, "\n".join(f"{path}: {lines} physical lines (bound {MAX_PHYSICAL_LINES})" for path, lines in found)
 
 
 def _plant(root: Path, relative: str, lines: int, *, newline: str = "\n", final: bool = True) -> Path:
-    path = root / relative
+    path = root / _DESKTOP / relative
     path.parent.mkdir(parents=True, exist_ok=True)
     body = newline.join(f"export const line{index} = {index};" for index in range(lines))
     path.write_bytes((body + (newline if final else "")).encode())
@@ -87,7 +87,7 @@ def _plant(root: Path, relative: str, lines: int, *, newline: str = "\n", final:
 def test_a_module_one_line_over_the_bound_is_found(tmp_path: Path, suffix: str) -> None:
     _plant(tmp_path, f"frontend/src/big{suffix}", MAX_PHYSICAL_LINES + 1)
 
-    assert oversized(tmp_path) == [(f"frontend/src/big{suffix}", MAX_PHYSICAL_LINES + 1)]
+    assert oversized(tmp_path) == [(f"{_DESKTOP}/frontend/src/big{suffix}", MAX_PHYSICAL_LINES + 1)]
 
 
 def test_a_module_at_the_bound_passes(tmp_path: Path) -> None:
@@ -102,23 +102,23 @@ def test_a_module_at_the_bound_passes(tmp_path: Path) -> None:
 def test_line_endings_and_a_missing_final_newline_do_not_hide_a_line(tmp_path: Path, newline: str, final: bool) -> None:
     _plant(tmp_path, "frontend/src/big.ts", MAX_PHYSICAL_LINES + 1, newline=newline, final=final)
 
-    assert oversized(tmp_path) == [("frontend/src/big.ts", MAX_PHYSICAL_LINES + 1)]
+    assert oversized(tmp_path) == [(f"{_DESKTOP}/frontend/src/big.ts", MAX_PHYSICAL_LINES + 1)]
 
 
 def test_blank_lines_and_comments_count(tmp_path: Path) -> None:
-    path = tmp_path / "frontend/src/padded.ts"
+    path = tmp_path / _DESKTOP / "frontend/src/padded.ts"
     path.parent.mkdir(parents=True)
     lines = ["// note" if index % 2 else "" for index in range(MAX_PHYSICAL_LINES)]
     path.write_text("export const kept = 1;\n" + "\n".join(lines) + "\n", encoding="utf-8")
 
-    assert oversized(tmp_path) == [("frontend/src/padded.ts", MAX_PHYSICAL_LINES + 1)]
+    assert oversized(tmp_path) == [(f"{_DESKTOP}/frontend/src/padded.ts", MAX_PHYSICAL_LINES + 1)]
 
 
 def test_a_generated_module_is_held_to_the_bound(tmp_path: Path) -> None:
     path = _plant(tmp_path, "frontend/src/shell/contract.ts", MAX_PHYSICAL_LINES)
     path.write_text("// Generated by a script; do not edit.\n" + path.read_text(encoding="utf-8"), encoding="utf-8")
 
-    assert oversized(tmp_path) == [("frontend/src/shell/contract.ts", MAX_PHYSICAL_LINES + 1)]
+    assert oversized(tmp_path) == [(f"{_DESKTOP}/frontend/src/shell/contract.ts", MAX_PHYSICAL_LINES + 1)]
 
 
 def test_specs_stories_prototypes_and_scripts_are_held_to_the_bound(tmp_path: Path) -> None:
@@ -131,12 +131,19 @@ def test_specs_stories_prototypes_and_scripts_are_held_to_the_bound(tmp_path: Pa
     for relative in planted:
         _plant(tmp_path, relative, MAX_PHYSICAL_LINES + 1)
 
-    assert [path for path, _ in oversized(tmp_path)] == sorted(planted)
+    assert [path for path, _ in oversized(tmp_path)] == sorted(f"{_DESKTOP}/{relative}" for relative in planted)
 
 
-def test_installed_dependencies_and_other_languages_are_not_the_desktops_modules(tmp_path: Path) -> None:
+def test_ignored_files_and_other_languages_are_not_the_desktops_modules(tmp_path: Path) -> None:
+    (tmp_path / ".gitignore").write_text("node_modules/\nbuild/\n", encoding="utf-8")
     _plant(tmp_path, "frontend/node_modules/library/index.d.ts", MAX_PHYSICAL_LINES * 3)
+    _plant(tmp_path, "frontend/build/bundle.ts", MAX_PHYSICAL_LINES * 3)
     _plant(tmp_path, "frontend/src/data.json", MAX_PHYSICAL_LINES * 3)
     _plant(tmp_path, "frontend/src/main.js", MAX_PHYSICAL_LINES * 3)
 
     assert oversized(tmp_path) == []
+
+
+def test_a_missing_desktop_tree_is_refused_rather_than_read_as_empty(tmp_path: Path) -> None:
+    with pytest.raises(FileNotFoundError):
+        oversized(tmp_path)
