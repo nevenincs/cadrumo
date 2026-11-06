@@ -501,18 +501,29 @@ def test_work_file_defaults_to_current_verified_for_visible_target(seed_profile:
     assert status.exit_code == 0, status.output
     assert unwrap_schema_envelope(status.output)["current_calculation_revision_id"] == revision_id
 
-    result = invoke_modelo_scenario_cli(
+    # The operator pays retención, so the 1T quarterly obligation exists; its window has
+    # closed, and a targeted request files it locally and late (extemporánea) rather than
+    # refusing it, with the current verified revision as the one filed.
+    filed = invoke_modelo_scenario_cli(
         [
+            "--format", "json",
             "app", "modelo", "work", "file",
             "--modelo", "111", "--year", "2025", "--period", "1T",
-            "--output-language", "ca",
         ],
     )  # fmt: skip
-    assert result.exit_code != 0
-    assert "file requires a verified-complete revision" not in result.output
-    assert "No pending filing obligation" not in result.output
-    assert "No hi ha cap obligació de presentació pendent" in result.output
-    assert "NO_PENDING_OBLIGATION" in result.output
+    assert filed.exit_code == 0, filed.output
+    file_payload = unwrap_schema_envelope(filed.output)
+    assert file_payload["calculation_revision_id"] == revision_id
+    assert file_payload["aeat_accepted"] is False
+    filed_status = invoke_modelo_scenario_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "status",
+            "--modelo", "111", "--year", "2025", "--period", "1T",
+        ],
+    )  # fmt: skip
+    assert filed_status.exit_code == 0, filed_status.output
+    assert unwrap_schema_envelope(filed_status.output)["state"] == "presentado"
 
 
 def test_work_file_help_exposes_explicit_result_elections() -> None:
@@ -967,6 +978,9 @@ def test_overview_next_step_not_import_after_manual_ledger_entry(seed_profile: P
     assert "1" in status.output
     # ...and the next-step guidance points forward, never back at import.
     next_section = status.output.split("\n\n")[-1]
+    # The operator pays retención, so overdue Modelo 111 quarters exist; their filing-obligation
+    # advisories render above the guidance, which stays the last paragraph on its own.
+    assert next_section.startswith(tr("cli.overview.status.next_heading", locale="en"))
     assert tr("cli.overview.status.next_step.import_transactions", locale="en") not in next_section
     assert tr("cli.overview.status.next_step.review_ledger", locale="en") in next_section
     assert tr("cli.overview.status.next_step.start_work_unit_from_ledger", locale="en") in next_section
