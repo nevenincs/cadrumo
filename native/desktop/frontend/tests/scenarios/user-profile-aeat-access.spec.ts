@@ -9,6 +9,8 @@ import {
   profileAction,
 } from "../support/userProfilePage";
 
+// The profile page's AEAT access editor: Cl@ve and certificate setup, masked write-only facts and stale-profile refusal.
+
 test("saved Cl@ve setup asks specifically for the NIE support number", async ({
   page,
 }) => {

@@ -4,6 +4,8 @@ import { label } from "../support/strings";
 import { startFromDocs, open } from "../support/scenarioShell";
 import { openLogs, errorsHeld, overLog } from "../support/scenarioLogView";
 
+// The log reader's place across filters, Tab, Page Up and Page Down, and record menus.
+
 test.beforeEach(async ({ page: target }) => {
   await startFromDocs(target);
 });

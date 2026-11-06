@@ -13,6 +13,8 @@ import {
   area,
 } from "../support/ledgerSetup";
 
+// The Ledger page's Setup sections over the scenario host's made-up ledger: a readiness reason that opens the movements it names, Health's counts, a reset whose dry run the sealed declarations block, and an accessibility audit.
+
 const engine = readFileSync(
   fileURLToPath(
     new URL("../../node_modules/axe-core/axe.min.js", import.meta.url),

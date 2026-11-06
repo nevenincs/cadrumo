@@ -555,7 +555,7 @@ runs three Playwright projects, each on a server of its own that the run starts
 and that must not already be running:
 
 - `product` drives the production build through `vite preview`, with no host or
-  with a faked Tauri transport (`tests/desktop.spec.ts`), under the window's
+  with a faked Tauri transport (`tests/desktop-*.spec.ts`), under the window's
   own content security policy, and checks the built output
   (`tests/bundle.spec.ts`).
 - `scenarios` drives `/scenarios.html` (`tests/scenarios/`) from
@@ -576,7 +576,9 @@ and that must not already be running:
 
 | File in `tests/scenarios/` | Holds the shell to                                                                         |
 | -------------------------- | ------------------------------------------------------------------------------------------ |
-| `sign-in.spec.ts`          | What each scenario presents, and the sign-in rules: one submission, no retry               |
+| `sign-in.spec.ts`          | The sign-in rules: one submission, no retry                                                |
+| `sign-in-focus.spec.ts`    | Where the keyboard goes around the sign-in dialog                                          |
+| `account-states.spec.ts`   | What each account scenario presents, the same in every element of the window               |
 | `accessibility.spec.ts`    | An axe audit of every major surface in both schemes                                        |
 | `keyboard.spec.ts`         | Tab stops, arrow-key patterns, chords, and where focus goes when a surface opens or closes |
 | `touch.spec.ts`            | A phone-sized touch screen: finger-sized controls, no overflow, taps and touch drags       |
