@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import recorded from "../../src/dev/fixtures/ledgerEntryOptions.json" with { type: "json" };
+import recorded from "@fixtures/ledger-entry-options/ledgerEntryOptions.json" with { type: "json" };
 import { label } from "../support/strings";
 
 // The registry's closed lists in the Invoices section, as the ledger serves

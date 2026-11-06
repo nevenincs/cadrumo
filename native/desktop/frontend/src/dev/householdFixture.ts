@@ -1,4 +1,4 @@
-import fixtures from "./fixtures/household.json";
+import fixtures from "@fixtures/desktop-household/household.json" with { type: "json" };
 import type {
   HouseholdFact,
   HouseholdGroup,

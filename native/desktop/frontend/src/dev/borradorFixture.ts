@@ -23,7 +23,7 @@ export type BorradorEnvelopes = Record<string, () => Promise<unknown>>;
 
 function servedEnvelopes(): BorradorEnvelopes {
   const found = import.meta.glob<unknown>(
-    "./fixtures/modelo/borrador-100-0A-*.json",
+    "@fixtures/modelo/borrador-100-0A-*.json",
     { import: "default" },
   );
   return Object.fromEntries(

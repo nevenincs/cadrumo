@@ -31,19 +31,13 @@
         ],
         "result": {
           "clean_state": {
-            "blockers": [
-              "missing_observation",
-              "missing_current_filing_record"
-            ],
-            "clean": false,
+            "blockers": [],
+            "clean": true,
             "dependencies": [
               {
-                "blockers": [
-                  "missing_observation",
-                  "missing_current_filing_record"
-                ],
+                "blockers": [],
                 "calculation_revision_id": null,
-                "clean": false,
+                "clean": true,
                 "expected_member_nifs": [],
                 "external_evidence_kind": null,
                 "filing_record_id": null,
@@ -59,12 +53,9 @@
                 "unexpected_member_nifs": []
               },
               {
-                "blockers": [
-                  "missing_observation",
-                  "missing_current_filing_record"
-                ],
+                "blockers": [],
                 "calculation_revision_id": null,
-                "clean": false,
+                "clean": true,
                 "expected_member_nifs": [],
                 "external_evidence_kind": null,
                 "filing_record_id": null,
@@ -80,12 +71,9 @@
                 "unexpected_member_nifs": []
               },
               {
-                "blockers": [
-                  "missing_observation",
-                  "missing_current_filing_record"
-                ],
+                "blockers": [],
                 "calculation_revision_id": null,
-                "clean": false,
+                "clean": true,
                 "expected_member_nifs": [],
                 "external_evidence_kind": null,
                 "filing_record_id": null,
@@ -101,12 +89,9 @@
                 "unexpected_member_nifs": []
               },
               {
-                "blockers": [
-                  "missing_observation",
-                  "missing_current_filing_record"
-                ],
+                "blockers": [],
                 "calculation_revision_id": null,
-                "clean": false,
+                "clean": true,
                 "expected_member_nifs": [],
                 "external_evidence_kind": null,
                 "filing_record_id": null,
@@ -122,12 +107,9 @@
                 "unexpected_member_nifs": []
               },
               {
-                "blockers": [
-                  "missing_observation",
-                  "missing_current_filing_record"
-                ],
+                "blockers": [],
                 "calculation_revision_id": null,
-                "clean": false,
+                "clean": true,
                 "expected_member_nifs": [],
                 "external_evidence_kind": null,
                 "filing_record_id": null,
@@ -143,12 +125,9 @@
                 "unexpected_member_nifs": []
               },
               {
-                "blockers": [
-                  "missing_observation",
-                  "missing_current_filing_record"
-                ],
+                "blockers": [],
                 "calculation_revision_id": null,
-                "clean": false,
+                "clean": true,
                 "expected_member_nifs": [],
                 "external_evidence_kind": null,
                 "filing_record_id": null,
@@ -164,12 +143,9 @@
                 "unexpected_member_nifs": []
               },
               {
-                "blockers": [
-                  "missing_observation",
-                  "missing_current_filing_record"
-                ],
+                "blockers": [],
                 "calculation_revision_id": null,
-                "clean": false,
+                "clean": true,
                 "expected_member_nifs": [],
                 "external_evidence_kind": null,
                 "filing_record_id": null,
@@ -185,12 +161,9 @@
                 "unexpected_member_nifs": []
               },
               {
-                "blockers": [
-                  "missing_observation",
-                  "missing_current_filing_record"
-                ],
+                "blockers": [],
                 "calculation_revision_id": null,
-                "clean": false,
+                "clean": true,
                 "expected_member_nifs": [],
                 "external_evidence_kind": null,
                 "filing_record_id": null,
@@ -206,12 +179,9 @@
                 "unexpected_member_nifs": []
               },
               {
-                "blockers": [
-                  "missing_observation",
-                  "missing_current_filing_record"
-                ],
+                "blockers": [],
                 "calculation_revision_id": null,
-                "clean": false,
+                "clean": true,
                 "expected_member_nifs": [],
                 "external_evidence_kind": null,
                 "filing_record_id": null,

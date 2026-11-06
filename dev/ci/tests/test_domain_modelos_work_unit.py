@@ -24,7 +24,7 @@ from pydantic import TypeAdapter, ValidationError
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.action_errors import (
     WorkUnitAlreadyDiscardedError,
@@ -53,13 +53,6 @@ from cadrumo.domain.modelos.work_unit import (
     WorkUnitState,
     derive_work_unit_id,
 )
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
-from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
-from cadrumo.domain.user_profile.values import (
-    ProfileSetupState,
-    UserProfileFact,
-    create_user_profile_record,
-)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -72,13 +65,6 @@ _WORK_UNIT_BUCKET_B_ID = "30330300-0000-4000-8000-0000000000b2"
 _WORK_UNIT_EVENT_BUCKET_ID = "30330300-0000-4000-8000-000000000303"
 _P_2026_1T = Period.from_year_and_code(2026, "1T")
 _P_2026_2T = Period.from_year_and_code(2026, "2T")
-_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="00000000T"),
-    UserProfileFact(path="identity.name", value="Test"),
-    UserProfileFact(path="identity.surnames", value="Operator"),
-    UserProfileFact(path="activities.description", value="Professional services"),
-    *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-)
 
 
 @pytest.fixture
@@ -86,22 +72,8 @@ def repo(tmp_path: Path) -> Iterator[WorkUnitCatalogueRepository]:
     """Yield a real work-unit repository through the active test runtime."""
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_ACTION_BUCKET_ID) as profile:
-        _seed_ready_profile(profile.bucket_id)
+        seed_ready_profile(bucket_id=profile.bucket_id, at=_T0)
         yield WorkUnitCatalogueRepository(bucket_id=profile.bucket_id, objects=profile.repository)
-
-
-def _seed_ready_profile(bucket_id: str) -> None:
-    with bundled_indexed_authority().operation():
-        seed_test_profile_record(
-            create_user_profile_record(
-                context=profile_creation_context_for_test(),
-                setup_state=ProfileSetupState.COMPLETE,
-                profile_id=bucket_id,
-                facts=_READY_PROFILE_FACTS,
-                created_at=_T0,
-                updated_at=_T0,
-            ),
-        )
 
 
 def _lifecycle_ports(repo: WorkUnitCatalogueRepository) -> WorkLifecyclePorts:
@@ -657,7 +629,7 @@ def test_rename_work_unit_emits_renamed_bucket_event_with_actor_and_names(
     from cadrumo.domain.buckets.event import BucketEventType
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_WORK_UNIT_EVENT_BUCKET_ID) as profile:
-        _seed_ready_profile(profile.bucket_id)
+        seed_ready_profile(bucket_id=profile.bucket_id, at=_T0)
         wu_repo = WorkUnitCatalogueRepository(objects=profile.repository)
         bv_repo = BucketEventHistoryRepository(objects=profile.repository)
         ports = WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo)

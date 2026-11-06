@@ -27,6 +27,7 @@ from cadrumo.application.filing.runtime import build_runtime_schema_provider
 from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
@@ -36,7 +37,6 @@ from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from cadrumo.domain.modelos.errors import ModeloExportError
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingSeverity
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.tests.profile_persistence.eligible_descendants_support import eligible_descendants
@@ -124,19 +124,20 @@ def _seed_filer(*, criterion: str, family: tuple[UserProfileFact, ...] = ()) -> 
             context=profile_creation_context_for_test(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value=TAX_ID),
-                UserProfileFact(path="identity.name", value="Annual"),
-                UserProfileFact(path="identity.surnames", value="Renta Tester"),
-                UserProfileFact(path="activities.description", value="design services"),
-                # An epigraph outside group 861 proves the filer carries on no urban rental as an activity,
-                # so that credit class reads as a proven zero rather than as unknown.
-                UserProfileFact(path="activities.iae_epigraph", value="844"),
-                *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-                *single,
-                *family,
-                *dated,
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.tax_id", value=TAX_ID),
+                    UserProfileFact(path="identity.name", value="Annual"),
+                    UserProfileFact(path="identity.surnames", value="Renta Tester"),
+                    UserProfileFact(path="activities.description", value="design services"),
+                    # An epigraph outside group 861 proves the filer carries on no urban rental as an activity,
+                    # so that credit class reads as a proven zero rather than as unknown.
+                    UserProfileFact(path="activities.iae_epigraph", value="844"),
+                    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                    *single,
+                    *family,
+                    *dated,
+                )
             ),
             created_at=T0,
             updated_at=T0,

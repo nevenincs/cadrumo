@@ -38,7 +38,6 @@ from ...application.modelo.work_form_models import (
 from ...application.modelo.work_form_service import load_modelo_work_form
 from ...core.external_constants import OutputLanguage
 from ...domain.user_profile.tests.general_regime_facts import RENTA_UNMARRIED_TAXPAYER_FACTS
-from ...domain.user_profile.values import UserProfileFact
 from ..adapter_composition import profile_adapter_composition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -50,11 +49,7 @@ _EARLIER_NEGATIVE_RESULTS = "modelo-130-resultados-negativos-anteriores"
 #: ceiling of box 13's reduction, no earlier negative results, and no earlier payments for box 05.
 _GIVEN = {_PREVIOUS_YEAR_INCOME: "13000", _EARLIER_NEGATIVE_RESULTS: "0"}
 _EARLIER_PAYMENTS_BOX = "05"
-_FACTS = (
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    *RENTA_UNMARRIED_TAXPAYER_FACTS,
-)
+_FACTS = RENTA_UNMARRIED_TAXPAYER_FACTS
 
 
 @contextmanager

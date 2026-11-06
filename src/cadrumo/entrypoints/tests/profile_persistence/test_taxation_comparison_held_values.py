@@ -25,6 +25,7 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -82,7 +83,6 @@ from ....domain.calculations.registry.tests.authored_editions import (
 )
 from ....domain.contribuyente.renta_codes import RentaDeclaracionType, RentaMaritalStatus
 from ....domain.modelos.calculation_revision import CalculationRevision
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from .file_flow_test_support import calculation_ports_for_test
@@ -92,7 +92,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _BUCKET_ID = "31111111-1111-4111-8111-111111111111"
 _PROFILE_ID = UUID(_BUCKET_ID)
 _TAX_ID = "12345678Z"
-_SPOUSE_TAX_ID = "98765432M"
+_SPOUSE_TAX_ID = "00001005Q"
 _YEAR = 2025
 _COMPARED_YEARS = supported_exercises_with_projection("100")
 """Every authored Modelo 100 exercise from the support floor up, then the first year projected from the newest edition."""
@@ -146,36 +146,30 @@ def _married_facts(
     return tuple(facts)
 
 
-# A salaried filer: work income only, so no economic-activity register is owed.
-_SALARIED_FACTS: tuple[UserProfileFact, ...] = (
-    *(
-        fact
-        for fact in GENERAL_REGIME_NATURAL_PERSON_FACTS
-        if fact.path not in {"taxpayer_type.irpf_income_categories", "irpf.estimation_regime"}
-    ),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
-)
+_SALARIED_OMISSIONS = ("irpf.estimation_regime", "activities.", "censo.activity_start_date")
+"""A salaried filer: work income only, so no economic-activity register is owed."""
 
 
 def _seed_taxpayer(renta_facts: tuple[UserProfileFact, ...], *, economic_activity: bool) -> None:
     taxpayer_facts = (
-        (
-            UserProfileFact(path="activities.description", value="economic activity"),
-            *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-        )
+        (UserProfileFact(path="activities.description", value="economic activity"),)
         if economic_activity
-        else _SALARIED_FACTS
+        else (UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),)
     )
     seed_test_profile_record(
         _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value=_TAX_ID),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                *taxpayer_facts,
-                *renta_facts,
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.tax_id", value=_TAX_ID),
+                    UserProfileFact(path="identity.name", value="Test"),
+                    UserProfileFact(path="identity.surnames", value="Operator"),
+                    *taxpayer_facts,
+                    *renta_facts,
+                ),
+                # These scenarios own the family situation: the persona's single status never fills a gap they leave.
+                without=(*(() if economic_activity else _SALARIED_OMISSIONS), "renta_family.situacion_familiar"),
             ),
             created_at=datetime(2026, 4, 1, tzinfo=UTC),
             updated_at=datetime(2026, 4, 1, tzinfo=UTC),

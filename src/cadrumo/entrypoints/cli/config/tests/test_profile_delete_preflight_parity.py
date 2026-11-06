@@ -61,8 +61,8 @@ def test_the_command_prints_the_observation_and_gives_the_refusals_the_preflight
     run_cadrumo_cli: Callable[..., Result],
 ) -> None:
     # Registration selects the profile it creates, so the second one leaves the first deletable.
-    register_cli_profile(label="doomed", facts={**_FACTS, "identity.tax_id": "00000001R"}, log_in=False)
-    register_cli_profile(label="survivor", facts={**_FACTS, "identity.tax_id": "00000002W"}, log_in=False)
+    register_cli_profile(label="doomed", facts={**_FACTS, "identity.tax_id": "00001005Q"}, log_in=False)
+    register_cli_profile(label="survivor", facts={**_FACTS, "identity.tax_id": "00001000B"}, log_in=False)
 
     offered = _preflight("doomed")
     printed = command_result("config", "profile", "delete", "doomed", invoke_cli=run_cadrumo_cli)
@@ -91,7 +91,7 @@ def test_the_command_prints_the_observation_and_gives_the_refusals_the_preflight
 
 @pytest.mark.parametrize("changed", ["identity", "content", "missing-digest", "unchanged"])
 def test_reviewed_delete_is_bound_to_identity_and_content(run_cadrumo_cli: Callable[..., Result], changed: str) -> None:
-    register_cli_profile(label="reviewed", facts={**_FACTS, "identity.tax_id": "00000001R"}, log_in=False)
+    register_cli_profile(label="reviewed", facts={**_FACTS, "identity.tax_id": "00001005Q"}, log_in=False)
     observed = _preflight("reviewed")
     assert observed.assessment is not None and observed.assessment.fingerprint is not None
     identity = str(uuid4()) if changed == "identity" else str(observed.profile_id)

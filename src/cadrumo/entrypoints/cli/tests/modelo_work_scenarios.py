@@ -17,6 +17,7 @@ from cadrumo.application.aggregation.withholding_recognition import (
 # Importing the wizard catalogue + persistence modules triggers
 # register_wizard_catalogue() at import time, exactly as the production CLI
 # startup does.
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_fact_strings
 from cadrumo.application.wizard import catalogue as _wizard_catalogue
 from cadrumo.application.wizard import persistence as _wizard_persistence
 from cadrumo.core.aggregation import RetencionClave
@@ -47,22 +48,15 @@ def invoke_modelo_scenario_cli(args: list[str]):
 
 
 def operator_profile_facts(*, activity_start_date: str | None = None) -> dict[str, str]:
-    """Return the facts of the operator profile the modelo work UX suites run against."""
-    facts = {
-        "identity.tax_id": "12345678Z",
-        "identity.name": "Operator",
-        "identity.surnames": "Readiness",
-        "activities.description": "design",
-        # Modelo 111 readiness requires the colegio concertado answer; these
-        # tests file 111 work units, so the profile states it.
-        "withholding.colegio_concertado": "false",
-        # Modelo 130 box 02 adds the art. 30.2.ª provision only under the simplified modality,
-        # so the activity states its modality; the normal one keeps box 02 as the stated expenses.
-        "irpf.estimation_regime": "directa_normal",
-    }
-    if activity_start_date is not None:
-        facts["censo.activity_start_date"] = activity_start_date
-    return facts
+    """Return the facts of the operator profile the modelo work UX suites run against.
+
+    The operator is the canonical estimación directa normal autónomo. Its modality keeps
+    Modelo 130 box 02 as the stated expenses, with no art. 30.2.ª provision, and the
+    colegio-concertado attestation lets Modelo 111 work units run.
+    """
+    return persona_fact_strings(
+        {} if activity_start_date is None else {"censo.activity_start_date": activity_start_date}
+    )
 
 
 GB_NON_RESIDENT_PROFILE_FACTS: dict[str, str] = {

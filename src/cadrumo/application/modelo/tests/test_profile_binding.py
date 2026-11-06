@@ -16,6 +16,7 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.general_regime_facts import RENTA_UNMARRIED_TAXPAYER_FACTS
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
@@ -66,21 +67,16 @@ def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
     return _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="tax_residence.ccaa", value=ccaa),
-            # M100 2025 added age_at_year_end date binding + declaration-type
-            # and derived marriage facts. Seed minimum values so M100 calculate
-            # resolves the profile-sourced bindings.
-            *RENTA_UNMARRIED_TAXPAYER_FACTS,
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="tax_residence.ccaa", value=ccaa),
+                # M100 2025 added age_at_year_end date binding + declaration-type
+                # and derived marriage facts. Seed minimum values so M100 calculate
+                # resolves the profile-sourced bindings.
+                *RENTA_UNMARRIED_TAXPAYER_FACTS,
+            ),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,

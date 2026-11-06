@@ -169,7 +169,7 @@ async def test_invoice_entry_preserves_explicit_iva_treatment_for_linked_income(
             _fill(
                 screen,
                 counterparty_name="Synthetic client",
-                counterparty_nif="A58818501",
+                counterparty_nif="B00010157",
                 invoice_number="S-01",
                 invoice_date="2025-02-15",
                 taxable_base="4000.00",

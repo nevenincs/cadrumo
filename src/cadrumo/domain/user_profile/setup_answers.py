@@ -246,11 +246,14 @@ class SetupAnswers(BaseModel):
     enrollment_public_administration_budget_gt_6000000: bool = False
 
     # ── retencion / modelo obligation booleans ───────────────────────────
-    has_employees: bool = False
+    has_employees: OptionalWizardBool = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
     colegio_concertado: OptionalWizardBool = ""
-    pays_professionals_with_retencion: bool = False
+    pays_professionals_with_retencion: OptionalWizardBool = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
     art109_activity_income_withholding_ge_70pct: bool = False
-    pays_rent_with_retencion: bool = False
+    pays_rent_with_retencion: OptionalWizardBool = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
     pays_capital_income_with_retencion: bool = False
     modelo_111_no_retenciones_periods: str = ""
     modelo_115_no_relevant_payment_periods: str = ""
@@ -266,7 +269,8 @@ class SetupAnswers(BaseModel):
     """IRPF special-regime axis. Blank for the general regime."""
     irpf_special_regime_start_date: str = ""
     """ISO-8601 opt-in election date for the special regime."""
-    does_intracomunitario: bool = False
+    does_intracomunitario: OptionalWizardBool = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
     third_party_transactions_above_347_threshold: OptionalWizardBool = ""
     """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
     bienes_extranjero_above_threshold: OptionalWizardBool = ""

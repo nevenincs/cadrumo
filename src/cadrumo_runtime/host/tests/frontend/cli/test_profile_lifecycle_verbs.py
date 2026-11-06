@@ -57,6 +57,7 @@ from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from cadrumo.entrypoints.cli.tests.profile_lifecycle_support import seed
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
 
+from ...native_profile_facts import native_general_iva_facts
 from ._profile_cli_support import invoke_protected_profile
 from .cli_runner import invoke_cached_cli
 
@@ -156,34 +157,20 @@ def test_registering_a_second_profile_uses_its_own_identity_while_the_first_is_a
         log_in=False,
         label="alpha",
         facts={
-            "taxpayer_type.entity_type": "natural_person",
+            **native_general_iva_facts(),
             "identity.name": "Alpha",
             "identity.surnames": "Operator",
             "activities.description": "alpha-design",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
     register_cli_profile(
         log_in=False,
         label="beta",
         facts={
-            "taxpayer_type.entity_type": "natural_person",
+            **native_general_iva_facts(),
             "identity.name": "Beta",
             "identity.surnames": "Operator",
             "activities.description": "beta-consulting",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
 
@@ -351,7 +338,7 @@ def test_config_profile_view_emits_active_profile_facts(_isolated_backend: Path)
 @pytest.mark.windows_only
 def test_config_profile_view_named_profile_includes_canonical_facts(_isolated_backend: Path) -> None:
     # A named target is authenticated independently of ambient selection.
-    register_cli_profile(log_in=False, label="operator", facts={"identity.tax_id": "00000001R"})
+    register_cli_profile(log_in=False, label="operator", facts={"identity.tax_id": "00001005Q"})
     register_cli_profile(log_in=False, label="spouse", facts={"identity.tax_id": "00000000T"})
     result = invoke_protected_profile("spouse", "view", "spouse")
     assert result.exit_code == 0, result.output
@@ -361,7 +348,7 @@ def test_config_profile_view_named_profile_includes_canonical_facts(_isolated_ba
     # fingerprint at the rendering boundary; raw value must not leak.
     assert "identity.tax_id\tsha256:" in result.output
     assert "00000000T" not in result.output
-    assert "00000001R" not in result.output
+    assert "00001005Q" not in result.output
     assert "iva.regime\tGENERAL" in result.output
     assert "tax_residence.ccaa\tmadrid" in result.output
 

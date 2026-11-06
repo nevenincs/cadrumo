@@ -12,6 +12,7 @@ from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_sc
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.invoices.source_resolver import InvoiceCatalogueSourceResolver
 from cadrumo.application.invoices.source_resolver_ports import InvoiceSourceCatalogueReader, InvoiceSourceResolverPorts
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.aggregation import IntracomOperationType, ThirdPartyDeclarationRole
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -242,19 +243,15 @@ def _public_administration_profile_facts() -> tuple[UserProfileFact, ...]:
 
 
 def _statutory_information_duty_profile_facts() -> tuple[UserProfileFact, ...]:
-    return (
-        UserProfileFact(path="identity.tax_id", value="B12345674"),
-        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-        UserProfileFact(path="iva.regime", value="GENERAL"),
-        UserProfileFact(path="iva.m303_regime_composition", value="general"),
-        UserProfileFact(path="iva.redeme_enrolled", value=False),
-        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-        UserProfileFact(
-            path="taxpayer_type.declaration_roles",
-            value=ThirdPartyDeclarationRole.from_registry("statutory_information_duty_entity").value,
+    return persona_facts_beneath(
+        (
+            UserProfileFact(path="identity.tax_id", value="B12345674"),
+            UserProfileFact(
+                path="taxpayer_type.declaration_roles",
+                value=ThirdPartyDeclarationRole.from_registry("statutory_information_duty_entity").value,
+            ),
         ),
+        persona_id="sociedad-limitada",
     )
 
 

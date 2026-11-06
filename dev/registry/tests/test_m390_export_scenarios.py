@@ -71,7 +71,7 @@ def test_neutral_m390_scenario_exports_and_missing_election_still_refuses(revisi
 
         assert sink.payload.startswith(f"<T3900{scenario.period.filing_year:04d}0A0000><AUX>".encode("ascii"))
         assert sink.payload[92:96] == b"C390"
-        assert sink.payload[100:109] == b"Y0000001S"
+        assert sink.payload[100:109] == b"Y0001006P"
         assert scenario.prior_domiciliation_election is producer.elections.prior_domiciliation
         refused_sink = PayloadCapture()
         with pytest.raises(FilingExportError, match="only with a resolved prior domiciliation election"):

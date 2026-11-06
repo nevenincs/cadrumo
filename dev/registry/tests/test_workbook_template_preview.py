@@ -38,7 +38,7 @@ def test_historical_232_human_form_retains_independent_amounts_and_unknowns() ->
     )
     figures = {
         "decl.ejercicio": Decimal(2017),
-        "vinculada-1-nif": "B00000000",
+        "vinculada-1-nif": "B00010082",
         "vinculada-1-razon-social": "Entidad vinculada ficticia A",
         "vinculada-1-fjo": "J",
         "vinculada-1-ingreso-pago": "I",

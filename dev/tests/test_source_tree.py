@@ -104,6 +104,18 @@ def test_under_narrows_to_the_named_paths_without_matching_a_mere_name_prefix(tm
     assert repository_files(tmp_path, under=("src", "top.py")) == ("src/a.py", "top.py")
 
 
+def test_a_missing_named_path_is_refused_only_when_it_must_exist(tmp_path: Path) -> None:
+    _write(tmp_path, "src/a.py", "x")
+    _write(tmp_path, ".gitignore", "ignored/\n")
+    _write(tmp_path, "ignored/b.py", "x")
+
+    assert repository_files(tmp_path, under=("src", "srcc")) == ("src/a.py",)
+    with pytest.raises(FileNotFoundError, match="srcc"):
+        repository_files(tmp_path, under=("src", "srcc"), must_exist=True)
+    # An ignored path exists: it contributes no file, and it is not a mistyped one.
+    assert repository_files(tmp_path, under=("src", "ignored"), must_exist=True) == ("src/a.py",)
+
+
 def test_text_content_is_named_as_the_repository_records_it_on_every_platform(tmp_path: Path) -> None:
     """The same committed content has the same digest whatever line endings the checkout has."""
     windows = tmp_path / "windows"

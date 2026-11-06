@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect } from "storybook/test";
-import calculation from "@/dev/fixtures/modelo/calculate-130.json";
+import calculation from "@fixtures/modelo/calculate-130.json" with { type: "json" };
 import type { ModeloWorkCalculatePublicResultV3 } from "../../../shell/modeloContract";
 import { UnresolvedFindings } from "./UnresolvedFindings";
 

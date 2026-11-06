@@ -27,7 +27,7 @@
         ],
         "result": {
           "profile_name": "docs-sequence-sandbox",
-          "status": "updated"
+          "status": "unchanged"
         },
         "schema_version": "2",
         "status": "warning"

@@ -5,14 +5,18 @@ evidence: the whole row, so an intra-EU acquisition loses its accrued cuota as
 well as its deduction. ``work verify`` must then refuse the revision with a
 worded blocking finding rather than fail internally, and export must refuse it.
 
-Two rows reach that state through the live ``aeat app ledger add`` parser:
+Rows reach that state through the live ``aeat app ledger add`` parser:
 
-* an intra-EU acquisition declared as ``intra_eu_current``, whose deduction is
-  established only by the intra-EU self-assessment, a document no ledger write
-  can record, so the refusal tells the filer to file the period another way;
-* a domestic purchase declared as ``domestic_current`` with no purchase-invoice
-  record linked, which the filer can still repair, so it keeps the general
-  evidence finding.
+* an intra-EU acquisition declared as ``intra_eu_current`` with no supplier
+  invoice linked, and a domestic purchase declared as ``domestic_current`` with
+  no purchase-invoice record linked, both of which the filer can repair by
+  attaching the supplier's invoice, so they keep the general evidence finding;
+* an import, a REAGP compensation and a rectification, whose documents no
+  ledger write can record, so each is refused terminally under its own entry.
+
+Attaching the supplier's invoice to the intra-EU acquisition lets the quarter
+calculate its self-assessed cuota and deduct it in the same return
+(LIVA art. 97.Uno.2.º).
 """
 
 from __future__ import annotations
@@ -38,6 +42,7 @@ from .test_m303_zero_cuota_and_investment_inputs_cli import (
     _add_sale,
     _added_transaction_id,
     _profile_facts,
+    _register_purchase_invoice_evidence,
     _seed_zero_compensation_wallet_decision,
 )
 
@@ -49,9 +54,7 @@ _OPERATION_DATE = "2025-02-15"
 _BASE = Decimal("200.00")
 _CUOTA = Decimal("42.00")
 _EVIDENCE_CONDITION = "modelo.work.verify.iva_selected_scope_evidence.complete"
-#: Nothing inside the product records an intra-EU self-assessment, so that
-#: refusal is terminal; a missing invoice is the filer's to attach.
-_INTRA_EU_FINDING = "terminal"
+#: A missing supplier invoice is the filer's to attach.
 _GENERAL_FINDING = "operator_decision"
 
 
@@ -68,7 +71,7 @@ def _seed_quarter(request: pytest.FixtureRequest) -> None:
     _add_sale()
 
 
-def _add_intra_eu_acquisition() -> str:
+def _add_intra_eu_acquisition(*evidence_options: str) -> str:
     """An acquisition from a French supplier, self-assessed under reverse charge.
 
     The movement is the base alone: the supplier invoices no Spanish IVA, the
@@ -90,6 +93,7 @@ def _add_intra_eu_acquisition() -> str:
                 "--iva-category", "intra_community_acquisition_reverse_charge",
                 "--deduction-kind", "intra_eu_current",
                 "--counterparty-country", "FR",
+                *evidence_options,
             ],
         )
     )  # fmt: skip
@@ -178,46 +182,49 @@ def _assert_export_refuses(work_unit_id: str, tmp_path: Path) -> None:
     assert not artefact.exists()
 
 
-def test_verify_refuses_an_intra_eu_acquisition_with_a_worded_refusal(
+def test_verify_refuses_an_intra_eu_acquisition_without_its_invoice_with_the_general_finding(
     request: pytest.FixtureRequest,
     tmp_path: Path,
 ) -> None:
-    """The self-assessment cannot be recorded, so the refusal names that and sends the filer elsewhere."""
+    """The supplier's invoice is the filer's to attach, so the refusal is not terminal."""
     _seed_quarter(request)
     acquisition = _add_intra_eu_acquisition()
     work_unit_id, calculation_revision_id = _calculate_1t()
 
     findings = _assert_verify_refuses(calculation_revision_id)
 
-    assert set(findings) == {acquisition}, findings
-    assert findings[acquisition]["recovery_outcome"] == _INTRA_EU_FINDING
-    assert findings[acquisition]["transaction_count"] == "1"
-    assert findings[acquisition]["transaction_ids"] == acquisition
+    assert set(findings) == {f"transaction:{acquisition}"}, findings
+    assert findings[f"transaction:{acquisition}"]["recovery_outcome"] == _GENERAL_FINDING
     _assert_export_refuses(work_unit_id, tmp_path)
 
 
-def test_the_intra_eu_refusal_renders_in_every_supported_locale(request: pytest.FixtureRequest) -> None:
-    """Each locale tells the filer the document cannot be recorded and to file another way."""
+def test_the_supplier_invoice_lets_the_intra_eu_acquisition_accrue_and_deduct_its_cuota(
+    request: pytest.FixtureRequest,
+    tmp_path: Path,
+) -> None:
+    """LIVA art. 97.Uno.2.º: the supplier's invoice justifies the deduction of the cuota the same return accrues."""
     _seed_quarter(request)
-    _add_intra_eu_acquisition()
-    _work_unit_id, calculation_revision_id = _calculate_1t()
-
-    rendered: dict[str, str] = {}
-    for language in ("en", "es", "ca", "hu"):
-        verified = invoke_cached_cli(
-            ["--language", language, "app", "modelo", "work", "verify", calculation_revision_id],
-        )
-        assert verified.exit_code == 1, verified.output
-        rendered[language] = verified.output
-
-    assert "self-assessment document for an intra-EU purchase" in rendered["en"]
-    assert "File this declaration another way." in rendered["en"]
-    assert "adquisición intracomunitaria" in rendered["es"]
-    assert "Presenta esta declaración por otra vía." in rendered["es"]
-    assert "adquisició intracomunitària" in rendered["ca"]
-    assert "per una altra via." in rendered["ca"]
-    assert "közösségen belüli beszerzés önadózási bizonylata" in rendered["hu"]
-    assert "Nyújtsd be ezt a bevallást más módon." in rendered["hu"]
+    evidence_id = _register_purchase_invoice_evidence(tmp_path, label="intracomunitaria", base=_BASE, cuota=_CUOTA)
+    _add_intra_eu_acquisition("--purchase-invoice-evidence-id", evidence_id)
+    created = _invoke(["app", "modelo", "work", "create", "--modelo", "303", "--year", "2025", "--period", "1T"])
+    assert created.exit_code == 0, created.output
+    work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
+    assert isinstance(work_unit_id, str)
+    calculated = _invoke(["app", "modelo", "work", "calculate", work_unit_id, *joint_return_options()])
+    assert calculated.exit_code == 0, calculated.output
+    payload = unwrap_schema_envelope(calculated.output)
+    calculation_revision_id = payload["calculation_revision_id"]
+    assert isinstance(calculation_revision_id, str)
+    values = payload["casilla_values"]
+    assert isinstance(values, dict)
+    # Devengado by the buyer [10]/[11] and deducted in the same return [36]/[37].
+    assert Decimal(str(values["10"])) == _BASE
+    assert Decimal(str(values["11"])) == _CUOTA
+    assert Decimal(str(values["36"])) == _BASE
+    assert Decimal(str(values["37"])) == _CUOTA
+    verified = _invoke(["app", "modelo", "work", "verify", calculation_revision_id])
+    assert "INTERNAL_CLI_UNEXPECTED_BOUNDARY" not in verified.output
+    assert _evidence_findings(verified.output) == {}, verified.output
 
 
 def test_verify_refuses_a_deduction_without_its_invoice_with_the_general_finding(
@@ -237,8 +244,8 @@ def test_verify_refuses_a_deduction_without_its_invoice_with_the_general_finding
     _assert_export_refuses(work_unit_id, tmp_path)
 
 
-def test_both_held_back_rows_are_refused_each_under_its_own_finding(request: pytest.FixtureRequest) -> None:
-    """The intra-EU row is lifted out of the general finding, not reported twice."""
+def test_both_held_back_rows_are_named_by_the_general_finding(request: pytest.FixtureRequest) -> None:
+    """Both rows lack the supplier's invoice, so one general finding names each of them."""
     _seed_quarter(request)
     acquisition = _add_intra_eu_acquisition()
     purchase = _add_purchase_without_invoice()
@@ -246,25 +253,15 @@ def test_both_held_back_rows_are_refused_each_under_its_own_finding(request: pyt
 
     findings = _assert_verify_refuses(calculation_revision_id)
 
-    assert set(findings) == {acquisition, f"transaction:{purchase}"}, findings
-    assert findings[acquisition]["recovery_outcome"] == _INTRA_EU_FINDING
-    assert findings[acquisition]["transaction_ids"] == acquisition
-    assert findings[f"transaction:{purchase}"]["recovery_outcome"] == _GENERAL_FINDING
-    assert findings[f"transaction:{purchase}"]["source_ref_ids"] == f"transaction:{purchase}"
+    assert len(findings) == 1, findings
+    ((subject, facts),) = findings.items()
+    assert facts["recovery_outcome"] == _GENERAL_FINDING
+    assert set(subject.split("|")) == {f"transaction:{acquisition}", f"transaction:{purchase}"}
 
 
 @pytest.mark.parametrize(
     ("category", "kind", "rate", "quota", "gross", "country", "authority"),
     [
-        (
-            "intra_community_acquisition_reverse_charge",
-            "intra_eu_current",
-            "0.21",
-            "42.00",
-            "200.00",
-            "FR",
-            "intra_eu_self_assessment",
-        ),
         ("import_third_country", "import_current", "0.21", "42.00", "200.00", "US", "customs_declaration"),
         ("reagp_compensation", "reagp_compensation", "0", "24.00", "224.00", "ES", "reagp_receipt"),
         ("domestic_general", "rectification", "0.21", "42.00", "242.00", "ES", "rectification_evidence"),

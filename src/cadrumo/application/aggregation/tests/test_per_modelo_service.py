@@ -801,13 +801,13 @@ def test_retenciones_collapse_preserves_landed_distinct_nif_perceptor_count(
         RetencionObservation(
             source_kind=BindingSourceKind.LEDGER_TRANSACTION,
             source_object_id="ledger_transaction-urban-b",
-            perceptor_nif="B00000042",
+            perceptor_nif="B00010173",
             perceptor_name="Arrendador B",
             scheme=RetencionScheme("arrendamiento_urbano"),
             taxable_base=Decimal("800.00"),
             retencion_amount=Decimal("152.00"),
             accrued_on="2025-06-01",
-            modelo_180_property=_urban_property("B00000042"),
+            modelo_180_property=_urban_property("B00010173"),
         ),
     )
     expected = aggregate_retenciones_180(observations, period=_P_2025_ANNUAL, operation=operation)

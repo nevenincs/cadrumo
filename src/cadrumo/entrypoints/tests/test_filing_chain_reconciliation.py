@@ -7,7 +7,7 @@ and the real profile repositories, including both observation layers.
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -23,6 +23,11 @@ from cadrumo.adapters.persistence.profile.justificante import JustificanteReposi
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import (
+    WITHHOLDING_PAYER_PERSONA,
+    seed_persona_profile,
+    seed_ready_profile,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.observations_repository import ObservationSourceKind
 from cadrumo.application.modelo.action_errors import ExternalModeloImportError
@@ -55,7 +60,6 @@ from cadrumo.domain.modelos.filing_record import (
 )
 from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.domain.modelos.work_unit import WorkUnit
-from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import seed_ready_profile
 from cadrumo.tests.aeat_literal_fixtures import justificante_cotejo_url
 
 from ...core.hashing import sha256_hex
@@ -88,9 +92,21 @@ class _Profile:
 
 @pytest.fixture
 def profile(tmp_path: Path) -> Iterator[_Profile]:
+    yield from _seeded_profile(tmp_path, lambda: seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0))
+
+
+@pytest.fixture
+def withholding_payer_profile(tmp_path: Path) -> Iterator[_Profile]:
+    """A profile whose taxpayer pays withheld income, so its Modelo 111 work applies."""
+    yield from _seeded_profile(
+        tmp_path, lambda: seed_persona_profile(WITHHOLDING_PAYER_PERSONA, bucket_id=_BUCKET_ID, at=_T0)
+    )
+
+
+def _seeded_profile(tmp_path: Path, seed: Callable[[], None]) -> Iterator[_Profile]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
         objects = runtime.repository
-        seed_ready_profile(bucket_id=_BUCKET_ID)
+        seed()
         work_units = WorkUnitCatalogueRepository(objects=objects)
         revisions = CalculationRevisionCatalogueRepository(objects=objects)
         filings = ModeloRecordCatalogueRepository(objects=objects)
@@ -349,13 +365,15 @@ def test_sparse_replay_of_discarded_work_remains_readable(
 
 @pytest.mark.parametrize("conflict", ["casillas", "csv", "expediente"])
 def test_receipt_confirmation_does_not_hide_later_evidence_conflict(
-    profile: _Profile, operation: PinnedAuthorityOperation, conflict: str
+    withholding_payer_profile: _Profile, operation: PinnedAuthorityOperation, conflict: str
 ) -> None:
-    work = _work_unit(profile, operation, modelo="111")
-    pending = _seed_local_filing(profile, operation, work, {_M111_RESULT: Decimal("40.00")}, at=_T1)
+    work = _work_unit(withholding_payer_profile, operation, modelo="111")
+    pending = _seed_local_filing(withholding_payer_profile, operation, work, {_M111_RESULT: Decimal("40.00")}, at=_T1)
     receipt = _justificante("M111REPLAY00001", modelo="111", total_a_ingresar=Decimal("40.00"))
     entry = _entry("EXP-RECEIPT", modelo="111", justificante=receipt)
-    assert _reconcile(profile, operation, entry, at=_T2).outcome is FilingReconciliationOutcome.CONFIRMED
+    assert (
+        _reconcile(withholding_payer_profile, operation, entry, at=_T2).outcome is FilingReconciliationOutcome.CONFIRMED
+    )
     incoming = replace(entry, justificante=None, casilla_values={_M111_RESULT: Decimal("41.00")})
     if conflict != "casillas":
         incoming = replace(
@@ -366,19 +384,19 @@ def test_receipt_confirmation_does_not_hide_later_evidence_conflict(
                 presented_at=_T1,
             ),
         )
-    filings_before = profile.filings.load()
-    events_before = profile.events.load()
+    filings_before = withholding_payer_profile.filings.load()
+    events_before = withholding_payer_profile.events.load()
     if conflict == "casillas":
-        result = _reconcile(profile, operation, incoming, at=_T3)
+        result = _reconcile(withholding_payer_profile, operation, incoming, at=_T3)
         assert result.outcome is FilingReconciliationOutcome.UNVERIFIABLE
         assert result.filing_record_id == pending.filing_record_id
         assert result.differing_casilla_ids == (_M111_RESULT,)
         assert result.evidence_basis == "casillas"
     else:
         with pytest.raises(ExternalModeloImportError):
-            _reconcile(profile, operation, incoming, at=_T3)
-    assert profile.filings.load() == filings_before
-    assert profile.events.load() == events_before
+            _reconcile(withholding_payer_profile, operation, incoming, at=_T3)
+    assert withholding_payer_profile.filings.load() == filings_before
+    assert withholding_payer_profile.events.load() == events_before
 
 
 def test_first_register_entry_is_appended_as_confirmed_original(
@@ -614,14 +632,16 @@ def test_receipt_without_a_declared_total_map_is_unverifiable(
 
 
 def test_matching_receipt_total_confirms_with_weaker_evidence(
-    profile: _Profile, operation: PinnedAuthorityOperation
+    withholding_payer_profile: _Profile, operation: PinnedAuthorityOperation
 ) -> None:
-    work_unit = _work_unit(profile, operation, modelo="111")
-    pending = _seed_local_filing(profile, operation, work_unit, {_M111_RESULT: Decimal("40.00")}, at=_T1)
+    work_unit = _work_unit(withholding_payer_profile, operation, modelo="111")
+    pending = _seed_local_filing(
+        withholding_payer_profile, operation, work_unit, {_M111_RESULT: Decimal("40.00")}, at=_T1
+    )
     receipt = _justificante("M111RECEIPT0001", modelo="111", total_a_ingresar=Decimal("40.00"))
 
     result = _reconcile(
-        profile,
+        withholding_payer_profile,
         operation,
         _entry(
             "EXP-111",
@@ -635,21 +655,23 @@ def test_matching_receipt_total_confirms_with_weaker_evidence(
     assert result.outcome is FilingReconciliationOutcome.CONFIRMED
     assert result.evidence_basis == "receipt_totals"
     assert _codes(result) == {FilingReconciliationNoticeCode.RECEIPT_TOTALS_ONLY}
-    confirmed = profile.filings.load().records[pending.filing_record_id]
+    confirmed = withholding_payer_profile.filings.load().records[pending.filing_record_id]
     assert confirmed.external_evidence is not None
     assert confirmed.external_evidence.kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
     assert confirmed.external_evidence.reference_id == receipt.csv
 
 
 def test_disagreeing_receipt_total_without_casillas_is_unverifiable(
-    profile: _Profile, operation: PinnedAuthorityOperation
+    withholding_payer_profile: _Profile, operation: PinnedAuthorityOperation
 ) -> None:
-    work_unit = _work_unit(profile, operation, modelo="111")
-    pending = _seed_local_filing(profile, operation, work_unit, {_M111_RESULT: Decimal("40.00")}, at=_T1)
+    work_unit = _work_unit(withholding_payer_profile, operation, modelo="111")
+    pending = _seed_local_filing(
+        withholding_payer_profile, operation, work_unit, {_M111_RESULT: Decimal("40.00")}, at=_T1
+    )
     receipt = _justificante("M111RECEIPT0002", modelo="111", total_a_ingresar=Decimal("41.00"))
 
     result = _reconcile(
-        profile,
+        withholding_payer_profile,
         operation,
         _entry(
             "EXP-111",
@@ -663,7 +685,7 @@ def test_disagreeing_receipt_total_without_casillas_is_unverifiable(
     assert result.outcome is FilingReconciliationOutcome.UNVERIFIABLE
     assert result.evidence_basis == "receipt_totals"
     assert _codes(result) == {FilingReconciliationNoticeCode.RECEIPT_TOTALS_MISMATCH}
-    unchanged = profile.filings.load().records[pending.filing_record_id]
+    unchanged = withholding_payer_profile.filings.load().records[pending.filing_record_id]
     assert unchanged.confirmation is AeatConfirmationState.PENDIENTE
     assert unchanged.external_evidence is None
 

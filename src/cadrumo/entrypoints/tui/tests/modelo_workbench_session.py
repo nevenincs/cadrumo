@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -85,13 +85,14 @@ _BUCKET_ID = "13000000-0000-4000-8000-000000000451"
 _T0 = datetime(2026, 6, 5, 9, 0, 0, tzinfo=UTC)
 _ACTOR = "operator:tui-modelo"
 
-_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="00000000T"),
-    UserProfileFact(path="identity.name", value="Test Operator"),
-    UserProfileFact(path="identity.surnames", value="Workspace"),
-    *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-    UserProfileFact(path="activities.description", value="economic activity"),
-    UserProfileFact(path="provenance.source", value="manual_cli"),
+_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = persona_facts_beneath(
+    (
+        UserProfileFact(path="identity.tax_id", value="00000000T"),
+        UserProfileFact(path="identity.name", value="Test Operator"),
+        UserProfileFact(path="identity.surnames", value="Workspace"),
+        UserProfileFact(path="activities.description", value="economic activity"),
+        UserProfileFact(path="provenance.source", value="manual_cli"),
+    )
 )
 
 
@@ -346,8 +347,12 @@ def real_workbench(
     modelo: str = "130",
     filing_year: int = 2026,
     period_code: str = "1T",
+    extra_facts: tuple[UserProfileFact, ...] = (),
 ) -> Generator[InstalledModeloWorkbench]:
     """Yield the production reader and actions of one seeded declaration.
+
+    ``extra_facts`` are profile facts the declaration's applicability needs beyond the
+    ready baseline, such as a payer fact the filer states.
 
     Held open as a context manager because the profile runtime must stay live
     while a mounted workbench reads through it. The address picks the SHAPE of
@@ -362,7 +367,7 @@ def real_workbench(
             create_user_profile_record(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=profile.bucket_id,
-                facts=_READY_PROFILE_FACTS,
+                facts=persona_facts_beneath((*_READY_PROFILE_FACTS, *extra_facts)),
                 created_at=_T0,
                 updated_at=_T0,
                 context=operation.profile_create_context(),

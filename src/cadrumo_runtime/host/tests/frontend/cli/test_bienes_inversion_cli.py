@@ -31,7 +31,7 @@ pytestmark = [
 _ACQUISITION_LEDGER_ID = "ledger-capital-good-1"
 _PRORRATA_SECTOR_ID = "sector-services"
 
-_PROFILE_FACTS = native_general_iva_facts(surnames="Capital goods", description="synthetic capital goods profile")
+_PROFILE_FACTS = native_general_iva_facts()
 
 
 def test_bienes_inversion_declare_and_list_preserve_schema_two_identity_fields(tmp_path: Path) -> None:

@@ -16,10 +16,10 @@ from typing import cast
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.taxpayer_persona_support import seed_modelo_ready_profile
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     bound_test_profile_record,
-    seed_modelo_ready_profile_record,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo import calculation_operation as definitions_module
@@ -383,7 +383,7 @@ def test_calculate_executor_refuses_unadmissible_attestations_before_any_revisio
     work_unit = _m303_work_unit(operation)
     context = _CalculateContext(operation)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M303_BUCKET_ID):
-        seed_modelo_ready_profile_record(_M303_BUCKET_ID, clock=_M303_CLOCK)
+        seed_modelo_ready_profile(bucket_id=_M303_BUCKET_ID, at=_M303_CLOCK)
         with bound_test_profile_record(_M303_BUCKET_ID) as profiles:
             store = AttachmentStore()
             evidence_input = build_evidence(store, profiles, operation)
@@ -411,7 +411,7 @@ def test_calculate_executor_refuses_evidence_admitted_under_another_profile_buck
     work_unit = _m303_work_unit(operation, bucket_id=foreign_bucket_id)
     opened: list[str] = []
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M303_BUCKET_ID):
-        seed_modelo_ready_profile_record(_M303_BUCKET_ID, clock=_M303_CLOCK)
+        seed_modelo_ready_profile(bucket_id=_M303_BUCKET_ID, at=_M303_CLOCK)
         with bound_test_profile_record(_M303_BUCKET_ID):
             store = AttachmentStore()
             evidence_input = _m303_attestation_input(operation=operation, store=store)
@@ -497,7 +497,7 @@ def test_calculation_preparation_authors_a_period_before_the_last_from_the_joint
     first_quarter = Period.from_year_and_code(2025, "1T")
     work_unit = _m303_work_unit(operation, period=first_quarter)
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M303_BUCKET_ID):
-        seed_modelo_ready_profile_record(_M303_BUCKET_ID, clock=_M303_CLOCK)
+        seed_modelo_ready_profile(bucket_id=_M303_BUCKET_ID, at=_M303_CLOCK)
         with bound_test_profile_record(_M303_BUCKET_ID):
             prepared = asyncio.run(
                 definitions_module.prepare_modelo_work_calculation(
@@ -531,7 +531,7 @@ def test_calculate_executor_refuses_the_last_period_without_an_attestation(
         attachment_store_factory=lambda _bucket_id: AttachmentStore(),
     )
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M303_BUCKET_ID):
-        seed_modelo_ready_profile_record(_M303_BUCKET_ID, clock=_M303_CLOCK)
+        seed_modelo_ready_profile(bucket_id=_M303_BUCKET_ID, at=_M303_CLOCK)
         with bound_test_profile_record(_M303_BUCKET_ID), pytest.raises(M303FilingEvidenceError) as raised:
             asyncio.run(
                 executor.execute(

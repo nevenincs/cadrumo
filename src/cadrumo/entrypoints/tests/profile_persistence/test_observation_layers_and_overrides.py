@@ -18,6 +18,7 @@ import pytest
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.observations_repository import ObservationOverride, ObservationSourceKind
 from cadrumo.application.modelo.action_errors import ModeloLocalObservationError
@@ -33,7 +34,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
-from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import seed_ready_profile
+from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import _T0
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -175,7 +176,7 @@ def test_an_official_envelope_refuses_an_operator_override(tmp_path: Path) -> No
 
 def test_an_override_is_audited_evented_and_cleared(tmp_path: Path, operation: PinnedAuthorityOperation) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        seed_ready_profile(bucket_id=profile.bucket_id)
+        seed_ready_profile(bucket_id=profile.bucket_id, at=_T0)
         repo = CalculationObservationRepository()
         ports = _ports(profile.bucket_id, repo)
         work_unit = create_work_unit(

@@ -8,7 +8,6 @@
         "edit",
         "docs-sequence-sandbox",
         "--quiet",
-        "--accept-defaults",
         "--activity-start-date",
         "2026-01-01"
       ],
@@ -123,13 +122,7 @@
         "--idempotency-key",
         "qs-compra"
       ],
-      "captures": [
-        {
-          "json_path": "result.transaction_id",
-          "name": "expense_id",
-          "value": "e28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6"
-        }
-      ],
+      "captures": [],
       "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
@@ -267,13 +260,13 @@
           "aeat_register": null,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "93ce28ffa74d9bb88d9eb5010f904c0530add800aaf1a2364862706405e4145a",
+          "calculation_revision_id": "6a79f16fbdb4b6c4842db9f17674711789bf1b4b6664b2a8d087d05b7281e8e7",
           "confirmation": "pendiente",
           "declaration_kind": "original",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "c67aa2e2e96bba8bef51e07d1b4c2f36fcf843ff077d26aadf9d2770685a8514",
+          "filing_record_id": "9432f4b8d82dcea8e34c7d8483c759418ba3415ceb26158ad2967a120aa2919b",
           "filing_year": 2026,
           "kind": "internal_filing",
           "live_submission": false,

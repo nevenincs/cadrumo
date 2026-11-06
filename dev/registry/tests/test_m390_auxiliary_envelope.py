@@ -40,7 +40,7 @@ _M390_DESIGNS = (
 def _product_identity() -> AeatProductSoftwareIdentity:
     return AeatProductSoftwareIdentity(
         program_identifier="C390",
-        developer_tax_id="Y0000001S",
+        developer_tax_id="Y0001006P",
         evidence=(
             AeatProductSoftwareEvidence(
                 reference="aeat-software-registration:c390",
@@ -135,7 +135,7 @@ def test_renders_each_real_modelo_390_header_once_before_parser_ordered_pages(
     assert rendered.header[22:92] == b" " * 70
     assert rendered.header[92:96] == b"C390"
     assert rendered.header[96:100] == b" " * 4
-    assert rendered.header[100:109] == b"Y0000001S"
+    assert rendered.header[100:109] == b"Y0001006P"
     assert rendered.header[109:322] == b" " * 213
     assert rendered.header[322:] == b"</AUX>"
     assert tuple(page.record_identity for page in rendered.numbered_pages) == tuple(

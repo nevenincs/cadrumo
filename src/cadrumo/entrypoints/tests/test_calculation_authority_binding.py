@@ -11,7 +11,7 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
+from cadrumo.adapters.persistence.profile.tests.taxpayer_persona_support import seed_modelo_ready_profile
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo import calculation_actions
 from cadrumo.application.modelo.calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
@@ -40,7 +40,7 @@ def test_bucket_calculation_reuses_caller_authority_and_returns_writer_publicati
 ) -> None:
     """Readiness, source, advisory, and result phases keep one authority lease."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID):
-        seed_modelo_ready_profile_record(_PROFILE_ID, clock=datetime(2026, 8, 24, tzinfo=UTC))
+        seed_modelo_ready_profile(bucket_id=_PROFILE_ID, at=datetime(2026, 8, 24, tzinfo=UTC))
         with bundled_indexed_authority().operation() as operation:
             revision = resolved_revision(modelo="130", filing_year=2025, period="1T")
             unit = create_work_unit(

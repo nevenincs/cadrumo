@@ -2067,11 +2067,11 @@ application:
         amely az aktív profilodból származik (egy rólad szóló adat, például a születési
         dátumod); nem adható meg --binding révén, amely csak decimális és felsorolási
         értékeket fogad. Mentsd el a profilodban, majd számolj újra.
+      calculate_binding_is_profile_derived: A(z) --binding %{key} igen vagy nem érték,
+        amely az aktív profilodból származik; a --binding nem adhatja meg. Módosítsd
+        a profil azon adatát, amelyből származik, és számolj újra.
       calculate_binding_unknown: 'A --binding %{key} egyik értékforrás-azonosítónak
         sem felel meg a nyomtatvány ezen változatában. Elfogadott azonosítók: %{accepted}.'
-      calculate_boolean_binding_encoding_invalid: 'A(z) %{key} értéke decimálisként
-        kódolt igen/nem jelző, és a következők egyike kell legyen: %{accepted}. Beérkezett:
-        %{value}. Elfogadott kódolás: %{mapping}.'
       calculate_casilla_noncanonical_ambiguous: 'A --casilla %{key} nem kanonikus
         casilla.id, és nem egyértelmű. Jelölt casilla.id értékek: %{accepted}. Add
         meg a pontos kanonikus casilla.id-t'
@@ -2531,10 +2531,6 @@ application:
         %{transaction_currency} összegű tételhez a behozatal vámáru-nyilatkozata szükséges.
         A Cadrumo ezt egyelőre nem tudja rögzíteni, ezért a bevallás nem mehet át
         az ellenőrzésen. Nyújtsd be ezt a bevallást más módon.
-      iva_intra_eu_self_assessment_unrecordable: A %{transaction_date} dátumú, %{transaction_amount}
-        %{transaction_currency} összegű tételhez a közösségen belüli beszerzés önadózási
-        bizonylata szükséges. A Cadrumo ezt egyelőre nem tudja rögzíteni, ezért a
-        bevallás nem mehet át az ellenőrzésen. Nyújtsd be ezt a bevallást más módon.
       iva_reagp_document_unrecordable: A %{transaction_date} dátumú, %{transaction_amount}
         %{transaction_currency} összegű tételhez a mezőgazdasági, állattenyésztési
         és halászati különleges rendszer (REAGP) szerinti bizonylat szükséges. A Cadrumo

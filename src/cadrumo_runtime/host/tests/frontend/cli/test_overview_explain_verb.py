@@ -14,6 +14,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [
@@ -34,7 +35,7 @@ def _native_profile(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
         fixture.register(
             label="Native overview explain",
             facts={
-                "taxpayer_type.entity_type": "natural_person",
+                **native_general_iva_facts(),
                 "identity.tax_id": "12345678Z",
                 "identity.name": "Native",
                 "identity.surnames": "Overview",
@@ -44,13 +45,6 @@ def _native_profile(tmp_path: Path) -> Iterator[NativeCliProfileFixture]:
                 "irpf.estimation_regime": "directa_normal",
                 "taxpayer_type.fiscal_residency": "resident_irpf",
                 "tax_residence.ccaa": "madrid",
-                "tax_residence.jurisdiction_scope": "common_regime",
-                "iva.regime": "GENERAL",
-                "iva.m303_regime_composition": "general",
-                "iva.redeme_enrolled": "false",
-                "iva.cash_accounting_regime_enrolled": "false",
-                "iva.voluntary_sii_enrolled": "false",
-                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             },
         )
         close_active_bucket_session()

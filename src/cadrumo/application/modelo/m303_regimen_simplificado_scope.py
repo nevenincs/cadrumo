@@ -83,6 +83,13 @@ def m303_regimen_simplificado_scope_for_profile(
                 {"iva_profile_present": False},
             ),
         )
+    if iva_profile.regime_composition is None:
+        raise ModeloProfileReadinessError(
+            precondition_failure=m303_profile_readiness_failure(
+                "iva_composition_missing",
+                {"iva_profile_present": True},
+            ),
+        )
     return m303_regimen_simplificado_scope_for_composition(iva_profile.regime_composition)
 
 

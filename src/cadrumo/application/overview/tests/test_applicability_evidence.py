@@ -18,6 +18,7 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.tests.log_records import delivered_records
 
@@ -45,7 +46,6 @@ from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
 from ....domain.iva.schema import InvoiceKind
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ...invoices.source_resolver_ports import InvoiceSourcePersistenceError, InvoiceSourceResolverPorts
 from ...user_profile.projections import projection_for_taxpayer
@@ -459,9 +459,8 @@ def test_explain_and_the_calendar_decide_a_ledger_yes_alike(
     assert has_disagreement is (threshold is False)
 
 
-_AUTONOMO_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="X1234567L"),
-    *GENERAL_REGIME_NATURAL_PERSON_FACTS,
+_AUTONOMO_FACTS: tuple[UserProfileFact, ...] = persona_facts_beneath(
+    (UserProfileFact(path="identity.tax_id", value="X1234567L"),)
 )
 
 

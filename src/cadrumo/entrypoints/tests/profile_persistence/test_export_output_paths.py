@@ -31,6 +31,7 @@ from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.filing.software_identity import (
     AeatSoftwareIdentityGrade,
+    development_mock_software_identity,
 )
 from cadrumo.domain.modelos.errors import (
     ModeloExportPriorDomiciliationElectionRequiredError,
@@ -234,8 +235,9 @@ def test_export_modelo_303_stamps_the_development_identity_into_the_developer_he
         written = output_path.read_bytes()
         prefix_start = written.index(b"<T3030")
         # The all-zero values the development mock identity fact declares.
+        mock = development_mock_software_identity()
         assert written[prefix_start + 92 : prefix_start + 96] == b"0000"
-        assert written[prefix_start + 100 : prefix_start + 109] == b"X0000000T"
+        assert written[prefix_start + 100 : prefix_start + 109] == mock.developer_tax_id.encode("ascii")
         assert taxpayer_nif.encode("ascii") not in written[prefix_start + 100 : prefix_start + 109]
         assert result.software_identity_grade is AeatSoftwareIdentityGrade.DEVELOPMENT_MOCK
         assert event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))

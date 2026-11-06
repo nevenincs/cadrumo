@@ -63,7 +63,7 @@ def _request(**overrides: object) -> InvoiceAddRequest:
         "profile_id": _PROFILE,
         "kind": InvoiceKind.RECEIVED,
         "counterparty_name": "Synthetic supplier",
-        "counterparty_tax_id": "A58818501",
+        "counterparty_tax_id": "B00010157",
         "counterparty_country": "ES",
         "invoice_number": "ADD-2026-001",
         "issued_at": date(2026, 4, 15),

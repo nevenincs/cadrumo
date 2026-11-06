@@ -66,8 +66,12 @@ def seed_clean_cross_period_sources(
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
     operation: PinnedAuthorityOperation,
+    tax_id: str = SEEDED_SOURCE_TAX_ID,
 ) -> None:
     """Materialise every declared cross-period source through real adapters.
+
+    Each source is filed and observed under ``tax_id``, the taxpayer whose
+    profile the work unit belongs to.
 
     Each source is filed through the real external-import door and then
     recorded as an ``aeat_sede_justificante`` observation, which is what the
@@ -108,6 +112,7 @@ def seed_clean_cross_period_sources(
                 filing_year=filing_year,
                 period=period,
                 captured_at=SEED_CLOCK,
+                tax_id=tax_id,
             )
             source_work_unit = create_work_unit(
                 bucket_id=work_unit.bucket_id,
@@ -130,7 +135,7 @@ def seed_clean_cross_period_sources(
                 filing_repository=filing_repository,
                 bucket_event_repository=bucket_event_repository,
                 observation_repository=observation_repository,
-                expected_tax_id=SEEDED_SOURCE_TAX_ID,
+                expected_tax_id=tax_id,
                 clock=SEED_CLOCK,
                 filing_instance_evidence=(
                     general_m303_filing_evidence(
@@ -164,7 +169,7 @@ def seed_clean_cross_period_sources(
                     "aeat_register_status": "ALTA",
                     "aeat_expediente_id": f"EXP-{source_modelo}-{filing_year}-{period}",
                     "aeat_justificante_csv": evidence_reference_id,
-                    "authenticated_identity": SEEDED_SOURCE_TAX_ID,
+                    "authenticated_identity": tax_id,
                 },
             ),
         )

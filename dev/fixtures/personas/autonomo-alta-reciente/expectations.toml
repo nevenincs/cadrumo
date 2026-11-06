@@ -1,0 +1,164 @@
+format = 1
+persona = "autonomo-alta-reciente"
+
+# Obligations for the fiscal year horizon, the first year of the activity, as
+# of the persona clock (1 April). The ledger covers the first quarter only.
+
+[[obligations]]
+modelo = "303"
+periods = ["1T", "2T", "3T", "4T"]
+year = "horizon"
+applicable = true
+reason = "Empresaria en régimen general del IVA con operaciones interiores sujetas desde el alta del 1 de enero; autoliquidación trimestral a partir del primer trimestre."
+legal_ref = ["ley-37-1992:art-164", "rd-1624-1992:art-71"]
+grounding = "verified"
+
+[[obligations]]
+modelo = "390"
+periods = ["0A"]
+year = "horizon"
+applicable = true
+reason = "Resumen anual de quien presenta el Modelo 303 trimestral en el régimen general sin estar exonerado."
+legal_ref = ["rd-1624-1992:art-71"]
+grounding = "cited"
+
+[[obligations]]
+modelo = "130"
+periods = ["1T", "2T", "3T", "4T"]
+year = "horizon"
+applicable = true
+reason = "Actividad empresarial en estimación directa simplificada cuyos ingresos no soportan retención; en el inicio de actividad el porcentaje del art. 109.2 RIRPF se mide en el propio periodo y es cero, así que no exime del pago fraccionado."
+legal_ref = ["rd-439-2007:art-109", "rd-439-2007:art-110"]
+grounding = "verified"
+
+[[obligations]]
+modelo = "100"
+periods = ["0A"]
+year = "horizon"
+applicable = true
+reason = "Titular de rendimientos de actividades económicas: obligada a declarar con independencia de su cuantía. El plazo de presentación lo fija la orden anual del modelo, que para este ejercicio aún no se ha publicado, así que el calendario la advierte sin ventana."
+legal_ref = ["ley-35-2006:art-96", "ley-35-2006:art-97"]
+grounding = "verified"
+calendar_advice = "applicable_window_missing"
+
+[[obligations]]
+modelo = "347"
+periods = ["0A"]
+year = "horizon"
+applicable = "unknown"
+reason = "El umbral de 3.005,06 euros anuales por tercero se mide sobre el año completo; en el primer trimestre ningún tercero lo alcanza (1.210,00 y 605,00 euros) y el escenario no recoge el resto del año."
+legal_ref = ["rd-1065-2007:art-31", "rd-1065-2007:art-33"]
+grounding = "cited"
+
+[[obligations]]
+modelo = "111"
+periods = ["1T", "2T", "3T", "4T"]
+year = "horizon"
+applicable = false
+reason = "Sin empleados ni pagos a profesionales sujetos a retención; el proveedor es una sociedad."
+legal_ref = ["rd-439-2007:art-108"]
+grounding = "cited"
+
+[[obligations]]
+modelo = "115"
+periods = ["1T", "2T", "3T", "4T"]
+year = "horizon"
+applicable = false
+reason = "No es arrendataria de ningún inmueble urbano afecto a la actividad."
+legal_ref = ["rd-439-2007:art-100", "rd-439-2007:art-108"]
+grounding = "cited"
+
+[[obligations]]
+modelo = "349"
+periods = ["1T", "2T", "3T", "4T"]
+year = "horizon"
+applicable = false
+reason = "No realiza operaciones intracomunitarias."
+legal_ref = ["rd-1624-1992:art-79"]
+grounding = "cited"
+
+# Statutory last day of each filing window inside the year envelope, before
+# any shift to the next business day. The fourth-quarter and annual windows
+# close in the year after the horizon, outside the envelope a persona date may
+# name, so they are not stated here.
+
+[[deadlines]]
+modelo = "303"
+period = "1T"
+year = "horizon"
+statutory_end = { year = "horizon", month = 4, day = 20 }
+legal_ref = ["rd-1624-1992:art-71"]
+grounding = "verified"
+
+[[deadlines]]
+modelo = "303"
+period = "2T"
+year = "horizon"
+statutory_end = { year = "horizon", month = 7, day = 20 }
+legal_ref = ["rd-1624-1992:art-71"]
+grounding = "verified"
+
+[[deadlines]]
+modelo = "303"
+period = "3T"
+year = "horizon"
+statutory_end = { year = "horizon", month = 10, day = 20 }
+legal_ref = ["rd-1624-1992:art-71"]
+grounding = "verified"
+
+[[deadlines]]
+modelo = "130"
+period = "1T"
+year = "horizon"
+statutory_end = { year = "horizon", month = 4, day = 20 }
+legal_ref = ["rd-439-2007:art-110"]
+grounding = "verified"
+
+[[deadlines]]
+modelo = "130"
+period = "2T"
+year = "horizon"
+statutory_end = { year = "horizon", month = 7, day = 20 }
+legal_ref = ["rd-439-2007:art-110"]
+grounding = "verified"
+
+[[deadlines]]
+modelo = "130"
+period = "3T"
+year = "horizon"
+statutory_end = { year = "horizon", month = 10, day = 20 }
+legal_ref = ["rd-439-2007:art-110"]
+grounding = "verified"
+
+# Values. Amounts are euro strings with two decimals. `derivation` names the
+# ledger rows (by ref) and the arithmetic; rounding is half-up to cents.
+
+[[values]]
+modelo = "303"
+period = "1T"
+year = "horizon"
+casillas = { "07" = "1000.00", "09" = "210.00", "27" = "210.00", "28" = "500.00", "29" = "105.00", "45" = "105.00", "64" = "105.00", "66" = "105.00", "71" = "105.00" }
+concepts = { resultado_regimen_general = "105.00" }
+derivation = """
+07 = ALT-VTA-01 1000.00 (servicio de limpieza a una empresa, tipo general); 09 = 21 % of 07 = 210.00. 27 = 09.
+28 = ALT-MAT-01 500.00 (material de oficina afecto, factura recibida); 29 = 21 % of 28 = 105.00. 45 = 29.
+Resultado del régimen general = 27 - 45 = 105.00; 64 = 66 (100 % atribuible al Estado) = 71: first period of a new activity, so no cuotas a compensar from earlier periods exist.
+"""
+legal_ref = ["ley-37-1992:art-90", "ley-37-1992:art-92"]
+grounding = "verified"
+
+[[values]]
+modelo = "130"
+period = "1T"
+year = "horizon"
+casillas = { "01" = "1000.00", "02" = "525.00", "03" = "475.00", "04" = "95.00", "05" = "0.00", "06" = "0.00", "07" = "95.00" }
+parameters = { provision_rate = "0.05", provision_cap = "2000.00", pago_rate = "0.20" }
+derivation = """
+Cumulative from 1 January, imputed by cobros y pagos: ALT-VTA-01 is collected and ALT-MAT-01 paid inside the quarter.
+01 = ALT-VTA-01 base 1000.00 (IVA repercutido excluded). Gastos = ALT-MAT-01 base 500.00 (IVA soportado deducible excluded).
+Provisión gastos de difícil justificación = 5 % of (1000.00 - 500.00) = 25.00, under the 2000.00 cap. 02 = 500.00 + 25.00 = 525.00.
+03 = 01 - 02 = 475.00; 04 = 20 % of 03 = 95.00; 05 = 0 (first quarter); 06 = 0 (no withheld income); 07 = 04 - 05 - 06.
+The art. 110.3.c minoración (casilla 13) depends on the prior-year return and is not asserted.
+"""
+legal_ref = ["rd-439-2007:art-7", "rd-439-2007:art-30", "rd-439-2007:art-110"]
+grounding = "verified"

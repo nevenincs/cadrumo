@@ -25,7 +25,7 @@ pytestmark = [
     pytest.mark.usefixtures("authority_operation"),
 ]
 
-_PROFILE_FACTS = native_general_iva_facts(surnames="Operator IVA", description="design")
+_PROFILE_FACTS = native_general_iva_facts()
 
 
 def _view(profile: NativeCliProfileFixture, transaction_id: str) -> dict[str, Any]:

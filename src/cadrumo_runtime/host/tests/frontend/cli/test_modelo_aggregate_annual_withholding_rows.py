@@ -55,9 +55,12 @@ from cadrumo.application.modelo.aggregate_contracts import MODELO_AGGREGATE_OPER
 from cadrumo.application.modelo.invoice_withholding_capture_contracts import (
     MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
 )
-from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.application.modelo.work_profile import ModeloWorkProfile
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
+from cadrumo.application.user_profile.tests.persona_profile_facts import (
+    COLEGIO_CONCERTADO_ATTESTATION,
+    persona_facts_beneath,
+)
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.aggregation import AggregationCaptureKind, BindingSourceKind, RetencionClave, RetencionScheme
 from cadrumo.core.i18n.render import lookup_translation
@@ -94,7 +97,7 @@ _ANNUAL = Period.from_year_and_code(_YEAR, "0A")
 _ABSENT_CODE = "modelo.aggregate.calculation_rows_absent"
 
 _LANDLORD_A = "B12345674"
-_LANDLORD_B = "A08000143"
+_LANDLORD_B = "A00010066"
 _LANDLORD_OTHER_YEAR = "B00000011"
 _LANDLORD_OWN_WINDOW = "B00000022"
 _EMPLOYEE = "11111111H"
@@ -154,7 +157,9 @@ def _operator_profile_preparer(operation: PinnedAuthorityOperation, seed: _Seed)
     """Complete the readiness-baseline profile the resolver context mirrors, then seed its stores."""
 
     def prepare(profile_id: UUID, root: Path) -> None:
-        facts = complete_profile_facts(operation.profile_schema(), MODELO_READY_PROFILE_FACTS)
+        facts = complete_profile_facts(
+            operation.profile_schema(), persona_facts_beneath((COLEGIO_CONCERTADO_ATTESTATION,))
+        )
         populated = upsert_test_profile_facts(profile_id, facts, root=root)
         with bound_test_profile_record(profile_id, root=root) as repository:
             ready = repository.complete_setup(

@@ -10,13 +10,9 @@ from .scenario import (
 from .seed_contracts import (
     _ACTOR,
     _ANNUAL,
-    _M100_BINDINGS,
     _M100_CASILLAS,
     _PERIODIC,
     SeedRefusalError,
-)
-from .seed_inputs import (
-    _binding_ids,
 )
 from .seed_state import SeedState
 
@@ -122,15 +118,7 @@ class ModeloSeedStage(SeedState):
                 inputs += ("--m303-exonerado-390-attachment-id", attachment_id, "--m303-exonerado-390-sha256", sha256)
             return inputs
         if modelo == "100":
-            declared = self._declared_bindings("100", year)
-            casillas = tuple(argument for value in _M100_CASILLAS for argument in ("--casilla", value))
-            bindings = tuple(
-                argument
-                for binding_id, value in _M100_BINDINGS.items()
-                if binding_id in declared
-                for argument in ("--binding", f"{binding_id}={value}")
-            )
-            return casillas + bindings
+            return tuple(argument for value in _M100_CASILLAS for argument in ("--casilla", value))
         return ()
 
     def _m303_exonerado_390_attestation(self, year: int, period: str) -> tuple[str, str]:
@@ -158,11 +146,3 @@ class ModeloSeedStage(SeedState):
             self._remember(f"{key}:sha256", attested["sha256"])
             self._complete(key)
         return self.receipt.identifiers[f"{key}:attachment_id"], self.receipt.identifiers[f"{key}:sha256"]
-
-    def _declared_bindings(self, modelo: str, year: int) -> frozenset[str]:
-        """Read the binding ids the selected revision declares, so no other year's answer is sent."""
-        listed = self._result(
-            ("app", "modelo", "bindings", "list", "--modelo", modelo, "--year", str(year)),
-            stage=f"bindings:{modelo}:{year}",
-        )
-        return frozenset(_binding_ids(listed))

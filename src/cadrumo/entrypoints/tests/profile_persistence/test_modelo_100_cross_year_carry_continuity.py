@@ -49,20 +49,17 @@ are deferred calc-completeness follow-ons — not claimed here.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
 from cadrumo.application.modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_persona_profile
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -77,9 +74,6 @@ from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
 )
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
 from .observation_seeding_support import save_stamped_observation
 
@@ -138,52 +132,6 @@ def _seed_prior_year_saldo(*, source_year: int, saldo: Decimal, obs_repo: Calcul
     )
 
 
-def _seed_taxpayer_unit_profile() -> None:
-    """Seed a realistic single-taxpayer ``UserProfileRecord``.
-
-    The seeded facts cover every ``source = "profile"`` binding M100's calc
-    chain consumes across the 2024 and 2025 revisions (tax-residence CCAA,
-    taxpayer birth date for ``age_at_year_end``, declaration type, marital
-    status and the derived marriage facts, minor-children count). The profile
-    is the substrate of record, so ``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` auto-resolves
-    these via ``_resolve_profile_bindings_for_calculation`` — no profile fact
-    is hand-fed through the caller binding channel.
-    """
-    # The display_name MUST match the label the isolated_runtime_profile
-    # fixture stamps on the bucket's profile manifest ("Test runtime profile");
-    # a divergent label trips the torn-rename guard in CommittedProfileView.
-    record = _create_profile_record_for_test(
-        setup_state=ProfileSetupState.COMPLETE,
-        profile_id=_PROFILE_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="identity.name", value="Test"),
-            UserProfileFact(path="identity.surnames", value="Operator"),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.sex", value="H"),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-            UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-            UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            # Single taxpayer, no dependants: every family / guardería / descendant
-            # Decimal-channel profile fact is a true zero for this persona.
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-            UserProfileFact(path="renta_family.descendientes_count", value=Decimal("0")),
-            UserProfileFact(path="renta_family.cotizaciones_ss_madre_2024", value=Decimal("0")),
-            UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
-            UserProfileFact(path="renta_family.unidad_familiar_otros_miembros_base", value=Decimal("0")),
-            UserProfileFact(path="renta_family.madrid_nacimiento_adopcion_eligible_count", value=Decimal("0")),
-        ),
-        created_at=_CLOCK,
-        updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
-    )
-    seed_test_profile_record(record)
-
-
 def _calculate_100(*, filing_year: int, obs_repo: CalculationObservationRepository):
     """Run the bucket M100 calculation for ``filing_year``.
 
@@ -238,7 +186,7 @@ def test_modelo_100_opening_pending_resolves_from_prior_year_saldo(tmp_path: Pat
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         obs_repo = CalculationObservationRepository()
-        _seed_taxpayer_unit_profile()
+        seed_persona_profile("autonomo-fontanero", bucket_id=_PROFILE_ID, at=_CLOCK)
         _seed_prior_year_saldo(source_year=2023, saldo=_SALDO_BY_SOURCE_YEAR[2023], obs_repo=obs_repo)
         revision = _calculate_100(filing_year=_YEAR_N, obs_repo=obs_repo)
     assert Decimal(revision.casilla_values[_PENDIENTE_INICIO]) == _SALDO_BY_SOURCE_YEAR[2023]
@@ -265,7 +213,7 @@ def test_modelo_100_base_liquidable_negativa_enrolls_two_renta_years(tmp_path: P
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         obs_repo = CalculationObservationRepository()
-        _seed_taxpayer_unit_profile()
+        seed_persona_profile("autonomo-fontanero", bucket_id=_PROFILE_ID, at=_CLOCK)
         _seed_prior_year_saldo(source_year=2023, saldo=_SALDO_BY_SOURCE_YEAR[2023], obs_repo=obs_repo)
         _seed_prior_year_saldo(source_year=2024, saldo=_SALDO_BY_SOURCE_YEAR[2024], obs_repo=obs_repo)
 

@@ -147,6 +147,7 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
@@ -330,22 +331,14 @@ def _seed_sociedad_profile(filing_year: int) -> None:
     record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="A12345674"),
-            UserProfileFact(path="identity.legal_name", value="Sociedad A Ejemplo1 SL"),
-            UserProfileFact(path="activities.description", value="fabricacion industrial"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-            UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
-            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("25000000")),
-            UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="A12345674"),
+                UserProfileFact(path="identity.legal_name", value="Sociedad A Ejemplo1 SL"),
+                UserProfileFact(path="activities.description", value="fabricacion industrial"),
+                UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("25000000")),
+            ),
+            persona_id="sociedad-limitada",
         ),
         created_at=_profile_instant(filing_year),
         updated_at=_profile_instant(filing_year),

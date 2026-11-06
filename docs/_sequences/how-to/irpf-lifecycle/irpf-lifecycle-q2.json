@@ -2,8 +2,8 @@
   "frames": [
     {"argv":["aeat","config","profile","edit","docs-sequence-sandbox","--quiet","--accept-defaults","--activity-start-date","2026-01-01","--irpf-estimation-regime","directa_simplificada","--irpf-activity-income-imputation-criterion","cobros_y_pagos","--irpf-activity-income-imputation-year","2026","--no-irpf-codigo-comercio-accounting"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {"argv":["aeat","app","ledger","add","--date","2026-02-10","--amount","1210","--direction","INCOMING","--description","venta","--classification","BUSINESS","--taxable-base","1000","--iva-rate","0.21","--iva-amount","210","--idempotency-key","irpf-q1-venta"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","ledger","evidence","add","fixtures/factura-material-oficina.pdf","--supplier","Papeleria Central SL","--invoice-number","C-2026-0087","--invoice-date","2026-02-11","--taxable-base","500","--iva-rate","21","--iva-amount","105"],"captures":[{"json_path":"result.evidence_id","name":"first_quarter_evidence_id","value":"3445d70497fc89d7"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","app","ledger","add","--date","2026-02-11","--amount","605","--direction","OUTGOING","--description","compra","--classification","BUSINESS","--category-id","material_oficina","--taxable-base","500","--iva-rate","0.21","--iva-amount","105","--purchase-invoice-evidence-id","3445d70497fc89d7","--idempotency-key","irpf-q1-compra"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","ledger","evidence","add","fixtures/factura-material-oficina.pdf","--supplier","Papeleria Central SL","--invoice-number","C-2026-0087","--invoice-date","2026-02-11","--taxable-base","500","--iva-rate","21","--iva-amount","105","--idempotency-key","irpf-q1-factura"],"captures":[{"json_path":"result.evidence_id","name":"first_quarter_evidence_id","value":"30466dcba3b4298e"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","app","ledger","add","--date","2026-02-11","--amount","605","--direction","OUTGOING","--description","compra","--classification","BUSINESS","--category-id","material_oficina","--taxable-base","500","--iva-rate","0.21","--iva-amount","105","--purchase-invoice-evidence-id","30466dcba3b4298e","--idempotency-key","irpf-q1-compra"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {"argv":["aeat","app","modelo","work","create","--modelo","130","--year","2026","--period","1T"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {"argv":["aeat","app","modelo","work","calculate","--modelo","130","--year","2026","--period","1T","--binding","modelo-130-resultados-negativos-anteriores=0","--binding","modelo-130-pagos-fraccionados-anteriores=0","--binding","irpf.previous_year_economic_activity_net_income=0"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {"argv":["aeat","app","modelo","work","verify","--modelo","130","--year","2026","--period","1T"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
@@ -146,7 +146,7 @@
             "modelo-130-retenciones-agrarias": "0",
             "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "56ee4609fcaab0e589be21abbba617220ac995e027e0586958d2b7d2b5c15e60",
+          "calculation_revision_id": "71a7e9aa11cf92519a1bd01864abf77af637c3cc2542685b3bbec2a42b1694b2",
           "casilla_values": {
             "01": "4000",
             "02": "912.50",
@@ -296,7 +296,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 56ee4609fcaab0e589be21abbba617220ac995e027e0586958d2b7d2b5c15e60 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 71a7e9aa11cf92519a1bd01864abf77af637c3cc2542685b3bbec2a42b1694b2 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -514,7 +514,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "56ee4609fcaab0e589be21abbba617220ac995e027e0586958d2b7d2b5c15e60",
+          "calculation_revision_id": "71a7e9aa11cf92519a1bd01864abf77af637c3cc2542685b3bbec2a42b1694b2",
           "completeness_status": "complete",
           "findings": [
             {
@@ -611,7 +611,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "b9e21223d63f87616e8604cb24d047aafd769512296d41eb17171d8892147f87",
+          "verification_report_id": "77ea068d48b61353b4c8e4726eeb9355a30793c45ad78739f9a24e2350ca0d19",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -678,11 +678,11 @@
           }
         ],
         "result": {
-          "bucket_event_id": "360cde0de446bd40d9b357d6901e2a25cfeb099f93d81165becba731304913fc",
+          "bucket_event_id": "1189f7f307efba0257c89c16f869729f3e549938f3fa156b155de506e9835b62",
           "bucket_id": "<bucket-id>",
           "byte_size": 946,
-          "calculation_revision_id": "56ee4609fcaab0e589be21abbba617220ac995e027e0586958d2b7d2b5c15e60",
-          "file_sha256": "4aa9f45789e37156f976083d0982d34e9aca5d381732ef099b939e83554db6b0",
+          "calculation_revision_id": "71a7e9aa11cf92519a1bd01864abf77af637c3cc2542685b3bbec2a42b1694b2",
+          "file_sha256": "fcc26fa6390a41b0460b8ed64d125df2966eda0088f6ed1d0aaec992e95886e7",
           "filing_year": 2026,
           "format": "fichero-boe",
           "iva_wallet_decision_provenance": null,

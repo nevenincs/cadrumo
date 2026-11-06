@@ -465,6 +465,7 @@ ComponentCatalogue = Mapping[tuple[IvaCategory, InvoiceKind], IvaCategoryCompone
 CategoryProjectionName = Literal[
     "cuota_less_m303",
     "m303_base_out_of_scope",
+    "received_outside_iva_scope",
     "evidence_exempt",
     "no_printed_tax",
     "cash_accounting_excluded",

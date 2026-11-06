@@ -51,6 +51,7 @@ from cadrumo.application.modelo.verification_actions import verify_modelo_revisi
 from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.casilla_id import CasillaId
@@ -185,23 +186,17 @@ def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:
         _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value=_TAX_ID),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="activity"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="SIMPLIFICADO"),
-                UserProfileFact(path="iva.m303_regime_composition", value="simplified"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="objetiva"),
-                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.tax_id", value=_TAX_ID),
+                    UserProfileFact(path="identity.name", value="Test"),
+                    UserProfileFact(path="identity.surnames", value="Operator"),
+                    UserProfileFact(path="activities.description", value="activity"),
+                    UserProfileFact(path="iva.regime", value="SIMPLIFICADO"),
+                    UserProfileFact(path="iva.m303_regime_composition", value="simplified"),
+                    UserProfileFact(path="irpf.estimation_regime", value="objetiva"),
+                    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                )
             ),
             created_at=_T0,
             updated_at=_T0,

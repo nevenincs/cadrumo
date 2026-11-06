@@ -124,11 +124,6 @@ _LITERAL_NON_PROFILE_EXCLUSIONS = (
 
 _FACT_CONTAINER_NON_PROFILE_EXCLUSIONS = (
     _ProfileShapeExclusion(
-        "src/cadrumo/adapters/persistence/profile/tests/test_m303_regimen_simplificado_scope_persistence.py",
-        None,
-        "schema-minimum fragment composed with the IVA block by each complete-profile fixture",
-    ),
-    _ProfileShapeExclusion(
         "src/cadrumo/application/tests/test_workbench_generation_home.py",
         "test_an_incomplete_profile_publishes_reasoned_zones_instead_of_failing",
         "deliberately incomplete profile proves the workbench reasons about the gap instead of failing",
@@ -189,6 +184,82 @@ def _shared_fact_tuples(module: ast.Module) -> dict[str, frozenset[str]]:
     }
 
 
+_PERSONA_COMPOSER = "persona_facts_beneath"
+"""The fixture seam that lays stated facts over a catalogue persona's complete profile."""
+
+
+def _local_containers(scope: ast.AST) -> dict[str, list[ast.expr]]:
+    """Map each name a scope assigns to the expressions assigned to it, without entering nested scopes."""
+    assigned: dict[str, list[ast.expr]] = {}
+    pending = list(ast.iter_child_nodes(scope))
+    while pending:
+        node = pending.pop()
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef | ast.Lambda):
+            continue
+        if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+            assigned.setdefault(node.targets[0].id, []).append(node.value)
+        pending.extend(ast.iter_child_nodes(node))
+    return assigned
+
+
+def _resolved(expression: ast.expr, assigned: Mapping[str, list[ast.expr]]) -> list[ast.expr]:
+    if isinstance(expression, ast.Name):
+        return assigned.get(expression.id, [])
+    return [expression]
+
+
+def _omits_a_required_iva_path(call: ast.Call, assigned: Mapping[str, list[ast.expr]]) -> bool:
+    """Whether the composer's ``without`` drops a required path or a section prefix holding one."""
+    without = next((keyword.value for keyword in call.keywords if keyword.arg == "without"), None)
+    if without is None:
+        return False
+    names = {
+        node.value
+        for expression in _resolved(without, assigned)
+        for node in ast.walk(expression)
+        if isinstance(node, ast.Constant) and isinstance(node.value, str)
+    }
+    return any(
+        name == path or (name.endswith(".") and path.startswith(name))
+        for name in names
+        for path in _REQUIRED_IVA_FACT_PATHS
+    )
+
+
+def _persona_overlays(module: ast.Module) -> frozenset[int]:
+    """Return the identities of fact containers stated over a persona's complete profile.
+
+    A fragment handed to the persona composer replaces the persona's facts only at the paths it
+    states, so the persona's own IVA block supplies every axis the fragment leaves out. The
+    fragment is still incomplete when the composer is told to omit one of those axes.
+    """
+    overlays: set[int] = set()
+    scopes = [module, *(node for node in ast.walk(module) if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef))]
+    for scope in scopes:
+        assigned = _local_containers(scope)
+        pending = list(ast.iter_child_nodes(scope))
+        while pending:
+            node = pending.pop()
+            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef | ast.Lambda):
+                continue
+            pending.extend(ast.iter_child_nodes(node))
+            if not isinstance(node, ast.Call) or _called_name(node) != _PERSONA_COMPOSER:
+                continue
+            stated = (
+                node.args[0]
+                if node.args
+                else next((keyword.value for keyword in node.keywords if keyword.arg == "stated"), None)
+            )
+            if stated is None or _omits_a_required_iva_path(node, assigned):
+                continue
+            overlays.update(
+                id(expression)
+                for expression in _resolved(stated, assigned)
+                if isinstance(expression, ast.Tuple | ast.List)
+            )
+    return frozenset(overlays)
+
+
 def _iter_modules() -> Iterator[tuple[Path, ast.Module]]:
     """Yield every shipped module and its AST, refusing an empty walk.
 
@@ -229,6 +300,7 @@ class _ProfileShapeFindings:
     def scan(self, relative_path: str, module: ast.Module) -> None:
         """Read every shape in one walk, tracking the enclosing function."""
         shared_fact_tuples = _shared_fact_tuples(module)
+        persona_overlays = _persona_overlays(module)
 
         def walk(node: ast.AST, enclosing: str | None) -> None:
             if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
@@ -237,7 +309,11 @@ class _ProfileShapeFindings:
                 self._read_constructor(relative_path, node)
             elif isinstance(node, ast.Tuple | ast.List):
                 fact_paths = _profile_fact_paths(node, shared_fact_tuples)
-                if _IVA_REGIME_PATH in fact_paths and _REQUIRED_IVA_FACT_PATHS - fact_paths:
+                if (
+                    _IVA_REGIME_PATH in fact_paths
+                    and _REQUIRED_IVA_FACT_PATHS - fact_paths
+                    and id(node) not in persona_overlays
+                ):
                     self.fact_containers[(relative_path, enclosing)] += 1
             elif isinstance(node, ast.Dict):
                 literal_paths = frozenset(
@@ -272,3 +348,38 @@ def test_every_claimed_current_iva_profile_has_the_canonical_required_axes() -> 
     assert findings.literal_maps == Counter(
         {(entry.path, entry.function): entry.expected_count for entry in _LITERAL_NON_PROFILE_EXCLUSIONS}
     )
+
+
+_BARE_FRAGMENT = "facts = (UserProfileFact(path='iva.regime', value='GENERAL'),)"
+_PERSONA_OVERLAY = "facts = persona_facts_beneath((UserProfileFact(path='iva.regime', value='GENERAL'),))"
+_OVERLAY_THROUGH_A_LOCAL = """
+def build():
+    stated = [UserProfileFact(path='iva.regime', value='GENERAL')]
+    return persona_facts_beneath(stated)
+"""
+_OVERLAY_OMITTING_THE_SECTION = (
+    "facts = persona_facts_beneath((UserProfileFact(path='iva.regime', value='GENERAL'),), without=('iva.',))"
+)
+_OVERLAY_OMITTING_AN_AXIS_THROUGH_A_LOCAL = """
+def build():
+    omitted = ('iva.voluntary_sii_enrolled',)
+    return persona_facts_beneath((UserProfileFact(path='iva.regime', value='GENERAL'),), without=omitted)
+"""
+
+
+@pytest.mark.parametrize(
+    ("source", "flagged"),
+    (
+        pytest.param(_BARE_FRAGMENT, True, id="bare-fragment"),
+        pytest.param(_PERSONA_OVERLAY, False, id="persona-overlay"),
+        pytest.param(_OVERLAY_THROUGH_A_LOCAL, False, id="persona-overlay-through-a-local"),
+        pytest.param(_OVERLAY_OMITTING_THE_SECTION, True, id="persona-overlay-omitting-the-iva-section"),
+        pytest.param(
+            _OVERLAY_OMITTING_AN_AXIS_THROUGH_A_LOCAL, True, id="persona-overlay-omitting-one-axis-through-a-local"
+        ),
+    ),
+)
+def test_a_regime_fragment_is_complete_only_over_a_persona_that_keeps_its_iva_block(source: str, flagged: bool) -> None:
+    findings = _ProfileShapeFindings()
+    findings.scan("fixture.py", ast.parse(source))
+    assert bool(findings.fact_containers) is flagged

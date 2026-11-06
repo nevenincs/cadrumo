@@ -1,0 +1,363 @@
+format = 1
+persona = "autonomo-electricista"
+
+# Obligations for the fiscal year horizon-1, as of the persona clock.
+
+[[obligations]]
+modelo = "303"
+periods = ["1T", "2T", "3T", "4T"]
+year = "horizon-1"
+applicable = true
+reason = "Empresario en régimen general del IVA con operaciones interiores sujetas; autoliquidación trimestral."
+legal_ref = ["ley-37-1992:art-164", "rd-1624-1992:art-71"]
+grounding = "verified"
+
+[[obligations]]
+modelo = "390"
+periods = ["0A"]
+year = "horizon-1"
+applicable = true
+reason = "Resumen anual de quien presenta el Modelo 303 trimestral sin estar exonerado."
+legal_ref = ["rd-1624-1992:art-71"]
+grounding = "cited"
+
+[[obligations]]
+modelo = "130"
+periods = ["1T", "2T", "3T", "4T"]
+year = "horizon-1"
+applicable = true
+reason = "Actividad empresarial en estimación directa, modalidad normal; sus ingresos no soportan retención, de modo que la excepción del art. 109.2 RIRPF no aplica."
+legal_ref = ["rd-439-2007:art-109", "rd-439-2007:art-110"]
+grounding = "verified"
+
+[[obligations]]
+modelo = "347"
+periods = ["0A"]
+year = "horizon-1"
+applicable = true
+reason = "Operaciones con tres terceros superan 3.005,06 euros anuales (IVA incluido) y no figuran en otra declaración informativa: la promotora, la cadena hotelera y el proveedor de material."
+legal_ref = ["rd-1065-2007:art-31", "rd-1065-2007:art-33"]
+grounding = "verified"
+
+[[obligations]]
+modelo = "100"
+periods = ["0A"]
+year = "horizon-1"
+applicable = true
+reason = "Titular de rendimientos de actividades económicas: obligado a declarar con independencia de su cuantía."
+legal_ref = ["ley-35-2006:art-96"]
+grounding = "verified"
+
+[[obligations]]
+modelo = "111"
+periods = ["1T", "2T", "3T", "4T"]
+year = "horizon-1"
+applicable = false
+reason = "Sin empleados ni pagos a profesionales sujetos a retención; la asesoría contable es una sociedad."
+legal_ref = ["rd-439-2007:art-108"]
+grounding = "cited"
+
+[[obligations]]
+modelo = "115"
+periods = ["1T", "2T", "3T", "4T"]
+year = "horizon-1"
+applicable = false
+reason = "No es arrendatario de ningún inmueble urbano afecto a su actividad."
+legal_ref = ["rd-439-2007:art-100", "rd-439-2007:art-108"]
+grounding = "cited"
+
+[[obligations]]
+modelo = "349"
+periods = ["1T", "2T", "3T", "4T"]
+year = "horizon-1"
+applicable = false
+reason = "No realiza operaciones intracomunitarias."
+legal_ref = ["rd-1624-1992:art-79"]
+grounding = "cited"
+
+# Statutory last day of each filing window, before any shift to the next
+# business day. The registry window end must equal this day or the next
+# business day after it.
+
+[[deadlines]]
+modelo = "303"
+period = "1T"
+year = "horizon-1"
+statutory_end = { year = "horizon-1", month = 4, day = 20 }
+legal_ref = ["rd-1624-1992:art-71"]
+grounding = "verified"
+
+[[deadlines]]
+modelo = "303"
+period = "2T"
+year = "horizon-1"
+statutory_end = { year = "horizon-1", month = 7, day = 20 }
+legal_ref = ["rd-1624-1992:art-71"]
+grounding = "verified"
+
+[[deadlines]]
+modelo = "303"
+period = "3T"
+year = "horizon-1"
+statutory_end = { year = "horizon-1", month = 10, day = 20 }
+legal_ref = ["rd-1624-1992:art-71"]
+grounding = "verified"
+
+[[deadlines]]
+modelo = "303"
+period = "4T"
+year = "horizon-1"
+statutory_end = { year = "horizon", month = 1, day = 30 }
+legal_ref = ["rd-1624-1992:art-71"]
+grounding = "verified"
+
+[[deadlines]]
+modelo = "390"
+period = "0A"
+year = "horizon-1"
+statutory_end = { year = "horizon", month = 1, day = 30 }
+legal_ref = ["rd-1624-1992:art-71"]
+grounding = "cited"
+
+[[deadlines]]
+modelo = "130"
+period = "1T"
+year = "horizon-1"
+statutory_end = { year = "horizon-1", month = 4, day = 20 }
+legal_ref = ["rd-439-2007:art-110"]
+grounding = "verified"
+
+[[deadlines]]
+modelo = "130"
+period = "2T"
+year = "horizon-1"
+statutory_end = { year = "horizon-1", month = 7, day = 20 }
+legal_ref = ["rd-439-2007:art-110"]
+grounding = "verified"
+
+[[deadlines]]
+modelo = "130"
+period = "3T"
+year = "horizon-1"
+statutory_end = { year = "horizon-1", month = 10, day = 20 }
+legal_ref = ["rd-439-2007:art-110"]
+grounding = "verified"
+
+[[deadlines]]
+modelo = "130"
+period = "4T"
+year = "horizon-1"
+statutory_end = { year = "horizon", month = 1, day = 30 }
+legal_ref = ["rd-439-2007:art-110"]
+grounding = "verified"
+
+[[deadlines]]
+modelo = "347"
+period = "0A"
+year = "horizon-1"
+statutory_end = { year = "horizon", month = 2, day = "last" }
+legal_ref = ["rd-1065-2007:art-35"]
+grounding = "cited"
+
+[[deadlines]]
+modelo = "100"
+period = "0A"
+year = "horizon-1"
+statutory_end = { year = "horizon", month = 6, day = 30 }
+legal_ref = ["ley-35-2006:art-97"]
+grounding = "cited"
+note = "The annual order sets the campaign window; 30 June is the end it has fixed in recent campaigns."
+
+# Values. Amounts are euro strings with two decimals. `derivation` names the
+# ledger rows (by ref) and the arithmetic; rounding is half-up to cents.
+
+[[values]]
+modelo = "303"
+period = "1T"
+year = "horizon-1"
+casillas = { "07" = "9600.00", "09" = "2016.00", "27" = "2016.00", "28" = "3040.00", "29" = "638.40", "45" = "638.40", "64" = "1377.60", "66" = "1377.60", "71" = "1377.60" }
+concepts = { resultado_regimen_general = "1377.60" }
+derivation = """
+07 = ELE-VTA-01 6200.00 + ELE-VTA-02 3400.00 = 9600.00; 09 = 21 % of 07 = 2016.00; 27 = 09 (no other rate).
+28 = ELE-MAT-1 2800.00 + ELE-GES-1 240.00 = 3040.00; 29 = 588.00 + 50.40 = 638.40; 45 = 29.
+Resultado del régimen general = 27 - 45 = 1377.60; 64 = 66 (100 % atribuible al Estado) = 71 (sin cuotas a compensar ni resultado de declaraciones anteriores).
+The RETA rows are no IVA operation and enter neither 28 nor 29.
+"""
+legal_ref = ["ley-37-1992:art-90", "ley-37-1992:art-92", "ley-37-1992:art-164"]
+grounding = "verified"
+
+[[values]]
+modelo = "303"
+period = "2T"
+year = "horizon-1"
+casillas = { "07" = "8700.00", "09" = "1827.00", "27" = "1827.00", "28" = "2690.00", "29" = "564.90", "45" = "564.90", "64" = "1262.10", "66" = "1262.10", "71" = "1262.10" }
+concepts = { resultado_regimen_general = "1262.10" }
+derivation = """
+07 = ELE-VTA-03 5800.00 + ELE-VTA-04 2900.00 = 8700.00; 09 = 1827.00.
+28 = ELE-MAT-2 2450.00 + ELE-GES-2 240.00 = 2690.00; 29 = 514.50 + 50.40 = 564.90.
+Resultado = 1827.00 - 564.90 = 1262.10.
+"""
+legal_ref = ["ley-37-1992:art-90", "ley-37-1992:art-92", "ley-37-1992:art-164"]
+grounding = "verified"
+
+[[values]]
+modelo = "303"
+period = "3T"
+year = "horizon-1"
+casillas = { "07" = "7700.00", "09" = "1617.00", "27" = "1617.00", "28" = "2140.00", "29" = "449.40", "45" = "449.40", "64" = "1167.60", "66" = "1167.60", "71" = "1167.60" }
+concepts = { resultado_regimen_general = "1167.60" }
+derivation = """
+07 = ELE-VTA-05 4600.00 + ELE-VTA-06 3100.00 = 7700.00; 09 = 1617.00.
+28 = ELE-MAT-3 1900.00 + ELE-GES-3 240.00 = 2140.00; 29 = 399.00 + 50.40 = 449.40.
+Resultado = 1617.00 - 449.40 = 1167.60.
+"""
+legal_ref = ["ley-37-1992:art-90", "ley-37-1992:art-92", "ley-37-1992:art-164"]
+grounding = "verified"
+
+[[values]]
+modelo = "303"
+period = "4T"
+year = "horizon-1"
+casillas = { "07" = "10100.00", "09" = "2121.00", "27" = "2121.00", "28" = "2890.00", "29" = "606.90", "45" = "606.90", "64" = "1514.10", "66" = "1514.10", "71" = "1514.10" }
+concepts = { resultado_regimen_general = "1514.10" }
+derivation = """
+07 = ELE-VTA-07 6400.00 + ELE-VTA-08 3700.00 = 10100.00; 09 = 2121.00.
+28 = ELE-MAT-4 2650.00 + ELE-GES-4 240.00 = 2890.00; 29 = 556.50 + 50.40 = 606.90.
+Resultado = 2121.00 - 606.90 = 1514.10.
+"""
+legal_ref = ["ley-37-1992:art-90", "ley-37-1992:art-92", "ley-37-1992:art-164"]
+grounding = "verified"
+
+[[values]]
+modelo = "390"
+period = "0A"
+year = "horizon-1"
+concepts = { base_21 = "36100.00", cuota_21 = "7581.00", total_cuota_devengada = "7581.00", base_soportado_interior = "10760.00", total_cuota_deducible = "2259.60", resultado_regimen_general = "5321.40", suma_resultados_303 = "5321.40" }
+derivation = """
+Annual sums of the four 303 periods: bases 21 % 9600 + 8700 + 7700 + 10100 = 36100.00, cuota 7581.00.
+Deductible: 3040 + 2690 + 2140 + 2890 = 10760.00 base, 638.40 + 564.90 + 449.40 + 606.90 = 2259.60 cuota.
+Resultado 7581.00 - 2259.60 = 5321.40, equal to the sum of the quarterly results 1377.60 + 1262.10 + 1167.60 + 1514.10.
+Asserted as concepts because the 390 casilla numbering is not re-derived here.
+"""
+legal_ref = ["rd-1624-1992:art-71"]
+grounding = "cited"
+
+# Modelo 130 under estimación directa normal: casilla 02 is the deductible
+# expenses alone. The 5 % provision for gastos de difícil justificación is a
+# rule of the simplified modality only (RIRPF art. 30.2.ª) and is absent here.
+
+[[values]]
+modelo = "130"
+period = "1T"
+year = "horizon-1"
+casillas = { "01" = "9600.00", "02" = "4000.00", "03" = "5600.00", "04" = "1120.00", "05" = "0.00", "06" = "0.00", "07" = "1120.00" }
+parameters = { pago_rate = "0.20" }
+derivation = """
+Cumulative from 1 January. 01 = issued bases ELE-VTA-01 6200.00 + ELE-VTA-02 3400.00 = 9600.00.
+02 = material 2800.00 + contabilidad 240.00 + RETA 3 x 320.00 = 4000.00 (IVA soportado deducible excluded; no provision).
+03 = 01 - 02 = 5600.00; 04 = 20 % of 03 = 1120.00; 05 = 0 (first quarter); 06 = 0 (no withheld income); 07 = 04 - 05 - 06.
+The art. 110.3.c minoración (casilla 13) depends on the prior-year return and is not asserted.
+"""
+legal_ref = ["ley-35-2006:art-28", "rd-439-2007:art-30", "rd-439-2007:art-110"]
+grounding = "verified"
+
+[[values]]
+modelo = "130"
+period = "2T"
+year = "horizon-1"
+casillas = { "01" = "18300.00", "02" = "7650.00", "03" = "10650.00", "04" = "2130.00", "05" = "1120.00", "06" = "0.00", "07" = "1010.00" }
+parameters = { pago_rate = "0.20" }
+derivation = """
+01 = 9600.00 + 5800.00 + 2900.00 = 18300.00. 02 = 4000.00 + 2450.00 + 240.00 + 960.00 = 7650.00.
+03 = 10650.00; 04 = 2130.00; 05 = previous positive 07 = 1120.00; 07 = 1010.00.
+"""
+legal_ref = ["ley-35-2006:art-28", "rd-439-2007:art-30", "rd-439-2007:art-110"]
+grounding = "verified"
+reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses for that missing input; these figures are what the filed earlier quarters would carry forward."
+refusal = "ERROR_MODELO_WORK_INPUT_REQUIRED"
+
+[[values]]
+modelo = "130"
+period = "3T"
+year = "horizon-1"
+casillas = { "01" = "26000.00", "02" = "10750.00", "03" = "15250.00", "04" = "3050.00", "05" = "2130.00", "06" = "0.00", "07" = "920.00" }
+parameters = { pago_rate = "0.20" }
+derivation = """
+01 = 18300.00 + 4600.00 + 3100.00 = 26000.00. 02 = 7650.00 + 1900.00 + 240.00 + 960.00 = 10750.00.
+03 = 15250.00; 04 = 3050.00; 05 = 1120.00 + 1010.00 = 2130.00; 07 = 920.00.
+"""
+legal_ref = ["ley-35-2006:art-28", "rd-439-2007:art-30", "rd-439-2007:art-110"]
+grounding = "verified"
+reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses for that missing input; these figures are what the filed earlier quarters would carry forward."
+refusal = "ERROR_MODELO_WORK_INPUT_REQUIRED"
+
+[[values]]
+modelo = "130"
+period = "4T"
+year = "horizon-1"
+casillas = { "01" = "36100.00", "02" = "14600.00", "03" = "21500.00", "04" = "4300.00", "05" = "3050.00", "06" = "0.00", "07" = "1250.00" }
+parameters = { pago_rate = "0.20" }
+derivation = """
+01 = 26000.00 + 6400.00 + 3700.00 = 36100.00. 02 = 10750.00 + 2650.00 + 240.00 + 960.00 = 14600.00.
+03 = 21500.00; 04 = 4300.00; 05 = 2130.00 + 920.00 = 3050.00; 07 = 1250.00.
+"""
+legal_ref = ["ley-35-2006:art-28", "rd-439-2007:art-30", "rd-439-2007:art-110"]
+grounding = "verified"
+reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses for that missing input; these figures are what the filed earlier quarters would carry forward."
+refusal = "ERROR_MODELO_WORK_INPUT_REQUIRED"
+
+[[values]]
+modelo = "347"
+period = "0A"
+year = "horizon-1"
+counterparty = "electricista.promotora"
+concepts = { clave = "B", importe_anual = "27830.00" }
+derivation = "Sales ELE-VTA-01, 03, 05, 07 including IVA: 7502.00 + 7018.00 + 5566.00 + 7744.00 = 27830.00."
+legal_ref = ["rd-1065-2007:art-33"]
+grounding = "verified"
+
+[[values]]
+modelo = "347"
+period = "0A"
+year = "horizon-1"
+counterparty = "electricista.cadena-hotelera"
+concepts = { clave = "B", importe_anual = "15851.00" }
+derivation = "Sales ELE-VTA-02, 04, 06, 08 including IVA: 4114.00 + 3509.00 + 3751.00 + 4477.00 = 15851.00."
+legal_ref = ["rd-1065-2007:art-33"]
+grounding = "verified"
+
+[[values]]
+modelo = "347"
+period = "0A"
+year = "horizon-1"
+counterparty = "electricista.proveedor"
+concepts = { clave = "A", importe_anual = "11858.00" }
+derivation = "Purchases ELE-MAT-1..4 including IVA: 3388.00 + 2964.50 + 2299.00 + 3206.50 = 11858.00 > 3005.06."
+legal_ref = ["rd-1065-2007:art-33"]
+grounding = "verified"
+
+[[values]]
+modelo = "347"
+period = "0A"
+year = "horizon-1"
+counterparty = "electricista.gestoria"
+concepts = { declared = "false", importe_anual = "1161.60" }
+derivation = "ELE-GES-1..4 4 x 290.40 = 1161.60, below the 3005.06 threshold."
+legal_ref = ["rd-1065-2007:art-33"]
+grounding = "verified"
+
+[[values]]
+modelo = "100"
+period = "0A"
+year = "horizon-1"
+casillas = { "0599" = "0.00" }
+not_sourced = { "0604" = "4300.00" }
+concepts = { ingresos_actividad = "36100.00", gastos_actividad = "14600.00", rendimiento_neto_actividad = "21500.00", minimo_personal = "5550.00" }
+derivation = """
+Activity income is the 130 4T cumulative figure: 36100.00 - 14600.00 = 21500.00, with no provision for gastos de difícil justificación under the normal modality.
+0604 pagos fraccionados = 1120.00 + 1010.00 + 920.00 + 1250.00 = 4300.00. No withheld activity income, so 0599 = 0.
+Mínimo personal 5550.00 (under 65). Cuota and resultado are not asserted: they depend on the state and Madrid scales.
+"""
+legal_ref = ["ley-35-2006:art-28", "ley-35-2006:art-57", "rd-439-2007:art-30"]
+grounding = "verified"
+reason = "Casilla 0604 sums the pagos fraccionados of this year's Modelo 130 returns as filed (LIRPF art. 99, RIRPF art. 110), and none is filed: the first quarter cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation leaves 0604 unresolved for that missing input; the figure is what the filed quarters would give."

@@ -53,7 +53,7 @@ _TARGET = Period.from_year_and_code(2025, "0A")
 
 
 def _facts() -> dict[str, str]:
-    return native_general_iva_facts(surnames="Dependencies", description="consulting")
+    return native_general_iva_facts()
 
 
 def _invoke(fixture: NativeCliProfileFixture, *arguments: str) -> Result:

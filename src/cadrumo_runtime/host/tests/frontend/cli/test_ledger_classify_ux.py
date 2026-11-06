@@ -22,7 +22,7 @@ pytestmark = [
     pytest.mark.usefixtures("authority_operation"),
 ]
 
-_PROFILE_FACTS = native_general_iva_facts(surnames="Ledger UX", description="design")
+_PROFILE_FACTS = native_general_iva_facts()
 
 
 @pytest.fixture

@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { windowFixture } from "../support/windowFixtures";
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { profileInput } from "../../src/shell/profileInput";
 import type { UserProfile } from "../../src/shell/userProfile";
 import { label } from "../support/strings";
@@ -146,12 +146,7 @@ test("an account's number and bank code are offered nothing and keep out of brow
 
 test("every profile detail asks the browser to remember nothing", async () => {
   const { en } = JSON.parse(
-    readFileSync(
-      fileURLToPath(
-        new URL("../../src/dev/fixtures/userProfile.json", import.meta.url),
-      ),
-      "utf8",
-    ),
+    readFileSync(windowFixture("desktop-profile", "userProfile"), "utf8"),
   ) as { en: UserProfile };
   const details = en.sections.flatMap((section) => section.fields);
   expect(details.length).toBeGreaterThan(20);

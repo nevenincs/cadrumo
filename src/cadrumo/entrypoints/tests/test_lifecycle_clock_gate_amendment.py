@@ -21,6 +21,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.modelo.amendment_actions import amend_modelo_revision
 from cadrumo.application.modelo.lifecycle_clock_gate import ModeloLifecycleClockPrecedesError
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.period import Period
@@ -52,8 +53,6 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import profile
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.adapter_composition_work_ports import build_amendment_action_ports, build_work_lifecycle_ports
 
-from ...domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
-
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _BUCKET_ID = "10000000-0000-4000-8000-000000000131"
@@ -61,12 +60,13 @@ _T0 = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 15, 13, 0, tzinfo=UTC)
 _INCOME: CasillaId = validated_casilla_id("01")
 _EXPENSE: CasillaId = validated_casilla_id("02")
-_FACTS = (
-    UserProfileFact(path="identity.tax_id", value="X1234567L"),
-    UserProfileFact(path="identity.name", value="Ready"),
-    UserProfileFact(path="identity.surnames", value="Operator"),
-    UserProfileFact(path="activities.description", value="amendment clock"),
-    *GENERAL_REGIME_NATURAL_PERSON_FACTS,
+_FACTS = persona_facts_beneath(
+    (
+        UserProfileFact(path="identity.tax_id", value="X1234567L"),
+        UserProfileFact(path="identity.name", value="Ready"),
+        UserProfileFact(path="identity.surnames", value="Operator"),
+        UserProfileFact(path="activities.description", value="amendment clock"),
+    )
 )
 
 

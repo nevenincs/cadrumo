@@ -18,7 +18,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     seed_test_profile_record,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
@@ -79,13 +79,14 @@ def seed_natural_person_profile(runtime_profile: TestRuntimeProfile, *, name: st
             context=profile_authority_contexts()[0],
             profile_id=runtime_profile.bucket_id,
             setup_state=ProfileSetupState.COMPLETE,
-            facts=(
-                UserProfileFact(path="identity.name", value=name),
-                UserProfileFact(path="identity.surnames", value="Golden Eval"),
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-                UserProfileFact(path="activities.description", value="economic activity"),
-                UserProfileFact(path="provenance.source", value="manual_cli"),
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.name", value=name),
+                    UserProfileFact(path="identity.surnames", value="Golden Eval"),
+                    UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                    UserProfileFact(path="activities.description", value="economic activity"),
+                    UserProfileFact(path="provenance.source", value="manual_cli"),
+                )
             ),
         ),
         root=runtime_profile.storage_root,

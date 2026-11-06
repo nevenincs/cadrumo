@@ -1,4 +1,4 @@
-@setup aeat app ledger prorrata declare-gross --ejercicio 2026 --period 1T --amount 400.00 --evidence "operator-evidence:303-1T"
+@setup aeat app ledger prorrata declare-gross --ejercicio 2026 --period 1T --amount 400.00 --evidence "operator-evidence:303-1T" --replace
 @step Remove the period's operator-declared gross base.
 @result aeat --format json app ledger prorrata remove-gross --ejercicio 2026 --period 1T
 @expect result.declaration.period == "1T"

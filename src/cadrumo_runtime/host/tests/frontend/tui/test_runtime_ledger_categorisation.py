@@ -413,11 +413,11 @@ _CASES: tuple[_Case, ...] = (
         "counterparty",
         lambda: build_ledger_counterparty_definition(_UNUSED),
         build_ledger_counterparty_registration,
-        LedgerCounterpartyRequest(profile_id=_PROFILE_ID, action="view", tax_identifier="B00000000"),
+        LedgerCounterpartyRequest(profile_id=_PROFILE_ID, action="view", tax_identifier="B00010082"),
         lambda profile: LedgerCounterpartyResult(
             profile_id=profile,
             action="view",
-            tax_identifier="B00000000",
+            tax_identifier="B00010082",
             resolution=CounterpartyResolutionProjection(),
         ),
         OperationEffect.NONE,

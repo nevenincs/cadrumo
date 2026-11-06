@@ -19,6 +19,7 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
     native_cli_profile_scope,
 )
 
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 
 
@@ -168,24 +169,17 @@ def partial_taxpayer_invoker(tmp_path: Path, *, label: str) -> Generator[Callabl
         profile.register(
             label=label,
             facts={
-                "taxpayer_type.entity_type": "natural_person",
+                **native_general_iva_facts(),
                 "identity.tax_id": "12345678Z",
                 "identity.name": "Operator",
                 "identity.surnames": "Example",
                 "activities.description": "design",
                 "censo.activity_start_date": "2024-01-01",
                 "contact.postcode": "28013",
-                "tax_residence.jurisdiction_scope": "common_regime",
                 "tax_residence.ccaa": "cataluna",
                 "renta_filing.declaration_type": "1",
                 "renta_taxpayer.birth_date": "1980-03-15",
                 "renta_family.minor_children_in_unit": "false",
-                "iva.regime": "GENERAL",
-                "iva.m303_regime_composition": "general",
-                "iva.redeme_enrolled": "false",
-                "iva.cash_accounting_regime_enrolled": "false",
-                "iva.voluntary_sii_enrolled": "false",
-                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             },
         )
 

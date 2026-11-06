@@ -35,6 +35,7 @@ from ...application.ledger.invoice_evidence_confirm_operation import (
 )
 from ...application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 from ...application.operations.error_detail import OperationErrorDetailV1
+from ...application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from ...core.confirmation_gate import FindingResolutionAction
 from ...core.operations import OperationTerminalCondition
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -69,14 +70,9 @@ def runtime(tmp_path: Path, operation: PinnedAuthorityOperation) -> Iterator[Ope
     ):
         upsert_test_profile_facts(
             enrolled.profile_id,
-            (
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path=FILER_POSTCODE_FACT_PATH, value="28013"),
+            persona_facts_beneath(
+                (UserProfileFact(path=FILER_POSTCODE_FACT_PATH, value="28013"),),
+                without=("identity.",),
             ),
         )
         yield enrolled

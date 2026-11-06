@@ -1,115 +1,74 @@
 """The periods the desktop fixtures serve are what the ledger's period read answers.
 
 The window does no period arithmetic: it shows the periods ``ledger.entry-options``
-serves. Its fixtures and tests therefore answer from a recording of that read,
-kept in the entry-options recording beside the vocabularies, and these tests hold
-the recording to the backend's own projection. Set
-``CADRUMO_RECORD_ENTRY_OPTION_PERIODS`` to write it again.
+serves, from a recording the producer
+``native/desktop/frontend/scripts/ledger_entry_options.py`` writes into the build tree. These tests ask
+the committed period questions of the ledger's period read and hold its answers to the calendar.
 """
 
 from __future__ import annotations
 
-import json
-import os
-from datetime import date
-from pathlib import Path
-from typing import Any, Final
-
 import pytest
 
 from ....core.external_constants import OutputLanguage
-from ..period_options import LedgerPeriodSpanRequest, LedgerPeriodsQuery, ledger_periods
+from .entry_option_periods_recording_support import committed_questions, parse_questions, recorded_periods
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_RECORDING: Final = Path(__file__).resolve().parents[5] / (
-    "native/desktop/frontend/src/dev/fixtures/ledgerEntryOptions.json"
-)
-_REFERENCE_DAY: Final = date(2026, 11, 4)
-_EVERY_LANGUAGE_YEARS: Final = (2024, 2025, 2026, 2027)
-_ENGLISH_YEARS: Final = (2003, 2011, 2012, 2019, 2020, 2023)
-_PROBE_DAYS: Final = (
-    date(2003, 7, 1),
-    date(2024, 2, 29),
-    date(2024, 12, 31),
-    date(2025, 1, 1),
-    date(2025, 2, 28),
-    date(2026, 3, 31),
-    date(2026, 4, 1),
-    date(2026, 10, 15),
-    date(2026, 11, 4),
-    date(2026, 12, 31),
-)
-_PROBE_SPANS: Final = (
-    (date(2026, 10, 1), date(2026, 10, 31)),
-    (date(2026, 10, 5), date(2026, 10, 20)),
-    (date(2026, 7, 1), date(2026, 9, 30)),
-    (date(2026, 8, 15), date(2026, 11, 2)),
-    (date(2026, 1, 1), date(2026, 12, 31)),
-    (date(2025, 12, 30), date(2026, 1, 2)),
-    (date(2024, 2, 29), date(2024, 2, 29)),
-)
-_PROBE_QUERY: Final = LedgerPeriodsQuery(
-    days=_PROBE_DAYS,
-)
+#: The quarter and month each probe day falls in, worked from the calendar.
+_QUARTER_AND_MONTH = {
+    "2003-07-01": ("3T", "07"),
+    "2024-02-29": ("1T", "02"),
+    "2024-12-31": ("4T", "12"),
+    "2025-01-01": ("1T", "01"),
+    "2025-02-28": ("1T", "02"),
+    "2026-03-31": ("1T", "03"),
+    "2026-04-01": ("2T", "04"),
+    "2026-10-15": ("4T", "10"),
+    "2026-11-04": ("4T", "11"),
+    "2026-12-31": ("4T", "12"),
+}
 
 
-def _projection(language: OutputLanguage, query: LedgerPeriodsQuery) -> dict[str, Any]:
-    served = ledger_periods(query, reference_day=_REFERENCE_DAY, language=language)
-    return json.loads(served.model_dump_json())
+def test_the_periods_answer_the_committed_reference_day_and_every_probe() -> None:
+    questions = committed_questions()
+    answered = recorded_periods(questions)
+
+    assert answered["reference_day"] == questions.reference_day.isoformat()
+    assert len(answered["probes"]["days"]) == len(questions.probe_days)
+    assert len(answered["probes"]["covering"]) == len(questions.probe_spans)
 
 
-def _years() -> dict[str, dict[str, list[dict[str, Any]]]]:
-    wanted = {OutputLanguage.EN.value: _EVERY_LANGUAGE_YEARS + _ENGLISH_YEARS}
-    for language in OutputLanguage:
-        wanted.setdefault(language.value, _EVERY_LANGUAGE_YEARS)
-    return {
-        language: {
-            str(year): _projection(OutputLanguage(language), LedgerPeriodsQuery(year=year))["periods"]
-            for year in sorted(years)
-        }
-        for language, years in sorted(wanted.items())
+def test_the_periods_name_every_committed_year_in_every_language() -> None:
+    questions = committed_questions()
+    answered = recorded_periods(questions)["years"]
+
+    assert set(answered) == {language.value for language in OutputLanguage}
+    for language, years in answered.items():
+        wanted = questions.every_language_years
+        if language == OutputLanguage.EN.value:
+            wanted += questions.english_years
+        assert set(years) == {str(year) for year in wanted}, language
+
+
+def test_the_period_a_day_falls_in_is_what_the_calendar_says() -> None:
+    answered = recorded_periods(committed_questions())
+
+    assert answered["annual_code"] == "0A"
+    containing = answered["containing"]
+    assert (containing["day"], containing["quarterly"]["code"], containing["monthly"]["code"]) == (
+        "2026-11-04",
+        "4T",
+        "11",
+    )
+    found = {
+        probe["day"]: (probe["quarterly"]["code"], probe["monthly"]["code"]) for probe in answered["probes"]["days"]
     }
+    assert found == _QUARTER_AND_MONTH
+    for probe in answered["probes"]["days"]:
+        assert probe["annual"] == {"filing_year": int(probe["day"][:4]), "code": "0A"}
 
 
-def _recorded() -> dict[str, Any]:
-    periods = _projection(OutputLanguage.EN, LedgerPeriodsQuery(year=_REFERENCE_DAY.year))
-    probed = _projection(OutputLanguage.EN, _PROBE_QUERY)
-    return {
-        "reference_day": _REFERENCE_DAY.isoformat(),
-        "annual_code": periods["annual_code"],
-        "containing": periods["containing"],
-        "years": _years(),
-        "probes": {
-            "days": probed["days"],
-            "covering": [
-                _projection(
-                    OutputLanguage.EN,
-                    LedgerPeriodsQuery(covering=LedgerPeriodSpanRequest(first_day=first, last_day=last)),
-                )["covering"]
-                for first, last in _PROBE_SPANS
-            ],
-        },
-    }
-
-
-def test_the_recorded_periods_are_what_the_backend_answers() -> None:
-    stored = json.loads(_RECORDING.read_text(encoding="utf-8"))
-
-    assert stored["periods"] == _recorded()
-
-
-def test_the_recording_names_a_year_in_every_language() -> None:
-    stored = json.loads(_RECORDING.read_text(encoding="utf-8"))["periods"]
-
-    assert set(stored["years"]) == {language.value for language in OutputLanguage}
-    for language, years in stored["years"].items():
-        assert set(years) >= {str(year) for year in _EVERY_LANGUAGE_YEARS}, language
-
-
-if os.environ.get("CADRUMO_RECORD_ENTRY_OPTION_PERIODS", "") != "":
-
-    def test_record_the_periods() -> None:
-        stored = json.loads(_RECORDING.read_text(encoding="utf-8"))
-        stored["periods"] = _recorded()
-        _RECORDING.write_text(json.dumps(stored, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+def test_a_period_question_file_with_a_missing_key_is_refused() -> None:
+    with pytest.raises(ValueError, match="exactly the keys"):
+        parse_questions({"probe_days": []})

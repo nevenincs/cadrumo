@@ -1,0 +1,80 @@
+format = 1
+persona = "arrendador-jubilado"
+
+[[obligations]]
+modelo = "100"
+periods = ["0A"]
+year = "horizon-1"
+applicable = true
+reason = "The pension (21840.00, one payer) is under the 22000.00 work-income limit, but rendimientos del capital inmobiliario are not among the incomes that art. 96.2 LIRPF lets go undeclared."
+legal_ref = ["ley-35-2006:art-96"]
+grounding = "verified"
+
+[[obligations]]
+modelo = "303"
+periods = ["1T", "2T", "3T", "4T"]
+year = "horizon-1"
+applicable = false
+reason = "Letting a dwelling is exempt from IVA (LIVA art. 20.Uno.23) and a person carrying out only exempt operations files no IVA return (RIVA art. 71.1)."
+legal_ref = ["ley-37-1992:art-20", "rd-1624-1992:art-71"]
+grounding = "verified"
+
+[[obligations]]
+modelo = "347"
+periods = ["0A"]
+year = "horizon-1"
+applicable = false
+reason = "RGAT art. 33.2.d excludes IVA-exempt lettings by natural persons outside any other business activity."
+legal_ref = ["rd-1065-2007:art-33"]
+grounding = "verified"
+
+[[deadlines]]
+modelo = "100"
+period = "0A"
+year = "horizon-1"
+statutory_end = { year = "horizon", month = 6, day = 30 }
+legal_ref = ["ley-35-2006:art-97"]
+grounding = "cited"
+note = "The annual order sets the campaign window; 30 June is the end it has fixed in recent campaigns."
+
+[[values]]
+modelo = "100"
+period = "0A"
+year = "horizon-1"
+casillas = { "0596" = "2180.00" }
+concepts = { pension_integra = "21840.00", otros_gastos_trabajo = "2000.00", rendimiento_neto_trabajo = "19840.00", reduccion_rendimientos_trabajo = "0.00" }
+derivation = """
+Pensions are rendimientos del trabajo (art. 17.2.a). Certificate: íntegro 21840.00, retención 2180.00; the ledger holds 14 net payments
+totalling 19660.00. Neto = 21840.00 - 2000.00 (art. 19.2.f) = 19840.00; the art. 20 reduction is zero above the top of its band.
+"""
+legal_ref = ["ley-35-2006:art-17", "ley-35-2006:art-19", "ley-35-2006:art-20"]
+grounding = "verified"
+
+[[values]]
+modelo = "100"
+period = "0A"
+year = "horizon-1"
+concepts = { ingresos_integros_alquiler = "11400.00", gastos_ibi = "412.00", gastos_comunidad = "540.00", gastos_seguro = "186.00", gastos_reparacion = "240.00", amortizacion = "3240.00", gastos_deducibles = "4618.00", rendimiento_neto_alquiler = "6782.00", reduccion_art_23_2 = "3391.00", rendimiento_neto_reducido_alquiler = "3391.00" }
+derivation = """
+Ingresos = ARR-REN-01..12 12 x 950.00 = 11400.00.
+Gastos = IBI ARR-IBI-1 412.00 + comunidad ARR-COM-1..4 4 x 135.00 + seguro ARR-SEG-1 186.00 + reparación ARR-REP-1 240.00
++ amortización 3 % x 108000.00 = 3240.00 (rental_properties.piso-arrendado) = 4618.00.
+Neto = 6782.00; reducción 50 % (art. 23.2 general tier: none of the conditions of the 60, 70 or 90 % tiers is met) = 3391.00.
+grounding is unverified for the application path only: the reducción tier is stored under a profile field keyed to one filing year
+and no operation recording rental_properties was located, so the application may not derive these concepts for horizon-1.
+"""
+legal_ref = ["ley-35-2006:art-23", "rd-439-2007:art-14"]
+grounding = "unverified"
+reason = "Arithmetic and provisions verified (art. 23 text in the bundled corpus); the application-side inputs for amortisation and the reducción tier have no located production operation for this year."
+
+[[values]]
+modelo = "100"
+period = "0A"
+year = "horizon-1"
+concepts = { minimo_contribuyente = "6700.00", base_liquidable_general = "23231.00" }
+derivation = """
+Contribuyente aged 70 at year end: 5550.00 + 1150.00 (over 65) = 6700.00 (art. 57).
+Base liquidable general = 19840.00 + 3391.00 = 23231.00 (no reductions of the base). Cuota is not asserted.
+"""
+legal_ref = ["ley-35-2006:art-57"]
+grounding = "verified"

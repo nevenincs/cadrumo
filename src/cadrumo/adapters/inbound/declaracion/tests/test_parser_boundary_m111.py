@@ -52,7 +52,7 @@ def test_parser_extracts_modelo_111_casillas_from_corpus(pdf_stem: str, year: in
 
     assert filing.modelo == "111"
     assert filing.period == _expected_period(year, period)
-    assert filing.tax_id == "Y0000001S", f"{pdf_stem}: expected tax_id='Y0000001S', got {filing.tax_id!r}"
+    assert filing.tax_id == "Y0001006P", f"{pdf_stem}: expected tax_id='Y0001006P', got {filing.tax_id!r}"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "111"
     assert filing.registry_snapshot_ref.modelo_year == year

@@ -138,7 +138,12 @@ def _invoice_line_iva_observation(
     rather than invite an invented domestic-current default.
 
     A line carrying a cuota takes the standard-case classification, which
-    derives the domestic category from the line's rate slot.
+    derives the domestic category from the line's rate slot, unless the invoice
+    declares a reverse-charge category. That cuota is the one the recipient
+    self-assesses (LIVA art. 84.Uno.2.º): the rate slot alone would read it as
+    domestic soportado, a category its linked intra-EU or reverse-charge
+    deduction cannot pair with, so the declared category governs it as it
+    governs a cuota-less line.
 
     A line carrying NO cuota cannot be classified that way, and that is the
     defect this branch closes. An intra-community supply, an export and a
@@ -181,7 +186,9 @@ def _invoice_line_iva_observation(
         nowhere.
     """
     ledger_id = f"invoice:{invoice.invoice_id}:{line_index}"
-    if iva_amount_eur > Decimal("0"):
+    if iva_amount_eur > Decimal("0") and not _declares_reverse_charge(
+        invoice, devengo_date=devengo_date, operation=operation
+    ):
         return _standard_invoice_line_iva_observation(
             ledger_id=ledger_id,
             invoice=invoice,
@@ -192,7 +199,7 @@ def _invoice_line_iva_observation(
             iva_amount_eur=iva_amount_eur,
             deduction_authority=deduction_authority,
         )
-    return _invoice_line_iva_observation_without_iva(
+    return _invoice_line_iva_observation_by_declaration(
         ledger_id=ledger_id,
         invoice=invoice,
         line=line,
@@ -205,7 +212,15 @@ def _invoice_line_iva_observation(
     )
 
 
-def _invoice_line_iva_observation_without_iva(
+def _declares_reverse_charge(invoice: Invoice, *, devengo_date: date, operation: PinnedAuthorityOperation) -> bool:
+    """Whether the invoice declares a category whose cuota the recipient self-assesses."""
+    category = _declared_invoice_category(invoice, devengo_date=devengo_date, operation=operation)
+    return category is not None and is_inversion_sujeto_pasivo_flow(
+        derive_flow_for_classification(category=category, invoice_direction=invoice.kind)
+    )
+
+
+def _invoice_line_iva_observation_by_declaration(
     *,
     ledger_id: str,
     invoice: Invoice,

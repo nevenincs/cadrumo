@@ -69,6 +69,7 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
     native_cli_profile_scope,
 )
 
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [
@@ -294,7 +295,7 @@ def test_native_quickfile_calculates_then_retains_cross_period_refusal_and_exact
         profile.register(
             label="native-quickfile",
             facts={
-                "taxpayer_type.entity_type": "natural_person",
+                **native_general_iva_facts(),
                 "identity.tax_id": "12345678Z",
                 "identity.name": "Synthetic",
                 "identity.surnames": "Quickfile",
@@ -303,13 +304,6 @@ def test_native_quickfile_calculates_then_retains_cross_period_refusal_and_exact
                 "taxpayer_type.irpf_income_categories": "actividad_economica",
                 "irpf.estimation_regime": "directa_normal",
                 "tax_residence.ccaa": "madrid",
-                "tax_residence.jurisdiction_scope": "common_regime",
-                "iva.regime": "GENERAL",
-                "iva.m303_regime_composition": "general",
-                "iva.redeme_enrolled": "false",
-                "iva.cash_accounting_regime_enrolled": "false",
-                "iva.voluntary_sii_enrolled": "false",
-                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             },
         )
         assert profile.label is not None
@@ -512,7 +506,7 @@ def test_native_quickfile_m115_completes_all_stages_and_exports_valid_local_byte
         profile.register(
             label="native-quickfile-m115",
             facts={
-                "taxpayer_type.entity_type": "natural_person",
+                **native_general_iva_facts(),
                 "identity.tax_id": "12345678Z",
                 "identity.name": "Synthetic",
                 "identity.surnames": "Quickfile",
@@ -521,13 +515,6 @@ def test_native_quickfile_m115_completes_all_stages_and_exports_valid_local_byte
                 "taxpayer_type.irpf_income_categories": "actividad_economica",
                 "irpf.estimation_regime": "directa_normal",
                 "tax_residence.ccaa": "madrid",
-                "tax_residence.jurisdiction_scope": "common_regime",
-                "iva.regime": "GENERAL",
-                "iva.m303_regime_composition": "general",
-                "iva.redeme_enrolled": "false",
-                "iva.cash_accounting_regime_enrolled": "false",
-                "iva.voluntary_sii_enrolled": "false",
-                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             },
         )
         assert profile.label is not None

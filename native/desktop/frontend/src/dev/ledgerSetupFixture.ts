@@ -13,8 +13,8 @@ import type {
   JsonValue,
   LedgerDefinitionId,
 } from "../shell/ledger";
-import servedEntryOptions from "./fixtures/ledgerEntryOptions.json" with { type: "json" };
-import servedWords from "./fixtures/ledgerServedWords.json" with { type: "json" };
+import servedEntryOptions from "@fixtures/ledger-entry-options/ledgerEntryOptions.json" with { type: "json" };
+import servedWords from "@fixtures/ledger-served-words/ledgerServedWords.json" with { type: "json" };
 
 const entryWord = (family: string, value: string, word = value) => ({
   value,

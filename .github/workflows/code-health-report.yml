@@ -51,7 +51,7 @@ jobs:
           enable-cache: false
 
       - name: Initialize the worktree
-        run: just setup
+        run: just setup-checkout
 
       - name: Run code-health report (text)
         # Informational only: a failed diagnostic verdict must not fail this job.

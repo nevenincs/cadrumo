@@ -83,7 +83,7 @@ Total factura: 1.485,00 €"""
 
 _RECARGO = """FACTURA
 Proveedor: Mayorista Textil del Turia SA
-CIF: A92000074
+CIF: A00010058
 Destinatario: Javier Ortega Llorens
 NIF: 12345678Z
 Nº factura: MT-26-0045
@@ -141,9 +141,9 @@ Total (IVA incluido) 72,60 €"""
 
 _RECTIFICATIVA = """FACTURA RECTIFICATIVA
 Emisor: Lucia Fernandez Ortega
-NIF: 45678912S
+NIF: 00001001N
 Cliente: Grupo Consultor Meridiano SL
-NIF: B01000017
+NIF: B00010132
 Numero de factura: R-2026/003
 Fecha de factura: 14/04/2026
 Base imponible: -400,00 EUR
@@ -276,7 +276,7 @@ _LAYOUTS: dict[str, tuple[str, str, dict[str, object]]] = {
     ),
     "rectificativa": (
         _RECTIFICATIVA,
-        "45678912S",
+        "00001001N",
         {
             "taxable_base": Decimal("-400.00"),
             "iva_amount": Decimal("-84.00"),
@@ -346,8 +346,8 @@ def test_an_unattributable_two_column_party_block_reads_no_identity(operation: P
         "FACTURA\n"
         "EMISOR DESTINATARIO / CLIENTE\n"
         "Suministros Iberia SA Lucia Fernandez Ortega\n"
-        "NIF: A22633036 Espana\n"
-        "NIF: 45678912S\n"
+        "NIF: A00010041 Espana\n"
+        "NIF: 00001001N\n"
         "Base imponible: 100,00 EUR\n"
         "IVA (21%): 21,00 EUR\n"
         "TOTAL FACTURA: 121,00 EUR"
@@ -361,12 +361,12 @@ def test_an_unattributable_two_column_party_block_reads_no_identity(operation: P
 
 
 def test_a_qualified_identifier_label_names_its_party(operation: PinnedAuthorityOperation) -> None:
-    text = "INVOICE\nEMISOR DESTINATARIO\nVAT ID: IE6388047V Espana\nCustomer VAT ID: 45678912S\nTotal due: 10.00 EUR"
+    text = "INVOICE\nEMISOR DESTINATARIO\nVAT ID: IE6388047V Espana\nCustomer VAT ID: 00001001N\nTotal due: 10.00 EUR"
 
     reading = _read(text, operation)
     envelopes = {envelope.field: envelope for envelope in reading.draft.provenance}
 
-    assert reading.draft.customer_tax_id == "45678912S"
+    assert reading.draft.customer_tax_id == "00001001N"
     assert reading.draft.supplier_tax_id is None
     assert envelopes["customer_tax_id"].role_evidence == "Customer VAT ID"
 

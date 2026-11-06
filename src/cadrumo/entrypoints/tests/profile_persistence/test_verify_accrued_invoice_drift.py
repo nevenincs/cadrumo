@@ -51,6 +51,7 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -162,26 +163,19 @@ def _facts(criterion: str, regime: str) -> tuple[UserProfileFact, ...]:
             {"path": path, "value": value, "valid_from": date(_YEAR, 1, 1), "valid_to": date(_YEAR, 12, 31)}
         )
 
-    return (
-        UserProfileFact(path="identity.tax_id", value=TAX_ID),
-        UserProfileFact(path="identity.name", value="Ready"),
-        UserProfileFact(path="identity.surnames", value="Operator"),
-        UserProfileFact(path="activities.description", value="accrued-invoice-drift"),
-        UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-        UserProfileFact(path="iva.regime", value="GENERAL"),
-        UserProfileFact(path="iva.m303_regime_composition", value="general"),
-        UserProfileFact(path="iva.redeme_enrolled", value="false"),
-        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value="false"),
-        UserProfileFact(path="iva.voluntary_sii_enrolled", value="false"),
-        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value="false"),
-        UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-        UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-        UserProfileFact(path="censo.activity_start_date", value=date(_YEAR - 5, 1, 1)),
-        UserProfileFact(path="withholding.colegio_concertado", value=False),
-        UserProfileFact(path="irpf.estimation_regime", value=regime),
-        dated(_ACCOUNTING, False),
-        dated(_CRITERION, criterion),
+    return persona_facts_beneath(
+        (
+            UserProfileFact(path="identity.tax_id", value=TAX_ID),
+            UserProfileFact(path="identity.name", value="Ready"),
+            UserProfileFact(path="identity.surnames", value="Operator"),
+            UserProfileFact(path="activities.description", value="accrued-invoice-drift"),
+            UserProfileFact(path="censo.activity_start_date", value=date(_YEAR - 5, 1, 1)),
+            UserProfileFact(path="withholding.colegio_concertado", value=False),
+            UserProfileFact(path="irpf.estimation_regime", value=regime),
+            dated(_ACCOUNTING, False),
+            dated(_CRITERION, criterion),
+        ),
+        without=(_ACCOUNTING, _CRITERION),
     )
 
 

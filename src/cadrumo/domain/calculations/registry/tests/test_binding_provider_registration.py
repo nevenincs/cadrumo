@@ -558,7 +558,7 @@ def test_a_profile_binding_marked_aeat_prefilled_is_accepted() -> None:
 
 def test_a_manual_input_binding_marked_aeat_prefilled_is_accepted() -> None:
     """An operator-entered value may be superseded by the AEAT prefill tier."""
-    provider = ManualInputProvider(casilla_id="01", data_type=CasillaDataType.BOOLEAN, true_value="1", false_value="0")
+    provider = ManualInputProvider(casilla_id="01", data_type=CasillaDataType.BOOLEAN)
     binding = _binding(provider, op=BindingAggregationOp.COPY, aeat_prefilled=True)
 
     assert validate_binding_against_registration(binding) == ()

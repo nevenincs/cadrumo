@@ -65,7 +65,7 @@ from cadrumo.tests.aeat_literal_fixtures import justificante_cotejo_url
 def _product_software_identity() -> AeatProductSoftwareIdentity:
     return AeatProductSoftwareIdentity(
         program_identifier="C303",
-        developer_tax_id="Y0000001S",
+        developer_tax_id="Y0001006P",
         evidence=(
             AeatProductSoftwareEvidence(
                 reference="aeat-software-registration:export-output-paths",

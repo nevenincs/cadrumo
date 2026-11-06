@@ -46,6 +46,7 @@ from cadrumo.tests.cli_envelope import unwrap_envelope_notices as _notices
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -69,7 +70,7 @@ def _native_backend(tmp_path: Path, authority_operation: PinnedAuthorityOperatio
 
 def _facts(*, activity_start_date: str | None = None) -> dict[str, str]:
     return {
-        "taxpayer_type.entity_type": "natural_person",
+        **native_general_iva_facts(),
         "identity.tax_id": "12345678Z",
         "identity.name": "Native",
         "identity.surnames": "Pipeline",
@@ -79,13 +80,6 @@ def _facts(*, activity_start_date: str | None = None) -> dict[str, str]:
         "irpf.estimation_regime": "directa_normal",
         "taxpayer_type.fiscal_residency": "resident_irpf",
         "tax_residence.ccaa": "madrid",
-        "tax_residence.jurisdiction_scope": "common_regime",
-        "iva.regime": "GENERAL",
-        "iva.m303_regime_composition": "general",
-        "iva.redeme_enrolled": "false",
-        "iva.cash_accounting_regime_enrolled": "false",
-        "iva.voluntary_sii_enrolled": "false",
-        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
     }
 
 

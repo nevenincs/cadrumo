@@ -97,6 +97,8 @@ from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli
 from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import NativeApiCliSession, native_api_cli_session
 from cadrumo_runtime.host.tests.frontend.cli.test_runtime_invoice_add import password_profile_session
 
+from ...native_profile_facts import native_general_iva_facts
+
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.hex_entrypoint,
@@ -146,20 +148,13 @@ def _report_session(
 ) -> AbstractContextManager[NativeApiCliSession[None]]:
     def prepare_profile(profile_id: UUID, root: Path) -> None:
         values = {
-            "taxpayer_type.entity_type": "natural_person",
+            **native_general_iva_facts(),
             "identity.tax_id": "12345678Z",
             "identity.name": "Report",
             "identity.surnames": "Operator",
             "activities.description": "consulting",
             "censo.activity_start_date": "2026-01-01",
-            "tax_residence.jurisdiction_scope": "common_regime",
             "withholding.colegio_concertado": "false",
-            "iva.regime": "GENERAL",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         }
         facts = complete_profile_facts(
             operation.profile_schema(),

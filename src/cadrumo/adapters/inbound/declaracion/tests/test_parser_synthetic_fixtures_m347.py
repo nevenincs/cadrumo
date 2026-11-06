@@ -56,7 +56,7 @@ def test_parser_extracts_modelo_347_synthetic_fixture_targets() -> None:
 
     assert filing.modelo == "347"
     assert filing.period == _expected_period(2024, "0A")
-    assert filing.tax_id == "Y0000001S"
+    assert filing.tax_id == "Y0001006P"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "347"
     assert filing.registry_snapshot_ref.modelo_year == 2024

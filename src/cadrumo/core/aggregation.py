@@ -546,8 +546,6 @@ class BindingTypedEnumKind(StrEnum):
 
     - ``CENSO_EVENT_KIND`` (``"censo_event_kind"``) — Modelo 036 censo status.
     - ``CCAA`` (``"CCAA"``) — Modelo 100 autonomic-community tax residence.
-    - ``ESTIMACION_DIRECTA_MODALIDAD`` (``"EstimacionDirectaModalidad"``) —
-      Modelo 100 estimación-directa modality.
     - ``LEGAL_ENTITY_FORM`` (``"LegalEntityForm"``) — Modelo 200 legal form.
     - ``RENTAL_REDUCTION_ART_23_2_TIER`` (``"RentalReductionArt232Tier"``) —
       Modelo 100 reducción por arrendamiento de vivienda tier (LIRPF Art. 23.2).
@@ -574,7 +572,6 @@ class BindingTypedEnumKind(StrEnum):
 
     CENSO_EVENT_KIND = "censo_event_kind"
     CCAA = "CCAA"
-    ESTIMACION_DIRECTA_MODALIDAD = "EstimacionDirectaModalidad"
     LEGAL_ENTITY_FORM = "LegalEntityForm"
     RENTAL_REDUCTION_ART_23_2_TIER = "RentalReductionArt232Tier"
 

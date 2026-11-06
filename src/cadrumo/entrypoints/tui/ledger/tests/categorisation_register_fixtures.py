@@ -43,7 +43,7 @@ from .....application.operations.public_scalar import PublicDecimal
 from .....core.operations import OperationEffect
 
 _ASSERTED_AT = datetime(2026, 3, 1, tzinfo=UTC)
-SYNTHETIC_TAX_ID = "B00000000"
+SYNTHETIC_TAX_ID = "B00010082"
 SYNTHETIC_RATIO_CATEGORIES = ("suministros_vivienda", "vehiculo")
 
 

@@ -24,6 +24,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.overview.home import HomeAccountSession, HomeSessionPosture
 from cadrumo.application.overview.read_payload import OverviewCalendarRead
 from cadrumo.application.overview.read_request import OverviewReadKind, OverviewReadRequest
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.time.clock import today_madrid
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -31,7 +32,6 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import validating_
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.overview_read_composition import build_overview_read_ports
@@ -47,13 +47,14 @@ _FILING_YEAR = 2025
 _CLOCK = datetime(2026, 1, 15, 9, 0, tzinfo=UTC)
 _THRESHOLD = "obligations.third_party_transactions_above_347_threshold"
 
-_AUTONOMO_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="12345678Z"),
-    UserProfileFact(path="identity.name", value="Test"),
-    UserProfileFact(path="identity.surnames", value="Operator"),
-    UserProfileFact(path="activities.description", value="design"),
-    *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+_AUTONOMO_FACTS: tuple[UserProfileFact, ...] = persona_facts_beneath(
+    (
+        UserProfileFact(path="identity.tax_id", value="12345678Z"),
+        UserProfileFact(path="identity.name", value="Test"),
+        UserProfileFact(path="identity.surnames", value="Operator"),
+        UserProfileFact(path="activities.description", value="design"),
+        UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+    )
 )
 
 

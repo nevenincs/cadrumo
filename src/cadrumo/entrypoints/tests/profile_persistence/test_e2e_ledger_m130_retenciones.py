@@ -62,6 +62,7 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.storage.calc_sheets.review_labels import ReviewWorkbookLabels
 from cadrumo.application.storage.calc_sheets.review_workbook import build_review_workbook
 from cadrumo.application.storage.calc_sheets.workbook_cells import plan_value_blocks
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.period import Period
@@ -99,7 +100,6 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
     build_test_verification_repository_bundle,
 )
 
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from .general_iva_profile_facts_support import renta_single_taxpayer_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -150,15 +150,16 @@ def _seed_taxpayer_profile() -> None:
             context=profile_creation_context_for_test(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value=_TAX_ID),
-                UserProfileFact(path="identity.name", value="Withheld"),
-                UserProfileFact(path="identity.surnames", value="Retencion Tester"),
-                UserProfileFact(path="activities.description", value="design services"),
-                *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-                *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
-                *cash_criterion_facts(_WITHHELD_YEAR, _ZERO_YEAR),
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.tax_id", value=_TAX_ID),
+                    UserProfileFact(path="identity.name", value="Withheld"),
+                    UserProfileFact(path="identity.surnames", value="Retencion Tester"),
+                    UserProfileFact(path="activities.description", value="design services"),
+                    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                    *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
+                    *cash_criterion_facts(_WITHHELD_YEAR, _ZERO_YEAR),
+                )
             ),
             created_at=_T0,
             updated_at=_T0,

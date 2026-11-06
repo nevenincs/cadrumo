@@ -49,7 +49,7 @@ _LABEL = "Native modelo review operator"
 
 
 def _facts() -> dict[str, str]:
-    return native_general_iva_facts(surnames="Review", description="consulting")
+    return native_general_iva_facts()
 
 
 def _invoke(fixture: NativeCliProfileFixture, *arguments: str) -> Result:

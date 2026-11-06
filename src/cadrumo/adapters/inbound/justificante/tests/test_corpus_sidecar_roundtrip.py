@@ -9,7 +9,7 @@ output.
 The key ground-truth fields available from every manifest:
 
 * ``tax_id``          — the redacted identifier the sidecar declares: a NIE/NIF
-                        for a personal filer (``Y0000001S``) or a CIF for a
+                        for a personal filer (``Y0001006P``) or a CIF for a
                         sociedad's IS modelo (e.g. Modelo 202 ``B00000001``).
 * ``csv``             — ``SANITIZED{modelo}{ejercicio}`` (the synthetic CSV
                         injected by the sanitiser, e.g. ``SANITIZED1302024``).
@@ -57,7 +57,7 @@ _JUSTIFICANTES_DIR = _FIXTURES_ROOT / "justificantes"
 _SEDE_HOST = aeat_host("sede")
 
 # The sanitiser injects a redacted tax id per fixture: a NIE/NIF for a personal
-# filer (Y0000001S) but a CIF for a sociedad's Impuesto sobre Sociedades modelo
+# filer (Y0001006P) but a CIF for a sociedad's Impuesto sobre Sociedades modelo
 # (e.g. Modelo 202 -> B00000001). This shape (optional leading letter, 7-8
 # digits, trailing control character) locates the tax-id replacement in the
 # sidecar, distinct from the redacted date (01-01-1900) and the

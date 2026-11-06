@@ -28,7 +28,7 @@ def test_operator_asserted_facts_resolve_under_the_explicit_operation() -> None:
             bucket_id=None,
             kind=InvoiceKind.RECEIVED,
             counterparty_name="Papeleria Sol SL",
-            counterparty_tax_id="A58818501",
+            counterparty_tax_id="B00010157",
             counterparty_country="ES",
             invoice_number="EXPLICIT-2026-001",
             issued_at=date(2026, 3, 15),

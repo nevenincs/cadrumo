@@ -65,7 +65,7 @@
             "entity_type": "natural_person",
             "fiscal_residency": "resident_irpf",
             "has_employees": false,
-            "irpf_estimation_regime": "",
+            "irpf_estimation_regime": "directa_simplificada",
             "irpf_income_categories": "actividad_economica",
             "iva.group_dominant_entity_enrolled": false,
             "iva.group_member_enrolled": false,
@@ -80,7 +80,7 @@
             "pays_rent_with_retencion": false,
             "premio_loteria_gravamen_especial_sin_retencion": "",
             "premio_loteria_gravamen_especial_trimestres": "",
-            "tax_id": "sha256:1c9f9632",
+            "tax_id": "sha256:7a828de5",
             "third_party_transactions_above_347_threshold": ""
           },
           "rationale": "Modelo 130 (pago fraccionado del IRPF): la persona física residente IRPF declara rendimientos de actividades económicas en estimación directa, que generan la obligación del pago fraccionado.",

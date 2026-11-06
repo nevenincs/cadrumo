@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -46,7 +47,6 @@ from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from ....domain.user_profile.tests.imputation_criterion_facts import cash_criterion_facts
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
@@ -88,7 +88,6 @@ _M100_PRIOR_YEAR_NEGATIVE_GENERAL_BASE_CARRY_CASILLA: CasillaId = validated_casi
 _PRIOR_ANEXO_C_REMAINDERS: tuple[CasillaId, ...] = tuple(
     validated_casilla_id(box, surface="_PRIOR_ANEXO_C_REMAINDERS") for box in ("1384", "1387", "1390")
 )
-_ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
 _M100_SS_BINDING: BindingId = "renta-ledger-expense-0186-deductible"
 _M100_OTHER_EXPENSES_BINDING: BindingId = "renta-ledger-expense-0199-deductible"
 
@@ -113,23 +112,24 @@ def _seed_sofia_profile(objects: SecureObjectRepository) -> None:
     record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="identity.name", value="Sofia"),
-            UserProfileFact(path="identity.surnames", value="Expense Inspector"),
-            UserProfileFact(path="activities.description", value="professional services"),
-            *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-            UserProfileFact(path="censo.activity_start_date", value=date(_YEAR - 5, 1, 1)),
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(_YEAR - 45, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.sex", value="M"),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-            UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-            UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-            UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
-            *cash_criterion_facts(_YEAR),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="Sofia"),
+                UserProfileFact(path="identity.surnames", value="Expense Inspector"),
+                UserProfileFact(path="activities.description", value="professional services"),
+                UserProfileFact(path="censo.activity_start_date", value=date(_YEAR - 5, 1, 1)),
+                UserProfileFact(path="renta_taxpayer.birth_date", value=date(_YEAR - 45, 3, 15)),
+                UserProfileFact(path="renta_taxpayer.sex", value="M"),
+                UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
+                UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
+                UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
+                UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
+                UserProfileFact(path="renta_filing.declaration_type", value="1"),
+                UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+                UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+                *cash_criterion_facts(_YEAR),
+            )
         ),
         created_at=_T0,
         updated_at=_T0,
@@ -246,7 +246,6 @@ def _m100_caller_zero_bindings() -> dict[BindingId, Decimal]:
         for binding in snapshot.revision.bindings
         if str(binding.source) not in _AUTO_RESOLVED_SOURCES
     }
-    values[_ESTIMACION_DIRECTA_NORMAL_BINDING] = Decimal("1")
     return values
 
 

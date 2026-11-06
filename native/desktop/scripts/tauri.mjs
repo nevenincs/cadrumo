@@ -82,12 +82,10 @@ if (process.env.CADRUMO_DESKTOP_RUST_BIN) {
     (environment[pathKey] ?? "");
 }
 // Preserve Cargo's input timestamps while synchronizing additions and removals.
-// The host's test inputs are data its tests read, never compiled into the image,
-// so a snapshot that already carries them builds the same host.
 const snapshot = snapshotHostSources(
   resolve(desktop, ".."),
   buildPath("desktop_host"),
-  { incremental: true, tests: backendOnly },
+  { incremental: true },
 );
 /** macOS draws an application icon at the size of its whole canvas, and its own
  * icons keep to Apple's grid: a rounded square 824 points wide, centred in 1024,

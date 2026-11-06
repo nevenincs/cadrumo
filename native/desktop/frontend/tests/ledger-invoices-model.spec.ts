@@ -1,10 +1,10 @@
 import { servedLimits } from "./support/servedLimits";
+import { windowFixture } from "./support/windowFixtures";
 import { holdRecordedPeriods } from "../src/dev/periodRecording";
 import { holdLedgerLimits } from "../src/shell/ledgerLimits";
 import { holdLedgerPeriods } from "../src/shell/ledgerPeriods";
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { readLocaleDecimal } from "../src/shared/numbers";
 import type {
   CatalogueInvoice,
@@ -48,17 +48,14 @@ type Recording = {
 const recorded = (
   JSON.parse(
     readFileSync(
-      fileURLToPath(
-        new URL(
-          "../src/dev/fixtures/ledgerInvoicePreview.json",
-          import.meta.url,
-        ),
-      ),
+      windowFixture("ledger-recordings", "ledgerInvoicePreview"),
       "utf8",
     ),
   ) as { recordings: Record<string, Recording> }
 ).recordings;
 const answer = (name: string) => recorded[name]!.result;
+/** The counterparty's tax id the recorded drafts were asked with. */
+const RECORDED_TAX_ID = recorded.two_lines!.request.counterparty_tax_id!;
 
 function invoice(facts: Partial<CatalogueInvoice> = {}): CatalogueInvoice {
   return {
@@ -127,7 +124,7 @@ function filled(
     number: "F-2026-021",
     issuedAt: "2026-10-23",
     counterpartyName: "Norte Digital S. Coop.",
-    taxId: "A58818501",
+    taxId: RECORDED_TAX_ID,
     country: "es",
     currency: "eur",
     lines: [
@@ -317,7 +314,7 @@ test("an add carries the answer's figures, and only with an answer to this very 
   expect(check.request).toEqual({
     kind: "issued",
     counterparty_name: "Norte Digital S. Coop.",
-    counterparty_tax_id: "A58818501",
+    counterparty_tax_id: RECORDED_TAX_ID,
     counterparty_country: "ES",
     series: "F",
     invoice_number: "F-2026-021",
@@ -461,12 +458,12 @@ test("a date that strands a rate is a finding on that line", () => {
   expect(slot("rate_in_force_2023", "RATE_5")).toBe(true);
 });
 
-test("before the registry's rates, the served finding stands and no rate is invented", () => {
+test("before the registry's rates, the nearest rates are served and the projection is a warning", () => {
   const check = checked(filled({ issuedAt: "2020-12-31" }), "before_registry");
-  expect(answer("before_registry").rate_slots).toEqual([]);
-  expect(check.request).toBeNull();
+  expect(answer("before_registry").rate_slots.length).toBeGreaterThan(0);
+  expect(check.request).not.toBeNull();
   expect(check.findings.general.map(({ code }) => code)).toEqual([
-    "rate_date_unresolved",
+    "rate_date_projected",
   ]);
 });
 
@@ -504,7 +501,7 @@ test("a category that mandates the tax id, a bad checksum and the lease rules co
   expect(
     code(
       "tax_id_bad_checksum",
-      filled({ taxId: "A58818502" }),
+      filled({ taxId: "B00000282" }),
       "counterparty_tax_id",
     ),
   ).toBe("counterparty_tax_id_invalid");
@@ -842,7 +839,7 @@ test("a stored date, series and rectified number take the ledger's verdict", () 
 
 test("a correction is asked about with the stored invoice it restates, and its answer says what is left to pay", () => {
   const stored = invoice({
-    counterparty_tax_id: "A58818501",
+    counterparty_tax_id: RECORDED_TAX_ID,
     base_total: { decimal: "1000" },
   });
   expect(
@@ -869,7 +866,7 @@ test("a correction is asked about with the stored invoice it restates, and its a
 
 test("a changed retención waits for the ledger's answer and takes its verdict", () => {
   const stored = invoice({
-    counterparty_tax_id: "A58818501",
+    counterparty_tax_id: RECORDED_TAX_ID,
     base_total: { decimal: "1000" },
     retention_rate: { decimal: "0.15" },
     retention_amount: { decimal: "150" },

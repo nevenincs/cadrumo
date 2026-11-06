@@ -2,7 +2,9 @@
 
 Each screen is driven through its own controls over in-memory doors that
 answer with the registered operations' public projections. Every record is
-synthetic; nothing is read from or written to storage.
+synthetic; nothing is read from or written to storage. The invoice the wizard
+captures is a received-invoice row of a catalogue persona, so its counterparty
+and figures are the catalogue's.
 """
 
 from __future__ import annotations
@@ -10,13 +12,16 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from enum import StrEnum
-from typing import cast, override
+from functools import cache
+from typing import Final, cast, override
 
 from textual.events import Mount
 from textual.screen import Screen
 from textual.widgets import Input, Select
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.iva.schema import InvoiceKind
+from cadrumo.entrypoints.tests.persona_materialisation import year_envelope
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.ledger.controller import LedgerWorkspaceController
 from cadrumo.entrypoints.tui.ledger.invoice_detail import LedgerInvoiceDetailScreen
@@ -40,6 +45,7 @@ from cadrumo.entrypoints.tui.ledger.tests.workspace_fixtures import (
 from cadrumo.entrypoints.tui.ledger.transaction_views import LedgerTransactionDetailScreen
 from cadrumo.entrypoints.tui.ledger.workspace_injection import LedgerWorkspaceInjection
 from cadrumo.entrypoints.tui.tests.settling import settle_host
+from cadrumo.tests.personas import read_persona
 
 from .settling import press_when_enabled
 
@@ -70,16 +76,30 @@ _INTERFACES = {
     "wizard": "cadrumo.entrypoints.tui.ledger.invoices_wizard.LedgerInvoiceWizardScreen",
     "confirm": "cadrumo.entrypoints.tui.components.dialogs.ConfirmScreen",
 }
-_WIZARD_VALUES = {
-    "counterparty_name": "Talleres Sintéticos SL",
-    "counterparty_nif": "B00000000",
-    "country_code": "ES",
-    "invoice_number": "2026-0042",
-    "invoice_date": "2026-03-15",
-    "taxable_base": "250.00",
-    "iva_rate": "21",
-    "notes": "Revisión trimestral",
-}
+WIZARD_PERSONA_ID: Final = "autonomo-fontanero"
+WIZARD_LEDGER_REF: Final = "FON-MAT-2"
+"""The persona ledger row whose received invoice the wizard captures."""
+
+
+@cache
+def _wizard_values() -> tuple[tuple[str, str], ...]:
+    """The wizard's inputs for the persona's received invoice, in the order the screen asks for them."""
+    with bundled_indexed_authority().operation() as operation:
+        envelope = year_envelope(operation)
+    persona = read_persona(WIZARD_PERSONA_ID, envelope=envelope)
+    (row,) = (row for row in persona.ledger if row.ref == WIZARD_LEDGER_REF)
+    if row.counterparty is None or row.taxable_base is None or row.iva_rate is None or row.invoice_number is None:
+        raise ValueError(f"persona ledger row {WIZARD_LEDGER_REF} does not carry a received invoice")
+    return (
+        ("counterparty_name", persona.identities.role(row.counterparty).field("legal_name")),
+        ("counterparty_nif", persona.identity(row.counterparty)),
+        ("country_code", "ES"),
+        ("invoice_number", row.invoice_number),
+        ("invoice_date", row.operation_date(envelope).isoformat()),
+        ("taxable_base", f"{row.taxable_base:f}"),
+        ("iva_rate", format((row.iva_rate * 100).normalize(), "f")),
+        ("notes", row.description),
+    )
 
 
 def _controller(doors: MemoryRecordDoors) -> LedgerWorkspaceController:
@@ -156,7 +176,7 @@ async def _import_outcome(host: InvoicesCaptureHost) -> None:
 
 
 async def _review_wizard(host: InvoicesCaptureHost) -> None:
-    for name, value in _WIZARD_VALUES.items():
+    for name, value in _wizard_values():
         host.type_into(f"#ledger-invoices-wizard-{name.replace('_', '-')}", value)
     for _ in range(3):
         await host.press("ledger-invoices-wizard-next")

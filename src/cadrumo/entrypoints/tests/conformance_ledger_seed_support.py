@@ -165,7 +165,7 @@ def _retained_ledger_prepare(context: ConformanceFamilyContext) -> ConformancePr
                     invoice_number="CONFORMANCE-LINK",
                     issued_at=date(2025, 4, 15),
                     counterparty_name="Conformance Supplier",
-                    counterparty_tax_id="A58818501",
+                    counterparty_tax_id="B00010157",
                     counterparty_country="ES",
                     base_total=Decimal("100.00"),
                     iva_total=Decimal("21.00"),
@@ -273,7 +273,7 @@ def _retained_ledger_prepare(context: ConformanceFamilyContext) -> ConformancePr
     if definition_id == "ledger.invoice.import":
         source = context.input_root / "invoices.csv"
         source.write_text(
-            "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\nA58818501,Conformance Supplier,IMPORT-001,2025-04-15,100.00,21\nA58818501,Conformance Supplier,IMPORT-002,not-a-date,50.00,21\n",
+            "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\nB00000281,Conformance Supplier,IMPORT-001,2025-04-15,100.00,21\nB00000034,Conformance Supplier,IMPORT-002,not-a-date,50.00,21\n",
             encoding="utf-8",
         )
 
@@ -305,7 +305,7 @@ def _retained_ledger_prepare(context: ConformanceFamilyContext) -> ConformancePr
         request = InvoiceWizardRequest(
             profile_id=context.profile_id,
             kind=InvoiceKind.RECEIVED,
-            counterparty_nif="A58818501",
+            counterparty_nif="B00010157",
             counterparty_name="Conformance Supplier",
             invoice_number="WIZARD-001",
             invoice_date="2025-04-15",

@@ -48,7 +48,7 @@ def test_parser_extracts_modelo_303_targets_from_synthetic_fixture() -> None:
 
     assert filing.modelo == "303"
     assert filing.period == _expected_period(2024, "1T")
-    assert filing.tax_id == "Y0000001S"
+    assert filing.tax_id == "Y0001006P"
     values = {value.casilla_id: value.printed_value for value in filing.values}
     assert set(values.keys()) == _M303_CURRENT_PROFILE_CASILLAS
 

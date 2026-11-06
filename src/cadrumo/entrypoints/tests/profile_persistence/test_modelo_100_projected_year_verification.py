@@ -19,7 +19,7 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -90,17 +90,15 @@ def _seed_profile(filing_year: int) -> None:
     record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="identity.name", value="Test"),
-            UserProfileFact(path="identity.surnames", value="Operator"),
-            *(
-                fact
-                for fact in GENERAL_REGIME_NATURAL_PERSON_FACTS
-                if fact.path not in {"taxpayer_type.irpf_income_categories", "irpf.estimation_regime"}
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
+                *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
             ),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
-            *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
+            without=("irpf.estimation_regime", "activities.", "censo.activity_start_date"),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,

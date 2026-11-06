@@ -10,6 +10,7 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.deadlines.models import (
     IVARegime,
@@ -18,7 +19,6 @@ from cadrumo.domain.deadlines.models import (
     ModeloIVAProfile,
     TaxpayerProfile,
 )
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -58,12 +58,13 @@ _M200_BIN_CLOSING_CASILLA: CasillaId = validated_casilla_id("00671")
 _M200_BIN_APPLIED_CASILLA: CasillaId = validated_casilla_id("DP200014:00547")
 _M200_BIN_GENERATED_CASILLA: CasillaId = validated_casilla_id("DP200014:00552")
 
-_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="00000000T"),
-    UserProfileFact(path="identity.name", value="Test"),
-    UserProfileFact(path="identity.surnames", value="Operator"),
-    *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-    UserProfileFact(path="activities.description", value="economic activity"),
+_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = persona_facts_beneath(
+    (
+        UserProfileFact(path="identity.tax_id", value="00000000T"),
+        UserProfileFact(path="identity.name", value="Test"),
+        UserProfileFact(path="identity.surnames", value="Operator"),
+        UserProfileFact(path="activities.description", value="economic activity"),
+    )
 )
 
 

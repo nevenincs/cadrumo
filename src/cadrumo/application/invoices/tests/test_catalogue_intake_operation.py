@@ -151,7 +151,7 @@ def _wizard() -> intake_contracts.InvoiceWizardRequest:
     return intake_contracts.InvoiceWizardRequest(
         profile_id=_PROFILE,
         kind=InvoiceKind.RECEIVED,
-        counterparty_nif="A58818501",
+        counterparty_nif="B00010157",
         counterparty_name="Synthetic supplier",
         invoice_number="WIZARD-1",
         invoice_date="2026-05-01",
@@ -398,7 +398,7 @@ def test_import_worker_retains_every_row_refusal_unmapped_header_and_repeat_noop
 ) -> None:
     monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     path = tmp_path / "synthetic.csv"
-    source = b"counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate,unused\nA58818501,Supplier,BOOK-1,2026-05-01,100.00,21,x\nA58818501,Supplier,BOOK-2,invalid,100.00,21,y\n"
+    source = b"counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate,unused\nB00000281,Supplier,BOOK-1,2026-05-01,100.00,21,x\nB00000034,Supplier,BOOK-2,invalid,100.00,21,y\n"
     path.write_bytes(source)
     request = _wire(
         intake_contracts.InvoiceImportRequest(
@@ -489,7 +489,7 @@ def test_source_substitution_refuses_before_mapping_provider_or_write(
 
 def _unreadable_book_import(tmp_path: Path) -> OperationRequest[BaseModel]:
     path = tmp_path / "libro.csv"
-    path.write_bytes(b"fecha_expedicion;nif_destinatario;base_imponible\n2026-05-01;A58818501;100,00\n")
+    path.write_bytes(b"fecha_expedicion;nif_destinatario;base_imponible\n2026-05-01;B00010157;100,00\n")
     return _wire(
         intake_contracts.InvoiceImportRequest(
             profile_id=_PROFILE, kind=InvoiceKind.RECEIVED, source_path=str(path), country="ES"

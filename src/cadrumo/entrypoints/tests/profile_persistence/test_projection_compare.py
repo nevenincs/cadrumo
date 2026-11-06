@@ -11,7 +11,6 @@ from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.application.modelo.projection import ModeloProjectionCasillaObservation
 from cadrumo.application.modelo.projection_compare import ModeloCompareDeltaRow, compare_modelo_years
@@ -28,18 +27,13 @@ from cadrumo.domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from cadrumo.domain.modelos.work_unit import WorkUnit
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
-from cadrumo.domain.user_profile.values import ProfileSetupState
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_calculation_action_ports,
     build_work_lifecycle_ports,
 )
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from .general_iva_profile_facts_support import general_iva_profile_facts
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -149,28 +143,12 @@ def _seed_revision(
     return revision
 
 
-def _seed_complete_profile(profile_id: str) -> None:
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=profile_id,
-            facts=general_iva_profile_facts(
-                tax_id="12345678Z",
-                activity_start_date="2020-01-01",
-            ),
-            created_at=_T0,
-            updated_at=_T0,
-            context=_profile_creation_context_for_test(),
-        ),
-    )
-
-
 def test_compare_uses_revision_observation_rowsfrom_registry_snapshot(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Comparison rows must not lose registry-grounded provenance."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        _seed_complete_profile(profile.bucket_id)
+        seed_ready_profile(bucket_id=profile.bucket_id, at=_T0)
         calculation_repository, work_2025, work_2026 = _seed_consecutive_work_units(profile, operation)
         revision_2025 = _seed_revision(
             calculation_repository,
@@ -231,7 +209,7 @@ def test_compare_reports_a_one_cent_delta_exactly_with_no_tolerance_absorption(
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        _seed_complete_profile(profile.bucket_id)
+        seed_ready_profile(bucket_id=profile.bucket_id, at=_T0)
         calculation_repository, work_2025, work_2026 = _seed_consecutive_work_units(profile, operation)
         _seed_revision(
             calculation_repository,

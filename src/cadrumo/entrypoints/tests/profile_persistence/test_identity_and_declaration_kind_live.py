@@ -18,11 +18,13 @@ Real registry authority, real engine, real source mesh; nothing is mocked.
 
 from __future__ import annotations
 
+from collections.abc import Collection
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -46,7 +48,6 @@ from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
 )
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
@@ -93,17 +94,22 @@ def bucket_id() -> str:
     return _BUCKET_ID
 
 
-def _seed_profile(*identity: UserProfileFact) -> None:
-    """Seed a single natural-person taxpayer whose facts cover Modelo 100's calculation bindings."""
+def _seed_profile(*identity: UserProfileFact, without: Collection[str] = ()) -> None:
+    """Seed a single natural-person taxpayer whose facts cover Modelo 100's calculation bindings.
+
+    ``without`` names the persona facts, such as its name, this taxpayer never stated.
+    """
     record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
-        facts=(
-            *identity,
-            UserProfileFact(path="activities.description", value="economic activity"),
-            *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-            *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
+        facts=persona_facts_beneath(
+            (
+                *identity,
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
+            ),
+            without=without,
         ),
         created_at=_T0,
         updated_at=_T0,
@@ -219,7 +225,9 @@ def test_the_declarant_identity_reaches_modelo_100_from_the_profile(secure_objec
 def test_a_profile_without_a_name_leaves_it_empty_and_says_which_fields_to_declare(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    _seed_profile(UserProfileFact(path="identity.tax_id", value="12345678Z"))
+    _seed_profile(
+        UserProfileFact(path="identity.tax_id", value="12345678Z"), without=("identity.name", "identity.surnames")
+    )
 
     result = _calculate_m100(secure_objects)
 

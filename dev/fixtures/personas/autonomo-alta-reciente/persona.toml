@@ -1,0 +1,66 @@
+format = 1
+
+[persona]
+id = "autonomo-alta-reciente"
+title = "Autónoma de limpieza de oficinas dada de alta este año"
+summary = """
+Clara Benítez se da de alta como autónoma el 1 de enero del año en curso para
+limpiar oficinas en Madrid. Es una actividad empresarial en estimación directa
+simplificada y en el régimen general del IVA: factura a empresas al 21 % sin
+retención, así que presenta los pagos fraccionados del Modelo 130. Imputa sus
+ingresos y gastos por cobros y pagos. No tiene empleados, no alquila local ni
+paga a profesionales. El escenario recoge el primer trimestre de su cuenta
+profesional: un cobro de un cliente y una compra de material de oficina; la
+cuota de autónomos se carga en su cuenta personal y queda fuera del extracto.
+"""
+taxpayer = "alta.titular"
+fiscal_year = "horizon"
+modelos = ["303", "130", "390", "347", "100"]
+
+# The first quarter has ended and its filing window is open (1 to 20 April).
+[clock]
+as_of = { year = "horizon", month = 4, day = 1 }
+
+[profile]
+"output-language" = "es"
+"entity-type" = "natural_person"
+"tax-id" = { identity = "alta.titular" }
+"name" = { identity = "alta.titular", field = "name" }
+"surnames" = { identity = "alta.titular", field = "surnames" }
+"fiscal-residency" = "resident_irpf"
+"tax-residence-jurisdiction-scope" = "common_regime"
+"tax-residence-ccaa" = "madrid"
+"address-postcode" = "28020"
+"irpf-income-categories" = ["actividad_economica"]
+"activity-start-date" = { year = "horizon", month = 1, day = 1 }
+"iva-regime" = "GENERAL"
+"iva-m303-regime-composition" = "general"
+"iva-roi-enrolled" = false
+"iva-oss-enrolled" = false
+"iva-sii-enrolled" = false
+"iva-redeme-enrolled" = false
+"iva-cash-accounting-regime-enrolled" = false
+"iva-voluntary-sii-enrolled" = false
+"iva-hydrocarbon-deposit-advance-payment-deduction-entitled" = false
+"taxation-type" = "1"
+"taxpayer-sex" = "M"
+"taxpayer-marital-status" = "1"
+"situacion-familiar" = "soltero"
+"taxpayer-birth-date" = { year = "horizon-31", month = 10, day = 3 }
+"has-employees" = false
+"pays-professionals-with-retencion" = false
+"pays-rent-with-retencion" = false
+"pays-capital-income-with-retencion" = false
+"art109-activity-income-withholding-ge-70pct" = false
+"irpf-estimation-regime" = "directa_simplificada"
+"irpf-codigo-comercio-accounting" = false
+"does-intracomunitario" = false
+
+[[activities]]
+description = "Servicios de limpieza de interiores de oficinas"
+iae_epigraph = "922.1"
+
+[[elections]]
+question = "irpf-activity-income-imputation-criterion"
+value = "cobros_y_pagos"
+year = "horizon"

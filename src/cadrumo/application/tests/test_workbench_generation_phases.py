@@ -12,7 +12,7 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.tests.log_records import delivered_records
 
 from ...core.errors.hierarchy import InternalInvariantError
@@ -383,7 +383,7 @@ def test_secure_generation_refuses_a_census_capture_changed_during_read(
     )
 
     observation = CensalObservation(
-        identity=CensalObservationIdentity(nif="00000001R"),
+        identity=CensalObservationIdentity(nif="00001005Q"),
         domicilio_fiscal=CensalObservationAddress(),
         domicilio_notificacion=CensalObservationAddress(),
         captured_at=_NOW,
@@ -419,10 +419,11 @@ def test_a_resident_s_calendar_survives_the_registered_result_round_trip(
         context=authority_operation.profile_create_context(),
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="X1234567L"),
-            *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-            UserProfileFact(path="taxpayer_type.fiscal_residency", value="resident_irpf"),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="X1234567L"),
+                UserProfileFact(path="taxpayer_type.fiscal_residency", value="resident_irpf"),
+            )
         ),
     )
     generation = InstalledWorkbenchGenerationProviderV1(

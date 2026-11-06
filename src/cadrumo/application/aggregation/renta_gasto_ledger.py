@@ -100,6 +100,7 @@ from ._renta_business_eligibility import (
 from .currency_predicates import (
     effective_eur_amount,
     effective_eur_iva_amount,
+    effective_eur_recargo_amount,
     effective_eur_taxable_base,
     is_non_eur_without_conversion,
 )
@@ -113,6 +114,7 @@ from .renta_imputation import (
     ImputationUnresolved,
     expense_incurred_date,
     impute_ledger_row,
+    received_invoice_reference,
     rows_left_out_summary,
     rows_touching_window,
 )
@@ -125,7 +127,12 @@ from .renta_ledger import (
     resolve_residence_ccaa,
 )
 from .renta_ledger_classification import CategoryRuleRefusal, refusal_issue_reason, resolve_category_rule
-from .renta_ledger_evidence import purchase_invoice_evidence_payload, refund_left_to_correction_netting
+from .renta_ledger_evidence import (
+    LinkedInvoiceCuotas,
+    linked_invoice_cuotas,
+    purchase_invoice_evidence_payload,
+    refund_left_to_correction_netting,
+)
 from .renta_ledger_models import RentaLedgerAggregationIssue
 
 if TYPE_CHECKING:
@@ -313,7 +320,7 @@ def aggregate_renta_gasto_ledger_from_repositories(
             whole_catalogue,
             invoices,
             kind=InvoiceKind.RECEIVED,
-            invoice_id_of=lambda row: row.purchase_invoice_evidence_id,
+            invoice_id_of=received_invoice_reference,
             start=window.start,
             end=window.end,
             criteria=criteria,
@@ -631,6 +638,7 @@ def _classify_gasto_transaction(
         proportion=proportion,
         rules=rules,
         refund=refund,
+        linked_cuotas=None if refund is not None else linked_invoice_cuotas(transaction, invoices),
     )
     if isinstance(evaluated, RentaGastoLedgerAggregationIssue):
         return evaluated
@@ -761,6 +769,7 @@ def _category_rule_deductible_amount(
     proportion: Decimal,
     rules: RentaCategoryDeductionRules,
     refund: _RefundFigures | None = None,
+    linked_cuotas: LinkedInvoiceCuotas | None = None,
 ) -> Decimal | RentaGastoLedgerAggregationIssue:
     """Run one categorised row through its category rule and return the deductible amount.
 
@@ -786,6 +795,9 @@ def _category_rule_deductible_amount(
         )
     category, profile = resolved
     scaling = row_scaling_proportion(transaction, proportion, profile.proportionality)
+    eur_recargo = effective_eur_recargo_amount(transaction) if refund is None else None
+    if linked_cuotas is not None:
+        eur_iva_amount, eur_recargo = linked_cuotas.iva_amount, linked_cuotas.recargo_amount
     try:
         fact = RentaDeductibleExpenseFact(
             transaction_id=transaction_id,
@@ -797,6 +809,7 @@ def _category_rule_deductible_amount(
             gross_amount=effective_eur_amount(transaction) * scaling,
             taxable_base=eur_base * scaling,
             iva_amount=eur_iva_amount * scaling if eur_iva_amount is not None else None,
+            recargo_amount=(None if eur_recargo is None else eur_recargo * scaling),
             direction=RentaExpenseDirection.OUTGOING_EXPENSE if refund is None else RentaExpenseDirection.REFUND,
             category=category,
             exclusive_business_use=exclusive_business_use(transaction),
@@ -858,7 +871,7 @@ def _net_received_corrections(
 
     def corrected(observation: RentaGastoObservation) -> RentaGastoObservation:
         row = transactions.get(observation.transaction_id)
-        fraction = None if row is None else fractions.get(row.purchase_invoice_evidence_id or "")
+        fraction = None if row is None else fractions.get(received_invoice_reference(row) or "")
         if fraction is None:
             return observation
         return observation.model_copy(
@@ -878,8 +891,8 @@ def _imputed_gasto_date(
     cash = transaction.raw.value_date or transaction.raw.booked_date
     if criteria is None:
         return cash
-    evidence_id = transaction.purchase_invoice_evidence_id
-    invoice = None if invoices is None or evidence_id is None else invoices.get(evidence_id)
+    invoice_id = received_invoice_reference(transaction)
+    invoice = None if invoices is None or invoice_id is None else invoices.get(invoice_id)
     return impute_ledger_row(transaction, invoice, kind=InvoiceKind.RECEIVED, criteria=criteria)
 
 

@@ -256,21 +256,26 @@ def _resolve_conditional_families(
         M303RegimenSimplificadoAnnualSummarySourceResolver,
     )
 
-    annual_summary_resolutions: tuple[CalculationSourceResolution, ...] = (
-        resolve_declared(
-            M303RegimenSimplificadoAnnualSummarySourceResolver(
-                registry_snapshot=snapshot,
-                work_unit_repository=ports.work_unit_repository,
-                calculation_repository=ports.calculation_repository,
-                filing_repository=ports.filing_repository,
-                regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies_to_profile(
-                    taxpayer_profile_for_work(profile),
+    annual_summary_resolutions: tuple[CalculationSourceResolution, ...] = ()
+    if any(
+        binding.source is BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY
+        for binding in snapshot.revision.bindings
+    ):
+        annual_summary_resolutions = (
+            resolve_declared(
+                M303RegimenSimplificadoAnnualSummarySourceResolver(
+                    registry_snapshot=snapshot,
+                    work_unit_repository=ports.work_unit_repository,
+                    calculation_repository=ports.calculation_repository,
+                    filing_repository=ports.filing_repository,
+                    regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies_to_profile(
+                        taxpayer_profile_for_work(profile),
+                    ),
+                    operation=ports.operation,
                 ),
-                operation=ports.operation,
+                stage="conditional",
             ),
-            stage="conditional",
-        ),
-    )
+        )
     inventory_resolutions: tuple[CalculationSourceResolution, ...] = ()
     if any(binding.source is BindingSourceKind.INVENTORY for binding in snapshot.revision.bindings):
         inventory_resolutions = (

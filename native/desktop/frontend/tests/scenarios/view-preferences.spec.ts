@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { PROFILE_SURNAMES } from "../support/profileFixture";
 import { seedLayout } from "../support/layout";
 import { openLogFilters, openPanelTab, panelToggle } from "../support/panel";
 import { label } from "../support/strings";
@@ -45,7 +46,7 @@ test("profile view choices and maximization survive reload without saving search
 }) => {
   await open(page);
   const profile = page.locator(".user-profile-page");
-  await expect(profile).toContainText("Soler Vidal");
+  await expect(profile).toContainText(PROFILE_SURNAMES);
   await profile
     .getByRole("button", { name: label("desktop.profile.view.options") })
     .click();
@@ -112,7 +113,7 @@ test("a filter saved before the show choice is read as its equivalent", async ({
   );
   await open(page);
   const profile = page.locator(".user-profile-page");
-  await expect(profile).toContainText("Soler Vidal");
+  await expect(profile).toContainText(PROFILE_SURNAMES);
   await profile
     .getByRole("button", { name: label("desktop.profile.view.options") })
     .click();

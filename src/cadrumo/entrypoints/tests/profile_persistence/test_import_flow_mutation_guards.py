@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from cadrumo.adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from cadrumo.application.aggregation.retenciones import RetencionObservation
@@ -67,10 +68,10 @@ from .import_flow_support import (
     _seed_local_filing_record,
     _seed_work_unit,
     repos,
-    seed_ready_profile,
+    withholding_payer_repos,
 )
 
-__all__ = ["repos"]
+__all__ = ["repos", "withholding_payer_repos"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -151,11 +152,11 @@ def test_external_import_refuses_m303_without_complete_filing_evidence(
 
 
 def test_amend_locally_filed_still_refused_after_import_path_exists(
-    repos: _Repos, *, operation: PinnedAuthorityOperation
+    withholding_payer_repos: _Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The import path does not loosen the local-filing amendment evidence gate."""
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, cr_repo, fr_repo, _, bv_repo = withholding_payer_repos
     work_unit = create_work_unit(
         bucket_id=_PROFILE_ID,
         modelo="111",
@@ -287,7 +288,7 @@ def test_calculate_refuses_a_work_unit_outside_the_repository_bucket(tmp_path: P
     calculation-revision addressing helpers in this same package do.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_GUARD_BUCKET_B) as profile:
-        seed_ready_profile(bucket_id=_GUARD_BUCKET_B)
+        seed_ready_profile(bucket_id=_GUARD_BUCKET_B, at=_T0)
         wu_repo = WorkUnitCatalogueRepository(bucket_id=_GUARD_BUCKET_A, objects=profile.repository)
         cr_repo = CalculationRevisionCatalogueRepository(objects=profile.repository)
         bv_repo = BucketEventHistoryRepository(objects=profile.repository)

@@ -62,6 +62,8 @@ _DATE_REVIEWED_EDITION = {"filing_period": date(_REVIEWED_EDITION, 12, 31)}
 
 # ── minimal binding_values required by M100 2024/2025 bound casillas ─────────
 _BINDINGS_2024: dict[str, Decimal] = {
+    "renta-profile-has-economic-activity": Decimal("1"),
+    "renta-profile-estimacion-directa": Decimal("1"),
     "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
     # declaration_type = 1 (individual) → 0461 computed = 0
     "renta-profile-declaration-type": Decimal("1"),
@@ -269,6 +271,7 @@ def test_reviewed_edition_0029_dividends_20000_populates_0460(
         # The production profile resolver supplies this predicate as 1/0 from
         # taxpayer_type.irpf_income_categories; the scenario models a directa filer.
         "renta-profile-has-economic-activity": Decimal("1"),
+        "renta-profile-estimacion-directa": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         # declaration_type = 1 (individual) → 0461 computed = 0
         "renta-profile-declaration-type": Decimal("1"),

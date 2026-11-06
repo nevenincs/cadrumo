@@ -27,7 +27,7 @@ from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_location
 from ..master_key.active_session import close_active_bucket_session
 from ..master_key.bucket_session import BucketSession
-from .locked_profile_support import DEK, PROFILE_ID, PROFILE_LABEL, READY_FACTS
+from .locked_profile_support import DEK, PROFILE_ID, PROFILE_LABEL, ready_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -42,7 +42,7 @@ def _bucket_relative_path(bucket_id: str, category: StorageCategory) -> Path:
 
 
 def _ready_profile_session(root: Path) -> ProfileRecordSession:
-    return create_current_profile_session(PROFILE_ID, root=root, label=PROFILE_LABEL, facts=READY_FACTS)
+    return create_current_profile_session(PROFILE_ID, root=root, label=PROFILE_LABEL, facts=ready_facts())
 
 
 def test_active_profile_health_is_ready_from_one_current_capsule_projection(tmp_path: Path) -> None:

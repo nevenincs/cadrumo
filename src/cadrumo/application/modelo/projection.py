@@ -116,7 +116,6 @@ _VERB_BASELINE_DECIMAL_BINDINGS: Mapping[str, Decimal] = {
     "renta-base-liquidable-negativa-general-em2-pendiente-inicio": Decimal("0"),
 }
 _VERB_BASELINE_BOOLEAN_BINDINGS: Mapping[str, bool] = {
-    "renta-modelo-100-estimacion-directa-es-normal": True,
     "renta-profile-marriage-full-year": False,
 }
 _REGION_BINDING_ID = "renta-profile-tax-residence-ccaa"

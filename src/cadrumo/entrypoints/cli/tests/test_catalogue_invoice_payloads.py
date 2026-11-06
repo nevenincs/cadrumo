@@ -57,7 +57,7 @@ def _canonical_invoice_payload() -> dict[str, object]:
         bucket_id="bucket-001",
         kind=InvoiceKind.RECEIVED,
         counterparty_name="Papeleria Sol SL",
-        counterparty_tax_id="A58818501",
+        counterparty_tax_id="B00010157",
         counterparty_country="ES",
         invoice_number="2026-STRICT-001",
         issued_at=date(2026, 3, 10),

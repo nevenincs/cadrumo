@@ -341,6 +341,11 @@ class ModeloIVAProfile(BaseModel):
     """IVA facts used by registry filing schedules.
 
     Attributes:
+        regime_composition: How the general and simplified regimes combine in
+            Modelo 303. ``None`` for a taxpayer whose only IVA regime is the
+            recargo de equivalencia: the supplier charges the recargo and the
+            retailer files no Modelo 303 for those activities (LIVA arts.
+            154-163), so there is no composition to state.
         roi_enrolled: Registered on the Registro de Operadores
             Intracomunitarios (ROI / VIES).
         oss_enrolled: Enrolled in the OSS / IOSS one-stop-shop regime.
@@ -366,7 +371,7 @@ class ModeloIVAProfile(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     tax_territory: M303TaxTerritory
-    regime_composition: M303RegimeComposition
+    regime_composition: M303RegimeComposition | None = None
     roi_enrolled: bool = False
     oss_enrolled: bool = False
     group_member_enrolled: bool = False
@@ -586,17 +591,17 @@ class TaxpayerProfile(BaseModel):
     irpf_estimation_regime: IrpfEstimationRegime | None = None
     irpf_activity_kind: IrpfActivityKind | None = None
     iva_regime: IVARegime
-    has_employees: bool = False
+    has_employees: bool | None = None
     colegio_concertado: bool | None = None
-    pays_professionals_with_retencion: bool = False
+    pays_professionals_with_retencion: bool | None = None
     art109_activity_income_withholding_ge_70pct: bool = False
-    pays_rent_with_retencion: bool = False
+    pays_rent_with_retencion: bool | None = None
     pays_capital_income_with_retencion: bool = False
     objective_estimation_prior_year_gross_income_eur: Decimal | None = None
     objective_estimation_prior_year_invoice_gross_income_eur: Decimal | None = None
     objective_estimation_prior_year_agri_livestock_forest_gross_eur: Decimal | None = None
     objective_estimation_prior_year_purchases_eur: Decimal | None = None
-    does_intracomunitario: bool = False
+    does_intracomunitario: bool | None = None
     third_party_transactions_above_347_threshold: bool | None = None
     bienes_extranjero_above_threshold: bool | None = None
     monedas_virtuales_extranjero_above_threshold: bool | None = None

@@ -16,6 +16,7 @@ from ...native_commands.runtime_profile_cli_fixture import (
     RuntimeFailureObservation,
     native_cli_profile_scope,
 )
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [
@@ -47,24 +48,17 @@ def test_modelo_100_readiness_filters_ledger_bindings_after_clean_preflight(tmp_
         profile.register(
             label="native-m100-readiness",
             facts={
+                **native_general_iva_facts(),
                 "preferences.output_language": "en",
-                "taxpayer_type.entity_type": "natural_person",
                 "identity.tax_id": "12345678Z",
                 "identity.name": "Operator",
                 "identity.surnames": "Readiness",
                 "activities.description": "design",
                 "censo.activity_start_date": "2024-01-01",
                 "contact.postcode": "28013",
-                "tax_residence.jurisdiction_scope": "common_regime",
                 "tax_residence.ccaa": "madrid",
                 "taxpayer_type.irpf_income_categories": "actividad_economica",
                 "irpf.estimation_regime": "directa_normal",
-                "iva.regime": "GENERAL",
-                "iva.m303_regime_composition": "general",
-                "iva.redeme_enrolled": "false",
-                "iva.cash_accounting_regime_enrolled": "false",
-                "iva.voluntary_sii_enrolled": "false",
-                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             },
         )
         assert profile.label is not None

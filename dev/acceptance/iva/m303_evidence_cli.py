@@ -136,7 +136,7 @@ def _invoice_args(*, kind: str, number: str, subtotal: str, iva_amount: str, dat
     )
     return (
         *("app", "ledger", "invoice", "add", "--kind", kind, "--counterparty-name", "Synthetic party SL"),
-        *("--counterparty-nif", "A58818501", "--invoice-number", number, "--invoice-date", date),
+        *("--counterparty-nif", "B00000281", "--invoice-number", number, "--invoice-date", date),
         *("--country-code", "ES", "--iva-category", "domestic_general", "--line", line),
     )
 

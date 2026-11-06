@@ -11,6 +11,7 @@ import type {
 import { ASSET_NOTES } from "../../src/dev/modeloAssetNotes";
 import { label } from "../support/strings";
 import { seedLayout } from "../support/layout";
+import { MODELO_FIXTURES } from "../support/windowFixtures";
 
 declare global {
   interface Window {
@@ -30,7 +31,7 @@ declare global {
 }
 
 // The Modelo workspace across its states, over the envelopes the
-// application read for a synthetic taxpayer (src/dev/fixtures/modelo/):
+// application read for a synthetic taxpayer (the generated envelopes):
 // a modelo whose rules are incomplete, a filled Modelo 130 with held zeros,
 // the check's findings, a file for the AEAT left out of date by a later
 // change, a filing recorded with and without a verified receipt, the list's
@@ -42,15 +43,20 @@ declare global {
 const LANGUAGES = ["en", "es", "ca", "hu"] as const;
 type Language = (typeof LANGUAGES)[number];
 
-const FIXTURES = fileURLToPath(
-  new URL("../../src/dev/fixtures/modelo/", import.meta.url),
-);
+const FIXTURES = fileURLToPath(MODELO_FIXTURES);
 const envelope = <Envelope>(name: string): Envelope =>
   JSON.parse(readFileSync(`${FIXTURES}${name}.json`, "utf8")) as Envelope;
 const form = (name: string, language: Language = "en") =>
   envelope<ModeloWorkbenchFormProjectionV1>(`modelo-${name}-${language}`);
 const list = (language: Language = "en") =>
   envelope<ModeloDeclarationsListProjectionV1>(`declarations-${language}`);
+
+/** The name the exported 130's filing file is saved under, as the window
+ * names it from the declaration's period. */
+const FILING_FILE = (() => {
+  const read = form("130-1T-exported").form.form;
+  return `modelo-${read.modelo}-${read.period.filing_year}-${read.period.code}.boe`;
+})();
 
 /** Every box of a form, in the order its pages hold them. */
 function fields(page: unknown): PublicModeloFormField[] {
@@ -313,7 +319,9 @@ test("a calculated Modelo 130 shows its figures, and its held zeros as zero", as
       field.value_text &&
       field.value_text !== "0.00 €",
   );
-  const held = calculated.find((field) => field.box && field.held_zero);
+  const held = calculated.find(
+    (field) => field.box && field.held_zero && field.value_text,
+  );
   if (!figure?.value_text || !held?.value_text)
     throw new Error("the calculated 130 holds no figure and no held zero");
   await openDeclaration(target, "130", { shape: "income" });
@@ -331,12 +339,12 @@ test("a Modelo 130 recorded as filed shows its proven-zero quarter as zero", asy
   if (!zero?.value_text) throw new Error("the filed 130 holds no held zero");
   await openDeclaration(target, "130", { shape: "filed" });
   await expect(boxRow(target, zero.box!)).toContainText(zero.value_text);
-  // The header states the result the read model stated.
+  // The header states the result the read model stated: its amount where it
+  // served one, else its sentence.
   const result = filed.header.result;
-  if (!result?.short_text) throw new Error("the filed 130 states no result");
-  await expect(
-    target.getByText(result.short_text, { exact: true }).first(),
-  ).toBeVisible();
+  const stated = result?.amount_text ?? result?.short_text;
+  if (!stated) throw new Error("the filed 130 states no result");
+  await expect(target.getByText(stated, { exact: true }).first()).toBeVisible();
 });
 
 test("a box shows the help the read serves for it, and its details in words only", async ({
@@ -546,7 +554,9 @@ test("the check lists every finding under its level, in plain words only", async
     const level = target.getByRole("region", {
       name: label(`workspace.modelo.level.${line.level}`),
     });
-    const item = level.getByRole("listitem").filter({ hasText: line.message });
+    // Two findings may share a sentence; each is told apart by where it is.
+    const said = level.getByRole("listitem").filter({ hasText: line.message });
+    const item = line.where ? said.filter({ hasText: line.where }) : said;
     await expect(item).toContainText(line.action);
     // A calculation note's own account, worded for the filer, is drawn under
     // its sentence, as a finding's kind is.
@@ -957,7 +967,7 @@ test("the gate sees a raw key, an identifier and an enum token", async ({
 
 // -- writes ------------------------------------------------------------------
 // Each write answers what the application answered for it (envelopes under
-// src/dev/fixtures/modelo/ read through the registered operations); a write
+// the generated envelopes read through the registered operations); a write
 // whose settlement was not seen, or that was refused before it ran, is the
 // host's own answer.
 
@@ -1212,7 +1222,7 @@ test("an export writes the file the filer saved, through its save token", async 
   await expect(
     target.getByText(
       label("workspace.modelo.filing.saved", {
-        name: "modelo-130-2026-1T.boe",
+        name: FILING_FILE,
       }),
     ),
   ).toBeVisible();
@@ -1318,7 +1328,7 @@ test("an export whose result says its direct-debit cutoff was checked states no 
     })
     .click();
   const saved = target.getByText(
-    label("workspace.modelo.filing.saved", { name: "modelo-130-2026-1T.boe" }),
+    label("workspace.modelo.filing.saved", { name: FILING_FILE }),
   );
   await expect(saved).toBeVisible();
   await expect(target.getByText(label(CUTOFF_UNVERIFIED))).toHaveCount(0);
@@ -1335,7 +1345,7 @@ test("an export whose result says no direct-debit cutoff was checked says so bes
     .click();
   const notice = target.getByRole("status").filter({
     hasText: label("workspace.modelo.filing.saved", {
-      name: "modelo-130-2026-1T.boe",
+      name: FILING_FILE,
     }),
   });
   await expect(notice).toBeVisible();
@@ -1666,13 +1676,22 @@ for (const language of LANGUAGES)
       ),
     ).toBeVisible();
     const report = target.locator(".modelo-reconciliation");
-    for (const diff of imported.diffs) {
-      await expect(
-        report.getByText(diff.work_unit_value, { exact: true }),
-      ).toBeVisible();
-      await expect(
-        report.getByText(diff.evidence_value, { exact: true }),
-      ).toBeVisible();
+    // Each difference is a row of its own, its declaration's value beside the
+    // receipt's: two rows, or one row's two sides, may read the same.
+    const rows = report
+      .getByRole("region", {
+        name: label(
+          "workspace.modelo.filing.reconciliation.differences",
+          {},
+          language,
+        ),
+      })
+      .locator(":scope > ul > li");
+    await expect(rows).toHaveCount(imported.diffs.length);
+    for (const [index, diff] of imported.diffs.entries()) {
+      const sides = rows.nth(index).locator("dd");
+      await expect(sides.nth(0)).toHaveText(diff.work_unit_value);
+      await expect(sides.nth(1)).toHaveText(diff.evidence_value);
     }
     for (const advisory of imported.advisories) {
       const item = report

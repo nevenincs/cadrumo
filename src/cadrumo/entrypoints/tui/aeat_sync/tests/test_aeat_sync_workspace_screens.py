@@ -541,7 +541,7 @@ async def test_complete_census_evidence_survives_reopen_and_selected_value_is_re
 
     long_value = "Valor censal completo " * 20
     observation = CensalObservation(
-        identity=CensalObservationIdentity(nif="00000001R", apellidos_y_nombre="Persona Sintética"),
+        identity=CensalObservationIdentity(nif="00001005Q", apellidos_y_nombre="Persona Sintética"),
         domicilio_fiscal=CensalObservationAddress(codigo_postal="28001"),
         domicilio_notificacion=CensalObservationAddress(),
         captured_at=_T2,

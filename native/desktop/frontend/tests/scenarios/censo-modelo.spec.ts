@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { label } from "../support/strings";
+import { PROFILE_SURNAMES } from "../support/profileFixture";
 
 // The Modelo page offers the one Censo flow the command palette offers: it
 // opens the profile page and starts the pull, or reattaches to the one that
@@ -31,7 +32,9 @@ test("the Modelo page's census entry starts the one Censo flow on the profile pa
     label("desktop.profile.censo.title"),
   );
   await page.locator(".declarations-census").click();
-  await expect(page.locator(".user-profile-page")).toContainText("Soler Vidal");
+  await expect(page.locator(".user-profile-page")).toContainText(
+    PROFILE_SURNAMES,
+  );
   await expect(review(page)).toBeVisible();
   expect(await page.evaluate(() => window.__scenarioCenso!.starts())).toBe(1);
 });

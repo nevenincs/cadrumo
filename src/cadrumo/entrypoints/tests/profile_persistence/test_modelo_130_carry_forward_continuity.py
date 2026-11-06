@@ -38,7 +38,7 @@ from typing import Any
 
 import pytest
 
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -205,17 +205,21 @@ _Q1_BINDINGS: dict[BindingId, Decimal] = {
 }
 _EXPECTED_Q1_SALDO = Decimal("100.00")
 
-_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="00000000T"),
-    UserProfileFact(path="identity.name", value="Sofia"),
-    UserProfileFact(path="identity.surnames", value="Operator"),
-    UserProfileFact(path="activities.description", value="professional services"),
-    *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-    UserProfileFact(path="iva.oss_enrolled", value=False),
-    UserProfileFact(path="censo.activity_start_date", value=date(2025, 1, 1)),
-    # The operator declares the cobros y pagos criterion for the quarters this module calculates,
-    # under the normal modality: the expected carry assumes no art. 30.2.4.a provision in box 02.
-    *cash_criterion_facts(2026, estimation_regime="directa_normal"),
+_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = persona_facts_beneath(
+    (
+        UserProfileFact(path="identity.tax_id", value="00000000T"),
+        UserProfileFact(path="identity.name", value="Sofia"),
+        UserProfileFact(path="identity.surnames", value="Operator"),
+        UserProfileFact(path="activities.description", value="professional services"),
+        UserProfileFact(path="iva.oss_enrolled", value=False),
+        UserProfileFact(path="censo.activity_start_date", value=date(2025, 1, 1)),
+        # The regime holds in every ejercicio, the prior year's net income included; the dated cash election
+        # below states the same regime for 2026 only.
+        UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+        # The operator declares the cobros y pagos criterion for the quarters this module calculates,
+        # under the normal modality: the expected carry assumes no art. 30.2.4.a provision in box 02.
+        *cash_criterion_facts(2026, estimation_regime="directa_normal"),
+    )
 )
 
 

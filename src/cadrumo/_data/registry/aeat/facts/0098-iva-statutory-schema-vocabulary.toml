@@ -130,6 +130,7 @@ entries = [
     { key = "iva_regime.simplificado_token", value = "SIMPLIFICADO" },
     { key = "iva_regime.reagp_token", value = "REAGP" },
     { key = "iva_regime.exento_token", value = "EXENTO" },
+    { key = "iva_regime.recargo_equivalencia_token", value = "RECARGO_EQUIVALENCIA" },
     { key = "iva_regime.GENERAL.value", value = "GENERAL" },
     { key = "iva_regime.GENERAL.description", value = "Régimen general del IVA (the ordinary LIVA regime)." },
     { key = "iva_regime.GENERAL.deadline_applicability", value = "self_assessment" },

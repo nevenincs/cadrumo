@@ -105,7 +105,7 @@ def _header(screen: LedgerInvoiceEntryScreen) -> None:
     _fill(
         screen,
         counterparty_name="Papeleria Sol SL",
-        counterparty_nif="A58818501",
+        counterparty_nif="B00010157",
         invoice_number="LINES-001",
         invoice_date="2026-03-15",
     )

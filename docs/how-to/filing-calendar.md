@@ -65,7 +65,7 @@ AEAT authentication and is read-only.
 
 ## What missed modelos did I forget to file?
 
-Use `backlog` for past-due obligations that you have not recorded as filed. The default window starts 365 days before today and ends today; narrow it with `--from` and `--to` when you are checking a specific period. The example profile declares an economic activity that started in 2025:
+Use `backlog` for past-due obligations that you have not recorded as filed. The default window starts 365 days before today and ends today; narrow it with `--from` and `--to` when you are checking a specific period. The example profile is a plumber whose economic activity started years ago, so the last year's quarterly and annual returns fall inside the window:
 
 ```{cli-sequence} filing-calendar-backlog
 :verify: Confirm the backlog resolves for the default and narrowed windows.

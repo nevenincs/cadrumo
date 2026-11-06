@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
-import served from "@/dev/fixtures/ledgerWithholdingRefusalWords.json";
+import served from "@fixtures/desktop-withholding-refusal-words/ledgerWithholdingRefusalWords.json" with { type: "json" };
 import type { LedgerShape } from "@/dev/ledgerFixture";
 import {
   STORY_PERIOD,
@@ -188,7 +188,7 @@ export const RefusedInServedWords: Story = {
     await userEvent.selectOptions(incomeClass!, "trabajo");
     await userEvent.type(
       inside.getByLabelText(word("desktop.ledger.withholding.payer_tax_id")),
-      "A58818501",
+      "B00000281",
     );
     const onAccount = inside.getByLabelText(
       word("desktop.ledger.withholding.amount.ingreso_a_cuenta"),
@@ -284,7 +284,7 @@ const startCertificate = async (canvasElement: HTMLElement) => {
   await userEvent.selectOptions(incomeClass!, "capital_mobiliario");
   await userEvent.type(
     inside.getByLabelText(word("desktop.ledger.withholding.payer_tax_id")),
-    "A58818501",
+    "B00000281",
   );
   await userEvent.type(
     inside.getByLabelText(word("desktop.ledger.withholding.payer_legal_name")),

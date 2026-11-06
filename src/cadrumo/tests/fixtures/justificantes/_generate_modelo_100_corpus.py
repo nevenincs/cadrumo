@@ -263,7 +263,7 @@ _MODELO_100_CORPUS_FIXTURES: tuple[_Modelo100CorpusFixture, ...] = tuple(
     _Modelo100CorpusFixture(
         filename=f"100/{ejercicio}-0A.pdf",
         ejercicio=ejercicio,
-        tax_id="Y0000001S",
+        tax_id="Y0001006P",
         full_name="APELLIDO APELLIDO NOMBRE",
         apartado_rows=_apartado_rows(ejercicio),
         cuota_rows=_cuota_rows(ejercicio),

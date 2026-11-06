@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import {
   calculateWithEvidence,
   calculationEvidenceMemory,
@@ -18,17 +17,12 @@ import type {
   ModeloWorkM303AttestationPublicResultV2,
 } from "../src/shell/modeloContract";
 import type { LedgerOutcome } from "../src/shell/ledger";
+import { MODELO_FIXTURES } from "./support/windowFixtures";
 
 const envelope = (last = false) =>
   ({
     ...JSON.parse(
-      readFileSync(
-        resolve(
-          import.meta.dirname,
-          "../src/dev/fixtures/modelo/modelo-303-1T-en.json",
-        ),
-        "utf8",
-      ),
+      readFileSync(new URL("modelo-303-1T-en.json", MODELO_FIXTURES), "utf8"),
     ),
     asks_m303_evidence: true,
     asks_modelo_390: last,

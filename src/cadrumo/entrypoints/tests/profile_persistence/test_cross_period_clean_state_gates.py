@@ -13,6 +13,7 @@ import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -104,27 +105,19 @@ def _store_ready_profile_record(*, activity_start_date: str | None = None) -> No
         _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value=str(workflow_profile().tax_id)),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="design"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value=IVARegime("GENERAL").value),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                *(
-                    (UserProfileFact(path="censo.activity_start_date", value=activity_start_date),)
-                    if activity_start_date is not None
-                    else ()
-                ),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.tax_id", value=str(workflow_profile().tax_id)),
+                    UserProfileFact(path="identity.name", value="Test"),
+                    UserProfileFact(path="identity.surnames", value="Operator"),
+                    UserProfileFact(path="activities.description", value="design"),
+                    UserProfileFact(path="iva.regime", value=IVARegime("GENERAL").value),
+                    *(
+                        (UserProfileFact(path="censo.activity_start_date", value=activity_start_date),)
+                        if activity_start_date is not None
+                        else ()
+                    ),
+                )
             ),
             created_at=_CLOCK,
             updated_at=_CLOCK,

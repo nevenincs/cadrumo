@@ -26,7 +26,7 @@ def test_parser_extracts_modelo_115_synthetic_fixture_targets() -> None:
 
     assert filing.modelo == "115"
     assert filing.period == _expected_period(2024, "1T")
-    assert filing.tax_id == "Y0000001S"
+    assert filing.tax_id == "Y0001006P"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "115"
     assert filing.registry_snapshot_ref.modelo_year == 2024
@@ -46,7 +46,7 @@ def test_parser_extracts_modelo_131_casillas_from_synthetic_fixture() -> None:
 
     assert filing.modelo == "131"
     assert filing.period == _expected_period(2026, "1T")
-    assert filing.tax_id == "Y0000001S", f"expected tax_id='Y0000001S', got {filing.tax_id!r}"
+    assert filing.tax_id == "Y0001006P", f"expected tax_id='Y0001006P', got {filing.tax_id!r}"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "131"
     assert filing.registry_snapshot_ref.modelo_year == 2026

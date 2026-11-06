@@ -147,6 +147,8 @@ def _binding_values_for_year(year: int) -> dict[str, Decimal]:
             for binding, value in M100_NO_DESCENDANT_MATERNIDAD_BINDINGS.items()
             if binding in declared_bindings
         },
+        "renta-profile-has-economic-activity": Decimal("1"),
+        "renta-profile-estimacion-directa": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
         # Childless borrador fixture: Art. 58/61 LIRPF mínimo por descendientes
         # aggregate is zero for a childless profile.

@@ -38,6 +38,7 @@ import pytest
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.profile_bindings import ProfileProvider
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.published_authority import (
@@ -46,6 +47,7 @@ from ....domain.calculations.registry.tests.published_authority import (
 from ....domain.calculations.registry.tests.published_authority import (
     published_profile_schema,
     published_snapshot,
+    published_supported_filing_years,
 )
 from ....domain.modelos.calculation_revision_sources import CalculationNoteSentence
 from ....domain.user_profile.registry_contract import profile_binding_selectors
@@ -60,6 +62,7 @@ from ..profile_derived_facts import (
     inject_derived_anualidades_eligibility_facts,
     inject_derived_autonomic_deduccion_facts,
     inject_derived_cash_election_fact,
+    inject_derived_estimation_modality_fact,
     inject_derived_marriage_facts,
     inject_derived_minimo_descendientes_facts,
     inject_ordinary_work_maritime_facts,
@@ -260,6 +263,8 @@ def test_every_scalar_profile_binding_resolves_to_typed_value(
     # Casilla 0169's election is stated only for a direct-estimation taxpayer whose
     # dated criterion is declared for the ejercicio; the fixture declares it.
     inject_derived_cash_election_fact(fact_index, record, _YEAR, operation=authority_operation)
+    # Casilla 0168's modality follows the same declared regime.
+    inject_derived_estimation_modality_fact(fact_index, operation=authority_operation)
 
     # Deliberately absent or calculate-path-derived bindings — tested separately.
     absent = {
@@ -614,3 +619,75 @@ def test_a_recorded_m130_modality_reaches_the_text_channel(
     assert resolved.enum_binding_values[_M130_MODALITY_BINDING] == modality
     assert _M130_MODALITY_BINDING not in resolved.unresolved_binding_ids
     assert not any(item.binding_id == _M130_MODALITY_BINDING for item in resolved.diagnostics)
+
+
+_M100_MODALITY_BINDING = "renta-modelo-100-estimacion-directa-es-normal"
+_M100_DIRECT_BINDING = "renta-profile-estimacion-directa"
+
+
+def _m100_supported_years() -> tuple[int, ...]:
+    support = published_supported_filing_years()
+    assert support is not None
+    years: list[int] = []
+    for year in sorted(support.years):
+        try:
+            published_snapshot("100", filing_year=year, period=_PERIOD)
+        except FilingYearOutsideSupportEnvelopeError:
+            continue
+        years.append(year)
+    return tuple(years)
+
+
+@pytest.mark.parametrize(("regime", "is_normal"), [("directa_normal", True), ("directa_simplificada", False)])
+def test_casilla_0168_follows_the_declared_direct_estimation_modality_in_every_supported_year(
+    authority_operation: PinnedAuthorityOperation, regime: str, is_normal: bool
+) -> None:
+    """The modality box is answered by the profile's regime, so calculating never asks for it."""
+    years = _m100_supported_years()
+    assert years
+    for year in years:
+        resolved = resolve_profile_sourced_bindings(
+            published_snapshot("100", filing_year=year, period=_PERIOD),
+            bucket_id=_BUCKET_ID,
+            profile_record=_m130_record(UserProfileFact(path="irpf.estimation_regime", value=regime)),
+            operation=authority_operation,
+        )
+
+        assert resolved.boolean_binding_values[_M100_MODALITY_BINDING] is is_normal, year
+        assert resolved.boolean_binding_values[_M100_DIRECT_BINDING] is True, year
+        assert _M100_MODALITY_BINDING not in resolved.unresolved_binding_ids, year
+
+
+@pytest.mark.parametrize("facts", [(), (UserProfileFact(path="irpf.estimation_regime", value="objetiva"),)])
+def test_casilla_0168_stays_unresolved_when_the_regime_is_not_direct_estimation(
+    authority_operation: PinnedAuthorityOperation, facts: tuple[UserProfileFact, ...]
+) -> None:
+    """An undeclared or objective regime states no direct-estimation modality on the taxpayer's behalf."""
+    for year in _m100_supported_years():
+        resolved = resolve_profile_sourced_bindings(
+            published_snapshot("100", filing_year=year, period=_PERIOD),
+            bucket_id=_BUCKET_ID,
+            profile_record=_m130_record(*facts),
+            operation=authority_operation,
+        )
+
+        assert _M100_MODALITY_BINDING not in resolved.boolean_binding_values, year
+
+
+@pytest.mark.parametrize(
+    ("facts", "stated"),
+    [((UserProfileFact(path="irpf.estimation_regime", value="objetiva"),), False), ((), None)],
+)
+def test_the_direct_estimation_block_is_read_only_under_a_declared_direct_regime_in_every_supported_year(
+    authority_operation: PinnedAuthorityOperation, facts: tuple[UserProfileFact, ...], stated: bool | None
+) -> None:
+    """An objetiva filer states no direct-estimation block, and an undeclared regime states nothing."""
+    for year in _m100_supported_years():
+        resolved = resolve_profile_sourced_bindings(
+            published_snapshot("100", filing_year=year, period=_PERIOD),
+            bucket_id=_BUCKET_ID,
+            profile_record=_m130_record(*facts),
+            operation=authority_operation,
+        )
+
+        assert resolved.boolean_binding_values.get(_M100_DIRECT_BINDING) is stated, year

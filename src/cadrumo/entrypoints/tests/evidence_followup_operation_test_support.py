@@ -53,6 +53,7 @@ from ...application.ledger.invoice_evidence_operation_dtos import (
 from ...application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 from ...application.ledger.party_attribution import party_attribution_advisory
 from ...application.ledger.review_advisories import review_advisory_kinds
+from ...application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from ...core.time.clock import now
 from ...domain.attachments.enums import AttachmentKind, AttachmentSource
 from ...domain.attachments.models import Attachment
@@ -82,14 +83,9 @@ def prepare_evidence_followup_conformance_case(
     """Create real encrypted evidence, draft, consent and attachment rows for one route."""
     upsert_test_profile_facts(
         profile_id,
-        (
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path=FILER_POSTCODE_FACT_PATH, value="28013"),
+        persona_facts_beneath(
+            (UserProfileFact(path=FILER_POSTCODE_FACT_PATH, value="28013"),),
+            without=("identity.",),
         ),
     )
     bucket_id = str(profile_id)

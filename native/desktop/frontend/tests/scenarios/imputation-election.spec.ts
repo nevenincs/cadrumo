@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { windowFixture } from "../support/windowFixtures";
 import { readFileSync } from "node:fs";
 import type { ImputationElection } from "../../src/shell/profileHousehold";
 import { label } from "../support/strings";
@@ -15,14 +16,15 @@ type Served = {
 };
 const served = JSON.parse(
   readFileSync(
-    new URL("../../src/dev/fixtures/imputationElection.json", import.meta.url),
+    windowFixture("desktop-imputation-election", "imputationElection"),
     "utf8",
   ),
 ) as Served;
 
 const LANGUAGES = ["en", "es", "ca", "hu"] as const;
 type Language = (typeof LANGUAGES)[number];
-const YEAR = 2025;
+/** The ejercicio the application read the elections for. */
+const YEAR = served.reads.devengo!.en!.tax_year;
 
 const workspace = (target: Page) => target.locator(".declarations-workspace");
 
@@ -111,7 +113,7 @@ test("an unstated year reads undeclared and none of the choices is selected", as
     label("workspace.modelo.election.other_years"),
   );
   await expect(element).toContainText(
-    `2024: ${read.criterion_question.choices[0]!.label}`,
+    `${read.criterion_statements[0]!.ejercicio}: ${read.criterion_question.choices[0]!.label}`,
   );
 });
 
@@ -237,8 +239,15 @@ test("clearing a stated year sends an empty token and the year reads undeclared 
   const writes = await target.evaluate(() =>
     window.__scenarioElection!.writes(),
   );
+  // Each question the year states is cleared with an empty token; one that
+  // states nothing is left as it is.
+  const stated = served.reads.devengo!.en!;
   expect(writes[0]).toMatchObject({
-    edit: { criterion: "", codigo_comercio_accounting: null },
+    edit: {
+      criterion: "",
+      codigo_comercio_accounting:
+        stated.codigo_comercio_accounting.state === "undeclared" ? null : "",
+    },
   });
   for (const radio of await radios(element).all())
     await expect(radio).not.toBeChecked();

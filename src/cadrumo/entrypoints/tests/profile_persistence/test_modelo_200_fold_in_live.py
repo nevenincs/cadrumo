@@ -64,6 +64,7 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -198,27 +199,19 @@ def _seed_m200_sociedad_profile(*, activity_start_date: date | None = None) -> N
     record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="B12345674"),
-            UserProfileFact(path="identity.legal_name", value="Test Runtime Profile SL"),
-            UserProfileFact(path="activities.description", value="software consultancy"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-            UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
-            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
-            UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
-            *(
-                (UserProfileFact(path="censo.activity_start_date", value=activity_start_date),)
-                if activity_start_date is not None
-                else ()
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="B12345674"),
+                UserProfileFact(path="identity.legal_name", value="Test Runtime Profile SL"),
+                UserProfileFact(path="activities.description", value="software consultancy"),
+                UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
+                *(
+                    (UserProfileFact(path="censo.activity_start_date", value=activity_start_date),)
+                    if activity_start_date is not None
+                    else ()
+                ),
             ),
+            persona_id="sociedad-limitada",
         ),
         created_at=_T0,
         updated_at=_T0,

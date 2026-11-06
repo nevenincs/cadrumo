@@ -59,7 +59,7 @@ def _valid_payload() -> dict[str, object]:
         "invoice_number": "COUNTRY-REQUIRED-001",
         "issued_at": date(2026, 5, 1),
         "counterparty_name": "Papeleria Sol SL",
-        "counterparty_tax_id": "A58818501",
+        "counterparty_tax_id": "B00010157",
         "counterparty_country": "ES",
         "base_total": Decimal("100.00"),
         "iva_total": Decimal("21.00"),

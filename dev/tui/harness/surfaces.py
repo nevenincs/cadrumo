@@ -248,7 +248,7 @@ def _profile_surfaces() -> tuple[Surface, ...]:
             f"Profile setup or editing: {state.value}",
             partial(build_profile_fixture, state),
             interfaces=profile_fixture_interfaces(state),
-            provision=profile_fixture_storage,
+            provision=partial(profile_fixture_storage, state),
         )
         for state in ProfileFixtureState
     )

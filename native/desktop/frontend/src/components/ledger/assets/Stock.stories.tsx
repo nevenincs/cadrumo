@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { userEvent, waitFor, within } from "storybook/test";
 import { typeAsAPerson } from "@/dev/personTyping";
-import servedWords from "@/dev/fixtures/ledgerServedWords.json";
+import servedWords from "@fixtures/ledger-served-words/ledgerServedWords.json" with { type: "json" };
 import {
   STORY_PERIOD,
   STORY_READER,

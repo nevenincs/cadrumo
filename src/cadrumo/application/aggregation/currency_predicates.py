@@ -146,9 +146,30 @@ def effective_eur_iva_amount(transaction: Transaction) -> Decimal | None:
     return transaction.iva_amount
 
 
+def effective_eur_recargo_amount(transaction: Transaction) -> Decimal | None:
+    """Return the EUR-equivalent ``recargo_amount``, or ``None`` if unset.
+
+    Same native-currency contract and ``fx_rate`` conversion as :func:`effective_eur_iva_amount`.
+    """
+    if transaction.recargo_amount is None:
+        return None
+    if is_non_eur_without_conversion(transaction):
+        raise AggregationConfigError(
+            translated_message=tr("aggregation.service.errors.currency_conversion_required"),
+            context={
+                "transaction_id": transaction.transaction_id,
+                "currency": transaction.raw.currency,
+            },
+        )
+    if transaction.fx_rate is not None:
+        return transaction.recargo_amount * transaction.fx_rate
+    return transaction.recargo_amount
+
+
 __all__ = [
     "effective_eur_amount",
     "effective_eur_iva_amount",
+    "effective_eur_recargo_amount",
     "effective_eur_taxable_base",
     "is_non_eur_without_conversion",
 ]

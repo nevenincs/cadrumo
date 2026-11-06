@@ -33,6 +33,7 @@ from cadrumo.entrypoints.ledger_action_composition import compose_ledger_action_
 from cadrumo.tests.inventory import FIXTURES_DIR
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [
@@ -52,18 +53,11 @@ _FILES = (
 
 
 _PROFILE_FACTS = {
-    "taxpayer_type.entity_type": "natural_person",
+    **native_general_iva_facts(),
     "identity.name": "Ledger",
     "identity.surnames": "Filter Reader",
     "activities.description": "design",
     "censo.activity_start_date": "2025-01-01",
-    "tax_residence.jurisdiction_scope": "common_regime",
-    "iva.regime": "GENERAL",
-    "iva.m303_regime_composition": "general",
-    "iva.redeme_enrolled": "false",
-    "iva.cash_accounting_regime_enrolled": "false",
-    "iva.voluntary_sii_enrolled": "false",
-    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
 }
 
 

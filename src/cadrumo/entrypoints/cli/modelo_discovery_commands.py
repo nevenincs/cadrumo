@@ -40,10 +40,8 @@ from . import _modelo_discovery_rendering as discovery_rendering
 from ._date_parsing import _parse_iso_date
 from ._modelo_behavior_support import bare_period_error, resolve_year_period
 from ._modelo_cli_support import bad_parameter_from_error, parse_binding_override
-from ._modelo_rendering import binding_encoded_option_lines
 from .common import active_bucket_id_or_refuse, emit_envelope
 from .modelo_bindings_results import (
-    BindingEncodedOptionPayload,
     BindingListRowPayload,
     BindingPreviewRowPayload,
     ModeloBindingsListResult,
@@ -528,11 +526,8 @@ def support_matrix(ctx: typer.Context) -> None:
 def _append_binding_list_row(
     row: ModeloBindingRowV1, merged_rows: list[BindingListRowPayload], text_rows: list[str]
 ) -> None:
-    """Append one grounded row and its encoded-option text in registry order."""
+    """Append one grounded row in registry order."""
     readiness = tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[BindingSourceKind(row.source)])
-    encoded_options = tuple(
-        BindingEncodedOptionPayload.model_validate(item.model_dump()) for item in row.encoded_options
-    )
     merged_rows.append(
         BindingListRowPayload(
             modelo=row.modelo,
@@ -548,7 +543,6 @@ def _append_binding_list_row(
             legal_refs=row.legal_refs,
             source_refs=row.source_refs,
             relation_inputs=row.relation_inputs,
-            encoded_options=encoded_options,
         )
     )
     text_rows.append(
@@ -556,7 +550,6 @@ def _append_binding_list_row(
         f"{row.source}\t{readiness}\t{row.typed_enum or '-'}\t{row.input_channel}\t"
         f"{row.borrador_capable}"
     )
-    text_rows.extend(binding_encoded_option_lines(row.binding_id, encoded_options))
 
 
 def _translate_unknown_binding_modelo(
@@ -636,16 +629,13 @@ def _binding_preview_rows(report: ModeloBindingsResolveProjection) -> list[Bindi
             legal_refs=row.legal_refs,
             source_refs=row.source_refs,
             relation_inputs=row.relation_inputs,
-            encoded_options=tuple(
-                BindingEncodedOptionPayload.model_validate(option.model_dump()) for option in row.encoded_options
-            ),
         )
         for row in report.bindings
     ]
 
 
 def _append_binding_preview_text(row: ModeloBindingRowV1, lines: list[str]) -> None:
-    """Append the established readiness, override, and encoded-option rows."""
+    """Append the established readiness and override rows."""
     readiness = tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[BindingSourceKind(row.source)])
     lines.append(
         "\t".join(
@@ -655,11 +645,5 @@ def _append_binding_preview_text(row: ModeloBindingRowV1, lines: list[str]) -> N
                 readiness,
                 row.override or "-",
             )
-        )
-    )
-    lines.extend(
-        binding_encoded_option_lines(
-            row.binding_id,
-            tuple(BindingEncodedOptionPayload.model_validate(option.model_dump()) for option in row.encoded_options),
         )
     )

@@ -1,6 +1,6 @@
 import { servedLimits } from "./support/servedLimits";
 import { holdLedgerLimits, textLimit } from "../src/shell/ledgerLimits";
-import recorded from "../src/dev/fixtures/ledgerEntryOptions.json" with { type: "json" };
+import recorded from "@fixtures/ledger-entry-options/ledgerEntryOptions.json" with { type: "json" };
 import { answerPeriods, holdRecordedPeriods } from "../src/dev/periodRecording";
 import {
   holdLedgerPeriods,

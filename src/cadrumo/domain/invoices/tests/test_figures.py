@@ -88,7 +88,7 @@ def _invoice(lines: tuple[InvoiceLine, ...], **overrides: object) -> Invoice:
         "invoice_number": "SYN-1",
         "issued_at": date(2026, 4, 15).isoformat(),
         "counterparty_name": "Synthetic supplier",
-        "counterparty_tax_id": "A58818501",
+        "counterparty_tax_id": "B00010157",
         "counterparty_country": "ES",
         "base_total": str(base),
         "iva_total": str(iva),

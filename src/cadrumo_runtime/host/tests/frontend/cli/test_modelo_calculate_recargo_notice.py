@@ -42,8 +42,8 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 from cadrumo.application.modelo.metadata_read_operation import MODELO_WORK_METADATA_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.revision_selection_operation import MODELO_WORK_REVISION_OPERATION_DEFINITION_ID
-from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.application.modelo.work_create_operation import MODELO_WORK_CREATE_OPERATION_DEFINITION_ID
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_fact_strings
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.period import Period, PeriodKind, registry_period_kind
 from cadrumo.core.time.clock import today_madrid
@@ -87,21 +87,8 @@ _M130_CALCULATE_OPTIONS = (
 
 
 def _natural_person_facts() -> dict[str, str]:
-    """The application readiness baseline with the natural-person operator's identity."""
-    facts = {
-        fact.path: (str(fact.value).lower() if isinstance(fact.value, bool) else str(fact.value))
-        for fact in MODELO_READY_PROFILE_FACTS
-    }
-    facts.update(
-        {
-            "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
-            "identity.name": "Operator",
-            "identity.surnames": "Readiness",
-            "activities.description": "design",
-        }
-    )
-    return facts
+    """The canonical natural-person taxpayer, with the colegio-concertado attestation."""
+    return persona_fact_strings()
 
 
 _OPERATIONS = frozenset(

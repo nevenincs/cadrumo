@@ -104,9 +104,9 @@
         "calculate",
         "0371dd7cb747105434a07926b17dfe5fb475b9d548121b773bd1815f52bcbc67",
         "--row",
-        "miembro nif=45678912S clave=C porcentaje=60 importe=10000",
+        "miembro nif=00001000B clave=C porcentaje=60 importe=10000",
         "--row",
-        "miembro nif=00000001R clave=C porcentaje=40 importe=5000"
+        "miembro nif=00001001N clave=C porcentaje=40 importe=5000"
       ],
       "captures": [],
       "envelope": {
@@ -142,7 +142,7 @@
         "result": {
           "authorization_state": null,
           "binding_overrides": {},
-          "calculation_revision_id": "48a1a8aa582ac2bd6a01ec9cbffd5f461ffbbb2b8fae07158cd1d88de7895316",
+          "calculation_revision_id": "08fbbe279707798054d17cd49145043ba56962e4bf0069895e31b8134f50afb2",
           "casilla_values": {
             "decl.ejercicio": "2024",
             "decl.entidad-extranjera.porcentaje-renta-residentes": "0",
@@ -212,7 +212,7 @@
                 "importe": "10000",
                 "miembro_a_31_diciembre": null,
                 "naturaleza_inmueble": null,
-                "nif": "sha256:1a1d79e0",
+                "nif": "sha256:be4475cd",
                 "nombre": "",
                 "pais": null,
                 "porcentaje": "60",
@@ -238,7 +238,7 @@
                 "importe": "5000",
                 "miembro_a_31_diciembre": null,
                 "naturaleza_inmueble": null,
-                "nif": "sha256:5637d0fd",
+                "nif": "sha256:4fd56d65",
                 "nombre": "",
                 "pais": null,
                 "porcentaje": "40",
@@ -327,7 +327,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 48a1a8aa582ac2bd6a01ec9cbffd5f461ffbbb2b8fae07158cd1d88de7895316 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 08fbbe279707798054d17cd49145043ba56962e4bf0069895e31b8134f50afb2 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [],
           "state": "borrador",
           "superseded_at": null,

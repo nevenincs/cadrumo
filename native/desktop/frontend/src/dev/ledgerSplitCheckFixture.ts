@@ -1,6 +1,6 @@
 // `ledger.split.check` for the fixtures. Stories type freely over movements whose
 // amounts are generated, so a recording cannot hold each question: this stand-in
-// works the answer out. `fixtures/ledgerSplitCheck.json` holds what the real
+// works the answer out. the generated `ledgerSplitCheck.json` holds what the real
 // backend answered, a test in the owning Python package holds that recording to
 // the live answer, and a test here holds this stand-in to the recording.
 

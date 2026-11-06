@@ -1,0 +1,1118 @@
+---
+tags:
+  - '#exec'
+  - '#fixture-canonicalization'
+date: '2026-11-04'
+modified: '2026-11-05'
+body_schema: 'body-v2'
+body_hash: 'sha256:92901ab4ad50547d3151b3be458387adfe576ac62438a66058fd33324a1cab80'
+related:
+  - "[[2026-11-04-fixture-canonicalization-plan]]"
+---
+
+<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
+     on first use and appends every row; never hand-edit it. Add no
+     frontmatter fields. Wiki-links belong in `related:` only.
+
+     ONE ledger per plan, the only execution artifact. Each row's first
+     column names its Step. -->
+
+# `fixture-canonicalization` ledger
+
+## Changes
+
+<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
+     by `--row`:
+       - `S##` `A` `path`   added
+       - `S##` `M` `path`   modified
+       - `S##` `D` `path`   deleted
+       - `S##` `R` `old` -> `new`   renamed
+     Paths are repo-relative, in backticks. No prose: the Step row states the
+     intent and the commit carries the diff.
+
+     Optional per-Step rows, written by `--verify` and `--by`:
+       - `S##` `verify:` `<command>` -> `pass` | `fail`
+       - `S##` `by:` `<persona>`
+
+     Rows are appended in Step order and never rewritten. Only rows in this
+     section register a Step as covered. `--note` adds a `## Notes` section
+     ONLY on exception (data loss, skipped work, a scaffold left in code, a
+     persistent failure), one `S##`-prefixed line each; it is otherwise
+     omitted. -->
+
+- `S02` `D` `native/application/tests/data/modelo-303-admitted-baseline.json`
+- `S02` `M` `native/application/src/runtime_client/live_tests.rs`
+- `S02` `verify:` `cargo test --no-run --lib` -> `pass`
+- `S02` `verify:` `rustfmt --check` -> `pass`
+- `S02` `by:` `sonnet`
+- `S03` `A` `native/desktop/frontend/scripts/ledger_recording_questions/ledgerInvoiceDuplicate.json`
+- `S03` `A` `native/desktop/frontend/scripts/ledger_recording_questions/ledgerInvoiceMatch.json`
+- `S03` `A` `native/desktop/frontend/scripts/ledger_recording_questions/ledgerInvoicePreview.json`
+- `S03` `A` `native/desktop/frontend/scripts/ledger_recording_questions/ledgerRuleTrial.json`
+- `S03` `A` `native/desktop/frontend/scripts/ledger_recording_questions/ledgerSplitCheck.json`
+- `S03` `A` `native/desktop/frontend/scripts/ledger_recordings.py`
+- `S03` `M` `native/desktop/frontend/src/dev/fixtures/ledgerInvoiceDuplicate.json`
+- `S03` `M` `native/desktop/frontend/src/dev/fixtures/ledgerInvoicePreview.json`
+- `S03` `M` `native/desktop/frontend/tests/ledger-invoices-model.spec.ts`
+- `S03` `M` `src/cadrumo/application/invoices/tests/figures_preview_support.py`
+- `S03` `A` `src/cadrumo/application/invoices/tests/test_figures_preview_recording.py`
+- `S03` `A` `src/cadrumo/application/ledger/tests/rule_trial_support.py`
+- `S03` `A` `src/cadrumo/application/ledger/tests/split_check_support.py`
+- `S03` `M` `src/cadrumo/application/ledger/tests/test_rule_trial.py`
+- `S03` `M` `src/cadrumo/application/ledger/tests/test_split_check_writer_parity.py`
+- `S03` `A` `src/cadrumo/domain/invoices/tests/duplicate_recording_support.py`
+- `S03` `A` `src/cadrumo/domain/invoices/tests/payment_matching_support.py`
+- `S03` `M` `src/cadrumo/domain/invoices/tests/test_likely_duplicate.py`
+- `S03` `M` `src/cadrumo/domain/invoices/tests/test_payment_matching.py`
+- `S03` `verify:` `ledger_recordings.py --check` -> `pass`
+- `S03` `verify:` `ledger parity pytest modules` -> `pass`
+- `S03` `verify:` `tsc --noEmit` -> `pass`
+- `S03` `by:` `sonnet`
+- `S07` `A` `dev/fixtures/personas/README.md`
+- `S07` `A` `dev/fixtures/personas/arrendador-jubilado/documents.toml`
+- `S07` `A` `dev/fixtures/personas/arrendador-jubilado/expectations.toml`
+- `S07` `A` `dev/fixtures/personas/arrendador-jubilado/ledger.csv`
+- `S07` `A` `dev/fixtures/personas/arrendador-jubilado/persona.toml`
+- `S07` `A` `dev/fixtures/personas/asalariada-familia/documents.toml`
+- `S07` `A` `dev/fixtures/personas/asalariada-familia/expectations.toml`
+- `S07` `A` `dev/fixtures/personas/asalariada-familia/ledger.csv`
+- `S07` `A` `dev/fixtures/personas/asalariada-familia/persona.toml`
+- `S07` `A` `dev/fixtures/personas/autonomo-fontanero/documents.toml`
+- `S07` `A` `dev/fixtures/personas/autonomo-fontanero/expectations.toml`
+- `S07` `A` `dev/fixtures/personas/autonomo-fontanero/ledger.csv`
+- `S07` `A` `dev/fixtures/personas/autonomo-fontanero/persona.toml`
+- `S07` `A` `dev/fixtures/personas/identities.toml`
+- `S07` `A` `dev/fixtures/personas/intracomunitario-desarrollador/documents.toml`
+- `S07` `A` `dev/fixtures/personas/intracomunitario-desarrollador/expectations.toml`
+- `S07` `A` `dev/fixtures/personas/intracomunitario-desarrollador/ledger.csv`
+- `S07` `A` `dev/fixtures/personas/intracomunitario-desarrollador/persona.toml`
+- `S07` `A` `dev/fixtures/personas/minorista-recargo/documents.toml`
+- `S07` `A` `dev/fixtures/personas/minorista-recargo/expectations.toml`
+- `S07` `A` `dev/fixtures/personas/minorista-recargo/ledger.csv`
+- `S07` `A` `dev/fixtures/personas/minorista-recargo/persona.toml`
+- `S07` `A` `dev/fixtures/personas/sociedad-limitada/documents.toml`
+- `S07` `A` `dev/fixtures/personas/sociedad-limitada/expectations.toml`
+- `S07` `A` `dev/fixtures/personas/sociedad-limitada/ledger.csv`
+- `S07` `A` `dev/fixtures/personas/sociedad-limitada/persona.toml`
+- `S07` `A` `dev/fixtures/personas/traductora-profesional/documents.toml`
+- `S07` `A` `dev/fixtures/personas/traductora-profesional/expectations.toml`
+- `S07` `A` `dev/fixtures/personas/traductora-profesional/ledger.csv`
+- `S07` `A` `dev/fixtures/personas/traductora-profesional/persona.toml`
+- `S07` `verify:` `persona TOML/schema/ledger arithmetic one-off validation` -> `pass`
+- `S07` `verify:` `dev.quality.data_files check` -> `pass`
+- `S07` `verify:` `just check-identity` -> `fail`
+- `S07` `by:` `opus`
+- `S08` `A` `src/cadrumo/entrypoints/tests/persona_materialisation.py`
+- `S08` `A` `src/cadrumo/entrypoints/tests/test_persona_materialisation.py`
+- `S08` `A` `src/cadrumo/tests/personas.py`
+- `S08` `A` `src/cadrumo/tests/test_personas.py`
+- `S08` `verify:` `pytest test_personas and test_persona_materialisation` -> `pass`
+- `S08` `verify:` `lint-imports` -> `pass`
+- `S08` `by:` `opus`
+- `S04` `M` `dev/acceptance/export_parity/scenario.py`
+- `S04` `M` `dev/acceptance/income_tax/cli_journey.py`
+- `S04` `M` `dev/acceptance/income_tax/financial_contracts.py`
+- `S04` `M` `dev/acceptance/iva/annual_capture.py`
+- `S04` `M` `dev/acceptance/iva/cli_journey.py`
+- `S04` `M` `dev/acceptance/iva/m303_evidence_cli.py`
+- `S04` `M` `dev/acceptance/iva/multirate_cli_journey.py`
+- `S04` `M` `dev/acceptance/iva/negative_4t_cli_journey.py`
+- `S04` `M` `dev/acceptance/ledger/installed_tui_contracts.py`
+- `S04` `M` `dev/acceptance/ledger/scenario.py`
+- `S04` `M` `dev/ingest_harness/tests/test_colocation_ceiling.py`
+- `S04` `M` `dev/registry/tests/test_creation.py`
+- `S04` `M` `dev/tui/harness/tests/test_home_fixtures.py`
+- `S04` `M` `docs/_sequences/contracts/how-to/review-calculation-values/review-values-rows.seq`
+- `S04` `M` `docs/_sequences/how-to/review-calculation-values/review-values-rows.json`
+- `S04` `M` `native/desktop/frontend/scripts/ledger_recordings.py`
+- `S04` `M` `native/desktop/frontend/src/components/ledger/invoices/Invoices.stories.tsx`
+- `S04` `M` `native/desktop/frontend/src/components/ledger/setup/WithholdingPane.stories.tsx`
+- `S04` `R` `native/desktop/frontend/scripts/ledger_recording_questions/ledgerInvoiceDuplicate.json` -> `native/desktop/frontend/src/dev/fixtures/ledger-recording-questions/ledgerInvoiceDuplicate.json`
+- `S04` `R` `native/desktop/frontend/scripts/ledger_recording_questions/ledgerInvoiceMatch.json` -> `native/desktop/frontend/src/dev/fixtures/ledger-recording-questions/ledgerInvoiceMatch.json`
+- `S04` `R` `native/desktop/frontend/scripts/ledger_recording_questions/ledgerInvoicePreview.json` -> `native/desktop/frontend/src/dev/fixtures/ledger-recording-questions/ledgerInvoicePreview.json`
+- `S04` `R` `native/desktop/frontend/scripts/ledger_recording_questions/ledgerRuleTrial.json` -> `native/desktop/frontend/src/dev/fixtures/ledger-recording-questions/ledgerRuleTrial.json`
+- `S04` `R` `native/desktop/frontend/scripts/ledger_recording_questions/ledgerSplitCheck.json` -> `native/desktop/frontend/src/dev/fixtures/ledger-recording-questions/ledgerSplitCheck.json`
+- `S04` `M` `native/desktop/frontend/src/dev/fixtures/ledgerInvoiceDuplicate.json`
+- `S04` `M` `native/desktop/frontend/src/dev/fixtures/ledgerInvoicePreview.json`
+- `S04` `M` `native/desktop/frontend/tests/ledger-invoices-model.spec.ts`
+- `S04` `M` `native/desktop/frontend/tests/scenarios/ledger-invoices.spec.ts`
+- `S04` `M` `native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts`
+- `S04` `M` `native/manager/src/session/quit.rs`
+- `S04` `M` `native/manager/tests/custody_conformance.rs`
+- `S04` `M` `native/manager/tests/session_ownership.rs`
+- `S04` `M` `native/manager/tests/session_record_vectors.json`
+- `S04` `M` `src/cadrumo/adapters/inbound/einvoice/tests/test_evidence_corpus_parsing.py`
+- `S04` `M` `src/cadrumo/adapters/inbound/einvoice/tests/test_structured_evidence_draft_projection.py`
+- `S04` `M` `src/cadrumo/adapters/outbound/aeat/auth/tests/test_authenticator_contracts.py`
+- `S04` `M` `src/cadrumo/adapters/outbound/llm/tests/test_evidence_draft_text.py`
+- `S04` `M` `src/cadrumo/adapters/outbound/llm/tests/test_invoice_field_contract.py`
+- `S04` `M` `src/cadrumo/adapters/outbound/llm/tests/test_invoice_role_evidence.py`
+- `S04` `M` `src/cadrumo/adapters/outbound/llm/tests/test_reader_country_name_resolves_to_code.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/classification_origin_support.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/test_bulk_import_persistence.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/test_catalogue_creation_commit_admission.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/test_confirm_path_establishment_reach.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/test_descendants_operation.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/test_evidence_confirm_grounds_for_renta.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/test_invoice_atomic_audit.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/test_invoice_lifecycle.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/test_source_resolver.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/test_source_resolver_m347_periods.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/test_source_resolver_m347_roles.py`
+- `S04` `M` `src/cadrumo/application/aggregation/tests/test_invoice_category_counterparty_mismatch_is_reported.py`
+- `S04` `M` `src/cadrumo/application/filing/tests/test_modelo_347_fichero_export.py`
+- `S04` `M` `src/cadrumo/application/filing/tests/test_modelo_347_inmueble_record_export.py`
+- `S04` `M` `src/cadrumo/application/filing/tests/test_source_mesh_review_unit.py`
+- `S04` `M` `src/cadrumo/application/invoices/tests/figures_preview_support.py`
+- `S04` `M` `src/cadrumo/application/invoices/tests/test_atomic_audit.py`
+- `S04` `M` `src/cadrumo/application/invoices/tests/test_bulk_import.py`
+- `S04` `M` `src/cadrumo/application/invoices/tests/test_catalogue_add_operation.py`
+- `S04` `M` `src/cadrumo/application/invoices/tests/test_catalogue_creation_explicit_authority.py`
+- `S04` `M` `src/cadrumo/application/invoices/tests/test_catalogue_creation_lines.py`
+- `S04` `M` `src/cadrumo/application/invoices/tests/test_catalogue_intake_operation.py`
+- `S04` `M` `src/cadrumo/application/invoices/tests/test_catalogue_intake_refusal.py`
+- `S04` `M` `src/cadrumo/application/invoices/tests/test_catalogue_read_operation.py`
+- `S04` `M` `src/cadrumo/application/invoices/tests/test_catalogue_read_projection.py`
+- `S04` `M` `src/cadrumo/application/invoices/tests/test_creation_wizard_declared_fields.py`
+- `S04` `M` `src/cadrumo/application/invoices/tests/test_figures_preview_operation.py`
+- `S04` `M` `src/cadrumo/application/invoices/tests/test_lifecycle.py`
+- `S04` `M` `src/cadrumo/application/invoices/tests/test_source_resolver.py`
+- `S04` `M` `src/cadrumo/application/ledger/tests/_evidence_corpus/facturae_32_retencion_suplidos_invoice.xml`
+- `S04` `M` `src/cadrumo/application/ledger/tests/_evidence_corpus/facturae_32_retencion_suplidos_invoice.xml.provenance.json`
+- `S04` `M` `src/cadrumo/application/ledger/tests/_evidence_corpus/facturae_32_series_and_parties_invoice.xml`
+- `S04` `M` `src/cadrumo/application/ledger/tests/_evidence_corpus/facturae_32_series_and_parties_invoice.xml.provenance.json`
+- `S04` `M` `src/cadrumo/application/ledger/tests/test_choose_candidate_by_rendered_digest.py`
+- `S04` `M` `src/cadrumo/application/ledger/tests/test_classification_assembly.py`
+- `S04` `M` `src/cadrumo/application/ledger/tests/test_document_direction.py`
+- `S04` `M` `src/cadrumo/application/ledger/tests/test_grounded_reading_wiring.py`
+- `S04` `M` `src/cadrumo/application/ledger/tests/test_identity_roles.py`
+- `S04` `M` `src/cadrumo/application/ledger/tests/test_invoice_confirmation_review_binding.py`
+- `S04` `M` `src/cadrumo/application/ledger/tests/test_invoice_evidence_operation_dtos.py`
+- `S04` `M` `src/cadrumo/application/ledger/tests/test_invoice_label_reader.py`
+- `S04` `M` `src/cadrumo/application/overview/tests/test_calendar_applicability_consistency.py`
+- `S04` `M` `src/cadrumo/application/search/tests/test_workbench.py`
+- `S04` `M` `src/cadrumo/application/user_profile/tests/test_projections.py`
+- `S04` `M` `src/cadrumo/core/tests/test_redaction.py`
+- `S04` `M` `src/cadrumo/domain/calculations/registry/tests/test_long_tail_data_types.py`
+- `S04` `M` `src/cadrumo/domain/calculations/registry/tests/test_m347_threshold_buckets.py`
+- `S04` `M` `src/cadrumo/domain/calculations/registry/tests/test_nif_data_type.py`
+- `S04` `M` `src/cadrumo/domain/invoices/tests/test_counterparty_country_is_required.py`
+- `S04` `M` `src/cadrumo/domain/invoices/tests/test_figures.py`
+- `S04` `M` `src/cadrumo/domain/invoices/tests/test_validators.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_catalogue_invoice_bulk_import.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_catalogue_invoice_payloads.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_cold_start_wizard_registration.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_evidence_field_notices.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_invoice_euro_rate_notice.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_named_profile_resolution_cross_process.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_operation_invoice_catalogue.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/conformance_ledger_seed_support.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/ledger_frontend_parity_test_support.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/profile_persistence/m303_annual_ledger_support.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m303_quarters_to_m390_annual.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_invoice_accumulative_cross_modelo_periods.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_347_declarado_rows.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_source_mesh_review.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_taxation_comparison_held_values.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_verify_invoice_drift_gate.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/test_invoice_import_reader_refusal_settlement.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/test_invoice_intake_operation_composition.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/test_ledger_known_values_read.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/test_verify_capture_operation.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_invoice_entry_lines.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_ledger_ingestion_surfaces.py`
+- `S04` `M` `src/cadrumo/tests/fixtures/financial/tabular-dialects/libro_facturas_expedidas_2025_2026.csv`
+- `S04` `M` `src/cadrumo/tests/fixtures/financial/tabular-dialects/libro_facturas_recibidas_2025_2026.csv`
+- `S04` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_business_invoice_verbs.py`
+- `S04` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_catalogue_invoice_lifecycle.py`
+- `S04` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_catalogue_invoice_link_flow.py`
+- `S04` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_invoice_preview_verb.py`
+- `S04` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_m303_ordinary_calculate_cli.py`
+- `S04` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_aggregate_annual_withholding_rows.py`
+- `S04` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_compare.py`
+- `S04` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_overview_calendar_verb.py`
+- `S04` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_invoice_add.py`
+- `S04` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_invoice_intake_native.py`
+- `S04` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_ledger_export_link_native.py`
+- `S04` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_work_calculate_row_flag.py`
+- `S04` `M` `dev/ingest_harness/tests/test_colocation_ceiling.py`
+- `S04` `M` `docs/_sequences/contracts/how-to/review-calculation-values/review-values-rows.seq`
+- `S04` `M` `docs/_sequences/how-to/review-calculation-values/review-values-rows.json`
+- `S04` `M` `src/cadrumo/adapters/inbound/einvoice/tests/test_evidence_corpus_parsing.py`
+- `S04` `M` `src/cadrumo/adapters/inbound/einvoice/tests/test_structured_evidence_draft_projection.py`
+- `S04` `M` `src/cadrumo/adapters/outbound/aeat/auth/tests/test_authenticator_contracts.py`
+- `S04` `M` `src/cadrumo/adapters/outbound/llm/tests/test_evidence_draft_text.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/test_confirm_path_establishment_reach.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/test_evidence_confirm_grounds_for_renta.py`
+- `S04` `M` `src/cadrumo/application/ledger/tests/_evidence_corpus/facturae_32_retencion_suplidos_invoice.xml`
+- `S04` `M` `src/cadrumo/application/ledger/tests/_evidence_corpus/facturae_32_retencion_suplidos_invoice.xml.provenance.json`
+- `S04` `M` `src/cadrumo/application/ledger/tests/_evidence_corpus/facturae_32_series_and_parties_invoice.xml`
+- `S04` `M` `src/cadrumo/application/ledger/tests/_evidence_corpus/facturae_32_series_and_parties_invoice.xml.provenance.json`
+- `S04` `M` `src/cadrumo/application/ledger/tests/test_invoice_label_reader.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_cold_start_wizard_registration.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_named_profile_resolution_cross_process.py`
+- `S04` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_compare.py`
+- `S04` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_overview_calendar_verb.py`
+- `S04` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_work_calculate_row_flag.py`
+- `S04` `verify:` `just check-identity` -> `pass`
+- `S04` `verify:` `ledger_recordings.py --check` -> `pass`
+- `S04` `verify:` `affected pytest modules` -> `pass`
+- `S04` `by:` `sonnet`
+- `S01` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/accept-130-1T-applied.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/amend-130.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/amendment-context-130.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/apply-130-1T-exported.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-compared-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-compared-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-compared-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-compared-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-stale-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-stale-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-stale-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/borrador-100-0A-stale-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/calculate-130.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-incomplete-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-incomplete-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-incomplete-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-incomplete-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-renta-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-renta-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-renta-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-renta-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-wallet-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-wallet-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-wallet-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-wallet-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-accepted-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-accepted-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-accepted-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-accepted-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-revoked-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-revoked-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-revoked-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/disagreements-130-1T-revoked-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/export-130.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/export-165-unverified.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/file-130.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/metadata-130-receipt.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-activity-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-activity-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-activity-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-activity-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-alone-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-alone-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-alone-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-alone-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-credited-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-credited-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-credited-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-credited-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-married-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-married-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-married-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-married-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parent-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parent-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parent-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parent-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parentapart-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parentapart-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parentapart-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-parentapart-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-pay-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-pay-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-pay-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-pay-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-projected-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-projected-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-projected-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-projected-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-refund-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-refund-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-refund-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-refund-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-spouseless-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-spouseless-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-spouseless-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-spouseless-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncalculated-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncalculated-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncalculated-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncalculated-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncredited-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncredited-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncredited-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-uncredited-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2022-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2022-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2022-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2022-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2023-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2023-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2023-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2023-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2024-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2024-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2024-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2024-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2026-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2026-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2026-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-100-0A-y2026-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-accepted-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-accepted-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-accepted-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-accepted-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-applied-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-applied-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-applied-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-applied-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-checked-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-checked-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-checked-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-checked-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-expiring-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-expiring-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-expiring-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-expiring-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-exported-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-exported-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-exported-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-exported-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-filed-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-filed-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-filed-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-filed-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-income-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-income-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-income-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-income-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-again-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-again-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-again-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-again-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebase-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebase-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebase-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebase-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebased-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebased-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebased-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-rebased-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-receipt-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-receipt-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-receipt-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-receipt-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-renewed-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-renewed-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-renewed-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-renewed-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-revoked-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-revoked-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-revoked-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-revoked-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-stale-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-stale-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-stale-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-stale-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-3T-prerequisite-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-3T-prerequisite-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-3T-prerequisite-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-3T-prerequisite-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-correct-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-correct-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-correct-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-correct-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-empty-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-empty-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-empty-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-empty-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-override-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-override-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-override-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-override-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-seed-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-seed-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-seed-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-wallet-seed-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-347-0A-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-347-0A-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-347-0A-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-347-0A-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-390-0A-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-390-0A-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-390-0A-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-390-0A-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-01-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-01-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-01-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-01-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-entry-06-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-expiring-entry-06-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-expiring-entry-06-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-expiring-entry-06-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-expiring-entry-06-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-expiring-stale.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-exported-entry-06-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-exported-entry-06-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-exported-entry-06-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-exported-entry-06-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-exported-review-06set-from-130-1T-exported.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-moving-again-stale.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-moving-stale.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-16-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-16-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-16-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-16-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-18-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-18-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-18-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-entry-18-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebase-stale.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebased-review-06clear-16set-18set-from-130-1T-rebase.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-rebased-review-16set-18set-from-130-1T-rebased.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-receipt-correction-refused.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-receipt-correction.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-renewed-review-06set-from-130-1T-expiring.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-review-06set-from-130-1T.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-3T-prerequisite-entry-06-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-3T-prerequisite-entry-06-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-3T-prerequisite-entry-06-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-3T-prerequisite-entry-06-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-3T-prerequisite-review-06set-from-130-3T-prerequisite.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-303-1T-entry-42-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-303-1T-entry-42-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-303-1T-entry-42-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-303-1T-entry-42-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-303-1T-review-42set-from-303-1T.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/reconcile-130.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/renew-130-1T-expiring.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/renew-130-1T-moving.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/renew-130-1T-rebase.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/renew-130-1T.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/revoke-130-1T-accepted.json`
+- `S01` `verify:` `two full generator runs diff -rq identical` -> `pass`
+- `S01` `verify:` `modelo_fixtures.py validate` -> `pass`
+- `S01` `verify:` `ruff` -> `pass`
+- `S01` `by:` `opus`
+- `S11` `M` `dev/tui/harness/ledger_categorisation_fixtures.py`
+- `S11` `M` `dev/tui/harness/ledger_invoices_fixtures.py`
+- `S11` `M` `dev/tui/harness/profile_fixtures.py`
+- `S11` `M` `dev/tui/harness/surfaces.py`
+- `S11` `M` `dev/tui/harness/tests/test_profile_fixtures.py`
+- `S11` `M` `dev/tui/harness/tests/test_workbench_fixtures.py`
+- `S11` `verify:` `focused pytest modules` -> `pass`
+- `S11` `verify:` `lint-imports` -> `pass`
+- `S11` `by:` `sonnet`
+- `S21` `M` `dev/fixtures/personas/README.md`
+- `S21` `M` `dev/fixtures/personas/arrendador-jubilado/persona.toml`
+- `S21` `M` `dev/fixtures/personas/asalariada-familia/expectations.toml`
+- `S21` `M` `dev/fixtures/personas/asalariada-familia/persona.toml`
+- `S21` `M` `dev/fixtures/personas/autonomo-fontanero/expectations.toml`
+- `S21` `M` `dev/fixtures/personas/autonomo-fontanero/ledger.csv`
+- `S21` `M` `dev/fixtures/personas/identities.toml`
+- `S21` `M` `dev/fixtures/personas/intracomunitario-desarrollador/ledger.csv`
+- `S21` `M` `dev/fixtures/personas/traductora-profesional/expectations.toml`
+- `S21` `M` `dev/fixtures/personas/traductora-profesional/ledger.csv`
+- `S21` `M` `dev/fixtures/personas/traductora-profesional/persona.toml`
+- `S21` `M` `src/cadrumo/_data/registry/aeat/facts/0084-iva-category-component-catalogue.toml`
+- `S21` `M` `src/cadrumo/entrypoints/tests/persona_materialisation.py`
+- `S21` `M` `src/cadrumo/entrypoints/tests/test_persona_materialisation.py`
+- `S21` `verify:` `focused pytest modules` -> `pass`
+- `S21` `verify:` `lint-imports` -> `pass`
+- `S21` `by:` `opus`
+- `S21` `verify:` `just check-registry-gate` -> `pass`
+- `S22` `M` `src/cadrumo/entrypoints/tests/persona_materialisation.py`
+- `S22` `M` `src/cadrumo/entrypoints/tests/test_persona_materialisation.py`
+- `S22` `M` `src/cadrumo/tests/personas.py`
+- `S22` `verify:` `materialisation scope and reuse tests` -> `pass`
+- `S22` `verify:` `lint-imports` -> `pass`
+- `S22` `by:` `sonnet`
+- `S05` `M` `.importlinter`
+- `S05` `A` `dev/fixture_projections/__init__.py`
+- `S05` `A` `dev/fixture_projections/__main__.py`
+- `S05` `A` `dev/fixture_projections/cli.py`
+- `S05` `A` `dev/fixture_projections/personas.py`
+- `S05` `A` `dev/fixture_projections/registry.py`
+- `S05` `A` `dev/fixture_projections/stamps.py`
+- `S05` `A` `dev/fixture_projections/tests/__init__.py`
+- `S05` `A` `dev/fixture_projections/tests/test_stamps.py`
+- `S05` `M` `justfile`
+- `S05` `verify:` `dev/fixture_projections stamp tests` -> `pass`
+- `S05` `verify:` `lint-imports` -> `pass`
+- `S05` `verify:` `fixtures-check without docs-sequences` -> `pass`
+- `S05` `verify:` `ruff check dev/fixture_projections` -> `fail`
+- `S05` `by:` `opus`
+- `S04` `M` `dev/acceptance/income_tax/personas.py`
+- `S04` `M` `dev/acceptance/retenciones/scenario.py`
+- `S04` `M` `dev/ci/tests/test_live_iva_remote_state_row_projection.py`
+- `S04` `R` `native/desktop/frontend/src/dev/fixtures/ledger-recording-questions/ledgerInvoiceDuplicate.json` -> `dev/fixtures/ledger-recording-questions/ledgerInvoiceDuplicate.json`
+- `S04` `R` `native/desktop/frontend/src/dev/fixtures/ledger-recording-questions/ledgerInvoiceMatch.json` -> `dev/fixtures/ledger-recording-questions/ledgerInvoiceMatch.json`
+- `S04` `R` `native/desktop/frontend/src/dev/fixtures/ledger-recording-questions/ledgerInvoicePreview.json` -> `dev/fixtures/ledger-recording-questions/ledgerInvoicePreview.json`
+- `S04` `R` `native/desktop/frontend/src/dev/fixtures/ledger-recording-questions/ledgerRuleTrial.json` -> `dev/fixtures/ledger-recording-questions/ledgerRuleTrial.json`
+- `S04` `R` `native/desktop/frontend/src/dev/fixtures/ledger-recording-questions/ledgerSplitCheck.json` -> `dev/fixtures/ledger-recording-questions/ledgerSplitCheck.json`
+- `S04` `M` `dev/fixtures/personas/README.md`
+- `S04` `M` `dev/fixtures/personas/identities.toml`
+- `S04` `M` `src/cadrumo/adapters/inbound/declaracion/tests/test_parser_source_digest_identity.py`
+- `S04` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_observations.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/test_identity_profile_persistence.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/test_operator.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/test_operator_probe_credential_resolution.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/tests/test_config_reset.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/tests/test_config_reset_concurrency.py`
+- `S04` `M` `src/cadrumo/application/aeat_sync/tests/reconciliation_fixtures.py`
+- `S04` `M` `src/cadrumo/application/aeat_sync/tests/test_workspace_reader.py`
+- `S04` `M` `src/cadrumo/application/aggregation/tests/test_per_modelo_service.py`
+- `S04` `M` `src/cadrumo/application/auth/tests/test_clave_credential_resolution.py`
+- `S04` `M` `src/cadrumo/application/auth/tests/test_identity_dni_divergence_is_auth_time_only.py`
+- `S04` `M` `src/cadrumo/application/auth/tests/test_session_identity_comparison.py`
+- `S04` `M` `src/cadrumo/application/auth/tests/test_sync_readiness.py`
+- `S04` `M` `src/cadrumo/application/live/tests/borrador_100_operation_support.py`
+- `S04` `M` `src/cadrumo/application/modelo/tests/_calculation_report_fixture.py`
+- `S04` `M` `src/cadrumo/application/modelo/tests/test_value_presentation.py`
+- `S04` `M` `src/cadrumo/application/tests/test_workbench_generation_phases.py`
+- `S04` `M` `src/cadrumo/core/identity/tests/test_documents.py`
+- `S04` `M` `src/cadrumo/core/identity/tests/test_tax_id.py`
+- `S04` `M` `src/cadrumo/domain/invoices/tests/duplicate_recording_support.py`
+- `S04` `M` `src/cadrumo/domain/invoices/tests/payment_matching_support.py`
+- `S04` `M` `src/cadrumo/domain/invoices/tests/test_likely_duplicate.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/config/tests/test_profile_delete_preflight_parity.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/config/tests/test_profile_label_ambiguity_refusal.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_retencion_soportada_cli.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/profile_persistence/renta_persona_support.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_projection_suffered_withholding_credits.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_renta_personas_end_to_end.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_withholding_count_reconciliation.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/test_retencion_soportada_certificado_mesh.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/aeat_sync/tests/test_aeat_sync_workspace_screens.py`
+- `S04` `M` `src/cadrumo_runtime/host/tests/frontend/cli/config/tests/test_profile_delete_verb.py`
+- `S04` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_profile_lifecycle_verbs.py`
+- `S06` `M` `.github/workflows/merge-gate.yml`
+- `S06` `M` `justfile`
+- `S06` `verify:` `just check-workflows` -> `pass`
+- `S06` `verify:` `just check-workflow-security` -> `pass`
+- `S06` `verify:` `dev/ci workflow and lane census tests` -> `pass`
+- `S06` `by:` `sonnet`
+- `S23` `M` `src/cadrumo/application/modelo/calculation_source_mesh_actions.py`
+- `S23` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_annual_summary_resolves_only_where_declared_live.py`
+- `S23` `verify:` `pytest annual-summary and 390 fold-in modules (45)` -> `pass`
+- `S23` `verify:` `lint-imports` -> `pass`
+- `S23` `by:` `vaultspec-standard-executor`
+- `S10` `M` `dev/docs/sequences/_seeds.py`
+- `S10` `M` `dev/docs/sequences/checks.py`
+- `S10` `M` `dev/docs/sequences/cli.py`
+- `S10` `A` `dev/docs/sequences/persona_profile.py`
+- `S10` `M` `dev/docs/sequences/sandbox.py`
+- `S10` `A` `dev/docs/sequences/seed_generator.py`
+- `S10` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S10` `M` `dev/quality/metadata/import_load_targets.json`
+- `S10` `M` `docs/_sequences/contracts/how-to/modelo-100/modelo-100-export-file.seq`
+- `S10` `M` `docs/_sequences/contracts/how-to/review-calculation-values/review-values-rows.seq`
+- `S10` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-bindings.json`
+- `S10` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-provenance.json`
+- `S10` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-requires.json`
+- `S10` `M` `docs/_sequences/how-to/censo-update/censo-update-check-profile.json`
+- `S10` `M` `docs/_sequences/how-to/censo-update/censo-update-preflight.json`
+- `S10` `M` `docs/_sequences/how-to/censo-update/censo-update-record-facts.json`
+- `S10` `M` `docs/_sequences/how-to/censo-update/censo-update-validate.json`
+- `S10` `M` `docs/_sequences/how-to/choose-modelo/choose-modelo-applicability.json`
+- `S10` `M` `docs/_sequences/how-to/correct-ledger-entries/correct-remove-transaction.json`
+- `S10` `M` `docs/_sequences/how-to/file-at-aeat/file-at-aeat-chain.json`
+- `S10` `M` `docs/_sequences/how-to/filing-calendar/filing-calendar-agenda.json`
+- `S10` `M` `docs/_sequences/how-to/filing-calendar/filing-calendar-backlog.json`
+- `S10` `M` `docs/_sequences/how-to/filing-calendar/filing-calendar-calendar.json`
+- `S10` `M` `docs/_sequences/how-to/filing-calendar/filing-calendar-explain.json`
+- `S10` `M` `docs/_sequences/how-to/filing-readiness/filing-readiness-report.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-address-by-id.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-chain.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-discard.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-exact-ids.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-file.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-history.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-rename.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-revision-by-id.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-runs.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-select.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-visible-target.json`
+- `S10` `M` `docs/_sequences/how-to/filing-spine/filing-spine-work-list.json`
+- `S10` `M` `docs/_sequences/how-to/first-quarterly-filing/first-quarter-expenses-exceed-income.json`
+- `S10` `M` `docs/_sequences/how-to/first-quarterly-filing/first-quarter-export-file.json`
+- `S10` `M` `docs/_sequences/how-to/first-quarterly-filing/modelo-130-first-quarter.json`
+- `S10` `M` `docs/_sequences/how-to/import-bank-statements/import-confirm-profile.json`
+- `S10` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-agenda.json`
+- `S10` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-position.json`
+- `S10` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-q1.json`
+- `S10` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-q2.json`
+- `S10` `M` `docs/_sequences/how-to/iva-lifecycle/iva-lifecycle-applicability.json`
+- `S10` `M` `docs/_sequences/how-to/iva-lifecycle/iva-lifecycle-q1.json`
+- `S10` `M` `docs/_sequences/how-to/ledger-evidence/ledger-evidence-remove.json`
+- `S10` `M` `docs/_sequences/how-to/manage-invoices/invoices-catalogue-and-349.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-100/modelo-100-dependencies.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-100/modelo-100-export-file.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-100/modelo-100-inspect-inputs.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-100/modelo-100-renta-2025.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-130/modelo-130-export-file.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-130/modelo-130-inspect-boxes.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-130/modelo-130-manual-casilla.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-130/modelo-130-quarterly.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-130/modelo-130-review-chain.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-303/modelo-303-first-quarter.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-303/modelo-303-inspect-boxes.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-303/modelo-303-ledger-period.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-303/modelo-303-revision.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-349/modelo-349-applicability.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-349/modelo-349-export.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-349/modelo-349-file.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-349/modelo-349-first-quarter.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-349/modelo-349-inspect.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-390/modelo-390-annual-2025.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-390/modelo-390-inspect.json`
+- `S10` `M` `docs/_sequences/how-to/modelo-390/modelo-390-supply-binding.json`
+- `S10` `M` `docs/_sequences/how-to/profile-setup/profile-setup-delete.json`
+- `S10` `M` `docs/_sequences/how-to/profile-setup/profile-setup-flag-help.json`
+- `S10` `M` `docs/_sequences/how-to/profile-setup/profile-setup-inspect.json`
+- `S10` `M` `docs/_sequences/how-to/profile-setup/profile-setup-worked-example.json`
+- `S10` `M` `docs/_sequences/how-to/protect-data-access/protect-data-access-logout.json`
+- `S10` `M` `docs/_sequences/how-to/quickstart/quickstart-agenda.json`
+- `S10` `M` `docs/_sequences/how-to/quickstart/quickstart-export.json`
+- `S10` `M` `docs/_sequences/how-to/quickstart/quickstart-file.json`
+- `S10` `M` `docs/_sequences/how-to/quickstart/quickstart-modelo-130.json`
+- `S10` `M` `docs/_sequences/how-to/quickstart/quickstart-profile.json`
+- `S10` `M` `docs/_sequences/how-to/quickstart/quickstart-revision.json`
+- `S10` `M` `docs/_sequences/how-to/quickstart/quickstart-version.json`
+- `S10` `M` `docs/_sequences/how-to/review-calculation-values/review-values-bindings.json`
+- `S10` `M` `docs/_sequences/how-to/review-calculation-values/review-values-manual-casilla.json`
+- `S10` `M` `docs/_sequences/how-to/review-calculation-values/review-values-relation.json`
+- `S10` `M` `docs/_sequences/how-to/review-calculation-values/review-values-review-saved.json`
+- `S10` `M` `docs/_sequences/how-to/review-calculation-values/review-values-rows.json`
+- `S10` `M` `docs/_sequences/how-to/review-with-google-sheets/sheets-folder.json`
+- `S10` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-active-profile.json`
+- `S10` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-missing-values.json`
+- `S10` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-period-grammar.json`
+- `S10` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-toolbox.json`
+- `S10` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-wrong-profile.json`
+- `S10` `M` `docs/_sequences/how-to/verification-reports/verification-reports-blocked.json`
+- `S10` `M` `docs/_sequences/how-to/verification-reports/verification-reports-export-check.json`
+- `S10` `M` `docs/_sequences/how-to/verification-reports/verification-reports-incomplete-report.json`
+- `S10` `M` `docs/_sequences/how-to/verification-reports/verification-reports-incomplete.json`
+- `S10` `M` `docs/_sequences/how-to/verification-reports/verification-reports-modelo-303.json`
+- `S10` `M` `docs/_sequences/how-to/verification-reports/verification-reports-work-history.json`
+- `S10` `M` `docs/_sequences/seeds/autonomo-irpf-2026.seq`
+- `S10` `M` `docs/_sequences/seeds/choose-modelo-autonomo.seq`
+- `S10` `M` `docs/_sequences/seeds/filing-calendar-obligated-profile.seq`
+- `S10` `M` `docs/_sequences/seeds/filing-spine-303-ledger.seq`
+- `S10` `M` `docs/_sequences/seeds/intracomunitario-2026.seq`
+- `S10` `M` `docs/_sequences/seeds/iva-evidence-2026.seq`
+- `S10` `M` `docs/_sequences/seeds/iva-year-2025.seq`
+- `S10` `M` `docs/_sequences/seeds/quickstart-ledger.seq`
+- `S10` `M` `docs/_sequences/seeds/renta-2025.seq`
+- `S10` `verify:` `dev.docs.sequences check` -> `pass`
+- `S10` `verify:` `dev.docs.sequences seeds --check` -> `pass`
+- `S10` `verify:` `lint-imports` -> `pass`
+- `S10` `by:` `vaultspec-standard-executor`
+- `S25` `M` `src/cadrumo/application/calculations/relation_prefill.py`
+- `S25` `A` `src/cadrumo/adapters/persistence/profile/tests/test_relation_prefill_pre_activity_source.py`
+- `S25` `verify:` `pytest relation prefill (45)` -> `pass`
+- `S25` `verify:` `new test fails on a377d3dd26^ source` -> `pass`
+- `S25` `verify:` `dev.quality.types --full` -> `pass`
+- `S25` `verify:` `lint-imports` -> `pass`
+- `S25` `by:` `vaultspec-standard-executor`
+- `S09` `A` `dev/prettier_json.py`
+- `S09` `A` `native/desktop/frontend/tests/support/profileFixture.ts`
+- `S09` `M` `dev/desktop_household_fixture.py`
+- `S09` `M` `dev/desktop_imputation_election_fixture.py`
+- `S09` `M` `dev/desktop_profile_fixture.py`
+- `S09` `M` `dev/desktop_withholding_refusal_words_fixture.py`
+- `S09` `M` `dev/tui/harness/profile_fixtures.py`
+- `S09` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S09` `M` `native/desktop/frontend/src/components/modelo/workspace/ImputationElection.stories.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/profile/Household.stories.tsx`
+- `S09` `M` `native/desktop/frontend/src/dev/censoFixture.ts`
+- `S09` `M` `native/desktop/frontend/src/dev/fixtures/household.json`
+- `S09` `M` `native/desktop/frontend/src/dev/fixtures/imputationElection.json`
+- `S09` `M` `native/desktop/frontend/src/dev/fixtures/modelo/`
+- `S09` `M` `native/desktop/frontend/src/dev/fixtures/userProfile.json`
+- `S09` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/accessibility.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/censo-modelo.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/censo-palette.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/imputation-election.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/modelo-declarations.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/modelo-wallet.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/modelo-workspace.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/navigation-guards.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/profile-household.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/user-profile.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/view-preferences.spec.ts`
+- `S09` `M` `native/desktop/src-tauri/src/shell/modelo/tests.rs`
+- `S09` `M` `src/cadrumo/adapters/inbound/borrador/tests/test_borrador_profile_years.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/cross_period_seeding.py`
+- `S09` `M` `src/cadrumo/application/user_profile/registration.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/persona_materialisation.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_borrador_100_comparison.py`
+- `S09` `M` `src/cadrumo/entrypoints/tests/test_persona_materialisation.py`
+- `S09` `M` `src/cadrumo/tests/fixtures/borrador/generate.py`
+- `S09` `M` `src/cadrumo/tests/fixtures/borrador/test_generate.py`
+- `S09` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_app_live_borrador_import.py`
+- `S09` `verify:` `modelo_fixtures double build 0 differing envelopes` -> `pass`
+- `S09` `verify:` `desktop_* --check (4), ledger_contract, ledger_served_words` -> `pass`
+- `S09` `verify:` `persona materialisation tests (10)` -> `pass`
+- `S09` `verify:` `lint-imports` -> `pass`
+- `S09` `verify:` `TS specs and prettier` -> `fail`
+- `S09` `by:` `vaultspec-high-executor`
+- `S26` `M` `dev/fixtures/personas/autonomo-fontanero/ledger.csv`
+- `S26` `M` `dev/fixtures/personas/README.md`
+- `S26` `M` `src/cadrumo/_data/registry/aeat/facts/0084-iva-category-component-catalogue.toml`
+- `S26` `M` `src/cadrumo/domain/iva/components.py`
+- `S26` `M` `src/cadrumo/domain/iva/_component_fact_projection.py`
+- `S26` `M` `src/cadrumo/domain/calculations/registry/ledger_iva_bindings.py`
+- `S26` `M` `src/cadrumo/application/aggregation/modelo_bindings_iva.py`
+- `S26` `A` `src/cadrumo_runtime/host/tests/frontend/cli/test_m303_outside_iva_scope_cli.py`
+- `S26` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_m303_zero_cuota_and_investment_inputs_cli.py`
+- `S26` `verify:` `new CLI test (3)` -> `pass`
+- `S26` `verify:` `303 screens and journeys (17), preflight (24), personas (10)` -> `pass`
+- `S26` `verify:` `check-registry-gate` -> `pass`
+- `S26` `verify:` `lint-imports` -> `pass`
+- `S26` `by:` `vaultspec-high-executor`
+- `S15` `M` `src/cadrumo/adapters/persistence/profile/tests/profile_registration.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/profile/tests/ready_profile_support.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/profile/tests/test_work_unit_discard_refusal.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/profile/tests/workspace_support.py`
+- `S15` `M` `src/cadrumo/domain/user_profile/tests/schema_value_support.py`
+- `S15` `M` `src/cadrumo/domain/user_profile/tests/test_schema_valid_placeholder.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/profile_persistence/import_flow_support.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_filed_capture_external_baseline.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_import_flow_mutation_guards.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_observation_layers_and_overrides.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_selectors.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_work_addressing.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/test_filing_chain_reconciliation.py`
+- `S15` `verify:` `ready-profile callers (114)` -> `pass`
+- `S15` `verify:` `lint-imports` -> `pass`
+- `S15` `verify:` `dev.quality.types on touched files` -> `pass`
+- `S15` `by:` `vaultspec-standard-executor`
+- `S16` `A` `src/cadrumo/entrypoints/tests/profile_persistence/ready_profile_taxpayer.py`
+- `S16` `A` `src/cadrumo/entrypoints/tests/test_persona_profile_seeding.py`
+- `S16` `M` `dev/ci/tests/test_domain_modelos_work_unit.py`
+- `S16` `M` `dev/ci/tests/test_ledger_scale_benchmark.py`
+- `S16` `M` `dev/ci/tests/test_ledger_tui_reads_benchmark.py`
+- `S16` `M` `dev/mcp_eval/tests/test_under_declaration_golden.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/profile/tests/ready_profile_support.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/profile/tests/test_lifecycle_event_atomicity.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/profile/tests/test_revision_id_d1_contract.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/storage/tests/locked_profile_support.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/storage/tests/test_profile_health.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/general_iva_profile_facts_support.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/ledger_drift_support.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/ready_profile_taxpayer.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_bucket_aggregation_flow.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_declaration_period_binding.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m303_recargo_cross_period.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_history.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_m111_retenciones_observation_live.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_cross_year_carry_continuity.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_negative_general_base_carry_live.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_130_cross_year_carry_continuity.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_130_prior_payment_advisory.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_200_accounting_input_guard.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_202_sociedades_fold_in_live.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_303_deductible_evidence_gate.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_303_official_box_under_declaration.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_390_303_fold_in_live.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_390_fifo_carried_pending.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_projection_compare.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_pull_path_calculate_path_casilla_parity.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_pulled_history_reaches_calculate.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_relation_fold_in_live.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_renta_annual_reconciliations_fold_in_live.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_source_boundary_and_enrollment.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/_cli_surface_support.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/_ledger_llm_support.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/_overview_native_support.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/_profile_cli_support.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_atomic_create_roundtrip.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_audit_remediation.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_bienes_inversion_cli.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_cli_workflow_verification.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_config_custody_profile_lifecycle.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_inventory_verbs.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_invoice_preview_verb.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_allocate_classification.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_bulk_classify.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_classify_fixture.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_classify_ux.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_corpus_review.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_cross_profile_unlock.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_evidence_followup_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_list_filter.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_llm_saturate.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_m145_communication_cli.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_maternidad_meses_reach_the_calculate_path.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_100_descendiente_entry_surface.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_100_readiness_missing_bindings.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_190_withholding_detail_gate.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_200_stored_calculation_drift_cli.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_action_recovery.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_discovery_defects.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_period_consistency.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_registry_bindings_surface.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_work_natural_key.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_work_report_pdf_verb.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_overview_explain_verb.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_overview_pipeline_verb.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_overview_status_no_aeat_history_notice.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_participation_cli_surface.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_profile_archive_roundtrip.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_profile_create_taxpayer_type_paths.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_profile_lifecycle_navigation.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_profile_lifecycle_verbs.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_root_help_shape.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_collab_recipient_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_invoice_add.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_invoice_intake_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_ledger_add_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_ledger_attachment_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_ledger_evidence_add_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_ledger_export_link_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_ledger_invoice_evidence_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_ledger_lifecycle_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_ledger_prefix_refusals_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_ledger_reads_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_ledger_rules_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_m303_attestation_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_modelo_dependencies_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_modelo_export_review_package_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_modelo_m036_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_modelo_m145_communication_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_modelo_projection_history_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_modelo_query_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_modelo_review_package_exchange_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_modelo_work_create_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_modelo_work_history_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_modelo_work_inventory_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_modelo_work_review_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_quickfile_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_review_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_workflow_runs_native.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_staged_check_verb.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_work_resume.py`
+- `S16` `M` `src/cadrumo_runtime/host/tests/native_profile_facts.py`
+- `S16` `verify:` `persona seeding parity, all 8 personas` -> `pass`
+- `S16` `verify:` `migrated host modules (440 plus 177)` -> `pass`
+- `S16` `verify:` `migrated entrypoints and adapters modules` -> `pass`
+- `S16` `verify:` `lint-imports` -> `pass`
+- `S16` `verify:` `dev.quality.types` -> `fail`
+- `S16` `by:` `vaultspec-standard-executor`
+- `S24` `A` `dev/docs/sequences/tests/test_seed_generator.py`
+- `S24` `A` `dev/fixtures/personas/autonomo-alta-reciente/documents.toml`
+- `S24` `A` `dev/fixtures/personas/autonomo-alta-reciente/expectations.toml`
+- `S24` `A` `dev/fixtures/personas/autonomo-alta-reciente/ledger.csv`
+- `S24` `A` `dev/fixtures/personas/autonomo-alta-reciente/persona.toml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-alta-reciente/factura-alt-mat-01.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-alq-01.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-alq-02.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-alq-03.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-alq-04.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-alq-05.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-alq-06.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-alq-07.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-alq-08.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-alq-09.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-alq-10.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-alq-11.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-alq-12.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-ges-1.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-ges-2.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-ges-3.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-ges-4.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-mat-1.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-mat-2.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-mat-3.xml`
+- `S24` `A` `docs/_sequences/fixtures/personas/autonomo-fontanero/factura-fon-mat-4.xml`
+- `S24` `A` `src/cadrumo/entrypoints/tests/test_persona_invoices.py`
+- `S24` `A` `src/cadrumo/tests/persona_invoices.py`
+- `S24` `M` `dev/docs/sequences/_seeds.py`
+- `S24` `M` `dev/docs/sequences/cli.py`
+- `S24` `M` `dev/docs/sequences/persona_profile.py`
+- `S24` `M` `dev/docs/sequences/seed_generator.py`
+- `S24` `M` `dev/docs/sequences/tests/test_seed_generator.py`
+- `S24` `M` `dev/fixtures/personas/autonomo-alta-reciente/documents.toml`
+- `S24` `M` `dev/fixtures/personas/autonomo-alta-reciente/ledger.csv`
+- `S24` `M` `dev/fixtures/personas/autonomo-fontanero/documents.toml`
+- `S24` `M` `dev/fixtures/personas/autonomo-fontanero/ledger.csv`
+- `S24` `M` `dev/fixtures/personas/identities.toml`
+- `S24` `M` `dev/fixtures/personas/README.md`
+- `S24` `M` `docs/_sequences/contracts/how-to/censo-update/censo-update-create-profile.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/classify-transactions/classify-confirm-readiness.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/classify-transactions/classify-correct.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/classify-transactions/classify-expense-category.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/classify-transactions/classify-from-csv.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/classify-transactions/classify-review-row.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/classify-transactions/classify-tax-fields.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/classify-with-llm/llm-derive-iva.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/classify-with-llm/llm-inspect-history.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/classify-with-llm/llm-override.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/classify-with-llm/llm-preflight.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/classify-with-llm/llm-suggest.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/filing-spine/filing-spine-create-profile.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/first-quarterly-filing/first-quarter-classify-income.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/first-quarterly-filing/first-quarter-expenses-exceed-income.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/first-quarterly-filing/first-quarter-link-invoice.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/first-quarterly-filing/modelo-130-first-quarter.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/import-bank-statements/import-check-readiness.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/import-bank-statements/import-classify-rows.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/import-bank-statements/import-diagnostics.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/import-bank-statements/import-preview-save.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/import-bank-statements/import-review-rows.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/irpf-lifecycle/irpf-lifecycle-annual-preflight.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/irpf-lifecycle/irpf-lifecycle-profile.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/modelo-130/modelo-130-quarterly.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/modelo-390/modelo-390-annual-2025.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/modelo-390/modelo-390-inspect.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/modelo-390/modelo-390-supply-binding.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/quickstart/quickstart-modelo-130.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/quickstart/quickstart-revision.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/review-calculation-values/review-values-bindings.seq`
+- `S24` `M` `docs/_sequences/contracts/how-to/review-calculation-values/review-values-manual-casilla.seq`
+- `S24` `M` `docs/_sequences/explanation/`
+- `S24` `M` `docs/_sequences/fixtures/classifications-2026-1t.csv`
+- `S24` `M` `docs/_sequences/fixtures/movimientos-2026-1t.csv`
+- `S24` `M` `docs/_sequences/how-to/`
+- `S24` `M` `docs/_sequences/seeds/autonomo-irpf-2026.seq`
+- `S24` `M` `docs/_sequences/seeds/choose-modelo-autonomo.seq`
+- `S24` `M` `docs/_sequences/seeds/filing-calendar-obligated-profile.seq`
+- `S24` `M` `docs/_sequences/seeds/filing-spine-303-ledger.seq`
+- `S24` `M` `docs/_sequences/seeds/iva-evidence-2026.seq`
+- `S24` `M` `docs/_sequences/seeds/iva-year-2025.seq`
+- `S24` `M` `docs/_sequences/seeds/quickstart-ledger.seq`
+- `S24` `M` `docs/_sequences/seeds/renta-2025.seq`
+- `S24` `M` `docs/how-to/filing-calendar.md`
+- `S24` `M` `docs/how-to/modelo-390.md`
+- `S24` `M` `src/cadrumo/entrypoints/tests/persona_materialisation.py`
+- `S24` `M` `src/cadrumo/entrypoints/tests/test_persona_materialisation.py`
+- `S24` `M` `src/cadrumo/tests/personas.py`
+- `S24` `verify:` `dev.docs.sequences check` -> `pass`
+- `S24` `verify:` `seeds --check` -> `pass`
+- `S24` `verify:` `persona invoices, seed generator, materialisation tests (21)` -> `pass`
+- `S24` `verify:` `lint-imports` -> `pass`
+- `S24` `by:` `vaultspec-high-executor`
+- `S05` `M` `dev/fixture_projections/cli.py`
+- `S05` `verify:` `ruff S603 resolved through dev.packaging.command_execution` -> `pass`
+- `S05` `verify:` `fixture_projections check ledger-entry-options` -> `pass`
+- `S05` `verify:` `dev.docs.sequences check` -> `pass`
+- `S05` `verify:` `modelo_fixtures double build 0 differing envelopes` -> `pass`
+- `S05` `by:` `coordinator`
+- `S04` `M` `src/cadrumo/tests/fixtures/financial/tabular-dialects/libro_facturas_recibidas_2025_2026.json`
+- `S04` `verify:` `check-identity` -> `pass`
+- `S04` `verify:` `changed test modules` -> `pass`
+- `S04` `by:` `vaultspec-standard-executor`
+- `S24` `M` `src/cadrumo/adapters/outbound/aeat/auth/tests/test_authenticator_contracts.py`
+- `S24` `M` `src/cadrumo/application/aggregation/tests/test_invoice_category_counterparty_mismatch_is_reported.py`
+- `S24` `M` `src/cadrumo/application/invoices/tests/test_catalogue_intake_operation.py`
+- `S24` `M` `src/cadrumo/domain/calculations/registry/tests/test_long_tail_data_types.py`
+- `S24` `M` `src/cadrumo/domain/calculations/registry/tests/test_nif_data_type.py`
+- `S24` `M` `src/cadrumo/entrypoints/tests/conformance_ledger_seed_support.py`
+- `S24` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_invoice_accumulative_cross_modelo_periods.py`
+- `S24` `M` `src/cadrumo/entrypoints/tests/test_invoice_intake_operation_composition.py`
+- `S24` `M` `src/cadrumo/tests/fixtures/financial/tabular-dialects/libro_facturas_recibidas_2025_2026.csv`
+- `S24` `M` `src/cadrumo/tests/fixtures/financial/tabular-dialects/libro_facturas_recibidas_2025_2026.json`
+- `S24` `verify:` `check-identity` -> `pass`
+- `S24` `verify:` `changed test modules` -> `pass`
+- `S24` `by:` `vaultspec-standard-executor`
+- `S05` `M` `dev/fixture_projections`
+- `S05` `M` `dev/source_tree.py`
+- `S05` `M` `dev/tests/test_source_tree.py`
+- `S05` `A` `dev/fixtures/ledger-staged-check-questions`
+- `S05` `A` `dev/fixtures/assets-served-words-questions`
+- `S05` `A` `dev/fixtures/ledger-entry-option-questions`
+- `S05` `M` `native/desktop/frontend/scripts`
+- `S05` `M` `dev/quality/metadata`
+- `S05` `verify:` `pytest -n 2 dev/fixture_projections/tests test_source_tree recording tests` -> `pass`
+- `S05` `verify:` `ruff, lint-imports, dev.quality.types` -> `pass`
+- `S05` `by:` `sonnet`
+- `S06` `M` `.github/workflows/aeat-corpus-staleness.yml`
+- `S06` `M` `.github/workflows/aeat-drift-detector.yml`
+- `S06` `M` `.github/workflows/code-health-report.yml`
+- `S06` `M` `.github/actions/setup/action.yml`
+- `S06` `verify:` `check-workflows, check-workflow-security, just --list, pytest check-set/precommit/native-build-recipes` -> `pass`
+- `S17` `M` `.vault/plan/2026-11-04-fixture-canonicalization-plan.md`
+- `S17` `verify:` `sweep of src and dev tests for direct taxpayer storage writes` -> `pass`
+- `S17` `by:` `sonnet`
+- `S28` `A` `dev/fixtures/personas/autonomo-electricista`
+- `S28` `M` `dev/fixtures/personas/autonomo-fontanero`
+- `S28` `M` `dev/fixtures/personas/sociedad-limitada`
+- `S28` `M` `dev/fixtures/personas/README.md`
+- `S28` `M` `src/cadrumo/tests/personas.py`
+- `S28` `M` `src/cadrumo/entrypoints/tests/persona_materialisation.py`
+- `S28` `M` `src/cadrumo/application/aggregation/retencion_soportada_source.py`
+- `S28` `A` `src/cadrumo/application/user_profile/tests/persona_profile_facts.py`
+- `S28` `A` `src/cadrumo/adapters/persistence/profile/tests/taxpayer_persona_support.py`
+- `S28` `M` `src/cadrumo/entrypoints/tests`
+- `S28` `M` `src/cadrumo_runtime/host/tests/frontend/cli`
+- `S28` `verify:` `test_personas 31, test_persona_materialisation 12 incl. HISTORY, seeding parity/invoices/retencion 30` -> `pass`
+- `S28` `verify:` `ruff, lint-imports, ty on touched files` -> `pass`
+- `S28` `by:` `sonnet`
+- `S16` `A` `src/cadrumo/application/user_profile/tests/persona_profile_facts.py`
+- `S16` `A` `src/cadrumo/adapters/persistence/profile/tests/taxpayer_persona_support.py`
+- `S16` `M` `src/cadrumo/application`
+- `S16` `M` `src/cadrumo/adapters`
+- `S16` `M` `src/cadrumo/entrypoints`
+- `S16` `M` `src/cadrumo_runtime/host/tests`
+- `S16` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S16` `M` `dev/identity/catalogue_gate.py`
+- `S16` `verify:` `converted non-runtime-host modules 567 passed after drift fix; consumers and runtime-host modules 164 passed` -> `pass`
+- `S16` `verify:` `lint-imports 30 kept; dev.quality.types --full 0 diagnostics` -> `pass`
+- `S16` `by:` `sonnet`
+
+## Notes
+
+- `S02` live test not run; needs a running runtime
+- `S07` check-identity fails on S03 `ledger_recording_questions` JSON, outside persona scope; fixed under S04. 202 obligation and arrendador rental figures deliberately unverified; `rental_properties` and officers have no production recording operation
+- `S08` `not_loaded:` `withholding_certificates,` `ledger.iva_amount` (reverse charge, recargo, net-of-retencion subcontratacion), ledger.invoice to unnamed consumers, `rental_properties,` officers
+- `S04` Real and random-looking identifiers and the session SID replaced; out-of-catalogue counter values to be absorbed by S20; `modelo_fixtures.py` `RENTA_SPOUSE_TAX_ID` left for S09; frontend specs and cargo tests not run
+- `S01` Opaque revision ids from random AES-GCM nonces and the export-path-derived bucket event id are renamed to first-seen sha256 tokens in the generator output; full run 13.5 min; modelo-fixtures.mjs --check not run (no `node_modules);` remaining year literals left for S09
+- `S21` Registry fix: reverse-charge service acquisition added to self-assessed projection (LIVA 84.Uno.2a). Open product gaps: pure recargo retailer refused by deadlines profile (no 303 regime composition); subcontratacion not accepted net of retencion (narrower than RIRPF art. 95, unchanged); no operation or Modelo 100 binding for employee social security contributions; no `rental_properties` or officers operation
+- `S11` Pre-answer profile states stay freshly registered by design; populated states take about 20 s each because the materialiser replays the full ledger; sequences.py follows S10
+- `S22` Cache hit 0.2 s vs miss 17.5 s; key excludes replay code so reuse is valid within one run only; authority lease now held around profile-context resolution
+- `S05` Open: ruff S603 on the producer subprocess call awaits operator ruling (pyproject per-file exemption convention vs no-suppression rule); docs-sequences check process exited without a status line during concurrent docs refresh, to be re-verified after S10; modelo determinism build failed on a fresh output directory while S09 is changing the generator; modelo check unavailable without `node_modules;` stamps for committed families live in var/storage/development/cache/fixture-projections
+- `S04` Review rework: catalogue-bound identities moved off generic uses onto unbound counters; intracom.titular rebound to X0000001R; recording questions moved to dev/fixtures/ledger-recording-questions; duplicate recording support builds real Invoice values. 8 TestSearchOptionSelection failures are environmental (no Chromium build). Docs sequence values handed to S10
+- `S06` test-frontend and test-native added as single entry points seeding first; init seeds after authority and frontend setup; setup itself unchanged because lint jobs run it without authority or Node; desktop PR job unverified on the runner (Node, Cargo, Playwright browsers); determinism proof stays in fixtures-check-determinism
+- `S10` Seed ledger, invoice, evidence and work-unit frames stay authored, and seeds override the persona activity start; carried to S24
+- `S25` Not-applicable zeros are labelled `SheetRelationProvenance.OPERATOR_MANUAL` because no system-derived kind exists; pre-existing, raise at phase review
+- `S09` TS specs and prettier not run, `node_modules` absent. Envelopes replay personas at ReplayScope.PROFILE and seed activity income synthetically; carried to S27
+- `S26` Proven at horizon-1 only; per-year registry population runs at S19. Received `domestic_exempt` rows still raise the `unrouted_declarable_quantity` advisory
+- `S15` `register_minimal_profile` and `register_cli_profile` (125 consumers) and about 15 private ready-profile helpers move in S16
+- `S16` Partial: types fail on 6 pre-existing diagnostics outside S16 files. `test_ledger_list_filter` `(FAIL_EXCHANGE_RATE_PROVIDER)` and `test_staged_check_verb` (extra inputs in LedgerStagedCheckEnvelope) fail on pre-migration content too. Remaining local builders wait for S28.
+- `S24` A problem line printed onto an advisory line hid llm-inspect-history drift from refresh. No product operation stores issued-invoice evidence, so issued invoices remain advisory.
+- `S05` The window Modelo family's check needs `node_modules` for prettier; it runs in the S19 full gates
+- `S04` Generic uses moved off catalogue values bound to fontanero, alta and electricista roles; the tabular specimen sidecar digest was already stale before this change
+- `S24` Generic uses moved off catalogue values bound to fontanero, alta and electricista roles; the tabular specimen sidecar digest was already stale before this change
+- `S06` desktop job not yet run on a real runner and kept out of verdict.needs; stagedCheck.ts tsc/eslint/prettier deferred under the CHECKS2 machine conditions
+- `S17` no code change: every taxpayer seeder writes through the production repository writers; remaining direct SQL is storage-layer subject or fault injection; hand-built fact tuples restating taxpayer meaning belong to S16
+- `S28` HISTORY replay files 303/115 1T-4T and 180 locally; 130 1T calculated only and 2T-4T refuse by design without a filed 1T; 0168 directa-normal indicator is a product defect; 0604 fold-in unconfirmable without AEAT-captured prior-year evidence; runtime-host edits deferred to the full gates
+- `S16` kept local: non-resident and IRNR shapes (no persona states a non-resident filer), attribution-entity and public-administration counterparties, profiles without an IVA regime, schema-boundary tests, CLI plumbing, and two first-year tests whose child process asserts the wizard is never imported

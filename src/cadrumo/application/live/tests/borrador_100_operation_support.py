@@ -36,7 +36,7 @@ from .test_borrador_100 import _BUCKET_ID, _InMemoryBorradorRepository
 
 PROFILE_ID = UUID(_BUCKET_ID)
 PROFILE_TAX_ID = "12345678Z"
-OTHER_TAX_ID = "00000001R"
+OTHER_TAX_ID = "00001005Q"
 CAPTURED_AT = datetime(2026, 10, 1, 12, tzinfo=UTC)
 
 

@@ -943,6 +943,31 @@ legal_refs = [
 ]
 
 [[sections.fields]]
+key = "estimation_directa_normal"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = false
+description = "Whether the estimacion directa modality is normal rather than simplificada (Modelo 100 casilla 0168), derived from estimation_regime and only under estimacion directa. Never entered: absent means the regime is undeclared or is not direct estimation."
+model_selectors = ["irpf.estimation_directa_normal"]
+legal_refs = [
+    "ley-35-2006:art-30",
+]
+
+[[sections.fields]]
+key = "estimation_directa"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = false
+description = "Whether the declared estimation regime is a direct estimation (normal or simplificada), so the return has an estimacion directa block, derived from estimation_regime. Never entered: absent means the regime is undeclared."
+model_selectors = ["irpf.estimation_directa"]
+legal_refs = [
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+]
+
+[[sections.fields]]
 key = "activity_income_cash_criterion_elected"
 type = "boolean"
 required = false

@@ -72,8 +72,8 @@ _PROFILE = "3f1c8b2e-5d4a-4e6b-9c7d-0a1b2c3d4e5f"
 _TAXPAYER = "00000000T"
 # Synthetic CIFs whose control digit is hand-derived: with every digit before it zero but the last, the
 # odd-position doubling leaves 2 * d7 (digit-summed), so the control is (10 - 2 * d7) mod 10 -- 0, 8, 6.
-_PAYER_A = "B00000018"
-_PAYER_B = "B00000026"
+_PAYER_A = "B00010090"
+_PAYER_B = "B00010165"
 _PAYER_WRONG_CONTROL = "B00000001"
 _EJERCICIO = 2025
 _BINDING = "renta-retencion-soportada-trabajo"
@@ -373,7 +373,7 @@ def test_a_fingerprint_alone_is_accepted_only_for_bytes_custody_holds(
         cited = _run(operation, _request(_PAYER_B, retencion="50.00", fingerprint=_sha256(data)))
         # A well formed sha256 of bytes this profile never kept is refused.
         invented, context = _run_in(
-            operation, _request("A00000000", retencion="5.00", fingerprint=_sha256(b"never kept"))
+            operation, _request("A00010009", retencion="5.00", fingerprint=_sha256(b"never kept"))
         )
         stored = _repository().list_revisioned(_EJERCICIO)
 

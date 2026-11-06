@@ -1,9 +1,8 @@
 """Which held-back rows rest on an intra-EU self-assessment is fact 0085's answer.
 
-Verification tells a filer that an intra-EU acquisition cannot pass the check,
-because the self-assessment its deduction rests on is a document no ledger write
-records. The generic authority query decides which rows get that refusal:
-a declared kind answers by its authority, an undeclared one by its category.
+Verification names the authority a held-back row's deduction rests on, and the
+ledger stamps a row's evidence under that authority. The generic authority query
+answers it: a declared kind by its authority, an undeclared one by its category.
 
 The last test is the teeth. It derives the answer for every declared kind from a
 different fact-0085 declaration, the required evidence authority, and asserts
@@ -20,7 +19,7 @@ from ...calculations.registry.iva_deduction_catalogue import (
     iva_deduction_fact_kinds,
     resolve_iva_deduction_catalogue,
 )
-from ..deduction_facts import deduction_evidence_authority_for_row
+from ..deduction_facts import deduction_evidence_authority_for_row, supplier_invoice_deduction_authority
 from ..schema import IvaCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
@@ -73,3 +72,38 @@ def test_the_family_answer_matches_the_required_evidence_authority() -> None:
         assert (deduction_evidence_authority_for_row(kind=kind, category=None) == self_assessment) == (
             kind in resolve_iva_deduction_catalogue().projection("kind.intra_eu")
         ), kind
+
+
+@pytest.mark.parametrize("kind", ["intra_eu_current", "intra_eu_investment"])
+def test_the_supplier_invoice_justifies_an_intra_eu_deduction_under_the_self_assessment(kind: str) -> None:
+    """LIVA art. 97.Uno.2.º and 4.º: the supplier's invoice, the cuota consigned in the buyer's own return."""
+    assert supplier_invoice_deduction_authority(
+        IvaDeductionFactKind.from_registry(kind)
+    ) == IvaDeductionEvidenceAuthority.from_registry("intra_eu_self_assessment")
+
+
+@pytest.mark.parametrize("kind", ["domestic_current", "domestic_investment"])
+def test_the_supplier_invoice_justifies_a_domestic_deduction_as_invoice_evidence(kind: str) -> None:
+    """LIVA art. 97.Uno.1.º."""
+    assert supplier_invoice_deduction_authority(
+        IvaDeductionFactKind.from_registry(kind)
+    ) == IvaDeductionEvidenceAuthority.from_registry("invoice_evidence")
+
+
+@pytest.mark.parametrize(
+    "kind",
+    ["import_current", "import_investment", "reagp_compensation", "rectification", "investment_goods_regularisation"],
+)
+def test_the_supplier_invoice_justifies_no_deduction_another_document_establishes(kind: str) -> None:
+    """The customs liquidation (3.º), the REAGP receipt (5.º), the rectifying document and the register."""
+    assert supplier_invoice_deduction_authority(IvaDeductionFactKind.from_registry(kind)) is None
+
+
+def test_the_supplier_invoice_answer_is_the_kind_s_required_authority_or_nothing() -> None:
+    """Whatever the invoice justifies, it justifies under the authority fact 0085 requires of the kind."""
+    catalogue = resolve_iva_deduction_catalogue()
+    justified = [kind for kind in catalogue.kinds if supplier_invoice_deduction_authority(kind) is not None]
+
+    assert justified
+    for kind in justified:
+        assert supplier_invoice_deduction_authority(kind) == catalogue.required_authority(kind), kind

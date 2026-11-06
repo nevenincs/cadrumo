@@ -12,7 +12,7 @@ import { DataGridHarness, DataTableHarness } from "./DataGridHarness";
 import { EditorHarness } from "./EditorHarness";
 import { LayersHarness } from "./LayersHarness";
 import { LedgerExportHarness } from "./LedgerExportHarness";
-import recordedEntryOptions from "../fixtures/ledgerEntryOptions.json";
+import recordedEntryOptions from "@fixtures/ledger-entry-options/ledgerEntryOptions.json" with { type: "json" };
 import { holdRecordedPeriods } from "../periodRecording";
 import { holdLedgerLimits } from "../../shell/ledgerLimits";
 import type { LedgerEntryLimits } from "../../shell/ledgerSetup";

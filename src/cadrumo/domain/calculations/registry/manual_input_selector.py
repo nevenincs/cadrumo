@@ -100,18 +100,6 @@ def _validate_record_shape(selector: ManualInputProvider) -> None:
         )
 
 
-def _validate_boolean_casilla_shape(selector: ManualInputProvider, has_casilla: bool) -> None:
-    """Require explicit wire values for a boolean casilla selector."""
-    if (
-        has_casilla
-        and selector.data_type == "boolean"
-        and (selector.true_value is None or selector.false_value is None)
-    ):
-        raise RegistryValidationError(
-            "manual_input boolean-casilla_id selector must declare true_value and false_value",
-        )
-
-
 def _validate_signed_shape(selector: ManualInputProvider, has_casilla: bool) -> None:
     """Restrict sign-marker metadata to money record-field selectors."""
     if selector.signed is not None:
@@ -143,7 +131,7 @@ class ManualInputProvider(BaseModel):
 
     Two shapes are accepted, gated by ``_validate_manual_input_shape``:
 
-    * **Casilla shape** ``{casilla_id, data_type, true_value?, false_value?}``:
+    * **Casilla shape** ``{casilla_id, data_type}``:
       The operator types the value directly into a registry casilla; the
       ``casilla_id`` names the canonical ``casilla.id`` and ``data_type``
       declares how the typed enum / boolean maps to the on-wire payload
@@ -164,8 +152,6 @@ class ManualInputProvider(BaseModel):
 
     # casilla shape
     casilla_id: CasillaId | None = Field(default=None, min_length=1, max_length=64)
-    true_value: str | None = Field(default=None, min_length=1, max_length=64)
-    false_value: str | None = Field(default=None, min_length=1, max_length=64)
     # record-field shape
     record: str | None = Field(default=None, min_length=1, max_length=64)
     field: str | None = Field(default=None, min_length=1, max_length=128)
@@ -192,7 +178,6 @@ class ManualInputProvider(BaseModel):
             _validate_record_shape(self)
         # Keep these checks after shape completeness: their error order is part
         # of the registry's diagnostic contract.
-        _validate_boolean_casilla_shape(self, has_casilla)
         _validate_signed_shape(self, has_casilla)
         _validate_decimal_scale(self, has_record_shape)
         return self

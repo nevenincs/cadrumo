@@ -1,0 +1,73 @@
+format = 1
+
+[persona]
+id = "sociedad-limitada"
+title = "Sociedad limitada de desarrollo web"
+summary = """
+Talleres Digitales Olmo, S.L., con domicilio en Valladolid, desarrolla y mantiene
+plataformas web para un cliente hostelero y alquila equipos y licencias a un
+proveedor. Su administradora no cobra retribución. Presenta IVA trimestral y el
+resumen anual, la declaración de operaciones con terceros y el Impuesto sobre
+Sociedades.
+"""
+taxpayer = "sociedad.titular"
+fiscal_year = "horizon-1"
+modelos = ["303", "390", "347", "200", "202"]
+
+[clock]
+as_of = { year = "horizon", month = 2, day = 16 }
+
+[profile]
+"output-language" = "es"
+"entity-type" = "legal_entity"
+"legal-entity-form" = "sl"
+"tax-id" = { identity = "sociedad.titular" }
+"legal-name" = { identity = "sociedad.titular", field = "legal_name" }
+"tax-residence-jurisdiction-scope" = "common_regime"
+"tax-residence-ccaa" = "castilla_y_leon"
+"address-postcode" = "47002"
+"activity-start-date" = { year = "horizon-6", month = 1, day = 15 }
+"incn-prior-12-months" = "28500.00"
+"new-entity-first-two-profit-periods" = false
+"iva-regime" = "GENERAL"
+"iva-m303-regime-composition" = "general"
+"iva-roi-enrolled" = false
+"iva-oss-enrolled" = false
+"iva-group-member-enrolled" = false
+"iva-sii-enrolled" = false
+"iva-redeme-enrolled" = false
+"iva-cash-accounting-regime-enrolled" = false
+"iva-voluntary-sii-enrolled" = false
+"iva-hydrocarbon-deposit-advance-payment-deduction-entitled" = false
+"enrollment-large-company" = false
+"has-employees" = false
+"pays-professionals-with-retencion" = false
+"pays-rent-with-retencion" = false
+"pays-capital-income-with-retencion" = false
+"does-intracomunitario" = false
+"third-party-transactions-above-347-threshold" = true
+
+# Domiciled in Valladolid with a turnover far below 12 million euros, the
+# company falls under neither the Concierto Económico (Ley 12/2002 art. 15) nor
+# the Convenio Económico (Ley 28/1990 art. 19): the State levies its whole
+# Impuesto sobre Sociedades.
+[fields]
+"taxpayer_type.tributacion_estado_porcentaje" = "100"
+
+[[activities]]
+description = "Desarrollo y mantenimiento de aplicaciones y plataformas web"
+iae_epigraph = "845"
+
+[[officers]]
+identity = "sociedad.administrador"
+role = "administrador_unico"
+remunerated = false
+
+# At the clock every quarterly IVA return of the fiscal year is past its window,
+# so the company has filed each one. Every quarter was to pay, so no compensation was
+# pending before the first quarter.
+[[filed_returns]]
+modelo = "303"
+year = "horizon-1"
+periods = ["1T", "2T", "3T", "4T"]
+iva_compensation_carried_in = "0.00"

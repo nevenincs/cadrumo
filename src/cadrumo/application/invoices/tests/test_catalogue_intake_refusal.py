@@ -111,7 +111,7 @@ def test_canonical_wizard_raises_typed_ordered_field_carrier_before_any_write(
         create_invoice_via_wizard(
             bucket_id=str(_PROFILE),
             kind=InvoiceKind.RECEIVED,
-            counterparty_nif="A58818501",
+            counterparty_nif="B00010157",
             counterparty_name="",
             invoice_number="SYNTHETIC-WIZARD",
             invoice_date="2026-05-01",

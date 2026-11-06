@@ -20,17 +20,12 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....application.modelo.calculation_bucket_actions import (
@@ -45,16 +40,14 @@ from ....domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
     IvaCompensationReconciliationDecision,
 )
-from ....domain.user_profile.values import ProfileSetupState
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from .file_flow_test_support import calculation_ports_for_test
-from .general_iva_profile_facts_support import general_iva_profile_facts
+from .ready_profile_taxpayer import ready_profile_tax_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _CLOCK = datetime(2026, 5, 21, 9, 0, 0, tzinfo=UTC)
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
-_TAXPAYER_NIF = "12345678Z"
+_TAXPAYER_NIF = ready_profile_tax_id()
 _DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
     "decl.ejercicio",
     surface="_DECL_EJERCICIO_CASILLA",
@@ -67,27 +60,9 @@ _DECL_PERIODO_CASILLA: CasillaId = validated_casilla_id(
 
 @contextmanager
 def _secure_backend(tmp_path: Path) -> Generator[None]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
-        _seed_taxpayer_profile(runtime.repository)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        seed_ready_profile(bucket_id=_BUCKET_ID, at=_CLOCK)
         yield
-
-
-def _seed_taxpayer_profile(objects: SecureObjectRepository) -> None:
-    """Seed the bucket profile with the taxpayer NIF so the IVA wallet
-    reconciliation gate of the bucket calculation resolves
-    the work-unit taxpayer identity."""
-    record = _create_profile_record_for_test(
-        setup_state=ProfileSetupState.COMPLETE,
-        profile_id=_BUCKET_ID,
-        facts=general_iva_profile_facts(
-            tax_id=_TAXPAYER_NIF,
-            activity_start_date=date(2020, 1, 1),
-        ),
-        created_at=_CLOCK,
-        updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
-    )
-    seed_test_profile_record(record)
 
 
 def _repositories():

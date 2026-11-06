@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -18,7 +18,11 @@ from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCata
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import (
+    WITHHOLDING_PAYER_PERSONA,
+    seed_persona_profile,
+    seed_ready_profile,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.calculation_revision_queries import get_calculation_revision
 from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
@@ -39,12 +43,6 @@ from cadrumo.domain.modelos.filing_record import (
 )
 from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.domain.modelos.work_unit import WorkUnit
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 
 _Repos = tuple[
@@ -80,27 +78,11 @@ _M111_ACTIVITY_AMOUNT_CASILLA: CasillaId = validated_casilla_id("24")
 _M111_ACTIVITY_WITHHELD_CASILLA: CasillaId = validated_casilla_id("27")
 _M111_TOTAL_WITHHELD_CASILLA: CasillaId = validated_casilla_id("29")
 
-_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="00000000T"),
-    UserProfileFact(path="identity.name", value="Test"),
-    UserProfileFact(path="identity.surnames", value="Operator"),
-    *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-    UserProfileFact(path="activities.description", value="economic activity"),
-    UserProfileFact(path="provenance.source", value="manual_cli"),
-    # Modelo 111 refuses a defaulted colegio-concertado declaration: the fichero
-    # carries the row as filer data, so it must be stated rather than assumed.
-    # False is the truthful value for this natural-person filer.
-    UserProfileFact(path="withholding.colegio_concertado", value=False),
-)
 
-
-@pytest.fixture
-def repos(tmp_path: Path) -> Iterator[_Repos]:
-    """Yield the five catalogue repositories over an encrypted SQLite db."""
-
+def _catalogue_repositories(tmp_path: Path, seed: Callable[[], None]) -> Iterator[_Repos]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
         objects = profile.repository
-        seed_ready_profile(bucket_id=_PROFILE_ID)
+        seed()
         wu = WorkUnitCatalogueRepository(objects=objects)
         cr = CalculationRevisionCatalogueRepository(objects=objects)
         fr = ModeloRecordCatalogueRepository(objects=objects)
@@ -109,16 +91,19 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
         yield wu, cr, fr, vr, bv
 
 
-def seed_ready_profile(*, bucket_id: str) -> None:
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=bucket_id,
-            facts=_READY_PROFILE_FACTS,
-            created_at=_T0,
-            updated_at=_T0,
-            context=_profile_creation_context_for_test(),
-        ),
+@pytest.fixture
+def repos(tmp_path: Path) -> Iterator[_Repos]:
+    """Yield the five catalogue repositories over an encrypted SQLite db."""
+
+    yield from _catalogue_repositories(tmp_path, lambda: seed_ready_profile(bucket_id=_PROFILE_ID, at=_T0))
+
+
+@pytest.fixture
+def withholding_payer_repos(tmp_path: Path) -> Iterator[_Repos]:
+    """Yield the repositories over a profile whose taxpayer pays withheld income, so Modelo 111 applies."""
+
+    yield from _catalogue_repositories(
+        tmp_path, lambda: seed_persona_profile(WITHHOLDING_PAYER_PERSONA, bucket_id=_PROFILE_ID, at=_T0)
     )
 
 

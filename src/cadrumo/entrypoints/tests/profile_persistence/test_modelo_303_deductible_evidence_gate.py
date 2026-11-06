@@ -11,9 +11,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
 )
@@ -30,10 +27,10 @@ from ....adapters.persistence.profile.tests.filing_report_support import seed_fi
 from ....adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from ....adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_persona_profile
 from ....adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.aggregation.ledger_filing_snapshot import (
     compute_ledger_filing_evidence,
@@ -87,8 +84,6 @@ from ....domain.modelos.verification_report import (
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
-from ....domain.user_profile.values import ProfileSetupState
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ....tests.env_scope import ready_clave_settings
 from ...adapter_composition_work_ports import (
     build_calculation_action_ports,
@@ -96,8 +91,8 @@ from ...adapter_composition_work_ports import (
     build_ledger_evidence_ports,
     build_verification_repository_bundle,
 )
-from .general_iva_profile_facts_support import general_iva_profile_facts
 from .ledger_drift_support import raw_transaction
+from .ready_profile_taxpayer import persona_tax_id
 from .verification_substance_support import workflow_profile as plain_workflow_profile
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
@@ -115,7 +110,7 @@ def bucket_id() -> str:
     return _BUCKET_ID
 
 
-_TAX_ID = "12345678Z"
+_TAX_ID = persona_tax_id("alta.titular")
 _YEAR = 2026
 _PERIOD = "1T"
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
@@ -214,25 +209,6 @@ _IVA_RATE = Decimal("0.21")
 _DEVENGADA_TOTAL: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
 _DEDUCIBLE_TOTAL: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
 _RESULTADO: CasillaId = validated_casilla_id("iva.resultado-regimen-general")
-
-
-def _store_profile(objects: SecureObjectRepository) -> None:
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
-            facts=general_iva_profile_facts(
-                tax_id=_TAX_ID,
-                activity_start_date=date(_YEAR, 1, 1),
-                name="Irene",
-                surnames="Evidence",
-                activity="consulting",
-            ),
-            created_at=_T0,
-            updated_at=_T0,
-            context=_profile_creation_context_for_test(),
-        ),
-    )
 
 
 def workflow_profile() -> TaxpayerProfile:
@@ -377,7 +353,7 @@ def _calculate_irene_revision(
     BucketEventHistoryRepository,
     TransactionCatalogueRepository,
 ]:
-    _store_profile(objects)
+    seed_persona_profile("autonomo-alta-reciente", bucket_id=_BUCKET_ID, at=_T0)
     wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = _repositories(objects)
     sale = iva_transaction(
         "irene-sale-no-evidence",

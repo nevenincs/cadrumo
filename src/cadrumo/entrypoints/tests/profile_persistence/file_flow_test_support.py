@@ -82,6 +82,7 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.modelo.workflow_gate import build_revision_workflow_engine, workflow_period_for_work_unit
 from cadrumo.application.user_profile.profile_read_ports import ProfileReadPorts
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.application.workflow.engine import WorkflowEngine
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.config import Settings
@@ -110,7 +111,6 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
     build_test_verification_repository_bundle,
 )
 
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from .secure_store_baseline import (
     SeededDurableProfile,
     provision_seeded_profile,
@@ -329,17 +329,23 @@ _VERIFY_MODELO = "180"
 _VERIFY_REVISION = "2023-y-siguientes"
 _VERIFY_PERIOD = "0A"
 _VERIFY_YEAR = 2024
-_READY_PROFILE_FACTS = (
-    UserProfileFact(path="identity.tax_id", value="X1234567L"),
-    UserProfileFact(path="identity.name", value="Ready"),
-    UserProfileFact(path="identity.surnames", value="Operator"),
-    UserProfileFact(path="activities.description", value="file-flow"),
-    *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-    UserProfileFact(path="censo.activity_start_date", value=date(2000, 1, 1)),
-    # Modelo 111 refuses a defaulted colegio-concertado declaration: the fichero
-    # carries the row as filer data, so it must be stated rather than assumed.
-    # False is the truthful value for this natural-person filer.
-    UserProfileFact(path="withholding.colegio_concertado", value=False),
+_READY_PROFILE_FACTS = persona_facts_beneath(
+    (
+        UserProfileFact(path="identity.tax_id", value="X1234567L"),
+        UserProfileFact(path="identity.name", value="Ready"),
+        UserProfileFact(path="identity.surnames", value="Operator"),
+        UserProfileFact(path="activities.description", value="file-flow"),
+        UserProfileFact(path="censo.activity_start_date", value=date(2000, 1, 1)),
+        # Modelo 111 refuses a defaulted colegio-concertado declaration: the fichero
+        # carries the row as filer data, so it must be stated rather than assumed.
+        # False is the truthful value for this natural-person filer.
+        UserProfileFact(path="withholding.colegio_concertado", value=False),
+        # The flows file Modelo 180 and Modelo 349 for this operator, so it pays a rent
+        # subject to retención and trades with other Member States as a ROI registrant.
+        UserProfileFact(path="withholding.pays_rent_with_retencion", value=True),
+        UserProfileFact(path="iva.does_intracomunitario", value=True),
+        UserProfileFact(path="iva.roi_enrolled", value=True),
+    )
 )
 
 

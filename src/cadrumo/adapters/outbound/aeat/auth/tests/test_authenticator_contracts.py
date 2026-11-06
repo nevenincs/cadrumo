@@ -136,10 +136,10 @@ def test_extract_nif_cn_fallback(tmp_path: Path) -> None:
         tmp_path,
         subject_attrs=[
             x509.NameAttribute(NameOID.COUNTRY_NAME, "ES"),
-            x509.NameAttribute(NameOID.COMMON_NAME, "NOMBRE APELLIDO - 22334455Y"),
+            x509.NameAttribute(NameOID.COMMON_NAME, "NOMBRE APELLIDO - 00001006V"),
         ],
     )
-    assert extract_nif_from_subject(cert) == "22334455Y"
+    assert extract_nif_from_subject(cert) == "00001006V"
 
 
 def test_extract_nif_rejects_checksum_invalid_serial(tmp_path: Path) -> None:
@@ -167,10 +167,10 @@ def test_extract_nif_skips_checksum_invalid_serial_and_falls_back_to_cn(tmp_path
         subject_attrs=[
             x509.NameAttribute(NameOID.COUNTRY_NAME, "ES"),
             x509.NameAttribute(NameOID.SERIAL_NUMBER, "12345678A"),
-            x509.NameAttribute(NameOID.COMMON_NAME, "NOMBRE APELLIDO - 22334455Y"),
+            x509.NameAttribute(NameOID.COMMON_NAME, "NOMBRE APELLIDO - 00001006V"),
         ],
     )
-    assert extract_nif_from_subject(cert) == "22334455Y"
+    assert extract_nif_from_subject(cert) == "00001006V"
 
 
 def test_extract_nif_rejects_cif(tmp_path: Path) -> None:

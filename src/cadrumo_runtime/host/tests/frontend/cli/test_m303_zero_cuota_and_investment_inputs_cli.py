@@ -35,7 +35,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import o
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
-from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
+from cadrumo.application.user_profile.tests.persona_profile_facts import directa_normal_tax_id
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
@@ -76,11 +76,7 @@ _INVESTMENT_ASSET_ID = "BI-2025-ORDENADOR"
 
 
 def _profile_facts() -> dict[str, str]:
-    facts = {
-        fact.path: (str(fact.value).lower() if isinstance(fact.value, bool) else str(fact.value))
-        for fact in MODELO_READY_PROFILE_FACTS
-    }
-    facts.update(operator_profile_facts(activity_start_date="2025-01-01"))
+    facts = operator_profile_facts(activity_start_date="2025-01-01")
     return facts
 
 
@@ -104,7 +100,7 @@ def _seed_zero_compensation_wallet_decision(bucket_id: str) -> None:
     with open_test_profile_session(bucket_id):
         IvaWalletDecisionRepository().save_decision(
             IvaCompensationReconciliationDecision(
-                taxpayer_nif="12345678Z",
+                taxpayer_nif=directa_normal_tax_id(),
                 target_year=2025,
                 target_period=_PERIOD,
                 target_registry_snapshot_ref=snapshot_ref,
@@ -437,12 +433,14 @@ def test_the_quarter_files_with_every_purchase_kind_in_it(
     # neither base may appear anywhere in the return.
     assert str(_RETA_QUOTA) not in values.values()
     assert str(_PREMIUM) not in values.values()
-    # And their absence is reported rather than silent: a base that reached no box
-    # is an advisory the operator sees on the calculation that omitted it.
+    # The exempt premium's absence is reported rather than silent: a base that
+    # reached no box is an advisory the operator sees on the calculation that
+    # omitted it. The RETA quota is no IVA operation at all, so it has no base
+    # to declare and nothing to report.
     advisories = "\n".join(str(notice) for notice in unwrap_envelope_notices(calculated.output))
     assert "unrouted_declarable_quantity" in advisories, advisories
     assert "domestic_exempt" in advisories
-    assert "operacion_no_sujeta" in advisories
+    assert "operacion_no_sujeta" not in advisories
 
 
 def test_an_investment_asset_id_without_its_register_record_is_refused(

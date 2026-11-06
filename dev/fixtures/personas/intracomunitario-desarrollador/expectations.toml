@@ -1,0 +1,334 @@
+format = 1
+persona = "intracomunitario-desarrollador"
+
+[[obligations]]
+modelo = "303"
+periods = ["1T", "2T", "3T", "4T"]
+year = "horizon-1"
+applicable = true
+reason = "Profesional en régimen general del IVA con operaciones interiores y adquisiciones intracomunitarias de servicios."
+legal_ref = ["ley-37-1992:art-164", "rd-1624-1992:art-71"]
+grounding = "verified"
+
+[[obligations]]
+modelo = "349"
+periods = ["1T", "2T", "3T", "4T"]
+year = "horizon-1"
+applicable = true
+reason = "Presta servicios a empresarios de otros Estados miembros y adquiere servicios intracomunitarios; las operaciones del trimestre y de los cuatro anteriores no superan 50000 euros, de modo que la periodicidad es trimestral."
+legal_ref = ["rd-1624-1992:art-79", "rd-1624-1992:art-80", "rd-1624-1992:art-81"]
+grounding = "cited"
+
+[[obligations]]
+modelo = "390"
+periods = ["0A"]
+year = "horizon-1"
+applicable = true
+reason = "Resumen anual de quien presenta el Modelo 303 trimestral."
+legal_ref = ["rd-1624-1992:art-71"]
+grounding = "cited"
+
+[[obligations]]
+modelo = "130"
+periods = ["1T", "2T", "3T", "4T"]
+year = "horizon-1"
+applicable = true
+reason = "Actividad profesional en estimación directa simplificada; solo 6700.00 de 41200.00 de ingresos soporta retención, por debajo del 70 % del art. 109.2 RIRPF."
+legal_ref = ["rd-439-2007:art-109", "rd-439-2007:art-110"]
+grounding = "verified"
+
+[[obligations]]
+modelo = "347"
+periods = ["0A"]
+year = "horizon-1"
+applicable = false
+reason = "Intra-community operations are declared in Modelo 349 (RGAT art. 33.2.i, verified); the Spanish client's 8107.00 bears retención declared in its Modelo 190 (art. 33.2.i applied to the payee, cited); the academy's 544.50 is below 3005.06."
+legal_ref = ["rd-1065-2007:art-33.2.i"]
+grounding = "cited"
+
+[[obligations]]
+modelo = "100"
+periods = ["0A"]
+year = "horizon-1"
+applicable = true
+reason = "Residente con rendimientos de actividades económicas."
+legal_ref = ["ley-35-2006:art-96"]
+grounding = "verified"
+
+[[deadlines]]
+modelo = "303"
+period = "1T"
+year = "horizon-1"
+statutory_end = { year = "horizon-1", month = 4, day = 20 }
+legal_ref = ["rd-1624-1992:art-71"]
+grounding = "verified"
+
+[[deadlines]]
+modelo = "303"
+period = "4T"
+year = "horizon-1"
+statutory_end = { year = "horizon", month = 1, day = 30 }
+legal_ref = ["rd-1624-1992:art-71"]
+grounding = "verified"
+
+[[deadlines]]
+modelo = "349"
+period = "1T"
+year = "horizon-1"
+statutory_end = { year = "horizon-1", month = 4, day = 20 }
+legal_ref = ["rd-1624-1992:art-81"]
+grounding = "cited"
+
+[[deadlines]]
+modelo = "349"
+period = "4T"
+year = "horizon-1"
+statutory_end = { year = "horizon", month = 1, day = 30 }
+legal_ref = ["rd-1624-1992:art-81"]
+grounding = "cited"
+
+[[deadlines]]
+modelo = "130"
+period = "1T"
+year = "horizon-1"
+statutory_end = { year = "horizon-1", month = 4, day = 20 }
+legal_ref = ["rd-439-2007:art-110"]
+grounding = "verified"
+
+[[deadlines]]
+modelo = "130"
+period = "4T"
+year = "horizon-1"
+statutory_end = { year = "horizon", month = 1, day = 30 }
+legal_ref = ["rd-439-2007:art-110"]
+grounding = "verified"
+
+[[deadlines]]
+modelo = "100"
+period = "0A"
+year = "horizon-1"
+statutory_end = { year = "horizon", month = 6, day = 30 }
+legal_ref = ["ley-35-2006:art-97"]
+grounding = "cited"
+note = "The annual order sets the campaign window; 30 June is the end it has fixed in recent campaigns."
+
+[[values]]
+modelo = "303"
+period = "1T"
+year = "horizon-1"
+casillas = { "07" = "1800.00", "09" = "378.00", "10" = "240.00", "11" = "50.40", "27" = "428.40", "28" = "45.00", "29" = "9.45", "36" = "240.00", "37" = "50.40", "45" = "59.85", "59" = "7500.00", "64" = "368.55", "66" = "368.55", "71" = "368.55" }
+concepts = { resultado_regimen_general = "368.55" }
+derivation = """
+07 = DEV-ES-1 1800.00; 09 = 21 % = 378.00.
+10 = DEV-NUBE-01..03 3 x 80.00 = 240.00 (intra-community service acquisition, taxpayer self-assesses); 11 = 21 % = 50.40.
+27 = 378.00 + 50.40 = 428.40.
+28 = DEV-TEL-1 45.00; 29 = 9.45. 36/37 = the self-assessed acquisition as deductible: 240.00 / 50.40. 45 = 9.45 + 50.40 = 59.85.
+Resultado = 428.40 - 59.85 = 368.55.
+59 = DEV-DE-1 7500.00: B2B service located in the customer's Member State, reported in 349 (casilla 59 rather than 120 is cited, not re-verified against the 303 instructions).
+"""
+legal_ref = ["ley-37-1992:art-69", "ley-37-1992:art-84", "ley-37-1992:art-90", "ley-37-1992:art-92"]
+grounding = "cited"
+
+[[values]]
+modelo = "303"
+period = "2T"
+year = "horizon-1"
+casillas = { "07" = "2200.00", "09" = "462.00", "10" = "240.00", "11" = "50.40", "27" = "512.40", "28" = "45.00", "29" = "9.45", "36" = "240.00", "37" = "50.40", "45" = "59.85", "59" = "9900.00", "64" = "452.55", "66" = "452.55", "71" = "452.55" }
+concepts = { resultado_regimen_general = "452.55" }
+derivation = "07 = DEV-ES-2 2200.00; 10/11 = DEV-NUBE-04..06; 28/29 = DEV-TEL-2; 59 = DEV-FR-1 2400.00 + DEV-DE-2 7500.00. Resultado = 512.40 - 59.85 = 452.55."
+legal_ref = ["ley-37-1992:art-69", "ley-37-1992:art-84", "ley-37-1992:art-90", "ley-37-1992:art-92"]
+grounding = "cited"
+
+[[values]]
+modelo = "303"
+period = "3T"
+year = "horizon-1"
+casillas = { "07" = "1200.00", "09" = "252.00", "10" = "240.00", "11" = "50.40", "27" = "302.40", "28" = "45.00", "29" = "9.45", "36" = "240.00", "37" = "50.40", "45" = "59.85", "59" = "6000.00", "64" = "242.55", "66" = "242.55", "71" = "242.55" }
+concepts = { resultado_regimen_general = "242.55" }
+derivation = "07 = DEV-ES-3 1200.00; 10/11 = DEV-NUBE-07..09; 28/29 = DEV-TEL-3; 59 = DEV-DE-3 6000.00. Resultado = 302.40 - 59.85 = 242.55."
+legal_ref = ["ley-37-1992:art-69", "ley-37-1992:art-84", "ley-37-1992:art-90", "ley-37-1992:art-92"]
+grounding = "cited"
+
+[[values]]
+modelo = "303"
+period = "4T"
+year = "horizon-1"
+casillas = { "07" = "1500.00", "09" = "315.00", "10" = "240.00", "11" = "50.40", "27" = "365.40", "28" = "495.00", "29" = "103.95", "36" = "240.00", "37" = "50.40", "45" = "154.35", "59" = "11100.00", "64" = "211.05", "66" = "211.05", "71" = "211.05" }
+concepts = { resultado_regimen_general = "211.05" }
+derivation = "07 = DEV-ES-4 1500.00; 10/11 = DEV-NUBE-10..12; 28 = DEV-TEL-4 45.00 + DEV-CUR-1 450.00 = 495.00, 29 = 9.45 + 94.50 = 103.95; 59 = DEV-FR-2 3100.00 + DEV-DE-4 8000.00. Resultado = 365.40 - 154.35 = 211.05."
+legal_ref = ["ley-37-1992:art-69", "ley-37-1992:art-84", "ley-37-1992:art-90", "ley-37-1992:art-92"]
+grounding = "cited"
+
+[[values]]
+modelo = "349"
+period = "1T"
+year = "horizon-1"
+counterparty = "intracom.cliente-de"
+concepts = { clave = "S", base = "7500.00" }
+derivation = "DEV-DE-1."
+legal_ref = ["rd-1624-1992:art-79"]
+grounding = "cited"
+
+[[values]]
+modelo = "349"
+period = "1T"
+year = "horizon-1"
+counterparty = "intracom.proveedor-nube"
+concepts = { clave = "I", base = "240.00" }
+derivation = "DEV-NUBE-01..03 3 x 80.00."
+legal_ref = ["rd-1624-1992:art-79"]
+grounding = "cited"
+
+[[values]]
+modelo = "349"
+period = "2T"
+year = "horizon-1"
+counterparty = "intracom.cliente-de"
+concepts = { clave = "S", base = "7500.00" }
+derivation = "DEV-DE-2."
+legal_ref = ["rd-1624-1992:art-79"]
+grounding = "cited"
+
+[[values]]
+modelo = "349"
+period = "2T"
+year = "horizon-1"
+counterparty = "intracom.cliente-fr"
+concepts = { clave = "S", base = "2400.00" }
+derivation = "DEV-FR-1."
+legal_ref = ["rd-1624-1992:art-79"]
+grounding = "cited"
+
+[[values]]
+modelo = "349"
+period = "2T"
+year = "horizon-1"
+counterparty = "intracom.proveedor-nube"
+concepts = { clave = "I", base = "240.00" }
+derivation = "DEV-NUBE-04..06."
+legal_ref = ["rd-1624-1992:art-79"]
+grounding = "cited"
+
+[[values]]
+modelo = "349"
+period = "3T"
+year = "horizon-1"
+counterparty = "intracom.cliente-de"
+concepts = { clave = "S", base = "6000.00" }
+derivation = "DEV-DE-3."
+legal_ref = ["rd-1624-1992:art-79"]
+grounding = "cited"
+
+[[values]]
+modelo = "349"
+period = "3T"
+year = "horizon-1"
+counterparty = "intracom.proveedor-nube"
+concepts = { clave = "I", base = "240.00" }
+derivation = "DEV-NUBE-07..09."
+legal_ref = ["rd-1624-1992:art-79"]
+grounding = "cited"
+
+[[values]]
+modelo = "349"
+period = "4T"
+year = "horizon-1"
+counterparty = "intracom.cliente-de"
+concepts = { clave = "S", base = "8000.00" }
+derivation = "DEV-DE-4."
+legal_ref = ["rd-1624-1992:art-79"]
+grounding = "cited"
+
+[[values]]
+modelo = "349"
+period = "4T"
+year = "horizon-1"
+counterparty = "intracom.cliente-fr"
+concepts = { clave = "S", base = "3100.00" }
+derivation = "DEV-FR-2."
+legal_ref = ["rd-1624-1992:art-79"]
+grounding = "cited"
+
+[[values]]
+modelo = "349"
+period = "4T"
+year = "horizon-1"
+counterparty = "intracom.proveedor-nube"
+concepts = { clave = "I", base = "240.00" }
+derivation = "DEV-NUBE-10..12."
+legal_ref = ["rd-1624-1992:art-79"]
+grounding = "cited"
+
+[[values]]
+modelo = "390"
+period = "0A"
+year = "horizon-1"
+concepts = { base_21 = "6700.00", cuota_21 = "1407.00", base_adquisiciones_intracomunitarias = "960.00", cuota_adquisiciones_intracomunitarias = "201.60", total_cuota_devengada = "1608.60", total_cuota_deducible = "333.90", entregas_intracomunitarias = "34500.00", resultado_regimen_general = "1274.70", suma_resultados_303 = "1274.70" }
+derivation = "Annual sums of the four 303 periods; 368.55 + 452.55 + 242.55 + 211.05 = 1274.70."
+legal_ref = ["rd-1624-1992:art-71"]
+grounding = "cited"
+
+[[values]]
+modelo = "130"
+period = "1T"
+year = "horizon-1"
+casillas = { "01" = "9300.00", "02" = "1573.65", "03" = "7726.35", "04" = "1545.27", "05" = "0.00", "06" = "270.00", "07" = "1275.27" }
+parameters = { provision_rate = "0.05", provision_cap = "2000.00", pago_rate = "0.20" }
+derivation = """
+01 = DEV-ES-1 1800.00 + DEV-DE-1 7500.00 = 9300.00 (income net of IVA; EU income has no Spanish IVA).
+Gastos = RETA 3 x 294.00 + nube 240.00 (self-assessed IVA is deductible, so not a cost) + telefonía 45.00 = 1167.00.
+Provisión = 5 % of 8133.00 = 406.65; 02 = 1573.65; 03 = 7726.35; 04 = 1545.27; 06 = retención DEV-ES-1 270.00; 07 = 1275.27.
+"""
+legal_ref = ["rd-439-2007:art-30", "rd-439-2007:art-110"]
+grounding = "verified"
+
+[[values]]
+modelo = "130"
+period = "2T"
+year = "horizon-1"
+casillas = { "01" = "21400.00", "02" = "3287.30", "03" = "18112.70", "04" = "3622.54", "05" = "1275.27", "06" = "600.00", "07" = "1747.27" }
+parameters = { provision_rate = "0.05", provision_cap = "2000.00", pago_rate = "0.20" }
+derivation = "01 = 9300.00 + 2200 + 2400 + 7500; gastos = 2334.00; provisión = 953.30; 06 = 270.00 + 330.00 cumulative; 07 = 3622.54 - 1275.27 - 600.00."
+legal_ref = ["rd-439-2007:art-30", "rd-439-2007:art-110"]
+grounding = "verified"
+reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses for that missing input; these figures are what the filed earlier quarters would carry forward."
+refusal = "ERROR_MODELO_WORK_INPUT_REQUIRED"
+
+[[values]]
+modelo = "130"
+period = "3T"
+year = "horizon-1"
+casillas = { "01" = "28600.00", "02" = "4755.95", "03" = "23844.05", "04" = "4768.81", "05" = "3022.54", "06" = "780.00", "07" = "966.27" }
+parameters = { provision_rate = "0.05", provision_cap = "2000.00", pago_rate = "0.20" }
+derivation = "01 = 21400.00 + 1200 + 6000; gastos = 3501.00; provisión = 1254.95; 05 = 1275.27 + 1747.27; 06 = 780.00 cumulative."
+legal_ref = ["rd-439-2007:art-30", "rd-439-2007:art-110"]
+grounding = "verified"
+reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses for that missing input; these figures are what the filed earlier quarters would carry forward."
+refusal = "ERROR_MODELO_WORK_INPUT_REQUIRED"
+
+[[values]]
+modelo = "130"
+period = "4T"
+year = "horizon-1"
+casillas = { "01" = "41200.00", "02" = "6922.10", "03" = "34277.90", "04" = "6855.58", "05" = "3988.81", "06" = "1005.00", "07" = "1861.77" }
+parameters = { provision_rate = "0.05", provision_cap = "2000.00", pago_rate = "0.20" }
+derivation = "01 = 28600.00 + 3100 + 1500 + 8000; gastos = 5118.00 (incl. curso 450.00); provisión = 5 % of 36082.00 = 1804.10 (under the cap); 05 = 3022.54 + 966.27; 06 = 1005.00."
+legal_ref = ["rd-439-2007:art-30", "rd-439-2007:art-110"]
+grounding = "verified"
+reason = "Casilla 05 sums casilla 07 of the earlier quarters' returns as filed (RIRPF art. 110.3), and none of this year's Modelo 130 quarters is filed: the first cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation refuses for that missing input; these figures are what the filed earlier quarters would carry forward."
+refusal = "ERROR_MODELO_WORK_INPUT_REQUIRED"
+
+[[values]]
+modelo = "100"
+period = "0A"
+year = "horizon-1"
+casillas = { "0599" = "1005.00" }
+not_sourced = { "0604" = "5850.58" }
+concepts = { ingresos_actividad = "41200.00", gastos_actividad = "5118.00", provision_dificil_justificacion = "1804.10", rendimiento_neto_actividad = "34277.90", minimo_personal = "5550.00" }
+derivation = """
+Rendimiento neto = 41200.00 - 5118.00 - 1804.10 = 34277.90.
+0599 = 15 % of domestic bases 6700.00 = 1005.00. 0604 = 1275.27 + 1747.27 + 966.27 + 1861.77 = 5850.58.
+"""
+legal_ref = ["ley-35-2006:art-28", "ley-35-2006:art-57", "rd-439-2007:art-30"]
+grounding = "verified"
+reason = "Casilla 0604 sums the pagos fraccionados of this year's Modelo 130 returns as filed (LIRPF art. 99, RIRPF art. 110), and none is filed: the first quarter cannot be, because its casilla 13 rests on a prior-year Renta the persona holds at most as its own copy, never as AEAT-captured evidence. The calculation leaves 0604 unresolved for that missing input; the figure is what the filed quarters would give."

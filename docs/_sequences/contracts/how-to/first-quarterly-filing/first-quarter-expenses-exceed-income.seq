@@ -1,4 +1,4 @@
-:seed: autonomo-irpf-2026
+:seed: first-quarter-ledger
 @step State the simplified direct estimation modality and the 2026 cobros y pagos election, without Codigo de Comercio accounting.
 @setup aeat config profile edit docs-sequence-sandbox --quiet --irpf-estimation-regime directa_simplificada --irpf-activity-income-imputation-criterion cobros_y_pagos --irpf-activity-income-imputation-year 2026 --no-irpf-codigo-comercio-accounting
 @step Register the invoice for a second office-supplies purchase as encrypted supporting document.

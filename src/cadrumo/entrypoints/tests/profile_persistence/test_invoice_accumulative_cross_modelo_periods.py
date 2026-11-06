@@ -79,6 +79,7 @@ from cadrumo.application.modelo.m303_regimen_simplificado_scope import active_ta
 from cadrumo.application.modelo.result_disposition_resolution import resolve_modelo_result_disposition
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
@@ -101,7 +102,6 @@ from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
 from ....domain.iva.schema import InvoiceKind
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -200,7 +200,6 @@ _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = validated_casilla_id
 _PRIOR_ANEXO_C_REMAINDERS: tuple[CasillaId, ...] = tuple(
     validated_casilla_id(box, surface="_PRIOR_ANEXO_C_REMAINDERS") for box in ("1384", "1387", "1390")
 )
-_M100_ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
 
 # M130 manual casillas (retenciones / agrarian / vivienda / prior
 # autoliquidaciones). All zero: this persona files no other income and has no
@@ -238,24 +237,25 @@ def _seed_taxpayer_profile() -> None:
             context=profile_creation_context_for_test(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value=_TAX_ID),
-                UserProfileFact(path="identity.name", value="Marta"),
-                UserProfileFact(path="identity.surnames", value="Invoice Life"),
-                UserProfileFact(path="activities.description", value="design services"),
-                *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-                UserProfileFact(path="censo.activity_start_date", value=date(_YEAR, 1, 1)),
-                UserProfileFact(path="renta_taxpayer.birth_date", value=date(1985, 6, 1)),
-                UserProfileFact(path="renta_taxpayer.sex", value="M"),
-                UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-                UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-                UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-                UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-                UserProfileFact(path="renta_filing.declaration_type", value="1"),
-                UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-                UserProfileFact(path="renta_family.descendientes_count", value=Decimal("0")),
-                UserProfileFact(path="renta_family.cotizaciones_ss_madre_2024", value=Decimal("0")),
-                UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.tax_id", value=_TAX_ID),
+                    UserProfileFact(path="identity.name", value="Marta"),
+                    UserProfileFact(path="identity.surnames", value="Invoice Life"),
+                    UserProfileFact(path="activities.description", value="design services"),
+                    UserProfileFact(path="censo.activity_start_date", value=date(_YEAR, 1, 1)),
+                    UserProfileFact(path="renta_taxpayer.birth_date", value=date(1985, 6, 1)),
+                    UserProfileFact(path="renta_taxpayer.sex", value="M"),
+                    UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
+                    UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
+                    UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
+                    UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
+                    UserProfileFact(path="renta_filing.declaration_type", value="1"),
+                    UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+                    UserProfileFact(path="renta_family.descendientes_count", value=Decimal("0")),
+                    UserProfileFact(path="renta_family.cotizaciones_ss_madre_2024", value=Decimal("0")),
+                    UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+                )
             ),
             created_at=_T0,
             updated_at=_T0,
@@ -319,7 +319,7 @@ def _persist_invoice_life(secure_objects: SecureObjectRepository) -> None:
             bucket_id=_BUCKET_ID,
             kind=InvoiceKind.ISSUED,
             counterparty_name="Cliente SA",
-            counterparty_tax_id="B58818501",
+            counterparty_tax_id="B00010181",
             counterparty_country="ES",
             invoice_number=f"FAC-{_YEAR}-{period}",
             issued_at=date(_YEAR, _QUARTER_MONTH[period], 15),
@@ -553,7 +553,6 @@ def _m100_non_relation_zero_bindings(secure_objects: SecureObjectRepository) -> 
             "retencion_soportada",
         )
     }
-    values[_M100_ESTIMACION_DIRECTA_NORMAL_BINDING] = Decimal("1")
     return values
 
 

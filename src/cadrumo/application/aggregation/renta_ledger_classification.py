@@ -47,10 +47,11 @@ from .currency_predicates import (
 
 if TYPE_CHECKING:
     pass
-from .renta_imputation import ImputationCriteria, ImputationUnresolved, impute_ledger_row
+from .renta_imputation import ImputationCriteria, ImputationUnresolved, impute_ledger_row, received_invoice_reference
 from .renta_ledger_evidence import (
     iva_amount_for,
     purchase_invoice_evidence_payload,
+    recargo_amount_for,
     taxable_base_for,
 )
 from .renta_ledger_models import (
@@ -283,7 +284,7 @@ def _renta_expense_fact_or_issue(
     try:
         return RentaDeductibleExpenseFact(
             transaction_id=transaction.transaction_id,
-            invoice_id=transaction.purchase_invoice_evidence_id,
+            invoice_id=received_invoice_reference(transaction),
             catalogue_id=_LEDGER_CATALOGUE_ID,
             operation_date=transaction.raw.value_date or transaction.raw.booked_date,
             invoice_issue_date=evidence_payload.invoice_issue_date,
@@ -291,6 +292,7 @@ def _renta_expense_fact_or_issue(
             gross_amount=business_fact_amount(eur_amount, proportion),
             taxable_base=business_fact_amount(taxable_base_for(transaction, evidence_payload), proportion),
             iva_amount=business_fact_amount(iva_amount_for(transaction, evidence_payload), proportion),
+            recargo_amount=business_fact_amount(recargo_amount_for(transaction, evidence_payload), proportion),
             direction=direction,
             category=category,
             activity_key=activity_key,

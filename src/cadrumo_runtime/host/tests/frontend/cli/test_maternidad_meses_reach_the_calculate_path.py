@@ -46,6 +46,7 @@ from cadrumo.tests.cli_envelope import require_schema_envelope, unwrap_envelope_
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope as _payload
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli as _invoke_cached_cli
 
 pytestmark = [
@@ -81,7 +82,6 @@ _MELLIZO_BIRTH = "NACIMIENTO=2022-06-01"
 # the profile resolver supplies them; a decimal --binding override for either
 # is refused as a misrouted input channel.
 _REQUIRED_2024_BINDING_FLAGS: tuple[str, ...] = (
-    "--binding", "renta-modelo-100-estimacion-directa-es-normal=1",
     "--binding", "renta-modelo-130-pagos-fraccionados=0",
     "--binding", "renta-modelo-131-pagos-fraccionados=0",
     "--binding", "renta-profile-cotizaciones-ss-madre=0",
@@ -105,21 +105,14 @@ def _seed_natural_person_profile(runtime_profile: NativeCliProfileFixture) -> No
     runtime_profile.register(
         label=_PROFILE_LABEL,
         facts={
+            **native_general_iva_facts(),
             "identity.name": "Marta",
             "identity.surnames": "Diaz Ortega",
             "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
             "taxpayer_type.irpf_income_categories": "actividad_economica",
             "irpf.estimation_regime": "directa_normal",
-            "iva.regime": "GENERAL",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             "activities.description": "economic activity",
             "tax_residence.ccaa": "madrid",
-            "tax_residence.jurisdiction_scope": "common_regime",
             "provenance.source": "manual_cli",
             "renta_taxpayer.birth_date": "1985-06-15",
             "renta_filing.declaration_type": "1",

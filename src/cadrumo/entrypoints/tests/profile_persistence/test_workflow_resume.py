@@ -11,6 +11,7 @@ from typing import Any, TypedDict
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_calculation_action_ports,
@@ -133,27 +134,16 @@ def _resolve_modelo_workflow_run_for_resume(
     )
 
 
-_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="00000000T"),
-    UserProfileFact(path="identity.name", value="Test Operator"),
-    UserProfileFact(path="identity.surnames", value="Resume"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="activities.description", value="economic activity"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value="false"),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value="false"),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value="false"),
-    UserProfileFact(
-        path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
-        value="false",
-    ),
-    UserProfileFact(path="provenance.source", value="manual_cli"),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-)
+def _ready_profile_facts() -> tuple[UserProfileFact, ...]:
+    return persona_facts_beneath(
+        (
+            UserProfileFact(path="identity.tax_id", value="00000000T"),
+            UserProfileFact(path="identity.name", value="Test Operator"),
+            UserProfileFact(path="identity.surnames", value="Resume"),
+            UserProfileFact(path="activities.description", value="economic activity"),
+            UserProfileFact(path="provenance.source", value="manual_cli"),
+        )
+    )
 
 
 def _seed_ready_profile_record(bucket_id: str) -> None:
@@ -163,7 +153,7 @@ def _seed_ready_profile_record(bucket_id: str) -> None:
                 context=operation.profile_create_context(),
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=bucket_id,
-                facts=_READY_PROFILE_FACTS,
+                facts=_ready_profile_facts(),
                 created_at=_T,
                 updated_at=_T,
             ),

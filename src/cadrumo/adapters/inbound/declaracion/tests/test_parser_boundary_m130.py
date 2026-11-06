@@ -46,7 +46,7 @@ def test_parser_extracts_modelo_130_legal_entity_nif_from_pdf() -> None:
     """Verify NIF extraction from a synthetic M130 PDF for a CIF-format declarant."""
     pdf_path = FIXTURES_DIR / "justificantes" / "130" / "2022-2T.pdf"
     filing = parse_declaracion(pdf_path, modelo_override="130", año_override=2022, period_override="2T")
-    assert filing.tax_id == "Y0000001S"
+    assert filing.tax_id == "Y0001006P"
     assert filing.source_pdf_path == source_pdf_reference_path(filing.source_pdf_sha256)
     assert pdf_path.name not in str(filing.source_pdf_path)
 

@@ -34,7 +34,7 @@ from .scenario import (
     build_scenario,
 )
 
-_CLIENT_NIF: Final[str] = "A58818501"
+_CLIENT_NIF: Final[str] = "B00000281"
 _RENTAL_ACTIVITY_CLASS: Final[str] = "arrendamiento_inmueble_urbano_actividad"
 
 
@@ -536,8 +536,6 @@ def calculate_m100(
             "0165=declarante",
             "--casilla",
             "0166=A05",
-            "--binding",
-            "renta-modelo-100-estimacion-directa-es-normal=1",
             "--by",
             "income-acceptance",
         ),

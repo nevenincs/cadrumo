@@ -46,7 +46,7 @@ pytestmark = [
     pytest.mark.usefixtures("authority_operation"),
 ]
 
-_PROFILE_FACTS = native_general_iva_facts(surnames="Inventory", description="synthetic inventory profile")
+_PROFILE_FACTS = native_general_iva_facts()
 
 _ACQUISITION = json.dumps(
     {

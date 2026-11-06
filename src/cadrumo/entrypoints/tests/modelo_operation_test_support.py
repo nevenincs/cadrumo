@@ -16,8 +16,8 @@ from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import (
     SEEDED_SOURCE_TAX_ID,
     seed_clean_cross_period_sources,
 )
+from cadrumo.adapters.persistence.profile.tests.taxpayer_persona_support import seed_modelo_ready_profile
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
 from cadrumo.application.live.justificante import JustificanteCaptureSnapshot
 from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -71,7 +71,7 @@ _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 def _seed_modelo_ready_profile(profile_id: UUID) -> None:
     """Seed the taxpayer facts required by Modelo work through the canonical helper."""
-    seed_modelo_ready_profile_record(str(profile_id), clock=_PROFILE_CLOCK, tax_id=SEEDED_SOURCE_TAX_ID)
+    seed_modelo_ready_profile(bucket_id=str(profile_id), at=_PROFILE_CLOCK, tax_id=SEEDED_SOURCE_TAX_ID)
 
 
 def seeded_modelo_work_unit(profile_id: UUID, *, operation: PinnedAuthorityOperation) -> WorkUnit:

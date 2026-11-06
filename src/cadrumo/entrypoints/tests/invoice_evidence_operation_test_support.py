@@ -34,6 +34,7 @@ from ...application.ledger.invoice_evidence_operation_dtos import (
     InvoiceDraftProjectionV1,
 )
 from ...application.ledger.invoice_extraction_authority import default_invoice_extraction_period
+from ...application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from ...core.operations import OperationEffect
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
@@ -58,14 +59,9 @@ def prepare_invoice_evidence_conformance_case(
     """Register a bundled synthetic XML in actual encrypted attachment custody."""
     upsert_test_profile_facts(
         profile_id,
-        (
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path=FILER_POSTCODE_FACT_PATH, value="28013"),
+        persona_facts_beneath(
+            (UserProfileFact(path=FILER_POSTCODE_FACT_PATH, value="28013"),),
+            without=("identity.",),
         ),
     )
     ports = build_invoice_evidence_operation_ports(bucket_id=str(profile_id))

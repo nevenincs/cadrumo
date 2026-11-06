@@ -28,11 +28,9 @@ __all__ = [
     "BindingFixedExportSelector",
     "BindingRowExportSelector",
     "BindingRowSetSelector",
-    "BooleanBindingEncodedValue",
     "ManualInputRecordFieldSelector",
     "binding_export_selector",
     "binding_row_set_selector",
-    "boolean_binding_encoded_values",
     "canonical_selector_key_hint",
     "computed_money_binding_failures",
     "intracommunity_clave_validator",
@@ -383,73 +381,6 @@ def selector_as_dict(binding: BindingDefinition) -> dict[str, object]:
     restored = _restore_nested_discriminators(provider, dumped)
     restored.pop("kind", None)
     return STR_KEYED_MAPPING_ADAPTER.validate_python(restored)
-
-
-class BooleanBindingEncodedValue(BaseModel):
-    """One accepted decimal encoding of a boolean-casilla ``manual_input`` binding.
-
-    A ``manual_input`` binding whose selector declares ``data_type = "boolean"``
-    (the Modelo 100 estimación-directa modality flag is the canonical case) is
-    consumed by the registry formulas as a numeric ``1`` / ``0`` operand. The
-    operator therefore supplies a decimal on the ``--binding`` channel, yet the
-    accepted values and their meaning are opaque from the raw
-    :class:`BindingDefinition`. This record makes one accepted value
-    explicit: ``encoded_value`` is the decimal the operator types,
-    ``boolean_meaning`` is the affirmative/negative sense it carries, and
-    ``registry_value`` is the underlying casilla token the boolean maps to (the
-    selector's declared ``true_value`` / ``false_value``).
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    encoded_value: str
-    boolean_meaning: bool
-    registry_value: str
-
-
-def boolean_binding_encoded_values(
-    binding: BindingDefinition,
-) -> tuple[BooleanBindingEncodedValue, ...]:
-    """Return the decimal encoding of a boolean-casilla ``manual_input`` binding.
-
-    The result is empty for every binding that is not a boolean-casilla
-    ``manual_input`` selector, so a caller can read a non-empty result as "this
-    binding is a decimal-encoded boolean flag". The encoding follows the
-    registry convention that a boolean operand is consumed as ``1`` (true) /
-    ``0`` (false); each sense is paired with the selector's declared
-    ``true_value`` / ``false_value`` casilla token, so the mapping is derived
-    from the binding definition, never hardcoded per modelo.
-
-    Returns:
-        Zero or two :class:`BooleanBindingEncodedValue` rows.
-
-    Raises:
-        RegistryValidationError: When ``binding`` is a ``manual_input`` binding
-            whose selector does not validate against :class:`ManualInputProvider`
-            -- a malformed selector must be a named failure, not a silently
-            empty "not a boolean binding" result.
-    """
-    if binding.source is not BindingSourceKind.MANUAL_INPUT:
-        return ()
-    # Read through the declared model rather than raw dict keys: a
-    # renamed/misspelled ``true_value`` / ``false_value`` / ``data_type`` key
-    # must raise, not silently return "not a boolean binding".
-    try:
-        selector = provider_member(binding, ManualInputProvider)
-    except ValueError as exc:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} has malformed manual_input selector: {exc}",
-        ) from exc
-    if selector.data_type != "boolean":
-        return ()
-    true_value = selector.true_value
-    false_value = selector.false_value
-    if not isinstance(true_value, str) or not isinstance(false_value, str):
-        return ()
-    return (
-        BooleanBindingEncodedValue(encoded_value="1", boolean_meaning=True, registry_value=true_value),
-        BooleanBindingEncodedValue(encoded_value="0", boolean_meaning=False, registry_value=false_value),
-    )
 
 
 class ManualInputRecordFieldSelector(BaseModel):

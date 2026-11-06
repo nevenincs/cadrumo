@@ -43,6 +43,7 @@ from ......domain.invoices.tests.modelo_349_invoice_facts import (
     intra_community_invoice,
 )
 from ......domain.modelos.work_unit import WorkUnit
+from ......domain.user_profile.values import UserProfileFact
 from ......tests.env_scope import ready_clave_settings
 from .....tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 from .....tests.profile_persistence.verification_repository_support import (
@@ -67,7 +68,9 @@ pytestmark = [pytest.mark.hex_entrypoint]
 
 @contextmanager
 def _seeded_m349(tmp_path: Path) -> Generator[SeededOperatorWork]:
-    with seeded_operator_work(tmp_path, modelo="349") as work:
+    with seeded_operator_work(
+        tmp_path, modelo="349", extra_facts=(UserProfileFact(path="iva.does_intracomunitario", value=True),)
+    ) as work:
         invoices = tuple(
             intra_community_invoice(
                 bucket_id=work.work_unit.bucket_id,

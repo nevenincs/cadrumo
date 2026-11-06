@@ -160,7 +160,7 @@ class TestThePromptAsksForPrintedEvidenceRatherThanAConclusion:
                 {
                     "supplier_tax_id": "B12345674",
                     f"supplier_tax_id{ROLE_EVIDENCE_KEY_SUFFIX}": "Proveedor:",
-                    "customer_tax_id": "A82645177",
+                    "customer_tax_id": "A00010017",
                     f"customer_tax_id{ROLE_EVIDENCE_KEY_SUFFIX}": "Cliente:",
                 },
             ),

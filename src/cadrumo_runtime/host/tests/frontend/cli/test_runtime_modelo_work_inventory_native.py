@@ -47,7 +47,7 @@ _LABEL = "Native modelo inventory operator"
 
 def _profile_facts() -> dict[str, str]:
     """Return complete, synthetic facts for the encrypted CLI profile."""
-    return native_general_iva_facts(surnames="Inventory", description="consulting")
+    return native_general_iva_facts()
 
 
 def _invoke_work(fixture: NativeCliProfileFixture, *arguments: str) -> Result:

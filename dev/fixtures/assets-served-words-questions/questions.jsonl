@@ -1,0 +1,26 @@
+{"kind":"gap","gap_kind":"accrued","name":"Compresor de taller","covered_from":"2027-01-01","covered_through":"2027-12-31","accrued":"360.00"}
+{"kind":"gap","gap_kind":"accrued","name":"Cristalería de la sala de catas","covered_from":"2024-01-01","covered_through":"2024-12-31","accrued":"200.00"}
+{"kind":"gap","gap_kind":"accrued","name":"Cristalería de la sala de catas","covered_from":"2025-01-01","covered_through":"2025-12-31","accrued":"200.00"}
+{"kind":"gap","gap_kind":"accrued","name":"Cámara de revelado","covered_from":"2025-07-01","covered_through":"2025-12-31","accrued":"362.96"}
+{"kind":"gap","gap_kind":"accrued","name":"Furgoneta de reparto","covered_from":"2026-07-01","covered_through":"2026-12-31","accrued":"1451.84"}
+{"kind":"gap","gap_kind":"accrued","name":"Furgoneta de reparto","covered_from":"2027-01-01","covered_through":"2027-12-31","accrued":"2880.00"}
+{"kind":"gap","gap_kind":"accrued","name":"Licencia de facturación","covered_from":"2026-01-01","covered_through":"2026-12-31","accrued":"360.00"}
+{"kind":"gap","gap_kind":"accrued","name":"Licencia de facturación","covered_from":"2027-01-01","covered_through":"2027-12-31","accrued":"360.00"}
+{"kind":"gap","gap_kind":"accrued","name":"Servidor de archivos","covered_from":"2026-01-01","covered_through":"2026-12-31","accrued":"950.00"}
+{"kind":"gap","gap_kind":"accrued","name":"Servidor de archivos","covered_from":"2027-01-01","covered_through":"2027-12-31","accrued":"950.00"}
+{"kind":"gap","gap_kind":"accrued","name":null,"covered_from":"2027-01-01","covered_through":"2027-12-31","accrued":"250.00"}
+{"kind":"gap","gap_kind":"free_method","name":"Impresora 3D","covered_from":"2026-09-01","covered_through":"2026-12-31","accrued":null}
+{"kind":"gap","gap_kind":"unavailable","name":"Estanterías de almacén","covered_from":"2023-01-01","covered_through":"2023-12-31","accrued":null}
+{"kind":"gap","gap_kind":"unavailable","name":"Estanterías de almacén","covered_from":"2024-01-01","covered_through":"2024-12-31","accrued":null}
+{"kind":"gap","gap_kind":"unavailable","name":"Estanterías de almacén","covered_from":"2025-01-01","covered_through":"2025-12-31","accrued":null}
+{"kind":"gap","gap_kind":"unavailable","name":"Estanterías de almacén","covered_from":"2026-01-01","covered_through":"2026-12-31","accrued":null}
+{"kind":"left_out","reason":"free_gap","names":["Impresora 3D","Taladro percutor"]}
+{"kind":"left_out","reason":"free_gap","names":["Impresora 3D"]}
+{"kind":"left_out","reason":"free_gap","names":["Taladro percutor"]}
+{"kind":"left_out","reason":"unavailable","names":["Estanterías de almacén"]}
+{"kind":"partial","count":1}
+{"kind":"reason","key":"ledger.actividad_asset.disposal_finding.minimum_unresolved","facts":[]}
+{"kind":"reason","key":"ledger.actividad_asset.errors.amortization_period_elapsed","facts":[{"key":"ended_on","value":"2025-12-31","kind":"date"}]}
+{"kind":"reason","key":"ledger.actividad_asset.errors.disposal_not_recorded","facts":[]}
+{"kind":"reason","key":"ledger.actividad_asset.errors.opening_history_missing","facts":[]}
+{"kind":"remedy","field_key":"ledger.actividad_asset.field.opening_history.accumulated_amount"}

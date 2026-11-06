@@ -163,14 +163,14 @@ _MODELO_100_CURRENT_YEAR_FIXTURES: tuple[_Modelo100CurrentYearFixture, ...] = (
     _Modelo100CurrentYearFixture(
         filename="100/2024-0A.pdf",
         ejercicio="2024",
-        tax_id="Y0000001S",
+        tax_id="Y0001006P",
         full_name="APELLIDO APELLIDO NOMBRE",
         render_rows=_M100_CURRENT_YEAR_RENDER_ROWS,
     ),
     _Modelo100CurrentYearFixture(
         filename="100/2025-0A.pdf",
         ejercicio="2025",
-        tax_id="Y0000001S",
+        tax_id="Y0001006P",
         full_name="APELLIDO APELLIDO NOMBRE",
         render_rows=_M100_CURRENT_YEAR_RENDER_ROWS,
     ),

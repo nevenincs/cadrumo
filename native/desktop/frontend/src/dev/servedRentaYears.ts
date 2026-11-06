@@ -19,7 +19,7 @@ export const RENTA_UNIT =
   "b1c431589384a105701ba15942606b5f5667cb677d6fa62e743cd0293f9baee4";
 
 const names = Object.keys(
-  import.meta.glob("./fixtures/modelo/modelo-100-0A-y*-en.json"),
+  import.meta.glob("@fixtures/modelo/modelo-100-0A-y*-en.json"),
 );
 
 /** The shapes that read the couple of each supported year. */

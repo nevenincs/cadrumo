@@ -14,6 +14,7 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -40,7 +41,6 @@ from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition, projected_exercise
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.contribuyente.inventory.records import InventoryLedgerDocument
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ...adapter_composition_work_ports import build_calculation_action_ports
@@ -78,16 +78,17 @@ def _seed_taxpayer_with_an_activity(secure_objects: SecureObjectRepository) -> N
     record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="identity.name", value="Test"),
-            UserProfileFact(path="identity.surnames", value="Operator"),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-            UserProfileFact(path="censo.activity_start_date", value=date(_NEWEST_EDITION - 5, 1, 1)),
-            *renta_single_taxpayer_facts(birth_date=date(_NEWEST_EDITION - 45, 3, 15)),
-            UserProfileFact(path="renta_family.unidad_familiar_otros_miembros_base", value=Decimal("0")),
-            UserProfileFact(path="renta_family.madrid_nacimiento_adopcion_eligible_count", value=Decimal("0")),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="censo.activity_start_date", value=date(_NEWEST_EDITION - 5, 1, 1)),
+                *renta_single_taxpayer_facts(birth_date=date(_NEWEST_EDITION - 45, 3, 15)),
+                UserProfileFact(path="renta_family.unidad_familiar_otros_miembros_base", value=Decimal("0")),
+                UserProfileFact(path="renta_family.madrid_nacimiento_adopcion_eligible_count", value=Decimal("0")),
+            )
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
@@ -167,7 +168,6 @@ def _calculate(secure_objects: SecureObjectRepository, *, filing_year: int) -> B
         return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-            binding_values={"renta-modelo-100-estimacion-directa-es-normal": Decimal("1")},
             clock=_CLOCK,
         )
 

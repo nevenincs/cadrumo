@@ -32,6 +32,8 @@ from cadrumo.tests.os_keychain_hook import require_os_credential_store
 from cadrumo.tests.subprocess_cli import as_text_completed_process, subprocess_cli_env
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_server
 
+from ...native_profile_facts import native_general_iva_facts
+
 # Each installed console receives its own bounded password proof. Registration
 # does not grant a later process authority through a saved sign-in.
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.os_keychain, pytest.mark.windows_only]
@@ -200,6 +202,7 @@ def _create_legal_profile(environment: dict[str, str]) -> None:
         environment,
         label="entidad-s27",
         facts={
+            **native_general_iva_facts(),
             "taxpayer_type.entity_type": "legal_entity",
             "taxpayer_type.legal_entity_form": "sl",
             "identity.tax_id": "B12345674",
@@ -208,13 +211,6 @@ def _create_legal_profile(environment: dict[str, str]) -> None:
             "taxpayer_type.incn_prior_12_months": "500000",
             "censo.activity_start_date": "2024-01-15",
             "tax_residence.ccaa": "madrid",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
 

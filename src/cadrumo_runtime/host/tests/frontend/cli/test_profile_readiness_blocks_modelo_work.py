@@ -287,7 +287,7 @@ def test_attribution_entity_without_activity_remains_status_blocked() -> None:
         assert "work_unit_id" not in work_create.output, work_create.output
 
 
-def test_economic_activity_m100_still_requires_the_direct_estimation_modality() -> None:
+def test_economic_activity_m100_derives_the_direct_estimation_modality_from_the_profile() -> None:
     """The non-business formula guard must not default a real activity's modality."""
     profile_id = register_cli_profile(
         label="autonomo-renta",
@@ -330,6 +330,6 @@ def test_economic_activity_m100_still_requires_the_direct_estimation_modality() 
                 "--binding", "renta-base-liquidable-negativa-general-em2-pendiente-inicio=0",
             ],
         )  # fmt: skip
-        # The registered missing-input calculation error is ERROR (exit 1).
-        assert calculated.exit_code == 1, calculated.output
-        assert "renta-modelo-100-estimacion-directa-es-normal" in calculated.output, calculated.output
+        # The profile states the regime, so the modality is derived and not asked for.
+        assert calculated.exit_code == 0, calculated.output
+        assert "renta-modelo-100-estimacion-directa-es-normal" not in calculated.output, calculated.output

@@ -16,23 +16,19 @@ existing previous-filing binding from real stored observations, with no caller
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
-
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ....adapters.persistence.profile.inventory import InventoryLedgerRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_persona_profile
 from ....adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....application.aggregation.tests.test_inventory_source import inventory_ledger
 from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND
 from ....application.modelo.calculation_bucket_actions import (
@@ -53,11 +49,7 @@ from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
 )
 from ....domain.contribuyente.inventory.records import InventoryLedgerDocument
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ...adapter_composition_work_ports import build_calculation_action_ports
-from .general_iva_profile_facts_support import renta_single_taxpayer_facts
 from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -98,28 +90,6 @@ _ACTIVITY_MANUAL_EXPENSE: CasillaId = validated_casilla_id("0184", surface="_ACT
 _TRABAJO_INGRESOS: CasillaId = validated_casilla_id("0003", surface="_TRABAJO_INGRESOS")
 _M130_PAGOS_OUTPUT: CasillaId = validated_casilla_id("19", surface="_M130_PAGOS_OUTPUT")
 _M131_PAGOS_OUTPUT: CasillaId = validated_casilla_id("15", surface="_M131_PAGOS_OUTPUT")
-
-
-def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
-    record = _create_profile_record_for_test(
-        setup_state=ProfileSetupState.COMPLETE,
-        profile_id=_BUCKET_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="identity.name", value="Test"),
-            UserProfileFact(path="identity.surnames", value="Operator"),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-            UserProfileFact(path="censo.activity_start_date", value=date(_NEWEST_EDITION - 5, 1, 1)),
-            *renta_single_taxpayer_facts(birth_date=date(_NEWEST_EDITION - 45, 3, 15)),
-            UserProfileFact(path="renta_family.unidad_familiar_otros_miembros_base", value=Decimal("0")),
-            UserProfileFact(path="renta_family.madrid_nacimiento_adopcion_eligible_count", value=Decimal("0")),
-        ),
-        created_at=_CLOCK,
-        updated_at=_CLOCK,
-        context=_profile_creation_context_for_test(),
-    )
-    seed_test_profile_record(record)
 
 
 def _save_observation(
@@ -208,7 +178,6 @@ def _calculate_m100(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             casilla_inputs=casilla_inputs,
-            binding_values={"renta-modelo-100-estimacion-directa-es-normal": Decimal("1")},
             clock=_CLOCK,
         )
 
@@ -224,7 +193,7 @@ def test_m100_prior_negative_general_base_carries_without_manual_0501_input(
 ) -> None:
     """Prior M100 Art. 50.3 1391 auto-fills current 1388 without transcribing 0501."""
     obs_repo = CalculationObservationRepository(objects=secure_objects)
-    _seed_taxpayer_unit_profile(secure_objects)
+    seed_persona_profile("autonomo-fontanero", bucket_id=_BUCKET_ID, at=_CLOCK)
     binding_id: BindingId = "renta-base-liquidable-negativa-general-anterior"
     _seed_prior_m100_generated_pending(obs_repo, source_year=filing_year - 1, value=prior_pending)
     _seed_zero_pagos_quarters(obs_repo, filing_year=filing_year)
@@ -250,7 +219,7 @@ def test_m100_anexo_c_applied_amount_reduces_base_liquidable_not_base_imponible(
     liquidable general before it and 0505 is the base after it.
     """
     obs_repo = CalculationObservationRepository(objects=secure_objects)
-    _seed_taxpayer_unit_profile(secure_objects)
+    seed_persona_profile("autonomo-fontanero", bucket_id=_BUCKET_ID, at=_CLOCK)
     # The filer carries on an economic activity, so its Anexo D inventory rows
     # feed the general base: without the year's ledger they are unresolved and
     # so is every base that sums them.
@@ -298,7 +267,7 @@ def test_m100_negative_general_base_is_carried_in_1391_and_taxes_nothing(
     Box 1391 holds this year's own negative base pending for the next four years.
     """
     obs_repo = CalculationObservationRepository(objects=secure_objects)
-    _seed_taxpayer_unit_profile(secure_objects)
+    seed_persona_profile("autonomo-fontanero", bucket_id=_BUCKET_ID, at=_CLOCK)
     InventoryLedgerRepository(objects=secure_objects).save(
         InventoryLedgerDocument(ledgers=(inventory_ledger("actividad"),))
     )
@@ -328,7 +297,7 @@ def test_m100_prior_return_without_the_older_remainders_refuses_naming_them(
     return does not show is unknown, so the stock it opens cannot read as zero.
     """
     obs_repo = CalculationObservationRepository(objects=secure_objects)
-    _seed_taxpayer_unit_profile(secure_objects)
+    seed_persona_profile("autonomo-fontanero", bucket_id=_BUCKET_ID, at=_CLOCK)
     _save_observation(
         obs_repo,
         modelo="100",

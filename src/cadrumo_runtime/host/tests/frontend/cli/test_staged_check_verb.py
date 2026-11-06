@@ -28,7 +28,7 @@ pytestmark = [
     pytest.mark.usefixtures("authority_operation"),
 ]
 
-_PROFILE_FACTS = native_general_iva_facts(surnames="Staged", description="synthetic staged check profile")
+_PROFILE_FACTS = native_general_iva_facts()
 
 
 def _invoke(profile: NativeCliProfileFixture, *command: str, secrets: dict[str, str] | None = None) -> Result:

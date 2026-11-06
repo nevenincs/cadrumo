@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.u
 
 _TYPED = {
     "counterparty_name": "Synthetic customer",
-    "counterparty_nif": "B00000000",
+    "counterparty_nif": "B00010082",
     "country_code": "ES",
     "invoice_number": "W-0001",
     "invoice_date": "2026-03-15",
@@ -102,7 +102,7 @@ async def test_the_wizard_moves_step_by_step_and_records_exactly_the_reviewed_re
         InvoiceWizardRequest(
             profile_id=INVOICES_PROFILE_ID,
             kind=InvoiceKind.ISSUED,
-            counterparty_nif="B00000000",
+            counterparty_nif="B00010082",
             counterparty_name="Synthetic customer",
             invoice_number="W-0001",
             invoice_date="2026-03-15",

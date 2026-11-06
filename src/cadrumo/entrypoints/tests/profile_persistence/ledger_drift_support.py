@@ -11,19 +11,15 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_persona_profile
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
@@ -42,14 +38,13 @@ from ....domain.modelos.work_unit import WorkUnit
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.user_profile.values import ProfileSetupState
-from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ...adapter_composition_work_ports import build_calculation_action_ports
-from .general_iva_profile_facts_support import general_iva_profile_facts
+from .ready_profile_taxpayer import persona_tax_id
 from .verification_substance_support import workflow_profile as plain_workflow_profile
 
 BUCKET_ID = "30300000-0000-4000-8000-000000000303"
-TAX_ID = "12345678Z"
+_PERSONA_ID = "autonomo-alta-reciente"
+TAX_ID = persona_tax_id("alta.titular")
 _YEAR = 2026
 _PERIOD = "1T"
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
@@ -60,25 +55,6 @@ _IVA_RATE = Decimal("0.21")
 def workflow_profile() -> TaxpayerProfile:
     """Return the profile facts used by the live verify workflow."""
     return plain_workflow_profile(tax_id=TAX_ID, activity_start_date=date(_YEAR, 1, 1))
-
-
-def _store_profile(objects: SecureObjectRepository) -> None:
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=BUCKET_ID,
-            facts=general_iva_profile_facts(
-                tax_id=TAX_ID,
-                activity_start_date=date(_YEAR, 1, 1),
-                name="Irene",
-                surnames="Evidence",
-                activity="consulting",
-            ),
-            created_at=_T0,
-            updated_at=_T0,
-            context=_profile_creation_context_for_test(),
-        ),
-    )
 
 
 def _wallet_decision(period: str = _PERIOD) -> IvaCompensationReconciliationDecision:
@@ -227,7 +203,7 @@ def calculate_irene_revision(
     TransactionCatalogueRepository,
 ]:
     """Seed Irene's deductible-evidence draft and return its repositories."""
-    _store_profile(objects)
+    seed_persona_profile(_PERSONA_ID, bucket_id=BUCKET_ID, at=_T0)
     wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = _repositories(objects)
     sale = iva_transaction(
         "irene-sale-no-evidence",

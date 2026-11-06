@@ -28,8 +28,8 @@ from cadrumo.application.invoices.catalogue_creation import build_catalogue_invo
 from cadrumo.application.modelo.metadata_read_operation import MODELO_WORK_METADATA_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.revision_selection_operation import MODELO_WORK_REVISION_OPERATION_DEFINITION_ID
-from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.application.modelo.work_create_operation import MODELO_WORK_CREATE_OPERATION_DEFINITION_ID
+from cadrumo.application.user_profile.tests.persona_profile_facts import directa_normal_tax_id
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
 from cadrumo.core.period import Period
@@ -71,11 +71,7 @@ type _Seed = Callable[[str], str | None]
 
 def _ordinary_m303_profile_facts() -> dict[str, str]:
     """Reuse the application readiness baseline with the CLI's activity fact for the exercise."""
-    facts = {
-        fact.path: (str(fact.value).lower() if isinstance(fact.value, bool) else str(fact.value))
-        for fact in MODELO_READY_PROFILE_FACTS
-    }
-    facts.update(operator_profile_facts(activity_start_date=f"{_EXERCISE}-01-01"))
+    facts = operator_profile_facts(activity_start_date=f"{_EXERCISE}-01-01")
     return facts
 
 
@@ -141,7 +137,7 @@ def _seed_ledger_and_wallet(bucket_id: str, *, purchase_deduction_fact_kind: str
         bucket_id=bucket_id,
         kind=InvoiceKind.RECEIVED,
         counterparty_name="Proveedor de prueba SL",
-        counterparty_tax_id="A58818501",
+        counterparty_tax_id="B00010157",
         counterparty_country="ES",
         invoice_number=f"REC-{_EXERCISE}-1T",
         issued_at=date(_EXERCISE, 2, 15),
@@ -186,7 +182,7 @@ def _seed_ledger_and_wallet(bucket_id: str, *, purchase_deduction_fact_kind: str
         InvoiceCatalogueRepository(bucket_id=bucket_id).save(invoice_catalogue)
         IvaWalletDecisionRepository().save_decision(
             IvaCompensationReconciliationDecision(
-                taxpayer_nif="12345678Z",
+                taxpayer_nif=directa_normal_tax_id(),
                 target_year=_EXERCISE,
                 target_period=_PERIOD,
                 target_registry_snapshot_ref=snapshot_ref,

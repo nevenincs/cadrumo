@@ -39,7 +39,6 @@ from ...domain.modelos.work_unit import WorkUnit
 from ._action_rendering import resolved_precondition_action_json_cell
 from ._filing_chain_payloads import aeat_register_lines, aeat_register_payload
 from .common import resolve_cli_precondition_action
-from .modelo_bindings_results import BindingEncodedOptionPayload
 from .modelo_results import (
     ExternalEvidencePayload,
     FindingPayload,
@@ -125,26 +124,6 @@ def _m184_socio_handoff_notice(
             "legal_refs": legal_refs,
         },
     )
-
-
-def binding_encoded_option_lines(
-    binding_id: str,
-    options: tuple[BindingEncodedOptionPayload, ...],
-) -> list[str]:
-    """Render one data-derived text hint enumerating a boolean binding's 0/1 encoding.
-
-    Emitted only for a decimal-channel boolean binding, so the operator can read
-    the ``--binding`` decimal-to-meaning mapping (e.g. ``1=true(N)  0=false(S)``)
-    straight from the ``bindings list`` / ``bindings resolve`` output. The mapping
-    is derived from the binding definition, so no prose is localised here.
-    """
-    if not options:
-        return []
-    mapping = "  ".join(
-        f"{option.encoded_value}={'true' if option.boolean_meaning else 'false'}({option.registry_value})"
-        for option in options
-    )
-    return [f"encoded_option\t{binding_id}\t{mapping}"]
 
 
 def advisory_notice(

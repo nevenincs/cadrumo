@@ -37,6 +37,7 @@ __all__ = [
     "PayerFactProjection",
     "PayerFactValue",
     "payer_fact_declaration",
+    "payer_fact_is_three_state",
     "payer_fact_profile_keys",
     "profile_path_value",
     "resolve_payer_fact",
@@ -129,11 +130,6 @@ _PREFIX = "payer_fact."
 
 _PAYER_FACT_EVALUATORS: Mapping[PayerFact, _PayerFactEvaluator] = MappingProxyType(
     {
-        PayerFact.PAYS_WITHHELD_INCOME: (
-            lambda profile: profile.has_employees or profile.pays_professionals_with_retencion
-        ),
-        PayerFact.PAYS_RENT_WITH_RETENCION: lambda profile: profile.pays_rent_with_retencion,
-        PayerFact.TRADES_INTRACOMMUNITY: lambda profile: profile.does_intracomunitario,
         PayerFact.IVA_GROUP_MEMBER: (lambda profile: profile.iva is not None and profile.iva.group_member_enrolled),
         PayerFact.IVA_GROUP_DOMINANT_ENTITY: (
             lambda profile: profile.iva is not None and profile.iva.group_dominant_entity_enrolled
@@ -143,11 +139,21 @@ _PAYER_FACT_EVALUATORS: Mapping[PayerFact, _PayerFactEvaluator] = MappingProxyTy
 )
 
 
-_PAYER_FACT_PROFILE_KEYS: Mapping[PayerFact, tuple[str, ...]] = MappingProxyType(
+#: Coded facts a profile answers yes, no or not at all: each reads optional
+#: boolean profile fields, so an unanswered question is ``None`` and a stored
+#: ``False`` is a declared no. A derived fact holds when any of its keys is yes.
+_THREE_STATE_PAYER_FACTS: Mapping[PayerFact, tuple[str, ...]] = MappingProxyType(
     {
         PayerFact.PAYS_WITHHELD_INCOME: ("has_employees", "pays_professionals_with_retencion"),
         PayerFact.PAYS_RENT_WITH_RETENCION: ("pays_rent_with_retencion",),
         PayerFact.TRADES_INTRACOMMUNITY: ("does_intracomunitario",),
+    },
+)
+
+
+_PAYER_FACT_PROFILE_KEYS: Mapping[PayerFact, tuple[str, ...]] = MappingProxyType(
+    {
+        **_THREE_STATE_PAYER_FACTS,
         PayerFact.IVA_GROUP_MEMBER: ("iva",),
         PayerFact.IVA_GROUP_DOMINANT_ENTITY: ("iva",),
         PayerFact.OSS_ENROLLED: ("iva",),
@@ -419,17 +425,37 @@ def _projection_declaration(profile: TaxpayerProfile, fact: PayerFactProjection)
     return _projection_yes_declaration(profile, fact)
 
 
+def payer_fact_is_three_state(fact: PayerFactValue) -> bool:
+    """Report whether a profile can state ``fact`` as a declared no, not only a yes or nothing."""
+    if isinstance(fact, PayerFactProjection):
+        return fact.three_state
+    return fact in _THREE_STATE_PAYER_FACTS
+
+
+def _three_state_declaration(answers: tuple[object, ...]) -> PayerFactDeclaration:
+    """Reduce optional yes/no answers: any yes holds, else any unanswered leaves it open, else no."""
+    if any(answer is True for answer in answers):
+        return PayerFactDeclaration.DECLARED_YES
+    if any(answer is None for answer in answers):
+        return PayerFactDeclaration.UNDECLARED
+    return PayerFactDeclaration.DECLARED_NO
+
+
 def payer_fact_declaration(profile: TaxpayerProfile, fact: PayerFactValue) -> PayerFactDeclaration:
     """Return what ``profile`` declares about the supplied payer fact.
 
-    A coded mechanics fact is two-state: its evaluator can prove a yes, and
-    anything else stays undeclared.
+    A coded enrolment fact is two-state: its evaluator can prove a yes, and
+    anything else stays undeclared. A coded payer fact over optional boolean
+    profile fields is three-state: a stated no is a declared no.
 
     Core types:
     :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
     """
     if isinstance(fact, PayerFactProjection):
         return _projection_declaration(profile, fact)
+    answered_keys = _THREE_STATE_PAYER_FACTS.get(fact)
+    if answered_keys is not None:
+        return _three_state_declaration(tuple(profile_path_value(profile, key) for key in answered_keys))
     try:
         holds = _PAYER_FACT_EVALUATORS[fact](profile)
     except KeyError as exc:

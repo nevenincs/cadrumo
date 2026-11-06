@@ -96,7 +96,7 @@ def _fully_populated_taxpayer() -> TaxpayerProfile:
                 source_modelo="322",
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "12"),
-                member_nifs=("B00000000", "A00000000"),
+                member_nifs=("B00010082", "A00010009"),
             ),
         ),
     )
@@ -135,7 +135,7 @@ class TestTaxpayerModelRoundTrip:
                 source_modelo="322",
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "12"),
-                member_nifs=("A00000000", "B00000000"),
+                member_nifs=("A00010009", "B00010082"),
             ),
         )
 

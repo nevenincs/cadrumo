@@ -1,5 +1,5 @@
-import checked130En from "@/dev/fixtures/modelo/modelo-130-1T-checked-en.json";
-import checked130Es from "@/dev/fixtures/modelo/modelo-130-1T-checked-es.json";
+import checked130En from "@fixtures/modelo/modelo-130-1T-checked-en.json" with { type: "json" };
+import checked130Es from "@fixtures/modelo/modelo-130-1T-checked-es.json" with { type: "json" };
 import type { Attention, FormIssue } from "./types";
 
 // What the read models report after steps a fresh synthetic profile never
