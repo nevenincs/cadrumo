@@ -21,6 +21,9 @@ use std::{
 
 /// The environment variable that selects the helper mode in a child test binary.
 pub(crate) const HELPER_MODE: &str = "CADRUMO_FAKE_OLLAMA";
+/// A file the stand-in waits for before it announces that it listens, so a test can
+/// observe a start that has begun and not finished.
+pub(crate) const HELPER_GATE: &str = "CADRUMO_FAKE_OLLAMA_GATE";
 /// The version the helper reports.
 pub(crate) const HELPER_VERSION: &str = "CADRUMO_FAKE_OLLAMA_VERSION";
 /// The arguments that run only the helper in a child test binary.
@@ -324,6 +327,11 @@ fn serve_helper() {
         exits_on_request: true,
         ..FakeState::default()
     }));
+    if let Some(gate) = std::env::var_os(HELPER_GATE) {
+        while !std::path::Path::new(&gate).exists() {
+            std::thread::sleep(std::time::Duration::from_millis(20));
+        }
+    }
     // The program's own announcement, which the engine waits for.
     eprintln!(
         "time=2026-01-01T00:00:00.000Z level=INFO source=routes.go:1 msg=\"Listening on {} (version {})\"",
