@@ -18,7 +18,12 @@ Every ``.ts``, ``.tsx``, ``.mts`` and ``.cts`` file in the repository, found on
 the filesystem under the repository's ignore rules, so installed dependencies
 and ignored build output stay out. A physical line is a line of the file as
 stored, blank lines and comments included, and a last line without its newline
-counts.
+counts. A line ends only at a line feed, a carriage return, or the two
+together, as Git and editors count lines. Any other separator, including
+U+2028, U+2029, vertical tab, form feed and next line, stays inside its line.
+The ESLint ``max-lines`` rule also treats U+2028 and U+2029 as line breaks, so
+on such a file the editor warns earlier than the gate fails. It never warns
+later.
 
 How to satisfy the gate
 -----------------------

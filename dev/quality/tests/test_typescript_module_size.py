@@ -62,12 +62,26 @@ def test_the_command_fails_on_a_module_over_the_bound(tmp_path: Path, capsys: py
 
 
 @pytest.mark.parametrize(
-    ("newline", "final"), [("\n", False), ("\r\n", True), ("\r\n", False)], ids=["no-final", "crlf", "crlf-no-final"]
+    ("newline", "final"),
+    [("\n", False), ("\r\n", True), ("\r\n", False), ("\r", True)],
+    ids=["no-final", "crlf", "crlf-no-final", "lone-cr"],
 )
 def test_line_endings_and_a_missing_final_newline_do_not_hide_a_line(tmp_path: Path, newline: str, final: bool) -> None:
     _plant(tmp_path, f"{_DESKTOP}/frontend/src/big.ts", MAX_PHYSICAL_LINES + 1, newline=newline, final=final)
 
     assert oversized(tmp_path) == [(f"{_DESKTOP}/frontend/src/big.ts", MAX_PHYSICAL_LINES + 1)]
+
+
+@pytest.mark.parametrize("separator", ["\u2028", "\u2029", "\v", "\f", "\x85"], ids=["ls", "ps", "vt", "ff", "nel"])
+def test_only_line_feeds_and_carriage_returns_end_a_line(tmp_path: Path, separator: str) -> None:
+    path = tmp_path / _DESKTOP / "frontend/src/text.ts"
+    path.parent.mkdir(parents=True)
+    lines = [f'export const line{index} = "a{separator}b";' for index in range(MAX_PHYSICAL_LINES)]
+    path.write_bytes(("\n".join(lines) + "\n").encode())
+
+    assert oversized(tmp_path) == []
+    path.write_bytes(path.read_bytes() + b"export const extra = 1;\n")
+    assert oversized(tmp_path) == [(f"{_DESKTOP}/frontend/src/text.ts", MAX_PHYSICAL_LINES + 1)]
 
 
 def test_blank_lines_and_comments_count(tmp_path: Path) -> None:
