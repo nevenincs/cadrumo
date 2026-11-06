@@ -5,7 +5,7 @@ tags:
 date: '2026-11-06'
 modified: '2026-11-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:ba8d5708353b40a013597b4097b2b95ecf4dc56f793f4f10ca8611acd68f2e53'
+body_hash: 'sha256:1f647cea739a1e3a689c4139501829d276785e0df4c758103e10f338d70dbe51'
 related:
   - "[[2026-11-06-modelo-profile-bindings-plan]]"
 ---
@@ -82,9 +82,14 @@ related:
 - `S04` `verify:` `encrypted contact module nine cases and final two corrected export cases` -> `pass`
 - `S04` `verify:` `authoring boundary eleven tests` -> `pass`
 - `S04` `verify:` `scoped Ruff format ty and generator context tests` -> `pass`
+- `S03` `A` `.vault/audit/2026-11-06-modelo-profile-bindings-audit.md`
+- `S03` `M` `.vault/reference/2026-11-06-modelo-profile-bindings-reference.md`
+- `S03` `verify:` `independent Sol high final scoped review` -> `pass`
+- `S03` `verify:` `local authority adoption and registry health` -> `pass`
 
 ## Notes
 
 - `S01` Semantic code index unavailable; targeted source inspection used. Full gates remain CHECKS2-owned.
 - `S02` Independent Sol review has no actionable findings; combined gates are CHECKS2 integration-owned.
 - `S04` Initial export fixture failures corrected; exact runs and independent scoped PASS recorded in audit. Combined gates remain CHECKS2-owned.
+- `S03` Combined integration gates and frontend null-context coverage assigned to CHECKS2; scoped evidence and limitations recorded in audit and reference.

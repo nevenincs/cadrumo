@@ -5,7 +5,7 @@ tags:
 date: '2026-11-06'
 modified: '2026-11-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:3ed20bca17b885470fdc14ac67f8220d7595a9289753fcdcc8df99552cc3c1bc'
+body_hash: 'sha256:7161435af589ae729241bc63430b20362c2d5285ef6f49d1de3a740c67f11722'
 related:
   - "[[2026-11-06-modelo-profile-bindings-plan]]"
 ---
@@ -19,6 +19,8 @@ The confirmed gap is the work-form projection of existing taxpayer header produc
 ## Scope and method
 
 MODELPROFILE examines canonical identity, contact, address and payment sources through typed registry declarations, calculation, work-form projection and export. Base eeba75569e252da8f3cd72826e1953740d386583, child branch nevenincs/modelo-profile-bindings. Semantic code search was attempted and returned index_unavailable for this child; targeted source inspection was used. The live typed inventory and verification results are added below when complete; static observations are not execution proof.
+
+The committed discovery/context slices were rebased onto integrated TUI `9b456620bc` on 2026-11-06, becoming `579c45d185` and `4b24a414fb`. The inventory below describes the original pinned generation; final changed-path publication/adoption results must be recorded separately. The integration introduces public-name renames, not dependency changes. M720 generator/provenance changes were adapted and verified on this base; final results appear below.
 
 ## Runtime trace
 
@@ -49,8 +51,7 @@ The linked governing plan names accepted contracts. Existing tests provide real 
 
 Official designs already bound to the sampled fields include AEAT DR 111 v18, DR 115 v13, DR 130 v12 and DR 131 2019-2023 v101 plus their revision-specific successors. This change must reuse their existing semantic producer assignments, rather than infer a new legal mapping from field labels. No new official release or supported-year policy is proposed.
 
-The baseline inventory below is complete for its declared structural scope. The context repair passes focused loader and exporter tests; M720 mapping validation and final integrated verification remain pending.
-
+The baseline inventory below is complete for its declared structural scope. The context and M720 repairs pass scoped source, publication and application proof below. Combined integrated acceptance remains CHECKS2-owned.
 
 ## Typed baseline coverage matrix
 
@@ -119,20 +120,38 @@ The following compact matrix groups exact authored revision IDs per modelo. Fiel
 | 763 | 2012-2014, 2015-2017, 2018-1t-3t, 2018-4t, 2019-y-siguientes | - | - | - | - |
 | 840 | 2003-y-siguientes | - | - | - | - |
 
-
 ### Field-level dispositions and coverage limits
 
 The exact export field ID is the reference carried by each form context block; the repair resolves that reference and then its producer key. It does not infer a source from displayed headings or a modelo number. Examples are `modelo-111-page-01-nif` -> taxpayer.tax_id and `modelo-111-page-01-apellidos` -> taxpayer.surnames_or_legal_name, with the same official roles already used by export. Requiredness remains the field's registry declaration. Modelo 130's analogous fields are optional; no new requiredness is imposed.
 
 M100's four authored editions already bind declarant identity to profile facts and have text-casilla and dictionary export resolution. Representative, spouse, asset-owner, issuer, creditor and group-entity rows are not generic taxpayer identity. The 600 lexical manual-input hints are discovery leads only; they are neither a defect count nor implementation authority. Inspected M390 representative/joint-declaration and M714 issuer/creditor candidates remain separately sourced. The scan does not certify every official field's legal completeness, test every export format, or adjudicate all specialized party/address keys.
 
-The actual missing mapping identified separately is M720 revision `2013-y-siguientes`: `modelo-720.type_1.telefono-contacto` and `modelo-720.type_1.nombre-contacto` are manual text bindings, consumed by fixed-width export and form binding fields, while the profile declares contact.contact_person_phone/name with the same contact-person role. These fields are optional, and missing facts must remain absent. Explicit declaration overrides take priority. AEAT DR720, physical PDF page 6 (printed page 15), positions 59-67 and 68-107, identifies contact phone and surnames/name respectively. Official source checked 2026-11-06: `https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/modelo_720.pdf`; existing enrolled source aeat-dr-720 pins sha256 ac324b935b690f0b6fe12dc8351c324cc804170750f483b0768d6417dd4976b7 in `src/cadrumo/_data/registry/aeat/legal/foreign-assets.toml:178`. No mapping to the unrelated Type-2 declared owner's name is authorized.
+The actual missing mapping identified separately is M720 revision `2013-y-siguientes`: `modelo-720.type_1.telefono-contacto` and `modelo-720.type_1.nombre-contacto` are manual text bindings, consumed by fixed-width export and form binding fields, while the profile declares contact.contact_person_phone/name with the same contact-person role. These fields are optional, and missing facts must remain absent. Explicit declaration overrides take priority. AEAT DR720, physical PDF page 6 (printed page 15), positions 59-67 and 68-107, identifies contact phone and surnames/name respectively. Official source checked 2026-11-06: `https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/modelo_720.pdf`; existing enrolled source aeat-dr-720 pins sha256 ac324b935b690f0b6fe12dc8351c324cc804170750f483b0768d6417dd4976b7 in `src/cadrumo/_data/registry/aeat/legal/foreign-assets.toml:178`. Final review corrected the initial Type-2 role interpretation: DR720 physical page 11, extraction lines 381-402, requires Type-2 NIF/name to repeat the Type-1 declarant. Those shipped manual inputs are supplied explicitly in the export fixture and are not claimed as automatic mappings by these two Type-1 contact replacements. Representative fields remain separately sourced.
 
 A fresh form read resolves current profile facts for open work. Existing frontend ContextSummary renders backend value_text without identity matching or edit addresses (`native/desktop/frontend/src/components/modelo/form/RecordsBlock.tsx:95`). Returning from the profile page remounts and rereads the workspace. Cross-window profile updates do not push-refresh an already mounted workspace; that pre-existing limitation is separate from source resolution. Filed/discarded historical heads must not be presented with today's profile identity as if it were recorded filing evidence.
 
-
 ## Context repair verification
+
+FRONTEND independently traced all three existing surfaces on integrated TUI `9b456620bc`: React `components/modelo/form/RecordsBlock.tsx` renders served `value_text` or the served unknown wording; TUI `entrypoints/tui/modelo/workbench/page_items.py` uses the same `context_value_text`; CLI `entrypoints/cli/modelo_rendering.py` renders the same work form. Thus removing a profile-backed field from generated form layout would remove it from all surfaces. The shared generator must retain those fields through existing read-only context, without surface-specific defaults. FRONTEND owns the additional React scenario assertions for served non-null/null context values; CHECKS2 owns their integrated build/run. Those assertions are pending, not completed evidence.
+
+FRONTEND delivered the assertions in commit `14a3764b49` (`fix/dock-title-refit`) to CHECKS2. The four-language M347 scenario compares each numbered context field's displayed value with served `value_text` and asserts that first open does not issue `modelo.work.calculate`. Its conditional null expectation is not exercised by current fixtures (all M347/M303 context values are populated). This is an explicit React coverage limit; the child encrypted M720 scenarios separately cover absent/partial profile facts at the backend. Integrated frontend execution remains CHECKS2-owned.
+
+The generator impact census reused the typed 58-modelo/161-revision inventory, checked actual source layout seed/review state and joined published export layouts with the two current M720 provider changes. Its fixed-width, nonrepeating scalar-profile predicates select exactly one generated revision: M720 `2013-y-siguientes`, contact fields `modelo-720-type_1-telefono-contacto` and `modelo-720-type_1-nombre-contacto` under `modelo-720-fichero-aeat` / `modelo-720-type-1`. Eleven profile-bearing authored/reviewed revisions across M130, M202 and M303 retain their authored layouts. XML/dictionary paths are outside this generator repair. Canonical generation and full validation below confirm this source-impact assessment.
 
 Joining typed form context references to exact export fields identifies taxpayer/contact context in 31 modelos across 73 authored revision occurrences. Representative tests exercise 111, 115, 130, 131 and distinct M180 contact data. The original loader supplied no producer values and the original context resolver returned None for taxpayer.tax_id; the new loader test independently expects the synthetic profile identifier, so the original path cannot satisfy it.
 
 The context slice's seven-module single-process pytest run passed 63 cases in 14.69 seconds. Three integration-marked exporter cases were excluded by default configuration; a follow-up explicit `-m 'unit or integration'` run of the new context tests and `test_export_producer_resolution.py` passed all 16 cases in 2.99 seconds, including those three. Ruff check, Ruff format check and scoped ty check passed all seven changed paths. Independent Sol high review found no actionable defects in this slice; full integrated gates remain CHECKS2-owned.
+
+## M720 source installation and local validation
+
+The final source changes the two Type-1 contact bindings to canonical profile providers, with exact instructional citations under `aeat-modelo-720-contact-instructions`. That guidance role reuses the enrolled PDF receipt without changing `aeat-dr-720` layout authority; the owning informative construct includes the guidance reference. Canonical generation changes only the two contact inputs to exact export-addressed read-only contexts and updates the source digest, preserving block IDs/order and export positions. A second generation writes zero fragments.
+
+Normal creation opens the form without calculating. The admitted form-read path therefore supplies current profile values for these exact declared binding contexts when no saved answer exists; saved membership, including empty/false/zero, takes precedence. Historical/unusable forms receive no current-profile fallback. The read does not persist inferred values. Calculation separately persists the considered scalar profile fingerprints under the existing provenance contract.
+
+Final source minimality/equivalence passed with fingerprint `53a5d5e136f483815d063c39a62ceab8fbeb2acbf176875f7f88361ed6f2133d` unchanged, 183518 bytes and 789 authored payload fields unchanged, zero redundant overrides/duplication/blocked work. The generic report's compaction status remains incomplete while minimality passes and source is accepted; no normalization was applied. `check-registry-target-current 720 2013-y-siguientes aeat-dr-720 2026 0A` passed with current output matching the committed target. Independent review passed the generated diff and construct evidence closure. Publication and encrypted runtime evidence follow.
+
+The canonical publisher installed logical generation `29d247afb605e9ebce6bf596e9882186bb9296a55c28218e2d410375f17afeb5`, database SHA-256 `b407d7923479d11a68f893baeb56468f70fe607c23dcca616bf63e3c4af484cd` (121561088 bytes), into the explicitly selected child-local authority root. `check-bindings` passed in 57.096 seconds: 9001 bindings across 58 modelos, zero findings/limitations. `check-registry` passed in 125.438 seconds with recorded and candidate identities equal, eight lifecycle lanes passing and none failing; its nonblocking target-coverage lane remains partial with 56 excluded targets, 105 current and zero drifted/stale targets. Export placement covers 35870 fields in 493 records with zero gaps/overlaps. This is not a claim that excluded formatos gained export capability.
+
+The seven-module scoped runtime selection initially passed 53 of 55 cases; two export cases lacked an explicit required Type-2 manual declaration row. A registered foreign-asset observation proved insufficient because its source row IDs are distinct from the shipped manual export fields. The final fixture uses the normal draft-input boundary for a synthetic Type-2 securities row and preserves the contact header solely from encrypted revision replay. It follows the existing case-preserving text codec. The nine-case encrypted module passed in 5.31 seconds. Independent review then corrected the fixture's Type-2 identity to repeat the canonical declarant; the two affected export cases passed in 2.84 seconds, with the other seven retaining unchanged passing evidence. Together these results cover all 55 scoped cases without claiming the earlier failing run passed.
+
+The encrypted cases cover first-create/first-form without calculation or repository writes, populated/empty/phone-only profiles, saved caller precedence, considered profile fingerprints, fingerprint-sensitive revision identity, registry-enumerated support years and exact local export positions. The two authoring-boundary modules passed all 11 cases in 137.89 seconds. Scoped Ruff/format/ty and whitespace checks pass. Independent final Sol review is PASS for this candidate. CHECKS2 owns combined check-code, check-registry-gate, test-gate, full test-registry, React/native build acceptance, final authority/doc-fixture regeneration on integrated TUI, and integration/cleanup; no remote publication or push was performed.
