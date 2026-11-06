@@ -138,7 +138,7 @@ msgstr "Noms de producte i d'autoritat"
 
 #: ../../reference/identity-and-naming.md
 msgid "Referent"
-msgstr "Referent"
+msgstr "Entitat"
 
 #: ../../reference/identity-and-naming.md
 msgid "Use"
