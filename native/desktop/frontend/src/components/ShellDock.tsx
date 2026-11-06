@@ -5,9 +5,7 @@ import type {
   RefObject,
   SetStateAction,
 } from "react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
-import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import type { DocsLanguage } from "../ipc/environment";
@@ -17,41 +15,29 @@ import type { Host, TerminalKind } from "../shell/host";
 import type { Layout, Maximized, PanelTab, Prefs } from "../shell/layout";
 import type { useNavigator } from "../shell/navigation/useNavigator";
 import type { RecordFilters } from "../shell/records";
-import { facts } from "../shell/compose";
-import { sessionFailedText } from "../shell/sessionWords";
 import type { AccountPhase, SignInController } from "../shell/signIn";
 import type { Translate } from "../shell/strings";
-import { DARK_TUI, LIGHT_TUI } from "../shell/terminalThemes";
 import type { useFullscreen } from "../shell/useFullscreen";
 import type { useShellShortcuts } from "../shell/useShellShortcuts";
 import type { useShellMenus } from "../shell/useShellMenus";
 import type { useWindowSetup } from "../shell/useWindowSetup";
 import { WORKSPACE_COLUMNS } from "../shell/useWorkspaceFocus";
-import { accountLabel } from "./accountWords";
-import { AgentColumn } from "./AgentColumn";
+import type { AgentColumn } from "./AgentColumn";
+import { AgentPane } from "./AgentPane";
 import type { OpenMenu } from "./ContextMenu";
 import { DockWorkspace } from "./docking/DockWorkspace";
 import { HostRecordList } from "./HostRecordList";
-import { PaneHeader, type PaneControl } from "./PaneHeader";
-import { SignedOut } from "./SignIn";
-import {
-  TerminalPane,
-  type TerminalApi,
-  type TerminalStatus,
-} from "./TerminalPane";
+import type { PaneControl } from "./PaneHeader";
+import { PANE_SURFACE } from "./paneSurface";
+import { sessionNote, tuiStatus } from "./sessionStatus";
+import { ShellTerminal, type TerminalWiring } from "./ShellTerminal";
+import type { TerminalApi, TerminalPane, TerminalStatus } from "./TerminalPane";
+import { TuiPane } from "./TuiPane";
+import { WorkspaceCanvas } from "./WorkspaceCanvas";
 
 type Navigator = ReturnType<typeof useNavigator>;
 type Area = Exclude<Maximized, null>;
 type Dock = ComponentProps<typeof DockWorkspace>;
-
-/** The exit code of a session that has exited, null when it is unknown. */
-const exitCode = (status: TerminalStatus): number | null | undefined =>
-  status.phase === "exited" ? status.code : undefined;
-
-/** The host's code for why a session could not start or carry on, when it has
- * failed; `sessionFailedText` words it. */
-const failure = (status: TerminalStatus): string | undefined =>
-  status.phase === "failed" ? status.message : undefined;
 
 /** The workspace's dock and every pane it holds: the agent, the first pane
  * with `main` in it, the TUI, the terminals and the log; and what closing,
@@ -210,186 +196,61 @@ export function ShellDock({
   revealLogs: () => void;
 }) {
   const tabOpen = (tab: PanelTab) => panelVisible && activePanes.includes(tab);
-  // What a session's header says beside its state: how it ended, or why it
-  // could not start.
-  const sessionNote = (kind: TerminalKind) => {
-    const reason = failure(status[kind]);
-    if (reason !== undefined) return sessionFailedText(t, reason);
-    const code = exitCode(status[kind]);
-    if (code === undefined) return undefined;
-    return facts(t, [
-      t("desktop.session.exited", { code: code ?? "?" }),
-      t("desktop.session.enter_restarts"),
-    ]);
+  const wiring: TerminalWiring = {
+    host,
+    t,
+    account,
+    fontSize: terminalFontSize,
+    isShellChord,
+    setStatus,
+    terminalMenu,
+    terminals,
   };
 
-  const terminalPane = (
-    kind: TerminalKind,
-    shown: boolean,
-    theme = terminalTheme,
-  ) => (
-    <TerminalPane
-      host={host}
-      kind={kind}
-      shown={shown}
-      theme={theme}
-      fontSize={terminalFontSize}
-      label={
-        kind === "tui"
-          ? t("desktop.tui.label")
-          : t(
-              kind === "console"
-                ? "desktop.rail.console"
-                : "desktop.rail.python",
-            )
-      }
-      isShellChord={isShellChord}
-      onStatus={(k, s) => {
-        setStatus((all) => ({ ...all, [k]: s }));
-        if (k !== "tui") return;
-        // The TUI's session has ended: what it did to the account is read
-        // again.
-        if (s.phase === "exited" || s.phase === "failed") account.tuiExited();
-      }}
-      onMenu={terminalMenu}
-      register={(k, api) => {
-        terminals.current[k] = api;
-      }}
-      tabPanel={kind !== "tui"}
+  const docsPane = <div className={cn(PANE_SURFACE, "pane-docs")}>{main}</div>;
+  const tuiPane = (
+    <TuiPane
+      wiring={wiring}
+      phase={phase}
+      status={status.tui}
+      scheme={scheme}
+      shown={tuiVisible}
+      maximizeControl={maximizeControl("tui", "desktop.pane.maximize_tui")}
+      splitControls={splitControls}
+      byId={byId}
+      toggleMaximize={() => toggleMaximize("tui")}
+      close={() => closeColumn("tui")}
+      askSignIn={askSignIn}
+      signInButton={signInButton}
     />
   );
-
-  const pane = "pane flex min-h-0 min-w-0 flex-1 flex-col bg-background";
-  const docsPane = <div className={cn(pane, "pane-docs")}>{main}</div>;
-  const tuiPane = (
-    <div className={cn(pane, "pane-tui")} data-scheme={scheme}>
-      <PaneHeader
-        title={t("desktop.pane.tui")}
-        // While the account withholds the TUI there is no session: the
-        // header says the account's phase, not the last session's.
-        status={
-          account.gated
-            ? {
-                phase:
-                  phase === "checking" ||
-                  phase === "starting" ||
-                  account.startingServices
-                    ? "starting"
-                    : "unavailable",
-                note: t(accountLabel(phase) ?? "desktop.account.unknown"),
-              }
-            : { phase: status.tui.phase, note: sessionNote("tui") }
-        }
-        onToggleMaximize={() => toggleMaximize("tui")}
-        controls={[
-          maximizeControl("tui", "desktop.pane.maximize_tui"),
-          ...splitControls,
-          {
-            id: "close",
-            icon: "close",
-            label: t("desktop.tui.hide"),
-            shortcut: primaryChord(byId("tui.toggle")),
-            run: () => closeColumn("tui"),
-          },
-        ]}
-      />
-      {account.gated ? (
-        <SignedOut
-          account={account}
-          onSignIn={askSignIn}
-          signInButton={signInButton}
-        />
-      ) : (
-        terminalPane(
-          "tui",
-          tuiVisible,
-          scheme === "dark" ? DARK_TUI : LIGHT_TUI,
-        )
-      )}
-    </div>
-  );
   const agentPane = (
-    <div className={cn(pane, "pane-agent")}>
-      {/* One bar: the conversation's own actions, then the column's maximize
-          and close as every column has them. */}
-      <AgentColumn
-        control={agentControl}
-        agent={host.agent}
-        session={host.agentSession}
-        providerSettings={host.providerSettings}
-        agentAccess={host.agentAccess}
-        writeClipboard={(text) => host.writeClipboard(text)}
-        // The agent works only for a profile that is signed in here: not
-        // for one the shell cannot tell about.
-        reader={signedIn ? (account.status?.active_profile ?? null) : null}
-        shown={agentVisible}
-        locale={locale}
-        body={agentBody}
-        onToggleMaximize={() => toggleMaximize("agent")}
-        onMenu={openMenu}
-        onToolRefused={onToolRefused}
-        onOpenLink={openLink}
-        setupSettled={settledSetups}
-        onOpenView={(url, opened) =>
-          openViewLink(url, {
-            opened: (shown) => opened?.(shown.opened),
-          })
-        }
-        trailing={[
-          maximizeControl("agent", "desktop.pane.maximize_agent"),
-          {
-            id: "close",
-            icon: "close",
-            label: t("desktop.agent.hide"),
-            shortcut: primaryChord(byId("agent.toggle")),
-            run: () => closeColumn("agent"),
-          } satisfies PaneControl,
-        ].map((control) => (
-          <IconButton
-            key={control.id}
-            label={control.label}
-            shortcut={control.shortcut}
-            aria-pressed={control.pressed}
-            onClick={control.run}
-          >
-            <Icon name={control.icon} />
-          </IconButton>
-        ))}
-      />
-    </div>
+    <AgentPane
+      host={host}
+      t={t}
+      locale={locale}
+      account={account}
+      signedIn={signedIn}
+      shown={agentVisible}
+      agentControl={agentControl}
+      body={agentBody}
+      openMenu={openMenu}
+      onToolRefused={onToolRefused}
+      openLink={openLink}
+      openViewLink={openViewLink}
+      settledSetups={settledSetups}
+      maximizeControl={maximizeControl("agent", "desktop.pane.maximize_agent")}
+      byId={byId}
+      toggleMaximize={() => toggleMaximize("agent")}
+      close={() => closeColumn("agent")}
+    />
   );
-  // Nothing open above the bottom panel: the main area says so, and offers
-  // each column back.
   const canvas = (
-    <EmptyState
-      className="canvas bg-background"
-      icon="canvas"
-      heading={t("desktop.canvas.title")}
-      description={t("desktop.canvas.lead")}
-    >
-      <div className="flex flex-wrap justify-center gap-2">
-        {(
-          [
-            [
-              "agent.toggle",
-              "agent",
-              "desktop.agent.show",
-              signedIn && !agentVisible,
-            ],
-            ["tui.toggle", "tui", "desktop.tui.show", true],
-            ["docs.toggle", "book", "desktop.docs.show", true],
-          ] as const
-        ).map(
-          ([id, icon, labelKey, offered]) =>
-            offered && (
-              <Button key={id} variant="outline" onClick={() => runAction(id)}>
-                <Icon name={icon} />
-                {t(labelKey)}
-              </Button>
-            ),
-        )}
-      </div>
-    </EmptyState>
+    <WorkspaceCanvas
+      t={t}
+      offersAgent={signedIn && !agentVisible}
+      runAction={runAction}
+    />
   );
 
   return (
@@ -514,23 +375,13 @@ export function ShellDock({
           id: "tui",
           title: t("desktop.pane.tui"),
           content: tuiPane,
-          status: account.gated
-            ? {
-                phase:
-                  phase === "checking" ||
-                  phase === "starting" ||
-                  account.startingServices
-                    ? "starting"
-                    : "unavailable",
-                note: t(accountLabel(phase) ?? "desktop.account.unknown"),
-              }
-            : { phase: status.tui.phase, note: sessionNote("tui") },
+          status: tuiStatus(t, account, phase, status.tui),
         },
         {
           id: "console",
           status: {
             phase: status.console.phase,
-            note: sessionNote("console"),
+            note: sessionNote(t, status.console),
           },
           className: cn(
             "[container:panel/size]",
@@ -539,7 +390,12 @@ export function ShellDock({
           title: t("desktop.rail.console"),
           content: (
             <div className="relative flex min-h-0 flex-1">
-              {terminalPane("console", tabOpen("console"))}
+              <ShellTerminal
+                kind="console"
+                shown={tabOpen("console")}
+                theme={terminalTheme}
+                wiring={wiring}
+              />
             </div>
           ),
         },
@@ -547,7 +403,7 @@ export function ShellDock({
           id: "python",
           status: {
             phase: status.python.phase,
-            note: sessionNote("python"),
+            note: sessionNote(t, status.python),
           },
           className: cn(
             "[container:panel/size]",
@@ -556,7 +412,12 @@ export function ShellDock({
           title: t("desktop.rail.python"),
           content: (
             <div className="relative flex min-h-0 flex-1">
-              {terminalPane("python", tabOpen("python"))}
+              <ShellTerminal
+                kind="python"
+                shown={tabOpen("python")}
+                theme={terminalTheme}
+                wiring={wiring}
+              />
             </div>
           ),
         },
