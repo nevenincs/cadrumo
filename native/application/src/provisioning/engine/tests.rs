@@ -9,7 +9,9 @@ use crate::provisioning::{
         Archives, BROWSER_VERSION, HOST, driver_package, fake_environment, fake_leading,
         launchable_archives,
     },
+    items::FULL_CHECK_BUDGET,
     local_ai::{
+        ServerCall,
         fake_ollama::FakeOllama,
         models::SelectedModel,
         program::{SERVER_RECORD, SERVER_RECORD_SCHEMA, ServerRecord},
@@ -809,6 +811,50 @@ fn a_tag_the_registry_moved_is_the_model_the_program_verified() {
             .count(),
         2,
         "each model is pulled once: {requests:?}"
+    );
+}
+
+#[test]
+fn a_setup_whose_check_the_server_drops_reports_the_request_that_failed() {
+    let text = StoredModel::new(1);
+    let vision = StoredModel::new(9);
+    let world = World::local_ai(&text, &vision);
+    world
+        .ollama
+        .as_ref()
+        .unwrap()
+        .state
+        .lock()
+        .unwrap()
+        .generation_hangs_up = true;
+
+    let done = world.set_up_local_ai_serving(None);
+
+    assert_eq!(done.report.outcome, Outcome::Failed, "{:?}", done.report);
+    assert_eq!(done.report.item, Some(ItemId::LocalAi));
+    assert_eq!(
+        done.report.failure,
+        Some(FailureCategory::ProgramNotRunning),
+        "the window still words the one category"
+    );
+    assert!(
+        matches!(
+            done.report.failure_cause.as_deref(),
+            Some(NotRunningCause::Request {
+                call: ServerCall::Generate,
+                budget: Some(FULL_CHECK_BUDGET),
+                ..
+            })
+        ),
+        "the report keeps which request failed: {:?}",
+        done.report.failure_cause
+    );
+    assert!(
+        world
+            .ollama_requests()
+            .iter()
+            .any(|line| line.starts_with("POST /api/pull")),
+        "the models were pulled before the check failed"
     );
 }
 

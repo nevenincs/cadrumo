@@ -56,6 +56,9 @@ pub(crate) struct FakeState {
     pub tags: BTreeSet<String>,
     /// The status and body a generation answers with instead of one token.
     pub generation: Option<(String, Value)>,
+    /// Whether a check's generation closes its connection without answering, as a server
+    /// that ended or dropped the request does.
+    pub generation_hangs_up: bool,
     /// Whether `POST /fake/exit` ends the process, as a crash would: only in the helper.
     pub exits_on_request: bool,
 }
@@ -195,7 +198,12 @@ Connection: close
             if body["keep_alive"] == json!(0) && body["prompt"].is_string() =>
         {
             let generation = guard.generation.clone();
+            let hangs_up = guard.generation_hangs_up;
             drop(guard);
+            if hangs_up {
+                let _ = stream.shutdown(std::net::Shutdown::Both);
+                return;
+            }
             match generation {
                 Some((status, answer)) => respond(&mut stream, &status, &answer),
                 None => respond(

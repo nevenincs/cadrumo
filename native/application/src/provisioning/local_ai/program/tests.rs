@@ -492,10 +492,10 @@ fn a_group_that_cannot_be_opened_starts_no_server() {
     );
     assert!(matches!(
         refused,
-        LocalAiError::ServerStart(ServerStartFailure::Launch {
+        LocalAiError::NotRunning(NotRunningCause::Start(ServerStartFailure::Launch {
             step: LaunchStep::OpenGroup,
             kind: io::ErrorKind::Unsupported,
-        })
+        }))
     ));
     assert_eq!(refused.category(), FailureCategory::ProgramNotRunning);
     assert!(program.server().is_none());
@@ -557,10 +557,10 @@ fn a_server_the_system_cannot_create_says_which_step_failed_and_why() {
     );
     assert!(matches!(
         error,
-        LocalAiError::ServerStart(ServerStartFailure::Launch {
+        LocalAiError::NotRunning(NotRunningCause::Start(ServerStartFailure::Launch {
             step: LaunchStep::Create,
             kind: io::ErrorKind::NotFound,
-        })
+        }))
     ));
     assert_eq!(error.category(), FailureCategory::ProgramNotRunning);
 }
@@ -586,10 +586,10 @@ fn a_server_that_cannot_be_contained_says_so_and_does_not_run() {
     );
     assert!(matches!(
         error,
-        LocalAiError::ServerStart(ServerStartFailure::Launch {
+        LocalAiError::NotRunning(NotRunningCause::Start(ServerStartFailure::Launch {
             step: LaunchStep::Contain,
             kind: io::ErrorKind::PermissionDenied,
-        })
+        }))
     ));
     assert_eq!(error.category(), FailureCategory::ProgramNotRunning);
 }
@@ -640,7 +640,7 @@ fn a_program_that_never_listens_or_answers_otherwise_is_ended_and_not_running() 
     assert!(
         matches!(
             exited,
-            LocalAiError::ServerStart(ServerStartFailure::Closed { .. })
+            LocalAiError::NotRunning(NotRunningCause::Start(ServerStartFailure::Closed { .. }))
         ),
         "{exited}"
     );
@@ -656,7 +656,7 @@ fn a_program_that_never_listens_or_answers_otherwise_is_ended_and_not_running() 
     assert!(
         matches!(
             &other,
-            LocalAiError::ServerStart(ServerStartFailure::Version(VersionFailure::Different { found }))
+            LocalAiError::NotRunning(NotRunningCause::Start(ServerStartFailure::Version(VersionFailure::Different { found })))
                 if found == "0.0.1"
         ),
         "{other}"
