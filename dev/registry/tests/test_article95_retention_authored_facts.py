@@ -8,7 +8,6 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.resolution import (
     ResolvedScalarFact,
     ScalarFactQuery,
@@ -16,6 +15,7 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
+from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
 
 from ..compiler.fact_validation import governed_fact_catalogue_failures
 from ..compiler.loader import load_shared_catalogues
@@ -102,14 +102,22 @@ def test_article_95_rate_boundaries_select_the_boe_redaction_value(
     assert resolved.source_refs == (f"boe-rirpf-art-95-{variant_suffix}",)
 
 
-def test_article_95_rates_do_not_project_before_the_first_redaction_in_force() -> None:
-    """The first redaction declares when it entered into force, and that is a legal boundary."""
-    first = _REDACTION_STARTS[0]
+def test_article_95_rates_before_the_first_redaction_read_it_as_a_backward_projection() -> None:
+    """A date always has a rate: before the first redaction in force, that redaction answers, marked as projected."""
+    fact_id = "rirpf-art-95:retencion-actividades-profesionales-general"
+    first = min(
+        variant.valid_from for variant in _catalogue().facts[fact_id].variants if variant.valid_from is not None
+    )
 
-    with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
-        _resolve("rirpf-art-95:retencion-actividades-profesionales-general", first - timedelta(days=1))
+    before = _resolve(fact_id, first - timedelta(days=1))
+    assert before.payload.value == Decimal("0.15")
+    assert before.variant_id.endswith(first.isoformat())
+    assert before.projection_direction is TemporalProjectionDirection.BACKWARD
+    assert before.projected_from_date == first
+    assert not before.published_on_date
 
     resolved = _resolve("rirpf-art-95:retencion-actividades-profesionales-general", first)
+    assert resolved.projection_direction is TemporalProjectionDirection.AUTHORED
     assert resolved.payload.value == Decimal("0.15")
     assert resolved.payload.unit == "fraction"
     assert resolved.source_refs == (f"boe-rirpf-art-95-{first.isoformat()}",)

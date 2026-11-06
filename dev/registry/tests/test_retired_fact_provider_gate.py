@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import shutil
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from pathlib import Path
 
@@ -21,6 +21,7 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
 
 from ..compiler import fact_providers
 from ..compiler.authority import compile_validated_authority
@@ -162,10 +163,30 @@ def test_real_resolution_tracks_known_legal_change_boundaries() -> None:
     ).payload.entities == frozenset({"subvencion_corriente", "subvencion_capital", "indemnizacion"})
 
 
-def test_real_resolution_refuses_before_the_source_grounded_windows() -> None:
-    # Historical variants stay authored, but the registry's floor refuses them.
+def test_real_resolution_below_the_floor_reads_the_authored_variant_as_a_backward_projection() -> None:
+    """A standing rate reaches below the floor and before its first window; it never claims grade there."""
+    rate = "liva-art-161:recargo-rate-general"
+    floor = committed_supported_filing_years().date_envelope().floor
+    starts = sorted(
+        variant.valid_from for variant in _catalogue().facts[rate].variants if variant.valid_from is not None
+    )
+    below_floor_start = max(start for start in starts if start < floor)
+
+    inside_a_window = _resolve_scalar(rate, below_floor_start)
+    assert inside_a_window.variant_id.endswith(below_floor_start.isoformat())
+    assert inside_a_window.published_on_date
+    assert inside_a_window.projection_direction is TemporalProjectionDirection.BACKWARD
+    assert inside_a_window.projected_from_date == floor
+
+    before_every_window = _resolve_scalar(rate, starts[0] - timedelta(days=1))
+    assert before_every_window.variant_id.endswith(starts[0].isoformat())
+    assert not before_every_window.published_on_date
+    assert before_every_window.projection_direction is TemporalProjectionDirection.BACKWARD
+    assert before_every_window.projected_from_date == starts[0]
+
+    # A threshold declares no standing rate, so the floor stays a refusal for it.
     with pytest.raises(RegistryValidationError, match="falls outside the supported filing years"):
-        _resolve_scalar("liva-art-161:recargo-rate-general", date(2012, 9, 1))
+        _resolve_scalar("lirpf-dt-32:eo-exclusion-rendimientos-conjunto-eur", floor - timedelta(days=1))
 
 
 def test_the_gate_applies_only_to_a_registry_that_enrolls_fact_providers(monkeypatch: pytest.MonkeyPatch) -> None:
