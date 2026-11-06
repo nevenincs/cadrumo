@@ -288,11 +288,21 @@ export function resizeDockSplit(
   return layout.root ? { ...layout, root: visit(layout.root, path) } : layout;
 }
 
-/** Hidden tabs keep their place; empty branches take no screen space. */
+/** Hidden tabs keep their place; empty branches take no screen space. A
+ * side-by-side split too narrow for both sides' `besideWidths` is drawn
+ * stacked, and a stacked split keeps each side's `minimumHeights` where both
+ * fit and shares the height in their proportion where they do not; the
+ * layout keeps its own arrangement and ratios for when there is room. */
 export function dockGeometry(
   layout: DockLayout,
   visible: readonly DockPane[],
-  fit?: { width: number; minimumWidths: Partial<Record<DockPane, number>> },
+  fit?: {
+    width: number;
+    minimumWidths: Partial<Record<DockPane, number>>;
+    besideWidths?: Partial<Record<DockPane, number>>;
+    height?: number;
+    minimumHeights?: Partial<Record<DockPane, number>>;
+  },
 ): { groups: DockPlacement[]; dividers: DockDivider[] } {
   const groups: DockPlacement[] = [];
   const dividers: DockDivider[] = [];
@@ -328,6 +338,40 @@ export function dockGeometry(
     widths.set(node, width);
     return width;
   };
+  // The width a branch needs to stand beside another: its active panes'
+  // floors, added across and the widest down.
+  const beside = (node: DockNode): number => {
+    if (!has(node)) return 0;
+    if (node.kind === "tabs") {
+      const pane = active(node);
+      return pane ? Math.max(0, fit?.besideWidths?.[pane] ?? 0) : 0;
+    }
+    if (!has(node.first) || !has(node.second))
+      return beside(has(node.first) ? node.first : node.second);
+    const a = beside(node.first),
+      b = beside(node.second);
+    return node.axis === "row" ? a + b : Math.max(a, b);
+  };
+  // The height a branch needs: its active panes' floors, added down and the
+  // tallest across.
+  const tall = (node: DockNode): number => {
+    if (!has(node)) return 0;
+    if (node.kind === "tabs") {
+      const pane = active(node);
+      return pane ? Math.max(0, fit?.minimumHeights?.[pane] ?? 0) : 0;
+    }
+    if (!has(node.first) || !has(node.second))
+      return tall(has(node.first) ? node.first : node.second);
+    const a = tall(node.first),
+      b = tall(node.second);
+    return node.axis === "column" ? a + b : Math.max(a, b);
+  };
+  const stacked = (node: DockNode & { kind: "split" }, rect: DockRect) => {
+    if (node.axis !== "row" || !fit || fit.width <= 0) return false;
+    const a = beside(node.first),
+      b = beside(node.second);
+    return a > 0 && b > 0 && rect.width * fit.width < a + b;
+  };
   const visit = (node: DockNode, rect: DockRect, path: string) => {
     if (node.kind === "tabs") {
       const tabs = node.tabs.filter((pane) => visible.includes(pane));
@@ -348,9 +392,10 @@ export function dockGeometry(
     if (!a && !b) return;
     if (!a || !b)
       return visit(a ? node.first : node.second, rect, path + (a ? "0" : "1"));
+    const axis = stacked(node, rect) ? "column" : node.axis;
     let minRatio = 0.1,
       maxRatio = 0.9;
-    if (node.axis === "row" && fit && fit.width > 0) {
+    if (axis === "row" && fit && fit.width > 0) {
       const available = rect.width * fit.width;
       const low = Math.max(minRatio, minimum(node.first) / available);
       const high = Math.min(maxRatio, 1 - minimum(node.second) / available);
@@ -360,17 +405,35 @@ export function dockGeometry(
         maxRatio = Math.max(low, high);
       }
     }
+    if (axis === "column" && fit?.height) {
+      const available = rect.height * fit.height;
+      const above = tall(node.first),
+        below = tall(node.second);
+      if (above + below > available && above > 0 && below > 0) {
+        // Neither floor fits: the two share the height and stay on screen.
+        minRatio = maxRatio = Math.max(
+          minRatio,
+          Math.min(maxRatio, above / (above + below)),
+        );
+      } else {
+        minRatio = Math.max(minRatio, Math.min(maxRatio, above / available));
+        maxRatio = Math.max(
+          minRatio,
+          Math.min(maxRatio, 1 - below / available),
+        );
+      }
+    }
     const ratio = Math.max(minRatio, Math.min(maxRatio, node.ratio));
     dividers.push({
       path,
-      axis: node.axis,
+      axis,
       ratio,
       minRatio,
       maxRatio,
       rect,
       panes: dockPanes(node).filter((pane) => visible.includes(pane)),
     });
-    const row = node.axis === "row";
+    const row = axis === "row";
     visit(
       node.first,
       {

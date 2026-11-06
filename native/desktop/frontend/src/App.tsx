@@ -532,8 +532,11 @@ export function App({ host }: { host: Host }) {
   // Layout geometry, read from the canonical tokens (src/styles/tokens.css) instead
   // of duplicated as literals; each metric re-reads on resize.
   const splitMinA = useMetric("--split-min-a", 260);
+  const splitMinBRow = useMetric("--split-min-b-row", 320);
   const railWidth = useMetric("--rail-w", 48);
   const agentMin = useMetric("--agent-min", 240);
+  const docsMin = useMetric("--docs-min", 200);
+  const panelMin = useMetric("--panel-min", 140);
   const terminalFontSize = useTerminalFontSize(prefs.fontSize);
 
   const patch = useCallback(
@@ -699,6 +702,25 @@ export function App({ host }: { host: Host }) {
   const dockMinimumWidths = useMemo(
     () => (fitLedger ? { docs: mainMin, agent: agentMin } : undefined),
     [fitLedger, mainMin, agentMin],
+  );
+  // Side by side needs room for both panes' minimums; a narrower window
+  // stacks them without changing the remembered arrangement.
+  const dockBesideWidths = useMemo(
+    () => ({ docs: mainMin, tui: splitMinBRow }),
+    [mainMin, splitMinBRow],
+  );
+  // The panel keeps a usable handful of rows and the panes above it their
+  // floor; a window too short for both shares its height between them.
+  const dockMinimumHeights = useMemo(
+    () => ({
+      docs: docsMin,
+      tui: docsMin,
+      agent: docsMin,
+      console: panelMin,
+      python: panelMin,
+      logs: panelMin,
+    }),
+    [docsMin, panelMin],
   );
   const docsVisible = firstPaneShown && !pageOn;
   const calendarVisible = calendarOn && firstPaneShown;
@@ -3221,6 +3243,8 @@ export function App({ host }: { host: Host }) {
             <DockWorkspace
               layout={docking}
               minimumWidths={dockMinimumWidths}
+              besideWidths={dockBesideWidths}
+              minimumHeights={dockMinimumHeights}
               visible={dockOffered}
               expanded={expandedPane}
               fullscreen={fullscreen.fullscreen}
