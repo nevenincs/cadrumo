@@ -317,7 +317,7 @@ class CadrumoTyperGroup(TyperGroup):
         the shared-spine error document never appeared on any parse-time
         or crash failure. Run the underlying dispatch non-standalone and
         re-implement the terminal handling with a JSON-aware branch (see
-        :mod:`._terminal_errors`): usage errors keep their Click exit
+        :mod:`cadrumo.entrypoints.cli.terminal_errors`): usage errors keep their Click exit
         codes but emit the shared-spine error document when JSON is
         requested; unexpected exceptions become the structured crash
         boundary instead of a raw traceback.

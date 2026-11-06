@@ -1,7 +1,7 @@
 """The calculation report builder and its CSV serialiser, over the real registry.
 
 Every case here runs against the published authority through the shared fixture
-revision in :mod:`._calculation_report_fixture`, so row identity, section order
+revision in :mod:`.calculation_report_fixture`, so row identity, section order
 and grounding are the registry's. What each test varies is one input to the
 builder -- the language, the persisted provenance, the export instant -- so the
 report's treatment of that input is observable on its own.

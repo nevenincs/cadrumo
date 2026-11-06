@@ -27,7 +27,7 @@ surfaces that split out of this module keep their own transport schemas in
 :mod:`ledger_interchange_results` (import / export),
 :mod:`ledger_participation_results` (participation / tracking),
 :mod:`ledger_rule_results`,
-:mod:`_ledger_llm_payloads`,
+:mod:`ledger_llm_payloads`,
 :mod:`ledger_catalogue_invoice_results`, and
 :mod:`ledger_business_payloads` (the invoice / inventory / evidence
 sub-app payload families).
@@ -598,7 +598,7 @@ class LedgerAddResult(LedgerMutationResult):
     """JSON envelope for ``aeat app ledger add``.
 
     ``add`` joins the uniform mutation quintet by subclassing
-    :class:`_LedgerMutationResult`, gaining the ``review_status`` field every
+    :class:`LedgerMutationResult`, gaining the ``review_status`` field every
     other single-transaction mutation already carries.
     """
 
