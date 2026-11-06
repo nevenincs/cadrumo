@@ -245,12 +245,36 @@ test("a narrow header keeps its controls inside it and its whole title in the ta
     })
     .tap();
   await expect(target.locator(".calendar-page")).toBeVisible();
-  // Where the header is too narrow to show the whole title, the tab still
-  // names it whole, and its tooltip shows it.
   const whole = label("desktop.calendar.title", {}, "es");
   const tab = target.getByRole("tab", { name: whole, exact: true });
   await expect(tab).toHaveAttribute("id", "tab-docs");
   await expect(tab).toHaveAttribute("title", new RegExp(`^${whole}`));
+  // The header gives up the controls its arrangement menu repeats before it
+  // cuts the title: the title shows whole, and the menu stays.
+  const title = target.locator(
+    '[data-dock-header="docs"] [aria-selected="true"] [data-dock-title]',
+  );
+  await expect(title).toHaveText(whole);
+  await expect
+    .poll(() =>
+      title.evaluate((element) => {
+        const row = element
+          .closest("[data-dock-tabs]")!
+          .getBoundingClientRect();
+        const box = element.getBoundingClientRect();
+        return (
+          element.scrollWidth <= element.clientWidth &&
+          box.left >= row.left - 1 &&
+          box.right <= row.right + 1
+        );
+      }),
+    )
+    .toBe(true);
+  await expect(
+    target
+      .locator('[data-dock-header="docs"]')
+      .getByRole("button", { name: label("desktop.dock.arrange", {}, "es") }),
+  ).toBeVisible();
   for (const pane of ["docs", "tui"]) {
     const header = target.locator(`[data-dock-header="${pane}"]`);
     const edge = (await header.boundingBox())!;

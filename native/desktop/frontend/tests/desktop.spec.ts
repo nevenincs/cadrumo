@@ -1801,12 +1801,30 @@ test("a window too narrow for side by side stacks without changing the choice", 
   await target.goto("/");
   await revealTui(target);
   await expect.poll(() => arrangement(target)).toBe("row");
+  const stackOffers = async () => {
+    await target.keyboard.press("ControlOrMeta+Shift+KeyK");
+    const palette = target.locator(".palette");
+    await palette
+      .getByRole("combobox", { name: label("desktop.palette.label") })
+      .fill(label("desktop.split.stack"));
+    const offers = await palette
+      .getByRole("option")
+      .filter({ hasText: label("desktop.split.stack") })
+      .count();
+    await target.keyboard.press("Escape");
+    await expect(palette).toBeHidden();
+    return offers;
+  };
+  expect(await stackOffers()).toBe(1);
   await target.setViewportSize({ width: 520, height: 600 });
   await expect.poll(() => arrangement(target)).toBe("column");
+  // The choice cannot take effect here, so it is not offered.
+  expect(await stackOffers()).toBe(0);
   // The window stacks them without changing the choice: given the room
   // again, they stand side by side as they were left.
   await target.setViewportSize({ width: 1280, height: 720 });
   await expect.poll(() => arrangement(target)).toBe("row");
+  expect(await stackOffers()).toBe(1);
 });
 
 test("the documentation can relay only the chords the shell published to it", async ({

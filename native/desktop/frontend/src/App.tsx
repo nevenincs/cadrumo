@@ -240,6 +240,8 @@ export function App({ host }: { host: Host }) {
   const [errorCount, setErrorCount] = useState(0);
   const initial = useMemo(loadState, []);
   const [prefs, setPrefs] = useState<Prefs>(initial.prefs);
+  // Panes whose side-by-side split the window is too narrow to draw.
+  const [narrowedPanes, setNarrowedPanes] = useState<readonly DockPane[]>([]);
   const [layout, setLayout] = useState<Layout>(() => {
     let docking =
       initial.layout.docking ??
@@ -1712,6 +1714,9 @@ export function App({ host }: { host: Host }) {
             : t("desktop.split.side_by_side"),
         group: "layout",
         icon: prefs.orientation === "row" ? "splitColumn" : "splitRow",
+        // While the window forces stacking, the choice would change nothing
+        // visible, so it is not offered.
+        enabled: () => !narrowedPanes.includes("docs"),
         run: () => {
           changeDocking((current) => orientDockPane(current, "docs"));
           setPrefs((p) => ({
@@ -2261,6 +2266,7 @@ export function App({ host }: { host: Host }) {
       layout.tab,
       layout.zoom,
       prefs.orientation,
+      narrowedPanes,
       maximized,
       docsSearchReady,
       docsEntry,
@@ -3314,6 +3320,7 @@ export function App({ host }: { host: Host }) {
                 } else toggleMaximize(pane);
               }}
               onFullscreen={(pane) => enterFullscreen(pane)}
+              onNarrowed={setNarrowedPanes}
               empty={canvas}
               panes={[
                 {
