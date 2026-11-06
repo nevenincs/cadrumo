@@ -281,6 +281,18 @@ FAMILIES: Final[tuple[FixtureFamily, ...]] = (
         support=(f"{_ASSET_TESTS}/served_words_recording_support.py",),
     ),
     _script(
+        "assets-register",
+        "assets_register.py",
+        ("assetsRegister.json",),
+        "What the register answers for the Assets fixtures' scenario register, replayed from its steps.",
+        questions="dev/fixtures/assets-register-scenario",
+        support=(
+            f"{_ASSET_TESTS}/register_recording_support.py",
+            f"{_ASSET_TESTS}/register_support.py",
+            f"{_ASSET_TESTS}/ledger_support.py",
+        ),
+    ),
+    _script(
         "ledger-entry-options",
         "ledger_entry_options.py",
         ("ledgerEntryOptions.json",),

@@ -22,16 +22,18 @@ def acquisition_transaction(
     direction: TransactionDirection = TransactionDirection.OUTGOING,
     currency: str = "EUR",
     value_in_eur: Decimal | None = None,
+    booked_date: date = date(2025, 1, 10),
+    description: str | None = None,
 ) -> Transaction:
     """Build one valid ledger row whose content-derived id an asset revision can name."""
     raw = RawTransaction(
         provider_transaction_id=provider_id,
-        booked_date=date(2025, 1, 10),
-        value_date=date(2025, 1, 10),
+        booked_date=booked_date,
+        value_date=booked_date,
         amount=amount,
         currency=currency,
         counterparty="Proveedor",
-        description=f"acquisition {provider_id}",
+        description=f"acquisition {provider_id}" if description is None else description,
         provenance=RawProvenance(
             source_path=Path(__file__),
             source_sha256="e" * 64,

@@ -4,6 +4,7 @@ import type {
   AeatSyncStart,
   AeatSyncStatus,
 } from "../shell/aeatSync";
+import { servedFilingYears } from "./servedYearAuthority";
 
 /** What the scenario's AEAT data page is served. */
 export type AeatSyncMode =
@@ -22,8 +23,11 @@ export type AeatSyncMode =
 
 const DAY = 24 * 60 * 60 * 1000;
 
-/** The filing years the demo host offers a Borrador import for. */
-export const DEMO_BORRADOR_YEARS: readonly number[] = [2025, 2024, 2023];
+/** The filing years the demo host offers a Borrador import for: the three
+ * before the newest filing year, newest first. */
+export const DEMO_BORRADOR_YEARS: readonly number[] = servedFilingYears
+  .slice(-4, -1)
+  .reverse();
 
 function captureRefused(now: number): AeatSyncArea[] {
   const refused: AeatSyncArea = {

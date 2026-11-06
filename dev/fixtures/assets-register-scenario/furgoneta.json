@@ -1,0 +1,116 @@
+{
+  "asset_id": "furgoneta",
+  "purchase": {
+    "booked_date": "2023-04-01",
+    "taxable_base": "24000.00",
+    "iva_amount": "5040.00"
+  },
+  "steps": [
+    {
+      "recorded_at": "2023-01-15T09:30:00Z",
+      "revision": {
+        "revision_number": 1,
+        "acquisition": {
+          "observed_lineage_event_id": null,
+          "invoice_evidence_id": "cde40905354915ad2823fd4bc7fba932069a4af87d95140d1b1014819512d3de",
+          "evidence_fingerprint": "545abb28a3c15a2a1451dae57e1b97e5d78e8932bc8ec5c1ac5e5a3fb60bfa8b"
+        },
+        "acquisition_shape": "primary_purchase",
+        "asset_kind": "material",
+        "basis": {
+          "stage": "business_allocated",
+          "basis_amount": {
+            "decimal": "24000.00"
+          },
+          "non_deductible_iva": {
+            "decimal": "0.00"
+          },
+          "is_property": false,
+          "construction_cost": null,
+          "land_cost": null,
+          "ownership_mode": null,
+          "ownership_share": null,
+          "office_area": null,
+          "total_area": null,
+          "business_use_share": null,
+          "prior_allocation_provenance": "Asignación contabilizada en el libro"
+        },
+        "residual_value": {
+          "decimal": "0"
+        },
+        "in_service_date": "2023-04-01",
+        "out_of_service_date": null,
+        "disposal": null,
+        "opening_history": {
+          "status": "known",
+          "accumulated_amount": {
+            "decimal": "0.00"
+          },
+          "amortization_method": null,
+          "covered_through_tax_year": null
+        },
+        "acquired_condition": "new",
+        "building_construction_date": null,
+        "amortization": {
+          "regime": "normal",
+          "method": "linear",
+          "authority_class_key": "transporte-externo",
+          "linear_coefficient": {
+            "decimal": "0.12"
+          },
+          "shift_hours_per_day": null,
+          "sum_of_digits_period_years": null,
+          "digit_order": null,
+          "approved_plan": null,
+          "useful_life": null,
+          "small_enterprise": null,
+          "low_value": null,
+          "research_development_evidence_reference": null,
+          "charging_infrastructure": null,
+          "renewable_self_consumption": null,
+          "used_original_price": null
+        },
+        "vehicle_affectation": {
+          "category": "mixed_vehicle",
+          "private_use": "none",
+          "listed_use": null,
+          "recorded_in_activity_books": true,
+          "evidence_reference": "vehicle declaration kept with the purchase",
+          "electric_propulsion": null
+        }
+      },
+      "create": {
+        "name": "Furgoneta de reparto",
+        "serial_number": "FR-2023-0114"
+      }
+    },
+    {
+      "recorded_at": "2023-02-01T11:00:00Z",
+      "claim": {
+        "covered_from": "2023-04-01",
+        "covered_through": "2023-12-31"
+      }
+    },
+    {
+      "recorded_at": "2024-02-01T11:00:00Z",
+      "claim": {
+        "covered_from": "2024-01-01",
+        "covered_through": "2024-12-31"
+      }
+    },
+    {
+      "recorded_at": "2025-02-01T11:00:00Z",
+      "claim": {
+        "covered_from": "2025-01-01",
+        "covered_through": "2025-12-31"
+      }
+    },
+    {
+      "recorded_at": "2026-07-02T08:15:00Z",
+      "claim": {
+        "covered_from": "2026-01-01",
+        "covered_through": "2026-06-30"
+      }
+    }
+  ]
+}

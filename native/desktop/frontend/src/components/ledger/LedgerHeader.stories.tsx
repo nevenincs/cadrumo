@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { STORY_PERIOD, useStoryControls } from "@/dev/LedgerStage";
+import { STORY_PERIOD, STORY_YEARS, useStoryControls } from "@/dev/LedgerStage";
 import { LEDGER_SECTIONS, type LedgerSection } from "../../shell/layout";
 import type { LedgerPeriod } from "../../shell/ledgerGrammar";
 import { useStrings } from "../../shell/strings";
@@ -54,7 +54,7 @@ function Header({ section = "movements", count, held, period, locale }: Args) {
             value={chosen}
             onChange={setChosen}
             label={t("desktop.ledger.period.label")}
-            years={[2024, 2025, 2026]}
+            years={[...STORY_YEARS]}
             locale={locale}
             fallbackYear={STORY_PERIOD.year}
           />

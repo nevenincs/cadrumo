@@ -8,7 +8,11 @@ import { translator, useStrings } from "../../../shell/strings";
 import { AssetsSection } from "./AssetsSection";
 import { ASSET_KEYS } from "./assetsWords";
 import { said } from "@/dev/assetsServedWords";
-import { SEED_ELEMENTS } from "@/dev/assetsSeed";
+import {
+  REGISTER_DEFAULT_YEAR,
+  REGISTER_YEARS,
+  SCENARIO_ELEMENTS,
+} from "@/dev/assetsRegister";
 import { ledgerLanguage } from "../../../shell/ledgerLanguage";
 
 // The Assets tab over the scenario's ledger: its list, the detail of one
@@ -170,7 +174,7 @@ const SPAN = {
 // recorded; where the recording holds one for a story's case it is drawn and
 // checked, and where it holds none the window draws nothing for it.
 const nameOf = (id: string) =>
-  SEED_ELEMENTS.find((seed) => seed.id === id)?.list.name ?? null;
+  SCENARIO_ELEMENTS.find((seed) => seed.id === id)?.list.name ?? null;
 const gapWords = (
   id: string,
   kind: string,
@@ -400,16 +404,21 @@ async function press(
 
 export const Register: Story = { name: "Register spanning decades" };
 
+/** A year the register lists other than the one it opens on. */
+const otherServedYear = REGISTER_YEARS.find(
+  (year) => year !== REGISTER_DEFAULT_YEAR,
+);
+
 export const RegisterOpensOnTheServedYear: Story = {
   name: "Register opens on the year the list serves, whatever the clock says",
-  args: { servedYear: 2024 },
+  args: { servedYear: otherServedYear },
   play: async (context) => {
     const t = wordsOf(context);
     const year = await within(context.canvasElement).findByLabelText(
       t(ASSET_KEYS.year),
     );
     await waitFor(() => {
-      if ((year as HTMLSelectElement).value !== "2024")
+      if ((year as HTMLSelectElement).value !== String(otherServedYear))
         throw new Error("the register did not open on the served year");
     });
   },

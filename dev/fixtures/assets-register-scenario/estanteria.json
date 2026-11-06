@@ -1,0 +1,76 @@
+{
+  "asset_id": "estanteria",
+  "purchase": {
+    "booked_date": "2023-01-01",
+    "taxable_base": "9000.00",
+    "iva_amount": "1890.00"
+  },
+  "steps": [
+    {
+      "recorded_at": "2023-01-15T09:30:00Z",
+      "revision": {
+        "revision_number": 1,
+        "acquisition": {
+          "observed_lineage_event_id": null,
+          "invoice_evidence_id": "ce677c9e8cb5fdc991a7133b4942aa6a7968c1276a310a2c97829d41cbce9643",
+          "evidence_fingerprint": "b921182a4f1eace0b310e5a340345880af9d38c33bc917367977221743c77727"
+        },
+        "acquisition_shape": "primary_purchase",
+        "asset_kind": "material",
+        "basis": {
+          "stage": "business_allocated",
+          "basis_amount": {
+            "decimal": "9000.00"
+          },
+          "non_deductible_iva": {
+            "decimal": "0.00"
+          },
+          "is_property": false,
+          "construction_cost": null,
+          "land_cost": null,
+          "ownership_mode": null,
+          "ownership_share": null,
+          "office_area": null,
+          "total_area": null,
+          "business_use_share": null,
+          "prior_allocation_provenance": "Asignación contabilizada en el libro"
+        },
+        "residual_value": {
+          "decimal": "0"
+        },
+        "in_service_date": "2023-01-01",
+        "out_of_service_date": null,
+        "disposal": null,
+        "opening_history": {
+          "status": "missing",
+          "accumulated_amount": null,
+          "amortization_method": null,
+          "covered_through_tax_year": null
+        },
+        "acquired_condition": "new",
+        "building_construction_date": null,
+        "amortization": {
+          "regime": "normal",
+          "method": "linear",
+          "authority_class_key": "instalacion-resto",
+          "linear_coefficient": null,
+          "shift_hours_per_day": null,
+          "sum_of_digits_period_years": null,
+          "digit_order": null,
+          "approved_plan": null,
+          "useful_life": null,
+          "small_enterprise": null,
+          "low_value": null,
+          "research_development_evidence_reference": null,
+          "charging_infrastructure": null,
+          "renewable_self_consumption": null,
+          "used_original_price": null
+        },
+        "vehicle_affectation": null
+      },
+      "create": {
+        "name": "Estanterías de almacén"
+      }
+    }
+  ]
+}

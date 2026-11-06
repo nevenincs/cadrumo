@@ -25,13 +25,13 @@ import {
   createRequest,
   type RevisionBase,
 } from "../../src/components/ledger/assets/assetRevision";
+import { SERVED_METHOD_FACTS } from "../../src/dev/assetsFixtureBase";
 import {
-  SERVED_ACTIVITIES,
-  SERVED_METHOD_FACTS,
-  SERVED_SHAPES,
-  TODAY,
-} from "../../src/dev/assetsFixture";
-import { TABLE_GROUPS } from "../../src/dev/assetsSeed";
+  ACQUISITION_SHAPES,
+  DECLARED_ACTIVITIES,
+  SCENARIO_TODAY,
+  TABLE_GROUPS,
+} from "../../src/dev/assetsRegister";
 import { servedEditionOf } from "../../src/dev/servedYearAuthority";
 import type {
   AcquisitionCandidate,
@@ -118,7 +118,7 @@ const FURTHER: AcquisitionCandidate = {
 };
 
 /** The scenario's own year, read from its date. */
-const scenarioYear = Number(TODAY.slice(0, 4));
+const scenarioYear = Number(SCENARIO_TODAY.slice(0, 4));
 
 const optionsFor = (kind: string, served: Served): FormOptions => ({
   tax_year: scenarioYear,
@@ -209,8 +209,8 @@ function run(scenario: Scenario, served: Served) {
     return {
       id: scenario.id,
       facts: SERVED_METHOD_FACTS,
-      shapes: SERVED_SHAPES,
-      activities: SERVED_ACTIVITIES,
+      shapes: ACQUISITION_SHAPES,
+      activities: DECLARED_ACTIVITIES,
     };
   if (scenario.kind === "baja")
     return {

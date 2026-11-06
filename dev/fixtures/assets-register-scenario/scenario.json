@@ -1,0 +1,37 @@
+{
+  "today": "2026-10-30",
+  "modality": "normal",
+  "payments": [
+    {
+      "provider_id": "t-portatil",
+      "booked_date": "2026-05-06",
+      "description": "Portátil de trabajo",
+      "taxable_base": "900.00",
+      "iva_amount": "189.00"
+    },
+    {
+      "provider_id": "t-silla",
+      "booked_date": "2026-02-11",
+      "description": "Silla ergonómica",
+      "taxable_base": "200.00",
+      "iva_amount": "42.00"
+    },
+    {
+      "provider_id": "t-efectivo",
+      "booked_date": "2025-11-30",
+      "description": "Compra pagada en efectivo",
+      "amount": "150.00",
+      "taxable_base": null,
+      "iva_amount": null
+    },
+    {
+      "provider_id": "t-monitor",
+      "booked_date": "2025-09-03",
+      "description": "Monitor de diseño",
+      "amount": "400.00",
+      "currency": "USD",
+      "taxable_base": null,
+      "iva_amount": null
+    }
+  ]
+}

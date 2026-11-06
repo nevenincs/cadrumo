@@ -2,11 +2,11 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { expect, fireEvent, userEvent, waitFor } from "storybook/test";
 import { STORY_READER, useLedgerPort } from "@/dev/LedgerStage";
-import { SEED_ELEMENTS } from "@/dev/assetsSeed";
+import { SCENARIO_ELEMENTS } from "@/dev/assetsRegister";
 import { typeAsAPerson } from "@/dev/personTyping";
 import { ledgerClassOf } from "@/dev/ledgerClassesFixture";
 import { servedSupport } from "@/dev/servedYearAuthority";
-import { TODAY } from "@/dev/assetsFixture";
+import { SCENARIO_TODAY } from "@/dev/assetsRegister";
 import type { LedgerShape } from "@/dev/ledgerFixture";
 import type { LedgerPort } from "../../../shell/ledger";
 import { PausedBanner, usePagePause, WritePauseContext } from "../WritePause";
@@ -19,7 +19,7 @@ import { ASSET_KEYS } from "./assetsWords";
 import { translator } from "../../../shell/strings";
 
 /** The year of the scenario's date, which the seeded plans are written around. */
-const scenarioYear = Number(TODAY.slice(0, 4));
+const scenarioYear = Number(SCENARIO_TODAY.slice(0, 4));
 /** The first year past the last one the registry admits, read on projected tables. */
 const projectedYear = servedSupport.horizon + 1;
 
@@ -685,7 +685,7 @@ const claiming = (
 
 /** The dotación the plan of an element holds for a year. */
 const claimOf = (assetId: string, year: number) =>
-  SEED_ELEMENTS.find((seed) => seed.id === assetId)!
+  SCENARIO_ELEMENTS.find((seed) => seed.id === assetId)!
     .rows.find((row) => row.tax_year === year)!
     .claims.find((found) => found.effective)!.claim_id;
 
@@ -700,7 +700,7 @@ const overlap = async (root: Root) => {
 export const Claim: Story = claiming("furgoneta", scenarioYear, {
   name: "Record dotación, a year not claimed",
 });
-const cristaleriaClaimYear = SEED_ELEMENTS.find(
+const cristaleriaClaimYear = SCENARIO_ELEMENTS.find(
   (seed) => seed.id === "cristaleria",
 )!.list.default_claim_year;
 
@@ -793,7 +793,7 @@ export const ClaimNoPlanForTheYear: Story = claiming(
   { name: "Record dotación, the element has no plan for the year" },
   {
     initialYear:
-      SEED_ELEMENTS.find((seed) => seed.id === "furgoneta")!.rows.at(-1)!
+      SCENARIO_ELEMENTS.find((seed) => seed.id === "furgoneta")!.rows.at(-1)!
         .tax_year + 1,
   },
 );
