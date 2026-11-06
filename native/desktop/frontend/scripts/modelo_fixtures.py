@@ -81,6 +81,9 @@ DECLARATIONS: tuple[tuple[str, str, bool], ...] = (
     ("347", "0A", True),
     ("390", "0A", False),
 )
+#: The declaration the scenarios open with registry rules that stop short of calculation grade, so it opens read only.
+#: It is read for the newest supported year whose rules do so, not the declarations' year, whose rules may be complete.
+RULES_INCOMPLETE_MODELO = "390"
 LANGUAGES = ("en", "es", "ca", "hu")
 #: The operator the desktop names on requests that take an actor, as src/shell/modelo.ts states it.
 ACTOR = "operator:desktop-modelo"
@@ -180,6 +183,8 @@ RENTA_SALARY_BOXES: tuple[str, str] = ("0003", "0013")
 RENTA_QUARTER = "1T"
 #: A day within the Renta's filing period, which closes on 30 June of the year after.
 RENTA_FILING_PERIOD_DAY = datetime(RENTA_YEAR + 1, 5, 20, 9, 0, tzinfo=UTC)
+#: The first day after that filing period has closed, when a result to pay can no longer be split.
+RENTA_AFTER_FILING_PERIOD_DAY = datetime(RENTA_YEAR + 1, 7, 1, 9, 0, tzinfo=UTC)
 
 
 @cache
@@ -205,6 +210,21 @@ def declarations_year() -> int:
     """The year of the activity declarations the envelopes read: the activity persona's fiscal year."""
     persona, envelope = _catalogue_persona(ACTIVITY_PERSONA)
     return int(persona.fiscal_year.resolve(envelope))
+
+
+def _rules_incomplete_year(operation: Any, modelo: str, period_code: str) -> int:
+    """The newest supported filing year whose registry rules for ``modelo`` stop short of calculation grade."""
+    from cadrumo.core.authority_grade import RegistryAuthorityGrade
+    from cadrumo.core.period import Period
+
+    ladder = tuple(RegistryAuthorityGrade)
+    support = operation.supported_filing_years()
+    for year in range(support.horizon, support.floor - 1, -1):
+        period = Period.from_year_and_code(year, period_code)
+        grade = operation.reachable_authority_grade(modelo, filing_year=year, period=period.registry_token)
+        if ladder.index(grade) < ladder.index(RegistryAuthorityGrade.CALCULATION):
+            return year
+    raise SystemExit(f"no supported year's Modelo {modelo} rules stop short of calculation grade")
 
 
 def _taxpayer_tax_id(persona_id: str) -> str:
@@ -1325,6 +1345,9 @@ class RentaFiler:
     #: The income classes the filer attests no payer withheld on, as the register records the attestation: a class
     #: with neither a certificate nor an attestation stays unresolved, which is not the same as none.
     attested_none: tuple[str, ...] = ()
+    #: The profile answers the filer takes back from the persona's, so the check names each as missing from the
+    #: profile and leads there.
+    unanswered: tuple[str, ...] = ()
 
 
 #: The withholding a scenario states where it needs a result to pay: below what the persona's certificate states.
@@ -1332,10 +1355,18 @@ PAYING_WITHHOLDING = Decimal("2000.00")
 
 RENTA_FILERS: tuple[RentaFiler, ...] = (
     # Salaried, with income from savings and a capital gain declared, and no certificate in the register:
-    # the three withholding credits and the totals that read them stay unresolved.
-    RentaFiler("", "trabajo,capital_mobiliario,ganancias_patrimoniales", salary=True, compared=True),
-    # Salaried, one certificate in the register that withholds less than the tax: the result is to pay.
-    RentaFiler("pay", "trabajo", salary=True, withheld=PAYING_WITHHOLDING),
+    # the three withholding credits and the totals that read them stay unresolved. The filer's sex is not
+    # answered, so one line of the check leads to the profile.
+    RentaFiler(
+        "",
+        "trabajo,capital_mobiliario,ganancias_patrimoniales",
+        salary=True,
+        compared=True,
+        unanswered=("renta_taxpayer.sex",),
+    ),
+    # Salaried, one certificate in the register that withholds less than the tax: the result is to pay, read after
+    # the filing period, so the result can no longer be paid in two instalments.
+    RentaFiler("pay", "trabajo", salary=True, withheld=PAYING_WITHHOLDING, read_on=RENTA_AFTER_FILING_PERIOD_DAY),
     # The persona's own certificate, which withholds more than the tax: the result is to refund.
     RentaFiler("refund", "trabajo", salary=True, persona_certificate=True),
     # Self-employed, with the activity persona's year of income in the ledger.
@@ -1525,7 +1556,11 @@ def _typed_salary(filer: RentaFiler, *, small: bool = False) -> tuple[str, str] 
 @contextmanager
 def _renta_seeded(tmp: Path, filer: RentaFiler, *, read_on: datetime | None = None) -> Generator[tuple[Any, Any]]:
     """The filer's persona with its categories and household stated, and its Modelo 100 of its year, not calculated."""
-    stated = (("taxpayer_type.irpf_income_categories", filer.categories), *_household(filer.household))
+    stated = (
+        ("taxpayer_type.irpf_income_categories", filer.categories),
+        *_household(filer.household),
+        *((path, None) for path in filer.unanswered),
+    )
     persona_id = _filer_persona(filer)
     # The salaried persona's own certificate is part of its full replay; a filer that states its own, or has none,
     # starts from the profile and household alone.
@@ -3142,7 +3177,14 @@ def _write_scenarios(directory: Path) -> None:
     ):
         works = {DECLARATIONS[0][0]: first}
         for modelo, period_code, _ in DECLARATIONS[1:]:
-            works[modelo] = _other_declaration(first, modelo, period_code)
+            works[modelo] = _other_declaration(
+                first,
+                modelo,
+                period_code,
+                filing_year=_rules_incomplete_year(first.operation, modelo, period_code)
+                if modelo == RULES_INCOMPLETE_MODELO
+                else None,
+            )
         for modelo, _, calculated in DECLARATIONS:
             if calculated:
                 works[modelo].recalculate()
