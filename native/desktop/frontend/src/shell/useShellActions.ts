@@ -4,7 +4,8 @@ import {
   type RefObject,
   type SetStateAction,
 } from "react";
-import type { DocsLanguage, SetupItemId, SetupRun } from "@/ipc/contract";
+import type { DocsLanguage } from "@/ipc/environment";
+import type { SetupItemId, SetupRun } from "@/ipc/componentSetup";
 import type { DocsFrameApi } from "../components/DocsFrame";
 import type { TerminalApi } from "../components/TerminalPane";
 import { canSignInGoogle, itemName } from "../components/setup/setupWords";

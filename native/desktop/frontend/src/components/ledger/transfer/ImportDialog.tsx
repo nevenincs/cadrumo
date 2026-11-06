@@ -36,14 +36,16 @@ import { facts, listed } from "../../../shell/compose";
 import type {
   FilePick,
   FilePurpose,
-  InvoiceImportResult,
-  InvoiceKind,
   LedgerImportResult,
   LedgerPort,
   LedgerProvider,
   LedgerTransaction,
   PickedFile,
 } from "../../../shell/ledger";
+import type {
+  InvoiceImportResult,
+  InvoiceKind,
+} from "../../../shell/ledgerInvoiceOperations";
 import { publicPeriod, type LedgerPeriod } from "../../../shell/ledgerGrammar";
 import { periodsHoldingToday, usePeriods } from "../../../shell/ledgerPeriods";
 import type { ShowImportBatch } from "../../../shell/ledgerImports";

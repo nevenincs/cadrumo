@@ -6,13 +6,15 @@
 
 import {
   ledgerFailure,
-  type CatalogueInvoice,
-  type InvoiceUpdateRequest,
   type LedgerDefinitionId,
   type LedgerPort,
   type LedgerRequest,
   type LedgerResult,
 } from "../../../shell/ledger";
+import type {
+  CatalogueInvoice,
+  InvoiceUpdateRequest,
+} from "../../../shell/ledgerInvoiceOperations";
 import { holdsCorrection } from "./invoiceModel";
 
 export type WriteAnswer<Result> =

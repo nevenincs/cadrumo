@@ -45,14 +45,15 @@ import {
 import { facts, listed } from "../../../shell/compose";
 import type {
   CatalogueInvoice,
+  InvoiceKind,
+} from "../../../shell/ledgerInvoiceOperations";
+import type {
   ConfirmationBlocker,
   EvidenceConfirmResult,
   EvidenceDraft,
   EvidenceRecord,
-  InvoiceKind,
-  LedgerPort,
-  LedgerRow,
-} from "../../../shell/ledger";
+} from "../../../shell/ledgerDocumentOperations";
+import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
 import type { StageEvent, StageState } from "../../../shell/ledgerStage";
 import { useTextLimit } from "../../../shell/ledgerLimits";
 import { readAnswer } from "../../../shell/ledgerWindow";

@@ -9,7 +9,7 @@ import type {
   CatalogueInvoice,
   LedgerInvoiceDuplicateRequest,
   LedgerInvoiceDuplicateResult,
-} from "../shell/ledger";
+} from "../shell/ledgerInvoiceOperations";
 
 const folded = (text: string | null | undefined) =>
   (text ?? "").toUpperCase().replace(/[^A-Z0-9]+/g, "");

@@ -1,7 +1,7 @@
 import { Icon } from "@/components/ui/icon";
 import type { Suggestion } from "@/components/ui/suggestions";
 import { facts } from "@/shell/compose";
-import type { LedgerTrackResult } from "../../../shell/ledger";
+import type { LedgerTrackResult } from "../../../shell/ledgerMovementOperations";
 import { usePeriods } from "../../../shell/ledgerPeriods";
 import { effectiveFacts, type StageField } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";

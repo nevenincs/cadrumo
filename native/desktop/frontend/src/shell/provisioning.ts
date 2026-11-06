@@ -14,7 +14,7 @@ import type {
   SetupRow,
   SetupRun,
   SetupSnapshot,
-} from "../ipc/contract";
+} from "../ipc/componentSetup";
 import {
   anyLive,
   liveRunOf,

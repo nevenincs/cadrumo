@@ -1,7 +1,7 @@
 import { Alert } from "@/components/ui/alert";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { Progress } from "@/components/ui/progress";
-import type { SignInRefusal } from "../../ipc/contract";
+import type { SignInRefusal } from "../../ipc/account";
 import { useStrings } from "../../shell/strings";
 
 type Tone = "neutral" | "warning" | "danger";

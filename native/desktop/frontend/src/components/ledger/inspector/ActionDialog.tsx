@@ -16,9 +16,9 @@ import { listed } from "@/shell/compose";
 import {
   ledgerFailure,
   type LedgerPort,
-  type LedgerRemoveResult,
   type LedgerRow,
 } from "../../../shell/ledger";
+import type { LedgerRemoveResult } from "../../../shell/ledgerMovementOperations";
 import { EMPTY_CONTENT, type StageEvent } from "../../../shell/ledgerStage";
 import {
   stagedCheckRequest,

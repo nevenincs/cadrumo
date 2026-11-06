@@ -1,5 +1,5 @@
 import type { ComboboxOption } from "@/components/ui/combobox";
-import type { LedgerParticipation } from "../../../shell/ledger";
+import type { LedgerParticipation } from "../../../shell/ledgerMovementOperations";
 import type { OwnAccountChoice } from "../../../shell/ledgerMovementReads";
 import type { ServedVocabulary } from "../../../shell/ledgerServedVocabulary";
 import { DIRECTIONS, sealsMovements } from "../../../shell/ledgerContract";

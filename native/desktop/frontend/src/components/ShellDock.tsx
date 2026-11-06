@@ -10,7 +10,7 @@ import { cn } from "@/components/ui/cn";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
-import type { DocsLanguage } from "../ipc/contract";
+import type { DocsLanguage } from "../ipc/environment";
 import { primaryChord, type Action } from "../shell/actions";
 import { initialDockLayout, type DockPane } from "../shell/docking";
 import type { Host, TerminalKind } from "../shell/host";

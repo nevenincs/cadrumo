@@ -10,9 +10,6 @@
 
 import {
   ledgerFailure,
-  type EvidenceBatchResult,
-  type InvoiceImportResult,
-  type InvoiceKind,
   type JsonObject,
   type LedgerDefinitionId,
   type LedgerImportRefusalCode,
@@ -25,6 +22,11 @@ import {
   type PickedFile,
   type PublicPeriod,
 } from "../../../shell/ledger";
+import type { EvidenceBatchResult } from "../../../shell/ledgerDocumentOperations";
+import type {
+  InvoiceImportResult,
+  InvoiceKind,
+} from "../../../shell/ledgerInvoiceOperations";
 import { sameDecimal, periodFilters } from "../../../shell/ledgerGrammar";
 import { importBatchFilters } from "../../../shell/ledgerImports";
 import { readPeriodsHolding } from "../../../shell/ledgerPeriods";

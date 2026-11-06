@@ -8,7 +8,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { LedgerCheckResult } from "../../../shell/ledger";
+import type { LedgerCheckResult } from "../../../shell/ledgerInvoiceOperations";
 import { publicPeriod } from "../../../shell/ledgerGrammar";
 import { useTextLimit } from "../../../shell/ledgerLimits";
 import type {

@@ -10,7 +10,7 @@ import type {
   CatalogueInvoice,
   InvoicePreviewRequest,
   InvoicePreviewResult,
-} from "../src/shell/ledger";
+} from "../src/shell/ledgerInvoiceOperations";
 import {
   InvoicePreviewSession,
   type PreviewReply,

@@ -1,7 +1,7 @@
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { Spinner } from "@/components/ui/spinner";
-import type { SedeViewVerb } from "../../ipc/contract";
+import type { SedeViewVerb } from "../../ipc/sedeViewMessages";
 import { useStrings } from "../../shell/strings";
 import type { PageAddress } from "./browserModel";
 

@@ -7,7 +7,7 @@ import {
   tiedInvoices,
   tiedMovements,
 } from "../src/components/ledger/matching/matchingModel";
-import type { LedgerInvoiceMatchSuggestion } from "../src/shell/ledger";
+import type { LedgerInvoiceMatchSuggestion } from "../src/shell/ledgerInvoiceOperations";
 import { catalogueInvoice as invoice, hexId, movement } from "./support/ledger";
 
 // The ledger says which invoice settles which movement and how they rank
