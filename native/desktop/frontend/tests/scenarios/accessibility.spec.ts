@@ -385,8 +385,13 @@ const SURFACES: {
         .getByRole("navigation", { name: label("desktop.rail.label") })
         .getByRole("button", { name: label("desktop.calendar.title") })
         .click();
+      // Maximized from its pane's own header.
       await target
-        .getByRole("button", { name: label("desktop.calendar.maximize") })
+        .locator('[data-dock-header="docs"]')
+        .getByRole("button", {
+          name: label("desktop.dock.expand"),
+          exact: true,
+        })
         .click();
       const page = target.getByRole("region", {
         name: label("desktop.calendar.title"),

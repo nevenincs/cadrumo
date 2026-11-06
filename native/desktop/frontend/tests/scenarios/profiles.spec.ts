@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
+import { showTui } from "../support/tui";
 
 // The profile a person signs in to: shown, chosen and created in the
 // window, on the scenario host. Presentation evidence only: the profiles
@@ -89,6 +90,7 @@ test("several profiles: the profile is a labelled choice with the selected one c
   await expect(password(target)).toBeFocused();
   await password(target).fill("anything");
   await submit(target).click();
+  await showTui(target);
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
   await expect.poll(calls(target, "signIn")).toBe(1);
   // The selected profile is not named: the product knows which it is.
@@ -144,6 +146,7 @@ test("signed in, the window does not read the profiles it has no use for", async
   page: target,
 }) => {
   await open(target, "signed-in");
+  await showTui(target);
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
   await target.evaluate(() => window.dispatchEvent(new Event("focus")));
   await expect.poll(calls(target, "signInStatus")).toBeGreaterThan(1);
@@ -157,6 +160,7 @@ test("another profile chosen is the one signed in to, and the one the window the
   await choice(target).selectOption({ label: "Ana Soler Vidal" });
   await password(target).fill("anything");
   await password(target).press("Enter");
+  await showTui(target);
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
   await expect.poll(calls(target, "signIn")).toBe(1);
   const made = await everyCall(target);
@@ -176,6 +180,7 @@ for (const from of ["header", "palette"] as const)
     page: target,
   }) => {
     await open(target, "signed-in");
+    await showTui(target);
     await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
     if (from === "header") {
       await menuButton(target).click();
@@ -267,6 +272,7 @@ test("several profiles and none selected: no password is sent until a profile is
     0,
   );
   await submit(target).click();
+  await showTui(target);
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
   await expect.poll(calls(target, "signIn")).toBe(1);
 });
@@ -298,6 +304,7 @@ test("profiles that cannot be read: it is said, and the password goes to the pro
   ).toContainText("Demo profile");
   await password(target).fill("anything");
   await submit(target).click();
+  await showTui(target);
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
   await expect.poll(calls(target, "signIn")).toBe(1);
   // No profile was named: the product's selected one is signed in to.
@@ -357,6 +364,7 @@ test("first run: one submission creates the profile and signs in automatically",
   await repeated(target).fill("correct horse");
   await createButton(target).click();
 
+  await showTui(target);
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
   await expect(dialog(target)).toHaveCount(0);
   await expect.poll(calls(target, "signIn")).toBe(1);
@@ -395,9 +403,9 @@ test("while a profile is being created the form says how long it takes, and noth
   // Nor is it put aside while the profile is being made.
   await target.keyboard.press("Escape");
   await expect(form(target).locator(".create-wait")).toBeVisible();
-  await expect(target.locator(".pane-tui .xterm")).toHaveCount(1, {
-    timeout: 10000,
-  });
+  await expect(dialog(target)).toHaveCount(0, { timeout: 10000 });
+  await showTui(target);
+  await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
   expect(await calls(target, "createProfile")()).toBe(1);
 });
 
@@ -463,6 +471,7 @@ test("a new profile is offered beside sign-in, refuses a name already in use, an
   await expect(nameField(target)).toBeFocused();
   await target.keyboard.press("Escape");
   await expect(dialog(target)).toHaveCount(0);
+  await showTui(target);
   await target
     .locator(".pane-tui")
     .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
@@ -482,6 +491,7 @@ test("a profile created beside others is automatically signed in by name", async
   await newPassword(target).fill("correct horse");
   await repeated(target).fill("correct horse");
   await createButton(target).click();
+  await showTui(target);
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
   expect(await calls(target, "signInProfile")()).toBe(1);
   await expect(target.locator(".titlebar .profile-name")).toHaveText(
@@ -496,6 +506,7 @@ test("first run: the pane, header and the palette all lead to the form in the wi
   await open(target, "first-run");
   await target.keyboard.press("Escape");
   await expect(dialog(target)).toHaveCount(0);
+  await showTui(target);
 
   const pane = target.locator(".pane-tui");
   await expect(pane).toContainText(label("desktop.account.first_run_lead"));
@@ -603,6 +614,7 @@ for (const [kind, long] of [
       await repeated(target).fill("correct horse");
       expect(await inside(".sign-in")).toEqual([]);
       await repeated(target).press("Enter");
+      await showTui(target);
       await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
       await expect(target.locator(`.titlebar [title="${long}"]`)).toBeVisible();
       await menuButton(target).click();
@@ -746,6 +758,7 @@ test("creation acknowledgement names the new sign-in target without rereading th
   await newPassword(target).fill("correct horse");
   await repeated(target).fill("correct horse");
   await repeated(target).press("Enter");
+  await showTui(target);
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
   await expect.poll(calls(target, "signIn")).toBe(1);
   expect(await calls(target, "signInProfile")()).toBe(1);
