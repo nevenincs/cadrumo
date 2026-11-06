@@ -387,6 +387,27 @@ class ModeloApplicabilityRule(BaseModel):
     exclusions: tuple[ModeloApplicabilityExclusion, ...] = ()
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
 
+    @property
+    def gating_payer_facts(self) -> tuple[PayerFactValue, ...]:
+        """Return every payer fact this rule's verdict can turn on, in authored order.
+
+        ``required_payer_fact`` gates the positive verdict, and an exclusion's
+        ``payer_fact`` decides ``NOT_APPLICABLE`` or keeps the modelo
+        ``INCOMPLETE``; both are facts the operator has to answer before the
+        modelo's verdict is settled. Callers that report unanswered gating
+        facts, or that name the profile fields behind one modelo, read this
+        accessor rather than ``required_payer_fact`` alone, so an
+        exclusion-only fact is not silently ungated.
+        """
+        facts: list[PayerFactValue] = []
+        seen: set[PayerFactValue] = set()
+        for fact in (self.required_payer_fact, *(exclusion.payer_fact for exclusion in self.exclusions)):
+            if fact is None or fact in seen:
+                continue
+            seen.add(fact)
+            facts.append(fact)
+        return tuple(facts)
+
     def _exclusion_finding(
         self,
         profile: TaxpayerProfile,

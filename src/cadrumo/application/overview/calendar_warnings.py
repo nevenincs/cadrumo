@@ -233,8 +233,8 @@ def _record_applicability_gating_fields(
     key_to_modelos: dict[str, set[str]],
     key_to_meta: dict[str, tuple[str, str]],
 ) -> None:
-    if rule.required_payer_fact is not None:
-        for profile_key in payer_fact_profile_keys(rule.required_payer_fact):
+    for payer_fact in rule.gating_payer_facts:
+        for profile_key in payer_fact_profile_keys(payer_fact):
             _record_gating_field(
                 profile_key=profile_key,
                 modelo=rule.modelo,
@@ -342,7 +342,11 @@ def calendar_applicability_profile_keys_for_modelo(
 
     The result combines registry applicability rules, IVA-regime coverage, and
     corporate censo axes so calendar provenance warnings use the same profile
-    facts that determine legal obligation rows.
+    facts that determine legal obligation rows. The rule's payer facts are
+    read through
+    :attr:`~cadrumo.domain.calculations.registry.applicability_models.ModeloApplicabilityRule.gating_payer_facts`,
+    so a fact an exclusion reads counts as well: it decides the modelo's
+    verdict, which is what censo enrolment is judged against.
 
     Core types:
     :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
@@ -359,8 +363,8 @@ def calendar_applicability_profile_keys_for_modelo(
             (regime,) = rule.required_estimation_regimes
             if regime in estimation_profile_keys:
                 keys.add(estimation_profile_keys[regime][0])
-        if rule.required_payer_fact is not None:
-            keys.update(payer_fact_profile_keys(rule.required_payer_fact))
+        for payer_fact in rule.gating_payer_facts:
+            keys.update(payer_fact_profile_keys(payer_fact))
         break
     keys.update(
         deadline_window_profile_keys_by_modelo(
