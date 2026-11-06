@@ -9,6 +9,7 @@ from typing import TypedDict
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
@@ -57,8 +58,8 @@ def test_bundled_tree_declares_one_ordered_supported_year_catalogue() -> None:
     "bounds",
     [
         pytest.param({"floor": 2026, "horizon": 2022}, id="horizon-precedes-floor"),
-        pytest.param({"floor": 1999, "horizon": 2026}, id="floor-below-range"),
-        pytest.param({"floor": 2022, "horizon": 2100}, id="horizon-above-range"),
+        pytest.param({"floor": FOUR_DIGIT_YEAR_FIRST - 1, "horizon": 2026}, id="floor-below-range"),
+        pytest.param({"floor": 2022, "horizon": FOUR_DIGIT_YEAR_LAST + 1}, id="horizon-above-range"),
         pytest.param({"floor": 2022, "horizon": 2026, "hard_ceiling": 2024}, id="ceiling-below-horizon"),
         pytest.param({"years": (2022, 2023)}, id="retired-enumerated-key"),
     ],
