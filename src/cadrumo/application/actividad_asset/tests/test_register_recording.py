@@ -104,16 +104,30 @@ def test_a_correction_leaves_the_claim_it_changed_stale() -> None:
     assert not claims[0]["claim"]["matches_current_schedule"]
 
 
-def test_every_offered_forecast_is_one_the_plan_leaves_open() -> None:
+def test_every_offered_forecast_opens_where_the_plan_leaves_a_span_open() -> None:
+    """A recorded charge covers a span the plan leaves open, or its first part.
+
+    The Modelo 130 handoff asks for the part of an open span that falls inside a
+    quarter, so a charge is recorded for each open span clipped at a quarter's
+    boundary as well as whole. Every recorded span still opens where the plan
+    leaves one open and ends no later. A span the register refuses a charge for,
+    such as one its method leaves to the person, is recorded for none.
+    """
+    offered = 0
     for asset_id, element in _recorded().items():
         if asset_id == "register":
             continue
-        offered = {
-            f"{interval['covered_from']}/{interval['covered_until']}"
+        open_spans = {
+            interval["covered_from"]: interval["covered_until"]
             for row in element["rows"]
             for interval in row["claimable_intervals"]
         }
-        assert set(element["forecasts"]) <= offered, asset_id
+        for span in element["forecasts"]:
+            start, end = span.split("/")
+            assert start in open_spans, f"{asset_id}: {span} opens where no span of the plan does"
+            assert end <= open_spans[start], f"{asset_id}: {span} runs past the span the plan leaves open"
+            offered += 1
+    assert offered > 0, "the register answered no charge at all"
 
 
 def test_the_replay_is_deterministic() -> None:

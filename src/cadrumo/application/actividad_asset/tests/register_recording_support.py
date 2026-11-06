@@ -58,6 +58,8 @@ NOTE: Final = (
 _ORIGIN_CREATE: Final = "ledger.actividad-asset.create"
 _ORIGIN_CLAIM: Final = "ledger.actividad-asset.claim"
 _ORIGIN_CORRECT: Final = "ledger.actividad-asset.correct"
+#: The day after each Modelo 130 quarter's last day, as a month and a day of the tax year.
+_QUARTER_BOUNDARIES: Final = ((4, 1), (7, 1), (10, 1), (1, 1))
 
 
 def _read(path: Path) -> dict[str, Any]:
@@ -263,20 +265,35 @@ def _dump(value: Any) -> Any:
     return value.model_dump(mode="json")
 
 
+def _asked_spans(row: dict[str, Any]) -> tuple[tuple[date, date], ...]:
+    """Every span the window can ask a charge for out of one plan row.
+
+    A dotación covers a span the plan leaves open. The Modelo 130 handoff asks
+    for the part of such a span that falls inside a quarter, so each open span
+    is also asked for clipped at each quarter's boundary. The quarters come from
+    the periods the registry serves; the charge of every span is the register's.
+    """
+    asked: set[tuple[date, date]] = set()
+    for interval in row["claimable_intervals"]:
+        start = date.fromisoformat(interval["covered_from"])
+        end = date.fromisoformat(interval["covered_until"])
+        asked.add((start, end))
+        for month, day in _QUARTER_BOUNDARIES:
+            boundary = date(row["tax_year"], month, day) if month > 1 else date(row["tax_year"] + 1, 1, 1)
+            if start < boundary < end:
+                asked.add((start, boundary))
+    return tuple(sorted(asked))
+
+
 def _forecasts(operations: ActivityAssetOperations, asset_id: str, plan: list[dict[str, Any]]) -> dict[str, Any]:
     offered: dict[str, Any] = {}
     for row in plan:
-        for interval in row["claimable_intervals"]:
-            key = f"{interval['covered_from']}/{interval['covered_until']}"
+        for start, end in _asked_spans(row):
             try:
-                charge = operations.forecast(
-                    asset_id=asset_id,
-                    covered_from=date.fromisoformat(interval["covered_from"]),
-                    covered_until=date.fromisoformat(interval["covered_until"]),
-                )
+                charge = operations.forecast(asset_id=asset_id, covered_from=start, covered_until=end)
             except ActividadAssetError:
                 continue
-            offered[key] = charge.model_dump(mode="json")
+            offered[f"{start.isoformat()}/{end.isoformat()}"] = charge.model_dump(mode="json")
     return offered
 
 
