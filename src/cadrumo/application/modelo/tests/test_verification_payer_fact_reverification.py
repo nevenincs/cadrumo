@@ -11,11 +11,14 @@ the question.
 Two outcomes would both be wrong, and they fail in opposite directions:
 
 * Reading the cleared answer as a *no* would make the applicability verdict
-  NOT_APPLICABLE, and the readiness gate verification runs
-  (:func:`~cadrumo.application.modelo.profile_readiness_gate.require_profile_ready_for_work_unit`,
-  with ``enforce_applicability`` on) would refuse the work unit outright. The
-  operator's own figures would become unverifiable because a question nobody
-  asked was answered for them.
+  NOT_APPLICABLE, and the readiness gate would refuse the work unit outright.
+  The operator's own figures would become unverifiable because a question
+  nobody asked was answered for them. The assertions call
+  :func:`~cadrumo.application.modelo.profile_readiness_gate.modelo_applicability_refusal`,
+  the applicability arm itself, which
+  :func:`~cadrumo.application.modelo.profile_readiness_gate.require_profile_ready_for_work_unit`
+  consults when ``enforce_applicability`` is on; that is the decision under
+  test, without the gate's unrelated profile-readiness axes.
 * Letting the cleared answer scope the modelo's cross-period source dependency
   out as "not a filing the taxpayer owes" would drop a prior-period leg from
   the verdict, which is the silent exclusion the cross-period gate exists to
@@ -89,6 +92,11 @@ def test_a_cleared_payer_fact_does_not_refuse_re_verification(
     )
 
     assert refusal is None
+    # Current policy: an unanswered gating fact is a warning, not a refusal, so
+    # an INCOMPLETE verdict stays outside the blocking set. It is a policy
+    # choice, not a law: whether an unanswered payer fact should instead stop
+    # the work unit is still open, and a ruling that it should has to change
+    # this assertion deliberately rather than find it already contradicted.
     assert ApplicabilityVerdict.INCOMPLETE not in BLOCKING_APPLICABILITY_VERDICTS
 
 

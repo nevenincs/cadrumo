@@ -35,6 +35,7 @@ from datetime import date
 import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ...user_profile.projections import (
     projection_for_taxpayer,
     record_to_path_values,
@@ -51,9 +52,23 @@ from ..calendar_warnings import PROFILE_FIELD_WARNING_LOCALE_KEYS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_TODAY = date(2026, 10, 19)
-_RANGE = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2027, 2, 1))
-"""A span wide enough to surface the periodic withholding and intracommunity rows."""
+_HORIZON = PublishedGovernedFactSource().supported_filing_years().horizon
+"""The registry's own last globally authored filing year.
+
+The warnings under test are about profile answers, not about a year, so the
+reference date is taken from the support envelope rather than written down:
+a literal year would start standing outside the envelope the moment the
+registry moves its horizon, and the rows would disappear for a reason that
+has nothing to do with a payer fact.
+"""
+
+_TODAY = date(_HORIZON, 10, 19)
+_RANGE = OverviewCalendarRange(from_date=date(_HORIZON, 1, 1), to_date=date(_HORIZON + 1, 2, 1))
+"""A span wide enough to surface the periodic withholding and intracommunity rows.
+
+It covers the horizon year whole and reaches into the following January,
+because the fourth-quarter and annual windows of a year open after it ends.
+"""
 
 PAYER_FACT_WARNING_CODES = (
     "has_employees",

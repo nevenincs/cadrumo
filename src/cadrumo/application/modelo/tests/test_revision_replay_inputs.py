@@ -13,7 +13,10 @@ from cadrumo.core.refund_election import RefundElection
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
-from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_editions
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    newest_authored_edition,
+    newest_authored_editions,
+)
 from cadrumo.domain.contribuyente.entity_type import EntityType
 from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
 from cadrumo.domain.filing.errors import FilingExportValidationError
@@ -287,8 +290,14 @@ def test_revision_replay_inputs_reuse_the_callers_pinned_operation_for_relation_
     pinned -- mixing authority generations within a single operation. This
     spies on the real applicability function to prove the exact pinned object
     reaches it unchanged.
+
+    The filing year is the newest Modelo 100 edition the registry authors
+    rather than a written year, because which exercise is replayed states
+    nothing about the pin. It is not the support horizon: the horizon
+    exercise of an annual Renta declaration still awaits its approving
+    Orden, which the export path refuses before any relation is reached.
     """
-    work_unit = _work_unit(modelo="100", filing_year=2025, period_code="0A")
+    work_unit = _work_unit(modelo="100", filing_year=newest_authored_edition("100"), period_code="0A")
     revision = _revision(
         work_unit,
         relation_overrides={"renta-modelo-130-pagos-fraccionados": "123.45"},
