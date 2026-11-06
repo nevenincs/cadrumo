@@ -101,7 +101,7 @@ import type { LeaveGuard } from "./components/ledger/editing/LedgerEditing";
 import { useLedgerPeriodsReader } from "./shell/ledgerPeriods";
 import { DeclarationsPane } from "./components/modelo/declarations/DeclarationsPane";
 import type { DeclarationsMemory } from "./components/modelo/declarations/DeclarationsPage";
-import type { OutputLanguage } from "./shell/modeloContract";
+import type { OutputLanguage } from "./shell/modeloContract/modelo";
 import { AccountMenu } from "./components/AccountMenu";
 import { ManageProfiles } from "./components/account/ManageProfiles";
 import { Titlebar } from "./components/Titlebar";

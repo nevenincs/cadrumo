@@ -32,8 +32,7 @@ from ....domain.modelos.calculation_revision import (
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..bucket_unrouted_source_issues import unrouted_source_issues
-from ..calculation_bucket_actions import source_provenance_refs
-from ..calculation_resolution import build_calculation_replay_payloads
+from ..calculation_resolution import build_calculation_replay_payloads, calculation_source_provenance_refs
 from ..printed_boxes import snapshot_printed_boxes
 from ..profile_binding import resolve_profile_sourced_bindings
 from ..source_policy import SourceSurface
@@ -103,7 +102,7 @@ def _calculated(operation: PinnedAuthorityOperation, record: UserProfileRecord) 
     return base.model_copy(
         update={
             "row_binding_values": payloads.row_binding_values,
-            "source_provenance": source_provenance_refs(resolution),
+            "source_provenance": calculation_source_provenance_refs(resolution.provenance),
             "source_issues": unrouted_source_issues(
                 resolution.diagnostics, snapshot_printed_boxes(operation, snapshot)
             ),

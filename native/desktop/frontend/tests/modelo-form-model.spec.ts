@@ -27,7 +27,7 @@ import { MODELO_FIXTURES } from "./support/windowFixtures";
 import type {
   ModeloWorkbenchFormProjectionV1,
   PublicModeloFormField,
-} from "../src/shell/modeloContract";
+} from "../src/shell/modeloContract/modeloWorkForm";
 
 // The form's working state over the envelopes the application read for a
 // synthetic taxpayer: where each box is drawn, the address an edit of it

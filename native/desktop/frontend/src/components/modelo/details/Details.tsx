@@ -7,14 +7,14 @@ import { Spinner } from "@/components/ui/spinner";
 import { formatDay } from "../../../shared/dateFormats";
 import { listed } from "../../../shell/compose";
 import type { ModeloPort } from "../../../shell/modelo";
+import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
+import type { SourceSurface } from "../../../shell/modeloContract/modeloWork";
+import type { ModeloCasillaHelpCardV1 } from "../../../shell/modeloContract/modeloWorkCasillaHelp";
 import type {
-  ModeloCasillaHelpCardV1,
   ModeloFormCounts,
   ModeloWorkbenchFormProjectionV1,
-  OutputLanguage,
   PublicModeloFormField,
-  SourceSurface,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloWorkForm";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { BoxNumber } from "../form/BoxNumber";
 import {

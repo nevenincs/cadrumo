@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect } from "storybook/test";
 import calculation from "@fixtures/modelo/calculate-130.json" with { type: "json" };
-import type { ModeloWorkCalculatePublicResultV3 } from "../../../shell/modeloContract";
+import type { ModeloWorkCalculatePublicResultV3 } from "../../../shell/modeloContract/modeloWork";
 import { UnresolvedFindings } from "./UnresolvedFindings";
 
 // What the calculation of a Modelo 130 could give no value for, as the

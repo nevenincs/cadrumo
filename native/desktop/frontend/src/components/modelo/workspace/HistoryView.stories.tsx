@@ -1,10 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import type {
-  ModeloAmendmentCorrectionContextV1,
-  ModeloWorkHistoryEntryV1,
-  OutputLanguage,
-} from "../../../shell/modeloContract";
+import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
+import type { ModeloAmendmentCorrectionContextV1 } from "../../../shell/modeloContract/modeloWorkAmendmentContext";
+import type { ModeloWorkHistoryEntryV1 } from "../../../shell/modeloContract/modeloWorkHistory";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount } from "../../../shared/numbers";
 import { useStrings, type Translate } from "../../../shell/strings";

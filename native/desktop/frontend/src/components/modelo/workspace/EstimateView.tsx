@@ -4,11 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
 import type { LedgerNextStep } from "../../../shell/ledger";
-import type {
-  ModeloFormAddressV1,
-  ModeloProjectOperationProjection,
-  PublicModeloFormField,
-} from "../../../shell/modeloContract";
+import type { ModeloFormAddressV1 } from "../../../shell/modeloContract/modeloEditWork";
+import type { ModeloProjectOperationProjection } from "../../../shell/modeloContract/modeloProject";
+import type { PublicModeloFormField } from "../../../shell/modeloContract/modeloWorkForm";
 import { useStrings } from "../../../shell/strings";
 import {
   estimateAmount,

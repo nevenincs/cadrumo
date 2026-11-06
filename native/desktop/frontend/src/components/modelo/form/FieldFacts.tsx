@@ -7,7 +7,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import type { PublicModeloFormField } from "../../../shell/modeloContract";
+import type { PublicModeloFormField } from "../../../shell/modeloContract/modeloWorkForm";
 import { useStrings } from "../../../shell/strings";
 import { BoxNumber } from "./BoxNumber";
 

@@ -9,12 +9,12 @@ import {
 } from "@/dev/servedRentaYears";
 import { translator } from "../../../shell/strings";
 import type { ModeloPort } from "../../../shell/modelo";
+import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
+import type { ModeloTaxationComparisonProjection } from "../../../shell/modeloContract/modeloWork";
 import type {
   ModeloFormElection,
-  ModeloTaxationComparisonProjection,
-  OutputLanguage,
   PublicModeloFormExportOffer,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloWorkForm";
 import type { LedgerErrorDetail } from "../../../shell/ledger";
 import { Settlement } from "./Settlement";
 import { WorkspaceScreen } from "./WorkspaceScreen";

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { formatDay } from "../src/shared/dateFormats";
-import type { ModeloDeclarationsListProjectionV1 } from "../src/shell/modeloContract";
+import type { ModeloDeclarationsListProjectionV1 } from "../src/shell/modeloContract/modeloDeclarations";
 import { MODELO_FIXTURES } from "./support/windowFixtures";
 
 // A date the application words reads as the window writes one in the same

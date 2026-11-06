@@ -53,6 +53,7 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.schema import ModeloRevision
     from ...domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
+    from ...domain.user_profile.schema import ProfileSchemaDefinition
 
 #: Every profile-fact gap this module reports is answered by one surface, so the
 #: warnings name that surface's catalogue action rather than nine copies of a
@@ -590,6 +591,36 @@ def _single_fix_action_or_unscoped_pull(actions: list[DeclaredNextAction]) -> De
     return declare_next_action(_FILED_PULL_ACTION_ID)
 
 
+def _gating_field_raw_value(
+    raw_values: Mapping[str, object],
+    key: str,
+    *,
+    schema: ProfileSchemaDefinition,
+) -> object | None:
+    """Read one gating field from ``raw_values``, under either key shape it arrives in.
+
+    Every applicability rule and deadline condition names ``key`` as the
+    registry selector token (``operator.profile.edit``-style completeness
+    keys such as ``"has_employees"``), which is what a selector-keyed
+    projection (:func:`~cadrumo.application.user_profile.projections.record_to_values`)
+    stores raw values under. A caller that instead projects the profile
+    record through
+    :func:`~cadrumo.application.user_profile.projections.record_to_path_values`
+    stores the same fact under its canonical dotted schema path (for example
+    ``"withholding.has_employees"``), which only coincides with the selector
+    token when the field sits at the schema root. The schema is the single
+    source for that path - :meth:`ProfileSchemaDefinition.path_for_model_selector`
+    - so no second spelling table is kept here.
+    """
+    raw = raw_values.get(key)
+    if raw is not None:
+        return raw
+    path = schema.path_for_model_selector(key)
+    if path is None or path == key:
+        return None
+    return raw_values.get(path)
+
+
 def build_completeness_and_warnings(
     raw_values: Mapping[str, object] | None,
     entries: tuple[OverviewCalendarEntry, ...],
@@ -605,6 +636,7 @@ def build_completeness_and_warnings(
     """
     if raw_values is None:
         return CalendarCompleteness(), ()
+    schema = operation.profile_schema()
     explicitly_set: list[str] = []
     defaulted: list[str] = []
     warnings: list[CalendarWarning] = []
@@ -613,7 +645,7 @@ def build_completeness_and_warnings(
         operation=operation,
         revision_inventory=revision_inventory,
     ).items():
-        raw = raw_values.get(key)
+        raw = _gating_field_raw_value(raw_values, key, schema=schema)
         if raw is not None and str(raw).strip():
             explicitly_set.append(key)
             continue

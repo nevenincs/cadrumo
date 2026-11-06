@@ -1738,7 +1738,7 @@ def test_a_generated_file_is_excluded_only_at_its_declared_path_with_its_header(
 
 
 def test_the_generated_outputs_are_read_from_the_drivers_that_write_them(outputs: dict[str, tuple[str, ...]]) -> None:
-    assert {"shell/ledgerContract.ts", "shell/modeloContract.ts"} <= set(outputs)
+    assert {"shell/ledgerContract.ts", "shell/modeloContract/contracts.ts"} <= set(outputs)
     assert all(path.endswith((".ts", ".tsx", ".mts", ".cts")) for path in outputs)
 
 

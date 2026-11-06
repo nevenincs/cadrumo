@@ -2,8 +2,8 @@ import type { FieldSpec } from "../../../shared/fieldKind";
 import type {
   ModeloEditValueGrammarV1,
   ModeloEditWritableScalarSurfaceEntryV1,
-  PublicModeloFormField,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloEditWork";
+import type { PublicModeloFormField } from "../../../shell/modeloContract/modeloWorkForm";
 import type { Translate } from "../../../shell/strings";
 
 // Which editor an address takes, from the grammar the application served for
