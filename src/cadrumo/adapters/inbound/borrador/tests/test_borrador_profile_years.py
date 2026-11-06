@@ -75,7 +75,7 @@ def test_each_supported_year_reads_the_printed_results_through_its_profile(year:
     assert support is not None
 
     observation = parse_borrador(
-        render_borrador_pdf(year, _PRINTED_BOXES),
+        render_borrador_pdf(year, _PRINTED_BOXES, tax_id="12345678Z"),
         artefact_kind_override=ArtefactKind.BORRADOR,
         filing_year=year,
         supported_filing_years=support,

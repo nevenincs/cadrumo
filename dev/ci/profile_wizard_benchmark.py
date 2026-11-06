@@ -128,7 +128,7 @@ def _observe_alias(
 
 def observe_profile_boundaries(patch: pytest.MonkeyPatch, recorder: RuntimeBenchmarkRecorder) -> None:
     """Observe real custody, record and SQLite commit owners in either process."""
-    from sqlalchemy.orm import Session
+    from sqlalchemy.engine import Transaction
 
     from cadrumo.adapters.persistence.storage.custody import kdf_supervision
     from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -161,7 +161,7 @@ def observe_profile_boundaries(patch: pytest.MonkeyPatch, recorder: RuntimeBench
             yield
 
     patch_function_aliases(patch, lease, measured_lease)
-    commit = Session.commit
+    commit = Transaction.commit
 
     @functools.wraps(commit)
     def commit_transaction(*args: Any, **kwargs: Any) -> Any:
@@ -169,11 +169,11 @@ def observe_profile_boundaries(patch: pytest.MonkeyPatch, recorder: RuntimeBench
         with recorder.measure("storage.sql_commit." + phase, aggregate=True):
             return commit(*args, **kwargs)
 
-    patch.setattr(Session, "commit", commit_transaction)
+    patch.setattr(Transaction, "commit", commit_transaction)
 
 
 def observe(patch: pytest.MonkeyPatch, recorder: RuntimeBenchmarkRecorder, owner: Any, name: str, label: str) -> None:
-    """Wrap an owner's callable so the recorder measures each call under a label."""
+    """Replace ``owner.name`` with a wrapper that records each call under ``label``, sync or async."""
     original = getattr(owner, name)
     if inspect.iscoroutinefunction(original):
 

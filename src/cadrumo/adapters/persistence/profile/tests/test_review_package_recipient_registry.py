@@ -37,8 +37,8 @@ from cadrumo.adapters.persistence.profile.review_package_recipient_registry impo
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE,
 )
-from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
 from cadrumo.adapters.persistence.storage.sql.session import session_scope
+from cadrumo.adapters.persistence.storage.sql.tables import secure_objects_table
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.application.modelo.review_package_recipient_registry import (
     RecipientAlreadyRegisteredError,
@@ -217,11 +217,11 @@ def test_register_is_never_stored_as_plaintext(tmp_path: Path) -> None:
 
         with session_scope(profile.repository._engine) as session:
             row = session.execute(
-                select(SecureObjectRow).where(
-                    SecureObjectRow.namespace
+                select(secure_objects_table).where(
+                    secure_objects_table.c.namespace
                     == MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE.namespace
                 ),
-            ).scalar_one()
+            ).one()
             ciphertext_bytes = bytes(row.payload)
 
     assert public_key_hex.encode("utf-8") not in ciphertext_bytes
@@ -303,16 +303,16 @@ def test_load_raises_on_corrupted_ciphertext(tmp_path: Path) -> None:
 
         with session_scope(profile.repository._engine) as session:
             row = session.execute(
-                select(SecureObjectRow).where(
-                    SecureObjectRow.namespace
+                select(secure_objects_table).where(
+                    secure_objects_table.c.namespace
                     == MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE.namespace
                 ),
-            ).scalar_one()
+            ).one()
             corrupted_payload = bytes(row.payload)[:-1] + bytes([bytes(row.payload)[-1] ^ 0xFF])
             session.execute(
-                update(SecureObjectRow)
+                update(secure_objects_table)
                 .where(
-                    SecureObjectRow.namespace
+                    secure_objects_table.c.namespace
                     == MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE.namespace
                 )
                 .values(payload=corrupted_payload),

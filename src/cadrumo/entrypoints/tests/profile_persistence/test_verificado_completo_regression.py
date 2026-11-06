@@ -30,7 +30,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test,
 )
@@ -129,13 +129,14 @@ def _seed_runtime_profile_record(bucket_id: str) -> None:
         create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="X1234567L"),
-                UserProfileFact(path="identity.name", value="Ana"),
-                UserProfileFact(path="identity.surnames", value="Verifier"),
-                UserProfileFact(path="activities.description", value="design services"),
-                *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-                UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.tax_id", value="X1234567L"),
+                    UserProfileFact(path="identity.name", value="Ana"),
+                    UserProfileFact(path="identity.surnames", value="Verifier"),
+                    UserProfileFact(path="activities.description", value="design services"),
+                    UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
+                )
             ),
             created_at=_T0,
             updated_at=_T0,

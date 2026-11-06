@@ -26,10 +26,10 @@ from textual.widgets import Button, DataTable, Link, Static
 
 import cadrumo
 from cadrumo.application.modelo.work_form_models import ModeloWorkForm
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import sha256_file
 from cadrumo.core.i18n.render import output_language
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.review_publication_labels import GoogleReviewLabels
 from cadrumo.entrypoints.tui.account import AccountRecomposeRequiredV1

@@ -8,12 +8,12 @@ from typing import Any
 
 from .environment_declaration_constants import BASE_NAME, SLOT
 from .environment_declaration_primitives import (
-    environment_declaration_primitives_list,
-    environment_declaration_primitives_table,
     fail,
-    integer,
-    keys,
-    strings,
+    require_integer,
+    require_keys,
+    require_list,
+    require_strings,
+    require_table,
 )
 
 ROOT_PLATFORMS = ("windows", "linux", "macos")
@@ -29,16 +29,18 @@ _ROOT_KEYS = {
 
 
 def _installed_default(raw: object, where: str) -> dict[str, Any]:
-    rule = environment_declaration_primitives_table(raw, where)
-    keys(rule, where, {"platform", "candidates", "home_variable"})
+    rule = require_table(raw, where)
+    require_keys(rule, where, {"platform", "candidates", "home_variable"})
     candidates = []
-    for position, item in enumerate(environment_declaration_primitives_list(rule["candidates"], f"{where}.candidates")):
-        candidate = environment_declaration_primitives_table(item, f"{where}.candidates[{position}]")
-        keys(candidate, f"{where}.candidates[{position}]", {"variable", "subpath"})
+    for position, item in enumerate(require_list(rule["candidates"], f"{where}.candidates")):
+        candidate = require_table(item, f"{where}.candidates[{position}]")
+        require_keys(candidate, f"{where}.candidates[{position}]", {"variable", "subpath"})
         if not isinstance(candidate["variable"], str) or not BASE_NAME.fullmatch(candidate["variable"]):
             raise fail(f"{where}.candidates[{position}].variable is malformed")
         subpath = (
-            strings(candidate["subpath"], f"{where}.candidates[{position}].subpath") if candidate["subpath"] else ()
+            require_strings(candidate["subpath"], f"{where}.candidates[{position}].subpath")
+            if candidate["subpath"]
+            else ()
         )
         candidates.append({"variable": candidate["variable"], "subpath": list(subpath)})
     home = rule["home_variable"]
@@ -47,9 +49,9 @@ def _installed_default(raw: object, where: str) -> dict[str, Any]:
     return {"platform": rule["platform"], "candidates": candidates, "home_variable": home}
 
 
-def environment_root(entry: Mapping[str, Any], names: Mapping[str, Mapping[str, str]]) -> dict[str, Any]:
-    """Build the validated root declaration from an environment entry."""
-    keys(entry, "root", _ROOT_KEYS, {"vectors"})
+def declare_root(entry: Mapping[str, Any], names: Mapping[str, Mapping[str, str]]) -> dict[str, Any]:
+    """Validate the declared installation root and its defaults."""
+    require_keys(entry, "root", _ROOT_KEYS, {"vectors"})
     variable = entry["variable"]
     if names.get(variable, {}).get("role") != "location":
         raise fail("root.variable must name the declared location")
@@ -60,7 +62,7 @@ def environment_root(entry: Mapping[str, Any], names: Mapping[str, Mapping[str, 
         "channel": {key: channel[key] for key in ("product_directory", "stable", "separator")},
         "blank_is_unset": True,
         "posix_directory_mode": mode,
-        "refusals": list(strings(entry["refusals"], "root.refusals", SLOT)),
+        "refusals": list(require_strings(entry["refusals"], "root.refusals", SLOT)),
         "path_rules": {rule: rules[rule] for rule in _PATH_RULES},
     }
 
@@ -68,9 +70,7 @@ def environment_root(entry: Mapping[str, Any], names: Mapping[str, Mapping[str, 
 def _root_defaults(entry: Mapping[str, Any]) -> list[dict[str, Any]]:
     defaults = [
         _installed_default(item, f"root.installed_defaults[{index}]")
-        for index, item in enumerate(
-            environment_declaration_primitives_list(entry["installed_defaults"], "root.installed_defaults")
-        )
+        for index, item in enumerate(require_list(entry["installed_defaults"], "root.installed_defaults"))
     ]
     if [rule["platform"] for rule in defaults] != list(ROOT_PLATFORMS):
         raise fail(f"root.installed_defaults must declare {list(ROOT_PLATFORMS)} in order")
@@ -78,15 +78,15 @@ def _root_defaults(entry: Mapping[str, Any]) -> list[dict[str, Any]]:
 
 
 def _root_policy(entry: Mapping[str, Any]) -> tuple[int, dict[str, Any], dict[str, Any]]:
-    mode = integer(entry["posix_directory_mode"], "root.posix_directory_mode")
+    mode = require_integer(entry["posix_directory_mode"], "root.posix_directory_mode")
     if mode > 0o777:
         raise fail("root.posix_directory_mode must be a permission mode")
-    rules = environment_declaration_primitives_table(entry["path_rules"], "root.path_rules")
-    keys(rules, "root.path_rules", set(_PATH_RULES))
+    rules = require_table(entry["path_rules"], "root.path_rules")
+    require_keys(rules, "root.path_rules", set(_PATH_RULES))
     if not all(isinstance(rules[rule], bool) for rule in _PATH_RULES):
         raise fail("root.path_rules values must be booleans")
-    channel = environment_declaration_primitives_table(entry["channel"], "root.channel")
-    keys(channel, "root.channel", {"product_directory", "stable", "separator"})
+    channel = require_table(entry["channel"], "root.channel")
+    require_keys(channel, "root.channel", {"product_directory", "stable", "separator"})
     if not all(isinstance(value, str) and re.fullmatch(r"[a-z0-9-]+", value) for value in channel.values()):
         raise fail("root.channel values must be lower-case tokens")
     return mode, rules, channel
@@ -105,8 +105,8 @@ _VECTOR_OPTIONAL = frozenset(
 
 
 def _vector(raw: object, where: str, root: Mapping[str, Any]) -> dict[str, Any]:
-    entry = environment_declaration_primitives_table(raw, where)
-    keys(entry, where, {"name", "platform", "environment"}, _VECTOR_OPTIONAL)
+    entry = require_table(raw, where)
+    require_keys(entry, where, {"name", "platform", "environment"}, _VECTOR_OPTIONAL)
     if entry["platform"] not in ROOT_PLATFORMS:
         raise fail(f"{where} names an undeclared platform")
     if ("root" in entry) == ("refusal" in entry):
@@ -131,7 +131,7 @@ def _vector_values(
     entry: dict[str, Any],
     where: str,
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], tuple[str, ...]]:
-    environment = environment_declaration_primitives_table(entry["environment"], f"{where}.environment")
+    environment = require_table(entry["environment"], f"{where}.environment")
     optional = {key: entry.get(key) for key in ("known_folder", "root", "refusal")}
     if not all(isinstance(value, str) for value in (*environment.values(), *(v for v in optional.values() if v))):
         raise fail(f"{where} values must be strings")
@@ -139,18 +139,18 @@ def _vector_values(
     if not all(isinstance(value, bool) for value in flags.values()):
         raise fail(f"{where} flags must be booleans")
     invalid = (
-        strings(entry["invalid_environment"], f"{where}.invalid_environment") if "invalid_environment" in entry else ()
+        require_strings(entry["invalid_environment"], f"{where}.invalid_environment")
+        if "invalid_environment" in entry
+        else ()
     )
     return environment, optional, flags, invalid
 
 
-def vectors(raw: object, root: Mapping[str, Any]) -> tuple[dict[str, Any], ...]:
-    """Parse the root vectors, refusing repeated vector names."""
+def declare_vectors(raw: object, root: Mapping[str, Any]) -> tuple[dict[str, Any], ...]:
+    """Validate the declared root vectors against the root policy."""
     vectors = tuple(
         _vector(item, f"root.vectors[{index}]", root)
-        for index, item in enumerate(
-            environment_declaration_primitives_list([] if raw is None else raw, "root.vectors")
-        )
+        for index, item in enumerate(require_list([] if raw is None else raw, "root.vectors"))
     )
     if len({vector["name"] for vector in vectors}) != len(vectors):
         raise fail("root.vectors repeats a vector name")

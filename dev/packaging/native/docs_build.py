@@ -291,7 +291,7 @@ def compile_roots(build_root: Path, work: Path, languages: tuple[str, ...]) -> N
     work.mkdir(parents=True, exist_ok=True)
     for root in roots.values():
         # The search index is written over every root once they exist
-        # (:func:`_index_site`). Removing it first means a failed or partial
+        # (:func:`index_site`). Removing it first means a failed or partial
         # compile can never pass staging with an old index.
         index = root / "pagefind"
         if index.exists():

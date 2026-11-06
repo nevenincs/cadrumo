@@ -30,7 +30,7 @@ import type {
   FixtureMovement,
 } from "./fixtures/ledger";
 import { DOCUMENT_PAGE } from "./fixtures/documentPage";
-import servedWords from "./fixtures/ledgerServedWords.json" with { type: "json" };
+import servedWords from "@fixtures/ledger-served-words/ledgerServedWords.json" with { type: "json" };
 import { InvoiceRequestInvalid, InvoiceStopped } from "./ledgerInvoiceFixture";
 
 declare global {

@@ -30,7 +30,7 @@ def test_the_catalogue_loader_refuses_pyyaml_without_libyaml(monkeypatch: pytest
     """DETECTOR: a build without libyaml fails loudly at import rather than degrading."""
     monkeypatch.setattr(yaml, "__with_libyaml__", False)
     spec = importlib.util.spec_from_file_location(
-        f"{lazy_catalogue.__package__}._lazy_catalogue_without_libyaml",
+        f"{lazy_catalogue.__package__}.lazy_catalogue_without_libyaml",
         Path(lazy_catalogue.__file__),
     )
     assert spec is not None

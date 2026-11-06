@@ -513,7 +513,7 @@ def test_sdk_decoder_rejects_invalid_source_provenance(tmp_path: Path, source: s
     decoder = tmp_path / "zstd"
     decoder.write_bytes(b"decoder fixture")
     with pytest.raises(ValueError, match="decoder"):
-        posix.archive_decoder(
+        posix.locate_archive_decoder(
             {
                 "cpython_archive_decoder": {
                     "executable": str(decoder),

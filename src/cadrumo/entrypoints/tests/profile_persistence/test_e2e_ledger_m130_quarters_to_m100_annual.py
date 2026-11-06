@@ -68,6 +68,7 @@ from cadrumo.application.modelo.action_errors import ModeloAggregationBindingErr
 from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.package_version import PACKAGE_VERSION
 from cadrumo.core.period import Period
@@ -92,7 +93,6 @@ from ....adapters.persistence.profile.tests.published_authority_support import p
 from ....adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
 from ....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
 from ....core.retencion_soportada import RetencionSoportadaClase
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from ....domain.user_profile.tests.imputation_criterion_facts import cash_criterion_facts
 from .general_iva_profile_facts_support import renta_single_taxpayer_facts
 from .m130_m100_annual_support import (
@@ -171,7 +171,13 @@ _EXPECTED_M130_C19_BY_PERIOD: dict[str, Decimal] = {
 }
 _EXPECTED_M100_ACTIVITY_INCOME = Decimal("12000.00")
 _EXPECTED_M100_ACTIVITY_EXPENSES = Decimal("2400.00")
-EXPECTED_M100_ACTIVITY_NET = Decimal("9600.00")
+# Hand-derived annual rendimiento neto for the cobros y pagos persona in estimacion directa simplificada.
+# Casilla 0180 (ingresos) 12000.00 less the casilla 0220 expenses 2400.00 leaves a rendimiento previo of
+# 9600.00. RIRPF art. 30.2.4.a adds the provision for gastos de dificil justificacion, 5 per cent of that
+# previo (7 per cent applies to 2023 only, Ley 35/2006 DA 56), capped at 2.000,00: 480.00. Casilla 0223 is
+# therefore 2400.00 + 480.00 = 2880.00 and casilla 0224 is 12000.00 - 2880.00 = 9120.00.
+# oracle: AEAT-RENTA-MANUAL, estimacion directa simplificada; RIRPF art. 30.2.4.a.
+EXPECTED_M100_ACTIVITY_NET = Decimal("9120.00")
 _AUTONOMA_M130_C19_BY_PERIOD: dict[str, Decimal] = {
     "1T": Decimal("300.00"),
     "2T": Decimal("360.00"),
@@ -281,17 +287,18 @@ def _seed_taxpayer_profile() -> None:
         context=profile_creation_context_for_test(),
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=BUCKET_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value=TAX_ID),
-            UserProfileFact(path="identity.name", value="Annual"),
-            UserProfileFact(path="identity.surnames", value="Renta Tester"),
-            UserProfileFact(path="activities.description", value="design services"),
-            # An IAE epigraph outside group 861, so no urban rental is carried on as an activity.
-            UserProfileFact(path="activities.iae_epigraph", value="844"),
-            *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-            *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
-            *cash_criterion_facts(YEAR),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value=TAX_ID),
+                UserProfileFact(path="identity.name", value="Annual"),
+                UserProfileFact(path="identity.surnames", value="Renta Tester"),
+                UserProfileFact(path="activities.description", value="design services"),
+                # An IAE epigraph outside group 861, so no urban rental is carried on as an activity.
+                UserProfileFact(path="activities.iae_epigraph", value="844"),
+                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
+                *cash_criterion_facts(YEAR),
+            )
         ),
         created_at=T0,
         updated_at=T0,
@@ -436,7 +443,8 @@ def test_verify_accepts_autonoma_m100_with_official_m130_observations(
     assert Decimal(annual.casilla_values[_M100_ACTIVITY_EXPENSES_SUMMARY_CASILLA]) == Decimal("2400.00")
     assert Decimal(annual.casilla_values[_M100_EXPENSES_PREVIOUS_SUM_CASILLA]) == Decimal("2400.00")
     assert Decimal(annual.casilla_values[M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA]) == Decimal("2400.00")
-    assert Decimal(annual.casilla_values[M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA]) == Decimal("9600.00")
+    # 12000.00 - (2400.00 + 5 per cent of the 9600.00 previo = 480.00) = 9120.00, as derived at the constant.
+    assert Decimal(annual.casilla_values[M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA]) == EXPECTED_M100_ACTIVITY_NET
     assert Decimal(annual.casilla_values[_M100_PAGOS_CASILLA]) == Decimal("1520.00")
     assert Decimal(annual.casilla_values[_M100_PAGOS_CASILLA]) == sum(
         _AUTONOMA_M130_C19_BY_PERIOD.values(),
@@ -470,7 +478,7 @@ def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_to
         operation=published_authority_operation(),
         taxpayer_tax_id=TAX_ID,
         ejercicio=YEAR,
-        payer_tax_id="B00000000",
+        payer_tax_id="B00010082",
         income_class=RetencionSoportadaClase.TRABAJO,
         retencion=_AUTONOMA_SALARY_WITHHOLDING,
         importe_integro_dinerario=_AUTONOMA_SALARY_GROSS,
@@ -488,7 +496,8 @@ def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_to
     assert Decimal(annual.casilla_values[M100_ACTIVITY_INCOME_CASILLA]) == Decimal("12000.00")
     assert Decimal(annual.casilla_values[_M100_EXPENSES_PREVIOUS_SUM_CASILLA]) == Decimal("2400.00")
     assert Decimal(annual.casilla_values[M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA]) == Decimal("2400.00")
-    assert Decimal(annual.casilla_values[M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA]) == Decimal("9600.00")
+    # 12000.00 - (2400.00 + 5 per cent of the 9600.00 previo = 480.00) = 9120.00, as derived at the constant.
+    assert Decimal(annual.casilla_values[M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA]) == EXPECTED_M100_ACTIVITY_NET
     assert Decimal(annual.casilla_values[_M100_RETENCIONES_TRABAJO_CASILLA]) == _AUTONOMA_SALARY_WITHHOLDING
     assert Decimal(annual.casilla_values[_M100_PAGOS_CASILLA]) == Decimal("1520.00")
     assert Decimal(annual.casilla_values[_M100_TOTAL_PAGOS_CASILLA]) == Decimal("6020.00")

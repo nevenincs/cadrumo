@@ -1791,11 +1791,6 @@ family = 'bindings'
 id = 'modelo-303-casilla-122-inversion-sujeto-pasivo-base'
 position = 49
 
-[[revisions.2023.family_positions]]
-family = 'bindings'
-id = 'modelo-303-casilla-120-no-sujetas-localizacion-base'
-position = 49
-
 # Replace the inherited disclosure owner with this edition's own source-scoped owner.
 [[revisions."2023".family_removals]]
 family = "constructs"

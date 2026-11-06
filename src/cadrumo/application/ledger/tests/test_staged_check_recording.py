@@ -1,192 +1,99 @@
-"""The desktop fixtures' recorded staged-check answers stay what the backend answers.
+"""The questions the desktop's staged-check recording asks are answered as the check's rules say.
 
-The window's fixtures hold no rule: they look ``ledger.staged.check`` up in a recording
-made here. Set ``CADRUMO_STAGED_CHECK_UNRECORDED`` to a file of questions the fixtures could
-not answer, one JSON object per line, to answer them and refresh the recording. Set it to ``all`` to
-answer again every question the recording holds, as after the backend's answer gained a field.
+The questions are committed in ``dev/fixtures/ledger-staged-check-questions``; the producer
+``native/desktop/frontend/scripts/ledger_staged_check.py`` records the answers into the build tree, and
+these tests ask the check the same questions directly.
 """
 
 from __future__ import annotations
 
 import json
-import os
-from datetime import UTC, date, datetime
-from decimal import Decimal
-from pathlib import Path
-from typing import Any, Final, get_args
-from uuid import uuid4
 
 import pytest
 
 from ....core.external_constants import OutputLanguage
-from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ....domain.transactions.models import Transaction
-from ..actions_manual import transaction_from_command
-from ..models import ManualLedgerTransactionCommand
-from ..staged_check import check_draft, check_stored_row
-from ..staged_check_contracts import LedgerStagedDraft, LedgerStagedRow, LedgerStagedRowAnswer, StagedBlockerKind
-from ..staged_check_words import blocker_words, share_refusal_words
+from .staged_check_recording_support import (
+    absent_answer,
+    committed_questions,
+    draft_answer,
+    parse_questions,
+    row_answer,
+    served_words,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
-_RECORDING: Final = Path(__file__).resolve().parents[5] / (
-    "native/desktop/frontend/src/dev/fixtures/ledgerStagedCheck.json"
+
+def test_questions_of_both_kinds_are_committed() -> None:
+    questions = committed_questions()
+
+    assert questions.rows, "no row question is committed"
+    assert questions.drafts, "no draft question is committed"
+
+
+def test_every_committed_row_question_is_answered_as_found_or_refused_with_a_blocker_list() -> None:
+    for question in committed_questions().rows:
+        answer = row_answer(question)
+        assert answer["found"] is True, question
+        assert isinstance(answer["blockers"], list), question
+
+
+def test_a_personal_active_row_is_classified_and_skips_the_tax_set_as_personal() -> None:
+    personal = next(
+        question
+        for question in committed_questions().rows
+        if json.loads(question)["stored"]["business_classification"] == "PERSONAL"
+        and json.loads(question)["lifecycle"] == "ACTIVE"
+    )
+
+    answer = row_answer(personal)
+
+    assert (answer["classified"], answer["tax_set_skip"], answer["blockers"]) == (True, "personal", [])
+
+
+def test_an_empty_draft_is_incomplete_in_the_five_fields_a_movement_needs_and_a_full_one_is_not() -> None:
+    empty = draft_answer("[]")
+    assert [(blocker["kind"], sorted(blocker["fields"])) for blocker in empty["blockers"]] == [
+        ("draft_incomplete", ["amount", "booked_date", "currency", "description", "direction"])
+    ]
+    full = next(
+        question
+        for question in committed_questions().drafts
+        if {entry["field"] for entry in json.loads(question)}
+        >= {"amount", "booked_date", "currency", "description", "direction"}
+    )
+    assert "draft_incomplete" not in {blocker["kind"] for blocker in draft_answer(full)["blockers"]}
+
+
+def test_the_served_sentences_name_every_language_for_every_kind() -> None:
+    languages = {language.value for language in OutputLanguage}
+    for kind, said in served_words()["blockers"].items():
+        assert set(said) == languages, kind
+        assert all(sentence["words"] and sentence["fix_words"] for sentence in said.values()), kind
+
+
+def test_an_absent_row_is_answered_as_not_found() -> None:
+    answer = absent_answer()
+
+    assert answer["found"] is False
+    assert answer["blockers"] == []
+
+
+@pytest.mark.parametrize(
+    ("lines", "refusal"),
+    [
+        (['{"kind":"cell","question":"[]"}'], "row or draft"),
+        (['{"kind":"draft"}'], "row or draft"),
+        (['{"kind":"draft","question":"[]"}', '{"kind":"draft","question":"[]"}'], "asked twice"),
+    ],
 )
-_NOW: Final = datetime(2026, 3, 2, 10, tzinfo=UTC)
-_ID: Final = "a" * 64
-_NOTE: Final = (
-    "What ledger.staged.check answered for each stored movement and staged request the fixtures ask about, keyed "
-    "by exactly what was asked. Written and held equal to the live answers by test_staged_check_recording.py."
-)
+def test_a_malformed_question_file_is_refused(lines: list[str], refusal: str) -> None:
+    with pytest.raises(ValueError, match=refusal):
+        parse_questions(lines)
 
 
-def _decimal(value: str | None) -> Decimal | None:
-    return None if value is None else Decimal(value)
+def test_question_lines_keep_their_kind_and_exact_text() -> None:
+    parsed = parse_questions(['{"kind":"draft","question":"[]"}', "", '{"kind":"row","question":"{\\"a\\":1}"}'])
 
-
-def _optional_date(value: str | None) -> date | None:
-    return None if value is None else date.fromisoformat(value)
-
-
-def _stored_transaction(question: dict[str, Any]) -> Transaction:
-    stored = question["stored"]
-    built = transaction_from_command(
-        ManualLedgerTransactionCommand(
-            bucket_id=str(uuid4()),
-            booked_date=date.fromisoformat(stored["booked_date"]),
-            amount=Decimal(stored["amount"]),
-            currency=stored["currency"],
-            direction=TransactionDirection(stored["direction"]),
-            description=stored["description"],
-            actor="operator",
-            source_command="recording",
-        ),
-        occurred_at=_NOW,
-    )
-    raw = built.raw.model_copy(
-        update={
-            "value_date": None if stored["value_date"] is None else date.fromisoformat(stored["value_date"]),
-            "counterparty": stored["counterparty"],
-        }
-    )
-    # The stored facts are taken as they are: a stored row is not put through the writer again.
-    return built.model_copy(
-        update={
-            "raw": raw,
-            "lifecycle_state": TransactionLifecycleState(question["lifecycle"]),
-            "operation_date": _optional_date(stored.get("operation_date")),
-            "accrual_date": _optional_date(stored.get("accrual_date")),
-            "business_classification": BusinessClassification(stored["business_classification"]),
-            "business_pct": _decimal(stored["business_pct"]),
-            "category_id": stored["category_id"],
-            "usage_ratio_id": stored["usage_ratio_id"],
-            "taxable_base": _decimal(stored["taxable_base"]),
-            "iva_rate": _decimal(stored["iva_rate"]),
-            "iva_amount": _decimal(stored["iva_amount"]),
-            "iva_category": stored["iva_category"],
-            "irpf_category": stored["irpf_category"],
-            "notes": stored["notes"],
-            "group_label": stored["group_label"],
-            "own_account_id": stored["own_account_id"],
-            "counterparty_country": stored["counterparty_country"],
-            "counterparty_identification_state": stored["counterparty_identification_state"],
-            "deduction_fact_kind": stored["deduction_fact_kind"],
-            "investment_asset_id": stored["investment_asset_id"],
-            "purchase_invoice_evidence_id": "e" * 64 if question["evidence"] else None,
-        }
-    )
-
-
-def _row_answer(text: str) -> dict[str, Any]:
-    question = json.loads(text)
-    row = LedgerStagedRow.model_validate_json(
-        json.dumps(
-            {
-                "transaction_id": _ID,
-                "cells": question["cells"],
-                "evidence_staged": question["evidence_staged"],
-                "m210_staged": question["m210_staged"],
-            }
-        )
-    )
-    answer = json.loads(check_stored_row(row, _stored_transaction(question)).model_dump_json())
-    del answer["transaction_id"]
-    return answer
-
-
-def _draft_answer(text: str) -> dict[str, Any]:
-    draft = LedgerStagedDraft.model_validate_json(json.dumps({"key": "d", "fields": json.loads(text)}))
-    answer = json.loads(check_draft(draft).model_dump_json())
-    del answer["key"]
-    return answer
-
-
-def _absent() -> dict[str, Any]:
-    answer = json.loads(LedgerStagedRowAnswer(transaction_id=_ID, found=False).model_dump_json())
-    del answer["transaction_id"]
-    return answer
-
-
-def _served_words() -> dict[str, Any]:
-    """The sentences the answer carries by kind and language, which depend on nothing else."""
-    return {
-        "blockers": {
-            kind: {
-                language.value: dict(zip(("words", "fix_words"), blocker_words(kind, language), strict=True))
-                for language in OutputLanguage
-            }
-            for kind in get_args(StagedBlockerKind)
-        },
-        "share_refusal": {language.value: share_refusal_words(language) for language in OutputLanguage},
-    }
-
-
-def _recording() -> dict[str, Any]:
-    return json.loads(_RECORDING.read_text(encoding="utf-8"))
-
-
-def test_every_recorded_answer_is_what_the_backend_answers() -> None:
-    recording = _recording()
-    assert recording["absent"] == _absent()
-    assert recording["rows"], "the recording is empty"
-    for question, answer in recording["rows"].items():
-        assert _row_answer(question) == answer, question
-
-
-def test_the_recorded_sentences_are_what_the_backend_says_in_every_language() -> None:
-    assert _recording()["words"] == _served_words()
-
-
-def test_every_recorded_draft_is_what_the_backend_answers() -> None:
-    recording = _recording()
-    assert recording["drafts"], "the draft recording is empty"
-    for question, answer in recording["drafts"].items():
-        assert _draft_answer(question) == answer, question
-
-
-# Defined only when given the questions, since with none there is nothing to record.
-if os.environ.get("CADRUMO_STAGED_CHECK_UNRECORDED", "") != "":
-
-    def test_record_the_questions_the_fixtures_could_not_answer() -> None:
-        recording = _recording() if _RECORDING.exists() else {"rows": {}, "drafts": {}}
-        source = os.environ["CADRUMO_STAGED_CHECK_UNRECORDED"]
-        if source == "all":
-            asked = [json.dumps({"kind": "row", "question": question}) for question in recording["rows"]] + [
-                json.dumps({"kind": "draft", "question": question}) for question in recording["drafts"]
-            ]
-        else:
-            asked = Path(source).read_text(encoding="utf-8").splitlines()
-        for line in asked:
-            entry = json.loads(line)
-            if entry["kind"] == "row":
-                recording["rows"][entry["question"]] = _row_answer(entry["question"])
-            else:
-                recording["drafts"][entry["question"]] = _draft_answer(entry["question"])
-        written = {
-            "note": _NOTE,
-            "absent": _absent(),
-            "words": _served_words(),
-            "rows": dict(sorted(recording["rows"].items())),
-            "drafts": dict(sorted(recording["drafts"].items())),
-        }
-        _RECORDING.write_text(json.dumps(written, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n")
+    assert parsed.drafts == ("[]",)
+    assert parsed.rows == ('{"a":1}',)

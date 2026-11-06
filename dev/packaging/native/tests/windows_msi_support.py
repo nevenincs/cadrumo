@@ -208,7 +208,7 @@ def assert_modified_stage_is_refused(
     manager.write_bytes(original_manager + b"changed")
     try:
         with monkeypatch.context() as patch:
-            patch.setattr(windows_msi_build, "run", compiler_not_entered)
+            patch.setattr(windows_msi_build, "run_wix", compiler_not_entered)
             with pytest.raises(ValueError, match=r"^Staged installation file has changed: cadrumo-manager$"):
                 compile_products(build, identity, wix, "cadrumo", adapter, runner)
         assert {path: path.read_bytes() for path in published} == published

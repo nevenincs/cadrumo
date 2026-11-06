@@ -68,9 +68,9 @@ def _login() -> App[Any]:
     import asyncio
     from uuid import UUID
 
-    from cadrumo.application.operations.registry import OperationFrontendProjection
     from cadrumo.application.user_profile.login_interaction import preselected_profile_login_id, profile_login_choices
     from cadrumo.core.async_cleanup import close_async_resources
+    from cadrumo.core.operations import OperationFrontendProjection
     from cadrumo.entrypoints.tui.components.host import ScreenHostApp
     from cadrumo_client.transport.frontend_client import FrontendClient
     from cadrumo_client.transport.installed_client import open_installed_client
@@ -248,7 +248,7 @@ def _profile_surfaces() -> tuple[Surface, ...]:
             f"Profile setup or editing: {state.value}",
             partial(build_profile_fixture, state),
             interfaces=profile_fixture_interfaces(state),
-            provision=profile_fixture_storage,
+            provision=partial(profile_fixture_storage, state),
         )
         for state in ProfileFixtureState
     )

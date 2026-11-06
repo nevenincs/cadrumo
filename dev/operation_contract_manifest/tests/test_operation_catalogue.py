@@ -29,7 +29,8 @@ from functools import cache
 import pytest
 
 from cadrumo.application.operations.operation_definition import OperationDefinition
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.entrypoints.tests.production_operation_registry import (
     production_operation_registry as production_operation_registry_shared_production_operation_registry,
 )

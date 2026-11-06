@@ -36,9 +36,9 @@ from sqlalchemy.engine import Engine
 from ......core.classification.policies import SensitivityClass
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
 from ...tests.ephemeral_bucket_session import EphemeralBucketSession
-from ..orm import Base
 from ..secure_object_records import SecureObjectRawRow
 from ..secure_objects import SecureObjectRepository
+from ..tables import metadata
 from .raw_key_writer import save_with_raw_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -158,8 +158,8 @@ def _index_bundle_by_namespace(
 
 def _wipe_and_recreate_secure_objects_table(engine: Engine, *, repo: SecureObjectRepository) -> None:
     """Drop the table, recreate it empty, and assert the raw walk yields nothing."""
-    Base.metadata.drop_all(engine)
-    Base.metadata.create_all(engine)
+    metadata.drop_all(engine)
+    metadata.create_all(engine)
     assert tuple(repo.iter_all_records_raw()) == ()
 
 

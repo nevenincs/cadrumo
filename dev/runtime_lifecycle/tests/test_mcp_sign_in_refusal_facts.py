@@ -17,8 +17,8 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.custody import acceleration_keychain
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.config import override_settings
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.transport.frontend_client import FrontendClient

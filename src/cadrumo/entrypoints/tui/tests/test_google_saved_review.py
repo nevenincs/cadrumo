@@ -45,11 +45,12 @@ from ....application.operations.frontend_requests import (
 )
 from ....application.operations.models import OperationIdentity
 from ....application.operations.persistence.replay import OperationReplayStatus
-from ....application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
+from ....application.operations.registry import OperationPublicContractSetV1
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import output_language
 from ....core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,

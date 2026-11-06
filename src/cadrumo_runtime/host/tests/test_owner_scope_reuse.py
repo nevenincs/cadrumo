@@ -13,8 +13,9 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
+from cadrumo.application.operations.registry import OperationPublicContractSetV1
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import Peer

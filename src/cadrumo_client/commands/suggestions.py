@@ -167,9 +167,9 @@ class LazySubcommand:
         decorate: Callable[[typer.Typer], None] | None = None,
         optional_unavailable: OptionalUnavailableFactory | None = None,
         required_unavailable: RequiredUnavailableRefusal | None = None,
-        help: str | None = None,
+        help: Callable[[], str | None] | None = None,
         hidden: bool = False,
-        short_help: str | None = None,
+        short_help: Callable[[], str | None] | None = None,
     ) -> None:
         """Initialize the lazy subcommand from its target and deferred loading behavior."""
         if not name:
@@ -242,8 +242,8 @@ class LazySubcommand:
 
     @property
     def help(self) -> str | None:
-        """Return the immutable long-help registration metadata."""
-        return self._help
+        """Render the long help in the current output language, if any is registered."""
+        return None if self._help is None else self._help()
 
     @property
     def hidden(self) -> bool:
@@ -252,15 +252,17 @@ class LazySubcommand:
 
     @property
     def short_help(self) -> str | None:
-        """Return the immutable explicit short-help metadata, if any."""
-        return self._short_help
+        """Render the explicit short help in the current output language, if any."""
+        return None if self._short_help is None else self._short_help()
 
     def get_short_help_str(self, limit: int = 45) -> str:
         """Render short help with the same rules as Click ``Command``."""
-        if self._short_help is not None and self._short_help:
-            text = inspect.cleandoc(self._short_help)
-        elif self._help is not None and self._help:
-            text = make_default_short_help(self._help, limit)
+        short_help = self.short_help
+        help_text = self.help
+        if short_help is not None and short_help != "":
+            text = inspect.cleandoc(short_help)
+        elif help_text is not None and help_text != "":
+            text = make_default_short_help(help_text, limit)
         else:
             text = ""
         return text.strip()

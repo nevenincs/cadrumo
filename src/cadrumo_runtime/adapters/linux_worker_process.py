@@ -11,6 +11,7 @@ from pathlib import Path
 from threading import Lock
 from uuid import UUID
 
+from cadrumo.core.pydantic_plugins import PYDANTIC_PLUGINS_DISABLED, PYDANTIC_PLUGINS_VARIABLE
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.posix import posix_owner_uid
 from cadrumo_client.transport.posix_channel import PosixChannel
@@ -251,7 +252,12 @@ def _validated_launch_inputs(
     if scope._guardian is not None or not executable.is_absolute() or not directory.is_absolute():
         raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
     selected_arguments = validated_worker_arguments(arguments, worker_script=scope._worker_script)
-    baseline = {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C", "PYDANTIC_DISABLE_PLUGINS": "__all__"}
+    baseline = {
+        "PATH": "/usr/bin:/bin",
+        "LANG": "C",
+        "LC_ALL": "C",
+        PYDANTIC_PLUGINS_VARIABLE: PYDANTIC_PLUGINS_DISABLED,
+    }
     allowed_storage = worker_path_environment_names()
     extras = set(environment) - set(baseline)
     if any(environment.get(name) != value for name, value in baseline.items()) or not extras <= allowed_storage:

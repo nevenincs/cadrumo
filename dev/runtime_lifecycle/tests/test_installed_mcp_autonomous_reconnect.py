@@ -43,13 +43,14 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
     OperationSubmissionReceiptV1,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore, NativeSecretBackend
 from cadrumo.core.async_cleanup import await_cancellation_complete, close_async_resources
 from cadrumo.core.config import override_settings
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,

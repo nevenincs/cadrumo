@@ -31,6 +31,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from ....core.modelo import Modelo
@@ -128,28 +129,27 @@ def _profile(
     voluntary_sii: bool = False,
     threshold_declared: bool | None = None,
 ) -> ModeloWorkProfile:
-    facts = [
+    stated = [
         UserProfileFact(path="identity.tax_id", value="12345678Z"),
-        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
         UserProfileFact(path="iva.regime", value=iva_regime),
-        UserProfileFact(path="iva.m303_regime_composition", value="general"),
-        UserProfileFact(path="iva.redeme_enrolled", value=False),
-        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
         UserProfileFact(path="iva.voluntary_sii_enrolled", value=voluntary_sii),
-        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
     ]
     if estimation_regime is not None:
-        facts.append(UserProfileFact(path="irpf.estimation_regime", value=estimation_regime))
+        stated.append(UserProfileFact(path="irpf.estimation_regime", value=estimation_regime))
     if threshold_declared is not None:
-        facts.append(UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"))
-        facts.append(
+        stated.append(
             UserProfileFact(path="obligations.third_party_transactions_above_347_threshold", value=threshold_declared)
         )
+    omitted = (
+        *(("irpf.estimation_regime",) if estimation_regime is None else ()),
+        *(("obligations.third_party_transactions_above_347_threshold",) if threshold_declared is None else ()),
+    )
+    facts = persona_facts_beneath(stated, without=omitted)
     record = create_user_profile_record(
         context=profile_creation_context_for_test(),
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
-        facts=tuple(facts),
+        facts=facts,
     )
     return ModeloWorkProfile(record=record, profile_decode_context=operation.profile_decode_context())
 
@@ -157,7 +157,7 @@ def _profile(
 def _ordinary_invoices() -> tuple[Invoice, ...]:
     return (
         _domestic("V-1", InvoiceKind.ISSUED, "B12345674", "CLIENTE NACIONAL SL", "8000.00"),
-        _domestic("C-1", InvoiceKind.RECEIVED, "A58818501", "PROVEEDOR NACIONAL SA", "5000.00"),
+        _domestic("C-1", InvoiceKind.RECEIVED, "A00010074", "PROVEEDOR NACIONAL SA", "5000.00"),
         _domestic("V-2", InvoiceKind.ISSUED, "C3333333G", "CLIENTE PEQUENO SL", "1000.00"),
     )
 

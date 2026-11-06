@@ -36,7 +36,7 @@ _COMMON = (
 def _identity() -> AeatProductSoftwareIdentity:
     return AeatProductSoftwareIdentity(
         program_identifier="C604",
-        developer_tax_id="Y0000001S",
+        developer_tax_id="Y0001006P",
         evidence=(AeatProductSoftwareEvidence(reference="aeat-software-registration:c604", digest="a" * 64),),
     )
 

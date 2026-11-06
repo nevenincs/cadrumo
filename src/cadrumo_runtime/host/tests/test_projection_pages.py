@@ -25,7 +25,6 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventoryProjection
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind
 from cadrumo.application.user_profile.automation_operations import (
@@ -33,7 +32,7 @@ from cadrumo.application.user_profile.automation_operations import (
     AutomationOperationRequest,
 )
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
-from cadrumo.core.operations import OperationTerminalCondition
+from cadrumo.core.operations import OperationFrontendProjection, OperationTerminalCondition
 from cadrumo.core.period import Period
 from cadrumo_client.contracts.operation_access import (
     OperationPage,

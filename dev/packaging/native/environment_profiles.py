@@ -18,18 +18,12 @@ from .environment_declaration_constants import (
     PROFILE,
     SLOT,
 )
-from .environment_declaration_primitives import (
-    environment_declaration_primitives_list,
-    environment_declaration_primitives_table,
-    fail,
-    keys,
-    strings,
-)
+from .environment_declaration_primitives import fail, require_keys, require_list, require_strings, require_table
 from .environment_models import FixedValue, Invocation, InvocationArgument, LaunchSlot
 
 
 def _argument(raw: object, where: str) -> InvocationArgument:
-    entry = environment_declaration_primitives_table(raw, where)
+    entry = require_table(raw, where)
     if "literal" in entry:
         return _literal_argument(entry, where)
     if "option" in entry:
@@ -38,7 +32,7 @@ def _argument(raw: object, where: str) -> InvocationArgument:
 
 
 def _literal_argument(entry: dict[str, Any], where: str) -> InvocationArgument:
-    keys(entry, where, {"literal"})
+    require_keys(entry, where, {"literal"})
     if not isinstance(entry["literal"], str) or not LITERAL.fullmatch(entry["literal"]):
         raise fail(f"{where} literal is malformed")
     return InvocationArgument(literal=entry["literal"], slot=None, kind=None, minimum=0)
@@ -46,7 +40,7 @@ def _literal_argument(entry: dict[str, Any], where: str) -> InvocationArgument:
 
 def _option_argument(entry: dict[str, Any], where: str) -> InvocationArgument:
     # An option is an optional flag followed by one typed value; the pair is present whole or absent.
-    keys(entry, where, {"option", "slot", "kind"})
+    require_keys(entry, where, {"option", "slot", "kind"})
     if not isinstance(entry["option"], str) or not OPTION.fullmatch(entry["option"]):
         raise fail(f"{where} option must be a lower-case double-dash flag")
     if not isinstance(entry["slot"], str) or not SLOT.fullmatch(entry["slot"]):
@@ -57,7 +51,7 @@ def _option_argument(entry: dict[str, Any], where: str) -> InvocationArgument:
 
 
 def _typed_argument(entry: dict[str, Any], where: str) -> InvocationArgument:
-    keys(entry, where, {"slot", "kind"}, {"minimum"})
+    require_keys(entry, where, {"slot", "kind"}, {"minimum"})
     if not isinstance(entry["slot"], str) or not SLOT.fullmatch(entry["slot"]):
         raise fail(f"{where} slot is malformed")
     if entry["kind"] not in ARGUMENT_KINDS:
@@ -94,8 +88,8 @@ def _options_trail(arguments: Sequence[InvocationArgument], where: str) -> None:
         raise fail(f"{where} option flags must be distinct from each other and from every literal")
 
 
-def environment_profiles_invocations(raw: object) -> tuple[Invocation, ...]:
-    """Parse the declared invocations array into invocation records."""
+def declare_invocations(raw: object) -> tuple[Invocation, ...]:
+    """Validate the declared invocation shapes."""
     if not isinstance(raw, list):
         raise fail("invocations must be an array of tables")
     invocations: list[Invocation] = []
@@ -106,8 +100,8 @@ def environment_profiles_invocations(raw: object) -> tuple[Invocation, ...]:
 
 
 def _invocation(item: object, where: str) -> Invocation:
-    entry = environment_declaration_primitives_table(item, where)
-    keys(entry, where, {"profile", "platform", "arguments"}, {"distinct", "greater"})
+    entry = require_table(item, where)
+    require_keys(entry, where, {"profile", "platform", "arguments"}, {"distinct", "greater"})
     if entry["platform"] not in {*PLATFORMS, "all"}:
         raise fail(f"{where} platform must be windows, posix or all")
     if not isinstance(entry["arguments"], list) or not entry["arguments"]:
@@ -138,7 +132,7 @@ def _comparable_slots(arguments: tuple[InvocationArgument, ...]) -> set[str]:
     }
 
 
-def environment_profiles_fixed(
+def declare_fixed(
     raw: object,
     where: str,
     names: Mapping[str, Mapping[str, str]],
@@ -146,8 +140,8 @@ def environment_profiles_fixed(
     role: str,
     allow_build_setting: bool = False,
 ) -> FixedValue:
-    """Parse a fixed environment value that has exactly one source."""
-    entry = environment_declaration_primitives_table(raw, where)
+    """Validate the fixed invocation arguments each profile pins."""
+    entry = require_table(raw, where)
     allowed = {"value", "layout_path", "image"}
     if allow_build_setting:
         allowed.add("build_setting")
@@ -155,7 +149,7 @@ def environment_profiles_fixed(
     if len(sources) != 1:
         choices = "value, layout_path, image or build_setting" if allow_build_setting else "value, layout_path or image"
         raise fail(f"{where} must declare exactly one of {choices}")
-    keys(entry, where, {"name", *sources})
+    require_keys(entry, where, {"name", *sources})
     name, source = entry["name"], next(iter(sources))
     if names.get(name, {}).get("role") != role:
         raise fail(f"{where} sets {name!r}, which is not a declared {role} name")
@@ -164,12 +158,12 @@ def environment_profiles_fixed(
     return FixedValue(name=name, source=source, value=entry[source])
 
 
-def environment_profiles(
+def declare_profiles(
     raw: object, names: Mapping[str, Mapping[str, str]], groups: Mapping[str, tuple[str, ...]], root_variable: str
 ) -> dict[str, dict[str, Any]]:
-    """Parse the declared environment profiles into a profile mapping."""
+    """Validate the declared profiles against their invocations."""
     profiles: dict[str, dict[str, Any]] = {}
-    for profile, item in environment_declaration_primitives_table(raw, "profiles").items():
+    for profile, item in require_table(raw, "profiles").items():
         profiles[profile] = _profile(profile, item, names, groups, root_variable)
     return profiles
 
@@ -184,8 +178,8 @@ def _profile(
     where = f"profiles.{profile}"
     if not PROFILE.fullmatch(profile):
         raise fail(f"profile name is not a lowercase hyphenated identifier: {profile!r}")
-    entry = environment_declaration_primitives_table(item, where)
-    keys(
+    entry = require_table(item, where)
+    require_keys(
         entry,
         where,
         {"image", "base", "pins", "path"},
@@ -198,8 +192,8 @@ def _profile(
     pins, inherit = _profile_pins(entry, where)
     base_groups, operator, passed = _profile_admissions(entry, where, inherit, names, groups)
     fixed = tuple(
-        environment_profiles_fixed(value, f"{where}.fixed[{index}]", names, role="fixed")
-        for index, value in enumerate(environment_declaration_primitives_list(entry.get("fixed", []), f"{where}.fixed"))
+        declare_fixed(value, f"{where}.fixed[{index}]", names, role="fixed")
+        for index, value in enumerate(require_list(entry.get("fixed", []), f"{where}.fixed"))
     )
     slots = _profile_slots(entry, where, names, root_variable, pins, fixed)
     _validate_profile_names(operator, passed, fixed, slots, where)
@@ -241,16 +235,16 @@ def _profile_admissions(
     names: Mapping[str, Mapping[str, str]],
     groups: Mapping[str, tuple[str, ...]],
 ) -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]:
-    base_groups = strings(entry.get("base_groups", []), f"{where}.base_groups") if not inherit else ()
+    base_groups = require_strings(entry.get("base_groups", []), f"{where}.base_groups") if not inherit else ()
     if not inherit and not base_groups:
         raise fail(f"{where} must name its base groups")
     if not set(base_groups) <= set(BASE_GROUPS):
         raise fail(f"{where}.base_groups names an undeclared base group")
-    operator_groups = strings(entry.get("operator", []), f"{where}.operator")
+    operator_groups = require_strings(entry.get("operator", []), f"{where}.operator")
     if not set(operator_groups) <= set(groups):
         raise fail(f"{where}.operator names an undeclared group")
     operator = tuple(name for group in operator_groups for name in groups[group])
-    passed = strings(entry.get("pass", []), f"{where}.pass", NAME)
+    passed = require_strings(entry.get("pass", []), f"{where}.pass", NAME)
     for name in passed:
         if name not in names:
             raise fail(f"{where}.pass admits an undeclared name {name}")
@@ -263,7 +257,7 @@ def _profile_pins(entry: dict[str, Any], where: str) -> tuple[tuple[str, ...], b
     if isinstance(entry["pins"], bool):
         pins = PIN_KINDS if entry["pins"] else ()
     else:
-        pins = strings(entry["pins"], f"{where}.pins")
+        pins = require_strings(entry["pins"], f"{where}.pins")
         if not set(pins) <= set(PIN_KINDS):
             raise fail(f"{where}.pins names an undeclared pin; declared: {list(PIN_KINDS)}")
         pins = tuple(kind for kind in PIN_KINDS if kind in pins)
@@ -282,9 +276,9 @@ def _profile_slots(
     fixed: tuple[FixedValue, ...],
 ) -> list[LaunchSlot]:
     slots: list[LaunchSlot] = []
-    for index, value in enumerate(environment_declaration_primitives_list(entry.get("slots", []), f"{where}.slots")):
-        slot = environment_declaration_primitives_table(value, f"{where}.slots[{index}]")
-        keys(slot, f"{where}.slots[{index}]", {"name", "required"})
+    for index, value in enumerate(require_list(entry.get("slots", []), f"{where}.slots")):
+        slot = require_table(value, f"{where}.slots[{index}]")
+        require_keys(slot, f"{where}.slots[{index}]", {"name", "required"})
         name = slot["name"]
         # The storage root is a slot where a parent hands its own root to an image that does not pin it,
         # and a package fact one image fixes is a slot where that image relays it to a child image.

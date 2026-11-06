@@ -102,7 +102,7 @@ MODELO_190_FIXTURES: tuple[Modelo190Fixture, ...] = (
     Modelo190Fixture(
         filename="190/2024-0A.pdf",
         ejercicio="2024",
-        tax_id="Y0000001S",
+        tax_id="Y0001006P",
         full_name="APELLIDO APELLIDO NOMBRE",
         contact_phone="000000000",
         contact_email="correo@example.invalid",

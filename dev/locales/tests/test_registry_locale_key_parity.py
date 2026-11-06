@@ -146,7 +146,7 @@ def test_no_catalogue_leaf_echoes_its_own_key(locale: str) -> None:
     ``scaffold`` writes a missing key as its own dotted path, so a membership
     check turns green the moment the scaffolder runs over a catalogue nobody
     has translated. The renderer treats such a value as a miss
-    (``_render.py`` ``_lookup_translation``), which is what lets the resolution
+    (``_render.py`` ``resolve_translation``), which is what lets the resolution
     checks above distinguish a translation from a reserved slot.
 
     This asserts the shipped state directly: reintroducing a placeholder reds

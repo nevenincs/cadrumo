@@ -82,13 +82,13 @@ def _row_payload(model: str) -> bytes:
         decrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from ....persistence.storage.sql.orm import SecureObjectRow
     from ....persistence.storage.sql.session import session_scope
+    from ....persistence.storage.sql.tables import secure_objects_table
 
     with session_scope(_repository_engine()) as session:
         for row in session.execute(
-            select(SecureObjectRow).where(SecureObjectRow.namespace == LLM_CACHE_NAMESPACE.namespace),
-        ).scalars():
+            select(secure_objects_table).where(secure_objects_table.c.namespace == LLM_CACHE_NAMESPACE.namespace),
+        ):
             aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
             plaintext = decrypt_secure_object_payload(bytes(row.payload), associated_data=aad)
             if json.loads(plaintext.decode("utf-8"))["entry"]["model"] == model:
@@ -98,26 +98,30 @@ def _row_payload(model: str) -> bytes:
 
 def _substitute_row(*, victim_model: str, donor_model: str) -> None:
     """Re-encrypt the donor row's genuine plaintext under the victim row's identity."""
-    from sqlalchemy import select
+    from sqlalchemy import select, update
 
     from ....persistence.storage.crypto.encrypted_columns import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from ....persistence.storage.sql.orm import SecureObjectRow
     from ....persistence.storage.sql.session import session_scope
+    from ....persistence.storage.sql.tables import secure_objects_table
 
     donor_plaintext = _row_payload(donor_model)
     with session_scope(_repository_engine()) as session:
         for row in session.execute(
-            select(SecureObjectRow).where(SecureObjectRow.namespace == LLM_CACHE_NAMESPACE.namespace),
-        ).scalars():
+            select(secure_objects_table).where(secure_objects_table.c.namespace == LLM_CACHE_NAMESPACE.namespace),
+        ).all():
             aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
             plaintext = decrypt_secure_object_payload(bytes(row.payload), associated_data=aad)
             if json.loads(plaintext.decode("utf-8"))["entry"]["model"] != victim_model:
                 continue
-            row.payload = encrypt_secure_object_payload(donor_plaintext, associated_data=aad)
+            session.execute(
+                update(secure_objects_table)
+                .where(secure_objects_table.c.id == row.id)
+                .values(payload=encrypt_secure_object_payload(donor_plaintext, associated_data=aad)),
+            )
             return
     raise AssertionError(f"no cache row holds an entry for model {victim_model!r}")
 

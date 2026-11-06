@@ -157,7 +157,7 @@ async def test_missing_published_authority_refuses_before_any_corpus_index_is_bu
 ) -> None:
     unpublished = tmp_path / "unpublished"
     unpublished.mkdir()
-    monkeypatch.setattr(authority_module, "authority_bundled_indexed_authority", None)
+    monkeypatch.setattr(authority_module, "bundled_indexed_authority_owner", None)
     adapter = admitted_adapter()
     try:
         with override_settings(cadrumo_authority_root=unpublished):

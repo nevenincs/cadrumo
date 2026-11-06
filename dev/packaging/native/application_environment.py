@@ -9,10 +9,10 @@ from pathlib import Path
 from typing import Any
 
 from .environment_components import (
-    components,
-    environment_components_native_host,
-    environment_components_temporary_member,
-    host_classes,
+    declare_components,
+    declare_host_classes,
+    declare_native_host,
+    declare_temporary_member,
 )
 from .environment_declaration_constants import (
     BASE_GROUPS,
@@ -27,32 +27,32 @@ from .environment_declaration_constants import (
 )
 from .environment_declaration_primitives import (
     DECLARATION,
-    environment_declaration_primitives_list,
-    environment_declaration_primitives_table,
     fail,
-    keys,
-    strings,
+    require_keys,
+    require_list,
+    require_strings,
+    require_table,
 )
-from .environment_launch_vectors import agent, launch_vectors
+from .environment_launch_vectors import declare_agent, declare_launch_vectors
 from .environment_models import (
     ApplicationEnvironment,
     ExternalPathDefault,
     FixedValue,
     Invocation,
 )
-from .environment_path import environment_path_external_path_defaults
-from .environment_profiles import environment_profiles, environment_profiles_fixed, environment_profiles_invocations
-from .environment_root import environment_root, vectors
+from .environment_path import declare_external_path_defaults
+from .environment_profiles import declare_fixed, declare_invocations, declare_profiles
+from .environment_root import declare_root, declare_vectors
 from .operational_settings import parse_settings
 
 
 def _names(raw: object) -> dict[str, dict[str, str]]:
     names: dict[str, dict[str, str]] = {}
-    for name, entry in environment_declaration_primitives_table(raw, "names").items():
+    for name, entry in require_table(raw, "names").items():
         if not NAME.fullmatch(name):
             raise fail(f"name is not an upper-case environment name: {name!r}")
-        entry = environment_declaration_primitives_table(entry, f"names.{name}")
-        keys(entry, f"names.{name}", {"kind", "role"})
+        entry = require_table(entry, f"names.{name}")
+        require_keys(entry, f"names.{name}", {"kind", "role"})
         if entry["kind"] not in NAME_KINDS:
             raise fail(f"names.{name} has an undeclared kind {entry['kind']!r}")
         if entry["role"] not in NAME_ROLES:
@@ -63,10 +63,10 @@ def _names(raw: object) -> dict[str, dict[str, str]]:
 
 def _groups(raw: object, names: Mapping[str, Mapping[str, str]]) -> dict[str, tuple[str, ...]]:
     groups: dict[str, tuple[str, ...]] = {}
-    for group, members in environment_declaration_primitives_table(raw, "groups").items():
+    for group, members in require_table(raw, "groups").items():
         if not SLOT.fullmatch(group):
             raise fail(f"group name is malformed: {group!r}")
-        groups[group] = strings(members, f"groups.{group}", NAME)
+        groups[group] = require_strings(members, f"groups.{group}", NAME)
         for member in groups[group]:
             role = names.get(member, {}).get("role")
             if role not in {"location", "operator", "package"}:
@@ -77,12 +77,12 @@ def _groups(raw: object, names: Mapping[str, Mapping[str, str]]) -> dict[str, tu
 
 
 def _base(raw: object) -> dict[str, dict[str, tuple[str, ...]]]:
-    table = environment_declaration_primitives_table(raw, "base")
-    keys(table, "base", set(PLATFORMS))
+    table = require_table(raw, "base")
+    require_keys(table, "base", set(PLATFORMS))
     base: dict[str, dict[str, tuple[str, ...]]] = {}
     for platform in PLATFORMS:
-        groups = environment_declaration_primitives_table(table[platform], f"base.{platform}")
-        keys(groups, f"base.{platform}", set(BASE_GROUPS))
+        groups = require_table(table[platform], f"base.{platform}")
+        require_keys(groups, f"base.{platform}", set(BASE_GROUPS))
         base[platform] = _base_groups(groups, platform)
         listed = _base_names(base[platform], platform)
         if len(listed) != len(set(listed)):
@@ -94,7 +94,7 @@ def _base(raw: object) -> dict[str, dict[str, tuple[str, ...]]]:
 
 def _base_groups(groups: dict[str, Any], platform: str) -> dict[str, tuple[str, ...]]:
     return {
-        group: strings(groups[group], f"base.{platform}.{group}", BASE_NAME) if groups[group] else ()
+        group: require_strings(groups[group], f"base.{platform}.{group}", BASE_NAME) if groups[group] else ()
         for group in BASE_GROUPS
     }
 
@@ -110,7 +110,7 @@ def parse(text: str) -> ApplicationEnvironment:
         document = tomllib.loads(text)
     except tomllib.TOMLDecodeError as error:
         raise fail(f"is not valid TOML: {error}") from error
-    keys(
+    require_keys(
         document,
         "the declaration",
         {"schema", "names", "groups", "base", "pins", "path", "profiles", "host_classes", "native_host"}
@@ -122,29 +122,27 @@ def parse(text: str) -> ApplicationEnvironment:
     names = _names(document["names"])
     groups = _groups(document["groups"], names)
     base = _base(document["base"])
-    pins = environment_declaration_primitives_table(document["pins"], "pins")
-    keys(pins, "pins", {"temporary", "temporary_member", "authority"})
-    temporary = strings(pins["temporary"], "pins.temporary", NAME)
+    pins = require_table(document["pins"], "pins")
+    require_keys(pins, "pins", {"temporary", "temporary_member", "authority"})
+    temporary = require_strings(pins["temporary"], "pins.temporary", NAME)
     if any(names.get(name, {}).get("role") != "pin" for name in temporary):
         raise fail("pins.temporary must list declared pin names")
-    authority = environment_profiles_fixed(pins["authority"], "pins.authority", names, role="fixed")
+    authority = declare_fixed(pins["authority"], "pins.authority", names, role="fixed")
     if authority.source != "layout_path":
         raise fail("pins.authority must name a layout path")
-    temporary_member = environment_components_temporary_member(pins["temporary_member"])
+    temporary_member = declare_temporary_member(pins["temporary_member"])
     path, entries, external_path_defaults, windows_system, posix_system = _parse_path(document["path"], names, base)
-    root_table = environment_declaration_primitives_table(document["root"], "root")
-    root = environment_root(root_table, names)
-    profiles = environment_profiles(document["profiles"], names, groups, root["variable"])
+    root_table = require_table(document["root"], "root")
+    root = declare_root(root_table, names)
+    profiles = declare_profiles(document["profiles"], names, groups, root["variable"])
     package_fixed = tuple(
-        environment_profiles_fixed(value, f"package_fixed[{index}]", names, role="fixed", allow_build_setting=True)
-        for index, value in enumerate(
-            environment_declaration_primitives_list(document.get("package_fixed", []), "package_fixed")
-        )
+        declare_fixed(value, f"package_fixed[{index}]", names, role="fixed", allow_build_setting=True)
+        for index, value in enumerate(require_list(document.get("package_fixed", []), "package_fixed"))
     )
     _validate_package_fixed(package_fixed, profiles)
     _validate_agent_declaration(document, names, profiles)
-    invocations = environment_profiles_invocations(document.get("invocations", []))
-    native_host = environment_components_native_host(document["native_host"])
+    invocations = declare_invocations(document.get("invocations", []))
+    native_host = declare_native_host(document["native_host"])
     _validate_profile_invocations(invocations, profiles)
     return ApplicationEnvironment(
         names=names,
@@ -157,18 +155,18 @@ def parse(text: str) -> ApplicationEnvironment:
         external_path_defaults=external_path_defaults,
         windows_system=(
             windows_system["variable"],
-            strings(windows_system["subpaths"], "path.windows_system.subpaths"),
+            require_strings(windows_system["subpaths"], "path.windows_system.subpaths"),
         ),
         posix_system=posix_system,
         profiles=profiles,
         invocations=invocations,
         temporary_member=temporary_member,
-        host_classes=host_classes(document["host_classes"]),
+        host_classes=declare_host_classes(document["host_classes"]),
         native_host=native_host,
-        components=components(document["components"], names),
+        components=declare_components(document["components"], names),
         root=root,
-        vectors=vectors(root_table.get("vectors"), root),
-        launch_vectors=launch_vectors(document.get("launch_vectors", []), profiles, native_host),
+        vectors=declare_vectors(root_table.get("vectors"), root),
+        launch_vectors=declare_launch_vectors(document.get("launch_vectors", []), profiles, native_host),
         package_fixed=package_fixed,
         settings=parse_settings(document.get("settings", {})),
     )
@@ -180,7 +178,7 @@ def _validate_agent_declaration(
     profiles: dict[str, dict[str, Any]],
 ) -> None:
     if "agent" in document:
-        agent(document["agent"], names, profiles)
+        declare_agent(document["agent"], names, profiles)
     elif any(entry["agent_names"] for entry in profiles.values()):
         raise fail("a profile admits the agent's names, and the declaration has no agent table")
 
@@ -188,21 +186,21 @@ def _validate_agent_declaration(
 def _parse_path(
     raw: object, names: Mapping[str, Mapping[str, str]], base: Mapping[str, Mapping[str, tuple[str, ...]]]
 ) -> tuple[dict[str, Any], tuple[str, ...], tuple[ExternalPathDefault, ...], dict[str, Any], tuple[str, ...]]:
-    path = environment_declaration_primitives_table(raw, "path")
-    keys(path, "path", {"entries", "external", "windows_system", "posix_system"}, {"external_defaults"})
-    entries = strings(path["entries"], "path.entries")
+    path = require_table(raw, "path")
+    require_keys(path, "path", {"entries", "external", "windows_system", "posix_system"}, {"external_defaults"})
+    entries = require_strings(path["entries"], "path.entries")
     if not set(entries) <= PATH_ENTRIES or "executable" not in entries:
         raise fail(f"path.entries must be drawn from {sorted(PATH_ENTRIES)} and include executable")
     if names.get(path["external"], {}).get("kind") != "directory_list":
         raise fail("path.external must name a declared directory_list name")
-    external_path_defaults = environment_path_external_path_defaults(path.get("external_defaults", []), base)
-    windows_system = environment_declaration_primitives_table(path["windows_system"], "path.windows_system")
-    keys(windows_system, "path.windows_system", {"variable", "subpaths"})
+    external_path_defaults = declare_external_path_defaults(path.get("external_defaults", []), base)
+    windows_system = require_table(path["windows_system"], "path.windows_system")
+    require_keys(windows_system, "path.windows_system", {"variable", "subpaths"})
     if not isinstance(windows_system["variable"], str) or not BASE_NAME.fullmatch(windows_system["variable"]):
         raise fail("path.windows_system.variable is malformed")
     if windows_system["variable"] not in base["windows"]["system"]:
         raise fail("path.windows_system.variable must be a windows system base name")
-    posix_system = strings(path["posix_system"], "path.posix_system")
+    posix_system = require_strings(path["posix_system"], "path.posix_system")
     if not all(entry.startswith("/") for entry in posix_system):
         raise fail("path.posix_system entries must be absolute")
     return path, entries, external_path_defaults, windows_system, posix_system

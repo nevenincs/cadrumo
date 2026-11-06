@@ -11,11 +11,12 @@ from datetime import datetime
 from ...config import load_settings
 from ...identity.digest import ContentDigest, ContentDigestOrAbsent
 from ...logging import get_logger
+from ...storage_taxonomy import RUN_EVENTS_FILENAME
 from ...time.clock import now
 from ..capture import CAPTURE_SINK
 from ..context import RUN_CONTEXT_VAR, STEP_CONTEXT_VAR, RunContextInfo
 from ..models import ArgumentRecord, RunEventKind, RunEventPayload, RunOutcome, RunTrace, StepBoundaryPayload
-from ..store import EVENTS_FILENAME, run_dir, save_envelope, save_trace, validate_run_id
+from ..store import run_dir, save_envelope, save_trace, validate_run_id
 from .fingerprint import compute_corpus_sha256, compute_data_root_sha256, read_cert_fingerprint
 from .sink import JsonlRunSink
 from .sink_scope import attach_run_sink, detach_run_sink
@@ -269,7 +270,7 @@ def _outer_run_context(
 ) -> Generator[RecordedRunContextInfo]:
     """Own the outer sink, context variables, boundary events, and teardown."""
     target = run_dir(info.run_id)
-    sink = JsonlRunSink(target / EVENTS_FILENAME, run_id=info.run_id)
+    sink = JsonlRunSink(target / RUN_EVENTS_FILENAME, run_id=info.run_id)
 
     # Arm result-envelope capture for the run so the emitted ``SchemaEnvelope``
     # is persisted as run evidence. Nesting-aware: an outer capture scope owns

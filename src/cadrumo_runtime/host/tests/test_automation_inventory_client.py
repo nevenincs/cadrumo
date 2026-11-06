@@ -10,8 +10,7 @@ import pytest
 
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
-from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
+from cadrumo.core.operations import OperationEffect, OperationFrontendProjection, OperationTerminalCondition
 from cadrumo_client.transport.automation_inventory import read_automation_inventory
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.installation import installation

@@ -33,14 +33,6 @@ ANNUAL: Final = ("390", "190", "180", "100")
 M100_CASILLAS: Final = ("0001=declarante", "0165=declarante", "0166=A05")
 
 
-#: Renta bindings the scenario answers, applied only where the selected revision declares them.
-#: The profile declares only economic-activity income, so the suffered-withholding credit
-#: classes of the annual return are proven zero by its categories and take no answer here.
-M100_BINDINGS: Final = {
-    "renta-modelo-100-estimacion-directa-es-normal": "1",
-}
-
-
 class SeedError(RuntimeError):
     """A seed stage could not complete through the public CLI."""
 

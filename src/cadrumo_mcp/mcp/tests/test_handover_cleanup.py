@@ -10,8 +10,8 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_vocabulary import AccessScope
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY

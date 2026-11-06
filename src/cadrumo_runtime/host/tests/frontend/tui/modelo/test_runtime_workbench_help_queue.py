@@ -13,9 +13,9 @@ import pytest
 from cadrumo.application.modelo.casilla_help import ModeloCasillaHelpCardV1
 from cadrumo.application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from cadrumo.application.modelo.workbench_operations import ModeloCasillaHelpProjectionV1, ModeloCasillaHelpRequest
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.period import Period
 from cadrumo.domain.modelos.work_unit import WorkUnitState
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError

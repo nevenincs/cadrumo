@@ -40,18 +40,14 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test,
-)
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.aggregation.source_mesh import CalculationSourceDiagnostic
 from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND
@@ -77,9 +73,7 @@ from ....domain.calculations.registry.tests.registry_observations import (
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.user_profile.values import ProfileSetupState, create_user_profile_record
 from .file_flow_test_support import calculation_ports_for_test
-from .general_iva_profile_facts_support import general_iva_profile_facts
 from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -146,25 +140,8 @@ _INCOME_DATE = date(2026, 2, 14)  # inside both 1T (Jan-Mar) and 2T (Jan-Jun) wi
 @pytest.fixture
 def objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET, label=_PROFILE_LABEL) as profile:
-        _seed_ready_profile(profile.repository)
+        seed_ready_profile(bucket_id=_BUCKET, at=_T0)
         yield profile.repository
-
-
-def _seed_ready_profile(objects: SecureObjectRepository) -> None:
-    """Persist the M130 natural-person profile required by the work-unit gate."""
-    seed_test_profile_record(
-        create_user_profile_record(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET,
-            facts=general_iva_profile_facts(
-                tax_id="12345678Z",
-                activity_start_date=date(2020, 1, 1),
-            ),
-            created_at=_T0,
-            updated_at=_T0,
-            context=profile_creation_context_for_test(),
-        ),
-    )
 
 
 def _seed_prior_year_m100(obs_repo: CalculationObservationRepository) -> None:

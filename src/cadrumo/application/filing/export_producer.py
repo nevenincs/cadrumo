@@ -1136,7 +1136,11 @@ def m303_profile_lexicals(
     return M303ProfileLexicals(
         redeme_enrolled=yes_no(iva_profile.redeme_enrolled),
         exclusively_foral=exclusively_foral,
-        regime_composition_code=m303_regime_composition_export_code(iva_profile.regime_composition),
+        regime_composition_code=(
+            m303_regime_composition_export_code(iva_profile.regime_composition)
+            if iva_profile.regime_composition is not None
+            else None
+        ),
         cash_accounting_regime_enrolled=yes_no(iva_profile.cash_accounting_regime_enrolled),
         voluntary_sii_enrolled=yes_no(iva_profile.voluntary_sii_enrolled),
         hydrocarbon_deposit_advance_payment_deduction_entitled=a30,

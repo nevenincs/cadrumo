@@ -19,8 +19,8 @@ from datetime import timedelta
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import AccessScope, Availability

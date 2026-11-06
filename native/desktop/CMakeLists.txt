@@ -166,7 +166,7 @@ file(GLOB_RECURSE desktop_chrome_inputs CONFIGURE_DEPENDS
   "${CADRUMO_SOURCE_ROOT}/dev/locales/*.py")
 list(FILTER desktop_chrome_inputs EXCLUDE REGEX "/dev/locales/tests/")
 list(APPEND desktop_chrome_inputs "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/i18n/render.py"
-  "${CADRUMO_SOURCE_ROOT}/dev/_paths.py" "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cmake_build.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/paths.py" "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cmake_build.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_directory.py"
   # The invoice preview's served keys are declared from these.
   "${CADRUMO_SOURCE_ROOT}/src/cadrumo/domain/invoices/figures.py"
@@ -175,12 +175,12 @@ list(APPEND desktop_chrome_inputs "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/i18n/
   # The shell source names the keys; generation refuses one it would not carry.
   "${CMAKE_CURRENT_SOURCE_DIR}/frontend/src")
 set(desktop_palette_inputs "${CADRUMO_SOURCE_ROOT}/docs/conf.py" "${CADRUMO_SOURCE_ROOT}/docs/_static/cadrumo-docs.css"
-  "${CADRUMO_SOURCE_ROOT}/dev/docs/desktop_palette.py" "${CADRUMO_SOURCE_ROOT}/dev/_paths.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/docs/desktop_palette.py" "${CADRUMO_SOURCE_ROOT}/dev/paths.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cmake_build.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_directory.py")
 set(desktop_icons_inputs
   "${CADRUMO_PATH_AGENT}/agent-wheel.json" "${CADRUMO_PATH_AGENT}/wheels"
-  "${CADRUMO_SOURCE_ROOT}/dev/_paths.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/paths.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/provider_icon_assets.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/agent.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_paths.py"
@@ -209,7 +209,7 @@ list(APPEND desktop_settings_inputs
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/operational_settings.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/desktop_settings.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/stable_output.py"
-  "${CADRUMO_SOURCE_ROOT}/dev/_paths.py")
+  "${CADRUMO_SOURCE_ROOT}/dev/paths.py")
 set(desktop_settings_output operational-settings.ts)
 set(desktop_settings_module dev.packaging.native.desktop_settings)
 set(desktop_settings_description "operational settings from the environment declaration")
@@ -370,6 +370,7 @@ foreach(action IN ITEMS test clippy unit-test unit-clippy)
       "CADRUMO_DESKTOP_PACKAGE_ROOT=${CADRUMO_DESKTOP_PACKAGE_ROOT}"
       "CADRUMO_PACKAGE_USER_DOCS=${desktop_test_user_docs}"
       "CADRUMO_PROVIDER_STATUS_CONTRACT_FIXTURE=${CADRUMO_PATH_DESKTOP_TESTING}/provider-status-contract.json"
+      "CADRUMO_WINDOW_FIXTURES=${CADRUMO_WINDOW_FIXTURES}"
       "${CADRUMO_STORAGE_ROOT_VARIABLE}=${CADRUMO_PATH_DESKTOP_TESTING}/storage"
       "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs" ${host_driver_action}
     DEPENDS ${host_dependencies}

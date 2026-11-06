@@ -34,6 +34,7 @@ from .renta_imputation import (
     accrual_entry_date,
     invoice_accrual_date,
     linked_accrual_date,
+    received_invoice_reference,
 )
 from .renta_income_models import (
     AccruedUnpaidIncome,
@@ -211,7 +212,7 @@ def _rows_of(invoice: Invoice, transactions: TransactionCatalogue) -> tuple[Tran
     """Return the active rows that link ``invoice`` on the side its kind reads."""
 
     def linked_id(row: Transaction) -> str | None:
-        return row.invoice_id if invoice.kind is InvoiceKind.ISSUED else row.purchase_invoice_evidence_id
+        return row.invoice_id if invoice.kind is InvoiceKind.ISSUED else received_invoice_reference(row)
 
     return tuple(
         row

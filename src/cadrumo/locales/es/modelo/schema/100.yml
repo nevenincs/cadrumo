@@ -18325,8 +18325,6 @@ modelo:
                 heading: Hijos y otros descendientes
               declaracion:
                 heading: Declaración
-              other-inputs:
-                heading: Otros datos que necesita el cálculo
             section:
               anexoa:
                 heading: Mejoras energéticas en viviendas, vehículos eléctricos y
@@ -18468,8 +18466,6 @@ modelo:
               inmueblesres:
                 heading: Resumen de rendimientos del capital inmobiliario e imputaciones
                   de rentas inmobiliarias
-              inputs:
-                heading: Datos sin casilla en el formulario
               integracionres:
                 heading: Integración y compensación de ganancias y pérdidas patrimoniales
               integracionres-2:

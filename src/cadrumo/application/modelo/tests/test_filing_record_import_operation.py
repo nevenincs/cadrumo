@@ -18,7 +18,12 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -36,7 +41,7 @@ from ....domain.modelos.filing_record import (
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..action_errors import WorkUnitMutationRefusedError
 from ..calculation_action_ports import CalculationActionPorts, CalculationActionPortsFactory

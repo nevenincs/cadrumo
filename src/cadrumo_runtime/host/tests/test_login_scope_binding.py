@@ -8,8 +8,8 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.login import LoginEvidence

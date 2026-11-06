@@ -82,6 +82,10 @@ _OPERATOR_FACTS: dict[str, str] = {
     "iva.cash_accounting_regime_enrolled": "false",
     "iva.voluntary_sii_enrolled": "false",
     "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+    # The operator pays an employee and a rented workshop with retencion, so the
+    # payer modelos 111, 115, 180 and 190 apply to the profile.
+    "withholding.has_employees": "true",
+    "withholding.pays_rent_with_retencion": "true",
 }
 # The renta facts a Modelo 100 2024 calculation reads from the profile.
 _M100_FACTS: dict[str, str] = {
@@ -452,8 +456,6 @@ def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses(
             "work",
             "calculate",
             str(work_unit_payload["work_unit_id"]),
-            "--binding",
-            "renta-modelo-100-estimacion-directa-es-normal=1",
         )
     assert calculated.exit_code == 0, calculated.output
     casilla_values = unwrap_schema_envelope(calculated.output)["casilla_values"]

@@ -331,8 +331,8 @@ def main() -> None:
                 import traceback
                 from uuid import UUID
 
-                from cadrumo.application.operations.registry import OperationFrontendProjection
                 from cadrumo.application.user_profile.login_session import resolve_login_target
+                from cadrumo.core.operations import OperationFrontendProjection
                 from cadrumo.entrypoints.adapter_composition import profile_free_adapter_composition
                 from cadrumo_client.transport.frontend_client import FrontendClient
 
@@ -391,8 +391,8 @@ def main() -> None:
             if mode in {"tui-acceptance", "cancel-review-acceptance"}:
                 from uuid import UUID
 
-                from cadrumo.application.operations.registry import OperationFrontendProjection
                 from cadrumo.application.user_profile.login_session import resolve_login_target
+                from cadrumo.core.operations import OperationFrontendProjection
                 from cadrumo.entrypoints.adapter_composition import profile_free_adapter_composition
                 from cadrumo_client.transport.frontend_client import FrontendClient
 

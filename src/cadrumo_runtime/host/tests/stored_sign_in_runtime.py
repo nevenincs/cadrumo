@@ -34,10 +34,10 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 )
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile import login_session
 from cadrumo.application.user_profile.access_contracts import AccessSession, ProfileAccessBinding
 from cadrumo.application.user_profile.login_session import authenticate_profile_candidate
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.clock import now
 from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 from cadrumo.tests.in_memory_keyring import IN_MEMORY_KEYRING, InMemoryKeyring

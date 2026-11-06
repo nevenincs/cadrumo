@@ -24,6 +24,7 @@ from ..checks import (
     timeout_progress_diagnostic,
 )
 from ..cli import main
+from ..persona_profile import SANDBOX_PERSONA_ID, pinned_persona
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -357,7 +358,11 @@ def _coherence_page(_second_expected_status: str) -> str:
 
 def _write_coherence_contracts(root: Path, page: str, second_expected_status: str) -> None:
     """Write the two private contracts used by one cumulative-page fixture."""
-    create = "aeat --format json app modelo work create --modelo 130 --year 2025 --period 1T"
+    # The sandbox profile is the canonical persona, whose activity began on the first day of the
+    # horizon year, so only a period of that year is a valid Modelo 130 obligation.
+    with pinned_persona(SANDBOX_PERSONA_ID) as (_, envelope):
+        filing_year = envelope.horizon
+    create = f"aeat --format json app modelo work create --modelo 130 --year {filing_year} --period 1T"
     _write_contract(
         root,
         page,

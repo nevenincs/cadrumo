@@ -30,8 +30,8 @@ from cadrumo.adapters.persistence.profile.tests.ledger_capital_support import (
     capital_request,
     withholding_producer,
 )
+from cadrumo.adapters.persistence.profile.tests.taxpayer_persona_support import seed_modelo_ready_profile
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.ledger_payment_withholding import build_ledger_payment_withholding_capture
 from cadrumo.application.aggregation.source_precedence import CallerOverrideDisposition, precedence_ladder_sources
@@ -91,7 +91,7 @@ def test_the_settled_row_advisory_reaches_the_collection_year_modelo_193_calcula
     )
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
-        seed_modelo_ready_profile_record(_BUCKET_ID, clock=datetime.now(UTC))
+        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=datetime.now(UTC))
         assert (
             withholding_producer(objects).capture(capture.command, cadence=quarterly_filer_cadence_for(capture.command))
             is not None

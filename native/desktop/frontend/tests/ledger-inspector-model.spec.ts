@@ -20,7 +20,7 @@ import {
 } from "../src/components/ledger/inspector/inspectorModel";
 import { sameInspectorContext } from "../src/components/ledger/inspector/inspectorContext";
 import { effectiveFacts } from "../src/shell/ledgerStage";
-import recorded from "../src/dev/fixtures/ledgerEntryOptions.json" with { type: "json" };
+import recorded from "@fixtures/ledger-entry-options/ledgerEntryOptions.json" with { type: "json" };
 import { answerPeriods } from "../src/dev/periodRecording";
 import { holdLedgerPeriods, ledgerPeriod } from "../src/shell/ledgerPeriods";
 import "./support/servedClassifications";

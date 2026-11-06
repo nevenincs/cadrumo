@@ -19,6 +19,7 @@ from ....core.config import Settings
 from ....core.hashing import sha256_hex
 from ....core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationInteractionKind,
     OperationTerminalCondition,
 )
@@ -34,7 +35,7 @@ from ...operations.interactions import OperationInteractionRequest
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext, OperationResumeCheckpoint
 from ...operations.persistence.journal import serialize_operation_operand
-from ...operations.registry import OperationFrontendProjection, OperationRegistry, operation_public_schema_reference
+from ...operations.registry import OperationRegistry, operation_public_schema_reference
 from ...tests.operation_host_fakes import RecordingEvents
 from ...user_profile.access_contracts import SessionKind
 from ...user_profile.access_errors import ProfileAccessRefusedError

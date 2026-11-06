@@ -2449,15 +2449,6 @@ export type ModeloAuditReadRequest = {
 };
 
 /**
- * One complete registry boolean encoding.
- */
-export type ModeloBindingEncodedOptionV1 = {
-  encoded_value: string;
-  boolean_meaning: boolean;
-  registry_value: string;
-};
-
-/**
  * One temporary preview value, never a saved binding.
  */
 export type ModeloBindingOverride = {
@@ -2482,7 +2473,6 @@ export type ModeloBindingRowV1 = {
   legal_refs: string[];
   source_refs: string[];
   relation_inputs: string[];
-  encoded_options: ModeloBindingEncodedOptionV1[];
   override: string | null;
 };
 

@@ -32,6 +32,7 @@ from ...application.modelo.projection_operation import (
     ModeloProjectOperationRequest,
 )
 from ...application.modelo.work_lifecycle import create_work_unit
+from ...application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from ...core.operations import OperationEffect
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -120,12 +121,12 @@ def prepare_modelo_projection_history_conformance_case(
 
     upsert_test_profile_facts(
         profile_id,
-        (
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 1, 1)),
+        persona_facts_beneath(
+            (
+                UserProfileFact(path="renta_filing.declaration_type", value="1"),
+                UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 1, 1)),
+            ),
+            without=("identity.",),
         ),
     )
     if definition_id == "modelo.project":

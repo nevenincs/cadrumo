@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import UTC, datetime
-from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -15,7 +14,7 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import seed_persona_profile, seed_ready_profile
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.action_errors import WorkUnitNotFoundError
 from cadrumo.application.modelo.calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
@@ -36,13 +35,7 @@ from cadrumo.domain.modelos.verification_report import (
     derive_verification_report_id,
 )
 from cadrumo.domain.modelos.verification_repository import upsert_verification_report
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test,
-)
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
-
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -55,50 +48,6 @@ _Repos = tuple[
 ]
 
 _BUCKET_ID = "17171717-1717-4171-8171-171717171717"
-
-
-def _seed_ready_profile() -> None:
-    seed_test_profile_record(
-        create_user_profile_record(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="economic activity"),
-                *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-            ),
-            context=profile_creation_context_for_test(),
-        ),
-    )
-
-
-def _seed_sociedad_profile() -> None:
-    seed_test_profile_record(
-        create_user_profile_record(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="B12345674"),
-                UserProfileFact(path="identity.legal_name", value="History Test Sociedad Limitada"),
-                UserProfileFact(path="activities.description", value="corporate tax activity"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-                UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-                UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
-                UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
-            ),
-            context=profile_creation_context_for_test(),
-        ),
-    )
 
 
 def _history_ports(repos: _Repos) -> ModeloHistoryPorts:
@@ -117,7 +66,7 @@ def _history_ports(repos: _Repos) -> ModeloHistoryPorts:
 def repos(tmp_path: Path) -> Iterator[_Repos]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
-        _seed_ready_profile()
+        seed_ready_profile(bucket_id=_BUCKET_ID, at=datetime.now(UTC))
         yield (
             WorkUnitCatalogueRepository(objects=objects),
             CalculationRevisionCatalogueRepository(objects=objects),
@@ -140,7 +89,7 @@ def test_create_rejects_unknown_period_for_modelo_revision(
     create-time with the declared-period listing (``1P``, ``2P``, ``3P``).
     """
     wu_repo, _, _, _, bv_repo = repos
-    _seed_sociedad_profile()
+    seed_persona_profile("sociedad-limitada", bucket_id=_BUCKET_ID, at=datetime.now(UTC))
     with pytest.raises(ModeloError) as exc:
         create_work_unit(
             bucket_id=_BUCKET_ID,

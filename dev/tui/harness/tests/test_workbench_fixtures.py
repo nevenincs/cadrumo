@@ -11,13 +11,14 @@ from textual.widgets import DataTable
 
 from cadrumo.entrypoints.tui.tests.frame import geometry_band, screen_text
 from cadrumo.entrypoints.tui.tests.workbench_fixtures import WORKBENCH_FIXTURES, WorkbenchFixtureScenario
+from cadrumo.tests.personas import identity_catalogue
 from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _FORBIDDEN_IMPORT_PARTS = frozenset({"adapter", "network", "filesystem", "random", "storage", "clock"})
 _PROTECTED_SENTINELS = (
-    "12345678Z",
+    next(identity.value for identity in identity_catalogue().identities if identity.primary),
     "SECRET_PROFILE_NAME",
     "PRIVATE_DOCUMENT_TEXT",
     "https://sede.example.invalid/private",

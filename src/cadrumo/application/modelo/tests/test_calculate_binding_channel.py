@@ -23,9 +23,14 @@ import pytest
 
 from ....core.errors.error_codes import build_error_envelope
 from ....core.errors.hierarchy import CadrumoError
+from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
-from ....domain.calculations.registry.tests.published_authority import published_revision, published_snapshot
+from ....domain.calculations.registry.tests.published_authority import (
+    published_revision,
+    published_snapshot,
+    published_supported_filing_years,
+)
 from ..calculate_input_validation import ModeloCalculateBindingInputError, validated_binding_input_channel
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -109,3 +114,25 @@ def test_date_sourced_binding_is_detected_as_a_date_channel() -> None:
     assert _M100_DATE_BINDING in date_ids
     # A date binding is neither an enum nor a plain decimal override channel.
     assert _M100_DATE_BINDING not in enum_consumed_binding_ids(revision)
+
+
+def test_a_profile_derived_boolean_binding_refuses_a_caller_override_in_every_supported_year() -> None:
+    """Casilla 0168 follows the declared estimation regime, so ``--binding`` cannot state it."""
+    support = published_supported_filing_years()
+    assert support is not None
+    checked = 0
+    for year in sorted(support.years):
+        try:
+            revision = published_snapshot("100", filing_year=year, period="0A").revision
+        except FilingYearOutsideSupportEnvelopeError:
+            continue
+        known = {binding.id for binding in revision.bindings}
+        with pytest.raises(ModeloCalculateBindingInputError) as exc_info:
+            validated_binding_input_channel(
+                "renta-modelo-100-estimacion-directa-es-normal", revision, known, enum_consumed_binding_ids(revision)
+            )
+
+        assert exc_info.value.translated_message == "application.modelo.errors.calculate_binding_is_profile_derived"
+        assert build_error_envelope(exc_info.value).code == "REFUSED_MODELO_CALCULATE_BINDING_INPUT"
+        checked += 1
+    assert checked

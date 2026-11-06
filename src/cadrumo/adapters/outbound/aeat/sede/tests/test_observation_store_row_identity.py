@@ -81,12 +81,12 @@ def _rows(engine, namespace: str) -> list[tuple[object, bytes, bytes]]:
         decrypt_secure_object_payload,
         secure_object_payload_aad,
     )
-    from .....persistence.storage.sql.orm import SecureObjectRow
     from .....persistence.storage.sql.session import session_scope
+    from .....persistence.storage.sql.tables import secure_objects_table
 
     with session_scope(engine) as session:
         found = []
-        for row in session.execute(select(SecureObjectRow).where(SecureObjectRow.namespace == namespace)).scalars():
+        for row in session.execute(select(secure_objects_table).where(secure_objects_table.c.namespace == namespace)):
             aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
             found.append((row.id, aad, decrypt_secure_object_payload(bytes(row.payload), associated_data=aad)))
         return found
@@ -100,11 +100,11 @@ def _substitute(engine, namespace: str, *, victim_marker: str, donor_marker: str
     stored bytes are a digest and a raw-bytes WHERE clause is not a narrower
     query but a different one.
     """
-    from sqlalchemy import select
+    from sqlalchemy import update
 
     from .....persistence.storage.crypto.encrypted_columns import encrypt_secure_object_payload
-    from .....persistence.storage.sql.orm import SecureObjectRow
     from .....persistence.storage.sql.session import session_scope
+    from .....persistence.storage.sql.tables import secure_objects_table
 
     rows = _rows(engine, namespace)
     donor = next(plaintext for _, _, plaintext in rows if donor_marker in plaintext.decode("utf-8"))
@@ -112,8 +112,11 @@ def _substitute(engine, namespace: str, *, victim_marker: str, donor_marker: str
     victim_aad = next(aad for row_id, aad, _ in rows if row_id == victim_id)
 
     with session_scope(engine) as session:
-        victim = session.execute(select(SecureObjectRow).where(SecureObjectRow.id == victim_id)).scalar_one()
-        victim.payload = encrypt_secure_object_payload(donor, associated_data=victim_aad)
+        session.execute(
+            update(secure_objects_table)
+            .where(secure_objects_table.c.id == victim_id)
+            .values(payload=encrypt_secure_object_payload(donor, associated_data=victim_aad)),
+        )
 
 
 def test_a_filed_observation_under_a_foreign_row_is_refused_on_targeted_load(tmp_path: Path) -> None:

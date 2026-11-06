@@ -25,9 +25,8 @@ from ...application.ledger.ratios_contracts import LedgerRatiosSetProjection, Le
 from ...application.ledger.rule_contracts import LedgerRuleAddProjection, LedgerRuleApplyProjection
 from ...application.operations.execution_actor import OperationExecutionCaller, OperationExecutionCallerReader
 from ...application.operations.models import OperationIdentity
-from ...application.operations.registry import OperationFrontendProjection
 from ...application.user_profile.access_contracts import SessionKind
-from ...core.operations import OperationTerminalCondition
+from ...core.operations import OperationFrontendProjection, OperationTerminalCondition
 from ...domain.buckets.event import BucketEvent, BucketEventType
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from . import registered_executor_case_support as conformance

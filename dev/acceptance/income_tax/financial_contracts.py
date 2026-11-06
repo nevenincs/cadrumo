@@ -15,7 +15,7 @@ SCHEMA_VERSION = "income-01-installed-tui-financial-v2"
 STATEMENT_CSV_HEADER = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID"
 
 
-SYNTHETIC_COUNTERPARTY_NIF = "A58818501"
+SYNTHETIC_COUNTERPARTY_NIF = "B00000281"
 
 
 @dataclass(frozen=True, slots=True)
@@ -59,5 +59,4 @@ ANNUAL_EDITS: Final[tuple[tuple[tuple[str, str], str], ...]] = (
     (("casilla", "0001"), "declarante"),
     (("casilla", "0165"), "declarante"),
     (("casilla", "0166"), "A05"),
-    (("binding", "renta-modelo-100-estimacion-directa-es-normal"), "1"),
 )

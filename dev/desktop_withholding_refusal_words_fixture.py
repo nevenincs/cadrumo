@@ -9,19 +9,17 @@ text of its own. Run after changing the served refusal catalogue keys or the rea
 
 from __future__ import annotations
 
-import argparse
-import json
-from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pydantic import TypeAdapter
+from dev.fixture_projections.location import family_directory
+from dev.fixture_projections.producer_output import emit, producer_arguments
+from dev.prettier_json import dump_json
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping
+    from collections.abc import Callable
 
 LANGUAGES = ("en", "es", "ca", "hu")
 _Words = dict[str, dict[str, dict[str, dict[str, str]]]]
-_WORDS = TypeAdapter(_Words)
 
 
 def _worded(reasons: tuple[str, ...], word: Callable[[str], tuple[str, str]]) -> dict[str, dict[str, dict[str, str]]]:
@@ -90,31 +88,18 @@ def render_fixture() -> str:
         "record": _worded(record_reasons, record),
         "absence": _worded(absence_reasons, absence),
     }
-    return json.dumps(words, ensure_ascii=False, indent=2) + "\n"
-
-
-def _comparable(text: str) -> Mapping[str, object]:
-    return _WORDS.validate_json(text)
+    return dump_json(words)
 
 
 def main() -> None:
-    """Write or verify the checked-in browser fixture."""
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--check", action="store_true")
-    args = parser.parse_args()
-    target = (
-        Path(__file__).resolve().parents[1]
-        / "native/desktop/frontend/src/dev/fixtures/ledgerWithholdingRefusalWords.json"
+    """Write, verify or redirect the browser fixture."""
+    arguments = producer_arguments(__doc__)
+    target = family_directory("desktop-withholding-refusal-words") / "ledgerWithholdingRefusalWords.json"
+    emit(
+        {target: render_fixture()},
+        arguments,
+        remedy="uv run --no-sync python -m dev.desktop_withholding_refusal_words_fixture",
     )
-    rendered = render_fixture()
-    if args.check:
-        if not target.is_file() or _comparable(target.read_text(encoding="utf-8")) != _comparable(rendered):
-            raise SystemExit(
-                "Withholding refusal words are stale; run "
-                "uv run --no-sync python -m dev.desktop_withholding_refusal_words_fixture"
-            )
-    else:
-        target.write_text(rendered, encoding="utf-8")
 
 
 if __name__ == "__main__":

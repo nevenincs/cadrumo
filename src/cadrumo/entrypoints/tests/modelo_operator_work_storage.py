@@ -59,13 +59,16 @@ from cadrumo.application.modelo.operation_shared import (
     MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
 )
-from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.application.modelo.work_calculation_contracts import ModeloWorkCalculateRequest
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest, new_operation_id
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.tests.financial_operand_delivery import deliver_financial_operand
 from cadrumo.application.operations.typed_financial_operand_context import BoundTypedFinancialOperandAccess
+from cadrumo.application.user_profile.tests.persona_profile_facts import (
+    COLEGIO_CONCERTADO_ATTESTATION,
+    persona_facts_beneath,
+)
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import content_hash_hex
@@ -398,15 +401,18 @@ def seeded_operator_work(
                 context=create_context,
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=profile.bucket_id,
-                facts=(
-                    *(fact for fact in MODELO_READY_PROFILE_FACTS if fact.path != _ESTIMATION_REGIME_PATH),
-                    _ACTIVITY_START,
-                    *(
-                        ()
-                        if estimation_regime is None
-                        else (UserProfileFact(path=_ESTIMATION_REGIME_PATH, value=estimation_regime),)
+                facts=persona_facts_beneath(
+                    (
+                        COLEGIO_CONCERTADO_ATTESTATION,
+                        _ACTIVITY_START,
+                        *(
+                            ()
+                            if estimation_regime is None
+                            else (UserProfileFact(path=_ESTIMATION_REGIME_PATH, value=estimation_regime),)
+                        ),
+                        *extra_facts,
                     ),
-                    *extra_facts,
+                    without=(_ESTIMATION_REGIME_PATH,) if estimation_regime is None else (),
                 ),
                 created_at=SEEDED_AT,
                 updated_at=SEEDED_AT,

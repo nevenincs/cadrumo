@@ -12,7 +12,6 @@ from uuid import UUID
 import pytest
 
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.descendant_rows import (
     ProfileDescendantFact,
     ProfileDescendantRow,
@@ -22,7 +21,7 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfileDescendantsOperationProjection,
     ProfileDescendantsOperationRequest,
 )
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
+from cadrumo.core.operations import OperationEffect, OperationFrontendProjection, OperationTerminalCondition
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.user_profile.values import UserProfileRecord

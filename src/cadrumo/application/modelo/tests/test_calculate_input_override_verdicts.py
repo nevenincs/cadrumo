@@ -24,13 +24,12 @@ from ....core.operator_action_enums import (
 )
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.binding_selector_utils import boolean_binding_encoded_values
 from ....domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     declared_casilla_ids,
     row_field_template_records_by_casilla,
 )
-from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids, revision_date_binding_ids
+from ....domain.calculations.registry.runtime_graph import enum_consumed_binding_ids
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.codes import ModeloCode
@@ -170,38 +169,6 @@ def test_unknown_binding_refusal_carries_its_bindings_list_verdict() -> None:
             enum_consumed_binding_ids(revision),
         )
     assert untargeted.value.precondition_failure is None
-
-
-def test_boolean_binding_encoding_refusal_carries_its_bindings_list_verdict() -> None:
-    work_unit = _work_unit("100")
-    revision = _revision("100")
-    enum_ids = enum_consumed_binding_ids(revision)
-    date_ids = revision_date_binding_ids(revision)
-    boolean_decimal_bindings = [
-        binding
-        for binding in revision.bindings
-        if boolean_binding_encoded_values(binding) and binding.id not in enum_ids and binding.id not in date_ids
-    ]
-    assert boolean_decimal_bindings, "the published revision no longer declares a decimal-encoded boolean binding"
-    binding = boolean_decimal_bindings[0]
-    accepted = ", ".join(option.encoded_value for option in boolean_binding_encoded_values(binding))
-
-    with pytest.raises(ModeloCalculateDecimalInputError) as exc_info:
-        resolve_binding_overrides({binding.id: "false"}, revision, work_unit=work_unit)
-
-    error = exc_info.value
-    assert error.translated_message == "application.modelo.errors.calculate_boolean_binding_encoding_invalid"
-    assert error.context is not None
-    assert set(error.context) == {"flag", "key", "value", "accepted", "mapping"}
-    verdict = _assert_verdict(
-        error,
-        work_unit=work_unit,
-        scenario_id="modelo.work.calculate.caller_overrides.boolean_binding_encoding_invalid",
-        condition_id="modelo.work.calculate.caller_overrides.binding_encoding_valid",
-        evidence_id="modelo.work.calculate.binding_override",
-        facts={"binding_id": binding.id, "accepted_encoded_values": accepted},
-    )
-    _assert_registry_listing_action(verdict, action_id="operator.modelo.bindings.list", modelo="100")
 
 
 def test_unknown_casilla_refusal_carries_its_casillas_verdict(*, operation: PinnedAuthorityOperation) -> None:

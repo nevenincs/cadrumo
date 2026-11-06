@@ -15,6 +15,8 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.tests.inventory import REPO_ROOT, leaf_name
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import cadrumo_click_command, invoke_cached_cli
 
+from ...native_profile_facts import native_general_iva_facts
+
 __all__ = ["isolated_profile_storage"]
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 
@@ -91,18 +93,11 @@ class TestOverviewCalendarRequiresProfileCreate:
         register_cli_profile(
             label="operator",
             facts={
-                "taxpayer_type.entity_type": "natural_person",
+                **native_general_iva_facts(),
                 "identity.name": "Operator",
                 "identity.surnames": "Operator",
                 "identity.tax_id": "12345678Z",
                 "activities.description": "software development",
-                "iva.regime": "GENERAL",
-                "tax_residence.jurisdiction_scope": "common_regime",
-                "iva.m303_regime_composition": "general",
-                "iva.redeme_enrolled": "false",
-                "iva.cash_accounting_regime_enrolled": "false",
-                "iva.voluntary_sii_enrolled": "false",
-                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             },
             log_in=False,
         )

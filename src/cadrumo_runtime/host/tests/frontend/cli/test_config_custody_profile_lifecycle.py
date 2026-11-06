@@ -32,13 +32,13 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.tests.secure_sql import reap_profile_session_keys
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.profile_pointer import (
     active_profile_pointer_transaction,
     observe_active_profile_pointer,
 )
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from cadrumo.tests.audited_process import run_audited_process
 from cadrumo.tests.call_time_refusing_keyring import CALL_TIME_REFUSING_KEYRING
@@ -49,6 +49,7 @@ from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInPresence
 from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
 
+from ...native_profile_facts import native_general_iva_facts
 from .fresh_process import run_fresh_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -269,18 +270,11 @@ def test_registered_profile_custody_survives_logout_and_reopens_on_login(tmp_pat
         tmp_path,
         "custody",
         **{
+            **native_general_iva_facts(),
             "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
             "identity.name": "Custody Operator",
             "identity.surnames": "Operator",
             "activities.description": "design",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
 
@@ -362,18 +356,11 @@ def test_profile_logout_is_the_only_strong_logout_before_switch(tmp_path: Path) 
         tmp_path,
         "custody",
         **{
+            **native_general_iva_facts(),
             "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
             "identity.name": "Custody Operator",
             "identity.surnames": "Operator",
             "activities.description": "design",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
 
@@ -421,18 +408,11 @@ def test_config_passphrase_change_self_authenticates_without_a_keychain(tmp_path
         tmp_path,
         "custody",
         **{
+            **native_general_iva_facts(),
             "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
             "identity.name": "Custody Operator",
             "identity.surnames": "Operator",
             "activities.description": "design",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
     provisioning_passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
@@ -493,18 +473,11 @@ def test_profile_root_secret_authenticates_keychain_free_read_in_process(tmp_pat
         tmp_path,
         "custody",
         **{
+            **native_general_iva_facts(),
             "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
             "identity.name": "Custody Operator",
             "identity.surnames": "Operator",
             "activities.description": "design",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
     passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
@@ -804,36 +777,22 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
         tmp_path,
         "alpha",
         **{
+            **native_general_iva_facts(),
             "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
             "identity.name": "Alpha Operator",
             "identity.surnames": "Operator",
             "activities.description": "consulting",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
     beta_id = _register_profile(
         tmp_path,
         "beta",
         **{
+            **native_general_iva_facts(),
             "identity.tax_id": "87654321X",
-            "taxpayer_type.entity_type": "natural_person",
             "identity.name": "Beta Operator",
             "identity.surnames": "Operator",
             "activities.description": "design",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
 

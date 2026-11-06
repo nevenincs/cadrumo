@@ -6,8 +6,8 @@ import hashlib
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
+from cadrumo.adapters.persistence.profile.tests.taxpayer_persona_support import seed_modelo_ready_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    seed_modelo_ready_profile_record,
     upsert_test_profile_facts,
 )
 
@@ -61,7 +61,7 @@ from .registered_executor_seeding_support import (
 
 def _seed_wallet_period(ctx: PayloadContext, period: Period) -> None:
     """Give the wallet a prior compensation period for the seeded taxpayer."""
-    seed_modelo_ready_profile_record(str(ctx.profile_id), clock=now(), tax_id=SEEDED_SOURCE_TAX_ID)
+    seed_modelo_ready_profile(bucket_id=str(ctx.profile_id), at=now(), tax_id=SEEDED_SOURCE_TAX_ID)
     seed_iva_compensation_period(
         taxpayer_nif=SEEDED_SOURCE_TAX_ID,
         period=period,
@@ -91,7 +91,7 @@ def _modelo_iva_wallet_balance(ctx: PayloadContext) -> PayloadResult:
 
 
 def _modelo_iva_wallet_seed(ctx: PayloadContext) -> PayloadResult:
-    seed_modelo_ready_profile_record(str(ctx.profile_id), clock=now(), tax_id=SEEDED_SOURCE_TAX_ID)
+    seed_modelo_ready_profile(bucket_id=str(ctx.profile_id), at=now(), tax_id=SEEDED_SOURCE_TAX_ID)
     return ctx.request(
         ctx.profile_subject,
         {
@@ -103,7 +103,7 @@ def _modelo_iva_wallet_seed(ctx: PayloadContext) -> PayloadResult:
 
 
 def _modelo_iva_wallet_override(ctx: PayloadContext) -> PayloadResult:
-    seed_modelo_ready_profile_record(str(ctx.profile_id), clock=now(), tax_id=SEEDED_SOURCE_TAX_ID)
+    seed_modelo_ready_profile(bucket_id=str(ctx.profile_id), at=now(), tax_id=SEEDED_SOURCE_TAX_ID)
     return ctx.request(
         ctx.profile_subject,
         {
@@ -322,7 +322,7 @@ def _modelo_observation_local(ctx: PayloadContext) -> PayloadResult:
 
 
 def _modelo_filing_record_import(ctx: PayloadContext) -> PayloadResult:
-    seed_modelo_ready_profile_record(str(ctx.profile_id), clock=now(), tax_id=SEEDED_SOURCE_TAX_ID)
+    seed_modelo_ready_profile(bucket_id=str(ctx.profile_id), at=now(), tax_id=SEEDED_SOURCE_TAX_ID)
     unit = modelo_operation_test_support.seeded_modelo_work_unit(ctx.profile_id, operation=ctx.operation)
     revision = resolved_revision(
         modelo=modelo_operation_test_support.MODELO,
@@ -531,7 +531,7 @@ def _modelo_review_package_build(ctx: PayloadContext) -> PayloadResult:
 
 
 def _modelo_work_m303_attestation(ctx: PayloadContext) -> PayloadResult:
-    seed_modelo_ready_profile_record(str(ctx.profile_id), clock=now(), tax_id=SEEDED_SOURCE_TAX_ID)
+    seed_modelo_ready_profile(bucket_id=str(ctx.profile_id), at=now(), tax_id=SEEDED_SOURCE_TAX_ID)
     upsert_test_profile_facts(
         str(ctx.profile_id),
         (UserProfileFact(path="censo.activity_start_date", value="2025-01-01"),),

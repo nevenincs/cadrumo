@@ -12,8 +12,8 @@ from uuid import UUID, uuid4
 import pytest
 from textual.app import App
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.errors.hierarchy import InternalInvariantError
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.clock import frozen_clock, now
 from cadrumo.entrypoints.tui.tests.settling import settle
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, ProfileAccessStatus

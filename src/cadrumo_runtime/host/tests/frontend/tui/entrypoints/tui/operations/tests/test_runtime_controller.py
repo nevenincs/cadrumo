@@ -22,14 +22,13 @@ from cadrumo.application.operations.frontend_requests import (
     OperationCancellationRefusalV1,
     OperationObservationSuccessV1,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.view_operation import (
     PROFILE_VIEW_OPERATION_DEFINITION_ID,
     ProfileViewOperationRequest,
     ProfileViewPageKind,
 )
-from cadrumo.core.operations import OperationLifecycle, OperationTerminalCondition
+from cadrumo.core.operations import OperationFrontendProjection, OperationLifecycle, OperationTerminalCondition
 from cadrumo_client.contracts.access_vocabulary import Availability, DisclosureCategory, DisclosurePermission
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.transport.framing import VerifiedConnection

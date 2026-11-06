@@ -28,11 +28,11 @@ from cadrumo.application.modelo.typed_query_operation import (
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.public_period import PublicPeriod
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.state_projection_models import ModeloProfileRefusalCause, ProjectionModeloReadiness
 from cadrumo.core.aggregation import BindingTypedEnumKind
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.core.operations import profile_operation_subject
+from cadrumo.core.operations import OperationFrontendProjection, profile_operation_subject
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.binding_value_contract import (

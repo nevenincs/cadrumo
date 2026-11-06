@@ -6,8 +6,10 @@ reading the file whole allocates at least the database's size, streaming it
 allocates a few chunks. The second proves the streamed digest still refuses a
 database whose bytes differ from the descriptor by a single byte. Receipts let
 a later process skip the hash for the very file object an earlier one proved,
-and the receipt cases show a rewrite is hashed again and a storage root
-whose caches are unprovisioned is left as found. The rest republish an
+and the receipt cases show a rewrite is hashed again, a storage root
+whose receipt directory is unprovisioned is left as found, and the cache
+provisioning every dispatched command performs on a fresh root is enough for
+the receipt to be kept. The rest republish an
 edited copy under its own content address, so the digest admits it and only
 the manifest decides.
 """
@@ -27,6 +29,8 @@ import pytest
 from .....core.config import override_settings
 from .....core.hashing import sha256_hex
 from .....core.storage_materialization import ensure_storage_tree
+from .....core.storage_taxonomy import StorageCategory, StorageGrouping
+from .....core.storage_taxonomy_locations import storage_path
 from .. import authority_store
 from ..authority_location import bundled_authority_descriptor_path
 from ..authority_store import (
@@ -157,7 +161,11 @@ def test_a_later_reader_of_the_same_file_relies_on_the_proof_an_earlier_one_left
     assert hashed == [database]
 
 
-@pytest.mark.parametrize("existing", [(), ("operator-secrets",)], ids=["empty", "caches-unprovisioned"])
+@pytest.mark.parametrize(
+    "existing",
+    [(), ("operator-secrets",), ("cache",)],
+    ids=["empty", "caches-unprovisioned", "receipt-directory-unprovisioned"],
+)
 def test_a_storage_root_without_provisioned_caches_receives_no_receipt(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, existing: tuple[str, ...]
 ) -> None:
@@ -172,6 +180,23 @@ def test_a_storage_root_without_provisioned_caches_receives_no_receipt(
         SQLiteAuthorityReader(descriptor, max_connections=1).close()
     assert sorted(path.name for path in root.iterdir()) == list(existing)
     assert hashed == [database, database]
+
+
+def test_a_fresh_root_whose_caches_a_read_only_command_provisioned_keeps_the_receipt(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = tmp_path / "fresh"
+    descriptor, database = _copied_pair(tmp_path / "pair")
+    hashed = _counting_hashes(monkeypatch)
+    with override_settings(cadrumo_storage_root=root):
+        ensure_storage_tree(derived_groupings=frozenset({StorageGrouping.CACHE}))
+        SQLiteAuthorityReader(descriptor, max_connections=1).close()
+        SQLiteAuthorityReader(descriptor, max_connections=1).close()
+        receipts = storage_path(StorageCategory.AUTHORITY_ADMISSION_RECEIPTS)
+    assert hashed == [database]
+    assert [path.name for path in receipts.iterdir()] == [
+        f"{AuthorityDescriptor.read(descriptor).database_sha256}.json"
+    ]
 
 
 def test_a_rewritten_database_is_hashed_again_although_its_bytes_are_unchanged(

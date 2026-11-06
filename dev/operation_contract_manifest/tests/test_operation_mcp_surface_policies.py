@@ -35,9 +35,10 @@ from cadrumo.application.operations.access_resolution import (
     with_commit_action,
 )
 from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.errors.hierarchy import CadrumoError
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.tests.registered_executor_case_support import (
     OperationRuntimeCloseWitness,

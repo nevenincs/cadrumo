@@ -34,6 +34,7 @@ from ..calculations.registry.irpf_regimes import require_irpf_special_regime
 from ..calculations.registry.iva_regime_vocabulary import (
     default_iva_regime,
     iva_regime_no_aplica_token,
+    iva_regime_recargo_equivalencia_token,
     require_iva_regime,
 )
 from ..calculations.registry.m303_schema_vocabulary import (
@@ -56,6 +57,7 @@ from .models import (
     IrpfIncomeCategory,
     IrpfSpecialRegime,
     IVARegime,
+    M303RegimeComposition,
     M303TaxTerritory,
     ModeloEnrollment,
     ModeloIVAProfile,
@@ -176,16 +178,16 @@ class _ProfileAxisFields(TypedDict):
 
 
 class _ProfileWithholdingFields(TypedDict):
-    has_employees: bool
+    has_employees: bool | None
     colegio_concertado: bool | None
-    pays_professionals_with_retencion: bool
+    pays_professionals_with_retencion: bool | None
     art109_activity_income_withholding_ge_70pct: bool
-    pays_rent_with_retencion: bool
+    pays_rent_with_retencion: bool | None
     pays_capital_income_with_retencion: bool
 
 
 class _ProfileObligationFields(TypedDict):
-    does_intracomunitario: bool
+    does_intracomunitario: bool | None
     third_party_transactions_above_347_threshold: bool | None
     bienes_extranjero_above_threshold: bool | None
     monedas_virtuales_extranjero_above_threshold: bool | None
@@ -309,11 +311,11 @@ def _resolve_profile_withholding_fields(typed: SetupAnswers) -> _ProfileWithhold
     """Project the withholding answers that are already typed by SetupAnswers."""
     colegio_concertado = typed.colegio_concertado if isinstance(typed.colegio_concertado, bool) else None
     return {
-        "has_employees": typed.has_employees,
+        "has_employees": _declared_bool(typed.has_employees),
         "colegio_concertado": colegio_concertado,
-        "pays_professionals_with_retencion": typed.pays_professionals_with_retencion,
+        "pays_professionals_with_retencion": _declared_bool(typed.pays_professionals_with_retencion),
         "art109_activity_income_withholding_ge_70pct": typed.art109_activity_income_withholding_ge_70pct,
-        "pays_rent_with_retencion": typed.pays_rent_with_retencion,
+        "pays_rent_with_retencion": _declared_bool(typed.pays_rent_with_retencion),
         "pays_capital_income_with_retencion": typed.pays_capital_income_with_retencion,
     }
 
@@ -326,7 +328,7 @@ def _declared_bool(value: object) -> bool | None:
 def _resolve_profile_obligation_fields(typed: SetupAnswers) -> _ProfileObligationFields:
     """Project the obligation flags that are already typed by SetupAnswers."""
     return {
-        "does_intracomunitario": typed.does_intracomunitario,
+        "does_intracomunitario": _declared_bool(typed.does_intracomunitario),
         "third_party_transactions_above_347_threshold": _declared_bool(
             typed.third_party_transactions_above_347_threshold,
         ),
@@ -497,6 +499,8 @@ def modelo_iva_profile_required_paths(values: Mapping[str, object]) -> tuple[str
     """
     if not profile_claims_modelo_iva_block(values):
         return ()
+    if _is_pure_recargo_equivalencia(values):
+        return tuple(path for path in MODELO_IVA_BLOCK_REQUIRED_PATHS if path != "iva.m303_regime_composition")
     return MODELO_IVA_BLOCK_REQUIRED_PATHS
 
 
@@ -510,22 +514,52 @@ def _required_iva_bool(value: object, *, path: str) -> bool:
     return value
 
 
-def _resolve_modelo_iva_profile(canonical: Mapping[str, str], typed: SetupAnswers) -> ModeloIVAProfile | None:
-    """Build an IVA block only when a block-owned fact is explicitly present."""
-    if not profile_claims_modelo_iva_block(canonical):
-        return None
+def _is_pure_recargo_equivalencia(values: Mapping[str, object]) -> bool:
+    """Report whether the declared IVA regime is the recargo de equivalencia and no composition is stated.
+
+    A retailer whose only regime is the recargo de equivalencia is charged the recargo by its
+    supplier and files no Modelo 303 for those activities (LIVA arts. 154-163), so the
+    composition of general and simplified regimes in that modelo has nothing to describe.
+    A composition stated alongside the regime is still honoured.
+    """
+    if _declared(values.get("iva.m303_regime_composition")):
+        return False
+    raw = values.get("iva.regime")
+    if not _declared(raw):
+        return False
+    token = str(raw).strip().upper().replace("-", "_")
+    try:
+        return token == iva_regime_recargo_equivalencia_token()
+    except RegistryValidationError:
+        return False
+
+
+def _resolve_m303_regime_composition(
+    canonical: Mapping[str, str],
+    typed: SetupAnswers,
+) -> M303RegimeComposition | None:
+    """Resolve the declared Modelo 303 composition; a pure recargo retailer states none."""
     if not typed.iva_m303_regime_composition:
+        if _is_pure_recargo_equivalencia(canonical):
+            return None
         raise ProfileError(
             f"iva.m303_regime_composition must be explicitly declared for Modelo IVA; "
             f"accepted values: {_accepted_m303_regime_composition()}",
         )
     try:
-        composition = require_m303_regime_composition(typed.iva_m303_regime_composition)
+        return require_m303_regime_composition(typed.iva_m303_regime_composition)
     except RegistryValidationError as exc:
         raise ProfileError(
             f"unsupported iva.m303_regime_composition {typed.iva_m303_regime_composition!r}; "
             f"accepted values: {_accepted_m303_regime_composition()}",
         ) from exc
+
+
+def _resolve_modelo_iva_profile(canonical: Mapping[str, str], typed: SetupAnswers) -> ModeloIVAProfile | None:
+    """Build an IVA block only when a block-owned fact is explicitly present."""
+    if not profile_claims_modelo_iva_block(canonical):
+        return None
+    composition = _resolve_m303_regime_composition(canonical, typed)
     return ModeloIVAProfile(
         tax_territory=_resolve_m303_tax_territory(typed.tax_residence_jurisdiction_scope),
         regime_composition=composition,

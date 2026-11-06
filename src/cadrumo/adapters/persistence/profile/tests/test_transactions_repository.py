@@ -18,8 +18,8 @@ from .....domain.transactions.errors import LedgerNoActiveBucketError, LedgerSto
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .....tests.log_records import delivered_records
-from ...storage.sql import orm
 from ...storage.sql.session import session_scope
+from ...storage.sql.tables import transaction_date_index_table
 from ...storage.tests.secure_sql import TestRuntimeProfile
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..transaction_iva_migration import MigratedIvaDeductionFact, migrated_iva_rate_kind
@@ -134,16 +134,16 @@ def test_partition_fallback_matches_complete_index_partition(runtime_profile: Te
     engine = runtime_profile.repository.engine
     with session_scope(engine) as session:
         session.execute(
-            delete(orm.TransactionDateIndexRow).where(
-                orm.TransactionDateIndexRow.bucket_id == runtime_profile.bucket_id,
-                orm.TransactionDateIndexRow.transaction_id == q2.transaction_id,
+            delete(transaction_date_index_table).where(
+                transaction_date_index_table.c.bucket_id == runtime_profile.bucket_id,
+                transaction_date_index_table.c.transaction_id == q2.transaction_id,
             ),
         )
     with session_scope(engine) as session:
         remaining = (
             session.execute(
-                select(orm.TransactionDateIndexRow.transaction_id).where(
-                    orm.TransactionDateIndexRow.bucket_id == runtime_profile.bucket_id,
+                select(transaction_date_index_table.c.transaction_id).where(
+                    transaction_date_index_table.c.bucket_id == runtime_profile.bucket_id,
                 ),
             )
             .scalars()

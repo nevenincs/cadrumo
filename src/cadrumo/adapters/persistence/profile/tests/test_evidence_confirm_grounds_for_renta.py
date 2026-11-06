@@ -58,7 +58,7 @@ __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_fil
 _SINGLE_RATE_FIXTURE = EVIDENCE_CORPUS / "facturae_32_series_and_parties_invoice.xml"
 # The document's seller party. Confirming it as ISSUED is only honest when the
 # filer is that seller; any other filer is refused before grounding is reached.
-_FIXTURE_SELLER_TAX_ID = "45821337R"
+_FIXTURE_SELLER_TAX_ID = "00001004S"
 
 
 @pytest.fixture(autouse=True)

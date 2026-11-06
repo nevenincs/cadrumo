@@ -24,6 +24,7 @@ is declared for a filing context.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import cache
 from typing import Annotated
 
 from pydantic import Field, TypeAdapter, ValidationError
@@ -32,7 +33,11 @@ _CASILLA_RE = r"^[A-Za-z0-9][A-Za-z0-9._:-]*$"
 
 type CasillaId = Annotated[str, Field(min_length=1, max_length=64, pattern=_CASILLA_RE)]
 
-_CASILLA_ID_ADAPTER: TypeAdapter[CasillaId] = TypeAdapter(CasillaId)
+
+@cache
+def _casilla_id_adapter() -> TypeAdapter[CasillaId]:
+    """Build the token validator on first use; constructing it compiles a schema."""
+    return TypeAdapter(CasillaId)
 
 
 def validated_casilla_id(value: object, *, surface: str = "casilla.id") -> CasillaId:
@@ -54,7 +59,7 @@ def validated_casilla_id(value: object, *, surface: str = "casilla.id") -> Casil
     if not isinstance(value, str):
         raise ValueError(f"{surface} {value!r} is not a canonical casilla.id")
     try:
-        return _CASILLA_ID_ADAPTER.validate_python(value)
+        return _casilla_id_adapter().validate_python(value)
     except ValidationError as exc:
         raise ValueError(f"{surface} {value!r} is not a canonical casilla.id") from exc
 

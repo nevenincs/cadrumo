@@ -6,6 +6,7 @@ import type {
   ModeloWorkbenchFormProjectionV1,
 } from "../../src/shell/modeloContract";
 import { label } from "../support/strings";
+import { MODELO_FIXTURES } from "../support/windowFixtures";
 
 // The answer to a source disagreement, in one declaration's Check view over
 // the scenario's modelo family, which answers the envelopes the application
@@ -20,17 +21,12 @@ const REASON = "The ledger misses an invoice booked late.";
 
 const stored = <T>(name: string): T =>
   JSON.parse(
-    readFileSync(
-      new URL(`../../src/dev/fixtures/modelo/${name}.json`, import.meta.url),
-      "utf8",
-    ),
+    readFileSync(new URL(`${name}.json`, MODELO_FIXTURES), "utf8"),
   ) as T;
 
 /** A command line, flag or markup an action would show had it not been
  * worded for the person. */
 const UNWORDED = /aeat |--|</;
-
-const FIXTURES = new URL("../../src/dev/fixtures/modelo/", import.meta.url);
 
 const workspace = (target: Page) => target.locator(".declarations-workspace");
 const tab = (target: Page, key: string, language: Language) =>
@@ -214,13 +210,13 @@ test("a declaration whose check states no disagreement offers no answer", async 
 });
 
 test("no stored check line words its action as a command", () => {
-  const forms = readdirSync(FIXTURES).filter((name) =>
+  const forms = readdirSync(MODELO_FIXTURES).filter((name) =>
     /^modelo-.*\.json$/.test(name),
   );
   expect(forms.length).toBeGreaterThan(0);
   for (const name of forms) {
     const form = JSON.parse(
-      readFileSync(new URL(name, FIXTURES), "utf8"),
+      readFileSync(new URL(name, MODELO_FIXTURES), "utf8"),
     ) as Partial<ModeloWorkbenchFormProjectionV1>;
     for (const line of form.issue_lines ?? []) {
       expect(line.action, name).not.toMatch(UNWORDED);

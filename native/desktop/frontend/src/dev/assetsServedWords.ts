@@ -1,7 +1,7 @@
 // The sentences the activity-asset register serves, for the scenario register:
 // what the backend said for each reason with its facts, each remedy, each
 // handoff interval and each reason a handoff leaves elements out, in each
-// language, recorded in `fixtures/assetsServedWords.json` and looked up by
+// language, recorded in the generated `assetsServedWords.json` and looked up by
 // exactly what was asked. This decides and words nothing: a question not
 // recorded answers undefined, as a sentence the backend could not say whole,
 // and is told to the hook that records it. A test in the owning Python package
@@ -10,7 +10,7 @@
 
 import type { OutputLanguage } from "../shell/ledger";
 import type { ReasonFact } from "../shell/ledgerSetup";
-import recorded from "./fixtures/assetsServedWords.json" with { type: "json" };
+import recorded from "@fixtures/assets-served-words/assetsServedWords.json" with { type: "json" };
 
 /** What the register is asked to say. */
 export type WordsQuestion =

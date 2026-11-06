@@ -274,7 +274,7 @@ def test_the_whole_live_path_rehearsed_offline_uses_the_dedicated_profile_and_wr
     profile_base = tmp_path / "live"
     with override_settings(
         cadrumo_clave_movil_dni_nie=SecretStr(_PLANTED_NIF),
-        cadrumo_clave_movil_nie_soporte=SecretStr("E00000000"),
+        cadrumo_clave_movil_nie_soporte=SecretStr("E00010256"),
     ):
         recorder = run_live_capture(
             (_flow(LOGIN, needs_session=False),),

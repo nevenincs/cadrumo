@@ -10,10 +10,10 @@ from uuid import UUID
 import typer
 from pydantic import SecretStr
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.json_contract import Notice, NoticeSeverity
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.output_rendering import OutputFormat, render_command_output
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo_client.commands import profile_selection

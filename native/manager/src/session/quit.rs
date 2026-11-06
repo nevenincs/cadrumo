@@ -167,7 +167,7 @@ mod tests {
 
     fn marker() -> QuitMarker {
         QuitMarker {
-            user: "S-1-5-21-1004336348-1177238915-682003330-1001".into(),
+            user: "S-1-5-21-111111111-222222222-333333333-1001".into(),
             session: "1".into(),
             set_at_ms: 1_790_000_000_000,
         }
@@ -178,7 +178,7 @@ mod tests {
         let encoded = encode_quit_marker(&marker()).expect("valid");
         assert_eq!(
             encoded,
-            br#"{"schema_version":1,"session":"1","set_at_ms":1790000000000,"user":"S-1-5-21-1004336348-1177238915-682003330-1001"}"#
+            br#"{"schema_version":1,"session":"1","set_at_ms":1790000000000,"user":"S-1-5-21-111111111-222222222-333333333-1001"}"#
         );
         assert_eq!(decode_quit_marker(&encoded), Some(marker()));
     }

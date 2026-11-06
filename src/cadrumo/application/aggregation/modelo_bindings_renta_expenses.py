@@ -106,6 +106,7 @@ from .renta_imputation import (
     declared_imputation_criteria,
     imputation_blocking_diagnostics,
     ledger_sum_outcome,
+    received_invoice_reference,
 )
 from .renta_income_diagnostics import received_rectificativa_netting_diagnostics, received_rectificativa_reading
 from .renta_income_evidence import taxable_base_comparison
@@ -549,11 +550,12 @@ def _ledger_expense_value_outcomes(
 
 
 def _received_invoice_rows(transactions: TransactionCatalogue) -> dict[str, list[Transaction]]:
-    """Group the active ledger rows linked to each purchase invoice."""
+    """Group the active ledger rows linked to each purchase invoice, by the catalogue invoice each row names."""
     rows_by_invoice: dict[str, list[Transaction]] = {}
     for row in transactions.values():
-        if row.purchase_invoice_evidence_id is not None and row.lifecycle_state is TransactionLifecycleState.ACTIVE:
-            rows_by_invoice.setdefault(row.purchase_invoice_evidence_id, []).append(row)
+        invoice_id = received_invoice_reference(row)
+        if invoice_id is not None and row.lifecycle_state is TransactionLifecycleState.ACTIVE:
+            rows_by_invoice.setdefault(invoice_id, []).append(row)
     return rows_by_invoice
 
 

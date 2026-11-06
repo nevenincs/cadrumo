@@ -455,7 +455,7 @@ def _capture_ordinary_sale(
             invoice_add_args(
                 kind="issued",
                 counterparty_name="Synthetic client SL",
-                counterparty_nif="A58818501",
+                counterparty_nif="B00000281",
                 invoice_number=f"IVA-ISS-{year}-1T",
                 invoice_date=journey_year.iso_date(2, 15),
                 iva_category="domestic_general",
@@ -552,7 +552,7 @@ def _capture_ordinary_purchase(
             invoice_add_args(
                 kind="received",
                 counterparty_name="Synthetic supplier SL",
-                counterparty_nif="A58818501",
+                counterparty_nif="B00000281",
                 invoice_number=f"IVA-REC-{year}-1T",
                 invoice_date=journey_year.iso_date(2, 15),
                 iva_category="domestic_general",

@@ -55,7 +55,7 @@ def write_modelo_232_declaration_pdf(path: Path, *, ejercicio: int) -> None:
     lines = (
         "Agencia Tributaria",
         "Declaracion informativa operaciones vinculadas Modelo 232",
-        "NIF: Y0000001S",
+        "NIF: Y0001006P",
         "Razon social: DEMO EMPRESA SL",
         f"Ejercicio de devengo {ejercicio}",
         "Tipo de Ejercicio 1",

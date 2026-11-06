@@ -33,6 +33,7 @@ from cadrumo.application.modelo.work_addressing import ensure_modelo_work_unit_f
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.user_profile.projections import record_to_path_values
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.core.period import Period
@@ -137,21 +138,14 @@ def _store_profile_without_activity(bucket_id: str) -> None:
         create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="identity.name", value="Ready"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="censo.activity_start_date", value=date(2025, 1, 1)),
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                    UserProfileFact(path="identity.name", value="Ready"),
+                    UserProfileFact(path="identity.surnames", value="Operator"),
+                    UserProfileFact(path="censo.activity_start_date", value=date(2025, 1, 1)),
+                ),
+                without=("activities.",),
             ),
             created_at=_NOW,
             updated_at=_NOW,
@@ -704,12 +698,7 @@ def test_m100_applicability_gate_distinguishes_resident_from_nonresident_natural
             context=profile_context,
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_OPERATOR_PROFILE_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="taxpayer_type.fiscal_residency", value="resident_irpf"),
-            ),
+            facts=persona_facts_beneath((UserProfileFact(path="identity.tax_id", value="12345678Z"),)),
             created_at=_NOW,
             updated_at=_NOW,
         )

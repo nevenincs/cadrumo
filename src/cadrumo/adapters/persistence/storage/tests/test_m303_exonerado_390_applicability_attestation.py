@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.taxpayer_persona_support import seed_modelo_ready_profile
 from cadrumo.application.modelo.action_errors import (
     M303Exonerado390AttestationUnadmissibleError,
     M303FilingEvidenceError,
@@ -30,7 +31,7 @@ from cadrumo.domain.user_profile.values import UserProfileFact
 
 from .....core.period import Period
 from ..attachment import AttachmentStore
-from .profile_capsule_runtime import bound_test_profile_record, seed_modelo_ready_profile_record
+from .profile_capsule_runtime import bound_test_profile_record
 from .secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -61,7 +62,7 @@ def test_admission_and_resolution_are_profile_witnessed_and_custody_verified(
     operation,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CAPTURED_AT)
+        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_CAPTURED_AT)
         with bound_test_profile_record(_BUCKET_ID):
             store = AttachmentStore()
             admission = admit_m303_exonerado_390_applicability_attestation(
@@ -102,7 +103,7 @@ def test_admission_refuses_a_period_whose_return_does_not_ask_the_exemption(
 ) -> None:
     """Only 12 and 4T ask the Modelo 390 exemption; an earlier period's attestation is refused before custody."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CAPTURED_AT)
+        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_CAPTURED_AT)
         with bound_test_profile_record(_BUCKET_ID):
             store = AttachmentStore()
 
@@ -128,7 +129,7 @@ def test_admission_accepts_the_last_monthly_period(tmp_path: Path, operation) ->
     """A monthly filer answers the exemption in period 12, as a quarterly filer does in 4T."""
     december = Period.from_year_and_code(2025, "12")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CAPTURED_AT)
+        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_CAPTURED_AT)
         with bound_test_profile_record(_BUCKET_ID):
             store = AttachmentStore()
             admission = admit_m303_exonerado_390_applicability_attestation(
@@ -156,7 +157,7 @@ def test_admission_accepts_the_last_monthly_period(tmp_path: Path, operation) ->
 
 def test_applicable_assertion_refuses_before_custody_mutation(tmp_path: Path, operation) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CAPTURED_AT)
+        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_CAPTURED_AT)
         with bound_test_profile_record(_BUCKET_ID):
             store = AttachmentStore()
 
@@ -185,7 +186,7 @@ def test_resolution_refuses_a_conflicting_typed_assertion_in_the_same_coordinate
     operation,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CAPTURED_AT)
+        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_CAPTURED_AT)
         with bound_test_profile_record(_BUCKET_ID) as profiles:
             store = AttachmentStore()
             admission = admit_m303_exonerado_390_applicability_attestation(
@@ -240,7 +241,7 @@ def test_resolution_refuses_an_attestation_stale_against_the_current_profile_wit
     operation,
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CAPTURED_AT)
+        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_CAPTURED_AT)
         with bound_test_profile_record(_BUCKET_ID) as profiles:
             store = AttachmentStore()
             admission = admit_m303_exonerado_390_applicability_attestation(

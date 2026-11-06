@@ -101,8 +101,8 @@ def test_scalar_keys_are_answered_without_a_full_load(tmp_path: Path) -> None:
     assert catalogue["modelo.schema.900.field.title"] == "Declaración informativa"
     assert _scan(shard, "modelo.schema.900.field.nested.deep.leaf") == "deepest"
     assert _scan(shard, "modelo.schema.900.after") == "final"
-    assert Path(_SHARD) not in catalogue._loaded_shards
-    assert set(catalogue._key_cache) == {"modelo.schema.900.field.title"}
+    assert Path(_SHARD) not in catalogue.loaded_shards
+    assert set(catalogue.key_cache) == {"modelo.schema.900.field.title"}
 
 
 @pytest.mark.unit
@@ -151,7 +151,7 @@ def test_keys_the_stream_cannot_answer_fall_back_to_the_full_load(tmp_path: Path
     with pytest.raises(UnscannableShardError):
         _scan(shard, key)
     assert catalogue.get(key) == _full_load(shard).get(key)
-    assert Path(_SHARD) in catalogue._loaded_shards
+    assert Path(_SHARD) in catalogue.loaded_shards
 
 
 @pytest.mark.unit

@@ -8,7 +8,7 @@ from uuid import UUID
 
 import psutil
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo_client.contracts.contracts import RefusalError

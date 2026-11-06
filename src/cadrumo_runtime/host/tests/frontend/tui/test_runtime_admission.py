@@ -14,7 +14,7 @@ import pytest
 from textual.pilot import Pilot
 from textual.widgets import Button, Input, Select
 
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.automation_operations import (
     build_automation_operation_definitions,
     build_automation_operation_registrations,
@@ -26,6 +26,7 @@ from cadrumo.application.user_profile.login_interaction import (
 )
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from cadrumo.core.i18n.render import tr
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
 from cadrumo.entrypoints import operation_composition

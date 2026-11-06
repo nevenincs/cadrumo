@@ -47,19 +47,15 @@ from typing import Literal
 
 import pytest
 
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test,
-)
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from ....adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -77,9 +73,8 @@ from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.user_profile.values import ProfileSetupState, create_user_profile_record
 from .file_flow_test_support import calculation_ports_for_test
-from .general_iva_profile_facts_support import general_iva_profile_facts
+from .ready_profile_taxpayer import ready_profile_tax_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -95,7 +90,7 @@ def bucket_id() -> str:
 
 
 _YEAR = 2025
-_TAX_ID = "12345678Z"
+_TAX_ID = ready_profile_tax_id()
 _T0 = datetime(2025, 1, 10, 10, 0, tzinfo=UTC)
 _FILE_AT = datetime(2025, 4, 10, 12, 0, tzinfo=UTC)
 
@@ -253,23 +248,6 @@ def _wallet_decision(*, period: str) -> IvaCompensationReconciliationDecision:
     )
 
 
-def _store_profile(secure_objects: SecureObjectRepository) -> None:
-    """Seed the taxpayer profile the M303 IVA-wallet gate reads (tax_id)."""
-    seed_test_profile_record(
-        create_user_profile_record(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
-            facts=general_iva_profile_facts(
-                tax_id=_TAX_ID,
-                activity_start_date=date(2020, 1, 1),
-            ),
-            created_at=_T0,
-            updated_at=_T0,
-            context=profile_creation_context_for_test(),
-        ),
-    )
-
-
 def _calculate_m303_quarter(
     secure_objects: SecureObjectRepository, *, period: str, operation: PinnedAuthorityOperation
 ) -> CalculationRevision:
@@ -317,7 +295,7 @@ def test_ledger_recargo_sales_populate_m303_recargo_casillas_per_quarter(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """Recargo repercutido sales fold into each quarter's M303 recargo cuotas, period-scoped."""
-    _store_profile(secure_objects)
+    seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
     stored = _persist_two_quarters_of_recargo_sales(secure_objects)
 
     computed: RecargoAmountsByPeriod = {}

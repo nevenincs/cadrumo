@@ -20,8 +20,8 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
     administration_subject,
 )
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.config import override_settings
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_vocabulary import AuthorityState
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError

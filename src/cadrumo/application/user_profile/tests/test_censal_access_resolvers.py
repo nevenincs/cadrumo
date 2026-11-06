@@ -11,10 +11,10 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
-from ....core.operations import profile_operation_subject
+from ....core.operations import OperationFrontendProjection, profile_operation_subject
 from ...operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ...operations.models import OperationRequest
-from ...operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ...operations.registry import OperationPublicDefinitionRegistrationV1
 from ..access_errors import ProfileAccessRefusedError
 from ..censal_file_import_operation import (
     CensalFileImportOperationRequest,

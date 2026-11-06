@@ -209,13 +209,14 @@ def test_registry_rules_derive_per_entity_and_per_regime_verdicts() -> None:
 def _attribution_entity_profile(
     *,
     iva_regime: IVARegime = _IVA_GENERAL,
-    has_employees: bool = False,
-    pays_professionals_with_retencion: bool = False,
-    pays_rent_with_retencion: bool = False,
-    does_intracomunitario: bool = False,
+    has_employees: bool | None = None,
+    pays_professionals_with_retencion: bool | None = None,
+    pays_rent_with_retencion: bool | None = None,
+    does_intracomunitario: bool | None = None,
     third_party_transactions_above_347_threshold: bool | None = None,
     declares_iva_block: bool = False,
 ) -> TaxpayerProfile:
+    """An attribution entity whose payer facts stay unanswered unless a test states them."""
     return TaxpayerProfile(
         tax_id="E12345674",
         entity_type=_ATTRIBUTION_ENTITY,

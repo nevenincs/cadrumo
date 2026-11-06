@@ -46,6 +46,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test,
 )
@@ -164,16 +165,11 @@ def _secure_backend(tmp_path: Path) -> Generator[None]:
             create_user_profile_record(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET_ID,
-                facts=(
-                    UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                    UserProfileFact(path="activities.description", value="Foreign asset holder"),
-                    UserProfileFact(path="iva.regime", value="GENERAL"),
-                    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                    UserProfileFact(path="iva.redeme_enrolled", value=False),
-                    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+                facts=persona_facts_beneath(
+                    (
+                        UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                        UserProfileFact(path="activities.description", value="Foreign asset holder"),
+                    )
                 ),
                 created_at=_CLOCK_N,
                 updated_at=_CLOCK_N,

@@ -30,13 +30,14 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
     administration_subject,
 )
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
+from cadrumo.application.operations.registry import OperationPublicContractSetV1
 from cadrumo.application.user_profile.automation_enrollment import (
     EnrollmentStage,
 )
 from cadrumo.application.user_profile.profile_operation_contracts import PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID
 from cadrumo.core.async_cleanup import AsyncCloseable, close_async_resources
 from cadrumo.core.config import override_settings
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo_client.commands.compiler import build_command_app

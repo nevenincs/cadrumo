@@ -28,6 +28,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationObservationSuccessV1,
 )
 from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -39,6 +40,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.authored_editions import revision_before_first_declaring
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from cadrumo.domain.filing.software_identity import development_mock_software_identity
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -269,27 +271,19 @@ def _set_export_profile_name() -> None:
 
 def _set_emilio_legal_entity_export_profile() -> None:
     set_active_test_profile_facts(
-        (
-            UserProfileFact(path="identity.tax_id", value="B12345674"),
-            UserProfileFact(path="identity.name", value="Emilio"),
-            UserProfileFact(path="identity.surnames", value="Corporate Persona"),
-            UserProfileFact(path="identity.legal_name", value="Emilio Consulting Sociedad Limitada"),
-            UserProfileFact(path="activities.description", value="Consulting"),
-            UserProfileFact(path="withholding.colegio_concertado", value=False),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="withholding.has_employees", value=True),
-            UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-            UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value=""),
-            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="500000"),
-            UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
-            UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value="100"),
+        persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="B12345674"),
+                UserProfileFact(path="identity.name", value="Emilio"),
+                UserProfileFact(path="identity.surnames", value="Corporate Persona"),
+                UserProfileFact(path="identity.legal_name", value="Emilio Consulting Sociedad Limitada"),
+                UserProfileFact(path="activities.description", value="Consulting"),
+                UserProfileFact(path="withholding.colegio_concertado", value=False),
+                UserProfileFact(path="withholding.has_employees", value=True),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value=""),
+                UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="500000"),
+            ),
+            persona_id="sociedad-limitada",
         ),
     )
 
@@ -749,7 +743,7 @@ def test_a_fixed_record_envelope_reports_the_development_identity_it_stamps(
     assert "modelo.export.development_software_identity" in {notice["code"] for notice in envelope["notices"]}
     written = out.read_bytes()
     assert written[92:96] == b"0000"
-    assert written[100:109] == b"X0000000T"
+    assert written[100:109] == development_mock_software_identity().developer_tax_id.encode("ascii")
 
 
 def _export_through_the_operation(

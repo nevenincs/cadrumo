@@ -87,7 +87,7 @@ def recapped_operation(
                 return published
             return recapped_snapshot(published, binding_id, cap)
 
-    return _RecappedOperation(operation._reader, operation.generation)
+    return _RecappedOperation(operation.reader, operation.generation)
 
 
 __all__ = ["IMPUTATION_PERIOD_CAP", "recapped_operation", "recapped_revision", "recapped_snapshot"]

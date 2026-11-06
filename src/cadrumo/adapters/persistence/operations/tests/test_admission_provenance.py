@@ -18,9 +18,9 @@ from cadrumo.application.operations.composition import OperationSubmissionServic
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest
 from cadrumo.application.operations.projection_services import OperationResponseAuthorityBroker
 from cadrumo.application.operations.provenance import OperationAdmissionProvenance
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.core.hashing import content_hash_hex
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, OperationAccessRequest
 
 from .supervisor_test_support import (

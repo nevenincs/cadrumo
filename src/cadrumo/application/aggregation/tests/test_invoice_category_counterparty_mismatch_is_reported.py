@@ -57,7 +57,7 @@ def test_the_predicate_narrows_to_categories_that_had_a_casilla_to_reach() -> No
         bucket_id=_BUCKET_ID,
         kind=InvoiceKind.ISSUED,
         counterparty_name="Clinica Madrid SL",
-        counterparty_tax_id="B58818501",
+        counterparty_tax_id="B00010181",
         counterparty_country="ES",
         invoice_number="FAC-PREDICATE-EXEMPT",
         issued_at=date(_YEAR, 2, 14),

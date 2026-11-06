@@ -33,7 +33,6 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import OsLockState
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.profile_operation_contracts import (
@@ -42,7 +41,12 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
 )
 from cadrumo.application.user_profile.view_operation import ProfileViewFactItem, ProfileViewPageKind
 from cadrumo.core.config import override_settings
-from cadrumo.core.operations import OperationEffect, OperationLifecycle, profile_operation_subject
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationLifecycle,
+    profile_operation_subject,
+)
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 from cadrumo_client.contracts.access_refusals import AccessDenialCode

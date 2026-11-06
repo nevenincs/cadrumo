@@ -10,8 +10,8 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.application.bucket_deletion_contracts import BucketDeletionFingerprint
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.custody_transactions import ProfileCustodyDeleteConfirmation
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.bootstrap import PasswordReset, PasswordResetRefused
 from cadrumo_client.contracts.bootstrap_delete import ProfileDeletePrepared
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError

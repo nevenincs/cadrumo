@@ -22,10 +22,10 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.hashing import content_hash_hex
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.contracts.contracts import ByteChannel, Peer, RefusalCode, RefusalError, ServerHello

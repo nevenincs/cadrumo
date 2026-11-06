@@ -26,16 +26,13 @@ from ....application.operations.frontend_requests import (
     OperationObservationSuccessV1,
 )
 from ....application.operations.models import OperationId
-from ....application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionContractV1,
-)
+from ....application.operations.registry import OperationPublicDefinitionContractV1
 from ....application.user_profile.censal_operation import (
     CENSAL_OPERATION_DEFINITION_ID,
     CensalOperationRequest,
     CensalReviewProjectionV1,
 )
-from ....core.operations import OperationLifecycle, OperationTerminalCondition
+from ....core.operations import OperationFrontendProjection, OperationLifecycle, OperationTerminalCondition
 from .operation_censal_contracts import CensalReceiptState, CensalReviewResult
 from .operation_censal_exchange import exchange
 from .operation_censal_observation import observe, review_interaction, validate_observation

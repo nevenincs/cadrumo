@@ -17,7 +17,7 @@ from typing import cast
 
 import pytest
 
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -43,13 +43,14 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PROFILE_ID = "13000000-0000-4000-8000-000000000231"
 _T0 = datetime(2026, 6, 5, 9, 0, 0, tzinfo=UTC)
-_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="00000000T"),
-    UserProfileFact(path="identity.name", value="Test Operator"),
-    UserProfileFact(path="identity.surnames", value="Workspace"),
-    *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-    UserProfileFact(path="activities.description", value="economic activity"),
-    UserProfileFact(path="provenance.source", value="manual_cli"),
+_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = persona_facts_beneath(
+    (
+        UserProfileFact(path="identity.tax_id", value="00000000T"),
+        UserProfileFact(path="identity.name", value="Test Operator"),
+        UserProfileFact(path="identity.surnames", value="Workspace"),
+        UserProfileFact(path="activities.description", value="economic activity"),
+        UserProfileFact(path="provenance.source", value="manual_cli"),
+    )
 )
 
 

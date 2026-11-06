@@ -125,7 +125,7 @@ def test_bucket_event_payload_tampering_surfaces_at_load(tmp_path: Path) -> None
     save MUST fail the id check on load — that's the audit-trail
     integrity guarantee the catalogue relies on.
 
-    Persists one event, reaches into ``SecureObjectRow`` via
+    Persists one event, reaches into the ``secure_objects`` row via
     ``session_scope``, surgically rewrites a payload value (changing
     ``modelo`` from ``"303"`` to ``"100"`` without touching the
     event_id), and asserts the load path catches the drift via the
@@ -138,7 +138,7 @@ def test_bucket_event_payload_tampering_surfaces_at_load(tmp_path: Path) -> None
 
     from sqlalchemy import select
 
-    from ...storage.sql.orm import SecureObjectRow
+    from ...storage.sql.tables import secure_objects_table
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         bucket_id = "b" * 32
@@ -155,8 +155,8 @@ def test_bucket_event_payload_tampering_surfaces_at_load(tmp_path: Path) -> None
         repo = BucketEventHistoryRepository()
         repo.save(catalogue)
 
-        stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == _NAMESPACE,
+        stmt = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == _NAMESPACE,
         )
 
         def mutate(envelope):

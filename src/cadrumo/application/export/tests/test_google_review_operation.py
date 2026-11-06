@@ -15,6 +15,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from ....core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationTerminalCondition,
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -25,7 +26,7 @@ from ...operations.interactions import (
     OperationRejectResponse,
 )
 from ...operations.models import OperationRequest, OperationTerminalReceipt
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...tests.operation_host_fakes import profile_operation_request
 from ...tests.review_operation_fakes import review_execution_context
 from ...user_profile import capabilities

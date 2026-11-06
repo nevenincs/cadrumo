@@ -16,9 +16,12 @@ from cadrumo.application.aggregation.withholding_filing_cadence import (
     resolve_withholding_filer_cadence,
 )
 from cadrumo.application.aggregation.withholding_producer import WithholdingEvidenceCaptureCommand
-from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.application.modelo.work_profile import ModeloWorkProfile
 from cadrumo.application.user_profile.projections import projection_for_taxpayer
+from cadrumo.application.user_profile.tests.persona_profile_facts import (
+    COLEGIO_CONCERTADO_ATTESTATION,
+    persona_facts_beneath,
+)
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 
@@ -41,9 +44,7 @@ REDEME_FACTS: Final[tuple[UserProfileFact, ...]] = (UserProfileFact(path="iva.re
 
 
 def _facts(overrides: tuple[UserProfileFact, ...]) -> tuple[UserProfileFact, ...]:
-    replaced = {fact.path: fact for fact in overrides}
-    merged = [replaced.pop(fact.path, fact) for fact in MODELO_READY_PROFILE_FACTS]
-    return (*merged, *replaced.values())
+    return persona_facts_beneath((COLEGIO_CONCERTADO_ATTESTATION, *overrides))
 
 
 def withholding_work_profile(
@@ -100,11 +101,11 @@ def published_work_profile_declaring_activities(
 
     The ready baseline declares one activity as the setup wizard writes it, unindexed; each
     further activity takes the next indexed row. ``facts`` replace the baseline at their paths
-    and are all kept, so one path may hold several dated windows.
+    and are all kept, so one path may hold several dated windows; a dated fact alone therefore
+    leaves the path undeclared outside its window.
     """
     if activities < 1:
         raise ValueError("a work profile declares at least the activity its readiness baseline holds")
-    stated = {fact.path for fact in facts}
     rows = tuple(
         UserProfileFact(path=f"activities.{row}.description", value=f"Synthetic activity {row}")
         for row in range(1, activities)
@@ -113,7 +114,7 @@ def published_work_profile_declaring_activities(
         record = create_user_profile_record(
             context=operation.profile_create_context(),
             profile_id=WITHHOLDING_FILER_PROFILE_ID,
-            facts=(*(fact for fact in MODELO_READY_PROFILE_FACTS if fact.path not in stated), *rows, *facts),
+            facts=(*persona_facts_beneath(facts), *rows),
             setup_state=ProfileSetupState.COMPLETE,
             created_at=_CLOCK,
             updated_at=_CLOCK,

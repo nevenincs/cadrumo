@@ -31,9 +31,9 @@ from .cli_fixture_worlds import RegisteredCliProfile, cli_world_provider, invoke
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 _TAXPAYER = "12345678Z"
-_PAYER_A = "B00000000"
-_PAYER_B = "B00000018"
-_PAYER_C = "B00000026"
+_PAYER_A = "B00010082"
+_PAYER_B = "B00010090"
+_PAYER_C = "B00010165"
 # Control digit 1 where the hand-derived CIF control of these digits is 0.
 _PAYER_BAD_CONTROL = "B00000001"
 _EJERCICIO = "2025"

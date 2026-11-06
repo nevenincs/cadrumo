@@ -28,8 +28,8 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from cadrumo.application.modelo.work_form_models import ModeloWorkForm
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry

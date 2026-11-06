@@ -26,6 +26,7 @@ from cadrumo.entrypoints.tui.ledger.tests.categorisation_memory_doors import (
     MemoryCategorisationProfile,
     categorisation_controller,
 )
+from cadrumo.entrypoints.tui.ledger.tests.categorisation_register_fixtures import SYNTHETIC_TAX_ID
 from cadrumo.entrypoints.tui.ledger.tests.workspace_fixtures import LEDGER_TX_A
 from cadrumo.entrypoints.tui.tests.settling import settle_host
 
@@ -160,7 +161,7 @@ async def _rules(host: CategorisationCaptureHost) -> None:
 
 
 async def _counterparty(host: CategorisationCaptureHost) -> None:
-    host.type("#categorisation-counterparty-identifier", "B00000000")
+    host.type("#categorisation-counterparty-identifier", SYNTHETIC_TAX_ID)
     await host.press("categorisation-counterparty-view")
 
 

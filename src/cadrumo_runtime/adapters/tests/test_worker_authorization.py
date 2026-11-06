@@ -16,9 +16,9 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (

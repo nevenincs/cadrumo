@@ -12,6 +12,10 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import (
+    INTRACOMMUNITY_OPERATOR_PERSONA,
+    seed_persona_profile,
+)
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -38,7 +42,6 @@ from cadrumo.entrypoints.tests.profile_persistence.dormant_resolver_live_support
     T0,
     T1,
     dormant_resolver_live_revision,
-    seed_ready_profile,
 )
 
 pytestmark = [pytest.mark.hex_entrypoint]
@@ -57,7 +60,7 @@ _M349_OPERADORES_CASILLA: CasillaId = validated_casilla_id("decl.numero-operador
 @pytest.fixture
 def m349_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M349_BUCKET) as profile:
-        seed_ready_profile(profile.repository, bucket_id=_M349_BUCKET)
+        seed_persona_profile(INTRACOMMUNITY_OPERATOR_PERSONA, bucket_id=_M349_BUCKET, at=T0)
         yield profile.repository
 
 

@@ -16,8 +16,8 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity

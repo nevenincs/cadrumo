@@ -267,7 +267,7 @@ async def test_sorted_target_locks_pause_reset_and_exclude_a_real_application_wr
 
     with isolated_reset_root(tmp_path) as root:
         create_profile(PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
-        create_profile(PROFILE_B_ID, label="Beta operator", tax_id="00000001R")
+        create_profile(PROFILE_B_ID, label="Beta operator", tax_id="00001005Q")
         pointer_before = pointer_path(root).read_bytes()
         fingerprints_before = {
             PROFILE_A_ID: fingerprint(PROFILE_A_ID),

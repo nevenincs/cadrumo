@@ -180,16 +180,6 @@ class OperationReconciliationPolicy(StrEnum):
     RESUME_FROM_CHECKPOINT = "resume_from_checkpoint"
 
 
-class OperationFrontendProjection(StrEnum):
-    """Authenticated human and delegated frontend identities."""
-
-    CLI = "cli"
-    TUI = "tui"
-    DESKTOP = "desktop"
-    EXTERNAL_CLIENT = "external-client"
-    INSTALLED_SERVICE = "installed-service"
-
-
 from . import operation_definition  # noqa: E402 — the enum must exist before model binding
 
 operation_definition.OperationDefinition.model_rebuild(
@@ -672,7 +662,6 @@ OperationPublicDefinitionContractV1.model_rebuild()
 
 __all__ = [
     "OperationEffectReceipt",
-    "OperationFrontendProjection",
     "OperationPublicContractSetV1",
     "OperationPublicDefinitionContractV1",
     "OperationPublicDefinitionRegistrationV1",

@@ -1,6 +1,6 @@
 // `ledger.staged.check` for the fixtures: what the real backend answered for
 // each stored movement and staged request, recorded in
-// `fixtures/ledgerStagedCheck.json` and looked up by exactly what was asked. It
+// the generated `ledgerStagedCheck.json` and looked up by exactly what was asked. It
 // decides nothing: a question not recorded answers null, which the page takes
 // as a ledger that did not answer. A test in the owning Python package holds
 // every recorded answer equal to the live one and records new questions.
@@ -16,8 +16,8 @@ import type {
   OutputLanguage,
 } from "../shell/ledger";
 import { STAGE_FIELDS, storedFieldValue } from "../shell/ledgerStage";
-import entryOptions from "./fixtures/ledgerEntryOptions.json" with { type: "json" };
-import recorded from "./fixtures/ledgerStagedCheck.json" with { type: "json" };
+import entryOptions from "@fixtures/ledger-entry-options/ledgerEntryOptions.json" with { type: "json" };
+import recorded from "@fixtures/ledger-staged-check/ledgerStagedCheck.json" with { type: "json" };
 
 type RecordedRows = Record<
   string,

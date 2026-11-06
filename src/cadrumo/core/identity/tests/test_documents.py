@@ -40,8 +40,8 @@ def test_valid_identity_document_variants_round_trip() -> None:
             "nie",
             (
                 "X1234567L",
-                "Y0000000Z",
-                "Z0000000M",
+                "Y0001007D",
+                "Z0001008R",
                 "x1234567L",
             ),
             IdentityDocument.NIE,
@@ -157,7 +157,7 @@ class TestCifKindCatalogue:
     def test_current_prefixed_nif_variants_validate_as_nif(self) -> None:
         from ..tax_id import validate_spanish_tax_id
 
-        for candidate in ("K1234567L", "L1234567L", "M1234567L"):
+        for candidate in ("K0001000B", "L0001001N", "M0001002J"):
             assert validate_spanish_tax_id(candidate, SPANISH_TAX_ID_FORMAT) == candidate
             assert validate_identity(candidate) is IdentityDocument.NIF
 

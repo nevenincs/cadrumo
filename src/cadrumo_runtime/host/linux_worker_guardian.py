@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Protocol
 
 from cadrumo.core.package_interpreter import interpreter_command
+from cadrumo.core.pydantic_plugins import PYDANTIC_PLUGINS_DISABLED, PYDANTIC_PLUGINS_VARIABLE
 from cadrumo_client.contracts.contracts import RefusalError
 
 from ..adapters.linux_pidfd import open_linux_pidfd
@@ -79,14 +80,14 @@ def _is_same_parent(options: argparse.Namespace, parent: Path, watcher: _ParentP
 
 
 def launch_worker(worker_arguments: tuple[str, ...]) -> subprocess.Popen[bytes] | None:
-    """Launch the worker with a fixed minimal environment and return its process."""
+    """Start the contained worker under the clean environment, or return None when it cannot start."""
     from ..adapters.worker_environment import worker_path_environment_names
 
     environment = {
         "PATH": "/usr/bin:/bin",
         "LANG": "C",
         "LC_ALL": "C",
-        "PYDANTIC_DISABLE_PLUGINS": "__all__",
+        PYDANTIC_PLUGINS_VARIABLE: PYDANTIC_PLUGINS_DISABLED,
     }
     path_names = worker_path_environment_names()
     environment.update({name: value for name, value in os.environ.items() if name in path_names})

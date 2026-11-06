@@ -1,0 +1,170 @@
+format = 1
+
+[persona]
+id = "autonomo-fontanero"
+title = "Fontanero autónomo en estimación directa simplificada"
+summary = """
+Javier Montero instala y repara fontanería y calefacción en Madrid. Factura a
+empresas al 21 % y repara instalaciones de viviendas de una comunidad de
+propietarios al 10 %. Alquila un taller a un particular, que le factura con IVA
+y sobre cuyo alquiler practica la retención del 19 %. No tiene empleados ni paga
+a profesionales sujetos a retención. Es soltero y vive solo, sin descendientes ni
+ascendientes a su cargo, y declara la renta de forma individual.
+"""
+taxpayer = "fontanero.titular"
+fiscal_year = "horizon-1"
+modelos = ["303", "130", "115", "180", "390", "347", "100"]
+
+[clock]
+as_of = { year = "horizon", month = 2, day = 16 }
+
+[profile]
+"output-language" = "es"
+"entity-type" = "natural_person"
+"tax-id" = { identity = "fontanero.titular" }
+"name" = { identity = "fontanero.titular", field = "name" }
+"surnames" = { identity = "fontanero.titular", field = "surnames" }
+"fiscal-residency" = "resident_irpf"
+"tax-residence-jurisdiction-scope" = "common_regime"
+"tax-residence-ccaa" = "madrid"
+"address-postcode" = "28045"
+"irpf-income-categories" = ["actividad_economica"]
+"activity-start-date" = { year = "horizon-9", month = 3, day = 1 }
+"iva-regime" = "GENERAL"
+"iva-m303-regime-composition" = "general"
+"iva-roi-enrolled" = false
+"iva-oss-enrolled" = false
+"iva-sii-enrolled" = false
+"iva-redeme-enrolled" = false
+"iva-cash-accounting-regime-enrolled" = false
+"iva-voluntary-sii-enrolled" = false
+"iva-hydrocarbon-deposit-advance-payment-deduction-entitled" = false
+"taxation-type" = "1"
+"taxpayer-sex" = "H"
+"taxpayer-marital-status" = "1"
+"situacion-familiar" = "soltero"
+"taxpayer-birth-date" = { year = "horizon-44", month = 4, day = 17 }
+"family-minor-children-in-unit" = false
+"family-descendants-eu-eea-deduction" = false
+"has-employees" = false
+"pays-professionals-with-retencion" = false
+"pays-rent-with-retencion" = true
+"pays-capital-income-with-retencion" = false
+"art109-activity-income-withholding-ge-70pct" = false
+"irpf-estimation-regime" = "directa_simplificada"
+"irpf-codigo-comercio-accounting" = false
+"does-intracomunitario" = false
+"third-party-transactions-above-347-threshold" = true
+
+# The cap term of the art. 81 LIRPF deduction for a mother of a child under
+# three. He has no child, so no contribution counts towards it: a stated zero,
+# not an unknown.
+[fields]
+"renta_family.cotizaciones_ss_madre_2024" = "0"
+
+[[activities]]
+description = "Instalaciones de fontanería, calefacción y aire acondicionado"
+iae_epigraph = "504.2"
+
+[[elections]]
+question = "irpf-activity-income-imputation-criterion"
+value = "devengo"
+year = "horizon-1"
+
+# Single, with no descendants and no ascendants in his care: both families are
+# declared empty, so the household reads as stated rather than unknown.
+[household]
+descendants = []
+ascendants = []
+
+# The workshop he rents from Tomás Lozano, a resident individual who lives in
+# Madrid. Each monthly rent invoice carries the 19 % retención he withholds
+# (RIRPF arts. 100 and 101), so each ALQ row is one rent payment for these
+# premises: Modelo 115 each quarter and the Modelo 180 summary (RIRPF art. 108)
+# read them. Situation 1 is a property with a cadastral reference outside the
+# País Vasco and Navarra; modality 1 is a rent paid in money. The cadastral
+# reference is synthetic: a counter parcel and map sheet with the two control
+# letters the Catastro algorithm gives them.
+[[leased_premises]]
+key = "taller"
+landlord = "fontanero.arrendador-taller"
+landlord_tax_status = "resident"
+landlord_tax_regime = "irpf"
+landlord_province = "28"
+situation = "1"
+cadastral_reference = "0000001VK0000N0001PH"
+modality = "1"
+
+[leased_premises.address]
+province_code = "28"
+municipality_code = "28079"
+municipality = "Madrid"
+locality = "Madrid"
+postal_code = "28021"
+street_type = "CL"
+street_name = "Ejemplo"
+number_type = "NUM"
+house_number = "12"
+complement = "Nave 3"
+
+# He buys pipe, fittings and boilers for each job and installs them on it, so
+# his activity holds no existencias: the book opens at zero, records no
+# movement and closes on its movements at zero. The Modelo 100 rows of the
+# stock variation and the purchases of existencias (casillas 0177, 0181 and
+# 0182) read it as zero on his statement, never by default.
+[[inventory]]
+activity = "instalaciones-fontaneria"
+year = "horizon-1"
+valuation_method = "fifo"
+opening_stock = "0.00"
+closing_stock = "0.00"
+statement = "La actividad de instalaciones de fontanería no mantuvo existencias en ningún momento del ejercicio ni al cierre del anterior."
+
+# His own copy of the prior year's Renta: rendimiento neto of his activity in
+# estimación directa (casilla 0224) of 12846.30, a better year than the fiscal
+# year's 9349.90. Modelo 130 casilla 13 reads it (RIRPF art. 110.3.c): above
+# 12000.00, so no minoración applies. His results have always been positive, so
+# that return carried no negative general base pending for later years: the
+# Anexo C remainders (casillas 1384, 1387, 1390 and 1391) are zero, and this
+# year's opening rows (casillas 1380 to 1388) read them (Ley 35/2006 art. 50.3).
+# The product keeps a figure the taxpayer types from his copy at calculation
+# grade.
+[[local_observations]]
+modelo = "100"
+year = "horizon-2"
+period = "0A"
+casillas = { "0224" = "12846.30", "1384" = "0.00", "1387" = "0.00", "1390" = "0.00", "1391" = "0.00" }
+reason = "Rendimiento neto de la actividad y bases liquidables generales negativas pendientes en la declaración de la renta del ejercicio anterior"
+
+# At the clock every quarterly return of the fiscal year is past its window,
+# so he has filed each one. His quarterly IVA results were all to pay, so no
+# compensation was pending before the first quarter. The Modelo 115 returns
+# and the Modelo 180 summary are filed from the captured rent withholding.
+[[filed_returns]]
+modelo = "303"
+year = "horizon-1"
+periods = ["1T", "2T", "3T", "4T"]
+iva_compensation_carried_in = "0.00"
+
+[[filed_returns]]
+modelo = "115"
+year = "horizon-1"
+periods = ["1T", "2T", "3T", "4T"]
+
+[[filed_returns]]
+modelo = "180"
+year = "horizon-1"
+periods = ["0A"]
+
+# His first Modelo 130 return is calculated but not filed by the replay.
+# Casilla 13 depends on the prior year's Renta, which he knows only from his
+# own copy: a local observation that the product keeps at calculation grade,
+# so the cross-period check refuses to verify a return that reads it. Only
+# AEAT evidence of that Renta would clear it, and the persona holds none. The
+# later quarters are not calculated either: their casilla 05 reads casilla 07
+# of the earlier quarters' filed returns, and with 1T unfiled the calculation
+# refuses for that missing input.
+[[calculated_returns]]
+modelo = "130"
+year = "horizon-1"
+periods = ["1T"]

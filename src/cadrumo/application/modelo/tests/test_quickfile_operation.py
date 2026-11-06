@@ -17,7 +17,12 @@ from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
 from ....core.errors.error_codes import get_registered_error_code
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...ledger.commit_fence import run_with_ledger_commit_fence
@@ -25,7 +30,7 @@ from ...ledger.persistence_ports import LedgerPersistenceConflictError
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.public_period import PublicPeriod
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import quickfile_operation as module
 from ..action_errors import WorkUnitNotFoundError

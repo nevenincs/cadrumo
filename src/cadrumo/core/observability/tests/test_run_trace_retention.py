@@ -20,10 +20,10 @@ import pytest
 
 from ...config import override_settings
 from ...directory_scan import DirectoryEntryKind, scan_directory
-from ...storage_taxonomy import StorageCategory
+from ...storage_taxonomy import RUN_EVENTS_FILENAME, RUN_TRACE_FILENAME, StorageCategory
 from ...storage_taxonomy_locations import storage_location
 from ..models import RunOutcome, RunTrace
-from ..store import EVENTS_FILENAME, TRACE_FILENAME, prune_run_traces, save_trace
+from ..store import prune_run_traces, save_trace
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -46,9 +46,9 @@ def _make_run_dir(
 ) -> Path:
     trace_dir = runs_dir / run_id
     trace_dir.mkdir(parents=True)
-    (trace_dir / TRACE_FILENAME).write_text("{}", encoding="utf-8")
+    (trace_dir / RUN_TRACE_FILENAME).write_text("{}", encoding="utf-8")
     if events_bytes:
-        (trace_dir / EVENTS_FILENAME).write_bytes(b"x" * events_bytes)
+        (trace_dir / RUN_EVENTS_FILENAME).write_bytes(b"x" * events_bytes)
     stamp = (anchor - timedelta(days=age_days)).timestamp()
     os.utime(trace_dir, (stamp, stamp))
     return trace_dir
@@ -146,7 +146,7 @@ def test_save_trace_write_path_fires_retention_prune(tmp_path: Path) -> None:
         save_trace(trace)
 
     assert not stale.exists()
-    assert (runs_dir / fresh_run_id / TRACE_FILENAME).exists()
+    assert (runs_dir / fresh_run_id / RUN_TRACE_FILENAME).exists()
 
 
 def test_prune_enforces_total_size_ceiling_oldest_first(tmp_path: Path) -> None:

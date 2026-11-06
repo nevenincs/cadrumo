@@ -34,6 +34,7 @@ from cadrumo.core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_server
 
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_unbound_cli
 from .profile_password_cli import invoke_with_profile_password
 
@@ -100,18 +101,11 @@ def _create(name: str, tax_id: str = "12345678Z") -> None:
     register_cli_profile(
         label=name,
         facts={
+            **native_general_iva_facts(),
             "identity.tax_id": tax_id,
-            "taxpayer_type.entity_type": "natural_person",
             "identity.name": name.capitalize(),
             "identity.surnames": "Example",
             "activities.description": "design",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
 

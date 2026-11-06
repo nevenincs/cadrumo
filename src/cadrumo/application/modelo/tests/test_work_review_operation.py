@@ -15,16 +15,13 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
 
 from ....core.modelo_work_progress_state import ModeloWorkProgressState
+from ....core.operations import OperationFrontendProjection
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
-from ...operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationRegistry,
-)
+from ...operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..history_ports import ModeloHistoryPorts, ModeloHistoryPortsFactory
 from ..work_review_contracts import (

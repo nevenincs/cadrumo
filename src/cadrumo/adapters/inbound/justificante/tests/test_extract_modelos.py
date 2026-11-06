@@ -28,7 +28,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.use
 
 
 # Synthetic PDF text shapes derived from live captures with PII
-# token-replaced (Y1234567X -> Y0000001S, real CSVs -> SANITIZED...).
+# token-replaced (Y1234567X -> Y0001006P, real CSVs -> SANITIZED...).
 # Each block ends with a verification URL so the URL extractor
 # always succeeds.
 _SHAPE_M130_QUARTERLY = (
@@ -38,8 +38,8 @@ _SHAPE_M130_QUARTERLY = (
     "Expediente/Referencia (n registro asignado): 999913013520146Z\n"
     "Codigo Seguro de Verificacion: SANITIZED1302024\n"
     "Numero de justificante: 1305124255671\n"
-    "NIF Presentador: Y0000001S\n"
-    "Y0000001S 2024 1T\n"
+    "NIF Presentador: Y0001006P\n"
+    "Y0001006P 2024 1T\n"
     f"{justificante_cotejo_url('SANITIZED1302024')}\n"
 )
 
@@ -50,7 +50,7 @@ _SHAPE_M303_QUARTERLY = (
     "Expediente/Referencia (n registro asignado): 999930313520389Q\n"
     "Codigo Seguro de Verificacion: SANITIZED3032024\n"
     "Numero de justificante: 3050124211223\n"
-    "NIF Presentador: Y0000001S\n"
+    "NIF Presentador: Y0001006P\n"
     "Sujeto pasivo (2) Ejercicio 2024 Periodo 1T\n"
     f"{justificante_cotejo_url('SANITIZED3032024')}\n"
 )
@@ -62,7 +62,7 @@ _SHAPE_M111_QUARTERLY = (
     "Expediente/Referencia (n registro asignado): 999911113520259N\n"
     "Codigo Seguro de Verificacion: SANITIZED1112024\n"
     "Numero de justificante: 1114264149320\n"
-    "NIF Presentador: Y0000001S\n"
+    "NIF Presentador: Y0001006P\n"
     "MINISTERIO DE HACIENDA\n"
     "2024 1T\n"
     f"{justificante_cotejo_url('SANITIZED1112024')}\n"
@@ -75,7 +75,7 @@ _SHAPE_M190_RESUMEN_ANUAL = (
     "Expediente/Referencia (n registro asignado): 9999190003820000301503\n"
     "Codigo Seguro de Verificacion: SANITIZED1902024\n"
     "Numero de justificante: 1905117526322\n"
-    "NIF Presentador: Y0000001S\n"
+    "NIF Presentador: Y0001006P\n"
     "Resumen anual\n"
     "Declarante\n"
     "Ejercicio (con 4 cifras) ....... 2024\n"
@@ -89,7 +89,7 @@ _SHAPE_M390_ANUAL = (
     "Expediente/Referencia (n registro asignado): 999939013520264K\n"
     "Codigo Seguro de Verificacion: SANITIZED3902023\n"
     "Numero de justificante: 3905124211226\n"
-    "NIF Presentador: Y0000001S\n"
+    "NIF Presentador: Y0001006P\n"
     "Sujeto pasivo Devengo\n"
     "Ejercicio 2023 Declaracion sustitutiva\n"
     f"{justificante_cotejo_url('SANITIZED3902023')}\n"
@@ -111,11 +111,11 @@ _SHAPE_M130_2021_ENGLISH = (
     "File/Reference (assigned registration no.):\n"
     "Secure Verification Code: SANITIZED1302021\n"
     "Filer\n"
-    "Y0000001S\n"
+    "Y0001006P\n"
     "Tax identification number(NIF)of filer:\n"
     "APELLIDO APELLIDO NOMBRE\n"
     "Surname(s) and first name/Company name:\n"
-    "Y0000001S 2021 4T\n"  # positional NIF + year + period block
+    "Y0001006P 2021 4T\n"  # positional NIF + year + period block
     f"{justificante_cotejo_url('SANITIZED1302021')}\n"
 )
 
@@ -128,7 +128,7 @@ _SHAPE_M390_2021_ENGLISH = (
     "File/Reference (assigned registration no.):\n"
     "Secure Verification Code: SANITIZED3902021\n"
     "Filer\n"
-    "Y0000001S\n"
+    "Y0001006P\n"
     "Tax identification number(NIF)of filer:\n"
     "Liability\n"
     "Financial year 2021 Replacement tax return\n"
@@ -151,7 +151,7 @@ class TestPeriodPositionalQuarterly:
         record = extract_justificante(_SHAPE_M130_QUARTERLY, _pdf_path(tmp_path, "130"))
         assert record.modelo == "130"
         assert record.period == Period.from_year_and_code(2024, "1T")
-        assert record.tax_id == "Y0000001S"
+        assert record.tax_id == "Y0001006P"
         assert record.csv == "SANITIZED1302024"
 
     def test_modelo_303_labelled_period(self, tmp_path: Path) -> None:
@@ -188,7 +188,7 @@ class TestPeriodPositionalRejectsMonthlyNoise:
             "Modelo 190\n"
             "Presentacion realizada el: 27-03-2025 a las 20:31:00\n"
             "Codigo Seguro de Verificacion: SANITIZED1902024\n"
-            "NIF Presentador: Y0000001S\n"
+            "NIF Presentador: Y0001006P\n"
             "Resumen anual\n"
             "Ejercicio (con 4 cifras) ....... 2024 01 enero\n"
             f"{justificante_cotejo_url('SANITIZED1902024')}\n"
@@ -204,8 +204,8 @@ class TestPeriodPositionalRejectsMonthlyNoise:
             "Modelo 130\n"
             "Codigo Seguro de Verificacion: SANITIZED1302024\n"
             "Presentacion realizada el: 05-07-2024 a las 16:28:37\n"
-            "NIF Presentador: Y0000001S\n"
-            "Y0000001S 2024 1T\n"
+            "NIF Presentador: Y0001006P\n"
+            "Y0001006P 2024 1T\n"
             f"{justificante_cotejo_url('SANITIZED1302024')}\n"
         )
         record = extract_justificante(text, _pdf_path(tmp_path, "130"))
@@ -240,7 +240,7 @@ class TestEnglishLayout:
             _pdf_path(tmp_path, "130"),
         )
         assert record.modelo == "130"
-        assert record.tax_id == "Y0000001S"
+        assert record.tax_id == "Y0001006P"
         assert record.csv == "SANITIZED1302021"
         # presented_at parses from "Filed on 31-01-2022 at 22:00:40"
         assert record.presented_at.year == 2022
@@ -254,7 +254,7 @@ class TestEnglishLayout:
             _pdf_path(tmp_path, "390"),
         )
         assert record.modelo == "390"
-        assert record.tax_id == "Y0000001S"
+        assert record.tax_id == "Y0001006P"
         assert record.csv == "SANITIZED3902021"
         # ejercicio captured from "Financial year 2021"
         assert record.ejercicio == "2021"

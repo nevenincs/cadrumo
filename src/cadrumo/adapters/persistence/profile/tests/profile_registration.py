@@ -29,6 +29,7 @@ from .....domain.user_profile.tests.schema_value_support import REQUIRED_PROFILE
 from .....domain.user_profile.values import (
     ProfileSetupState,
     UserProfileFact,
+    UserProfileFactValue,
     UserProfileRecord,
     create_user_profile_record,
 )
@@ -79,11 +80,15 @@ def register_minimal_profile(
 
     with _profile_authority_scope() as operation:
         profile_id = canonical_profile_bucket_id(profile_id)
-        merged: dict[str, str] = dict(REQUIRED_PROFILE_PLACEHOLDERS)
+        merged: dict[str, UserProfileFactValue] = dict(REQUIRED_PROFILE_PLACEHOLDERS)
         merged["identity.tax_id"] = _distinct_valid_nif(profile_id, operation=operation)
         if overrides is not None and overrides:
             merged.update(overrides)
-        facts = tuple(UserProfileFact(path=path, value=value) for path, value in merged.items() if value)
+        facts = tuple(
+            UserProfileFact(path=path, value=value)
+            for path, value in merged.items()
+            if value is not None and value != ""
+        )
         record = create_user_profile_record(
             context=operation.profile_create_context(),
             profile_id=profile_id,
@@ -135,7 +140,7 @@ def register_cli_profile(
     from .....core.paths import effective_storage_root
 
     with _profile_authority_scope() as operation:
-        merged: dict[str, str] = dict(REQUIRED_PROFILE_PLACEHOLDERS)
+        merged: dict[str, UserProfileFactValue] = dict(REQUIRED_PROFILE_PLACEHOLDERS)
         merged["identity.tax_id"] = _distinct_valid_nif(label, operation=operation)
         if facts is not None and facts:
             merged.update(facts)
@@ -148,7 +153,11 @@ def register_cli_profile(
                 profile_id = register_profile_with_credentials(
                     label=label,
                     passphrase=passphrase,
-                    facts=tuple(UserProfileFact(path=path, value=value) for path, value in merged.items() if value),
+                    facts=tuple(
+                        UserProfileFact(path=path, value=value)
+                        for path, value in merged.items()
+                        if value is not None and value != ""
+                    ),
                     profile_create_context=create_context,
                     profile_decode_context=decode_context,
                 ).profile_id

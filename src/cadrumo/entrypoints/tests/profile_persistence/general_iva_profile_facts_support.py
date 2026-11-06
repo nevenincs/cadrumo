@@ -5,9 +5,8 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.values import UserProfileFact
-
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 
 
 def general_iva_profile_facts(
@@ -19,13 +18,14 @@ def general_iva_profile_facts(
     activity: str = "economic activity",
 ) -> tuple[UserProfileFact, ...]:
     """Return the complete-profile facts shared by the profile persistence scenarios."""
-    return (
-        UserProfileFact(path="identity.tax_id", value=tax_id),
-        UserProfileFact(path="identity.name", value=name),
-        UserProfileFact(path="identity.surnames", value=surnames),
-        UserProfileFact(path="activities.description", value=activity),
-        *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-        UserProfileFact(path="censo.activity_start_date", value=activity_start_date),
+    return persona_facts_beneath(
+        (
+            UserProfileFact(path="identity.tax_id", value=tax_id),
+            UserProfileFact(path="identity.name", value=name),
+            UserProfileFact(path="identity.surnames", value=surnames),
+            UserProfileFact(path="activities.description", value=activity),
+            UserProfileFact(path="censo.activity_start_date", value=activity_start_date),
+        )
     )
 
 

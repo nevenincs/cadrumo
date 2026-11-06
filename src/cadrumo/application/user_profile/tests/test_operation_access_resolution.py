@@ -9,7 +9,7 @@ import pytest
 
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.operations import (
     USER_PROFILE_OPERATION_DEFINITIONS,
@@ -19,6 +19,7 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
     PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
     ProfileFieldMutationOperationRequest,
 )
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 

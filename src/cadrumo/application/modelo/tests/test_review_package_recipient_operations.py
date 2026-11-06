@@ -17,13 +17,17 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...bucket_event_repository import BucketEventHistoryRepositoryFactory
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
-from ...operations.registry import OperationFrontendProjection
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import review_package_recipient_operations as operation
 from ..review_package_recipient_registry import (

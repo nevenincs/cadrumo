@@ -43,8 +43,8 @@ from ..storage.secure_object_namespaces import (
     PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE,
     TRANSACTION_CATALOGUE_NAMESPACE,
 )
-from ..storage.sql.orm import TransactionDateIndexRow
 from ..storage.sql.secure_objects import SecureObjectMigrationTarget
+from ..storage.sql.tables import transaction_date_index_table
 from .bienes_inversion import BienesInversionIvaRegisterRepository
 from .transaction_authority_validation import validate_iva_authority_migration
 from .transaction_date_index_storage import (
@@ -71,7 +71,7 @@ from .transaction_row_contracts import (
 from .transaction_storage_failures import translating_transaction_storage_failures
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from sqlalchemy.orm import Session
+    from sqlalchemy import Connection
 
     from ....core.secure_object_write import SecureObjectWrite
     from ..storage.envelope.contract import Envelope
@@ -662,7 +662,7 @@ class TransactionCatalogueRepository:
     def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
         """Return the persisted catalogue filtered to ``[start, end]`` inclusive.
 
-        Reads the plaintext, non-sensitive :class:`~adapters.persistence.storage.sql.orm.TransactionDateIndexRow`
+        Reads the plaintext, non-sensitive :data:`~adapters.persistence.storage.sql.tables.transaction_date_index_table`
         routing rows for this bucket to select the candidate transaction ids
         whose filing date (``value_date`` or ``booked_date``) falls in the
         window, then decrypts only those rows via one targeted batch
@@ -775,26 +775,26 @@ class TransactionCatalogueRepository:
         was an avoidable O(n) CPU cost even though only the in-window ids need
         decryption and large remainders are represented by a summary.
         """
-        outside_condition = (TransactionDateIndexRow.eligible_from > end) | (
-            TransactionDateIndexRow.eligible_to < start
+        outside_condition = (transaction_date_index_table.c.eligible_from > end) | (
+            transaction_date_index_table.c.eligible_to < start
         )
         with self._objects.guarded_session_scope() as session:
             in_window_ids = set(
                 session.execute(
-                    select(TransactionDateIndexRow.transaction_id).where(
-                        TransactionDateIndexRow.bucket_id == self._bucket_id,
-                        TransactionDateIndexRow.eligible_from <= end,
-                        TransactionDateIndexRow.eligible_to >= start,
+                    select(transaction_date_index_table.c.transaction_id).where(
+                        transaction_date_index_table.c.bucket_id == self._bucket_id,
+                        transaction_date_index_table.c.eligible_from <= end,
+                        transaction_date_index_table.c.eligible_to >= start,
                     ),
                 ).scalars(),
             )
             out_count, min_filing_date, max_filing_date = session.execute(
                 select(
-                    func.count(TransactionDateIndexRow.id),
-                    func.min(TransactionDateIndexRow.filing_date),
-                    func.max(TransactionDateIndexRow.filing_date),
+                    func.count(transaction_date_index_table.c.id),
+                    func.min(transaction_date_index_table.c.filing_date),
+                    func.max(transaction_date_index_table.c.filing_date),
                 ).where(
-                    TransactionDateIndexRow.bucket_id == self._bucket_id,
+                    transaction_date_index_table.c.bucket_id == self._bucket_id,
                     outside_condition,
                 ),
             ).one()
@@ -803,10 +803,10 @@ class TransactionCatalogueRepository:
                 projected_rows: list[tuple[str, date]] = []
                 for transaction_id, filing_date in session.execute(
                     select(
-                        TransactionDateIndexRow.transaction_id,
-                        TransactionDateIndexRow.filing_date,
+                        transaction_date_index_table.c.transaction_id,
+                        transaction_date_index_table.c.filing_date,
                     ).where(
-                        TransactionDateIndexRow.bucket_id == self._bucket_id,
+                        transaction_date_index_table.c.bucket_id == self._bucket_id,
                         outside_condition,
                     ),
                 ).all():
@@ -846,7 +846,7 @@ class TransactionCatalogueRepository:
         """Split this bucket's catalogue into an in-window half and an out-of-window remainder.
 
         The period-first partition runs a completeness gate against the plaintext
-        :class:`~adapters.persistence.storage.sql.orm.TransactionDateIndexRow`
+        :data:`~adapters.persistence.storage.sql.tables.transaction_date_index_table`
         rows for this bucket -- the index row count and id set must exactly
         match the encrypted membership index -- before trusting the index for
         a partition. On a completeness match, only the in-window transaction
@@ -1020,8 +1020,8 @@ class TransactionCatalogueRepository:
         with self._objects.guarded_session_scope() as session:
             rows = (
                 session.execute(
-                    select(TransactionDateIndexRow.transaction_id).where(
-                        TransactionDateIndexRow.bucket_id == self._bucket_id,
+                    select(transaction_date_index_table.c.transaction_id).where(
+                        transaction_date_index_table.c.bucket_id == self._bucket_id,
                     ),
                 )
                 .scalars()
@@ -1039,15 +1039,17 @@ class TransactionCatalogueRepository:
         """
         with self._objects.guarded_session_scope() as session:
             any_row = session.execute(
-                select(TransactionDateIndexRow.id).where(TransactionDateIndexRow.bucket_id == self._bucket_id).limit(1),
+                select(transaction_date_index_table.c.id)
+                .where(transaction_date_index_table.c.bucket_id == self._bucket_id)
+                .limit(1),
             ).first()
             if any_row is None:
                 return None
             rows = session.execute(
-                select(TransactionDateIndexRow.transaction_id).where(
-                    TransactionDateIndexRow.bucket_id == self._bucket_id,
-                    TransactionDateIndexRow.filing_date >= start,
-                    TransactionDateIndexRow.filing_date <= end,
+                select(transaction_date_index_table.c.transaction_id).where(
+                    transaction_date_index_table.c.bucket_id == self._bucket_id,
+                    transaction_date_index_table.c.filing_date >= start,
+                    transaction_date_index_table.c.filing_date <= end,
                 ),
             ).scalars()
             return set(rows)
@@ -1085,7 +1087,9 @@ class TransactionCatalogueRepository:
             if {key: value[1] for key, value in baseline.items()} == incoming:
                 return
 
-            def commit(session: Session, baseline: dict[str, tuple[int, IndexedTransactionDates]] = baseline) -> None:
+            def commit(
+                session: Connection, baseline: dict[str, tuple[int, IndexedTransactionDates]] = baseline
+            ) -> None:
                 current = read_date_index_rows(self._bucket_id, session)
                 if current != baseline:
                     # No DML has occurred: the whole transaction is a proven
@@ -1116,7 +1120,7 @@ class TransactionCatalogueRepository:
 
         Returns ``(changed writes, deletions)``. Changed-row detection is a
         decryption-free
-        :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.namespace_payload_hashes`
+        :meth:`~adapters.persistence.storage.sql.secure_object_writes.SecureObjectWriteOperations.namespace_payload_hashes`
         lookup keyed by the bucket-qualified HMAC digest (so it is correct even
         when several buckets share one store): an incoming transaction whose
         freshly-serialised payload hash matches the stored one is left

@@ -16,7 +16,7 @@ from .....domain.iva.schema import InvoiceKind
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "29292929-2929-4292-8292-292929292929"
-_CIF = "A58818501"
+_CIF = "B00010157"
 
 
 def _csv_source(text: str, tmp_path: Path):

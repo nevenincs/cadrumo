@@ -28,7 +28,6 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.automation_custody_port import AutomationCustodySnapshot
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationReceiptProjection,
@@ -39,7 +38,12 @@ from cadrumo.application.user_profile.automation_operations import (
     AUTOMATION_APPROVE_OPERATION_DEFINITION_ID,
     AutomationOperationRequest,
 )
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_location
 from cadrumo_client.contracts.access_refusals import AccessDenialCode

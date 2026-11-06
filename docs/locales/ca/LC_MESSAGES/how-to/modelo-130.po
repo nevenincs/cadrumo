@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-03 19:37+0100\n"
+"POT-Creation-Date: 2026-11-06 04:51+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -248,16 +248,16 @@ msgstr ""
 msgid ""
 "Your records feed the cumulative income, expense, and withholding figures"
 " through the rules that fill each box; earlier filings feed the carries. "
-"Boxes `06`, `08`, `10`, `16`, and `18` are manual inputs for the cases "
-"that apply to you (withholdings, second-activity volume, home habitual "
+"Boxes `06`, `08`, `10`, `16`, and `18` are inputs for the cases that "
+"apply to you (withholdings, second-activity volume, home habitual "
 "deduction, prior complementary results). Inspect which boxes are filled "
 "in, missing, or manual:"
 msgstr ""
 "Els teus registres alimenten les xifres acumulades d'ingressos, despeses "
 "i retencions mitjançant les regles que omplen cada casella; les "
 "presentacions anteriors alimenten els arrossegaments. Les caselles `06`, "
-"`08`, `10`, `16` i `18` són entrades manuals per als casos que t'apliquen"
-" (retencions, volum d'una segona activitat, deducció per habitatge "
+"`08`, `10`, `16` i `18` són entrades per als casos que t'apliquen "
+"(retencions, volum d'una segona activitat, deducció per habitatge "
 "habitual, resultats complementaris anteriors). Inspecciona quines "
 "caselles estan emplenades, quines falten i quines són manuals:"
 
@@ -267,18 +267,33 @@ msgstr "Aporta el valor d'una casella manual"
 
 #: ../../how-to/modelo-130.md:97
 msgid ""
-"Box `06` (Retenciones e ingresos a cuenta) is a manual box: your records "
-"do not fill it, so you supply it by hand with `--casilla`. Pass it in the"
-" same `calculate` call as the first-period `--binding` values, then "
-"review the saved calculation to confirm your value landed:"
+"Box `06` (Retenciones e ingresos a cuenta) takes the withholdings you "
+"record in the ledger with `aeat app ledger retencion-soportada record`; "
+"with none recorded it is 0. You can also supply it by hand with "
+"`--casilla`. A hand value that differs from the recorded withholdings is "
+"a disagreement between two sources: Cadrumo uses the one that takes "
+"precedence, and the check waits until you record the withholding that "
+"agrees or accept the value in use with `aeat app modelo work accept-"
+"disagreement`. The example therefore supplies the value on a second-"
+"quarter draft, so it does not carry into the first-quarter chain that the"
+" next sections check and file. Pass it in the same `calculate` call as "
+"the zero `--binding` values, then review the saved calculation to confirm"
+" your value landed:"
 msgstr ""
-"La casella `06` (Retenciones e ingresos a cuenta) és una casella manual: "
-"els teus registres no l'omplen, així que l'aportes a mà amb `--casilla`. "
-"Passa-la a la mateixa crida a `calculate` que els valors `--binding` del "
-"primer període i, tot seguit, revisa el càlcul desat per confirmar que el"
-" teu valor hi ha quedat:"
+"La casella `06` (Retenciones e ingresos a cuenta) pren les retencions que"
+" registres al llibre amb `aeat app ledger retencion-soportada record`; si"
+" no n'has registrat cap, val 0. També pots aportar-la a mà amb "
+"`--casilla`. Un valor a mà que difereix de les retencions registrades és "
+"una discrepància entre dues fonts: Cadrumo fa servir la que té prioritat,"
+" i la comprovació espera fins que registris la retenció que hi "
+"coincideixi o acceptis el valor en ús amb `aeat app modelo work accept-"
+"disagreement`. Per això l'exemple aporta el valor en un esborrany del "
+"segon trimestre, perquè no passi a la cadena del primer trimestre que les"
+" seccions següents comproven i presenten. Passa-la en la mateixa crida a "
+"`calculate` que els valors `--binding` a zero, i revisa després el càlcul"
+" desat per confirmar que el teu valor ha quedat registrat:"
 
-#: ../../how-to/modelo-130.md:106
+#: ../../how-to/modelo-130.md:113
 msgid ""
 "`--casilla` works only on `manual` boxes; a `bound` box filled from your "
 "records (like box `02`) refuses the override. Check a box's kind with "
@@ -293,11 +308,11 @@ msgstr ""
 "consulta [Revisa i aporta entrades de càlcul](review-calculation-"
 "values.md) per al flux d'entrada complet."
 
-#: ../../how-to/modelo-130.md:112
+#: ../../how-to/modelo-130.md:119
 msgid "Each quarter is cumulative"
 msgstr "Cada trimestre és acumulatiu"
 
-#: ../../how-to/modelo-130.md:114
+#: ../../how-to/modelo-130.md:121
 msgid ""
 "Modelo 130 is a year-to-date form, not a quarter-slice form. The second "
 "quarter's box `01` covers January through June, not April through June; "
@@ -310,7 +325,7 @@ msgstr ""
 "sobre tot l'any transcorregut, i els pagaments fraccionats que ja has "
 "abonat se'n descompten a través de la casella `05`."
 
-#: ../../how-to/modelo-130.md:119
+#: ../../how-to/modelo-130.md:126
 msgid ""
 "Cadrumo does this by adding up your records from the start of the year "
 "(for `2T`, January 1 to June 30) and by reading your own earlier filed "
@@ -320,7 +335,7 @@ msgstr ""
 "`2T`, de l'1 de gener al 30 de juny) i llegint els teus propis trimestres"
 " presentats abans (`previous_filing`):"
 
-#: ../../how-to/modelo-130.md:123
+#: ../../how-to/modelo-130.md:130
 msgid ""
 "`modelo-130-pagos-fraccionados-anteriores` - the instalments already paid"
 " this year, from your recorded `1T`..`3T` filings."
@@ -329,7 +344,7 @@ msgstr ""
 "abonats aquest any, a partir de les teves presentacions registrades de "
 "`1T` a `3T`."
 
-#: ../../how-to/modelo-130.md:125
+#: ../../how-to/modelo-130.md:132
 msgid ""
 "`modelo-130-resultados-negativos-anteriores` - negative results carried "
 "from earlier quarters."
@@ -337,7 +352,7 @@ msgstr ""
 "`modelo-130-resultados-negativos-anteriores`: els resultats negatius "
 "arrossegats de trimestres anteriors."
 
-#: ../../how-to/modelo-130.md:127
+#: ../../how-to/modelo-130.md:134
 msgid ""
 "`irpf.previous_year_economic_activity_net_income` - last year's net "
 "income, which decides the minoración tier."
@@ -345,7 +360,7 @@ msgstr ""
 "`irpf.previous_year_economic_activity_net_income`: la renda neta de l'any"
 " passat, que decideix el tram de la minoración."
 
-#: ../../how-to/modelo-130.md:130
+#: ../../how-to/modelo-130.md:137
 msgid ""
 "For a first period these have no history, which is why the first-quarter "
 "chain passes them as `--binding ...=0`. For later quarters do NOT pass "
@@ -365,11 +380,11 @@ msgstr ""
 "aquella presentació anterior (consulta [Concilia un model presentat amb "
 "el teu justificant de l'AEAT](reconcile.md))."
 
-#: ../../how-to/modelo-130.md:139
+#: ../../how-to/modelo-130.md:146
 msgid "Calculate, review, check, record filing"
 msgstr "Calcula, revisa, comprova, registra la presentació"
 
-#: ../../how-to/modelo-130.md:141
+#: ../../how-to/modelo-130.md:148
 msgid ""
 "The chain is the standard filing workflow - see [The filing workflow"
 "](filing-spine.md) for how declarations and earlier calculations behave. "
@@ -379,7 +394,7 @@ msgstr ""
 "flux de treball de presentació](filing-spine.md) per saber com es "
 "comporten les declaracions i els càlculs anteriors. En resum:"
 
-#: ../../how-to/modelo-130.md:149
+#: ../../how-to/modelo-130.md:156
 msgid ""
 "Once the draft passes the check, record the filing. The check refuses "
 "until every deductible-expense entry has its purchase invoice linked as a"
@@ -398,7 +413,7 @@ msgstr ""
 "justificants quan el comproves, de manera que una factura adjuntada "
 "després no arriba a la presentació."
 
-#: ../../how-to/modelo-130.md:156
+#: ../../how-to/modelo-130.md:163
 msgid ""
 "The following example exports the checked draft, then records the filing."
 " Export refuses to overwrite an existing file unless you add `--replace`,"
@@ -409,7 +424,7 @@ msgstr ""
 " que afegeixis `--replace`, i es nega si la carpeta de sortida no "
 "existeix."
 
-#: ../../how-to/modelo-130.md:164
+#: ../../how-to/modelo-130.md:171
 msgid ""
 "Recording the filing applies only while the obligation window is open. It"
 " is an internal note that you have already presented the figures at the "
@@ -419,7 +434,7 @@ msgstr ""
 " és oberta. És una nota interna que ja has presentat les xifres al "
 "portal."
 
-#: ../../how-to/modelo-130.md:167
+#: ../../how-to/modelo-130.md:174
 msgid ""
 "Each computed box carries its formula, legal references, and source "
 "references; show them with the saved-calculation view or [review the "
@@ -434,7 +449,7 @@ msgstr ""
 "de l'AEAT (consulta [Concilia un model presentat amb el teu justificant "
 "de l'AEAT](reconcile.md))."
 
-#: ../../how-to/modelo-130.md:173
+#: ../../how-to/modelo-130.md:180
 msgid ""
 "Modelo 130's quarterly results feed your annual Renta declaration: the "
 "four instalments are folded into Modelo 100 as payments on account. See "
@@ -445,27 +460,27 @@ msgstr ""
 "100 com a pagaments a compte. Consulta [Prepara la declaració anual de la"
 " Renta (Modelo 100)](modelo-100.md)."
 
-#: ../../how-to/modelo-130.md:177
+#: ../../how-to/modelo-130.md:184
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/modelo-130.md:179
+#: ../../how-to/modelo-130.md:186
 msgid "[The income-tax year (run-through)](irpf-lifecycle.md)"
 msgstr "[L'any de l'impost sobre la renda (recorregut)](irpf-lifecycle.md)"
 
-#: ../../how-to/modelo-130.md:180
+#: ../../how-to/modelo-130.md:187
 msgid "[The filing workflow](filing-spine.md)"
 msgstr "[El flux de treball de presentació](filing-spine.md)"
 
-#: ../../how-to/modelo-130.md:181
+#: ../../how-to/modelo-130.md:188
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisa i aporta entrades de càlcul](review-calculation-values.md)"
 
-#: ../../how-to/modelo-130.md:182
+#: ../../how-to/modelo-130.md:189
 msgid "[File your modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Presenta el teu model al portal de l'AEAT](file-at-aeat.md)"
 
-#: ../../how-to/modelo-130.md:183
+#: ../../how-to/modelo-130.md:190
 msgid "[Reconcile a filed modelo against its AEAT receipt](reconcile.md)"
 msgstr ""
 "[Concilia un model presentat amb el teu justificant de "

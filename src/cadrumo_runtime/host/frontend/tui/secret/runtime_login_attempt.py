@@ -10,7 +10,6 @@ from logging import ERROR, INFO, WARNING
 from typing import TYPE_CHECKING, TypeGuard
 from uuid import UUID
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.async_cleanup import (
     AsyncResourceCleanupError,
     async_cleanup_failures,
@@ -20,6 +19,7 @@ from cadrumo.core.async_cleanup import (
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event, diagnostic_scope
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.logging import get_logger
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.tui.account import RuntimeUpgradePending

@@ -113,12 +113,12 @@ _PLANTED_IBAN = "ES8200000000000000000000"
 
 #: The legal-entity and prefixed spellings of the same all-zero convention.
 #:
-#: ``B00000000`` is an all-zero CIF body under the ``B`` kind, whose control is
+#: ``B00010082`` is an all-zero CIF body under the ``B`` kind, whose control is
 #: a digit and is ``0`` for that body; ``ES00000000T`` is the intra-community
 #: spelling of the planted NIF above. Both are as unmistakably synthetic as the
 #: pair above and exist for the same reason: a class cannot be shown to refuse a
 #: wrong control character unless it is also shown to accept a right one.
-_PLANTED_CIF = "B00000000"
+_PLANTED_CIF = "B00010082"
 _PLANTED_NIF_IVA = "ES00000000T"
 _PLANTED_NAME = "NOMBRE DE PRUEBA CERO"
 """The name the pre-sanitisation specimen carries before the sanitiser rewrites it.
@@ -134,7 +134,7 @@ manifest across the categories a real ``TokenMap`` declares.
 #: a sanitiser that failed to rewrite anything would leave the planted values in
 #: place and the end-to-end control would still fire. All-one bodies keep them
 #: as obviously synthetic on sight as the all-zero originals.
-_SYNTHETIC_NIF = "Y0000001S"
+_SYNTHETIC_NIF = "Y0001006P"
 _SYNTHETIC_IBAN = "ES6011111111111111111111"
 _SYNTHETIC_NAME = "APELLIDO APELLIDO NOMBRE"
 

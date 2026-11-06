@@ -24,7 +24,7 @@ def ephemeral_secure_repo_at(
 ) -> Generator[tuple[Any, SecureObjectRepository]]:
     """Open ``db_path`` under a fresh, self-managed ephemeral key.
 
-    This is intentionally distinct from :func:`_repo_at`: callers of the
+    This is intentionally distinct from :func:`repo_at`: callers of the
     latter already own an active :class:`EphemeralBucketSession`, while
     this helper owns the provider lifecycle for a fresh-key reopen.
     """

@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient

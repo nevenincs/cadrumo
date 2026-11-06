@@ -23,6 +23,7 @@ from cadrumo.domain.calculations.registry.applicability_models import (
     ModeloApplicability,
     ModeloApplicabilityRule,
 )
+from cadrumo.domain.calculations.registry.applicability_payer_facts import PayerFactProjection, resolve_payer_fact
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.irpf_income_categories import require_irpf_income_category
 from cadrumo.domain.calculations.registry.iva_regime_vocabulary import require_iva_regime
@@ -31,6 +32,7 @@ from cadrumo.domain.calculations.registry.schema_revision_members import (
     ApplicabilityExclusionDefinition,
     ApplicabilityRuleDefinition,
 )
+from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from cadrumo.domain.calculations.registry.third_party_declaration_roles import require_third_party_declaration_role
 from cadrumo.domain.contribuyente.entity_type import require_entity_type, require_legal_entity_form
 from cadrumo.domain.deadlines.models import ModeloEnrollment, ModeloIVAProfile, TaxpayerProfile
@@ -127,12 +129,21 @@ def test_an_exclusion_naming_an_undeclared_payer_fact_is_refused() -> None:
         hydrate_applicability_rule(Modelo("347"), fragment)
 
 
-@pytest.mark.parametrize("payer_fact", ("pays_capital_income_with_retencion", "pays_withheld_income"))
-def test_an_exclusion_reading_a_two_state_fact_is_refused(payer_fact: str) -> None:
-    fragment = _fragment(_exclusion(payer_fact=payer_fact))
+@pytest.mark.parametrize("payer_fact", ("pays_capital_income_with_retencion", "oss_enrolled"))
+def test_an_exclusion_reading_a_declared_no_of_a_two_state_fact_is_refused(payer_fact: str) -> None:
+    fragment = _fragment(_exclusion(payer_fact=payer_fact, payer_fact_declared=False))
 
     with pytest.raises(RegistryValidationError, match="cannot tell a declared no"):
         hydrate_applicability_rule(Modelo("347"), fragment)
+
+
+@pytest.mark.parametrize("payer_fact", ("pays_capital_income_with_retencion", "oss_enrolled"))
+def test_an_exclusion_reading_a_declared_yes_of_a_two_state_fact_is_accepted(payer_fact: str) -> None:
+    fragment = _fragment(_exclusion(payer_fact=payer_fact))
+
+    rule = hydrate_applicability_rule(Modelo("347"), fragment)
+
+    assert [exclusion.id for exclusion in rule.exclusions] == ["m999-excluded"]
 
 
 def test_an_exclusion_naming_an_unknown_role_selection_is_refused() -> None:
@@ -329,3 +340,54 @@ def test_every_modelo_347_edition_carries_the_same_exclusions() -> None:
 
     assert len(exclusion_ids) >= 2
     assert set(exclusion_ids.values()) == {("m347-sii", "m347-sin-actividad", "m347-cobro-por-cuenta-de-terceros")}
+
+
+# ---------------------------------------------------------------------
+# Modelo 130: RIRPF art. 109.1 withholding exception
+# ---------------------------------------------------------------------
+
+_ART_109 = "rd-439-2007:art-109"
+_ART109_FACT = "art109_activity_income_withholding_ge_70pct"
+
+
+def _m130(profile: TaxpayerProfile) -> ModeloApplicability:
+    return derive_modelo_applicability(profile, "130", today=_TODAY, authority=compiled_bundled_authority())
+
+
+def _autonomo(**facts: object) -> TaxpayerProfile:
+    return _persona(("actividad_economica",), "GENERAL", irpf_estimation_regime="directa_simplificada", **facts)
+
+
+def test_a_professional_with_seventy_percent_withholding_does_not_file_modelo_130() -> None:
+    result = _m130(_autonomo(art109_activity_income_withholding_ge_70pct=True))
+
+    assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    assert _ART_109 in result.legal_refs
+    assert "artículo 109.1" in result.reason
+
+
+@pytest.mark.parametrize("facts", ({}, {_ART109_FACT: False}), ids=("unanswered", "below-seventy-percent"))
+def test_an_activity_below_the_art109_coverage_files_modelo_130(facts: dict[str, bool]) -> None:
+    assert _m130(_autonomo(**facts)).verdict is ApplicabilityVerdict.APPLICABLE
+
+
+def test_the_art109_fact_is_declared_for_every_supported_filing_year() -> None:
+    support = published_supported_filing_years()
+    assert support is not None
+    assert support.years
+    for year in sorted(support.years):
+        fact = resolve_payer_fact(
+            _ART109_FACT,
+            effective_date=date(year, 12, 31),
+            authority=compiled_bundled_authority(),
+        )
+
+        assert isinstance(fact, PayerFactProjection), year
+        assert fact.profile_keys == (_ART109_FACT,), year
+        assert fact.legal_refs == (_ART_109,), year
+
+
+def test_modelo_130_carries_only_the_art109_exclusion() -> None:
+    rule = resolve_applicability_rule_from_authority(compiled_bundled_authority(), Modelo("130"))
+
+    assert [exclusion.id for exclusion in rule.exclusions] == ["m130-art109-retencion-70"]

@@ -26,13 +26,18 @@ from ....application.ledger.models import ManualLedgerTransactionCommand
 from ....application.ledger.transaction_projection import LedgerTransactionProjection
 from ....application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ....application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
-from ....application.operations.registry import OperationFrontendProjection, OperationRegistry
+from ....application.operations.registry import OperationRegistry
 from ....application.prorrata_register.ports import (
     ProrrataRegisterServiceRepositoryProtocol,
 )
 from ....application.review.filter import LedgerReviewStatus
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.prorrata_vocabulary import require_input_classification
 from ....domain.prorrata_register.register import ProrrataRegister

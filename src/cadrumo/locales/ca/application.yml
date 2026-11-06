@@ -2114,11 +2114,11 @@ application:
         que es pren del teu perfil actiu (una dada de data teva, com la data de naixement);
         no es pot aportar mitjançant --binding, que només admet valors decimals i
         d'enumeració. Desa'l al teu perfil i torna a calcular.
+      calculate_binding_is_profile_derived: --binding %{key} és un valor de sí o no
+        que es deriva del teu perfil actiu; no es pot aportar mitjançant --binding.
+        Canvia la dada del perfil de la qual procedeix i torna a calcular.
       calculate_binding_unknown: '--binding %{key} no coincideix amb cap id d''origen
         de valor d''aquesta versió del model. Ids acceptats: %{accepted}.'
-      calculate_boolean_binding_encoding_invalid: 'El valor de %{key} és un indicador
-        sí o no codificat com a decimal i ha de ser un de: %{accepted}. S''ha rebut
-        %{value}. Codificació acceptada: %{mapping}.'
       calculate_casilla_noncanonical_ambiguous: '--casilla %{key} no és un casilla.id
         canònic i és ambigu. Valors casilla.id candidats: %{accepted}. Indica el casilla.id
         canònic exacte'
@@ -2584,11 +2584,6 @@ application:
         %{transaction_currency} necessita la declaració duanera de la importació.
         Cadrumo encara no pot registrar-la, de manera que aquesta declaració no pot
         superar la comprovació. Presenta aquesta declaració per una altra via.
-      iva_intra_eu_self_assessment_unrecordable: L'apunt del %{transaction_date} per
-        %{transaction_amount} %{transaction_currency} necessita el justificant d'autoliquidació
-        de l'adquisició intracomunitària. Cadrumo encara no pot registrar-lo, de manera
-        que aquesta declaració no pot superar la comprovació. Presenta aquesta declaració
-        per una altra via.
       iva_reagp_document_unrecordable: L'apunt del %{transaction_date} per %{transaction_amount}
         %{transaction_currency} necessita el rebut del règim especial de l'agricultura,
         la ramaderia i la pesca (REAGP). Cadrumo encara no pot registrar-lo, de manera

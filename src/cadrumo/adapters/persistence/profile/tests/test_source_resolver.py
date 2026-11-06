@@ -175,7 +175,7 @@ def test_invoice_catalogue_source_resolver_projects_domestic_m347_summary_from_i
         kind=InvoiceKind.ISSUED,
         invoice_number="M347-C-2025-002",
         issued_at=date(2025, 3, 15),
-        counterparty_tax_id="A58818501",
+        counterparty_tax_id="B00010157",
         counterparty_name="At Floor SL",
         base_total=Decimal("2483.52"),
         iva_total=Decimal("521.54"),

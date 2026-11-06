@@ -226,7 +226,7 @@ def _projection_rows_envelope_layout(
 def product_software_identity() -> AeatProductSoftwareIdentity:
     return AeatProductSoftwareIdentity(
         program_identifier="C303",
-        developer_tax_id="Y0000001S",
+        developer_tax_id="Y0001006P",
         evidence=(
             AeatProductSoftwareEvidence(
                 reference="aeat-software-registration:isolated-m303-envelope",

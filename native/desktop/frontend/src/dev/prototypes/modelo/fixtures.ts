@@ -1,11 +1,11 @@
-import e130en from "@/dev/fixtures/modelo/modelo-130-1T-en.json";
-import e130es from "@/dev/fixtures/modelo/modelo-130-1T-es.json";
-import e303en from "@/dev/fixtures/modelo/modelo-303-1T-en.json";
-import e303es from "@/dev/fixtures/modelo/modelo-303-1T-es.json";
-import e347en from "@/dev/fixtures/modelo/modelo-347-0A-en.json";
-import e347es from "@/dev/fixtures/modelo/modelo-347-0A-es.json";
-import e390en from "@/dev/fixtures/modelo/modelo-390-0A-en.json";
-import e390es from "@/dev/fixtures/modelo/modelo-390-0A-es.json";
+import e130en from "@fixtures/modelo/modelo-130-1T-en.json" with { type: "json" };
+import e130es from "@fixtures/modelo/modelo-130-1T-es.json" with { type: "json" };
+import e303en from "@fixtures/modelo/modelo-303-1T-en.json" with { type: "json" };
+import e303es from "@fixtures/modelo/modelo-303-1T-es.json" with { type: "json" };
+import e347en from "@fixtures/modelo/modelo-347-0A-en.json" with { type: "json" };
+import e347es from "@fixtures/modelo/modelo-347-0A-es.json" with { type: "json" };
+import e390en from "@fixtures/modelo/modelo-390-0A-en.json" with { type: "json" };
+import e390es from "@fixtures/modelo/modelo-390-0A-es.json" with { type: "json" };
 import { ISSUES_130 } from "./scenarios";
 import type {
   FormEnvelope,

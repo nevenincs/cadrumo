@@ -36,13 +36,13 @@ from cadrumo.adapters.persistence.storage.custody.tests.native_enrollment_recipi
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.search.workbench import WorkbenchDestinationAdmissionState
 from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.view_operation import ProfileViewOperationRequest, ProfileViewPageKind
 from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import tr
-from cadrumo.core.operations import OperationLifecycle, profile_operation_subject
+from cadrumo.core.operations import OperationFrontendProjection, OperationLifecycle, profile_operation_subject
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.navigation import (

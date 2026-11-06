@@ -17,7 +17,6 @@ from ....core.i18n.render import output_language
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import Period, RegistrySelectorPeriodCode
 from ....core.type_adapters import OBJECT_TUPLE_ADAPTER
-from .binding_selector_utils import boolean_binding_encoded_values
 from .binding_temporal import binding_applies_to_period
 from .errors import (
     RegistryFailureClassification,
@@ -261,7 +260,6 @@ def _binding_rows(
             source_refs=tuple(binding.source_refs),
             borrador_capable=binding.borrador_supplies_value,
             relation_inputs=(binding.id,) if binding.id in fold_binding_ids else (),
-            encoded_options=boolean_binding_encoded_values(binding),
             operator_input_required=operator_required.get(binding.id, True),
         )
         for binding in revision.bindings

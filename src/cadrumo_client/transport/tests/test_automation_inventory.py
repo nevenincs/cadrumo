@@ -11,10 +11,7 @@ import pytest
 from cadrumo.application.operations.frontend_requests import (
     OperationSubmissionReceiptV1,
 )
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionContractV1,
-)
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationInventoryProjection,
     AutomationKeyProjection,
@@ -26,6 +23,7 @@ from cadrumo.application.user_profile.automation_operations import (
 )
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationTerminalCondition,
     profile_operation_subject,
 )

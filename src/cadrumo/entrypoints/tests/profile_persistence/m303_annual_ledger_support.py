@@ -133,7 +133,7 @@ def product_software_identity() -> AeatProductSoftwareIdentity:
     """Test product identity supplied to every export in the M303-to-M390 vertical."""
     return AeatProductSoftwareIdentity(
         program_identifier="C303",
-        developer_tax_id="Y0000001S",
+        developer_tax_id="Y0001006P",
         evidence=(
             AeatProductSoftwareEvidence(
                 reference="aeat-software-registration:e2e-ledger-m303-m390",
@@ -241,7 +241,7 @@ def persist_year_of_invoices(
             bucket_id=BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             counterparty_name="Proveedor Taller SL",
-            counterparty_tax_id="A58818501",
+            counterparty_tax_id="B00010157",
             counterparty_country="ES",
             invoice_number=f"REC-{filing_year}-{period}",
             issued_at=date(filing_year, _QUARTER_MONTH[period], 10),
@@ -387,7 +387,7 @@ def seed_m303_period_cuotas(
             bucket_id=work_unit.bucket_id,
             kind=InvoiceKind.RECEIVED,
             counterparty_name="Proveedor Taller SL",
-            counterparty_tax_id="A58818501",
+            counterparty_tax_id="B00010157",
             counterparty_country="ES",
             invoice_number=f"WALLET-REC-{year}-{quarter}",
             issued_at=transaction_booked_date(quarter, filing_year=year),

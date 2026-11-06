@@ -1,64 +1,79 @@
 """Generate the desktop demo from the real profile schema and overview projection.
 
-Run after publishing a changed profile schema. No stored user profile is read.
+The profile is the ``asalariada-familia`` persona of the canonical catalogue,
+replayed through the production profile operations into a throwaway profile,
+and projected by the overview the installed runtime serves. No stored user
+profile is read. Run after publishing a changed profile schema or persona.
 """
 
 from __future__ import annotations
 
-import argparse
-import json
+import tempfile
 from pathlib import Path
 
-from cadrumo.application.user_profile.overview import build_profile_overview
-from cadrumo.application.wizard.catalogue import build_setup_flow
-from cadrumo.core.config import override_settings
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from dev.fixture_projections.location import family_directory
+from dev.fixture_projections.producer_output import emit, producer_arguments
+from dev.prettier_json import dump_json
+from dev.temporary_output import prepare_temp_root
+
+PERSONA_ID = "asalariada-familia"
+"""The catalogue persona whose profile the demo shows."""
+PROFILE_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+"""The profile id the browser fixtures name, in place of the id a registration mints afresh."""
+LANGUAGES = ("en", "es", "ca", "hu")
+UNANSWERED = ("identity.tax_id", "tax_residence.jurisdiction_scope")
+"""The required answers the demo's setup has not reached yet."""
 
 
-def render_fixture() -> str:
-    """Project synthetic answers through the same schema walk as the installed runtime."""
+def render_fixture(root: Path) -> str:
+    """Project the persona's replayed profile through the same schema walk as the installed runtime."""
+    from cadrumo.application.user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
+    from cadrumo.application.user_profile.overview import build_profile_overview
+    from cadrumo.application.wizard.catalogue import build_setup_flow
+    from cadrumo.core.config import override_settings
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+    from cadrumo.domain.user_profile.values import UserProfileFact
+    from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
+    from cadrumo.entrypoints.tests.persona_materialisation import (
+        ReplayScope,
+        load_profile_record,
+        materialised_persona,
+    )
+
     fixtures = {}
-    with bundled_indexed_authority().operation() as operation:
-        context = operation.profile_create_context()
-        record = create_user_profile_record(
-            context=context,
-            profile_id="aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-            setup_state=ProfileSetupState.INCOMPLETE,
-            facts=tuple(
-                UserProfileFact(path=path, value=value)
-                for path, value in {
-                    "identity.name": "Ana",
-                    "identity.surnames": "Soler Vidal",
-                    "identity.email": "ana.soler@example.test",
-                    "contact.fiscal_address": "Calle Larios 12, 2 A, Málaga",
-                    "contact.postcode": "29005",
-                    "contact.contact_person_phone": "952000000",
-                }.items()
-            ),
+    with (
+        profile_adapter_composition(),
+        bundled_indexed_authority().operation(),
+        materialised_persona(PERSONA_ID, root, ReplayScope.HOUSEHOLD, complete_setup=False) as persona,
+    ):
+        operation = persona.world.operation
+        # The demo is a setup in progress: the answers a new profile has not given yet are taken back through the
+        # manager's field door, so the page shows what the taxpayer still has to state.
+        record = apply_profile_fact_changes(
+            profile_id=str(persona.world.profile_id),
+            changes=tuple(UserProfileFact(path=path, value=None) for path in UNANSWERED),
+            door=ProfileFactWriteDoor.MANAGER_FIELD,
+            expected_record=load_profile_record(persona.world),
+            profile_decode_context=operation.profile_decode_context(),
         )
+        schema = operation.profile_decode_context().schema
         flow = build_setup_flow(operation)
-        for language in ("en", "es", "ca", "hu"):
+        for language in LANGUAGES:
             with override_settings(cadrumo_output_language=language):
-                data = build_profile_overview(record, schema=context.schema, flow=flow).model_dump(mode="json")
-                data.pop("label")
-                data.update(valid=True, pages=1, content_digest="a" * 64)
-                fixtures[language] = data
-    return json.dumps(fixtures, ensure_ascii=False, indent=2) + "\n"
+                data = build_profile_overview(record, schema=schema, flow=flow).model_dump(mode="json")
+            data.pop("label")
+            data.update(profile_id=PROFILE_ID, valid=True, pages=1, content_digest="a" * 64)
+            fixtures[language] = data
+    return dump_json(fixtures)
 
 
 def main() -> None:
-    """Write or verify the checked-in, synthetic browser fixture."""
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--check", action="store_true")
-    args = parser.parse_args()
-    target = Path(__file__).resolve().parents[1] / "native/desktop/frontend/src/dev/fixtures/userProfile.json"
-    rendered = render_fixture()
-    if args.check:
-        if json.loads(target.read_text(encoding="utf-8")) != json.loads(rendered):
-            raise SystemExit("Profile demo is stale; run uv run --no-sync python -m dev.desktop_profile_fixture")
-    else:
-        target.write_text(rendered, encoding="utf-8")
+    """Write, verify or redirect the synthetic browser fixture."""
+    arguments = producer_arguments(__doc__)
+    target = family_directory("desktop-profile") / "userProfile.json"
+    with tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp:
+        rendered = render_fixture(Path(tmp))
+    emit({target: rendered}, arguments, remedy="uv run --no-sync python -m dev.desktop_profile_fixture")
 
 
 if __name__ == "__main__":

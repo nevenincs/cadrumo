@@ -38,9 +38,9 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from cadrumo.adapters.persistence.profile.tests.relation_prefill_support import empty_profile_read_ports
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.errors import (
     AggregationValidationError,
@@ -78,10 +78,6 @@ from cadrumo.domain.calculations.registry.formula_runtime import calculate_regis
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test,
-)
-from cadrumo.domain.user_profile.values import ProfileSetupState, create_user_profile_record
 from cadrumo.entrypoints.adapter_composition_ports import build_retencion_observation_ports
 from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_calculation_action_ports,
@@ -90,7 +86,6 @@ from cadrumo.entrypoints.adapter_composition_work_ports import (
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
-from .general_iva_profile_facts_support import general_iva_profile_facts
 from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -142,26 +137,8 @@ _M180_PERCEPTOR_NIFS: tuple[str, ...] = ("11111111H", "22222222J")
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label=_PROFILE_LABEL) as profile:
-        _seed_ready_profile(profile.repository)
+        seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
         yield profile.repository
-
-
-def _seed_ready_profile(objects: SecureObjectRepository) -> None:
-    """Persist a filing-ready profile for the annual M180 work-unit gate."""
-    seed_test_profile_record(
-        create_user_profile_record(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
-            facts=general_iva_profile_facts(
-                tax_id="12345678Z",
-                activity_start_date=date(2020, 1, 1),
-                activity="rental withholding activity",
-            ),
-            created_at=_T0,
-            updated_at=_T0,
-            context=profile_creation_context_for_test(),
-        ),
-    )
 
 
 def _seed_115_quarters(*, obs_repo: CalculationObservationRepository) -> dict[CasillaId, Decimal]:

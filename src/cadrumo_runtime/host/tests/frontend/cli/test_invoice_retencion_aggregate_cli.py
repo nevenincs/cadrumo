@@ -50,6 +50,7 @@ from cadrumo.application.modelo.invoice_withholding_capture_contracts import (
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.aggregation import RetencionClave
 from cadrumo.core.i18n.render import lookup_translation
@@ -60,7 +61,6 @@ from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_perce
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.schema import InvoiceKind, IvaCategory
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.entrypoints.adapter_composition_ports import build_retencion_observation_ports
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
@@ -169,14 +169,15 @@ def _withholding_evidence_payload(
     return request.model_dump_json()
 
 
-_M111_PROFILE_FACTS = (
-    UserProfileFact(path="identity.tax_id", value="12345678Z"),
-    UserProfileFact(path="identity.name", value="Test"),
-    UserProfileFact(path="identity.surnames", value="Operator"),
-    UserProfileFact(path="activities.description", value="withholding operator activity"),
-    *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-    UserProfileFact(path="withholding.colegio_concertado", value=False),
+_M111_PROFILE_FACTS = persona_facts_beneath(
+    (
+        UserProfileFact(path="identity.tax_id", value="12345678Z"),
+        UserProfileFact(path="identity.name", value="Test"),
+        UserProfileFact(path="identity.surnames", value="Operator"),
+        UserProfileFact(path="activities.description", value="withholding operator activity"),
+        UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+        UserProfileFact(path="withholding.colegio_concertado", value=False),
+    )
 )
 
 

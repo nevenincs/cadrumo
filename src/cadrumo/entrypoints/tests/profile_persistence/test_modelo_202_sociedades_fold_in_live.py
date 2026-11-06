@@ -87,15 +87,10 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test,
-)
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
-from ....domain.user_profile.values import create_user_profile_record
 from ...adapter_composition_work_ports import build_calculation_action_ports
 
 __all__ = ["register_wizard_catalogue", "secure_objects"]
@@ -103,9 +98,9 @@ __all__ = ["register_wizard_catalogue", "secure_objects"]
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_persona_profile
 from ....adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND
 from ....application.modelo.action_errors import ModeloRequiredBindingsMissingError
@@ -120,7 +115,6 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from .observation_seeding_support import save_stamped_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -224,47 +218,6 @@ def secure_objects_m200(tmp_path: Path) -> Iterator[SecureObjectRepository]:
         yield profile.repository
 
 
-def _seed_m200_sociedad_profile() -> None:
-    """Seed a legal-entity ``UserProfileRecord`` covering M200's six profile bindings.
-
-    M200/2024 declares six ``source = "profile"`` bindings. Four are consumed
-    by the cuota chain: ``legal-entity-form``, ``new-entity-flag``,
-    ``incn-prior-12-months``, ``tributacion-estado-porcentaje``. Two are
-    Sociedad Laboral specific: ``sal-reserva-especial-dotada`` and
-    ``sal-capital-social``. For a standard SL (not a SAL), the SAL facts are
-    absent / zero, which the formulas treat as no dotacion. The profile resolver
-    fills all six from the persisted record via
-    :mod:`cadrumo.application.modelo.profile_binding`;
-    no profile binding is hand-fed through the caller channel. ``display_name``
-    matches the ``isolated_runtime_profile`` manifest label.
-    """
-    record = create_user_profile_record(
-        setup_state=ProfileSetupState.COMPLETE,
-        profile_id=_BUCKET_ID_M200,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="B87654323"),
-            UserProfileFact(path="identity.legal_name", value="M200 Fold Sociedad Limitada"),
-            UserProfileFact(path="activities.description", value="desarrollo de software"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-            UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-            UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
-            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
-            UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
-        ),
-        created_at=_T0,
-        updated_at=_T0,
-        context=profile_creation_context_for_test(),
-    )
-    seed_test_profile_record(record)
-
-
 def _seed_m202_pago_for_m200(*, period: str, value: Decimal, obs_repo: CalculationObservationRepository) -> None:
     """Persist one filed M202/2025 instalment (c34) for the M200 pagos fold proof."""
     save_stamped_observation(
@@ -298,7 +251,7 @@ def _calculate_m200(secure_objects: SecureObjectRepository) -> BucketAggregation
     caller channel, so ``DP200014B:00599`` (cuota a ingresar) resolves to zero
     and ``DP200014B:00611`` (cuota diferencial) == 0 − sum(M202 pagos).
     """
-    _seed_m200_sociedad_profile()
+    seed_persona_profile("sociedad-limitada", bucket_id=_BUCKET_ID_M200, at=_T0)
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     snapshot = published_authority_operation().snapshot(
         _M200,
@@ -326,45 +279,6 @@ def _calculate_m200(secure_objects: SecureObjectRepository) -> BucketAggregation
             binding_values={},
             clock=_T1,
         )
-
-
-def _seed_sociedad_profile() -> None:
-    """Seed a legal-entity ``UserProfileRecord`` covering M202's profile binding.
-
-    M202/2025 declares one ``source = "profile"`` binding,
-    ``modelo-202-2025-y-siguientes-incn-prior-12-months`` (selector
-    ``profile_model = taxpayer, field = incn_prior_12_months``). The live source
-    mesh's profile resolver fills it from the persisted record, so the value is
-    NOT hand-fed through the caller channel. ``entity_type`` and
-    ``legal_entity_form`` describe the sociedad routing axis the corporate-tax
-    facts hang off; ``display_name`` matches the ``isolated_runtime_profile``
-    manifest label (``"Test runtime profile"``) so the loaded
-    :class:`CommittedProfileView` passes its cross-store label-agreement validator.
-    """
-    record = create_user_profile_record(
-        setup_state=ProfileSetupState.COMPLETE,
-        profile_id=_BUCKET_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="B12345674"),
-            UserProfileFact(path="identity.legal_name", value="M202 Fold Sociedad Limitada"),
-            UserProfileFact(path="activities.description", value="servicios empresariales"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-            UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
-            UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
-        ),
-        created_at=_T0,
-        updated_at=_T0,
-        context=profile_creation_context_for_test(),
-    )
-    seed_test_profile_record(record)
 
 
 def _seed_m202_pago(*, period: str, value: Decimal, obs_repo: CalculationObservationRepository) -> None:
@@ -420,7 +334,7 @@ def _calculate_m202(secure_objects: SecureObjectRepository, *, period: str) -> B
     binding resolves from the seeded sociedad record. No ``binding_values`` are
     supplied so the live mesh is the sole value source.
     """
-    _seed_sociedad_profile()
+    seed_persona_profile("sociedad-limitada", bucket_id=_BUCKET_ID, at=_T0)
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     snapshot = published_authority_operation().snapshot(_M202, filing_year=_FILING_YEAR, period=period)
     with bundled_indexed_authority().operation() as operation:
@@ -528,7 +442,7 @@ def test_m202_2p_no_prior_filing_refuses_zero_draft_on_live_calculate(
     secure_objects: SecureObjectRepository,
 ) -> None:
     """A live M202 calculate with missing prior observations must not save zero carries."""
-    _seed_sociedad_profile()
+    seed_persona_profile("sociedad-limitada", bucket_id=_BUCKET_ID, at=_T0)
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     snapshot = published_authority_operation().snapshot(_M202, filing_year=_FILING_YEAR, period="2P")

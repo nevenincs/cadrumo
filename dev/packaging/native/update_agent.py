@@ -39,7 +39,7 @@ def require_runtime_receipt(root: Path, runtime: Path, packages: str, files: Map
 
 
 def wheel_files(wheel: Path, *, version: str, prefix: str) -> dict[str, bytes]:
-    """Admit agent-owned members and prepare their checked-hash bytecode in memory."""
+    """Admit agent-owned members and prepare their unchecked-hash bytecode in memory."""
     owned = {"cadrumo_agent", f"cadrumo_agent-{version}.dist-info"}
     prepared: dict[str, bytes] = {}
     aliases: set[str] = set()

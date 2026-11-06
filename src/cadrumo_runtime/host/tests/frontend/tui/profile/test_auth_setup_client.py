@@ -16,7 +16,6 @@ from cadrumo.application.auth.credential_operations import AuthCredentialSaveRes
 from cadrumo.application.auth.operation_definitions import AuthConfigureOperationRequest
 from cadrumo.application.auth.provider_configure_operation_access import AuthConfigurePublicResultV2
 from cadrumo.application.auth.sync_readiness import AuthSyncReadiness
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.language_resolver import adopt_profile_output_language, register_language_resolver
 from cadrumo.application.user_profile.overview import ProfileOverview
 from cadrumo.application.user_profile.view_operation import ProfileViewPageKind
@@ -24,6 +23,7 @@ from cadrumo.core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import profile_output_language_precedence
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.tui.profile.tests.test_aeat_auth_setup import (
     auth_setup_overview_projection,

@@ -25,7 +25,6 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.application.user_profile.automation_enrollment import (
     AutomationInventoryProjection,
@@ -38,7 +37,12 @@ from cadrumo.application.user_profile.automation_operations import (
     AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID,
     AutomationOperationRequest,
 )
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from cadrumo_client.contracts.access_vocabulary import AuthorityState
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS, exchange_deadline

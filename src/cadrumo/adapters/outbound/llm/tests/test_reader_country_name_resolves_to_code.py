@@ -31,7 +31,7 @@ from ..invoice_field_grounding import ground_extracted_fields, parse_invoice_ext
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CIF = "B12345674"
-_CUSTOMER_NIF = "A58818501"
+_CUSTOMER_NIF = "B00010157"
 
 
 def _reply(*, supplier_country: str | None, customer_country: str | None) -> str:

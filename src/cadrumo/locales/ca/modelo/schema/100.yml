@@ -18127,8 +18127,6 @@ modelo:
                 heading: Fills i altres descendents
               declaracion:
                 heading: Declaració
-              other-inputs:
-                heading: Altres dades que necessita el càlcul
             section:
               anexoa:
                 heading: Millores energètiques en habitatges, vehicles elèctrics i
@@ -18267,8 +18265,6 @@ modelo:
               inmueblesres:
                 heading: Resum de rendiments del capital immobiliari i imputacions
                   de rendes immobiliàries
-              inputs:
-                heading: Dades sense casella al formulari
               integracionres:
                 heading: Integració i compensació de guanys i pèrdues patrimonials
               integracionres-2:

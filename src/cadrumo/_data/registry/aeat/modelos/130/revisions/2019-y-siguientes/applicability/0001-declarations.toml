@@ -8,3 +8,14 @@ applicable_reason = "Modelo 130 (pago fraccionado del IRPF): la persona física 
 not_applicable_reason = "Modelo 130 no aplica: el pago fraccionado en estimación directa solo corresponde a la persona física residente IRPF que obtiene rendimientos de actividades económicas determinados por ese método. Una actividad en estimación objetiva presenta el Modelo 131; un contribuyente NON_RESIDENT_IRNR queda en la ruta IRNR."
 cuota_bearing = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "trlirnr-rdleg-5-2004:art-2"]
+
+# RIRPF art. 109.1: "No estarán obligados a efectuar pagos fraccionados los contribuyentes que
+# ejerzan actividades profesionales, agrícolas, ganaderas o forestales cuando, en el ejercicio
+# anterior, al menos el 70 por ciento de los ingresos de la actividad hubieran sido objeto de
+# retención o de ingreso a cuenta". The profile states the coverage as the yes that triggers the
+# exception; an unanswered fact leaves the obligation in force, as the deadline windows do.
+[[revisions."2019-y-siguientes".applicability.exclusions]]
+id = "m130-art109-retencion-70"
+payer_fact = "art109_activity_income_withholding_ge_70pct"
+reason = "Modelo 130 no aplica: según el artículo 109.1 del Reglamento del IRPF, quien ejerce actividades profesionales, agrícolas, ganaderas o forestales no está obligado a efectuar pagos fraccionados cuando al menos el 70 por ciento de los ingresos de la actividad del ejercicio anterior fue objeto de retención o de ingreso a cuenta."
+legal_refs = ["rd-439-2007:art-109", "rd-439-2007:art-110"]

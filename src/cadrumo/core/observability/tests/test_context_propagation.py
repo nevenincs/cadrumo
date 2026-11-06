@@ -18,11 +18,11 @@ import pytest
 
 from ...config import override_settings
 from ...directory_scan import scan_directory
-from ...storage_taxonomy import StorageCategory
+from ...storage_taxonomy import RUN_EVENTS_FILENAME, RUN_TRACE_FILENAME, StorageCategory
 from ...storage_taxonomy_locations import storage_path
 from ..errors import RunTracePersistenceError
 from ..models import GenericPayload, RunEventKind, RunEventPayload, RunOutcome
-from ..store import EVENTS_FILENAME, TRACE_FILENAME, iter_events, load_trace
+from ..store import iter_events, load_trace
 from .recorder import record_event
 from .run_scope import run_context
 
@@ -115,7 +115,7 @@ class TestRunContextOutcome:
     ) -> None:
         run_id = "1111111111111111"
         with override_settings(cadrumo_storage_root=tmp_path) as settings:
-            trace_path = storage_path(StorageCategory.RUNS, settings=settings) / run_id / TRACE_FILENAME
+            trace_path = storage_path(StorageCategory.RUNS, settings=settings) / run_id / RUN_TRACE_FILENAME
             with (
                 pytest.raises(RunTracePersistenceError) as excinfo,
                 run_context(entrypoint="cadrumo test persist fail", arguments=(), run_id=run_id),
@@ -135,7 +135,7 @@ class TestRunContextOutcome:
             pytest.raises(RuntimeError, match="primary failure"),
             run_context(entrypoint="cadrumo test body fail", arguments=(), run_id=run_id),
         ):
-            (storage_path(StorageCategory.RUNS) / run_id / TRACE_FILENAME).mkdir(parents=True)
+            (storage_path(StorageCategory.RUNS) / run_id / RUN_TRACE_FILENAME).mkdir(parents=True)
             raise RuntimeError("primary failure")
 
 
@@ -227,7 +227,7 @@ class TestRunSinkScrubbing:
                 )
                 run_id = info.run_id
 
-            jsonl_path = storage_path(StorageCategory.RUNS) / run_id / EVENTS_FILENAME
+            jsonl_path = storage_path(StorageCategory.RUNS) / run_id / RUN_EVENTS_FILENAME
             assert jsonl_path.exists(), f"JSONL sink file not found: {jsonl_path}"
 
             raw_text = jsonl_path.read_text(encoding="utf-8")
@@ -273,7 +273,7 @@ class TestRunSinkScrubbing:
                 )
                 run_id = info.run_id
 
-            jsonl_path = storage_path(StorageCategory.RUNS) / run_id / EVENTS_FILENAME
+            jsonl_path = storage_path(StorageCategory.RUNS) / run_id / RUN_EVENTS_FILENAME
             lines = [ln for ln in jsonl_path.read_text(encoding="utf-8").splitlines() if ln.strip()]
             assert lines, "no JSONL lines written"
             for line in lines:

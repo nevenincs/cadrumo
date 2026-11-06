@@ -86,10 +86,11 @@ import pytest
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import upsert_test_profile_facts
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.iva_ledger import (
     aggregate_iva_ledger_observations_from_repositories,
@@ -121,9 +122,7 @@ from cadrumo.domain.transactions.enums import (
 )
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
-from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 from cadrumo.tests.log_records import delivered_records
@@ -134,7 +133,6 @@ from .ledger_benchmark_support import classified_business_transaction, dates_acr
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _BUCKET_ID = "40404040-4040-4040-8040-404040404040"
-_TAX_ID = "40404040D"
 
 #: Period-scoped ledger operations complete under 3 CPU-seconds at
 #: 30k-transaction scale. Unfiltered full-catalogue reads and the annual renta
@@ -324,27 +322,15 @@ def _seed_prior_year_m130_minoracion(objects: SecureObjectRepository) -> None:
 def _seed_taxpayer_profile() -> None:
     """Seed the single-taxpayer profile ``create_work_unit``'s readiness gate requires.
 
-    Mirrors the proven working fixture from
-    ``application/modelo/tests/test_e2e_ledger_m130_quarters_to_m100_annual.py``.
-    ``activity_start_date`` (2020) predates every benchmarked filing year
-    (``_FIRST_YEAR`` 2021 onward).
+    The taxpayer is the shared ready profile; the benchmark adds only the
+    activity start date, which predates every benchmarked filing year.
     """
-    record = create_user_profile_record(
-        context=profile_creation_context_for_test(),
-        profile_id=_BUCKET_ID,
-        setup_state=ProfileSetupState.COMPLETE,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value=_TAX_ID),
-            UserProfileFact(path="identity.name", value="Scale"),
-            UserProfileFact(path="identity.surnames", value="Bench Tester"),
-            UserProfileFact(path="activities.description", value="design services"),
-            *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-            UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-        ),
-        created_at=datetime(_FIRST_YEAR, 1, 1, tzinfo=UTC),
-        updated_at=datetime(_FIRST_YEAR, 1, 1, tzinfo=UTC),
+    at = datetime(_FIRST_YEAR, 1, 1, tzinfo=UTC)
+    seed_ready_profile(bucket_id=_BUCKET_ID, at=at)
+    upsert_test_profile_facts(
+        _BUCKET_ID,
+        (UserProfileFact(path="censo.activity_start_date", value=date(_FIRST_YEAR - 1, 1, 1)),),
     )
-    seed_test_profile_record(record)
 
 
 def _save_benchmark_update(transaction: Transaction, sample_index: int) -> Transaction:

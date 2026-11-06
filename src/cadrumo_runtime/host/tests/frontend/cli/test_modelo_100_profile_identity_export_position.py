@@ -27,6 +27,7 @@ from cadrumo.adapters.persistence.profile.tests.published_authority_support impo
 from cadrumo.adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.calculations.registry.profile_bindings import ProfileProvider
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
@@ -74,25 +75,19 @@ def _seed_salaried_profile(runtime_profile: TestRuntimeProfile) -> None:
     record = create_user_profile_record(
         profile_id=runtime_profile.bucket_id,
         setup_state=ProfileSetupState.COMPLETE,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="identity.name", value="ANA"),
-            UserProfileFact(path="identity.surnames", value="PEREZ GIL"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="activities.description", value="salaried employment"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="renta_taxpayer.birth_date", value="1985-06-15"),
-            UserProfileFact(path="renta_taxpayer.sex", value="M"),
-            UserProfileFact(path="renta_taxpayer.marital_status", value=Decimal("4")),
-            UserProfileFact(path="renta_filing.declaration_type", value=Decimal("1")),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="ANA"),
+                UserProfileFact(path="identity.surnames", value="PEREZ GIL"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
+                UserProfileFact(path="activities.description", value="salaried employment"),
+                UserProfileFact(path="renta_taxpayer.birth_date", value="1985-06-15"),
+                UserProfileFact(path="renta_taxpayer.sex", value="M"),
+                UserProfileFact(path="renta_taxpayer.marital_status", value=Decimal("4")),
+                UserProfileFact(path="renta_filing.declaration_type", value=Decimal("1")),
+            ),
+            without=("irpf.estimation_regime", "censo.activity_start_date"),
         ),
         context=profile_creation_context_for_test(),
     )
@@ -103,7 +98,7 @@ def _seed_salaried_profile(runtime_profile: TestRuntimeProfile) -> None:
         operation=published_authority_operation(),
         taxpayer_tax_id="12345678Z",
         ejercicio=_FILING_YEAR,
-        payer_tax_id="B00000000",
+        payer_tax_id="B00010082",
         income_class=RetencionSoportadaClase.TRABAJO,
         retencion=Decimal("2400"),
         importe_integro_dinerario=Decimal("24000"),

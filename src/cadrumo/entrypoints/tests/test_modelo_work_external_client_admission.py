@@ -56,9 +56,9 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest
 from cadrumo.application.operations.public_period import PublicPeriod
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_contracts import SessionKind
-from cadrumo.core.operations import OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operations import OperationFrontendProjection, OperationTerminalCondition, profile_operation_subject
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.work_unit import WorkUnit

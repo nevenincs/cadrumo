@@ -34,7 +34,6 @@ from cadrumo.application.config_reset_models import (
     ConfigResetOperationStatus,
     ConfigResetTargetPhase,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.custody_transactions import (
     ProfileCustodyDeleteConfirmation,
     ProfileCustodyTransactionReceipt,
@@ -44,6 +43,7 @@ from cadrumo.application.user_profile.registration import register_profile_with_
 from cadrumo.core.async_cleanup import has_async_cleanup_failure
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import get_registered_error_code
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.entrypoints.cli.operation_installation import run_installation_act
 from cadrumo.tests.env_scope import derived_storage_settings, scoped_env_var
 from cadrumo_client.commands.errors import CliOperationStillRunningError, CliRefusedBoundaryError

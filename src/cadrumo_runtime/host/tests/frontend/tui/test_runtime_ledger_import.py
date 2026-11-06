@@ -31,11 +31,7 @@ from cadrumo.application.operations.frontend_projection import (
 )
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionContractV1,
-    OperationRegistry,
-)
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1, OperationRegistry
 from cadrumo.application.operator_actions.models import PreconditionVerdict
 from cadrumo.application.operator_actions.projection import PreconditionVerdictSnapshot
 from cadrumo.application.tests.agent_refusal_support import model_not_installed_verdict
@@ -43,6 +39,7 @@ from cadrumo.core.i18n.render import tr
 from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,

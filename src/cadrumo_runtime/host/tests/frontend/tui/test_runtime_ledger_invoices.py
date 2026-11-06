@@ -281,7 +281,7 @@ def _wizard_request(kind: InvoiceKind = InvoiceKind.ISSUED) -> InvoiceWizardRequ
     return InvoiceWizardRequest(
         profile_id=INVOICES_PROFILE_ID,
         kind=kind,
-        counterparty_nif="B00000000",
+        counterparty_nif="B00010082",
         counterparty_name="Synthetic customer",
         invoice_number="F-00001",
         invoice_date="2026-03-01",

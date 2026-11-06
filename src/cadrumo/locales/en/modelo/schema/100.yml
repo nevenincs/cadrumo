@@ -17745,8 +17745,6 @@ modelo:
                 heading: Children and other descendants
               declaracion:
                 heading: Declaration
-              other-inputs:
-                heading: Other data the calculation needs
             section:
               anexoa:
                 heading: Home energy improvements, electric vehicles and charging
@@ -17878,8 +17876,6 @@ modelo:
                 heading: Amount to pay or to refund
               inmueblesres:
                 heading: Real estate income and imputed property income summary
-              inputs:
-                heading: Data with no box on the form
               integracionres:
                 heading: Combining and offsetting capital gains and losses
               integracionres-2:

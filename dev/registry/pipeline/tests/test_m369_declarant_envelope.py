@@ -66,13 +66,13 @@ def test_declarant_prefix_and_closer_use_only_source_stated_slots() -> None:
         modelo=Modelo("369"),
         period=period,
         product_software_identity=None,
-        declarant_tax_id="Y0000001S",
+        declarant_tax_id="Y0001006P",
         envelope=declaration,
     )
     assert len(rendered) == 328
     assert rendered[:17] == b"<T369020251T0000>"
     assert rendered[17:109] == b" " * 92
-    assert rendered[109:118] == b"Y0000001S"
+    assert rendered[109:118] == b"Y0001006P"
     assert rendered[118:] == b" " * 210
     assert declaration.closer_for(rendered[:17]) == envelope_closer_bytes(modelo=Modelo("369"), period=period)
     serialised = declaration.model_dump(mode="json", exclude_none=True)
@@ -89,7 +89,7 @@ def test_declarant_prefix_and_closer_use_only_source_stated_slots() -> None:
             modelo=Modelo("369"),
             period=Period.from_year_and_code(2025, "0A"),
             product_software_identity=None,
-            declarant_tax_id="Y0000001S",
+            declarant_tax_id="Y0001006P",
             envelope=declaration,
         )
 
@@ -107,7 +107,7 @@ def test_exterior_quarter_uses_source_pinned_369_envelope(quarter: str) -> None:
         modelo=Modelo("369"),
         period=period,
         product_software_identity=None,
-        declarant_tax_id="Y0000001S",
+        declarant_tax_id="Y0001006P",
         envelope=declaration,
     )
     assert rendered[:17] == f"<T36902025{quarter}0000>".encode("ascii")

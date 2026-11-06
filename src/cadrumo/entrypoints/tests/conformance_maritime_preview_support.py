@@ -5,10 +5,15 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 
+from cadrumo.adapters.persistence.profile.tests.taxpayer_persona_support import seed_modelo_ready_profile
+from cadrumo.application.user_profile.tests.persona_profile_facts import (
+    COLEGIO_CONCERTADO_ATTESTATION,
+    persona_facts_beneath,
+)
+
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.storage.tests.profile_capsule_runtime import (
-    seed_modelo_ready_profile_record,
     seed_test_profile_record,
     upsert_test_profile_facts,
 )
@@ -22,7 +27,6 @@ from ...application.modelo.maritime_preview_operation import (
 from ...application.modelo.quickfile import QUICKFILE_STAGE_ORDER, QuickfileStage, QuickfileStageStatus
 from ...application.modelo.quickfile_operation_contracts import QuickfileCalculationInputs, QuickfileRequest
 from ...application.modelo.quickfile_operation_projections import QuickfileProjection
-from ...application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from ...application.operations.public_period import PublicPeriod
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
@@ -56,7 +60,7 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
             context=context.operation.profile_create_context(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=str(profile_id),
-            facts=(*MODELO_READY_PROFILE_FACTS, *_MARITIME_FACTS),
+            facts=persona_facts_beneath((COLEGIO_CONCERTADO_ATTESTATION, *_MARITIME_FACTS)),
             created_at=seeded_at,
             updated_at=seeded_at,
         )
@@ -135,7 +139,7 @@ def _retained_maritime_quickfile_prepare(context: ConformanceFamilyContext) -> C
             ModeloMaritimePreviewRequest(profile_id=context.profile_id, annual_salary="36500.00", qualifying_days=100),
             verify=verify,
         )
-    seed_modelo_ready_profile_record(profile, clock=datetime(2026, 4, 1, tzinfo=UTC))
+    seed_modelo_ready_profile(bucket_id=profile, at=datetime(2026, 4, 1, tzinfo=UTC))
     output = context.input_root / "quickfile.fichero-boe"
     units = WorkUnitCatalogueRepository(bucket_id=profile)
     calculations = CalculationRevisionCatalogueRepository(bucket_id=profile)

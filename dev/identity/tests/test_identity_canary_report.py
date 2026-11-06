@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import contextlib
 import io
+import re
 
 import pytest
 
@@ -83,14 +84,14 @@ def canary_run() -> tuple[int, str]:
     return exit_code, stream.getvalue()
 
 
-def test_the_report_carries_every_section_and_its_exit_code_tracks_the_blocking_scope(
+def test_the_report_carries_every_section_and_its_exit_code_tracks_both_gates(
     canary_run: tuple[int, str],
 ) -> None:
     """Each section exists so a narrowing stays arguable; a missing one hides it.
 
     The exit code is asserted against what the report itself says rather than a
     pinned verdict, so this holds whether or not the tree currently carries a
-    blocking finding.
+    finding in either gate.
     """
     exit_code, out = canary_run
 
@@ -98,10 +99,15 @@ def test_the_report_carries_every_section_and_its_exit_code_tracks_the_blocking_
     assert "operator tier, untracked and ignored content:" in out
     assert "suppressed by path exclusion" in out
     assert "advisory, outside the blocking scope:" in out
+    assert "catalogue convention, tests and fixtures:" in out
 
     findings_line = next(line for line in out.splitlines() if line.startswith("blocking scope:"))
     blocking_findings = int(findings_line.split(",")[1].strip().split(" ")[0])
-    assert (exit_code == 0) == (blocking_findings == 0)
+    convention_line = next(line for line in out.splitlines() if line.startswith("catalogue convention,"))
+    counted = re.search(r"(\d+) findings in", convention_line)
+    assert counted is not None
+    convention_findings = int(counted.group(1))
+    assert (exit_code == 0) == (blocking_findings == 0 and convention_findings == 0)
 
 
 def test_every_path_exclusion_is_printed_with_a_reason(canary_run: tuple[int, str]) -> None:

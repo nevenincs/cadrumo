@@ -76,7 +76,7 @@ def _audited_read_path(event: str, arguments: tuple[object, ...]) -> str | None:
 
 
 def write_discovered_inputs(target: Path, root: Path, opened: set[str]) -> None:
-    """Write the sorted list of opened and imported source files to the target."""
+    """Write the sorted checkout files a build command opened or imported to ``target``."""
     files = set(opened)
     files.update(
         os.path.abspath(module_file)

@@ -275,7 +275,7 @@ def _host_browser_owner(directory: Path) -> None:
 
     from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import administration_subject
     from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-    from cadrumo.application.operations.registry import OperationFrontendProjection
+    from cadrumo.core.operations import OperationFrontendProjection
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
     from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
     from cadrumo_client.contracts.contracts import ClientHello

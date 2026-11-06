@@ -40,7 +40,7 @@ def test_parser_extracts_modelo_190_targets_from_declaration_copy() -> None:
 
     assert filing.modelo == "190"
     assert filing.period == expected_period(2024, "0A")
-    assert filing.tax_id == "Y0000001S"
+    assert filing.tax_id == "Y0001006P"
     assert {value.casilla_id: value.printed_value for value in filing.values} == _M190_EXPECTED_VALUES
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "190"

@@ -513,7 +513,7 @@ def resolve_binding_overrides(
         if channel == "enum":
             enum_binding_values[key] = raw_value
             continue
-        binding_values[key] = decimal_binding_value(raw_value, bindings_by_id[key], work_unit=work_unit)
+        binding_values[key] = decimal_binding_value(raw_value, bindings_by_id[key])
     return binding_values, enum_binding_values
 
 

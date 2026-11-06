@@ -38,6 +38,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation, 
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.iva_regime_vocabulary import (
     iva_regime_exento_token,
+    iva_regime_recargo_equivalencia_token,
     require_iva_regime,
 )
 from ...domain.calculations.registry.prorrata_register_catalogue import regime_apportions_deduction
@@ -493,7 +494,8 @@ def _profile_exempt_iva_ratio(
     if raw_regime is None:
         return None
     regime = require_iva_regime(raw_regime.strip().upper())
-    if regime == iva_regime_exento_token():
+    if regime in (iva_regime_exento_token(), iva_regime_recargo_equivalencia_token()):
+        # LIVA art. 154.Dos: the retailer in the recargo de equivalencia deducts none of the IVA she bears.
         return exempt_ratio
     return None
 

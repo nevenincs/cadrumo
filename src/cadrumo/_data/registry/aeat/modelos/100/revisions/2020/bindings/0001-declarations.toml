@@ -1,7 +1,11 @@
+# Casilla 0168 states the modalidad of the estimacion directa block: N normal, S
+# simplificada. The modalidad is a taxpayer-wide fact the profile already holds
+# as the estimation regime, so it is derived from that regime rather than asked
+# when calculating. A regime outside direct estimation leaves the box unresolved.
 [[revisions."2020".bindings]]
 id = "renta-modelo-100-estimacion-directa-es-normal"
-provider = { kind = "manual_input", casilla_id = "0168", data_type = "boolean", true_value = "N", false_value = "S" }
-value = { data_type = "boolean", channel = "boolean", typed_enum = "EstimacionDirectaModalidad" }
+provider = { kind = "profile", profile_key = "irpf.estimation_directa_normal" }
+value = { data_type = "boolean", channel = "boolean" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-35-2006:art-30"]
 source_refs = ["aeat-dr-100-2020-dictionary", "lirpf-cuota-chain-authority"]
@@ -9,6 +13,33 @@ source_refs = ["aeat-dr-100-2020-dictionary", "lirpf-cuota-chain-authority"]
 [[revisions."2020".bindings.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["estimación directa", "rendimiento neto"]
+# The modality of the estimacion directa is read only for a filer that has an economic activity
+# (LIRPF art. 27): a salaried filer has no direct-estimation block and no regime to state.
+[[revisions."2020".bindings]]
+id = "renta-profile-has-economic-activity"
+provider = { kind = "profile", profile_key = "taxpayer_type.irpf_income_categories" }
+value = { data_type = "boolean", channel = "boolean" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-30"]
+source_refs = ["aeat-renta-2020-manual-parte1"]
+
+[[revisions."2020".bindings.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa"]
+# The estimacion directa block exists only for a filer whose regime is direct estimation
+# (LIRPF arts. 28 and 30): an estimacion objetiva filer has none, so its net income and
+# modality are not read.
+[[revisions."2020".bindings]]
+id = "renta-profile-estimacion-directa"
+provider = { kind = "profile", profile_key = "irpf.estimation_directa" }
+value = { data_type = "boolean", channel = "boolean" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-renta-2020-manual-parte1"]
+
+[[revisions."2020".bindings.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa"]
 [[revisions."2020".bindings]]
 id = "renta-profile-tax-residence-ccaa"
 provider = { kind = "profile", profile_model = "TaxResidenceProfile", field = "ccaa", xsd_attribute = "codigoCADeclaracion", dictionary_field = "ZCCAD" }

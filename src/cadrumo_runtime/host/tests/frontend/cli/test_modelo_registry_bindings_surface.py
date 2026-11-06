@@ -19,6 +19,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli as cli_runner_invoke_cached_cli
 
 pytestmark = [
@@ -55,20 +56,13 @@ def invoke_cached_cli(args: Sequence[str]) -> Result:
         profile.register(
             label="native-bindings-surface",
             facts={
-                "taxpayer_type.entity_type": "natural_person",
+                **native_general_iva_facts(),
                 "identity.tax_id": "12345678Z",
                 "identity.name": "Operator",
                 "identity.surnames": "Example",
                 "activities.description": "design",
                 "censo.activity_start_date": "2025-01-01",
                 "contact.postcode": "28013",
-                "tax_residence.jurisdiction_scope": "common_regime",
-                "iva.regime": "GENERAL",
-                "iva.m303_regime_composition": "general",
-                "iva.redeme_enrolled": "false",
-                "iva.cash_accounting_regime_enrolled": "false",
-                "iva.voluntary_sii_enrolled": "false",
-                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             },
         )
     assert profile.label is not None

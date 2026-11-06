@@ -271,7 +271,7 @@ def sequence_runtime(root: Path, *, signed_in_profile: UUID | None = None) -> Ge
 
 def _establish_synthetic_sign_in(profile_id: UUID) -> None:
     """Mint real runtime-owned proof for the fixture's explicit sign-out scenario."""
-    from cadrumo.application.operations.registry import OperationFrontendProjection
+    from cadrumo.core.operations import OperationFrontendProjection
     from cadrumo_client.transport.installed_client import open_installed_client
 
     client = asyncio.run(open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.CLI))

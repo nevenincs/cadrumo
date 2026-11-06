@@ -13,7 +13,7 @@ from typing import Any
 import pytest
 
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo_runtime.host.session_hold_operations import OperationRelay
 from cadrumo_runtime.host.tests.stored_sign_in_runtime import stored_sign_in_runtime

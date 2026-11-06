@@ -33,7 +33,7 @@ pytestmark = [
     pytest.mark.usefixtures("authority_operation"),
 ]
 
-_PROFILE_FACTS = native_general_iva_facts(surnames="Evidence", description="design")
+_PROFILE_FACTS = native_general_iva_facts()
 
 
 def test_native_exact_profile_evidence_add_replay_and_readback(

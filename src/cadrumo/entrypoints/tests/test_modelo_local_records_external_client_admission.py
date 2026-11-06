@@ -49,10 +49,15 @@ from ...application.operations.execution_actor import OperationExecutionCaller
 from ...application.operations.frontend_requests import OperationObservationSuccessV1
 from ...application.operations.models import OperationIdentity
 from ...application.operations.public_period import PublicPeriod
-from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
+from ...application.operations.registry import OperationRegistry
 from ...application.user_profile.access_contracts import SessionKind
 from ...core.casilla_id import validated_casilla_id
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ...core.period import Period
 from ...domain.buckets.event import BucketEvent, BucketEventType
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation

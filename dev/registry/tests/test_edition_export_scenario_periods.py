@@ -97,7 +97,7 @@ def test_corporate_scenario_defers_software_identity_until_candidate_fact_scope(
     if modelo_id == "222":
         assert isinstance(profile, Modelo222ProfileFacts)
         assert profile.numero_grupo == "0001/25"
-        assert profile.entidad_dominante_identificacion == "B00000000"
+        assert profile.entidad_dominante_identificacion == "B00010082"
     else:
         assert isinstance(profile, Modelo200ProfileFacts)
         rows = profile.projection_rows

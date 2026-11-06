@@ -11,13 +11,12 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.modelo.calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.identity.hex_ids import CalculationRevisionId
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
-
-from ...domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 
 
 def seed_ready_capital_payer_profile(*, bucket_id: str, at: datetime, tax_id: str = "12345678Z") -> None:
@@ -26,14 +25,15 @@ def seed_ready_capital_payer_profile(*, bucket_id: str, at: datetime, tax_id: st
         create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value=tax_id),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="capital income payer"),
-                *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-                UserProfileFact(path="withholding.colegio_concertado", value=False),
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.tax_id", value=tax_id),
+                    UserProfileFact(path="identity.name", value="Test"),
+                    UserProfileFact(path="identity.surnames", value="Operator"),
+                    UserProfileFact(path="activities.description", value="capital income payer"),
+                    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                    UserProfileFact(path="withholding.colegio_concertado", value=False),
+                )
             ),
             created_at=at,
             updated_at=at,

@@ -72,7 +72,7 @@ from .....domain.calculations.registry.formula_runtime import RegistryCalculatio
 from .....domain.calculations.registry.ids import RelationId
 from .....domain.calculations.registry.tests.relation_fixture import relation_prefill_values_as_binding_values
 from ...storage.sql.engine import get_engine
-from ...storage.sql.orm import SecureObjectRow
+from ...storage.sql.tables import secure_objects_table
 from ...storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
@@ -319,9 +319,9 @@ def test_3t_refuses_a_2t_observation_stamped_with_the_late_revision(tmp_path: Pa
                 stamped_revision_id=_EARLY_DESIGN_REVISION,
             )
         )
-        statement = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == CalculationObservationRepository.namespace,
-            SecureObjectRow.object_key
+        statement = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == CalculationObservationRepository.namespace,
+            secure_objects_table.c.object_key
             == observation_key(
                 _MODELO,
                 Period.from_year_and_code(_SPLIT_DESIGN_EXERCISE, _EARLY_DESIGN_PERIOD),

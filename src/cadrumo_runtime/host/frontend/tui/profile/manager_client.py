@@ -9,7 +9,6 @@ from decimal import Decimal
 from cadrumo.application.auth.operation_definitions import AuthConfigureOperationRequest
 from cadrumo.application.auth.provider_configure_operation_access import AuthConfigurePublicResultV2
 from cadrumo.application.live.filed_history_operation import FILED_HISTORY_OPERATION_DEFINITION_ID
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operator_actions.models import ActionReference
 from cadrumo.application.user_profile.acquisition_sources import ProfileAcquisitionSourceKey, ProfileAcquisitionSourceV1
 from cadrumo.application.user_profile.censal_operation import CENSAL_OPERATION_DEFINITION_ID
@@ -39,7 +38,7 @@ from cadrumo.application.user_profile.view_operation import ProfileViewFactItem,
 from cadrumo.core.auth_provider import AuthProviderKind, ClaveMovilRoute
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import output_language, tr
-from cadrumo.core.operations import OperationTerminalCondition
+from cadrumo.core.operations import OperationFrontendProjection, OperationTerminalCondition
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.domain.user_profile.errors import UserProfileValidationError

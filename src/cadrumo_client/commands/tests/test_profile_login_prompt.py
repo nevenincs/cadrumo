@@ -19,11 +19,11 @@ from cadrumo.adapters.persistence.storage.custody import acceleration_keychain
 from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt_store
 from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import RECEIPT_LOGIN_ID, committed_sign_in
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.profile_pointer import (
     active_profile_pointer_transaction,
     observe_active_profile_pointer,
 )
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.profile_session import ProfileHumanLoginReceipt, ProfileSessionRefusalReason
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import AccessScope, Availability, EffectiveScopeSummary

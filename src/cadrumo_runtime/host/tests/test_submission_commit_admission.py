@@ -29,7 +29,7 @@ from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody impo
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.operations.errors import OperationSubjectBusyError
 from cadrumo.application.operations.models import OperationId, OperationRequest, new_operation_id
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.user_profile.access_contracts import (
     ACCESS_LEASE_MAXIMUM,
@@ -55,7 +55,7 @@ from cadrumo.application.user_profile.profile_operation_contracts import (
     PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
     ProfileFieldMutationOperationRequest,
 )
-from cadrumo.core.operations import OperationLifecycle, profile_operation_subject
+from cadrumo.core.operations import OperationFrontendProjection, OperationLifecycle, profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState, Availability

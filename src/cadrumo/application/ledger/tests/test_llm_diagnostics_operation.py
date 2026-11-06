@@ -21,14 +21,19 @@ from cadrumo_client.contracts.access_vocabulary import (
     OperationAccessRequest,
 )
 
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...operations.access_resolution import OperationAccessContext
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.public_scalar import PublicDecimal
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...tests.access_authority_support import (
     disclosure_decision_without_category,
 )

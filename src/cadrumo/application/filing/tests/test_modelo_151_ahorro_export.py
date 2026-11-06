@@ -44,7 +44,7 @@ def _software() -> AeatProductSoftwareIdentity:
     """Synthetic product identity; both 151 layouts open with a filing envelope that prints it."""
     return AeatProductSoftwareIdentity(
         program_identifier="C151",
-        developer_tax_id="Y0000001S",
+        developer_tax_id="Y0001006P",
         evidence=(AeatProductSoftwareEvidence(reference="aeat-software-registration:c151", digest="a" * 64),),
     )
 

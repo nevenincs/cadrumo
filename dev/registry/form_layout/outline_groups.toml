@@ -54,7 +54,6 @@ groups = [
         "datoseconomicos-tomadatosampliada/regestimadirecta",
         "datoseconomicos-tomadatosampliada/regestimaobj",
         "datoseconomicos-tomadatosampliada/regestimaobjagricola",
-        "other-inputs/inputs",
     ] },
     { id = "attributed-income", sections = [
         "datoseconomicos-resultados/regimenesespecialesres",

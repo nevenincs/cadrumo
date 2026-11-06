@@ -19,7 +19,12 @@ from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenial
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
 from ....core.errors.hierarchy import InternalInvariantError
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...operations import profile_guard
@@ -27,7 +32,7 @@ from ...operations.access_resolution import OperationAccessContext
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.public_period import PublicPeriod
 from ...operations.public_scalar import PublicDecimal
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import borrador_100 as service_module
 from .. import borrador_100_contracts as contracts

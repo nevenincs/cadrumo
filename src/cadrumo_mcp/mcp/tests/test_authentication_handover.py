@@ -9,7 +9,8 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionDescriptionV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState

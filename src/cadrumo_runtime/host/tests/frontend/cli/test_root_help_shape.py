@@ -39,6 +39,7 @@ from cadrumo.core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from cadrumo.tests.audited_process import ensure_text_completed_process, run_audited_process
 from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
 
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 from .isolated_profile_storage_fixtures import isolated_state
 from .runtime_profile_backend import operator_profile_bound_to_cli
@@ -425,7 +426,7 @@ def test_installed_console_honors_isolated_storage_env(tmp_path: Path) -> None:
         register_cli_profile(
             label="operator",
             facts={
-                "taxpayer_type.entity_type": "natural_person",
+                **native_general_iva_facts(),
                 "identity.tax_id": "12345678Z",
                 "identity.name": "Operator",
                 "identity.surnames": "Storage",
@@ -434,13 +435,6 @@ def test_installed_console_honors_isolated_storage_env(tmp_path: Path) -> None:
                 "contact.postcode": "28015",
                 "censo.activity_start_date": "2025-01-01",
                 "tax_residence.ccaa": "madrid",
-                "iva.regime": "GENERAL",
-                "tax_residence.jurisdiction_scope": "common_regime",
-                "iva.m303_regime_composition": "general",
-                "iva.redeme_enrolled": "false",
-                "iva.cash_accounting_regime_enrolled": "false",
-                "iva.voluntary_sii_enrolled": "false",
-                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
                 "irpf.estimation_regime": "directa_simplificada",
             },
         )

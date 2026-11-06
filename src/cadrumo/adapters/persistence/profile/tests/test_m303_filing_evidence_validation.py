@@ -16,7 +16,10 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from cadrumo.application.modelo.action_errors import M303FilingEvidenceError
 from cadrumo.application.modelo.m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
-from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
+from cadrumo.application.user_profile.tests.persona_profile_facts import (
+    COLEGIO_CONCERTADO_ATTESTATION,
+    persona_facts_beneath,
+)
 from cadrumo.core.filing_projection_ref import M303RegimenSimplificadoFact
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -238,13 +241,15 @@ def _store_profile(
     iae_epigraph: str | None = None,
 ) -> None:
     """Seed the modelo-ready baseline, varying only the facts these validations compare against."""
-    overrides: dict[str, object] = {"iva.m303_regime_composition": composition.value}
+    stated = [
+        COLEGIO_CONCERTADO_ATTESTATION,
+        UserProfileFact(path="iva.m303_regime_composition", value=composition.value),
+    ]
     if iae_epigraph is not None:
-        overrides["activities.iae_epigraph"] = iae_epigraph
-    facts = tuple(
-        UserProfileFact(path=fact.path, value=overrides.pop(fact.path)) if fact.path in overrides else fact
-        for fact in MODELO_READY_PROFILE_FACTS
-    ) + tuple(UserProfileFact(path=path, value=value) for path, value in overrides.items())
+        # The filing check reads the censo epigraph from the flat activity fact.
+        stated.append(UserProfileFact(path="activities.description", value="economic activity"))
+        stated.append(UserProfileFact(path="activities.iae_epigraph", value=iae_epigraph))
+    facts = persona_facts_beneath(stated)
     seed_test_profile_record(
         create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,

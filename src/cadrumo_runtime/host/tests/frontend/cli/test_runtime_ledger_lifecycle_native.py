@@ -51,7 +51,7 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
 ]
 
-_PROFILE_FACTS = native_general_iva_facts(surnames="Ledger Lifecycle", description="design")
+_PROFILE_FACTS = native_general_iva_facts()
 _ACTOR = "native-lifecycle-operator"
 
 

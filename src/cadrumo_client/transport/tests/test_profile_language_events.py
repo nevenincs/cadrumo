@@ -5,7 +5,7 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.operations import OperationFrontendProjection
 
 from ...contracts.contracts import RefusalError
 from ...contracts.session_events import ProfileLanguageChanged, ProfileRecordsChanged

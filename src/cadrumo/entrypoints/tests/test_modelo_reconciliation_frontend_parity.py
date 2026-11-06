@@ -34,10 +34,14 @@ from ...application.modelo.reconciliation_pull_operation import (
 )
 from ...application.operations.execution_actor import OperationExecutionCaller, OperationExecutionCallerReader
 from ...application.operations.models import OperationIdentity
-from ...application.operations.registry import OperationFrontendProjection
 from ...application.user_profile.access_contracts import SessionKind
 from ...core.config import override_settings
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from . import modelo_operation_test_support
 from . import registered_executor_case_support as conformance

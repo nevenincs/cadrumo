@@ -1,0 +1,104 @@
+format = 1
+
+[persona]
+id = "autonomo-electricista"
+title = "Electricista autónomo en estimación directa normal"
+summary = """
+Alberto Requena hace instalaciones eléctricas en Alcalá de Henares para una
+promotora de viviendas y una cadena hotelera, siempre a empresas y al 21 %, sin
+retención sobre sus facturas. Determina su rendimiento por la modalidad normal
+de la estimación directa: renunció a la simplificada en un mes de diciembre, la
+renuncia le vinculó tres años y desde entonces se prorroga cada año porque no
+la ha revocado (RIRPF art. 29.1). Por ello lleva contabilidad ajustada al Código
+de Comercio (RIRPF art. 68.2) y no deduce la provisión del 5 % para gastos de
+difícil justificación, propia de la simplificada. Su furgoneta y sus
+herramientas están totalmente amortizadas. No tiene empleados ni local
+alquilado y no paga a profesionales. Es soltero y vive solo, sin descendientes
+ni ascendientes a su cargo, y declara la renta de forma individual.
+"""
+taxpayer = "electricista.titular"
+fiscal_year = "horizon-1"
+modelos = ["303", "130", "390", "347", "100"]
+
+[clock]
+as_of = { year = "horizon", month = 2, day = 16 }
+
+[profile]
+"output-language" = "es"
+"entity-type" = "natural_person"
+"tax-id" = { identity = "electricista.titular" }
+"name" = { identity = "electricista.titular", field = "name" }
+"surnames" = { identity = "electricista.titular", field = "surnames" }
+"fiscal-residency" = "resident_irpf"
+"tax-residence-jurisdiction-scope" = "common_regime"
+"tax-residence-ccaa" = "madrid"
+"address-postcode" = "28805"
+"irpf-income-categories" = ["actividad_economica"]
+"activity-start-date" = { year = "horizon-14", month = 9, day = 1 }
+"iva-regime" = "GENERAL"
+"iva-m303-regime-composition" = "general"
+"iva-roi-enrolled" = false
+"iva-oss-enrolled" = false
+"iva-sii-enrolled" = false
+"iva-redeme-enrolled" = false
+"iva-cash-accounting-regime-enrolled" = false
+"iva-voluntary-sii-enrolled" = false
+"iva-hydrocarbon-deposit-advance-payment-deduction-entitled" = false
+"taxation-type" = "1"
+"taxpayer-sex" = "H"
+"taxpayer-marital-status" = "1"
+"situacion-familiar" = "soltero"
+"taxpayer-birth-date" = { year = "horizon-47", month = 11, day = 8 }
+"family-minor-children-in-unit" = false
+"family-descendants-eu-eea-deduction" = false
+"has-employees" = false
+"pays-professionals-with-retencion" = false
+"pays-rent-with-retencion" = false
+"pays-capital-income-with-retencion" = false
+"art109-activity-income-withholding-ge-70pct" = false
+"irpf-estimation-regime" = "directa_normal"
+"irpf-codigo-comercio-accounting" = true
+"does-intracomunitario" = false
+"third-party-transactions-above-347-threshold" = true
+
+# The cap term of the art. 81 LIRPF deduction for a mother of a child under
+# three. He has no child, so no contribution counts towards it: a stated zero,
+# not an unknown.
+[fields]
+"renta_family.cotizaciones_ss_madre_2024" = "0"
+
+[[activities]]
+description = "Instalaciones eléctricas en general"
+iae_epigraph = "504.1"
+
+[[elections]]
+question = "irpf-activity-income-imputation-criterion"
+value = "devengo"
+year = "horizon-1"
+
+# Single, with no descendants and no ascendants in his care: both families are
+# declared empty, so the household reads as stated rather than unknown.
+[household]
+descendants = []
+ascendants = []
+
+# His own copy of the previous year's Renta: no negative general base was left
+# pending to offset, so the four-year carry of casilla 1380 starts from zero, and
+# the net income of the activity in estimación directa (casilla 0224) was 21000.00,
+# above the 12000.00 up to which RIRPF art. 110.3.c lets casilla 13 of Modelo 130
+# lower the quarterly payment.
+[[local_observations]]
+modelo = "100"
+year = "horizon-2"
+period = "0A"
+casillas = { "0224" = "21000.00", "1384" = "0.00", "1387" = "0.00", "1390" = "0.00", "1391" = "0.00" }
+reason = "Rendimiento neto de la actividad y bases liquidables generales negativas pendientes en la declaración de la renta del ejercicio anterior"
+
+# At the clock every quarterly IVA return of the fiscal year is past its window,
+# so he has filed each one. Every quarter was to pay, so no compensation was
+# pending before the first quarter.
+[[filed_returns]]
+modelo = "303"
+year = "horizon-1"
+periods = ["1T", "2T", "3T", "4T"]
+iva_compensation_carried_in = "0.00"

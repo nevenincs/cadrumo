@@ -61,9 +61,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test,
-)
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -84,13 +81,18 @@ from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterR
 from ....adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from ....adapters.persistence.profile.tests.percepcion_observation_authoring import replace_percepcion_observations
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.ready_profile_support import (
+    WITHHOLDING_PAYER_PERSONA,
+    persona_taxpayer_tax_id,
+    seed_persona_profile,
+    seed_ready_profile,
+)
 from ....adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
     load_test_profile_record,
     replace_test_profile_record,
-    seed_test_profile_record,
 )
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.aggregation.retenciones import (
@@ -125,8 +127,7 @@ from ....domain.calculations.registry.tests.registry_observations import (
 )
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from ....domain.user_profile.values import UserProfileFact
 from ....tests.env_scope import ready_clave_settings
 from .file_flow_test_support import calculation_ports_for_test
 from .fold_in_assertions_support import assert_distinct_positive
@@ -175,33 +176,16 @@ _M123_RETENCIONES_OUTPUT: CasillaId = validated_casilla_id("09", surface="_M123_
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     """Yield the active profile's real encrypted-SQLite object repository."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label=_PROFILE_LABEL) as profile:
-        _seed_ready_profile()
+        seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
         yield profile.repository
 
 
-def _seed_ready_profile() -> None:
-    """Persist a filing-ready withholding-operator profile for annual summaries."""
-    seed_test_profile_record(
-        create_user_profile_record(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="withholding operator activity"),
-                *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-                # Modelo 111 refuses a defaulted colegio-concertado declaration: the fichero
-                # carries the row as filer data, so it must be stated rather than assumed.
-                # False is the truthful value for this natural-person filer.
-                UserProfileFact(path="withholding.colegio_concertado", value=False),
-            ),
-            created_at=_T0,
-            updated_at=_T0,
-            context=profile_creation_context_for_test(),
-        ),
-    )
+@pytest.fixture
+def withholding_payer_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
+    """Yield the repository of a profile whose taxpayer pays withheld income, so Modelos 111 and 190 apply."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label=_PROFILE_LABEL) as profile:
+        seed_persona_profile(WITHHOLDING_PAYER_PERSONA, bucket_id=_BUCKET_ID, at=_T0)
+        yield profile.repository
 
 
 def _seed_quarterly_filing(
@@ -447,7 +431,7 @@ def _seed_retencion_perceptors(
 
 
 def workflow_profile() -> TaxpayerProfile:
-    return TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("GENERAL"))
+    return TaxpayerProfile(tax_id=persona_taxpayer_tax_id(WITHHOLDING_PAYER_PERSONA), iva_regime=IVARegime("GENERAL"))
 
 
 def test_m180_folds_in_four_m115_quarters_on_live_calculate(
@@ -646,7 +630,7 @@ def _seed_and_file_m111_1t(
             verification_repositories=build_test_verification_repository_bundle(),
             actor="test-operator",
             workflow_profile=workflow_profile(),
-            settings=ready_clave_settings("12345678Z"),
+            settings=ready_clave_settings(workflow_profile().tax_id),
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
@@ -693,7 +677,7 @@ def _seed_and_file_m111_1t(
 
 
 def test_m190_folds_in_four_m111_quarters_with_withholding_advisory(
-    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+    withholding_payer_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """E2E: four filed M111 quarters fold into M190 monetary totals; withholding advisory present.
 
@@ -728,7 +712,7 @@ def test_m190_folds_in_four_m111_quarters_with_withholding_advisory(
     assert expected_retenciones > Decimal("0")
     assert expected_percepciones_amount != expected_retenciones
 
-    result = _calculate_annual(secure_objects, modelo="190", operation=operation, year=_M190_YEAR)
+    result = _calculate_annual(withholding_payer_objects, modelo="190", operation=operation, year=_M190_YEAR)
 
     values = result.revision.casilla_values
     assert Decimal(values[_DECL_PERCEPCIONES_COUNT]) == Decimal("0"), (
@@ -750,13 +734,13 @@ def test_m190_folds_in_four_m111_quarters_with_withholding_advisory(
 
 
 def test_m190_verify_accepts_observation_backed_m111_cross_period_evidence(
-    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+    withholding_payer_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """M190 verify recognizes observed M111 values and names the missing filing-grade quarterly evidence."""
     _seed_m111_quarterly_m190_evidence()
-    _seed_m190_withholding_detail(secure_objects)
+    _seed_m190_withholding_detail(withholding_payer_objects)
 
-    result = _calculate_annual(secure_objects, modelo="190", operation=operation, year=_M190_YEAR)
+    result = _calculate_annual(withholding_payer_objects, modelo="190", operation=operation, year=_M190_YEAR)
     with bundled_indexed_authority().operation() as operation:
         report = verify_modelo_revision_with_preconditions(
             result.revision.calculation_revision_id,
@@ -764,7 +748,7 @@ def test_m190_verify_accepts_observation_backed_m111_cross_period_evidence(
             verification_repositories=build_test_verification_repository_bundle(),
             actor="test-operator",
             workflow_profile=workflow_profile(),
-            settings=ready_clave_settings("12345678Z"),
+            settings=ready_clave_settings(workflow_profile().tax_id),
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
@@ -799,14 +783,14 @@ def test_m190_verify_accepts_observation_backed_m111_cross_period_evidence(
 
 
 def test_m190_verify_accepts_filed_1t_m111_and_attested_no_obligation_zero_quarters(
-    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+    withholding_payer_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """M190 verify accepts a clean filed M111 1T plus explicit 2T-4T no-obligation evidence."""
-    m111_result = _seed_and_file_m111_1t(secure_objects, operation=operation)
-    _attest_m111_no_retenciones_periods(secure_objects, periods=("2T", "3T", "4T"))
-    _seed_m190_withholding_detail(secure_objects)
+    m111_result = _seed_and_file_m111_1t(withholding_payer_objects, operation=operation)
+    _attest_m111_no_retenciones_periods(withholding_payer_objects, periods=("2T", "3T", "4T"))
+    _seed_m190_withholding_detail(withholding_payer_objects)
 
-    result = _calculate_annual(secure_objects, modelo="190", operation=operation, year=_M190_YEAR)
+    result = _calculate_annual(withholding_payer_objects, modelo="190", operation=operation, year=_M190_YEAR)
     expected_percepciones_amount = sum(
         (Decimal(m111_result.revision.casilla_values[output]) for output in _M190_IMPORTE_OUTPUTS),
         Decimal("0"),
@@ -823,7 +807,7 @@ def test_m190_verify_accepts_filed_1t_m111_and_attested_no_obligation_zero_quart
             verification_repositories=build_test_verification_repository_bundle(),
             actor="test-operator",
             workflow_profile=workflow_profile(),
-            settings=ready_clave_settings("12345678Z"),
+            settings=ready_clave_settings(workflow_profile().tax_id),
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
@@ -850,18 +834,18 @@ def test_m190_verify_accepts_filed_1t_m111_and_attested_no_obligation_zero_quart
 
 
 def test_m190_verify_refuses_a_work_income_row_missing_its_family_data(
-    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+    withholding_payer_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
     """The registry scopes descendant data to work-income claves, so a clave A row must carry it.
 
     The companion above files a clave G row without that data and verifies; the
     same row as clave A is refused on exactly the casillas its clave carries.
     """
-    _seed_and_file_m111_1t(secure_objects, operation=operation)
-    _attest_m111_no_retenciones_periods(secure_objects, periods=("2T", "3T", "4T"))
-    _seed_m190_withholding_detail(secure_objects, clave="A", subclave="")
+    _seed_and_file_m111_1t(withholding_payer_objects, operation=operation)
+    _attest_m111_no_retenciones_periods(withholding_payer_objects, periods=("2T", "3T", "4T"))
+    _seed_m190_withholding_detail(withholding_payer_objects, clave="A", subclave="")
 
-    result = _calculate_annual(secure_objects, modelo="190", operation=operation, year=_M190_YEAR)
+    result = _calculate_annual(withholding_payer_objects, modelo="190", operation=operation, year=_M190_YEAR)
     with bundled_indexed_authority().operation() as operation:
         report = verify_modelo_revision_with_preconditions(
             result.revision.calculation_revision_id,
@@ -869,7 +853,7 @@ def test_m190_verify_refuses_a_work_income_row_missing_its_family_data(
             verification_repositories=build_test_verification_repository_bundle(),
             actor="test-operator",
             workflow_profile=workflow_profile(),
-            settings=ready_clave_settings("12345678Z"),
+            settings=ready_clave_settings(workflow_profile().tax_id),
             clock=_T1,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,

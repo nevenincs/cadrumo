@@ -15,7 +15,7 @@ See Also:
         Deterministic revision-id primitive the write funnel stamps rows with.
     :func:`~adapters.persistence.storage.sql.secure_object_crypto.verify_revision_self_consistency`
         Integrity check applied before decrypting an existing row.
-    :func:`~adapters.persistence.storage.sql._secure_object_schema.build_revision_ancestor_ids`
+    :func:`~adapters.persistence.storage.sql.secure_object_schema.build_revision_ancestor_ids`
         Revision-lineage helper used to persist ancestor chains.
     :class:`~adapters.persistence.storage.sql.secure_object_records.SecureObjectRecord`
         Plaintext record returned after classification, schema, lineage, and
@@ -46,7 +46,6 @@ from ..schema_lineage import (
     inner_envelope_classification_is_expected,
 )
 from ..secure_object_namespaces import SecureObjectNamespaceDefinition
-from . import orm
 from .secure_object_crypto import verify_revision_self_consistency
 from .secure_object_records import (
     SecureObjectBatchLoadItem,
@@ -68,6 +67,23 @@ class _SecureObjectListRawRow(Protocol):
 
     id: int
     object_key: str | bytes
+    classification: str
+    schema_version: int
+    written_at: datetime
+    payload: bytes
+    revision_id: str | None
+    previous_revision_id: str | None
+    payload_hash: str | None
+    ciphertext_hash: str | None
+    previous_payload_hash: str | None
+
+
+class _SecureObjectTableRow(Protocol):
+    """A whole ``secure_objects`` row as a typed ``SELECT`` of the table returns it."""
+
+    id: int
+    namespace: str
+    object_key: bytes
     classification: str
     schema_version: int
     written_at: datetime
@@ -262,21 +278,22 @@ def _classification_reason(exc: ClassificationError) -> str:
 
 
 def secure_object_record_from_row(
-    row: orm.SecureObjectRow,
+    raw: object,
     *,
     expected_class: SensitivityClass,
     max_supported_version: int,
     namespace_definition: SecureObjectNamespaceDefinition | None = None,
     enforce_registered_row_schema: Callable[..., None],
 ) -> SecureObjectRecord:
-    """Decode one ORM row, propagating the typed failure.
+    """Decode one whole-table row, propagating the typed failure.
 
     Fail-closed policy: a caller loading a specific row wants the typed error,
-    not a placeholder. Normalisation of the ORM row is the only thing this
+    not a placeholder. Normalisation of the row is the only thing this
     wrapper adds; every check lives in :func:`decode_secure_object_row`.
 
     Args:
-        row: The ORM row to decode. Its columns are coerced to the concrete
+        raw: The ``secure_objects`` row to decode, as selected through the
+            table's typed columns. Its columns are coerced to the concrete
             types the codec requires (``int`` id, ``bytes`` object key and
             payload) and forwarded; nothing is otherwise interpreted here.
         expected_class: The :class:`SensitivityClass` the row's own
@@ -289,6 +306,9 @@ def secure_object_record_from_row(
         enforce_registered_row_schema: The namespace-registration check,
             forwarded verbatim.
     """
+    # CAST-RATIONALE-SECURE-OBJECT-TABLE-ROW: every caller selects the whole
+    # ``secure_objects`` table, whose typed columns yield exactly these fields.
+    row = cast(_SecureObjectTableRow, raw)
     return decode_secure_object_row(
         namespace=row.namespace,
         row_id=int(row.id),

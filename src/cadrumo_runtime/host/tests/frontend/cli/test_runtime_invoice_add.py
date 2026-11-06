@@ -100,7 +100,7 @@ def _scope(
     )
 
 
-_LEDGER_ADD_PROFILE_FACTS = native_general_iva_facts(surnames="Add", description="design")
+_LEDGER_ADD_PROFILE_FACTS = native_general_iva_facts()
 
 
 def _prepare_profile(
@@ -190,7 +190,7 @@ def _add_arguments(*, number: str) -> tuple[str, ...]:
         "--kind",
         "received",
         "--counterparty-nif",
-        "A58818501",
+        "B00010157",
         "--counterparty-name",
         "Runtime supplier SL",
         "--invoice-number",

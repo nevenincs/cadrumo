@@ -53,11 +53,10 @@ from cadrumo.application.operations.frontend_requests import (
     OperationReviewProjectionRequestV1,
 )
 from cadrumo.application.operations.models import OperationId
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import SessionKind
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import build_error_envelope
-from cadrumo.core.operations import OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operations import OperationFrontendProjection, OperationTerminalCondition, profile_operation_subject
 from cadrumo.core.request_faults import RequestFault
 from cadrumo.core.time.clock import now
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue

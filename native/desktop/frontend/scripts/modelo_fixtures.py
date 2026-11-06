@@ -5,8 +5,10 @@ request and result the desktop's admitted ``modelo.*`` definitions register,
 plus the edit operator input the financial body carries.
 ``src/shell/relayBounds.ts`` is generated from the host's relay bounds, as the
 Rust sources state them. The envelopes under
-``src/dev/fixtures/modelo/`` are read through the application's own read path
-for a synthetic taxpayer in a throwaway profile over the published authority.
+``build/<preset>/fixtures/window/modelo/`` are read through the application's own read path
+for the catalogue's personas, each replayed into a throwaway profile over the
+published authority, with each scenario's own state stated over it through the
+profile operations.
 
 ``scripts/modelo-fixtures.mjs`` drives this module and formats what it writes;
 run that, not this. ``contract`` writes the unformatted module to standard
@@ -14,8 +16,9 @@ output; ``bounds`` writes the unformatted relay bounds module; ``envelopes``
 writes the envelopes, stored compactly and the Modelo 100 forms as patches;
 ``pack`` stores the envelopes already on disk that way; ``validate`` fails when the host's admitted list differs
 from the registered family or a stored envelope no longer validates against
-its model. The envelopes carry the day they were
-read, so they are validated rather than compared byte for byte.
+its model. Every profile the envelopes read runs on the personas' one
+scenario clock and is registered at its persona's own identity, so a
+regeneration writes the same bytes.
 """
 
 from __future__ import annotations
@@ -23,21 +26,23 @@ from __future__ import annotations
 import argparse
 import ast
 import asyncio
+import hashlib
 import json
 import re
 import sys
 import tempfile
 import textwrap
 from collections.abc import AsyncGenerator, Generator, Iterable, Iterator, Mapping
-from contextlib import asynccontextmanager, contextmanager, nullcontext
+from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from functools import cache
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
 
+from dev.fixture_projections.location import family_directory
 from dev.temporary_output import prepare_temp_root
 from pydantic import BaseModel
 from pydantic.json_schema import models_json_schema
@@ -48,8 +53,12 @@ from cadrumo.core.operations import OperationEffect
 from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 
+if TYPE_CHECKING:
+    from cadrumo.tests.personas import Persona, WithholdingCertificate, YearEnvelope
+
 FRONTEND = Path(__file__).resolve().parents[1]
-FIXTURES = FRONTEND / "src" / "dev" / "fixtures" / "modelo"
+#: The scenario envelopes are build output in the host's build tree, never committed.
+FIXTURES = family_directory("modelo")
 
 #: The host's closed list of admitted definitions, which the generated mirror is pinned to.
 ADMITTED = FRONTEND.parent / "src-tauri" / "src" / "shell" / "modelo" / "admitted.rs"
@@ -72,6 +81,9 @@ DECLARATIONS: tuple[tuple[str, str, bool], ...] = (
     ("347", "0A", True),
     ("390", "0A", False),
 )
+#: The declaration the scenarios open with registry rules that stop short of calculation grade, so it opens read only.
+#: It is read for the newest supported year whose rules do so, not the declarations' year, whose rules may be complete.
+RULES_INCOMPLETE_MODELO = "390"
 LANGUAGES = ("en", "es", "ca", "hu")
 #: The operator the desktop names on requests that take an actor, as src/shell/modelo.ts states it.
 ACTOR = "operator:desktop-modelo"
@@ -88,17 +100,24 @@ FILED_RENTA_BINDING = "irpf.previous_year_economic_activity_net_income"
 CLEAN_130_ANSWERS: tuple[tuple[str, str], ...] = tuple(
     answer for answer in FILED_130_ANSWERS if answer[0] != FILED_RENTA_BINDING
 )
-#: The quarter's activity income booked for the calculated-only 130.
-INCOME_130 = Decimal("12000.00")
-#: The boxes whose help card the envelopes carry, by modelo.
-#: When the synthetic AEAT receipt of the filed 130 is imported.
-RECEIPT_AT = datetime(2026, 4, 21, 9, 30, tzinfo=UTC)
-#: The quarter the AEAT holds a Modelo 130 for that the profile has no declaration of, and when it was filed and seen.
+#: The catalogue persona every Modelo 130, 303, 347 and 390 profile starts from, whose fiscal year the declarations
+#: are of and whose clock every envelope is read on.
+ACTIVITY_PERSONA = "autonomo-fontanero"
+#: The catalogue persona a Renta filer who declares no economic activity starts from.
+SALARIED_PERSONA = "asalariada-familia"
+#: The catalogue role of the payer whose withholding certificate a salaried Renta filer records.
+RENTA_PAYER = "asalariada.empleador"
+#: When the synthetic AEAT receipt of the filed 130 is imported, as month, day, hour and minute of the declarations'
+#: year: the day after the first quarter's filing period closes.
+RECEIPT_ON = (4, 21, 9, 30)
+#: The quarter the AEAT holds a Modelo 130 for that the profile has no declaration of, and when it was filed and seen,
+#: in the declarations' year.
 AEAT_ONLY = ("130", "2T")
-AEAT_PRESENTED_AT = datetime(2026, 7, 14, 11, 0, tzinfo=UTC)
-AEAT_SEEN_AT = datetime(2026, 7, 15, 9, 0, tzinfo=UTC)
-#: The seeded profile's tax id, as the modelo-ready baseline states it.
-MAIN_TAX_ID = "12345678Z"
+AEAT_PRESENTED_ON = (7, 14, 11, 0)
+AEAT_SEEN_ON = (7, 15, 9, 0)
+#: What the calculated-only profile states over the activity persona: no estimation regime, as a filer who never
+#: answered it.
+UNREGIMED: tuple[tuple[str, object], ...] = (("irpf.estimation_regime", None),)
 #: The value the edit scenarios type over a Modelo 130 box, as the desktop stages it.
 EDIT_130: tuple[tuple[str, str], ...] = (("06", "1234.56"),)
 #: The box and figure the correction of the recorded 130 states, as the filer types it.
@@ -137,7 +156,7 @@ UNVERIFIED_EXPORT = ("165", "0A")
 UNREADABLE_ENTRY = "doce"
 #: Why the correction is made, as the filer says it.
 CORRECTION_REASON = "A deductible expense was left out."
-#: A synthetic AEAT justificante for a Modelo 130 of the first quarter of 2026.
+#: A synthetic AEAT justificante specimen for a Modelo 130 of a first quarter.
 JUSTIFICANTE_130 = ("tests", "fixtures", "justificantes", "modelo_130_2026Q1.pdf")
 HELP_BOXES: Mapping[str, tuple[str, ...]] = {
     "130": ("01", "03", "07", "19"),
@@ -150,25 +169,74 @@ HELP_BOXES: Mapping[str, tuple[str, ...]] = {
 RENTA_YEAR = newest_authored_edition("100")
 RENTA_PERIOD = "0A"
 #: What the filer answers for that Renta: the earlier year's negative general base, the negative general base
-#: still pending at the start of each of the three years before, and whether direct estimation is normal. The
+#: still pending at the start of each of the three years before. The
 #: calculation refuses without all of them.
 RENTA_ANSWERS: tuple[tuple[str, str], ...] = (
     ("renta-base-liquidable-negativa-general-anterior", "0"),
     ("renta-base-liquidable-negativa-general-em4-pendiente-inicio", "0"),
     ("renta-base-liquidable-negativa-general-em3-pendiente-inicio", "0"),
     ("renta-base-liquidable-negativa-general-em2-pendiente-inicio", "0"),
-    ("renta-modelo-100-estimacion-directa-es-normal", "1"),
 )
 #: The boxes a salaried filer states: the cash remuneration and the Social Security contributions, as typed.
 RENTA_SALARY_BOXES: tuple[str, str] = ("0003", "0013")
-#: A synthetic payer whose withholding certificate the register holds.
-RENTA_PAYER_TAX_ID = "B12345674"
-#: The quarter whose calculated Modelo 130 a projected filer holds, and the region the filers' profiles state as their
-#: tax residence, which the projection takes when it is not named.
+#: The quarter whose calculated Modelo 130 a projected filer holds.
 RENTA_QUARTER = "1T"
-RENTA_CCAA = "madrid"
 #: A day within the Renta's filing period, which closes on 30 June of the year after.
 RENTA_FILING_PERIOD_DAY = datetime(RENTA_YEAR + 1, 5, 20, 9, 0, tzinfo=UTC)
+#: The first day after that filing period has closed, when a result to pay can no longer be split.
+RENTA_AFTER_FILING_PERIOD_DAY = datetime(RENTA_YEAR + 1, 7, 1, 9, 0, tzinfo=UTC)
+
+
+@cache
+def _catalogue_persona(persona_id: str) -> tuple[Persona, YearEnvelope]:
+    """The catalogue persona ``persona_id`` and the registry's year envelope it is read in."""
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+    from cadrumo.entrypoints.tests.persona_materialisation import year_envelope
+    from cadrumo.tests.personas import read_persona
+
+    with bundled_indexed_authority().operation() as operation:
+        envelope = year_envelope(operation)
+    return read_persona(persona_id, envelope=envelope), envelope
+
+
+def scenario_as_of() -> datetime:
+    """The instant the scenarios are read as of: the activity persona's clock, which every persona shares."""
+    from cadrumo.entrypoints.tests.persona_materialisation import scenario_instant
+
+    return scenario_instant(*_catalogue_persona(ACTIVITY_PERSONA))
+
+
+def declarations_year() -> int:
+    """The year of the activity declarations the envelopes read: the activity persona's fiscal year."""
+    persona, envelope = _catalogue_persona(ACTIVITY_PERSONA)
+    return int(persona.fiscal_year.resolve(envelope))
+
+
+def _rules_incomplete_year(operation: Any, modelo: str, period_code: str) -> int:
+    """The newest supported filing year whose registry rules for ``modelo`` stop short of calculation grade."""
+    from cadrumo.core.authority_grade import RegistryAuthorityGrade
+    from cadrumo.core.period import Period
+
+    ladder = tuple(RegistryAuthorityGrade)
+    support = operation.supported_filing_years()
+    for year in range(support.horizon, support.floor - 1, -1):
+        period = Period.from_year_and_code(year, period_code)
+        grade = operation.reachable_authority_grade(modelo, filing_year=year, period=period.registry_token)
+        if ladder.index(grade) < ladder.index(RegistryAuthorityGrade.CALCULATION):
+            return year
+    raise SystemExit(f"no supported year's Modelo {modelo} rules stop short of calculation grade")
+
+
+def _taxpayer_tax_id(persona_id: str) -> str:
+    """The tax id the catalogue gives the taxpayer of ``persona_id``."""
+    persona, _ = _catalogue_persona(persona_id)
+    return str(persona.identity(persona.taxpayer))
+
+
+def _in_declarations_year(when: tuple[int, int, int, int]) -> datetime:
+    """``when``, as month, day, hour and minute in UTC, in the declarations' year."""
+    month, day, hour, minute = when
+    return datetime(declarations_year(), month, day, hour, minute, tzinfo=UTC)
 
 
 # -- wire types ---------------------------------------------------------------
@@ -460,37 +528,123 @@ def render_contract() -> str:
 
 
 @contextmanager
-def _seeded(tmp: Path, *, facts: tuple[Any, ...] = ()) -> Generator[Any]:
-    """One synthetic profile, its first declaration the first the envelopes read, under every session adapter."""
-    from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
-    from cadrumo.entrypoints.tests.modelo_operator_work_storage import seeded_operator_work
+def _persona_profile(
+    tmp: Path,
+    persona_id: str,
+    stated: tuple[tuple[str, object], ...] = (),
+    *,
+    read_on: datetime | None = None,
+    household_only: bool = False,
+) -> Generator[Any]:
+    """The catalogue persona ``persona_id`` replayed into its own profile, under every session adapter.
 
-    first, *_ = DECLARATIONS
+    The persona is replayed in full: its profile facts, household, declared withholding, ledger rows, invoices
+    and evidence go through the production operations, so the activity and the withholding the envelopes show
+    are the persona's own. ``household_only`` replays only its profile and household, for a scenario whose point
+    is a register without the persona's income or withholding. ``stated`` is then stated over what was replayed
+    through the profile fact writer, each path with its value or ``None`` to take the persona's answer back, the
+    way the profile manager states a field. Where ``read_on`` is given the persona is replayed and read on that day.
+    """
+    from cadrumo.adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
+    from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory
+    from cadrumo.application.user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+    from cadrumo.domain.user_profile.values import UserProfileFact
+    from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
+    from cadrumo.entrypoints.tests.persona_materialisation import (
+        ReplayScope,
+        load_profile_record,
+        materialised_persona,
+    )
+
     with (
         profile_adapter_composition(),
-        seeded_operator_work(tmp, modelo=first[0], period_code=first[1], extra_facts=facts) as work,
+        # The ledger import converts foreign amounts; the recorded reference rates keep that off the network.
+        bind_exchange_rate_provider_factory(recorded_ecb_rate_provider),
+        bundled_indexed_authority().operation(),
+        materialised_persona(
+            persona_id,
+            tmp,
+            ReplayScope.HOUSEHOLD if household_only else ReplayScope.FULL,
+            reuse=True,
+            read_on=read_on,
+        ) as persona,
     ):
-        yield work
+        world = persona.world
+        if stated:
+            apply_profile_fact_changes(
+                profile_id=str(world.profile_id),
+                changes=tuple(UserProfileFact(path=path, value=value) for path, value in stated),
+                door=ProfileFactWriteDoor.MANAGER_FIELD,
+                expected_record=load_profile_record(world),
+                profile_decode_context=world.operation.profile_decode_context(),
+            )
+        yield persona
 
 
-def _other_declaration(work: Any, modelo: str, period_code: str) -> Any:
+def _declaration(persona: Any, modelo: str, filing_year: int, period_code: str) -> Any:
+    """Create one declaration in the persona's profile through the work lifecycle; the work over it."""
     from cadrumo.application.modelo.work_lifecycle import create_work_unit
     from cadrumo.core.period import Period
+    from cadrumo.core.time.clock import now
+    from cadrumo.entrypoints.adapter_composition_ports import build_modelo_edit_receipt_repository
+    from cadrumo.entrypoints.adapter_composition_work_ports import (
+        build_calculation_action_ports,
+        build_work_lifecycle_ports,
+    )
+    from cadrumo.entrypoints.tests.modelo_operator_work_storage import SeededOperatorWork
+
+    operation = persona.world.operation
+    bucket_id = str(persona.world.profile_id)
+    period = Period.from_year_and_code(filing_year, period_code)
+    revision = operation.revision_for_context(modelo, filing_year=filing_year, period=period.registry_token)
+    unit = create_work_unit(
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        revision_id=str(revision.id),
+        ports=build_work_lifecycle_ports(bucket_id=bucket_id),
+        clock=now(),
+        operation=operation,
+    )
+    return SeededOperatorWork(
+        work_unit=unit,
+        ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
+        operation=operation,
+        receipt_repository_factory=build_modelo_edit_receipt_repository,
+    )
+
+
+@contextmanager
+def _seeded(tmp: Path, *, stated: tuple[tuple[str, object], ...] = ()) -> Generator[Any]:
+    """The activity persona's profile, its first declaration the first the envelopes read."""
+    modelo, period_code, _ = DECLARATIONS[0]
+    with _persona_profile(tmp, ACTIVITY_PERSONA, stated) as persona:
+        yield _declaration(persona, modelo, declarations_year(), period_code)
+
+
+def _other_declaration(work: Any, modelo: str, period_code: str, *, filing_year: int | None = None) -> Any:
+    """Another declaration in the profile, of the work's year unless ``filing_year`` names one; the work over it."""
+    from cadrumo.application.modelo.work_lifecycle import create_work_unit
+    from cadrumo.core.period import Period
+    from cadrumo.core.time.clock import now
     from cadrumo.domain.modelos.work_unit import WorkUnit
     from cadrumo.entrypoints.adapter_composition_work_ports import build_work_lifecycle_ports
-    from cadrumo.entrypoints.tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork
+    from cadrumo.entrypoints.tests.modelo_operator_work_storage import SeededOperatorWork
 
     unit = work.work_unit
-    period = Period.from_year_and_code(unit.filing_year, period_code)
-    revision = work.operation.revision_for_context(modelo, filing_year=unit.filing_year, period=period.registry_token)
+    year = unit.filing_year if filing_year is None else filing_year
+    period = Period.from_year_and_code(year, period_code)
+    revision = work.operation.revision_for_context(modelo, filing_year=year, period=period.registry_token)
     created: WorkUnit = create_work_unit(
         bucket_id=unit.bucket_id,
         modelo=modelo,
-        filing_year=unit.filing_year,
+        filing_year=year,
         period=period,
         revision_id=str(revision.id),
         ports=build_work_lifecycle_ports(bucket_id=unit.bucket_id),
-        clock=SEEDED_AT,
+        clock=now(),
         operation=work.operation,
     )
     return SeededOperatorWork(
@@ -518,11 +672,242 @@ def _read_ports(bucket_id: str, operation: Any) -> Any:
 
 
 def _write(directory: Path, name: str, model: BaseModel) -> None:
-    """Write an envelope as the host hands it to the window, with every file's place reduced to its name."""
+    """Write an envelope as the host hands it to the window, with every file's place reduced to its name.
+
+    The written envelope is what the host hands the window. Once every envelope is written, the opaque ids a run
+    mints afresh are named stably across them (see ``_name_minted_ids``); the calculations an envelope names are
+    read for that here, while their profile is open.
+    """
     shown = _host_view(json.loads(model.model_dump_json()), _result_path_keys(), _FILE_FOLDERS)
+    _name_calculations(shown)
     text = json.dumps(shown, ensure_ascii=False, separators=(",", ":"))
     (directory / name).write_text(text, "utf-8", newline="\n")
     sys.stdout.write(f"{name}\n")
+
+
+#: The fields that name a calculation revision.
+_CALCULATION_ID_KEYS = frozenset(
+    {"calculation_revision_id", "current_calculation_revision_id", "filed_calculation_revision_id"}
+)
+#: The digests an edit baseline derives from its work unit's record and calculation head.
+_BASELINE_DIGEST_KEYS = ("work_unit_record_digest", "calculation_head_digest", "baseline_id")
+#: Each id a run mints afresh, and the name the envelopes give it.
+_MINTED_IDS: dict[str, str] = {}
+
+
+#: What each name was stated by, so two ids stated alike can be told apart in the refusal.
+_STATED: dict[str, Any] = {}
+
+
+def _token(kind: str, stated: Any) -> str:
+    """The name of an id of ``kind``: a digest of what states it."""
+    token = hashlib.sha256(json.dumps([kind, stated], ensure_ascii=False, sort_keys=True).encode()).hexdigest()
+    _STATED[token] = [kind, stated]
+    return token
+
+
+def _strings_under(value: Any, keys: frozenset[str]) -> Generator[str]:
+    """Every string ``value`` holds under one of ``keys``, at any depth."""
+    if isinstance(value, list):
+        for item in value:
+            yield from _strings_under(item, keys)
+    elif isinstance(value, dict):
+        for key, item in value.items():
+            if key in keys and isinstance(item, str):
+                yield item
+            else:
+                yield from _strings_under(item, keys)
+
+
+def _baselines(value: Any) -> Generator[dict[str, Any]]:
+    """Every edit baseline over a calculation that ``value`` holds, at any depth."""
+    if isinstance(value, list):
+        for item in value:
+            yield from _baselines(item)
+    elif isinstance(value, dict):
+        if _is_baseline_over_calculation(value):
+            yield value
+        for item in value.values():
+            yield from _baselines(item)
+
+
+def _is_baseline_over_calculation(value: dict[str, Any]) -> bool:
+    """Whether ``value`` is an edit baseline over a calculation.
+
+    A baseline over no calculation covers nothing a run mints, so it reads the same on every run.
+    """
+    return set(_BASELINE_DIGEST_KEYS) <= set(value) and isinstance(value.get("current_calculation_revision_id"), str)
+
+
+def _name_calculations(value: Any) -> None:
+    """Name the calculations ``value`` names, and the baselines' digests over them, while their profile is open.
+
+    A revision's id digests its sources, among them references keyed by the profile's own key, which is drawn
+    afresh on every registration; so the id differs between runs although nothing it calculated does. It is named
+    by its work unit and rules, the values it was given, the transactions and draft it read, the values it
+    calculated, and when it was calculated. A baseline's digest of its work unit's record and of its calculation
+    head covers that id and those references, so each is named by the stored record or head it digests, with its
+    ids named and without the source provenance that carries the keyed references; the digest is first recomputed
+    from the stored one, so a name always stands for what was read.
+    """
+    from cadrumo.application.modelo.edit_services import calculation_head_digest, work_unit_record_digest
+
+    unnamed = {found for found in _strings_under(value, _CALCULATION_ID_KEYS) if found not in _MINTED_IDS}
+    baselines = [
+        baseline
+        for baseline in _baselines(value)
+        if {baseline["work_unit_record_digest"], baseline["calculation_head_digest"]} - set(_MINTED_IDS)
+    ]
+    if not unnamed and not baselines:
+        return
+    from cadrumo.adapters.persistence.storage.master_key.active_session import current_active_bucket_session
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+    from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
+
+    active = current_active_bucket_session()
+    if active is None:
+        return
+    with bundled_indexed_authority().operation() as operation:
+        ports = build_calculation_action_ports(bucket_id=str(active.bucket_id), operation=operation)
+        revisions = ports.calculation_repository.load().revisions
+        work_units = ports.work_unit_repository.load().work_units
+    for found in unnamed:
+        revision = revisions.get(found)
+        if revision is None:
+            continue
+        stated = revision.model_dump(
+            mode="json",
+            include={
+                "work_unit_id",
+                "registry_snapshot_ref",
+                "input_values_by_casilla_id",
+                "binding_overrides",
+                "relation_overrides",
+                "cleared_casilla_ids",
+                "source_transaction_ids",
+                "borrador_snapshot_id",
+                "bindings_sourced_from_borrador",
+                "casilla_values",
+                "created_at",
+            },
+        )
+        _MINTED_IDS[found] = _token("calculation-revision", stated)
+    for baseline in baselines:
+        head = revisions.get(baseline["current_calculation_revision_id"])
+        unit = work_units.get(head.work_unit_id) if head is not None else None
+        if head is None or unit is None:
+            continue
+        if calculation_head_digest(head) != baseline["calculation_head_digest"]:
+            raise SystemExit(f"the calculation head {head.calculation_revision_id} changed before its read was written")
+        if work_unit_record_digest(unit) != baseline["work_unit_record_digest"]:
+            raise SystemExit(f"the work unit {unit.work_unit_id} changed before its read was written")
+        named = {
+            baseline["work_unit_record_digest"]: _token(
+                "work-unit-record", _with_minted_names(unit.model_dump(mode="json"))
+            ),
+            baseline["calculation_head_digest"]: _token(
+                "calculation-head",
+                _with_minted_names(head.model_dump(mode="json", exclude={"source_provenance"})),
+            ),
+        }
+        for raw, token in named.items():
+            if _MINTED_IDS.setdefault(raw, token) != token:
+                raise SystemExit(f"{raw} is stated differently by two reads, so it cannot be named stably")
+
+
+def _with_minted_names(value: Any) -> Any:
+    """``value`` with every id already named replaced by its name."""
+    if isinstance(value, list):
+        return [_with_minted_names(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _with_minted_names(item) for key, item in value.items()}
+    if isinstance(value, str):
+        return _MINTED_IDS.get(value, value)
+    return value
+
+
+def _derived_names(value: Any, found: dict[str, str]) -> None:
+    """Name the ids ``value`` derives from named ones, each by the rest of the row it stands in.
+
+    An edit baseline's id covers its work unit's record and calculation head, an export's event id the file's
+    throwaway place, and a stored disagreement answer's revision its ciphertext, whose nonce is drawn afresh on
+    every write; each is named by what the rest of its own row states, with the ids in it already named.
+    """
+    from cadrumo.application.modelo.credit_resolution_contracts import CreditResolutionRowProjection
+    from cadrumo.application.modelo.export_projection import ModeloFicheroBoePublicReceipt
+
+    if isinstance(value, list):
+        for item in value:
+            _derived_names(item, found)
+        return
+    if not isinstance(value, dict):
+        return
+    for item in value.values():
+        _derived_names(item, found)
+    # Each row kind, the id it names, and what of the row states it: an edit baseline by everything else it
+    # carries, which are facts rather than words, and a stored answer and an export's event by the fields that read
+    # the same in every language.
+    rows: list[tuple[str, str, tuple[str, ...]]] = []
+    if _is_baseline_over_calculation(value):
+        for digest in ("work_unit_record_digest", "calculation_head_digest"):
+            if value[digest] not in _MINTED_IDS:
+                raise SystemExit(f"{digest} {value[digest]} was never read while its profile was open")
+        rows.append(("edit-baseline", "baseline_id", tuple(field for field in value if field != "baseline_id")))
+    if set(ModeloFicheroBoePublicReceipt.model_fields) <= set(value):
+        rows.append(("bucket-event", "bucket_event_id", ("calculation_revision_id", "file_sha256", "exported_at")))
+    if set(CreditResolutionRowProjection.model_fields) <= set(value):
+        rows.append(("stored-resolution-revision", "revision_id", ("finding_id", "state", "resolved_at", "revoked_at")))
+    # A filing record's id is derived from its work unit, the calculation it filed and who filed it, and the record
+    # is refused where the two disagree; so it is derived again, by the same derivation, from the named calculation.
+    if {"filing_record_id", "work_unit_id", "calculation_revision_id", "filed_by"} <= set(value) and isinstance(
+        value["filing_record_id"], str
+    ):
+        from cadrumo.domain.modelos.filing_record import derive_filing_record_id
+
+        derived = derive_filing_record_id(
+            work_unit_id=value["work_unit_id"],
+            calculation_revision_id=_with_minted_names(value["calculation_revision_id"]),
+            filed_by=value["filed_by"],
+            member_nif=value.get("member_nif"),
+        )
+        if found.setdefault(value["filing_record_id"], derived) != derived:
+            raise SystemExit(f"filing record {value['filing_record_id']} is filed differently by two rows")
+    for kind, key, stated in rows:
+        raw = value[key]
+        if not isinstance(raw, str):
+            continue
+        token = _token(kind, _with_minted_names({field: value[field] for field in stated}))
+        if found.setdefault(raw, token) != token:
+            raise SystemExit(f"{key} {raw} is stated differently by two rows, so it cannot be named stably")
+
+
+def _name_minted_ids(directory: Path, names: Iterable[str]) -> None:
+    """Name every id the envelopes ``names`` in ``directory`` hold that a run mints afresh, the same on every run.
+
+    A name is a digest of what its own row states, never of where the id was met first, so each id is named the
+    same wherever it recurs and whatever order the envelopes are read in; an id another row cites, or the window
+    hands back as the one it read, is replaced by the same name.
+    """
+    envelopes = {name: json.loads((directory / name).read_text("utf-8")) for name in names}
+    for envelope in envelopes.values():
+        unnamed = sorted(set(_strings_under(envelope, _CALCULATION_ID_KEYS)) - set(_MINTED_IDS))
+        if unnamed:
+            raise SystemExit(f"calculation revision {unnamed[0]} was never read while its profile was open")
+    derived: dict[str, str] = {}
+    for envelope in envelopes.values():
+        _derived_names(envelope, derived)
+    named: dict[str, str] = {}
+    for raw, token in [*_MINTED_IDS.items(), *derived.items()]:
+        if named.setdefault(token, raw) != raw:
+            raise SystemExit(
+                f"{named[token]} and {raw} state the same row, so their names would merge them: {_STATED.get(token)}"
+            )
+    _MINTED_IDS.update(derived)
+    for name, envelope in envelopes.items():
+        text = json.dumps(_with_minted_names(envelope), ensure_ascii=False, separators=(",", ":"))
+        if any(raw in text for raw in _MINTED_IDS):
+            raise SystemExit(f"{name} still holds a minted id inside a longer text")
+        (directory / name).write_text(text, "utf-8", newline="\n")
 
 
 @dataclass(slots=True)
@@ -686,7 +1071,7 @@ def _check_clean(work: Any) -> Any:
 
     A clean check needs the operator's answers to the earlier-filing figures
     and the earlier Renta the 130 reads present as filed AEAT evidence under
-    the profile's own tax id. That Renta's activity income is read from it, not
+    the persona's own tax id. That Renta's activity income is read from it, not
     answered: an answer differing from the filed figure is a divergence the
     check refuses. The profile books no activity in its ledger:
     the bank-dated income, expense and retención boxes are capped below
@@ -720,23 +1105,13 @@ def _check_clean(work: Any) -> Any:
         filing_repository=ports.filing_repository,
         bucket_event_repository=ports.bucket_event_repository,
         operation=work.operation,
+        tax_id=_taxpayer_tax_id(ACTIVITY_PERSONA),
     )
     work.recalculate()
     checked = _verify(work)
     if not checked.granted_verificado_completo:
         raise SystemExit(f"the 130's check was not complete: {checked.completeness_status}")
     return checked
-
-
-def _seed_income(work: Any) -> None:
-    """Book the quarter's activity income in the profile's ledger, so the 130's boxes carry figures.
-
-    The boxes it feeds are capped below filing grade: only a profile that is
-    calculated and never checked, exported or filed may hold it.
-    """
-    from cadrumo.adapters.persistence.profile.tests.m130_source_support import seed_m130_income_transaction
-
-    seed_m130_income_transaction(amount=INCOME_130, filing_year=work.work_unit.filing_year, source_key="desktop")
 
 
 def _record_filed(work: Any) -> BaseModel:
@@ -774,12 +1149,11 @@ def _record_filed(work: Any) -> BaseModel:
 def _import_receipt(work: Any) -> None:
     """Import the recorded 130's AEAT receipt through the external-evidence door, which confirms the filing.
 
-    The receipt is a synthetic justificante stored under the profile's tax id
+    The receipt is a synthetic justificante stored under the persona's tax id
     with the recorded calculation's own figures, so it matches the pending
     local filing.
     """
     from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-    from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import SEEDED_SOURCE_TAX_ID
     from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
     from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
     from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
@@ -787,14 +1161,16 @@ def _import_receipt(work: Any) -> None:
 
     modelo, period_code, _ = DECLARATIONS[0]
     unit = work.work_unit
+    received = _in_declarations_year(RECEIPT_ON)
+    tax_id = _taxpayer_tax_id(ACTIVITY_PERSONA)
     reference = f"CSV{modelo}{unit.filing_year}{period_code}DESKTOP"
     persist_justificante_metadata(
         reference,
         modelo=modelo,
         filing_year=unit.filing_year,
         period=period_code,
-        captured_at=RECEIPT_AT,
-        tax_id=SEEDED_SOURCE_TAX_ID,
+        captured_at=received,
+        tax_id=tax_id,
     )
     ports = build_filing_action_ports(bucket_id=unit.bucket_id, operation=work.operation)
     import_external_filing_evidence(
@@ -808,8 +1184,8 @@ def _import_receipt(work: Any) -> None:
         filing_repository=ports.filing_repository,
         bucket_event_repository=ports.bucket_event_repository,
         observation_repository=CalculationObservationRepository(),
-        expected_tax_id=SEEDED_SOURCE_TAX_ID,
-        clock=RECEIPT_AT,
+        expected_tax_id=tax_id,
+        clock=received,
         operation=work.operation,
     )
 
@@ -844,33 +1220,6 @@ def _export_file(work: Any, destination: Path) -> BaseModel:
     return _published(MODELO_EXPORT_OPERATION_DEFINITION_ID, settled, work.work_unit_id)
 
 
-def _income_categories_fact() -> Any:
-    """The profile's IRPF income categories: economic activity, as the pinned registry names it.
-
-    The filing calendar needs them to say which obligations apply.
-    """
-    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-    from cadrumo.domain.calculations.registry.irpf_income_categories import (
-        irpf_income_category_actividad_economica_token,
-    )
-    from cadrumo.domain.user_profile.values import UserProfileFact
-
-    with bundled_indexed_authority().operation() as operation:
-        token = irpf_income_category_actividad_economica_token(authority=operation).value
-    return UserProfileFact(path="taxpayer_type.irpf_income_categories", value=token)
-
-
-def _estimation_regime_fact() -> Any:
-    """The profile's IRPF estimation regime: estimación directa normal, the profile schema's own token.
-
-    Box 02 of the Modelo 130 reads the modality from it, so a filer whose declaration is checked or filed
-    records one; without it the box is unresolved and the check refuses.
-    """
-    from cadrumo.domain.user_profile.values import UserProfileFact
-
-    return UserProfileFact(path="irpf.estimation_regime", value="directa_normal")
-
-
 def _observe_at_aeat(work: Any) -> None:
     """Store a Modelo 130 the AEAT holds for a quarter the profile has no declaration for.
 
@@ -878,8 +1227,6 @@ def _observe_at_aeat(work: Any) -> None:
     register row and its observation, through the profile's filed-declaration
     store. Nothing is read from or sent to the AEAT.
     """
-    import hashlib
-
     from pydantic import AnyHttpUrl
 
     from cadrumo.adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
@@ -904,7 +1251,7 @@ def _observe_at_aeat(work: Any) -> None:
             content_type="text/plain",
             byte_count=len(body),
             sha256=hashlib.sha256(body).hexdigest(),
-            captured_at=AEAT_SEEN_AT,
+            captured_at=_in_declarations_year(AEAT_SEEN_ON),
         ),
         body,
     )
@@ -915,8 +1262,8 @@ def _observe_at_aeat(work: Any) -> None:
             period=period,
             expediente_id=expediente,
             status="ALTA",
-            presented_at=AEAT_PRESENTED_AT,
-            authenticated_identity=MAIN_TAX_ID,
+            presented_at=_in_declarations_year(AEAT_PRESENTED_ON),
+            authenticated_identity=_taxpayer_tax_id(ACTIVITY_PERSONA),
             artefacts=(artefact,),
             casillas=(),
             extraction_coverage={"register_row": 1.0},
@@ -953,31 +1300,36 @@ def _write_list(directory: Path, work: Any, name: str) -> None:
 
 # -- the Renta ------------------------------------------------------------------
 #
-# The 2025 Modelo 100 of synthetic filers, each its own profile, calculated with the two answers the calculation
-# refuses without. Nothing is cut: every form is read whole, and a box the application cannot work out stays
-# unresolved in it. The declarations are data: a change to what a filer states, or a new filer, is one line here.
+# The Modelo 100 of the Renta's year of filers, each its own profile started from a catalogue persona, calculated
+# with the answers the calculation refuses without. Nothing is cut: every form is read whole, and a box the
+# application cannot work out stays unresolved in it. The declarations are data: a change to what a filer states, or
+# a new filer, is one line here.
 
 
 @dataclass(frozen=True, slots=True)
 class RentaFiler:
-    """One synthetic filer of the 2025 Renta and what the profile holds for the declaration."""
+    """One filer of the Renta and what the profile holds for the declaration, over the persona it starts from."""
 
     #: The envelope's name after ``modelo-100-0A``; empty for the declaration the scenarios open.
     envelope: str
     #: The IRPF income categories the profile declares, comma separated as the setup answer states them.
     categories: str
-    #: The cash remuneration and the Social Security contributions typed into the form, where the filer is salaried.
-    salary: tuple[str, str] | None = None
-    #: The withholding the payer's certificate states and the register holds, where there is a certificate.
-    certified: Decimal | None = None
-    #: Activity income booked in the profile's ledger for the year.
-    ledger_income: Decimal | None = None
+    #: Whether the cash remuneration and Social Security contributions the salaried persona's employer certificate
+    #: declares are typed into the form; the figures are the persona's, never restated here.
+    salary: bool = False
+    #: Whether the register holds the persona's own declared certificate, replayed with the persona in full. A
+    #: salaried filer without it starts from the persona's profile and household alone.
+    persona_certificate: bool = False
+    #: The withholding of a certificate the scenario states in place of the persona's, over the persona's own
+    #: remuneration: a result to pay needs less withheld than the persona's certificate states. The certificate is
+    #: recorded through the register's operation for the filer's year.
+    withheld: Decimal | None = None
     #: Whether the profile also holds the year's calculated first-quarter Modelo 130, which the projection of the
     #: annual return from the quarters reads; the projection is read for the filer only then.
     quarter_130: bool = False
     #: The day the filer's profile is read on, where it matters: the filing period of the return runs to the end
     #: of June of the year after, and a result to pay is offered in two instalments only within it. ``None`` reads
-    #: on today's date.
+    #: as of the scenario's instant.
     read_on: datetime | None = None
     #: What the profile states of the household, by name (see ``_household_facts``).
     household: str = "single"
@@ -993,92 +1345,84 @@ class RentaFiler:
     #: The income classes the filer attests no payer withheld on, as the register records the attestation: a class
     #: with neither a certificate nor an attestation stays unresolved, which is not the same as none.
     attested_none: tuple[str, ...] = ()
+    #: The profile answers the filer takes back from the persona's, so the check names each as missing from the
+    #: profile and leads there.
+    unanswered: tuple[str, ...] = ()
 
+
+#: The withholding a scenario states where it needs a result to pay: below what the persona's certificate states.
+PAYING_WITHHOLDING = Decimal("2000.00")
 
 RENTA_FILERS: tuple[RentaFiler, ...] = (
     # Salaried, with income from savings and a capital gain declared, and no certificate in the register:
-    # the three withholding credits and the totals that read them stay unresolved.
-    RentaFiler("", "trabajo,capital_mobiliario,ganancias_patrimoniales", salary=("30000", "1900"), compared=True),
-    # Salaried, one certificate in the register: a credit smaller than the tax, so the result is to pay.
-    RentaFiler("pay", "trabajo", salary=("30000", "1900"), certified=Decimal("2000.00")),
-    # The same income with a certificate stating more than the tax: the result is to refund.
-    RentaFiler("refund", "trabajo", salary=("30000", "1900"), certified=Decimal("6000.00")),
-    # Self-employed, with the year's activity income booked in the ledger.
-    RentaFiler("activity", "actividad_economica", ledger_income=Decimal("40000.00")),
+    # the three withholding credits and the totals that read them stay unresolved. The filer's sex is not
+    # answered, so one line of the check leads to the profile.
+    RentaFiler(
+        "",
+        "trabajo,capital_mobiliario,ganancias_patrimoniales",
+        salary=True,
+        compared=True,
+        unanswered=("renta_taxpayer.sex",),
+    ),
+    # Salaried, one certificate in the register that withholds less than the tax: the result is to pay, read after
+    # the filing period, so the result can no longer be paid in two instalments.
+    RentaFiler("pay", "trabajo", salary=True, withheld=PAYING_WITHHOLDING, read_on=RENTA_AFTER_FILING_PERIOD_DAY),
+    # The persona's own certificate, which withholds more than the tax: the result is to refund.
+    RentaFiler("refund", "trabajo", salary=True, persona_certificate=True),
+    # Self-employed, with the activity persona's year of income in the ledger.
+    RentaFiler("activity", "actividad_economica"),
     # Salaried and self-employed, the year's first quarter calculated, and no certificate in the register: the
     # projection from the quarter names the employment credit and the totals that read it as unresolved.
-    RentaFiler(
-        "projected",
-        "trabajo,actividad_economica",
-        salary=("30000", "1900"),
-        ledger_income=Decimal("40000.00"),
-        quarter_130=True,
-    ),
+    RentaFiler("projected", "trabajo,actividad_economica", salary=True, quarter_130=True),
     # The same filer with a certificate in the register, and the attestation that no payer withheld on the rental
     # activity the register would otherwise leave unresolved: the projection resolves every credit.
     RentaFiler(
         "credited",
         "trabajo,actividad_economica",
-        salary=("30000", "1900"),
-        certified=Decimal("2000.00"),
-        ledger_income=Decimal("40000.00"),
+        salary=True,
+        withheld=PAYING_WITHHOLDING,
         quarter_130=True,
         attested_none=("arrendamiento_inmueble_urbano_actividad",),
     ),
     # The salaried filer with a certificate that leaves a result to pay, read within the filing period: the
     # result may be paid at once or in two instalments, and the split states both amounts as advisory.
-    RentaFiler(
-        "instalment",
-        "trabajo",
-        salary=("30000", "1900"),
-        certified=Decimal("2000.00"),
-        read_on=RENTA_FILING_PERIOD_DAY,
-    ),
+    RentaFiler("instalment", "trabajo", salary=True, withheld=PAYING_WITHHOLDING, read_on=RENTA_FILING_PERIOD_DAY),
     # A married couple whose profile states the spouse, one certificate in the register: the filing modes can be
     # compared, and joint filing comes out lower.
     RentaFiler(
         "married",
         "trabajo",
-        salary=("30000", "1900"),
-        certified=Decimal("2000.00"),
+        salary=True,
+        withheld=PAYING_WITHHOLDING,
         household="married",
         compared=True,
         compared_states=True,
     ),
     # The same couple with no certificate in the register: the credits the results read have no value, so the
     # comparison names those boxes instead of comparing.
-    RentaFiler("uncredited", "trabajo", salary=("30000", "1900"), household="married", compared=True),
+    RentaFiler("uncredited", "trabajo", salary=True, household="married", compared=True),
     # A married filer whose profile does not state the spouse.
     RentaFiler(
         "spouseless",
         "trabajo",
-        salary=("30000", "1900"),
-        certified=Decimal("2000.00"),
+        salary=True,
+        withheld=PAYING_WITHHOLDING,
         household="married-no-spouse",
         compared=True,
     ),
     # A single filer with no child in the household, who has no family unit to file jointly.
-    RentaFiler(
-        "alone",
-        "trabajo",
-        salary=("30000", "1900"),
-        certified=Decimal("2000.00"),
-        household="alone",
-        compared=True,
-    ),
+    RentaFiler("alone", "trabajo", salary=True, withheld=PAYING_WITHHOLDING, household="alone", compared=True),
     # A married couple whose return was never calculated.
     RentaFiler("uncalculated", "trabajo", household="married", calculated=False, compared=True),
     # A single parent who has not said whether they live with the child's other parent: the joint reduction
     # depends on it, so the comparison names the box it leaves without a value.
-    RentaFiler(
-        "parent", "trabajo", salary=("30000", "1900"), certified=Decimal("2000.00"), household="parent", compared=True
-    ),
+    RentaFiler("parent", "trabajo", salary=True, withheld=PAYING_WITHHOLDING, household="parent", compared=True),
     # The same parent stating that they do not live with the child's other parent: the comparison is made.
     RentaFiler(
         "parentapart",
         "trabajo",
-        salary=("30000", "1900"),
-        certified=Decimal("2000.00"),
+        salary=True,
+        withheld=PAYING_WITHHOLDING,
         household="parent-apart",
         compared=True,
     ),
@@ -1106,132 +1450,207 @@ def renta_year_filer(year: int) -> RentaFiler:
     return RentaFiler(
         f"y{year}",
         "trabajo",
-        salary=("30000", "1900"),
-        certified=Decimal("2000.00"),
+        salary=True,
+        withheld=PAYING_WITHHOLDING,
         household="married",
         compared=True,
         year=year,
     )
 
 
-#: The tax id the profile states for a married filer's spouse.
-RENTA_SPOUSE_TAX_ID = "98765432M"
+#: The spouse a profile states, as the setup flow records it.
+_SPOUSE_PATHS: tuple[str, ...] = (
+    "renta_spouse.tax_id",
+    "renta_spouse.name",
+    "renta_spouse.surnames",
+    "renta_spouse.birth_date",
+    "renta_spouse.sex",
+    "renta_spouse.non_resident_irpf",
+)
 
 
-def _household_facts(name: str) -> tuple[Any, ...]:
-    """What the profile states of the taxpayer's household, by the name a filer gives it.
+def _household(name: str) -> tuple[tuple[str, object], ...]:
+    """What the profile states of the taxpayer's household over the persona's own, by the name a filer gives it.
 
-    ``single`` is one unmarried taxpayer who states nothing of a family situation. ``married`` is a married couple
-    that states the spouse and the family situation; ``married-no-spouse`` leaves the spouse out. ``alone`` is an
-    unmarried taxpayer who states a family situation with no child in the household. ``parent`` is an unmarried
-    taxpayer with a minor child in the household who has not said whether they live with the child's other parent,
-    and ``parent-apart`` is the same taxpayer stating that they do not.
+    ``married`` is a married couple that states the spouse and the family situation, with no child in the family
+    unit: the salaried persona's marriage and spouse; ``married-no-spouse`` takes the spouse back. ``single`` is an
+    unmarried taxpayer who states nothing of a family situation, and ``alone`` one who states a family situation with
+    no child in the household. ``parent`` is an unmarried taxpayer with a minor child in the household who has not
+    said whether they live with the child's other parent, and ``parent-apart`` is the same taxpayer stating that they
+    do not. Each states every fact it names, so it reads the same over either persona.
     """
-    from datetime import date
-
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
     from cadrumo.domain.contribuyente.renta_codes import RentaDeclaracionType, RentaMaritalStatus
-    from cadrumo.domain.user_profile.tests.general_regime_facts import RENTA_UNMARRIED_TAXPAYER_FACTS
-    from cadrumo.domain.user_profile.values import UserProfileFact
 
     # The form codes the profile stores are the registry's own, read under a pinned authority.
     with bundled_indexed_authority().operation():
         married_code = RentaMaritalStatus.CASADO.code
         single_code = RentaMaritalStatus.SOLTERO.code
         individual_code = RentaDeclaracionType.INDIVIDUAL.code
-    if name == "single":
-        return RENTA_UNMARRIED_TAXPAYER_FACTS
-    if name == "alone":
-        stated = UserProfileFact(path="renta_family.situacion_familiar", value="soltero")
-        return (*RENTA_UNMARRIED_TAXPAYER_FACTS, stated)
-    married = (
-        UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-        UserProfileFact(path="renta_taxpayer.marital_status", value=married_code),
-        UserProfileFact(path="renta_taxpayer.marriage_full_year", value=True),
-        UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("1")),
-        UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("12")),
-        UserProfileFact(path="renta_filing.declaration_type", value=individual_code),
-        UserProfileFact(path="renta_family.situacion_familiar", value="casado"),
-        UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+    situation, children, apart = (
+        "renta_family.situacion_familiar",
+        "renta_family.minor_children_in_unit",
+        "renta_family.convive_con_otro_progenitor",
     )
-    if name == "married":
-        return (*married, UserProfileFact(path="renta_spouse.tax_id", value=RENTA_SPOUSE_TAX_ID))
-    if name == "married-no-spouse":
-        return married
-    if name in {"parent", "parent-apart"}:
-        parent = (
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.marital_status", value=single_code),
-            UserProfileFact(path="renta_filing.declaration_type", value=individual_code),
-            UserProfileFact(path="renta_family.situacion_familiar", value="soltero"),
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=True),
-        )
-        if name == "parent":
-            return parent
-        return (*parent, UserProfileFact(path="renta_family.convive_con_otro_progenitor", value=False))
-    raise SystemExit(f"no household is named {name}")
+    filing = (("renta_filing.declaration_type", individual_code),)
+    no_spouse = tuple((path, None) for path in _SPOUSE_PATHS)
+    unmarried = (
+        ("renta_taxpayer.marital_status", single_code),
+        ("renta_taxpayer.marriage_date", None),
+        *no_spouse,
+        *filing,
+    )
+    married = (
+        ("renta_taxpayer.marital_status", married_code),
+        *filing,
+        (situation, "casado"),
+        (children, False),
+        (apart, None),
+    )
+    households: dict[str, tuple[tuple[str, object], ...]] = {
+        "single": (*unmarried, (situation, None), (children, False), (apart, None)),
+        "alone": (*unmarried, (situation, "soltero"), (children, False), (apart, None)),
+        "married": married,
+        "married-no-spouse": (*married, *no_spouse),
+        "parent": (*unmarried, (situation, "soltero"), (children, True), (apart, None)),
+        "parent-apart": (*unmarried, (situation, "soltero"), (children, True), (apart, False)),
+    }
+    if name not in households:
+        raise SystemExit(f"no household is named {name}")
+    return households[name]
+
+
+def _filer_persona(filer: RentaFiler) -> str:
+    """The catalogue persona a filer starts from: the activity persona where it declares an economic activity."""
+    return ACTIVITY_PERSONA if "actividad_economica" in filer.categories.split(",") else SALARIED_PERSONA
+
+
+def _salaried_certificate() -> WithholdingCertificate:
+    """The employer certificate the salaried persona declares: the figures every salaried filer's form states."""
+    persona, _ = _catalogue_persona(SALARIED_PERSONA)
+    (certificate,) = (item for item in persona.withholding_certificates if item.payer == RENTA_PAYER)
+    return certificate
+
+
+def _salaried_contributions() -> Decimal:
+    """The Social Security contributions the salaried persona's certificate states."""
+    contributions = _salaried_certificate().cotizaciones_seguridad_social
+    if contributions is None:
+        raise SystemExit("the salaried persona's certificate states no Social Security contributions")
+    return contributions
+
+
+def _typed_salary(filer: RentaFiler, *, small: bool = False) -> tuple[str, str] | None:
+    """The cash remuneration and contributions the filer types, or ``None`` where it types none.
+
+    ``small`` takes the figures of a household too small for either filing mode to owe tax on.
+    """
+    if small:
+        return RENTA_SMALL_SALARY
+    if not filer.salary:
+        return None
+    certificate = _salaried_certificate()
+    return str(certificate.importe_integro), str(_salaried_contributions())
 
 
 @contextmanager
-def _renta_seeded(tmp: Path, filer: RentaFiler) -> Generator[Any]:
-    """One synthetic profile whose first declaration is the filer's Modelo 100 of its year, not yet calculated."""
-    from cadrumo.domain.user_profile.values import UserProfileFact
-    from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
-    from cadrumo.entrypoints.tests.modelo_operator_work_storage import seeded_operator_work
-
-    facts = (
-        UserProfileFact(path="taxpayer_type.irpf_income_categories", value=filer.categories),
-        UserProfileFact(path="tax_residence.ccaa", value=RENTA_CCAA),
-        *_household_facts(filer.household),
+def _renta_seeded(tmp: Path, filer: RentaFiler, *, read_on: datetime | None = None) -> Generator[tuple[Any, Any]]:
+    """The filer's persona with its categories and household stated, and its Modelo 100 of its year, not calculated."""
+    stated = (
+        ("taxpayer_type.irpf_income_categories", filer.categories),
+        *_household(filer.household),
+        *((path, None) for path in filer.unanswered),
     )
-    with (
-        profile_adapter_composition(),
-        seeded_operator_work(
-            tmp, modelo="100", filing_year=filer.year, period_code=RENTA_PERIOD, extra_facts=facts
-        ) as work,
-    ):
-        yield work
+    persona_id = _filer_persona(filer)
+    # The salaried persona's own certificate is part of its full replay; a filer that states its own, or has none,
+    # starts from the profile and household alone.
+    household_only = persona_id == SALARIED_PERSONA and not filer.persona_certificate
+    with _persona_profile(tmp, persona_id, stated, read_on=read_on, household_only=household_only) as persona:
+        yield persona, _declaration(persona, "100", filer.year, RENTA_PERIOD)
 
 
-def _record_certificate(work: Any, filer: RentaFiler) -> None:
-    """Store the payer's certificate and the filer's attestations in the register, as its write door does."""
-    from cadrumo.adapters.persistence.profile.tests.retencion_soportada_seed import (
-        seed_absence_attestation,
-        seed_payer_certificate,
+def _record_certificate(persona: Any, filer: RentaFiler) -> None:
+    """Record the certificate the scenario states and the filer's attestations through the register's operations.
+
+    The certificate has the salaried persona's own remuneration, the payer's identity and the withheld amount the
+    scenario states; the persona's own certificate is replayed with the persona, not recorded here.
+    """
+    from cadrumo.application.operations.public_scalar import PublicDecimal
+    from cadrumo.application.retencion_soportada_absence.contracts import (
+        RETENCION_SOPORTADA_ABSENCE_ATTEST_OPERATION_DEFINITION_ID,
     )
+    from cadrumo.application.retencion_soportada_absence.requests import RetencionSoportadaAbsenceAttestRequest
+    from cadrumo.application.retencion_soportada_certificado.contracts import (
+        RETENCION_SOPORTADA_RECORD_OPERATION_DEFINITION_ID,
+    )
+    from cadrumo.application.retencion_soportada_certificado.requests import RetencionSoportadaRecordRequest
+    from cadrumo.application.retencion_soportada_certificado.results import RetencionSoportadaMutationProjection
     from cadrumo.core.retencion_soportada import RetencionSoportadaClase
+    from cadrumo.domain.renta.retencion_soportada import RetencionSoportadaOrigen
+    from cadrumo.entrypoints.tests.persona_materialisation import run_operation, settle_operation
 
+    world = persona.world
     for token in filer.attested_none:
-        seed_absence_attestation(
-            operation=work.operation, ejercicio=filer.year, income_class=RetencionSoportadaClase(token)
-        )
-    if filer.certified is None or filer.salary is None:
+        if (
+            settle_operation(
+                world,
+                RETENCION_SOPORTADA_ABSENCE_ATTEST_OPERATION_DEFINITION_ID,
+                RetencionSoportadaAbsenceAttestRequest(
+                    profile_id=world.profile_id,
+                    ejercicio=filer.year,
+                    income_class=RetencionSoportadaClase(token),
+                    note="No payer withheld on this income.",
+                ),
+            )
+            is None
+        ):
+            raise SystemExit(f"the attestation of {token} published nothing")
+    if filer.withheld is None:
         return
-    seed_payer_certificate(
-        operation=work.operation,
-        taxpayer_tax_id=MAIN_TAX_ID,
-        ejercicio=filer.year,
-        payer_tax_id=RENTA_PAYER_TAX_ID,
-        income_class=RetencionSoportadaClase.TRABAJO,
-        retencion=filer.certified,
-        importe_integro_dinerario=Decimal(filer.salary[0]),
+    certificate = _salaried_certificate()
+    payer = persona.persona.identities.role(RENTA_PAYER)
+    zero = PublicDecimal(decimal="0.00")
+    recorded = run_operation(
+        world,
+        RETENCION_SOPORTADA_RECORD_OPERATION_DEFINITION_ID,
+        RetencionSoportadaRecordRequest(
+            profile_id=world.profile_id,
+            ejercicio=filer.year,
+            income_class=RetencionSoportadaClase.TRABAJO,
+            payer_tax_id=payer.value,
+            payer_legal_name=payer.legal_name,
+            importe_integro_dinerario=PublicDecimal(decimal=str(certificate.importe_integro)),
+            valoracion_especie=zero,
+            retencion=PublicDecimal(decimal=str(filer.withheld)),
+            ingreso_a_cuenta=zero,
+            ingreso_a_cuenta_repercutido=zero,
+            origin=RetencionSoportadaOrigen.OPERATOR_DECLARATION,
+        ),
+        RetencionSoportadaMutationProjection,
     )
+    if recorded.outcome != "recorded":
+        raise SystemExit(f"the payer's certificate was refused: {recorded.refusal}")
 
 
-def _calculate_renta(work: Any, filer: RentaFiler, *, borrador_snapshot_id: str | None = None) -> None:
+def _calculate_renta(
+    work: Any, filer: RentaFiler, *, borrador_snapshot_id: str | None = None, small_salary: bool = False
+) -> None:
     """Calculate the filer's declaration through the registered calculation, with the answers it refuses without.
 
     The filer starts from the answers the latest design asks. Another year's design asks others, which the
     calculation names one at a time as the binding it refuses without; the filer answers each as none, the way
     an operator answers a question the calculation puts, and the calculation is asked again.
-    A draft imported earlier is replayed into the calculation when ``borrador_snapshot_id`` names it.
+    A draft imported earlier is replayed into the calculation when ``borrador_snapshot_id`` names it. With
+    ``small_salary`` the filer types the figures of a household too small to owe tax on.
     """
     from cadrumo.application.modelo.work_missing_input import ModeloWorkMissingInputError
 
     answers = list(RENTA_ANSWERS)
     while True:
         try:
-            _calculate_renta_with(work, filer, tuple(answers), borrador_snapshot_id=borrador_snapshot_id)
+            _calculate_renta_with(
+                work, filer, tuple(answers), borrador_snapshot_id=borrador_snapshot_id, small_salary=small_salary
+            )
         except ModeloWorkMissingInputError as missing:
             if any(missing.binding_id == key for key, _ in answers):
                 raise
@@ -1241,7 +1660,12 @@ def _calculate_renta(work: Any, filer: RentaFiler, *, borrador_snapshot_id: str 
 
 
 def _calculate_renta_with(
-    work: Any, filer: RentaFiler, answers: tuple[tuple[str, str], ...], *, borrador_snapshot_id: str | None
+    work: Any,
+    filer: RentaFiler,
+    answers: tuple[tuple[str, str], ...],
+    *,
+    borrador_snapshot_id: str | None,
+    small_salary: bool,
 ) -> None:
     """Calculate the filer's declaration once, answering the bindings in ``answers``."""
     from cadrumo.application.modelo.calculation_operation import ModeloWorkCalculateExecutor
@@ -1261,7 +1685,8 @@ def _calculate_renta_with(
         calculation_action_ports_factory=lambda **_: work.ports,
         attachment_store_factory=build_attachment_store,
     )
-    stated = zip(RENTA_SALARY_BOXES, filer.salary, strict=True) if filer.salary is not None else ()
+    salary = _typed_salary(filer, small=small_salary)
+    stated = zip(RENTA_SALARY_BOXES, salary, strict=True) if salary is not None else ()
     request = OperationRequest(
         definition_id=MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
         subject_ref=work.work_unit_id,
@@ -1415,8 +1840,6 @@ def _write_comparison_states(directory: Path, work: Any, filer: RentaFiler) -> N
     reached by the single-earner household the application models, so the real projection and its served words
     state one built from amounts: the application's own result, projected and worded as any comparison is.
     """
-    from dataclasses import replace
-
     from cadrumo.application.modelo.taxation_comparison import (
         TaxationComparisonResult,
         TaxationRecommendation,
@@ -1425,7 +1848,7 @@ def _write_comparison_states(directory: Path, work: Any, filer: RentaFiler) -> N
     from cadrumo.application.modelo.taxation_comparison_operation import ModeloTaxationComparisonProjection
     from cadrumo.core.config import override_settings
 
-    _calculate_renta(work, replace(filer, salary=RENTA_SMALL_SALARY))
+    _calculate_renta(work, filer, small_salary=True)
     _write_taxation_comparison(directory, work, f"100-{RENTA_PERIOD}-{filer.envelope}-small")
     conjunta, individual, conjunta_cuota, individual_cuota = (Decimal(amount) for amount in INDIVIDUAL_LOWER)
     built = TaxationComparisonResult(
@@ -1451,33 +1874,26 @@ def _write_comparison_states(directory: Path, work: Any, filer: RentaFiler) -> N
 def _write_projection_steps(directory: Path) -> None:
     """Record the stops from a profile with no quarterly declaration to an estimate, as served.
 
-    The profile is the projected filer's, with its income booked and no quarter yet. Its first quarter is created
-    through the registered creation, which the first refusal's step names, and the refusal that follows names the
-    declaration just created as the one to calculate. That is calculated through the registered calculation, with
-    none of the answers about earlier filings it refuses without, and the estimate is then refused for want of a
-    result the quarter does not yet hold: the refusal names the quarter's open boxes from its own form and serves
-    the step that opens it. Each refusal is recorded as a stopped executor's detail is, in every language; the two
-    results are recorded once.
+    The profile is the projected filer's, with the activity persona's income in its ledger and no quarter yet. Its
+    first quarter is created through the registered creation, which the first refusal's step names, and the refusal
+    that follows names the declaration just created as the one to calculate. That is calculated through the registered
+    calculation, with none of the answers about earlier filings it refuses without, and the estimate is then refused for
+    want of a result the quarter does not yet hold: the refusal names the quarter's open boxes from its own form and
+    serves the step that opens it. Each refusal is recorded as a stopped executor's detail is, in every language; the
+    two results are recorded once.
     """
     from dataclasses import replace
 
-    from cadrumo.adapters.persistence.profile.tests.m130_source_support import seed_m130_income_transaction
     from cadrumo.application.modelo.work_calculation_contracts import ModeloWorkCalculateRequest
     from cadrumo.application.modelo.work_create_operation import ModeloWorkCreateProjection, ModeloWorkCreateRequest
     from cadrumo.application.operations.public_period import PublicPeriod
-    from cadrumo.core.time.clock import frozen_clock
-    from cadrumo.entrypoints.tests.modelo_operator_work_storage import SEEDED_AT
 
     projected = next(filer for filer in RENTA_FILERS if filer.envelope == "projected")
     filer = replace(projected, quarter_130=False)
-    if filer.ledger_income is None:
-        raise SystemExit("the filer of the estimate's steps books no income")
     with (
         tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
-        frozen_clock(SEEDED_AT),
-        _renta_seeded(Path(tmp), filer) as work,
+        _renta_seeded(Path(tmp), filer) as (_, work),
     ):
-        seed_m130_income_transaction(amount=filer.ledger_income, filing_year=RENTA_YEAR, source_key="synthetic-ledger")
         created = _operate(
             work,
             "modelo.work.create",
@@ -1508,23 +1924,15 @@ def _write_projection_steps(directory: Path) -> None:
 
 
 def _write_renta_filer(directory: Path, filer: RentaFiler, *, first: bool) -> None:
-    """Read one filer's 2025 Modelo 100 in every language, with the projection and settlement states it has.
+    """Read one filer's Modelo 100 in every language, with the projection and settlement states it has.
 
     The first filer is also the one whose declarations list, help cards and refused projection are read.
     """
-    from cadrumo.adapters.persistence.profile.tests.m130_source_support import seed_m130_income_transaction
-    from cadrumo.core.time.clock import frozen_clock
-
     with (
         tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
-        frozen_clock(filer.read_on) if filer.read_on is not None else nullcontext(),
-        _renta_seeded(Path(tmp), filer) as work,
+        _renta_seeded(Path(tmp), filer, read_on=filer.read_on) as (persona, work),
     ):
-        _record_certificate(work, filer)
-        if filer.ledger_income is not None:
-            seed_m130_income_transaction(
-                amount=filer.ledger_income, filing_year=filer.year, source_key="synthetic-ledger"
-            )
+        _record_certificate(persona, filer)
         if filer.quarter_130:
             _answer_quarter(_other_declaration(work, "130", RENTA_QUARTER))
         if filer.calculated:
@@ -1546,14 +1954,27 @@ def _write_renta_filer(directory: Path, filer: RentaFiler, *, first: bool) -> No
 
 
 #: The filer whose profile holds the Borrador drafts: a salaried filer with one certificate in the register.
-BORRADOR_FILER = RentaFiler("borrador", "trabajo", salary=("30000", "1900"), certified=Decimal("2000.00"))
+BORRADOR_FILER = RentaFiler("borrador", "trabajo", salary=True, withheld=PAYING_WITHHOLDING)
 #: The boxes an AEAT draft prints as results, which no binding owns: they are kept only to be compared. The draft
 #: prints what the calculation works out for each, except the last, which it prints a euro and a quarter higher.
 BORRADOR_PRINTED_RESULTS: tuple[str, ...] = ("0505", "0545", "0546", "0585", "0586")
 BORRADOR_PRINTED_OFF = ("0585", Decimal("1.25"))
-#: Boxes the draft prints that its import does not read: the cash remuneration, stated lower than the filer typed,
-#: and the Social Security contributions, stated as typed.
-BORRADOR_PRINTED_EXTRA: tuple[tuple[str, str], ...] = (("0003", "29500.00"), ("0013", "1900.00"))
+#: How much lower than the filer typed the draft prints the cash remuneration.
+BORRADOR_PRINTED_REMUNERATION_SHORT = Decimal("500.00")
+
+
+def _borrador_printed_extra() -> tuple[tuple[str, Decimal], ...]:
+    """Boxes the draft prints that its import does not read, from the salaried persona's certificate.
+
+    The cash remuneration is stated lower than the filer typed, and the Social Security contributions as typed.
+    """
+    certificate = _salaried_certificate()
+    return (
+        ("0003", certificate.importe_integro - BORRADOR_PRINTED_REMUNERATION_SHORT),
+        ("0013", _salaried_contributions()),
+    )
+
+
 #: When a draft the rules refuse was stored, when the first draft was imported and when the second was.
 BORRADOR_REFUSED_AT = datetime(RENTA_YEAR + 1, 4, 2, 10, 0, tzinfo=UTC)
 BORRADOR_FIRST_AT = datetime(RENTA_YEAR + 1, 4, 3, 10, 0, tzinfo=UTC)
@@ -1582,9 +2003,15 @@ def _write_borrador_comparison(directory: Path | None, work: Any, state: str) ->
 
 
 def _import_borrador(
-    work: Any, tmp: Path, *, captured_at: datetime, results: Mapping[str, Decimal], shift: Decimal = Decimal(0)
+    work: Any,
+    tmp: Path,
+    *,
+    tax_id: str,
+    captured_at: datetime,
+    results: Mapping[str, Decimal],
+    shift: Decimal = Decimal(0),
 ) -> str:
-    """Read a synthetic draft PDF through the real parser and keep it in the profile's encrypted custody.
+    """Read a synthetic draft PDF issued to ``tax_id`` through the real parser and keep it in encrypted custody.
 
     The printed ``results`` are kept as comparison-only observations, with the printed boxes the import does not
     read. ``shift`` moves every printed result, so a second draft differs from the first.
@@ -1600,7 +2027,7 @@ def _import_borrador(
     period = Period.from_year_and_code(RENTA_YEAR, RENTA_PERIOD)
     printed = {box: value + shift for box, value in results.items()}
     source = tmp / "borrador.pdf"
-    source.write_bytes(render_borrador_pdf(RENTA_YEAR, printed))
+    source.write_bytes(render_borrador_pdf(RENTA_YEAR, printed, tax_id=tax_id))
     ports = build_borrador_100_operation_ports(profile_id=UUID(bucket), operation=work.operation)
     prepared = prepare_borrador_100_import(
         source,
@@ -1611,8 +2038,8 @@ def _import_borrador(
         profile_tax_id=ports.profile_tax_id,
     )
     extra = tuple(
-        Borrador100PrintedObservation(casilla_id=box, continuidad_id=None, value=Decimal(value))
-        for box, value in BORRADOR_PRINTED_EXTRA
+        Borrador100PrintedObservation(casilla_id=box, continuidad_id=None, value=value)
+        for box, value in _borrador_printed_extra()
     )
     repository = build_borrador_100_snapshot_repository(bucket_id=bucket)
     return (
@@ -1672,20 +2099,24 @@ def _borrador_chain(directory: Path | None, results: Mapping[str, Decimal]) -> d
     it, and a second draft imported after the calculation. What the calculation holds for each box the draft prints
     as a result is returned.
     """
+    # Read within the filing period, after the drafts were imported.
     with (
         tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
-        _renta_seeded(Path(tmp), BORRADOR_FILER) as work,
+        _renta_seeded(Path(tmp), BORRADOR_FILER, read_on=RENTA_FILING_PERIOD_DAY) as (persona, work),
     ):
-        _record_certificate(work, BORRADOR_FILER)
+        _record_certificate(persona, BORRADOR_FILER)
         _write_borrador_comparison(directory, work, "no-capture")
         _store_refused_borrador(work)
         _write_borrador_comparison(directory, work, "capture-refused")
-        first = _import_borrador(work, Path(tmp), captured_at=BORRADOR_FIRST_AT, results=results)
+        issued_to = _taxpayer_tax_id(_filer_persona(BORRADOR_FILER))
+        first = _import_borrador(work, Path(tmp), tax_id=issued_to, captured_at=BORRADOR_FIRST_AT, results=results)
         _write_borrador_comparison(directory, work, "no-calculation")
         _calculate_renta(work, BORRADOR_FILER, borrador_snapshot_id=first)
         _write_borrador_comparison(directory, work, "compared")
         compared = json.loads(_borrador_comparison(work, LANGUAGES[0]).model_dump_json())
-        _import_borrador(work, Path(tmp), captured_at=BORRADOR_SECOND_AT, results=results, shift=Decimal(7))
+        _import_borrador(
+            work, Path(tmp), tax_id=issued_to, captured_at=BORRADOR_SECOND_AT, results=results, shift=Decimal(7)
+        )
         _write_borrador_comparison(directory, work, "stale")
     calculated = {
         row["casilla_id"]: Decimal(row["calculation_value"]["decimal"])
@@ -1708,7 +2139,7 @@ def _write_borrador_comparisons(directory: Path) -> None:
 
 
 def _write_renta(directory: Path) -> None:
-    """Read every filer's 2025 Modelo 100 in every language, and the declarations list of the first filer.
+    """Read every filer's Modelo 100 in every language, and the declarations list of the first filer.
 
     The married couple is also read for each other supported year, whose own design and registry edition, or the
     edition it is projected from, decide what the form offers.
@@ -2493,7 +2924,9 @@ def checked_entries(directory: Path, form: str) -> list[dict[str, Any]]:
 def _write_unverified_export(directory: Path, first: Any, destination: Path) -> None:
     """Export a declaration whose file design carries no completeness manifest; the export cannot vouch for it."""
     modelo, period_code = UNVERIFIED_EXPORT
-    work = _other_declaration(first, modelo, period_code)
+    # The edition in force on the scenario's clock: the one for the declarations' own year is graded for
+    # applicability only, so it cannot be calculated.
+    work = _other_declaration(first, modelo, period_code, filing_year=scenario_as_of().year)
     work.recalculate()
     if not _verify(work).granted_verificado_completo:
         raise SystemExit(f"modelo {modelo} did not check cleanly")
@@ -2591,12 +3024,13 @@ def _form_fields(envelope: Mapping[str, Any]) -> list[dict[str, Any]]:
 
 
 def _refusals() -> tuple[tuple[str, BaseException], ...]:
-    """The refusals the scenarios settle, each as its executor raises it."""
+    """The refusals the scenarios settle, each as its executor raises it, for the declarations' first 130."""
     from cadrumo.application.modelo.action_errors import ModeloDomiciliationPastCutoffError
     from cadrumo.application.modelo.calculation_note_gate import ModeloCalculationBlockedError
     from cadrumo.application.modelo.calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON
     from cadrumo.application.modelo.calculation_screen import calculation_screen_outdated_message_key
 
+    year = declarations_year()
     return (
         (
             "report-outdated",
@@ -2617,12 +3051,12 @@ def _refusals() -> tuple[tuple[str, BaseException], ...]:
                 context={
                     "calculation_revision_id": "c" * 64,
                     "modelo": "130",
-                    "filing_year": "2026",
+                    "filing_year": str(year),
                     "period": "1T",
-                    "payment_cutoff_on": "2026-04-15",
+                    "payment_cutoff_on": f"{year}-04-15",
                     "payment_cutoff_source": "filing_window",
                     "payment_cutoff_legal_refs": "Orden HAC/3625/2003, art. 3",
-                    "export_on": "2026-04-16",
+                    "export_on": f"{year}-04-16",
                 },
             ),
         ),
@@ -2668,7 +3102,9 @@ def _write_iva_wallet(directory: Path) -> None:
         iva = _other_declaration(work, "303", "1T")
         _write_list(directory, work, "declarations-wallet")
         profile_id = UUID(work.work_unit.bucket_id)
-        source = PublicPeriod(filing_year=2024, code="4T")
+        # The opening balance comes from the last quarter two years before the declaration's.
+        year = work.work_unit.filing_year
+        source = PublicPeriod(filing_year=year - 2, code="4T")
         subject = _profile_subject(work)
 
         def balance(stage: str) -> None:
@@ -2680,7 +3116,7 @@ def _write_iva_wallet(directory: Path) -> None:
                 _operate(
                     work,
                     MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID,
-                    ModeloIvaWalletBalanceRequest(profile_id=profile_id, as_of_year=2026),
+                    ModeloIvaWalletBalanceRequest(profile_id=profile_id, as_of_year=year),
                     subject_ref=subject,
                     effect=OperationEffect.NONE,
                 ),
@@ -2708,10 +3144,10 @@ def _write_iva_wallet(directory: Path) -> None:
                 MODELO_IVA_WALLET_OVERRIDE_OPERATION_DEFINITION_ID,
                 ModeloIvaWalletOverrideRequest(
                     profile_id=profile_id,
-                    period=PublicPeriod(filing_year=2026, code="1T"),
+                    period=PublicPeriod(filing_year=year, code="1T"),
                     amount="850.00",
                     reason="Use the taxpayer's reviewed carry balance.",
-                    evidence_locator="fixture:reviewed-iva-balance-2026-1T",
+                    evidence_locator=f"fixture:reviewed-iva-balance-{year}-1T",
                 ),
             ),
         ):
@@ -2720,25 +3156,35 @@ def _write_iva_wallet(directory: Path) -> None:
 
 
 def write_envelopes(directory: Path) -> None:
-    """Read every envelope the scenario host answers through the application's read path."""
-    from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import SEEDED_SOURCE_TAX_ID
+    """Read every envelope the scenario host answers through the application's read path, as of one instant."""
+    from cadrumo.core.time.clock import frozen_clock
+
+    with frozen_clock(scenario_as_of()):
+        _write_scenarios(directory)
+    _name_minted_ids(directory, sorted(path.name for path in directory.glob("*.json")))
+    pack_envelopes(directory)
+
+
+def _write_scenarios(directory: Path) -> None:
     from cadrumo.core.time.clock import frozen_clock, now
-    from cadrumo.domain.user_profile.values import UserProfileFact
 
     directory.mkdir(parents=True, exist_ok=True)
     write_refusals(directory)
     _write_iva_wallet(directory)
-    # The activity a filer declares and the regime it is assessed under; the calculated-only filer below records
-    # no regime, so its form shows what that leaves the declaration waiting on.
-    unregimed = (_income_categories_fact(),)
-    income = (*unregimed, _estimation_regime_fact())
     with (
         tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
-        _seeded(Path(tmp), facts=income) as first,
+        _seeded(Path(tmp)) as first,
     ):
         works = {DECLARATIONS[0][0]: first}
         for modelo, period_code, _ in DECLARATIONS[1:]:
-            works[modelo] = _other_declaration(first, modelo, period_code)
+            works[modelo] = _other_declaration(
+                first,
+                modelo,
+                period_code,
+                filing_year=_rules_incomplete_year(first.operation, modelo, period_code)
+                if modelo == RULES_INCOMPLETE_MODELO
+                else None,
+            )
         for modelo, _, calculated in DECLARATIONS:
             if calculated:
                 works[modelo].recalculate()
@@ -2753,11 +3199,10 @@ def write_envelopes(directory: Path) -> None:
         _write_prerequisite(directory, first)
         _write_303_edits(directory, works["303"])
         _write_unverified_export(directory, first, Path(tmp) / "modelo-165.txt")
-    # Its own profile: recording needs the earlier Renta filed under the profile's tax id.
-    facts = (*income, UserProfileFact(path="identity.tax_id", value=SEEDED_SOURCE_TAX_ID))
+    # Its own profile: recording needs the earlier Renta filed under the persona's tax id.
     with (
         tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
-        _seeded(Path(tmp), facts=facts) as filed,
+        _seeded(Path(tmp)) as filed,
     ):
         _write(directory, "file-130.json", _record_filed(filed))
         _write_form(directory, filed, "modelo-130-1T-filed")
@@ -2768,27 +3213,28 @@ def write_envelopes(directory: Path) -> None:
         _write_form(directory, filed, "modelo-130-1T-receipt")
         unit = _write_filing_reads(directory, filed, "130-receipt")
         _write_correction(directory, filed, unit.current_filing_record_id)
-    # Its own profile: the quarter's income is booked and the declaration is calculated, never checked or filed.
+    # Its own profile: the persona's ledger carries the quarter's income and the declaration is calculated, never
+    # checked or filed. It records no estimation regime, so its form shows what that leaves it waiting on.
     with (
         tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
-        _seeded(Path(tmp), facts=unregimed) as booked,
+        _seeded(Path(tmp), stated=UNREGIMED) as booked,
     ):
-        _seed_income(booked)
         booked.recalculate()
         _write_form(directory, booked, "modelo-130-1T-income")
-    # Its own profile, on a frozen timeline: a review half an hour after the form was read, and its renewal.
-    started = now()
+    # Its own profile, on a frozen timeline: calculated now, a review half an hour after the form was read, and its
+    # renewal, forty minutes on.
     with (
         tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
-        frozen_clock(started - timedelta(minutes=40)),
-        _seeded(Path(tmp), facts=income) as renewing,
+        _seeded(Path(tmp)) as renewing,
     ):
-        renewing.recalculate()
+        started = now() + timedelta(minutes=40)
+        with frozen_clock(started - timedelta(minutes=40)):
+            renewing.recalculate()
         _write_renewal_flow(directory, renewing, started)
     # Its own profile: the file is written, then a conflicting edit makes it stale and blocks verification.
     with (
         tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
-        _seeded(Path(tmp), facts=facts) as stale,
+        _seeded(Path(tmp)) as stale,
     ):
         _check_clean(stale)
         _write(directory, "export-130.json", _export_file(stale, Path(tmp) / "modelo-130.txt"))
@@ -2800,12 +3246,11 @@ def write_envelopes(directory: Path) -> None:
         _write_form(directory, stale, "modelo-130-1T-stale")
         _write_rebase(directory, stale)
     _write_renta(directory)
-    pack_envelopes(directory)
 
 
 # -- stored envelopes -----------------------------------------------------------
 #
-# The 2025 Modelo 100 forms are over three megabytes each, and the filers and languages read of it differ in
+# The Modelo 100 forms are over three megabytes each, and the filers and languages read of it differ in
 # a few hundred words. They are stored as a patch of the form they differ from: the filer's form in the
 # language's words, or the first filer's form in another language. A patch is the envelope's name and the
 # values that differ, the way ``src/dev/modeloEnvelopePatch.ts`` reads it. Every other envelope is stored whole.
@@ -2984,8 +3429,12 @@ def _result_model(definition_id: str) -> type[BaseModel]:
     return registry.lookup_public_schema_binding(schema).model_type
 
 
-def validate() -> int:
-    """Whether the host's admitted list and every stored envelope still match the registered models."""
+def validate(*, envelopes: bool = True) -> int:
+    """Whether the host's admitted list and, unless ``envelopes`` is false, every stored envelope match the models.
+
+    Raises:
+        SystemExit: When envelopes are asked for and none has been seeded, naming the command that seeds them.
+    """
     failures: list[str] = []
     registered, admitted = definitions(), admitted_by_host()
     if registered != admitted:
@@ -2994,7 +3443,9 @@ def validate() -> int:
             f"unadmitted {sorted(set(registered) - set(admitted))}, "
             f"unregistered {sorted(set(admitted) - set(registered))}"
         )
-    for pattern, model in _fixture_models():
+    if envelopes and not any(FIXTURES.glob("*.json")):
+        raise SystemExit(f"No modelo envelope is seeded in {FIXTURES}; run `just fixtures-seed modelo-envelopes`")
+    for pattern, model in _fixture_models() if envelopes else ():
         paths = sorted(FIXTURES.glob(pattern))
         if not paths:
             failures.append(f"no fixture matches {pattern}")
@@ -3016,6 +3467,9 @@ def main() -> int:
     parser.add_argument(
         "directory", nargs="?", type=Path, default=FIXTURES, help="Where `envelopes` writes and `pack` stores."
     )
+    parser.add_argument(
+        "--definitions", action="store_true", help="With `validate`, check the host's admitted list and no envelope."
+    )
     args = parser.parse_args()
     if args.step == "contract":
         sys.stdout.write(render_contract())
@@ -3029,7 +3483,7 @@ def main() -> int:
     if args.step == "pack":
         pack_envelopes(args.directory)
         return 0
-    return validate()
+    return validate(envelopes=not args.definitions)
 
 
 if __name__ == "__main__":

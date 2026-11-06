@@ -4,9 +4,9 @@ Every expectation about what the engine refuses without is read from the engine
 itself: the 2025 Modelo 100 is calculated over the published registry with one
 answer left out, and the refusal names the binding. The form is then built by
 the real builder, and must ask for exactly the boxes those refusals belong to --
-the earlier year's negative base (1388) always, and the normal direct
-estimation answer (0168) only for a filer whose profile states an economic
-activity, since the calculation reads it only behind that fact.
+the earlier year's negative base (1388) always. The normal direct
+estimation answer (0168) is derived from the profile's estimation regime, so the
+form never asks for it although the engine still refuses a calculation without it.
 """
 
 from __future__ import annotations
@@ -21,11 +21,12 @@ from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
-from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError, RegistryValidationError
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.modelo_100_registry_support import neutral_binding_values
+from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ..calculation_required_inputs import calculation_required_inputs
 from ..work_form_models import ModeloFormOrigin, ModeloFormStanding, ModeloWorkForm, section_fields
@@ -47,19 +48,23 @@ _NEGATIVE_BASE_BOXES = frozenset({_EARLIER_NEGATIVE_BASE_BOX, *_OLDER_NEGATIVE_B
 _DIRECT_ESTIMATION_BOX = "0168"
 _DIRECT_ESTIMATION: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
 _ECONOMIC_ACTIVITY: BindingId = "renta-profile-has-economic-activity"
+_DIRECT_REGIME: BindingId = "renta-profile-estimacion-directa"
 
 
-def _calculation_snapshot(operation: PinnedAuthorityOperation) -> RegistrySnapshot:
-    return operation.snapshot("100", filing_year=_YEAR, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
+def _calculation_snapshot(operation: PinnedAuthorityOperation, year: int = _YEAR) -> RegistrySnapshot:
+    return operation.snapshot("100", filing_year=year, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
 
 
-def _calculate_without(snapshot: RegistrySnapshot, *, activity: bool, omitted: BindingId | None) -> None:
+def _calculate_without(
+    snapshot: RegistrySnapshot, *, activity: bool, omitted: BindingId | None, year: int = _YEAR, directa: bool = True
+) -> None:
     """Run the engine over every binding's neutral answer, leaving ``omitted`` unanswered."""
     decimals, booleans, dates, enums = neutral_binding_values(
         binding for binding in snapshot.revision.bindings if binding.source is not BindingSourceKind.RELATION_PREFILL
     )
     booleans[_ECONOMIC_ACTIVITY] = activity
     booleans[_DIRECT_ESTIMATION] = True
+    booleans[_DIRECT_REGIME] = directa
     decimals["renta-profile-declaration-type"] = Decimal(1)
     if omitted is not None:
         decimals.pop(omitted, None)
@@ -70,7 +75,7 @@ def _calculate_without(snapshot: RegistrySnapshot, *, activity: bool, omitted: B
             _SALARY: Decimal("30000.00"),
             **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, decimals),
         },
-        date_context={"filing_period": date(_YEAR, 12, 31)},
+        date_context={"filing_period": date(year, 12, 31)},
         binding_values=decimals,
         enum_binding_values=enums,
         relation_values={
@@ -82,9 +87,9 @@ def _calculate_without(snapshot: RegistrySnapshot, *, activity: bool, omitted: B
     )
 
 
-def _refused_binding(snapshot: RegistrySnapshot, *, activity: bool, omitted: BindingId) -> str:
+def _refused_binding(snapshot: RegistrySnapshot, *, activity: bool, omitted: BindingId, year: int = _YEAR) -> str:
     with pytest.raises(RegistryValidationError) as refused:
-        _calculate_without(snapshot, activity=activity, omitted=omitted)
+        _calculate_without(snapshot, activity=activity, omitted=omitted, year=year)
     assert refused.value.translated_message in {
         "errors.calc.binding_value_missing",
         "errors.calc.bound_casilla_binding_value_missing",
@@ -112,10 +117,21 @@ def test_the_engine_refuses_without_any_earlier_negative_base_whoever_the_filer_
 def test_the_engine_refuses_without_the_direct_estimation_answer_only_for_a_filer_with_an_activity(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    snapshot = _calculation_snapshot(operation)
-
-    assert _refused_binding(snapshot, activity=True, omitted=_DIRECT_ESTIMATION) == _DIRECT_ESTIMATION
-    _calculate_without(snapshot, activity=False, omitted=_DIRECT_ESTIMATION)
+    """An employee or an objetiva filer calculates without the modality and a direct filer still needs it, in every supported year."""
+    support = published_supported_filing_years()
+    assert support is not None
+    checked = 0
+    for year in sorted(support.years):
+        try:
+            snapshot = _calculation_snapshot(operation, year)
+        except FilingYearOutsideSupportEnvelopeError:
+            continue
+        assert _refused_binding(snapshot, activity=True, omitted=_DIRECT_ESTIMATION, year=year) == _DIRECT_ESTIMATION
+        _calculate_without(snapshot, activity=False, omitted=_DIRECT_ESTIMATION, year=year)
+        # An estimacion objetiva filer has an activity but no direct-estimation block, so no modality is read.
+        _calculate_without(snapshot, activity=True, omitted=_DIRECT_ESTIMATION, year=year, directa=False)
+        checked += 1
+    assert checked
 
 
 # -- what the registry says the form must ask for -------------------------------
@@ -132,7 +148,7 @@ def test_the_inputs_named_are_the_ones_the_engine_refused_without(operation: Pin
 
     assert named(None) == _NEGATIVE_BASE_BOXES
     assert named({_ECONOMIC_ACTIVITY: False}) == _NEGATIVE_BASE_BOXES
-    assert named({_ECONOMIC_ACTIVITY: True}) == {*_NEGATIVE_BASE_BOXES, _DIRECT_ESTIMATION_BOX}
+    assert named({_ECONOMIC_ACTIVITY: True}) == _NEGATIVE_BASE_BOXES
 
 
 def test_a_carry_between_periods_of_one_year_is_not_named(operation: PinnedAuthorityOperation) -> None:
@@ -169,22 +185,14 @@ def test_the_earlier_negative_base_needs_the_filer_instead_of_waiting_for_an_imp
     assert _needs_you(form) >= _NEGATIVE_BASE_BOXES
 
 
-def test_the_direct_estimation_answer_is_asked_of_a_filer_with_an_activity_only(
+def test_the_direct_estimation_answer_is_never_asked_because_the_profile_derives_it(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    unknown = form_casilla(built_form(operation, "100", _YEAR, "0A"), _DIRECT_ESTIMATION_BOX)
-    without = form_casilla(
-        built_form(operation, "100", _YEAR, "0A", known_truths={_ECONOMIC_ACTIVITY: False}), _DIRECT_ESTIMATION_BOX
-    )
-    with_activity = form_casilla(
-        built_form(operation, "100", _YEAR, "0A", known_truths={_ECONOMIC_ACTIVITY: True}), _DIRECT_ESTIMATION_BOX
-    )
+    for truths in (None, {_ECONOMIC_ACTIVITY: False}, {_ECONOMIC_ACTIVITY: True}):
+        field = form_casilla(built_form(operation, "100", _YEAR, "0A", known_truths=truths), _DIRECT_ESTIMATION_BOX)
 
-    # A fact the form does not know claims nothing; a filer without an activity is never asked.
-    assert unknown.origin is ModeloFormOrigin.OPTIONAL_EMPTY
-    assert without.origin is ModeloFormOrigin.OPTIONAL_EMPTY
-    assert with_activity.origin is ModeloFormOrigin.NEEDS_INPUT
-    assert with_activity.standing is ModeloFormStanding.NEEDS_YOU
+        assert field.origin is not ModeloFormOrigin.NEEDS_INPUT, truths
+        assert field.standing is not ModeloFormStanding.NEEDS_YOU, truths
 
 
 def test_a_held_answer_is_confirmed_not_asked_again(operation: PinnedAuthorityOperation) -> None:
@@ -193,15 +201,13 @@ def test_a_held_answer_is_confirmed_not_asked_again(operation: PinnedAuthorityOp
         "100",
         _YEAR,
         "0A",
-        held={**dict.fromkeys(_NEGATIVE_BASE_BOXES, Decimal("0")), _DIRECT_ESTIMATION_BOX: "N"},
-        entered=frozenset({_DIRECT_ESTIMATION_BOX}),
+        held=dict.fromkeys(_NEGATIVE_BASE_BOXES, Decimal("0")),
         known_truths={_ECONOMIC_ACTIVITY: True},
     )
 
     for box in _NEGATIVE_BASE_BOXES:
         assert form_casilla(form, box).origin is ModeloFormOrigin.IMPORTED, box
-    assert form_casilla(form, _DIRECT_ESTIMATION_BOX).origin is ModeloFormOrigin.ENTERED
-    assert not {*_NEGATIVE_BASE_BOXES, _DIRECT_ESTIMATION_BOX} & _needs_you(form)
+    assert not _NEGATIVE_BASE_BOXES & _needs_you(form)
 
 
 def test_the_answers_feed_the_attention_counts_of_the_form_and_its_outline(operation: PinnedAuthorityOperation) -> None:
@@ -214,9 +220,9 @@ def test_the_answers_feed_the_attention_counts_of_the_form_and_its_outline(opera
         if hasattr(field.address, "casilla_id")
     }
 
-    assert form.counts.needs_input >= 2
-    assert form.counts.needs_you >= 2
-    for box in (_EARLIER_NEGATIVE_BASE_BOX, _DIRECT_ESTIMATION_BOX):
+    assert form.counts.needs_input >= 1
+    assert form.counts.needs_you >= 1
+    for box in (_EARLIER_NEGATIVE_BASE_BOX,):
         group = next(item for item in form.outline if sections[box] in item.section_ids)
         assert group.counts.needs_you >= 1, box
         assert group.counts.needs_input >= 1, box

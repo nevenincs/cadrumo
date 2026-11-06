@@ -617,12 +617,25 @@ def test_payer_fact_modelos_apply_when_required_fact_is_declared() -> None:
             assert result.legal_refs == expected_legal_refs, case_id
 
 
-def test_modelo_111_incomplete_when_payer_fact_not_declared() -> None:
-    """When the taxpayer does not positively declare paying withheld
-    income, Modelo 111 is INCOMPLETE — the boolean has no tri-state, so
-    the engine refuses to guess a NOT_APPLICABLE it cannot justify."""
+_UNANSWERED_PAYER_FACTS: dict[str, None] = {
+    "has_employees": None,
+    "pays_professionals_with_retencion": None,
+    "pays_rent_with_retencion": None,
+    "does_intracomunitario": None,
+}
 
-    result = derive_modelo_applicability(calendar_autonomo(), "111")
+
+def _autonomo_unanswered_payer_facts() -> TaxpayerProfile:
+    """The shared autónomo with the four payer questions left unanswered."""
+
+    return calendar_autonomo().model_copy(update=_UNANSWERED_PAYER_FACTS)
+
+
+def test_modelo_111_incomplete_when_payer_fact_not_declared() -> None:
+    """When the taxpayer has not answered whether they pay withheld
+    income, Modelo 111 is INCOMPLETE: an unanswered question is not a no."""
+
+    result = derive_modelo_applicability(_autonomo_unanswered_payer_facts(), "111")
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
     assert "depende de un hecho que el perfil no expresa con certeza" in result.reason
     # The undetermined rationale must not tell a declared operator to
@@ -648,7 +661,9 @@ def test_modelo_190_tracks_modelo_111_payer_fact() -> None:
     attribution_paying = _attribution_entity().model_copy(update={"has_employees": True})
     assert derive_modelo_applicability(paying, "190").verdict is (ApplicabilityVerdict.APPLICABLE)
     assert derive_modelo_applicability(attribution_paying, "190").verdict is (ApplicabilityVerdict.APPLICABLE)
-    assert derive_modelo_applicability(calendar_autonomo(), "190").verdict is (ApplicabilityVerdict.INCOMPLETE)
+    assert derive_modelo_applicability(_autonomo_unanswered_payer_facts(), "190").verdict is (
+        ApplicabilityVerdict.INCOMPLETE
+    )
     assert derive_modelo_applicability(_attribution_entity(), "190").verdict is (ApplicabilityVerdict.INCOMPLETE)
 
 
@@ -657,10 +672,45 @@ def test_payer_fact_modelos_are_incomplete_when_required_fact_not_declared() -> 
 
     # The shared autónomo answers the Modelo 347 question with a declared "no";
     # this case needs it unanswered.
-    undeclared = calendar_autonomo().model_copy(update={"third_party_transactions_above_347_threshold": None})
+    undeclared = _autonomo_unanswered_payer_facts().model_copy(
+        update={"third_party_transactions_above_347_threshold": None},
+    )
     for modelo in ("115", "123", "349", "347"):
         result = derive_modelo_applicability(undeclared, modelo)
         assert result.verdict is ApplicabilityVerdict.INCOMPLETE, modelo
+
+
+def test_a_stated_no_to_each_payer_question_makes_its_modelos_not_applicable() -> None:
+    """A declared no is an answer: 111/190 (withholding on pay), 115/180 (rent) and 349 (intra-EU)
+    are NOT_APPLICABLE when the profile states the matching fact is false."""
+
+    stated_no = calendar_autonomo()
+    for modelo in ("111", "190", "115", "349"):
+        result = derive_modelo_applicability(stated_no, modelo)
+        assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE, modelo
+
+
+def test_one_stated_no_does_not_settle_a_withholding_fact_with_an_unanswered_half() -> None:
+    """111 reads employees and professionals together: a no to one and silence on the other stays open,
+    and a yes to either decides it."""
+
+    base = _autonomo_unanswered_payer_facts()
+    half_answered = base.model_copy(update={"has_employees": False})
+    assert derive_modelo_applicability(half_answered, "111").verdict is ApplicabilityVerdict.INCOMPLETE
+    professionals = half_answered.model_copy(update={"pays_professionals_with_retencion": True})
+    assert derive_modelo_applicability(professionals, "111").verdict is ApplicabilityVerdict.APPLICABLE
+
+
+def test_a_stated_yes_to_each_payer_question_makes_its_modelos_applicable() -> None:
+    """Each fact's yes still decides its modelo, whatever the other answers say."""
+
+    for modelo, fact in (
+        ("115", "pays_rent_with_retencion"),
+        ("349", "does_intracomunitario"),
+        ("111", "has_employees"),
+    ):
+        result = derive_modelo_applicability(calendar_autonomo().model_copy(update={fact: True}), modelo)
+        assert result.verdict is ApplicabilityVerdict.APPLICABLE, modelo
 
 
 def test_modelo_180_tracks_modelo_115_payer_fact() -> None:
@@ -676,6 +726,8 @@ def test_modelo_180_tracks_modelo_115_payer_fact() -> None:
     )
     assert derive_modelo_applicability(paying, "180").verdict is (ApplicabilityVerdict.APPLICABLE)
     assert derive_modelo_applicability(_sociedad_limitada(), "180").verdict is (ApplicabilityVerdict.INCOMPLETE)
+    stated_no = _sociedad_limitada().model_copy(update={"pays_rent_with_retencion": False})
+    assert derive_modelo_applicability(stated_no, "180").verdict is (ApplicabilityVerdict.NOT_APPLICABLE)
 
 
 def test_attribution_entity_with_required_fact_owes_fact_gated_modelos() -> None:

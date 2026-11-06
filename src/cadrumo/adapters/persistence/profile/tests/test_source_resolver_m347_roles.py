@@ -11,6 +11,7 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.aggregation import ThirdPartyDeclarationRole, TravelAgencyMediationType
 from cadrumo.core.period import Period
 from cadrumo.domain.invoices.models import Invoice
@@ -295,33 +296,28 @@ def test_m347_excludes_a_received_invoice_whose_withholding_the_filer_declares_a
     assert declared.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("4235.00")
 
 
-def test_m347_declares_an_issued_invoice_withheld_by_the_customer_and_discloses_it(
+def test_m347_excludes_an_issued_invoice_withheld_by_the_customer(
     secure_profile: TestRuntimeProfile,
 ) -> None:
-    """The withheld party has no withholding summary of its own, so its side stays declared and disclosed.
+    """Art. 33.2.i excludes the operation, so the withheld party's side leaves the declaration too.
 
-    The advisory must not tell a landlord of business premises that the lease may
-    drop out: art. 34.1.d has the landlord relate it. This invoice records no
-    lease, so the advisory names it and points at the lease fact that would
-    take it out of the unsettled set.
+    The customer reports the operation in its withholding summary (RIRPF art.
+    108.2) and the text excludes every operation so reported, not one party's
+    side of it. The same issued invoice without the withholding is declared, so
+    what excludes it is the withholding alone, and no advisory is left open.
     """
     withheld = _withheld_invoice(
         secure_profile.bucket_id, kind=InvoiceKind.ISSUED, invoice_number="M347-RETENIDA-EMI-2026-001"
     )
+    unwithheld = withheld.model_copy(update={"retention_rate": None, "retention_amount": None})
+    context = m347_2026_context(secure_profile.bucket_id)
 
-    resolution = public_resolution((withheld,), context=m347_2026_context(secure_profile.bucket_id))
+    excluded = public_resolution((withheld,), context=context)
+    declared = public_resolution((unwithheld,), context=context)
 
-    assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
-    assert unsettled_reading_refs(resolution) == ["m347-exclusion:withheld-issued-invoice"]
-    advisory = next(item for item in resolution.diagnostics if item.reason == "unsettled_legal_reading")
-    assert advisory.asserted_legal_refs == (
-        "rd-1065-2007:art-33.2.i",
-        "rd-1065-2007:art-34.1.d",
-        "rd-439-2007:art-108",
-    )
-    assert "None of them records a business-premises lease" in advisory.message
-    assert advisory.remedy is not None
-    assert "lease of a local de negocio" in advisory.remedy
+    assert excluded.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("0")
+    assert unsettled_reading_refs(excluded) == []
+    assert declared.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
 
 
 def test_m347_clave_f_declares_a_mediated_sale_ordinary_sale_of_the_same_amount_does_not(
@@ -400,7 +396,7 @@ def test_m347_clave_g_declares_only_air_transport_purchases_not_other_mediated_p
         kind=InvoiceKind.RECEIVED,
         invoice_number="M347-AIR-2026-001",
         issued_at=date(2026, 5, 2),
-        counterparty_tax_id="B11223344",
+        counterparty_tax_id="B00010140",
         counterparty_name="Agencia de Viajes SA",
         counterparty_country="ES",
         base_total=Decimal("1200.00"),
@@ -414,7 +410,7 @@ def test_m347_clave_g_declares_only_air_transport_purchases_not_other_mediated_p
         kind=InvoiceKind.RECEIVED,
         invoice_number="M347-HOTEL-2026-001",
         issued_at=date(2026, 5, 2),
-        counterparty_tax_id="B11223344",
+        counterparty_tax_id="B00010140",
         counterparty_name="Agencia de Viajes SA",
         counterparty_country="ES",
         base_total=Decimal("1200.00"),
@@ -483,19 +479,15 @@ def test_m347_filer_declaration_roles_reaches_a_role_set_by_the_real_operator_pa
     set through the real projection, not a directly-constructed
     `TaxpayerProfile`.
     """
-    facts = (
-        UserProfileFact(path="identity.tax_id", value="B12345674"),
-        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-        UserProfileFact(path="iva.regime", value="GENERAL"),
-        UserProfileFact(path="iva.m303_regime_composition", value="general"),
-        UserProfileFact(path="iva.redeme_enrolled", value=False),
-        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-        UserProfileFact(
-            path="taxpayer_type.declaration_roles",
-            value=ThirdPartyDeclarationRole.from_registry("third_party_fee_collector").value,
+    facts = persona_facts_beneath(
+        (
+            UserProfileFact(path="identity.tax_id", value="B12345674"),
+            UserProfileFact(
+                path="taxpayer_type.declaration_roles",
+                value=ThirdPartyDeclarationRole.from_registry("third_party_fee_collector").value,
+            ),
         ),
+        persona_id="sociedad-limitada",
     )
     seed_test_profile_record(
         create_user_profile_record(
@@ -548,19 +540,15 @@ def test_m347_filer_declaration_roles_reaches_a_role_set_by_the_real_operator_pa
 
 
 def _third_party_fee_collector_profile_facts() -> tuple[UserProfileFact, ...]:
-    return (
-        UserProfileFact(path="identity.tax_id", value="B12345674"),
-        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-        UserProfileFact(path="iva.regime", value="GENERAL"),
-        UserProfileFact(path="iva.m303_regime_composition", value="general"),
-        UserProfileFact(path="iva.redeme_enrolled", value=False),
-        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-        UserProfileFact(
-            path="taxpayer_type.declaration_roles",
-            value=ThirdPartyDeclarationRole.from_registry("third_party_fee_collector").value,
+    return persona_facts_beneath(
+        (
+            UserProfileFact(path="identity.tax_id", value="B12345674"),
+            UserProfileFact(
+                path="taxpayer_type.declaration_roles",
+                value=ThirdPartyDeclarationRole.from_registry("third_party_fee_collector").value,
+            ),
         ),
+        persona_id="sociedad-limitada",
     )
 
 

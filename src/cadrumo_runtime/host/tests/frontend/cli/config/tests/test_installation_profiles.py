@@ -16,7 +16,6 @@ from pydantic import SecretBytes
 
 from cadrumo.adapters.persistence.storage.bucket.sealed_archive_writer import CADRUMO_BUCKET_BUNDLE_SUFFIX
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.authentication import ProfileAuthenticationRefusedError
 from cadrumo.application.user_profile.capsule_archive import (
     PROFILE_CAPSULE_ARCHIVE_SUFFIX,
@@ -37,6 +36,7 @@ from cadrumo.application.user_profile.recovery_custody import (
 )
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import get_registered_error_code
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.tests.command_line_rendering import (
     Printed,

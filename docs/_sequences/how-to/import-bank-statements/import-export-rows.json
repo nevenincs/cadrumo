@@ -49,12 +49,12 @@
         ],
         "result": {
           "bucket_event_ids": [
-            "e2f88aa6b03a556e8f0de0f284143b77842eb6a2926ee98d67a3c0abdc6074a9"
+            "f78da81c44d558713956daf7cdbf6b76ccbf3e81044201b9232c873c7dd3fb53"
           ],
           "bucket_id": "<bucket-id>",
-          "byte_size": 995,
+          "byte_size": 970,
           "export_format": "csv",
-          "export_id": "219d875a4954abf84adbe0c5d5a1cce87e9abbf09ebbbfe4b3ff6f75da24f545",
+          "export_id": "01598a6cff7951e1127b3b1ce389256d3c27f98116e0a24fd7faeef0ca3baa11",
           "fieldnames": [
             "bucket_id",
             "transaction_id",
@@ -111,7 +111,7 @@
               "created_by": "",
               "created_source_command": "",
               "currency": "EUR",
-              "description": "Cobro factura F-2026-001 servicios de consultoria",
+              "description": "Cobro factura limpieza de oficinas enero",
               "direction": "INCOMING",
               "effective_date": "2026-02-10",
               "fx_rate": "",
@@ -127,7 +127,7 @@
               "purchase_invoice_evidence_id": "",
               "source_jurisdiction": "",
               "taxable_base": "",
-              "transaction_id": "71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518",
+              "transaction_id": "21853f4f5ebb8a636d83ff9d60f410bb414634032df9a120a98691ca1e5c0e80",
               "usage_ratio_id": "",
               "value_date": "2026-02-10",
               "value_in_eur": ""
@@ -147,7 +147,7 @@
               "created_by": "",
               "created_source_command": "",
               "currency": "EUR",
-              "description": "Compra de material de oficina proveedor local",
+              "description": "Compra de material de oficina",
               "direction": "OUTGOING",
               "effective_date": "2026-02-11",
               "fx_rate": "",
@@ -163,13 +163,13 @@
               "purchase_invoice_evidence_id": "",
               "source_jurisdiction": "",
               "taxable_base": "",
-              "transaction_id": "e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d",
+              "transaction_id": "1703f84035f8f1b9e95d99784e08d3a3fd56d526fb555e3d71d59887f5082e3e",
               "usage_ratio_id": "",
               "value_date": "2026-02-11",
               "value_in_eur": ""
             }
           ],
-          "sha256": "937917c208858f94cde1b85613d7d29d2d36ab7e78ade971f19abcbd03052186"
+          "sha256": "670c70d478b011c6d685811d213b5e474f54159428887d691a59c789d66b7aa8"
         },
         "schema_version": "2",
         "status": "warning"

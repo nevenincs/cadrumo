@@ -7,6 +7,7 @@ import { translator } from "../../../shell/strings";
 import type { ModeloPort } from "../../../shell/modelo";
 import type { OutputLanguage } from "../../../shell/modeloContract";
 import { WorkspaceScreen } from "./WorkspaceScreen";
+import { byName } from "@/dev/globByName";
 
 // The withholdings a register supplies and the estimate from the quarterly
 // declarations, in the real workspace over the envelopes the application read
@@ -16,18 +17,17 @@ import { WorkspaceScreen } from "./WorkspaceScreen";
 
 const UNIT = "b1c431589384a105701ba15942606b5f5667cb677d6fa62e743cd0293f9baee4";
 
-const refusals = import.meta.glob<LedgerErrorDetail>(
-  "../../../dev/fixtures/modelo/refusal-project-quarter-incomplete-*.json",
-  { import: "default" },
+const refusals = byName(
+  import.meta.glob<LedgerErrorDetail>(
+    "@fixtures/modelo/refusal-project-quarter-incomplete-*.json",
+    { import: "default" },
+  ),
 );
 
 /** The refusal the application recorded for the quarter that cannot yet give
  * its result, in `locale`. */
 async function incomplete(locale: OutputLanguage): Promise<LedgerErrorDetail> {
-  const load =
-    refusals[
-      `../../../dev/fixtures/modelo/refusal-project-quarter-incomplete-${locale}.json`
-    ];
+  const load = refusals[`refusal-project-quarter-incomplete-${locale}`];
   if (!load) throw new Error("No refusal is stored for the incomplete quarter");
   return load();
 }

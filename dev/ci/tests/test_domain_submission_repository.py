@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from cadrumo.adapters.persistence.profile.submission import (
     SubmissionRepository,
@@ -16,8 +16,8 @@ from cadrumo.adapters.persistence.profile.submission import (
 from cadrumo.adapters.persistence.storage.envelope.contract import Envelope
 from cadrumo.adapters.persistence.storage.errors import ClassificationError, PathContainmentError
 from cadrumo.adapters.persistence.storage.sql.engine import get_engine
-from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
 from cadrumo.adapters.persistence.storage.sql.session import session_scope
+from cadrumo.adapters.persistence.storage.sql.tables import secure_objects_table
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.period import Period
@@ -154,12 +154,16 @@ class TestListAndIter:
 
         with session_scope(get_engine(runtime_profile.settings)) as session:
             row = session.execute(
-                select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == SubmissionRepository.namespace,
-                    SecureObjectRow.object_key == future.submission_id,
+                select(secure_objects_table).where(
+                    secure_objects_table.c.namespace == SubmissionRepository.namespace,
+                    secure_objects_table.c.object_key == future.submission_id,
                 ),
-            ).scalar_one()
-            row.schema_version = SubmissionRepository.schema_version + 1
+            ).one()
+            session.execute(
+                update(secure_objects_table)
+                .where(secure_objects_table.c.id == row.id)
+                .values(schema_version=SubmissionRepository.schema_version + 1),
+            )
 
         caplog.set_level("WARNING")
 

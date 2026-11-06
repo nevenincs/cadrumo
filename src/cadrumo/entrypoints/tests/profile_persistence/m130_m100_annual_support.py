@@ -129,7 +129,6 @@ _MESH_RESOLVED_OR_LOCKED_SOURCES = frozenset(
     },
 ) | {kind.value for kind in precedence_ladder_sources(CallerOverrideDisposition.LOCK)}
 
-_M100_ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
 
 M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = validated_casilla_id("18")
 
@@ -408,5 +407,4 @@ def m100_non_relation_zero_bindings() -> dict[BindingId, Decimal]:
         for binding in snapshot.revision.bindings
         if binding.source not in _MESH_RESOLVED_OR_LOCKED_SOURCES
     }
-    values[_M100_ESTIMACION_DIRECTA_NORMAL_BINDING] = Decimal("1")
     return values

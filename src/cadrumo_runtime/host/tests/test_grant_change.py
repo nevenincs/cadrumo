@@ -22,14 +22,13 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
 )
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.frontend_requests import OperationResultProjectionSuccessV1
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import AutomationGrant
 from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection, EnrollmentStage
 from cadrumo.application.user_profile.automation_operations import (
     AUTOMATION_APPROVE_OPERATION_DEFINITION_ID,
     AutomationOperationRequest,
 )
-from cadrumo.core.operations import OperationTerminalCondition
+from cadrumo.core.operations import OperationFrontendProjection, OperationTerminalCondition
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction

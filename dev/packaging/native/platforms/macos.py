@@ -95,7 +95,7 @@ def split_vendor_images(images: list[Path], root: Path) -> tuple[list[Path], lis
 
 
 def require_relocatable_as_shipped(path: Path, floor: tuple[int, ...], system: set[str]) -> None:
-    """Refuse a Mach-O image that exceeds the deployment floor or needs relocation."""
+    """Refuse a Mach-O image above the deployment floor or one that needs relocation to ship."""
     image = inspect_macho(path)
     if image.minimum > floor:
         raise ValueError(f"Mach-O exceeds canonical deployment floor: {path}")

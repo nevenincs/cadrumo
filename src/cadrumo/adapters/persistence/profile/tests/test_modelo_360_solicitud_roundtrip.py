@@ -40,7 +40,7 @@ from .....core.period import Period
 from .....domain.deadlines.models import RefundAccount
 from ...storage.secure_object_namespaces import PROFILE_MODELO_360_SOLICITUD_NAMESPACE
 from ...storage.sql.engine import get_engine
-from ...storage.sql.orm import SecureObjectRow
+from ...storage.sql.tables import secure_objects_table
 from ...storage.tests.secure_sql import (
     isolated_runtime_profile,
     isolated_two_bucket_runtime,
@@ -109,9 +109,9 @@ def _entry(period: Period = _PERIOD_2025, *, refund_account: RefundAccount | Non
 
 
 def _register_row():
-    return select(SecureObjectRow).where(
-        SecureObjectRow.namespace == PROFILE_MODELO_360_SOLICITUD_NAMESPACE.namespace,
-        SecureObjectRow.object_key == PROFILE_MODELO_360_SOLICITUD_NAMESPACE.require_default_object_key(),
+    return select(secure_objects_table).where(
+        secure_objects_table.c.namespace == PROFILE_MODELO_360_SOLICITUD_NAMESPACE.namespace,
+        secure_objects_table.c.object_key == PROFILE_MODELO_360_SOLICITUD_NAMESPACE.require_default_object_key(),
     )
 
 

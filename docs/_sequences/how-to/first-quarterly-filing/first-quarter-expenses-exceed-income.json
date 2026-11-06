@@ -8,7 +8,6 @@
         "edit",
         "docs-sequence-sandbox",
         "--quiet",
-        "--accept-defaults",
         "--activity-start-date",
         "2026-01-01"
       ],
@@ -45,7 +44,7 @@
         "app",
         "ledger",
         "classify",
-        "71a5db2b",
+        "21853f4f",
         "--classification",
         "BUSINESS",
         "--taxable-base",
@@ -69,7 +68,7 @@
         "app",
         "ledger",
         "classify",
-        "e3eeac5e",
+        "1703f840",
         "--classification",
         "BUSINESS",
         "--category-id",
@@ -136,7 +135,7 @@
         "app",
         "ledger",
         "attach",
-        "e3eeac5e",
+        "1703f840",
         "--purchase-invoice-evidence-id",
         "02f887c6ff8a69c5"
       ],
@@ -339,7 +338,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "70e18cc545d8ec5537b3ab3f14d50603b3954e03493066bdb37aacb7431bc076"
+          "value": "4dc6c09c5be0870c99159ea96f679b8bc9fe4eb88c881e85ca4bc212f52ff566"
         }
       ],
       "envelope": {
@@ -367,7 +366,7 @@
             "modelo-130-retenciones-agrarias": "0",
             "modelo-130-volumen-ingresos-agrario": "0"
           },
-          "calculation_revision_id": "70e18cc545d8ec5537b3ab3f14d50603b3954e03493066bdb37aacb7431bc076",
+          "calculation_revision_id": "4dc6c09c5be0870c99159ea96f679b8bc9fe4eb88c881e85ca4bc212f52ff566",
           "casilla_values": {
             "01": "1000",
             "02": "1500.00",
@@ -517,7 +516,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 70e18cc545d8ec5537b3ab3f14d50603b3954e03493066bdb37aacb7431bc076 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 4dc6c09c5be0870c99159ea96f679b8bc9fe4eb88c881e85ca4bc212f52ff566 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -528,7 +527,18 @@
               "parent_source_ref": null,
               "resolved_binding_source": "ledger_renta_income_aggregation",
               "resolver_id": "ledger_renta_income_aggregation",
-              "source_ref": "transaction:71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
+              "source_ref": "transaction:21853f4f5ebb8a636d83ff9d60f410bb414634032df9a120a98691ca1e5c0e80"
+            },
+            {
+              "contributor_binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "contributor_source_kind": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "resolver_id": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "source_ref": "transaction:1703f84035f8f1b9e95d99784e08d3a3fd56d526fb555e3d71d59887f5082e3e"
             },
             {
               "contributor_binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
@@ -540,17 +550,6 @@
               "resolved_binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
               "resolver_id": "ledger_renta_gastos_pago_fraccionado_aggregation",
               "source_ref": "transaction:cb48924c8761416c4eb7ea9796238a6785217fcc019e96ecf4f2743e7ac1d52b"
-            },
-            {
-              "contributor_binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
-              "contributor_source_kind": "ledger_renta_gastos_pago_fraccionado_aggregation",
-              "dependency_treatment": "",
-              "fingerprint": null,
-              "lineage_role": "primary",
-              "parent_source_ref": null,
-              "resolved_binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
-              "resolver_id": "ledger_renta_gastos_pago_fraccionado_aggregation",
-              "source_ref": "transaction:e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
             },
             {
               "contributor_binding_source": "previous_filing",
@@ -592,7 +591,7 @@
         "modelo",
         "work",
         "verify",
-        "70e18cc545d8ec5537b3ab3f14d50603b3954e03493066bdb37aacb7431bc076"
+        "4dc6c09c5be0870c99159ea96f679b8bc9fe4eb88c881e85ca4bc212f52ff566"
       ],
       "captures": [],
       "envelope": {
@@ -620,7 +619,7 @@
             "action": null,
             "code": "modelo.work.verify.finding.advisory",
             "context": {
-              "binding_id": "71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518",
+              "binding_id": "21853f4f5ebb8a636d83ff9d60f410bb414634032df9a120a98691ca1e5c0e80",
               "diagnostic_reason_code": "missing_transaction_evidence",
               "kind": "advisory",
               "legal_refs": "ley-37-1992:art-97, rd-1619-2012:art-2",
@@ -640,7 +639,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "70e18cc545d8ec5537b3ab3f14d50603b3954e03493066bdb37aacb7431bc076",
+          "calculation_revision_id": "4dc6c09c5be0870c99159ea96f679b8bc9fe4eb88c881e85ca4bc212f52ff566",
           "completeness_status": "complete",
           "findings": [
             {
@@ -686,7 +685,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "87f8c06222024c4f07a5b264b8727dfef8d7efc095001657100cac2685ff0070",
+          "verification_report_id": "44e960915a5d74dd734cdd97543eda82b15173a962015349a2db9c945a43a302",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

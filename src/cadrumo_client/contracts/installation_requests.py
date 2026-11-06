@@ -50,7 +50,6 @@ from cadrumo.application.config_reset_documents import ConfigResetOperationPaylo
 from cadrumo.application.diagnostics_repair_documents import RepairProfileDocument, RepairReportDocument
 from cadrumo.application.operations.error_detail import OperationErrorDetailV1
 from cadrumo.application.operations.public_period import PublicPeriod
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.storage_management.documents import StorageAreaIssuePayload, StorageAreaPayload
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.filing_year import FilingYear
@@ -61,6 +60,7 @@ from cadrumo.core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from cadrumo.core.identity.profile import ProfileId
 from cadrumo.core.identity.profile_label import ProfileLabel
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.storage_taxonomy import StorageArea
 from cadrumo.core.text_bounds import NonEmptyStr
 

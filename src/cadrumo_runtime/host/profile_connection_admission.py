@@ -11,8 +11,8 @@ from uuid import UUID, uuid4
 from cadrumo.adapters.persistence.storage.custody.automation_profile import current_automation_profile_binding
 from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
 from cadrumo.application.operations.person_acts import is_persons_frontend
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_management import (
     AutomationDeny,
     ProfileRecoveryPrepare,

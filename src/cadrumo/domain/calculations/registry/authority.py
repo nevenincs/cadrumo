@@ -173,8 +173,8 @@ class ValidatedRegistryAuthority:
 
     modelos: tuple[ModeloDefinition, ...]
     catalogues: RegistryCatalogues
-    _modelos_by_id: dict[str, ModeloDefinition]
-    _snapshots: dict[_SnapshotKey, RegistrySnapshot]
+    modelos_by_id: dict[str, ModeloDefinition]
+    snapshots: dict[_SnapshotKey, RegistrySnapshot]
     _identity_digest: str = ""
     evidence: AuthorityEvidenceProjection = field(default_factory=AuthorityEvidenceProjection)
     _profile_schema: ProfileSchemaDefinition | None = field(default=None, repr=False)
@@ -205,8 +205,8 @@ class ValidatedRegistryAuthority:
         authority = cls(
             modelos=modelos,
             catalogues=catalogues,
-            _modelos_by_id={modelo.id: modelo for modelo in modelos},
-            _snapshots={},
+            modelos_by_id={modelo.id: modelo for modelo in modelos},
+            snapshots={},
             _identity_digest=identity_digest,
             evidence=AuthorityEvidenceProjection() if evidence is None else evidence,
             _profile_schema=profile_schema,
@@ -242,7 +242,7 @@ class ValidatedRegistryAuthority:
         """
         normalized = Modelo(modelo_id)
         try:
-            return self._modelos_by_id[normalized.value]
+            return self.modelos_by_id[normalized.value]
         except KeyError as exc:
             raise RegistrySnapshotError(
                 f"modelo {normalized.value!r} is not present in the calculation registry"
@@ -399,7 +399,7 @@ class ValidatedRegistryAuthority:
 
         normalized_modelo_id = Modelo(modelo_id).value
         key = (normalized_modelo_id, filing_year, period, on, revision_id, grade)
-        cached = self._snapshots.get(key)
+        cached = self.snapshots.get(key)
         if cached is not None:
             return cached
         modelo = self.validate_modelo(normalized_modelo_id)
@@ -413,9 +413,9 @@ class ValidatedRegistryAuthority:
                 revision_id=revision_id,
                 grade=grade,
             )
-        if len(self._snapshots) >= 1024:
-            self._snapshots.pop(next(iter(self._snapshots)))
-        self._snapshots[key] = snapshot
+        if len(self.snapshots) >= 1024:
+            self.snapshots.pop(next(iter(self.snapshots)))
+        self.snapshots[key] = snapshot
         return snapshot
 
     def capture_law_selected_projection(
@@ -514,7 +514,7 @@ class _SnapshotProjectionKey:
 class PinnedAuthorityOperation:
     """Typed component access confined to one leased authority generation."""
 
-    _reader: AuthorityComponentReader
+    reader: AuthorityComponentReader
     generation: AuthorityGenerationPin
     _state_lock: RLock = field(default_factory=RLock, init=False, repr=False, compare=False)
     _fact_resolutions: dict[GovernedFactQuery, ResolvedGovernedFact] = field(
@@ -529,7 +529,7 @@ class PinnedAuthorityOperation:
         """Load an addressed component only through this operation's generation."""
         if pin != self.generation:
             raise RegistrySnapshotError("authority component query crossed an operation generation boundary")
-        return self._reader.load(query, pin=self.generation)
+        return self.reader.load(query, pin=self.generation)
 
     def governed_fact(self, fact_id: str) -> GovernedFact:
         """Load one raw governed fact by canonical identity."""
@@ -558,7 +558,7 @@ class PinnedAuthorityOperation:
         # The profile schema model tree is only needed by profile-bound operations.
         from ...user_profile.schema import ProfileSchemaDefinition
 
-        value = self._reader.load(ProfileSchemaComponentQuery(schema_id), pin=self.generation)
+        value = self.reader.load(ProfileSchemaComponentQuery(schema_id), pin=self.generation)
         if not isinstance(value, ProfileSchemaDefinition):
             raise RegistryValidationError("profile schema component decoded to an unexpected type")
         return value
@@ -577,7 +577,7 @@ class PinnedAuthorityOperation:
 
         normalized = Modelo(modelo_id).value
         try:
-            value = self._reader.load(ModeloRevisionComponentQuery(normalized, revision_id), pin=self.generation)
+            value = self.reader.load(ModeloRevisionComponentQuery(normalized, revision_id), pin=self.generation)
         except LookupError as exc:
             if normalized not in self.modelo_ids():
                 raise RegistrySnapshotError.for_modelo_not_registered(modelo_id=normalized) from exc
@@ -595,7 +595,7 @@ class PinnedAuthorityOperation:
         revision = self.revision(normalized, revision_id)
         layouts = tuple(
             self.export_layout(normalized, revision_id, query.layout_id)
-            for query in self._reader.component_queries()
+            for query in self.reader.component_queries()
             if isinstance(query, ExportLayoutComponentQuery)
             and query.modelo_id == normalized
             and query.revision_id == revision_id
@@ -619,7 +619,7 @@ class PinnedAuthorityOperation:
         """Return deterministic modelo identities without hydrating directories."""
         return tuple(
             query.modelo_id
-            for query in self._reader.component_queries()
+            for query in self.reader.component_queries()
             if isinstance(query, ModeloDirectoryComponentQuery)
         )
 
@@ -627,7 +627,7 @@ class PinnedAuthorityOperation:
         """Return deterministic modelo/revision identities without hydrating payloads."""
         return tuple(
             (query.modelo_id, query.revision_id)
-            for query in self._reader.component_queries()
+            for query in self.reader.component_queries()
             if isinstance(query, ModeloRevisionComponentQuery)
         )
 
@@ -734,7 +734,7 @@ class PinnedAuthorityOperation:
         from .schema import RegistrySnapshot
 
         normalized = Modelo(modelo_id).value
-        reader = self._reader
+        reader = self.reader
         if not isinstance(reader, SQLiteAuthorityReader):
             return self._build_snapshot(
                 normalized, filing_year=filing_year, period=period, on=on, revision_id=revision_id, grade=grade
@@ -797,7 +797,7 @@ class PinnedAuthorityOperation:
 
     def snapshot_proof_contract(self) -> SnapshotProofContract | None:
         """Return the snapshot proof contract this generation records, or ``None`` without proofs."""
-        reader = self._reader
+        reader = self.reader
         return reader.snapshot_proof_contract() if isinstance(reader, SQLiteAuthorityReader) else None
 
     def _usable_snapshot_proof(
@@ -815,19 +815,23 @@ class PinnedAuthorityOperation:
         additionally needs this process to run the validator that proved it,
         today's Madrid date inside the window its wall-clock fact lookups hold
         for, and a recorded cell whose revision is the one just selected.
+
+        The validator identity is checked last, once a recorded cell would
+        otherwise be used: it re-reads every source module of the validator, and
+        a request publication did not prove takes full validation without it.
         """
         from .snapshot_proof import runtime_validator_matches, snapshot_proof_key
 
-        reader = self._reader
+        reader = self.reader
         if not isinstance(reader, SQLiteAuthorityReader):
             return None
         contract = reader.snapshot_proof_contract()
-        if contract is None or not contract.admits_date(today_madrid()) or not runtime_validator_matches(contract):
+        if contract is None or not contract.admits_date(today_madrid()):
             return None
         proof = reader.snapshot_proof(
             snapshot_proof_key(selected, modelo_id=normalized, filing_year=filing_year, period=period, grade=grade)
         )
-        if proof is None or proof.revision_id != selected.id:
+        if proof is None or proof.revision_id != selected.id or not runtime_validator_matches(contract):
             return None
         return proof
 
@@ -907,7 +911,7 @@ class PinnedAuthorityOperation:
 
     def runtime_catalogue(self, family: str) -> object:
         """Load one named runtime catalogue family."""
-        return self._reader.load(RuntimeCatalogueComponentQuery(family), pin=self.generation)
+        return self.reader.load(RuntimeCatalogueComponentQuery(family), pin=self.generation)
 
     def legal_reference(self, reference_id: str) -> LegalReference:
         """Load one legal declaration by canonical identity."""
@@ -942,7 +946,7 @@ class PinnedAuthorityOperation:
         """Load one separately addressable export layout."""
         from .schema_exports import ExportLayoutDefinition
 
-        value = self._reader.load(
+        value = self.reader.load(
             ExportLayoutComponentQuery(Modelo(modelo_id).value, revision_id, layout_id),
             pin=self.generation,
         )
@@ -960,17 +964,17 @@ class PinnedAuthorityOperation:
 
         normalized = Modelo(modelo_id).value
         query = FormLayoutComponentQuery(normalized, revision_id)
-        if query not in self._reader.component_queries():
+        if query not in self.reader.component_queries():
             self.revision(normalized, revision_id)
             return None
-        value = self._reader.load(query, pin=self.generation)
+        value = self.reader.load(query, pin=self.generation)
         if not isinstance(value, FormLayoutDefinition):
             raise RegistryValidationError("form layout component decoded to an unexpected type")
         return value
 
     def legal_evidence(self, legal_reference_id: str) -> PublishedLegalEvidence:
         """Load one publisher-captured legal evidence projection."""
-        value = self._reader.load(
+        value = self.reader.load(
             EvidenceComponentQuery(legal_reference_id, AuthorityComponentKind.LEGAL_EVIDENCE),
             pin=self.generation,
         )
@@ -1029,7 +1033,7 @@ class PinnedAuthorityOperation:
 
     def source_evidence(self, source_reference_id: str) -> PublishedSourceEvidence:
         """Load one publisher-captured public source payload."""
-        value = self._reader.load(
+        value = self.reader.load(
             EvidenceComponentQuery(source_reference_id, AuthorityComponentKind.SOURCE_EVIDENCE),
             pin=self.generation,
         )
@@ -1116,18 +1120,19 @@ class IndexedRegistryAuthority:
 
 
 _bundled_indexed_authority_lock = RLock()
-authority_bundled_indexed_authority: IndexedRegistryAuthority | None = None
+bundled_indexed_authority_owner: IndexedRegistryAuthority | None = None
+"""The process-shared owner :func:`bundled_indexed_authority` returns; ``None`` before first use and after release."""
 
 
 def bundled_indexed_authority() -> IndexedRegistryAuthority:
     """Return the process-shared descriptor-following indexed authority owner."""
-    global authority_bundled_indexed_authority
+    global bundled_indexed_authority_owner
     with _bundled_indexed_authority_lock:
-        if authority_bundled_indexed_authority is None:
-            authority_bundled_indexed_authority = IndexedRegistryAuthority(
+        if bundled_indexed_authority_owner is None:
+            bundled_indexed_authority_owner = IndexedRegistryAuthority(
                 authority_location.bundled_authority_descriptor_path()
             )
-        return authority_bundled_indexed_authority
+        return bundled_indexed_authority_owner
 
 
 def release_bundled_indexed_authority() -> bool:
@@ -1148,14 +1153,14 @@ def release_bundled_indexed_authority() -> bool:
     Returns:
         Whether the process holds no shared owner afterwards.
     """
-    global authority_bundled_indexed_authority
+    global bundled_indexed_authority_owner
     with _bundled_indexed_authority_lock:
-        if authority_bundled_indexed_authority is None:
+        if bundled_indexed_authority_owner is None:
             return True
         try:
-            authority_bundled_indexed_authority.close()
+            bundled_indexed_authority_owner.close()
         except AuthorityStoreError as refusal:
             _LOGGER.warning("the shared registry authority stayed open: %s", str(refusal))
             return False
-        authority_bundled_indexed_authority = None
+        bundled_indexed_authority_owner = None
         return True

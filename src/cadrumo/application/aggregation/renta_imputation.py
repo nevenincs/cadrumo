@@ -25,10 +25,13 @@ from ...core.period import Period
 from ...domain.calculations.registry.cash_election_minimum_years import cash_election_minimum_years
 from ...domain.calculations.registry.errors import GovernedFactNotApplicableError
 from ...domain.calculations.registry.invoice_legal_classification import advance_payment_received_role
+from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
+from ...domain.categories.spending_category import SpendingCategory
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.models import Invoice
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.date_partition import OutOfWindowTransactionSummary
+from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
 from .source_mesh import DIAGNOSTIC_MESSAGE_MAX_LENGTH, CalculationSourceDiagnostic
@@ -519,9 +522,35 @@ def impute_row(cash: date, accrual: date | None, criteria: ImputationCriteria) -
     return ImputationUnresolved.UNCOMPUTED_ACROSS_CHANGE
 
 
+def received_invoice_reference(row: Transaction) -> str | None:
+    """Return the catalogue invoice a deductible-expense row is linked to, or ``None`` when it names none.
+
+    The ledger link stamps ``invoice_id``, the catalogue key; ``purchase_invoice_evidence_id``
+    addresses the evidence record's own id space and is read only for a row no link names.
+    """
+    return row.invoice_id if row.invoice_id is not None else row.purchase_invoice_evidence_id
+
+
 def linked_accrual_date(invoice: Invoice | None, *, kind: InvoiceKind) -> date | None:
     """Return the accrual of the invoice a row links to, when it links to one of ``kind``."""
     return invoice_accrual_date(invoice) if invoice is not None and invoice.kind is kind else None
+
+
+def _accrues_when_charged(row: Transaction, kind: InvoiceKind) -> bool:
+    """Whether the row accrues on its own date, with no invoice to say otherwise.
+
+    A received expense in a self-employed Seguridad Social cuota covers a calendar month and falls
+    due within it (LIRPF art. 14.1.b, RIRPF art. 7); the TGSS receipt, not an invoice, justifies it.
+    An issued till settlement of a retailer in the recargo de equivalencia is a cash sale to final
+    consumers, who are given tickets or simplified invoices (RD 1619/2012 art. 4), so the sale
+    accrues on the day it is made and the settlement carries that day. Both are keyed on the canonical
+    category the row states.
+    """
+    if kind is InvoiceKind.RECEIVED:
+        return row.category_id == SpendingCategory.from_registry("cuotas_autonomos_ss").value
+    return row.direction is TransactionDirection.INCOMING and row.iva_category == require_iva_category(
+        "recargo_equivalencia"
+    )
 
 
 def row_accrual_date(
@@ -538,6 +567,8 @@ def row_accrual_date(
     linked = linked_accrual_date(invoice, kind=kind)
     stated = row.accrual_date
     if stated is None:
+        if linked is None and _accrues_when_charged(row, kind):
+            return row.raw.value_date or row.raw.booked_date
         return linked
     if linked is None or linked == stated:
         return stated
@@ -554,7 +585,7 @@ def expense_incurred_date(row: Transaction, invoices: InvoiceCatalogue | None) -
 
     ``invoices`` is the :class:`InvoiceCatalogue`, the profile's invoice catalogue.
     """
-    invoice_id = row.purchase_invoice_evidence_id
+    invoice_id = received_invoice_reference(row)
     invoice = None if invoices is None or invoice_id is None else invoices.get(invoice_id)
     accrual = row_accrual_date(row, invoice, kind=InvoiceKind.RECEIVED)
     if accrual is None or isinstance(accrual, ImputationUnresolved):

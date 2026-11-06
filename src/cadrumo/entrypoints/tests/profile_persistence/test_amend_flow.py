@@ -24,6 +24,7 @@ from sqlalchemy.engine import Engine
 
 from cadrumo.adapters.inbound.pdf.source_provenance import source_pdf_reference_path
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.justificante.schema import Justificante
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test,
@@ -93,7 +94,6 @@ from ....domain.modelos.filing_record import (
 )
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.modelos.work_unit import WorkUnit
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.write_unit_recorder import WriteUnitRecorder
 from ...adapter_composition_work_ports import (
@@ -126,12 +126,15 @@ _T3 = datetime(2026, 4, 15, 15, 0, 0, tzinfo=UTC)
 _T4 = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
 _PROFILE_ID = "10000000-0000-4000-8000-000000000130"
 _PROFILE_LABEL = "Test runtime profile"
-_READY_PROFILE_FACTS = (
-    UserProfileFact(path="identity.tax_id", value="X1234567L"),
-    UserProfileFact(path="identity.name", value="Ready"),
-    UserProfileFact(path="identity.surnames", value="Operator"),
-    UserProfileFact(path="activities.description", value="file-flow"),
-    *GENERAL_REGIME_NATURAL_PERSON_FACTS,
+_READY_PROFILE_FACTS = persona_facts_beneath(
+    (
+        UserProfileFact(path="identity.tax_id", value="X1234567L"),
+        UserProfileFact(path="identity.name", value="Ready"),
+        UserProfileFact(path="identity.surnames", value="Operator"),
+        UserProfileFact(path="activities.description", value="file-flow"),
+        # The taxpayer pays rent with retencion, so Modelo 180 applies to the profile.
+        UserProfileFact(path="withholding.pays_rent_with_retencion", value=True),
+    )
 )
 
 
@@ -600,10 +603,10 @@ def test_amend_member_scoped_filing_id_carries_member_nif(
     _, _, baseline = _seed_external_baseline(
         repos,
         casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")},
-        member_nif="A00000000",
+        member_nif="A00010009",
         operation=operation,
     )
-    assert baseline.member_nif == "A00000000"
+    assert baseline.member_nif == "A00010009"
 
     with bundled_indexed_authority().operation() as operation:
         new_filing = amend_modelo_revision(
@@ -616,12 +619,12 @@ def test_amend_member_scoped_filing_id_carries_member_nif(
             clock=_T4,
         )
 
-    assert new_filing.member_nif == "A00000000"
+    assert new_filing.member_nif == "A00010009"
     assert new_filing.filing_record_id == derive_filing_record_id(
         work_unit_id=new_filing.work_unit_id,
         calculation_revision_id=new_filing.calculation_revision_id,
         filed_by="operator-A",
-        member_nif="A00000000",
+        member_nif="A00010009",
     )
 
 
@@ -643,7 +646,7 @@ def test_amend_member_scoped_filing_does_not_collide_with_single_filer_record(
     work_unit, _, baseline_a = _seed_external_baseline(
         repos,
         casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")},
-        member_nif="A00000000",
+        member_nif="A00010009",
         operation=operation,
     )
 
@@ -681,7 +684,7 @@ def test_amend_member_scoped_filing_does_not_collide_with_single_filer_record(
             clock=_T4,
         )
 
-    assert new_filing.member_nif == "A00000000"
+    assert new_filing.member_nif == "A00010009"
     refreshed_single_filer = persisted_filing_record(
         single_filer_filing_id,
         ports=build_filing_action_ports(bucket_id=_PROFILE_ID, operation=operation),

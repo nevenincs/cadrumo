@@ -65,7 +65,7 @@ LAW_SELECTED_REVISION_ID = "2019-y-siguientes"
 
 
 def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str) -> None:
-    seed_ready_profile(bucket_id=bucket_id, surnames="Workspace", at=T0)
+    seed_ready_profile(bucket_id=bucket_id, at=T0)
 
 
 @pytest.fixture

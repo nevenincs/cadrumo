@@ -195,21 +195,8 @@ def is_iva_deduction_kind(
     return token in catalogue.projection(projection_key)
 
 
-def invoice_evidence_authority(
-    *,
-    effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
-) -> IvaDeductionEvidenceAuthority:
-    """Return the registry-declared authority for invoice-linked evidence."""
-    return resolve_iva_deduction_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    ).authority_for_role("invoice")
-
-
 __all__ = [
     "IvaDeductionCatalogue",
-    "invoice_evidence_authority",
     "is_iva_deduction_kind",
     "iva_deduction_fact_kinds",
     "require_iva_deduction_evidence_authority",

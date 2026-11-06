@@ -7,24 +7,18 @@ from pathlib import PurePath, PurePosixPath, PureWindowsPath
 from typing import Any
 
 from .environment_declaration_constants import BASE_NAME, PATH_COMPONENT
-from .environment_declaration_primitives import (
-    environment_declaration_primitives_list,
-    environment_declaration_primitives_table,
-    fail,
-    keys,
-    strings,
-)
+from .environment_declaration_primitives import fail, require_keys, require_list, require_strings, require_table
 from .environment_models import ExternalPathDefault
 
 
-def environment_path_external_path_defaults(
+def declare_external_path_defaults(
     raw: object,
     base: Mapping[str, Mapping[str, tuple[str, ...]]],
 ) -> tuple[ExternalPathDefault, ...]:
-    """Parse and validate the external installation path defaults, refusing repeats."""
+    """Validate the declared defaults for externally supplied paths."""
     defaults: list[ExternalPathDefault] = []
     seen: set[tuple[str, str | None, str, tuple[str, ...]]] = set()
-    for index, item in enumerate(environment_declaration_primitives_list(raw, "path.external_defaults")):
+    for index, item in enumerate(require_list(raw, "path.external_defaults")):
         where = f"path.external_defaults[{index}]"
         default = _external_path_default(item, where, base)
         identity = (default.platform, default.variable, default.path, default.subpaths)
@@ -40,8 +34,8 @@ def _external_path_default(
     where: str,
     base: Mapping[str, Mapping[str, tuple[str, ...]]],
 ) -> ExternalPathDefault:
-    entry = environment_declaration_primitives_table(item, where)
-    keys(entry, where, {"platform"}, {"variable", "path", "subpaths"})
+    entry = require_table(item, where)
+    require_keys(entry, where, {"platform"}, {"variable", "path", "subpaths"})
     platform = entry["platform"]
     if not isinstance(platform, str) or platform not in {"windows", "posix", "macos"}:
         raise fail(f"{where}.platform must be windows, posix or macos")
@@ -49,7 +43,7 @@ def _external_path_default(
     if has_variable == has_path:
         raise fail(f"{where} must declare exactly one of variable or path")
     family = "windows" if platform == "windows" else "posix"
-    subpaths = strings(entry.get("subpaths", []), f"{where}.subpaths", PATH_COMPONENT)
+    subpaths = require_strings(entry.get("subpaths", []), f"{where}.subpaths", PATH_COMPONENT)
     if any(part in {".", ".."} for part in subpaths):
         raise fail(f"{where}.subpaths must not contain current or parent components")
     if has_variable:

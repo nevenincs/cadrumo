@@ -11,7 +11,6 @@ from uuid import UUID
 
 from pydantic import ValidationError
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operator_output.connection_remedies import connection_unavailable_remedy
 from cadrumo.core.async_cleanup import (
     AsyncCloseable,
@@ -21,6 +20,7 @@ from cadrumo.core.async_cleanup import (
 )
 from cadrumo.core.external_constants import DEFAULT_OUTPUT_LANGUAGE
 from cadrumo.core.logging import get_logger
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 from cadrumo_client.contracts.profile_access import ProfileStatus

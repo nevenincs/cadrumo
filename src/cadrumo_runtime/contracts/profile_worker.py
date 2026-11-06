@@ -20,11 +20,12 @@ from cadrumo.application.operations.models import (
     OperationIdentity,
     OperationReference,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.operations.secret_submission import OperationSecretRequirement
 from cadrumo.application.user_profile.access_contracts import AccessSession
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.profile_session import ProfileHumanLoginReceipt
 from cadrumo.core.request_faults import MAX_REQUEST_FAULTS, RequestFault
 from cadrumo_client.contracts.access_refusals import AccessDenialCode

@@ -43,7 +43,7 @@ def discard_repos(tmp_path: Path) -> Iterator[tuple[str, WorkUnitCatalogueReposi
     """Yield a real work-unit repository over one isolated runtime profile."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_DISCARD_PROFILE_ID) as profile:
         objects = profile.repository
-        seed_ready_profile(bucket_id=profile.bucket_id, surnames="Discard Refusal", at=_T0)
+        seed_ready_profile(bucket_id=profile.bucket_id, at=_T0)
         yield profile.bucket_id, WorkUnitCatalogueRepository(objects=objects)
 
 

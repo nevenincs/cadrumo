@@ -6,7 +6,7 @@ from typing import Final
 
 from cadrumo_client.contracts.view_stream import SEDE_VIEW_DEFINITION_ID
 
-from .registry import OperationFrontendProjection
+from ...core.operations import OperationFrontendProjection
 
 ACCESS_ADMINISTRATION_OPERATIONS: Final = frozenset(
     {

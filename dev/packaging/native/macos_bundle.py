@@ -66,8 +66,8 @@ def sealed_members(application: str, wrapper: ApplicationBundle, executable: str
     )
 
 
-def run(tool: Path, *arguments: str) -> str:
-    """Run a macOS tool, returning its standard error and refusing on a non-zero exit."""
+def run_tool(tool: Path, *arguments: str) -> str:
+    """Run a signing or imaging tool and return its standard error, refusing a failed run."""
     result = run_command([str(tool), *arguments], cwd=Path.cwd(), timeout_seconds=900)
     if result.returncode != 0:
         detail = (result.stderr or result.stdout).strip()
@@ -113,9 +113,9 @@ class CodesignSeal:
         nested = nested_images(bundle, main_executable)
         if nested:
             # Assembly owns these signatures; the bundle seal hashes them as they are.
-            run(self.codesign, "--verify", "--strict", *(str(path) for path in nested))
+            run_tool(self.codesign, "--verify", "--strict", *(str(path) for path in nested))
         timestamp = "--timestamp=none" if self.identity == "-" else "--timestamp"
-        run(self.codesign, "--force", "--sign", self.identity, "--options", "runtime", timestamp, str(bundle))
+        run_tool(self.codesign, "--force", "--sign", self.identity, "--options", "runtime", timestamp, str(bundle))
         self.verify(bundle, application_id)
 
     def verify(self, bundle: Path, application_id: str) -> None:
@@ -139,8 +139,8 @@ def verify_seal(codesign: Path, bundle: Path, application_id: str) -> str:
     _require_tool(codesign, "codesign")
     if not bundle.is_dir() or bundle.is_symlink():
         raise ValueError(f"Application bundle is missing: {bundle}")
-    run(codesign, "--verify", "--deep", "--strict", "--verbose=2", str(bundle))
-    details = run(codesign, "--display", "--verbose=2", str(bundle))
+    run_tool(codesign, "--verify", "--deep", "--strict", "--verbose=2", str(bundle))
+    details = run_tool(codesign, "--display", "--verbose=2", str(bundle))
     _require_hardened_seal(details.splitlines(), application_id)
     return details
 
@@ -298,7 +298,7 @@ class PackageTools:
 
 
 def verify_copy(tools: PackageTools, bundle: Path, application_id: str, label: str) -> None:
-    """Verify a bundle copy's code signature seal and Gatekeeper assessment."""
+    """Verify the bundle's seal and its Gatekeeper assessment, reporting each under ``label``."""
     verify_seal(tools.codesign, bundle, application_id)
     print(f"[cadrumo:bundle] {label}: seal valid")
     print(f"[cadrumo:bundle] {label}: gatekeeper {assess(tools.spctl, bundle)}")
@@ -310,7 +310,7 @@ def _verify_disk_image(
     with TemporaryDirectory(prefix="cadrumo-dmg-", dir=scratch_root) as directory:
         mountpoint = Path(directory) / "volume"
         mountpoint.mkdir()
-        run(
+        run_tool(
             tools.hdiutil, "attach", "-nobrowse", "-readonly", "-noautoopen", "-mountpoint", str(mountpoint), str(image)
         )
         try:
@@ -318,7 +318,7 @@ def _verify_disk_image(
         finally:
             detached = run_command([str(tools.hdiutil), "detach", str(mountpoint)], cwd=Path.cwd(), timeout_seconds=120)
             if detached.returncode != 0:
-                run(tools.hdiutil, "detach", "-force", str(mountpoint))
+                run_tool(tools.hdiutil, "detach", "-force", str(mountpoint))
 
 
 def _verify_archive(
@@ -326,7 +326,7 @@ def _verify_archive(
 ) -> None:
     with TemporaryDirectory(prefix="cadrumo-zip-", dir=scratch_root) as directory:
         extracted = Path(directory) / "archive"
-        run(tools.ditto, "-x", "-k", str(archive), str(extracted))
+        run_tool(tools.ditto, "-x", "-k", str(archive), str(extracted))
         verify_copy(tools, locate_bundle(extracted, application), application_id, archive.name)
 
 

@@ -44,7 +44,7 @@ def _validate_decoder_provenance(decoder: dict[str, object]) -> None:
         raise ValueError("SDK archive decoder source requires HTTPS without credentials")
 
 
-def archive_decoder(tools: Mapping[str, object]) -> tuple[Path, dict[str, object]]:
+def locate_archive_decoder(tools: Mapping[str, object]) -> tuple[Path, dict[str, object]]:
     """Admit an explicit, hash-pinned build tool without discovering a host decoder."""
     decoder = tools.get("cpython_archive_decoder")
     if not isinstance(decoder, dict):
@@ -75,7 +75,7 @@ def _sdk_source(
     archive_format = tools.get("cpython_archive_format", "tar")
     if archive_format not in {"tar", "tar.gz", "tar.zst"}:
         raise ValueError("Unsupported CPython SDK archive format")
-    decoder = archive_decoder(tools) if archive_format == "tar.zst" else None
+    decoder = locate_archive_decoder(tools) if archive_format == "tar.zst" else None
     return provenance, url, cast(str, archive_format), decoder
 
 

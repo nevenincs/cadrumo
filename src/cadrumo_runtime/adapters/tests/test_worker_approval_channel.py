@@ -15,7 +15,6 @@ import pytest
 from pydantic import SecretBytes
 
 from cadrumo.application.operations.models import OperationId
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_enrollment import (
@@ -24,6 +23,7 @@ from cadrumo.application.user_profile.automation_enrollment import (
     EnrollmentTransition,
 )
 from cadrumo.application.user_profile.automation_operations import AUTOMATION_APPROVE_OPERATION_DEFINITION_ID
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (

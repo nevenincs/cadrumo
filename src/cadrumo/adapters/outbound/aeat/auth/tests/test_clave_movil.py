@@ -78,7 +78,7 @@ def test_auth_browser_action_policy_admits_aeat_sibling_and_refuses_external_hos
 
 @pytest.mark.parametrize(
     ("identity", "expected_kind"),
-    [("12345678Z", "DNI"), ("X1234567L", "NIE"), ("K1234567L", "DNI"), ("M1234567L", "DNI")],
+    [("12345678Z", "DNI"), ("X1234567L", "NIE"), ("K0001000B", "DNI"), ("M0001002J", "DNI")],
 )
 def test_identity_classification_accepts_supported_people(identity: str, expected_kind: str) -> None:
     """Every natural-person document the domain recognises reaches the flow.

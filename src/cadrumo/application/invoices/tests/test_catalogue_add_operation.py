@@ -19,6 +19,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from ....core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationTerminalCondition,
     profile_operation_subject,
 )
@@ -32,7 +33,7 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.owner import OperationExecutorContext
 from ...operations.public_scalar import PublicDecimal
 from ...operations.refusal_evidence import OperationRefusalEvidence
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import catalogue_add_operation as add_operation
 from ..catalogue_add_contracts import (
@@ -62,7 +63,7 @@ def _request(**overrides: object) -> InvoiceAddRequest:
         "profile_id": _PROFILE,
         "kind": InvoiceKind.RECEIVED,
         "counterparty_name": "Synthetic supplier",
-        "counterparty_tax_id": "A58818501",
+        "counterparty_tax_id": "B00010157",
         "counterparty_country": "ES",
         "invoice_number": "ADD-2026-001",
         "issued_at": date(2026, 4, 15),

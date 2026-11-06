@@ -11,7 +11,6 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from ...core.aggregation import BindingTypedEnumKind
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.binding_selector_utils import boolean_binding_encoded_values
 from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ...domain.calculations.registry.ccaa_catalogue import resolve_ccaa_catalogue
@@ -77,8 +76,6 @@ def _validate_enum_kind(
         _validate_legal_entity_form_enum(binding, raw, operation=operation, effective_date=effective_date)
     elif kind is BindingTypedEnumKind.RENTAL_REDUCTION_ART_23_2_TIER:
         _validate_rental_reduction_enum(binding, raw, operation=operation, effective_date=effective_date)
-    elif kind is BindingTypedEnumKind.ESTIMACION_DIRECTA_MODALIDAD:
-        _validate_estimation_modality_enum(binding, raw)
     else:
         raise ModeloBindingValueContractUnsupportedError()
 
@@ -140,16 +137,6 @@ def _validate_rental_reduction_enum(
     except (RegistrySnapshotError, RegistryValidationError):
         raise ModeloBindingValueContractUnsupportedError() from None
     if str(catalogue.require(raw)) != raw:
-        raise ModeloBindingValueInvalidError()
-
-
-def _validate_estimation_modality_enum(binding: BindingDefinition, raw: str) -> None:
-    if binding.value.channel not in {BindingValueChannel.BOOLEAN, BindingValueChannel.DECIMAL}:
-        raise ModeloBindingValueContractUnsupportedError()
-    encoded = boolean_binding_encoded_values(binding)
-    if not encoded:
-        raise ModeloBindingValueContractUnsupportedError()
-    if raw not in {row.encoded_value for row in encoded}:
         raise ModeloBindingValueInvalidError()
 
 

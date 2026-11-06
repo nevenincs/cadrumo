@@ -32,8 +32,8 @@ def test_mutation_stripping_the_intra_community_supply_binding_reds_the_negative
         revision_id=revision_id,
         section="bindings",
         member=f'id = "{_INTRA_COMMUNITY_SUPPLY_BASE_BINDING}"',
-        find='categories = ["intra_community_supply"]',
-        replace='categories = ["domestic_general"]',
+        find='categories = ["intra_community_supply", "intra_community_service_supply"]',
+        replace='categories = ["intra_community_service_supply"]',
     )
 
     modelos, _catalogues = load_registry_tree(scratch_root)

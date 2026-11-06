@@ -198,6 +198,8 @@ class RentaDeductibleExpenseFact(_RentaStrictFrozenModel):
     gross_amount: Decimal = Field(gt=Decimal("0"))
     taxable_base: Decimal | None = None
     iva_amount: Decimal | None = None
+    recargo_amount: Decimal | None = None
+    """The recargo de equivalencia the supplier surcharged, which no regime lets the payer deduct."""
     currency: Literal["EUR"] = EUR_CURRENCY
     direction: RentaExpenseDirection = RentaExpenseDirection.OUTGOING_EXPENSE
     category: SpendingCategory
@@ -210,7 +212,7 @@ class RentaDeductibleExpenseFact(_RentaStrictFrozenModel):
     requires exclusive use deducts nothing for shared use.
     """
 
-    @field_validator("gross_amount", "taxable_base", "iva_amount")
+    @field_validator("gross_amount", "taxable_base", "iva_amount", "recargo_amount")
     @classmethod
     @pydantic_validation_boundary
     def _amounts_are_finite_decimals(cls, value: Decimal | None) -> Decimal | None:
@@ -701,6 +703,8 @@ def _deductible_basis_amount(fact: RentaDeductibleExpenseFact, context: RentaDed
     the historic behaviour.
     """
     base = fact.taxable_base if fact.taxable_base is not None else fact.gross_amount
+    if fact.taxable_base is not None:
+        base += fact.recargo_amount or Decimal("0")
     if fact.taxable_base is None or fact.iva_amount is None or context.iva_deduction_ratio is None:
         return base
     non_deductible_iva = fact.iva_amount * (Decimal("1") - context.iva_deduction_ratio)

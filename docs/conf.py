@@ -1075,13 +1075,10 @@ nitpick_ignore_regex = [
     # mask a missing class. The underscored-constant pattern above covers the
     # multi-word members; this covers the single-word ones.
     (r"py:attr", r"^(?:[A-Za-z_][\w.]*\.)?[A-Z][A-Z0-9]*$"),
-    # Members reached through a class whose own definition lives in a private
-    # module: ``SecureObjectRepository`` is public, but ``apply_batch`` is
-    # defined on the write-operations base in
-    # ``sql/_secure_object_writes.py``, which is excluded from the documented
-    # surface, so the inherited member has no object to link to. The private
-    # dotted patterns above match a private segment in the reference path, and
-    # this reference names only public segments.
+    # Members reached through ``SecureObjectRepository`` that it inherits from
+    # the write-operations base in ``sql/secure_object_writes.py``: the
+    # repository's own page does not list inherited members, so a reference
+    # written through the subclass has no object to link to.
     (
         r"py:meth",
         r"^(?:cadrumo\.)?adapters\.persistence\.storage\.sql\.secure_objects\."

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from sqlalchemy import select
 
-from ...storage.sql.orm import TransactionDateIndexRow
+from ...storage.sql.tables import transaction_date_index_table
 from ..transaction_date_projection import IndexedTransactionDates
 from ..transactions import TransactionCatalogueRepository
 
@@ -14,11 +14,11 @@ def all_date_index_rows(self: TransactionCatalogueRepository) -> dict[str, Index
     with self._objects.guarded_session_scope() as session:
         rows = session.execute(
             select(
-                TransactionDateIndexRow.transaction_id,
-                TransactionDateIndexRow.filing_date,
-                TransactionDateIndexRow.eligible_from,
-                TransactionDateIndexRow.eligible_to,
-            ).where(TransactionDateIndexRow.bucket_id == self._bucket_id)
+                transaction_date_index_table.c.transaction_id,
+                transaction_date_index_table.c.filing_date,
+                transaction_date_index_table.c.eligible_from,
+                transaction_date_index_table.c.eligible_to,
+            ).where(transaction_date_index_table.c.bucket_id == self._bucket_id)
         ).all()
         return {
             str(transaction_id): IndexedTransactionDates(

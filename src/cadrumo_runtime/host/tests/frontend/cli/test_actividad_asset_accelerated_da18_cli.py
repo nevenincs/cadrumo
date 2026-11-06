@@ -23,6 +23,7 @@ import pytest
 from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.errors.error_codes import ErrorCategory, get_error_exit_code
 from cadrumo.core.i18n.render import tr
 from cadrumo.domain.calculations.registry.tests.published_authority import (
@@ -70,31 +71,24 @@ def seed_direct_normal_profile(root: Path, profile_id: str, *, residence: str = 
         create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=profile_id,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="identity.name", value="Autonoma"),
-                UserProfileFact(path="identity.surnames", value="Sintetica"),
-                UserProfileFact(path="activities.description", value="reparto sintetico"),
-                UserProfileFact(path="tax_residence.ccaa", value=residence),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(
-                    path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
-                    value=False,
-                ),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-                UserProfileFact(path="renta_filing.declaration_type", value="1"),
-                UserProfileFact(path="renta_taxpayer.sex", value="M"),
-                UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-                UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-                UserProfileFact(path="withholding.colegio_concertado", value=False),
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                    UserProfileFact(path="identity.name", value="Autonoma"),
+                    UserProfileFact(path="identity.surnames", value="Sintetica"),
+                    UserProfileFact(path="activities.description", value="reparto sintetico"),
+                    UserProfileFact(path="tax_residence.ccaa", value=residence),
+                    UserProfileFact(
+                        path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
+                        value=False,
+                    ),
+                    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                    UserProfileFact(path="renta_filing.declaration_type", value="1"),
+                    UserProfileFact(path="renta_taxpayer.sex", value="M"),
+                    UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
+                    UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
+                    UserProfileFact(path="withholding.colegio_concertado", value=False),
+                )
             ),
             created_at=_T0,
             updated_at=_T0,

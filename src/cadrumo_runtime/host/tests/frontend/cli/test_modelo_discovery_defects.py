@@ -35,6 +35,7 @@ from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
 from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import joint_return_options
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile
 
@@ -44,7 +45,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 _OPERATOR_FACTS = {
-    "taxpayer_type.entity_type": "natural_person",
+    **native_general_iva_facts(),
     "identity.tax_id": "12345678Z",
     "identity.name": "Operator",
     "identity.surnames": "Operator",
@@ -52,16 +53,12 @@ _OPERATOR_FACTS = {
     "censo.activity_start_date": "2024-01-01",
     "taxpayer_type.irpf_income_categories": "actividad_economica",
     "tax_residence.ccaa": "madrid",
-    "tax_residence.jurisdiction_scope": "common_regime",
-    "iva.regime": "GENERAL",
-    "iva.m303_regime_composition": "general",
-    "iva.redeme_enrolled": "false",
-    "iva.cash_accounting_regime_enrolled": "false",
-    "iva.voluntary_sii_enrolled": "false",
-    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
     # Modelo 111 readiness requires the colegio concertado answer.
     "withholding.colegio_concertado": "false",
 }
+
+# The operator pays an employee with retencion, so Modelo 111 applies to the profile.
+_EMPLOYER_FACTS = {**_OPERATOR_FACTS, "withholding.has_employees": "true"}
 
 _LEGAL_ENTITY_FACTS = {
     "taxpayer_type.entity_type": "legal_entity",
@@ -311,12 +308,10 @@ def test_work_create_still_accepts_quarterly_tokens(seed_profile: ProfileSeeder)
 # ---------------------------------------------------------------------------
 
 
-def test_bindings_list_marks_decimal_consumed_typed_enum_binding(seed_profile: ProfileSeeder) -> None:
-    """The Modelo 100 estimación-directa binding offers encoded choices
-    yet is consumed as a Decimal operand. ``bindings list`` must report
-    its ``input_channel`` as ``decimal`` and name the encoded values, so the
-    operator is not misled into supplying a label through the binding channel.
-    """
+def test_bindings_list_names_the_estimation_modality_as_derived_from_the_profile(
+    seed_profile: ProfileSeeder,
+) -> None:
+    """The Modelo 100 modality binding is read from the profile, so it advertises no decimal encoding to type."""
 
     seed_profile(label="operator", facts=_OPERATOR_FACTS)
     result = invoke_cached_cli(
@@ -324,12 +319,11 @@ def test_bindings_list_marks_decimal_consumed_typed_enum_binding(seed_profile: P
     )
     assert result.exit_code == 0, result.output
     lines = result.output.splitlines()
-    row = next(line for line in lines if line.startswith("100\t") and "estimacion-directa-es-normal" in line)
-    columns = row.split("\t")
-    assert columns[-2] == "decimal", row
-    assert any(line.startswith("encoded_option\t") and "estimacion-directa-es-normal" in line for line in lines), (
-        result.output
-    )
+    row = next(line for line in lines if line.startswith("100	") and "estimacion-directa-es-normal" in line)
+    assert row.split("	")[4:6] == ["profile", "profile fact"], row
+    assert not any(
+        line.startswith("encoded_option	") and "estimacion-directa-es-normal" in line for line in lines
+    ), result.output
 
 
 def test_modelo_readiness_names_preflight_scope(seed_profile: ProfileSeeder) -> None:
@@ -601,7 +595,7 @@ def test_work_calculate_leads_with_a_result_summary(seed_profile: ProfileSeeder)
     on calculation inputs.
     """
 
-    seed_profile(label="operator", facts=_OPERATOR_FACTS)
+    seed_profile(label="operator", facts=_EMPLOYER_FACTS)
     work_unit_id = create_calculable_modelo_work_unit()
     result = invoke_cached_cli(
         ["app", "modelo", "work", "calculate", work_unit_id],
@@ -626,7 +620,7 @@ def test_work_calculate_json_carries_the_result_summary(seed_profile: ProfileSee
     prior-period data.
     """
 
-    seed_profile(label="operator", facts=_OPERATOR_FACTS)
+    seed_profile(label="operator", facts=_EMPLOYER_FACTS)
     work_unit_id = create_calculable_modelo_work_unit()
     result = invoke_cached_cli(
         ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id],

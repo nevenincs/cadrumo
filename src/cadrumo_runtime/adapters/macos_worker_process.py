@@ -23,6 +23,7 @@ from threading import Event, Lock, Thread
 from uuid import UUID
 
 from cadrumo.core.hashing import sha256_hex
+from cadrumo.core.pydantic_plugins import PYDANTIC_PLUGINS_DISABLED, PYDANTIC_PLUGINS_VARIABLE
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.posix_channel import PosixChannel
 
@@ -43,7 +44,12 @@ from .macos_worker_markers import (
 from .worker_arguments import validated_worker_arguments, worker_interpreter_arguments
 from .worker_environment import worker_path_environment_names
 
-_CLEAN_ENVIRONMENT = {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C", "PYDANTIC_DISABLE_PLUGINS": "__all__"}
+_CLEAN_ENVIRONMENT = {
+    "PATH": "/usr/bin:/bin",
+    "LANG": "C",
+    "LC_ALL": "C",
+    PYDANTIC_PLUGINS_VARIABLE: PYDANTIC_PLUGINS_DISABLED,
+}
 _GUARDIAN_MODULE = "cadrumo_runtime.host.macos_worker_guardian"
 # launchctl print exits with 113 when the domain has no service of that label.
 _SERVICE_ABSENT = 113

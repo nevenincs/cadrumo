@@ -110,7 +110,7 @@ def _assert_modelo_232_round_trip(
 
     assert filing.modelo == "232"
     assert filing.period == expected_period(year, "0A")
-    assert filing.tax_id == "Y0000001S"
+    assert filing.tax_id == "Y0001006P"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "232"
     assert filing.registry_snapshot_ref.revision_id == revision_id

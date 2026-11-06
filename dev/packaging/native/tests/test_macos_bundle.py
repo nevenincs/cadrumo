@@ -340,7 +340,7 @@ def test_package_scratch_is_build_owned_and_cleaned_after_verification(
             return real_run_command([sys.executable, "-c", "pass"], **kwargs)
         raise AssertionError(argv)
 
-    monkeypatch.setattr(macos_bundle, "run", run)
+    monkeypatch.setattr(macos_bundle, "run_tool", run)
     monkeypatch.setattr(macos_bundle, "verify_copy", verify)
     monkeypatch.setattr(macos_bundle, "run_command", detach)
     if refuse_seal:

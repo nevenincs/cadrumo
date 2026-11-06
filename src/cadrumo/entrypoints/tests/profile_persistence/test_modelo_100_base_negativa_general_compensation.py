@@ -26,7 +26,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.application.modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test,
 )
@@ -98,18 +98,16 @@ def _seed_taxpayer_unit_profile() -> None:
     record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="identity.name", value="Test"),
-            UserProfileFact(path="identity.surnames", value="Operator"),
-            # A salaried taxpayer: the work income below is this unit's only income.
-            *(
-                fact
-                for fact in GENERAL_REGIME_NATURAL_PERSON_FACTS
-                if fact.path not in {"taxpayer_type.irpf_income_categories", "irpf.estimation_regime"}
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                # A salaried taxpayer: the work income below is this unit's only income.
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
+                *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
             ),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
-            *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
+            without=("irpf.estimation_regime", "activities.", "censo.activity_start_date"),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,

@@ -26,7 +26,7 @@ _ANNUAL_308 = Period.from_year_and_code(2022, "0A")
 def _software_identity() -> AeatProductSoftwareIdentity:
     return AeatProductSoftwareIdentity(
         program_identifier="C308",
-        developer_tax_id="Y0000001S",
+        developer_tax_id="Y0001006P",
         evidence=(AeatProductSoftwareEvidence(reference="aeat-software-registration:c308", digest="a" * 64),),
     )
 

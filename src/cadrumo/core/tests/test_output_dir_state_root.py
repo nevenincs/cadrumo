@@ -61,6 +61,7 @@ DERIVED_OUTPUT_SUBPATHS: Final[dict[StorageCategory, str]] = {
     StorageCategory.LLM_RUN_RECORD: "llm-run-telemetry",
     StorageCategory.LLM_CACHE: "cache/llm-cache",
     StorageCategory.CORPUS_SEARCH_CACHE: "cache/corpus-search",
+    StorageCategory.AUTHORITY_ADMISSION_RECEIPTS: "cache/authority-admissions",
     StorageCategory.SUBMISSIONS: "submissions",
     StorageCategory.WORKFLOW_RUNS: "workflow-runs",
     StorageCategory.DRAFTS: "drafts",

@@ -216,7 +216,7 @@ def _restamp_stored_borrador_as_earlier_schema(runtime, snapshot_id: str) -> Non
     """Turn one stored borrador row into an earlier-schema row, whose values were plain strings."""
     from sqlalchemy import select
 
-    from ...adapters.persistence.storage.sql.orm import SecureObjectRow
+    from ...adapters.persistence.storage.sql.tables import secure_objects_table
     from ...application.live.borrador_100 import borrador_100_snapshot_object_key
 
     def to_earlier_shape(document) -> None:
@@ -226,9 +226,9 @@ def _restamp_stored_borrador_as_earlier_schema(runtime, snapshot_id: str) -> Non
 
     restamp_secure_object_schema_version(
         runtime.repository._engine,
-        row_statement=select(SecureObjectRow).where(
-            SecureObjectRow.namespace == LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE.namespace,
-            SecureObjectRow.object_key == borrador_100_snapshot_object_key(runtime.bucket_id, snapshot_id),
+        row_statement=select(secure_objects_table).where(
+            secure_objects_table.c.namespace == LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE.namespace,
+            secure_objects_table.c.object_key == borrador_100_snapshot_object_key(runtime.bucket_id, snapshot_id),
         ),
         schema_version=1,
         mutate=to_earlier_shape,

@@ -20,6 +20,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import Publi
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import capture_m111_invoice_withholding
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["isolated_cli_backend"]
@@ -62,7 +63,7 @@ def _create_first_year_activity_profile() -> None:
     register_cli_profile(
         label="operator",
         facts={
-            "taxpayer_type.entity_type": "natural_person",
+            **native_general_iva_facts(),
             "identity.tax_id": "12345678Z",
             "identity.name": "Daniel",
             "identity.surnames": "Persona",
@@ -70,13 +71,6 @@ def _create_first_year_activity_profile() -> None:
             "censo.activity_start_date": "2025-01-01",
             "taxpayer_type.irpf_income_categories": "actividad_economica",
             "irpf.estimation_regime": "directa_simplificada",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             "taxpayer_type.fiscal_residency": "resident_irpf",
             "tax_residence.ccaa": "madrid",
         },
@@ -93,7 +87,7 @@ def _create_autonoma_activity_profile(exercise: int) -> None:
     register_cli_profile(
         label="autonoma",
         facts={
-            "taxpayer_type.entity_type": "natural_person",
+            **native_general_iva_facts(),
             "identity.tax_id": "12345678Z",
             "identity.name": "Ana",
             "identity.surnames": "Persona",
@@ -101,13 +95,6 @@ def _create_autonoma_activity_profile(exercise: int) -> None:
             "censo.activity_start_date": f"{exercise}-01-01",
             "taxpayer_type.irpf_income_categories": "actividad_economica",
             "irpf.estimation_regime": "directa_simplificada",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             "taxpayer_type.fiscal_residency": "resident_irpf",
             "tax_residence.ccaa": "madrid",
         },

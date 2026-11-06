@@ -27,7 +27,7 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.work_addressing import (
     ModeloWorkRegistryYearMismatchError,
@@ -41,11 +41,6 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 from cadrumo.domain.modelos.work_unit import derive_work_unit_id
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test,
-)
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -254,16 +249,6 @@ class TestS01CreationGate:
 # Door reconfirmation: create_work_unit itself, called directly
 # ===========================================================================
 
-_M303_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="00000000T"),
-    UserProfileFact(path="identity.name", value="Test"),
-    UserProfileFact(path="identity.surnames", value="Operator"),
-    UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
-    *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-    UserProfileFact(path="activities.description", value="economic activity"),
-)
-
-
 _DOOR_BUCKET_ID = "d1230300-0000-4000-8000-000000000399"
 
 
@@ -272,19 +257,6 @@ def door_reconfirmation_repo(tmp_path: Path) -> Iterator[tuple[str, WorkUnitCata
     """Yield an isolated bucket and work-unit repository, UUID-shaped for profile persistence."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_DOOR_BUCKET_ID) as profile:
         yield profile.bucket_id, WorkUnitCatalogueRepository(objects=profile.repository)
-
-
-def _seed_m303_ready_profile(bucket_id: str) -> None:
-    seed_test_profile_record(
-        create_user_profile_record(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=bucket_id,
-            facts=_M303_READY_PROFILE_FACTS,
-            created_at=_T0,
-            updated_at=_T0,
-            context=profile_creation_context_for_test(),
-        ),
-    )
 
 
 class TestS03CreateWorkUnitDoorReconfirmation:
@@ -313,7 +285,7 @@ class TestS03CreateWorkUnitDoorReconfirmation:
         build a 2026 work unit under 2022 norms.
         """
         bucket_id, repo = door_reconfirmation_repo
-        _seed_m303_ready_profile(bucket_id)
+        seed_ready_profile(bucket_id=bucket_id, at=_T0)
 
         with pytest.raises(ModeloWorkRegistryYearMismatchError) as exc_info:
             create_work_unit(
@@ -357,7 +329,7 @@ class TestS03CreateWorkUnitDoorReconfirmation:
         this ``(modelo, filing_year, period)`` triple must pass unchanged.
         """
         bucket_id, repo = door_reconfirmation_repo
-        _seed_m303_ready_profile(bucket_id)
+        seed_ready_profile(bucket_id=bucket_id, at=_T0)
 
         unit = create_work_unit(
             bucket_id=bucket_id,

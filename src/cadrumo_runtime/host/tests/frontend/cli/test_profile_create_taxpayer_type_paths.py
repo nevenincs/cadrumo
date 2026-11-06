@@ -27,6 +27,7 @@ import pytest
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage
 
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["isolated_profile_storage"]
@@ -126,18 +127,11 @@ def test_edit_refuses_natural_person_branch_change_without_legal_name() -> None:
     register_cli_profile(
         label="branch-to-legal",
         facts={
-            "taxpayer_type.entity_type": "natural_person",
+            **native_general_iva_facts(),
             "identity.tax_id": "12345678Z",
             "identity.name": "Branch",
             "identity.surnames": "Operator",
             "activities.description": "consultoria",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.regime": "GENERAL",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
         log_in=False,
     )
@@ -167,19 +161,13 @@ def test_edit_allows_a_natural_person_branch_without_surnames() -> None:
     register_cli_profile(
         label="branch-to-natural",
         facts={
+            **native_general_iva_facts(),
             "taxpayer_type.entity_type": "legal_entity",
             "taxpayer_type.legal_entity_form": "sl",
             "identity.tax_id": "B66012345",
             "identity.legal_name": "Branch Legal SL",
             "identity.surnames": "",
             "activities.description": "asesoria",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.regime": "GENERAL",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
         complete=False,
         log_in=False,

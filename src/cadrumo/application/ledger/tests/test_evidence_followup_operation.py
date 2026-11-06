@@ -77,17 +77,18 @@ from ....application.ledger.invoice_evidence_operation_dtos import (
 )
 from ....application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ....application.operations.models import OperationId, OperationIdentity, OperationRequest, OperationTerminalReceipt
-from ....application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionContractV1,
-    OperationRegistry,
-)
+from ....application.operations.registry import OperationPublicDefinitionContractV1, OperationRegistry
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....core.config import Settings, load_settings
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....core.time.clock import now
 from ....domain.attachments.enums import AttachmentSource
 from ...tests.access_authority_support import assert_admitted_alike_without_commit_door

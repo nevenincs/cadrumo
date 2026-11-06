@@ -1,2 +1,6 @@
-@step Record the taxpayer's Renta profile: a Madrid-resident employee filing an individual 2025 return.
-@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --irpf-income-categories trabajo --taxpayer-birth-date 1985-06-15 --tax-residence-ccaa madrid --taxation-type 1 --taxpayer-sex H --taxpayer-marital-status 1
+:persona: asalariada-familia
+:profile: tax-id name surnames irpf-income-categories taxpayer-birth-date tax-residence-ccaa taxation-type taxpayer-sex taxpayer-marital-status situacion-familiar taxpayer-marriage-date spouse-tax-id spouse-name spouse-surnames spouse-birth-date spouse-sex spouse-non-resident-irpf
+@step State the taxpayer's Renta profile: a married Madrid-resident employee filing an individual return.
+:generated: begin
+@setup aeat config profile edit docs-sequence-sandbox --quiet --tax-id 00000027G --name Lucía --surnames "Navarro Ibáñez" --irpf-income-categories trabajo --taxpayer-birth-date 1987-06-14 --tax-residence-ccaa madrid --taxation-type 1 --taxpayer-sex M --taxpayer-marital-status 2 --situacion-familiar casado --taxpayer-marriage-date 2014-09-15 --spouse-tax-id 00000001R --spouse-name Daniel --spouse-surnames "Ortega Pina" --spouse-birth-date 1985-01-30 --spouse-sex H --no-spouse-non-resident-irpf
+:generated: end

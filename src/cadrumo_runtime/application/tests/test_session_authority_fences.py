@@ -23,7 +23,7 @@ from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support impor
     changed,
 )
 from cadrumo.adapters.persistence.storage.custody.tests.portable_password_custody import portable_password_custody
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_contracts import (
     AccessSession,
     OsLockState,
@@ -40,6 +40,7 @@ from cadrumo.application.user_profile.operations import (
 )
 from cadrumo.application.user_profile.session_retirement import SessionRetirement
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.profile_session import ReceiptBindingRefusal
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied, ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import (

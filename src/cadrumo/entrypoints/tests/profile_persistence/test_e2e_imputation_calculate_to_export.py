@@ -45,6 +45,7 @@ from cadrumo.application.modelo.action_errors import ModeloInstalmentElectionRef
 from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.payment_instalment_election import PaymentInstalmentElection
 from cadrumo.core.period import Period
@@ -54,7 +55,6 @@ from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservat
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 
@@ -145,15 +145,16 @@ def _seed_profile(criterion: str) -> None:
             context=profile_creation_context_for_test(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value=TAX_ID),
-                UserProfileFact(path="identity.name", value="Annual"),
-                UserProfileFact(path="identity.surnames", value="Renta Tester"),
-                UserProfileFact(path="activities.description", value="design services"),
-                *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-                *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
-                *dated,
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.tax_id", value=TAX_ID),
+                    UserProfileFact(path="identity.name", value="Annual"),
+                    UserProfileFact(path="identity.surnames", value="Renta Tester"),
+                    UserProfileFact(path="activities.description", value="design services"),
+                    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                    *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
+                    *dated,
+                )
             ),
             created_at=T0,
             updated_at=T0,

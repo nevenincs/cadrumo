@@ -106,7 +106,7 @@ def modelo_390_annual_snapshot() -> RegistrySnapshot:
     )
 
 
-def iva_compensation_history_state(
+def period_state(
     *,
     filing_year: int,
     period: str,

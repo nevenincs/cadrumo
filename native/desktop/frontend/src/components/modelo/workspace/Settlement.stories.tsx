@@ -11,6 +11,7 @@ import type {
 } from "../../../shell/modeloContract";
 import { Settlement } from "./Settlement";
 import { WorkspaceScreen } from "./WorkspaceScreen";
+import { byName } from "@/dev/globByName";
 
 // How the result is settled. The component stories draw the export offer the
 // application served for a result in each state a settlement can be in, and
@@ -20,9 +21,11 @@ import { WorkspaceScreen } from "./WorkspaceScreen";
 
 const UNIT = "b1c431589384a105701ba15942606b5f5667cb677d6fa62e743cd0293f9baee4";
 
-const offers = import.meta.glob<PublicModeloFormExportOffer>(
-  "../../../dev/fixtures/modelo/settlement-100-0A-*.json",
-  { import: "default" },
+const offers = byName(
+  import.meta.glob<PublicModeloFormExportOffer>(
+    "@fixtures/modelo/settlement-100-0A-*.json",
+    { import: "default" },
+  ),
 );
 
 const language = (globals: Record<string, unknown>) =>
@@ -35,10 +38,7 @@ function Offer({ state, locale }: { state: string; locale: OutputLanguage }) {
     Partial<Record<ModeloFormElection, string>>
   >({});
   useEffect(() => {
-    const load =
-      offers[
-        `../../../dev/fixtures/modelo/settlement-100-0A-${state}-${locale}.json`
-      ];
+    const load = offers[`settlement-100-0A-${state}-${locale}`];
     if (!load) throw new Error(`No settlement is stored as ${state}`);
     void load().then((read) => setOffer(structuredClone(read)));
   }, [state, locale]);

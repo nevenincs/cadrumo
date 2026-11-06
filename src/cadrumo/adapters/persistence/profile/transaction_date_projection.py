@@ -47,7 +47,7 @@ def catalogue_from_loaded_transactions(transactions: Iterable[Transaction]) -> T
 
 @dataclass(frozen=True, slots=True)
 class IndexedTransactionDates:
-    """The plaintext routing dates one :class:`TransactionDateIndexRow` records.
+    """The plaintext routing dates one ``transaction_date_index`` row records.
 
     Groups the filing date with the inclusive eligible-observation span so a
     row's index state is compared and written as one value: a change to

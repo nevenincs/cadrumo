@@ -57,21 +57,21 @@ def test_lazy_catalogue_targeted_loading() -> None:
         catalogue = LazyLocaleCatalogue("es", shard_dir=es_dir)
 
         # Before any access, nothing is read
-        assert not catalogue._key_cache
-        assert not catalogue._loaded_shards
+        assert not catalogue.key_cache
+        assert not catalogue.loaded_shards
 
         # Accessing a CLI key reads only cli.yml
         val = catalogue["cli.root.app_help"]
         assert val == "Spanish Help"
-        assert set(catalogue._key_cache) == {"cli.root.app_help"}
+        assert set(catalogue.key_cache) == {"cli.root.app_help"}
         assert catalogue["desktop.startup.failure"] == "No se ha podido iniciar."
-        assert Path("common.yml") not in catalogue._loaded_shards
+        assert Path("common.yml") not in catalogue.loaded_shards
 
         # Accessing M303 reads 303.yml, leaving 100.yml unread
         val_303 = catalogue["modelo.schema.303.casilla.01.label"]
         assert val_303 == "IVA Devengado"
-        assert not [key for key in catalogue._key_cache if key.startswith("modelo.schema.100.")]
-        assert Path("modelo/schema/100.yml") not in catalogue._loaded_shards
+        assert not [key for key in catalogue.key_cache if key.startswith("modelo.schema.100.")]
+        assert Path("modelo/schema/100.yml") not in catalogue.loaded_shards
 
 
 def test_lazy_catalogue_missing_key_behavior() -> None:

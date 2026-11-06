@@ -5,20 +5,20 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, insert, select, update
 
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....domain.transactions.models import (
     Transaction,
 )
-from ..storage.sql.orm import TransactionDateIndexRow
+from ..storage.sql.tables import transaction_date_index_table
 from .transaction_date_projection import (
     IndexedTransactionDates,
 )
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from sqlalchemy.orm import Session
+    from sqlalchemy import Connection
 
 
 def date_index_revision(rows: dict[str, tuple[int, IndexedTransactionDates]]) -> str:
@@ -30,16 +30,16 @@ def date_index_revision(rows: dict[str, tuple[int, IndexedTransactionDates]]) ->
     return sha256_hex(json.dumps(values, separators=(",", ":")).encode(UTF_8_ENCODING))
 
 
-def read_date_index_rows(bucket_id: str, session: Session) -> dict[str, tuple[int, IndexedTransactionDates]]:
+def read_date_index_rows(bucket_id: str, session: Connection) -> dict[str, tuple[int, IndexedTransactionDates]]:
     """Read the exact bucket baseline used by the canonical routing diff."""
     existing_rows = session.execute(
         select(
-            TransactionDateIndexRow.id,
-            TransactionDateIndexRow.transaction_id,
-            TransactionDateIndexRow.filing_date,
-            TransactionDateIndexRow.eligible_from,
-            TransactionDateIndexRow.eligible_to,
-        ).where(TransactionDateIndexRow.bucket_id == bucket_id),
+            transaction_date_index_table.c.id,
+            transaction_date_index_table.c.transaction_id,
+            transaction_date_index_table.c.filing_date,
+            transaction_date_index_table.c.eligible_from,
+            transaction_date_index_table.c.eligible_to,
+        ).where(transaction_date_index_table.c.bucket_id == bucket_id),
     ).all()
     return {
         transaction_id: (
@@ -56,7 +56,7 @@ def read_date_index_rows(bucket_id: str, session: Session) -> dict[str, tuple[in
 
 def write_date_index_rows(
     bucket_id: str,
-    session: Session,
+    session: Connection,
     *,
     incoming: dict[str, IndexedTransactionDates],
     existing: dict[str, tuple[int, IndexedTransactionDates]],
@@ -65,21 +65,21 @@ def write_date_index_rows(
     stale_ids = set(existing) - set(incoming)
     if stale_ids:
         session.execute(
-            delete(TransactionDateIndexRow).where(
-                TransactionDateIndexRow.bucket_id == bucket_id,
-                TransactionDateIndexRow.transaction_id.in_(stale_ids),
+            delete(transaction_date_index_table).where(
+                transaction_date_index_table.c.bucket_id == bucket_id,
+                transaction_date_index_table.c.transaction_id.in_(stale_ids),
             ),
         )
 
-    new_rows: list[TransactionDateIndexRow] = []
+    new_rows: list[dict[str, object]] = []
     for transaction_id, dates in incoming.items():
         current = existing.get(transaction_id)
         if current is not None and current[1] == dates:
             continue  # unchanged: leave the existing row untouched
         if current is not None:
             session.execute(
-                update(TransactionDateIndexRow)
-                .where(TransactionDateIndexRow.id == current[0])
+                update(transaction_date_index_table)
+                .where(transaction_date_index_table.c.id == current[0])
                 .values(
                     filing_date=dates.filing_date,
                     filing_year=dates.filing_date.year,
@@ -89,17 +89,17 @@ def write_date_index_rows(
             )
             continue
         new_rows.append(
-            TransactionDateIndexRow(
-                bucket_id=bucket_id,
-                transaction_id=transaction_id,
-                filing_date=dates.filing_date,
-                filing_year=dates.filing_date.year,
-                eligible_from=dates.eligible_from,
-                eligible_to=dates.eligible_to,
-            ),
+            {
+                "bucket_id": bucket_id,
+                "transaction_id": transaction_id,
+                "filing_date": dates.filing_date,
+                "filing_year": dates.filing_date.year,
+                "eligible_from": dates.eligible_from,
+                "eligible_to": dates.eligible_to,
+            },
         )
     if new_rows:
-        session.add_all(new_rows)
+        session.execute(insert(transaction_date_index_table), new_rows)
 
 
 def date_routing_unchanged(current: Transaction, replacement: Transaction) -> bool:

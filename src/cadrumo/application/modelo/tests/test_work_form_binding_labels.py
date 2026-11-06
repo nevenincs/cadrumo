@@ -12,7 +12,7 @@ from ....core.i18n.render import lookup_translation
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.manual_input_selector import ManualInputProvider
-from ....domain.calculations.registry.modelo_localization import binding_locale_key, resolve_modelo_localization
+from ....domain.calculations.registry.modelo_localization import binding_locale_key
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_form_layouts import FormLayoutDefinition
 from ....domain.modelos.codes import ModeloCode
@@ -27,8 +27,6 @@ from ..work_form_service import modelo_form_snapshot
 from .work_form_fixture import uncalculated_review
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
-
-_DIRECT_ESTIMATION = "renta-modelo-100-estimacion-directa-es-normal"
 
 
 def _form(
@@ -65,35 +63,6 @@ def _form(
 
 def _binding_fields(form: ModeloWorkForm) -> list[ModeloFormField]:
     return [field for field in form.fields() if isinstance(field.address, ModeloFormBindingAddressV1)]
-
-
-@pytest.mark.parametrize(
-    ("language", "expected"),
-    [
-        (OutputLanguage.EN, "Additional data for box 0224"),
-        (OutputLanguage.ES, "Dato adicional de la casilla 0224"),
-        (OutputLanguage.CA, "Dada addicional de la casella 0224"),
-        (OutputLanguage.HU, "Kiegészítő adat a(z) 0224. rovathoz"),
-    ],
-)
-def test_the_binding_question_precedes_its_provider_and_fed_box_names(
-    operation: PinnedAuthorityOperation, language: OutputLanguage, expected: str
-) -> None:
-    form = _form(operation, "100", 2024, "0A", language)
-    field = next(
-        field
-        for field in _binding_fields(form)
-        if isinstance(field.address, ModeloFormBindingAddressV1) and str(field.address.binding_id) == _DIRECT_ESTIMATION
-    )
-
-    provider = next(casilla for casilla in operation.revision("100", "2024").casillas if str(casilla.id) == "0168")
-    assert field.label.text == lookup_translation(
-        binding_locale_key("100", _DIRECT_ESTIMATION, "label"), locale=language.value
-    )
-    assert field.label.text != resolve_modelo_localization(provider.localization_keys, locale=language.value)
-    assert field.label.text != expected
-    assert field.box == "0168"
-    assert field.label.disclosure is ModeloFormTextDisclosure.LOCALIZED
 
 
 @pytest.mark.parametrize("language", tuple(OutputLanguage))
@@ -183,40 +152,3 @@ def test_the_generated_envelope_closing_tag_is_not_a_manual_question(operation: 
         or str(field.address.binding_id) != "modelo-369-union-fichero.tipo-y-cierre"
         for field in fields
     )
-
-
-def _direct_estimation_field(form: ModeloWorkForm) -> ModeloFormField:
-    return next(
-        field
-        for field in _binding_fields(form)
-        if isinstance(field.address, ModeloFormBindingAddressV1) and str(field.address.binding_id) == _DIRECT_ESTIMATION
-    )
-
-
-def test_the_binding_question_precedes_a_declared_owner_name(operation: PinnedAuthorityOperation) -> None:
-    def add_owner(snapshot: RegistrySnapshot) -> RegistrySnapshot:
-        casillas = tuple(
-            casilla.model_copy(update={"binding": _DIRECT_ESTIMATION}) if str(casilla.id) == "0001" else casilla
-            for casilla in snapshot.revision.casillas
-        )
-        return snapshot.model_copy(update={"revision": snapshot.revision.model_copy(update={"casillas": casillas})})
-
-    field = _direct_estimation_field(_form(operation, "100", 2024, "0A", OutputLanguage.EN, adjust=add_owner))
-    owner = next(casilla for casilla in operation.revision("100", "2024").casillas if str(casilla.id) == "0001")
-    assert field.label.text == lookup_translation(binding_locale_key("100", _DIRECT_ESTIMATION, "label"), locale="en")
-    assert field.label.text != resolve_modelo_localization(owner.localization_keys, locale="en")
-    assert field.box == "0001"
-
-
-def test_missing_relationship_names_preserve_the_binding_question(operation: PinnedAuthorityOperation) -> None:
-    def remove_provider_name(snapshot: RegistrySnapshot) -> RegistrySnapshot:
-        casillas = tuple(
-            casilla.model_copy(update={"localization_keys": ()}) if str(casilla.id) == "0168" else casilla
-            for casilla in snapshot.revision.casillas
-        )
-        return snapshot.model_copy(update={"revision": snapshot.revision.model_copy(update={"casillas": casillas})})
-
-    field = _direct_estimation_field(
-        _form(operation, "100", 2024, "0A", OutputLanguage.EN, adjust=remove_provider_name)
-    )
-    assert field.label.text == lookup_translation(binding_locale_key("100", _DIRECT_ESTIMATION, "label"), locale="en")

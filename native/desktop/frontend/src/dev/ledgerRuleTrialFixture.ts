@@ -1,11 +1,11 @@
 // `ledger.rule.trial` for the fixtures: what the real rule engine answered for
 // each pattern over the fixture ledger's descriptions, recorded in
-// `fixtures/ledgerRuleTrial.json` and looked up by exactly what was asked. It
+// the generated `ledgerRuleTrial.json` and looked up by exactly what was asked. It
 // decides nothing: a pattern not recorded answers null, which the page takes as
 // a ledger that did not answer. A test in the owning Python package holds every
 // recorded answer equal to the live one.
 import type { LedgerRuleTrialResult, LedgerRow } from "../shell/ledger";
-import recorded from "./fixtures/ledgerRuleTrial.json" with { type: "json" };
+import recorded from "@fixtures/ledger-recordings/ledgerRuleTrial.json" with { type: "json" };
 
 export function answerRuleTrial(
   pattern: string,

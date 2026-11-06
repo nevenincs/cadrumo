@@ -6,8 +6,9 @@ from uuid import UUID, uuid4
 
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
 
+from ....core.operations import OperationFrontendProjection
 from ...operations.access_resolution import OperationAccessContext
-from ...operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ...operations.registry import OperationPublicDefinitionRegistrationV1
 
 
 def registration_access_context(

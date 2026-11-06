@@ -14,6 +14,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.tests.inventory import FIXTURES_DIR
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_server
 
+from ...native_profile_facts import native_general_iva_facts
 from .profile_password_cli import invoke_with_profile_password
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.windows_only]
@@ -27,17 +28,10 @@ def _register(label: str) -> None:
     register_cli_profile(
         label=label,
         facts={
-            "taxpayer_type.entity_type": "natural_person",
+            **native_general_iva_facts(),
             "identity.name": "Ledger",
             "identity.surnames": label,
             "activities.description": "design",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.regime": "GENERAL",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
         log_in=False,
     )

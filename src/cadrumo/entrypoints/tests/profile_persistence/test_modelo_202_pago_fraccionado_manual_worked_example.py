@@ -99,6 +99,7 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
 from cadrumo.application.modelo.revision_replay_inputs import revision_filing_replay_inputs
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
@@ -226,23 +227,15 @@ def _seed_sociedad_m_profile(exercise: int) -> None:
     record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
-        facts=(
-            UserProfileFact(path="identity.name", value="Sociedad M Ejemplo"),
-            UserProfileFact(path="identity.legal_name", value="Sociedad Limitada M SL"),
-            UserProfileFact(path="identity.tax_id", value="B87654323"),
-            UserProfileFact(path="activities.description", value="actividad economica"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-            UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
-            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=_INCN_BELOW_THRESHOLD),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.name", value="Sociedad M Ejemplo"),
+                UserProfileFact(path="identity.legal_name", value="Sociedad Limitada M SL"),
+                UserProfileFact(path="identity.tax_id", value="B87654323"),
+                UserProfileFact(path="activities.description", value="actividad economica"),
+                UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=_INCN_BELOW_THRESHOLD),
+            ),
+            persona_id="sociedad-limitada",
         ),
         created_at=_profile_instant(exercise),
         updated_at=_profile_instant(exercise),

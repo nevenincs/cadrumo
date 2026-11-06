@@ -1,4 +1,4 @@
-import fixtures from "./fixtures/userProfile.json";
+import fixtures from "@fixtures/desktop-profile/userProfile.json" with { type: "json" };
 import type { CensoMode } from "./censoFixture";
 import type { CensoReadiness } from "../shell/profileCenso";
 import type {

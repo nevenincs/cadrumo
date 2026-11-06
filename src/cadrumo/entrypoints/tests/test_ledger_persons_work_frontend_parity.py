@@ -46,8 +46,8 @@ from ...application.ledger.split_operation import (
     LedgerSplitOperationResult,
     LedgerSplitRequest,
 )
-from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
-from ...core.operations import OperationEffect, OperationTerminalCondition
+from ...application.operations.registry import OperationRegistry
+from ...core.operations import OperationEffect, OperationFrontendProjection, OperationTerminalCondition
 from ...domain.buckets.event import BucketEvent, BucketEventType
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.transactions.classification_origin import ClassificationOrigin, classification_facts

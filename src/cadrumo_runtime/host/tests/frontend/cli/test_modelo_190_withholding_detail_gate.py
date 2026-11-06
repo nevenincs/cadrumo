@@ -53,6 +53,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 
+from ...native_profile_facts import native_general_iva_facts
 from .native_api_cli_support import NativeApiCliSession, native_api_cli_session, operation_lifecycle_scope
 from .test_runtime_invoice_add import password_profile_session
 
@@ -96,20 +97,13 @@ def _profile_session(
 
     def prepare(profile_id: UUID, root: Path) -> None:
         values = {
+            **native_general_iva_facts(),
             "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
             "identity.name": "Operator",
             "identity.surnames": "Retenedor",
             "activities.description": "design",
             "taxpayer_type.irpf_income_categories": "actividad_economica",
             "censo.activity_start_date": "2020-01-01",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.regime": "GENERAL",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             "withholding.colegio_concertado": "false",
         }
         if attested_periods is not None:

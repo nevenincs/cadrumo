@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test,
 )
@@ -159,6 +160,9 @@ def _seed_ready_profile(bucket_id: str, objects: SecureObjectRepository | None =
         UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
         UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
         UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+        # The taxpayer pays an employee and rent with retencion, so the payer modelos 111, 115, 180 and 190 apply.
+        UserProfileFact(path="withholding.has_employees", value=True),
+        UserProfileFact(path="withholding.pays_rent_with_retencion", value=True),
         UserProfileFact(path="provenance.source", value="manual_cli"),
         UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
     ]
@@ -194,28 +198,22 @@ def _seed_m100_profile_facts(bucket_id: str, objects: SecureObjectRepository | N
     record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=bucket_id,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="X1234567L"),
-            UserProfileFact(path="identity.name", value="Test"),
-            UserProfileFact(path="identity.surnames", value="Salaried"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="activities.description", value="salaried income"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="provenance.source", value="manual_cli"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            UserProfileFact(path="renta_taxpayer.sex", value="M"),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="X1234567L"),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Salaried"),
+                UserProfileFact(path="activities.description", value="salaried income"),
+                UserProfileFact(path="provenance.source", value="manual_cli"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
+                UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
+                UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
+                UserProfileFact(path="renta_taxpayer.sex", value="M"),
+                UserProfileFact(path="renta_filing.declaration_type", value="1"),
+                UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+                UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+            ),
+            without=("irpf.estimation_regime", "censo.activity_start_date"),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
@@ -627,7 +625,7 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(
             operation=operation,
             taxpayer_tax_id="X1234567L",
             ejercicio=2025,
-            payer_tax_id="B00000000",
+            payer_tax_id="B00010082",
             income_class=RetencionSoportadaClase.TRABAJO,
             retencion=retenciones_trabajo_amount,
             importe_integro_dinerario=Decimal("32000.00"),
@@ -659,7 +657,6 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(
                     "0016": Decimal("0"),
                 },
                 binding_values={
-                    "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
                     zero_binding: Decimal("0"),
                     "renta-base-liquidable-negativa-general-em4-pendiente-inicio": Decimal("0"),
                     "renta-base-liquidable-negativa-general-em3-pendiente-inicio": Decimal("0"),
@@ -922,7 +919,7 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(
                 ),
                 source_kind="aeat_sede_justificante",
                 captured_at=_CLOCK,
-                member_nif="A00000000",
+                member_nif="A00010009",
                 stamped_revision_id=revision_id_for_observation(
                     RegistryModeloObservation(
                         modelo="322",
@@ -967,7 +964,7 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(
                         source_modelo="322",
                         filing_year=2026,
                         period=Period.from_year_and_code(2026, _GROUP_PERIOD),
-                        member_nifs=("A00000000", "B00000001"),
+                        member_nifs=("A00010009", "B00000001"),
                     ),
                 ),
                 clock=_CLOCK,
@@ -1006,7 +1003,7 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(
                 ),
                 source_kind="aeat_sede_justificante",
                 captured_at=_CLOCK,
-                member_nif="A00000000",
+                member_nif="A00010009",
                 stamped_revision_id=revision_id_for_observation(
                     RegistryModeloObservation(
                         modelo="322",
@@ -1039,7 +1036,7 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(
                         source_modelo="322",
                         filing_year=2026,
                         period=Period.from_year_and_code(2026, _GROUP_PERIOD),
-                        member_nifs=("A00000000", "B00000000"),
+                        member_nifs=("A00010009", "B00010082"),
                     ),
                 ),
             },

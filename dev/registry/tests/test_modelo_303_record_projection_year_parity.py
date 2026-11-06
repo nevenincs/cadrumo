@@ -69,7 +69,6 @@ _REVISIONS = tuple(M303_RECORD_DESIGN_SOURCE_BY_REVISION)
 _DERIVED_BOXES = {
     "11": ("computed", "modelo-303-dr303-11-projection"),
     "13": ("computed", "modelo-303-dr303-13-projection"),
-    "120": ("bound", "modelo-303-casilla-120-no-sujetas-localizacion-base"),
     "122": ("bound", "modelo-303-casilla-122-inversion-sujeto-pasivo-base"),
 }
 #: The rate-row cuotas whose meaning depends on the paired Tipo % constraint.

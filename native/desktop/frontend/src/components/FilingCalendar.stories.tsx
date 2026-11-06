@@ -11,7 +11,7 @@ import {
   STRADDLING_CALENDAR,
 } from "@/dev/fixtures/calendar";
 import { BUSY_CALENDAR, BUSY_TODAY } from "@/dev/fixtures/calendarBusy";
-import profiles from "@/dev/fixtures/userProfile.json";
+import profiles from "@fixtures/desktop-profile/userProfile.json" with { type: "json" };
 import type { CalendarState } from "../shell/calendar";
 import type { UserProfile } from "../shell/userProfile";
 import { useStrings } from "../shell/strings";

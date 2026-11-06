@@ -22,8 +22,8 @@ from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.owner import OperationExecutorContext
 from cadrumo.application.operations.refusal_evidence import OperationRefusalEvidence
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.calculations.registry.tests.published_authority import leased_profile_create_context
-from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from cadrumo.domain.user_profile.values import (
     ProfileSetupState,
     UserProfileFact,
@@ -46,15 +46,16 @@ def runtime_profile(tmp_path: Path, authority_operation: object) -> Iterator[Tes
         record = create_user_profile_record(
             profile_id=profile.bucket_id,
             setup_state=ProfileSetupState.COMPLETE,
-            facts=(
-                UserProfileFact(path="identity.name", value="Marta"),
-                UserProfileFact(path="identity.surnames", value="Diaz Ortega"),
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-                UserProfileFact(path="activities.description", value="economic activity"),
-                UserProfileFact(path="provenance.source", value="manual_cli"),
-                UserProfileFact(path="renta_taxpayer.birth_date", value="1985-06-15"),
-                UserProfileFact(path="renta_filing.declaration_type", value="1"),
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.name", value="Marta"),
+                    UserProfileFact(path="identity.surnames", value="Diaz Ortega"),
+                    UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                    UserProfileFact(path="activities.description", value="economic activity"),
+                    UserProfileFact(path="provenance.source", value="manual_cli"),
+                    UserProfileFact(path="renta_taxpayer.birth_date", value="1985-06-15"),
+                    UserProfileFact(path="renta_filing.declaration_type", value="1"),
+                )
             ),
             context=leased_profile_create_context(),
         )

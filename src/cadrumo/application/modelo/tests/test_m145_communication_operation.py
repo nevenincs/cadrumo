@@ -18,7 +18,7 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ....core.hashing import sha256_hex
-from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...operations.access_resolution import OperationAccessContext
@@ -30,11 +30,7 @@ from ...operations.capabilities import (
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.operation_definition import OperationDefinition
 from ...operations.owner import OperationExecutorContext
-from ...operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationRegistry,
-)
+from ...operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
 from .. import m145_communication_execution as m145_operation
 from ..m145_communication_contracts import (
     M145_COMMUNICATION_CREATE_OPERATION_DEFINITION_ID,

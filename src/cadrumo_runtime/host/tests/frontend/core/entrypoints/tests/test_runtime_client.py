@@ -13,8 +13,8 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.config import override_settings
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DESCRIPTOR_FILENAME, AuthorityDescriptor
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import AccessRefusal, SessionRequest

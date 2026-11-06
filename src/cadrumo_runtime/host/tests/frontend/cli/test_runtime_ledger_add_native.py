@@ -24,7 +24,7 @@ pytestmark = [
     pytest.mark.usefixtures("authority_operation"),
 ]
 
-_PROFILE_FACTS = native_general_iva_facts(surnames="Add", description="design")
+_PROFILE_FACTS = native_general_iva_facts()
 
 
 def test_native_exact_profile_add_is_readable_after_session_reauthentication(tmp_path: Path) -> None:

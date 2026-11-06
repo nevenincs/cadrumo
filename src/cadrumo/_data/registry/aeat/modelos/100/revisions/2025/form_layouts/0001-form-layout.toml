@@ -7,7 +7,7 @@ revision_id = "2025"
 seed_source = "xml_dictionary"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "738dbd453da2909e7ac1471a7039e5bf65f32f21c8b056b12fca754865796486"
+source_state_digest = "b97da09254526552abb4f4b138c9dacf7595c61341f59ad1965732ffc30058a9"
 design_sources = [
     { source_ref = "aeat-dr-100-2025-dictionary", sha256 = "67409ad3027f2548d90bd64ea5eeff7fa344ace87377a048527d2c7de92fe93b" },
     { source_ref = "aeat-dr-100-2025-input-dictionary", sha256 = "ef63737b6d52e22a4c1c4b7934975488b93b0f37f9a8bc10f6c365219b6ecade" },
@@ -5120,17 +5120,6 @@ blocks = [
     { kind = "field", id = "field-48", casilla_id = "1440" },
 ]
 
-[[revisions.2025.form_layouts.pages]]
-id = "other-inputs"
-heading_key = "modelo.schema.100.form.page.other-inputs.heading"
-
-[[revisions.2025.form_layouts.pages.sections]]
-id = "inputs"
-heading_key = "modelo.schema.100.form.section.inputs.heading"
-blocks = [
-    { kind = "binding_inputs", id = "binding-inputs", binding_ids = ["renta-modelo-100-estimacion-directa-es-normal"] },
-]
-
 [[revisions.2025.form_layouts.outline]]
 id = "identification"
 heading_key = "modelo.schema.100.form.outline.identification.heading"
@@ -5194,7 +5183,6 @@ sections = [
     { page_id = "datoseconomicos-tomadatosampliada", section_id = "regestimadirecta" },
     { page_id = "datoseconomicos-tomadatosampliada", section_id = "regestimaobj" },
     { page_id = "datoseconomicos-tomadatosampliada", section_id = "regestimaobjagricola" },
-    { page_id = "other-inputs", section_id = "inputs" },
 ]
 
 [[revisions.2025.form_layouts.outline]]

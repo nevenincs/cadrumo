@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, waitFor } from "storybook/test";
-import form130 from "../../../dev/fixtures/modelo/modelo-130-1T-en.json";
+import form130 from "@fixtures/modelo/modelo-130-1T-en.json" with { type: "json" };
 import type {
   ModeloEditValueGrammarV1,
   ModeloWorkbenchFormProjectionV1,

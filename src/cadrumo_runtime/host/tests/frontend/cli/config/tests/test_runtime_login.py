@@ -32,7 +32,6 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     dev_test_database_password,
     isolated_cli_backend,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
 from cadrumo.application.user_profile.login_session import authenticate_profile_candidate
@@ -41,6 +40,7 @@ from cadrumo.application.user_profile.profile_pointer import (
     active_profile_pointer_transaction,
     observe_active_profile_pointer,
 )
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError

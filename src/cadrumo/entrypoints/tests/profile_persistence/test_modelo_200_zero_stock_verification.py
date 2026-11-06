@@ -25,6 +25,7 @@ from cadrumo.application.modelo.external_import_actions import import_external_f
 from cadrumo.application.modelo.operation_shared import resolve_active_workflow_profile
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
@@ -68,28 +69,18 @@ _PROFILE_BUCKET_ID = "20000000-0000-4000-8000-000000000299"
 
 def _seed_legal_entity_profile(bucket_id: str, operation: PinnedAuthorityOperation) -> None:
     """Seed the existing synthetic corporate-profile shape under this operation's schema pin."""
-    facts = (
-        UserProfileFact(path="identity.tax_id", value=_TAX_ID),
-        UserProfileFact(path="identity.name", value="Test"),
-        UserProfileFact(path="identity.surnames", value="Operator"),
-        UserProfileFact(path="identity.legal_name", value="Test Company SL"),
-        UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-        UserProfileFact(path="activities.description", value="economic activity"),
-        UserProfileFact(path="iva.regime", value="GENERAL"),
-        UserProfileFact(path="iva.m303_regime_composition", value="general"),
-        UserProfileFact(path="iva.oss_enrolled", value=False),
-        UserProfileFact(path="iva.redeme_enrolled", value=False),
-        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-        UserProfileFact(path="provenance.source", value="manual_cli"),
-        UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
-        UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-        UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-        UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
-        UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="7000000"),
-        UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
+    facts = persona_facts_beneath(
+        (
+            UserProfileFact(path="identity.tax_id", value=_TAX_ID),
+            UserProfileFact(path="identity.name", value="Test"),
+            UserProfileFact(path="identity.surnames", value="Operator"),
+            UserProfileFact(path="identity.legal_name", value="Test Company SL"),
+            UserProfileFact(path="activities.description", value="economic activity"),
+            UserProfileFact(path="provenance.source", value="manual_cli"),
+            UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
+            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="7000000"),
+        ),
+        persona_id="sociedad-limitada",
     )
     seed_test_profile_record(
         create_user_profile_record(

@@ -122,7 +122,6 @@ def _m303_zero_bindings() -> dict[str, Decimal]:
         "modelo-303-iva-autorepercutido-interior-deducible-cuota": Decimal("0.00"),
         "modelo-303-casilla-59-entregas-intracomunitarias-base": Decimal("0"),
         "modelo-303-casilla-60-exportaciones-base": Decimal("0"),
-        "modelo-303-casilla-120-no-sujetas-localizacion-base": Decimal("0"),
         "modelo-303-casilla-122-inversion-sujeto-pasivo-base": Decimal("0"),
         "modelo-303-iva-repercutido-general-base": Decimal("0"),
         "modelo-303-iva-repercutido-reducido-base": Decimal("0"),

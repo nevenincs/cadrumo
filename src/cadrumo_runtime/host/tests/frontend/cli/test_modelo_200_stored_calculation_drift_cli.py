@@ -12,6 +12,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
 )
 from cadrumo.tests.log_records import delivered_text
 
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
 from .profile_cli_support import invoke_protected_profile
 
@@ -32,6 +33,7 @@ def test_verify_after_profile_activity_start_change_reports_scoped_advisories_wi
     register_cli_profile(
         label="sa-drift",
         facts={
+            **native_general_iva_facts(),
             "taxpayer_type.entity_type": "legal_entity",
             "taxpayer_type.legal_entity_form": "sa",
             "identity.tax_id": "A12345674",
@@ -39,13 +41,6 @@ def test_verify_after_profile_activity_start_change_reports_scoped_advisories_wi
             "activities.description": "industrial services",
             "taxpayer_type.incn_prior_12_months": "500000",
             "taxpayer_type.new_entity_first_two_profit_periods": "false",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             "tax_residence.ccaa": "madrid",
         },
         log_in=False,

@@ -76,7 +76,7 @@ def test_path_parser_reloads_equal_metadata_replacement_and_stamps_its_digest(tm
     Modelo 123 is used (rather than the default modelo 130) because its
     ``numeric_casilla`` targets match on printed label text alone; modelo 130's
     ``bbox_anchored`` targets additionally require the box number to sit in a
-    specific x-coordinate band that the generic ``_write_declaration_pdf``
+    specific x-coordinate band that the generic ``write_declaration_pdf``
     layout never populates, so no amount of ``values`` could clear its
     coverage floor. The values themselves are incidental to this test, which
     exercises cache/digest identity, not extraction fidelity.
@@ -92,7 +92,7 @@ def test_path_parser_reloads_equal_metadata_replacement_and_stamps_its_digest(tm
     second_pdf = tmp_path / "second.pdf"
     target_pdf = tmp_path / "declaracion.pdf"
     write_declaration_pdf(first_pdf, modelo="123", ejercicio="2024", period="1T", values=values, tax_id="00000000T")
-    write_declaration_pdf(second_pdf, modelo="123", ejercicio="2024", period="1T", values=values, tax_id="00000001R")
+    write_declaration_pdf(second_pdf, modelo="123", ejercicio="2024", period="1T", values=values, tax_id="00001005Q")
 
     first_bytes = first_pdf.read_bytes()
     second_bytes = second_pdf.read_bytes()
@@ -126,5 +126,5 @@ def test_path_parser_reloads_equal_metadata_replacement_and_stamps_its_digest(tm
     assert replacement_stat.st_size == original_stat.st_size
     assert replacement_stat.st_mtime_ns == original_stat.st_mtime_ns
     assert first.tax_id == "00000000T"
-    assert replacement.tax_id == "00000001R"
+    assert replacement.tax_id == "00001005Q"
     assert replacement.source_pdf_sha256 == hashlib.sha256(second_bytes).hexdigest()

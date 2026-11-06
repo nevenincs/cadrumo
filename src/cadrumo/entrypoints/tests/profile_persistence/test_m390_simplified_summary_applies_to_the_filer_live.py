@@ -37,6 +37,7 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
@@ -84,23 +85,17 @@ def _seed_profile(*, iva_regime: str, composition: str, estimation_regime: str) 
         create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="activity"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value=iva_regime),
-                UserProfileFact(path="iva.m303_regime_composition", value=composition),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value=estimation_regime),
-                UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                    UserProfileFact(path="identity.name", value="Test"),
+                    UserProfileFact(path="identity.surnames", value="Operator"),
+                    UserProfileFact(path="activities.description", value="activity"),
+                    UserProfileFact(path="iva.regime", value=iva_regime),
+                    UserProfileFact(path="iva.m303_regime_composition", value=composition),
+                    UserProfileFact(path="irpf.estimation_regime", value=estimation_regime),
+                    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+                )
             ),
             created_at=_T0,
             updated_at=_T0,

@@ -33,14 +33,11 @@ from cadrumo.application.operations.frontend_projection import (
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
 from cadrumo.application.operations.public_scalar import PublicDecimal
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionContractV1,
-    OperationRegistry,
-)
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1, OperationRegistry
 from cadrumo.core.aggregation import IntracomOperationType
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,

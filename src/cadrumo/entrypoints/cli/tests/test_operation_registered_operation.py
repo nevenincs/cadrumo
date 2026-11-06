@@ -40,11 +40,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationSubmissionReceiptV1,
 )
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicContractSetV1,
-    OperationPublicDefinitionContractV1,
-)
+from cadrumo.application.operations.registry import OperationPublicContractSetV1, OperationPublicDefinitionContractV1
 from cadrumo.application.user_profile.censal_operation import (
     CENSAL_OPERATION_DEFINITION_ID,
     CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING,
@@ -61,7 +57,12 @@ from cadrumo.application.user_profile.censal_operation import (
 )
 from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
-from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
 from cadrumo.entrypoints.cli.errors import emit_error_and_exit
 from cadrumo_client.commands import profile_binding, registered_operation_deadlines, registered_operation_errors
 from cadrumo_client.commands.errors import CliRefusedBoundaryError

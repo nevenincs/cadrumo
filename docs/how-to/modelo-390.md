@@ -58,7 +58,7 @@ The example starts with the four 2025 Modelo 303 quarters recorded as filed, so 
 :verify: Confirm the annual summary passed the check before you export it.
 ```
 
-The check passes the draft as complete and reports issues that do not block filing: the four quarters are recorded as filed but carry no AEAT receipt yet, so the tool discloses that the annual reconciliation rests only on filings recorded in Cadrumo. That disclosure is correct - a quarter recorded as filed is honest proof for the annual fold-in, and the issue tells you where an AEAT receipt would strengthen the record. In this example the four quarters charged 1470.00 of VAT between them (420 + 315 + 210 + 525) and the year carries 105.00 of deductible input VAT (one purchase with a supporting document, 500 base at 21%), so the annual cuota devengada is 1470.00, the deducible total is 105.00, and the régimen-general result is 1365.00 (1470.00 − 105.00) - the full annual VAT equation, each figure matching the sum of the quarters (the reconciliation invariant). Input VAT counts only once the purchase has the invoice linked as a supporting document. The rest of this guide explains each stage and the checks around it.
+The check passes the draft as complete and reports issues that do not block filing: the four quarters are recorded as filed but carry no AEAT receipt yet, so the tool discloses that the annual reconciliation rests only on filings recorded in Cadrumo. That disclosure is correct - a quarter recorded as filed is honest proof for the annual fold-in, and the issue tells you where an AEAT receipt would strengthen the record. In this example a plumber's four quarters charged 4386.00 of VAT between them (1740.00 at 10% on dwelling repairs and 2646.00 at 21%) and the year carries 3492.30 of deductible input VAT (workshop rent, materials and the adviser's fees, each backed by its invoice), so the annual cuota devengada is 4386.00, the deducible total is 3492.30, and the régimen-general result is 893.70 (4386.00 − 3492.30) - the full annual VAT equation, each figure matching the sum of the quarters (496.00 + 248.20 + 24.60 + 124.90, the reconciliation invariant). Input VAT counts only once the purchase has its invoice linked. The rest of this guide explains each stage and the checks around it.
 
 ## Setup steps before you start
 
@@ -153,10 +153,10 @@ Modelo 390 reconciles from Modelo 303:
 
 If a 303 return was filed outside Cadrumo, read or reconcile the official AEAT data before you rely on local values, with the `live filed pull-sources` or `reconcile import` commands shown under [What each Modelo 303 quarter needs](#what-each-modelo-303-quarter-needs-before-you-verify) above. Reading filed declarations from AEAT is read-only; reconciliation reads the AEAT receipt or declaration file you supply. Modelo 390 calculation does not require a fresh check against what AEAT holds before it runs.
 
-For VAT compensation history, use the VAT wallet commands; they support the compensation carry-forward review but are not a general Modelo 390 reconciliation gate. Inspect the balance with the `iva-wallet balance` step in the inspection example. Seed an opening balance, fix a wrong seed, or review the AEAT-side history with the following commands. The seed runs. Correcting a seed is refused once a 303 recorded as filed has consumed it, and the history read reaches AEAT, so those two are examples that are not run:
+For VAT compensation history, use the VAT wallet commands; they support the compensation carry-forward review but are not a general Modelo 390 reconciliation gate. Inspect the balance with the `iva-wallet balance` step in the inspection example. Read the balance, seed an opening balance, fix a wrong seed, or review the AEAT-side history with the following commands. The balance read runs. Seeding and correcting a seed are refused once a 303 recorded as filed has consumed the opening balance, as the 2025 quarters here have, and the history read reaches AEAT, so those three are examples that are not run:
 
 ```{cli-sequence} modelo-390-wallet
-:verify: Confirm the opening compensation balance seeds.
+:verify: Confirm the compensation balance reads.
 ```
 
 `pull-history` requires both `--from-year` and `--to-year`; it reads filed
@@ -179,7 +179,7 @@ That listing shows totals from your records (source `ledger_iva_aggregation`) an
 
 Check the annual period's records before calculation with the `ledger preflight` and `ledger status` steps in the inspection example.
 
-The annual calculation uses your records for the whole year for the VAT totals in Modelo 390. For values taken from 303, the tax rules define the ids of the values Cadrumo fills in and their source periods. If those values are not already available to the calculation, inspect the list of missing values and supply reviewed values explicitly. The reviewed sums come from your own 303 review. The following example passes the ones this guide's year produces (1470.00 accrued, 105.00 deducible, 1365.00 régimen general), which match the annual totals from your records, and the reconciliation boxes carry the supplied figures:
+The annual calculation uses your records for the whole year for the VAT totals in Modelo 390. For values taken from 303, the tax rules define the ids of the values Cadrumo fills in and their source periods. If those values are not already available to the calculation, inspect the list of missing values and supply reviewed values explicitly. The reviewed sums come from your own 303 review. The following example passes the ones this guide's year produces (4386.00 accrued, 3492.30 deducible, 893.70 régimen general), which match the annual totals from your records, and the reconciliation boxes carry the supplied figures:
 
 ```{cli-sequence} modelo-390-supply-binding
 :verify: Confirm the supplied 303-derived values land on the annual reconciliation boxes.

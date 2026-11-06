@@ -1479,13 +1479,6 @@ sequence_order = {source_refs = [2, 0, 1]}
 
 [[revisions.2026-y-siguientes.family_overrides]]
 family = "bindings"
-selector = {revision = "2025", id = "modelo-303-casilla-120-no-sujetas-localizacion-base"}
-sequence_additions = {source_refs = ["aeat-dr-303-2026"]}
-sequence_removals = {source_refs = [0]}
-sequence_order = {source_refs = [2, 0, 1]}
-
-[[revisions.2026-y-siguientes.family_overrides]]
-family = "bindings"
 selector = {revision = "2025", id = "modelo-303-casilla-122-inversion-sujeto-pasivo-base"}
 sequence_additions = {source_refs = ["aeat-dr-303-2026"]}
 sequence_removals = {source_refs = [0]}

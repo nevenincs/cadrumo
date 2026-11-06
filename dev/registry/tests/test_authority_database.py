@@ -215,13 +215,13 @@ def test_cached_loads_verify_database_identity_once_per_lease_not_per_load(
 ) -> None:
     reader = SQLiteAuthorityReader(_published_candidate(tmp_path), max_connections=2)
     verifications: list[None] = []
-    real_verify = reader._verify_database_identity
+    real_verify = reader.verify_database_identity
 
     def counting_verify() -> None:
         verifications.append(None)
         real_verify()
 
-    monkeypatch.setattr(reader, "_verify_database_identity", counting_verify)
+    monkeypatch.setattr(reader, "verify_database_identity", counting_verify)
     try:
         with reader.lease() as pin:
             first = reader.load(ProfileSchemaComponentQuery(), pin=pin)

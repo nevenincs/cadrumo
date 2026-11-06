@@ -30,7 +30,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationPublicTerminalEventV1,
 )
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.operator_actions.models import ActionReference
 from cadrumo.application.user_profile.censal_operation import (
     CENSAL_OPERATION_DEFINITION_ID,
@@ -50,6 +50,7 @@ from cadrumo.application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,

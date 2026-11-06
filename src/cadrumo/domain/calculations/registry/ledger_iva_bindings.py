@@ -33,6 +33,7 @@ from ...iva.deduction_facts import (
 from ...iva.flow import (
     IvaFlowDirection,
     is_deducible_flow,
+    received_flow_direction,
 )
 from ...iva.prorrata import InputClassification
 from ...iva.schema import (
@@ -565,7 +566,7 @@ def iva_reachability_probe(selector: LedgerIvaProvider) -> None:
 
     Builds a synthetic observation from the selector's OWN declared values and
     runs it through the real matcher this family's resolver builds
-    (:func:`_iva_build_matcher`), not a reimplementation of the match rule.
+    (:func:`iva_build_matcher`), not a reimplementation of the match rule.
     A selector whose matcher accepts no shape assembled from its own
     declarations can never resolve a value: the binding aggregates to zero
     forever, indistinguishable from a taxpayer with no IVA of that kind.
@@ -802,6 +803,35 @@ assert_quantity_readers_cover_independent_facts(
 )
 
 
+def declarable_ledger_iva_observations(
+    observations: Iterable[IvaLedgerObservation],
+) -> tuple[IvaLedgerObservation, ...]:
+    """Return the observations whose base an IVA self-assessment return can declare.
+
+    A received operation outside the IVA taxable event bears no IVA soportado,
+    and the returns' non-subject boxes declare only operations the taxpayer
+    performs, so its base has no box to reach. The registry's
+    ``received_outside_iva_scope`` projection names those categories, read on
+    each row's own date. Only the received side is dropped: a non-subject supply
+    the taxpayer makes keeps its devengado routing and its screens.
+    """
+    rows = tuple(observations)
+    received = received_flow_direction()
+    outside_by_date: dict[date, frozenset[IvaCategory]] = {}
+    for observation in rows:
+        if observation.flow_direction == received and observation.transaction_date not in outside_by_date:
+            outside_by_date[observation.transaction_date] = registry_category_projection(
+                "received_outside_iva_scope",
+                effective_date=observation.transaction_date,
+            )
+    return tuple(
+        observation
+        for observation in rows
+        if observation.flow_direction != received
+        or observation.category not in outside_by_date[observation.transaction_date]
+    )
+
+
 def unrouted_ledger_iva_quantities(
     revision: ModeloRevision,
     observations: Iterable[IvaLedgerObservation],
@@ -843,7 +873,7 @@ def unrouted_ledger_iva_quantities(
     """
     return unrouted_ledger_family_quantities(
         revision,
-        observations,
+        declarable_ledger_iva_observations(observations),
         source_kind=BindingSourceKind.LEDGER_IVA_AGGREGATION,
         provider_model=LedgerIvaProvider,
         build_matcher=iva_build_matcher,
@@ -952,7 +982,7 @@ def structurally_unroutable_iva_base_categories(
     different modelo must supply its own set rather than default into M303's.
 
     Uses the real production selector narrowing (:func:`provider_member`)
-    and matcher (:func:`_iva_build_matcher`) -- never a re-implementation of
+    and matcher (:func:`iva_build_matcher`) -- never a re-implementation of
     the match rule. For each ``base_amount_sum`` binding whose declared
     categories include the candidate, a probe observation is assembled from
     values the selector's OWN declared axes already admit (one representative

@@ -26,9 +26,9 @@ from keyring.errors import KeyringError, PasswordDeleteError
 from cadrumo.adapters.persistence.storage.custody import acceleration_keychain
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import AccessSession
 from cadrumo.application.user_profile.login_session import authenticate_profile_candidate
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.tests.in_memory_keyring import InMemoryKeyring
 from cadrumo_client.contracts.access_refusals import AccessDenied
 from cadrumo_client.contracts.deadline_budget import TimeoutDeadline

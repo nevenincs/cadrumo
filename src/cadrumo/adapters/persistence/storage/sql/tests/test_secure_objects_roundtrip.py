@@ -24,9 +24,9 @@ from ...errors import (
 )
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
 from ...tests.ephemeral_bucket_session import EphemeralBucketSession
-from ..orm import SecureObjectRow
 from ..secure_object_records import SecureObjectRecord, SecureObjectUnreadable
 from ..secure_objects import SecureObjectRepository
+from ..tables import secure_objects_table
 from .raw_key_writer import save_with_raw_key
 from .secure_objects_support import (
     ephemeral_secure_repo,
@@ -37,7 +37,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
 def test_write_provenance_matches_the_persisted_column_width() -> None:
-    column_type = SecureObjectRow.__table__.c.write_provenance.type
+    column_type = secure_objects_table.c.write_provenance.type
     assert isinstance(column_type, String)
     assert column_type.length == 255
     fields = {
@@ -70,9 +70,9 @@ def test_revision_id_round_trips_for_self_consistency_check(tmp_path: Path) -> N
 
     from sqlalchemy import select
 
-    from ..orm import SecureObjectRow
     from ..secure_object_crypto import derive_revision_id
     from ..session import session_scope
+    from ..tables import secure_objects_table
 
     with ephemeral_secure_repo(tmp_path, "revision-fidelity.db") as (_db_path, engine, repo):
         # Two writes to the same key so the second row carries a populated
@@ -95,11 +95,11 @@ def test_revision_id_round_trips_for_self_consistency_check(tmp_path: Path) -> N
         )
         with session_scope(engine) as session:
             row = session.execute(
-                select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == "aeat-test",
-                    SecureObjectRow.object_key == "key-rev",
+                select(secure_objects_table).where(
+                    secure_objects_table.c.namespace == "aeat-test",
+                    secure_objects_table.c.object_key == "key-rev",
                 ),
-            ).scalar_one()
+            ).one()
             assert row.revision_id is not None
             assert row.previous_revision_id is not None, "second write must chain to the first revision"
             assert row.payload_hash is not None
@@ -159,12 +159,14 @@ def test_save_refuses_a_written_at_that_could_not_be_read_back(
         # The refusal is pre-commit: no row was left behind for this key.
         from sqlalchemy import func, select
 
-        from ..orm import SecureObjectRow
         from ..session import session_scope
+        from ..tables import secure_objects_table
 
         with session_scope(engine) as session:
             committed = session.execute(
-                select(func.count()).select_from(SecureObjectRow).where(SecureObjectRow.namespace == "aeat-test"),
+                select(func.count())
+                .select_from(secure_objects_table)
+                .where(secure_objects_table.c.namespace == "aeat-test"),
             ).scalar_one()
         assert committed == 0
 
@@ -418,7 +420,7 @@ def test_secure_object_table_materializes_revision_integrity_columns(tmp_path: P
     """Fresh SQL bootstrap creates nullable lineage and integrity columns.
 
     The check goes through SQLite's real table metadata after
-    ``Base.metadata.create_all``. Nullable is the canonical CREATE shape for
+    ``metadata.create_all``. Nullable is the canonical CREATE shape for
     these columns: a record without a prior revision legitimately carries no
     ``previous_*`` lineage, so the schema admits NULL by design.
     """

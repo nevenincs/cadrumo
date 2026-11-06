@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.taxpayer_persona_support import seed_modelo_ready_profile
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
 from cadrumo.domain.buckets.event import BucketEventType
@@ -36,7 +36,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     """Retain the profile record required by real ledger port composition."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as runtime:
-        seed_modelo_ready_profile_record(BUCKET_ID, clock=datetime(2026, 5, 1, tzinfo=UTC))
+        seed_modelo_ready_profile(bucket_id=BUCKET_ID, at=datetime(2026, 5, 1, tzinfo=UTC))
         yield runtime.repository
 
 

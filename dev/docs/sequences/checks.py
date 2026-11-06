@@ -47,6 +47,7 @@ from .runner import (
 )
 from .sandbox import owned_scratch_directory
 from .schema import FrameKind, ParsedSequence, SequenceId
+from .seed_generator import check_seeds
 
 __all__ = [
     "READER_FRAME_OUTPUT_ADVISORY_BYTES",
@@ -382,6 +383,10 @@ def check_sequences(
     if any(item.sequence.executed_frames for item in discovered):
         require_current_authority()
     all_problems = list(problems)
+    if page is None and sequence_id is None:
+        # The recipes are shared by every sequence, so a drifted persona frame is a corpus-level
+        # fault; a scoped run leaves it to the unscoped gate.
+        all_problems.extend(check_seeds())
     advisories: list[str] = []
     for item in discovered:
         advisories.extend(unused_capture_advisories(item))
@@ -735,6 +740,12 @@ def build_argument_parser() -> argparse.ArgumentParser:
                     "last started page, sequence, frame, and resolved command on expiry"
                 ),
             )
+    seeds = subparsers.add_parser(
+        "seeds",
+        help="render the persona-derived profile frames of the seed recipes, or with --check fail on drift",
+    )
+    seeds.add_argument("--check", action="store_true", help="report drift without rewriting any recipe")
+    seeds.add_argument("--seeds-root", type=Path, default=None, help=argparse.SUPPRESS)
     return parser
 
 

@@ -32,7 +32,7 @@ def unpublished_authority_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
     The process-shared authority owner is reset because a cached one would
     answer from the generation this checkout already holds.
     """
-    monkeypatch.setattr(authority_module, "authority_bundled_indexed_authority", None)
+    monkeypatch.setattr(authority_module, "bundled_indexed_authority_owner", None)
     return tmp_path
 
 

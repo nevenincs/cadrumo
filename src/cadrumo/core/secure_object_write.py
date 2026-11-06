@@ -22,7 +22,7 @@ See Also:
         DTO.
     :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
         Storage adapter that consumes these prepared writes.
-    :meth:`~adapters.persistence.storage.sql._secure_object_writes.SecureObjectWriteOperations.save_many`
+    :meth:`~adapters.persistence.storage.sql.secure_object_writes.SecureObjectWriteOperations.save_many`
         Unit-of-work API that persists one or more prepared writes atomically.
 """
 

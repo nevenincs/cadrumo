@@ -16,13 +16,13 @@ from pydantic import SecretBytes
 
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT, administration_subject
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import OsLockState
 from cadrumo.application.user_profile.custody_ports import (
     load_profile_custody_recovery_material,
     unlock_profile_custody_recovery,
 )
 from cadrumo.application.user_profile.recovery_custody import profile_recovery_status
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.storage_taxonomy import StorageArea
 from cadrumo.tests.log_records import delivered_records, delivered_text
 from cadrumo_client.contracts.contracts import ByteChannel, ClientHello, RefusalCode, RefusalError

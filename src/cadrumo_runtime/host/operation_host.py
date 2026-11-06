@@ -73,7 +73,6 @@ if TYPE_CHECKING:
     from cadrumo.application.operations.composition import OperationComposedServices, OperationSubmission
     from cadrumo.application.operations.execution_actor import OperationExecutionCaller
     from cadrumo.application.operations.registry import (
-        OperationFrontendProjection,
         OperationPublicDefinitionContractV1,
         OperationPublicDefinitionDescriptionV1,
         OperationRegistry,
@@ -82,6 +81,7 @@ if TYPE_CHECKING:
     from cadrumo.application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
     from cadrumo.application.workbench_generation_contracts import WorkbenchGenerationV1
     from cadrumo.application.workbench_generation_operation import WorkbenchGenerationOperationRequest
+    from cadrumo.core.operations import OperationFrontendProjection
     from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
     from cadrumo.domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from cadrumo.domain.deadlines.models import TaxpayerProfile

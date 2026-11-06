@@ -42,6 +42,7 @@ from cadrumo.application.modelo.metadata_read_operation import MODELO_WORK_METAD
 from cadrumo.application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.revision_selection_operation import MODELO_WORK_REVISION_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_create_operation import MODELO_WORK_CREATE_OPERATION_DEFINITION_ID
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.domain.buckets.event import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -68,23 +69,15 @@ _OVERLONG_PROFILE_LABEL = "x" * (BUCKET_ACTOR_LABEL_MAX_LENGTH + 1)
 _SHORT_PROFILE_LABEL = "Calculate boundary probe profile"
 
 
-_LEGAL_ENTITY_FACTS = (
-    UserProfileFact(path="identity.name", value="Probe IS Operator"),
-    UserProfileFact(path="identity.legal_name", value="Probe IS Operator SL"),
-    UserProfileFact(path="identity.tax_id", value="B12345674"),
-    UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-    UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-    UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000.00")),
-    UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
-    UserProfileFact(path="activities.description", value="economic activity"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+_LEGAL_ENTITY_FACTS = persona_facts_beneath(
+    (
+        UserProfileFact(path="identity.name", value="Probe IS Operator"),
+        UserProfileFact(path="identity.legal_name", value="Probe IS Operator SL"),
+        UserProfileFact(path="identity.tax_id", value="B12345674"),
+        UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000.00")),
+        UserProfileFact(path="activities.description", value="economic activity"),
+    ),
+    persona_id="sociedad-limitada",
 )
 
 _OPERATIONS = frozenset(

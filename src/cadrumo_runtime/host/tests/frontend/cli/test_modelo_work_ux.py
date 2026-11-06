@@ -34,6 +34,7 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import close
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend,
 )
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_fact_strings
 from cadrumo.core.i18n.render import tr
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
@@ -766,15 +767,15 @@ def test_work_create_without_revision_uses_registry_revision_for_supplied_year(s
 
     seed_profile(
         label="operator",
-        facts={
-            "taxpayer_type.entity_type": "natural_person",
-            "taxpayer_type.irpf_income_categories": "actividad_economica",
-            "irpf.estimation_regime": "objetiva",
-            "identity.tax_id": "12345678Z",
-            "identity.name": "Operator",
-            "identity.surnames": "Readiness",
-            "activities.description": "objective-estimation activity",
-        },
+        facts=persona_fact_strings(
+            {
+                "irpf.estimation_regime": "objetiva",
+                "identity.tax_id": "12345678Z",
+                "identity.name": "Operator",
+                "identity.surnames": "Readiness",
+                "activities.description": "objective-estimation activity",
+            }
+        ),
     )
     modelos_131, _catalogues_131 = bundled_registry_tree()
     modelo_131 = next(candidate for candidate in modelos_131 if candidate.id == "131")
@@ -842,15 +843,15 @@ def test_modelo_303_workflow_json_resolves_each_quarter_once(seed_profile: Profi
 def test_m131_modulos_manual_entry_calculates_without_ledger_observations(seed_profile: ProfileSeeder) -> None:
     seed_profile(
         label="operator",
-        facts={
-            "taxpayer_type.entity_type": "natural_person",
-            "taxpayer_type.irpf_income_categories": "actividad_economica",
-            "irpf.estimation_regime": "objetiva",
-            "identity.tax_id": "12345678Z",
-            "identity.name": "Operator",
-            "identity.surnames": "Readiness",
-            "activities.description": "objective-estimation taxi activity",
-        },
+        facts=persona_fact_strings(
+            {
+                "irpf.estimation_regime": "objetiva",
+                "identity.tax_id": "12345678Z",
+                "identity.name": "Operator",
+                "identity.surnames": "Readiness",
+                "activities.description": "objective-estimation taxi activity",
+            }
+        ),
     )
 
     created_work = invoke_modelo_scenario_cli(
@@ -1007,15 +1008,15 @@ def test_work_create_rejects_revision_that_does_not_cover_filing_year(seed_profi
 
     seed_profile(
         label="operator",
-        facts={
-            "taxpayer_type.entity_type": "natural_person",
-            "taxpayer_type.irpf_income_categories": "actividad_economica",
-            "irpf.estimation_regime": "objetiva",
-            "identity.tax_id": "12345678Z",
-            "identity.name": "Operator",
-            "identity.surnames": "Readiness",
-            "activities.description": "objective-estimation activity",
-        },
+        facts=persona_fact_strings(
+            {
+                "irpf.estimation_regime": "objetiva",
+                "identity.tax_id": "12345678Z",
+                "identity.name": "Operator",
+                "identity.surnames": "Readiness",
+                "activities.description": "objective-estimation activity",
+            }
+        ),
     )
     result = invoke_modelo_scenario_cli(
         [

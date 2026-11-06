@@ -32,7 +32,7 @@ from pydantic import ValidationError
 from sqlalchemy import select
 
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
-from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
+from cadrumo.adapters.persistence.storage.sql.tables import secure_objects_table
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
@@ -45,7 +45,7 @@ from cadrumo.domain.calculations.registry.schema_references import RegistrySnaps
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 
 from .....domain.calculations.registry.tests.fact_scope import outside_governed_fact_validation
-from .iva_compensation_history_support import iva_compensation_history_state
+from .iva_compensation_history_support import period_state
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -109,7 +109,7 @@ def test_app_filing_history_round_trips_through_list_and_load_under_a_bundled_au
     real isolated storage runtime while making this a regression for the
     adapter boundary rather than an accidental consumer of its caller's lease.
     """
-    original = iva_compensation_history_state(filing_year=2025, period="4T", generated=Decimal("75.00"))
+    original = period_state(filing_year=2025, period="4T", generated=Decimal("75.00"))
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = IvaCompensationHistoryRepository()
@@ -154,9 +154,9 @@ def test_a_state_stripped_of_its_persisted_provenance_refuses_to_load(tmp_path: 
         repository.save_period(original)
         identifier = repository.extract_identifier(original)
 
-        stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == repository.namespace,
-            SecureObjectRow.object_key == identifier,
+        stmt = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == repository.namespace,
+            secure_objects_table.c.object_key == identifier,
         )
 
         def mutate(payload):

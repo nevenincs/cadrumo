@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test,
 )
@@ -52,7 +53,6 @@ from ....domain.calculations.registry.ids import BindingId, RelationId
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.user_profile.tests.general_regime_facts import (
-    GENERAL_REGIME_NATURAL_PERSON_FACTS,
     RENTA_UNMARRIED_TAXPAYER_FACTS,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
@@ -175,13 +175,14 @@ def _seed_profile_with_birth_date(objects: SecureObjectRepository) -> None:
         create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value="12345678Z"),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="activities.description", value="economic activity"),
-                *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-                *RENTA_UNMARRIED_TAXPAYER_FACTS,
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                    UserProfileFact(path="identity.name", value="Test"),
+                    UserProfileFact(path="identity.surnames", value="Operator"),
+                    UserProfileFact(path="activities.description", value="economic activity"),
+                    *RENTA_UNMARRIED_TAXPAYER_FACTS,
+                )
             ),
             created_at=datetime(2026, 4, 1, tzinfo=UTC),
             updated_at=datetime(2026, 4, 1, tzinfo=UTC),

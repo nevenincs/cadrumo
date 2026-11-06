@@ -21,6 +21,7 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -37,30 +38,31 @@ from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_work_lifecycle_ports,
 )
 
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _BUCKET = "44444444-4444-4444-8444-444444444444"
-_READY_PROFILE_FACTS = (
-    UserProfileFact(path="identity.tax_id", value="12345678Z"),
-    UserProfileFact(path="identity.name", value="Ready"),
-    UserProfileFact(path="identity.surnames", value="Operator"),
-    UserProfileFact(path="activities.description", value="source mesh"),
-    *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
-    UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-    UserProfileFact(path="renta_taxpayer.sex", value="H"),
-    UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-    UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-    UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-    UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-    UserProfileFact(path="renta_filing.declaration_type", value="1"),
-    UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-    UserProfileFact(path="renta_family.descendientes_count", value=Decimal("0")),
-    UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+_READY_PROFILE_FACTS = persona_facts_beneath(
+    (
+        UserProfileFact(path="identity.tax_id", value="12345678Z"),
+        UserProfileFact(path="identity.name", value="Ready"),
+        UserProfileFact(path="identity.surnames", value="Operator"),
+        UserProfileFact(path="activities.description", value="source mesh"),
+        UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+        UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
+        UserProfileFact(path="renta_taxpayer.sex", value="H"),
+        UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
+        UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
+        UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
+        UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
+        UserProfileFact(path="renta_filing.declaration_type", value="1"),
+        UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+        UserProfileFact(path="renta_family.descendientes_count", value=Decimal("0")),
+        UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+        # The ledger holds intra-Community acquisitions, so the taxpayer conducts intra-Community operations.
+        UserProfileFact(path="iva.does_intracomunitario", value=True),
+    )
 )
 
 

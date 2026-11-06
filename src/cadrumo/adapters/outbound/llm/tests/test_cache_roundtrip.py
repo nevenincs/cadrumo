@@ -158,7 +158,7 @@ def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(
 
     from sqlalchemy import select
 
-    from ....persistence.storage.sql.orm import SecureObjectRow
+    from ....persistence.storage.sql.tables import secure_objects_table
     from ..errors import LLMCacheError
 
     created_at = _CREATED_AT
@@ -171,8 +171,8 @@ def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(
     # from the nested response on the redacted entry. The column
     # accessor handles encrypt/decrypt automatically; the
     # The canonical cache namespace filter pins the right row.
-    stmt = select(SecureObjectRow).where(
-        SecureObjectRow.namespace == LLM_CACHE_NAMESPACE.namespace,
+    stmt = select(secure_objects_table).where(
+        secure_objects_table.c.namespace == LLM_CACHE_NAMESPACE.namespace,
     )
 
     def mutate(decoded):

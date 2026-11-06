@@ -259,7 +259,7 @@ def _m390_product_software_identity() -> AeatProductSoftwareIdentity:
     """Build Modelo 390's example software identity on first use; see :func:`_presenter`."""
     return AeatProductSoftwareIdentity(
         program_identifier="C390",
-        developer_tax_id="Y0000001S",
+        developer_tax_id="Y0001006P",
         evidence=(AeatProductSoftwareEvidence(reference="edition-round-trip:m390-software", digest="b" * 64),),
     )
 
@@ -269,7 +269,7 @@ def _product_software_identity() -> AeatProductSoftwareIdentity:
     """Build Modelo 303's example software identity on first use; see :func:`_presenter`."""
     return AeatProductSoftwareIdentity(
         program_identifier="C303",
-        developer_tax_id="Y0000001S",
+        developer_tax_id="Y0001006P",
         evidence=(
             AeatProductSoftwareEvidence(reference="aeat-software-registration:edition-round-trip", digest="a" * 64),
         ),
@@ -837,7 +837,7 @@ def _scenario_software_identity(modelo_id: str) -> AeatProductSoftwareIdentity:
     """Validate synthetic software evidence inside the candidate fact scope."""
     return AeatProductSoftwareIdentity(
         program_identifier=f"C{modelo_id}",
-        developer_tax_id="Y0000001S",
+        developer_tax_id="Y0001006P",
         evidence=(AeatProductSoftwareEvidence(reference=f"edition-round-trip:m{modelo_id}-software", digest="c" * 64),),
     )
 
@@ -880,7 +880,7 @@ def m200_export_scenario(
 
 #: The synthetic NIF every Modelo 200 projected party is identified by. Nine
 #: characters, the width the diseño gives each of those NIF fields.
-_M200_SYNTHETIC_NIF: Final = "B00000000"
+_M200_SYNTHETIC_NIF: Final = "B00010082"
 #: The synthetic country/province code the two-character ``codigo`` members take.
 _M200_SYNTHETIC_COUNTRY: Final = "ES"
 
@@ -979,7 +979,7 @@ def _m222_producer_snapshot(period: Period) -> FilingProducerSnapshot:
         presenter=_presenter(),
         model_profile=Modelo222ProfileFacts(
             numero_grupo="0001/25",
-            entidad_dominante_identificacion="B00000000",
+            entidad_dominante_identificacion="B00010082",
             entidad_dominante_razon_social="Grupo Prueba",
             representante_o_dominante="2",
             fecha_inicio_periodo_impositivo=f"0101{period.filing_year}",

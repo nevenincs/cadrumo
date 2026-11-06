@@ -13,11 +13,11 @@ from uuid import UUID
 
 import typer
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from cadrumo.core.click_context import json_output_requested
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.i18n.render import tr
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.terminal_encoding import encode_terminal_text
 from cadrumo.core.tty import stderr_is_tty, stdin_is_tty
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError

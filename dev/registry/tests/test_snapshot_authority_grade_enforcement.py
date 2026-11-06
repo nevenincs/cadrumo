@@ -122,8 +122,8 @@ def test_the_authority_facade_refuses_a_mutated_lower_grade_revision(
     authority = replace(
         registry_authority,
         modelos=tuple(mutated if modelo.id == _MODEL else modelo for modelo in registry_authority.modelos),
-        _modelos_by_id={**registry_authority._modelos_by_id, _MODEL: mutated},
-        _snapshots={},
+        modelos_by_id={**registry_authority.modelos_by_id, _MODEL: mutated},
+        snapshots={},
     )
 
     with pytest.raises(

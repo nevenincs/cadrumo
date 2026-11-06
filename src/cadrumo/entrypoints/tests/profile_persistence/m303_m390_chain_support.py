@@ -43,6 +43,7 @@ from cadrumo.application.modelo.work_form_models import ModeloFormOrigin, addres
 from cadrumo.application.modelo.work_form_service import load_modelo_work_form
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.period import Period
@@ -245,26 +246,18 @@ def store_profile(secure_objects: SecureObjectRepository, *, activity_start_date
             context=published_authority_operation().profile_create_context(),
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value=TAX_ID),
-                UserProfileFact(path="identity.name", value="Laura"),
-                UserProfileFact(path="identity.surnames", value="Taller Sol"),
-                UserProfileFact(path="activities.description", value="taller"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(
-                    path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
-                    value=False,
-                ),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="censo.activity_start_date", value=activity_start_date),
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.tax_id", value=TAX_ID),
+                    UserProfileFact(path="identity.name", value="Laura"),
+                    UserProfileFact(path="identity.surnames", value="Taller Sol"),
+                    UserProfileFact(path="activities.description", value="taller"),
+                    UserProfileFact(
+                        path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
+                        value=False,
+                    ),
+                    UserProfileFact(path="censo.activity_start_date", value=activity_start_date),
+                )
             ),
             created_at=T0,
             updated_at=T0,

@@ -19,7 +19,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     OperationAccessRequest,
 )
 
-from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....core.period import Period
 from ....domain.buckets.event import (
     BucketEvent,
@@ -36,7 +36,7 @@ from ...operations.access_resolution import OperationAccessContext
 from ...operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.owner import OperationExecutorContext
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...tests.access_authority_support import (
     disclosure_decision_without_category,
 )

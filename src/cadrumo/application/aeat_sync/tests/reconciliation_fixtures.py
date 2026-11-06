@@ -48,7 +48,7 @@ def reconciliation_projection(records):
     """Project stored comparisons without requiring a separate local filing."""
     return read_local_aeat_sync_workspace_projection(
         bucket_id=_BUCKET,
-        subject_key="00000001R",
+        subject_key="00001005Q",
         observed_at=_NOW,
         filings=(),
         operation_contracts=unrelated_contracts(),

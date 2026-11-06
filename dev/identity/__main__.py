@@ -5,8 +5,11 @@ The blocking section is what fails a build; the advisory section is the
 population the blocking scope leaves out, printed so the narrowing stays
 visible and arguable rather than silent.
 
-Run with ``python -m dev.identity``. Exits non-zero when the blocking scope has
-any finding.
+A third section holds tests and fixtures to the catalogue convention (see
+:mod:`dev.identity.catalogue_gate`) and blocks as well.
+
+Run with ``python -m dev.identity``. Exits non-zero when the blocking scope or
+the convention gate has any finding.
 """
 
 from __future__ import annotations
@@ -16,6 +19,7 @@ from collections import Counter
 
 from dev.paths import REPO_ROOT
 
+from .catalogue_gate import GATE_SUFFIXES, scan_convention
 from .tree_scan import (
     EXCLUDED_PATH_FRAGMENTS,
     SCANNED_SUFFIXES,
@@ -71,7 +75,21 @@ def main() -> int:
     for bucket, count in sorted(Counter(main___bucket(finding.path) for finding in advisory).items()):
         print(f"  {bucket:34s} {count:6d}")
 
-    return 1 if scan.findings else 0
+    convention = scan_convention(_REPO_ROOT, files=repository_files(_REPO_ROOT, suffixes=GATE_SUFFIXES))
+    counts = convention.by_violation()
+    print(
+        f"\ncatalogue convention, tests and fixtures: {convention.files_scanned} files scanned, "
+        f"{len(convention.findings)} findings in {convention.files_with_findings()} files "
+        f"({', '.join(f'{kind.value} {count}' for kind, count in sorted(counts.items())) or 'none'})"
+    )
+    for finding in convention.findings:
+        print(f"  {finding.rendered()}")
+    if convention.unreadable:
+        print(f"convention gate could not open: {len(convention.unreadable)}")
+        for relative in convention.unreadable:
+            print(f"  {relative}")
+
+    return 1 if scan.findings or convention.findings or convention.unreadable else 0
 
 
 if __name__ == "__main__":

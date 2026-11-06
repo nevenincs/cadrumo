@@ -22,7 +22,7 @@ import {
 } from "../shell/ledgerContract";
 import type { FixtureLedger } from "./fixtures/ledger";
 import { settlementOf } from "./ledgerSettlement";
-import recorded from "./fixtures/ledgerInvoicePreview.json" with { type: "json" };
+import recorded from "@fixtures/ledger-recordings/ledgerInvoicePreview.json" with { type: "json" };
 
 /** A request its registered contract would not decode. */
 export class InvoiceRequestInvalid extends Error {}

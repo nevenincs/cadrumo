@@ -393,8 +393,16 @@ def test_modelo_347_reads_a_cash_accounting_invoice_the_same_with_or_without_a_l
         profile=cash_criterion_profile(_YEAR),
     )
 
-    unlinked = invoice_observation(_invoice(legal_mentions=(mention,)), context=context, m347_filer=M347Filer())
-    linked = invoice_observation(_invoice(movement, legal_mentions=(mention,)), context=context, m347_filer=M347Filer())
+    # A withholding would exclude the operation under art. 33.2.i, which is not what this case reads.
+    unwithheld = {"retention_rate": None, "retention_amount": None}
+    unlinked = invoice_observation(
+        _invoice(legal_mentions=(mention,)).model_copy(update=unwithheld), context=context, m347_filer=M347Filer()
+    )
+    linked = invoice_observation(
+        _invoice(movement, legal_mentions=(mention,)).model_copy(update=unwithheld),
+        context=context,
+        m347_filer=M347Filer(),
+    )
 
     assert linked is not None
     assert linked.cash_accounting_operation is True

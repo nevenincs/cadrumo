@@ -8,7 +8,7 @@ from decimal import Decimal
 from uuid import UUID
 
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
+from cadrumo.adapters.persistence.profile.tests.taxpayer_persona_support import seed_modelo_ready_profile
 from cadrumo.application.aggregation.invoice_retencion import (
     InvoiceWithholdingEvidenceRequest,
     build_invoice_withholding_capture,
@@ -73,7 +73,7 @@ def seed_invoice_withholding_conformance_case(
 ) -> InvoiceWithholdingConformanceSeed:
     """Seed a real received professional invoice and all capture evidence."""
     bucket_id = str(profile_id)
-    seed_modelo_ready_profile_record(bucket_id, clock=now(), tax_id="12345678Z")
+    seed_modelo_ready_profile(bucket_id=bucket_id, at=now(), tax_id="12345678Z")
     with validating_governed_facts(operation):
         issued_on = date(_YEAR, 3, 31)
         paid_on = date(_YEAR, 4, 2)

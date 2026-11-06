@@ -26,11 +26,16 @@ from ...application.operations.frontend_requests import (
     OperationPublicPhaseEventV1,
 )
 from ...application.operations.models import OperationRequest
-from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
+from ...application.operations.registry import OperationRegistry
 from ...application.operations.subject_reference import expected_operation_subject
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.errors.hierarchy import CadrumoError
-from ...core.operations import OperationLifecycle, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import (
+    OperationFrontendProjection,
+    OperationLifecycle,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from .production_operation_registry import production_operation_registry
 from .registered_executor_case_support import (

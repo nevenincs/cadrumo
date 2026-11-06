@@ -18,10 +18,10 @@ from sqlalchemy import Engine, bindparam, text
 
 from ..crypto.encrypted_columns import decrypt_secure_object_payload, secure_object_payload_aad
 from ..errors import DecryptionError
-from . import orm
 from .secure_object_records import SecureObjectDecryptabilityRow, SecureObjectNamespaceIntegrity
 from .secure_object_schema import database_bytes, ensure_quarantine_table, quarantine_timestamp
 from .session import session_scope
+from .tables import secure_objects_table
 
 
 class _DecryptableRawRow(Protocol):
@@ -56,7 +56,7 @@ def probe_row_decryptability(raw: object, *, namespace: str) -> RowDecryptabilit
 
     The single decryptability decision behind quarantine, namespace counting,
     and per-row enumeration. Normalises the row's bytes through
-    :func:`~adapters.persistence.storage.sql._secure_object_schema.database_bytes`
+    :func:`~adapters.persistence.storage.sql.secure_object_schema.database_bytes`
     (SQLite returns ``bytes``, ``memoryview``, or ``str`` depending on the
     driver and query form), rebuilds the row-identity AAD, and attempts the
     AEAD open.
@@ -225,11 +225,11 @@ def iter_namespace_decryptability(
             )
             .bindparams(bindparam("namespace", value=namespace))
             .columns(
-                id=orm.SecureObjectRow.__table__.c.id.type,
-                object_key=orm.SecureObjectRow.__table__.c.object_key.type,
-                classification=orm.SecureObjectRow.__table__.c.classification.type,
-                schema_version=orm.SecureObjectRow.__table__.c.schema_version.type,
-                written_at=orm.SecureObjectRow.__table__.c.written_at.type,
+                id=secure_objects_table.c.id.type,
+                object_key=secure_objects_table.c.object_key.type,
+                classification=secure_objects_table.c.classification.type,
+                schema_version=secure_objects_table.c.schema_version.type,
+                written_at=secure_objects_table.c.written_at.type,
             )
         )
         rows = session.execute(stmt).all()

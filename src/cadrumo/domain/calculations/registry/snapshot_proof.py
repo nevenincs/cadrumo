@@ -287,7 +287,7 @@ def _with_ancestors(module: str) -> Iterable[str]:
 
 
 @dataclass(frozen=True, slots=True)
-class _ImportStatement:
+class ImportStatement:
     """One import statement as written, before it is resolved against the module's package."""
 
     level: int
@@ -296,7 +296,7 @@ class _ImportStatement:
     is_from: bool
 
 
-import_statements_cache: dict[str, tuple[str, tuple[_ImportStatement, ...]]] = {}
+import_statements_cache: dict[str, tuple[str, tuple[ImportStatement, ...]]] = {}
 """The parsed statements of each module's latest-seen source, with the digest they were parsed from.
 
 Parsing about four hundred sources dominates a closure computation. A module's
@@ -307,25 +307,25 @@ call, and every call re-reads and re-hashes every source.
 """
 
 
-def parsed_import_statements(module: str, source: bytes, digest: str) -> tuple[_ImportStatement, ...]:
-    """Parse the import statements of a module's source, caching them by source digest."""
+def parsed_import_statements(module: str, source: bytes, digest: str) -> tuple[ImportStatement, ...]:
+    """Return the import statements of ``source``, reusing the parse recorded for the same digest."""
     cached = import_statements_cache.get(module)
     if cached is not None and cached[0] == digest:
         return cached[1]
-    statements: list[_ImportStatement] = []
+    statements: list[ImportStatement] = []
     for node in ast.walk(ast.parse(source, filename=module)):
         if isinstance(node, ast.Import):
-            statements.extend(_ImportStatement(0, alias.name, (), False) for alias in node.names)
+            statements.extend(ImportStatement(0, alias.name, (), False) for alias in node.names)
         elif isinstance(node, ast.ImportFrom):
             statements.append(
-                _ImportStatement(node.level, node.module or "", tuple(alias.name for alias in node.names), True)
+                ImportStatement(node.level, node.module or "", tuple(alias.name for alias in node.names), True)
             )
     parsed = tuple(statements)
     import_statements_cache[module] = (digest, parsed)
     return parsed
 
 
-def _statement_modules(statement: _ImportStatement, package: str) -> set[str]:
+def _statement_modules(statement: ImportStatement, package: str) -> set[str]:
     """Resolve one static import and its package-member modules without importing them."""
     found: set[str] = set()
     if not statement.is_from:
@@ -342,7 +342,7 @@ def _statement_modules(statement: _ImportStatement, package: str) -> set[str]:
     return found
 
 
-def _imported_modules(module: str, statements: Iterable[_ImportStatement]) -> set[str]:
+def _imported_modules(module: str, statements: Iterable[ImportStatement]) -> set[str]:
     """Return every ``cadrumo`` module an import statement anywhere in a module can execute."""
     package = module if _is_package(module) else module.rpartition(".")[0]
     found: set[str] = set()
@@ -395,11 +395,13 @@ def validator_digest(sources: Iterable[ValidatorSource]) -> str:
     )
 
 
-_validator_matches: dict[str, bool] = {}
+validator_matches: dict[str, bool] = {}
+"""Whether this process runs the validator each recorded validator digest names, computed once per digest."""
 _validator_matches_lock = Lock()
 
 
-def _sources_match(sources: Sequence[ValidatorSource]) -> bool:
+def sources_match(sources: Sequence[ValidatorSource]) -> bool:
+    """Re-read and hash every recorded module, saying no for one outside the closure root or unreadable."""
     for source in sources:
         if not _in_closure_root(source.module):
             return False
@@ -421,10 +423,10 @@ def runtime_validator_matches(contract: SnapshotProofContract) -> bool:
     if not contract.validator_sources or validator_digest(contract.validator_sources) != contract.validator_digest:
         return False
     with _validator_matches_lock:
-        known = _validator_matches.get(contract.validator_digest)
+        known = validator_matches.get(contract.validator_digest)
         if known is None:
-            known = _sources_match(contract.validator_sources)
-            _validator_matches[contract.validator_digest] = known
+            known = sources_match(contract.validator_sources)
+            validator_matches[contract.validator_digest] = known
         return known
 
 
@@ -634,6 +636,7 @@ def prove_snapshot_selectors(operation: SnapshotProofOperation) -> SnapshotProof
 __all__ = [
     "SNAPSHOT_PROOF_DDL",
     "SNAPSHOT_PROOF_TABLES",
+    "ImportStatement",
     "SnapshotCrossCheckProof",
     "SnapshotProofContract",
     "SnapshotProofKey",
@@ -641,9 +644,14 @@ __all__ = [
     "SnapshotProofPublicationError",
     "SnapshotProofSet",
     "ValidatorSource",
+    "import_statements_cache",
+    "module_origin",
+    "parsed_import_statements",
     "prove_snapshot_selectors",
     "runtime_validator_matches",
     "snapshot_proof_key",
     "snapshot_validator_closure",
+    "sources_match",
     "validator_digest",
+    "validator_matches",
 ]

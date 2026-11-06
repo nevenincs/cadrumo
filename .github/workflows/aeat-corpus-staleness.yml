@@ -62,7 +62,7 @@ jobs:
           enable-cache: false
 
       - name: Initialize the worktree
-        run: just setup
+        run: just setup-checkout
 
       - name: Compare the captured corpus against the official pages
         id: staleness

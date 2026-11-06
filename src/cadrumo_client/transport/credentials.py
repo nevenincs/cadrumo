@@ -12,9 +12,9 @@ from uuid import UUID
 from cadrumo.adapters.persistence.storage.custody.automation_client_credentials import NativeClientCredentialStore
 from cadrumo.adapters.persistence.storage.custody.automation_profile import current_automation_profile_binding
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
 from cadrumo.core.async_cleanup import await_cancellation_complete, close_async_resources
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.paths import effective_storage_root
 from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 

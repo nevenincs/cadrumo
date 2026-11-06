@@ -34,6 +34,7 @@ from .applicability_payer_facts import (
     PayerFactProjection,
     PayerFactValue,
     payer_fact_declaration,
+    payer_fact_is_three_state,
 )
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
@@ -242,11 +243,20 @@ class ModeloApplicabilityExclusion(BaseModel):
     def _payer_fact_holds(self, declaration: PayerFactDeclaration | None) -> bool | None:
         if declaration is None:
             return True
+        if declaration is PayerFactDeclaration.UNDECLARED and self._reads_two_state_yes():
+            # A fact whose boolean cannot tell no from unasked establishes an exclusion only
+            # by a declared yes; anything else leaves the exclusion without effect.
+            return False
         if declaration is PayerFactDeclaration.DECLARED_YES:
             return self.payer_fact_declared
         if declaration is PayerFactDeclaration.DECLARED_NO:
             return not self.payer_fact_declared
         return None
+
+    def _reads_two_state_yes(self) -> bool:
+        fact = self.payer_fact
+        two_state = fact is not None and not payer_fact_is_three_state(fact)
+        return two_state and self.payer_fact_declared
 
     def evaluate(self, modelo: ModeloId, profile: TaxpayerProfile) -> _ExclusionFinding | None:
         """Return this exclusion's finding for ``profile``, or ``None`` when a condition fails.

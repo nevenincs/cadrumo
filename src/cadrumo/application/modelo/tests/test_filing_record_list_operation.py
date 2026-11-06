@@ -18,7 +18,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     OperationAccessRequest,
 )
 
-from ....core.operations import OperationEffect, profile_operation_subject
+from ....core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.filing_record import (
@@ -36,7 +36,7 @@ from ....domain.modelos.filing_record import (
 from ....domain.modelos.work_unit import derive_work_unit_id
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationRequest
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...tests.operation_host_fakes import RecordingEvents, RecordingOperands
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..filing_record_list_contracts import (

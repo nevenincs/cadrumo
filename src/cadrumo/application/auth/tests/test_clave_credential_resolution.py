@@ -45,7 +45,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 _TAX_ID = "12345678Z"
-_OTHER_TAX_ID = "00000001R"
+_OTHER_TAX_ID = "00001005Q"
 _SOPORTE = "E12345678"
 _FECHA_VALIDEZ = "2030-01-01"
 

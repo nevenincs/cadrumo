@@ -121,7 +121,7 @@ def test_parser_extracts_modelo_100_current_year_profile_targets_from_committed_
 
     assert filing.modelo == "100"
     assert filing.period == expected_period(year, "0A")
-    assert filing.tax_id == "Y0000001S"
+    assert filing.tax_id == "Y0001006P"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "100"
     assert filing.registry_snapshot_ref.modelo_year == year

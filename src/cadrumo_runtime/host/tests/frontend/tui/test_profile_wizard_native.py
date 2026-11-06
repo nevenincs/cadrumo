@@ -15,12 +15,12 @@ from textual.pilot import Pilot
 from textual.widgets import Button, Input, OptionList, Select, Static
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.overview import ProfileOverview
 from cadrumo.core.bucket_pointer import require_active_bucket_id
 from cadrumo.core.credentials import assess_profile_password
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp

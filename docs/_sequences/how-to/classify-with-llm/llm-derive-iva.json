@@ -25,7 +25,7 @@
         "app",
         "ledger",
         "classify",
-        "e3eeac5e",
+        "1703f840",
         "--classification",
         "BUSINESS",
         "--category-id",
@@ -47,7 +47,7 @@
         "app",
         "ledger",
         "classify",
-        "e3eeac5e",
+        "1703f840",
         "--iva-category",
         "domestic_general",
         "--saturate"
@@ -67,8 +67,8 @@
         ],
         "result": {
           "bucket_event_ids": [
-            "61e7203679a2689c9a11cf6a24ddaa370cfcbd16cad1a677ef3aa2dc14e52433",
-            "017f5fb8270351a164fc4a36993989c06504305ae5dcf0d07335084d30267c75"
+            "e6e7b2d4f2a19cac8133a082976b590ebd2de4ce124dcd5dafc9912f5a0427f2",
+            "60a51deda4a7f786535ffbfd5867802773ace32b911ff89ce42b6caeab788b48"
           ],
           "bucket_id": "<bucket-id>",
           "review_status": "reviewed",
@@ -91,7 +91,7 @@
             "currency": "EUR",
             "date": "2026-02-11",
             "deduction_fact_kind": null,
-            "description": "Compra de material de oficina proveedor local",
+            "description": "Compra de material de oficina",
             "direction": "OUTGOING",
             "fx_rate": null,
             "investment_asset_id": null,
@@ -109,12 +109,12 @@
             "purchase_invoice_evidence_id": null,
             "source_jurisdiction": null,
             "taxable_base": "500",
-            "transaction_id": "e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d",
+            "transaction_id": "1703f84035f8f1b9e95d99784e08d3a3fd56d526fb555e3d71d59887f5082e3e",
             "usage_ratio_id": null,
             "value_date": "2026-02-11",
             "value_in_eur": null
           },
-          "transaction_id": "e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
+          "transaction_id": "1703f84035f8f1b9e95d99784e08d3a3fd56d526fb555e3d71d59887f5082e3e"
         },
         "schema_version": "2",
         "status": "warning"

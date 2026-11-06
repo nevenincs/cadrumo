@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.application.modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test,
 )
@@ -90,18 +91,13 @@ def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
     return create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="tax_residence.ccaa", value=ccaa),
-            *RENTA_UNMARRIED_TAXPAYER_FACTS,
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="tax_residence.ccaa", value=ccaa),
+                *RENTA_UNMARRIED_TAXPAYER_FACTS,
+            )
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
@@ -203,42 +199,6 @@ def test_calculate_modelo_revision_rejects_ccaa_supplied_through_decimal_channel
                 clock=_CLOCK,
             )
         assert calc_repo.load().revisions == {}
-
-
-def test_estimacion_directa_binding_stays_in_the_decimal_channel(
-    tmp_path: Path, *, operation: PinnedAuthorityOperation
-) -> None:
-    """The estimacion-directa binding remains on the Decimal channel."""
-    with _secure_backend(tmp_path):
-        _store_profile(_profile_with_ccaa("madrid"))
-        snapshot = _modelo_100_snapshot()
-        work_repo, calc_repo, event_repo = _calculation_repositories()
-        work_unit = create_work_unit(
-            bucket_id=_BUCKET_ID,
-            modelo="100",
-            filing_year=_YEAR,
-            period=_TYPED_PERIOD,
-            revision_id="2025",
-            ports=WorkLifecyclePorts(work_unit_repository=work_repo, bucket_event_repository=event_repo),
-            clock=_CLOCK,
-            operation=operation,
-        )
-        with calculation_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            work_unit_repository=work_repo,
-            calculation_repository=calc_repo,
-            bucket_event_repository=event_repo,
-        ) as _calculation_ports_215:
-            revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-                work_unit.work_unit_id,
-                actor="operator",
-                casilla_inputs={},
-                binding_values=_non_ccaa_decimal_binding_values(snapshot),
-                relation_values=_zero_relation_values(snapshot),
-                ports=_calculation_ports_215,
-                clock=_CLOCK,
-            ).revision
-        assert Decimal(revision.binding_overrides[_ESTIMACION_BINDING]) == Decimal("0")
 
 
 def test_estimacion_directa_binding_rejected_through_enum_channel(

@@ -52,14 +52,14 @@ from ...application.operations.execution_actor import OperationExecutionCaller
 from ...application.operations.models import OperationIdentity, OperationRequest
 from ...application.operations.operation_definition import OperationDefinition
 from ...application.operations.owner import OperationExecutorContext
-from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
+from ...application.operations.registry import OperationRegistry
 from ...application.operations.subject_reference import OperationSubjectReferenceV1
 from ...application.user_profile.access_contracts import SessionKind
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.workflow.persistence import workflow_state_repository
 from ...application.workflow.state_models import WorkflowState
 from ...core.errors.hierarchy import SiteHealthState
-from ...core.operations import OperationEffect, profile_operation_subject
+from ...core.operations import OperationEffect, OperationFrontendProjection, profile_operation_subject
 from ...domain.buckets.event import BucketEventType
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..diagnostics_repair_composition import DiagnosticsRepairOperations, build_diagnostics_repair_operations

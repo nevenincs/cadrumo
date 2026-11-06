@@ -11,6 +11,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.modelo.work_profile import ModeloWorkProfile
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.core.aggregation import ThirdPartyDeclarationRole
 from cadrumo.core.period import Period
 from cadrumo.domain.invoices.enums import invoice_class_rectificativa
@@ -291,17 +292,14 @@ def _regime_profile_facts(
     iva_regime: str,
     extra: tuple[UserProfileFact, ...] = (),
 ) -> tuple[UserProfileFact, ...]:
-    return (
-        UserProfileFact(path="identity.tax_id", value="B12345674"),
-        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-        UserProfileFact(path="irpf.estimation_regime", value=estimation),
-        UserProfileFact(path="iva.regime", value=iva_regime),
-        UserProfileFact(path="iva.m303_regime_composition", value="general"),
-        UserProfileFact(path="iva.redeme_enrolled", value=False),
-        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-        *extra,
+    return persona_facts_beneath(
+        (
+            UserProfileFact(path="identity.tax_id", value="B12345674"),
+            UserProfileFact(path="irpf.estimation_regime", value=estimation),
+            UserProfileFact(path="iva.regime", value=iva_regime),
+            *extra,
+        ),
+        persona_id="sociedad-limitada",
     )
 
 
@@ -312,7 +310,7 @@ def _supplier_and_customer_invoices(bucket_id: str) -> tuple[Invoice, Invoice]:
         kind=InvoiceKind.RECEIVED,
         invoice_number="M347-PROVEEDOR-2026-001",
         issued_at=date(2026, 6, 1),
-        counterparty_tax_id="A58818501",
+        counterparty_tax_id="B00010157",
         counterparty_name="Proveedor Mayorista SA",
         base_total=Decimal("5000.00"),
         iva_total=Decimal("1050.00"),
@@ -409,7 +407,7 @@ def test_m347_reads_the_filer_from_the_calculation_pinned_profile_not_per_invoic
         kind=InvoiceKind.RECEIVED,
         invoice_number="M347-COMPRA-2026-002",
         issued_at=date(2026, 7, 1),
-        counterparty_tax_id="B11223344",
+        counterparty_tax_id="B00010140",
         counterparty_name="Otro Proveedor SL",
         base_total=Decimal("5000.00"),
         iva_total=Decimal("1050.00"),

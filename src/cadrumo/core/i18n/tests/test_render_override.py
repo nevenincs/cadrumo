@@ -115,7 +115,7 @@ def test_locale_load_failure_is_logged_with_traceback(caplog: pytest.LogCaptureF
     """A missing locale file falls back, but leaves a debug traceback."""
 
     with caplog.at_level(logging.DEBUG, logger="cadrumo.core.i18n.render"):
-        rendered = render.lookup_rendered_translation("not-supported-locale", "cli.missing.key", default="fallback")
+        rendered = render.resolve_translation("not-supported-locale", "cli.missing.key", default="fallback")
 
     assert rendered == "fallback"
     records = [

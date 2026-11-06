@@ -15,8 +15,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
 )
 from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.core.operations import OperationTerminalCondition
+from cadrumo.core.operations import OperationFrontendProjection, OperationTerminalCondition
 from cadrumo_client.contracts.access_vocabulary import AccessScope, DisclosureCategory, DisclosurePermission
 
 from ..profile_worker import ProfileWorkerProcess

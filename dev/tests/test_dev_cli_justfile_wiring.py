@@ -18,6 +18,7 @@ _EXPECTED_WIRING: Final[dict[str, str]] = {
     "dev.docs.terminology.synonyms": "docs-synonyms-maintain",
     "dev.docs.terminology_handbook": "docs-terminology-report",
     "dev.env": "setup-env",
+    "dev.fixture_projections": "fixtures-seed",
     "dev.identity": "check-identity",
     "dev.init": "init",
     "dev.locales": "check-locales",

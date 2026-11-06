@@ -60,7 +60,7 @@ from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 from cadrumo.adapters.persistence.storage.errors import KeyringUnavailableError
 from cadrumo.core.errors.error_codes import get_registered_error_code
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo_runtime.host.frontend.tui.profile.overview_client import read_profile_overview
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -95,7 +95,7 @@ import asyncio, importlib.util, json, sys
 from pathlib import Path
 from uuid import UUID
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
-from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentProposal
 from cadrumo.core.time.clock import now

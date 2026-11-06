@@ -28,9 +28,9 @@ from cadrumo.application.modelo.workbench_projection import (
     restore_modelo_workbench_form,
 )
 from cadrumo.application.modelo.workbench_read import ModeloWorkbenchFormReadV1
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.operation_reads import read_operation

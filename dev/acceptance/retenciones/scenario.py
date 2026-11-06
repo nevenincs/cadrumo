@@ -499,7 +499,7 @@ def build_scenario(year: int = SUPPORTED_YEAR) -> RetencionesScenario:
     )
     nonresident = Payment(
         source_id="nonresident-boundary",
-        recipient_id="X0000000T",
+        recipient_id="X0000002W",
         recipient_name="Nonresident Recipient",
         modelo="216",
         annual_modelo="296",
@@ -921,7 +921,7 @@ def _scenario_payments(year: int) -> tuple[Payment, ...]:
         ),
         Payment(
             source_id="payroll-q1",
-            recipient_id="00000001R",
+            recipient_id="00000024R",
             recipient_name="Employee One",
             modelo="111",
             annual_modelo="190",

@@ -3,8 +3,8 @@
 @step List the accepted category ids.
 aeat app ledger categories
 @step Classify the expense as business with a category.
-aeat app ledger classify e3eeac5e --classification BUSINESS --category-id material_oficina
+aeat app ledger classify 1703f840 --classification BUSINESS --category-id material_oficina
 @step Confirm the row now carries the business classification and category.
-@result aeat --format json app ledger view e3eeac5e
+@result aeat --format json app ledger view 1703f840
 @expect result.transaction.business_classification == "BUSINESS"
 @expect result.transaction.category_id == "material_oficina"

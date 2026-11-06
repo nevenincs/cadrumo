@@ -37,12 +37,13 @@ from cadrumo.application.operations.frontend_projection import (
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
 from cadrumo.application.operations.public_period import PublicPeriod
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.core.calculation_report_format import CalculationReportDocumentFormat
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.modelo_export_artefact import ModeloExportArtefact
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,

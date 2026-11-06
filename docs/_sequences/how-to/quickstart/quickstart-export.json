@@ -8,7 +8,6 @@
         "edit",
         "docs-sequence-sandbox",
         "--quiet",
-        "--accept-defaults",
         "--activity-start-date",
         "2026-01-01"
       ],
@@ -123,13 +122,7 @@
         "--idempotency-key",
         "qs-compra"
       ],
-      "captures": [
-        {
-          "json_path": "result.transaction_id",
-          "name": "expense_id",
-          "value": "e28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6"
-        }
-      ],
+      "captures": [],
       "envelope": null,
       "envelope_source": null,
       "exit_code": 0,
@@ -288,11 +281,11 @@
           }
         ],
         "result": {
-          "bucket_event_id": "823176a86ca7e041a94eecb1a217d357ac130baddb0b14ff3fb9c61cea24f8fa",
+          "bucket_event_id": "e1abc2e49a734ae86445796e7aa16370fc1d684a35406fcd66dcc62b9885e2d4",
           "bucket_id": "<bucket-id>",
           "byte_size": 946,
-          "calculation_revision_id": "93ce28ffa74d9bb88d9eb5010f904c0530add800aaf1a2364862706405e4145a",
-          "file_sha256": "11865d95acd5eed9b4d35a6b945ef5d9eee77868c523efdb0fc4f934bd96f785",
+          "calculation_revision_id": "6a79f16fbdb4b6c4842db9f17674711789bf1b4b6664b2a8d087d05b7281e8e7",
+          "file_sha256": "77e3d52f4b731a1ce2a2bc30b3c88ee091ce17b370140d5db054aa32e1a22942",
           "filing_year": 2026,
           "format": "fichero-boe",
           "iva_wallet_decision_provenance": null,

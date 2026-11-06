@@ -14,7 +14,12 @@ from pydantic import BaseModel, ValidationError
 
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.transactions.enums import (
     BusinessClassification,
@@ -27,11 +32,7 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
-from ...operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicDefinitionRegistrationV1,
-    OperationRegistry,
-)
+from ...operations.registry import OperationPublicDefinitionRegistrationV1, OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import split_operation as operation
 from ..action_ports import LedgerActionPorts

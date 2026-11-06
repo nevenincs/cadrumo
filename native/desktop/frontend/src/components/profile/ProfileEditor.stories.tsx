@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ComponentProps } from "react";
 import { expect, screen, userEvent, waitFor } from "storybook/test";
-import profiles from "@/dev/fixtures/userProfile.json";
+import profiles from "@fixtures/desktop-profile/userProfile.json" with { type: "json" };
 import type {
   ProfileField,
   ProfileSection,

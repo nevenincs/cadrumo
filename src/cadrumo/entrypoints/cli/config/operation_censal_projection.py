@@ -27,7 +27,7 @@ from ....application.operations.frontend_requests import (
     OperationReviewProjectionSuccessV1,
 )
 from ....application.operations.models import OperationId
-from ....application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from ....application.operations.registry import OperationPublicDefinitionContractV1
 from ....application.operations.schema_identity import OperationSchemaIdentityV1
 from ....application.user_profile.censal_operation import (
     CENSAL_OPERATION_DEFINITION_ID,
@@ -39,7 +39,12 @@ from ....application.user_profile.censal_operation import (
     CensalReviewProjectionV1,
 )
 from ....core.hashing import canonical_json_bytes
-from ....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
 from .operation_censal_exchange import exchange
 
 

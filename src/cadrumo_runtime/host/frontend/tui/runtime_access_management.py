@@ -14,10 +14,10 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Static
 from textual.worker import Worker, WorkerCancelled, WorkerError, WorkerFailed
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_projections import PublicAccessSession
 from cadrumo.core.async_cleanup import await_cancellation_complete, close_async_resources
 from cadrumo.core.i18n.render import tr
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.tui.components.theme import tokenised
 from cadrumo_client.contracts.automation_lifecycle import AutomationResumeReceipt

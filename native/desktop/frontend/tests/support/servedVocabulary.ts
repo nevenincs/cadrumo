@@ -1,4 +1,4 @@
-import recorded from "../../src/dev/fixtures/ledgerEntryOptions.json" with { type: "json" };
+import recorded from "@fixtures/ledger-entry-options/ledgerEntryOptions.json" with { type: "json" };
 import { servedVocabulary } from "../../src/shell/ledgerServedVocabulary";
 import { answerPeriods } from "../../src/dev/periodRecording";
 import type { LedgerEntryLimits } from "../../src/shell/ledgerSetup";

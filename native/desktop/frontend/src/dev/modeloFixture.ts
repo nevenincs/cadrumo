@@ -1,5 +1,5 @@
 // The scenario host's modelo family: the modelo port answered from the
-// envelopes in ./fixtures/modelo/, which scripts/modelo-fixtures.mjs reads
+// envelopes in @fixtures/modelo/, which scripts/modelo-fixtures.mjs reads
 // through the application's own read path for a synthetic taxpayer. The
 // declarations list, each declaration's form, the help cards and one edit
 // preflight answer exactly what the application answered, in each of the
@@ -380,7 +380,7 @@ export type ModeloEnvelopes = Record<string, () => Promise<unknown>>;
 
 /** The envelopes on disk, as the development server serves them. */
 function servedEnvelopes(): ModeloEnvelopes {
-  const found = import.meta.glob<unknown>("./fixtures/modelo/*.json", {
+  const found = import.meta.glob<unknown>("@fixtures/modelo/*.json", {
     import: "default",
   });
   return Object.fromEntries(
@@ -893,39 +893,43 @@ export function modeloFixture(options: Options): ModeloPort {
             return shape.startsWith("renta")
               ? written(`compare-${rentaForm(shape)}-${spoken}`)
               : unserved();
-          case "modelo.iva-wallet.balance":
-            return shape === "wallet" && request.as_of_year === 2026
-              ? written(`iva-wallet-balance-${walletStage}`)
+          case "modelo.iva-wallet.balance": {
+            if (shape !== "wallet") return unserved();
+            // The balance is served for the year the written read was taken at.
+            const balance = await envelope<JsonObject>(
+              `iva-wallet-balance-${walletStage}`,
+            );
+            return balance && request.as_of_year === balance.as_of_year
+              ? balance
               : unserved();
+          }
           case "modelo.iva-wallet.seed":
           case "modelo.iva-wallet.correct":
           case "modelo.iva-wallet.override": {
             if (shape !== "wallet") return unserved();
+            const mode = definition.slice("modelo.iva-wallet.".length);
+            const before =
+              mode === "seed"
+                ? "empty"
+                : mode === "correct"
+                  ? "seed"
+                  : "correct";
+            // A write is answered when it carries what the written one did.
+            const result = await envelope<JsonObject>(`iva-wallet-${mode}`);
+            if (!result || walletStage !== before) return unserved();
             const period = request.period as
               { filing_year?: unknown; code?: unknown } | undefined;
-            const mode = definition.slice("modelo.iva-wallet.".length);
-            const matches =
-              mode === "seed"
-                ? walletStage === "empty" &&
-                  period?.filing_year === 2024 &&
-                  period.code === "4T" &&
-                  request.amount === "1200.50"
-                : mode === "correct"
-                  ? walletStage === "seed" &&
-                    period?.filing_year === 2024 &&
-                    period.code === "4T" &&
-                    request.amount === "900.25" &&
-                    request.reason === "Correct the recorded opening balance."
-                  : walletStage === "correct" &&
-                    period?.filing_year === 2026 &&
-                    period.code === "1T" &&
-                    request.amount === "850.00" &&
-                    request.reason ===
-                      "Use the taxpayer's reviewed carry balance." &&
-                    request.evidence_locator ===
-                      "fixture:reviewed-iva-balance-2026-1T";
-            if (!matches) return unserved();
-            const result = await written(`iva-wallet-${mode}`);
+            const recorded = result.period as
+              { filing_year?: unknown; code?: unknown } | undefined;
+            const carried = (["amount", "reason", "evidence_locator"] as const)
+              .filter((field) => field in result)
+              .every((field) => request[field] === result[field]);
+            if (
+              period?.filing_year !== recorded?.filing_year ||
+              period?.code !== recorded?.code ||
+              !carried
+            )
+              return unserved();
             walletStage =
               mode === "seed"
                 ? "seed"

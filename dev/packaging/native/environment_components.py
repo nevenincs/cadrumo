@@ -8,45 +8,47 @@ from typing import Any
 
 from .environment_declaration_constants import BASE_NAME, SLOT
 from .environment_declaration_primitives import (
-    environment_declaration_primitives_table,
     fail,
-    integer,
-    keys,
-    relative,
-    strings,
+    require_integer,
+    require_keys,
+    require_relative,
+    require_strings,
+    require_table,
 )
 
 
-def environment_components_temporary_member(raw: object) -> dict[str, Any]:
-    """Validate the temporary-member pin table and return its relative default path."""
-    entry = environment_declaration_primitives_table(raw, "pins.temporary_member")
-    keys(entry, "pins.temporary_member", {"default"})
-    return {"default": relative(entry["default"], "pins.temporary_member.default")}
+def declare_temporary_member(raw: object) -> dict[str, Any]:
+    """Validate the declared temporary-member policy."""
+    entry = require_table(raw, "pins.temporary_member")
+    require_keys(entry, "pins.temporary_member", {"default"})
+    return {"default": require_relative(entry["default"], "pins.temporary_member.default")}
 
 
-def host_classes(raw: object) -> dict[str, Any]:
-    """Validate the host class table and return its prefix and cleared names."""
-    entry = environment_declaration_primitives_table(raw, "host_classes")
-    keys(entry, "host_classes", {"cleared_prefixes", "cleared_names", "namespace_prefix"})
+def declare_host_classes(raw: object) -> dict[str, Any]:
+    """Validate the declared host classes."""
+    entry = require_table(raw, "host_classes")
+    require_keys(entry, "host_classes", {"cleared_prefixes", "cleared_names", "namespace_prefix"})
     prefix = entry["namespace_prefix"]
     if not isinstance(prefix, str) or not re.fullmatch(r"[A-Z][A-Z0-9]*_", prefix):
         raise fail("host_classes.namespace_prefix must be an upper-case prefix ending in an underscore")
     return {
-        "cleared_prefixes": list(strings(entry["cleared_prefixes"], "host_classes.cleared_prefixes", BASE_NAME)),
-        "cleared_names": list(strings(entry["cleared_names"], "host_classes.cleared_names", BASE_NAME)),
+        "cleared_prefixes": list(
+            require_strings(entry["cleared_prefixes"], "host_classes.cleared_prefixes", BASE_NAME)
+        ),
+        "cleared_names": list(require_strings(entry["cleared_names"], "host_classes.cleared_names", BASE_NAME)),
         "namespace_prefix": prefix,
     }
 
 
-def environment_components_native_host(raw: object) -> dict[str, Any]:
-    """Validate the native host table and return its owner and slot range."""
-    entry = environment_declaration_primitives_table(raw, "native_host")
-    keys(entry, "native_host", {"owner", "first", "last", "launch_profile_refused", "refusals"})
+def declare_native_host(raw: object) -> dict[str, Any]:
+    """Validate the declared native host."""
+    entry = require_table(raw, "native_host")
+    require_keys(entry, "native_host", {"owner", "first", "last", "launch_profile_refused", "refusals"})
     if not isinstance(entry["owner"], str) or not SLOT.fullmatch(entry["owner"]):
         raise fail("native_host.owner must be a lower-case token")
-    first = integer(entry["first"], "native_host.first")
-    last = integer(entry["last"], "native_host.last", minimum=first)
-    refused = integer(entry["launch_profile_refused"], "native_host.launch_profile_refused")
+    first = require_integer(entry["first"], "native_host.first")
+    last = require_integer(entry["last"], "native_host.last", minimum=first)
+    refused = require_integer(entry["launch_profile_refused"], "native_host.launch_profile_refused")
     # POSIX reports only the low byte of an exit status.
     if last > 0xFF or not first <= refused <= last:
         raise fail("native_host exit codes must lie in one byte and hold launch_profile_refused")
@@ -55,7 +57,7 @@ def environment_components_native_host(raw: object) -> dict[str, Any]:
         "first": first,
         "last": last,
         "launch_profile_refused": refused,
-        "refusals": list(strings(entry["refusals"], "native_host.refusals", SLOT)),
+        "refusals": list(require_strings(entry["refusals"], "native_host.refusals", SLOT)),
     }
 
 
@@ -84,11 +86,11 @@ _LOCAL_AI_PORTS = range(1024, 32768)
 _LOCAL_AI_UPSTREAM_PORT = 11434
 
 
-def components(raw: object, names: Mapping[str, Mapping[str, str]]) -> dict[str, Any]:
-    """Validate the components table, its relative paths and its values."""
-    entry = environment_declaration_primitives_table(raw, "components")
-    keys(entry, "components", {*_COMPONENT_PATHS, *_COMPONENT_VALUES})
-    components: dict[str, Any] = {key: relative(entry[key], f"components.{key}") for key in _COMPONENT_PATHS}
+def declare_components(raw: object, names: Mapping[str, Mapping[str, str]]) -> dict[str, Any]:
+    """Validate the declared installable components against the manager strings."""
+    entry = require_table(raw, "components")
+    require_keys(entry, "components", {*_COMPONENT_PATHS, *_COMPONENT_VALUES})
+    components: dict[str, Any] = {key: require_relative(entry[key], f"components.{key}") for key in _COMPONENT_PATHS}
     if not components["log_file"].startswith(components["logs"] + "/"):
         raise fail("components.log_file must lie in components.logs")
     if not isinstance(entry["log_format"], str) or not entry["log_format"]:
@@ -103,8 +105,8 @@ def components(raw: object, names: Mapping[str, Mapping[str, str]]) -> dict[str,
     address = _local_ai_address(entry)
     components.update(
         log_format=entry["log_format"],
-        log_max_bytes=integer(entry["log_max_bytes"], "components.log_max_bytes"),
-        log_backups=integer(entry["log_backups"], "components.log_backups", minimum=0),
+        log_max_bytes=require_integer(entry["log_max_bytes"], "components.log_max_bytes"),
+        log_backups=require_integer(entry["log_backups"], "components.log_backups", minimum=0),
         language_variable=entry["language_variable"],
         language_default=language,
         profile_variable=entry["profile_variable"],

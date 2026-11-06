@@ -56,22 +56,24 @@ def test_summary_uses_last_distribution_and_omits_small_sample_percentiles(tmp_p
 
 def test_sql_commit_attribution_preserves_transaction_and_restores_hooks(tmp_path: Path) -> None:
     from sqlalchemy import create_engine, text
-    from sqlalchemy.orm import Session
+    from sqlalchemy.engine import Transaction
 
     recorder = ProfileBenchmarkRecorder(tmp_path, role="parent")
-    original = Session.commit
+    original = Transaction.commit
     engine = create_engine("sqlite://")
     with pytest.MonkeyPatch.context() as patch:
         observe_profile_boundaries(patch, recorder)
-        with Session(engine) as session:
-            session.execute(text("CREATE TABLE benchmark (value INTEGER)"))
-            session.commit()
+        with engine.connect() as connection:
+            transaction = connection.begin()
+            connection.execute(text("CREATE TABLE benchmark (value INTEGER)"))
+            transaction.commit()
             with recorder.measure("profile.record_write_transaction", aggregate=True):
-                session.execute(text("INSERT INTO benchmark VALUES (42)"))
-                session.commit()
-        with Session(engine) as reopened:
+                transaction = connection.begin()
+                connection.execute(text("INSERT INTO benchmark VALUES (42)"))
+                transaction.commit()
+        with engine.connect() as reopened:
             assert reopened.scalar(text("SELECT value FROM benchmark")) == 42
-    assert Session.commit is original
+    assert Transaction.commit is original
     assert recorder.totals["storage.sql_commit.profile"].calls == 1
     assert recorder.totals["storage.sql_commit.other"].calls == 1
     recorder.flush()

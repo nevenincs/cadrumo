@@ -28,6 +28,8 @@ def _snapshot(year: int) -> RegistrySnapshot:
 
 def _binding_values(year: int) -> dict[str, Decimal]:
     values = {
+        "renta-profile-has-economic-activity": Decimal("1"),
+        "renta-profile-estimacion-directa": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-profile-declaration-type": Decimal("1"),
         "renta-profile-family-minor-children-in-unit": Decimal("0"),

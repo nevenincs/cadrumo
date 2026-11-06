@@ -68,6 +68,8 @@ from ...core.modelo import Modelo
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.period import Period
 from ...core.time.clock import now
+from ...domain.calculations.registry.applicability import derive_modelo_applicability
+from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
@@ -97,6 +99,7 @@ from ...domain.calculations.registry.relations import (
     relation_source_requirements,
 )
 from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
+from ...domain.deadlines.errors import ProfileError
 from ..aggregation.source_mesh import (
     CalculationSourceContext,
     CalculationSourceProvenance,
@@ -106,6 +109,7 @@ from ..aggregation.source_resolution_operations import storage_degradation_resol
 from ..persistence_errors import PersistenceDegradationError
 from ..storage.calc_sheets.records import RelationValue, RelationValues, SheetRelationProvenance
 from ..user_profile.profile_read_ports import ProfilePathValuesReadPort, ProfileReadPorts
+from ..user_profile.projections import projection_for_taxpayer
 from .m111_no_retenciones import (
     is_m111_no_retenciones_period,
     m111_no_retenciones_periods_for_bucket,
@@ -292,7 +296,7 @@ def not_applicable_source_modelos_for_bucket(
     """Return the revision's economic-activity-conditional sources not applicable to the bucket.
 
     The registry classification bounds the candidate set
-    (:func:`_economic_activity_conditional_source_modelos`); the profile decides
+    (:func:`economic_activity_conditional_source_modelos`); the profile decides
     the verdict within it. No actividad económica means no quarterly
     pagos-fraccionado obligation at all; estimación directa means M130 applies
     and M131 does not; estimación objetiva means M131 applies and M130 does not
@@ -330,6 +334,37 @@ def not_applicable_source_modelos_for_bucket(
     if estimation_regime == irpf_estimation_regime_objetiva_token():
         return candidates & frozenset({str(Modelo("130"))})
     return frozenset[str]()
+
+
+def _registry_not_applicable_source_modelos(
+    snapshot: RegistrySnapshot,
+    context: CalculationSourceContext,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> frozenset[str]:
+    """Return the conditional sources the registry's applicability rule positively excludes for the profile.
+
+    The rule is the one the overview reads, so a source modelo the taxpayer is exempt from for the
+    whole ejercicio (RIRPF art. 109.1 for Modelo 130) resolves its relation to a proven zero the way
+    a pre-activity source does. Only a positive ``NOT_APPLICABLE`` verdict counts: an incomplete or
+    undetermined verdict, a derivation that cannot run, or a context with no profile leaves the
+    relation unresolved.
+    """
+    if context.profile is None:
+        return frozenset[str]()
+    try:
+        taxpayer = projection_for_taxpayer(context.profile.record, schema=operation.profile_schema())
+    except ProfileError:
+        return frozenset[str]()
+    excluded: set[str] = set()
+    for modelo in sorted(economic_activity_conditional_source_modelos(snapshot)):
+        try:
+            verdict = derive_modelo_applicability(taxpayer, modelo, operation=operation).verdict
+        except (TypeError, ValueError, RegistryValidationError):
+            continue
+        if verdict is ApplicabilityVerdict.NOT_APPLICABLE:
+            excluded.add(modelo)
+    return frozenset(excluded)
 
 
 def _parse_canonical_iso_date(raw: str | None) -> date | None:
@@ -554,6 +589,42 @@ def _relation_period_scoped_out(
     )
 
 
+def _pre_activity_requirements_by_relation(
+    snapshot: RegistrySnapshot,
+    activity_start_date: date | None,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> dict[RelationId, RegistryFoldRequirement]:
+    """Index relations whose economic-activity-conditional source periods all precede the activity start.
+
+    Such a source modelo had no obligation in any of its periods, so the relation
+    is positively not applicable rather than unresolved. Only the revision's
+    economic-activity-conditional sources qualify: a source a payer files
+    (suffered retenciones) is not made absent by the activity start. Without a
+    declared activity start nothing is indexed, so unknown applicability stays
+    unresolved.
+    """
+    if activity_start_date is None:
+        return {}
+    conditional = economic_activity_conditional_source_modelos(snapshot)
+    candidates = tuple(
+        requirement
+        for requirement in relation_source_requirements(
+            snapshot.revision,
+            filing_year=snapshot.filing_year,
+            period=snapshot.period,
+        )
+        if requirement.source_modelo in conditional
+        and not _kept_relation_periods(
+            requirement,
+            activity_start_date=activity_start_date,
+            m111_no_retenciones_periods=frozenset[tuple[int, str]](),
+            operation=operation,
+        )
+    )
+    return dict(relation_requirement_index(candidates))
+
+
 def _default_activity_start_date(activity_start_date: date | None) -> date | None:
     """Return the caller-supplied activity date without consulting global state."""
     return activity_start_date
@@ -588,7 +659,22 @@ def _unresolved_relation_value(
     resolved_at: datetime,
     modelo_202_first_year_cuota: bool,
     not_applicable_source_modelos: frozenset[str],
+    pre_activity_requirement: RegistryFoldRequirement | None,
 ) -> RelationValue:
+    if requirement is None and pre_activity_requirement is not None:
+        return RelationValue(
+            relation=binding.id,
+            value=Decimal("0"),
+            provenance=SheetRelationProvenance.OPERATOR_MANUAL,
+            source_filing_year=target_year,
+            source_periods=source_periods,
+            **grounding,
+            resolved_at=resolved_at,
+            note=(
+                f"source modelo {pre_activity_requirement.source_modelo} is not applicable: every source "
+                "period precedes the activity start; relation resolved to 0 without a synthetic filing"
+            ),
+        )
     if modelo_202_first_year_cuota and requirement is not None and requirement.source_modelo == str(Modelo("202")):
         return RelationValue(
             relation=binding.id,
@@ -629,12 +715,15 @@ def _relation_value_for_relation(
     resolved_at: datetime,
     modelo_202_first_year_cuota: bool,
     not_applicable_source_modelos: frozenset[str],
+    pre_activity_requirements: Mapping[RelationId, RegistryFoldRequirement],
     filing_year: int,
 ) -> RelationValue:
     requirement = requirements_by_relation.get(binding.id)
-    target_year = requirement.filing_year if requirement is not None else filing_year
-    source_periods = requirement.periods if requirement is not None else provider.required_source_periods
-    grounding = relation_value_grounding(binding, provider, requirement)
+    pre_activity_requirement = pre_activity_requirements.get(binding.id) if requirement is None else None
+    described = requirement if requirement is not None else pre_activity_requirement
+    target_year = described.filing_year if described is not None else filing_year
+    source_periods = described.periods if described is not None else provider.required_source_periods
+    grounding = relation_value_grounding(binding, provider, described)
     resolved = resolved_map.get(binding.id)
     if resolved is None:
         return _unresolved_relation_value(
@@ -646,6 +735,7 @@ def _relation_value_for_relation(
             resolved_at=resolved_at,
             modelo_202_first_year_cuota=modelo_202_first_year_cuota,
             not_applicable_source_modelos=not_applicable_source_modelos,
+            pre_activity_requirement=pre_activity_requirement,
         )
     return RelationValue(
         relation=binding.id,
@@ -682,6 +772,7 @@ def _relation_values_for_snapshot(
     resolved_at: datetime,
     modelo_202_first_year_cuota: bool,
     not_applicable_source_modelos: frozenset[str],
+    pre_activity_requirements: Mapping[RelationId, RegistryFoldRequirement],
 ) -> tuple[RelationValue, ...]:
     return tuple(
         _relation_value_for_relation(
@@ -692,6 +783,7 @@ def _relation_values_for_snapshot(
             resolved_at=resolved_at,
             modelo_202_first_year_cuota=modelo_202_first_year_cuota,
             not_applicable_source_modelos=not_applicable_source_modelos,
+            pre_activity_requirements=pre_activity_requirements,
             filing_year=snapshot.filing_year,
         )
         for binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
@@ -785,6 +877,11 @@ def resolve_relations_from_local_store(
         resolved_at=when,
         modelo_202_first_year_cuota=modelo_202_first_year_cuota,
         not_applicable_source_modelos=not_applicable_source_modelos,
+        pre_activity_requirements=_pre_activity_requirements_by_relation(
+            snapshot,
+            activity_start_date,
+            operation=operation,
+        ),
     )
     return RelationValues(values=values)
 
@@ -876,7 +973,8 @@ def _relation_prefill_context_inputs(
             snapshot,
             bucket_id,
             profile_path_values_reader=profile_path_values_reader,
-        ),
+        )
+        | _registry_not_applicable_source_modelos(snapshot, context, operation=operation),
         modelo_202_first_year_cuota=(
             context.modelo == str(Modelo("200"))
             and _first_year_modalidad_cuota_no_m202(

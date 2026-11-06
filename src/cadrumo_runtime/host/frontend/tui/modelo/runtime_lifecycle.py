@@ -49,11 +49,15 @@ from cadrumo.application.modelo.workbench_operations import (
 )
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
 from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import output_language
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from cadrumo.entrypoints.tui.modelo.lifecycle import ModeloLifecycleActionUnavailableError, ModeloWorkspaceLifecycleDoor
 from cadrumo.entrypoints.tui.operations.controller_port import OperationControllerPort
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError

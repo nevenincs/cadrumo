@@ -1474,8 +1474,9 @@ mod tests {
     /// The edit baselines real Modelo 303 and 347 forms admitted, as the
     /// product's form read answered them.
     fn admitted_baselines() -> [(&'static str, Value); 2] {
-        let baseline = |envelope: &str| {
-            let read: Value = serde_json::from_str(envelope).unwrap();
+        let baseline = |name: &str| {
+            let read: Value =
+                serde_json::from_str(&crate::window_fixtures::window_fixture(name)).unwrap();
             let baseline = read["admitted_baseline"].clone();
             assert!(baseline.is_object());
             baseline
@@ -1483,15 +1484,11 @@ mod tests {
         [
             (
                 "303",
-                baseline(include_str!(
-                    "../../../../frontend/src/dev/fixtures/modelo/modelo-303-1T-en.json"
-                )),
+                baseline("modelo/modelo-303-1T-en.json"),
             ),
             (
                 "347",
-                baseline(include_str!(
-                    "../../../../frontend/src/dev/fixtures/modelo/modelo-347-0A-en.json"
-                )),
+                baseline("modelo/modelo-347-0A-en.json"),
             ),
         ]
     }

@@ -5,12 +5,12 @@ aeat --format json app modelo work create --modelo 390 --year 2025 --period 0A
 @step Calculate the annual summary from the year's records and the filed 303 quarters.
 aeat --format json app modelo work calculate {work_unit_id}
 @capture calculation_revision_id result.calculation_revision_id
-@expect result.casilla_values["iva.anual.cuota-devengada-total"] == "1470.00"
-@expect result.casilla_values["iva.anual.reconciliacion.devengada-303"] == "1470.00"
-@expect result.casilla_values["iva.anual.cuota-deducible-total"] == "105.00"
-@expect result.casilla_values["iva.anual.reconciliacion.deducible-303"] == "105.00"
-@expect result.casilla_values["iva.anual.resultado-regimen-general"] == "1365.00"
-@expect result.casilla_values["iva.anual.reconciliacion.resultado-303"] == "1365.00"
+@expect result.casilla_values["iva.anual.cuota-devengada-total"] == "4386.00"
+@expect result.casilla_values["iva.anual.reconciliacion.devengada-303"] == "4386.00"
+@expect result.casilla_values["iva.anual.cuota-deducible-total"] == "3492.30"
+@expect result.casilla_values["iva.anual.reconciliacion.deducible-303"] == "3492.30"
+@expect result.casilla_values["iva.anual.resultado-regimen-general"] == "893.70"
+@expect result.casilla_values["iva.anual.reconciliacion.resultado-303"] == "893.70"
 @step Check the annual draft; the four filed 303 quarters satisfy the cross-period gate.
 @result aeat --format json app modelo work verify {calculation_revision_id}
 @expect result.granted_verificado_completo == true

@@ -15,19 +15,15 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test,
-)
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.ready_profile_support import seed_persona_profile
 from ....adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....application.modelo.action_errors import ModeloAggregationBindingError
 from ....application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
@@ -44,7 +40,6 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from .file_flow_test_support import calculation_ports_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -67,36 +62,6 @@ _FILING_YEAR = 2025
 _RESULTADO_CONTABLE: CasillaId = validated_casilla_id("DP200012:00501", surface="_RESULTADO_CONTABLE")
 _BASE_IMPONIBLE: CasillaId = validated_casilla_id("DP200014:00552", surface="_BASE_IMPONIBLE")
 _CUOTA_EJERCICIO: CasillaId = validated_casilla_id("DP200014B:00599", surface="_CUOTA_EJERCICIO")
-
-
-def _seed_m200_legal_entity_profile(objects: SecureObjectRepository) -> None:
-    record = create_user_profile_record(
-        setup_state=ProfileSetupState.COMPLETE,
-        profile_id=_BUCKET_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="B12345674"),
-            UserProfileFact(path="identity.legal_name", value="Beatriz Test SL"),
-            UserProfileFact(path="activities.description", value="software consultancy"),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
-            UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
-            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
-            UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
-            UserProfileFact(path="censo.activity_start_date", value="2024-01-01"),
-        ),
-        created_at=_T0,
-        updated_at=_T0,
-        context=profile_creation_context_for_test(),
-    )
-    seed_test_profile_record(record)
 
 
 def _raw_transaction(
@@ -212,7 +177,7 @@ def _calculate_m200(
     casilla_inputs: dict[CasillaId, Decimal] | None = None,
     operation: PinnedAuthorityOperation,
 ) -> tuple[BucketAggregationCalculationResult, CalculationRevisionCatalogueRepository]:
-    _seed_m200_legal_entity_profile(secure_objects)
+    seed_persona_profile("sociedad-limitada", bucket_id=_BUCKET_ID, at=_T0)
     wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     event_repo = BucketEventHistoryRepository(objects=secure_objects)

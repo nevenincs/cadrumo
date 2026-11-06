@@ -186,7 +186,7 @@ async def test_authority_response_provenance_is_the_publication_the_report_was_r
     assert pin.logical_generation == published.logical_generation == artifact.identity_digest
     assert pin.logical_generation != packaged_pin.logical_generation
 
-    monkeypatch.setattr(authority_module, "authority_bundled_indexed_authority", authority)
+    monkeypatch.setattr(authority_module, "bundled_indexed_authority_owner", authority)
     adapter = admitted_adapter()
     held = adapter.client
     try:
@@ -211,7 +211,7 @@ async def test_missing_configured_authority_refuses_without_packaged_fallback(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(authority_module, "authority_bundled_indexed_authority", None)
+    monkeypatch.setattr(authority_module, "bundled_indexed_authority_owner", None)
     adapter = admitted_adapter()
     assert adapter.client is not None
     try:
@@ -228,7 +228,7 @@ async def test_corrupt_configured_database_refuses_without_packaged_fallback(
 ) -> None:
     source_descriptor = bundled_authority_descriptor_path()
     copy_and_corrupt_published_database(source_descriptor, tmp_path)
-    monkeypatch.setattr(authority_module, "authority_bundled_indexed_authority", None)
+    monkeypatch.setattr(authority_module, "bundled_indexed_authority_owner", None)
 
     adapter = admitted_adapter()
     assert adapter.client is not None
@@ -263,7 +263,7 @@ async def test_sdk_query_finishes_on_held_publication_across_descriptor_cutover(
         expected_entries = registry_support_matrix(operation=initial).model_dump(mode="json")["entries"]
     assert expected_entries
 
-    monkeypatch.setattr(authority_module, "authority_bundled_indexed_authority", authority)
+    monkeypatch.setattr(authority_module, "bundled_indexed_authority_owner", authority)
     adapter = admitted_adapter()
     assert adapter.client is not None
     try:

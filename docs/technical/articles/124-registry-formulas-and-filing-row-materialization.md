@@ -46,7 +46,7 @@ The specialized formula operations rely on the central dispatcher and shared run
 - registry/_formula_operator_command_ports.py (`src/cadrumo/domain/calculations/registry/_formula_operator_command_ports.py`) — lines 1–95
 - registry/_formula_runtime_irnr.py (`src/cadrumo/domain/calculations/registry/formula_runtime_irnr.py`) — lines 1–529
 - registry/_formula_runtime_m131.py (`src/cadrumo/domain/calculations/registry/formula_runtime_m131.py`) — lines 1–832
-- registry/_invoice_row_materialization.py (`src/cadrumo/domain/calculations/registry/invoice_row_materialization.py`) — lines 1–372
+- registry/invoice_row_materialization.py (`src/cadrumo/domain/calculations/registry/invoice_row_materialization.py`) — lines 1–372
 - registry/_ledger_binding_resolution.py (`src/cadrumo/domain/calculations/registry/ledger_binding_resolution.py`) — lines 1–374
 - registry/_schema_export_exemption.py (`src/cadrumo/domain/calculations/registry/schema_export_exemption.py`) — lines 1–41
 - registry/_toml_helpers.py (`src/cadrumo/domain/calculations/registry/toml_helpers.py`) — lines 1–31

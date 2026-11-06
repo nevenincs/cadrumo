@@ -27,9 +27,8 @@ from ...application.ledger.evidence_mutation_operation import (
 from ...application.ledger.invoice_evidence_extract_operation import LedgerEvidenceExtractProjection
 from ...application.operations.execution_actor import OperationExecutionCaller, OperationExecutionCallerReader
 from ...application.operations.models import OperationIdentity
-from ...application.operations.registry import OperationFrontendProjection
 from ...application.user_profile.access_contracts import SessionKind
-from ...core.operations import OperationTerminalCondition, profile_operation_subject
+from ...core.operations import OperationFrontendProjection, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..adapter_composition_work_ports import build_ledger_evidence_ports
 from . import registered_executor_case_support as conformance

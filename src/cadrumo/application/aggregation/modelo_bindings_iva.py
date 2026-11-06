@@ -23,6 +23,7 @@ from ...domain.calculations.registry.ledger_binding_selector_support import Ledg
 from ...domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     LedgerIvaProvider,
+    declarable_ledger_iva_observations,
     structurally_unroutable_iva_base_categories,
     unrouted_ledger_iva_quantities,
     unsupported_ledger_iva_observations,
@@ -491,7 +492,7 @@ def _present_unroutable_iva_categories(
 ) -> tuple[IvaCategory, ...]:
     if context.modelo != form_for_role("iva.periodic"):
         return ()
-    present_categories = {observation.category for observation in observations}
+    present_categories = {observation.category for observation in declarable_ledger_iva_observations(observations)}
     return tuple(
         category
         for category in structurally_unroutable_iva_base_categories(context.revision)

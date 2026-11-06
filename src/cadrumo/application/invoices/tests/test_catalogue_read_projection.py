@@ -25,7 +25,7 @@ def _snapshot(
         bucket_id="20202020-2020-4202-8202-202020202020",
         kind=kind,
         counterparty_name="Papeleria Sol SL",
-        counterparty_tax_id="A58818501",
+        counterparty_tax_id="B00010157",
         counterparty_country="ES",
         invoice_number="2026-0142",
         issued_at=date(2026, 3, 10),

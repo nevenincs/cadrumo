@@ -66,12 +66,17 @@ from ...application.operations.frontend_requests import (
 from ...application.operations.models import OperationRequest
 from ...application.operations.persistence.journal import OperationPersistedSnapshot
 from ...application.operations.public_period import PublicPeriod
-from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
+from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
 from ...core.casilla_value_kind import CasillaValueKind
 from ...core.config import override_settings
 from ...core.hashing import sha256_hex
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef

@@ -49,7 +49,7 @@ _SHA = "0" * 64
 _REAL_NIE_CANARY = "Y1234567X"
 _REAL_NIF_CANARY = "99999999R"
 _REAL_NAME_CANARY = "PERSONA PRUEBA UNO"
-_SYNTHETIC_NIE = "Y0000001S"
+_SYNTHETIC_NIE = "Y0001006P"
 _SYNTHETIC_NIF = "12345678Z"
 _SYNTHETIC_NAME = "APELLIDO APELLIDO NOMBRE"
 
@@ -244,7 +244,7 @@ def test_every_replacement_subclass_is_reached_by_the_case_tables() -> None:
     (``AddressReplacement``, ``ArbitraryReplacement``) has no subclass-specific
     rejection to demonstrate, so it is not required to carry a reject case. The
     converse is permitted rather than required: a case that exercises a
-    ``_ReplacementBase`` constraint on a subclass that adds none is still a real
+    ``ReplacementBase`` constraint on a subclass that adds none is still a real
     rejection, which is why only the validator-without-case direction fails.
     """
     subclasses = tuple(ReplacementBase.__subclasses__())
@@ -365,7 +365,7 @@ class TestReplacementShape:
             surface="content_stream",
             surface_index=(2, 17),
             real_sha256=_SHA,
-            synthetic="Y0000001S",
+            synthetic="Y0001006P",
             encoding="literal",
         )
         assert record.surface == "content_stream"

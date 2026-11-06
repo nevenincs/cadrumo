@@ -22,11 +22,14 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.m303_regimen_simplificado_scope import active_taxpayer_profile
-from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.modelo.work_plazo import calculated_m210_plazo_resolution
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
+from cadrumo.application.user_profile.tests.persona_profile_facts import (
+    COLEGIO_CONCERTADO_ATTESTATION,
+    persona_facts_beneath,
+)
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.published_authority import (
@@ -111,9 +114,11 @@ def _seed_minimal_profile(profile_id: str) -> None:
     copy was another place for that answer to drift.
     """
     create_context, _decode_context = profile_authority_contexts()
-    facts = (
-        *(fact for fact in MODELO_READY_PROFILE_FACTS if fact.path not in _NON_RESIDENT_FACTS),
-        *(UserProfileFact(path=path, value=value) for path, value in _NON_RESIDENT_FACTS.items()),
+    facts = persona_facts_beneath(
+        (
+            COLEGIO_CONCERTADO_ATTESTATION,
+            *(UserProfileFact(path=path, value=value) for path, value in _NON_RESIDENT_FACTS.items()),
+        )
     )
     seed_test_profile_record(
         create_user_profile_record(

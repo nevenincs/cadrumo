@@ -5,6 +5,7 @@ import type {
   PublicModeloFormField,
 } from "../../src/shell/modeloContract";
 import { label } from "../support/strings";
+import { MODELO_FIXTURES } from "../support/windowFixtures";
 
 // The withholdings view of the 2025 Modelo 100: the boxes the withholding
 // register supplies, as the application served them, the way to the register
@@ -145,8 +146,8 @@ const refusalWords = (language: Language) =>
     JSON.parse(
       readFileSync(
         new URL(
-          `../../src/dev/fixtures/modelo/refusal-project-no-quarters-${language}.json`,
-          import.meta.url,
+          `refusal-project-no-quarters-${language}.json`,
+          MODELO_FIXTURES,
         ),
         "utf8",
       ),
@@ -165,10 +166,7 @@ type ServedStep =
 const servedRefusal = (refusal: string, language: Language) =>
   JSON.parse(
     readFileSync(
-      new URL(
-        `../../src/dev/fixtures/modelo/refusal-${refusal}-${language}.json`,
-        import.meta.url,
-      ),
+      new URL(`refusal-${refusal}-${language}.json`, MODELO_FIXTURES),
       "utf8",
     ),
   ) as {

@@ -29,7 +29,7 @@ from pydantic import ValidationError
 from sqlalchemy import select
 
 from cadrumo.adapters.persistence.profile.filing_drafts import ModeloDraftRepository
-from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
+from cadrumo.adapters.persistence.storage.sql.tables import secure_objects_table
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
@@ -180,9 +180,9 @@ def test_boundary_catches_binding_provenance_field_drop(
                 original = _populated_draft(rendimiento=Decimal(f"8400.0{index}"))
                 repository.save(original)
 
-                stmt = select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == ModeloDraftRepository.namespace,
-                    SecureObjectRow.object_key == original.draft_id,
+                stmt = select(secure_objects_table).where(
+                    secure_objects_table.c.namespace == ModeloDraftRepository.namespace,
+                    secure_objects_table.c.object_key == original.draft_id,
                 )
 
                 def mutate(decoded, *, field: str = field_name):

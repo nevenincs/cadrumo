@@ -37,7 +37,7 @@ from pydantic import ValidationError
 from sqlalchemy import select
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
+from cadrumo.adapters.persistence.storage.sql.tables import secure_objects_table
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
@@ -183,9 +183,9 @@ def test_a_header_fact_stripped_of_its_locator_refuses_at_load(tmp_path: Path) -
         _save(repo)
 
         object_key = member_observation_key("303", _PERIOD, "B12345678")
-        stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == CalculationObservationRepository.namespace,
-            SecureObjectRow.object_key == object_key,
+        stmt = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == CalculationObservationRepository.namespace,
+            secure_objects_table.c.object_key == object_key,
         )
 
         def mutate(envelope):
@@ -228,9 +228,9 @@ def test_dropping_the_whole_header_channel_surfaces_as_inequality(tmp_path: Path
         assert saved.source_headers, "nothing was stored, so the deletion below would prove nothing"
 
         object_key = member_observation_key("303", _PERIOD, "B12345678")
-        stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == CalculationObservationRepository.namespace,
-            SecureObjectRow.object_key == object_key,
+        stmt = select(secure_objects_table).where(
+            secure_objects_table.c.namespace == CalculationObservationRepository.namespace,
+            secure_objects_table.c.object_key == object_key,
         )
 
         def mutate(envelope):

@@ -68,14 +68,15 @@ from cadrumo.application.operations.frontend_requests import (
     OperationSubmissionReceiptV1,
 )
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus, PublicReplayStatus
-from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicContractSetV1,
-    OperationPublicDefinitionContractV1,
-)
+from cadrumo.application.operations.registry import OperationPublicContractSetV1, OperationPublicDefinitionContractV1
 from cadrumo.core.errors.error_codes import build_error_envelope, get_registered_error_code
 from cadrumo.core.i18n.render import tr
-from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
 from cadrumo.entrypoints.cli.operation_modelo_verification import run_modelo_work_filing, run_modelo_work_verification
 from cadrumo_client.commands.errors import (
     CliOperationStillRunningError,

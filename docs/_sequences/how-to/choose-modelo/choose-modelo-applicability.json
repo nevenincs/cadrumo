@@ -8,7 +8,6 @@
         "edit",
         "docs-sequence-sandbox",
         "--quiet",
-        "--accept-defaults",
         "--irpf-income-categories",
         "actividad_economica",
         "--irpf-estimation-regime",
@@ -41,7 +40,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "profile\tdocs-sequence-sandbox\nprofile_id\t<profile-id>\nidentity.tax_id\tsha256:1c9f9632\nactivities.description\tdocumentation examples\niva.regime\tGENERAL\ntax_residence.ccaa\tmadrid\nNext step: `aeat app overview status`\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "profile\tdocs-sequence-sandbox\nprofile_id\t<profile-id>\nidentity.tax_id\tsha256:7a828de5\nactivities.description\t<unset>\niva.regime\tGENERAL\ntax_residence.ccaa\tmadrid\nNext step: `aeat app overview status`\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -97,7 +96,7 @@
             "pays_rent_with_retencion": false,
             "premio_loteria_gravamen_especial_sin_retencion": "",
             "premio_loteria_gravamen_especial_trimestres": "",
-            "tax_id": "sha256:1c9f9632",
+            "tax_id": "sha256:7a828de5",
             "third_party_transactions_above_347_threshold": ""
           },
           "rationale": "Modelo 303 (autoliquidación del IVA): el contribuyente realiza una actividad económica sujeta al IVA y presenta la autoliquidación periódica.",
@@ -164,7 +163,7 @@
           }
         ],
         "result": {
-          "authority_generation": "ccefc805386a4f39971ca10ab267597ee3237c133f56618fd4e4937a1f22a1a4",
+          "authority_generation": "aa42bfb7e3089208e79e066d18e34de9fcd58811c657562e6c3d963788ac5ace",
           "binding_ready": false,
           "filing_year": 2026,
           "ledger_checked_transaction_count": 0,

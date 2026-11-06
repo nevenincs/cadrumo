@@ -15,13 +15,18 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
-from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ....core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ....core.time.clock import now
 from ....domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
-from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...operations.registry import OperationRegistry
 from ...tests.access_authority_support import assert_admitted_alike_without_commit_door
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import evidence_read_operation as worker

@@ -29,7 +29,7 @@ from .cli_fixture_worlds import RegisteredCliProfile, cli_world_provider, invoke
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 _TAXPAYER = "12345678Z"
-_PAYER = "B00000018"
+_PAYER = "B00010090"
 _EJERCICIO = "2025"
 _NOTE = "Synthetic note: the bank paid no interest subject to withholding."
 _ABSENCE_CODE = "REFUSED_RETENCION_SOPORTADA_ABSENCE"

@@ -76,7 +76,7 @@ def test_native_work_history_matches_pinned_encrypted_oracle_including_discard(
     with native_cli_profile_scope(tmp_path) as fixture:
         fixture.register(
             label=_LABEL,
-            facts=native_general_iva_facts(surnames="History", description="consulting"),
+            facts=native_general_iva_facts(),
         )
         bucket_id = resolve_login_target(_LABEL).bucket_id
         revision_id, report_id = modelo_operation_test_support.seeded_modelo_verification_report(

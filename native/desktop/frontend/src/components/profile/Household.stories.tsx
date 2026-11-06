@@ -7,7 +7,7 @@ import {
   type HouseholdRefusal,
   type HouseholdScenario,
 } from "@/dev/householdFixture";
-import fixtures from "@/dev/fixtures/household.json";
+import fixtures from "@fixtures/desktop-household/household.json" with { type: "json" };
 import { translator } from "../../shell/strings";
 import { Household } from "./Household";
 
@@ -179,9 +179,20 @@ export const Masked: Story = {
     const shown = await groups(canvasElement);
     const hidden = canvasElement.querySelectorAll("[data-masked]");
     expect(hidden.length).toBeGreaterThan(0);
+    // The values the masked read holds behind the mask, which no hidden fact may show.
+    const concealed = (
+      fixtures.reads.masked.items.en as unknown as {
+        kind: string;
+        facts?: { value: string; masked: boolean }[];
+      }[]
+    )
+      .flatMap((item) => item.facts ?? [])
+      .filter((fact) => fact.masked)
+      .map((fact) => fact.value);
     for (const fact of hidden) {
       expect(fact.textContent).toContain("••••");
-      expect(fact.textContent).not.toMatch(/12345678Z|2012-01-01/);
+      for (const value of concealed)
+        expect(fact.textContent).not.toContain(value);
     }
     // A replacement would have to state the hidden values again, so the group
     // that holds them offers no edit; the group without them still does.

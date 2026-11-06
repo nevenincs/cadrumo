@@ -1,4 +1,4 @@
-"""Private row materialisation for invoice-shaped registry bindings."""
+"""Row materialisation for invoice-shaped registry bindings."""
 
 from __future__ import annotations
 
@@ -38,7 +38,14 @@ _M349_EXPORT_NIF_COUNTRY_BINDINGS: dict[BindingId, BindingId] = {
 def normalise_m349_nif_export_rows(
     rows: dict[tuple[BindingId, int], Decimal | str],
 ) -> dict[tuple[BindingId, int], Decimal | str]:
-    """Normalise the M349 export NIF values using the country value of the same row."""
+    """Return Modelo 349 export rows with each NIF reduced to the number its country slot expects.
+
+    Only the operator and rectification NIF bindings that have a paired country
+    binding in the same row are rewritten; every other cell is copied unchanged.
+
+    Raises:
+        RegistryValidationError: When a NIF cannot be expressed for its country.
+    """
     normalised = dict(rows)
     for (binding_id, row_index), value in rows.items():
         country_binding = _M349_EXPORT_NIF_COUNTRY_BINDINGS.get(binding_id)
@@ -57,7 +64,14 @@ def build_invoice_rows(
     *,
     m347_threshold_filter: Callable[[tuple[InvoiceObservation, ...]], tuple[InvoiceObservation, ...]],
 ) -> tuple[Mapping[str, Decimal | str], ...]:
-    """Build the invoice rows for a grouping, refusing a grouping that is not supported."""
+    """Group invoice observations into ordered export rows for one declared grouping.
+
+    ``m347_threshold_filter`` is applied only by the ``contraparte_clave``
+    grouping, which declares Modelo 347 third-party totals.
+
+    Raises:
+        RegistryValidationError: When ``grouping`` is not a supported grouping.
+    """
     if grouping == "operator_clave":
         return _build_operator_clave_rows(observations)
     if grouping == "operator_clave_period":
@@ -184,6 +198,7 @@ _ACCUMULATOR_CONFIG: ConfigDict = ConfigDict(
     extra="forbid",
     validate_default=True,
     validate_assignment=True,
+    defer_build=True,
 )
 
 

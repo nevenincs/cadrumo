@@ -36,11 +36,11 @@ from cadrumo.application.modelo.calculation_summary_pdf_ports import (
 from cadrumo.application.modelo.review_package import build_review_package
 from cadrumo.application.modelo.review_package_counter_sign import counter_sign_review_package
 from cadrumo.application.modelo.review_package_signing import ReviewPackageSigningKeypair, sign_review_package
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.output_rendering import jsonable_output_payload
 from cadrumo.core.period import Period
 from cadrumo.core.redaction.rules import CLI_BUCKET_ID_PLACEHOLDER, redact_structured_for_cli_output

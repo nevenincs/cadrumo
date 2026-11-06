@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.application.wizard import catalogue, persistence
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
 from cadrumo.core.period import Period
@@ -92,27 +93,19 @@ def seed_full_autonomo_profile_for_guidance(bucket_id: str) -> None:
         create_user_profile_record(
             profile_id=bucket_id,
             setup_state=ProfileSetupState.COMPLETE,
-            facts=(
-                UserProfileFact(path="identity.name", value="Guidance Test Autonomo"),
-                UserProfileFact(path="identity.surnames", value="Guidance Tester"),
-                UserProfileFact(path="identity.tax_id", value=_GUIDANCE_NIF),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(
-                    path="taxpayer_type.irpf_income_categories",
-                    value="actividad_economica",
-                ),
-                UserProfileFact(path="censo.activity_start_date", value="2024-01-01"),
-                UserProfileFact(path="activities.description", value="economic activity"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-                UserProfileFact(path="iva.regime", value="GENERAL"),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="provenance.source", value="manual_cli"),
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.name", value="Guidance Test Autonomo"),
+                    UserProfileFact(path="identity.surnames", value="Guidance Tester"),
+                    UserProfileFact(path="identity.tax_id", value=_GUIDANCE_NIF),
+                    UserProfileFact(
+                        path="taxpayer_type.irpf_income_categories",
+                        value="actividad_economica",
+                    ),
+                    UserProfileFact(path="censo.activity_start_date", value="2024-01-01"),
+                    UserProfileFact(path="activities.description", value="economic activity"),
+                    UserProfileFact(path="provenance.source", value="manual_cli"),
+                )
             ),
             created_at=created_at,
             updated_at=created_at,

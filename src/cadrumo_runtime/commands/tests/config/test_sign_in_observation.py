@@ -8,11 +8,11 @@ from uuid import uuid4
 import pytest
 import typer
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile import profile_pointer
 from cadrumo.core.bucket_pointer import BucketPointer
 from cadrumo.core.config import override_settings
 from cadrumo.core.json_contract import OutputSchema
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.output_rendering import OutputFormat
 from cadrumo_client.commands import custody, profile_selection
 from cadrumo_client.commands.custody_payloads import ConfigSignInStatusResult

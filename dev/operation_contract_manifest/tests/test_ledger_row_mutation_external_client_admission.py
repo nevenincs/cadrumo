@@ -40,10 +40,15 @@ from cadrumo.application.ledger.tests.manual_transaction_support import create_m
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.execution_actor import OperationExecutionCaller, OperationExecutionCallerReader
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_contracts import SessionKind
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operations import (
+    OperationEffect,
+    OperationFrontendProjection,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from cadrumo.core.time.clock import now
 from cadrumo.domain.buckets.event import BucketEvent
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation

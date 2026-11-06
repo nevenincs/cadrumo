@@ -433,7 +433,7 @@ def tr(translation_key: str, /, **kwargs: object) -> str:
         kwargs["locale"] = output_language()
     locale = normalise_supported_language(kwargs["locale"]) or "en"
     default = kwargs.pop("default", None)
-    looked_up = lookup_rendered_translation(locale, translation_key, default=default)
+    looked_up = resolve_translation(locale, translation_key, default=default)
     interpolation = {key: value for key, value in kwargs.items() if key not in {"locale", "default"}}
     if interpolation:
         interpolated, format_succeeded = _interpolate_with_status(translation_key, looked_up, interpolation)
@@ -581,7 +581,7 @@ def override_locales_root(root: Path) -> Generator[None]:
     """Resolve catalogues from ``root`` instead of the packaged resources.
 
     The renderer's miss semantics — an absent key and a key-echo value are
-    both misses (:func:`_lookup_translation`) — can only be exercised
+    both misses (:func:`resolve_translation`) — can only be exercised
     against a catalogue that carries the defect, and the shipped
     catalogues are gated echo-free. This override is the sanctioned seam
     for pointing resolution at a fixture catalogue, mirroring
@@ -661,7 +661,7 @@ def lookup_translation_entry(translation_key: str, /, *, locale: str) -> tuple[b
     return True, rendered
 
 
-def lookup_rendered_translation(locale: str, translation_key: str, *, default: object | None = None) -> str:
+def resolve_translation(locale: str, translation_key: str, *, default: object | None = None) -> str:
     from yaml import YAMLError
 
     rendered: str | None

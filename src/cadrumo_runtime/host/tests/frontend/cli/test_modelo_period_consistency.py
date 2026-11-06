@@ -26,6 +26,7 @@ from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_server
 
+from ...native_profile_facts import native_general_iva_facts
 from .profile_password_cli import invoke_with_profile_password
 
 
@@ -57,6 +58,7 @@ def _create_profile() -> None:
     register_cli_profile(
         label="operator",
         facts={
+            **native_general_iva_facts(),
             "identity.tax_id": "B12345674",
             "taxpayer_type.entity_type": "legal_entity",
             "taxpayer_type.legal_entity_form": "sl",
@@ -64,8 +66,6 @@ def _create_profile() -> None:
             "identity.surnames": "Operator SL",
             "identity.legal_name": "Operator SL",
             "activities.description": "design",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.regime": "GENERAL",
             "taxpayer_type.incn_prior_12_months": "7500000.00",
         },
         log_in=False,

@@ -10,6 +10,8 @@ from importlib.metadata import version
 from typing import BinaryIO, TextIO, cast
 from uuid import UUID
 
+from cadrumo.core.pydantic_plugins import disable_pydantic_plugins
+
 
 def _argument_parser() -> argparse.ArgumentParser:
     """Declare the profile, protected-reference and surface arguments of the MCP server."""
@@ -30,7 +32,7 @@ def _argument_parser() -> argparse.ArgumentParser:
 
 def main() -> None:
     """Serve the person's sign-in on the selected profile, or one profile's enrolled key."""
-    os.environ.setdefault("PYDANTIC_DISABLE_PLUGINS", "__all__")
+    disable_pydantic_plugins()
     if isinstance(sys.stderr, io.TextIOWrapper):
         # The generic form is for static analysis; TextIOWrapper is not subscriptable at runtime.
         cast("io.TextIOWrapper[BinaryIO]", sys.stderr).reconfigure(newline="\n")

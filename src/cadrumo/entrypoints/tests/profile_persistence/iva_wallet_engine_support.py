@@ -12,6 +12,7 @@ from pathlib import Path
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.application.modelo.iva_wallet_gate import resolve_iva_compensation_decision_for_calculation
 from cadrumo.application.user_profile.projections import profile_path_values_for_bucket
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test,
 )
@@ -261,24 +262,16 @@ def store_operator_profile_with_tax_id(tax_id: str) -> None:
         create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=BUCKET_ID,
-            facts=(
-                UserProfileFact(path="identity.tax_id", value=tax_id),
-                UserProfileFact(path="identity.name", value="Test"),
-                UserProfileFact(path="identity.surnames", value="Operator"),
-                UserProfileFact(path="censo.activity_start_date", value="2026-01-01"),
-                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="activities.description", value="economic activity"),
-                UserProfileFact(path="iva.regime", value=IVARegime("GENERAL")),
-                UserProfileFact(path="iva.m303_regime_composition", value="general"),
-                UserProfileFact(path="iva.redeme_enrolled", value=False),
-                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-                UserProfileFact(path="provenance.source", value=PROVENANCE_SOURCE_MANUAL_CLI),
-                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+            facts=persona_facts_beneath(
+                (
+                    UserProfileFact(path="identity.tax_id", value=tax_id),
+                    UserProfileFact(path="identity.name", value="Test"),
+                    UserProfileFact(path="identity.surnames", value="Operator"),
+                    UserProfileFact(path="censo.activity_start_date", value="2026-01-01"),
+                    UserProfileFact(path="activities.description", value="economic activity"),
+                    UserProfileFact(path="iva.regime", value=IVARegime("GENERAL")),
+                    UserProfileFact(path="provenance.source", value=PROVENANCE_SOURCE_MANUAL_CLI),
+                )
             ),
             created_at=DECIDED_AT,
             updated_at=DECIDED_AT,

@@ -38,7 +38,7 @@ PAGO_FRACCIONADO_RATE = Decimal("0.20")
 
 #: Synthetic CIFs whose control digit is hand-derived (digits zero but the last: 8 for 1, 6 for 2).
 EMPLOYER_A = "B00000018"
-EMPLOYER_B = "B00000026"
+EMPLOYER_B = "B00000299"
 FREELANCER = "B12345674"
 
 #: Casilla inputs naming the declarant as holder of the work and activity blocks, and the activity key.

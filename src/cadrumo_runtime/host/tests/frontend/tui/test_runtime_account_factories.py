@@ -9,8 +9,8 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.entrypoints.tui.account import (
     AccountDirectSessionActionV1,
     AccountFactoriesV1,

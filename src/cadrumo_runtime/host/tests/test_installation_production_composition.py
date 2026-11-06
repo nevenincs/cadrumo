@@ -20,9 +20,9 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.application.modelo.review_package import ReviewPackageIntegrityError
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.errors.hierarchy import InternalInvariantError
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.tests.audited_process import run_audited_process
 from cadrumo.tests.env_scope import derived_storage_settings
 from cadrumo_client.contracts.installation_requests import (

@@ -7,8 +7,8 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.session_retirement import SessionRetirementKind
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.profile_access import AccessRefusal, Request

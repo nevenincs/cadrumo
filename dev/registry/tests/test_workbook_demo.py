@@ -599,7 +599,7 @@ def test_184_member_amounts_are_saved_declarations_not_invented_formulas(case: D
     assert all(v["tipo3.clave-pais"] is None for v in values)
     assert all(v["tipo3.referencia-catastral"] is None for v in values)
     form = [cell.value for cell in plan.value_cells if cell.address.tab is TabName.FORM]
-    assert "Comunidad ficticia Ejemplo" in form and "E00000000" in form
+    assert "Comunidad ficticia Ejemplo" in form and "E00010256" in form
     assert "Miembro ficticio A" in form and "Miembro ficticio B" in form
     formats = {directive.address: directive.pattern for directive in plan.number_formats}
     amounts = [

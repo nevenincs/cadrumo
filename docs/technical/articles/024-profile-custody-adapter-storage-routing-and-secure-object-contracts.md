@@ -57,6 +57,6 @@ All 18 assigned files were read in full across pages 1–9.
 - secret_store/store.py (676 lines) (`src/cadrumo/adapters/persistence/storage/secret_store/store.py`)
 - secure_object_namespaces.py (1,151 lines) (`src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py`)
 - sql/__init__.py (3 lines) (`src/cadrumo/adapters/persistence/storage/sql/__init__.py`)
-- sql/_secure_object_integrity.py (247 lines) (`src/cadrumo/adapters/persistence/storage/sql/secure_object_integrity.py`)
-- sql/_secure_object_row_codec.py (484 lines) (`src/cadrumo/adapters/persistence/storage/sql/secure_object_row_codec.py`)
+- sql/secure_object_integrity.py (247 lines) (`src/cadrumo/adapters/persistence/storage/sql/secure_object_integrity.py`)
+- sql/secure_object_row_codec.py (484 lines) (`src/cadrumo/adapters/persistence/storage/sql/secure_object_row_codec.py`)
 <!-- /preserved:article -->

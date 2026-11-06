@@ -13,7 +13,7 @@ import pytest
 from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, OptionList, Static
 
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_projections import PublicAccessSession
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenialKind, AutomationDenialReceipt
 from cadrumo.application.user_profile.automation_operations import (
@@ -21,6 +21,7 @@ from cadrumo.application.user_profile.automation_operations import (
     build_automation_operation_registrations,
 )
 from cadrumo.core.i18n.render import tr
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo.core.period import Period
 from cadrumo.entrypoints.tui.account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
 from cadrumo.entrypoints.tui.installation.destination import InstallationScreen

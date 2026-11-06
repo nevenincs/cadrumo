@@ -172,9 +172,8 @@ def test_resultado_chain_hydrates_in_every_edition() -> None:
     assert not failures, "\n".join(failures)
 
 
-def test_informativa_boxes_120_and_122_are_bound_in_every_edition() -> None:
+def test_informativa_box_122_is_bound_in_every_edition() -> None:
     expected = {
-        "120": "modelo-303-casilla-120-no-sujetas-localizacion-base",
         "122": "modelo-303-casilla-122-inversion-sujeto-pasivo-base",
     }
     for revision in authored_revisions("303"):
@@ -265,3 +264,19 @@ def test_floor_exercise_carries_its_sales_to_the_printed_result() -> None:
     assert box("64") == Decimal("234.00")
     assert box("66") == Decimal("234.00")
     assert box("iva.resultado") == Decimal("234.00")
+
+
+def test_box_59_collects_goods_and_service_intracommunity_supplies_in_every_edition() -> None:
+    """LIVA art. 25 goods and art. 69.Uno.1 services supplied to an EU businessman share one box."""
+    for revision in authored_revisions("303"):
+        binding = next(
+            item
+            for item in revision.bindings
+            if str(item.id) == "modelo-303-casilla-59-entregas-intracomunitarias-base"
+        )
+        categories = {str(category) for category in binding.model_dump(mode="json")["provider"]["categories"]}
+
+        assert categories == {"intra_community_supply", "intra_community_service_supply"}, revision.id
+        assert str(_casilla(revision, "59").binding) == str(binding.id), revision.id
+        assert "[59]" in _design(revision), revision.id
+        assert _casilla(revision, "120").input_kind is not InputKind.BOUND, revision.id

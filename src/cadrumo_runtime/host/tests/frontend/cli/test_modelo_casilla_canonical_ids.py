@@ -25,6 +25,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     TestRuntimeProfile,
     isolated_cli_backend,
 )
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.tests.ordinary_m303_scenarios import joint_return_options
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
@@ -63,19 +64,14 @@ def _seed_profile(runtime_profile: TestRuntimeProfile) -> None:
         context=profile_authority_contexts()[0],
         profile_id=runtime_profile.bucket_id,
         setup_state=ProfileSetupState.COMPLETE,
-        facts=(
-            UserProfileFact(path="identity.name", value="Test Operator"),
-            UserProfileFact(path="identity.surnames", value="Test Operator"),
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            UserProfileFact(path="censo.activity_start_date", value="2025-01-01"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.name", value="Test Operator"),
+                UserProfileFact(path="identity.surnames", value="Test Operator"),
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="censo.activity_start_date", value="2025-01-01"),
+            )
         ),
     )
     seed_test_profile_record(record, root=runtime_profile.storage_root, label="Casilla canonical-id test profile")

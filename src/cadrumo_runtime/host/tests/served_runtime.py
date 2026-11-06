@@ -20,9 +20,9 @@ from cadrumo.application.operations.frontend_requests import (
     OperationObservationSuccessV1,
 )
 from cadrumo.application.operations.models import OperationId
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ByteChannel, ClientHello
 from cadrumo_client.contracts.deadline_budget import exchange_deadline

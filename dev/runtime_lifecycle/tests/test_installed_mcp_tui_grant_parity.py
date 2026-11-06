@@ -48,7 +48,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
     OperationSubmissionReceiptV1,
 )
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.user_profile.access_contracts import KEY_ROTATION_MAXIMUM_OVERLAP
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection, EnrollmentStage
@@ -57,6 +57,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.operations import (
     OperationEffect,
+    OperationFrontendProjection,
     OperationLifecycle,
     OperationTerminalCondition,
     profile_operation_subject,

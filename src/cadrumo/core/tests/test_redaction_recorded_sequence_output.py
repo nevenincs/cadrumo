@@ -41,6 +41,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("a
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 RECORDED_SEQUENCES = REPOSITORY_ROOT / "docs" / "_sequences"
+#: The committed synthetic inputs the recorded commands read. They are authored
+#: documents, not captured renderings, so they are not the population this gate
+#: measures: a Facturae namespace URI is input text, not operator output.
+SEQUENCE_INPUTS = RECORDED_SEQUENCES / "fixtures"
 
 _FUNNELS: tuple[tuple[str, Callable[[str], str]], ...] = (
     ("redact_for_cli_output", redact_for_cli_output),
@@ -64,10 +68,19 @@ _MINIMUM_EXPECTED_FILES = 100
 _MINIMUM_EXPECTED_REDACTIONS = 5
 
 
+def _recorded_files() -> tuple[Path, ...]:
+    """Every recorded output file, without the synthetic inputs the commands read."""
+    return tuple(
+        path
+        for path in scan_directory(RECORDED_SEQUENCES, recursive=True, select=DirectoryEntryKind.FILES)
+        if not path.is_relative_to(SEQUENCE_INPUTS)
+    )
+
+
 def _recorded_lines() -> Iterator[str]:
     """Yield each distinct line of recorded output, pre-filtered to candidates."""
     seen: set[str] = set()
-    for path in scan_directory(RECORDED_SEQUENCES, recursive=True, select=DirectoryEntryKind.FILES):
+    for path in _recorded_files():
         try:
             text = path.read_text(encoding="utf-8")
         except (UnicodeDecodeError, OSError):
@@ -88,7 +101,7 @@ def test_the_recorded_corpus_is_present_and_large_enough_to_measure() -> None:
     """
     assert RECORDED_SEQUENCES.is_dir(), f"recorded sequence corpus is missing at {RECORDED_SEQUENCES}"
 
-    files = len(scan_directory(RECORDED_SEQUENCES, recursive=True, select=DirectoryEntryKind.FILES))
+    files = len(_recorded_files())
 
     assert files >= _MINIMUM_EXPECTED_FILES, f"only {files} recorded files found; the corpus moved or shrank"
 

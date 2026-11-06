@@ -760,14 +760,14 @@ def test_native_admission_dll_is_embedded_once_in_the_verified_scope_aware_produ
     document["paths"]["packages"] = "packages"
     paths.write_text(json.dumps(document), encoding="utf-8")
     compiler_calls = []
-    run_wix = windows_msi_build.run
+    run_wix = windows_msi_build.run_wix
 
     def counted(wix: Path, arguments: list[str], directory: Path) -> str:
         if arguments[0] == "build":
             compiler_calls.append(tuple(arguments))
         return run_wix(wix, arguments, directory)
 
-    monkeypatch.setattr(windows_msi_build, "run", counted)
+    monkeypatch.setattr(windows_msi_build, "run_wix", counted)
     compile_products(build, identity, Path(wix), "cadrumo", adapter, runner)
     assert len(compiler_calls) == 1
     compile_products(build, identity, Path(wix), "cadrumo", adapter, runner)
@@ -978,14 +978,14 @@ def test_native_wix_compiles_one_scope_aware_product_without_warnings(
     document["paths"]["packages"] = "packages"
     paths.write_text(json.dumps(document), encoding="utf-8")
     compiler_calls = []
-    run_wix = windows_msi_build.run
+    run_wix = windows_msi_build.run_wix
 
     def counted(wix: Path, arguments: list[str], directory: Path) -> str:
         if arguments[0] == "build":
             compiler_calls.append(tuple(arguments))
         return run_wix(wix, arguments, directory)
 
-    monkeypatch.setattr(windows_msi_build, "run", counted)
+    monkeypatch.setattr(windows_msi_build, "run_wix", counted)
     compile_products(build, identity, Path(wix), "cadrumo" if desktop else None)
     assert len(compiler_calls) == 1
     artifact = build / "packages/msi/application.msi"

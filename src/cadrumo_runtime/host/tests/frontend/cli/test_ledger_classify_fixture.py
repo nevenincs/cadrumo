@@ -69,7 +69,7 @@ def test_classify_fixture_applies_through_bulk_classify(tmp_path: Path) -> None:
     with native_cli_profile_scope(tmp_path) as profile:
         profile.register(
             label="native-ledger-classify-fixture",
-            facts=native_general_iva_facts(surnames="Classify fixture", description="design"),
+            facts=native_general_iva_facts(),
         )
         imported = invoke_exact_profile(
             profile, ["app", "ledger", "import", "--file", str(_CORPUS / _ACCOUNT), "--provider", "csv"]

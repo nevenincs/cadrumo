@@ -315,8 +315,6 @@ def test_profile_binding_selectors_ignores_a_non_profile_typed_selector() -> Non
         {
             "casilla_id": "0003",
             "data_type": "boolean",
-            "true_value": "S",
-            "false_value": "N",
         },
     )
 

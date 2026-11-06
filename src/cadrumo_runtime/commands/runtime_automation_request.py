@@ -12,10 +12,10 @@ import typer
 from pydantic import Field, field_validator
 
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from cadrumo.core.operations import OperationFrontendProjection
 from cadrumo_client.commands.access_management_payloads import (
     ConfigProfileAutomationChangeResult,
     ConfigProfileAutomationCreateResult,

@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import type { ModeloWorkbenchFormProjectionV1 } from "../../src/shell/modeloContract";
 import { label } from "../support/strings";
+import { MODELO_FIXTURES } from "../support/windowFixtures";
 
 // One declaration's workspace over the scenario's modelo family, which
 // answers the forms the application read for a synthetic taxpayer: the
@@ -37,10 +38,13 @@ async function openDeclaration(target: Page, modelo: string, shape = "") {
 test("the header states the read model's result, deadline and next action", async ({
   page: target,
 }) => {
+  const served = JSON.parse(
+    readFileSync(new URL("modelo-130-1T-en.json", MODELO_FIXTURES), "utf8"),
+  ) as ModeloWorkbenchFormProjectionV1;
   await openDeclaration(target, "130");
   const header = workspace(target).locator("header").first();
   await expect(header).toContainText("Result: could not be calculated");
-  await expect(header).toContainText("Deadline passed on Apr 20, 2026");
+  await expect(header).toContainText(served.header.deadline!.text);
   // The quarter's earlier-filing answers are still to be given, so filling them in comes first.
   await expect(
     header.getByRole("button", {
@@ -174,10 +178,7 @@ test("what the calculation noted about a box is said beside it, at its level", a
 }) => {
   const read = JSON.parse(
     readFileSync(
-      new URL(
-        "../../src/dev/fixtures/modelo/modelo-130-1T-income-en.json",
-        import.meta.url,
-      ),
+      new URL("modelo-130-1T-income-en.json", MODELO_FIXTURES),
       "utf8",
     ),
   ) as ModeloWorkbenchFormProjectionV1;

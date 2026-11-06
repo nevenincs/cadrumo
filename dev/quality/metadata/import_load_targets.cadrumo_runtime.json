@@ -137,6 +137,7 @@
         "cadrumo_runtime.host.frontend.cli",
         "cadrumo_runtime.host.frontend.cli.app",
         "cadrumo_runtime.host.frontend.cli.bootstrap",
+        "cadrumo_runtime.host.frontend.cli.console_exit",
         "cadrumo_runtime.host.frontend.cli.profile_client",
         "cadrumo_runtime.host.frontend.cli.profile_services",
         "cadrumo_runtime.host.frontend.cli.tui_launcher",

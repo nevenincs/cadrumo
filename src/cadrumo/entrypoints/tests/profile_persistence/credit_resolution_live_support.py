@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
+from cadrumo.application.user_profile.tests.persona_profile_facts import persona_facts_beneath
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test,
 )
@@ -57,7 +58,6 @@ from ....domain.calculations.registry.tests.registry_observations import registr
 from ....domain.modelos.filing_kind_evidence import observed_filing_kind_for_local_revision
 from ....domain.modelos.filing_record import FilingDeclarationKind
 from ....domain.modelos.work_unit import WorkUnit
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from .file_flow_test_support import calculation_ports_for_test
@@ -105,27 +105,28 @@ def _seed_profile() -> None:
     record = create_user_profile_record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=BUCKET_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value=_TAX_ID),
-            UserProfileFact(path="identity.name", value="Test"),
-            UserProfileFact(path="identity.surnames", value="Operator"),
-            UserProfileFact(path="activities.description", value="economic activity"),
-            UserProfileFact(path="activities.iae_epigraph", value="844"),
-            *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-            UserProfileFact(
-                path="taxpayer_type.irpf_income_categories", value="trabajo,capital_mobiliario,actividad_economica"
-            ),
-            UserProfileFact(path="censo.activity_start_date", value=date(YEAR - 5, 1, 1)),
-            UserProfileFact(path="withholding.colegio_concertado", value=False),
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(YEAR - 45, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.sex", value="H"),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-            UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-            UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
-            UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+        facts=persona_facts_beneath(
+            (
+                UserProfileFact(path="identity.tax_id", value=_TAX_ID),
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="activities.description", value="economic activity"),
+                UserProfileFact(path="activities.iae_epigraph", value="844"),
+                UserProfileFact(
+                    path="taxpayer_type.irpf_income_categories", value="trabajo,capital_mobiliario,actividad_economica"
+                ),
+                UserProfileFact(path="censo.activity_start_date", value=date(YEAR - 5, 1, 1)),
+                UserProfileFact(path="withholding.colegio_concertado", value=False),
+                UserProfileFact(path="renta_taxpayer.birth_date", value=date(YEAR - 45, 3, 15)),
+                UserProfileFact(path="renta_taxpayer.sex", value="H"),
+                UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
+                UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
+                UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
+                UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
+                UserProfileFact(path="renta_filing.declaration_type", value="1"),
+                UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+                UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+            )
         ),
         created_at=_T0,
         updated_at=_T0,
@@ -135,7 +136,7 @@ def _seed_profile() -> None:
 
 
 def _seed_payers(operation: PinnedAuthorityOperation) -> None:
-    for payer, retencion, ingreso_a_cuenta in (("B00000000", "1200.00", "300.00"), ("A00000000", "450.00", "0.00")):
+    for payer, retencion, ingreso_a_cuenta in (("B00010082", "1200.00", "300.00"), ("A00010009", "450.00", "0.00")):
         seed_payer_certificate(
             operation=operation,
             taxpayer_tax_id=_TAX_ID,
@@ -149,7 +150,7 @@ def _seed_payers(operation: PinnedAuthorityOperation) -> None:
         operation=operation,
         taxpayer_tax_id=_TAX_ID,
         ejercicio=YEAR,
-        payer_tax_id="C00000000",
+        payer_tax_id="C00010231",
         income_class=RetencionSoportadaClase.CAPITAL_MOBILIARIO,
         retencion=EXPECTED_CAPITAL_CREDIT,
     )

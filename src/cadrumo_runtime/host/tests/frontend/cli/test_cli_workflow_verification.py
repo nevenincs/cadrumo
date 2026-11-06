@@ -26,6 +26,7 @@ from cadrumo.tests.cli_fixture_ports import CliInvocation
 
 from .....commands.tests.config.runtime_cli import invoke_runtime_cli
 from ...native_commands.runtime_profile_cli_fixture import native_cli_profile_scope
+from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import (
     bind_public_cli_runner,
     cadrumo_click_command,
@@ -219,18 +220,11 @@ def _drive_workflow_round_trip(backend: Path) -> _WorkflowRoundTripOutcome:
     register_cli_profile(
         label="operator",
         facts={
+            **native_general_iva_facts(),
             "identity.tax_id": "12345678Z",
-            "taxpayer_type.entity_type": "natural_person",
             "identity.name": "Operator",
             "identity.surnames": "Workflow",
             "activities.description": "design",
-            "iva.regime": "GENERAL",
-            "tax_residence.jurisdiction_scope": "common_regime",
-            "iva.m303_regime_composition": "general",
-            "iva.redeme_enrolled": "false",
-            "iva.cash_accounting_regime_enrolled": "false",
-            "iva.voluntary_sii_enrolled": "false",
-            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
     status = _invoke(["--format", "json", "config", "profile", "status"])
