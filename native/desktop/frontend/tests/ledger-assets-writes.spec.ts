@@ -20,6 +20,7 @@ import {
   SCENARIO_CREATIONS,
   SCENARIO_ELEMENTS,
 } from "../src/dev/assetsRegister";
+import { dayBefore } from "../src/dev/assetsFixtureBase";
 import { servedHandoffOf, servedSupport } from "../src/dev/servedYearAuthority";
 
 import {
@@ -622,11 +623,15 @@ test("the figures of a baja are the backend's: a stated baja previews and writes
 
 test("a forecast works out a span and records nothing; a claim is recorded once and refused where it overlaps", async () => {
   const port = portOf();
+  // The span the register left open on the furgoneta's own year.
+  const furgoneta = SCENARIO_ELEMENTS.find((seed) => seed.id === "furgoneta")!;
+  const open = furgoneta.rows.find((row) => row.tax_year === scenarioYear)!
+    .claimable_intervals[0]!;
   const ask = (extra: object) =>
     port.submit(FORECAST, {
       asset_id: "furgoneta",
-      covered_from: "2026-07-01",
-      covered_until: "2027-01-01",
+      covered_from: open.covered_from,
+      covered_until: open.covered_until,
       requested_free_amount: null,
       supersedes_claim_id: null,
       ...extra,
@@ -643,12 +648,12 @@ test("a forecast works out a span and records nothing; a claim is recorded once 
   const before = await planOf(port, "furgoneta");
   const forecast = (await ask({})).result!.forecast;
   // The rest of the year, as the register forecast it.
-  expect(forecast.amount.decimal).toBe(
-    SCENARIO_ELEMENTS.find((seed) => seed.id === "furgoneta")!.forecasts[
-      "2026-07-01/2027-01-01"
-    ],
+  const span = `${open.covered_from}/${open.covered_until}`;
+  expect(forecast.amount.decimal).toBe(furgoneta.forecasts[span]);
+  expect(forecast.service_days).toBe(
+    (furgoneta.charges[span] as unknown as { service_days: number })
+      .service_days,
   );
-  expect(forecast.service_days).toBe(184);
   expect(await planOf(port, "furgoneta")).toEqual(before);
   const claim = () =>
     port.submit(CLAIM, {
@@ -701,11 +706,17 @@ test("a forecast works out a span and records nothing; a claim is recorded once 
 
 test("a free method asks for its amount, and a claim replaces the one it corrects", async () => {
   const port = portOf();
+  // The span the register left open on the element whose method leaves the
+  // amount to the person.
+  const free = SCENARIO_ELEMENTS.find(
+    (seed) => seed.id === "impresora",
+  )!.rows.find((row) => row.absence === "free_election")!
+    .claimable_intervals[0]!;
   const ask = (extra: object) =>
     port.submit(FORECAST, {
       asset_id: "impresora",
-      covered_from: "2026-09-01",
-      covered_until: "2027-01-01",
+      covered_from: free.covered_from,
+      covered_until: free.covered_until,
       requested_free_amount: null,
       supersedes_claim_id: null,
       ...extra,
@@ -752,10 +763,15 @@ test("an element made through create is forecast and claimed like a seeded one",
     CREATE,
     (await newRequest(port, NEW_ELEMENT, "made-1"))! as never,
   );
+  // The span the register left open on the element it answered for this very
+  // request, asked for by its last day covered.
+  const open = SCENARIO_CREATIONS.find(
+    (creation) => creation.id === "linear_new",
+  )!.rows[0]!.claimable_intervals[0]!;
   const forecast = (await port.submit(FORECAST, {
     asset_id: "made-1",
-    covered_from: "2026-06-15",
-    covered_through: "2026-12-31",
+    covered_from: open.covered_from,
+    covered_through: dayBefore(open.covered_until),
     requested_free_amount: null,
     supersedes_claim_id: null,
   })) as { result?: { forecast: never } };

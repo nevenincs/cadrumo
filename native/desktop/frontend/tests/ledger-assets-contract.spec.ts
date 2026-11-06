@@ -224,8 +224,9 @@ test("a plan past the maximum period states it, with the date it ended", async (
       FORECAST as never,
       {
         asset_id: "cristaleria",
-        covered_from: "2026-01-01",
-        covered_until: "2027-01-01",
+        // The whole year after the one the period ended in.
+        covered_from: `${elapsed.tax_year}-01-01`,
+        covered_until: `${elapsed.tax_year + 1}-01-01`,
         requested_free_amount: null,
         supersedes_claim_id: null,
       } as never,
@@ -245,10 +246,13 @@ test("the plan states the limits of the election, or why it has none", async () 
   const table = await settled<LedgerResult<typeof PLAN>>(
     port.submit(PLAN, { asset_id: "furgoneta" }),
   );
+  const held = SCENARIO_ELEMENTS.find(
+    (seed) => seed.id === "furgoneta",
+  )!.limits;
   expect(table.limits).toMatchObject({
-    class_key: "transporte-externo",
+    class_key: held.class_key,
     not_table_bound: null,
-    maximum_period_ends_on: "2037-04-01",
+    maximum_period_ends_on: held.maximum_period_ends_on,
   });
   const free = await settled<LedgerResult<typeof PLAN>>(
     port.submit(PLAN, { asset_id: "taladro" }),

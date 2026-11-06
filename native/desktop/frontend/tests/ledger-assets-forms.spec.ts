@@ -93,7 +93,6 @@ import {
   SHIFT_HOURS,
   VEHICLE_ELEMENT,
   WHOLE_PROPERTY,
-  secondActivity,
 } from "./support/assetContract";
 
 // The Assets tab's forms: typed text, the requests they make, how a write
@@ -765,16 +764,16 @@ test("an element bought outside the ledger names its document, its date and its 
   const request = (await newRequest(port, outside, "made-6"))!;
   expect(request).not.toBeNull();
   expect(request.revision).toMatchObject({
-    acquisition_shape: "acquired_outside_ledger",
+    acquisition_shape: outside.acquisition_shape,
     acquisition: {
       observed_transaction_id: null,
       observed_lineage_event_id: null,
-      invoice_evidence_id: "Factura 2024-118",
+      invoice_evidence_id: outside.acquisition_reference,
       evidence_fingerprint: null,
     },
     further_acquisitions: [],
-    declared_acquisition_date: "2024-11-05",
-    declared_activity: secondActivity,
+    declared_acquisition_date: outside.declared_acquisition_date,
+    declared_activity: outside.declared_activity,
   });
   // The document it holds is stated; without it nothing is made.
   expect(
