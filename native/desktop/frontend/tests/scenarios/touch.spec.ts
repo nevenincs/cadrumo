@@ -320,34 +320,79 @@ test("a header that shares its row with other tabs still shows the active title 
   await group.getByRole("tab", { name: whole, exact: true }).tap();
   const pane = await group.getAttribute("data-dock-header");
   await expectWholeTitle(target, pane!, whole);
+  // The other tab gives way but stays in the row, named and not selected.
+  const other = group.getByRole("tab", {
+    name: label("desktop.pane.tui", {}, "es"),
+    exact: true,
+  });
+  await expect(other).toBeVisible();
+  await expect(other).toHaveAttribute("aria-selected", "false");
 });
 
 test("a header measures a new title afresh instead of keeping the last title's room", async ({
   page: target,
 }) => {
-  const expand = (target: Page) =>
-    target
-      .locator('[data-dock-header="docs"]')
-      .getByRole("button", { name: label("desktop.dock.expand", {}, "es") });
-  const visit = async (keys: string[]) => {
-    await seedLayout(target);
-    await target.goto(
-      "/scenarios.html?scenario=signed-in&latency=0&bar=off&lang=es",
-    );
-    await showTui(target, { touch: true, lang: "es" });
-    for (const key of keys) {
-      await destination(target, key);
-      await expectWholeTitle(target, "docs", label(key, {}, "es"));
-    }
-    return expand(target).isVisible();
+  const expand = target
+    .locator('[data-dock-header="docs"]')
+    .getByRole("button", { name: label("desktop.dock.expand", {}, "es") });
+  const visit = async (key: string) => {
+    await destination(target, key);
+    await expectWholeTitle(target, "docs", label(key, {}, "es"));
   };
-  // The profile's header straight after launch, and after the calendar's
-  // longer title made the header give up its controls, are the same header.
-  const fresh = await visit(["desktop.profile.title"]);
-  await target.evaluate(() => sessionStorage.clear());
-  expect(await visit(["desktop.calendar.title", "desktop.profile.title"])).toBe(
-    fresh,
+  await seedLayout(target);
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&lang=es",
   );
+  await showTui(target, { touch: true, lang: "es" });
+  // The profile's title leaves room for the header's own controls.
+  await visit("desktop.profile.title");
+  await expect(expand).toBeVisible();
+  // The calendar's longer one does not: the header gives them up.
+  await visit("desktop.calendar.title");
+  await expect(expand).toBeHidden();
+  // Back on the profile, the header measures that title again and has room.
+  await visit("desktop.profile.title");
+  await expect(expand).toBeVisible();
+});
+
+test("a header next gives up its page's actions, and takes them back when there is room", async ({
+  page: target,
+}) => {
+  await seedLayout(target);
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&lang=es",
+  );
+  await target
+    .getByRole("navigation", { name: label("desktop.rail.label", {}, "es") })
+    .getByRole("button", {
+      name: label("desktop.rail.docs", {}, "es"),
+      exact: true,
+    })
+    .tap();
+  const header = target.locator('[data-dock-header="docs"]');
+  const button = (key: string) =>
+    header.getByRole("button", { name: label(key, {}, "es"), exact: true });
+  const back = button("desktop.action.docs_back");
+  const whole = label("desktop.pane.docs", {}, "es");
+  await expect(back).toBeVisible();
+  await expectWholeTitle(target, "docs", whole);
+  // Narrow the window until the page's actions have to give way.
+  let width = 390;
+  while ((await back.isVisible()) && width > 240) {
+    width -= 10;
+    await target.setViewportSize({ width, height: 844 });
+    await expectWholeTitle(target, "docs", whole);
+  }
+  await expect(back).toBeHidden();
+  await expect(button("desktop.action.docs_forward")).toBeHidden();
+  // Expand and close went first; the arrangement menu still holds them.
+  await expect(button("desktop.dock.expand")).toBeHidden();
+  await expect(button("desktop.dock.arrange")).toBeVisible();
+  await expectWholeTitle(target, "docs", whole);
+  await target.setViewportSize({ width: 390, height: 844 });
+  await expect(back).toBeVisible();
+  await expect(button("desktop.action.docs_forward")).toBeVisible();
+  await expectWholeTitle(target, "docs", whole);
 });
 
 test("the shell stacks its panes and never scrolls sideways", async ({
