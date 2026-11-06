@@ -129,7 +129,11 @@ def test_an_exclusion_naming_an_undeclared_payer_fact_is_refused() -> None:
         hydrate_applicability_rule(Modelo("347"), fragment)
 
 
-@pytest.mark.parametrize("payer_fact", ("pays_capital_income_with_retencion", "oss_enrolled"))
+_TWO_STATE_FACTS = ("oss_enrolled", "iva_group_member", "iva_group_dominant_entity")
+"""Facts a coded evaluator can only prove a yes for; every catalogue projection is three-state."""
+
+
+@pytest.mark.parametrize("payer_fact", _TWO_STATE_FACTS)
 def test_an_exclusion_reading_a_declared_no_of_a_two_state_fact_is_refused(payer_fact: str) -> None:
     fragment = _fragment(_exclusion(payer_fact=payer_fact, payer_fact_declared=False))
 
@@ -137,7 +141,16 @@ def test_an_exclusion_reading_a_declared_no_of_a_two_state_fact_is_refused(payer
         hydrate_applicability_rule(Modelo("347"), fragment)
 
 
-@pytest.mark.parametrize("payer_fact", ("pays_capital_income_with_retencion", "oss_enrolled"))
+def test_an_exclusion_reading_the_declared_no_of_the_capital_income_fact_is_accepted() -> None:
+    """Its profile field became ``bool | None``, so the taxpayer's own no is now readable."""
+    fragment = _fragment(_exclusion(payer_fact="pays_capital_income_with_retencion", payer_fact_declared=False))
+
+    rule = hydrate_applicability_rule(Modelo("347"), fragment)
+
+    assert [exclusion.id for exclusion in rule.exclusions] == ["m999-excluded"]
+
+
+@pytest.mark.parametrize("payer_fact", (*_TWO_STATE_FACTS, "pays_capital_income_with_retencion"))
 def test_an_exclusion_reading_a_declared_yes_of_a_two_state_fact_is_accepted(payer_fact: str) -> None:
     fragment = _fragment(_exclusion(payer_fact=payer_fact))
 

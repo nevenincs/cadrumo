@@ -521,7 +521,10 @@ class TaxpayerProfile(BaseModel):
         pays_rent_with_retencion: Whether the taxpayer pays alquiler de
             local with retención.
         pays_capital_income_with_retencion: Whether the taxpayer pays
-            capital-income rents subject to withholding.
+            capital-income rents subject to withholding. ``None`` when
+            unanswered, which keeps Modelos 117, 123, 126, 128, 187, 188,
+            193 and 194 incomplete; a stored ``False`` is the taxpayer's
+            own no and rules those modelos out.
         member_of_large_multinational_group: Whether the entity is the
             reporting parent of a multinational group above the
             country-by-country reporting threshold (Modelo 231).
@@ -597,7 +600,7 @@ class TaxpayerProfile(BaseModel):
     pays_professionals_with_retencion: bool | None = None
     art109_activity_income_withholding_ge_70pct: bool | None = None
     pays_rent_with_retencion: bool | None = None
-    pays_capital_income_with_retencion: bool = False
+    pays_capital_income_with_retencion: bool | None = None
     objective_estimation_prior_year_gross_income_eur: Decimal | None = None
     objective_estimation_prior_year_invoice_gross_income_eur: Decimal | None = None
     objective_estimation_prior_year_agri_livestock_forest_gross_eur: Decimal | None = None

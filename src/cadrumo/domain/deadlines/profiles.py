@@ -183,7 +183,7 @@ class _ProfileWithholdingFields(TypedDict):
     pays_professionals_with_retencion: bool | None
     art109_activity_income_withholding_ge_70pct: bool | None
     pays_rent_with_retencion: bool | None
-    pays_capital_income_with_retencion: bool
+    pays_capital_income_with_retencion: bool | None
 
 
 class _ProfileObligationFields(TypedDict):
@@ -318,7 +318,7 @@ def _resolve_profile_withholding_fields(typed: SetupAnswers) -> _ProfileWithhold
             typed.art109_activity_income_withholding_ge_70pct,
         ),
         "pays_rent_with_retencion": _declared_bool(typed.pays_rent_with_retencion),
-        "pays_capital_income_with_retencion": typed.pays_capital_income_with_retencion,
+        "pays_capital_income_with_retencion": _declared_bool(typed.pays_capital_income_with_retencion),
     }
 
 

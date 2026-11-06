@@ -42,7 +42,9 @@ _FACT = "iva.does_intracomunitario"
 _FLAG = "does-intracomunitario"
 _ART109_FACT = "irpf.art109_activity_income_withholding_ge_70pct"
 _ART109_FLAG = "art109-activity-income-withholding-ge-70pct"
-_CLEARED = ((_FACT, _FLAG), (_ART109_FACT, _ART109_FLAG))
+_CAPITAL_FACT = "withholding.pays_capital_income_with_retencion"
+_CAPITAL_FLAG = "pays-capital-income-with-retencion"
+_CLEARED = ((_FACT, _FLAG), (_ART109_FACT, _ART109_FLAG), (_CAPITAL_FACT, _CAPITAL_FLAG))
 
 
 @pytest.fixture
@@ -95,6 +97,9 @@ def test_each_cleared_fact_is_scoped_to_the_modelos_its_own_gate_reads(
     intracommunity = payer_fact_gated_modelos(_FACT, operation=leased_operation)
     assert "349" in intracommunity
     assert "130" not in intracommunity
+    assert payer_fact_gated_modelos(_CAPITAL_FACT, operation=leased_operation) == frozenset(
+        {"117", "123", "126", "128", "187", "188", "193", "194"},
+    )
 
 
 @pytest.mark.parametrize("flag", [flag for _path, flag in _CLEARED])

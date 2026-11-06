@@ -255,7 +255,8 @@ class SetupAnswers(BaseModel):
     """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
     pays_rent_with_retencion: OptionalWizardBool = ""
     """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
-    pays_capital_income_with_retencion: bool = False
+    pays_capital_income_with_retencion: OptionalWizardBool = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
     modelo_111_no_retenciones_periods: str = ""
     modelo_115_no_relevant_payment_periods: str = ""
     irpf_estimation_regime: OptionalIrpfEstimationRegime = ""
@@ -349,6 +350,7 @@ class SetupAnswers(BaseModel):
         "has_employees",
         "pays_professionals_with_retencion",
         "pays_rent_with_retencion",
+        "pays_capital_income_with_retencion",
         "art109_activity_income_withholding_ge_70pct",
         "does_intracomunitario",
         "third_party_transactions_above_347_threshold",

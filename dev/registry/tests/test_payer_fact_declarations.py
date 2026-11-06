@@ -170,15 +170,33 @@ def test_modelo_136_undeclared_is_incomplete_across_its_revisions() -> None:
 
 
 @pytest.mark.usefixtures("governed_fact_scope")
-def test_a_plain_boolean_payer_fact_keeps_its_two_state_reading() -> None:
+@pytest.mark.parametrize(
+    ("answer", "declaration", "verdict"),
+    (
+        (None, PayerFactDeclaration.UNDECLARED, ApplicabilityVerdict.INCOMPLETE),
+        (False, PayerFactDeclaration.DECLARED_NO, ApplicabilityVerdict.NOT_APPLICABLE),
+        (True, PayerFactDeclaration.DECLARED_YES, ApplicabilityVerdict.APPLICABLE),
+    ),
+)
+def test_the_capital_income_fact_reads_three_states_from_its_optional_profile_field(
+    answer: bool | None,
+    declaration: PayerFactDeclaration,
+    verdict: ApplicabilityVerdict,
+) -> None:
+    """The registry declares no ``three_state`` key; it derives the reading from ``bool | None``.
+
+    While the profile field was a plain ``bool`` defaulting to ``False`` this
+    fact was two-state, so the taxpayer's own no could not be told apart from
+    an unanswered question and Modelo 193 stayed INCOMPLETE either way.
+    """
     fact = resolve_payer_fact("pays_capital_income_with_retencion", effective_date=_TODAY)
     assert isinstance(fact, PayerFactProjection)
-    assert fact.three_state is False
+    assert fact.three_state is True
 
-    unanswered = _natural_person(pays_capital_income_with_retencion=False)
+    profile = _natural_person(pays_capital_income_with_retencion=answer)
 
-    assert payer_fact_declaration(unanswered, fact) is PayerFactDeclaration.UNDECLARED
-    assert derive_modelo_applicability(unanswered, "193", today=_TODAY).verdict is ApplicabilityVerdict.INCOMPLETE
+    assert payer_fact_declaration(profile, fact) is declaration
+    assert derive_modelo_applicability(profile, "193", today=_TODAY).verdict is verdict
 
 
 @pytest.mark.usefixtures("governed_fact_scope")

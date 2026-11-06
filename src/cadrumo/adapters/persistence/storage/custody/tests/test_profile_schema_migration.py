@@ -70,20 +70,21 @@ _PAYS_PROFESSIONALS = "withholding.pays_professionals_with_retencion"
 _PAYS_RENT = "withholding.pays_rent_with_retencion"
 _HAS_EMPLOYEES = "withholding.has_employees"
 _ART109 = "irpf.art109_activity_income_withholding_ge_70pct"
+_PAYS_CAPITAL = "withholding.pays_capital_income_with_retencion"
+_CAPITAL_GATED_MODELOS = ("117", "123", "126", "128", "187", "188", "193", "194")
 _MIGRATED_AT = datetime(2026, 9, 1, 10, 0, 0, tzinfo=UTC)
 
-_CLEARED_FROM_V7 = (_ART109, _INTRACOMUNITARIO, _PAYS_PROFESSIONALS, _PAYS_RENT)
-_CLEARED_FROM_V6 = (_ART109, _INTRACOMUNITARIO, _M347, _PAYS_PROFESSIONALS, _PAYS_RENT)
+_CLEARED_FROM_V7 = (_ART109, _INTRACOMUNITARIO, _PAYS_CAPITAL, _PAYS_PROFESSIONALS, _PAYS_RENT)
+_CLEARED_FROM_V6 = (_ART109, _INTRACOMUNITARIO, _M347, _PAYS_CAPITAL, _PAYS_PROFESSIONALS, _PAYS_RENT)
 _EXPECTED_CLEARED = {6: _CLEARED_FROM_V6, 7: _CLEARED_FROM_V7}
 
 _UNTOUCHED_FACTS = (
     UserProfileFact(path="identity.tax_id", value="X0001500M"),
     UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
     UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="withholding.pays_capital_income_with_retencion", value=False),
     UserProfileFact(path="censo.large_company", value=False),
 )
-"""Facts no transition touches: a two-state payer fact and a cadence predicate."""
+"""Facts no transition touches: the identity axes and a filing-cadence predicate."""
 
 _STORED_PAYER_FACTS = (
     UserProfileFact(path=_HAS_EMPLOYEES, value=True),
@@ -91,6 +92,7 @@ _STORED_PAYER_FACTS = (
     UserProfileFact(path=_M720, value=True),
     UserProfileFact(path=_INTRACOMUNITARIO, value=False),
     UserProfileFact(path=_ART109, value=False),
+    UserProfileFact(path=_PAYS_CAPITAL, value=False),
     UserProfileFact(path=_PAYS_PROFESSIONALS, value=False),
     UserProfileFact(path=_PAYS_RENT, value=False, valid_from=date(2024, 1, 1), valid_to=date(2024, 12, 31)),
     UserProfileFact(path=_PAYS_RENT, value=False, valid_from=date(2025, 1, 1)),
@@ -418,6 +420,79 @@ def test_a_stored_art109_yes_survives_every_transition(
         UserProfileFact(path=_ART109, value=True),
     ]
     assert verdict.verdict is ApplicabilityVerdict.NOT_APPLICABLE
+
+
+def test_the_cleared_capital_income_fact_reopens_its_eight_modelos_until_it_is_answered(
+    legacy_capsule: tuple[ProfileRecordSession, UserProfileRecord, Path, int],
+    contexts: tuple[ProfileCreateContext, ProfileDecodeContext],
+) -> None:
+    """Both stored versions defaulted the capital-income question, so neither stored ``false`` is an answer."""
+    session, _stored, root, version = legacy_capsule
+    repository = ProfileRecordRepository(session=session, root=root)
+    migrated = repository.load(PROFILE_ID)
+    schema = contexts[1].schema
+
+    assert _PAYS_CAPITAL in _EXPECTED_CLEARED[version]
+    assert not [fact for fact in migrated.facts if fact.path == _PAYS_CAPITAL]
+    assert _PAYS_CAPITAL in repository.pending_cleared_payer_fact_paths(PROFILE_ID)
+    with bundled_indexed_authority().operation():
+        undeclared = tuple(
+            derive_modelo_applicability(projection_for_taxpayer(migrated, schema=schema), modelo).verdict
+            for modelo in _CAPITAL_GATED_MODELOS
+        )
+    assert undeclared == (ApplicabilityVerdict.INCOMPLETE,) * len(_CAPITAL_GATED_MODELOS)
+
+    answered = repository.apply_fact_changes(
+        PROFILE_ID,
+        facts=(*migrated.facts, UserProfileFact(path=_PAYS_CAPITAL, value=False)),
+        expected_revision=migrated.record_revision,
+        expected_content_digest=migrated.content_digest,
+        event_type=BucketEventType.PROFILE_VALUES_UPDATED,
+        event_payload={},
+        now=_MIGRATED_AT,
+    )
+
+    assert _PAYS_CAPITAL not in repository.pending_cleared_payer_fact_paths(PROFILE_ID)
+    with bundled_indexed_authority().operation():
+        declared_no = tuple(
+            derive_modelo_applicability(projection_for_taxpayer(answered, schema=schema), modelo).verdict
+            for modelo in _CAPITAL_GATED_MODELOS
+        )
+    assert declared_no == (ApplicabilityVerdict.NOT_APPLICABLE,) * len(_CAPITAL_GATED_MODELOS)
+
+
+@pytest.mark.parametrize("version", SUPPORTED_LEGACY_PROFILE_SCHEMA_VERSIONS)
+def test_a_stored_capital_income_yes_survives_every_transition(
+    version: int,
+    tmp_path: Path,
+    contexts: tuple[ProfileCreateContext, ProfileDecodeContext],
+) -> None:
+    """Only the negative is unprovable; a stored yes is the taxpayer's own statement that he pays."""
+    _publish_legacy(
+        tmp_path,
+        contexts,
+        (*_UNTOUCHED_FACTS, UserProfileFact(path=_PAYS_CAPITAL, value=True)),
+        version=version,
+    )
+    session = _session(contexts[1])
+    try:
+        migrated = ProfileRecordRepository(session=session, root=tmp_path).load(PROFILE_ID)
+        with bundled_indexed_authority().operation():
+            verdicts = tuple(
+                derive_modelo_applicability(
+                    projection_for_taxpayer(migrated, schema=contexts[1].schema),
+                    modelo,
+                ).verdict
+                for modelo in _CAPITAL_GATED_MODELOS
+            )
+    finally:
+        session.close()
+        drain_migration_cleared_paths()
+
+    assert [fact for fact in migrated.facts if fact.path == _PAYS_CAPITAL] == [
+        UserProfileFact(path=_PAYS_CAPITAL, value=True),
+    ]
+    assert verdicts == (ApplicabilityVerdict.APPLICABLE,) * len(_CAPITAL_GATED_MODELOS)
 
 
 def test_a_restored_legacy_capsule_is_accepted_and_migrates_on_first_open(
