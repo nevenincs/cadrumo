@@ -30,7 +30,7 @@ from .renta_income_aggregation_support import (
     m130_employment_category_matcher,
     renta_income_aggregation_period,
 )
-from .test_renta_gasto_linked_invoice import _BUCKET, _YEAR, _criteria
+from .test_renta_gasto_linked_invoice import BUCKET, YEAR, criteria
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -50,13 +50,13 @@ def _first_quarter_income(*rows: Transaction) -> tuple[Decimal, list[str]]:
     result = aggregate_renta_income_ledger(
         TransactionCatalogue.from_transactions(rows),
         build_invoice_catalogue(()),
-        bucket_id=_BUCKET,
-        period=renta_income_aggregation_period(_YEAR, "1T"),
+        bucket_id=BUCKET,
+        period=renta_income_aggregation_period(YEAR, "1T"),
         modelo="130",
         target_casilla_id=validated_casilla_id("01", surface="the Modelo 130 income box"),
         activity_category_matcher=m130_activity_category_matcher,
         employment_category_matcher=m130_employment_category_matcher,
-        criteria=_criteria(),
+        criteria=criteria(),
     )
     return (
         sum((o.taxable_base_amount or o.gross_amount for o in result.observations), Decimal("0.00")),
@@ -66,17 +66,17 @@ def _first_quarter_income(*rows: Transaction) -> tuple[Decimal, list[str]]:
 
 def test_monthly_till_settlements_are_income_of_their_months() -> None:
     rows = (
-        _settlement("tpv-1", date(_YEAR, 1, 28), "4850.00"),
-        _settlement("tpv-2", date(_YEAR, 2, 27), "4120.00"),
-        _settlement("tpv-3", date(_YEAR, 3, 28), "5330.00"),
-        _settlement("tpv-4", date(_YEAR, 4, 28), "4680.00"),
+        _settlement("tpv-1", date(YEAR, 1, 28), "4850.00"),
+        _settlement("tpv-2", date(YEAR, 2, 27), "4120.00"),
+        _settlement("tpv-3", date(YEAR, 3, 28), "5330.00"),
+        _settlement("tpv-4", date(YEAR, 4, 28), "4680.00"),
     )
 
     assert _first_quarter_income(*rows) == (Decimal("14300.00"), [])
 
 
 def test_an_activity_receipt_with_no_invoice_and_no_till_category_stays_unplaced() -> None:
-    amount, issues = _first_quarter_income(_settlement("cobro", date(_YEAR, 2, 10), "1000.00", till=False))
+    amount, issues = _first_quarter_income(_settlement("cobro", date(YEAR, 2, 10), "1000.00", till=False))
 
     assert amount == Decimal("0.00")
     assert issues == ["imputation_unresolved"]

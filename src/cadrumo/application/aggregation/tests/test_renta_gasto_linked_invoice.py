@@ -42,13 +42,13 @@ from .renta_ledger_support import ledger_expense_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_BUCKET = "7a5e1c20-3f4b-4d6a-8b71-0c9d2e3f4a51"
-_YEAR = newest_authored_edition("100")
+BUCKET = "7a5e1c20-3f4b-4d6a-8b71-0c9d2e3f4a51"
+YEAR = newest_authored_edition("100")
 _CATEGORY = SpendingCategory.from_registry("asesoria_fiscal")
 _AMOUNT = Decimal("200.00")
 
 
-def _criteria() -> ImputationCriteria:
+def criteria() -> ImputationCriteria:
     facts = [
         UserProfileFact(
             path="irpf.activity_income_imputation_criterion",
@@ -56,7 +56,7 @@ def _criteria() -> ImputationCriteria:
             valid_from=date(year, 1, 1),
             valid_to=date(year, 12, 31),
         )
-        for year in (_YEAR, _YEAR + 1)
+        for year in (YEAR, YEAR + 1)
     ]
     facts.extend(
         UserProfileFact(
@@ -65,7 +65,7 @@ def _criteria() -> ImputationCriteria:
             valid_from=date(year, 1, 1),
             valid_to=date(year, 12, 31),
         )
-        for year in (_YEAR, _YEAR + 1)
+        for year in (YEAR, YEAR + 1)
     )
     facts.append(UserProfileFact(path="irpf.estimation_regime", value="directa_simplificada"))
     return ImputationCriteria(facts=tuple(facts))
@@ -76,8 +76,8 @@ def _row() -> Transaction:
         "asesoria-febrero",
         amount=_AMOUNT,
         category=_CATEGORY,
-        booked_date=date(_YEAR, 4, 10),
-        value_date=date(_YEAR, 4, 10),
+        booked_date=date(YEAR, 4, 10),
+        value_date=date(YEAR, 4, 10),
         taxable_base=_AMOUNT,
     )
 
@@ -93,10 +93,10 @@ def _invoice(row: Transaction) -> Invoice:
     )
     return Invoice.model_validate(
         {
-            "bucket_id": _BUCKET,
+            "bucket_id": BUCKET,
             "kind": InvoiceKind.RECEIVED,
             "invoice_number": "ASE-FEB-1",
-            "issued_at": date(_YEAR, 2, 12),
+            "issued_at": date(YEAR, 2, 12),
             "counterparty_name": "Asesoria SL",
             "counterparty_tax_id": "B12345674",
             "counterparty_country": "ES",
@@ -114,13 +114,13 @@ def _invoice(row: Transaction) -> Invoice:
 def _first_quarter_expense(row: Transaction, invoices: InvoiceCatalogue) -> Decimal:
     result = aggregate_renta_gasto_ledger(
         TransactionCatalogue.from_transactions((row,)),
-        bucket_id=_BUCKET,
-        period=renta_income_aggregation_period(_YEAR, "1T"),
+        bucket_id=BUCKET,
+        period=renta_income_aggregation_period(YEAR, "1T"),
         modelo="130",
         target_casilla_id=validated_casilla_id("02", surface="the Modelo 130 expense box"),
         accept_activity_marker=True,
         invoices=invoices,
-        criteria=_criteria(),
+        criteria=criteria(),
     )
     return sum((observation.deductible_amount for observation in result.observations), Decimal("0.00"))
 
@@ -168,9 +168,9 @@ def test_the_cumulative_window_keeps_a_row_whose_linked_invoice_accrues_in_it() 
             build_invoice_catalogue((invoice,)),
             kind=InvoiceKind.RECEIVED,
             invoice_id_of=received_invoice_reference,
-            start=date(_YEAR, 1, 1),
-            end=date(_YEAR, 3, 31),
-            criteria=_criteria(),
+            start=date(YEAR, 1, 1),
+            end=date(YEAR, 3, 31),
+            criteria=criteria(),
         )
         return len(window)
 

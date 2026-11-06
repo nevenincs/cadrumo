@@ -302,7 +302,8 @@ def check(names: Sequence[str], *, determinism: bool, workspace: Workspace | Non
     return 0
 
 
-def _removable_targets(family: FixtureFamily, root: Path) -> list[Path]:
+def removable_targets(family: FixtureFamily, root: Path) -> list[Path]:
+    """Return the family's existing outputs and stamp, refusing any that leave its output root or follow a link."""
     if family.output_root is None:
         return []
     checkout = root.resolve()
@@ -329,7 +330,7 @@ def clean(names: Sequence[str], workspace: Workspace | None = None) -> int:
             print(f"{family.name}: refused, its outputs are committed in place")
             refused.append(family.name)
             continue
-        targets = _removable_targets(family, workspace.root)
+        targets = removable_targets(family, workspace.root)
         for target in targets:
             target.unlink()
         print(f"{family.name}: removed {len(targets)} files")

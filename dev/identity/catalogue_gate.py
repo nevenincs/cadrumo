@@ -36,8 +36,8 @@ from .tree_scan import (
     SCANNED_SUFFIXES,
     CandidateFile,
     FileTracking,
-    _read_text,
     in_scope,
+    read_text,
     repository_files,
 )
 
@@ -323,7 +323,7 @@ def scan_convention(
                 continue
             if not in_gate_scope(candidate.relative):
                 continue
-            text = _read_text(candidate.path)
+            text = read_text(candidate.path)
             if text is None:
                 unreadable.append(candidate.relative)
                 continue

@@ -34,7 +34,7 @@ from .ledger_source_mesh_support import (
     resolve_m130,
 )
 from .renta_ledger_support import ledger_expense_transaction
-from .test_renta_gasto_linked_invoice import _YEAR
+from .test_renta_gasto_linked_invoice import YEAR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -60,8 +60,8 @@ def _purchase(*, base: str, iva: str, recargo: str | None = None) -> Transaction
         "compra",
         amount=gross,
         category=_CATEGORY,
-        booked_date=date(_YEAR, 2, 10),
-        value_date=date(_YEAR, 2, 10),
+        booked_date=date(YEAR, 2, 10),
+        value_date=date(YEAR, 2, 10),
         taxable_base=Decimal(base),
         iva_amount=Decimal(iva),
         recargo_amount=None if recargo is None else Decimal(recargo),
@@ -69,7 +69,7 @@ def _purchase(*, base: str, iva: str, recargo: str | None = None) -> Transaction
 
 
 def _expense_box(regime: str, row: Transaction) -> Decimal:
-    profile = cash_criterion_profile(_YEAR, extra_facts=_iva_block(regime))
+    profile = cash_criterion_profile(YEAR, extra_facts=_iva_block(regime))
     resolution = resolve_m130(ActivityAssetHistory(), "1T", rows=(row,), profile=profile)
     return resolution.binding_values[m130_binding_id(ledger_source_mesh_revision("130", "2019-y-siguientes"))]
 
@@ -102,7 +102,7 @@ def _recargo_invoice(row: Transaction) -> Invoice:
             "bucket_id": BUCKET_ID,
             "kind": InvoiceKind.RECEIVED,
             "invoice_number": "MAY-1",
-            "issued_at": date(_YEAR, 2, 5),
+            "issued_at": date(YEAR, 2, 5),
             "counterparty_name": "Mayorista SL",
             "counterparty_tax_id": "B12345674",
             "counterparty_country": "ES",
@@ -123,15 +123,15 @@ def test_the_linked_invoice_states_the_iva_and_recargo_the_row_does_not_carry() 
         "compra-sin-cuotas",
         amount=Decimal("8581.60"),
         category=_CATEGORY,
-        booked_date=date(_YEAR, 2, 10),
-        value_date=date(_YEAR, 2, 10),
+        booked_date=date(YEAR, 2, 10),
+        value_date=date(YEAR, 2, 10),
         taxable_base=Decimal("6800.00"),
     )
     invoice = _recargo_invoice(bare)
     linked = bare.model_copy(update={"invoice_id": invoice.invoice_id})
     repository = InMemoryInvoiceCatalogueRepository()
     repository.save(build_invoice_catalogue((invoice,)))
-    profile = cash_criterion_profile(_YEAR, extra_facts=_iva_block("RECARGO_EQUIVALENCIA"))
+    profile = cash_criterion_profile(YEAR, extra_facts=_iva_block("RECARGO_EQUIVALENCIA"))
 
     quarterly = resolve_m130(ActivityAssetHistory(), "1T", rows=(linked,), profile=profile, invoices=repository)
     unlinked = resolve_m130(ActivityAssetHistory(), "1T", rows=(bare,), profile=profile)

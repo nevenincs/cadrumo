@@ -132,7 +132,7 @@ def _minimal_pdf(text: str) -> bytes:
     return b"%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n" + body + b"\n%%EOF\n"
 
 
-def _register_purchase_invoice_evidence(tmp_path: Path, *, label: str, base: Decimal, cuota: Decimal) -> str:
+def register_purchase_invoice_evidence(tmp_path: Path, *, label: str, base: Decimal, cuota: Decimal) -> str:
     """Register one purchase invoice document and return its evidence id.
 
     The deduction's evidence pointer is derived from the registered record rather
@@ -200,7 +200,7 @@ def add_sale() -> str:
 
 
 def _add_taxable_purchase(tmp_path: Path, *, extra_options: tuple[str, ...] = ()) -> str:
-    evidence_id = _register_purchase_invoice_evidence(
+    evidence_id = register_purchase_invoice_evidence(
         tmp_path, label="corriente", base=_PURCHASE_BASE, cuota=_PURCHASE_CUOTA
     )
     return added_transaction_id(
@@ -240,7 +240,7 @@ def _add_taxable_purchase(tmp_path: Path, *, extra_options: tuple[str, ...] = ()
 
 
 def _add_investment_purchase(tmp_path: Path) -> str:
-    evidence_id = _register_purchase_invoice_evidence(
+    evidence_id = register_purchase_invoice_evidence(
         tmp_path, label="inversion", base=_INVESTMENT_BASE, cuota=_INVESTMENT_CUOTA
     )
     return added_transaction_id(
@@ -557,7 +557,7 @@ def test_a_deduction_claimed_on_the_exempt_premium_is_refused_by_the_cli(
     assert bucket_id is not None
     seed_zero_compensation_wallet_decision(bucket_id)
 
-    evidence_id = _register_purchase_invoice_evidence(tmp_path, label="prima", base=_PREMIUM, cuota=Decimal("0.00"))
+    evidence_id = register_purchase_invoice_evidence(tmp_path, label="prima", base=_PREMIUM, cuota=Decimal("0.00"))
     premium = added_transaction_id(
         _invoke(
             [

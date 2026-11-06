@@ -26,7 +26,7 @@ from ..renta_imputation import ActivityImputationCriterion
 from ..renta_ledger import aggregate_renta_ledger_expenses
 from .renta_income_aggregation_support import renta_income_aggregation_period
 from .renta_ledger_support import ledger_expense_transaction
-from .test_renta_gasto_linked_invoice import _BUCKET, _YEAR, _criteria
+from .test_renta_gasto_linked_invoice import BUCKET, YEAR, criteria
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -42,16 +42,16 @@ def _row(name: str, category: SpendingCategory, charged: date, amount: Decimal =
 
 
 def _quarter(rows: tuple[Transaction, ...], code: str) -> RentaGastoLedgerAggregation:
-    assert _criteria().usable(_YEAR) is ActivityImputationCriterion.DEVENGO
+    assert criteria().usable(YEAR) is ActivityImputationCriterion.DEVENGO
     return aggregate_renta_gasto_ledger(
         TransactionCatalogue.from_transactions(rows),
-        bucket_id=_BUCKET,
-        period=renta_income_aggregation_period(_YEAR, code),
+        bucket_id=BUCKET,
+        period=renta_income_aggregation_period(YEAR, code),
         modelo="130",
         target_casilla_id=validated_casilla_id("02", surface="the Modelo 130 expense box"),
         accept_activity_marker=True,
         invoices=build_invoice_catalogue(()),
-        criteria=_criteria(),
+        criteria=criteria(),
     )
 
 
@@ -60,7 +60,7 @@ def _total(result: RentaGastoLedgerAggregation) -> Decimal:
 
 
 def test_monthly_cuotas_without_an_invoice_are_placed_in_their_months() -> None:
-    rows = tuple(_row(f"reta-{month}", _RETA, date(_YEAR, month, 28)) for month in (1, 2, 3))
+    rows = tuple(_row(f"reta-{month}", _RETA, date(YEAR, month, 28)) for month in (1, 2, 3))
 
     result = _quarter(rows, "1T")
 
@@ -69,27 +69,27 @@ def test_monthly_cuotas_without_an_invoice_are_placed_in_their_months() -> None:
 
 
 def test_a_cuota_charged_in_a_later_quarter_is_not_in_the_first() -> None:
-    assert _total(_quarter((_row("reta-abril", _RETA, date(_YEAR, 4, 28)),), "1T")) == Decimal("0.00")
+    assert _total(_quarter((_row("reta-abril", _RETA, date(YEAR, 4, 28)),), "1T")) == Decimal("0.00")
 
 
 def test_an_expense_that_is_not_a_cuota_and_has_no_invoice_stays_unplaced() -> None:
-    result = _quarter((_row("asesoria", _ASESORIA, date(_YEAR, 2, 10)),), "1T")
+    result = _quarter((_row("asesoria", _ASESORIA, date(YEAR, 2, 10)),), "1T")
 
     assert _total(result) == Decimal("0.00")
     assert [issue.reason.value for issue in result.issues] == ["imputation_unresolved"]
 
 
 def test_a_december_cuota_belongs_to_its_ejercicio_and_a_january_one_to_the_next() -> None:
-    december = _row("reta-diciembre", _RETA, date(_YEAR, 12, 28))
-    january = _row("reta-enero", _RETA, date(_YEAR + 1, 1, 2))
+    december = _row("reta-diciembre", _RETA, date(YEAR, 12, 28))
+    january = _row("reta-enero", _RETA, date(YEAR + 1, 1, 2))
 
     annual = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((december, january)),
         build_invoice_catalogue(()),
-        bucket_id=_BUCKET,
-        period=renta_income_aggregation_period(_YEAR, "0A"),
-        profile_year=_YEAR,
-        criteria=_criteria(),
+        bucket_id=BUCKET,
+        period=renta_income_aggregation_period(YEAR, "0A"),
+        profile_year=YEAR,
+        criteria=criteria(),
     )
 
     assert [o.transaction_id for o in annual.observations] == [december.transaction_id]

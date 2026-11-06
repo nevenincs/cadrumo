@@ -39,10 +39,10 @@ from cadrumo.tests.cli_envelope import require_error_document, unwrap_envelope_n
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile
 from .test_m303_zero_cuota_and_investment_inputs_cli import (
-    _register_purchase_invoice_evidence,
     add_sale,
     added_transaction_id,
     profile_facts,
+    register_purchase_invoice_evidence,
     seed_zero_compensation_wallet_decision,
 )
 
@@ -204,7 +204,7 @@ def test_the_supplier_invoice_lets_the_intra_eu_acquisition_accrue_and_deduct_it
 ) -> None:
     """LIVA art. 97.Uno.2.º: the supplier's invoice justifies the deduction of the cuota the same return accrues."""
     _seed_quarter(request)
-    evidence_id = _register_purchase_invoice_evidence(tmp_path, label="intracomunitaria", base=_BASE, cuota=_CUOTA)
+    evidence_id = register_purchase_invoice_evidence(tmp_path, label="intracomunitaria", base=_BASE, cuota=_CUOTA)
     _add_intra_eu_acquisition("--purchase-invoice-evidence-id", evidence_id)
     created = _invoke(["app", "modelo", "work", "create", "--modelo", "303", "--year", "2025", "--period", "1T"])
     assert created.exit_code == 0, created.output

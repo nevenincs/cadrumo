@@ -464,7 +464,7 @@ def matching_fragments(relative_path: str) -> tuple[str, ...]:
     return tuple(fragment for fragment in EXCLUDED_PATH_FRAGMENTS if fragment in haystack)
 
 
-def _read_text(path: Path) -> str | None:
+def read_text(path: Path) -> str | None:
     """The file's text, or ``None`` when it could not be opened.
 
     Decoding never fails -- undecodable bytes are replaced -- so ``None`` means
@@ -551,7 +551,7 @@ def scan_tree(
     scanned = 0
     with identity_authority_scope():
         for candidate in _candidates(repo_root, files, DATA_SUFFIXES):
-            text = _read_text(candidate.path)
+            text = read_text(candidate.path)
             if text is None:
                 unreadable.append(candidate.relative)
                 continue
@@ -597,7 +597,7 @@ def advisory_findings(
             in_narrative = candidate.path.suffix.lower() in NARRATIVE_SUFFIXES
             if not in_narrative and not matching_fragments(candidate.relative):
                 continue
-            text = _read_text(candidate.path)
+            text = read_text(candidate.path)
             if text is None:
                 continue
             findings.extend(_file_findings(text, candidate, selected))

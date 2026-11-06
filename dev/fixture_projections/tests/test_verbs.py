@@ -18,10 +18,10 @@ from ..cli import (
     DETERMINISM_UNDECLARED,
     FixtureProjectionError,
     Workspace,
-    _removable_targets,
     check,
     child_environment,
     clean,
+    removable_targets,
     seed,
     status,
 )
@@ -292,9 +292,9 @@ def test_an_output_root_outside_the_checkout_is_refused(tmp_path: Path) -> None:
     (tmp_path / "elsewhere" / "kept.json").write_text("{}", encoding="utf-8")
 
     with pytest.raises(FixtureProjectionError, match="not inside the checkout"):
-        _removable_targets(_family(output_root="../elsewhere"), root)
+        removable_targets(_family(output_root="../elsewhere"), root)
     with pytest.raises(FixtureProjectionError, match="not inside the checkout"):
-        _removable_targets(_family(output_root="."), root)
+        removable_targets(_family(output_root="."), root)
     assert (tmp_path / "elsewhere" / "kept.json").exists()
 
 
@@ -303,7 +303,7 @@ def test_an_output_pattern_reaching_outside_its_root_is_refused(tmp_path: Path) 
     (root / "inputs" / "kept.json").write_text("{}", encoding="utf-8")
 
     with pytest.raises(FixtureProjectionError, match="outside its output root"):
-        _removable_targets(_family(outputs=("*.json", "../inputs/*.json")), root)
+        removable_targets(_family(outputs=("*.json", "../inputs/*.json")), root)
 
 
 def test_a_linked_target_is_refused_rather_than_followed(tmp_path: Path) -> None:
@@ -320,7 +320,7 @@ def test_a_linked_target_is_refused_rather_than_followed(tmp_path: Path) -> None
         link.symlink_to(outside, target_is_directory=True)
 
     with pytest.raises(FixtureProjectionError, match="refusing to follow the link"):
-        _removable_targets(family, root)
+        removable_targets(family, root)
     assert outside.is_dir()
 
 
