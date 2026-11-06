@@ -50,12 +50,15 @@ def operator_profile_facts(*, activity_start_date: str | None = None) -> dict[st
     """Return the facts of the operator profile the modelo work UX suites run against.
 
     The operator is the canonical estimación directa normal autónomo. Its modality keeps
-    Modelo 130 box 02 as the stated expenses, with no art. 30.2.ª provision, and the
-    colegio-concertado attestation lets Modelo 111 work units run.
+    Modelo 130 box 02 as the stated expenses, with no art. 30.2.ª provision. The operator
+    files Modelo 111 for the retención withheld from a professional's invoice, so it states
+    that it pays such income: Modelo 111 applies only to a payer of income subject to
+    retención, and the persona answers that it pays none.
     """
-    return persona_fact_strings(
-        {} if activity_start_date is None else {"censo.activity_start_date": activity_start_date}
-    )
+    stated = {"withholding.pays_professionals_with_retencion": "true"}
+    if activity_start_date is not None:
+        stated["censo.activity_start_date"] = activity_start_date
+    return persona_fact_strings(stated)
 
 
 GB_NON_RESIDENT_PROFILE_FACTS: dict[str, str] = {

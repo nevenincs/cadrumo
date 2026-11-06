@@ -177,6 +177,9 @@ _M111_PROFILE_FACTS = persona_facts_beneath(
         UserProfileFact(path="activities.description", value="withholding operator activity"),
         UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
         UserProfileFact(path="withholding.colegio_concertado", value=False),
+        # The invoices withhold retención from a professional, and Modelo 111 applies only
+        # to a payer of income subject to retención.
+        UserProfileFact(path="withholding.pays_professionals_with_retencion", value=True),
     )
 )
 
