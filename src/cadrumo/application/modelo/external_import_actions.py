@@ -54,7 +54,7 @@ from ...core.filing_timeliness import FilingTimeliness
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.observed_header_fact import ObservedHeaderFact
 from ...core.period import Period
-from ...core.time.clock import now
+from ...core.time.clock import madrid_wall_clock_to_utc, now
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
@@ -638,11 +638,18 @@ def _external_import_reconciliation_ports(
 
 
 def _external_import_register_reference(receipt: Justificante | None, cleaned_reference: str) -> AeatRegisterRef:
-    """Retain receipt identifiers or the CSV-register reference without synthesizing a receipt."""
+    """Retain receipt identifiers or the CSV-register reference without synthesizing a receipt.
+
+    A receipt carries the presentation timestamp AEAT stamped on it, as a
+    peninsular wall clock, so the reference keeps that instant: it is what says
+    whether the declaration was presented inside its plazo. A bare CSV-register
+    reference carries no presentation date, and none is invented for it.
+    """
     return AeatRegisterRef(
         expediente_id=None if receipt is not None else cleaned_reference,
         csv=receipt.csv if receipt is not None else None,
         justificante_number=receipt.presentation_id if receipt is not None else None,
+        presented_at=madrid_wall_clock_to_utc(receipt.presented_at) if receipt is not None else None,
     )
 
 

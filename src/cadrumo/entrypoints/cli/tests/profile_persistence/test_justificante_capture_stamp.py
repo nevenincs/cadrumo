@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 
 import pytest
@@ -19,14 +20,18 @@ from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from cadrumo.application.live.errors import LiveApplicationInputError
+from cadrumo.application.live.filed_observation_ports import FiledFilingReconciliationPort
 from cadrumo.application.live.justificante import register_capture_as_filing_evidence
 from cadrumo.application.live.justificante_ports import JustificanteRegistrationPorts
 from cadrumo.application.live.snapshot_base import SnapshotLifecycleState
+from cadrumo.application.modelo.filing_chain_reconciliation import AeatRegisterEntry, FilingReconciliationResult
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
+from cadrumo.core.time.clock import MADRID_TZ, madrid_wall_clock_to_utc
 from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.cli.tests.profile_persistence.justificante_reconcile_support import (
@@ -42,6 +47,26 @@ isolated_backend = active_profile_isolated_backend_fixture(profile_overrides={"i
 __all__ = ["isolated_backend"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
+
+
+@dataclass(frozen=True, slots=True)
+class _RecordingReconciliation:
+    """Observe the register entry the real reconciliation is handed, and delegate."""
+
+    inner: FiledFilingReconciliationPort
+    observed: list[AeatRegisterEntry]
+
+    def reconcile(
+        self,
+        entry: AeatRegisterEntry,
+        *,
+        actor: str,
+        clock: datetime,
+        authority_operation: PinnedAuthorityOperation | None = None,
+    ) -> FilingReconciliationResult:
+        """Record the entry, then let the real reconciliation decide."""
+        self.observed.append(entry)
+        return self.inner.reconcile(entry, actor=actor, clock=clock, authority_operation=authority_operation)
 
 
 def _registration_ports() -> JustificanteRegistrationPorts:
@@ -277,6 +302,41 @@ def test_a_capture_whose_expediente_is_not_the_receipt_presentation_id_reaches_r
         .for_bucket(active_bucket_id(), event_types=(BucketEventType.MODELO_FILING_RECONCILED,))
     )
     assert [event.payload["aeat_expediente_id"] for event in events] == ["13020260410DIFFERENTIDENT"]
+
+
+def test_the_capture_entry_carries_the_receipts_own_presentation_instant() -> None:
+    """The register entry says when AEAT stamped the receipt.
+
+    The entry used to carry identifiers only, so a chain entry built from a
+    live capture could not say when the declaration was presented, and so could
+    not say whether it was presented inside the plazo. The receipt prints that
+    timestamp without an offset, as peninsular official time.
+    """
+    receipt = parse_justificante_bytes(MODELO_130_FIXTURE.read_bytes())
+    assert receipt.presented_at.tzinfo is None, "the receipt still prints an offset-free wall clock"
+    work_unit_id = seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
+    snapshot = persist_capture(
+        pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
+        modelo=Modelo("130").value,
+        filing_year=2026,
+        period="1T",
+    )
+    observed: list[AeatRegisterEntry] = []
+    ports = _registration_ports()
+    recording = replace(ports, filing_reconciliation=_RecordingReconciliation(ports.filing_reconciliation, observed))
+
+    with pytest.raises(
+        LiveApplicationInputError,
+        match=r"application\.live\.justificante\.errors\.filing_record_unconfirmed",
+    ):
+        register_capture_as_filing_evidence(snapshot=snapshot, ports=recording)
+
+    assert len(observed) == 1
+    presented_at = observed[0].register.presented_at
+    assert presented_at is not None
+    assert presented_at == madrid_wall_clock_to_utc(receipt.presented_at)
+    assert presented_at.astimezone(MADRID_TZ).replace(tzinfo=None) == receipt.presented_at
 
 
 def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_modelo() -> None:
