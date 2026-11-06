@@ -4,7 +4,7 @@ import { userEvent, waitFor } from "storybook/test";
 import { modeloFixture, type ModeloShape } from "@/dev/modeloFixture";
 import { translator } from "../../../shell/strings";
 import type { ModeloPort } from "../../../shell/modelo";
-import type { OutputLanguage } from "../../../shell/modeloContract";
+import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
 import type { WorkspaceView } from "./Workspace";
 import { WorkspaceScreen } from "./WorkspaceScreen";
 

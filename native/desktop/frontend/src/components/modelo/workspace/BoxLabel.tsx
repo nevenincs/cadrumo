@@ -1,4 +1,4 @@
-import type { ModeloFormText } from "../../../shell/modeloContract";
+import type { ModeloFormText } from "../../../shell/modeloContract/modeloWorkForm";
 import { useStrings } from "../../../shell/strings";
 import { calm } from "../form/FieldRow";
 

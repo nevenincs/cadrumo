@@ -10,7 +10,7 @@ import {
 import { facts } from "../../../shell/compose";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { ATTENTION_TONE } from "../../modelo/workspace/Marks";
-import type { ModeloFormAttention } from "../../../shell/modeloContract";
+import type { ModeloFormAttention } from "../../../shell/modeloContract/modeloWorkForm";
 import { formatDay } from "../../../shared/dateFormats";
 import { WriteHold } from "../WritePause";
 import { rankDecimal, SetupTable, type Column } from "../setup/SetupParts";

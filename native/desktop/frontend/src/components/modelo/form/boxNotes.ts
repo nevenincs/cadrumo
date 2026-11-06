@@ -1,7 +1,7 @@
 import type {
   ModeloFormIssueLine,
   PublicModeloFormField,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloWorkForm";
 import { addressKey, fieldKey } from "./session";
 
 /** What the latest calculation noted about each box the form shows, by the

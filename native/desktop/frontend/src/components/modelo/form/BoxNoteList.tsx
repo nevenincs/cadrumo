@@ -5,7 +5,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { ModeloFormIssueLine } from "../../../shell/modeloContract";
+import type { ModeloFormIssueLine } from "../../../shell/modeloContract/modeloWorkForm";
 import { useStrings } from "../../../shell/strings";
 import { ATTENTION_ICON, ATTENTION_TONE } from "../workspace/Marks";
 

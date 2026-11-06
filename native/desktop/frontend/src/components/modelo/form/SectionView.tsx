@@ -12,7 +12,7 @@ import type {
   PublicModeloFormBlock,
   PublicModeloFormContextFieldBlock,
   PublicModeloFormField,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloWorkForm";
 import { factsGap } from "../../../shell/compose";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { calm, FieldRow } from "./FieldRow";

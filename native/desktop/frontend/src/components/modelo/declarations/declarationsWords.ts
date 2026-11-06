@@ -1,6 +1,6 @@
 import type { IconName } from "@/components/ui/icon";
 import { facts } from "../../../shell/compose";
-import type { ModeloDeclarationListRowV1 } from "../../../shell/modeloContract";
+import type { ModeloDeclarationListRowV1 } from "../../../shell/modeloContract/modeloDeclarations";
 import type { Translate } from "../../../shell/strings";
 
 // Catalogue keys for the read model's closed tokens, and the glyph each

@@ -7,10 +7,8 @@ import {
   type LedgerErrorDetail,
 } from "../../../shell/ledger";
 import type { ModeloPort } from "../../../shell/modelo";
-import type {
-  ModeloTaxationComparisonProjection,
-  OutputLanguage,
-} from "../../../shell/modeloContract";
+import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
+import type { ModeloTaxationComparisonProjection } from "../../../shell/modeloContract/modeloWork";
 import { translator } from "../../../shell/strings";
 import { TaxationComparison } from "./TaxationComparison";
 import {

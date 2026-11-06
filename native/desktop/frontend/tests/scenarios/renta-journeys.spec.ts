@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import type {
   ModeloWorkbenchFormProjectionV1,
   PublicModeloFormField,
-} from "../../src/shell/modeloContract";
+} from "../../src/shell/modeloContract/modeloWorkForm";
 import { label } from "../support/strings";
 
 // Two journeys through the Modelo 100 workspace, each from the declarations

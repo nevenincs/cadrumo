@@ -1,13 +1,13 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import type { ModeloDeclarationsListProjectionV1 } from "../../src/shell/modeloContract/modeloDeclarations";
+import type { ModeloReconciliationImportProjection } from "../../src/shell/modeloContract/modeloReconcile";
 import type {
-  ModeloDeclarationsListProjectionV1,
-  ModeloReconciliationImportProjection,
   PublicModeloFormContextFieldBlock,
   ModeloWorkbenchFormProjectionV1,
   PublicModeloFormField,
-} from "../../src/shell/modeloContract";
+} from "../../src/shell/modeloContract/modeloWorkForm";
 import { ASSET_NOTES } from "../../src/dev/modeloAssetNotes";
 import { label } from "../support/strings";
 import { seedLayout } from "../support/layout";
