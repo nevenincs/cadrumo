@@ -1611,6 +1611,11 @@ audit-complexity:
 complexity-gate:
     @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label complexity-gate -- uv run --no-sync python -m dev.audit.complexity --gate
 
+[doc('Reject any TypeScript module in the repository over 1500 physical lines; read-only and blocking.')]
+[group('check')]
+check-module-size:
+    @uv run --no-sync python -m dev.quality.typescript_module_size
+
 [doc('Reject rank E/F callables and modules over the line limit in src test files; dev test files are reported only. Slow: about two minutes.')]
 [group('check')]
 test-complexity-gate:
