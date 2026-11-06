@@ -10,7 +10,6 @@ import { WindowOverlays } from "./components/WindowOverlays";
 import { WindowTitlebar } from "./components/WindowTitlebar";
 import { useAbout } from "./shell/about";
 import type { Host } from "./shell/host";
-import { pageViewId } from "./shell/navigation/windowViews";
 import { paneControls } from "./shell/paneControls";
 import { ShellContexts } from "./shell/ShellContexts";
 import { useSignIn } from "./shell/signIn";
@@ -272,11 +271,6 @@ export function App({ host }: { host: Host }) {
     host.agentSession,
     openView,
   );
-  // The register element of the main view shown: the first pane's page, or
-  // its Ledger section; nothing while the first pane is put away.
-  const shownViewId = firstPaneShown
-    ? pageViewId(pageOn ? layout.page : "docs", layout.ledgerView.section)
-    : undefined;
   const pastedLink = usePastedLink(t, resolveView, openViewLink);
 
   const actions = useShellActions({
@@ -334,7 +328,6 @@ export function App({ host }: { host: Host }) {
     toggleColumn: columns.toggleColumn,
     resolveView,
     openView,
-    shownViewId,
     copy,
     views,
     messages,
