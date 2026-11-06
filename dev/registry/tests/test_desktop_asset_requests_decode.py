@@ -286,8 +286,7 @@ def _run(bundle: Path, scenarios: list[dict[str, Any]]) -> dict[str, dict[str, A
         scenarios,
         served=_served(),
         limits=json.loads(ledger_entry_limits().model_dump_json()),
-        candidate=CANDIDATE,
-        further=LATER_PAYMENT,
+        candidates=[CANDIDATE, LATER_PAYMENT],
     )
 
 

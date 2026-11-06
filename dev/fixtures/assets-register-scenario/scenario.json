@@ -21,6 +21,15 @@
       "purchase_invoice_evidence_id": "2a5bc6d7e81f9302b4c5d6e7f8091023b4c5d6e7f8091a2b3c4d5e6f70819203"
     },
     {
+      "provider_id": "t-local",
+      "booked_date": "2026-04-18",
+      "description": "Obra del local",
+      "taxable_base": "1000.00",
+      "iva_amount": "210.00",
+      "input_classification": "exclusively_deductible",
+      "purchase_invoice_evidence_id": "3b6cd7e8f9201a43c5d6e7f80912a3b4c5d6e7f8091a2b3c4d5e6f7081920314"
+    },
+    {
       "provider_id": "t-efectivo",
       "booked_date": "2025-11-30",
       "description": "Compra pagada en efectivo",

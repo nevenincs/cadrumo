@@ -1,0 +1,543 @@
+{
+  "_note": "The elements the window's new-element form makes, each as the draft a person types and the create request the form's own builders make of it. The register producer replays every request and records what it answers, so the window never works a new element's plan out. dev/registry/tests/test_desktop_asset_creations_match.py runs the real builders on each draft and fails loudly where a committed request no longer matches. A ledger payment is named as ledger-payment:<provider id of the scenario>, which both sides resolve against the register's recording.",
+  "base": {
+    "asset_kind": "material",
+    "name": "Sierra de cinta",
+    "serial_number": "SC-0412",
+    "acquisition": "ledger-payment:t-portatil",
+    "acquisition_shape": "primary_purchase",
+    "in_service_date": "2026-06-15",
+    "acquired_condition": "new",
+    "basis_stage": "business_allocated",
+    "basis_amount": "900.00",
+    "non_deductible_iva": "0.00",
+    "prior_allocation_provenance": "allocation booked in the ledger",
+    "opening_status": "known",
+    "opening_amount": "0.00",
+    "method": "linear",
+    "amortization.authority_class_key": "maquinaria"
+  },
+  "creations": [
+    {
+      "id": "linear_new",
+      "draft": {},
+      "revision": {
+        "revision_number": 1,
+        "acquisition": {
+          "observed_transaction_id": "ledger-payment:t-portatil",
+          "invoice_evidence_id": "1f4ab5c6d70e8291a3b4c5d6e7f80912a3b4c5d6e7f8091a2b3c4d5e6f708192",
+          "evidence_fingerprint": "1f4ab5c6d70e8291a3b4c5d6e7f80912a3b4c5d6e7f8091a2b3c4d5e6f708192"
+        },
+        "amortization": {
+          "regime": "normal",
+          "method": "linear",
+          "authority_class_key": "maquinaria"
+        },
+        "asset_kind": "material",
+        "in_service_date": "2026-06-15",
+        "acquisition_shape": "primary_purchase",
+        "acquired_condition": "new",
+        "basis": {
+          "stage": "business_allocated",
+          "basis_amount": {
+            "decimal": "900"
+          },
+          "non_deductible_iva": {
+            "decimal": "0"
+          },
+          "prior_allocation_provenance": "allocation booked in the ledger",
+          "is_property": false
+        },
+        "opening_history": {
+          "status": "known",
+          "accumulated_amount": {
+            "decimal": "0"
+          }
+        }
+      },
+      "descriptor": {
+        "name": "Sierra de cinta",
+        "serial_number": "SC-0412",
+        "description": null,
+        "document_kind": null,
+        "document_number": null,
+        "supplier_name": null,
+        "supplier_tax_id": null
+      }
+    },
+    {
+      "id": "opening_missing",
+      "draft": {
+        "opening_status": "missing",
+        "opening_amount": ""
+      },
+      "revision": {
+        "revision_number": 1,
+        "acquisition": {
+          "observed_transaction_id": "ledger-payment:t-portatil",
+          "invoice_evidence_id": "1f4ab5c6d70e8291a3b4c5d6e7f80912a3b4c5d6e7f8091a2b3c4d5e6f708192",
+          "evidence_fingerprint": "1f4ab5c6d70e8291a3b4c5d6e7f80912a3b4c5d6e7f8091a2b3c4d5e6f708192"
+        },
+        "amortization": {
+          "regime": "normal",
+          "method": "linear",
+          "authority_class_key": "maquinaria"
+        },
+        "asset_kind": "material",
+        "in_service_date": "2026-06-15",
+        "acquisition_shape": "primary_purchase",
+        "acquired_condition": "new",
+        "basis": {
+          "stage": "business_allocated",
+          "basis_amount": {
+            "decimal": "900"
+          },
+          "non_deductible_iva": {
+            "decimal": "0"
+          },
+          "prior_allocation_provenance": "allocation booked in the ledger",
+          "is_property": false
+        },
+        "opening_history": {
+          "status": "missing"
+        }
+      },
+      "descriptor": {
+        "name": "Sierra de cinta",
+        "serial_number": "SC-0412",
+        "description": null,
+        "document_kind": null,
+        "document_number": null,
+        "supplier_name": null,
+        "supplier_tax_id": null
+      }
+    },
+    {
+      "id": "used_expert_valuation",
+      "draft": {
+        "acquired_condition": "used",
+        "amortization.used_original_price.determination": "expert_valuation",
+        "amortization.used_original_price.original_price": "1500.00",
+        "amortization.used_original_price.evidence_reference": "valuation report of the appraiser"
+      },
+      "revision": {
+        "revision_number": 1,
+        "acquisition": {
+          "observed_transaction_id": "ledger-payment:t-portatil",
+          "invoice_evidence_id": "1f4ab5c6d70e8291a3b4c5d6e7f80912a3b4c5d6e7f8091a2b3c4d5e6f708192",
+          "evidence_fingerprint": "1f4ab5c6d70e8291a3b4c5d6e7f80912a3b4c5d6e7f8091a2b3c4d5e6f708192"
+        },
+        "amortization": {
+          "regime": "normal",
+          "method": "linear",
+          "authority_class_key": "maquinaria",
+          "used_original_price": {
+            "determination": "expert_valuation",
+            "original_price": {
+              "decimal": "1500"
+            },
+            "evidence_reference": "valuation report of the appraiser"
+          }
+        },
+        "asset_kind": "material",
+        "in_service_date": "2026-06-15",
+        "acquisition_shape": "primary_purchase",
+        "acquired_condition": "used",
+        "basis": {
+          "stage": "business_allocated",
+          "basis_amount": {
+            "decimal": "900"
+          },
+          "non_deductible_iva": {
+            "decimal": "0"
+          },
+          "prior_allocation_provenance": "allocation booked in the ledger",
+          "is_property": false
+        },
+        "opening_history": {
+          "status": "known",
+          "accumulated_amount": {
+            "decimal": "0"
+          }
+        }
+      },
+      "descriptor": {
+        "name": "Sierra de cinta",
+        "serial_number": "SC-0412",
+        "description": null,
+        "document_kind": null,
+        "document_number": null,
+        "supplier_name": null,
+        "supplier_tax_id": null
+      }
+    },
+    {
+      "id": "outside_ledger",
+      "draft": {
+        "acquisition": "",
+        "acquisition_shape": "acquired_outside_ledger",
+        "declared_acquisition_date": "2024-11-05",
+        "declared_activity": "B05",
+        "acquisition_reference": "Factura 2024-118"
+      },
+      "revision": {
+        "revision_number": 1,
+        "acquisition": {
+          "observed_transaction_id": null,
+          "observed_lineage_event_id": null,
+          "invoice_evidence_id": "Factura 2024-118",
+          "evidence_fingerprint": null
+        },
+        "further_acquisitions": [],
+        "amortization": {
+          "regime": "normal",
+          "method": "linear",
+          "authority_class_key": "maquinaria"
+        },
+        "asset_kind": "material",
+        "in_service_date": "2026-06-15",
+        "acquisition_shape": "acquired_outside_ledger",
+        "declared_acquisition_date": "2024-11-05",
+        "declared_activity": "B05",
+        "acquired_condition": "new",
+        "basis": {
+          "stage": "business_allocated",
+          "basis_amount": {
+            "decimal": "900"
+          },
+          "non_deductible_iva": {
+            "decimal": "0"
+          },
+          "prior_allocation_provenance": "allocation booked in the ledger",
+          "is_property": false
+        },
+        "opening_history": {
+          "status": "known",
+          "accumulated_amount": {
+            "decimal": "0"
+          }
+        }
+      },
+      "descriptor": {
+        "name": "Sierra de cinta",
+        "serial_number": "SC-0412",
+        "description": null,
+        "document_kind": null,
+        "document_number": null,
+        "supplier_name": null,
+        "supplier_tax_id": null
+      }
+    },
+    {
+      "id": "outside_ledger_keyed",
+      "draft": {
+        "acquisition": "",
+        "acquisition_shape": "acquired_outside_ledger",
+        "declared_acquisition_date": "2026-01-10",
+        "declared_activity": "A01",
+        "acquisition_reference": "Factura 2026-118"
+      },
+      "revision": {
+        "revision_number": 1,
+        "acquisition": {
+          "observed_transaction_id": null,
+          "observed_lineage_event_id": null,
+          "invoice_evidence_id": "Factura 2026-118",
+          "evidence_fingerprint": null
+        },
+        "further_acquisitions": [],
+        "amortization": {
+          "regime": "normal",
+          "method": "linear",
+          "authority_class_key": "maquinaria"
+        },
+        "asset_kind": "material",
+        "in_service_date": "2026-06-15",
+        "acquisition_shape": "acquired_outside_ledger",
+        "declared_acquisition_date": "2026-01-10",
+        "declared_activity": "A01",
+        "acquired_condition": "new",
+        "basis": {
+          "stage": "business_allocated",
+          "basis_amount": {
+            "decimal": "900"
+          },
+          "non_deductible_iva": {
+            "decimal": "0"
+          },
+          "prior_allocation_provenance": "allocation booked in the ledger",
+          "is_property": false
+        },
+        "opening_history": {
+          "status": "known",
+          "accumulated_amount": {
+            "decimal": "0"
+          }
+        }
+      },
+      "descriptor": {
+        "name": "Sierra de cinta",
+        "serial_number": "SC-0412",
+        "description": null,
+        "document_kind": null,
+        "document_number": null,
+        "supplier_name": null,
+        "supplier_tax_id": null
+      }
+    },
+    {
+      "id": "outside_ledger_with_later_payment",
+      "draft": {
+        "acquisition": "",
+        "acquisition_shape": "acquired_outside_ledger",
+        "declared_acquisition_date": "2026-01-10",
+        "declared_activity": "A01",
+        "acquisition_reference": "invoice held at the office",
+        "further_purchase": "ledger-payment:t-silla",
+        "further_shape": "split_payment"
+      },
+      "revision": {
+        "revision_number": 1,
+        "acquisition": {
+          "observed_transaction_id": null,
+          "observed_lineage_event_id": null,
+          "invoice_evidence_id": "invoice held at the office",
+          "evidence_fingerprint": null
+        },
+        "further_acquisitions": [
+          {
+            "shape": "split_payment",
+            "lineage": {
+              "observed_transaction_id": "ledger-payment:t-silla",
+              "invoice_evidence_id": "2a5bc6d7e81f9302b4c5d6e7f8091023b4c5d6e7f8091a2b3c4d5e6f70819203",
+              "evidence_fingerprint": "2a5bc6d7e81f9302b4c5d6e7f8091023b4c5d6e7f8091a2b3c4d5e6f70819203"
+            }
+          }
+        ],
+        "amortization": {
+          "regime": "normal",
+          "method": "linear",
+          "authority_class_key": "maquinaria"
+        },
+        "asset_kind": "material",
+        "in_service_date": "2026-06-15",
+        "acquisition_shape": "acquired_outside_ledger",
+        "declared_acquisition_date": "2026-01-10",
+        "declared_activity": "A01",
+        "acquired_condition": "new",
+        "basis": {
+          "stage": "business_allocated",
+          "basis_amount": {
+            "decimal": "900"
+          },
+          "non_deductible_iva": {
+            "decimal": "0"
+          },
+          "prior_allocation_provenance": "allocation booked in the ledger",
+          "is_property": false
+        },
+        "opening_history": {
+          "status": "known",
+          "accumulated_amount": {
+            "decimal": "0"
+          }
+        }
+      },
+      "descriptor": {
+        "name": "Sierra de cinta",
+        "serial_number": "SC-0412",
+        "description": null,
+        "document_kind": null,
+        "document_number": null,
+        "supplier_name": null,
+        "supplier_tax_id": null
+      }
+    },
+    {
+      "id": "whole_property",
+      "draft": {
+        "basis_stage": "whole_property",
+        "basis_amount": "1000.00",
+        "construction_cost": "800.00",
+        "land_cost": "200.00",
+        "ownership_mode": "sole",
+        "ownership_share": "1",
+        "office_area": "30",
+        "total_area": "100",
+        "acquisition": "ledger-payment:t-local"
+      },
+      "revision": {
+        "revision_number": 1,
+        "acquisition": {
+          "observed_transaction_id": "ledger-payment:t-local",
+          "invoice_evidence_id": "3b6cd7e8f9201a43c5d6e7f80912a3b4c5d6e7f8091a2b3c4d5e6f7081920314",
+          "evidence_fingerprint": "3b6cd7e8f9201a43c5d6e7f80912a3b4c5d6e7f8091a2b3c4d5e6f7081920314"
+        },
+        "amortization": {
+          "regime": "normal",
+          "method": "linear",
+          "authority_class_key": "maquinaria"
+        },
+        "asset_kind": "material",
+        "in_service_date": "2026-06-15",
+        "acquisition_shape": "primary_purchase",
+        "acquired_condition": "new",
+        "basis": {
+          "stage": "whole_property",
+          "basis_amount": {
+            "decimal": "1000"
+          },
+          "non_deductible_iva": {
+            "decimal": "0"
+          },
+          "construction_cost": {
+            "decimal": "800"
+          },
+          "land_cost": {
+            "decimal": "200"
+          },
+          "ownership_mode": "sole",
+          "ownership_share": {
+            "decimal": "1"
+          },
+          "office_area": {
+            "decimal": "30"
+          },
+          "total_area": {
+            "decimal": "100"
+          },
+          "is_property": true
+        },
+        "opening_history": {
+          "status": "known",
+          "accumulated_amount": {
+            "decimal": "0"
+          }
+        }
+      },
+      "descriptor": {
+        "name": "Sierra de cinta",
+        "serial_number": "SC-0412",
+        "description": null,
+        "document_kind": null,
+        "document_number": null,
+        "supplier_name": null,
+        "supplier_tax_id": null
+      }
+    },
+    {
+      "id": "vehicle",
+      "draft": {
+        "amortization.authority_class_key": "transporte-externo",
+        "vehicle_declared": "yes",
+        "vehicle_category": "passenger_car",
+        "vehicle_private_use": "none",
+        "vehicle_in_books": "yes",
+        "vehicle_evidence": "Libro registro de bienes de inversión",
+        "vehicle_propulsion": "bev"
+      },
+      "revision": {
+        "revision_number": 1,
+        "acquisition": {
+          "observed_transaction_id": "ledger-payment:t-portatil",
+          "invoice_evidence_id": "1f4ab5c6d70e8291a3b4c5d6e7f80912a3b4c5d6e7f8091a2b3c4d5e6f708192",
+          "evidence_fingerprint": "1f4ab5c6d70e8291a3b4c5d6e7f80912a3b4c5d6e7f8091a2b3c4d5e6f708192"
+        },
+        "amortization": {
+          "regime": "normal",
+          "method": "linear",
+          "authority_class_key": "transporte-externo"
+        },
+        "asset_kind": "material",
+        "in_service_date": "2026-06-15",
+        "acquisition_shape": "primary_purchase",
+        "acquired_condition": "new",
+        "basis": {
+          "stage": "business_allocated",
+          "basis_amount": {
+            "decimal": "900"
+          },
+          "non_deductible_iva": {
+            "decimal": "0"
+          },
+          "prior_allocation_provenance": "allocation booked in the ledger",
+          "is_property": false
+        },
+        "opening_history": {
+          "status": "known",
+          "accumulated_amount": {
+            "decimal": "0"
+          }
+        },
+        "vehicle_affectation": {
+          "category": "passenger_car",
+          "private_use": "none",
+          "recorded_in_activity_books": true,
+          "evidence_reference": "Libro registro de bienes de inversión",
+          "electric_propulsion": "bev"
+        }
+      },
+      "descriptor": {
+        "name": "Sierra de cinta",
+        "serial_number": "SC-0412",
+        "description": null,
+        "document_kind": null,
+        "document_number": null,
+        "supplier_name": null,
+        "supplier_tax_id": null
+      }
+    },
+    {
+      "id": "shift_hours",
+      "draft": {
+        "amortization.shift_hours_per_day": "16"
+      },
+      "revision": {
+        "revision_number": 1,
+        "acquisition": {
+          "observed_transaction_id": "ledger-payment:t-portatil",
+          "invoice_evidence_id": "1f4ab5c6d70e8291a3b4c5d6e7f80912a3b4c5d6e7f8091a2b3c4d5e6f708192",
+          "evidence_fingerprint": "1f4ab5c6d70e8291a3b4c5d6e7f80912a3b4c5d6e7f8091a2b3c4d5e6f708192"
+        },
+        "amortization": {
+          "regime": "normal",
+          "method": "linear",
+          "authority_class_key": "maquinaria",
+          "shift_hours_per_day": {
+            "decimal": "16"
+          }
+        },
+        "asset_kind": "material",
+        "in_service_date": "2026-06-15",
+        "acquisition_shape": "primary_purchase",
+        "acquired_condition": "new",
+        "basis": {
+          "stage": "business_allocated",
+          "basis_amount": {
+            "decimal": "900"
+          },
+          "non_deductible_iva": {
+            "decimal": "0"
+          },
+          "prior_allocation_provenance": "allocation booked in the ledger",
+          "is_property": false
+        },
+        "opening_history": {
+          "status": "known",
+          "accumulated_amount": {
+            "decimal": "0"
+          }
+        }
+      },
+      "descriptor": {
+        "name": "Sierra de cinta",
+        "serial_number": "SC-0412",
+        "description": null,
+        "document_kind": null,
+        "document_number": null,
+        "supplier_name": null,
+        "supplier_tax_id": null
+      }
+    }
+  ]
+}

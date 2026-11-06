@@ -68,8 +68,7 @@ def run(
     *,
     served: dict[str, Any],
     limits: dict[str, Any],
-    candidate: dict[str, Any],
-    further: dict[str, Any],
+    candidates: list[dict[str, Any]],
 ) -> dict[str, dict[str, Any]]:
     """Run the bundled builders on ``scenarios``, keyed by each scenario's name."""
     done = subprocess.run(  # noqa: S603 - fixed node program on a bundle built above
@@ -78,8 +77,7 @@ def run(
             {
                 "served": served,
                 "limits": limits,
-                "candidate": candidate,
-                "further": further,
+                "candidates": candidates,
                 "scenarios": scenarios,
             }
         ),

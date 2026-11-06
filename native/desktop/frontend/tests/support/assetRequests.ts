@@ -126,8 +126,16 @@ const contextFor = (
   options,
 });
 
+/** The payment a draft picks, or the first on offer where it names none. */
+const pickedBy = (
+  candidates: AcquisitionCandidate[],
+  named: string | undefined,
+): AcquisitionCandidate | null =>
+  candidates.find((found) => found.transaction_id === named) ??
+  (named === undefined ? (candidates[0] ?? null) : null);
+
 function run(scenario: Scenario, given: Given) {
-  const { served, candidate, further } = given;
+  const { served, candidates } = given;
   if (scenario.kind === "forecast")
     return {
       id: scenario.id,
@@ -213,11 +221,8 @@ function run(scenario: Scenario, given: Given) {
     const request = createRequest(stated.values, {
       assetId: hex("d"),
       regime: "normal",
-      candidate,
-      further:
-        scenario.draft[FURTHER_PURCHASE] === further.transaction_id
-          ? further
-          : null,
+      candidate: pickedBy(candidates, scenario.draft.acquisition),
+      further: pickedBy(candidates, scenario.draft[FURTHER_PURCHASE]),
       base: null,
       options,
     });
@@ -252,15 +257,11 @@ let input = "";
 process.stdin.setEncoding("utf8");
 process.stdin.on("data", (chunk) => (input += chunk));
 process.stdin.on("end", () => {
-  const { served, limits, candidate, further, scenarios } = JSON.parse(
-    input,
-  ) as Input;
+  const { served, limits, candidates, scenarios } = JSON.parse(input) as Input;
   holdLedgerLimits(limits);
   process.stdout.write(
     JSON.stringify(
-      scenarios.map((scenario) =>
-        run(scenario, { served, candidate, further }),
-      ),
+      scenarios.map((scenario) => run(scenario, { served, candidates })),
     ),
   );
 });

@@ -67,13 +67,57 @@ def _read(path: Path) -> dict[str, Any]:
     return value
 
 
+CREATIONS: Final = SCENARIO / "creations.json"
+_FRAMES: Final = frozenset({"scenario.json", CREATIONS.name})
+PAYMENT_PREFIX: Final = "ledger-payment:"
+
+
 def committed_scenario() -> tuple[dict[str, Any], tuple[dict[str, Any], ...]]:
     """The scenario's frame and its elements, in file-name order."""
-    elements = tuple(_read(path) for path in sorted(SCENARIO.glob("*.json")) if path.name != "scenario.json")
+    elements = tuple(_read(path) for path in sorted(SCENARIO.glob("*.json")) if path.name not in _FRAMES)
     for element in elements:
         if element["asset_id"] + ".json" not in {path.name for path in SCENARIO.glob("*.json")}:
             raise ValueError(f"{element['asset_id']}: an element's file is named after it")
     return _read(SCENARIO / "scenario.json"), elements
+
+
+def committed_creations() -> tuple[dict[str, Any], ...]:
+    """The elements the window's new-element form makes, each with its draft and its request.
+
+    The draft is the one a person types over the corpus's shared base; the request
+    is what the form's own builders make of it. A ledger payment is named by the
+    provider the scenario calls it by, since the identifier the ledger mints for
+    it is content-derived and moves whenever the payment's facts move.
+    """
+    corpus = _read(CREATIONS)
+    base = corpus["base"]
+    made = tuple({**item, "draft": {**base, **item["draft"]}} for item in corpus["creations"])
+    names = [item["id"] for item in made]
+    if len(set(names)) != len(names):
+        raise ValueError("a creation is committed twice under one name")
+    return made
+
+
+def resolved_payments(value: Any, payments: dict[str, str]) -> Any:
+    """Name every payment a committed creation refers to by the identifier the ledger minted.
+
+    Args:
+        value: Committed creation data, at any depth.
+        payments: The ledger's identifier for each provider the scenario names.
+
+    Returns:
+        The same data with every ``ledger-payment:<provider>`` replaced.
+    """
+    if isinstance(value, dict):
+        return {name: resolved_payments(item, payments) for name, item in value.items()}
+    if isinstance(value, list):
+        return [resolved_payments(item, payments) for item in value]
+    if isinstance(value, str) and value.startswith(PAYMENT_PREFIX):
+        provider = value.removeprefix(PAYMENT_PREFIX)
+        if provider not in payments:
+            raise ValueError(f"{provider}: no payment of the scenario is named so")
+        return payments[provider]
+    return value
 
 
 def _payment(provider_id: str, facts: dict[str, Any]) -> Transaction:
@@ -274,7 +318,31 @@ def _element(operations: ActivityAssetOperations, asset_id: str, today: date) ->
     }
 
 
-def _candidates(operations: ActivityAssetOperations) -> tuple[Any, ...]:
+def _creation(frame: dict[str, Any], elements: tuple[dict[str, Any], ...], made: dict[str, Any]) -> dict[str, Any]:
+    """What the register answers for one creation the window's form makes.
+
+    Each creation is replayed into a register of its own, standing on the
+    scenario's day with the scenario's elements and payments, so one creation
+    never sees another and the element it makes is numbered as the only new one.
+    """
+    operations, today, payments = replayed_register(frame, elements)
+    named = {item["provider_id"]: item["transaction_id"] for item in payments}
+    revision = resolved_payments({**made["revision"], "asset_id": made["id"]}, named)
+    descriptor = resolved_payments(made["descriptor"], named)
+    snapshot = ActivityAssetRevisionSnapshot.model_validate_json(json.dumps(revision))
+    operations.create(
+        snapshot.to_domain(),
+        ActivityAssetDescriptorFacts.model_validate(descriptor),
+        recorded_at=datetime.combine(today, datetime.min.time()),
+        origin=_ORIGIN_CREATE,
+    )
+    row = next(item for item in operations.list_elements() if item.asset_id == made["id"])
+    return {"id": made["id"], "draft": made["draft"], "list": row.model_dump(mode="json")} | _element(
+        operations, made["id"], today
+    )
+
+
+def recorded_candidates(operations: ActivityAssetOperations) -> tuple[Any, ...]:
     """The payments the register offers, read under a pinned generation.
 
     Reading a payment's non-deductible IVA resolves the art. 106 input vocabulary,
@@ -321,7 +389,7 @@ def recording(frame: dict[str, Any], elements: tuple[dict[str, Any], ...]) -> di
         "list": _dump(rows),
         "years": list(years),
         "default_year": operations.default_register_year(years),
-        "candidates": _dump(_candidates(operations)),
+        "candidates": _dump(recorded_candidates(operations)),
         "payments": list(payments),
         "form_options": _form_options(operations, _answered_years(rows, documents)),
         "vocabulary": {
@@ -332,4 +400,5 @@ def recording(frame: dict[str, Any], elements: tuple[dict[str, Any], ...]) -> di
             "no_table_minimum_key": NO_TABLE_MINIMUM_REASON_KEY,
         },
     }
+    register["creations"] = [_creation(frame, elements, made) for made in committed_creations()]
     return {"register": register, **{name: {"_note": NOTE, **element} for name, element in documents.items()}}
