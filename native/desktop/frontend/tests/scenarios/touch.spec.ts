@@ -358,7 +358,9 @@ test("a header measures a new title afresh instead of keeping the last title's r
 test("a header next gives up its page's actions, and takes them back when there is room", async ({
   page: target,
 }) => {
-  await seedLayout(target);
+  // The window's own first arrangement leaves the documentation closed, so
+  // the rail's tap opens it; a stored layout that already shows it would
+  // have the same tap close it again.
   await target.goto(
     "/scenarios.html?scenario=signed-in&latency=0&bar=off&lang=es",
   );
@@ -370,6 +372,7 @@ test("a header next gives up its page's actions, and takes them back when there 
     })
     .tap();
   const header = target.locator('[data-dock-header="docs"]');
+  await expect(header).toBeVisible();
   const button = (key: string) =>
     header.getByRole("button", { name: label(key, {}, "es"), exact: true });
   const back = button("desktop.action.docs_back");
