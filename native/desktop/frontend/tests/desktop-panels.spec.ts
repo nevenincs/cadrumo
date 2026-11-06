@@ -35,7 +35,9 @@ test("a fresh layout keeps the TUI closed after sign-in", async ({ page }) => {
     0,
   );
   await expect(page.locator(".pane-tui")).toBeHidden();
-  await expect.poll(async () => (await signInState(page)).tuiStarts).toBe(0);
+  // A count of none cannot be waited for; the saved-layout case below goes
+  // through the same sign-in and sees this count reach one.
+  expect((await signInState(page)).tuiStarts).toBe(0);
 });
 
 test("a saved open and maximized TUI comes back as saved, once signed in", async ({
