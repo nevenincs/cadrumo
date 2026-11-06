@@ -7,7 +7,9 @@ that defines it.
   current UTC-aware instant), :func:`~cadrumo.core.time.clock.today_madrid`
   (the current Europe/Madrid civil date, the authority for regulated
   date-boundary reference-date defaults), :data:`~cadrumo.core.time.clock.MADRID_TZ`
-  (Spain's peninsular civil timezone), and the replay/test-scoped
+  (Spain's peninsular civil timezone),
+  :func:`~cadrumo.core.time.clock.madrid_wall_clock_to_utc` (the instant a naive
+  peninsular wall-clock reading names), and the replay/test-scoped
   :func:`~cadrumo.core.time.clock.frozen_clock` seam with its
   :func:`~cadrumo.core.time.clock.frozen_clock` context manager.
 * :mod:`cadrumo.core.time.utc` — :func:`~cadrumo.core.time.utc.parse_iso_datetime`

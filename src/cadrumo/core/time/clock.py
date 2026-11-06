@@ -92,6 +92,32 @@ def today_madrid() -> date:
     return now().astimezone(MADRID_TZ).date()
 
 
+def madrid_wall_clock_to_utc(value: datetime) -> datetime:
+    """Read a naive Europe/Madrid wall-clock reading as the instant it names.
+
+    AEAT prints presentation timestamps without an offset: the sede
+    electrónica's listbox cells and the justificante's "Presentación realizada
+    el" line are peninsular official time (Ley 39/2015 art. 31). Attaching
+    :data:`~datetime.UTC` to such a reading moves the instant one or two hours
+    back, which changes its Spanish civil date for anything stamped in the last
+    two hours of a Spanish day -- exactly the readings a filing-plazo
+    comparison turns on.
+
+    An already-aware value is converted rather than reinterpreted, because its
+    offset is a fact the source supplied.
+
+    Args:
+        value: A naive reading of Spain's peninsular civil clock, or any aware
+            instant.
+
+    Returns:
+        The same instant, UTC-aware.
+    """
+    if value.tzinfo is None:
+        return value.replace(tzinfo=MADRID_TZ).astimezone(UTC)
+    return value.astimezone(UTC)
+
+
 def _refuse_under_live_opt_in() -> None:
     """Raise :class:`CoreValidationError` when the live-test opt-in is active.
 
