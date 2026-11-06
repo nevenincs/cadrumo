@@ -88,7 +88,7 @@ def _professional_services_invoice(
     number: str = "F-PROV-900",
     issued_at: date = date(2025, 3, 15),
     counterparty_country: str = "ES",
-    counterparty_tax_id: str = "B12345674",
+    counterparty_tax_id: str = "B00015016",
 ) -> Invoice:
     subtotal = Decimal("1000.00")
     rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(2026, 1, 1))
@@ -615,7 +615,7 @@ def _producer_created_invoice(
             bucket_id=bucket_id,
             kind=InvoiceKind.RECEIVED,
             counterparty_name="Asesoría Profesional SL",
-            counterparty_tax_id="B12345674",
+            counterparty_tax_id="B00015016",
             counterparty_country="ES",
             invoice_number=number,
             issued_at=date(2025, 3, 15),

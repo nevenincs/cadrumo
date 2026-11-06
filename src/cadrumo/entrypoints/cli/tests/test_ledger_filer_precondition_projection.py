@@ -39,7 +39,7 @@ def test_filer_setup_refusal_reaches_the_shared_cli_projection_intact() -> None:
         profile = _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id="11111111-1111-4111-8111-111111111111",
-            facts=(UserProfileFact(path=FILER_TAX_ID_FACT_PATH, value="X1234567L"),),
+            facts=(UserProfileFact(path=FILER_TAX_ID_FACT_PATH, value="X0001500M"),),
             context=_profile_creation_context_for_test(),
         )
 

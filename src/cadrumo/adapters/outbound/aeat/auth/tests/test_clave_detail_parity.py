@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _SESSION_SHARED_FIELDS = ("dni_nie", "landing_url")
 _ASSERTION_SHARED_FIELDS = ("session_cookie_present", "landing_url")
-_DNI_NIE = "X1234567L"
+_DNI_NIE = "X0001500M"
 
 type ClaveSessionDetail = ClaveMovilSessionDetail | ClavePermanenteSessionDetail
 type ClaveLoginAssertionDetail = ClaveMovilLoginAssertionDetail | ClavePermanenteLoginAssertionDetail

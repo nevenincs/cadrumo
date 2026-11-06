@@ -45,7 +45,7 @@ def contribution_members() -> tuple[Modelo156AfiliadoRow, ...]:
             ),
         ),
         Modelo156AfiliadoRow(
-            nif="87654321X",
+            nif="X0001502F",
             nombre="Ejemplo Prueba Luis",
             numero_afiliacion="001234567891",
             cotizaciones=tuple(

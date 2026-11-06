@@ -29,10 +29,10 @@ def _payload() -> dict[str, object]:
         "booked": date(2025, 12, 31),
         "stamped": datetime(2026, 1, 2, 3, 4, 5, tzinfo=UTC),
         "export": Path("exports") / "ledger.csv",
-        "pair": ("B12345674", Decimal("0.10")),
+        "pair": ("B00015016", Decimal("0.10")),
         "tags": frozenset({"mixed"}),
         "lines": [_Line(amount=Decimal("12.50"), booked=date(2025, 3, 1))],
-        "note": "invoice for B12345674 at https://example.org/private/path",
+        "note": "invoice for B00015016 at https://example.org/private/path",
     }
 
 
@@ -59,7 +59,7 @@ def test_the_emitted_envelope_equals_a_twice_converted_one() -> None:
     assert emitted["result"] == expected["result"]
     assert emitted["result"]["exponent_amount"] == "100"
     assert emitted["result"]["lines"] == [{"amount": "12.50", "booked": "2025-03-01"}]
-    assert "B12345674" not in stream.getvalue()
+    assert "B00015016" not in stream.getvalue()
 
 
 def test_the_emitted_bytes_are_the_twice_converted_bytes() -> None:

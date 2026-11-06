@@ -313,7 +313,7 @@ def _observation(
 ) -> WithholdingObservation:
     return WithholdingObservation(
         source_id=source_id,
-        perceptor_tax_id="11111111H",
+        perceptor_tax_id="00001500M",
         perceptor_legal_name="PERCEPTOR SINTETICO",
         transaction_date=date(2025, 6, 1),
         clave=RetencionClave.from_registry("G"),
@@ -375,7 +375,7 @@ def test_m190_rows_group_active_payments_by_recipient_clave_and_subclave() -> No
         base.id: Decimal("600.00"),
         retention.id: Decimal("110.00"),
     }
-    assert row_values[(nif.id, 1)] == "11111111H"
+    assert row_values[(nif.id, 1)] == "00001500M"
     assert row_values[(clave.id, 1)] == "G"
     assert row_values[(subclave.id, 1)] == "01"
     assert row_values[(dinerario.id, 1)] == Decimal("500.00")

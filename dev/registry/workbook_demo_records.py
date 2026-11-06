@@ -40,7 +40,7 @@ def member_attribution_records(snapshot: RegistrySnapshot) -> CalculationRevisio
         )
         for nif, name, share, amount, province in (
             ("12345678Z", "Miembro ficticio A", "60", "3600", "28"),
-            ("87654321X", "Miembro ficticio B", "40", "2400", "08"),
+            ("X0001502F", "Miembro ficticio B", "40", "2400", "08"),
         )
     )
     work_id = sha256_hex(f"fictional-184-{snapshot.revision.id}-{snapshot.filing_year}".encode())
@@ -107,7 +107,7 @@ def annual_rent_records(snapshot: RegistrySnapshot) -> CalculationRevision:
             "perc.inmueble-provincia": "28",
         },
         {
-            "perc.nif": "87654321X",
+            "perc.nif": "X0001502F",
             "perc.nombre": "Arrendador ficticio B",
             "perc.provincia": "08",
             "perc.modalidad": "1",
@@ -139,7 +139,7 @@ def annual_employment_records(snapshot: RegistrySnapshot) -> CalculationRevision
         }
         for nif, name, province, amount, withheld in (
             ("12345678Z", "Persona ficticia A", "28", "24000", "2400"),
-            ("87654321X", "Persona ficticia B", "08", "18000", "1800"),
+            ("X0001502F", "Persona ficticia B", "08", "18000", "1800"),
         )
     )
     return _recipient_records(snapshot, rows, "modelo-190-perceptor")
@@ -161,7 +161,7 @@ def annual_capital_records(snapshot: RegistrySnapshot) -> CalculationRevision:
         }
         for nif, name, province, amount, withheld in (
             ("12345678Z", "Perceptor ficticio A", "28", "1000", "190"),
-            ("87654321X", "Perceptor ficticio B", "08", "2000", "380"),
+            ("X0001502F", "Perceptor ficticio B", "08", "2000", "380"),
         )
     )
     expenses = ({"gasto.nif": "12345678Z", "gasto.nombre": "Perceptor ficticio A", "gasto.importe": "25"},)

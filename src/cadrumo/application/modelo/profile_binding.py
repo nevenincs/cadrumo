@@ -91,6 +91,7 @@ from .profile_derived_facts import (
     inject_derived_minimo_descendientes_facts,
     inject_derived_state_attribution_facts,
     inject_ordinary_work_maritime_facts,
+    profile_declares_economic_activity,
     snapshot_authored_year,
 )
 from .profile_row_binding import profile_row_bindings, resolve_profile_row_values
@@ -132,7 +133,6 @@ if TYPE_CHECKING:
 # hecho and Art. 82.1.2a is registration-agnostic, so BOTH must count as
 # partnered; treating only the registered form as partnered would over-grant
 # for an unregistered couple.
-_ECONOMIC_ACTIVITY_INCOME_CATEGORY = "actividad_economica"
 _ECONOMIC_ACTIVITY_PREDICATE_BINDING_SUFFIX = "-profile-has-economic-activity"
 
 
@@ -341,6 +341,8 @@ class _ProfileFacts:
 
     fact_index: dict[str, UserProfileFactValue]
     fingerprint: str | None
+    decided_derived_paths: frozenset[str] = frozenset()
+    """Derived paths an injector decided, including those it decided to leave absent."""
 
 
 def _is_calculation_only_profile_binding(binding: BindingDefinition) -> bool:
@@ -430,8 +432,12 @@ def _load_profile_facts(
     family_context = family_fact_context(snapshot, operation=operation)
     inject_derived_marriage_facts(fact_index, snapshot.filing_year)
     inject_ordinary_work_maritime_facts(fact_index)
-    inject_derived_cash_election_fact(fact_index, record, snapshot.filing_year, operation=operation)
-    inject_derived_estimation_modality_fact(fact_index, operation=operation)
+    decided_derived_paths = frozenset(
+        (
+            *inject_derived_cash_election_fact(fact_index, record, snapshot.filing_year, operation=operation),
+            *inject_derived_estimation_modality_fact(fact_index, operation=operation),
+        )
+    )
     declared_selectors = declared_profile_selectors(snapshot.revision)
     inject_derived_anualidades_eligibility_facts(
         fact_index,
@@ -474,7 +480,11 @@ def _load_profile_facts(
             effective_date=date(snapshot.filing_year, 1, 1),
             operation=operation,
         )
-    return _ProfileFacts(fact_index=fact_index, fingerprint=profile_record_fingerprint)
+    return _ProfileFacts(
+        fact_index=fact_index,
+        fingerprint=profile_record_fingerprint,
+        decided_derived_paths=decided_derived_paths,
+    )
 
 
 def resolve_profile_binding_channels(
@@ -653,6 +663,7 @@ def resolve_profile_sourced_bindings(
                 facts.fact_index,
                 resolved_schema,
                 bucket_id=bucket_id,
+                decided_derived_paths=facts.decided_derived_paths,
             ),
             *rows.diagnostics,
         ),
@@ -750,6 +761,7 @@ def _derived_binding_diagnostics(
     schema: ProfileSchemaDefinition,
     *,
     bucket_id: str,
+    decided_derived_paths: frozenset[str] = frozenset(),
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Advise on a SELECTED derived binding that still resolved to nothing.
 
@@ -765,6 +777,11 @@ def _derived_binding_diagnostics(
     be an ordinary absence -- no injector claimed it, which means a structural
     gap (a registry year with no injector coverage, or a pattern whose
     consuming binding drifted). Every fire is real.
+
+    Some derived paths are legitimately absent: the estimation modality and the
+    cash election are left unset when the regime or criterion is undeclared or
+    the block does not apply. Their injectors return the paths they decided, and
+    ``decided_derived_paths`` keeps such a decided absence from reading as a gap.
     """
     diagnostics: list[CalculationSourceDiagnostic] = []
     for binding in bindings:
@@ -772,7 +789,7 @@ def _derived_binding_diagnostics(
             continue
         for selector in profile_binding_selectors(binding.provider):
             derived = derived_selector_for_path(selector, schema.derived_selectors)
-            if derived is None:
+            if derived is None or selector in decided_derived_paths:
                 continue
             diagnostics.append(
                 CalculationSourceDiagnostic(
@@ -790,15 +807,6 @@ def _derived_binding_diagnostics(
             )
             break
     return tuple(diagnostics)
-
-
-def _economic_activity_binding_value(
-    fact_index: Mapping[str, UserProfileFactValue],
-) -> bool:
-    """Derive the activity predicate from the canonical category fact."""
-    raw_categories = str(fact_index.get("taxpayer_type.irpf_income_categories", ""))
-    categories = {token.strip() for token in raw_categories.split(",") if token.strip()}
-    return _ECONOMIC_ACTIVITY_INCOME_CATEGORY in categories
 
 
 def _profile_selector_value(
@@ -845,7 +853,7 @@ def resolve_profile_binding_value(
     if isinstance(binding.provider, ProfileProvider) and binding.provider.repeating:
         return None
     if binding.id.endswith(_ECONOMIC_ACTIVITY_PREDICATE_BINDING_SUFFIX):
-        return _economic_activity_binding_value(fact_index)
+        return profile_declares_economic_activity(fact_index)
     # ``profile_binding_selectors`` returns the binding's DEPENDENCY set -- every
     # fact it references -- and that includes ``required_when_profile_key``. The
     # gate fact states WHETHER the binding applies, never WHAT it holds, so it

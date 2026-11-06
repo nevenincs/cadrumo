@@ -696,7 +696,7 @@ test("Censo checks saved prerequisites and edits the missing identity", async ({
     name: "Tax ID (NIF/NIE/CIF)",
     exact: true,
   });
-  await editor.getByRole("textbox").fill("X1234567L");
+  await editor.getByRole("textbox").fill("X0001500M");
   await save(editor).click();
   await expect(region).not.toContainText(
     label("auth.sync.requirement.profile_tax_id_required"),

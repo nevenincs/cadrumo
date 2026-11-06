@@ -33,7 +33,7 @@ _SOURCE_REFS = ("aeat-dr-193-2025",)
 _DEVENGO: WithholdingGrouping = "per_perceptor_clave_devengo"
 _PENDING_NIF = "999999999"
 _PENDING_NAME = "VALORES PENDIENTE DE ABONO"
-_HOLDER_NIF = "11111111H"
+_HOLDER_NIF = "00001500M"
 
 
 def _row_binding(

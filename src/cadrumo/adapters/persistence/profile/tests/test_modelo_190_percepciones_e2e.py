@@ -52,9 +52,9 @@ def test_m190_percepciones_count_resolves_distinct_from_store_to_bound_casilla(t
             period=source_period,
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
             observations=[
-                perceptor_observation("11111111H", RetencionClave.from_registry("A")),
-                perceptor_observation("11111111H", RetencionClave.from_registry("G")),
-                perceptor_observation("22222222J", RetencionClave.from_registry("A")),
+                perceptor_observation("00001500M", RetencionClave.from_registry("A")),
+                perceptor_observation("00001500M", RetencionClave.from_registry("G")),
+                perceptor_observation("00001501Y", RetencionClave.from_registry("A")),
             ],
         )
         snapshot = published_authority_operation().snapshot("190", filing_year=2024, period="0A")

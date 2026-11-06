@@ -57,7 +57,7 @@ _BUCKET_ID = "35353535-3535-4353-8353-353535353535"
 #: is a ``SubjectTaxId``, so a placeholder label is refused at the boundary
 #: and these fixtures must carry real identifier shapes.
 _TAXPAYER_REF = "12345678Z"
-_OTHER_TAXPAYER_REF = "87654321X"
+_OTHER_TAXPAYER_REF = "X0001502F"
 
 
 @cache

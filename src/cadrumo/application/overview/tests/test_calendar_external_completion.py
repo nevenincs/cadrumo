@@ -30,7 +30,7 @@ _AS_OF = date(2025, 4, 30)
 def _row(operation: PinnedAuthorityOperation, observations, *, coordinate_change: dict[str, object] | None = None):
     evidence = calendar_filing_evidence_from_sources(
         filed_declaration_observations=observations,
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
     if coordinate_change is not None and coordinate_change:
         evidence = tuple(item.model_copy(update=coordinate_change) for item in evidence)
@@ -58,7 +58,7 @@ def test_an_exact_alta_is_filed_without_local_link_or_overdue_recovery(operation
 @pytest.mark.parametrize(
     "change",
     [
-        {"authenticated_identity": "Y7654321G"},
+        {"authenticated_identity": "Y0001503E"},
         {"status": "BAJA"},
         {"period": Period.from_year_and_code(2025, "2T")},
         {"modelo": "130"},
@@ -109,7 +109,7 @@ def test_inactive_and_unknown_register_rows_stay_visible_as_concerns_without_com
 
 def test_identity_mismatch_does_not_even_expose_a_register_concern(operation: PinnedAuthorityOperation) -> None:
     observation = filed_declaration_observation(artefacts=()).model_copy(
-        update={"status": "BAJA", "authenticated_identity": "Y7654321G"}
+        update={"status": "BAJA", "authenticated_identity": "Y0001503E"}
     )
     row = _row(operation, (observation,))
     assert row.filing_evidence.aeat_evidence_concerns == ()

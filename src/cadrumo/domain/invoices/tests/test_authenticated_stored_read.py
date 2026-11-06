@@ -93,7 +93,7 @@ def _rich_payloads() -> list[dict[str, object]]:
                 date(2025, 8, 8),
                 ("RATE_21",),
                 extra={
-                    "collected_on_behalf_of_tax_id": "B12345674",
+                    "collected_on_behalf_of_tax_id": "B00015016",
                     "collected_on_behalf_of_name": "Colegiado Ejemplo",
                     "payment_status": "PARTIALLY_PAID",
                     "operation_date_role": "",

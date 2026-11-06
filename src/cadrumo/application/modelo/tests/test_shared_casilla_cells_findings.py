@@ -113,7 +113,7 @@ def _shared_cell_findings(
         findings, _resolved, _missing, failures = collect_revision_verification_findings(
             work_unit=work_unit,
             target=_revision(work_unit, casilla_values),
-            profile=TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL")),
+            profile=TaxpayerProfile(tax_id="X0001500M", iva_regime=IVARegime("GENERAL")),
             transaction_repository=EmptyTransactionCatalogueRepository(bucket_id=work_unit.bucket_id),
             invoice_repository=InvoiceCatalogueFake(),
             operation=operation,

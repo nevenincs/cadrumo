@@ -55,7 +55,7 @@ def _valid_invoice(
     invoice_number: str = "INV-001",
     kind: InvoiceKind = InvoiceKind.ISSUED,
     counterparty_name: str = "Cliente SL",
-    counterparty_tax_id: str = "B12345674",
+    counterparty_tax_id: str = "B00015016",
     counterparty_country: str = "ES",
     linked_transaction_ids: tuple[str, ...] = (),
 ) -> Invoice:
@@ -121,7 +121,7 @@ def _maximally_populated_invoice() -> Invoice:
             "operation_date": date(2026, 4, 8),
             "operation_date_role": InvoiceOperationDateRole.from_registry("OPERATION_PERFORMED"),
             "counterparty_name": "Consultora Ibérica SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "counterparty_identification_state": EUMemberState.from_registry("es"),
             "bucket_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",

@@ -1,7 +1,21 @@
-# Casilla 0168 states the modalidad of the estimacion directa block: N normal, S
-# simplificada. The modalidad is a taxpayer-wide fact the profile already holds
-# as the estimation regime, so it is derived from that regime rather than asked
-# when calculating. A regime outside direct estimation leaves the box unresolved.
+# Casilla 0168 states the modalidad of the estimacion directa block as the design's
+# clave (E1MED, tipo_OpcionesSyN): N normal, S simplificada. The modalidad is a
+# taxpayer-wide fact the profile already holds as the estimation regime, so the clave
+# is derived from that regime rather than asked when calculating. A regime outside
+# direct estimation leaves the box unresolved.
+[[revisions."2020".bindings]]
+id = "renta-modelo-100-estimacion-directa-modalidad-clave"
+provider = { kind = "profile", profile_key = "irpf.estimation_directa_modalidad_clave", xsd_path = "/DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1MED", dictionary_field = "E1MED" }
+value = { data_type = "text", channel = "text" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-xsd", "aeat-renta-2020-manual-parte1"]
+
+[[revisions."2020".bindings.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa"]
+# The same modalidad read as a yes/no answer, for the formulas that branch on it
+# (casilla 0224 takes 0180 - 0220 under normal and 0180 - 0223 under simplificada).
 [[revisions."2020".bindings]]
 id = "renta-modelo-100-estimacion-directa-es-normal"
 provider = { kind = "profile", profile_key = "irpf.estimation_directa_normal" }

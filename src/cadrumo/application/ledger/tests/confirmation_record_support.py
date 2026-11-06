@@ -34,8 +34,8 @@ def populated_confirmation_record() -> InvoiceConfirmationRecord:
         field="supplier_tax_id",
         detail="two tax ids printed on the same document",
         candidates=(
-            FieldAmbiguityCandidate(value="ESB12345674", anchor="NIF: ESB12345674", note="header block"),
-            FieldAmbiguityCandidate(value="ESX1234567L", anchor="ESX1234567L", note="footer block"),
+            FieldAmbiguityCandidate(value="ESB00015016", anchor="NIF: ESB00015016", note="header block"),
+            FieldAmbiguityCandidate(value="ESX0001500M", anchor="ESX0001500M", note="footer block"),
         ),
     )
     return InvoiceConfirmationRecord(
@@ -63,7 +63,7 @@ def populated_confirmation_record() -> InvoiceConfirmationRecord:
                 resolution=FindingResolution(
                     blocker_id="0123456789abcdef",
                     action=FindingResolutionAction.CHOOSE_CANDIDATE,
-                    value="ESX1234567L",
+                    value="ESX0001500M",
                     note="matched against the paper invoice header",
                 ),
             ),

@@ -59,7 +59,7 @@ def _create_profile() -> None:
         label="operator",
         facts={
             **native_general_iva_facts(),
-            "identity.tax_id": "B12345674",
+            "identity.tax_id": "B00015016",
             "taxpayer_type.entity_type": "legal_entity",
             "taxpayer_type.legal_entity_form": "sl",
             "identity.name": "Operator",

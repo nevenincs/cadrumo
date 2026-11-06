@@ -354,7 +354,7 @@ _M115_C03_RETENCIONES = {
     "3T": Decimal("142.55"),
     "4T": Decimal("570.00"),
 }
-_M180_RETENCION_PERCEPTOR_NIFS: tuple[str, ...] = ("11111111H", "22222222J")
+_M180_RETENCION_PERCEPTOR_NIFS: tuple[str, ...] = ("00001500M", "00001501Y")
 # The per-perceptor rental detail M180 counts is the quarterly M115 detail; it is
 # filed under the quarter its accrual date falls in.
 _M180_DETAIL_SOURCE_MODELO = "115"
@@ -890,7 +890,7 @@ _M123_C09_RETENCIONES = {
     "3T": Decimal("1710.04"),
     "4T": Decimal("63.28"),
 }
-_M193_RETENCION_PERCEPTOR_NIFS: tuple[str, ...] = ("33333333P", "44444444A", "55555555K")
+_M193_RETENCION_PERCEPTOR_NIFS: tuple[str, ...] = ("00001502F", "00001503P", "00001504D")
 
 
 def test_m193_folds_in_four_m123_quarters_with_withholding_advisory(

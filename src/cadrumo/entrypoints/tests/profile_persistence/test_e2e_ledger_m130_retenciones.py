@@ -252,7 +252,7 @@ def _issued_invoice(
             "invoice_number": number,
             "issued_at": date(_WITHHELD_YEAR, 2, 10) if issued_at is None else issued_at,
             "counterparty_name": "Cliente SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "bucket_id": _BUCKET_ID,
             "base_total": base,

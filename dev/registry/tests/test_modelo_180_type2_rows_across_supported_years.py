@@ -207,7 +207,7 @@ def test_declaration_pdf_profile_and_application_wiring_are_one_member_across_th
 
 def _one_recipient_two_properties(year: int) -> RetencionesAggregation:
     """One landlord letting two properties: one distinct recipient, two type-2 rows."""
-    nif = "11111111H"
+    nif = "00001500M"
     rows = tuple(
         Modelo180Type2Row(
             filing_year=year,

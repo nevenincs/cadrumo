@@ -53,7 +53,7 @@ from ..filing.producer_snapshot import DeclarationContactFacts, PresenterIdentit
 from ..user_profile.projections import profile_fact_index
 from ..user_profile.validation import profile_text_too_long_error
 from .profile_binding import resolve_profile_binding_value
-from .profile_derived_facts import inject_derived_cash_election_fact
+from .profile_derived_facts import inject_derived_cash_election_fact, inject_derived_estimation_modality_fact
 
 _SURNAMES_NAME_FORMAT = "surnames_name"
 
@@ -143,6 +143,22 @@ def _profile_text_casilla_bindings(
 
 def _first_profile_text_value(declared: tuple[UserProfileFactValue, ...]) -> str | None:
     return next((text for fact in declared if (text := _profile_text_spelling(fact)) is not None), None)
+
+
+def profile_text_fact_index(
+    record: object,
+    schema: ProfileSchemaDefinition,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> dict[str, UserProfileFactValue]:
+    """Return the fact index a bound text casilla reads, with its engine-derived claves.
+
+    Casilla 0168's modality clave is derived from the declared estimation regime, so
+    the text channel reads the derived value and never one stored at the path.
+    """
+    fact_index = profile_fact_index(record, schema)
+    inject_derived_estimation_modality_fact(fact_index, operation=operation)
+    return fact_index
 
 
 def resolve_profile_text_casilla_inputs(
@@ -647,5 +663,6 @@ def _resolve_profile_export_values(
     resolved_schema = operation.profile_schema() if schema is None else schema
     fact_index = profile_fact_index(record, resolved_schema)
     inject_derived_cash_election_fact(fact_index, record, filing_year, operation=operation)
+    inject_derived_estimation_modality_fact(fact_index, operation=operation)
 
     return _profile_export_values_from_facts(bindings, fact_index)

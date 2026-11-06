@@ -59,7 +59,7 @@ _LOAD_CAPACITY = LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED.value
 _DOES_NOT_FIT = ModelRunRefusalCode.MODEL_DOES_NOT_FIT
 
 _SUPPLIER_NAME = "Estacion de Servicio Albufera SL"
-_SUPPLIER_TAX_ID = "B92000082"
+_SUPPLIER_TAX_ID = "B00015081"
 
 # The labels read every required field here except the issuer's letterhead name,
 # which no label assigns, so the text model is asked for exactly that one field.
@@ -76,7 +76,7 @@ _PARTIALLY_LABELLED_LINES = (
 )
 
 # Nothing here is a label the rules read, so there is no reading to stand on.
-_UNLABELLED_LINES = ("B1234567X B17283946 766,30",)
+_UNLABELLED_LINES = ("B1234567X B00015024 766,30",)
 
 #: The service's reply to every fill: the one field the labels leave unread.
 _FILL_REPLY = json.dumps({"supplier_name": _SUPPLIER_NAME, "supplier_name_anchor": _SUPPLIER_NAME})

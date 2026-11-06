@@ -33,7 +33,7 @@ def test_counterparty_public_schema_binds_and_round_trips_scalar_projection() ->
     request = LedgerCounterpartyRequest(
         profile_id=profile_id,
         action="view",
-        tax_identifier="B12345674",
+        tax_identifier="B00015016",
         evidenced_scope="es_mainland",
     )
     assert LedgerCounterpartyRequest.model_validate_json(request.model_dump_json()) == request

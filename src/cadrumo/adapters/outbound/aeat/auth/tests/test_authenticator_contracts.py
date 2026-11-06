@@ -113,10 +113,10 @@ def test_extract_nif_from_bare_serial(tmp_path: Path) -> None:
         subject_attrs=[
             x509.NameAttribute(NameOID.COUNTRY_NAME, "ES"),
             x509.NameAttribute(NameOID.COMMON_NAME, "ANYBODY"),
-            x509.NameAttribute(NameOID.SERIAL_NUMBER, "87654321X"),
+            x509.NameAttribute(NameOID.SERIAL_NUMBER, "X0001502F"),
         ],
     )
-    assert extract_nif_from_subject(cert) == "87654321X"
+    assert extract_nif_from_subject(cert) == "X0001502F"
 
 
 def test_extract_nif_accepts_nie(tmp_path: Path) -> None:
@@ -124,11 +124,11 @@ def test_extract_nif_accepts_nie(tmp_path: Path) -> None:
         tmp_path,
         subject_attrs=[
             x509.NameAttribute(NameOID.COUNTRY_NAME, "ES"),
-            x509.NameAttribute(NameOID.SERIAL_NUMBER, "X1234567L"),
+            x509.NameAttribute(NameOID.SERIAL_NUMBER, "X0001500M"),
             x509.NameAttribute(NameOID.COMMON_NAME, "RESIDENT PERSON"),
         ],
     )
-    assert extract_nif_from_subject(cert) == "X1234567L"
+    assert extract_nif_from_subject(cert) == "X0001500M"
 
 
 def test_extract_nif_cn_fallback(tmp_path: Path) -> None:
@@ -178,7 +178,7 @@ def test_extract_nif_rejects_cif(tmp_path: Path) -> None:
         tmp_path,
         subject_attrs=[
             x509.NameAttribute(NameOID.COUNTRY_NAME, "ES"),
-            x509.NameAttribute(NameOID.SERIAL_NUMBER, "B12345674"),
+            x509.NameAttribute(NameOID.SERIAL_NUMBER, "B00015016"),
             x509.NameAttribute(NameOID.COMMON_NAME, "EMPRESA SL"),
         ],
     )
@@ -491,10 +491,10 @@ def test_extract_nif_handles_quoted_plus_in_cn(tmp_path: Path) -> None:
         tmp_path,
         subject_attrs=[
             x509.NameAttribute(NameOID.COMMON_NAME, "Alice+Bob Industries"),
-            x509.NameAttribute(NameOID.SERIAL_NUMBER, "X1234567L"),
+            x509.NameAttribute(NameOID.SERIAL_NUMBER, "X0001500M"),
         ],
     )
-    assert extract_nif_from_subject(cert) == "X1234567L"
+    assert extract_nif_from_subject(cert) == "X0001500M"
 
 
 def test_extract_nif_from_multi_valued_rdn(tmp_path: Path) -> None:

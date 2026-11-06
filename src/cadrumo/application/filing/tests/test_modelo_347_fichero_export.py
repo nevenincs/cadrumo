@@ -156,9 +156,9 @@ def _profile(
 
 def _ordinary_invoices() -> tuple[Invoice, ...]:
     return (
-        _domestic("V-1", InvoiceKind.ISSUED, "B12345674", "CLIENTE NACIONAL SL", "8000.00"),
+        _domestic("V-1", InvoiceKind.ISSUED, "B00015016", "CLIENTE NACIONAL SL", "8000.00"),
         _domestic("C-1", InvoiceKind.RECEIVED, "A00010074", "PROVEEDOR NACIONAL SA", "5000.00"),
-        _domestic("V-2", InvoiceKind.ISSUED, "C3333333G", "CLIENTE PEQUENO SL", "1000.00"),
+        _domestic("V-2", InvoiceKind.ISSUED, "C0001502D", "CLIENTE PEQUENO SL", "1000.00"),
     )
 
 
@@ -286,7 +286,7 @@ def test_a_landlord_files_one_inmueble_record_per_leased_premises_and_the_leases
         _domestic(
             "A-1",
             InvoiceKind.ISSUED,
-            "B12345674",
+            "B00015016",
             "INQUILINO UNO SL",
             "10000.00",
             referencia_catastral="9872023VH5797S0001WX",
@@ -294,28 +294,28 @@ def test_a_landlord_files_one_inmueble_record_per_leased_premises_and_the_leases
         _domestic(
             "A-2",
             InvoiceKind.ISSUED,
-            "B87654323",
+            "B00015057",
             "INQUILINO DOS SL",
             "6000.00",
             referencia_catastral="1234567DF3813S0002QK",
         ),
-        _domestic("V-1", InvoiceKind.ISSUED, "B12345674", "INQUILINO UNO SL", "5000.00"),
+        _domestic("V-1", InvoiceKind.ISSUED, "B00015016", "INQUILINO UNO SL", "5000.00"),
     )
 
     declarante, *type_2 = _exported_lines(operation, tmp_path, invoices)
 
     declarados = {(line[17:26], line[99]): line[82:98] for line in type_2 if line[75] == "D"}
     assert declarados == {
-        ("B12345674", "X"): " 000000001210000",
-        ("B12345674", " "): " 000000000605000",
-        ("B87654323", "X"): " 000000000726000",
+        ("B00015016", "X"): " 000000001210000",
+        ("B00015016", " "): " 000000000605000",
+        ("B00015057", "X"): " 000000000726000",
     }
     inmuebles = [line for line in type_2 if line[75] == "I"]
     assert [
         (line[17:26], line[35:75].rstrip(), line[98:114], line[114], line[115:140].rstrip()) for line in inmuebles
     ] == [
-        ("B12345674", "INQUILINO UNO SL", " 000000001210000", "1", "9872023VH5797S0001WX"),
-        ("B87654323", "INQUILINO DOS SL", " 000000000726000", "1", "1234567DF3813S0002QK"),
+        ("B00015016", "INQUILINO UNO SL", " 000000001210000", "1", "9872023VH5797S0001WX"),
+        ("B00015057", "INQUILINO DOS SL", " 000000000726000", "1", "1234567DF3813S0002QK"),
     ]
     assert declarante[135:144] == "000000003"
     assert declarante[144:160] == " 000000002541000"
@@ -396,7 +396,7 @@ def test_a_single_counterparty_row_carries_the_typed_cash_amount(
     operation: PinnedAuthorityOperation,
     tmp_path: Path,
 ) -> None:
-    only_one = (_domestic("V-1", InvoiceKind.ISSUED, "B12345674", "CLIENTE NACIONAL SL", "8000.00"),)
+    only_one = (_domestic("V-1", InvoiceKind.ISSUED, "B00015016", "CLIENTE NACIONAL SL", "8000.00"),)
 
     lines = _export_with_inputs(operation, tmp_path, only_one, {"contraparte.importe-metalico": "7000"})
 

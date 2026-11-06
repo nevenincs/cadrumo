@@ -106,7 +106,7 @@ def test_rows_reach_the_authority_as_the_exact_domain_rows_submitted() -> None:
     the request happens to hold.
     """
     row = Modelo232VinculadaRow(
-        nif="B12345674",
+        nif="B00015016",
         nombre="Acme SL",
         pais="ES",
         importe=Decimal("1000.00"),
@@ -146,7 +146,7 @@ def test_all_three_states_survive_request_json_round_trip() -> None:
     that declared nil, or restore the refusal this field removes.
     """
     row_payload = Modelo232VinculadaRow(
-        nif="B12345674",
+        nif="B00015016",
         nombre="Acme SL",
         pais="ES",
         importe=Decimal("1000.00"),
@@ -172,7 +172,7 @@ def test_a_domain_row_cannot_be_submitted_in_place_of_its_mirror() -> None:
     would move that mismatch to where nothing checks for it.
     """
     row = Modelo232VinculadaRow(
-        nif="B12345674",
+        nif="B00015016",
         nombre="Acme SL",
         pais="ES",
         importe=Decimal("1000.00"),

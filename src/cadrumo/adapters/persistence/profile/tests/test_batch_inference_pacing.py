@@ -57,7 +57,7 @@ _LABELLED_TEXT_LAYER = "labelled_text_layer_invoice.pdf"
 _LABELLED_LINES = (
     "FACTURA",
     "Proveedor: Hardware Profesional Sur SL",
-    "NIF: B92000090",
+    "NIF: B00015099",
     "Numero de factura: A-0003",
     "Fecha de expedicion: 2026-03-27",
     "Destinatario: Javier Ortega Llorens NIF: 12345678Z",

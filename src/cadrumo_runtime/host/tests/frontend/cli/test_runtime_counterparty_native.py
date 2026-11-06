@@ -27,7 +27,7 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
 ]
 
-_IDENTIFIER = "B12345674"
+_IDENTIFIER = "B00015016"
 _DEFINITION = LEDGER_COUNTERPARTY_OPERATION_DEFINITION_ID
 
 

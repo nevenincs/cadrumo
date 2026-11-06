@@ -34,7 +34,7 @@ from .conformance_family_contract import (
 )
 
 # A well-formed NIF: 87654321 mod 23 = 10, which selects check letter X.
-_REPRESENTED_NIF = "87654321X"
+_REPRESENTED_NIF = "X0001502F"
 _NOTES = "Conformance delegation"
 _SEEDED_AT = datetime(2026, 3, 1, 10, 0, tzinfo=UTC)
 

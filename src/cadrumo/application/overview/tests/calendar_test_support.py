@@ -289,7 +289,7 @@ def filed_declaration_observation(
         _expediente_id=expediente_id,
         _status="ALTA",
         _presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
-        _authenticated_identity="X1234567L",
+        _authenticated_identity="X0001500M",
         _artefacts=artefacts,
     )
 
@@ -314,7 +314,7 @@ def justificante_metadata(
     modelo: str = "303",
     filing_year: int = 2025,
     period: Period = PERIOD_2025_1T,
-    tax_id: str = "X1234567L",
+    tax_id: str = "X0001500M",
 ) -> Justificante:
     pdf_bytes = f"{csv}-pdf".encode()
     source_pdf_sha256 = hashlib.sha256(pdf_bytes).hexdigest()
@@ -401,7 +401,7 @@ def profile() -> TaxpayerProfile:
     """A declared autónomo en estimación directa."""
 
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),

@@ -678,7 +678,7 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
                 bucket_id=_BUCKET_ID,
                 kind=InvoiceKind.RECEIVED,
                 counterparty_name="Proveedor Ejemplo SL",
-                counterparty_tax_id="B12345674",
+                counterparty_tax_id="B00015016",
                 counterparty_country="ES",
                 invoice_number="F2026-0042",
                 issued_at=date(_YEAR, 2, 15),

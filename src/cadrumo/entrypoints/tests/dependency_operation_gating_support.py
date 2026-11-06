@@ -112,7 +112,7 @@ _READABLE_STATEMENT = (
     "08/04/2026;08/04/2026;Pago material oficina;-121,00;4300,75;EUR\n"
 )
 #: Figures with no label the rules read, so a text-layer document needs the text model.
-_NO_LABELS = ("B1234567X B17283946 766,30",)
+_NO_LABELS = ("B1234567X B00015024 766,30",)
 
 
 @dataclass(frozen=True)

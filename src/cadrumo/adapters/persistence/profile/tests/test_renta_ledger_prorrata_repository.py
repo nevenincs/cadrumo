@@ -126,7 +126,7 @@ def _profile_with_iva_regime(*iva_facts: UserProfileFact) -> UserProfileRecord:
     return _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="33333333-3333-4333-8333-333333333333",
-        facts=(UserProfileFact(path="identity.tax_id", value="X1234567L"), *iva_facts),
+        facts=(UserProfileFact(path="identity.tax_id", value="X0001500M"), *iva_facts),
         context=_profile_creation_context_for_test(),
     )
 

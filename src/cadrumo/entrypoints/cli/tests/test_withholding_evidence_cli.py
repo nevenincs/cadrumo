@@ -51,7 +51,7 @@ def _invoice() -> Invoice:
             "invoice_number": "CLI-WITHHOLDING-001",
             "issued_at": date(2025, 3, 31),
             "counterparty_name": "Resident professional SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": base,
             "iva_total": line.iva_amount,

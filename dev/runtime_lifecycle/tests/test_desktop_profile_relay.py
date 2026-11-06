@@ -97,7 +97,7 @@ async def test_desktop_profile_read_write_invalidation_and_stale_revision(
                 "expected_revision": before["record_revision"],
                 "expected_content_digest": before["content_digest"],
                 "path": "identity.tax_id",
-                "value": "X1234567L",
+                "value": "X0001500M",
             }
             started = time.perf_counter()
             saved = await asyncio.to_thread(run, "user-profile.field-mutation", payload)
@@ -109,7 +109,7 @@ async def test_desktop_profile_read_write_invalidation_and_stale_revision(
             assert any(
                 item.get("kind") == "field"
                 and item["field"]["path"] == "identity.tax_id"
-                and item["field"]["value"] == "X1234567L"
+                and item["field"]["value"] == "X0001500M"
                 for item in items
             )
             started = time.perf_counter()
@@ -128,7 +128,7 @@ async def test_desktop_profile_read_write_invalidation_and_stale_revision(
             assert prepared["operation_request"]["baseline"]["profile_id"] == profile
             assert prepared["operation_request"]["baseline"]["record_revision"] == after["record_revision"]
             assert len(prepared["effective_fields"]) == 3
-            stale = await asyncio.to_thread(run, "user-profile.field-mutation", {**payload, "value": "Y1234567X"})
+            stale = await asyncio.to_thread(run, "user-profile.field-mutation", {**payload, "value": "Y0001500L"})
             assert stale.get("refused") in {"refused", "failed"}, stale
             # The existing executor conservatively settles exceptions after its
             # effect fence as unknown. The desktop must preserve that outcome;
@@ -139,7 +139,7 @@ async def test_desktop_profile_read_write_invalidation_and_stale_revision(
             assert any(
                 item.get("kind") == "field"
                 and item["field"]["path"] == "identity.tax_id"
-                and item["field"]["value"] == "X1234567L"
+                and item["field"]["value"] == "X0001500M"
                 for item in checked_items
             )
             print(

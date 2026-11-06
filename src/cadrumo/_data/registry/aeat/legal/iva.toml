@@ -1327,6 +1327,29 @@ applies_from = 2009-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G414.shtml"
 review_status = "pending_review"
 
+[sources."aeat-modelo-303-instructions-20261106"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_303/files/modelo-303-instrucciones-20261106.html"
+sha256 = "76fb8a93b3b950bd2d3b41fdc33883f1db68b64f5298a5469d09a14d85f7f1bc"
+bytes = 110946
+retrieved_at = 2026-11-06
+applies_from = 2022-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/iva/modelo-303-iva-autoliquidacion_/instrucciones.html"
+review_status = "pending_review"
+# The page AEAT serves at this address is titled "Instrucciones para 01 a 08, 1T y
+# 2T de 2024" and states "Pagina actualizada: 09/junio/2026". Its Informacion
+# adicional wording for boxes 59 and 120 was compared, word for word, against two
+# other renderings of the same instructions: the 09-12/3T and 4T 2024 child pages
+# linked from it, and the capture of this same address taken on 2022-05-21
+# (web.archive.org/web/20220521193948, "Pagina actualizada: 17/marzo/2022"), which
+# carries the 2022 edition. All three define box 59 as the exempt art. 25 goods
+# plus "el importe de las prestaciones de servicios intracomunitarias del periodo
+# de liquidacion", and exclude those services from box 120. Applicability records
+# that comparison; it does not date this capture to 2022, and other paragraphs
+# are not asserted to govern every historical period.
+
 [sources."boe-modelo-303-2008-form"]
 evidence_tier = "layout_authority"
 authority = "boe"

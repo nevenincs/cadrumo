@@ -57,7 +57,7 @@ def _invoice(kind: InvoiceKind, gross: Decimal) -> Invoice:
             "invoice_number": "F-1",
             "issued_at": date(2026, 4, 1),
             "counterparty_name": "Proveedor S.L.",
-            "counterparty_tax_id": "B92000025",
+            "counterparty_tax_id": "B00015073",
             "counterparty_country": "ES",
             "base_total": base,
             "iva_total": iva,

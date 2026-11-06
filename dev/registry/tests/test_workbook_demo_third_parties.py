@@ -20,12 +20,12 @@ def test_third_party_invoice_projection(year: int, era: str) -> None:
     saved = third_party_records(snapshot)
     rows = saved.row_binding_values
     prefix = "modelo-347-contraparte-row-"
-    assert set(rows[prefix + "nif"].values()) == {"12345678Z", "87654321X", "11111111H"}
-    assert "22222222J" not in rows[prefix + "nif"].values()
+    assert set(rows[prefix + "nif"].values()) == {"12345678Z", "X0001502F", "00001500M"}
+    assert "00001501Y" not in rows[prefix + "nif"].values()
     expected = {
         "12345678Z": ("A", ("1210", "2420", "3630", "4840")),
-        "87654321X": ("B", ("4840", "3630", "2420", "1210")),
-        "11111111H": ("B", ("1815", "1815", "1815", "1815")),
+        "X0001502F": ("B", ("4840", "3630", "2420", "1210")),
+        "00001500M": ("B", ("1815", "1815", "1815", "1815")),
     }
     for index, nif in rows[prefix + "nif"].items():
         clave, amounts = expected[nif]
@@ -37,7 +37,7 @@ def test_third_party_invoice_projection(year: int, era: str) -> None:
     assert summary["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("31460")
     assert summary["modelo-347-declarante-numero-inmuebles"] == 1
     assert summary["modelo-347-declarante-importe-total-arrendamiento-locales"] == Decimal("7260")
-    assert rows["modelo-347-inmueble-row-arrendatario-nif"] == {"1": "11111111H"}
+    assert rows["modelo-347-inmueble-row-arrendatario-nif"] == {"1": "00001500M"}
     assert Decimal(rows["modelo-347-inmueble-row-importe"]["1"]) == Decimal("7260")
     assert saved.registry_snapshot_ref == snapshot.snapshot_ref
     assert saved.binding_overrides == {}

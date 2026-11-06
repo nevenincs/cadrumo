@@ -40,7 +40,7 @@ def test_modelo_111_selects_monthly_schedule_from_profile_object(
 ) -> None:
     snapshot = registry_snapshot("111", 2026, "01")
     profile = TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         iva_regime=IVARegime("GENERAL"),
         enrollment=ModeloEnrollment(large_company=True),
     )

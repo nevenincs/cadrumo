@@ -370,8 +370,8 @@ def test_m347_combined_provenance_preserves_both_invoice_directions() -> None:
             iva_total=Decimal("840"),
         )
         for kind, number, tax_id in (
-            (InvoiceKind.ISSUED, "347-ISSUED", "B87654323"),
-            (InvoiceKind.RECEIVED, "347-RECEIVED", "B12345674"),
+            (InvoiceKind.ISSUED, "347-ISSUED", "B00015057"),
+            (InvoiceKind.RECEIVED, "347-RECEIVED", "B00015016"),
         )
     )
     context = _m347_context(2025)
@@ -417,7 +417,7 @@ def test_m347_resolution_returns_one_declarado_row_per_declarable_counterparty_a
         kind=InvoiceKind.RECEIVED,
         number="P-001",
         issued_at=date(2025, 2, 10),
-        counterparty_tax_id="B12345674",
+        counterparty_tax_id="B00015016",
         counterparty_name="PROVEEDOR GRANDE SL",
         base_total=Decimal("2500.00"),
         iva_total=Decimal("525.00"),
@@ -426,7 +426,7 @@ def test_m347_resolution_returns_one_declarado_row_per_declarable_counterparty_a
         kind=InvoiceKind.RECEIVED,
         number="P-002",
         issued_at=date(2025, 8, 10),
-        counterparty_tax_id="B12345674",
+        counterparty_tax_id="B00015016",
         counterparty_name="PROVEEDOR GRANDE SL",
         base_total=Decimal("2500.00"),
         iva_total=Decimal("525.00"),
@@ -435,7 +435,7 @@ def test_m347_resolution_returns_one_declarado_row_per_declarable_counterparty_a
         kind=InvoiceKind.ISSUED,
         number="V-001",
         issued_at=date(2025, 11, 20),
-        counterparty_tax_id="B87654323",
+        counterparty_tax_id="B00015057",
         counterparty_name="CLIENTE GRANDE SL",
         base_total=Decimal("6611.57"),
         iva_total=Decimal("1388.43"),
@@ -457,7 +457,7 @@ def test_m347_resolution_returns_one_declarado_row_per_declarable_counterparty_a
     rows = sorted(_rows_by_index(resolution.row_binding_values), key=lambda row: str(row["nif"]))
     assert rows == [
         {
-            "nif": "B12345674",
+            "nif": "B00015016",
             "nombre": "PROVEEDOR GRANDE SL",
             "clave": "A",
             "pais-codigo": "",
@@ -473,7 +473,7 @@ def test_m347_resolution_returns_one_declarado_row_per_declarable_counterparty_a
             "arrendamiento-local-negocio": "",
         },
         {
-            "nif": "B87654323",
+            "nif": "B00015057",
             "nombre": "CLIENTE GRANDE SL",
             "clave": "B",
             "pais-codigo": "",
@@ -548,7 +548,7 @@ def _received(number: str, issued_at: date, *, kind: InvoiceKind = InvoiceKind.R
         kind=kind,
         number=number,
         issued_at=issued_at,
-        counterparty_tax_id="B12345674",
+        counterparty_tax_id="B00015016",
         counterparty_name="PROVEEDOR GRANDE SL",
         base_total=Decimal("2500.00"),
         iva_total=Decimal("525.00"),
@@ -624,8 +624,8 @@ def test_m347_relates_each_leased_premises_in_its_own_inmueble_row_whatever_its_
     while its tenant gets no declarado record; the type 1 totals count and sum
     the inmueble rows.
     """
-    big = _lease("ALQ-1", "B12345674", "10000.00", situacion_inmueble="1", referencia_catastral="9872023VH5797S0001WX")
-    small = _lease("ALQ-2", "B87654323", "1000.00", situacion_inmueble="3")
+    big = _lease("ALQ-1", "B00015016", "10000.00", situacion_inmueble="1", referencia_catastral="9872023VH5797S0001WX")
+    small = _lease("ALQ-2", "B00015057", "1000.00", situacion_inmueble="3")
 
     resolution = _resolver(build_invoice_catalogue([big, small])).resolve(_m347_context(2025))
 
@@ -635,16 +635,16 @@ def test_m347_relates_each_leased_premises_in_its_own_inmueble_row_whatever_its_
             rows.setdefault(row_index, {})[binding_id.removeprefix("modelo-347-inmueble-row-")] = value
     assert [rows[index] for index in sorted(rows)] == [
         {
-            "arrendatario-nif": "B12345674",
-            "arrendatario-nombre": "INQUILINO B12345674",
+            "arrendatario-nif": "B00015016",
+            "arrendatario-nombre": "INQUILINO B00015016",
             "importe": big.grand_total,
             "situacion": "1",
             "referencia-catastral": "9872023VH5797S0001WX",
             "direccion": "",
         },
         {
-            "arrendatario-nif": "B87654323",
-            "arrendatario-nombre": "INQUILINO B87654323",
+            "arrendatario-nif": "B00015057",
+            "arrendatario-nombre": "INQUILINO B00015057",
             "importe": small.grand_total,
             "situacion": "3",
             "referencia-catastral": "",
@@ -660,13 +660,13 @@ def test_m347_relates_each_leased_premises_in_its_own_inmueble_row_whatever_its_
         for row in _rows_by_index(resolution.row_binding_values)
         if "nif" in row
     }
-    assert declarado_marks == {("B12345674", "X")}
+    assert declarado_marks == {("B00015016", "X")}
 
 
 def test_m347_names_the_inmueble_fields_a_recorded_lease_leaves_open() -> None:
     """A lease without situación, or with situación 1 or 2 but no referencia, is named; the dirección always is."""
-    without_situacion = _lease("ALQ-1", "B12345674", "4000.00")
-    without_referencia = _lease("ALQ-2", "B87654323", "4000.00", situacion_inmueble="2")
+    without_situacion = _lease("ALQ-1", "B00015016", "4000.00")
+    without_referencia = _lease("ALQ-2", "B00015057", "4000.00", situacion_inmueble="2")
 
     resolution = _resolver(build_invoice_catalogue([without_situacion, without_referencia])).resolve(
         _m347_context(2025),
@@ -682,7 +682,7 @@ def test_m347_names_the_inmueble_fields_a_recorded_lease_leaves_open() -> None:
 
 def test_m347_raises_no_inmueble_advisory_for_a_complete_lease_or_without_leases() -> None:
     complete = _lease(
-        "ALQ-1", "B12345674", "4000.00", situacion_inmueble="1", referencia_catastral="9872023VH5797S0001WX"
+        "ALQ-1", "B00015016", "4000.00", situacion_inmueble="1", referencia_catastral="9872023VH5797S0001WX"
     )
     ordinary = _received("P-NOV", date(2025, 11, 5))
 
@@ -703,7 +703,7 @@ def test_m347_raises_no_inmueble_advisory_for_a_complete_lease_or_without_leases
 
 def test_m347_a_withheld_lease_stays_declared_because_art_34_1_d_has_the_landlord_relate_it() -> None:
     """Art. 34.1.d has the landlord relate a lease, withheld or not, so the withholding does not exclude it."""
-    lease = _lease("ALQ-1", "B12345674", "4000.00", situacion_inmueble="1", referencia_catastral="9872023VH5797S0001WX")
+    lease = _lease("ALQ-1", "B00015016", "4000.00", situacion_inmueble="1", referencia_catastral="9872023VH5797S0001WX")
     withheld_lease = Invoice.model_validate(
         {**lease.model_dump(), "retention_rate": Decimal("0.19"), "retention_amount": Decimal("760.00")},
     )

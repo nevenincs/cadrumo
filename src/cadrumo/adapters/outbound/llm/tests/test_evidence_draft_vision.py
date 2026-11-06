@@ -70,7 +70,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # A real Spanish CIF (AEAT-checksum-valid: leading letter B, 7 digits, computed
 # control character), mirroring the fixture used by the text-layer draft tests.
-_SUPPLIER_CIF = "B12345674"
+_SUPPLIER_CIF = "B00015016"
 
 #: Content address of the SOURCE bytes a transcription is keyed by.
 _SOURCE_SHA = "b" * 64
@@ -78,7 +78,7 @@ _SOURCE_SHA = "b" * 64
 #: A page as a transcription-only reader returns it: printed forms intact,
 #: headings kept, no JSON and no field names.
 _TRANSCRIBED_PAGE = """FACTURA 2026-0142
-Proveedor: EJEMPLO SL B12345674
+Proveedor: EJEMPLO SL B00015016
 Fecha: 10/03/2026
 Base imponible 100,00 EUR
 IVA (21%) 21,00 EUR

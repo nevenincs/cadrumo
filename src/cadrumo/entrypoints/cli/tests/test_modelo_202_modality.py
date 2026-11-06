@@ -57,7 +57,7 @@ _INCN_BELOW_THRESHOLD = Decimal("5_999_999.99")
 
 def _sl_profile(incn: Decimal | None) -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         irpf_income_categories=frozenset(),
         iva_regime=IVARegime("GENERAL"),
@@ -76,7 +76,7 @@ def _natural_person_profile() -> TaxpayerProfile:
 
 def _attribution_entity_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="E12345674",
+        tax_id="E00015008",
         entity_type=EntityType.from_registry("attribution_entity"),
         irpf_income_categories=frozenset(),
         iva_regime=IVARegime("GENERAL"),
@@ -243,7 +243,7 @@ def test_legal_entity_can_create_modelo_202_work_unit(tmp_path: Path) -> None:
         facts={
             "taxpayer_type.entity_type": "legal_entity",
             "taxpayer_type.legal_entity_form": "sl",
-            "identity.tax_id": "B12345674",
+            "identity.tax_id": "B00015016",
             "identity.legal_name": "Company SL",
             "activities.description": "consulting",
             "taxpayer_type.incn_prior_12_months": "7500000.00",

@@ -117,7 +117,7 @@ def _command(
         source_object_id="invoice-issued-2025-03-31",
         source_revision_id="invoice-revision-1",
         allocation_id=allocation_id,
-        perceptor_nif="11111111H",
+        perceptor_nif="00001500M",
         perceptor_name="Professional Recipient",
         scheme=scheme,
         taxable_base=Decimal(taxable_base),
@@ -162,7 +162,7 @@ def _capital_command(
         source_object_id="capital-invoice-2025-12",
         source_revision_id="capital-invoice-revision-1",
         allocation_id=allocation_id,
-        perceptor_nif="11111111H",
+        perceptor_nif="00001500M",
         perceptor_name="Resident Capital Recipient",
         scheme=scheme,
         taxable_base=Decimal("500.00"),
@@ -205,7 +205,7 @@ def _annual_detail(
 ) -> WithholdingObservation:
     return WithholdingObservation(
         source_id="invoice-issued-2025-03-31",
-        perceptor_tax_id="11111111H",
+        perceptor_tax_id="00001500M",
         perceptor_legal_name="Professional Recipient",
         transaction_date=paid_on,
         clave=RetencionClave.from_registry(clave),
@@ -225,7 +225,7 @@ def _capital_pending_payment_detail(*, transaction_date: date) -> Modelo193Pendi
         nonpayment_cause=Modelo193NonpaymentCause.HOLDER_NOT_PRESENTED_FOR_COLLECTION,
         actual_recipient_detail=WithholdingObservation(
             source_id="capital-invoice-2025-12",
-            perceptor_tax_id="11111111H",
+            perceptor_tax_id="00001500M",
             perceptor_legal_name="Resident Capital Recipient",
             transaction_date=transaction_date,
             clave=RetencionClave.from_registry("B"),
@@ -442,7 +442,7 @@ def _assert_settlement_adds_no_second_123_liability(
     settled_row = settlement_phase[0]
     assert settled_row.original_accrual_year == 2025
     assert settled_row.settlement_event_id == "capital-settlement-2026-01"
-    assert settled_row.annual_detail.perceptor_tax_id == "11111111H"
+    assert settled_row.annual_detail.perceptor_tax_id == "00001500M"
     assert settled_row.annual_detail.accrual_year == 2025
     assert settled_row.annual_detail.pendiente_flag is None
     assert settled_row.amount_authority_advisory is not None

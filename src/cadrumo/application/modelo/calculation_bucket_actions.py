@@ -41,7 +41,7 @@ from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
-from ..user_profile.projections import profile_fact_index, record_to_path_values
+from ..user_profile.projections import record_to_path_values
 from ._calculation_aggregation_context import load_bucket_aggregation_context as _load_bucket_aggregation_context
 from ._calculation_modelo_adjustments import (
     calculated_decimal as _calculated_decimal,
@@ -74,7 +74,7 @@ from .calculation_notes import (
 from .calculation_publication import CalculationRevisionPublication
 from .calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES, CALLER_OVERRIDABLE_CARRY_SOURCES
 from .printed_boxes import snapshot_printed_boxes
-from .profile_export_binding import profile_text_casilla_gap_diagnostics
+from .profile_export_binding import profile_text_casilla_gap_diagnostics, profile_text_fact_index
 from .projection import (
     ModeloProjectionUnresolvedBinding,
     ModeloProjectionUnresolvedCasilla,
@@ -712,7 +712,11 @@ def _bucket_aggregation_source_diagnostics(
     )
     profile_text_diagnostics = profile_text_casilla_gap_diagnostics(
         preparation.snapshot.revision,
-        profile_fact_index(preparation.profile.record, preparation.profile.profile_decode_context.schema),
+        profile_text_fact_index(
+            preparation.profile.record,
+            preparation.profile.profile_decode_context.schema,
+            operation=ports.operation,
+        ),
         supplied_casilla_ids=frozenset(revision.input_values_by_casilla_id),
     )
     source_diagnostics = (

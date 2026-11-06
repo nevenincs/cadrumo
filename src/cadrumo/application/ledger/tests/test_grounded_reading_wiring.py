@@ -68,7 +68,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _DOCUMENT_TEXT = (
     "FACTURA 2026-0142\n"
-    "Proveedor: EJEMPLO SL B12345674\n"
+    "Proveedor: EJEMPLO SL B00015016\n"
     "Cliente: OTRA SL A00010017\n"
     "Base imponible 100,00 EUR\n"
     "TOTAL 121,00 EUR\n"
@@ -86,7 +86,7 @@ _CONTROL = _CORPUS / "com_2026_0005_layout_minimal.pdf"
 
 #: The filer on this purchase invoice is the RECIPIENT, whose identifier is the
 #: one checksum-valid token on the page.
-_FILER_CIF = "B17283946"
+_FILER_CIF = "B00015024"
 _SUPPLIER_CIF_BAD_CHECKSUM = "B1234567X"
 #: The page prints the real figures only. The reader's fabricated anchor must
 #: be genuinely absent from it, or the anti-fabrication cases below would find
@@ -669,7 +669,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
 
     def test_no_candidate_arrives_carrying_evidence_the_reader_merely_asserted(self) -> None:
         """With nothing printed to copy, the reader supplies nothing at all."""
-        candidates = self._candidates(supplier_tax_id="B12345674", customer_tax_id="A00010017")
+        candidates = self._candidates(supplier_tax_id="B00015016", customer_tax_id="A00010017")
 
         assert candidates, "the fixture must produce candidates, or this passes vacuously"
         assert all(not candidate.role_evidence for candidate in candidates)
@@ -682,7 +682,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
         """
         resolution = resolve_counterparty_identity(
             field="supplier_tax_id",
-            candidates=self._candidates(supplier_tax_id="B1234567X", customer_tax_id="B12345674"),
+            candidates=self._candidates(supplier_tax_id="B1234567X", customer_tax_id="B00015016"),
             taxpayer_tax_id=None,
             origin=FieldOrigin.TEXT_LAYER,
             operation=operation,
@@ -701,7 +701,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
         resolution = resolve_counterparty_identity(
             field="supplier_tax_id",
             candidates=(
-                IdentityCandidate(value="B12345674", role_evidence="printed under 'Proveedor'"),
+                IdentityCandidate(value="B00015016", role_evidence="printed under 'Proveedor'"),
                 IdentityCandidate(value="A00010017"),
             ),
             taxpayer_tax_id=None,
@@ -709,7 +709,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
             operation=operation,
         )
 
-        assert resolution.resolved == "B12345674"
+        assert resolution.resolved == "B00015016"
         assert resolution.provenance.grounding is FieldGroundingOutcome.ANCHORED
 
     def test_the_no_role_evidence_fallback_note_finally_renders(self, operation: PinnedAuthorityOperation) -> None:
@@ -722,7 +722,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
         """
         resolution = resolve_counterparty_identity(
             field="supplier_tax_id",
-            candidates=self._candidates(supplier_tax_id="B12345674", customer_tax_id="A00010017"),
+            candidates=self._candidates(supplier_tax_id="B00015016", customer_tax_id="A00010017"),
             taxpayer_tax_id=None,
             origin=FieldOrigin.TEXT_LAYER,
             operation=operation,
@@ -745,13 +745,13 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
         whose.
         """
         candidates = self._candidates(
-            supplier_tax_id="B12345674",
+            supplier_tax_id="B00015016",
             customer_tax_id="A00010017",
             role_evidence={"supplier_tax_id": "Proveedor:"},
         )
 
         evidenced = [candidate for candidate in candidates if candidate.role_evidence]
-        assert [candidate.value for candidate in evidenced] == ["B12345674"]
+        assert [candidate.value for candidate in evidenced] == ["B00015016"]
 
         resolution = resolve_counterparty_identity(
             field="supplier_tax_id",
@@ -761,7 +761,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
             operation=operation,
         )
 
-        assert resolution.resolved == "B12345674"
+        assert resolution.resolved == "B00015016"
         assert resolution.provenance.grounding is FieldGroundingOutcome.ANCHORED
         assert resolution.provenance.role_evidence is None or "Proveedor" in str(resolution.provenance.note)
 
@@ -777,7 +777,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
         in ``_identity_candidates`` and pass the claim through unchecked.
         """
         candidates = self._candidates(
-            supplier_tax_id="B12345674",
+            supplier_tax_id="B00015016",
             customer_tax_id="A00010017",
             role_evidence={"supplier_tax_id": "Lieferant:"},
         )
@@ -806,7 +806,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
         first-match selection with a heading attached to it.
         """
         candidates = self._candidates(
-            supplier_tax_id="B12345674",
+            supplier_tax_id="B00015016",
             customer_tax_id="A00010017",
             role_evidence={"supplier_tax_id": "Proveedor:", "customer_tax_id": "Cliente:"},
         )
@@ -834,13 +834,13 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
         can see it.
         """
         draft = InvoiceDraft(
-            supplier_tax_id="B12345674",
+            supplier_tax_id="B00015016",
             provenance=(
                 FieldProvenance(
                     field="supplier_tax_id",
                     origin=FieldOrigin.TEXT_LAYER,
                     grounding=FieldGroundingOutcome.UNANCHORED,
-                    anchor="B12345674",
+                    anchor="B00015016",
                     role_evidence="Lieferant:",
                 ),
             ),
@@ -863,7 +863,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
 _UNPRINTED_SUPPLIER_DOCUMENT = (
     "FACTURA 2026-0142\n"
     "Proveedor: EJEMPLO SL\n"
-    "Cliente: ESTUDIO SL B17283946\n"
+    "Cliente: ESTUDIO SL B00015024\n"
     "Base imponible 2.000,00 EUR\n"
     "TOTAL 2.420,00 EUR\n"
 )
@@ -873,7 +873,7 @@ _UNPRINTED_SUPPLIER_DOCUMENT = (
 def _ground_unprinted_supplier(*, anchor: str | None) -> InvoiceDraft:
     """Ground a draft naming a checksum-valid supplier NIF the page never prints."""
     draft = InvoiceDraft(
-        supplier_tax_id="B12345674",
+        supplier_tax_id="B00015016",
         customer_tax_id=_FILER_CIF,
         provenance=(
             FieldProvenance(
@@ -906,7 +906,7 @@ def _ground_unprinted_supplier(*, anchor: str | None) -> InvoiceDraft:
         )
 
 
-@pytest.mark.parametrize("anchor", ["B12345674", None], ids=["refused_anchor", "no_anchor_offered"])
+@pytest.mark.parametrize("anchor", ["B00015016", None], ids=["refused_anchor", "no_anchor_offered"])
 def test_a_printed_heading_cannot_promote_a_tax_id_the_page_never_prints(anchor: str | None) -> None:
     """Two 2,000 EUR invoices from a supplier recorded under an invented NIF would
     otherwise reach Modelo 347 as one counterparty; the heading alone must not

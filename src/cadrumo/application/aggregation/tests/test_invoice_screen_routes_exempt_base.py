@@ -156,7 +156,7 @@ def test_a_domestic_exemption_is_not_routed_to_either_base_casilla(
     would put this base in casilla 59 and over-declare intra-community volume.
     """
     resolved = resolved_for(
-        _invoice(category=IvaCategory("domestic_exempt"), country="ES", tax_id="ESB12345674", identification="es"),
+        _invoice(category=IvaCategory("domestic_exempt"), country="ES", tax_id="ESB00015016", identification="es"),
         operation=authority_operation,
     )
 
@@ -202,7 +202,7 @@ def test_the_aggregate_already_refuses_an_intra_community_supply_to_spain() -> N
         _invoice(
             category=IvaCategory("intra_community_supply"),
             country="ES",
-            tax_id="ESB12345674",
+            tax_id="ESB00015016",
             identification="es",
         )
 

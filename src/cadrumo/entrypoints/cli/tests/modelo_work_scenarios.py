@@ -33,7 +33,7 @@ from .cli_fixture_worlds import cli_world_provider, invoke_joined_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
 
 _WIZARD_REGISTRATION_MODULES = (_wizard_catalogue, _wizard_persistence)
-_M111_PROFESSIONAL_NIF = "B12345674"
+_M111_PROFESSIONAL_NIF = "B00015016"
 _M111_PROFESSIONAL_NAME = "Asesoria Profesional SL"
 _M111_PAID_ON = date(2025, 1, 15)
 MODELO_OPERATOR_PROFILE_LABEL = "operator"
@@ -95,7 +95,7 @@ def create_de_nonresident_legal_entity_profile() -> None:
         facts={
             "taxpayer_type.entity_type": "legal_entity",
             "taxpayer_type.legal_entity_form": "sl",
-            "identity.tax_id": "B66012345",
+            "identity.tax_id": "B00015032",
             "identity.legal_name": "NordHaus GmbH",
             "activities.description": "Spanish-source services",
             "taxpayer_type.fiscal_residency": "non_resident_irnr",
@@ -117,7 +117,7 @@ def create_attribution_entity_intracom_profile() -> None:
         label="operator",
         facts={
             "taxpayer_type.entity_type": "attribution_entity",
-            "identity.tax_id": "E12345674",
+            "identity.tax_id": "E00015008",
             "identity.name": "M349 Readiness CB",
             "activities.description": "intracommunity operations",
             "iva.does_intracomunitario": "true",
@@ -251,7 +251,7 @@ def _capture_m115_invoice_withholding() -> None:
             "app", "ledger", "invoice", "add",
             "--kind", "received",
             "--counterparty-name", "Arrendador Ejemplo SL",
-            "--counterparty-nif", "B12345674",
+            "--counterparty-nif", "B00015016",
             "--invoice-number", "M115-RENT-2025-001",
             "--invoice-date", paid_on.isoformat(),
             "--country-code", "ES",

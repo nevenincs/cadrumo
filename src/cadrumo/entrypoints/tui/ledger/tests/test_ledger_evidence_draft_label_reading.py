@@ -24,7 +24,7 @@ def _draft(fallback: LabelReadingFallback | None) -> LedgerEvidenceDraftV1:
     return LedgerEvidenceDraftV1(
         evidence_id="8747cbf318cf0adb",
         supplier_name=None,
-        supplier_tax_id="B92000082",
+        supplier_tax_id="B00015081",
         invoice_number="T-0042-2026",
         invoice_date="2026-02-14",
         taxable_base="60.00",

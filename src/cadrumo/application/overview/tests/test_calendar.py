@@ -287,7 +287,7 @@ def test_calendar_entry_marks_censo_enrolment_not_checked_when_no_live_censo_sco
 
 def _corporate_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         legal_entity_form=LegalEntityForm.from_registry("SL"),
         iva_regime=IVARegime("GENERAL"),
@@ -482,9 +482,9 @@ def test_build_overview_calendar_accepts_observed_events(
                         certificado_id="2596230606502",
                         tipo="comunicacion",
                         concepto="Comunicacion informativa",
-                        titular_nif="B12345674",
+                        titular_nif="B00015016",
                         titular_nombre="Test S.L.",
-                        destinatario_nif="B12345674",
+                        destinatario_nif="B00015016",
                         destinatario_nombre="Test S.L.",
                         fecha_emision=date(2025, 3, 10),
                         leida=True,
@@ -924,7 +924,7 @@ def test_calendar_emits_warning_when_iva_regime_unset(
     """
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
     today = date(2026, 4, 1)
-    raw = {"tax.id": "X1234567L", "activity": "design"}
+    raw = {"tax.id": "X0001500M", "activity": "design"}
     cal = build_overview_calendar(_profile(), rng, operation=authority_operation, today=today, raw_values=raw)
     iva_warnings = [w for w in cal.warnings if w.code == "iva.regime"]
     assert len(iva_warnings) == 1
@@ -947,7 +947,7 @@ def test_calendar_completeness_lists_uncomputable_with_reason(
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
     today = date(2026, 4, 1)
     raw = {
-        "tax.id": "X1234567L",
+        "tax.id": "X0001500M",
         "activity": "design",
         "iva.regime": "GENERAL",
     }
@@ -969,7 +969,7 @@ def test_calendar_warnings_include_registry_deadline_window_predicates(
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
     today = date(2026, 4, 1)
     raw = {
-        "tax.id": "X1234567L",
+        "tax.id": "X0001500M",
         "activity": "design",
         "iva.regime": "GENERAL",
     }

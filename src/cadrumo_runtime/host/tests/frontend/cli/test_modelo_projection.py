@@ -270,7 +270,7 @@ def _seed_autónomo_profile(runtime_profile: TestRuntimeProfile) -> None:
             (
                 UserProfileFact(path="identity.name", value="Projection Test Autónomo"),
                 UserProfileFact(path="identity.surnames", value="Regression Harness"),
-                UserProfileFact(path="identity.tax_id", value="87654321X"),
+                UserProfileFact(path="identity.tax_id", value="X0001502F"),
                 UserProfileFact(path="activities.description", value="consultoria fiscal"),
                 UserProfileFact(
                     path="taxpayer_type.irpf_income_categories",

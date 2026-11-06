@@ -66,7 +66,7 @@ from .confirm_from_evidence_support import confirm_invoice_draft_from_evidence
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_filer_profile"]
 
-_SUPPLIER_CIF = "B12345674"
+_SUPPLIER_CIF = "B00015016"
 
 
 def _authority_percentages(on_date: date) -> set[Decimal]:

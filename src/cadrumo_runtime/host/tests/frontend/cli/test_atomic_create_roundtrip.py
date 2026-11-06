@@ -174,7 +174,7 @@ def test_atomic_create_roundtrip_two_profiles_resolve_independently(_cli_storage
     """
 
     _create("alice", tax_id="12345678Z")
-    _create("bob", tax_id="87654321X")
+    _create("bob", tax_id="X0001502F")
 
     listing = _invoke(["--format", "json", "config", "profile", "list"])
     assert listing.exit_code == 0, listing.output
@@ -210,7 +210,7 @@ def test_atomic_create_refuses_a_label_differing_only_in_case(_cli_storage: Path
     _create("Only One", tax_id="12345678Z")
 
     with pytest.raises(ProfileRegistrationError) as refusal:
-        _create("only one", tax_id="87654321X")
+        _create("only one", tax_id="X0001502F")
 
     # The registration preflight may detect the collision before the custody
     # transaction starts; the operator-facing refusal and surviving first

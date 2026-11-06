@@ -157,8 +157,8 @@ def test_naming_the_field_keeps_everything_else_the_error_carried() -> None:
 def test_a_valid_counterparty_passes_through_unwrapped() -> None:
     """Precision: the wrapper must not touch the path that does not refuse."""
     normalised = normalise_invoice_counterparty(
-        {"counterparty_country": "es", "counterparty_tax_id": "b12345674"},
+        {"counterparty_country": "es", "counterparty_tax_id": "b00015016"},
     )
 
     assert normalised["counterparty_country"] == "ES"
-    assert normalised["counterparty_tax_id"] == "B12345674"
+    assert normalised["counterparty_tax_id"] == "B00015016"

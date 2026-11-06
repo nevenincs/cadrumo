@@ -42,7 +42,7 @@ def _profile(residence: str, *periods: UserProfileFact) -> UserProfileRecord:
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
-            UserProfileFact(path="identity.tax_id", value="X1234567L"),
+            UserProfileFact(path="identity.tax_id", value="X0001500M"),
             *(periods or (UserProfileFact(path="tax_residence.ccaa", value=residence),)),
         ),
         context=leased_profile_create_context(),

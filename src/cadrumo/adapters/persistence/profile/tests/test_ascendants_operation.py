@@ -50,8 +50,8 @@ _COUNT = "renta_family.ascendientes_count"
 _ASCENDANT_LIMIT = 4
 _DESCENDANT_LIMIT = 15
 _NIF = "12345678Z"
-_NIE = "X1234567L"
-_CIF = "B12345674"
+_NIE = "X0001500M"
+_CIF = "B00015016"
 
 
 def _row(**leaves: str) -> ProfileAscendantRow:

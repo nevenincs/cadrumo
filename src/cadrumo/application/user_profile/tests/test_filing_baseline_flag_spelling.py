@@ -122,7 +122,7 @@ def test_an_unregistered_path_still_yields_a_well_formed_flag() -> None:
         # identity group, so a missing legal name was reported as a Modelo 303
         # requirement.
         (
-            {"taxpayer_type.entity_type": "legal_entity", "identity.tax_id": "B12345674"},
+            {"taxpayer_type.entity_type": "legal_entity", "identity.tax_id": "B00015016"},
             ("legal-entity-form", "legal-name"),
             False,
         ),

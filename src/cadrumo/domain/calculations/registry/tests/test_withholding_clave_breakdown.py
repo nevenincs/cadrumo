@@ -53,11 +53,11 @@ def _obs(
 def test_breakdown_groups_by_clave_and_sums_magnitudes() -> None:
     """Two claves roll up to distinct per-clave percepción counts and magnitudes."""
     observations = (
-        _obs(source_id="a1", nif="11111111H", clave="A", percibido_dinerario="1000.00", retencion_practicada="190.00"),
-        _obs(source_id="a2", nif="22222222J", clave="A", percibido_dinerario="500.00", retencion_practicada="95.00"),
+        _obs(source_id="a1", nif="00001500M", clave="A", percibido_dinerario="1000.00", retencion_practicada="190.00"),
+        _obs(source_id="a2", nif="00001501Y", clave="A", percibido_dinerario="500.00", retencion_practicada="95.00"),
         _obs(
             source_id="g1",
-            nif="11111111H",
+            nif="00001500M",
             clave="G",
             percibido_dinerario="2000.00",
             percibido_especie="100.00",
@@ -84,9 +84,9 @@ def test_breakdown_groups_by_clave_and_sums_magnitudes() -> None:
 def test_distinct_percepcion_count_is_per_perceptor_subclave_within_clave() -> None:
     """A perceptor paid twice under one (clave, subclave) is one percepción; a new subclave is another."""
     observations = (
-        _obs(source_id="r1", nif="11111111H", clave="A", subclave="01", retencion_practicada="50.00"),
-        _obs(source_id="r2", nif="11111111H", clave="A", subclave="01", retencion_practicada="70.00"),
-        _obs(source_id="r3", nif="11111111H", clave="A", subclave="02", retencion_practicada="30.00"),
+        _obs(source_id="r1", nif="00001500M", clave="A", subclave="01", retencion_practicada="50.00"),
+        _obs(source_id="r2", nif="00001500M", clave="A", subclave="01", retencion_practicada="70.00"),
+        _obs(source_id="r3", nif="00001500M", clave="A", subclave="02", retencion_practicada="30.00"),
     )
 
     breakdown = aggregate_withholding_by_clave(observations)
@@ -101,9 +101,9 @@ def test_distinct_percepcion_count_is_per_perceptor_subclave_within_clave() -> N
 
 def test_breakdown_is_order_independent_and_sorted_by_clave() -> None:
     """Identical observations in any order produce the same clave-sorted tuple."""
-    a = _obs(source_id="a", nif="11111111H", clave="A", retencion_practicada="10.00")
-    g = _obs(source_id="g", nif="22222222J", clave="G", retencion_practicada="20.00")
-    e = _obs(source_id="e", nif="33333333P", clave="E", retencion_practicada="30.00")
+    a = _obs(source_id="a", nif="00001500M", clave="A", retencion_practicada="10.00")
+    g = _obs(source_id="g", nif="00001501Y", clave="G", retencion_practicada="20.00")
+    e = _obs(source_id="e", nif="00001502F", clave="E", retencion_practicada="30.00")
 
     forward = aggregate_withholding_by_clave((a, e, g))
     shuffled = aggregate_withholding_by_clave((g, a, e))

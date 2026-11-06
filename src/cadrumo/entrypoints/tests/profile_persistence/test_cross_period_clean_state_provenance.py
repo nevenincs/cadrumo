@@ -113,7 +113,7 @@ def _evaluate_390(
         calculation_repository=CalculationRevisionCatalogueRepository(),
         verification_repository=VerificationReportCatalogueRepository(),
         justificante_repository=JustificanteRepository(),
-        taxpayer_tax_id="X1234567L",
+        taxpayer_tax_id="X0001500M",
         operation=operation,
     )
 
@@ -165,7 +165,7 @@ def test_cross_period_clean_state_blocks_non_alta_aeat_register_observation_prov
                     "1T": {
                         "aeat_register_status": "BAJA",
                         "aeat_expediente_id": "EXP-303-REFERENCE-ONE",
-                        "authenticated_identity": "X1234567L",
+                        "authenticated_identity": "X0001500M",
                     },
                 },
             )
@@ -186,7 +186,7 @@ def test_cross_period_clean_state_blocks_missing_aeat_register_reference(tmp_pat
                 source_metadata_by_period={
                     "1T": {
                         "aeat_register_status": "ALTA",
-                        "authenticated_identity": "X1234567L",
+                        "authenticated_identity": "X0001500M",
                         "aeat_justificante_csv": "JUST00001T",
                     },
                 },
@@ -316,7 +316,7 @@ def test_cross_period_clean_state_accepts_csv_register_with_matching_justificant
             verdict = evaluate_cross_period_clean_state(
                 _snapshot_390(),
                 bucket_id=_BUCKET_ID,
-                taxpayer_tax_id="X1234567L",
+                taxpayer_tax_id="X0001500M",
                 observation_repository=observation_repository,
                 filing_repository=ModeloRecordCatalogueRepository(),
                 calculation_repository=CalculationRevisionCatalogueRepository(),
@@ -342,7 +342,7 @@ def test_cross_period_clean_state_accepts_live_capture_with_matching_justificant
             verdict = evaluate_cross_period_clean_state(
                 _snapshot_390(),
                 bucket_id=_BUCKET_ID,
-                taxpayer_tax_id="X1234567L",
+                taxpayer_tax_id="X0001500M",
                 observation_repository=observation_repository,
                 filing_repository=ModeloRecordCatalogueRepository(),
                 calculation_repository=CalculationRevisionCatalogueRepository(),
@@ -481,7 +481,7 @@ def test_verify_modelo_revision_refuses_m390_when_prior_filings_are_not_clean(
                 verification_repositories=build_test_verification_repository_bundle(),
                 actor="operator-test",
                 workflow_profile=TaxpayerProfile(
-                    tax_id="X1234567L",
+                    tax_id="X0001500M",
                     iva_regime=IVARegime("GENERAL"),
                     has_employees=False,
                     pays_rent_with_retencion=False,

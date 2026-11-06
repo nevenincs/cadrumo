@@ -601,8 +601,8 @@ def test_verify_gate_blocks_chain_carrying_non_official_prior_year(
         certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
         verification_repositories=build_test_verification_repository_bundle(),
         actor="system",
-        workflow_profile=TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL")),
-        settings=ready_clave_settings("X1234567L"),
+        workflow_profile=TaxpayerProfile(tax_id="X0001500M", iva_regime=IVARegime("GENERAL")),
+        settings=ready_clave_settings("X0001500M"),
         operator_scope_ports=OPERATOR_SCOPE_PORTS,
     )
 

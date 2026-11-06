@@ -136,7 +136,7 @@ def test_modelo_record_calendar_event_reports_verified_aeat_justificante_axis() 
         ),
         OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
         justificantes=(_justificante_metadata(csv=csv),),
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     assert len(events) == 1
@@ -157,7 +157,7 @@ def test_justificante_capture_snapshot_projects_verified_calendar_event_without_
         (snapshot,),
         OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
         justificantes=(_justificante_metadata(csv=csv),),
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     assert len(events) == 1
@@ -180,7 +180,7 @@ def test_justificante_capture_snapshot_creates_verified_evidence_without_local_r
     evidence = calendar_filing_evidence_from_sources(
         justificante_capture_snapshots=(snapshot,),
         justificantes=(_justificante_metadata(csv=csv),),
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     assert len(evidence) == 1
@@ -202,14 +202,14 @@ def test_justificante_capture_snapshot_requires_matching_taxpayer_metadata() -> 
 
     evidence = calendar_filing_evidence_from_sources(
         justificante_capture_snapshots=(snapshot,),
-        justificantes=(_justificante_metadata(csv=csv, tax_id="B76543214"),),
-        expected_tax_id="X1234567L",
+        justificantes=(_justificante_metadata(csv=csv, tax_id="B00015040"),),
+        expected_tax_id="X0001500M",
     )
     events = calendar_events_from_justificante_capture_snapshots(
         (snapshot,),
         OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
-        justificantes=(_justificante_metadata(csv=csv, tax_id="B76543214"),),
-        expected_tax_id="X1234567L",
+        justificantes=(_justificante_metadata(csv=csv, tax_id="B00015040"),),
+        expected_tax_id="X0001500M",
     )
 
     assert evidence == ()
@@ -323,7 +323,7 @@ def test_live_capture_external_evidence_requires_persisted_justificante_to_verif
             ),
         ),
         justificantes=(_justificante_metadata(csv=csv),),
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     assert len(evidence) == 1
@@ -339,8 +339,8 @@ def test_live_capture_external_evidence_requires_persisted_justificante_to_verif
 def test_modelo_record_justificante_matching_is_case_insensitive() -> None:
     csv = "CSVLIVE3031T2025"
     cases = (
-        ("taxpayer-id", csv, csv, "X1234567L", "x1234567l"),
-        ("csv", csv.lower(), csv, "X1234567L", "X1234567L"),
+        ("taxpayer-id", csv, csv, "X0001500M", "x0001500m"),
+        ("csv", csv.lower(), csv, "X0001500M", "X0001500M"),
     )
 
     for case_id, evidence_csv, justificante_csv, justificante_tax_id, expected_tax_id in cases:
@@ -372,7 +372,7 @@ def test_modelo_record_csv_register_external_evidence_is_justificante_backed() -
             ),
         ),
         justificantes=(_justificante_metadata(csv=csv),),
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     assert len(evidence) == 1
@@ -394,9 +394,9 @@ def test_modelo_record_case_equivalent_conflicting_justificantes_do_not_verify()
         ),
         justificantes=(
             _justificante_metadata(csv=csv),
-            _justificante_metadata(csv=csv.lower(), tax_id="Y7654321G"),
+            _justificante_metadata(csv=csv.lower(), tax_id="Y0001503E"),
         ),
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     assert len(evidence) == 1
@@ -414,7 +414,7 @@ def test_live_capture_external_evidence_without_metadata_is_not_justificante_ver
                 external_evidence=_external_evidence(ExternalEvidenceKind.AEAT_LIVE_CAPTURE, "CSVLIVE3031T2025"),
             ),
         ),
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     assert len(evidence) == 1
@@ -428,12 +428,12 @@ def test_live_capture_external_evidence_without_metadata_is_not_justificante_ver
 
 def test_expedientes_event_marks_observed_submission_but_not_justificante_verified() -> None:
     event = expedientes_filing_events(
-        expediente_declaration("12345678901234567890"), snapshot_id="e" * 64, authenticated_identity="X1234567L"
+        expediente_declaration("12345678901234567890"), snapshot_id="e" * 64, authenticated_identity="X0001500M"
     )
     evidence = calendar_filing_evidence_from_sources(
         filing_records=(_modelo_record(),),
         observed_events=event,
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     row = evidence[0]
@@ -446,12 +446,12 @@ def test_expedientes_event_marks_observed_submission_but_not_justificante_verifi
 
 def test_expedientes_event_for_wrong_authenticated_identity_is_not_submission_evidence() -> None:
     event = expedientes_filing_events(
-        expediente_declaration("12345678901234567890"), snapshot_id="e" * 64, authenticated_identity="Y7654321G"
+        expediente_declaration("12345678901234567890"), snapshot_id="e" * 64, authenticated_identity="Y0001503E"
     )
 
     evidence = calendar_filing_evidence_from_sources(
         observed_events=event,
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     assert evidence == ()
@@ -508,13 +508,13 @@ def test_sede_calculation_observation_is_not_justificante_verification() -> None
         source_metadata={
             "aeat_register_status": "ALTA",
             "aeat_expediente_id": "12345678901234567890",
-            "authenticated_identity": "X1234567L",
+            "authenticated_identity": "X0001500M",
         },
     )
 
     evidence = calendar_filing_evidence_from_sources(
         calculation_observations=(payload,),
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     assert len(evidence) == 1
@@ -532,13 +532,13 @@ def test_official_calculation_observation_sources_are_calendar_submission_eviden
         source_metadata={
             "aeat_register_status": "ALTA",
             "aeat_expediente_id": "12345678901234567890",
-            "authenticated_identity": "X1234567L",
+            "authenticated_identity": "X0001500M",
         },
     )
 
     evidence = calendar_filing_evidence_from_sources(
         calculation_observations=(payload,),
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     assert len(evidence) == 1
@@ -558,14 +558,14 @@ def test_official_calculation_observation_source_with_matching_justificante_is_v
             "aeat_register_status": "ALTA",
             "aeat_expediente_id": "12345678901234567890",
             "aeat_justificante_csv": csv,
-            "authenticated_identity": "X1234567L",
+            "authenticated_identity": "X0001500M",
         },
     )
 
     evidence = calendar_filing_evidence_from_sources(
         calculation_observations=(payload,),
         justificantes=(_justificante_metadata(csv=csv),),
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     assert len(evidence) == 1
@@ -585,7 +585,7 @@ def test_verified_modelo_record_receipt_time_survives_calculation_observation_me
             "aeat_register_status": "ALTA",
             "aeat_expediente_id": "12345678901234567890",
             "aeat_justificante_csv": csv,
-            "authenticated_identity": "X1234567L",
+            "authenticated_identity": "X0001500M",
         },
     )
 
@@ -602,7 +602,7 @@ def test_verified_modelo_record_receipt_time_survives_calculation_observation_me
         ),
         calculation_observations=(payload,),
         justificantes=(_justificante_metadata(csv=csv),),
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     assert len(evidence) == 1
@@ -630,7 +630,7 @@ def test_sede_calculation_observation_with_matching_justificante_metadata_is_ver
         source_metadata={
             "aeat_register_status": "ALTA",
             "aeat_expediente_id": "12345678901234567890",
-            "authenticated_identity": "X1234567L",
+            "authenticated_identity": "X0001500M",
             **justificante_metadata,
         },
     )
@@ -638,7 +638,7 @@ def test_sede_calculation_observation_with_matching_justificante_metadata_is_ver
     evidence = calendar_filing_evidence_from_sources(
         calculation_observations=(payload,),
         justificantes=(_justificante_metadata(csv=csv),),
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     assert len(evidence) == 1
@@ -658,7 +658,7 @@ def test_sede_calculation_observation_conflicting_case_equivalent_justificantes_
             "aeat_register_status": "ALTA",
             "aeat_expediente_id": "12345678901234567890",
             "aeat_justificante_csv": csv.lower(),
-            "authenticated_identity": "X1234567L",
+            "authenticated_identity": "X0001500M",
         },
     )
 
@@ -666,9 +666,9 @@ def test_sede_calculation_observation_conflicting_case_equivalent_justificantes_
         calculation_observations=(payload,),
         justificantes=(
             _justificante_metadata(csv=csv),
-            _justificante_metadata(csv=csv.lower(), tax_id="Y7654321G"),
+            _justificante_metadata(csv=csv.lower(), tax_id="Y0001503E"),
         ),
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     assert evidence[0].aeat_submission_state is OverviewAeatSubmissionState.SUBMITTED_OBSERVED
@@ -683,14 +683,14 @@ def test_sede_calculation_observation_with_wrong_justificante_metadata_is_not_ve
             "aeat_register_status": "ALTA",
             "aeat_expediente_id": "12345678901234567890",
             "aeat_justificante_csv": "JUST3032025X1T7",
-            "authenticated_identity": "X1234567L",
+            "authenticated_identity": "X0001500M",
         },
     )
 
     evidence = calendar_filing_evidence_from_sources(
         calculation_observations=(payload,),
-        justificantes=(_justificante_metadata(csv="JUST3032025X1T7", tax_id="Y7654321G"),),
-        expected_tax_id="X1234567L",
+        justificantes=(_justificante_metadata(csv="JUST3032025X1T7", tax_id="Y0001503E"),),
+        expected_tax_id="X0001500M",
     )
 
     assert evidence[0].aeat_submission_state is OverviewAeatSubmissionState.SUBMITTED_OBSERVED
@@ -700,7 +700,7 @@ def test_sede_calculation_observation_with_wrong_justificante_metadata_is_not_ve
 
 def test_sede_calculation_observation_requires_valid_register_metadata() -> None:
     cases = (
-        ("missing-metadata", None, "X1234567L", None),
+        ("missing-metadata", None, "X0001500M", None),
         (
             "non-alta",
             {
@@ -714,10 +714,10 @@ def test_sede_calculation_observation_requires_valid_register_metadata() -> None
             "missing-register-reference",
             {
                 "aeat_register_status": "ALTA",
-                "authenticated_identity": "X1234567L",
+                "authenticated_identity": "X0001500M",
                 "aeat_justificante_csv": "JUST3032025X1T7",
             },
-            "X1234567L",
+            "X0001500M",
             "JUST3032025X1T7",
         ),
         (
@@ -726,7 +726,7 @@ def test_sede_calculation_observation_requires_valid_register_metadata() -> None
                 "aeat_register_status": "ALTA",
                 "aeat_expediente_id": "12345678901234567890",
             },
-            "X1234567L",
+            "X0001500M",
             None,
         ),
         (
@@ -734,9 +734,9 @@ def test_sede_calculation_observation_requires_valid_register_metadata() -> None
             {
                 "aeat_register_status": "ALTA",
                 "aeat_expediente_id": "12345678901234567890",
-                "authenticated_identity": "Y7654321G",
+                "authenticated_identity": "Y0001503E",
             },
-            "X1234567L",
+            "X0001500M",
             None,
         ),
     )

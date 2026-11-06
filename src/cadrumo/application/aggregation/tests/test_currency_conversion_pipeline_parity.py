@@ -298,7 +298,7 @@ def test_renta_ledger_m100_expense_linked_invoice_evidence_is_converted(
             "invoice_number": "INV-USD-PARITY-1",
             "issued_at": date(2025, 2, 10),
             "counterparty_name": "Proveedor SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": base_total_native,
             "iva_total": iva_total_native,
@@ -484,7 +484,7 @@ def test_modelo_bindings_iva_screen_converts_invoice_line_amounts() -> None:
     invoice, _line = _converted_usd_invoice(
         kind=InvoiceKind.ISSUED,
         counterparty_country="ES",
-        counterparty_tax_id="B12345674",
+        counterparty_tax_id="B00015016",
         base_total=base_total_native,
         iva_total=iva_total_native,
     )

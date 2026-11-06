@@ -12,7 +12,7 @@ the persisted cl@ve-movil storage state, so a reasonably-fresh session
 must be present in the tokens member of the storage root before the test runs.
 
 The drift detector ALSO runs an end-to-end verdict-parser sanity check
-against a known public NIF (Telefónica's A28015865, registered ROI
+against a known public NIF (Telefónica's A00015016, registered ROI
 operator) so a parser that diverges from the live response phrasing is
 flagged independently from the selector check.
 """
@@ -39,7 +39,7 @@ pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
 
 # Telefónica SA — public, ROI-registered Spanish corporate NIF; the
 # verdict for this NIF is stable as long as Telefónica stays registered.
-_PROBE_NIF: str = "A28015865"
+_PROBE_NIF: str = "A00015016"
 
 
 def test_groi_form_selectors_still_match_live_dom() -> None:

@@ -38,8 +38,8 @@ def modelo_draft(
         draft_id="submission-preflight-draft",
         modelo="130",
         period=Period.from_year_and_code(2026, "1T"),
-        profile_tax_id="X1234567L",
-        subject_tax_id="X1234567L",
+        profile_tax_id="X0001500M",
+        subject_tax_id="X0001500M",
         snapshot_ref=RegistrySnapshotRef(
             modelo="130",
             revision_id="2025",
@@ -59,7 +59,7 @@ def modelo_draft(
 def deadline_checker() -> DeadlineWindowChecker:
     """Return the production registry-backed filing-window adapter."""
     profile = TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_rent_with_retencion=False,

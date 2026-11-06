@@ -43,7 +43,7 @@ def secure_objects(runtime_profile: TestRuntimeProfile) -> SecureObjectRepositor
 
 def _confirmed_fact() -> ConfirmedCounterpartyFacts:
     return ConfirmedCounterpartyFacts.create(
-        tax_identifier="B12345674",
+        tax_identifier="B00015016",
         territorial_scope=IvaTerritorialScope.from_registry("es_ceuta_melilla"),
         asserted_by="operator@example.test",
         asserted_at=datetime(2026, 4, 17, 11, 5, tzinfo=UTC),
@@ -102,7 +102,7 @@ def test_reload_under_a_leased_authority_returns_both_projected_axes(
     operation: PinnedAuthorityOperation,
 ) -> None:
     original = ConfirmedCounterpartyFacts.create(
-        tax_identifier="B12345674",
+        tax_identifier="B00015016",
         territorial_scope=require_iva_territorial_scope("es_canarias", operation=operation),
         identification_state=require_eu_member_state("FR", authority=operation),
         asserted_by="operator@example.test",

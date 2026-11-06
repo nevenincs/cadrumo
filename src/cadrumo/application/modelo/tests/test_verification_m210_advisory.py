@@ -191,7 +191,7 @@ def test_m210_inmobiliaria_advisory_silent_when_tipo_renta_is_not_inmobiliaria()
 def _non_eea_irnr_profile() -> TaxpayerProfile:
     """A NON_RESIDENT_IRNR profile whose country of fiscal residence is outside the EU/EEA."""
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         iva_regime=IVARegime("GENERAL"),
         fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
         country_of_fiscal_residence="AR",
@@ -203,7 +203,7 @@ def _non_eea_irnr_profile() -> TaxpayerProfile:
 def _eea_irnr_profile() -> TaxpayerProfile:
     """A NON_RESIDENT_IRNR profile whose country of fiscal residence IS an EU/EEA member."""
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         iva_regime=IVARegime("GENERAL"),
         fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
         country_of_fiscal_residence="DE",

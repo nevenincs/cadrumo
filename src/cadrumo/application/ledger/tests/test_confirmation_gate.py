@@ -131,8 +131,8 @@ def test_an_ambiguous_counterparty_identifier_blocks_without_any_arithmetic_find
                     origin=FieldOrigin.TEXT_LAYER,
                     grounding=FieldGroundingOutcome.AMBIGUOUS,
                     candidates=(
-                        FieldAmbiguityCandidate(value="ESB12345674", note="header block"),
-                        FieldAmbiguityCandidate(value="ESX1234567L", note="footer block"),
+                        FieldAmbiguityCandidate(value="ESB00015016", note="header block"),
+                        FieldAmbiguityCandidate(value="ESX0001500M", note="footer block"),
                     ),
                     note="two tax ids printed on the same document",
                 ),
@@ -143,7 +143,7 @@ def test_an_ambiguous_counterparty_identifier_blocks_without_any_arithmetic_find
     blockers = confirmation_blockers(draft)
 
     assert [blocker.reason for blocker in blockers] == [ConfirmationBlockReason.AMBIGUOUS_IDENTITY]
-    assert blockers[0].candidate_values == ("ESB12345674", "ESX1234567L")
+    assert blockers[0].candidate_values == ("ESB00015016", "ESX0001500M")
     with pytest.raises(ConfirmationBlockedError):
         resolved_blockers(draft=draft, resolutions=())
 
@@ -274,8 +274,8 @@ def test_choosing_a_value_the_document_never_offered_refuses() -> None:
                     origin=FieldOrigin.TEXT_LAYER,
                     grounding=FieldGroundingOutcome.AMBIGUOUS,
                     candidates=(
-                        FieldAmbiguityCandidate(value="ESB12345674"),
-                        FieldAmbiguityCandidate(value="ESX1234567L"),
+                        FieldAmbiguityCandidate(value="ESB00015016"),
+                        FieldAmbiguityCandidate(value="ESX0001500M"),
                     ),
                 ),
             ),
@@ -308,7 +308,7 @@ def test_choosing_a_value_the_document_never_offered_refuses() -> None:
                 FindingResolution(
                     blocker_id=blockers[0].blocker_id,
                     action=FindingResolutionAction.CHOOSE_CANDIDATE,
-                    value="ESX1234567L",
+                    value="ESX0001500M",
                 ),
             ),
         )

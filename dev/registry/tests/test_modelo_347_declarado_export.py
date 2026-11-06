@@ -109,7 +109,7 @@ def _observation(party_tax_id: str, country_code: str, name: str) -> InvoiceObse
 
 
 _PARTIES = (
-    _observation("B12345674", "ES", "CLIENTE NACIONAL SL"),
+    _observation("B00015016", "ES", "CLIENTE NACIONAL SL"),
     _observation("DE123456789", "DE", "KUNDE GMBH"),
     _observation("123456789", "US", "CUSTOMER INC"),
 )
@@ -135,7 +135,7 @@ def test_declarado_rows_identify_residents_by_nif_and_non_residents_by_country_a
         rows["KUNDE GMBH"],
         rows["CUSTOMER INC"],
     )
-    assert (resident[_NIF], resident[_COUNTRY], resident[_COMMUNITY_VAT]) == ("B12345674", "", "")
+    assert (resident[_NIF], resident[_COUNTRY], resident[_COMMUNITY_VAT]) == ("B00015016", "", "")
     assert (community_operator[_NIF], community_operator[_COUNTRY], community_operator[_COMMUNITY_VAT]) == (
         "",
         "DE",
@@ -188,7 +188,7 @@ def test_provincia_export_reads_each_declared_row_binding(revision_id: str, year
 
 def _filer_profile(operation: PinnedAuthorityOperation, *extra: UserProfileFact) -> ModeloWorkProfile:
     facts = (
-        UserProfileFact(path="identity.tax_id", value="B12345674"),
+        UserProfileFact(path="identity.tax_id", value="B00015016"),
         UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
         UserProfileFact(path="iva.regime", value="GENERAL"),
         UserProfileFact(path="iva.m303_regime_composition", value="general"),
@@ -222,7 +222,7 @@ def _operation(
     *,
     iva: str = "0",
     kind: InvoiceKind = InvoiceKind.ISSUED,
-    tax_id: str = "C3333333G",
+    tax_id: str = "C0001502D",
     name: str = "CONTRAPARTE PRUEBA SL",
     country: str = "ES",
     **facts: object,
@@ -356,13 +356,13 @@ def test_criterio_de_caja_and_reverse_charge_operations_are_separate_records_wit
     """
     with bundled_indexed_authority().operation() as operation:
         invoices = (
-            _operation("V-1", date(2025, 2, 10), "4000.00", tax_id="C3333333G", name="CLIENTE CAJA SL"),
+            _operation("V-1", date(2025, 2, 10), "4000.00", tax_id="C0001502D", name="CLIENTE CAJA SL"),
             _operation(
                 "V-2",
                 date(2025, 5, 10),
                 "4132.23",
                 iva="867.77",
-                tax_id="C3333333G",
+                tax_id="C0001502D",
                 name="CLIENTE CAJA SL",
                 legal_mentions=("CASH_ACCOUNTING_REGIME",),
             ),
@@ -371,7 +371,7 @@ def test_criterio_de_caja_and_reverse_charge_operations_are_separate_records_wit
                 date(2025, 8, 1),
                 "6000.00",
                 kind=InvoiceKind.RECEIVED,
-                tax_id="B87654323",
+                tax_id="B00015057",
                 name="SUBCONTRATA OBRA SL",
                 iva_category="domestic_reverse_charge",
             ),
@@ -380,7 +380,7 @@ def test_criterio_de_caja_and_reverse_charge_operations_are_separate_records_wit
                 date(2025, 11, 1),
                 "4000.00",
                 kind=InvoiceKind.RECEIVED,
-                tax_id="B87654323",
+                tax_id="B00015057",
                 name="SUBCONTRATA OBRA SL",
             ),
         )
@@ -431,7 +431,7 @@ def test_an_annual_basis_filer_reports_no_quarterly_amounts(filer_fact: UserProf
             date(2025, 6, 1),
             "5000.00",
             kind=InvoiceKind.RECEIVED,
-            tax_id="B87654323",
+            tax_id="B00015057",
             name="PROVEEDOR SL",
         )
         resolution = _resolve_2025((purchase,), _filer_profile(operation, filer_fact))
@@ -447,27 +447,27 @@ def test_a_non_resident_declarado_carries_provincia_99_and_a_spanish_one_is_disc
     with bundled_indexed_authority().operation() as operation:
         invoices = (
             _operation("V-4", date(2025, 2, 1), "8000.00", tax_id="US000000001", name="CUSTOMER INC", country="US"),
-            _operation("V-5", date(2025, 2, 1), "8000.00", tax_id="C3333333G", name="CLIENTE NACIONAL SL"),
+            _operation("V-5", date(2025, 2, 1), "8000.00", tax_id="C0001502D", name="CLIENTE NACIONAL SL"),
         )
         resolution = _resolve_2025(invoices, _filer_profile(operation))
 
     provincia = {str(row[_NAME]): row[_PROVINCIA] for row in _declarado_rows(resolution)}
     assert provincia == {"CUSTOMER INC": "99", "CLIENTE NACIONAL SL": ""}
     advisory = next(item for item in resolution.diagnostics if item.source_ref == "m347-record:provincia-not-recorded")
-    assert "C3333333G" in advisory.message
+    assert "C0001502D" in advisory.message
     assert "US000000001" not in advisory.message
 
 
 def test_declared_sales_disclose_that_cash_collections_are_not_recorded() -> None:
     """Art. 34.1.h: no invoice records a cash collection, so the metálico amount is disclosed, not guessed."""
     with bundled_indexed_authority().operation() as operation:
-        sale = _operation("V-6", date(2025, 9, 1), "8000.00", tax_id="C3333333G", name="CLIENTE EFECTIVO SL")
+        sale = _operation("V-6", date(2025, 9, 1), "8000.00", tax_id="C0001502D", name="CLIENTE EFECTIVO SL")
         purchase = _operation(
             "C-5",
             date(2025, 9, 1),
             "8000.00",
             kind=InvoiceKind.RECEIVED,
-            tax_id="B87654323",
+            tax_id="B00015057",
             name="PROVEEDOR SL",
         )
         with_sale = _resolve_2025((sale, purchase), _filer_profile(operation))

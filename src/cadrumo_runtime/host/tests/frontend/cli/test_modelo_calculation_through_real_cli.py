@@ -125,7 +125,7 @@ def _seed_legal_entity_profile(
         (
             UserProfileFact(path="identity.name", value="Oracle IS Operator"),
             UserProfileFact(path="identity.legal_name", value="Oracle IS Operator SL"),
-            UserProfileFact(path="identity.tax_id", value="B12345674"),
+            UserProfileFact(path="identity.tax_id", value="B00015016"),
             UserProfileFact(
                 path="taxpayer_type.incn_prior_12_months",
                 value=incn_prior_12_months,

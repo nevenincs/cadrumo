@@ -74,7 +74,7 @@ def _invoice(
             "invoice_number": "F-2026-001",
             "issued_at": date(2026, 4, 1),
             "counterparty_name": "Cliente SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": base_total,
             "iva_total": iva_total,

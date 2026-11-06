@@ -41,7 +41,7 @@ def test_filed_declaration_observation_with_stored_justificante_marks_verified()
         filed_declaration_observations=(_filed_declaration_observation(artefacts=(_filed_declaration_artefact(),)),),
         verified_filed_declaration_artefact_refs=(_FILED_JUSTIFICANTE_STORAGE_REF,),
         verified_filed_declaration_artefact_csvs={_FILED_JUSTIFICANTE_STORAGE_REF: csv},
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     assert len(evidence) == 1
@@ -58,12 +58,12 @@ def test_filed_declaration_observation_identity_match_is_case_insensitive() -> N
     evidence = calendar_filing_evidence_from_sources(
         filed_declaration_observations=(
             _filed_declaration_observation(artefacts=(_filed_declaration_artefact(),)).model_copy(
-                update={"authenticated_identity": "x1234567l"},
+                update={"authenticated_identity": "x0001500m"},
             ),
         ),
         verified_filed_declaration_artefact_refs=(_FILED_JUSTIFICANTE_STORAGE_REF,),
         verified_filed_declaration_artefact_csvs={_FILED_JUSTIFICANTE_STORAGE_REF: csv},
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     assert len(evidence) == 1
@@ -75,7 +75,7 @@ def test_filed_declaration_observation_identity_match_is_case_insensitive() -> N
 def test_filed_declaration_observation_with_dangling_justificante_manifest_is_observed_only() -> None:
     evidence = calendar_filing_evidence_from_sources(
         filed_declaration_observations=(_filed_declaration_observation(artefacts=(_filed_declaration_artefact(),)),),
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     assert len(evidence) == 1
@@ -92,7 +92,7 @@ def test_non_alta_filed_declaration_observation_does_not_mark_verified() -> None
                 artefacts=(_filed_declaration_artefact(),),
             ).model_copy(update={"status": "BAJA"}),
         ),
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     assert len(evidence) == 1
@@ -108,9 +108,9 @@ def test_filed_declaration_observation_for_wrong_taxpayer_is_ignored() -> None:
         filed_declaration_observations=(
             _filed_declaration_observation(
                 artefacts=(_filed_declaration_artefact(),),
-            ).model_copy(update={"authenticated_identity": "Y7654321G"}),
+            ).model_copy(update={"authenticated_identity": "Y0001503E"}),
         ),
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     assert evidence == ()
@@ -154,7 +154,7 @@ def test_imported_justificante_record_marks_aeat_verified_without_implying_local
             ),
         ),
         justificantes=(_justificante_metadata(csv=csv),),
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     row = evidence[0]
@@ -168,10 +168,10 @@ def test_imported_justificante_record_marks_aeat_verified_without_implying_local
 def test_imported_justificante_record_for_nonmatching_receipt_metadata_is_not_verified() -> None:
     csv = "JUST3032025X1T7"
     cases = (
-        ("wrong-taxpayer", "303", 2025, _PERIOD_2025_1T, "Y7654321G"),
-        ("wrong-modelo", "130", 2025, _PERIOD_2025_1T, "X1234567L"),
-        ("wrong-ejercicio", "303", 2024, _PERIOD_2025_1T, "X1234567L"),
-        ("wrong-period", "303", 2025, Period.from_year_and_code(2025, "2T"), "X1234567L"),
+        ("wrong-taxpayer", "303", 2025, _PERIOD_2025_1T, "Y0001503E"),
+        ("wrong-modelo", "130", 2025, _PERIOD_2025_1T, "X0001500M"),
+        ("wrong-ejercicio", "303", 2024, _PERIOD_2025_1T, "X0001500M"),
+        ("wrong-period", "303", 2025, Period.from_year_and_code(2025, "2T"), "X0001500M"),
     )
 
     for case_id, modelo, filing_year, period, tax_id in cases:
@@ -196,7 +196,7 @@ def test_imported_justificante_record_for_nonmatching_receipt_metadata_is_not_ve
                     tax_id=tax_id,
                 ),
             ),
-            expected_tax_id="X1234567L",
+            expected_tax_id="X0001500M",
         )
 
         row = evidence[0]

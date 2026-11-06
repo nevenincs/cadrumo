@@ -39,7 +39,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 _EFFECTIVE_DATE = date(2026, 3, 31)
 
 
-def _administrador(base: str, withheld: str, *, nif: str = "87654321X") -> RetencionObservation:
+def _administrador(base: str, withheld: str, *, nif: str = "X0001502F") -> RetencionObservation:
     return RetencionObservation(
         source_kind=BindingSourceKind.LEDGER_TRANSACTION,
         source_object_id=f"administrador-{nif}-{withheld}",
@@ -74,7 +74,7 @@ def test_advisory_fires_on_administrador_rate_matching_neither_statutory_figure(
     diagnostic = diagnostics[0]
     assert diagnostic.reason == "administrador_retencion_rate_mismatch"
     assert diagnostic.source_kind == ADMINISTRADOR_RETENCION_RATE_SOURCE_KIND
-    assert "87654321X" in diagnostic.message
+    assert "X0001502F" in diagnostic.message
 
 
 def test_advisory_silent_on_administrador_general_35_percent_rate() -> None:
@@ -129,15 +129,15 @@ def test_advisory_fires_once_per_divergent_administrador_row() -> None:
     """Two divergent administrador rows each raise one advisory; a conforming row stays silent."""
     diagnostics = administrador_retencion_rate_advisory_observations(
         [
-            _administrador("1000.00", "150.00", nif="11111111H"),
-            _administrador("1000.00", "350.00", nif="22222222J"),
-            _administrador("1000.00", "220.00", nif="33333333P"),
+            _administrador("1000.00", "150.00", nif="00001500M"),
+            _administrador("1000.00", "350.00", nif="00001501Y"),
+            _administrador("1000.00", "220.00", nif="00001502F"),
         ],
         effective_date=_EFFECTIVE_DATE,
     )
     assert len(diagnostics) == 2
     flagged = {d.message.split("perceptor ")[1].split(" ")[0].strip("'") for d in diagnostics}
-    assert flagged == {"11111111H", "33333333P"}
+    assert flagged == {"00001500M", "00001502F"}
 
 
 # -- the grounding the advisory asserts must come from the registry ---------

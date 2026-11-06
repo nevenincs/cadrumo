@@ -484,7 +484,7 @@ class TestAccruedDateAuthority:
         """
         with pytest.raises(ValidationError):
             _obs(
-                nif="11111111H",
+                nif="00001500M",
                 scheme=RetencionScheme("actividades_economicas"),
                 base="100",
                 retencion="15",
@@ -496,7 +496,7 @@ class TestAccruedDateAuthority:
         """Only the extended ``YYYY-MM-DD`` wire form is admitted."""
         with pytest.raises(ValidationError):
             _obs(
-                nif="11111111H",
+                nif="00001500M",
                 scheme=RetencionScheme("actividades_economicas"),
                 base="100",
                 retencion="15",
@@ -506,7 +506,7 @@ class TestAccruedDateAuthority:
     def test_valid_accrued_date_is_admitted_and_aggregates(self, operation: PinnedAuthorityOperation) -> None:
         """The positive control: a real accrual date is admitted and rolls up."""
         observation = _obs(
-            nif="11111111H",
+            nif="00001500M",
             scheme=RetencionScheme("actividades_economicas"),
             base="100",
             retencion="15",

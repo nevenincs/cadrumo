@@ -1733,8 +1733,8 @@ sequence_order = {casillas = [0, 127, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
 family = "constructs"
 selector = {revision = "2025", id = "modelo-303-iva-autoliquidacion"}
 sequence_additions = {deadline_windows = ["modelo-303-2026-02-mensual", "modelo-303-2026-03-mensual", "modelo-303-2026-04-mensual", "modelo-303-2026-05-mensual", "modelo-303-2026-06-mensual", "modelo-303-2026-07-mensual", "modelo-303-2026-08-mensual", "modelo-303-2026-09-mensual", "modelo-303-2026-10-mensual", "modelo-303-2026-11-mensual", "modelo-303-2026-12-mensual", "modelo-303-2026-2t", "modelo-303-2026-3t", "modelo-303-2026-4t"], legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-dr-303-2026", "aeat-calendario-contribuyente-2026-hasta-2-marzo", "aeat-calendario-contribuyente-2026-domiciliacion", "aeat-calendario-contribuyente-2026-simplificado-hasta-1-febrero-2027", "boe-orden-hac-1425-2025-iva-authority"]}
-sequence_removals = {deadline_windows = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], source_refs = [3, 5, 6, 8]}
-sequence_order = {source_refs = [0, 1, 2, 5, 3, 4, 6, 7, 8, 9]}
+sequence_removals = {deadline_windows = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], source_refs = [3, 6, 7, 9]}
+sequence_order = {source_refs = [0, 1, 2, 6, 3, 4, 5, 7, 8, 9, 10]}
 [[revisions.2026-y-siguientes.family_overrides]]
 family = "verification_expectations"
 selector = {revision = "2025", id = "modelo-303-reconcile-when-present"}

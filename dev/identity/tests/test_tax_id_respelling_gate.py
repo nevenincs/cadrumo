@@ -16,7 +16,7 @@ the census's ``EXEMPTIONS`` with a stated reason.
 WHY THE ACTIONABLE KINDS ARE ASSERTED SEPARATELY from the rest. A ``comparison``
 respelling and a ``keying`` respelling are the two the canonical forms directly
 replace, and each is a live defect: the comparison kind is how a printed
-``B-1234567-4`` failed to match a stored ``B12345674`` and read as a different
+``B-1234567-4`` failed to match a stored ``B00015016`` and read as a different
 bearer. ``unclassified`` and ``free_standing`` sites are normalisations whose
 use this walker cannot attribute; they are reported so they cannot be silently
 dropped, but a site there may be legitimate and forcing them to zero would

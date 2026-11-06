@@ -60,7 +60,7 @@ def _reply(*, taxable_base: str | None, iva_amount: str | None, grand_total: str
     against a parser that had stopped working at all.
     """
     values: dict[str, str | None] = {
-        "supplier_tax_id": "B12345674",
+        "supplier_tax_id": "B00015016",
         "supplier_name": "Pinturas del Norte SL",
         "invoice_number": "SIN-NUMERO",
         "invoice_date": "11/06/2026",

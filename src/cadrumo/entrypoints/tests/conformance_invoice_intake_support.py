@@ -27,7 +27,7 @@ from .conformance_family_contract import (
     RegisteredExecutorConformanceCase,
 )
 
-_COUNTERPARTY_NIF = "B12345674"
+_COUNTERPARTY_NIF = "B00015016"
 _COUNTERPARTY_NAME = "Conformance Supplier"
 _BOOK_HEADER = (
     "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate,currency,country_code"

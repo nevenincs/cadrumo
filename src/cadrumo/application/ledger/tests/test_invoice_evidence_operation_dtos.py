@@ -64,7 +64,7 @@ def _draft() -> InvoiceDraft:
     draft = InvoiceDraft(
         supplier_tax_id="B00010157",
         supplier_name="Papeleria Sol SL",
-        customer_tax_id="B12345674",
+        customer_tax_id="B00015016",
         customer_name="Cliente Ejemplo SL",
         supplier_postal_code="08001",
         customer_postal_code="28001",
@@ -185,7 +185,7 @@ def _establishment() -> ConfirmedEstablishment:
     )
     contradiction = CounterpartyEstablishmentContradiction(
         counterparty_key="b" * 64,
-        canonical_tax_identifier="B12345674",
+        canonical_tax_identifier="B00015016",
         confirmed_scope=other_scope,
         evidenced_scope=scope,
         detail="The remembered territory conflicts with this document.",

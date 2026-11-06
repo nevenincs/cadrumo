@@ -29,7 +29,7 @@ def test_valid_identity_document_variants_round_trip() -> None:
             (
                 "00000000T",
                 "12345678Z",
-                "87654321X",
+                "X0001502F",
                 "12345678z",
                 "  12345678Z  ",
                 "12345678-Z",
@@ -39,16 +39,16 @@ def test_valid_identity_document_variants_round_trip() -> None:
         (
             "nie",
             (
-                "X1234567L",
+                "X0001500M",
                 "Y0001007D",
                 "Z0001008R",
-                "x1234567L",
+                "x0001500M",
             ),
             IdentityDocument.NIE,
         ),
         (
             "cif",
-            ("A12345674", "P1234567D", "C12345674", "C1234567D"),
+            ("A00015008", "P0001500H", "C00015008", "C0001501F"),
             IdentityDocument.CIF,
         ),
     )

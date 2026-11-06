@@ -64,7 +64,7 @@ _ADVISED_NOTICE: Final = "ledger.evidence.review.advised_pending"
 _PAGE: Final = (
     "FACTURA 2026-0142\n"
     "Emisor: Acme Suministros SL\n"
-    "NIF B12345674\n"
+    "NIF B00015016\n"
     "Calle Mayor 3, 28001 Madrid\n"
     "Espana\n"
     "Cliente: Islas Comercial SL\n"
@@ -93,7 +93,7 @@ def _attribution_draft(*, legends: tuple[RegimeLegend, ...], operation: PinnedAu
     the reading path produces it.
     """
     draft = InvoiceDraft(
-        supplier_tax_id="B12345674",
+        supplier_tax_id="B00015016",
         supplier_name="Acme Suministros SL",
         supplier_postal_code="28001",
         supplier_country="Espana",
@@ -138,7 +138,7 @@ def _country_draft(*, legends: tuple[RegimeLegend, ...], operation: PinnedAuthor
     advisory the moment the reader's field split moved underneath it.
     """
     read = InvoiceDraft(
-        supplier_tax_id="B12345674",
+        supplier_tax_id="B00015016",
         customer_country_code="XX",
         customer_stated_country_code="XX",
         taxable_base=Decimal("100.00"),
@@ -152,7 +152,7 @@ def _country_draft(*, legends: tuple[RegimeLegend, ...], operation: PinnedAuthor
 def _clean_draft(*, legends: tuple[RegimeLegend, ...], operation: PinnedAuthorityOperation) -> InvoiceDraft:
     """Return a draft carrying nothing advisory: the control every filter needs."""
     read = InvoiceDraft(
-        supplier_tax_id="B12345674",
+        supplier_tax_id="B00015016",
         supplier_name="Acme Suministros SL",
         taxable_base=Decimal("100.00"),
     )

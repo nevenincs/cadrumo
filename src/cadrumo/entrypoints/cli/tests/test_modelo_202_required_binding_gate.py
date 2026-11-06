@@ -39,7 +39,7 @@ _MISSING_M202_BINDINGS = {
 _LEGAL_ENTITY_FACTS = {
     "taxpayer_type.entity_type": "legal_entity",
     "taxpayer_type.legal_entity_form": "sl",
-    "identity.tax_id": "B12345674",
+    "identity.tax_id": "B00015016",
     "identity.name": "",
     "identity.surnames": "",
     "taxpayer_type.irpf_income_categories": "",

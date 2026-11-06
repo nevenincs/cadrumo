@@ -50,7 +50,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 def _undeclared_profile() -> TaxpayerProfile:
     """A profile with no taxpayer model declared at all."""
 
-    return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL"))
+    return TaxpayerProfile(tax_id="X0001500M", iva_regime=IVARegime("GENERAL"))
 
 
 def test_explain_returns_typed_envelope_for_applicable_modelo() -> None:
@@ -66,7 +66,7 @@ def test_explain_returns_typed_envelope_for_applicable_modelo() -> None:
     assert result.verdict is ApplicabilityVerdict.APPLICABLE
     assert result.rationale
     assert result.legal_refs  # applicability is registry-grounded.
-    assert result.profile_facts["tax_id"] == "X1234567L"
+    assert result.profile_facts["tax_id"] == "X0001500M"
     assert result.profile_facts["iva_regime"] == "GENERAL"
     assert result.profile_facts["entity_type"] == "natural_person"
 
@@ -246,7 +246,7 @@ def test_explain_applicable_flag_matches_derived_verdict() -> None:
 
 def test_explain_721_depends_on_crypto_abroad_threshold_fact() -> None:
     profile = TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("trabajo")}),
         iva_regime=IVARegime("GENERAL"),
@@ -350,7 +350,7 @@ def test_rule_fact_keys_without_exclusions_name_no_exclusion_inputs() -> None:
 def _sii_sociedad(**facts: object) -> TaxpayerProfile:
     return TaxpayerProfile.model_validate(
         {
-            "tax_id": "B12345674",
+            "tax_id": "B00015016",
             "entity_type": EntityType.from_registry("legal_entity"),
             "legal_entity_form": LegalEntityForm.from_registry("sl"),
             "iva_regime": IVARegime("GENERAL"),

@@ -10,7 +10,7 @@ status pages. The scrubbed fixture corpus lives under
    the AEAT anónimo demo page if available).
 2. Strip all `<script>`, `<style>`, `<link>`, `<meta>` and every
    `<div>` not ancestor to the target `<table>`.
-3. Scrub PII: replace the tax id with `X1234567L`, employer tax ids
+3. Scrub PII: replace the tax id with `X0001500M`, employer tax ids
    with `A12345678`, amounts with round numbers, and any URL query
    tokens with stable placeholders.
 4. Save under `src/cadrumo/tests/fixtures/aeat-pages/<surface>/<name>.html`.

@@ -147,7 +147,7 @@ def _resolve_result_disposition(
 def _result_disposition_profile(kind: str) -> TaxpayerProfile:
     if kind == "redeme":
         return TaxpayerProfile(
-            tax_id="B66012345",
+            tax_id="B00015032",
             iva_regime=IVARegime("GENERAL"),
             iva=ModeloIVAProfile(
                 tax_territory=M303TaxTerritory.from_registry("common_regime"),
@@ -160,7 +160,7 @@ def _result_disposition_profile(kind: str) -> TaxpayerProfile:
         )
     if kind == "ordinary":
         return TaxpayerProfile(
-            tax_id="B66012345",
+            tax_id="B00015032",
             iva_regime=IVARegime("GENERAL"),
             iva=ModeloIVAProfile(
                 tax_territory=M303TaxTerritory.from_registry("common_regime"),

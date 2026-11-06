@@ -470,10 +470,10 @@ class TestSecondDeclarantAndConflictingRows:
     @pytest.mark.parametrize(
         "marker",
         [
-            "NIF cónyuge: 11111111H",
-            "NIF del cónyuge 11111111H",
-            "Cónyuge NIF: 11111111H",
-            "Segundo declarante - NIF 11111111H",
+            "NIF cónyuge: 00001500M",
+            "NIF del cónyuge 00001500M",
+            "Cónyuge NIF: 00001500M",
+            "Segundo declarante - NIF 00001500M",
             "Tributación conjunta: Sí",
             "Declaración conjunta",
         ],

@@ -95,7 +95,7 @@ def _retention_invoice() -> Invoice:
                 "invoice_number": "F-PROV-901",
                 "issued_at": issued_at,
                 "counterparty_name": "Asesoria Profesional Martinez SL",
-                "counterparty_tax_id": "B12345674",
+                "counterparty_tax_id": "B00015016",
                 "counterparty_country": "ES",
                 "iva_category": require_iva_category(
                     "domestic_general",

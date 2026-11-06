@@ -26,7 +26,7 @@ def _minimal_profile_mapping() -> dict[str, str]:
     """Return a profile-values mapping that satisfies the descriptor."""
 
     return {
-        "identity.tax_id": "B66012345",
+        "identity.tax_id": "B00015032",
         "tax_residence.jurisdiction_scope": "common_regime",
         "iva.regime": "GENERAL",
         "iva.m303_regime_composition": "general",
@@ -43,7 +43,7 @@ def test_taxpayer_profile_carries_incn_as_a_typed_decimal_when_declared() -> Non
     values = _minimal_profile_mapping() | {
         "taxpayer_type.incn_prior_12_months": "7500000.00",
     }
-    profile = taxpayer_profile_from_mapping(values, tax_id_default="B66012345")
+    profile = taxpayer_profile_from_mapping(values, tax_id_default="B00015032")
     assert profile.incn_prior_12_months == Decimal("7500000.00")
     assert isinstance(profile.incn_prior_12_months, Decimal)
 
@@ -52,7 +52,7 @@ def test_taxpayer_profile_carries_incn_as_none_when_undeclared() -> None:
     """An undeclared INCN projects as ``None`` so the engine returns
     INCOMPLETE rather than guessing a Modelo 202 modality."""
 
-    profile = taxpayer_profile_from_mapping(_minimal_profile_mapping(), tax_id_default="B66012345")
+    profile = taxpayer_profile_from_mapping(_minimal_profile_mapping(), tax_id_default="B00015032")
     assert profile.incn_prior_12_months is None
 
 
@@ -61,7 +61,7 @@ def test_taxpayer_profile_model_validates_incn_decimal_field() -> None:
     and rejects a non-decimal scalar via the field's typed boundary."""
 
     profile = TaxpayerProfile(
-        tax_id="B66012345",
+        tax_id="B00015032",
         iva_regime=IVARegime("GENERAL"),
         incn_prior_12_months=Decimal("6000000"),
     )

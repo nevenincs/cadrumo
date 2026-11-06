@@ -170,7 +170,7 @@ def _invoice(
             "invoice_number": number,
             "issued_at": issued_at,
             "counterparty_name": counterparty,
-            "counterparty_tax_id": "B92000025",
+            "counterparty_tax_id": "B00015073",
             "counterparty_country": "ES",
             "base_total": base,
             "iva_total": iva,

@@ -147,25 +147,35 @@ required_text = ["modelo 303"]
 [revisions.2022.bindings.aggregation]
 op = "sum"
 
-# Casilla 59, "Entregas intracomunitarias de bienes y servicios": the base of the
-# exempt intra-Community supplies of goods (LIVA art. 25) and of the intra-Community
-# supplies of services, which are the services located in another Member State under
-# LIVA art. 69.Uno.1 for a businessman established there and reported in Modelo 349
-# with clave S. The bundled Modelo 322 instructions word the same box as "el importe
-# de las entregas intracomunitarias de bienes exentas, [...] segun lo dispuesto en el
-# articulo 25 [...] y el importe de las prestaciones de servicios intracomunitarias del
-# periodo de liquidacion"; no copy of the Modelo 303 instructions is bundled. Casilla 120
-# therefore keeps only the other not-subject-by-location operations, which the ledger
-# categories do not model, so it is entered by the operator.
+# Casilla 59, "Entregas intracomunitarias de bienes y servicios". The Modelo 303
+# instructions (aeat-modelo-303-instructions-20261106, Informacion adicional, box
+# 59) define it as "el importe de las entregas intracomunitarias de bienes exentas
+# [...] segun lo dispuesto en el articulo 25 [...] y el importe de las prestaciones
+# de servicios intracomunitarias del periodo de liquidacion": the exempt art. 25
+# goods plus the services located in another Member State by LIVA art. 69.Uno.1
+# for a businessman established there. The same instructions exclude those
+# services from box 120 ("excepto las prestaciones de servicios intracomunitarias,
+# incluidas en la casilla 59").
+#
+# Rate kinds are zero and exempt for both categories. The goods leg is exempt by
+# definition, and the services leg is not subject in Spain, so neither carries a
+# Spanish tier. A row of either category that resolves to a positive tier
+# contradicts its own category; leaving it unselected makes the unrouted-quantity
+# screen report its base instead of declaring it here.
 [[revisions.2022.bindings]]
 id = "modelo-303-casilla-59-entregas-intracomunitarias-base"
-provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_supply", "intra_community_service_supply"], rate_kinds = ["general", "reduced", "super_reduced", "zero", "exempt"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_supply", "intra_community_service_supply"], rate_kinds = ["zero", "exempt"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
-legal_refs = ["ley-37-1992:art-25", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-instructions-20261106", "boe-modelo-303-2008-form"]
+legal_refs = ["ley-37-1992:art-25", "ley-37-1992:art-69", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.bindings.source_citations]]
-source_ref = "aeat-modelo-303-procedure"
-required_text = ["modelo 303"]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "59 Entregas intracomunitarias de bienes y servicios",
+    "el importe de las prestaciones de servicios intracomunitarias del periodo de liquidación",
+    "excepto las prestaciones de servicios intracomunitarias, incluidas en la casilla 59",
+]
 
 [revisions.2022.bindings.aggregation]
 op = "sum"

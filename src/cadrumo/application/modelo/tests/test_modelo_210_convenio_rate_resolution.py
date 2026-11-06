@@ -103,7 +103,7 @@ def _irnr_profile(country_code: str) -> TaxpayerProfile:
     """
 
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         iva_regime=_iva_regime(),
         fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
         country_of_fiscal_residence=country_code,
@@ -119,7 +119,7 @@ def _resident_profile() -> TaxpayerProfile:
     """
 
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         iva_regime=_iva_regime(),
         fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
@@ -423,7 +423,7 @@ def _irnr_profile_without_representante(country_code: str) -> TaxpayerProfile:
     """
 
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         iva_regime=_iva_regime(),
         fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
         country_of_fiscal_residence=country_code,
@@ -455,7 +455,7 @@ def test_representante_predicate_violated_for_non_eea_resident_without_represent
     """Non-EEA IRNR profile without representante — rule applies; predicate violated."""
 
     profile = TaxpayerProfile.model_construct(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         iva_regime=_iva_regime(),
         fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
         country_of_fiscal_residence="AR",
@@ -487,7 +487,7 @@ def test_representante_predicate_emits_blocking_finding_via_evaluator() -> None:
         finding_kind="BLOCKING_RULE",
     )
     profile = TaxpayerProfile.model_construct(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         iva_regime=_iva_regime(),
         fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
         country_of_fiscal_residence="AR",

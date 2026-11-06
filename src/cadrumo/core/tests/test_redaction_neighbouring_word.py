@@ -13,7 +13,7 @@ is why four review passes over the gates found neither.
 
 **The neighbour swallow.** The prefixed arm admits a space as an internal
 separator, so the greedy scan joins the adjacent word to the number:
-``ESB12345674 is`` in one direction and ``de SE556677889901`` in the other. The
+``ESB00015016 is`` in one direction and ``de SE556677889901`` in the other. The
 joined span normalises to nothing any authority recognises, so the gate refuses
 it *correctly* -- and the identity, already inside a consumed span, is never
 asked about again. Both constraints the module cites for admitting the space
@@ -48,10 +48,10 @@ _FUNNELS: list[Callable[[str], str]] = [redact_for_cli_output, redact_for_log]
 #: that ate the neighbour would satisfy "the identity is gone" and still corrupt
 #: the operator's sentence.
 IDENTITY_BESIDE_A_SHORT_WORD = [
-    ("counterparty ESB12345674 is declared", "ESB12345674", ["counterparty ", " is declared"]),
-    ("NIF ESB12345674 en factura", "ESB12345674", ["NIF ", " en factura"]),
-    ("el ESB12345674 y la factura", "ESB12345674", ["el ", " y la factura"]),
-    ("es ESB12345674 la contraparte", "ESB12345674", ["es ", " la contraparte"]),
+    ("counterparty ESB00015016 is declared", "ESB00015016", ["counterparty ", " is declared"]),
+    ("NIF ESB00015016 en factura", "ESB00015016", ["NIF ", " en factura"]),
+    ("el ESB00015016 y la factura", "ESB00015016", ["el ", " y la factura"]),
+    ("es ESB00015016 la contraparte", "ESB00015016", ["es ", " la contraparte"]),
     ("de SE556677889901 y otros", "SE556677889901", ["de ", " y otros"]),
     ("en DE811234567 es", "DE811234567", ["en ", " es"]),
     ("la B.1234567.4 en el registro", "B.1234567.4", ["la ", " en el registro"]),
@@ -70,9 +70,9 @@ TWO_IDENTITIES_IN_ONE_LINE = "de SE556677889901 y DE811234567 en la factura"
 #: entries are the leak: ``same_tax_identifier`` folds them onto the compact
 #: form, and the funnel did not.
 SAME_BEARER_SPELLINGS = [
-    ("B12345674", "B.1234567.4"),
-    ("B12345674", "B-1234567-4"),
-    ("ESB12345674", "ESB.1234567.4"),
+    ("B00015016", "B.1234567.4"),
+    ("B00015016", "B-1234567-4"),
+    ("ESB00015016", "ESB.1234567.4"),
     ("12345678Z", "12.345.678.Z"),
 ]
 

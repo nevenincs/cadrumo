@@ -36,8 +36,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def _draft(suggested: InvoiceKind | None) -> InvoiceDraft:
     return InvoiceDraft(
-        supplier_tax_id="B12345674",
-        customer_tax_id="B17283946",
+        supplier_tax_id="B00015016",
+        customer_tax_id="B00015024",
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("21"),
         iva_amount=Decimal("21.00"),

@@ -210,7 +210,7 @@ def _representative_profiles() -> tuple[TaxpayerProfile, ...]:
             iva_regime=IVARegime("NO_APLICA"),
         ),
         TaxpayerProfile(
-            tax_id="B12345674", entity_type=EntityType.from_registry("legal_entity"), iva_regime=IVARegime("NO_APLICA")
+            tax_id="B00015016", entity_type=EntityType.from_registry("legal_entity"), iva_regime=IVARegime("NO_APLICA")
         ),
         TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("NO_APLICA")),
     )
