@@ -3,7 +3,7 @@ import { useRef } from "react";
 import { userEvent, waitFor } from "storybook/test";
 import { modeloFixture, type ModeloShape } from "@/dev/modeloFixture";
 import type { ModeloPort } from "../../../shell/modelo";
-import type { OutputLanguage } from "../../../shell/modeloContract";
+import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
 import { translator, useStrings } from "../../../shell/strings";
 import { DeclarationsPage, type DeclarationsMemory } from "./DeclarationsPage";
 

@@ -140,7 +140,7 @@ def _bounded_transport_label(label: str) -> str:
     """Shorten a transport label to fit one bucket-event payload value.
 
     The recognised transport segment is always short, but the malformed-stamp
-    fallback in :func:`_transport_from_provenance` echoes the whole,
+    fallback in :func:`transport_from_provenance` echoes the whole,
     operator-supplied provenance stamp, which carries no length bound of its
     own. Truncating silently would misreport a malformed stamp as a
     recognised one, so the elision marker keeps a shortened value

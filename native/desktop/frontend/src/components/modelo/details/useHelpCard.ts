@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { ledgerFailure, type LedgerFailureCode } from "../../../shell/ledger";
 import type { ModeloPort } from "../../../shell/modelo";
-import type {
-  ModeloCasillaHelpCardV1,
-  ModeloWorkbenchFormProjectionV1,
-  OutputLanguage,
-} from "../../../shell/modeloContract";
+import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
+import type { ModeloCasillaHelpCardV1 } from "../../../shell/modeloContract/modeloWorkCasillaHelp";
+import type { ModeloWorkbenchFormProjectionV1 } from "../../../shell/modeloContract/modeloWorkForm";
 
 // The help card of the chosen box, read when the box is chosen and held in
 // this component's memory for the revision, calculation and language the

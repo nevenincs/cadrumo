@@ -18,7 +18,7 @@ import type {
   SedeViewPhase,
   SedeViewPublication,
   SedeViewTransfer,
-} from "../ipc/contract";
+} from "../ipc/sedeViewMessages";
 import type {
   SedeViewEvent,
   SedeViewPort,

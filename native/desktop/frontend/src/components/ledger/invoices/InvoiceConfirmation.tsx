@@ -7,7 +7,7 @@ import { facts, labelGap } from "../../../shell/compose";
 import type {
   CatalogueInvoice,
   InvoiceAddRequest,
-} from "../../../shell/ledger";
+} from "../../../shell/ledgerInvoiceOperations";
 import type { InvoiceUpdateField } from "../../../shell/ledgerContract";
 import { useStrings } from "../../../shell/strings";
 import { ivaCategoryLabel } from "../movements/movementWords";

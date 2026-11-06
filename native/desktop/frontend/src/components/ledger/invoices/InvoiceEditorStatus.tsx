@@ -4,7 +4,7 @@ import { Icon } from "@/components/ui/icon";
 import type {
   InvoicePreviewFinding,
   InvoicePreviewRateSlot,
-} from "../../../shell/ledger";
+} from "../../../shell/ledgerInvoiceOperations";
 import { useStrings } from "../../../shell/strings";
 import type { PlacedFindings } from "./invoiceModel";
 import { findingText } from "./invoiceWords";

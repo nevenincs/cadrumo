@@ -1,9 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import type {
-  ModeloProjectOperationProjection,
-  PublicModeloFormField,
-} from "../../src/shell/modeloContract";
+import type { ModeloProjectOperationProjection } from "../../src/shell/modeloContract/modeloProject";
+import type { PublicModeloFormField } from "../../src/shell/modeloContract/modeloWorkForm";
 import { label } from "../support/strings";
 import { MODELO_FIXTURES } from "../support/windowFixtures";
 

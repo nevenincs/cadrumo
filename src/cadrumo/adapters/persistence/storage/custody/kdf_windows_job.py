@@ -5,7 +5,7 @@ with :mod:`ctypes.wintypes`, which raises on import on every platform that is
 not Windows -- its ``VARIANT_BOOL`` names a ``_type_`` the other platforms do
 not support. Importing this module
 therefore has to stay safe everywhere, because the KDF process boundary that
-consumes :class:`_WindowsJob` is imported on every platform.
+consumes :class:`WindowsJob` is imported on every platform.
 
 The module-level ``sys.platform == "win32"`` block is what makes that true, and
 it is also the only guard shape every checker this project runs narrows on, so

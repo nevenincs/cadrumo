@@ -29,11 +29,11 @@ import { cn } from "@/components/ui/cn";
 import { PaneHeader, type PaneControl } from "../../PaneHeader";
 import type { ModeloPort } from "../../../shell/modelo";
 import { modeloWritesFor } from "../../../shell/modeloWriteHolds";
+import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
 import type {
   DeclarationListGroup,
   ModeloDeclarationListRowV1 as Row,
-  OutputLanguage,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloDeclarations";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { aeatWords, rowMark } from "./declarationsWords";
 import {

@@ -1,4 +1,4 @@
-import type { AboutInfo } from "../../ipc/contract";
+import type { AboutInfo } from "../../ipc/environment";
 
 /** A made-up installation, as the About dialog shows it. */
 export const ABOUT_FIXTURE: AboutInfo = {

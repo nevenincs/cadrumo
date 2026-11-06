@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, type ReactNode } from "react";
-import type { SetupItemId, SetupModelDownload } from "../ipc/contract";
+import type { SetupItemId, SetupModelDownload } from "../ipc/componentSetup";
 import type { LocalAiSource } from "../shell/localAiLanes";
 import type { LocalModelHost } from "../shell/localModels";
 import {

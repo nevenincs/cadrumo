@@ -6,7 +6,7 @@
 // missing capture, a refused capture and a missing calculation each have a
 // status of their own. Nothing here contacts AEAT.
 
-import type { ModeloFormText } from "./modeloContract";
+import type { ModeloFormText } from "./modeloContract/modeloWorkForm";
 
 export type BorradorState = "active" | "superseded" | "discarded" | "all";
 

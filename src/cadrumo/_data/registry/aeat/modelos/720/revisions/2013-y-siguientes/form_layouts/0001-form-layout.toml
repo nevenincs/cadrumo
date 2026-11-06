@@ -7,7 +7,7 @@ revision_id = "2013-y-siguientes"
 seed_source = "casilla_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "f0061b327191bea80666c594a32dd70ab47f72f16c33ac9d15a0918504ec8bb5"
+source_state_digest = "ad6a0bc9185ee066fccc8ae9311c25a0e27a599dcc004a322b0f422aa9c558a0"
 placements = [
     { casilla_id = "cuentas.codigo-de-cuenta", kind = "unplaced", unplaced_reason = "no_official_anchor" },
     { casilla_id = "cuentas.valoracion", kind = "unplaced", unplaced_reason = "no_official_anchor" },
@@ -28,8 +28,8 @@ id = "general"
 heading_key = "modelo.schema.720.form.section.general.heading"
 blocks = [
     { kind = "field", id = "field", binding_id = "modelo-720.type_1.tipo-de-soporte" },
-    { kind = "field", id = "field-2", binding_id = "modelo-720.type_1.telefono-contacto" },
-    { kind = "field", id = "field-3", binding_id = "modelo-720.type_1.nombre-contacto" },
+    { kind = "context_field", id = "field-2", export_layout_id = "modelo-720-fichero-aeat", export_record_id = "modelo-720-type-1", export_field_id = "modelo-720-type_1-telefono-contacto", heading_key = "modelo.schema.720.binding.x-dlnm8pbcdsmjechg5pq7is35bsoist35dhimcrredsmm6rreehgm6t3f.label" },
+    { kind = "context_field", id = "field-3", export_layout_id = "modelo-720-fichero-aeat", export_record_id = "modelo-720-type-1", export_field_id = "modelo-720-type_1-nombre-contacto", heading_key = "modelo.schema.720.binding.x-dlnm8pbcdsmjechg5pq7is35bsoisrjfdlh74p9dcdnmst31cdq6u.label" },
     { kind = "field", id = "field-4", binding_id = "modelo-720.type_1.numero-identificativo-de-la-declaracion" },
     { kind = "field", id = "field-5", binding_id = "modelo-720.type_1.declaracion-complementaria-o-sustitutiva" },
     { kind = "field", id = "field-6", binding_id = "modelo-720.type_1.numero-identificativo-de-la-declaracion-anterior" },

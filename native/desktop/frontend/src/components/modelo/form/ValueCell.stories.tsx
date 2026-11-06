@@ -2,11 +2,11 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, waitFor } from "storybook/test";
 import form130 from "@fixtures/modelo/modelo-130-1T-en.json" with { type: "json" };
+import type { ModeloEditValueGrammarV1 } from "../../../shell/modeloContract/modeloEditWork";
 import type {
-  ModeloEditValueGrammarV1,
   ModeloWorkbenchFormProjectionV1,
   PublicModeloFormField,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloWorkForm";
 import { placedFields, type StagedEdit } from "./session";
 import { ValueCell, type EditRequest } from "./ValueCell";
 

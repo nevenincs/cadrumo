@@ -16,7 +16,7 @@ import type {
   PublicModeloFormField,
   PublicModeloFormSection,
   PublicModeloWorkForm,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloWorkForm";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { calm } from "../form/FieldRow";
 import {

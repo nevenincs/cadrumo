@@ -18,7 +18,7 @@ import {
 import { Icon } from "@/components/ui/icon";
 import { Kbd } from "@/components/ui/kbd";
 import { Spinner } from "@/components/ui/spinner";
-import type { DocsResultKind, DocsSearchResult } from "../ipc/contract";
+import type { DocsResultKind, DocsSearchResult } from "../ipc/docsBridge";
 import { primaryChord, scoreAction, type Action } from "../shell/actions";
 import { useStrings } from "../shell/strings";
 

@@ -576,7 +576,7 @@ and that must not already be running:
 
 | File in `tests/scenarios/` | Holds the shell to                                                                         |
 | -------------------------- | ------------------------------------------------------------------------------------------ |
-| `scenarios.spec.ts`        | What each scenario presents, and the sign-in rules: one submission, no retry               |
+| `sign-in.spec.ts`          | What each scenario presents, and the sign-in rules: one submission, no retry               |
 | `accessibility.spec.ts`    | An axe audit of every major surface in both schemes                                        |
 | `keyboard.spec.ts`         | Tab stops, arrow-key patterns, chords, and where focus goes when a surface opens or closes |
 | `touch.spec.ts`            | A phone-sized touch screen: finger-sized controls, no overflow, taps and touch drags       |

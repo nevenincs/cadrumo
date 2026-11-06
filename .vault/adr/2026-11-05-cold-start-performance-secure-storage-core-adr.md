@@ -3,12 +3,13 @@ tags:
   - '#adr'
   - '#cold-start-performance'
 date: '2026-11-05'
-modified: '2026-11-05'
+modified: '2026-11-06'
 body_schema: 'body-v2'
 body_hash: 'sha256:b082fa78557c36e37d84f6f3939458fa2a5e2c2eb57e728e483e4232f6c138b6'
 related:
   - "[[2026-07-02-arch-remediation-engine-lifecycle-adr]]"
   - "[[2026-08-22-secure-storage-performance-hardening-adr]]"
+  - '[[2026-11-06-cold-start-performance-secure-storage-core-reference]]'
 ---
 
 # `cold-start-performance` adr: `Secure-object storage on SQLAlchemy Core` | (**status:** `accepted`)

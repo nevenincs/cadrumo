@@ -18,7 +18,8 @@ import {
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { Toast } from "@/components/ui/toast";
-import type { CatalogueInvoice, LedgerPort } from "../../../shell/ledger";
+import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
+import type { LedgerPort } from "../../../shell/ledger";
 import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
 import { useFocusTarget } from "../../../shell/navigation/hooks";
 import { useStrings, type Translate } from "../../../shell/strings";

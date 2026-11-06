@@ -8,7 +8,7 @@ import type {
   SetupRow,
   SetupRun,
   SetupSnapshot,
-} from "../ipc/contract";
+} from "../ipc/componentSetup";
 import { failureCode } from "../errors";
 import { useCachedRead, type AgentRead } from "./agentViews";
 import type { Setup } from "./host";

@@ -1,5 +1,4 @@
 import {
-  Fragment,
   useCallback,
   useEffect,
   useId,
@@ -12,12 +11,8 @@ import { CountryEditor } from "@/components/editors/CountryEditor";
 import { useInvoiceDuplicate } from "../../../shell/ledgerInvoiceDuplicate";
 import { useInvoiceMatches } from "../../../shell/ledgerInvoiceMatch";
 import { CurrencyEditor } from "@/components/editors/CurrencyEditor";
-import { NotesEditor } from "@/components/editors/NotesEditor";
-import { TextEditor } from "@/components/editors/TextEditor";
 import { TypedField } from "@/components/editors/TypedField";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty";
 import {
@@ -27,42 +22,35 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
-import { IconButton } from "@/components/ui/icon-button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
-import { ResizeHandle } from "@/components/ui/resize-handle";
 import {
   SegmentedControl,
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { Spinner } from "@/components/ui/spinner";
 import type { Suggestion } from "@/components/ui/suggestions";
-import { useTableView } from "@/components/ui/table-view";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { facts, listed } from "../../../shell/compose";
+import { facts } from "../../../shell/compose";
+import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
 import type {
-  CatalogueInvoice,
-  ConfirmationBlocker,
   EvidenceConfirmResult,
   EvidenceDraft,
   EvidenceRecord,
+} from "../../../shell/ledgerDocumentOperations";
+import type {
+  CatalogueInvoice,
   InvoiceKind,
-  LedgerPort,
-  LedgerRow,
-} from "../../../shell/ledger";
+} from "../../../shell/ledgerInvoiceOperations";
 import type { StageEvent, StageState } from "../../../shell/ledgerStage";
-import { useTextLimit } from "../../../shell/ledgerLimits";
 import { readAnswer } from "../../../shell/ledgerWindow";
 import { useNavigationGuard } from "../../../shell/navigation/hooks";
 import { provisionActionOf } from "../../../shell/provisioningRecovery";
-import { useStrings, type Translate } from "../../../shell/strings";
+import { useStrings } from "../../../shell/strings";
 import { localDay } from "../../../shared/dates";
 import { formatDay } from "../../../shared/dateFormats";
-import { formatAmount, formatPercent } from "../../../shared/numbers";
-import { SetupOffer } from "../../setup/SetupOffer";
 import { seriesAndNumber } from "../invoices/invoiceModel";
 import { kindChoice, problemText } from "../invoices/invoiceWords";
 import { write } from "../invoices/invoiceWrites";
@@ -75,13 +63,7 @@ import {
   partyNameOptions,
   partyTaxIdOptions,
 } from "../suggestions/ledgerSuggestions";
-import {
-  remapMatches,
-  remapMovementChoices,
-  stageLink,
-  stagedLinks,
-} from "../matching/matchingModel";
-import { invoiceLine } from "../matching/matchingWords";
+import { stagedLinks } from "../matching/matchingModel";
 import {
   CORRECTION_SHAPES,
   DERIVED_FIELDS,
@@ -90,18 +72,15 @@ import {
   duplicateQuestion,
   entrySpec,
   fieldWidth,
-  provenanceOf,
   readCorrection,
   readValue,
   readingFieldOf,
   readingRows,
-  type ReadingRow,
   referenceFields,
   resolutionOf,
   seeded,
   sameAsRead,
   sameReading,
-  VALUE_COLUMN_MIN_PX,
   type CorrectionField,
   type Corrections,
   type DocumentReference,
@@ -109,398 +88,20 @@ import {
   type ReadingBinding,
   type ReadingField,
 } from "./documentsModel";
-import {
-  doubtful,
-  fieldLabel,
-  holdText,
-  provenanceText,
-  reasonLabel,
-} from "./documentWords";
+import { fieldLabel, holdText } from "./documentWords";
 import { confirmationLanding, extractionLanding } from "./documentLanding";
 import { DocumentViewer } from "./DocumentViewer";
 import { OffHostDialog } from "./OffHostDialog";
 import { useLedgerRead } from "./useLedgerRead";
+import { ConfirmedReading } from "./ConfirmedReading";
+import { DuplicateNotice } from "./DuplicateNotice";
+import { Provenance, type Question } from "./ReadingProvenance";
+import { ReadingTable, shownReadingValue } from "./ReadingTable";
+import { ReviewColumns } from "./ReviewColumns";
+import { Finding } from "./ReviewFinding";
+import { ReviewNotices, type ReviewNotice } from "./ReviewNotices";
 
 const KINDS: readonly InvoiceKind[] = ["received", "issued"];
-/** The viewer's share of the review's width, in percent: its limits and a
- * keyboard step. */
-const VIEWER_MIN = 25;
-const VIEWER_MAX = 70;
-const VIEWER_STEP = 5;
-const clampShare = (share: number) =>
-  Math.min(VIEWER_MAX, Math.max(VIEWER_MIN, share));
-
-/**
- * The document beside what was read from it: the viewer on the left keeps
- * its place while the reading, the questions and the confirmation scroll
- * on the right, so the page is on screen next to the question it answers.
- */
-function ReviewColumns({
-  viewer,
-  share,
-  onShare,
-  className,
-  children,
-}: {
-  viewer: ReactNode;
-  share: number;
-  onShare(share: number): void;
-  className: string;
-  children: ReactNode;
-}) {
-  const t = useStrings();
-  const columns = useRef<HTMLDivElement>(null);
-  return (
-    <div ref={columns} className="ledger-draft flex min-h-0 min-w-0 flex-1">
-      <div
-        className="ledger-draft-viewer flex min-h-0 shrink-0 flex-col p-3"
-        style={{ width: `${share}%` }}
-      >
-        {viewer}
-      </div>
-      <ResizeHandle
-        orientation="vertical"
-        className="ledger-draft-resize"
-        aria-label={t("desktop.ledger.documents.viewer.resize")}
-        value={share}
-        onDrag={({ x }) => {
-          const box = columns.current?.getBoundingClientRect();
-          if (box && box.width > 0)
-            onShare(clampShare(((x - box.left) / box.width) * 100));
-        }}
-        onStep={(direction) =>
-          onShare(clampShare(share + direction * VIEWER_STEP))
-        }
-        onLimit={(limit) => onShare(limit === "min" ? VIEWER_MIN : VIEWER_MAX)}
-      />
-      <div className={`min-h-0 min-w-0 flex-1 overflow-y-auto ${className}`}>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-/** The reading table: what was read from the document, its provenance and
- * its value, in the document's own order. Its columns can be dragged to a
- * width. */
-function ReadingTable({
-  rows,
-  renderRow,
-}: {
-  rows: readonly ReadingRow[];
-  renderRow(row: ReadingRow): ReactNode;
-}) {
-  const t = useStrings();
-  const field = t("desktop.ledger.documents.column.field");
-  const source = t("desktop.ledger.documents.column.source");
-  const value = t("desktop.ledger.documents.column.value");
-  const table = useTableView({
-    columns: [
-      { id: "field", label: field, name: field },
-      { id: "source", label: source, name: source, resizable: false },
-      {
-        id: "value",
-        label: value,
-        name: value,
-        minWidth: VALUE_COLUMN_MIN_PX,
-      },
-    ],
-    rows,
-    resizeLabel: (column) => t("desktop.table.resize_column", { column }),
-  });
-  return (
-    <table className="ledger-draft-fields w-full text-sm" {...table.tableProps}>
-      <thead>
-        <tr className="border-b border-border text-muted-foreground">
-          {table.headers}
-        </tr>
-      </thead>
-      <tbody>
-        {table.rows.map((row) => (
-          <Fragment key={row.field}>{renderRow(row)}</Fragment>
-        ))}
-      </tbody>
-    </table>
-  );
-}
-
-/** A value as the reading table shows it: rates as percentages. */
-function shownValue(locale: string, field: ReadingField, value: string | null) {
-  if (value === null) return null;
-  if (field === "iva_rate" || field === "retencion_rate")
-    return formatPercent(locale, value, { unit: "points" });
-  if (
-    field === "taxable_base" ||
-    field === "iva_amount" ||
-    field === "recargo_amount" ||
-    field === "retencion_amount" ||
-    field === "grand_total"
-  )
-    return formatAmount(locale, value);
-  return value;
-}
-
-/** The finding that asks about a field, and how to go to it. */
-type Question = { words: string | null; go(): void };
-
-/**
- * Where a value came from, as a glyph: its words are the tooltip and what a
- * screen reader hears, so the column stays one glyph wide. A field a
- * finding asks about is flagged, and its glyph goes to that finding.
- */
-function Provenance({
-  t,
-  draft,
-  field,
-  edited,
-  question,
-}: {
-  t: Translate;
-  draft: EvidenceDraft;
-  field: ReadingField;
-  edited: boolean;
-  question: Question | null;
-}) {
-  const found = edited ? null : provenanceOf(draft, field);
-  const [glyph, words] = edited
-    ? [
-        <Icon key="edited" name="edit" size="xs" />,
-        t("desktop.ledger.documents.entered_by_you"),
-      ]
-    : found
-      ? [
-          doubtful(found) ? (
-            <Icon key="doubt" name="alert" size="xs" className="text-warning" />
-          ) : (
-            <Icon
-              key="read"
-              name="tick"
-              size="xs"
-              className="text-muted-foreground"
-            />
-          ),
-          provenanceText(t, found),
-        ]
-      : readValue(draft, field) === null
-        ? [
-            <Icon
-              key="unread"
-              name="pending"
-              size="xs"
-              className="text-muted-foreground"
-            />,
-            t("desktop.ledger.documents.not_read"),
-          ]
-        : [
-            <Icon
-              key="unknown"
-              name="info"
-              size="xs"
-              className="text-muted-foreground"
-            />,
-            t("desktop.ledger.documents.no_provenance"),
-          ];
-  if (question)
-    return (
-      <IconButton
-        className="ledger-provenance ledger-provenance-question text-warning"
-        label={words}
-        hint={t("desktop.ledger.documents.go_to_question", {
-          reason: reasonLabel(t, question.words),
-        })}
-        side="right"
-        onClick={question.go}
-      >
-        <Icon name="alert" size="xs" />
-      </IconButton>
-    );
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span className="ledger-provenance inline-flex size-icon-sm items-center justify-center text-sm text-muted-foreground">
-          {glyph}
-          <span className="sr-only">{words}</span>
-        </span>
-      </TooltipTrigger>
-      <TooltipContent>{words}</TooltipContent>
-    </Tooltip>
-  );
-}
-
-function Finding({
-  id,
-  t,
-  blocker,
-  answer,
-  onAnswer,
-  printed,
-}: {
-  /** Where a flagged field's glyph goes. */
-  id: string;
-  t: Translate;
-  blocker: ConfirmationBlocker;
-  answer: FindingAnswer | undefined;
-  onAnswer(answer: FindingAnswer): void;
-  /** The value printed for a field the catalogue works out itself, as
-   * shown; null for any other finding. */
-  printed: string | null;
-}) {
-  const group = useId();
-  const noteLimit = useTextLimit("confirm_note");
-  const valueLimit = useTextLimit("confirm_label");
-  const answered = resolutionOf(blocker, answer) !== null;
-  const candidates = blocker.candidates ?? [];
-  const current = answer ?? { action: "attest", value: "", note: "" };
-  // A figure the catalogue works out is saved as worked out whatever is
-  // answered: the finding says so, and only takes the reason it is accepted.
-  const worked =
-    blocker.field !== null && blocker.field !== undefined
-      ? DERIVED_FIELDS.has(blocker.field as ReadingField)
-      : false;
-  if (worked)
-    return (
-      <li
-        id={id}
-        tabIndex={-1}
-        className="ledger-finding grid scroll-m-3 gap-2 rounded-md bg-muted p-3"
-        data-answered={answered || undefined}
-      >
-        <div className="flex flex-wrap items-center gap-2">
-          <Icon
-            name={answered ? "check" : "alert"}
-            size="sm"
-            className={answered ? "text-success" : "text-warning"}
-          />
-          <span className="font-medium">
-            {reasonLabel(t, blocker.reason_words)}
-          </span>
-          {blocker.field && <Badge>{fieldLabel(t, blocker.field)}</Badge>}
-        </div>
-        <p className="ledger-finding-worked text-sm">
-          {t("desktop.ledger.documents.worked_out", {
-            field: fieldLabel(t, blocker.field!),
-            printed: printed ?? "—",
-          })}
-        </p>
-        <Field className="ledger-finding-note">
-          <FieldLabel htmlFor={`${group}-note`}>
-            {t("desktop.ledger.documents.why_right")}
-          </FieldLabel>
-          <TextEditor
-            id={`${group}-note`}
-            controlSize="sm"
-            maxLength={noteLimit ?? undefined}
-            value={answer?.action === "attest" ? answer.note : ""}
-            onChange={(note) => onAnswer({ action: "attest", value: "", note })}
-          />
-        </Field>
-      </li>
-    );
-  return (
-    <li
-      id={id}
-      tabIndex={-1}
-      className="ledger-finding grid scroll-m-3 gap-2 rounded-md bg-muted p-3"
-      data-answered={answered || undefined}
-    >
-      <div className="flex flex-wrap items-center gap-2">
-        <Icon
-          name={answered ? "check" : "alert"}
-          size="sm"
-          className={answered ? "text-success" : "text-warning"}
-        />
-        <span className="font-medium">
-          {reasonLabel(t, blocker.reason_words)}
-        </span>
-        {blocker.field && <Badge>{fieldLabel(t, blocker.field)}</Badge>}
-      </div>
-      {blocker.detail && <p className="text-sm">{blocker.detail}</p>}
-      <SegmentedControl
-        aria-label={t("desktop.ledger.documents.answer")}
-        value={answer?.action ?? ""}
-        onValueChange={(action) =>
-          onAnswer({
-            action: action as FindingAnswer["action"],
-            value: "",
-            note: current.note,
-          })
-        }
-        className="ledger-finding-action w-fit"
-      >
-        <SegmentedControlItem
-          value="choose_candidate"
-          disabled={candidates.length === 0}
-          className="text-sm"
-        >
-          {t("desktop.ledger.documents.action.choose_candidate")}
-        </SegmentedControlItem>
-        <SegmentedControlItem value="supply_value" className="text-sm">
-          {t("desktop.ledger.documents.action.supply_value")}
-        </SegmentedControlItem>
-        <SegmentedControlItem value="attest" className="text-sm">
-          {t("desktop.ledger.documents.action.attest")}
-        </SegmentedControlItem>
-      </SegmentedControl>
-      {answer?.action === "choose_candidate" && (
-        <RadioGroup
-          aria-label={t("desktop.ledger.documents.readings")}
-          value={answer.value}
-          onValueChange={(value) => onAnswer({ ...answer, value })}
-        >
-          {candidates.map((candidate) => (
-            <label
-              key={candidate.value}
-              className="flex cursor-pointer items-center gap-2 text-sm"
-            >
-              <RadioGroupItem value={candidate.value} />
-              <span className="font-mono">{candidate.value}</span>
-              {candidate.note && (
-                <span className="text-muted-foreground">{candidate.note}</span>
-              )}
-            </label>
-          ))}
-        </RadioGroup>
-      )}
-      {answer?.action === "supply_value" && (
-        <Field className="ledger-finding-value">
-          <FieldLabel htmlFor={`${group}-value`}>
-            {t("desktop.ledger.documents.the_value")}
-          </FieldLabel>
-          <TextEditor
-            id={`${group}-value`}
-            controlSize="sm"
-            maxLength={valueLimit ?? undefined}
-            value={answer.value}
-            onChange={(value) => onAnswer({ ...answer, value })}
-          />
-        </Field>
-      )}
-      {answer?.action === "attest" && (
-        <Field className="ledger-finding-note">
-          <FieldLabel htmlFor={`${group}-note`}>
-            {t("desktop.ledger.documents.why_right")}
-          </FieldLabel>
-          <NotesEditor
-            id={`${group}-note`}
-            controlSize="sm"
-            rows={2}
-            maxLength={noteLimit ?? undefined}
-            value={answer.note}
-            onChange={(note) => onAnswer({ ...answer, note })}
-          />
-        </Field>
-      )}
-    </li>
-  );
-}
-
-type Notice =
-  | { kind: "changed" }
-  /** `recovery` is the setup action the refusal names, if any. */
-  | { kind: "refused"; code: string; recovery: string | null }
-  | { kind: "unknown" }
-  | { kind: "failed"; code: string }
-  | { kind: "checked"; saved: boolean };
 
 /**
  * One reading waiting for review: what was read and where from, the
@@ -572,7 +173,7 @@ export function DraftReview({
   const [busy, setBusy] = useState<
     "reading" | "confirming" | "checking" | null
   >(null);
-  const [notice, setNotice] = useState<Notice | null>(null);
+  const [notice, setNotice] = useState<ReviewNotice | null>(null);
   const [confirmed, setConfirmed] = useState<EvidenceConfirmResult | null>(
     null,
   );
@@ -848,179 +449,22 @@ export function DraftReview({
     }
   }
 
-  if (confirmed) {
-    const invoice = confirmed.confirmation.invoice;
-    const staged = stagedLinks(actions);
-    const offer =
-      rows && linkMatches.kind === "answer"
-        ? (remapMatches(linkMatches.result, rows, [invoice]).list[0] ?? null)
-        : null;
-    const linkStaged = staged.invoices.get(invoice.invoice_id);
-    // With no movement that settles it, the movements near its day are
-    // offered instead, those that settle its amount first.
-    const nearby =
-      rows &&
-      !offer &&
-      linkMatches.kind === "answer" &&
-      linkMatches.result.movement_choices !== null
-        ? remapMovementChoices(linkMatches.result.movement_choices, rows)
-        : null;
+  if (confirmed)
     return columns(
       "",
-      <div
-        ref={root}
-        tabIndex={-1}
-        className="ledger-draft-confirmed grid content-start gap-3 p-3"
-      >
-        <Alert tone="success" icon={<Icon name="check" />}>
-          <AlertTitle>
-            {confirmed.confirmation.created
-              ? t("desktop.ledger.documents.confirmed", {
-                  number: seriesAndNumber(invoice),
-                })
-              : t("desktop.ledger.documents.already_confirmed", {
-                  number: seriesAndNumber(invoice),
-                })}
-          </AlertTitle>
-          <AlertDescription>{invoiceLine(t, locale, invoice)}</AlertDescription>
-        </Alert>
-        {confirmed.confirmation.total_discrepancy && (
-          <Alert tone="warning" icon={<Icon name="alert" />}>
-            {t("desktop.ledger.documents.printed_differs", {
-              printed: formatAmount(
-                locale,
-                confirmed.confirmation.total_discrepancy.printed_total.decimal,
-              ),
-              recorded: formatAmount(
-                locale,
-                confirmed.confirmation.total_discrepancy.recorded_total.decimal,
-              ),
-            })}
-          </Alert>
-        )}
-        {confirmed.confirmation.retention_discrepancy && (
-          <Alert
-            tone="warning"
-            icon={<Icon name="alert" />}
-            className="ledger-draft-retention-differs"
-          >
-            {confirmed.confirmation.retention_discrepancy.recorded_amount
-              ? t("desktop.ledger.documents.retention_differs", {
-                  read: formatAmount(
-                    locale,
-                    confirmed.confirmation.retention_discrepancy.read_amount
-                      .decimal,
-                  ),
-                  recorded: formatAmount(
-                    locale,
-                    confirmed.confirmation.retention_discrepancy.recorded_amount
-                      .decimal,
-                  ),
-                })
-              : t("desktop.ledger.documents.retention_unrecorded", {
-                  read: formatAmount(
-                    locale,
-                    confirmed.confirmation.retention_discrepancy.read_amount
-                      .decimal,
-                  ),
-                })}
-          </Alert>
-        )}
-        {linkStaged ? (
-          <Alert
-            icon={<Icon name="lock" />}
-            className="ledger-draft-link-staged"
-          >
-            {t("desktop.ledger.matching.staged_toast")}
-          </Alert>
-        ) : nearby ? (
-          <Alert icon={<Icon name="link" />} className="ledger-draft-no-match">
-            <AlertTitle>{t("desktop.ledger.documents.no_movement")}</AlertTitle>
-            <AlertDescription className="grid gap-2">
-              <span>{t("desktop.ledger.inspector.invoice.permanent")}</span>
-              <Combobox
-                label={t("desktop.ledger.documents.find_movement")}
-                value={null}
-                className="w-dialog-md"
-                options={nearby.map((option): ComboboxOption => ({
-                  value: option.row.transaction.transaction_id,
-                  label: facts(t, [
-                    option.row.transaction.description,
-                    formatDay(locale, option.row.transaction.date),
-                    formatAmount(locale, option.row.transaction.amount),
-                  ]),
-                  group: option.settles
-                    ? t("desktop.ledger.inspector.invoice.group_settles")
-                    : t("desktop.ledger.documents.group_near", {
-                        days:
-                          linkMatches.kind === "answer"
-                            ? linkMatches.result.window_days
-                            : 0,
-                      }),
-                }))}
-                emptyLabel={t("desktop.ledger.inspector.no_match")}
-                onCommit={(chosen) => {
-                  onStage(stageLink(chosen, invoice.invoice_id));
-                  say(t("desktop.ledger.matching.staged_toast"));
-                  onLinkStaged();
-                }}
-              >
-                <Button
-                  size="xs"
-                  variant="outline"
-                  className="ledger-draft-find-movement w-fit"
-                >
-                  {t("desktop.ledger.documents.find_movement")}
-                  <Icon name="chevronDown" size="xs" />
-                </Button>
-              </Combobox>
-            </AlertDescription>
-          </Alert>
-        ) : (
-          offer && (
-            <Alert
-              icon={<Icon name="link" />}
-              className="ledger-draft-link-offer"
-            >
-              <AlertTitle>
-                {t("desktop.ledger.documents.link_offer")}
-              </AlertTitle>
-              <AlertDescription className="grid gap-2">
-                <span>
-                  {t("desktop.ledger.documents.link_offer_note", {
-                    description: offer.row.transaction.description,
-                    date: formatDay(locale, offer.row.transaction.date),
-                    amount: formatAmount(locale, offer.row.transaction.amount),
-                  })}
-                </span>
-                <span>
-                  <Button
-                    size="xs"
-                    variant="outline"
-                    className="ledger-match-link"
-                    ref={confirmedLink}
-                    onClick={() => {
-                      onStage(
-                        stageLink(
-                          offer.row.transaction.transaction_id,
-                          invoice.invoice_id,
-                        ),
-                      );
-                      say(t("desktop.ledger.matching.staged_toast"));
-                      onLinkStaged();
-                    }}
-                  >
-                    <Icon name="lock" size="xs" />
-                    {t("desktop.ledger.matching.link")}
-                  </Button>
-                </span>
-              </AlertDescription>
-            </Alert>
-          )
-        )}
-      </div>,
+      <ConfirmedReading
+        rootRef={root}
+        linkRef={confirmedLink}
+        confirmed={confirmed}
+        rows={rows}
+        linkMatches={linkMatches}
+        actions={actions}
+        locale={locale}
+        onStage={onStage}
+        onLinkStaged={onLinkStaged}
+        say={say}
+      />,
     );
-  }
 
   if (read.phase === "failed")
     return columns(
@@ -1125,14 +569,6 @@ export function DraftReview({
         ? (draft.supplier_country_code ?? null)
         : null;
   const currencyRead = readValue(draft, "currency");
-  const attachTarget =
-    duplicate && record && reference.kind === "evidence"
-      ? (duplicate.linked_transaction_ids[0] ?? null)
-      : null;
-  const attachId = attachTarget
-    ? `attach:${attachTarget}:${reference.id}`
-    : null;
-  const attachStaged = actions.some((action) => action.id === attachId);
   const open = blockers.filter(
     (blocker) => resolutionOf(blocker, answers[blocker.blocker_id]) === null,
   ).length;
@@ -1201,71 +637,15 @@ export function DraftReview({
         )}
       </div>
 
-      {notice?.kind === "changed" && (
-        <Alert tone="warning" role="alert" icon={<Icon name="alert" />}>
-          {t("desktop.ledger.documents.reading_changed")}
-        </Alert>
-      )}
-      {(notice?.kind === "refused" || notice?.kind === "failed") && (
-        <Alert tone="danger" role="alert" icon={<Icon name="refused" />}>
-          <AlertTitle>{t("desktop.ledger.documents.not_done")}</AlertTitle>
-          <AlertDescription className="flex flex-wrap items-center gap-2">
-            {notice.kind === "refused" && (
-              <SetupOffer action={notice.recovery} />
-            )}
-          </AlertDescription>
-        </Alert>
-      )}
-      {notice?.kind === "unknown" && (
-        <Alert tone="warning" role="alert" icon={<Icon name="unknown" />}>
-          <AlertTitle>{t("desktop.ledger.documents.unknown")}</AlertTitle>
-          <AlertDescription className="flex flex-wrap items-center gap-2">
-            {t("desktop.ledger.documents.unknown_note")}
-            <Button
-              size="xs"
-              variant="outline"
-              className="ledger-draft-check"
-              disabled={busy !== null}
-              onClick={() => {
-                void check();
-                if (!pause.rereading) pause.reread();
-              }}
-            >
-              {t("desktop.ledger.documents.check")}
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
-      {notice?.kind === "checked" && (
-        <Alert icon={<Icon name="info" />} className="ledger-draft-checked">
-          {notice.saved
-            ? t("desktop.ledger.documents.checked_saved")
-            : t("desktop.ledger.documents.checked_not_saved")}
-        </Alert>
-      )}
-      {view.label_reading_fallback && (
-        <Alert
-          tone="warning"
-          icon={<Icon name="pause" />}
-          className="ledger-draft-unread"
-        >
-          <AlertTitle>{t("desktop.ledger.documents.unread")}</AlertTitle>
-          <AlertDescription className="grid gap-2">
-            <span>
-              {listed(
-                t,
-                view.label_reading_fallback.unread_fields.map((field) =>
-                  fieldLabel(t, field),
-                ),
-              )}
-            </span>
-            <SetupOffer
-              action={provisionActionOf(view.label_reading_fallback)}
-              className="justify-self-start"
-            />
-          </AlertDescription>
-        </Alert>
-      )}
+      <ReviewNotices
+        notice={notice}
+        busy={busy !== null}
+        fallback={view.label_reading_fallback}
+        onCheck={() => {
+          void check();
+          if (!pause.rereading) pause.reread();
+        }}
+      />
 
       <section aria-labelledby={`${countryId}-read`} className="grid gap-2">
         <h4 id={`${countryId}-read`} className="text-sm font-semibold">
@@ -1294,7 +674,7 @@ export function DraftReview({
                     />
                   </td>
                   <td className="py-1 pr-2 tabular-nums">
-                    {shownValue(locale, row.field, value) ?? "—"}
+                    {shownReadingValue(locale, row.field, value) ?? "—"}
                   </td>
                 </tr>
               );
@@ -1389,7 +769,7 @@ export function DraftReview({
                 printed={
                   blocker.field &&
                   DERIVED_FIELDS.has(blocker.field as ReadingField)
-                    ? shownValue(
+                    ? shownReadingValue(
                         locale,
                         blocker.field as ReadingField,
                         readValue(draft, blocker.field as ReadingField),
@@ -1494,79 +874,19 @@ export function DraftReview({
             </Field>
           )}
         </div>
-        {duplicateCheck.kind === "failed" && duplicateAsked && (
-          <Alert
-            tone="warning"
-            role="alert"
-            icon={<Icon name="unknown" />}
-            className="ledger-draft-duplicate-failed"
-          >
-            <span>{t("desktop.ledger.documents.duplicate_check_failed")}</span>{" "}
-            <Button variant="ghost" onClick={duplicateCheck.retry}>
-              {t("desktop.ledger.documents.duplicate_check_retry")}
-            </Button>
-          </Alert>
-        )}
-        {duplicate && (
-          <Alert
-            tone="warning"
-            icon={<Icon name="alert" />}
-            className="ledger-draft-duplicate"
-          >
-            <AlertTitle>
-              {t("desktop.ledger.documents.duplicate", {
-                number: seriesAndNumber(duplicate),
-              })}
-            </AlertTitle>
-            <AlertDescription className="grid gap-2">
-              <span>{invoiceLine(t, locale, duplicate)}</span>
-              <span className="flex flex-wrap items-center gap-2">
-                {attachTarget && record && !attachStaged && (
-                  <Button
-                    size="xs"
-                    className="ledger-draft-attach"
-                    onClick={() => {
-                      onStage({
-                        type: "stage_action",
-                        action: {
-                          id: attachId!,
-                          kind: "attach",
-                          transactionId: attachTarget,
-                          evidenceId: record.evidence_id,
-                          attachmentIds: [record.attachment_id],
-                        },
-                      });
-                      say(t("desktop.ledger.documents.attach_staged"));
-                    }}
-                  >
-                    {t("desktop.ledger.documents.attach_to", {
-                      number: seriesAndNumber(duplicate),
-                    })}
-                  </Button>
-                )}
-                {attachStaged && (
-                  <span className="text-sm">
-                    {t("desktop.ledger.documents.attach_staged")}
-                  </span>
-                )}
-                {!attachTarget && (
-                  <span className="text-sm">
-                    {t("desktop.ledger.documents.no_movement_to_attach")}
-                  </span>
-                )}
-                <Button
-                  size="xs"
-                  variant="outline"
-                  className="ledger-draft-anyway"
-                  aria-pressed={anyway}
-                  onClick={() => setAnyway(!anyway)}
-                >
-                  {t("desktop.ledger.documents.confirm_anyway")}
-                </Button>
-              </span>
-            </AlertDescription>
-          </Alert>
-        )}
+        <DuplicateNotice
+          duplicateCheck={duplicateCheck}
+          asked={duplicateAsked !== null}
+          duplicate={duplicate}
+          record={record}
+          reference={reference}
+          actions={actions}
+          anyway={anyway}
+          onAnyway={setAnyway}
+          locale={locale}
+          onStage={onStage}
+          say={say}
+        />
         <p className="text-sm text-muted-foreground">
           {t("desktop.ledger.documents.confirm_note")}
         </p>

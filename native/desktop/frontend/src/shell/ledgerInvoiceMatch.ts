@@ -8,8 +8,8 @@ import type {
   LedgerInvoiceMatchRequest,
   LedgerInvoiceMatchResult,
   LedgerInvoiceMatchStagedLink,
-  LedgerPort,
-} from "./ledger";
+} from "./ledgerInvoiceOperations";
+import type { LedgerPort } from "./ledger";
 import { LatestAnswerSession, type LatestAnswer } from "./ledgerLatestAnswer";
 import { readAnswer } from "./ledgerWindow";
 

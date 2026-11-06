@@ -12,7 +12,7 @@ import type {
   DocsLink,
   DocsSearchResult,
   DocsTheme,
-} from "../ipc/contract";
+} from "../ipc/docsBridge";
 import { onDocsOrigin } from "../shell/docsOrigin";
 
 const CHANNEL = "cadrumo-desktop";

@@ -1,4 +1,4 @@
-import type { SignInRefusal, SignInStatus } from "../../ipc/contract";
+import type { SignInRefusal, SignInStatus } from "../../ipc/account";
 import { targetOf } from "../../shell/profiles";
 import {
   canSignIn,
