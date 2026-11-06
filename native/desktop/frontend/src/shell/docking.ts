@@ -32,6 +32,9 @@ export type DockDivider = {
   panes: DockPane[];
   path: string;
   axis: "row" | "column";
+  /** Drawn stacked only because the window is too narrow for the saved
+   * side-by-side split: its ratio is not the saved one and is not saved. */
+  narrowed: boolean;
   ratio: number;
   rect: DockRect;
   minRatio: number;
@@ -329,9 +332,10 @@ export function dockGeometry(
     } else {
       const a = minimum(node.first),
         b = minimum(node.second);
-      // Side-by-side children also need room within the model's 10–90% limits.
+      // Side-by-side children also need room within the model's 10–90% limits;
+      // a split that stacks where it is narrow needs only its wider side.
       width =
-        node.axis === "row"
+        node.axis === "row" && !stackable(node)
           ? Math.max(a + b, a / 0.9, b / 0.9)
           : Math.max(a, b);
     }
@@ -366,12 +370,15 @@ export function dockGeometry(
       b = tall(node.second);
     return node.axis === "column" ? a + b : Math.max(a, b);
   };
-  const stacked = (node: DockNode & { kind: "split" }, rect: DockRect) => {
-    if (node.axis !== "row" || !fit || fit.width <= 0) return false;
-    const a = beside(node.first),
-      b = beside(node.second);
-    return a > 0 && b > 0 && rect.width * fit.width < a + b;
-  };
+  const stackable = (node: DockNode & { kind: "split" }) =>
+    node.axis === "row" &&
+    !!fit &&
+    fit.width > 0 &&
+    beside(node.first) > 0 &&
+    beside(node.second) > 0;
+  const stacked = (node: DockNode & { kind: "split" }, rect: DockRect) =>
+    stackable(node) &&
+    rect.width * fit!.width < beside(node.first) + beside(node.second);
   const visit = (node: DockNode, rect: DockRect, path: string) => {
     if (node.kind === "tabs") {
       const tabs = node.tabs.filter((pane) => visible.includes(pane));
@@ -392,7 +399,8 @@ export function dockGeometry(
     if (!a && !b) return;
     if (!a || !b)
       return visit(a ? node.first : node.second, rect, path + (a ? "0" : "1"));
-    const axis = stacked(node, rect) ? "column" : node.axis;
+    const narrowed = stacked(node, rect);
+    const axis = narrowed ? "column" : node.axis;
     let minRatio = 0.1,
       maxRatio = 0.9;
     if (axis === "row" && fit && fit.width > 0) {
@@ -423,10 +431,16 @@ export function dockGeometry(
         );
       }
     }
-    const ratio = Math.max(minRatio, Math.min(maxRatio, node.ratio));
+    // The saved ratio divides the width; stacked for want of it, the two
+    // share the height evenly within their floors.
+    const ratio = Math.max(
+      minRatio,
+      Math.min(maxRatio, narrowed ? 0.5 : node.ratio),
+    );
     dividers.push({
       path,
       axis,
+      narrowed,
       ratio,
       minRatio,
       maxRatio,
