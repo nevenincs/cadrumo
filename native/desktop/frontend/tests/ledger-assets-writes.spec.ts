@@ -16,7 +16,10 @@ import {
 import { answer } from "../src/components/ledger/assets/assetFormValues";
 import { correctRequest } from "../src/components/ledger/assets/assetRevision";
 import { type LedgerResult } from "../src/shell/ledger";
-import { SCENARIO_ELEMENTS, TABLE_GROUPS } from "../src/dev/assetsRegister";
+import {
+  SCENARIO_CREATIONS,
+  SCENARIO_ELEMENTS,
+} from "../src/dev/assetsRegister";
 import { servedHandoffOf, servedSupport } from "../src/dev/servedYearAuthority";
 
 import {
@@ -141,26 +144,24 @@ test("adding an element sends the revision and descriptor the backend decodes, w
   expect((await port.submit(CREATE, request as never)).kind).toBe("settled");
   const rows = await listOf(port);
   const made = rows.find((row) => row.asset_id === "made-2")!;
-  expect(made).toMatchObject({
-    name: "Sierra de cinta",
-    accumulated: { decimal: "0.00" },
-    pending: { decimal: "900.00" },
-    revision_number: 1,
-  });
-  expect(elementLanded(await registerOf(port), "made-2")).toBe("saved");
-  // The first year is worked out on the table's maximum coefficient, by days.
-  const group = TABLE_GROUPS.material!.find(
-    (found) => found.class_key === "maquinaria",
+  // The element the register answered for this very request, under the
+  // identity the window minted for it.
+  const answered = SCENARIO_CREATIONS.find(
+    (creation) => creation.id === "linear_new",
   )!;
+  expect(made).toEqual({ ...answered.list, asset_id: "made-2" });
+  expect(elementLanded(await registerOf(port), "made-2")).toBe("saved");
+  // The first year the register planned, by the days it serves of it.
   const first = (await planOf(port, "made-2"))[0]!;
   expect(first).toMatchObject({
     tax_year: scenarioYear,
     absence: null,
-    service_days: 200,
-    calendar_days: 365,
+    service_days: answered.rows[0]!.service_days,
+    calendar_days: answered.rows[0]!.calendar_days,
     minimum_complete: true,
   });
-  expect(first.coefficient).toEqual(group.maximum_coefficient);
+  expect(first.coefficient).toEqual(answered.rows[0]!.coefficient);
+  expect(first.planned).toEqual(answered.rows[0]!.planned);
   expect(first.planned).not.toBeNull();
   // Replaying the same request adds nothing.
   expect((await port.submit(CREATE, request as never)).kind).toBe("settled");
