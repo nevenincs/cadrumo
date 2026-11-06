@@ -5,7 +5,7 @@ tags:
 date: '2026-11-06'
 modified: '2026-11-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:c3f9aee8ada64c82dcc8a63fa50891cc53ae9f9098bfbe8579aad9b023bd9255'
+body_hash: 'sha256:51986a758862736f694594c4ea3c4be7725812d14700624890e620f8452636fe'
 related:
   - "[[2026-11-06-modelo-profile-bindings-plan]]"
 ---
@@ -43,7 +43,19 @@ related:
 - `S01` `A` `.vault/reference/2026-11-06-modelo-profile-bindings-reference.md`
 - `S01` `verify:` `typed pinned-authority inventory: 58 modelos, 161 revisions, zero hydration failures` -> `pass`
 - `S01` `verify:` `seven-module focused pytest: 63 passed; remaining exporter integration nodes 3 passed` -> `pass`
+- `S02` `M` `src/cadrumo/application/filing/export_producer.py`
+- `S02` `M` `src/cadrumo/application/modelo/profile_export_binding.py`
+- `S02` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S02` `M` `src/cadrumo/application/modelo/work_form_context_values.py`
+- `S02` `M` `src/cadrumo/application/modelo/work_form_layout.py`
+- `S02` `M` `src/cadrumo/application/modelo/work_form_service.py`
+- `S02` `A` `src/cadrumo/application/modelo/tests/test_work_form_profile_context.py`
+- `S02` `verify:` `focused seven-module pytest -n0: 63 passed` -> `pass`
+- `S02` `verify:` `export integration plus context pytest -n0: 16 passed` -> `pass`
+- `S02` `verify:` `horizon fixture follow-up pytest -n0: 13 passed` -> `pass`
+- `S02` `verify:` `scoped Ruff check, format and ty: seven changed files` -> `pass`
 
 ## Notes
 
 - `S01` Semantic code index unavailable; targeted source inspection used. Full gates remain CHECKS2-owned.
+- `S02` Independent Sol review has no actionable findings; combined gates are CHECKS2 integration-owned.

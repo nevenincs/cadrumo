@@ -12,7 +12,7 @@ related:
   - '[[2026-08-16-m210-export-authority-adr]]'
 modified: '2026-11-06'
 body_schema: body-v2
-body_hash: 'sha256:3d950f139aa18df5d87ba997e702c9d8d667fd4a12e0eb440252277ccaae3dea'
+body_hash: 'sha256:7400803363662ccb0a85fa118642f974b0f59e02aa10dc2827983e865e918b6b'
 ---
 
 # `modelo-profile-bindings` plan
@@ -30,7 +30,7 @@ S03 proves real application behavior, absence and override handling, role separa
 ## Steps
 
 - [x] `S01` - Establish typed revision coverage matrix and reproduce profile sourcing gaps with canonical synthetic fixtures; `dev/registry, src/cadrumo/application/modelo/tests, .vault/reference`.
-- [ ] `S02` - Project registry-declared taxpayer and contact header fields through shared export producers in the admitted work-form read, preserving absence and historical evidence; `src/cadrumo/application/filing/export_producer.py, src/cadrumo/application/modelo form projection and tests`.
+- [x] `S02` - Project registry-declared taxpayer and contact header fields through shared export producers in the admitted work-form read, preserving absence and historical evidence; `src/cadrumo/application/filing/export_producer.py, src/cadrumo/application/modelo form projection and tests`.
 - [ ] `S04` - Bind Modelo 720 contact-person name and phone to canonical profile facts through the existing saved text channel, preserving declaration overrides and optional absence; `profile_binding.py, modelos/720 contact bindings, owning tests`.
 - [ ] `S03` - Verify integrated creation, calculation, GUI projection and applicable export behavior, publish final local authority if needed, and resolve independent review findings; `owning scoped tests, .vault/audit, .vault/exec`.
 

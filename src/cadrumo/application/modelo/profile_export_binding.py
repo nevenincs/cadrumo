@@ -46,6 +46,7 @@ from ...domain.user_profile.registry_contract import profile_binding_selectors
 from ...domain.user_profile.schema import ProfileSchemaDefinition
 from ...domain.user_profile.values import UserProfileFactValue, compose_legal_full_name
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from ..filing.export_producer import identity_contact_producer_values
 from ..filing.producer_snapshot import DeclarationContactFacts, PresenterIdentity, TaxpayerIdentityFacts
 
 # Reuse the public defining module's canonical fact-index and scalar resolver;
@@ -529,10 +530,41 @@ def resolve_declaration_contact(
     if record is None:
         return DeclarationContactFacts()
     resolved_schema = operation.profile_schema() if schema is None else schema
+    return _declaration_contact_from_profile_facts(profile_fact_index(record, resolved_schema), schema=resolved_schema)
+
+
+def resolve_profile_identity_producer_values(
+    *,
+    bucket_id: str,
+    operation: PinnedAuthorityOperation,
+    profile_record: object | None = None,
+    schema: ProfileSchemaDefinition | None = None,
+) -> dict[FilingProducerKey, str | None]:
+    """Read current taxpayer/contact context using the export's canonical shaping.
+
+    Unlike export admission, this read needs neither a complete presenter nor
+    filing elections: a partial profile still answers each fact it declares.
+    It supplies no representative, payment selection or historical evidence.
+    """
+    record = _load_profile_record(bucket_id=bucket_id, operation=operation, profile_record=profile_record)
+    if record is None:
+        return {}
+    resolved_schema = operation.profile_schema() if schema is None else schema
     facts = profile_fact_index(record, resolved_schema)
+    return identity_contact_producer_values(
+        taxpayer_tax_id=str(facts.get(_IDENTITY_TAX_ID_KEY) or "").strip() or None,
+        identity=_taxpayer_identity_from_profile_facts(facts, schema=resolved_schema),
+        contact=_declaration_contact_from_profile_facts(facts, schema=resolved_schema),
+    )
+
+
+def _declaration_contact_from_profile_facts(
+    facts: Mapping[str, UserProfileFactValue], *, schema: ProfileSchemaDefinition
+) -> DeclarationContactFacts:
+    """Shape only the declaration's contact fields, preserving absent components."""
     phone = str(facts.get(_CONTACT_PERSON_PHONE_KEY) or "").strip()
     full_name = str(facts.get(_CONTACT_PERSON_NAME_KEY) or "").strip()
-    with _refusing_overlong_profile_text(_CONTACT_TEXT_PROFILE_FACTS, schema=resolved_schema):
+    with _refusing_overlong_profile_text(_CONTACT_TEXT_PROFILE_FACTS, schema=schema):
         return DeclarationContactFacts(phone=phone or None, full_name=full_name or None)
 
 
@@ -546,20 +578,23 @@ def identity_from_profile_facts(
     if not tax_id:
         return None
 
-    name = str(facts.get(_IDENTITY_NAME_KEY) or "").strip()
-    surnames = str(facts.get(_IDENTITY_SURNAMES_KEY) or "").strip()
-    legal_name = str(facts.get(_IDENTITY_LEGAL_NAME_KEY) or "").strip()
-    entity_type = str(facts.get(_ENTITY_TYPE_KEY) or "").strip().casefold()
-    identity = _taxpayer_identity_facts(
-        name=name,
-        surnames=surnames,
-        legal_name=legal_name,
-        entity_type=entity_type,
-        schema=schema,
-    )
+    identity = _taxpayer_identity_from_profile_facts(facts, schema=schema)
     if identity.full_name is None:
         return None
     return PresenterIdentity(tax_id=tax_id, full_name=identity.full_name), identity
+
+
+def _taxpayer_identity_from_profile_facts(
+    facts: Mapping[str, UserProfileFactValue], *, schema: ProfileSchemaDefinition
+) -> TaxpayerIdentityFacts:
+    """Shape each declared name component using the export identity rules."""
+    return _taxpayer_identity_facts(
+        name=str(facts.get(_IDENTITY_NAME_KEY) or "").strip(),
+        surnames=str(facts.get(_IDENTITY_SURNAMES_KEY) or "").strip(),
+        legal_name=str(facts.get(_IDENTITY_LEGAL_NAME_KEY) or "").strip(),
+        entity_type=str(facts.get(_ENTITY_TYPE_KEY) or "").strip().casefold(),
+        schema=schema,
+    )
 
 
 def _taxpayer_identity_facts(
