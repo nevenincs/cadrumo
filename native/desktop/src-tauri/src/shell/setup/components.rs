@@ -1177,6 +1177,12 @@ fn setup_failed(
     if let Some(cause) = cause {
         let mut why = ApplicationError::new(ErrorCode::SetupFailed, Operation::Cli)
             .with_reason(cause.reason());
+        if let Some(start) = cause.latest_start() {
+            why = why.caused_by(
+                ApplicationError::new(ErrorCode::SetupFailed, Operation::Cli)
+                    .with_reason(start.reason()),
+            );
+        }
         if let Some(kind) = cause.io_kind() {
             why = why.caused_by(std::io::Error::from(kind));
         }

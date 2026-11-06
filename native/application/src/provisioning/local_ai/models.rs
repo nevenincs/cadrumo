@@ -26,7 +26,10 @@
 //! Role fitness, how well a model answers for its role, is no part of this state: it
 //! is the consumer's admission check.
 
-use super::{LocalAiError, NotRunningCause, ServerCall, hardware::Hardware, program::Server};
+use super::{
+    LocalAiError, NotRunningCause, ServerCall, hardware::Hardware, loopback::Loopback,
+    program::Server,
+};
 use crate::{
     component::Cancellation,
     error::Error,
@@ -538,62 +541,53 @@ fn pull_once(
     let cancellation = pull.cancellation;
     let stop = || cancellation.check().is_err();
     let events = &mut *pull.events;
-    let answer = server
-        .loopback()
-        .with_io_timeout(FULL_CHECK_BUDGET)
-        .post_lines(
-            "/api/pull",
-            request.to_string().as_bytes(),
-            &stop,
-            &mut |line| {
-                let Ok(value) = serde_json::from_slice::<serde_json::Value>(line) else {
-                    return Ok(());
-                };
-                if let Some(error) = value["error"].as_str() {
-                    failed = Some(pull_error_category(error));
-                    return Ok(());
-                }
-                if value["status"] == "success" {
-                    succeeded = true;
-                }
-                if let (Some(digest), Some(total)) =
-                    (value["digest"].as_str(), value["total"].as_u64())
-                {
-                    totals.insert(digest.to_owned(), total);
-                }
-                if let (Some(digest), Some(completed)) =
-                    (value["digest"].as_str(), value["completed"].as_u64())
-                {
-                    let held = layers.entry(digest.to_owned()).or_default();
-                    *held = (*held).max(completed);
-                    let completed = layers
+    let loopback = server.loopback().with_io_timeout(FULL_CHECK_BUDGET);
+    let answer = loopback.post_lines(
+        "/api/pull",
+        request.to_string().as_bytes(),
+        &stop,
+        &mut |line| {
+            let Ok(value) = serde_json::from_slice::<serde_json::Value>(line) else {
+                return Ok(());
+            };
+            if let Some(error) = value["error"].as_str() {
+                failed = Some(pull_error_category(error));
+                return Ok(());
+            }
+            if value["status"] == "success" {
+                succeeded = true;
+            }
+            if let (Some(digest), Some(total)) = (value["digest"].as_str(), value["total"].as_u64())
+            {
+                totals.insert(digest.to_owned(), total);
+            }
+            if let (Some(digest), Some(completed)) =
+                (value["digest"].as_str(), value["completed"].as_u64())
+            {
+                let held = layers.entry(digest.to_owned()).or_default();
+                *held = (*held).max(completed);
+                let completed = layers
+                    .values()
+                    .fold(0u64, |sum, bytes| sum.saturating_add(*bytes));
+                let total = model.size_bytes.unwrap_or_else(|| {
+                    totals
                         .values()
-                        .fold(0u64, |sum, bytes| sum.saturating_add(*bytes));
-                    let total = model.size_bytes.unwrap_or_else(|| {
-                        totals
-                            .values()
-                            .fold(0u64, |sum, bytes| sum.saturating_add(*bytes))
-                    });
-                    events(TransferEvent::Progress {
-                        completed: completed.min(total),
-                        total,
-                    });
-                }
-                Ok(())
-            },
-        );
+                        .fold(0u64, |sum, bytes| sum.saturating_add(*bytes))
+                });
+                events(TransferEvent::Progress {
+                    completed: completed.min(total),
+                    total,
+                });
+            }
+            Ok(())
+        },
+    );
     cancellation.check()?;
     let (status, body) = match answer {
         Ok(answer) => answer,
         // The engine's own connection to the program broke: the program, not the
         // registry, is the problem, and it is not retried.
-        Err(error) => {
-            return Err(LocalAiError::NotRunning(NotRunningCause::Request {
-                call: ServerCall::PullModel,
-                kind: error.kind(),
-                budget: Some(FULL_CHECK_BUDGET),
-            }));
-        }
+        Err(error) => return Err(request_failed(&loopback, ServerCall::PullModel, &error)),
     };
     if !(200..300).contains(&status) {
         let error = serde_json::from_slice::<serde_json::Value>(&body)
@@ -678,15 +672,21 @@ pub fn pull_error_category(message: &str) -> FailureCategory {
         .map_or(FailureCategory::Unexpected, |(_, category)| *category)
 }
 
+/// The program is not running as far as `call` could tell: the exchange over `loopback`
+/// failed with `error`, under the bound that client enforced.
+fn request_failed(loopback: &Loopback, call: ServerCall, error: &std::io::Error) -> LocalAiError {
+    LocalAiError::NotRunning(NotRunningCause::Request {
+        call,
+        failure: loopback.failure(error),
+    })
+}
+
 /// Whether the server's own list of installed models holds `name`.
 fn listed(server: &Server, name: &ModelName) -> Result<bool, LocalAiError> {
-    let (status, body) = server.loopback().get("/api/tags").map_err(|error| {
-        LocalAiError::NotRunning(NotRunningCause::Request {
-            call: ServerCall::ListModels,
-            kind: error.kind(),
-            budget: None,
-        })
-    })?;
+    let loopback = server.loopback();
+    let (status, body) = loopback
+        .get("/api/tags")
+        .map_err(|error| request_failed(&loopback, ServerCall::ListModels, &error))?;
     if status != 200 {
         return Err(LocalAiError::NotRunning(NotRunningCause::ListStatus {
             status,
@@ -717,17 +717,10 @@ fn generate_one_token(server: &Server, name: &ModelName) -> Result<bool, LocalAi
         "keep_alive": 0,
         "options": { "num_predict": 1 },
     });
-    let (status, body) = server
-        .loopback()
-        .with_io_timeout(FULL_CHECK_BUDGET)
+    let loopback = server.loopback().with_io_timeout(FULL_CHECK_BUDGET);
+    let (status, body) = loopback
         .post("/api/generate", request.to_string().as_bytes())
-        .map_err(|error| {
-            LocalAiError::NotRunning(NotRunningCause::Request {
-                call: ServerCall::Generate,
-                kind: error.kind(),
-                budget: Some(FULL_CHECK_BUDGET),
-            })
-        })?;
+        .map_err(|error| request_failed(&loopback, ServerCall::Generate, &error))?;
     let value: serde_json::Value = serde_json::from_slice(&body).unwrap_or_default();
     if status == 200 && value["done"] == true {
         return Ok(true);

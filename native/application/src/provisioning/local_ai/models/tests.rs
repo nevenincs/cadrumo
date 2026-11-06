@@ -1,7 +1,12 @@
 use super::*;
 use crate::provisioning::{
     items::ItemId,
-    local_ai::{fake_ollama::FakeOllama, program::Server, reading},
+    local_ai::{
+        fake_ollama::FakeOllama,
+        loopback::{ExchangeFailure, ExchangePhase},
+        program::Server,
+        reading,
+    },
     plan::PlanEntry,
     state::{CheckMode, StaleReason},
 };
@@ -664,11 +669,14 @@ fn the_full_check_looks_the_model_up_in_the_servers_list_and_generates_one_token
             &gone,
             LocalAiError::NotRunning(NotRunningCause::Request {
                 call: ServerCall::ListModels,
-                budget: None,
-                ..
-            })
+                failure: ExchangeFailure {
+                    phase: ExchangePhase::Connect,
+                    bound,
+                    ..
+                },
+            }) if *bound == server.loopback().connect_timeout
         ),
-        "{gone:?}"
+        "the connect failed, under the connect bound: {gone:?}"
     );
 }
 
