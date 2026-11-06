@@ -65,7 +65,7 @@ class WorkUnitCatalogueRepository:
     return an empty catalogue when no object has been persisted yet (no
     separate "fresh install" path is needed). The write path
     (``to_secure_object_write`` / ``save`` / ``exists``) composes
-    :class:`~adapters.persistence.profile._secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
+    :class:`~adapters.persistence.profile.secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
     for the shared one-record decode and Envelope-construction mechanics;
     :meth:`load_revisioned` translates a classification or schema-version
     mismatch into :class:`WorkUnitPersistenceError` via

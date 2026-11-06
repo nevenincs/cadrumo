@@ -188,7 +188,10 @@ def draft_input_channels(
     snapshot: RegistrySnapshot,
     inputs: ModeloInputs,
 ) -> _DraftInputChannels:
-    """Partition the supplied modelo inputs into the draft channels the revision declares."""
+    """Partition the supplied modelo inputs into the draft channels the revision declares.
+
+    ``snapshot`` is a :class:`RegistrySnapshot`.
+    """
     casilla_ids = set(declared_casilla_ids(snapshot.revision))
     text_casilla_data_types = _text_casilla_data_types(snapshot)
     date_casilla_ids = _date_casilla_ids(snapshot)
@@ -495,7 +498,10 @@ def filing_period_date(period: Period) -> date:
 
 
 def formula_binding_ids(snapshot: RegistrySnapshot) -> set[BindingId]:
-    """Collect the binding ids referenced by the revision's formula expressions."""
+    """Collect the binding ids referenced by the revision's formula expressions.
+
+    ``snapshot`` is a :class:`RegistrySnapshot`.
+    """
     return {
         binding_id
         for formula in snapshot.revision.formulas
@@ -504,7 +510,10 @@ def formula_binding_ids(snapshot: RegistrySnapshot) -> set[BindingId]:
 
 
 def snapshot_bound_casilla_binding_ids(snapshot: RegistrySnapshot) -> set[BindingId]:
-    """Collect the binding ids consumed by the revision's bound casillas."""
+    """Collect the binding ids consumed by the revision's bound casillas.
+
+    ``snapshot`` is a :class:`RegistrySnapshot`.
+    """
     return {
         binding_id
         for casilla in snapshot.revision.casillas
@@ -522,6 +531,8 @@ def draft_construction_date_binding_ids(snapshot: RegistrySnapshot) -> set[Bindi
     channel. A draft replay must supply them or the formula runtime
     refuses the calculation. Delegates to the canonical
     :func:`revision_date_binding_ids` registry query (single source of truth).
+
+    ``snapshot`` is a :class:`RegistrySnapshot`.
     """
     return set(revision_date_binding_ids(snapshot.revision))
 
@@ -535,6 +546,8 @@ def draft_construction_relation_ids(snapshot: RegistrySnapshot) -> set[RelationI
     persisted inputs by this id-set; relations not present in the inputs
     are simply absent from the resolved relation map. The set is scoped to
     the snapshot period, matching the engine's own accepted relation ids.
+
+    ``snapshot`` is a :class:`RegistrySnapshot`.
     """
     return {
         binding.id for binding, _ in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)

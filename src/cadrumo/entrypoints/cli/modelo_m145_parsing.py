@@ -11,7 +11,7 @@ See Also:
         Backend DTO produced by :func:`m145_create_command_from_cli`.
     :class:`~application.modelo.m145_communication_period.M145CommunicationPeriod`
         Closed period-token type accepted by the CLI option and backend DTO.
-    :mod:`~entrypoints.cli._modelo_m145_rendering`
+    :mod:`~entrypoints.cli.modelo_m145_rendering`
         Sibling output boundary that emits results after parsed commands run.
 """
 

@@ -2,7 +2,7 @@
 
 Both
 :class:`adapters.outbound.storage.local.LocalFileSystemProvider` and
-:class:`adapters.outbound.storage._google_drive.GoogleDriveProvider`
+:class:`adapters.outbound.storage.google_drive.GoogleDriveProvider`
 persist a ``content_hash`` (optionally ``sha256-``-prefixed) alongside each
 object and re-check it on read. This module centralises the
 :func:`strip_sha256_prefix` convention and the :func:`verify_content_hash`
@@ -68,7 +68,7 @@ def verify_content_hash(
     A no-op when ``stored_hash`` is empty or carries no digest. With
     ``require_full_digest`` the check is skipped unless the stripped digest is a
     full 64-character hex string
-    (:class:`adapters.outbound.storage._google_drive.GoogleDriveProvider`
+    (:class:`adapters.outbound.storage.google_drive.GoogleDriveProvider`
     policy); without it any non-empty stripped digest is compared against
     ``actual_hash``
     (:class:`adapters.outbound.storage.local.LocalFileSystemProvider`

@@ -10,7 +10,7 @@ See Also:
         Each operation's CommandSpec owns its lazy public OutputSchema target.
     :mod:`~entrypoints.cli.modelo_m145_commands`
         Behavior handlers that emit these payloads.
-    :mod:`~entrypoints.cli._modelo_m145_rendering`
+    :mod:`~entrypoints.cli.modelo_m145_rendering`
         Renderer that converts application results into these payload classes.
     :class:`~application.modelo.m145_communication_records.M145CommunicationRecord`
         Persisted record projected by :class:`M145CommunicationRecordPayload`.

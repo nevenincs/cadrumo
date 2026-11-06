@@ -144,6 +144,8 @@ def deadline_window_profile_keys_by_modelo(
     applicability conditions, so no revision is hydrated. Whole-registry
     callers may provide an explicit revision inventory, but still supply the
     operation owned by the surrounding workflow.
+
+    ``revision_inventory`` is a :class:`ModeloRevision`.
     """
     if revision_inventory is not None:
         return _collect_deadline_window_profile_keys(
@@ -206,7 +208,10 @@ def derive_gating_fields(
     revision_inventory: Iterable[tuple[str, ModeloRevision]] | None = None,
     modelos: Iterable[str] | None = None,
 ) -> MappingProxyType[str, tuple[tuple[str, ...], str, str]]:
-    """Derive the gating fields keyed by applicability rules across the published modelos."""
+    """Derive the gating fields keyed by applicability rules across the published modelos.
+
+    ``revision_inventory`` is a :class:`ModeloRevision`.
+    """
     key_to_modelos: dict[str, set[str]] = {}
     key_to_meta: dict[str, tuple[str, str]] = {}
     for rule in iter_modelo_applicability_rules(operation=operation):
@@ -427,7 +432,10 @@ def calendar_censo_enrolment_state(
     operation: PinnedAuthorityOperation,
     revision_inventory: Iterable[tuple[str, ModeloRevision]] | None = None,
 ) -> OverviewCensoEnrolmentState:
-    """Classify whether censo-stamped profile paths witness ``modelo`` enrolment."""
+    """Classify whether censo-stamped profile paths witness ``modelo`` enrolment.
+
+    ``revision_inventory`` is a :class:`ModeloRevision`.
+    """
     if live_censo_verified_profile_keys is None:
         return OverviewCensoEnrolmentState.NOT_CHECKED
     required = (
@@ -633,6 +641,8 @@ def build_completeness_and_warnings(
     Missing profile values produce :class:`CalendarWarning` rows and populate
     ``CalendarCompleteness.defaulted_modelos`` only for modelos that also appear
     in the already-computed :class:`OverviewCalendarEntry` rows.
+
+    ``revision_inventory`` is a :class:`ModeloRevision`.
     """
     if raw_values is None:
         return CalendarCompleteness(), ()

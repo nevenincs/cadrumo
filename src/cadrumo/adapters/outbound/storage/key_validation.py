@@ -8,7 +8,7 @@ disagreeing about which keys are admissible -- and before this module they did.
 Local enforced ``[alnum-_]``; Drive enforced only non-blank.
 
 That asymmetry mattered because of what happens downstream.
-:func:`~adapters.outbound.storage._object_name.provider_object_hmac_prefix` is
+:func:`~adapters.outbound.storage.object_name.provider_object_hmac_prefix` is
 a bare slice with no sanitisation, deliberately: its module delegates
 admissibility to the caller, and the ``sanitize_provider_object_label`` helper
 one function below it -- which DOES sanitise -- shows the delegation is a

@@ -617,7 +617,7 @@ def parse_spanish_decimal(value: str) -> Decimal:
 
     Unlike :func:`~adapters.inbound.pdf.label_regex.parse_spanish_decimal` (PDF receipts,
     which explicitly tolerate an English-rendered receipt per
-    :mod:`adapters.inbound.justificante._extract`) and
+    :mod:`adapters.inbound.justificante.extract`) and
     :func:`~adapters.inbound.financial.providers.base.parse_amount_value`
     (arbitrary-locale bank exports), the thousands-vs-decimal reading is
     never genuinely ambiguous here: this module reads exactly one

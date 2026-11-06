@@ -442,7 +442,10 @@ def resolve_casilla_overrides(
     operation: PinnedAuthorityOperation,
     work_unit: WorkUnit,
 ) -> tuple[dict[CasillaId, Decimal], dict[CasillaId, str], str | None]:
-    """Resolve canonical casilla overrides onto their registry-declared channels."""
+    """Resolve canonical casilla overrides onto their registry-declared channels.
+
+    ``revision`` is a :class:`ModeloRevision`.
+    """
     revision_casillas_by_id = casillas_by_id(revision)
     row_field_records = row_field_template_records_by_casilla(revision)
     casilla_inputs: dict[CasillaId, Decimal] = {}

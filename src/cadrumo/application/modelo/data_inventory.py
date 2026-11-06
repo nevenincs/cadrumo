@@ -17,7 +17,7 @@ aggregation path is introduced: the same registry snapshot and profile-binding
 resolver the calculate path uses are read, not re-derived.
 
 See Also:
-    :func:`~application.modelo._registry_helpers.required_input_casilla_ids_for_revision`
+    :func:`~application.modelo.registry_helpers.required_input_casilla_ids_for_revision`
         Sibling helper returning only the bare required/optional id tuples
         (used by amendment completeness checks); this module composes the
         richer operator-facing checklist over the same snapshot.
@@ -186,6 +186,8 @@ def profile_keys_for_bindings(
     A derived path is computed from other facts and refuses operator writes,
     so it is replaced by the source facts it derives from: those are what the
     operator can set.
+
+    ``revision`` is a :class:`ModeloRevision`.
     """
     wanted = set(binding_ids)
     keys: list[str] = []
@@ -322,7 +324,10 @@ def collect_inventory_buckets(
     revision: ModeloRevision,
     bindings_by_id: dict[BindingId, BindingDefinition],
 ) -> _DataInventoryBuckets:
-    """Group the revision's bindings into data inventory buckets by requirement kind."""
+    """Group the revision's bindings into data inventory buckets by requirement kind.
+
+    ``revision`` is a :class:`ModeloRevision`.
+    """
     buckets = _DataInventoryBuckets(
         required_manual=[],
         optional_manual=[],

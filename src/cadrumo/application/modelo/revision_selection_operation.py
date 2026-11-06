@@ -213,7 +213,10 @@ def revision_selection_operation_filed_external_without_report(
     *,
     profile_id: UUID,
 ) -> bool:
-    """Recognize a co-committed AEAT import by its exact filing receipt."""
+    """Recognize a co-committed AEAT import by its exact filing receipt.
+
+    ``revision`` is a :class:`CalculationRevision`.
+    """
     if (
         revision.amendment_identity is not None
         or revision.state not in FILED_REVISION_STATES

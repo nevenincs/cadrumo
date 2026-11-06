@@ -491,7 +491,7 @@ async def dismiss_wallet_pre303_alert_modal_if_present(page: Page) -> None:
     in this reader's own log output rather than read off a stack trace three
     layers away if the read subsequently stalls or times out. The collapsed
     predicate and the residual evidence gap it accepts are documented on
-    :func:`~adapters.outbound.aeat._representation_gate.dismiss_pre303_alert_modal_if_present`.
+    :func:`~adapters.outbound.aeat.representation_gate.dismiss_pre303_alert_modal_if_present`.
     """
 
     def _log_declined_hidden_modal() -> None:

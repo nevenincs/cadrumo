@@ -566,6 +566,8 @@ def explain_out_of_plazo_warning(
     modelo apply?"). This helper adds a separate timing warning: a
     historical return can still be applicable while its
     voluntary filing window closed long ago.
+
+    ``profile`` is a :class:`TaxpayerProfile`.
     """
     deadline_engine = DeadlineEngine()
     try:

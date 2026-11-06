@@ -1139,6 +1139,8 @@ def guarderia_cap_anual(snapshot: RegistrySnapshot) -> Decimal | None:
     cannot read, and the per-child proration is computed here. Returns
     ``None`` when the revision declares no such parameter, which leaves the
     aggregate unresolved rather than proceeding against a guessed ceiling.
+
+    ``snapshot`` is a :class:`RegistrySnapshot`.
     """
     parameter_id = f"renta-{_GUARDERIA_CAP_PARAMETER_SUFFIX}"
     for parameter in snapshot.revision.parameters:
