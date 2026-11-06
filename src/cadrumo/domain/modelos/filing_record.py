@@ -35,6 +35,7 @@ from typing import Annotated, Self, override
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.filing_timeliness import FilingTimeliness
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.identity.aeat_csv import AeatCsv
@@ -475,6 +476,17 @@ class ModeloRecord(BaseModel):
     :class:`ExternalEvidence` and no other state carries it. An ``AEAT``-origin
     record is always ``CONFIRMADA``; the retired states (``DISCREPANTE``,
     ``DESCARTADA``) are local entries that are no longer in force.
+
+    ``filing_timeliness`` is the posture against the plazo voluntario decided
+    AT FILING TIME and kept. ``declaration_kind`` cannot carry it: an
+    ``ORIGINAL`` declaration presented after its window closed is extemporánea,
+    which attaches the Ley 58/2003 art. 27 recargo consequence. It is stored
+    rather than recomputed on read because a filing window can be amended
+    later, and a reread must report the posture the filing actually had.
+    ``None`` means no posture was decided for this record -- a record written
+    before the field existed, or a path that does not decide one -- and is
+    reported as unknown rather than guessed from today's deadlines. Lateness
+    only; no recargo eligibility, amount or interest is asserted.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -493,6 +505,7 @@ class ModeloRecord(BaseModel):
     origin: FilingOrigin
     confirmation: AeatConfirmationState
     declaration_kind: FilingDeclarationKind
+    filing_timeliness: FilingTimeliness | None = None
     aeat_register: AeatRegisterRef | None = None
     status: ModeloRecordStatus = ModeloRecordStatus.VIGENTE
     superseded_at: UtcInstant | None = None

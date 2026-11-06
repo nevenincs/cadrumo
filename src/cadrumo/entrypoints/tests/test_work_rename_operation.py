@@ -65,6 +65,7 @@ from ...application.operations.capabilities import (
 )
 from ...application.operations.models import CredentialFreeOperationRequest
 from ...application.tests.operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+from ...core.filing_timeliness import FilingTimeliness
 from ...core.operations import OperationCancellation, OperationDurability, OperationEffect
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -423,6 +424,7 @@ def test_filing_records_locally_and_always_requires_a_human_handoff() -> None:
         origin=FilingOrigin.LOCAL,
         confirmation=AeatConfirmationState.PENDIENTE,
         declaration_kind=FilingDeclarationKind.ORIGINAL,
+        filing_timeliness=FilingTimeliness.EN_PLAZO,
     )
     result = ModeloWorkFilePublicResultV2(
         record=ModeloFilingRecordSnapshot.from_record(record),
@@ -434,6 +436,7 @@ def test_filing_records_locally_and_always_requires_a_human_handoff() -> None:
             period="1T",
         ),
         published=True,
+        filing_timeliness=FilingTimeliness.EN_PLAZO,
         filing_record_id=filing_id,
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,

@@ -24,6 +24,7 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.workflow.abort import WorkflowAbortReason
 from cadrumo.application.workflow.persistence import WorkflowRunRepository
 from cadrumo.application.workflow.run_models import WorkflowDeadlineContextDetails, WorkflowStage
+from cadrumo.core.filing_timeliness import FilingTimeliness
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
@@ -49,6 +50,7 @@ from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import
     Repos,
     calculation_ports_for_test,
     file_revision,
+    file_revision_result,
     seed_work_unit,
     target_filing_records,
     verify_revision,
@@ -179,7 +181,7 @@ def test_file_creates_filing_record_and_advances_pointers(
     monkeypatch.setattr(cr_repo, "load_revisioned", counted_load_revisioned)
 
     def publish() -> ModeloRecord:
-        record = file_revision(
+        outcome = file_revision_result(
             revision.calculation_revision_id,
             revision=revision,
             work_unit=work_unit,
@@ -191,7 +193,13 @@ def test_file_creates_filing_record_and_advances_pointers(
             bucket_event_repository=bv_repo,
             clock=T3,
         )
+        record = outcome.record
         assert isinstance(record, ModeloRecord)
+        # Filed inside the plazo voluntario of Modelo 130 1T, so the posture is
+        # decided at filing time and kept on the receipt rather than left for the
+        # operator to infer from ``original``.
+        assert record.filing_timeliness is FilingTimeliness.EN_PLAZO
+        assert outcome.filing_timeliness is FilingTimeliness.EN_PLAZO
         return record
 
     if reject_final_read:
@@ -279,7 +287,7 @@ def test_file_records_verified_modelo_130_as_late_non_official_local_filing(repo
         clock=T2,
     )
 
-    filing = file_revision(
+    outcome = file_revision_result(
         revision.calculation_revision_id,
         revision=revision,
         work_unit=work_unit,
@@ -290,10 +298,17 @@ def test_file_records_verified_modelo_130_as_late_non_official_local_filing(repo
         bucket_event_repository=bv_repo,
         clock=T3,
     )
+    filing = outcome.record
 
     assert filing.status is ModeloRecordStatus.VIGENTE
     assert filing.aeat_accepted is False
     assert filing.external_evidence is None
+    # The declaration kind stays ``original``, so lateness has to be carried as
+    # its own fact or no consumer of the file result can see the art. 27 LGT
+    # consequence of a closed-window filing.
+    assert filing.declaration_kind is FilingDeclarationKind.ORIGINAL
+    assert filing.filing_timeliness is FilingTimeliness.EXTEMPORANEA
+    assert outcome.filing_timeliness is FilingTimeliness.EXTEMPORANEA
     with calculation_ports_for_test(
         bucket_id=work_unit.bucket_id,
         work_unit_repository=wu_repo,

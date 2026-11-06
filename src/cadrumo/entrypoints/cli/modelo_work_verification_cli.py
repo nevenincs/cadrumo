@@ -25,6 +25,7 @@ from ...application.modelo.work_filing_contracts import (
 )
 from ...application.modelo.work_verification_contracts import ModeloWorkVerifyPublicResultV2, ModeloWorkVerifyRequest
 from ...core.external_constants import OutputLanguage
+from ...core.filing_timeliness import FilingTimeliness
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.payment_election import PaymentElection
@@ -365,10 +366,29 @@ def work_file(
     if not isinstance(projection, ModeloWorkFilePublicResultV2):
         raise RefusalError(RefusalCode.INVALID_FRAME)
     record = projection.record.to_record()
-    result = WorkFileResult.model_validate(filing_record_payload(record).model_dump(mode="python"))
+    timeliness = projection.filing_timeliness
+    result = WorkFileResult.model_validate(
+        filing_record_payload(record).model_dump(mode="python") | {"filing_timeliness": timeliness}
+    )
     lines = ["operation\tmodelo.work.file", *filing_record_lines(record)]
+    lines.append(f"filing_timeliness\t{timeliness.value}")
     lines.append(f"filing_disambiguation\t{tr('cli.app.modelo.work.file_internal_disambiguation')}")
     notices: list[Notice] = []
+    if timeliness is FilingTimeliness.EXTEMPORANEA:
+        extemporanea_message = tr("cli.app.modelo.work.file_extemporanea")
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="modelo.work.file.extemporanea",
+                message=extemporanea_message,
+                context={
+                    "filing_record_id": record.filing_record_id,
+                    "filing_timeliness": timeliness.value,
+                    "article_27_assessment_status": "unassessed",
+                },
+            )
+        )
+        lines.append(extemporanea_message)
     if not projection.published:
         noop_message = tr(
             "cli.app.modelo.work.file_idempotent_noop", calculation_revision_id=record.calculation_revision_id

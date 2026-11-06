@@ -73,6 +73,7 @@ from .action_errors import (
     VerificationReportNotFoundError,
     WorkUnitMutationRefusedError,
 )
+from .effective_deadline import decide_filing_timeliness
 from .filed_revision_observation import (
     PreparedFiledRevisionObservation,
     filed_revision_observation_writes,
@@ -266,8 +267,16 @@ def _new_local_filing_record(
     notes: str | None,
     actor: str,
     now: datetime,
+    operation: PinnedAuthorityOperation,
     settlement: IvaSettlementSnapshot | None = None,
 ) -> ModeloRecord:
+    """Compose the local filing receipt, deciding its plazo posture at filing time.
+
+    The timeliness posture is decided here, from this filing's own clock and
+    the caller's pinned authority, and kept on the record. A later reader
+    reports the kept value: a filing window amended after the fact must not
+    change what a past filing's posture was.
+    """
     return ModeloRecord(
         filing_record_id=filing_record_id,
         work_unit_id=target.work_unit_id,
@@ -282,6 +291,13 @@ def _new_local_filing_record(
         origin=FilingOrigin.LOCAL,
         confirmation=AeatConfirmationState.PENDIENTE,
         declaration_kind=filing_declaration_kind_for_amendment(target.amendment_identity),
+        filing_timeliness=decide_filing_timeliness(
+            modelo=str(work_unit.modelo),
+            filing_year=work_unit.filing_year,
+            period=work_unit.period,
+            filed_at=now,
+            operation=operation,
+        ),
         status=ModeloRecordStatus.VIGENTE,
         source_transaction_ids=target.source_transaction_ids,
         settlement=settlement,
@@ -690,6 +706,7 @@ def _prepare_filing_catalogues_and_writes(
         notes=notes,
         actor=actor,
         now=now,
+        operation=operation,
         settlement=settlement,
     )
 

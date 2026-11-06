@@ -1775,6 +1775,9 @@ cli:
           verification_report_ambiguous: Hi ha més d’un informe de verificació favorable
             per a aquesta revisió. Resol el conflicte de verificació abans de registrar
             la presentació.
+        file_extemporanea: 'AVÍS: aquesta presentació es registra fora del termini
+          voluntari (Art. 27 LGT). Aquesta aplicació no determina cap deute per recàrrec
+          ni interessos.'
         file_help: Registrar com a presentat un càlcul desat i comprovat. NO envia
           res a l'AEAT
         file_idempotent_noop: 'Res a fer: el càlcul desat %{calculation_revision_id}

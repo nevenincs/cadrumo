@@ -47,6 +47,7 @@ from ...core.calculation_report_format import CalculationReportDocumentFormat
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
+from ...core.filing_timeliness import FilingTimeliness
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, VerificationReportId, WorkUnitId
@@ -407,6 +408,10 @@ class ModeloRecordPayload(OutputSchema):
     origin: FilingOrigin
     confirmation: AeatConfirmationState
     declaration_kind: FilingDeclarationKind
+    #: Posture against the plazo voluntario kept from this filing's own filing
+    #: time; ``None`` where the record kept none, which is unknown rather than
+    #: timely. Lateness only: no art. 27 recargo is asserted.
+    filing_timeliness: FilingTimeliness | None = None
     aeat_register: AeatRegisterRefPayload | None = None
     aeat_accepted: bool = False
     status: ModeloRecordStatus
@@ -882,6 +887,12 @@ class WorkFileResult(ModeloRecordPayload):
     resulting :class:`ModeloRecordPayload`. It records that the verified
     revision was marked as internally filed. It does not attach
     :class:`ExternalEvidencePayload`; ``live_submission`` is always ``False``.
+
+    ``filing_timeliness`` carries the fact ``declaration_kind`` cannot: an
+    ``original`` declaration filed after its plazo voluntario closed is
+    extemporánea, with the Ley 58/2003 art. 27 recargo consequence. This
+    command always populates it, with ``unknown`` where the filing kept no
+    posture; the backend decided it at filing time and no frontend computes it.
     """
 
     operation: str = "modelo.work.file"

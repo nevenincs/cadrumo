@@ -1790,6 +1790,8 @@ cli:
           verification_report_ambiguous: Hay más de un informe de verificación favorable
             para esta revisión. Resuelve el conflicto de verificación antes de registrar
             la presentación.
+        file_extemporanea: 'AVISO: esta presentación se registra fuera del plazo voluntario
+          (Art. 27 LGT). Esta aplicación no determina una deuda por recargo o intereses.'
         file_help: Registrar como presentado un cálculo guardado y comprobado. NO
           envía nada a la AEAT
         file_idempotent_noop: 'Nada que hacer: el cálculo guardado %{calculation_revision_id}
