@@ -277,6 +277,7 @@ def _new_local_filing_record(
     reports the kept value: a filing window amended after the fact must not
     change what a past filing's posture was.
     """
+    declaration_kind = filing_declaration_kind_for_amendment(target.amendment_identity)
     return ModeloRecord(
         filing_record_id=filing_record_id,
         work_unit_id=target.work_unit_id,
@@ -290,13 +291,14 @@ def _new_local_filing_record(
         notes=notes.strip() if (notes is not None and notes) else None,
         origin=FilingOrigin.LOCAL,
         confirmation=AeatConfirmationState.PENDIENTE,
-        declaration_kind=filing_declaration_kind_for_amendment(target.amendment_identity),
+        declaration_kind=declaration_kind,
         filing_timeliness=decide_filing_timeliness(
             modelo=str(work_unit.modelo),
             filing_year=work_unit.filing_year,
             period=work_unit.period,
             filed_at=now,
             operation=operation,
+            declaration_kind=declaration_kind,
         ),
         status=ModeloRecordStatus.VIGENTE,
         source_transaction_ids=target.source_transaction_ids,

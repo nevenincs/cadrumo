@@ -172,6 +172,42 @@ class FilingDeclarationKind(StrEnum):
     RECTIFICATIVA = "rectificativa"
 
 
+#: Declaration kinds whose presentation after the period's plazo voluntario is
+#: itself a late presentation. Ley 58/2003 art. 122.1 says an autoliquidación
+#: complementaria, or a declaración or comunicación complementaria o
+#: sustitutiva, may be presented inside the plazo or after it ends, and "en este
+#: último caso tendrán el carácter de extemporáneas" -- the same window, the
+#: same date test, as an original. Art. 27.1 attaches the recargo to the
+#: presentation of an autoliquidación or declaración "fuera de plazo sin
+#: requerimiento previo", so the calendar fact is the same one for all three.
+#:
+#: RECTIFICATIVA is deliberately absent. Art. 120.3 and the art. 120.4 added by
+#: Ley 13/2023 make the autoliquidación rectificativa the vehicle of the
+#: rectification procedure -- the replacement for the solicitud de rectificación
+#: of an autoliquidación that harmed the taxpayer's legitimate interests -- and
+#: art. 122.1's extemporaneidad rule names complementarias and sustitutivas
+#: only. No bundled official text says a rectificativa presented after the
+#: plazo is thereby extemporánea, so its posture stays unknown instead of being
+#: inferred from a neighbouring rule.
+_PLAZO_TIMED_DECLARATION_KINDS = frozenset(
+    {
+        FilingDeclarationKind.ORIGINAL,
+        FilingDeclarationKind.COMPLEMENTARIA,
+        FilingDeclarationKind.SUSTITUTIVA,
+    }
+)
+
+
+def declaration_kind_is_timed_against_the_plazo(kind: FilingDeclarationKind) -> bool:
+    """Say whether this declaration kind's lateness is the period's own plazo question.
+
+    ``True`` means a presentation date may be judged against the period's filing
+    window. ``False`` means no official text in the bundle supports that test
+    for this kind, so its timeliness stays unknown rather than guessed.
+    """
+    return kind in _PLAZO_TIMED_DECLARATION_KINDS
+
+
 class IvaSettlementRefundState(StrEnum):
     """Independent refund-request, approval, and payment evidence state."""
 

@@ -14,7 +14,7 @@ import hashlib
 from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 
@@ -59,6 +59,7 @@ from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ....application.modelo.calculation_revision_queries import get_calculation_revision
+from ....application.modelo.effective_deadline import resolve_effective_filing_deadline
 from ....application.modelo.export import export_modelo_revision
 from ....application.modelo.export_contracts import ModeloExportCommand, ModeloExportEvidenceMissingError
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
@@ -69,7 +70,9 @@ from ....application.modelo.work_lifecycle import (
 from ....core.auth_provider import AuthProviderKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.config import Settings
+from ....core.filing_timeliness import FilingTimeliness
 from ....core.period import Period
+from ....core.time.clock import MADRID_TZ
 from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -564,6 +567,58 @@ def test_amend_new_filing_records_filing_metadata(repos: _Repos, *, operation: P
     outcome = _drive_amend_creates_complementaria(repos, operation=operation)
     assert outcome.new_filing.filed_at == _T4
     assert outcome.new_filing.filed_by == "operator-A"
+
+
+def test_amend_inside_the_window_records_a_timely_complementaria(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A complementaria decides its own posture at its own presentation date.
+
+    Ley 58/2003 art. 122.1 lets a complementaria be presented inside the plazo
+    or after it; only in the second case is it extemporánea. This one is filed
+    on 16 April 2026, inside the Modelo 303 1T 2026 window.
+    """
+    outcome = _drive_amend_creates_complementaria(repos, operation=operation)
+    deadline = resolve_effective_filing_deadline("303", 2026, outcome.work_unit.period, operation=operation)
+
+    assert deadline is not None
+    assert _T4.astimezone(MADRID_TZ).date() <= deadline.closes_on
+    assert outcome.new_filing.declaration_kind is FilingDeclarationKind.COMPLEMENTARIA
+    assert outcome.new_filing.filing_timeliness is FilingTimeliness.EN_PLAZO
+
+
+def test_amend_after_the_window_records_an_extemporanea_complementaria(
+    repos: _Repos, *, operation: PinnedAuthorityOperation
+) -> None:
+    """Past the window the complementaria is extemporánea (art. 122.1 in fine).
+
+    It does not inherit the baseline's posture: the amendment is its own
+    presentation, on its own date.
+    """
+    work_unit, _baseline_revision, baseline = _seed_external_baseline(
+        repos,
+        casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000"), _AMEND_EXPENSE_CASILLA: Decimal("250")},
+        operation=operation,
+    )
+    deadline = resolve_effective_filing_deadline("303", 2026, work_unit.period, operation=operation)
+    assert deadline is not None
+    filed_late = datetime(
+        deadline.closes_on.year, deadline.closes_on.month, deadline.closes_on.day, 12, 0, 0, tzinfo=UTC
+    ) + timedelta(days=1)
+
+    with bundled_indexed_authority().operation() as amend_operation:
+        new_filing = amend_modelo_revision(
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=amend_operation),
+            from_filing_record_id=baseline.filing_record_id,
+            overrides={_AMEND_INCOME_CASILLA: Decimal("1100")},
+            amendment_kind=FilingDeclarationKind.COMPLEMENTARIA,
+            reason="under-reported turnover discovered after the window closed",
+            actor="operator-A",
+            clock=filed_late,
+        )
+
+    assert baseline.filing_timeliness is None, "the seeded external baseline decided no posture of its own"
+    assert new_filing.filing_timeliness is FilingTimeliness.EXTEMPORANEA
 
 
 def test_amend_baseline_is_superseded_by_new_filing(repos: _Repos, *, operation: PinnedAuthorityOperation) -> None:

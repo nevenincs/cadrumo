@@ -112,6 +112,7 @@ from .calculation_helpers import amendment_observations as calculation_amendment
 from .calculation_helpers import resolve_registry_snapshot_for_work_unit
 from .calculation_modelo_adjustments import detail_row_declaration_modelos
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
+from .effective_deadline import decide_filing_timeliness
 from .filed_revision_observation import filed_revision_observation_writes, prepare_filed_revision_observation
 from .filing_revision_persistence import filed_calculation_revision
 from .ledger_anchor_capture import capture_revision_ledger_evidence
@@ -654,6 +655,7 @@ def _finalize_amendment(
         declaration_kind=amendment_kind,
         actor=actor,
         now=now,
+        operation=operation,
     )
 
     filed_amendment = filed_calculation_revision(target=verified_amendment, actor=actor, now=now)
@@ -832,6 +834,7 @@ def _build_amendment_filing_updates(
     declaration_kind: FilingDeclarationKind,
     actor: str,
     now: datetime,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[str, ModeloRecord, ModeloRecordCatalogue]:
     new_filing_id = derive_filing_record_id(
         work_unit_id=in_force.work_unit_id,
@@ -847,6 +850,7 @@ def _build_amendment_filing_updates(
         declaration_kind=declaration_kind,
         filed_at=now,
         filed_by=actor.strip(),
+        operation=operation,
     )
     updated_filing_catalogue = filing_catalogue
     if in_force.filing_record_id != baseline.filing_record_id:
@@ -944,8 +948,17 @@ def _build_amendment_filing_record(
     declaration_kind: FilingDeclarationKind,
     filed_at: datetime,
     filed_by: str,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloRecord:
-    """Create the pending current filing record that replaces ``in_force`` and amends ``baseline``."""
+    """Create the pending current filing record that replaces ``in_force`` and amends ``baseline``.
+
+    The amendment decides its own plazo posture at its own presentation date,
+    against the same period's filing window: Ley 58/2003 art. 122.1 gives a
+    complementaria or sustitutiva presented after that window closed "el
+    carácter de extemporáneas". A kind the official text does not time against
+    the window keeps an unknown posture. The amendment is a new presentation,
+    so it never inherits the posture of the record it supersedes.
+    """
     return ModeloRecord(
         filing_record_id=filing_record_id,
         work_unit_id=in_force.work_unit_id,
@@ -961,6 +974,14 @@ def _build_amendment_filing_record(
         origin=FilingOrigin.LOCAL,
         confirmation=AeatConfirmationState.PENDIENTE,
         declaration_kind=declaration_kind,
+        filing_timeliness=decide_filing_timeliness(
+            modelo=str(in_force.modelo),
+            filing_year=in_force.filing_year,
+            period=in_force.period,
+            filed_at=filed_at,
+            operation=operation,
+            declaration_kind=declaration_kind,
+        ),
         status=ModeloRecordStatus.VIGENTE,
         external_evidence=None,
         amends_filing_record_id=baseline.filing_record_id,

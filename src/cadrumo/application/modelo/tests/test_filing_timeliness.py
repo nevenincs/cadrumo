@@ -26,6 +26,7 @@ from ....core.filing_timeliness import FilingTimeliness
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
+from ....domain.modelos.filing_record import FilingDeclarationKind
 from ..effective_deadline import (
     EffectiveFilingDeadline,
     decide_filing_timeliness,
@@ -124,6 +125,60 @@ def test_the_presentation_date_is_the_spanish_civil_date_of_the_filing_instant(
             operation=operation,
         )
         is FilingTimeliness.EN_PLAZO
+    )
+
+
+@pytest.mark.parametrize(
+    "declaration_kind",
+    [FilingDeclarationKind.ORIGINAL, FilingDeclarationKind.COMPLEMENTARIA, FilingDeclarationKind.SUSTITUTIVA],
+    ids=["original", "complementaria", "sustitutiva"],
+)
+def test_a_plazo_timed_declaration_is_judged_against_the_periods_own_window(
+    declaration_kind: FilingDeclarationKind,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Ley 58/2003 art. 122.1: presented after the plazo, these are extemporáneas."""
+    modelo, filing_year, period_code, effective_close = _SHIFTED_CLOSE
+    period = Period.from_year_and_code(filing_year, period_code)
+
+    for day, expected in (
+        (effective_close, FilingTimeliness.EN_PLAZO),
+        (effective_close + timedelta(days=1), FilingTimeliness.EXTEMPORANEA),
+    ):
+        decided = decide_filing_timeliness(
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            filed_at=datetime(day.year, day.month, day.day, 12, 0, tzinfo=UTC),
+            operation=operation,
+            declaration_kind=declaration_kind,
+        )
+        assert decided is expected, f"{declaration_kind} on {day}: {decided} != {expected}"
+
+
+def test_a_rectificativa_keeps_an_unknown_posture(operation: PinnedAuthorityOperation) -> None:
+    """No bundled official text times the rectification procedure against the plazo.
+
+    Art. 120.3 and the art. 120.4 added by Ley 13/2023 make it the vehicle of
+    the rectification procedure, and art. 122.1's extemporaneidad rule names
+    complementarias and sustitutivas only, so the posture is not inferred.
+    """
+    modelo, filing_year, period_code, effective_close = _SHIFTED_CLOSE
+    period = Period.from_year_and_code(filing_year, period_code)
+    well_past_the_close = effective_close + timedelta(days=400)
+
+    assert (
+        decide_filing_timeliness(
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            filed_at=datetime(
+                well_past_the_close.year, well_past_the_close.month, well_past_the_close.day, 12, 0, tzinfo=UTC
+            ),
+            operation=operation,
+            declaration_kind=FilingDeclarationKind.RECTIFICATIVA,
+        )
+        is FilingTimeliness.UNKNOWN
     )
 
 

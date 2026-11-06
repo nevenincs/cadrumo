@@ -47,6 +47,7 @@ from ...domain.deadlines.festivos import (
 )
 from ...domain.deadlines.filing_window_projection import ProjectedFilingWindowCloseUnavailable
 from ...domain.deadlines.plazo import resolve_filing_window
+from ...domain.modelos.filing_record import FilingDeclarationKind, declaration_kind_is_timed_against_the_plazo
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -227,8 +228,14 @@ def decide_filing_timeliness(
     period: Period,
     filed_at: datetime,
     operation: PinnedAuthorityOperation,
+    declaration_kind: FilingDeclarationKind = FilingDeclarationKind.ORIGINAL,
 ) -> FilingTimeliness:
     """Decide the posture to KEEP on a filing being recorded now.
+
+    ``declaration_kind`` selects whether the period's own plazo decides this
+    declaration's lateness at all; a kind no official text times against that
+    window keeps an unknown posture (see
+    :func:`~cadrumo.domain.modelos.filing_record.declaration_kind_is_timed_against_the_plazo`).
 
     The presentation date is the Europe/Madrid civil date of ``filed_at``. A
     filing plazo is a Spanish-calendar boundary (Ley 39/2015 art. 31), and the
@@ -242,6 +249,8 @@ def decide_filing_timeliness(
     Readers report the kept value; none of them judges it again, because a
     window amended later must not change what a past filing's posture was.
     """
+    if not declaration_kind_is_timed_against_the_plazo(declaration_kind):
+        return FilingTimeliness.UNKNOWN
     try:
         return resolve_filing_timeliness(
             modelo,
