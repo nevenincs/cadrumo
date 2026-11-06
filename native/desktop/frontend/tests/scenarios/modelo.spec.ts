@@ -913,7 +913,20 @@ for (const language of LANGUAGES) {
             term.getByText(item.box_number!, { exact: true }),
           ).toBeVisible();
           await expect(term).toContainText(item.label.text);
+          // Beside it, the value the read model serves for the filer and the
+          // period, or the served words for a fact not known yet.
+          await expect(
+            term.locator("xpath=following-sibling::dd[1]"),
+          ).toHaveText(
+            item.value_text ??
+              label("workspace.modelo.value.not_known_yet", {}, language),
+          );
         }
+        // Opening the form shows those facts as served: the window never
+        // calculates to fill them.
+        expect(
+          await calls(target, "modelo submit modelo.work.calculate"),
+        ).toEqual([]);
       }
       if (read.header.deadline)
         await expect(
