@@ -19,6 +19,7 @@ import {
   ACQUIRED_CONDITIONS,
   ACQUISITION_SHAPES,
   ADMITTED_METHODS,
+  BASIS_STAGES,
   DECLARED_ACTIVITIES,
   FURTHER_ACQUISITION_SHAPES,
   NOT_APPLICABLE_ABSENCES,
@@ -27,6 +28,7 @@ import {
   SCENARIO_PAYMENTS,
   SCENARIO_REGIME,
   SCENARIO_TODAY,
+  TABLE_BOUND_METHODS,
   TABLE_GROUPS,
   TIMELINE_FACT_PATHS,
   formOptionsFor,
@@ -105,6 +107,17 @@ export function makeRegister(
   );
   /** The purchases an element has taken as its acquisition. */
   const taken = new Set<string>();
+  // The backend's history numbers every event of the register in one sequence,
+  // so a new event continues the recorded numbering rather than restarting per
+  // element.
+  const sequence = {
+    last: Math.max(
+      0,
+      ...[...elements.values()].flatMap((element) =>
+        element.events.map((event) => event.sequence),
+      ),
+    ),
+  };
 
   const authority = {
     logical_generation: hex64("authority:generation"),
@@ -238,13 +251,14 @@ export function makeRegister(
       value !== null && Object.hasOwn(TOKEN_FIELDS, field)
         ? `${FAMILY}${TOKEN_FIELDS[field]}.${value}`
         : null;
+    sequence.last += 1;
     element.events.push({
-      sequence: element.events.length + 1,
+      sequence: sequence.last,
       recorded_at: now(),
       kind,
       event_kind: eventKind,
       asset_id: element.id,
-      record_id: hex64(`${kind}:${element.id}:${element.events.length + 1}`),
+      record_id: hex64(`${kind}:${element.id}:${sequence.last}`),
       effect_date: effect,
       origin,
       changes: changes.map((change) => ({
@@ -571,8 +585,6 @@ export function makeRegister(
   };
 
   const latest = (element: Element) => element.revisions.at(-1)!;
-  const STAGES = ["taxpayer_owned", "business_allocated", "whole_property"];
-  const TABLE_METHODS = ["linear", "constant_percentage", "sum_of_digits"];
 
   /** The backend's judgement of a revision: the refusal it gives, if any. */
   const judgeRevision = (revision: JsonObject, shape: JsonObject): void => {
@@ -668,7 +680,7 @@ export function makeRegister(
     if (
       decimalOf(basis.basis_amount) === null ||
       decimalOf(basis.non_deductible_iva) === null ||
-      !STAGES.includes(String(basis.stage))
+      !BASIS_STAGES.some((found) => found.stage === basis.stage)
     )
       return invalid();
     if (
@@ -764,7 +776,7 @@ export function makeRegister(
     const group = TABLE_GROUPS[kind]!.find(
       (found) => found.class_key === classKey,
     );
-    if (TABLE_METHODS.includes(method) && classKey === null)
+    if (TABLE_BOUND_METHODS.includes(method) && classKey === null)
       return refuse(INCOMPLETE, "table_class_required", { method }, shape, [
         "amortization.authority_class_key",
       ]);
@@ -960,7 +972,39 @@ export function makeRegister(
       : { legal_citations: [], legal_citations_complete: false };
   };
 
+  /** The charge the register answered for a span, or for another span of an
+   * element whose election it answered: the provisions a charge cites are the
+   * election's, not the span's, the way `citationsFor` reads them. Null where
+   * the register answered no charge of any like election, which a forecast is
+   * refused for rather than named from anything stated here. */
+  const recordedChargeFor = (
+    element: Element,
+    from: string,
+    until: string,
+  ): JsonObject | null => {
+    const own = SCENARIO_ELEMENTS.find((seed) => seed.id === element.id);
+    const exact = own?.charges[`${from}/${until}`];
+    if (exact !== undefined) return exact;
+    const like =
+      own ??
+      SCENARIO_ELEMENTS.find(
+        (seed) =>
+          seed.list.asset_kind === element.list.asset_kind &&
+          seed.list.method === element.list.method &&
+          seed.limits.class_key === element.limits.class_key &&
+          Object.keys(seed.charges).length > 0,
+      ) ??
+      SCENARIO_ELEMENTS.find(
+        (seed) =>
+          seed.list.asset_kind === element.list.asset_kind &&
+          seed.list.method === element.list.method &&
+          Object.keys(seed.charges).length > 0,
+      );
+    return Object.values(like?.charges ?? {})[0] ?? null;
+  };
+
   return {
+    recordedChargeFor,
     now,
     hex64,
     invalid,
@@ -995,8 +1039,6 @@ export function makeRegister(
     FIGURE_NEUTRAL,
     movesCharge,
     latest,
-    STAGES,
-    TABLE_METHODS,
     judgeRevision,
     describe,
     citationsFor,

@@ -86,6 +86,7 @@ export function makeWrites(register: Register) {
     movesCharge,
     latest,
     judgeRevision,
+    recordedChargeFor,
   } = register;
   /** The plan a new element starts with. Only a linear election whose opening
    * history is known is worked out; any other starts with the reason it is
@@ -342,6 +343,7 @@ export function makeWrites(register: Register) {
       list,
       annual: annual ?? "0.00",
       forecasts: {},
+      charges: {},
       descriptor: { ...descriptor, name },
       outOfService: null,
       baja: null,
@@ -1115,6 +1117,25 @@ export function makeWrites(register: Register) {
         {},
         { forecast: null },
       );
+    // The provisions a charge rests on are the register's, never named here. A
+    // span it answered is replayed whole while the revision it rests on still
+    // stands; any other span carries the provisions the register cited for this
+    // element, whose election cites the same ones whatever the span.
+    const charge = recordedChargeFor(element, from, until);
+    if (charge === null)
+      return refuse(
+        INCOMPLETE,
+        "schedule_authority_unavailable",
+        {},
+        { forecast: null },
+      );
+    if (
+      charge.covered_from === from &&
+      charge.covered_until === until &&
+      charge.asset_revision_id === latest(element).revision_id &&
+      row.absence !== "free_election"
+    )
+      return json({ ...ok, forecast: charge });
     let amount: string;
     if (row.absence === "free_election") {
       const asked = decimalOf(request.requested_free_amount);
@@ -1166,7 +1187,7 @@ export function makeWrites(register: Register) {
           `schedule:${id}:${from}:${until}:${amount}`,
         ),
         authority_generation: authority.logical_generation,
-        source_reference: "ley-35-2006:art-28",
+        source_reference: charge.source_reference,
         method: row.method,
         annual_rate: row.coefficient,
       },

@@ -12,8 +12,10 @@ import { createRequest } from "../../src/components/ledger/assets/assetRevision"
 import { type LedgerPort, type LedgerResult } from "../../src/shell/ledger";
 import type { Translate } from "../../src/shell/strings";
 import {
+  DECLARED_ACTIVITIES,
   SCENARIO_TODAY,
   SCENARIO_ELEMENTS,
+  scenarioPaymentId,
 } from "../../src/dev/assetsRegister";
 import {
   servedEditionOf,
@@ -181,11 +183,18 @@ export async function newRequest(
   });
 }
 
+/** An activity the registry declares for the scenario's taxpayer, and another
+ * one, so a spec names a declared activity without stating its code. */
+export const [firstActivity, secondActivity] = [
+  DECLARED_ACTIVITIES[0]!,
+  DECLARED_ACTIVITIES.at(-1)!,
+];
+
 export const NEW_ELEMENT = {
   asset_kind: "material",
   name: "Sierra de cinta",
   serial_number: "SC-0412",
-  acquisition: "t-portatil",
+  acquisition: scenarioPaymentId("t-portatil"),
   acquisition_shape: "primary_purchase",
   in_service_date: "2026-06-15",
   acquired_condition: "new",

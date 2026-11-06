@@ -43,6 +43,7 @@ import type { Translate } from "../src/shell/strings";
 import {
   DECLARED_ACTIVITIES,
   SCENARIO_ELEMENTS,
+  scenarioPaymentId,
 } from "../src/dev/assetsRegister";
 import {
   servedHandoffOf,
@@ -72,6 +73,7 @@ import {
   optionsOf,
   newRequest,
   NEW_ELEMENT,
+  firstActivity,
   sale,
   servidorRow,
   words,
@@ -615,7 +617,7 @@ test("an element bought outside the ledger can own a later ledger payment, which
     acquisition_shape: "acquired_outside_ledger",
     acquisition: "",
     declared_acquisition_date: "2026-01-10",
-    declared_activity: "A01",
+    declared_activity: firstActivity,
     acquisition_reference: "invoice held at the office",
   };
   const keys = (draft: Record<string, string>) =>
@@ -625,9 +627,9 @@ test("an element bought outside the ledger can own a later ledger payment, which
   expect(keys(NEW_ELEMENT)).not.toContain(FURTHER_PURCHASE);
   expect(keys(outside)).toContain(FURTHER_PURCHASE);
   expect(keys(outside)).not.toContain(FURTHER_SHAPE);
-  expect(keys({ ...outside, [FURTHER_PURCHASE]: "t-silla" })).toContain(
-    FURTHER_SHAPE,
-  );
+  expect(
+    keys({ ...outside, [FURTHER_PURCHASE]: scenarioPaymentId("t-silla") }),
+  ).toContain(FURTHER_SHAPE);
   const build = (draft: Record<string, string>, id: string) => {
     const stated = answer(fieldsFor(context, draft), draft, null);
     return createRequest(stated.values, {
@@ -646,7 +648,7 @@ test("an element bought outside the ledger can own a later ledger payment, which
   expect(build(outside, "made-5").revision.further_acquisitions).toEqual([]);
   const withPayment = {
     ...outside,
-    [FURTHER_PURCHASE]: "t-silla",
+    [FURTHER_PURCHASE]: scenarioPaymentId("t-silla"),
     [FURTHER_SHAPE]: "split_payment",
   };
   const request = build(withPayment, "made-6");
@@ -654,7 +656,7 @@ test("an element bought outside the ledger can own a later ledger payment, which
     {
       shape: "split_payment",
       lineage: {
-        observed_transaction_id: "t-silla",
+        observed_transaction_id: scenarioPaymentId("t-silla"),
         invoice_evidence_id: "",
         evidence_fingerprint: null,
       },
@@ -665,7 +667,9 @@ test("an element bought outside the ledger can own a later ledger payment, which
   const left = (
     await settled<LedgerResult<typeof CANDIDATES>>(port.submit(CANDIDATES, {}))
   ).candidates!;
-  expect(left.some((found) => found.transaction_id === "t-silla")).toBe(false);
+  expect(
+    left.some((found) => found.transaction_id === scenarioPaymentId("t-silla")),
+  ).toBe(false);
   // A payment the ledger does not hold, and one named twice, are refused.
   const unknown = build(withPayment, "made-7");
   (unknown.revision.further_acquisitions as { lineage: object }[])[0]!.lineage =
@@ -899,7 +903,7 @@ test("the shapes of a later payment are the ones the options serve", async () =>
       {
         ...NEW_ELEMENT,
         acquisition_shape: "acquired_outside_ledger",
-        [FURTHER_PURCHASE]: "t-silla",
+        [FURTHER_PURCHASE]: scenarioPaymentId("t-silla"),
       },
     )
       .find((found) => found.key === FURTHER_SHAPE)!

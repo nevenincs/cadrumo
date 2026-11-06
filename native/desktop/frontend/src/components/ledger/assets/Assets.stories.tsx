@@ -402,7 +402,7 @@ async function press(
   await userEvent.click(found);
 }
 
-export const Register: Story = { name: "Register spanning decades" };
+export const Register: Story = { name: "Register of every listed year" };
 
 /** A year the register lists other than the one it opens on. */
 const otherServedYear = REGISTER_YEARS.find(

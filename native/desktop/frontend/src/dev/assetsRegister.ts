@@ -51,6 +51,9 @@ export type ScenarioElement = {
   annual: string;
   /** The charge for each span the plan offers to claim, by `from/until`. */
   forecasts: Record<string, string>;
+  /** The whole charge the register answered for each of those spans, with the
+   * revision it rests on and the provisions it cites. */
+  charges: Record<string, JsonObject>;
   /** Null where the register cannot work the baja out. */
   disposal: ScenarioDisposal | null;
 };
@@ -72,9 +75,9 @@ type FormOptions = {
 
 type RecordedElement = Omit<
   ScenarioElement,
-  "id" | "list" | "annual" | "forecasts"
+  "id" | "list" | "annual" | "forecasts" | "charges"
 > & {
-  forecasts: Record<string, { amount: string }>;
+  forecasts: Record<string, JsonObject & { amount: string }>;
 };
 
 type Recording = {
@@ -89,7 +92,14 @@ type Recording = {
       tax_year: number;
       options: FormOptions;
     }[];
+    payments: {
+      provider_id: string;
+      asset_id: string | null;
+      transaction_id: string;
+      description: string;
+    }[];
     vocabulary: {
+      table_bound_methods: string[];
       timeline_fact_paths: string[];
       not_applicable_absences: string[];
       remedy_field_keys: Record<string, string>;
@@ -111,6 +121,27 @@ export const REGISTER_DEFAULT_YEAR: number | null = register.default_year;
 /** The ledger payments no element owns, as the register offers them. */
 export const SCENARIO_PAYMENTS: readonly AcquisitionCandidate[] =
   register.candidates;
+
+/** Every ledger payment the scenario gave the register, owned or not, under
+ * the name the scenario calls it by: the content-derived identifier the ledger
+ * itself minted for it, and the description it carries. */
+export const SCENARIO_LEDGER_PAYMENTS: readonly {
+  provider_id: string;
+  asset_id: string | null;
+  transaction_id: string;
+  description: string;
+}[] = register.payments;
+
+/** The identifier the ledger minted for the payment the scenario calls
+ * `providerId`. */
+export const scenarioPaymentId = (providerId: string): string => {
+  const found = register.payments.find(
+    (payment) => payment.provider_id === providerId,
+  );
+  if (found === undefined)
+    throw new Error(`the recording holds no payment ${providerId}`);
+  return found.transaction_id;
+};
 
 /** The planned charge of a year the element serves whole, or nothing where no
  * such year has a figure. */
@@ -135,6 +166,7 @@ export const SCENARIO_ELEMENTS: readonly ScenarioElement[] = register.list.map(
           charge.amount,
         ]),
       ),
+      charges: element.forecasts,
     };
   },
 );
@@ -193,6 +225,10 @@ export const ACQUIRED_CONDITIONS: readonly ConditionOption[] =
 export const FURTHER_ACQUISITION_SHAPES: readonly string[] =
   anyKind.further_acquisition_shapes;
 
+/** The methods whose corridor is the registry's amortization table, so an
+ * election of one names a class, as the register declares them. */
+export const TABLE_BOUND_METHODS: readonly string[] =
+  register.vocabulary.table_bound_methods;
 /** The facts a timeline can show a change of, with a repeated row as `[]`. */
 export const TIMELINE_FACT_PATHS: readonly string[] =
   register.vocabulary.timeline_fact_paths;

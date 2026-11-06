@@ -27,19 +27,19 @@ const meta: Meta<typeof Stepper> = {
 export default meta;
 type Story = StoryObj<typeof Stepper>;
 
-const decades = REGISTER_YEARS;
+const listed = REGISTER_YEARS;
 /** A year the register lists, left out of the years offered. */
-const missing = decades[Math.floor(decades.length / 2)] ?? null;
-const first = decades[0] ?? null;
+const missing = listed[Math.floor(listed.length / 2)] ?? null;
+const first = listed[0] ?? null;
 
-export const SpanningDecades: Story = { name: "Spanning decades" };
+export const EveryListedYear: Story = { name: "Every listed year" };
 export const OldestYear: Story = {
   name: "Oldest year",
   args: { year: first },
 };
 export const NewestYear: Story = {
   name: "Newest year",
-  args: { year: decades.at(-1) ?? null },
+  args: { year: listed.at(-1) ?? null },
 };
 export const NoneChosen: Story = {
   name: "None chosen",
@@ -47,7 +47,7 @@ export const NoneChosen: Story = {
 };
 export const ChosenYearNotOffered: Story = {
   name: "Chosen year not offered",
-  args: { years: decades.filter((year) => year !== missing), year: missing },
+  args: { years: listed.filter((year) => year !== missing), year: missing },
 };
 export const OneYear: Story = {
   name: "One year",

@@ -11,9 +11,10 @@ import { LEDGER_DEFINITIONS, type LedgerResult } from "../src/shell/ledger";
 import { ledgerClassOf } from "../src/dev/ledgerClassesFixture";
 import {
   REGISTER_YEARS,
-  ADMITTED_METHODS,
   SCENARIO_ELEMENTS,
   TABLE_GROUPS,
+  formOptionsFor,
+  scenarioPaymentId,
 } from "../src/dev/assetsRegister";
 import { servedEditionOf, servedSupport } from "../src/dev/servedYearAuthority";
 
@@ -318,13 +319,13 @@ test("the options are the registry's methods and table classes for the kind and 
   ).options!;
   // Only the methods whose facts a form can state in full are offered, each
   // with the facts it takes.
-  expect(options.methods).toEqual(
-    ADMITTED_METHODS.material!.filter((method) => method !== "approved_plan"),
-  );
+  const recorded = formOptionsFor("material", lastAuthored)!;
+  expect(options.methods).toEqual(recorded.methods);
+  expect(options.methods.length).toBeGreaterThan(0);
   expect(
     (options as FormOptions).method_facts!.map((found) => found.method),
   ).toEqual(options.methods);
-  expect(options.table_groups).toEqual(TABLE_GROUPS.material);
+  expect(options.table_groups).toEqual(recorded.table_groups);
   expect(options.edition).toEqual(servedEditionOf(lastAuthored));
   expect(options.edition.projected).toBe(false);
   const later = (
@@ -356,14 +357,24 @@ test("a purchase states what the ledger knows and leaves the rest null, and one 
   const offered = (
     await settled<LedgerResult<typeof CANDIDATES>>(port.submit(CANDIDATES, {}))
   ).candidates!;
-  const known = offered.find((found) => found.transaction_id === "t-portatil")!;
-  const silent = offered.find((found) => found.transaction_id === "t-silla")!;
+  // The form takes each figure from what the ledger knows of the payment and
+  // leaves what it does not know null; the figures themselves are the
+  // register's, read from its own account of the payment.
+  const known = offered.find(
+    (found) => found.transaction_id === scenarioPaymentId("t-portatil"),
+  )!;
+  const silent = offered.find(
+    (found) => found.transaction_id === scenarioPaymentId("t-efectivo"),
+  )!;
+  expect(known.non_deductible_iva_state).toBe("known");
   expect(purchaseValues(known)).toEqual({
-    basis_amount: "900.00",
-    non_deductible_iva: "0.00",
+    basis_amount: known.taxable_base!.decimal,
+    non_deductible_iva: known.non_deductible_iva!.decimal,
   });
+  expect(silent.non_deductible_iva_state).toBe("unknown");
+  expect(silent.taxable_base).toBeNull();
   expect(purchaseValues(silent)).toEqual({
-    basis_amount: "200.00",
+    basis_amount: null,
     non_deductible_iva: null,
   });
   expect(purchaseValues(undefined)).toEqual({
@@ -371,8 +382,9 @@ test("a purchase states what the ledger knows and leaves the rest null, and one 
     non_deductible_iva: null,
   });
   const noConversion = offered.find(
-    (found) => found.transaction_id === "t-monitor",
+    (found) => found.transaction_id === scenarioPaymentId("t-monitor"),
   )!;
+  expect(noConversion.currency).not.toBe("EUR");
   expect(noConversion.paid_in_euro).toBeNull();
   await port.submit(
     CREATE,
@@ -381,9 +393,11 @@ test("a purchase states what the ledger knows and leaves the rest null, and one 
   const after = (
     await settled<LedgerResult<typeof CANDIDATES>>(port.submit(CANDIDATES, {}))
   ).candidates!;
-  expect(after.some((found) => found.transaction_id === "t-portatil")).toBe(
-    false,
-  );
+  expect(
+    after.some(
+      (found) => found.transaction_id === scenarioPaymentId("t-portatil"),
+    ),
+  ).toBe(false);
 });
 
 // ---- Writes -----------------------------------------------------------------

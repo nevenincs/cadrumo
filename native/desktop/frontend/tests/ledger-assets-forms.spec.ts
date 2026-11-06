@@ -89,6 +89,7 @@ import {
   servidorRow,
   words,
   NEW_ELEMENT,
+  secondActivity,
 } from "./support/assetContract";
 
 // The Assets tab's forms: typed text, the requests they make, how a write
@@ -761,7 +762,7 @@ test("an element bought outside the ledger names its document, its date and its 
     acquisition: "",
     acquisition_shape: "acquired_outside_ledger",
     declared_acquisition_date: "2024-11-05",
-    declared_activity: "A05",
+    declared_activity: secondActivity,
     acquisition_reference: "Factura 2024-118",
   };
   const request = (await newRequest(port, outside, "made-6"))!;
@@ -776,7 +777,7 @@ test("an element bought outside the ledger names its document, its date and its 
     },
     further_acquisitions: [],
     declared_acquisition_date: "2024-11-05",
-    declared_activity: "A05",
+    declared_activity: secondActivity,
   });
   // The document it holds is stated; without it nothing is made.
   expect(
