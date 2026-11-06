@@ -1027,36 +1027,15 @@ export function makeRegister(
     };
   };
 
-  /** The charge the register answered for a span, or for another span of an
-   * element whose election it answered: the provisions a charge cites are the
-   * election's, not the span's, the way `citationsFor` reads them. Null where
-   * the register answered no charge of any like election, which a forecast is
-   * refused for rather than named from anything stated here. */
+  /** The charge the register answered for this element's own span, whether the
+   * element came from the scenario's register or from a recorded creation.
+   * Null where the register answered none, which a forecast is refused for:
+   * another element's charge covers another element's span. */
   const recordedChargeFor = (
     element: Element,
     from: string,
     until: string,
-  ): JsonObject | null => {
-    const own = SCENARIO_ELEMENTS.find((seed) => seed.id === element.id);
-    const exact = own?.charges[`${from}/${until}`];
-    if (exact !== undefined) return exact;
-    const like =
-      own ??
-      SCENARIO_ELEMENTS.find(
-        (seed) =>
-          seed.list.asset_kind === element.list.asset_kind &&
-          seed.list.method === element.list.method &&
-          seed.limits.class_key === element.limits.class_key &&
-          Object.keys(seed.charges).length > 0,
-      ) ??
-      SCENARIO_ELEMENTS.find(
-        (seed) =>
-          seed.list.asset_kind === element.list.asset_kind &&
-          seed.list.method === element.list.method &&
-          Object.keys(seed.charges).length > 0,
-      );
-    return Object.values(like?.charges ?? {})[0] ?? null;
-  };
+  ): JsonObject | null => element.charges[`${from}/${until}`] ?? null;
 
   return {
     recordedChargeFor,
