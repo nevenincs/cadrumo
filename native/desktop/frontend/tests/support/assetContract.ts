@@ -15,7 +15,7 @@ import {
   DECLARED_ACTIVITIES,
   SCENARIO_TODAY,
   SCENARIO_ELEMENTS,
-  scenarioPaymentId,
+  creationDraft,
 } from "../../src/dev/assetsRegister";
 import {
   servedEditionOf,
@@ -190,23 +190,21 @@ export const [firstActivity, secondActivity] = [
   DECLARED_ACTIVITIES.at(-1)!,
 ];
 
-export const NEW_ELEMENT = {
-  asset_kind: "material",
-  name: "Sierra de cinta",
-  serial_number: "SC-0412",
-  acquisition: scenarioPaymentId("t-portatil"),
-  acquisition_shape: "primary_purchase",
-  in_service_date: "2026-06-15",
-  acquired_condition: "new",
-  basis_stage: "business_allocated",
-  basis_amount: "900.00",
-  non_deductible_iva: "0.00",
-  prior_allocation_provenance: "allocation booked in the ledger",
-  opening_status: "known",
-  opening_amount: "0.00",
-  method: "linear",
-  "amortization.authority_class_key": "maquinaria",
-};
+/** The draft a person types to make each element the corpus commits, read from
+ * the register's recording: the window's own creation requests are committed
+ * scenario data, so a spec states no draft of its own and the register holds a
+ * recorded answer for every creation a spec sends. */
+export const NEW_ELEMENT = creationDraft("linear_new");
+export const OPENING_MISSING = creationDraft("opening_missing");
+export const USED_ELEMENT = creationDraft("used_expert_valuation");
+export const OUTSIDE_LEDGER = creationDraft("outside_ledger");
+export const OUTSIDE_LEDGER_KEYED = creationDraft("outside_ledger_keyed");
+export const OUTSIDE_WITH_LATER_PAYMENT = creationDraft(
+  "outside_ledger_with_later_payment",
+);
+export const WHOLE_PROPERTY = creationDraft("whole_property");
+export const VEHICLE_ELEMENT = creationDraft("vehicle");
+export const SHIFT_HOURS = creationDraft("shift_hours");
 
 export const sale = {
   disposal_date: "2025-06-30",

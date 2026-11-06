@@ -538,6 +538,59 @@
         "supplier_name": null,
         "supplier_tax_id": null
       }
+    },
+    {
+      "id": "story_add_element",
+      "draft": {
+        "acquisition": "ledger-payment:t-portatil",
+        "amortization.authority_class_key": "almacen-deposito",
+        "basis_stage": "taxpayer_owned",
+        "business_use_share": "0.75",
+        "opening_status": "missing",
+        "opening_amount": ""
+      },
+      "revision": {
+        "revision_number": 1,
+        "acquisition": {
+          "observed_transaction_id": "ledger-payment:t-portatil",
+          "invoice_evidence_id": "1f4ab5c6d70e8291a3b4c5d6e7f80912a3b4c5d6e7f8091a2b3c4d5e6f708192",
+          "evidence_fingerprint": "1f4ab5c6d70e8291a3b4c5d6e7f80912a3b4c5d6e7f8091a2b3c4d5e6f708192"
+        },
+        "amortization": {
+          "regime": "normal",
+          "method": "linear",
+          "authority_class_key": "almacen-deposito"
+        },
+        "asset_kind": "material",
+        "in_service_date": "2026-06-15",
+        "acquisition_shape": "primary_purchase",
+        "acquired_condition": "new",
+        "basis": {
+          "stage": "taxpayer_owned",
+          "basis_amount": {
+            "decimal": "900"
+          },
+          "non_deductible_iva": {
+            "decimal": "0"
+          },
+          "business_use_share": {
+            "decimal": "0.75"
+          },
+          "is_property": false
+        },
+        "opening_history": {
+          "status": "missing"
+        }
+      },
+      "descriptor": {
+        "name": "Sierra de cinta",
+        "serial_number": "SC-0412",
+        "description": null,
+        "document_kind": null,
+        "document_number": null,
+        "supplier_name": null,
+        "supplier_tax_id": null
+      }
     }
   ]
 }

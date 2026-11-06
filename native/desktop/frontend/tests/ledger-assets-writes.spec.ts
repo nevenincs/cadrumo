@@ -44,6 +44,8 @@ import {
   optionsOf,
   newRequest,
   NEW_ELEMENT,
+  OPENING_MISSING,
+  USED_ELEMENT,
   sale,
   servidorRow,
 } from "./support/assetContract";
@@ -178,11 +180,7 @@ test("adding an element sends the revision and descriptor the backend decodes, w
 
 test("an element whose opening history is missing starts without figures, and says why", async () => {
   const port = portOf();
-  const request = await newRequest(
-    port,
-    { ...NEW_ELEMENT, opening_status: "missing", opening_amount: "" },
-    "made-3",
-  );
+  const request = await newRequest(port, OPENING_MISSING, "made-3");
   expect((await port.submit(CREATE, request! as never)).kind).toBe("settled");
   const made = (await listOf(port)).find((row) => row.asset_id === "made-3")!;
   expect(made).toMatchObject({ accumulated: null, pending: null });
@@ -195,18 +193,7 @@ test("an element whose opening history is missing starts without figures, and sa
 
 test("an originating price is stated only for a used element on the linear method", async () => {
   const port = portOf();
-  const used = {
-    acquired_condition: "used",
-    "amortization.used_original_price.determination": "expert_valuation",
-    "amortization.used_original_price.original_price": "1500.00",
-    "amortization.used_original_price.evidence_reference":
-      "valuation report of the appraiser",
-  };
-  const request = (await newRequest(
-    port,
-    { ...NEW_ELEMENT, ...used },
-    "made-4",
-  ))!;
+  const request = (await newRequest(port, USED_ELEMENT, "made-4"))!;
   expect(
     (request.revision.amortization as { used_original_price: unknown })
       .used_original_price,

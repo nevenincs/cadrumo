@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { expect, fireEvent, userEvent, waitFor } from "storybook/test";
 import { STORY_READER, useLedgerPort } from "@/dev/LedgerStage";
-import { SCENARIO_ELEMENTS } from "@/dev/assetsRegister";
+import { SCENARIO_ELEMENTS, creationDraft } from "@/dev/assetsRegister";
 import { typeAsAPerson } from "@/dev/personTyping";
 import { ledgerClassOf } from "@/dev/ledgerClassesFixture";
 import { servedSupport } from "@/dev/servedYearAuthority";
@@ -190,20 +190,32 @@ const steps =
 
 const submit = (root: Root) => pressed(root, ".ledger-asset-submit");
 
-/** The add form filled with the first purchase, which states its figures. */
+/** The add form filled with the draft the register answered for: the corpus
+ * under `dev/fixtures/assets-register-scenario/creations.json` commits every
+ * creation the window sends, so the story states no value of its own and the
+ * register holds the plan the form it fills will be answered with. */
+const ADD_ELEMENT = creationDraft("story_add_element");
+/** The fields of the draft that are chosen from what the options serve, in the
+ * order the form draws them; everything else in it is typed. */
+const CHOSEN_FIELDS = [
+  "asset_kind",
+  "method",
+  "amortization.authority_class_key",
+  "acquisition",
+  "acquired_condition",
+  "basis_stage",
+  "opening_status",
+];
 const fillElement = async (root: Root) => {
-  await typed(root, "name", "Sierra de cinta");
-  await typed(root, "serial_number", "SC-0412");
-  await chosenValue(root, "asset_kind", "material");
-  await typed(root, "in_service_date", `${scenarioYear}-06-15`);
-  await chosen(root, "method", 0);
-  await chosen(root, "amortization.authority_class_key", 0);
-  await chosen(root, "acquisition", 0);
-  await chosenValue(root, "acquired_condition", "new");
-  await chosenValue(root, "basis_stage", "taxpayer_owned");
-  await chosenValue(root, "opening_status", "missing");
-  await typed(root, "basis_amount", "900.00");
-  await typed(root, "business_use_share", "100");
+  for (const key of CHOSEN_FIELDS) {
+    const stated = ADD_ELEMENT[key];
+    if (stated !== undefined && stated !== "")
+      await chosenValue(root, key, stated);
+  }
+  for (const [key, stated] of Object.entries(ADD_ELEMENT)) {
+    if (CHOSEN_FIELDS.includes(key) || stated === "") continue;
+    await typed(root, key, stated);
+  }
 };
 const sendElement = steps(fillElement, submit);
 

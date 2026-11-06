@@ -89,6 +89,10 @@ import {
   servidorRow,
   words,
   NEW_ELEMENT,
+  OUTSIDE_LEDGER,
+  SHIFT_HOURS,
+  VEHICLE_ELEMENT,
+  WHOLE_PROPERTY,
   secondActivity,
 } from "./support/assetContract";
 
@@ -757,14 +761,7 @@ test("a purchase states the ledger's own account of its non-deductible IVA", asy
 
 test("an element bought outside the ledger names its document, its date and its activity, and no purchase", async () => {
   const port = portOf();
-  const outside = {
-    ...NEW_ELEMENT,
-    acquisition: "",
-    acquisition_shape: "acquired_outside_ledger",
-    declared_acquisition_date: "2024-11-05",
-    declared_activity: secondActivity,
-    acquisition_reference: "Factura 2024-118",
-  };
+  const outside = OUTSIDE_LEDGER;
   const request = (await newRequest(port, outside, "made-6"))!;
   expect(request).not.toBeNull();
   expect(request.revision).toMatchObject({
@@ -824,6 +821,18 @@ test("an element bought outside the ledger names its document, its date and its 
 
 test("a whole property states its parts, a vehicle its declaration, and a linear election its hours", async () => {
   // Each element names the one purchase the ledger offers, so each has a ledger.
+  /** Send one whole draft the corpus commits, whose answer the register holds. */
+  const sendDraft = async (draft: Record<string, string>, id: string) => {
+    const port = portOf();
+    const request = await newRequest(port, draft, id);
+    expect(request, id).not.toBeNull();
+    return {
+      request: request!,
+      outcome: port.submit(CREATE, request as never),
+    };
+  };
+  /** Send a draft changed away from a committed one, which the register was
+   * never asked and so holds no answer for. */
   const send = async (changes: Record<string, string>, id: string) => {
     const port = portOf();
     const request = await newRequest(port, { ...NEW_ELEMENT, ...changes }, id);
@@ -833,17 +842,8 @@ test("a whole property states its parts, a vehicle its declaration, and a linear
       outcome: port.submit(CREATE, request as never),
     };
   };
-  const property = {
-    basis_stage: "whole_property",
-    basis_amount: "1000.00",
-    construction_cost: "800.00",
-    land_cost: "200.00",
-    ownership_mode: "sole",
-    ownership_share: "1",
-    office_area: "30",
-    total_area: "100",
-  };
-  const made = await send(property, "made-8");
+  const property = WHOLE_PROPERTY;
+  const made = await sendDraft(property, "made-8");
   expect(made.request.revision.basis).toMatchObject({
     stage: "whole_property",
     is_property: true,
@@ -870,16 +870,8 @@ test("a whole property states its parts, a vehicle its declaration, and a linear
     precondition_verdict: { missing_field_keys: ["basis.office_area"] },
   });
 
-  const vehicle = {
-    "amortization.authority_class_key": "transporte-externo",
-    vehicle_declared: "yes",
-    vehicle_category: "passenger_car",
-    vehicle_private_use: "none",
-    vehicle_in_books: "yes",
-    vehicle_evidence: "Libro registro de bienes de inversión",
-    vehicle_propulsion: "bev",
-  };
-  const driven = await send(vehicle, "made-11");
+  const vehicle = VEHICLE_ELEMENT;
+  const driven = await sendDraft(vehicle, "made-11");
   expect(driven.request.revision.vehicle_affectation).toEqual({
     category: "passenger_car",
     private_use: "none",
@@ -911,10 +903,7 @@ test("a whole property states its parts, a vehicle its declaration, and a linear
     ).map((found) => found.key),
   ).not.toContain("vehicle_declared");
 
-  const hours = await send(
-    { "amortization.shift_hours_per_day": "16" },
-    "made-13",
-  );
+  const hours = await sendDraft(SHIFT_HOURS, "made-13");
   expect(hours.request.revision.amortization).toMatchObject({
     method: "linear",
     shift_hours_per_day: { decimal: "16" },

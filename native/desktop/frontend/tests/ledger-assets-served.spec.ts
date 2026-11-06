@@ -41,7 +41,6 @@ import {
 import { type JsonObject, type LedgerResult } from "../src/shell/ledger";
 import type { Translate } from "../src/shell/strings";
 import {
-  DECLARED_ACTIVITIES,
   SCENARIO_ELEMENTS,
   scenarioPaymentId,
 } from "../src/dev/assetsRegister";
@@ -73,6 +72,8 @@ import {
   optionsOf,
   newRequest,
   NEW_ELEMENT,
+  OUTSIDE_LEDGER_KEYED,
+  OUTSIDE_WITH_LATER_PAYMENT,
   firstActivity,
   sale,
   servidorRow,
@@ -292,18 +293,7 @@ test("a changed fact on the timeline is worded by the key the backend served for
   );
   // The reference of a purchase outside the ledger is shown; the system's own identities are not.
   const keyed = portOf();
-  const made = await newRequest(
-    keyed,
-    {
-      ...NEW_ELEMENT,
-      acquisition: "",
-      acquisition_shape: "acquired_outside_ledger",
-      declared_acquisition_date: "2026-01-10",
-      declared_activity: DECLARED_ACTIVITIES[0]!,
-      acquisition_reference: "Factura 2026-118",
-    },
-    "made-keys",
-  );
+  const made = await newRequest(keyed, OUTSIDE_LEDGER_KEYED, "made-keys");
   await keyed.submit(CREATE, made! as never);
   const fields = (await eventsOf(keyed, "made-keys")).flatMap((event) =>
     event.changes.map((found) => found.field),
@@ -646,11 +636,7 @@ test("an element bought outside the ledger can own a later ledger payment, which
   };
   // Without a payment the element states none.
   expect(build(outside, "made-5").revision.further_acquisitions).toEqual([]);
-  const withPayment = {
-    ...outside,
-    [FURTHER_PURCHASE]: scenarioPaymentId("t-silla"),
-    [FURTHER_SHAPE]: "split_payment",
-  };
+  const withPayment = OUTSIDE_WITH_LATER_PAYMENT;
   const request = build(withPayment, "made-6");
   expect(request.revision.further_acquisitions).toEqual([
     {
