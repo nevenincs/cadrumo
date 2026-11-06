@@ -64,6 +64,10 @@ import type {
 
 /** A request its registered contract would not decode. */
 export class SetupRequestInvalid extends Error {}
+/** Settled refused because the recordings behind the scenario hold no answer
+ * for the request: the fixture states no figure of its own, so it has nothing
+ * else it can honestly say. */
+export class SetupRequestUnrecorded extends Error {}
 /** Settled refused after it had kept part of what it was asked for: the
  * operation's effect is partial, neither none nor unknown. */
 export class SetupKeptInPart extends Error {
@@ -2322,6 +2326,9 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
     now,
     hex64,
     invalid,
+    unrecorded: (): never => {
+      throw new SetupRequestUnrecorded();
+    },
     stop: (reason, detail) => {
       throw new SetupStopped(reason, detail);
     },

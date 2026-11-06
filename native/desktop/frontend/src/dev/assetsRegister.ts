@@ -98,6 +98,11 @@ type Recording = {
       transaction_id: string;
       description: string;
     }[];
+    creations: (RecordedElement & {
+      id: string;
+      draft: Record<string, string>;
+      list: AssetListRow;
+    })[];
     vocabulary: {
       table_bound_methods: string[];
       timeline_fact_paths: string[];
@@ -170,6 +175,34 @@ export const SCENARIO_ELEMENTS: readonly ScenarioElement[] = register.list.map(
     };
   },
 );
+
+/** One element the window's new-element form makes: the draft a person types,
+ * and what the register answered when that draft's request was replayed
+ * through it. The window works no new element's plan out. */
+export type ScenarioCreation = ScenarioElement & {
+  draft: Record<string, string>;
+};
+
+export const SCENARIO_CREATIONS: readonly ScenarioCreation[] =
+  register.creations.map((recorded) => ({
+    ...recorded,
+    annual: annualOf(recorded.rows),
+    forecasts: Object.fromEntries(
+      Object.entries(recorded.forecasts).map(([span, charge]) => [
+        span,
+        charge.amount,
+      ]),
+    ),
+    charges: recorded.forecasts,
+  }));
+
+/** The draft a person types to make the committed creation called `name`. */
+export const creationDraft = (name: string): Record<string, string> => {
+  const found = SCENARIO_CREATIONS.find((made) => made.id === name);
+  if (found === undefined)
+    throw new Error(`the recording holds no creation ${name}`);
+  return { ...found.draft };
+};
 
 /** What the registry admits for an asset kind in a tax year, or undefined for a
  * year the register does not list. */

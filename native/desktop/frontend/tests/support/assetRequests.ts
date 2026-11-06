@@ -84,20 +84,15 @@ type Scenario =
 type Input = {
   served: Served;
   limits: LedgerEntryLimits;
-  /** The purchase the person picks and the later payment they pick for an
-   * element bought outside the ledger, as the ledger accounts for them: the
-   * driver supplies both, so a request is built against a real payment. */
-  candidate: AcquisitionCandidate;
-  further: AcquisitionCandidate;
+  /** The payments the ledger offers, as it accounts for them. A draft picks one
+   * by its identifier, the way the window picks from what the register serves;
+   * a draft that names none takes the first. */
+  candidates: AcquisitionCandidate[];
   scenarios: Scenario[];
 };
 
 /** What one run was given beyond its scenarios. */
-type Given = {
-  served: Served;
-  candidate: AcquisitionCandidate;
-  further: AcquisitionCandidate;
-};
+type Given = { served: Served; candidates: AcquisitionCandidate[] };
 
 const hex = (seed: string) => seed.repeat(64).slice(0, 64);
 

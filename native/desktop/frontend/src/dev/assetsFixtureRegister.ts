@@ -24,6 +24,7 @@ import {
   FURTHER_ACQUISITION_SHAPES,
   NOT_APPLICABLE_ABSENCES,
   REMEDY_FIELD_KEYS,
+  SCENARIO_CREATIONS,
   SCENARIO_ELEMENTS,
   SCENARIO_PAYMENTS,
   SCENARIO_REGIME,
@@ -31,6 +32,7 @@ import {
   TABLE_BOUND_METHODS,
   TABLE_GROUPS,
   TIMELINE_FACT_PATHS,
+  type ScenarioCreation,
   formOptionsFor,
 } from "./assetsRegister";
 import {
@@ -72,7 +74,7 @@ export function makeRegister(
   session: Session,
   wordedDetail: (detail: JsonObject) => JsonObject,
 ) {
-  const { now, hex64, invalid } = tools;
+  const { now, hex64, invalid, unrecorded } = tools;
   const stop = (reason: string, detail: JsonObject): never =>
     tools.stop(reason, wordedDetail(detail));
 
@@ -972,6 +974,52 @@ export function makeRegister(
       : { legal_citations: [], legal_citations_complete: false };
   };
 
+  /** A revision as the recording holds it: the facts it states, with the
+   * identity the window mints left out and the fields in one order. The
+   * register answers the same plan whatever the element is called, and a
+   * description moves no figure of it. */
+  const asRecorded = (revision: JsonObject) =>
+    JSON.stringify(
+      Object.entries(revision)
+        .filter(([name]) => name !== "asset_id")
+        .sort(([a], [b]) => a.localeCompare(b)),
+    );
+
+  const recordedCreations = new Map(
+    SCENARIO_CREATIONS.map((made) => [
+      asRecorded(made.revisions[0]!.revision),
+      made,
+    ]),
+  );
+
+  /** What the register answered for this very create request, or null where it
+   * was never asked it. */
+  const recordedCreation = (revision: JsonObject): ScenarioCreation | null =>
+    recordedCreations.get(asRecorded(revision)) ?? null;
+
+  /** The recorded answer held as an element of the register, under the identity
+   * the window minted for it. */
+  const installed = (
+    answer: ScenarioCreation,
+    id: string,
+    descriptor: DescriptorFacts,
+  ): Element => {
+    const copy = structuredClone(answer) as unknown as ScenarioCreation;
+    for (const row of copy.rows) {
+      row.claims = row.claims.map(withThrough);
+      row.claimable_intervals = row.claimable_intervals.map(withThrough);
+    }
+    return {
+      ...copy,
+      id,
+      list: { ...copy.list, asset_id: id, name: descriptor.name },
+      events: [],
+      descriptor,
+      outOfService: null,
+      baja: null,
+    };
+  };
+
   /** The charge the register answered for a span, or for another span of an
    * element whose election it answered: the provisions a charge cites are the
    * election's, not the span's, the way `citationsFor` reads them. Null where
@@ -1005,9 +1053,12 @@ export function makeRegister(
 
   return {
     recordedChargeFor,
+    recordedCreation,
+    installed,
     now,
     hex64,
     invalid,
+    unrecorded,
     session,
     stop,
     elements,

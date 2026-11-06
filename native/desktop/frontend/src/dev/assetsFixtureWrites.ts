@@ -3,32 +3,22 @@
 // handoff and a baja's figures.
 
 import type {
-  AssetListRow,
   DescriptorFacts,
   DisposalCalculation,
   DisposalFacts,
   PlanClaim,
-  PlanRow,
 } from "@/shell/ledgerSetup";
 import type { JsonObject } from "../shell/ledger";
-import {
-  NO_TABLE_MINIMUM_KEY,
-  SCENARIO_PAYMENTS,
-  SCENARIO_TODAY,
-  TABLE_GROUPS,
-} from "./assetsRegister";
+import { SCENARIO_PAYMENTS, SCENARIO_TODAY } from "./assetsRegister";
 import {
   recordsEditionFor,
-  servedAdmits,
   servedBeyondLastAdmitted,
-  servedEditionYears,
   servedHandoffOf,
   servedSupport,
 } from "./servedYearAuthority";
 import {
   CLAIM_CONFLICT,
   DATE,
-  ERRORS,
   type Element,
   FAMILY,
   FINDING,
@@ -39,7 +29,6 @@ import {
   asAmount,
   asCount,
   asDate,
-  chargeFor,
   dayAfter,
   dayBefore,
   daysBetween,
@@ -52,7 +41,6 @@ import {
   leap,
   textOf,
   toCents,
-  todayYear,
   withThrough,
 } from "./assetsFixtureBase";
 import type { Register } from "./assetsFixtureRegister";
@@ -60,7 +48,6 @@ import type { Register } from "./assetsFixtureRegister";
 export function makeWrites(register: Register) {
   const {
     ok,
-    citationsFor,
     hex64,
     invalid,
     elements,
@@ -70,14 +57,12 @@ export function makeWrites(register: Register) {
     required,
     exact,
     find,
-    editionOf,
     history,
     claimUse,
     retire,
     record,
     uncovered,
     serviceWindow,
-    settle,
     restate,
     recount,
     notFound,
@@ -87,153 +72,20 @@ export function makeWrites(register: Register) {
     latest,
     judgeRevision,
     recordedChargeFor,
+    recordedCreation,
+    installed,
+    unrecorded,
   } = register;
-  /** The plan a new element starts with. Only a linear election whose opening
-   * history is known is worked out; any other starts with the reason it is
-   * not. */
-  const startingRows = (revision: JsonObject, annual: string | null) => {
-    const kind = textOf(revision.asset_kind)!;
-    const inService = textOf(revision.in_service_date)!;
-    const election = obj(revision.amortization)!;
-    const method = textOf(election.method)!;
-    const basis = decimalOf(obj(revision.basis)!.basis_amount)!;
-    const opening = obj(revision.opening_history)!;
-    const group = TABLE_GROUPS[kind]!.find(
-      (found) => found.class_key === textOf(election.authority_class_key),
-    );
-    const first = Number(inService.slice(0, 4));
-    const through =
-      typeof opening.covered_through_tax_year === "number"
-        ? opening.covered_through_tax_year
-        : null;
-    let left =
-      opening.status === "known"
-        ? toCents(basis) - toCents(decimalOf(opening.accumulated_amount)!)
-        : null;
-    let minimum = 0;
-    // The reason the first year without a minimum has none, kept for every
-    // year after it.
-    let minimumReason: string | null = null;
-    const rows: PlanRow[] = [];
-    const base = (year: number, days: number | null): PlanRow => {
-      const calendar = leap(year) ? 366 : 365;
-      const edition = editionOf(year);
-      const start = later(inService, `${year}-01-01`);
-      const end = `${year + 1}-01-01`;
-      const span = daysBetween(start, end);
-      if (edition === null || !group) {
-        minimumReason ??=
-          edition === null
-            ? `${FINDING}minimum_unresolved`
-            : NO_TABLE_MINIMUM_KEY;
-      } else if (minimumReason === null)
-        minimum += Math.round(
-          (toCents(basis) * Number(group.minimum_coefficient.decimal) * span) /
-            calendar,
-        );
-      return {
-        tax_year: year,
-        method,
-        coefficient: null,
-        planned: null,
-        absence: null,
-        absence_reason_key: null,
-        absence_reason_facts: [],
-        absence_remedy_field_key: null,
-        applies: true,
-        claimed: dec("0.00"),
-        claim_state:
-          year > Number(SCENARIO_TODAY.slice(0, 4)) ? "not_due" : "missing",
-        claimable_intervals: [],
-        claimable_refusal_key: null,
-        claimable_refusal_facts: [],
-        claimable_refusal_remedy_field_key: null,
-        edition,
-        service_days: days,
-        calendar_days: days === null ? null : calendar,
-        claims: [],
-        // A minimum with an earlier year unresolved is unknown, with the
-        // reason, and never a partial sum.
-        minimum_through:
-          minimumReason === null
-            ? dec(fromCents(Math.min(toCents(basis), minimum)))
-            : null,
-        minimum_reason_key: minimumReason,
-        minimum_has_no_table: minimumReason === NO_TABLE_MINIMUM_KEY,
-        minimum_complete: minimumReason === null,
-      };
-    };
-    if (left === null) {
-      for (
-        let year = first;
-        year <= Math.max(first, todayYear) && rows.length < 6;
-        year++
-      ) {
-        const row = base(year, null);
-        row.absence = "incomplete";
-        row.absence_reason_key = `${ERRORS}opening_history_missing`;
-        row.claimable_refusal_key = `${ERRORS}opening_history_missing`;
-        row.claim_state = "missing";
-        rows.push(row);
-      }
-      return rows;
-    }
-    if (method !== "linear" || annual === null) {
-      const row = base(first, null);
-      row.absence = [
-        "low_value_free",
-        "research_development_free",
-        "small_enterprise_employment_free",
-      ].includes(method)
-        ? "free_election"
-        : "unsupported";
-      rows.push(row);
-      return rows;
-    }
-    for (
-      let year = first;
-      rows.length < 15 && year <= servedEditionYears.last;
-      year++
-    ) {
-      const start = later(inService, `${year}-01-01`);
-      const end = `${year + 1}-01-01`;
-      const days = daysBetween(start, end);
-      const row = base(year, days);
-      rows.push(row);
-      if (row.edition === null) {
-        row.absence = "edition_unavailable";
-        row.claim_state = "edition_unavailable";
-        row.service_days = null;
-        row.calendar_days = null;
-        continue;
-      }
-      if (through !== null && year <= through) {
-        row.absence = "covered_by_opening";
-        row.service_days = null;
-        row.calendar_days = null;
-        row.claim_state = "not_due";
-        continue;
-      }
-      if (left <= 0) {
-        row.absence = "basis_exhausted";
-        row.claim_state = "not_due";
-        break;
-      }
-      const charge = Math.min(
-        left,
-        toCents(chargeFor(annual, start, start, end, year)),
-      );
-      left -= charge;
-      row.planned = dec(fromCents(charge));
-      row.coefficient = dec(
-        decimalOf(election.linear_coefficient) ??
-          group!.maximum_coefficient.decimal,
-      );
-      row.claimable_intervals = [
-        withThrough({ covered_from: start, covered_until: end }),
-      ];
-    }
-    return rows;
+  /** What the register answered a span of this element accrues, or null where
+   * it answered none: the handoff names such an element rather than counting a
+   * figure stated here. */
+  const accrualOf = (
+    element: Element,
+    from: string,
+    until: string,
+  ): { decimal: string } | null => {
+    const amount = element.forecasts[`${from}/${until}`];
+    return amount === undefined ? null : dec(amount);
   };
 
   const create: Handler = (request) => {
@@ -276,123 +128,19 @@ export function makeWrites(register: Register) {
       if (typeof id === "string") taken.add(id);
     }
 
-    const basis = obj(revision.basis)!;
-    const election = obj(revision.amortization)!;
-    const opening = obj(revision.opening_history)!;
-    const kind = textOf(revision.asset_kind)!;
-    const method = textOf(election.method)!;
-    const inService = textOf(revision.in_service_date)!;
-    const group = TABLE_GROUPS[kind]!.find(
-      (found) => found.class_key === textOf(election.authority_class_key),
-    );
-    const amount = decimalOf(basis.basis_amount)!;
-    const coefficient =
-      decimalOf(election.linear_coefficient) ??
-      group?.maximum_coefficient.decimal ??
-      null;
-    const annual =
-      method === "linear" && coefficient !== null
-        ? fromCents(Math.round(toCents(amount) * Number(coefficient)))
-        : null;
-    const rows = startingRows(revision, annual);
-    rows.forEach(settle);
-    const accumulated =
-      opening.status === "known" ? decimalOf(opening.accumulated_amount) : null;
-    const list: AssetListRow = {
-      asset_id: id,
-      name,
-      serial_number: descriptor.serial_number ?? null,
-      asset_kind: kind,
-      state: "in_service",
-      in_service_date: inService,
-      method,
-      revision_number: 1,
-      basis: dec(fromCents(toCents(amount))),
-      accumulated:
-        accumulated === null ? null : dec(fromCents(toCents(accumulated))),
-      pending:
-        accumulated === null
-          ? null
-          : dec(fromCents(Math.max(toCents(amount) - toCents(accumulated), 0))),
-      pending_applies: true,
-      opening_remedy_field_key:
-        accumulated === null
-          ? "ledger.actividad_asset.field.opening_history.accumulated_amount"
-          : null,
-      findings: {
-        missing: 0,
-        incomplete: 0,
-        conflict: 0,
-        unsupported: 0,
-        without_tables: 0,
-        stale: 0,
-      },
-      default_claim_year: null,
-      disposal: null,
-      years: rows
-        .map((row) => row.tax_year)
-        .filter(
-          (year) => servedAdmits(year) && !servedBeyondLastAdmitted(year),
-        ),
-      projected_years: rows
-        .map((row) => row.tax_year)
-        .filter((year) => servedAdmits(year) && servedBeyondLastAdmitted(year)),
-    };
-    const element: Element = {
-      id,
-      list,
-      annual: annual ?? "0.00",
-      forecasts: {},
-      charges: {},
-      descriptor: { ...descriptor, name },
-      outOfService: null,
-      baja: null,
-      disposal: null,
-      rows,
-      limits: {
-        class_key: group?.class_key ?? null,
-        class_label: group?.class_label ?? null,
-        maximum_coefficient: group?.maximum_coefficient ?? null,
-        minimum_coefficient: group?.minimum_coefficient ?? null,
-        maximum_period_years: group?.maximum_period_years ?? null,
-        maximum_period_ends_on:
-          group === undefined
-            ? null
-            : `${Number(inService.slice(0, 4)) + Number(group.maximum_period_years.decimal)}${inService.slice(4)}`,
-        maximum_period_last_day:
-          group === undefined
-            ? null
-            : dayBefore(
-                `${Number(inService.slice(0, 4)) + Number(group.maximum_period_years.decimal)}${inService.slice(4)}`,
-              ),
-        ...citationsFor(kind, method),
-        not_table_bound: group
-          ? null
-          : accumulated === null
-            ? "authority_unavailable"
-            : "free_election",
-        unavailable_reason_key:
-          group || accumulated !== null
-            ? null
-            : `${ERRORS}opening_history_missing`,
-        unavailable_reason_facts: [],
-      },
-      events: [],
-      revisions: [
-        {
-          revision: structuredClone(revision),
-          revision_id: hex64(`revision:${JSON.stringify(revision)}`),
-        },
-      ],
-    };
+    // What the register answered for this very request. The window works no
+    // plan, limit or figure of a new element out: a request the register was
+    // never asked is refused, never answered from anything stated here.
+    const answer = recordedCreation(revision);
+    if (answer === null) return unrecorded();
+    const element = installed(answer, id, { ...descriptor, name });
     elements.set(id, element);
-    recount(element);
     record(
       element,
       "revision",
       "created",
       "ledger.actividad-asset.create",
-      inService,
+      textOf(revision.in_service_date),
       changesBetween(null, revision),
     );
     record(
@@ -403,12 +151,12 @@ export function makeWrites(register: Register) {
       null,
       [
         { field: "name", before: null, after: name },
-        ...(list.serial_number
+        ...(element.list.serial_number
           ? [
               {
                 field: "serial_number",
                 before: null,
-                after: list.serial_number,
+                after: element.list.serial_number,
               },
             ]
           : []),
@@ -664,15 +412,8 @@ export function makeWrites(register: Register) {
             }),
             accrued:
               kind === "accrued"
-                ? dec(
-                    chargeFor(
-                      element.annual,
-                      later(element.list.in_service_date, `${year}-01-01`),
-                      gap.covered_from,
-                      gap.covered_until,
-                      year,
-                    ),
-                  )
+                ? (accrualOf(element, gap.covered_from, gap.covered_until) ??
+                  null)
                 : null,
           };
         });
@@ -722,18 +463,20 @@ export function makeWrites(register: Register) {
               unavailable.push(element.id);
             continue;
           }
-          const window = later(element.list.in_service_date, `${year}-01-01`);
+          const accrued = accrualOf(
+            element,
+            gap.covered_from,
+            gap.covered_until,
+          );
+          if (accrued === null) {
+            // The register answered no charge for this span, so the handoff
+            // names the element rather than counting a figure worked out here.
+            if (!unavailable.includes(element.id)) unavailable.push(element.id);
+            continue;
+          }
           contributions.push({
             asset_id: element.id,
-            amount: dec(
-              chargeFor(
-                element.annual,
-                window,
-                gap.covered_from,
-                gap.covered_until,
-                year,
-              ),
-            ),
+            amount: accrued,
             claim_id: null,
             schedule_fingerprint: hex64(
               `schedule:${element.id}:${gap.covered_from}:${gap.covered_until}`,
@@ -1117,27 +860,22 @@ export function makeWrites(register: Register) {
         {},
         { forecast: null },
       );
-    // The provisions a charge rests on are the register's, never named here. A
-    // span it answered is replayed whole while the revision it rests on still
-    // stands; any other span carries the provisions the register cited for this
-    // element, whose election cites the same ones whatever the span.
-    const charge = recordedChargeFor(element, from, until);
-    if (charge === null)
-      return refuse(
-        INCOMPLETE,
-        "schedule_authority_unavailable",
-        {},
-        { forecast: null },
-      );
-    if (
-      charge.covered_from === from &&
-      charge.covered_until === until &&
-      charge.asset_revision_id === latest(element).revision_id &&
-      row.absence !== "free_election"
-    )
-      return json({ ...ok, forecast: charge });
+    // A charge is the register's answer for the span, replayed whole. Nothing
+    // here works one out, so a span the register was never asked is refused.
+    if (row.absence !== "free_election") {
+      const charge = recordedChargeFor(element, from, until);
+      if (charge === null) return unrecorded();
+      return json({
+        ...ok,
+        forecast: {
+          ...charge,
+          asset_id: id,
+          asset_revision_id: latest(element).revision_id,
+        },
+      });
+    }
     let amount: string;
-    if (row.absence === "free_election") {
+    {
       const asked = decimalOf(request.requested_free_amount);
       if (asked === null)
         return refuse(
@@ -1167,10 +905,12 @@ export function makeWrites(register: Register) {
           { forecast: null },
         );
       amount = asked;
-    } else {
-      const window = later(element.list.in_service_date, `${year}-01-01`);
-      amount = chargeFor(element.annual, window, spanStart, spanEnd, year);
     }
+    // A method that leaves the amount to the person: the register states no
+    // figure, and the forecast carries back the one that was asked for, with
+    // the provisions the register cited for this election.
+    const cited = recordedChargeFor(element, from, until);
+    if (cited === null) return unrecorded();
     return json({
       ...ok,
       forecast: {
@@ -1187,7 +927,7 @@ export function makeWrites(register: Register) {
           `schedule:${id}:${from}:${until}:${amount}`,
         ),
         authority_generation: authority.logical_generation,
-        source_reference: charge.source_reference,
+        source_reference: cited.source_reference,
         method: row.method,
         annual_rate: row.coefficient,
       },
@@ -1337,7 +1077,6 @@ export function makeWrites(register: Register) {
   };
 
   return {
-    startingRows,
     create,
     correct,
     inspect,

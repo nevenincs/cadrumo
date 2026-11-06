@@ -83,6 +83,7 @@ import {
 import {
   SetupKeptInPart,
   SetupRequestInvalid,
+  SetupRequestUnrecorded,
   SetupStopped,
   setupOperations,
 } from "./ledgerSetupFixture";
@@ -354,6 +355,8 @@ const reject = (
 };
 /** A request its registered contract would not decode. */
 const invalid = () => reject("refused", { reason: "invalid" });
+/** A request the recordings behind the scenario hold no answer for. */
+const unrecorded = () => reject("refused", { reason: "unrecorded" });
 
 const text = (value: JsonValue | undefined) =>
   typeof value === "string" ? value : null;
@@ -2320,6 +2323,7 @@ export function ledgerFixture(options: Options): LedgerPort {
       )
         return invalid();
       if (error instanceof SetupRequestInvalid) return invalid();
+      if (error instanceof SetupRequestUnrecorded) return unrecorded();
       if (error instanceof SetupKeptInPart) {
         // The refusal settled with a partial effect, which the host reports
         // as a write that stopped, not as a refusal that wrote nothing.

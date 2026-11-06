@@ -76,6 +76,10 @@ _RULES: tuple[tuple[str, re.Pattern[str]], ...] = (
         ),
     ),
     (
+        "corridor arithmetic",
+        re.compile(rf"\b{_CORRIDOR}\b[\w.?!\[\]()]*\s*[*/+-](?![=>])|[*/+-]\s*[\w.?!(\[\]]*\b{_CORRIDOR}\b"),
+    ),
+    (
         "token table",
         re.compile(
             rf"\b{_TABLE_NAME}\b[^=\n]*=(?![=>])\s*(?:new Set(?:<[^>]*>)?\()?\[\s*{_QUOTED_WORD}\s*,\s*{_QUOTED_WORD}"
@@ -179,6 +183,12 @@ def test_the_window_fixtures_hold_no_registry_table_and_cite_no_provision() -> N
         ('const TABLE_METHODS = ["linear", "constant_percentage"];', "token table"),
         ('const BASIS_STAGES = ["taxpayer_owned", "business_allocated"];', "token table"),
         ('const SHAPES = new Set<string>(["primary_purchase", "acquired_outside_ledger"]);', "token table"),
+        ("const charge = basis * Number(group.minimum_coefficient.decimal);", "corridor arithmetic"),
+        ("const annual = Number(group.maximum_coefficient.decimal) * cents;", "corridor arithmetic"),
+        ("const ends = first + Number(group.maximum_period_years.decimal);", "corridor arithmetic"),
+        ("const share = cents / Number(election.linear_coefficient);", "corridor arithmetic"),
+        ("const left = basis - Number(row.annual_rate);", "corridor arithmetic"),
+        ("const when = `${first + Number(group.maximum_period_years.decimal)}`;", "corridor arithmetic"),
     ],
 )
 def test_a_planted_table_or_provision_is_found(planted: str, rule: str) -> None:
@@ -201,7 +211,6 @@ def test_a_planted_table_or_provision_is_found(planted: str, rule: str) -> None:
         "const stated = BASIS_STAGES.some((found) => found.stage === basis.stage);",
         'const kinds = ["material", "intangible"];',
         "const period = group.maximum_period_years.decimal;",
-        "const date = `${first + Number(group.maximum_period_years.decimal)}`;",
     ],
 )
 def test_served_reads_and_sentences_are_not_findings(clean: str) -> None:

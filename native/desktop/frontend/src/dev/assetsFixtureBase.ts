@@ -39,6 +39,10 @@ export type Tools = {
   hex64: (text: string) => string;
   /** Throws the refusal of a request its contract would not decode. */
   invalid: () => never;
+  /** Throws the refusal of a request the register was never asked, so the
+   * recording holds no answer for it. The fixture states no figure of its
+   * own, so there is nothing else it can honestly say. */
+  unrecorded: () => never;
   /** Throws a refusal the ledger settles with its own result as detail. */
   stop: (reason: string, detail: JsonObject) => never;
 };
@@ -90,21 +94,6 @@ export const withThrough = <T extends { covered_until: string }>(span: T) => ({
   covered_through: dayBefore(span.covered_until),
 });
 export const earlier = (a: string, b: string) => (a < b ? a : b);
-
-/** The charge of a span on the tax year's cumulative curve: each end is
- * rounded, so contiguous spans add up to the year's figure. */
-export function chargeFor(
-  annual: string,
-  window: string,
-  from: string,
-  until: string,
-  year: number,
-): string {
-  const days = leap(year) ? 366 : 365;
-  const upTo = (point: string) =>
-    Math.round((toCents(annual) * daysBetween(window, point)) / days);
-  return fromCents(upTo(until) - upTo(from));
-}
 
 // ---- The register ----------------------------------------------------------------
 
