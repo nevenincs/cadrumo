@@ -3,8 +3,8 @@ import { readdirSync, readFileSync } from "node:fs";
 import type {
   CreditResolutionListProjection,
   CreditResolutionMutationProjection,
-  ModeloWorkbenchFormProjectionV1,
-} from "../../src/shell/modeloContract";
+} from "../../src/shell/modeloContract/modeloWork";
+import type { ModeloWorkbenchFormProjectionV1 } from "../../src/shell/modeloContract/modeloWorkForm";
 import { label } from "../support/strings";
 import { MODELO_FIXTURES } from "../support/windowFixtures";
 

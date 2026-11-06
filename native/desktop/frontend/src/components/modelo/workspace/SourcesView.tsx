@@ -1,13 +1,13 @@
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon, type IconName } from "@/components/ui/icon";
+import type { ModeloFormAddressV1 } from "../../../shell/modeloContract/modeloEditWork";
 import type {
-  ModeloFormAddressV1,
   ModeloFormSourceGroup,
   ModeloFormSourceGroupKind,
   ModeloFormSourceState,
   PublicModeloFormField,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloWorkForm";
 import type { OpenableSurface } from "../details/Details";
 import { useStrings } from "../../../shell/strings";
 import { BoxNumber } from "../form/BoxNumber";

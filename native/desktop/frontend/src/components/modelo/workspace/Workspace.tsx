@@ -21,7 +21,7 @@ import type {
   ModeloFormNextAction,
   ModeloFormResultView,
   ModeloWorkbenchFormProjectionV1,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloWorkForm";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { AttentionMark, DEADLINE_TONE, GlyphMark } from "./Marks";
 

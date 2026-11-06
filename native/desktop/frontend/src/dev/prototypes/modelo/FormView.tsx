@@ -22,7 +22,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { readLocaleDecimal } from "@/shared/numbers";
-import type { ModeloEditValueGrammarV1 } from "@/shell/modeloContract";
+import type { ModeloEditValueGrammarV1 } from "@/shell/modeloContract/modeloEditWork";
 import { translator } from "@/shell/strings";
 import type {
   FormBlock,

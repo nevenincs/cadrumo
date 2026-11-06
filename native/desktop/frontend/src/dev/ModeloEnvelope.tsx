@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import type { ModeloWorkbenchFormProjectionV1 } from "../shell/modeloContract";
+import type { ModeloWorkbenchFormProjectionV1 } from "../shell/modeloContract/modeloWorkForm";
 import { wholeEnvelopes } from "./modeloEnvelopePatch";
 import { requireServed } from "./servedFixtures";
 

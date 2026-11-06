@@ -5,7 +5,7 @@ import { borradorFixture, type BorradorScenario } from "@/dev/borradorFixture";
 import { modeloFixture } from "@/dev/modeloFixture";
 import type { BorradorComparison as Comparison } from "../../../shell/borrador";
 import type { ModeloPort } from "../../../shell/modelo";
-import type { OutputLanguage } from "../../../shell/modeloContract";
+import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
 import { translator } from "../../../shell/strings";
 import { BorradorComparison } from "./BorradorComparison";
 import type { BorradorComparisonRead } from "./borradorComparisonRead";

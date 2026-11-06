@@ -9,7 +9,7 @@ import {
   type TerminalOperationFailure,
 } from "../../../shell/ledger";
 import type { ModeloPort } from "../../../shell/modelo";
-import type { ModeloEditApplyBaselineV1 } from "../../../shell/modeloContract";
+import type { ModeloEditApplyBaselineV1 } from "../../../shell/modeloContract/modeloEditWork";
 
 /** Whether a check that found `stale` stale may renew it: only the latest
  * check, on the baseline the review now holds; an overtaken check leaves the

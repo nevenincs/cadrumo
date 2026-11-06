@@ -5,7 +5,7 @@ import { modeloFixture, type ModeloShape } from "@/dev/modeloFixture";
 import type { LedgerErrorDetail } from "../../../shell/ledger";
 import { translator } from "../../../shell/strings";
 import type { ModeloPort } from "../../../shell/modelo";
-import type { OutputLanguage } from "../../../shell/modeloContract";
+import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
 import { WorkspaceScreen } from "./WorkspaceScreen";
 import { byName } from "@/dev/globByName";
 

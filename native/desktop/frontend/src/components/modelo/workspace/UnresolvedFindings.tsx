@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type {
   ProjectUnresolvedBindingProjection,
   ProjectUnresolvedCasillaProjection,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modelo";
 
 // The inputs and boxes the application could not give a value for, with the
 // words it served for each, whether it said them for a projection or for a

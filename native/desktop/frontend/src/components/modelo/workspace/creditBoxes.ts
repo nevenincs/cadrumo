@@ -1,7 +1,7 @@
 import type {
   ModeloFormCredit,
   PublicModeloFormField,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloWorkForm";
 import { addressKey, type PlacedField } from "../form/session";
 
 // The credits the withholding register supplies and the boxes worked out

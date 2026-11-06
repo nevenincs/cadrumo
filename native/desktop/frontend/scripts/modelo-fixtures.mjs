@@ -2,13 +2,15 @@
 // bounds from the Python models and the host's Rust sources, through
 // scripts/modelo_fixtures.py, and formats what it writes as the frontend's
 // formatter does. `--contract` selects the wire types and relay bounds
-// (src/shell/modeloContract.ts and relayBounds.ts, committed); `--envelopes`
+// (the modules under src/shell/modeloContract/ and relayBounds.ts,
+// committed); `--envelopes`
 // selects the scenario envelopes, which are build output in the host's build
 // tree (see fixture-paths.mjs) and never committed; with neither, both. The
 // envelopes are stored as the producer writes them, compact and the Modelo 100
 // forms as patches; `--pack` stores the ones already on disk that way.
 // `--check` writes nothing: for the wire types it fails when they differ from
-// fresh output or the host's admitted list differs from the registered family,
+// fresh output, a module is missing or left over, or the host's admitted list
+// differs from the registered family,
 // and for the envelopes it fails when a stored one no longer validates against
 // its model, having nothing to check while none is seeded. `--output DIR`
 // writes what was selected into an existing directory instead, which is how a
@@ -25,7 +27,7 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { resolve } from "node:path";
+import { basename, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { format, resolveConfig } from "prettier";
@@ -45,7 +47,51 @@ const scenarios = values.envelopes || !values.contract;
 
 const frontend = fileURLToPath(new URL("..", import.meta.url));
 const repository = resolve(frontend, "../../..");
-const contract = resolve(frontend, "src/shell/modeloContract.ts");
+// The wire type modules, one directory the generator alone writes. The
+// producer groups the types into modules; this list names every module it
+// writes, and a run fails when the two differ.
+const CONTRACT_MODULES = [
+  "src/shell/modeloContract/contracts.ts",
+  "src/shell/modeloContract/modelo.ts",
+  "src/shell/modeloContract/modelo036.ts",
+  "src/shell/modeloContract/modeloAggregate.ts",
+  "src/shell/modeloContract/modeloAudit.ts",
+  "src/shell/modeloContract/modeloBindings.ts",
+  "src/shell/modeloContract/modeloCompare.ts",
+  "src/shell/modeloContract/modeloDeclarations.ts",
+  "src/shell/modeloContract/modeloEdit.ts",
+  "src/shell/modeloContract/modeloEditWork.ts",
+  "src/shell/modeloContract/modeloExport.ts",
+  "src/shell/modeloContract/modeloFilingRecord.ts",
+  "src/shell/modeloContract/modeloHistory.ts",
+  "src/shell/modeloContract/modeloIvaWallet.ts",
+  "src/shell/modeloContract/modeloM145.ts",
+  "src/shell/modeloContract/modeloM360Solicitud.ts",
+  "src/shell/modeloContract/modeloObservation.ts",
+  "src/shell/modeloContract/modeloProject.ts",
+  "src/shell/modeloContract/modeloQuickfile.ts",
+  "src/shell/modeloContract/modeloReadiness.ts",
+  "src/shell/modeloContract/modeloReconcile.ts",
+  "src/shell/modeloContract/modeloRequires.ts",
+  "src/shell/modeloContract/modeloReviewPackage.ts",
+  "src/shell/modeloContract/modeloSpreadsheet.ts",
+  "src/shell/modeloContract/modeloVerificationReport.ts",
+  "src/shell/modeloContract/modeloWork.ts",
+  "src/shell/modeloContract/modeloWorkAmend.ts",
+  "src/shell/modeloContract/modeloWorkAmendmentContext.ts",
+  "src/shell/modeloContract/modeloWorkCasillaHelp.ts",
+  "src/shell/modeloContract/modeloWorkCompareTaxation.ts",
+  "src/shell/modeloContract/modeloWorkDependencies.ts",
+  "src/shell/modeloContract/modeloWorkForm.ts",
+  "src/shell/modeloContract/modeloWorkHistory.ts",
+  "src/shell/modeloContract/modeloWorkPreviewMaritimeExemption.ts",
+  "src/shell/modeloContract/modeloWorkReportVerify.ts",
+  "src/shell/modeloContract/modeloWorkReview.ts",
+  "src/shell/modeloContract/modeloWorkVerify.ts",
+];
+const contractDirectory = resolve(frontend, "src/shell/modeloContract");
+// The most lines a formatted module may take.
+const MODULE_LINE_LIMIT = 1500;
 const bounds = resolve(frontend, "src/shell/relayBounds.ts");
 const fixtures = resolve(windowFixtures(), "modelo");
 const producer = resolve(frontend, "scripts/modelo_fixtures.py");
@@ -105,19 +151,47 @@ let failed = false;
 if (wireTypes) {
   const generated = python("contract");
   if (generated.status !== 0) process.exit(generated.status);
-  const fresh = await formatted(generated.output, contract);
+  const modules = Object.entries(JSON.parse(generated.output));
+  const listed = CONTRACT_MODULES.map((path) => basename(path));
+  const unlisted = modules
+    .map(([name]) => name)
+    .filter((name) => !listed.includes(name));
+  const unwritten = listed.filter(
+    (name) => !modules.some(([module]) => module === name),
+  );
+  if (unlisted.length || unwritten.length) {
+    console.error(
+      `The producer's contract modules differ from CONTRACT_MODULES: list ${unlisted.join(", ") || "nothing new"}; drop ${unwritten.join(", ") || "nothing"}`,
+    );
+    process.exit(1);
+  }
+  const directory = values.output
+    ? resolve(values.output, "modeloContract")
+    : contractDirectory;
+  const targets = [];
+  for (const [name, source] of modules) {
+    const path = resolve(directory, name);
+    const text = await formatted(source, resolve(contractDirectory, name));
+    const length = text.split("\n").length - 1;
+    if (length > MODULE_LINE_LIMIT) {
+      console.error(
+        `${name} takes ${length} lines, more than ${MODULE_LINE_LIMIT}; lower the producer's module line budget`,
+      );
+      process.exit(1);
+    }
+    targets.push([path, text]);
+  }
   const measured = python("bounds");
   if (measured.status !== 0) process.exit(measured.status);
   const freshBounds = await formatted(measured.output, bounds);
-  const targets = values.output
-    ? [
-        [resolve(values.output, "modeloContract.ts"), fresh],
-        [resolve(values.output, "relayBounds.ts"), freshBounds],
-      ]
-    : [
-        [contract, fresh],
-        [bounds, freshBounds],
-      ];
+  targets.push([
+    values.output ? resolve(values.output, "relayBounds.ts") : bounds,
+    freshBounds,
+  ]);
+  // A module the producer no longer writes is stale, not left to be imported.
+  const leftover = existsSync(directory)
+    ? readdirSync(directory).filter((name) => !listed.includes(name))
+    : [];
 
   if (values.check) {
     for (const [path, text] of targets) {
@@ -131,6 +205,12 @@ if (wireTypes) {
         failed = true;
       }
     }
+    for (const name of leftover) {
+      console.error(
+        `${resolve(directory, name)} is no generated module; run node scripts/modelo-fixtures.mjs --contract`,
+      );
+      failed = true;
+    }
     // The host's admitted list is held to the registered family with no
     // envelope in hand.
     if (python("validate", "--definitions").status !== 0) {
@@ -140,6 +220,11 @@ if (wireTypes) {
       failed = true;
     }
   } else {
+    mkdirSync(directory, { recursive: true });
+    for (const name of leftover) {
+      rmSync(resolve(directory, name));
+      console.log(`removed ${resolve(directory, name)}`);
+    }
     for (const [path, text] of targets) {
       writeFileSync(path, text);
       console.log(`wrote ${path}`);

@@ -18,10 +18,8 @@ import {
   isCreationWriteKey,
   type ModeloWriteMemory,
 } from "../../../shell/modeloWriteHolds";
-import type {
-  ModeloDeclarationsListProjectionV1,
-  OutputLanguage,
-} from "../../../shell/modeloContract";
+import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
+import type { ModeloDeclarationsListProjectionV1 } from "../../../shell/modeloContract/modeloDeclarations";
 
 export type DeclarationsRead =
   | { phase: "reading"; list: ModeloDeclarationsListProjectionV1 | null }

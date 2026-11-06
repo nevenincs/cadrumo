@@ -15,11 +15,11 @@ import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
 import { facts, listed } from "../../../shell/compose";
 import type { ModeloPort } from "../../../shell/modelo";
+import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
 import type {
   ModeloFormTypingEffect,
   ModeloWorkbenchFormProjectionV1,
-  OutputLanguage,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloWorkForm";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { BoxNumber } from "../form/BoxNumber";
 import {

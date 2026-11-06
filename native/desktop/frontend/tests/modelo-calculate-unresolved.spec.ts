@@ -3,7 +3,7 @@ import { build } from "esbuild";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
-import type { ModeloWorkCalculatePublicResultV3 } from "../src/shell/modeloContract";
+import type { ModeloWorkCalculatePublicResultV3 } from "../src/shell/modeloContract/modeloWork";
 import { MODELO_FIXTURES } from "./support/windowFixtures";
 
 // What the calculation of a Modelo 130 said it could give no value for, drawn
