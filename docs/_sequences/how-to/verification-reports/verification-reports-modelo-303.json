@@ -376,7 +376,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "f4399f46329e589c6c929e27e70c3748e31fa2747d082334664d7e398504cfa1"
+          "value": "8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5"
         }
       ],
       "envelope": {
@@ -475,7 +475,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "f4399f46329e589c6c929e27e70c3748e31fa2747d082334664d7e398504cfa1",
+          "calculation_revision_id": "8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -799,7 +799,7 @@
             {"absent_by_design":false,"casilla_id":"56","formula_id":null,"legal_refs":["ley-37-1992:art-122","ley-37-1992:art-123","ley-37-1992:art-124","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"57","formula_id":null,"legal_refs":["ley-37-1992:art-122","ley-37-1992:art-123","ley-37-1992:art-124","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"58","formula_id":null,"legal_refs":["ley-37-1992:art-122","ley-37-1992:art-123","ley-37-1992:art-124","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"59","formula_id":null,"legal_refs":["ley-37-1992:art-25","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"59","formula_id":null,"legal_refs":["ley-37-1992:art-25","ley-37-1992:art-69","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"60","formula_id":null,"legal_refs":["ley-37-1992:art-21","ley-37-1992:art-22","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"62","formula_id":null,"legal_refs":["ley-37-1992:art-75","ley-37-1992:art-163-decies","ley-37-1992:art-163-undecies","ley-37-1992:art-163-duodecies","ley-37-1992:art-163-terdecies","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"63","formula_id":null,"legal_refs":["ley-37-1992:art-75","ley-37-1992:art-163-decies","ley-37-1992:art-163-undecies","ley-37-1992:art-163-duodecies","ley-37-1992:art-163-terdecies","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
@@ -1042,7 +1042,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision f4399f46329e589c6c929e27e70c3748e31fa2747d082334664d7e398504cfa1 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -1106,13 +1106,13 @@
         "modelo",
         "work",
         "verify",
-        "f4399f46329e589c6c929e27e70c3748e31fa2747d082334664d7e398504cfa1"
+        "8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5"
       ],
       "captures": [
         {
           "json_path": "result.verification_report_id",
           "name": "verification_report_id",
-          "value": "91458522e41a3c9af05b052cee668a503238aea39864e48aa843c06257937bfe"
+          "value": "005b27c69ac5c0a4d4e9a0e9c562fc4ea2cc05bb18a8b16ea0632bc29fdf2256"
         }
       ],
       "envelope": {
@@ -1160,7 +1160,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "f4399f46329e589c6c929e27e70c3748e31fa2747d082334664d7e398504cfa1",
+          "calculation_revision_id": "8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5",
           "completeness_status": "complete",
           "findings": [
             {
@@ -1211,7 +1211,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "91458522e41a3c9af05b052cee668a503238aea39864e48aa843c06257937bfe",
+          "verification_report_id": "005b27c69ac5c0a4d4e9a0e9c562fc4ea2cc05bb18a8b16ea0632bc29fdf2256",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -1233,7 +1233,7 @@
         "verification-report",
         "list",
         "--calculation-revision-id",
-        "f4399f46329e589c6c929e27e70c3748e31fa2747d082334664d7e398504cfa1"
+        "8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5"
       ],
       "captures": [],
       "envelope": {
@@ -1249,12 +1249,12 @@
           }
         ],
         "result": {
-          "calculation_revision_id_filter": "f4399f46329e589c6c929e27e70c3748e31fa2747d082334664d7e398504cfa1",
+          "calculation_revision_id_filter": "8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5",
           "operation": "modelo.verification_report.list",
           "report_count": 1,
           "reports": [
             {
-              "calculation_revision_id": "f4399f46329e589c6c929e27e70c3748e31fa2747d082334664d7e398504cfa1",
+              "calculation_revision_id": "8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5",
               "completeness_status": "complete",
               "findings": [
                 {
@@ -1304,7 +1304,7 @@
               },
               "resolved_casilla_ids": [],
               "run_at": "2026-04-01T09:00:00+00:00",
-              "verification_report_id": "91458522e41a3c9af05b052cee668a503238aea39864e48aa843c06257937bfe",
+              "verification_report_id": "005b27c69ac5c0a4d4e9a0e9c562fc4ea2cc05bb18a8b16ea0632bc29fdf2256",
               "verified_by": "docs-sequence-sandbox"
             }
           ]
@@ -1327,7 +1327,7 @@
         "modelo",
         "verification-report",
         "view",
-        "91458522e41a3c9af05b052cee668a503238aea39864e48aa843c06257937bfe"
+        "005b27c69ac5c0a4d4e9a0e9c562fc4ea2cc05bb18a8b16ea0632bc29fdf2256"
       ],
       "captures": [],
       "envelope": {
@@ -1343,7 +1343,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "f4399f46329e589c6c929e27e70c3748e31fa2747d082334664d7e398504cfa1",
+          "calculation_revision_id": "8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5",
           "completeness_status": "complete",
           "findings": [
             {
@@ -1394,7 +1394,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "91458522e41a3c9af05b052cee668a503238aea39864e48aa843c06257937bfe",
+          "verification_report_id": "005b27c69ac5c0a4d4e9a0e9c562fc4ea2cc05bb18a8b16ea0632bc29fdf2256",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

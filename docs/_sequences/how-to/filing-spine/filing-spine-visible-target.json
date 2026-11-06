@@ -351,7 +351,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "active_profile\tdocs-sequence-sandbox\noperation\tmodelo.work.status\nwork_unit_id\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\nshort_work_unit_id\tb7a7592ccc53\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nrevision_id\t2026-hasta-01-y-1t\nname\t303-2026-1T\nstate\tdraft\ncurrent_calculation_revision_id\tf4399f46329e589c6c929e27e70c3748e31fa2747d082334664d7e398504cfa1\nshort_current_calculation_revision_id\t7e398504cfa1\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-04-20\nplazo_nominal_closes_on\t2026-04-20\nplazo_holiday_coverage\tnational_only\ndays_remaining\t19\nnotice\tmodelo.work.status.next_action\tThis active declaration can be calculated.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\nnext_action\taeat app modelo work calculate ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\n"
+      "text": "active_profile\tdocs-sequence-sandbox\noperation\tmodelo.work.status\nwork_unit_id\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\nshort_work_unit_id\tb7a7592ccc53\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nrevision_id\t2026-hasta-01-y-1t\nname\t303-2026-1T\nstate\tdraft\ncurrent_calculation_revision_id\t8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5\nshort_current_calculation_revision_id\teb6e82a549b5\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-04-20\nplazo_nominal_closes_on\t2026-04-20\nplazo_holiday_coverage\tnational_only\ndays_remaining\t19\nnotice\tmodelo.work.status.next_action\tThis active declaration can be calculated.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\nnext_action\taeat app modelo work calculate ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\n"
     },
     {
       "argv": [
@@ -373,7 +373,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.revisions\nwork_unit_id_filter\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\nrevision_count\t1\nshort_calculation_revision_id\tcalculation_revision_id\tshort_work_unit_id\twork_unit_id\tstate\tcreated_at\n7e398504cfa1\tf4399f46329e589c6c929e27e70c3748e31fa2747d082334664d7e398504cfa1\tb7a7592ccc53\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\tborrador\t2026-04-01T09:00:00+00:00\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "operation\tmodelo.work.revisions\nwork_unit_id_filter\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\nrevision_count\t1\nshort_calculation_revision_id\tcalculation_revision_id\tshort_work_unit_id\twork_unit_id\tstate\tcreated_at\neb6e82a549b5\t8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5\tb7a7592ccc53\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\tborrador\t2026-04-01T09:00:00+00:00\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -457,7 +457,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "f4399f46329e589c6c929e27e70c3748e31fa2747d082334664d7e398504cfa1",
+          "calculation_revision_id": "8f4dd55acb4120cc1429075e5cc7517308de222111b776ec5be7eb6e82a549b5",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -773,7 +773,7 @@
             {"absent_by_design":false,"casilla_id":"56","formula_id":null,"legal_refs":["ley-37-1992:art-122","ley-37-1992:art-123","ley-37-1992:art-124","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"57","formula_id":null,"legal_refs":["ley-37-1992:art-122","ley-37-1992:art-123","ley-37-1992:art-124","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"58","formula_id":null,"legal_refs":["ley-37-1992:art-122","ley-37-1992:art-123","ley-37-1992:art-124","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"59","formula_id":null,"legal_refs":["ley-37-1992:art-25","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"59","formula_id":null,"legal_refs":["ley-37-1992:art-25","ley-37-1992:art-69","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"60","formula_id":null,"legal_refs":["ley-37-1992:art-21","ley-37-1992:art-22","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"62","formula_id":null,"legal_refs":["ley-37-1992:art-75","ley-37-1992:art-163-decies","ley-37-1992:art-163-undecies","ley-37-1992:art-163-duodecies","ley-37-1992:art-163-terdecies","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"63","formula_id":null,"legal_refs":["ley-37-1992:art-75","ley-37-1992:art-163-decies","ley-37-1992:art-163-undecies","ley-37-1992:art-163-duodecies","ley-37-1992:art-163-terdecies","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
