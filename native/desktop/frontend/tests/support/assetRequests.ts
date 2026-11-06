@@ -84,38 +84,22 @@ type Scenario =
 type Input = {
   served: Served;
   limits: LedgerEntryLimits;
+  /** The purchase the person picks and the later payment they pick for an
+   * element bought outside the ledger, as the ledger accounts for them: the
+   * driver supplies both, so a request is built against a real payment. */
+  candidate: AcquisitionCandidate;
+  further: AcquisitionCandidate;
   scenarios: Scenario[];
 };
 
+/** What one run was given beyond its scenarios. */
+type Given = {
+  served: Served;
+  candidate: AcquisitionCandidate;
+  further: AcquisitionCandidate;
+};
+
 const hex = (seed: string) => seed.repeat(64).slice(0, 64);
-
-/** The purchase the person picks: the ledger's own account of it. */
-const CANDIDATE: AcquisitionCandidate = {
-  transaction_id: hex("a"),
-  booked_date: "2026-05-06",
-  description: "Compra",
-  amount: { decimal: "1089.00" },
-  currency: "EUR",
-  paid_in_euro: { decimal: "1089.00" },
-  taxable_base: { decimal: "900.00" },
-  iva_amount: { decimal: "189.00" },
-  non_deductible_iva_state: "known",
-  non_deductible_iva_state_key:
-    "ledger.actividad_asset.non_deductible_iva_state.known",
-  non_deductible_iva: { decimal: "0.00" },
-  invoice_evidence_id: hex("b"),
-  evidence_fingerprint: hex("c"),
-};
-
-/** The later payment the person picks for an element bought outside the
- * ledger: the ledger's own account of it. */
-const FURTHER: AcquisitionCandidate = {
-  ...CANDIDATE,
-  transaction_id: hex("e"),
-  description: "Segundo plazo",
-  invoice_evidence_id: null,
-  evidence_fingerprint: null,
-};
 
 /** The scenario's own year, read from its date. */
 const scenarioYear = Number(SCENARIO_TODAY.slice(0, 4));
@@ -142,7 +126,8 @@ const contextFor = (
   options,
 });
 
-function run(scenario: Scenario, served: Served) {
+function run(scenario: Scenario, given: Given) {
+  const { served, candidate, further } = given;
   if (scenario.kind === "forecast")
     return {
       id: scenario.id,
@@ -228,10 +213,10 @@ function run(scenario: Scenario, served: Served) {
     const request = createRequest(stated.values, {
       assetId: hex("d"),
       regime: "normal",
-      candidate: CANDIDATE,
+      candidate,
       further:
-        scenario.draft[FURTHER_PURCHASE] === FURTHER.transaction_id
-          ? FURTHER
+        scenario.draft[FURTHER_PURCHASE] === further.transaction_id
+          ? further
           : null,
       base: null,
       options,
@@ -267,9 +252,15 @@ let input = "";
 process.stdin.setEncoding("utf8");
 process.stdin.on("data", (chunk) => (input += chunk));
 process.stdin.on("end", () => {
-  const { served, limits, scenarios } = JSON.parse(input) as Input;
+  const { served, limits, candidate, further, scenarios } = JSON.parse(
+    input,
+  ) as Input;
   holdLedgerLimits(limits);
   process.stdout.write(
-    JSON.stringify(scenarios.map((scenario) => run(scenario, served))),
+    JSON.stringify(
+      scenarios.map((scenario) =>
+        run(scenario, { served, candidate, further }),
+      ),
+    ),
   );
 });
