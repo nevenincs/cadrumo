@@ -70,7 +70,10 @@ test("the check reads the projections it is given, not the project's static cand
 test("a projection that no longer fits its reader fails the check", (t) => {
   const planted = plantedProject(t, { value: "changed", decoyValue: 1 });
   const { diagnostics } = typecheck(planted);
-  assert.deepEqual(diagnostics.map((diagnostic) => diagnostic.code), [2322]);
+  assert.deepEqual(
+    diagnostics.map((diagnostic) => diagnostic.code),
+    [2322],
+  );
 });
 
 test("missing projections are refused with the remedy before anything is checked", (t) => {

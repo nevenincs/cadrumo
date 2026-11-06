@@ -31,6 +31,7 @@ function requireProjections(fixtures) {
     if (error.code !== "ENOENT") throw error;
     throw new Error(
       `The window projections the type check imports are missing: ${fixtures}. To produce them, ${SEED}.`,
+      { cause: error },
     );
   }
   if (stat.isSymbolicLink() || !stat.isDirectory())
