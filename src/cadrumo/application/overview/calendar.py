@@ -144,9 +144,7 @@ def entry_intersects_range(
             obligation.opens_on <= calendar_range.to_date and obligation.nominal_closes_on >= calendar_range.from_date
         )
     del operation
-    return (
-        obligation.opens_on <= calendar_range.to_date and obligation.adjusted_closes_on >= calendar_range.from_date
-    )
+    return obligation.opens_on <= calendar_range.to_date and obligation.adjusted_closes_on >= calendar_range.from_date
 
 
 def _calendar_entry_key(entry: OverviewCalendarEntry) -> tuple[str, int, str]:
