@@ -68,6 +68,10 @@ jobs:
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: just check-types
 
+      - name: TypeScript module size
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: just check-module-size
+
       - name: Workflow definitions
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: just check-workflows
