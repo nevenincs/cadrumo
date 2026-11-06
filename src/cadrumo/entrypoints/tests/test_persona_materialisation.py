@@ -78,7 +78,7 @@ _NOT_LOADED: dict[str, set[str]] = {
     "autonomo-electricista": set(),
     "autonomo-fontanero": set(),
     "intracomunitario-desarrollador": set(),
-    "minorista-recargo": {"ledger.recargo_amount", "setup"},
+    "minorista-recargo": {"ledger.recargo_amount"},
     "sociedad-limitada": {"officers"},
     "traductora-profesional": set(),
 }
