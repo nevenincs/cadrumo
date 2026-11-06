@@ -39,7 +39,6 @@ import hashlib
 import json
 import re
 import sys
-import tempfile
 import textwrap
 from collections.abc import AsyncGenerator, Generator, Iterable, Iterator, Mapping
 from contextlib import asynccontextmanager, contextmanager
@@ -51,7 +50,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
 
-from dev.fixture_projections.location import family_directory, producer_scratch
+from dev.fixture_projections.location import family_directory, scratch_tree
 from dev.quality.typescript_module_size import MAX_PHYSICAL_LINES
 from pydantic import BaseModel
 from pydantic.json_schema import models_json_schema
@@ -2163,7 +2162,7 @@ def _write_projection_steps(directory: Path) -> None:
     projected = next(filer for filer in RENTA_FILERS if filer.envelope == "projected")
     filer = replace(projected, quarter_130=False)
     with (
-        tempfile.TemporaryDirectory(dir=producer_scratch()) as tmp,
+        scratch_tree() as tmp,
         _renta_seeded(Path(tmp), filer) as (_, work),
     ):
         created = _operate(
@@ -2201,7 +2200,7 @@ def _write_renta_filer(directory: Path, filer: RentaFiler, *, first: bool) -> No
     The first filer is also the one whose declarations list, help cards and refused projection are read.
     """
     with (
-        tempfile.TemporaryDirectory(dir=producer_scratch()) as tmp,
+        scratch_tree() as tmp,
         _renta_seeded(Path(tmp), filer, read_on=filer.read_on) as (persona, work),
     ):
         _record_certificate(persona, filer)
@@ -2373,7 +2372,7 @@ def _borrador_chain(directory: Path | None, results: Mapping[str, Decimal]) -> d
     """
     # Read within the filing period, after the drafts were imported.
     with (
-        tempfile.TemporaryDirectory(dir=producer_scratch()) as tmp,
+        scratch_tree() as tmp,
         _renta_seeded(Path(tmp), BORRADOR_FILER, read_on=RENTA_FILING_PERIOD_DAY) as (persona, work),
     ):
         _record_certificate(persona, BORRADOR_FILER)
@@ -3370,7 +3369,7 @@ def _write_iva_wallet(directory: Path) -> None:
     )
     from cadrumo.application.operations.public_period import PublicPeriod
 
-    with tempfile.TemporaryDirectory(dir=producer_scratch()) as tmp, _seeded(Path(tmp)) as work:
+    with scratch_tree() as tmp, _seeded(Path(tmp)) as work:
         iva = _other_declaration(work, "303", "1T")
         _write_list(directory, work, "declarations-wallet")
         profile_id = UUID(work.work_unit.bucket_id)
@@ -3444,7 +3443,7 @@ def _write_scenarios(directory: Path) -> None:
     write_refusals(directory)
     _write_iva_wallet(directory)
     with (
-        tempfile.TemporaryDirectory(dir=producer_scratch()) as tmp,
+        scratch_tree() as tmp,
         _seeded(Path(tmp)) as first,
     ):
         works = {DECLARATIONS[0][0]: first}
@@ -3473,7 +3472,7 @@ def _write_scenarios(directory: Path) -> None:
         _write_unverified_export(directory, first, Path(tmp) / "modelo-165.txt")
     # Its own profile: recording needs the earlier Renta filed under the persona's tax id.
     with (
-        tempfile.TemporaryDirectory(dir=producer_scratch()) as tmp,
+        scratch_tree() as tmp,
         _seeded(Path(tmp)) as filed,
     ):
         _write(directory, "file-130.json", _record_filed(filed))
@@ -3488,7 +3487,7 @@ def _write_scenarios(directory: Path) -> None:
     # Its own profile: the persona's ledger carries the quarter's income and the declaration is calculated, never
     # checked or filed. It records no estimation regime, so its form shows what that leaves it waiting on.
     with (
-        tempfile.TemporaryDirectory(dir=producer_scratch()) as tmp,
+        scratch_tree() as tmp,
         _seeded(Path(tmp), stated=UNREGIMED) as booked,
     ):
         booked.recalculate()
@@ -3496,7 +3495,7 @@ def _write_scenarios(directory: Path) -> None:
     # Its own profile, on a frozen timeline: calculated now, a review half an hour after the form was read, and its
     # renewal, forty minutes on.
     with (
-        tempfile.TemporaryDirectory(dir=producer_scratch()) as tmp,
+        scratch_tree() as tmp,
         _seeded(Path(tmp)) as renewing,
     ):
         started = now() + timedelta(minutes=40)
@@ -3505,7 +3504,7 @@ def _write_scenarios(directory: Path) -> None:
         _write_renewal_flow(directory, renewing, started)
     # Its own profile: the file is written, then a conflicting edit makes it stale and blocks verification.
     with (
-        tempfile.TemporaryDirectory(dir=producer_scratch()) as tmp,
+        scratch_tree() as tmp,
         _seeded(Path(tmp)) as stale,
     ):
         _check_clean(stale)

@@ -3,10 +3,15 @@
 from __future__ import annotations
 
 import json
+import os
 import re
+import sys
+import textwrap
 from pathlib import Path, PurePosixPath
 
 import pytest
+
+from cadrumo.tests.audited_process import run_audited_process
 
 from ... import temporary_output
 from ...packaging.runtime_wheelhouse_contract import target_platform
@@ -23,6 +28,7 @@ from ..location import (
     output_directory,
     producer_scratch,
     scratch_directory,
+    scratch_tree,
     selected_build,
     temporary_member,
     window_member,
@@ -280,3 +286,53 @@ def test_the_build_scratch_is_prepared_only_where_its_build_manifest_declares_it
 def test_no_window_producer_takes_the_checkouts_scratch_while_a_build_runs_it(source: Path) -> None:
     # The checkout's scratch root ignores the selected build; a producer takes its scratch through the location.
     assert "prepare_temp_root" not in source.read_text(encoding="utf-8")
+
+
+#: A producer opening a profile in its scratch, so the process's diagnostic log file lands there, then logging on.
+_PRODUCER_LOGGING_PAST_ITS_SCRATCH = textwrap.dedent(
+    """
+    import logging
+
+    from cadrumo.core.config import override_settings
+    from cadrumo.core.logging import configure_logging, flush_logging
+    from dev.fixture_projections.location import scratch_tree
+
+    with scratch_tree(environment={}) as tree, override_settings(cadrumo_storage_root=tree / "storage"):
+        configure_logging()
+        logging.getLogger("producer").warning("inside the scratch")
+        assert flush_logging(timeout=30.0)
+        assert any((tree / "storage").rglob("*.log")), "the diagnostic log file was not opened in the scratch"
+    logging.getLogger("producer").warning("after the scratch")
+    assert flush_logging(timeout=30.0)
+    print(tree)
+    """
+)
+
+
+def test_a_scratch_tree_stays_removed_when_its_profile_logged_there_and_logging_goes_on(tmp_path: Path) -> None:
+    environment = {key: value for key, value in os.environ.items() if key != BINARY_DIRECTORY_VARIABLE}
+    environment["CADRUMO_STORAGE_ROOT"] = str(tmp_path / "outside")
+    environment["PYTHONPATH"] = os.pathsep.join((str(REPO_ROOT / "src"), str(REPO_ROOT)))
+
+    run = run_audited_process(
+        [sys.executable, "-c", _PRODUCER_LOGGING_PAST_ITS_SCRATCH],
+        cwd=REPO_ROOT,
+        env=environment,
+        capture_output=True,
+        text=True,
+        timeout=300,
+    )
+
+    assert run.returncode == 0, run.stderr
+    assert isinstance(run.stdout, str)
+    tree = Path(run.stdout.strip().splitlines()[-1])
+    assert tree.parent == scratch_directory(REPO_ROOT, {})
+    assert not tree.exists()
+
+
+def test_a_scratch_tree_is_inside_the_producer_scratch_and_removed_on_exit(tmp_path: Path) -> None:
+    with scratch_tree(environment={}) as tree:
+        (tree / "member").write_text("synthetic", encoding="utf-8")
+        assert tree.parent == scratch_directory(REPO_ROOT, {})
+
+    assert not tree.exists()

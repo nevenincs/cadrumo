@@ -13,17 +13,23 @@ build-path manifest.
 
 A window producer's scratch follows the same selection: under CMake it is the
 selected build's own ``TEMPORARY`` directory, so a build writes nothing outside
-its tree; outside CMake it is the checkout's ``.tmp``.
+its tree; outside CMake it is the checkout's ``.tmp``. A profile a producer
+opens in its scratch may have configured the process's diagnostic log file
+there, and that file's handler would recreate the directory with its next
+record, so a scratch tree detaches it before the tree is removed.
 """
 
 from __future__ import annotations
 
 import functools
 import json
+import logging
 import os
 import platform
 import re
-from collections.abc import Mapping
+import tempfile
+from collections.abc import Generator, Mapping
+from contextlib import contextmanager
 from pathlib import Path, PurePosixPath
 from typing import Final, cast
 
@@ -164,6 +170,44 @@ def producer_scratch(root: Path = REPO_ROOT, environment: Mapping[str, str] | No
         ValueError: When the build's temporary directory is not a declared member of its build-path manifest.
     """
     return prepare_temp_root(override=scratch_directory(root, environment))
+
+
+def _detach_diagnostic_files(directory: Path) -> None:
+    """Deliver every pending diagnostic record, then detach and close each diagnostic log file inside ``directory``.
+
+    Raises:
+        OSError: When the pending records cannot be delivered, since the files may still be written.
+    """
+    from cadrumo.core.logging import AsyncDiagnosticHandler, flush_logging
+
+    if not flush_logging(timeout=30.0):
+        raise OSError(f"the diagnostic records were not delivered before {directory} was removed")
+    inside = Path(os.path.normcase(directory))
+    root = logging.getLogger()
+    for handler in tuple(root.handlers):
+        if not isinstance(handler, AsyncDiagnosticHandler):
+            continue
+        sink = handler.sink
+        if isinstance(sink, logging.FileHandler) and Path(os.path.normcase(sink.baseFilename)).is_relative_to(inside):
+            root.removeHandler(handler)
+            handler.close()
+            sink.close()
+
+
+@contextmanager
+def scratch_tree(root: Path = REPO_ROOT, environment: Mapping[str, str] | None = None) -> Generator[Path]:
+    """A fresh directory in the producer scratch root, removed on exit, every failure to remove it raised.
+
+    A diagnostic log file inside it is detached first: its handler would otherwise write, and so recreate the
+    directory, with the next record. Records after that reach the remaining sinks only.
+    """
+    scratch = tempfile.TemporaryDirectory(dir=producer_scratch(root, environment))
+    directory = Path(scratch.name)
+    try:
+        yield directory
+    finally:
+        _detach_diagnostic_files(directory)
+        scratch.cleanup()
 
 
 def output_directory(output_root: str, root: Path) -> Path:
