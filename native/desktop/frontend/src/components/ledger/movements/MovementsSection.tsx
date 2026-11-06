@@ -6,26 +6,15 @@ import {
   useState,
   type Dispatch,
   type KeyboardEvent,
-  type RefObject,
   type SetStateAction,
 } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import type { DataGridHandle, GridRow } from "@/components/ui/dataGridTypes";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { IconButton } from "@/components/ui/icon-button";
-import { exactly, FILL_DOWN_CHORD } from "@/components/ui/dataGridModel";
+import { exactly } from "@/components/ui/dataGridModel";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { Toast } from "@/components/ui/toast";
-import { chordMatches, type ChordKeys } from "@/shared/chords";
 import { facts, labelled, listed } from "@/shell/compose";
 import {
   ContextMenu,
@@ -36,46 +25,26 @@ import type { Action } from "../../../shell/actions";
 import type { LedgerView } from "../../../shell/layout";
 import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
 import {
-  CLASSIFICATION_OF,
-  CLASSIFY_KINDS,
-  categoryCells,
-  categorySplit,
-  classifyAsksCategory,
   classifyAvailability,
-  classifyCells,
-  ratioCoverage,
-  type ClassifyBlock,
   type ClassifyKind,
-  type ClassifyScope,
   type OpenRuleFromSelection,
 } from "../../../shell/ledgerCommands";
 import { useLedgerClassifications } from "../../../shell/ledgerClassifications";
-import {
-  isUndecided,
-  takesChanges,
-  takesClassification,
-} from "../../../shell/ledgerContract";
-import {
-  checkOnce,
-  stagedCheckRequest,
-  type StagedCheck,
-} from "../../../shell/ledgerStagedCheck";
+import { takesChanges } from "../../../shell/ledgerContract";
 import { useConfiguredRatios } from "../setup/useConfiguredRatios";
 import { ActionDialog, type ActionRequest } from "../inspector/ActionDialog";
 import {
   sameInspectorContext,
   type SectionInspectorContext,
 } from "../inspector/inspectorContext";
-import { parsePercent, type LedgerPeriod } from "../../../shell/ledgerGrammar";
+import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
 import {
   useLedgerMembership,
   useOwnAccounts,
   useSearchElsewhere,
 } from "../../../shell/ledgerMovementReads";
 import {
-  effectiveFacts,
   stagedMovements,
-  type DraftField,
   type StageEvent,
   type StageState,
 } from "../../../shell/ledgerStage";
@@ -86,22 +55,17 @@ import {
   type LedgerWindow,
   type Readiness,
 } from "../../../shell/ledgerWindow";
-import { useStrings, type Translate } from "../../../shell/strings";
+import { useStrings } from "../../../shell/strings";
 import { useVocabulary } from "../suggestions/SuggestionsProvider";
-import { formatMonth, monthNames } from "../../../shared/dateFormats";
-import { formatAmount, formatCount } from "../../../shared/numbers";
-import {
-  draftedWidth,
-  draftRow,
-  stageTally,
-  typedPoints,
-} from "../editing/editingModel";
-import {
-  REVERT_CELL_CHORD,
-  useMovementEditing,
-} from "../editing/MovementEditing";
+import { monthNames } from "../../../shared/dateFormats";
+import { formatCount } from "../../../shared/numbers";
+import { draftRow, stageTally } from "../editing/editingModel";
+import { useMovementEditing } from "../editing/MovementEditing";
 import { periodText } from "../ledgerWords";
-import { ClassifyDialog } from "./ClassifyDialog";
+import { SelectionActions, type GroupCommands } from "./ClassifyMenus";
+import { MovementClassifyDialog } from "./MovementClassifyDialog";
+import { movementMenuItems } from "./movementMenuItems";
+import { movementPaletteActions } from "./movementPaletteActions";
 import { MovementsGrid } from "./MovementsGrid";
 import {
   COLUMN_SPECS,
@@ -110,13 +74,9 @@ import {
   REASON_FIX,
   SERVER_GROUPING,
   columnLayout,
-  currencySums,
-  groupRows,
-  groupValue,
   keepsRow,
   matchesSearch,
   presetHidden,
-  presetOf,
   readinessSets,
   searchTerms,
   serverFilters,
@@ -124,25 +84,21 @@ import {
   shownColumns,
   sortRows,
   stagedClassifyCount,
-  dateWidth,
   statusMarks,
-  statusWidth,
   type ColumnId,
-  type CurrencySum,
   type GroupingId,
   type MovementFilters,
   type ReadinessFilter,
   type SortLabels,
 } from "./movementsModel";
 import { MovementsToolbar } from "./MovementsToolbar";
+import { MovementWindowNotices } from "./MovementWindowNotices";
 import {
   accountLabel,
   categoryLabel,
-  classificationLabel,
   classificationText,
   classifiedByLabel,
   directionLabel,
-  familyLabel,
   irpfCategoryLabel,
   ivaCategoryLabel,
   lifecycleLabel,
@@ -151,58 +107,17 @@ import {
   statusWord,
 } from "./movementWords";
 import { ReadinessStrip } from "./ReadinessStrip";
+import { useClassifyChords } from "./useClassifyChords";
+import { useClassifyCommand } from "./useClassifyCommand";
+import { useMovementColumns } from "./useMovementColumns";
+import { useMovementGroupRows } from "./MovementGroupRows";
 import { useFocusTarget } from "../../../shell/navigation/hooks";
 import { RowRevealNotice, useRowReveal, type LinkedRow } from "../RowReveal";
 import { movementHiding, withoutHiding } from "./movementReveal";
 import type { MovementsView } from "./useMovementsView";
 import type { ImportedBatches } from "../../../shell/ledgerImports";
 
-/** Above this many movements classified otherwise, Personal, which asks
- * nothing else, asks once before it changes them. */
-const OVERWRITE_ASK = 5;
-
-/** The chord each classify kind takes, which the page runs and its menus
- * show. */
-const CLASSIFY_CHORDS: Record<ClassifyKind, ChordKeys> = {
-  business: { code: "KeyB", key: "B", alt: true },
-  personal: { code: "KeyP", key: "P", alt: true },
-  mixed: { code: "KeyM", key: "M", alt: true },
-};
-/** Whether `element` takes typed text, so a chord there is its own: a
- * checkbox or a radio does not. */
-function takesText(element: HTMLElement): boolean {
-  if (element.isContentEditable) return true;
-  if (element instanceof HTMLTextAreaElement) return true;
-  if (element instanceof HTMLSelectElement) return true;
-  if (element instanceof HTMLInputElement)
-    return !["checkbox", "radio", "button", "submit", "reset"].includes(
-      element.type,
-    );
-  return false;
-}
-
 const idOf = (row: LedgerRow) => row.transaction.transaction_id;
-
-/** A classification dialog asked for, and what it would act on. */
-type Asking = {
-  /** The ledger's answer the asking was made from, where it needed one. */
-  check?: StagedCheck;
-  kind: ClassifyKind | "category";
-  /** Of `ids`, how many are classified otherwise now. */
-  overwritten?: number;
-  ids: string[];
-  skipped: number;
-  partial: boolean;
-  error: string | null;
-  /** Of `ids`, those that take a spending category and the income. */
-  split: { expenses: number; income: number };
-  /** A share typed beside the control that asked. */
-  share?: string;
-  /** The rows a cell range covers, where they are not the selection. */
-  range?: string[];
-  /** A new movement's classification, filled in rather than staged. */
-  draft?: string;
-};
 
 /** The list read that keeps the movements an import flagged as likely
  * duplicates. */
@@ -218,192 +133,6 @@ export type SectionEditing = {
   sealed?: ReadonlySet<string>;
 };
 const NO_SEALED: ReadonlySet<string> = new Set();
-
-function blockText(t: Translate, block: ClassifyBlock): string {
-  switch (block.kind) {
-    case "nothing_selected":
-      return t("desktop.ledger.classify.nothing");
-    case "hidden":
-      return t("desktop.ledger.selection.hidden", {
-        hidden: block.hidden,
-        selected: block.selected,
-      });
-    case "transfers_only":
-      return t("desktop.ledger.classify.transfers_only");
-    case "inactive_only":
-      return t("desktop.ledger.classify.inactive_only");
-  }
-}
-
-function SumLine({ sums, locale }: { sums: CurrencySum[]; locale: string }) {
-  const t = useStrings();
-  return (
-    <span className="flex flex-wrap items-center gap-x-3 tabular-nums">
-      {sums.map((sum) => (
-        <span key={sum.currency} className="flex items-center gap-2">
-          {(
-            [
-              ["incoming", "desktop.ledger.sum.in"],
-              ["outgoing", "desktop.ledger.sum.out"],
-              ["transfer", "desktop.ledger.sum.transfer"],
-            ] as const
-          ).map(([side, key]) =>
-            sum[side] === null ? null : (
-              <span key={side}>
-                {t(key, {
-                  amount: formatAmount(
-                    locale,
-                    sum[side],
-                    sum.currency === "EUR" ? {} : { currency: sum.currency },
-                  ),
-                })}
-              </span>
-            ),
-          )}
-        </span>
-      ))}
-    </span>
-  );
-}
-
-/** What a group header's buttons do: set by the section after each render,
- * read when one is pressed. */
-type GroupCommands = {
-  classify: (kind: ClassifyKind, ids: readonly string[]) => void;
-  category: (ids: string[]) => void;
-  select: (ids: string[]) => void;
-  /** Null where the page has no rule dialog. */
-  makeRule: ((ids: string[]) => void) | null;
-};
-
-/** A group header's quick actions, which act on the group's movements
- * through the page's one classify command: one Classify menu, and a menu of
- * the rest. A press on them is theirs, never the header's. */
-function GroupActions({
-  ids,
-  transfers,
-  commands,
-}: {
-  ids: string[];
-  transfers: boolean;
-  commands: RefObject<GroupCommands>;
-}) {
-  const t = useStrings();
-  const own = {
-    onClick: (event: { stopPropagation: () => void }) =>
-      event.stopPropagation(),
-    onDoubleClick: (event: { stopPropagation: () => void }) =>
-      event.stopPropagation(),
-    onPointerDown: (event: { stopPropagation: () => void }) =>
-      event.stopPropagation(),
-  };
-  const transferNote = transfers
-    ? t("desktop.ledger.classify.transfers_only")
-    : undefined;
-  const kinds: [ClassifyKind, string][] = [
-    ["business", t("desktop.ledger.group.business")],
-    ["personal", t("desktop.ledger.group.personal")],
-    ["mixed", t("desktop.ledger.group.mixed")],
-  ];
-  return (
-    <span className="ledger-group-actions flex items-center gap-1" {...own}>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="outline"
-            size="xs"
-            tabIndex={-1}
-            className="ledger-group-classify"
-          >
-            {t("desktop.ledger.group.classify")}
-            <Icon name="chevronDown" size="xs" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {kinds.map(([kind, label]) => (
-            <DropdownMenuItem
-              key={kind}
-              disabled={kind !== "personal" && transferNote !== undefined}
-              onSelect={() => commands.current.classify(kind, ids)}
-            >
-              {label}
-              {kind !== "personal" && transferNote && (
-                <DropdownMenuShortcut>{transferNote}</DropdownMenuShortcut>
-              )}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <IconButton
-            label={t("desktop.ledger.group.more")}
-            size="xs"
-            variant="outline"
-            tabIndex={-1}
-            className="ledger-group-more"
-          >
-            <Icon name="more" />
-          </IconButton>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={() => commands.current.category(ids)}>
-            {t("desktop.ledger.group.category")}…
-          </DropdownMenuItem>
-          {commands.current.makeRule && (
-            <DropdownMenuItem onSelect={() => commands.current.makeRule?.(ids)}>
-              {t("desktop.ledger.group.make_rule")}…
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => commands.current.select(ids)}>
-            {t("desktop.ledger.group.select", { count: ids.length })}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </span>
-  );
-}
-
-/** A group's name: the label of what it groups by, or what it lacks. */
-function groupLabelOf(
-  t: Translate,
-  locale: string,
-  by: GroupingId,
-  value: string,
-  first: LedgerRow,
-): string {
-  if (value === "") return t(`desktop.ledger.group.empty.${by}`);
-  switch (by) {
-    case "category":
-      return categoryLabel(t, value);
-    case "category_family":
-      return familyLabel(t, value);
-    case "classification":
-      return classificationLabel(t, value);
-    case "status":
-      return t(`desktop.ledger.review.${value}`);
-    case "direction":
-      return directionLabel(t, value);
-    case "month":
-      return formatMonth(locale, value);
-    case "iva_category":
-      return ivaCategoryLabel(t, value);
-    case "counterparty":
-      return first.transaction.counterparty.trim();
-    default:
-      return value;
-  }
-}
-
-/** The account grouping's labels come from the register, read once. */
-function accountGroupLabel(
-  t: Translate,
-  accounts: readonly { id: string; label: string }[] | null,
-  value: string,
-): string {
-  return accountLabel(t, accounts, value === "" ? null : value);
-}
 
 /**
  * The Movements section: the readiness strip, the toolbar and the grid of
@@ -632,34 +361,6 @@ export function MovementsSection({
   const grouping: GroupingId | null =
     groupBy && (complete || groupBy === SERVER_GROUPING) ? groupBy : null;
 
-  const groups = useMemo(() => {
-    if (!grouping) return null;
-    const firstOf = new Map<string, LedgerRow>();
-    for (const row of sorted) {
-      const value = groupValue(row, grouping, vocabulary);
-      if (!firstOf.has(value)) firstOf.set(value, row);
-    }
-    return groupRows(sorted, grouping, {
-      label: (value) =>
-        grouping === "account"
-          ? accountGroupLabel(t, accounts, value)
-          : groupLabelOf(t, locale, grouping, value, firstOf.get(value)!),
-      pendingFirst: savedView === "to_classify",
-      descending:
-        effectiveSort.key === "date" && effectiveSort.direction === "desc",
-      vocabulary,
-    });
-  }, [
-    grouping,
-    sorted,
-    savedView,
-    effectiveSort,
-    t,
-    locale,
-    accounts,
-    vocabulary,
-  ]);
-
   // The group headers' buttons act on the state of the moment they are
   // pressed.
   const groupCommands = useRef<GroupCommands>({
@@ -668,45 +369,18 @@ export function MovementsSection({
     select: () => undefined,
     makeRule: null,
   });
-  const gridRows = useMemo<GridRow<LedgerRow>[]>(() => {
-    if (!groups)
-      return sorted.map((row) => ({ kind: "data", key: idOf(row), data: row }));
-    const out: GridRow<LedgerRow>[] = [];
-    for (const group of groups) {
-      const first = group.rows[0]!;
-      const folded = collapsed.has(group.key);
-      out.push({
-        kind: "section",
-        key: group.key,
-        label:
-          grouping === "account"
-            ? accountGroupLabel(t, accounts, group.value)
-            : groupLabelOf(t, locale, grouping!, group.value, first),
-        hint: t("desktop.ledger.group.count", { count: group.rows.length }),
-        collapsed: folded,
-        summary: complete ? (
-          <span className="flex items-center gap-3">
-            <SumLine sums={currencySums(group.rows)} locale={locale} />
-            <GroupActions
-              ids={group.rows.map(idOf)}
-              transfers={group.rows.every(
-                (row) =>
-                  !takesClassification(
-                    row.transaction.direction,
-                    CLASSIFICATION_OF.business,
-                  ),
-              )}
-              commands={groupCommands}
-            />
-          </span>
-        ) : undefined,
-      });
-      if (!folded)
-        for (const row of group.rows)
-          out.push({ kind: "data", key: idOf(row), data: row });
-    }
-    return out;
-  }, [groups, grouping, sorted, collapsed, complete, locale, t, accounts]);
+  const { groups, gridRows } = useMovementGroupRows({
+    sorted,
+    grouping,
+    collapsed,
+    complete,
+    savedView,
+    sort: effectiveSort,
+    locale,
+    accounts,
+    vocabulary,
+    commands: groupCommands,
+  });
   const visible = useMemo(
     () => gridRows.flatMap((row) => (row.kind === "data" ? [row.key] : [])),
     [gridRows],
@@ -832,69 +506,14 @@ export function MovementsSection({
   }, [shownImport, answeredImport, visible, replaceFilters]);
 
   // ---- Columns ---------------------------------------------------------------
-  const layout = useMemo(() => columnLayout(view.columns), [view.columns]);
-  const remPx =
-    typeof document === "undefined"
-      ? 16
-      : parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-  const widths = useMemo(() => {
-    const out: Record<string, number> = {};
-    for (const [column, px] of Object.entries(view.columns.widths))
-      out[column] = px / remPx;
-    return out;
-  }, [view.columns.widths, remPx]);
-  // Where the review preset the page starts from does not fit, it gives up
-  // Group before Category, and the columns menu shows Group as hidden, so
-  // showing it there draws it. A layout the person made is drawn as made.
-  const [room, setRoom] = useState<number | null>(null);
-  useEffect(() => {
-    const element = within.current;
-    if (!element) return;
-    const observer = new ResizeObserver(() => setRoom(element.clientWidth));
-    observer.observe(element);
-    setRoom(element.clientWidth);
-    return () => observer.disconnect();
-  }, []);
-  const untouched = view.columns.order.length === 0;
   const drafting = stage.content.drafts.length > 0;
-  const narrow = useMemo(() => {
-    if (room === null || !untouched || presetOf(layout) !== "review")
-      return false;
-    const needed = shownColumns(layout).reduce((sum, column) => {
-      const spec = COLUMN_SPECS[column];
-      const natural =
-        column === "status"
-          ? statusWidth(view.density, marks)
-          : column === "date"
-            ? dateWidth(period === null)
-            : Math.max(spec.width, spec.minWidth ?? 0);
-      const rem =
-        widths[column] ?? (drafting ? draftedWidth(column, natural) : natural);
-      return sum + rem * remPx;
-    }, 0);
-    return needed > room;
-  }, [
-    layout,
-    untouched,
-    room,
-    widths,
-    view.density,
+  const { layout, remPx, widths, drawnLayout, order } = useMovementColumns({
+    view,
+    within,
     marks,
-    period,
-    remPx,
+    withYear: period === null,
     drafting,
-  ]);
-  const drawnLayout = useMemo(
-    () =>
-      narrow
-        ? {
-            ...layout,
-            hidden: new Set<ColumnId>([...layout.hidden, "group_label"]),
-          }
-        : layout,
-    [layout, narrow],
-  );
-  const order = useMemo(() => shownColumns(drawnLayout), [drawnLayout]);
+  });
   const missing = filters.reason
     ? (() => {
         const column = REASON_FIX[filters.reason]?.column ?? null;
@@ -927,45 +546,27 @@ export function MovementsSection({
     accounts,
   };
 
-  // ---- Staged editing ---------------------------------------------------------
-  const draftCheckVersion = useRef(0);
-  const currentStage = useRef(stage.content);
-  currentStage.current = stage.content;
-  useEffect(
-    () => () => {
-      draftCheckVersion.current++;
-    },
-    [],
-  );
-  async function askDraftClassification(
-    kind: "business" | "mixed",
-    key: string,
-  ) {
-    const content = stage.content;
-    const version = ++draftCheckVersion.current;
-    const check = await checkOnce(port, stagedCheckRequest(content, byId));
-    if (
-      version !== draftCheckVersion.current ||
-      currentStage.current !== content
-    )
-      return;
-    const answer = check?.drafts.get(key);
-    if (typeof answer?.takes_expense_category !== "boolean") {
-      setToast(t("desktop.ledger.apply.read_failed"));
-      return;
-    }
-    setAsking({
-      kind,
-      ids: [],
-      skipped: 0,
-      partial: false,
-      error: null,
-      split: answer.takes_expense_category
-        ? { expenses: 1, income: 0 }
-        : { expenses: 0, income: 1 },
-      draft: key,
-    });
-  }
+  // ---- Staged editing and the classify command -------------------------------
+  const classify = useClassifyCommand({
+    t,
+    port,
+    byId,
+    stage,
+    ratios,
+    partial,
+    selected,
+    hiddenSelected: hiddenSelected.length,
+    grid,
+    stageChecked: (event, then) => edit.stageChecked(event, then),
+    say: setToast,
+  });
+  const {
+    asking,
+    classifySelection,
+    askCategory,
+    availabilityOf,
+    classifyTarget,
+  } = classify;
   const edit = useMovementEditing({
     t,
     locale,
@@ -980,192 +581,12 @@ export function MovementsSection({
     withYear: period === null,
     accounts,
     classify: (kind, ids) => classifySelection(kind, { ids }),
-    askDraft: (kind, key) => void askDraftClassification(kind, key),
+    askDraft: (kind, key) => void classify.askDraftClassification(kind, key),
     say: (text) => setToast(text),
     openReview: pageEditing.openReview,
     focusDraft: pageEditing.focusDraft,
     onDraftFocused: pageEditing.onDraftFocused,
   });
-
-  // ---- Commands --------------------------------------------------------------
-  const [asking, setAsking] = useState<Asking | null>(null);
-  const selectedTarget = useMemo(
-    () => ({ ids: [...selected], hidden: hiddenSelected.length, partial }),
-    [selected, hiddenSelected.length, partial],
-  );
-  const classifyTarget = (scope?: ClassifyScope) =>
-    scope?.ids ? { ids: scope.ids, hidden: 0, partial } : selectedTarget;
-
-  /** Of `ids`, how many classifying as `kind` would overwrite what a person
-   * or a rule decided, stored or staged; advice before the change. */
-  const overwrittenBy = (kind: ClassifyKind, ids: readonly string[]) => {
-    const target = CLASSIFICATION_OF[kind];
-    return ids.filter((id) => {
-      const row = byId.get(id);
-      if (!row) return false;
-      const now = effectiveFacts(
-        row,
-        stage.content.rows[id],
-      ).business_classification;
-      return !!now && !isUndecided(now) && now !== target;
-    }).length;
-  };
-
-  /** The ledger's answer about `ids` as they would be saved, and `category`. */
-  const askCheck = (ids: readonly string[], category?: string) =>
-    checkOnce(
-      port,
-      stagedCheckRequest(stage.content, byId, {
-        ids,
-        categories: category ? [category] : [],
-      }),
-    );
-
-  async function stageClassified(
-    kind: ClassifyKind,
-    ids: readonly string[],
-    answer: { category?: string; share?: string },
-  ): Promise<string | null> {
-    const overwritten = overwrittenBy(kind, ids);
-    // A classification that carries no business figures names no category,
-    // so it has nothing to ask.
-    const asks = classifyAsksCategory(kind);
-    const check = asks ? await askCheck(ids, answer.category) : null;
-    if (asks && !check) return t("desktop.ledger.apply.read_failed");
-    const outcome = classifyCells(
-      { kind, ids, ...answer, ratios, check },
-      byId,
-    );
-    if (outcome.kind === "refused")
-      return t("desktop.ledger.classify.share_refused", {
-        raw: typedPoints(outcome.refusal.raw),
-      });
-    if (outcome.kind === "needs") return null;
-    const classification = classificationLabel(t, CLASSIFICATION_OF[kind]);
-    const detail = facts(t, [
-      answer.share ? `${answer.share.trim().replace(/\s*%$/, "")}%` : "",
-      answer.category && check && categorySplit(ids, byId, check).expenses > 0
-        ? categoryLabel(t, answer.category)
-        : "",
-    ]);
-    const said = facts(t, [
-      detail
-        ? t("desktop.ledger.classify.staged_detail", {
-            classification,
-            detail,
-            count: outcome.movements,
-          })
-        : t("desktop.ledger.classify.staged", {
-            classification,
-            count: outcome.movements,
-          }),
-      overwritten > 0
-        ? t("desktop.ledger.classify.overwritten", { count: overwritten })
-        : "",
-    ]);
-    edit.stageChecked(outcome.event, () => setToast(said));
-    return null;
-  }
-
-  /** The page's one classify command: every control calls it. Business
-   * asks for a category only where a movement takes one, so income alone
-   * is staged at once; Mixed asks for its share and, where a movement
-   * takes one, a category a share applies to. */
-  async function classifySelection(kind: ClassifyKind, scope?: ClassifyScope) {
-    const availability = classifyAvailability(
-      kind,
-      classifyTarget(scope),
-      byId,
-    );
-    if (availability.kind === "blocked") {
-      setToast(blockText(t, availability.block));
-      return;
-    }
-    if (!classifyAsksCategory(kind)) {
-      // It asks nothing, so over many movements classified otherwise it asks
-      // once before it changes them.
-      const overwritten = overwrittenBy(kind, availability.ids);
-      if (overwritten > OVERWRITE_ASK && !scope?.answer)
-        setAsking({
-          kind,
-          ids: availability.ids,
-          skipped: availability.skipped,
-          partial: availability.partial,
-          split: { expenses: 0, income: 0 },
-          error: null,
-          overwritten,
-        });
-      else await stageClassified(kind, availability.ids, {});
-      return;
-    }
-    const answer = scope?.answer ?? {};
-    const check = await askCheck(availability.ids, answer.category);
-    if (!check) {
-      setToast(t("desktop.ledger.apply.read_failed"));
-      return;
-    }
-    const split = categorySplit(availability.ids, byId, check);
-    const outcome = classifyCells(
-      { kind, ids: availability.ids, ...answer, ratios, check },
-      byId,
-    );
-    // What the control already asked for is not asked again, and nothing
-    // is asked of income alone.
-    if (outcome.kind === "staged") {
-      const error = await stageClassified(kind, availability.ids, answer);
-      if (error) setToast(error);
-      return;
-    }
-    // A cell range over other rows than the selection is said, with the
-    // way to act on the range instead.
-    const drawn = scope?.ids ? null : (grid.current?.cellRange() ?? null);
-    const ranged = drawn ? drawn.rows.filter((id) => byId.has(id)) : [];
-    const differs =
-      ranged.length > 1 &&
-      (ranged.length !== selected.size ||
-        ranged.some((id) => !selected.has(id)));
-    setAsking({
-      kind,
-      ids: availability.ids,
-      skipped: availability.skipped,
-      partial: availability.partial,
-      overwritten: overwrittenBy(kind, availability.ids),
-      split,
-      check,
-      error:
-        outcome.kind === "refused"
-          ? t("desktop.ledger.classify.share_refused", {
-              raw: typedPoints(outcome.refusal.raw),
-            })
-          : null,
-      ...(answer.share ? { share: answer.share } : {}),
-      ...(differs ? { range: ranged } : {}),
-    });
-  }
-  const availabilityOf = (kind: ClassifyKind) =>
-    classifyAvailability(kind, classifyTarget(), byId);
-
-  async function askCategory(ids: string[]) {
-    const named = ids.filter((id) => byId.has(id));
-    const check = named.length > 0 ? await askCheck(named) : null;
-    if (named.length > 0 && !check) {
-      setToast(t("desktop.ledger.apply.read_failed"));
-      return;
-    }
-    const takes = named.filter((id) => check?.rows.get(id)?.category_askable);
-    if (!check || takes.length === 0) {
-      setToast(t("desktop.ledger.classify.category_needs_classification"));
-      return;
-    }
-    setAsking({
-      kind: "category",
-      ids: takes,
-      skipped: ids.length - takes.length,
-      partial,
-      error: null,
-      split: categorySplit(takes, byId, check),
-    });
-  }
 
   // ---- Leading to the fix ----------------------------------------------------
   const leadTo = (next: MovementFilters, column: ColumnId) => {
@@ -1248,30 +669,7 @@ export function MovementsSection({
     }
   };
 
-  // Alt+B, Alt+P and Alt+M classify the selection wherever focus is on the
-  // Ledger page, as Alt+I opens the inspector: the header's tabs, period and
-  // buttons, a row checkbox, the toolbar and the inspector beside the grid
-  // included. A text field keeps its keys, and a dialog over the page is not
-  // the page.
-  const chord = useRef<(kind: ClassifyKind) => void>(() => undefined);
-  useEffect(() => {
-    chord.current = (kind) => classifySelection(kind);
-  });
-  useEffect(() => {
-    const onChord = (event: globalThis.KeyboardEvent) => {
-      if (event.defaultPrevented || event.isComposing) return;
-      const kind = CLASSIFY_KINDS.find((each) =>
-        chordMatches(CLASSIFY_CHORDS[each], event),
-      );
-      if (!kind) return;
-      const target = event.target as HTMLElement | null;
-      if (!target?.closest("[data-ledger-root]") || takesText(target)) return;
-      event.preventDefault();
-      chord.current(kind);
-    };
-    document.addEventListener("keydown", onChord);
-    return () => document.removeEventListener("keydown", onChord);
-  }, []);
+  useClassifyChords((kind) => classifySelection(kind));
 
   // ---- The palette -----------------------------------------------------------
   const latest = useRef<() => Action[]>(() => []);
@@ -1282,52 +680,19 @@ export function MovementsSection({
       select: (ids) => setSelection(new Set(ids)),
       makeRule: onMakeRule ? (ids) => onMakeRule({ ids }) : null,
     };
-    latest.current = () => [
-      ...CLASSIFY_KINDS.map((kind): Action => {
-        const availability = availabilityOf(kind);
-        return {
-          id: `ledger.classify.${kind}`,
-          label:
-            availability.kind === "blocked"
-              ? facts(t, [
-                  t(`desktop.ledger.classify.as_${kind}`),
-                  blockText(t, availability.block),
-                ])
-              : t(`desktop.ledger.classify.as_${kind}`),
-          group: "ledger",
-          icon: "tick",
-          enabled: () => availability.kind === "ready",
-          run: () => classifySelection(kind),
-        };
-      }),
-      {
-        id: "ledger.issue.next",
-        label: t("desktop.ledger.issue.next"),
-        group: "ledger",
-        icon: "alert",
-        enabled: () => sets.fix.size > 0,
-        run: () => stepIssue(1),
-      },
-      {
-        id: "ledger.issue.previous",
-        label: t("desktop.ledger.issue.previous"),
-        group: "ledger",
-        icon: "alert",
-        enabled: () => sets.fix.size > 0,
-        run: () => stepIssue(-1),
-      },
-      {
-        id: "ledger.filters.clear",
-        label: t("desktop.ledger.filters.clear_all"),
-        group: "ledger",
-        icon: "filter",
-        enabled: () => filters !== NO_FILTERS || search !== "",
-        run: () => {
+    latest.current = () =>
+      movementPaletteActions({
+        t,
+        availabilityOf,
+        classify: (kind) => classifySelection(kind),
+        hasIssues: sets.fix.size > 0,
+        stepIssue,
+        filtering: filters !== NO_FILTERS || search !== "",
+        clearFilters: () => {
           setFilters(NO_FILTERS);
           setSearch("");
         },
-      },
-    ];
+      });
   });
   useEffect(() => {
     register(() => latest.current());
@@ -1402,21 +767,6 @@ export function MovementsSection({
     items: MenuEntry[];
     run: (id: string) => void;
   } | null>(null);
-  // A group's items act on the group, which the chords, acting on the
-  // selection, do not: only the others show them.
-  const classifyItems = (ids: string[] | null): MenuEntry[] =>
-    CLASSIFY_KINDS.map((kind) => ({
-      id: `classify.${kind}`,
-      label: t(`desktop.ledger.classify.as_${kind}`),
-      enabled:
-        classifyAvailability(
-          kind,
-          ids ? { ids, hidden: 0, partial } : classifyTarget(),
-          byId,
-        ).kind === "ready",
-      icon: "tick",
-      ...(ids ? {} : { chord: CLASSIFY_CHORDS[kind] }),
-    }));
   const openMenu = (key: string, column: string | null, at: MenuAnchor) => {
     const group = groups?.find((entry) => entry.key === key);
     const ids = group ? group.rows.map(idOf) : null;
@@ -1424,73 +774,22 @@ export function MovementsSection({
     const staged = draft || stagedMovements(stage.content).has(key);
     setMenu({
       at,
-      items: [
-        ...(draft ? [] : classifyItems(ids)),
-        ...(ids
-          ? []
-          : [
-              { separator: true as const },
-              {
-                id: "revert.cell",
-                label: t("desktop.ledger.edit.revert_cell"),
-                icon: "reset" as const,
-                chord: REVERT_CELL_CHORD,
-                enabled: column !== null && edit.cellStaged(key, column),
-              },
-              {
-                id: "revert.movement",
-                label: draft
-                  ? t("desktop.ledger.draft.remove")
-                  : t("desktop.ledger.edit.revert_movement"),
-                icon: draft ? ("trash" as const) : ("reset" as const),
-                enabled: staged,
-              },
-              {
-                id: "fill",
-                label: t("desktop.ledger.fill.down"),
-                icon: "fillDown" as const,
-                chord: FILL_DOWN_CHORD,
-                enabled: column !== null,
-              },
-              ...(duplicates.has(key)
-                ? [
-                    { separator: true as const },
-                    {
-                      id: "duplicate.archive",
-                      label: `${t("desktop.ledger.duplicate.archive")}…`,
-                      icon: "archive" as const,
-                      enabled: true,
-                    },
-                  ]
-                : []),
-            ]),
-        ...(ids
-          ? [
-              {
-                id: "category",
-                label: t("desktop.ledger.group.category"),
-                icon: "group" as const,
-                enabled: true,
-              },
-              ...(onMakeRule
-                ? [
-                    {
-                      id: "make_rule",
-                      label: `${t("desktop.ledger.group.make_rule")}…`,
-                      icon: "filter" as const,
-                      enabled: true,
-                    },
-                  ]
-                : []),
-              {
-                id: "select",
-                label: t("desktop.ledger.group.select", { count: ids.length }),
-                icon: "selectAll" as const,
-                enabled: true,
-              },
-            ]
-          : []),
-      ],
+      items: movementMenuItems({
+        t,
+        ids,
+        draft,
+        staged,
+        column,
+        cellStaged: () => column !== null && edit.cellStaged(key, column),
+        duplicate: duplicates.has(key),
+        makeRule: !!onMakeRule,
+        classifyEnabled: (kind) =>
+          classifyAvailability(
+            kind,
+            ids ? { ids, hidden: 0, partial } : classifyTarget(),
+            byId,
+          ).kind === "ready",
+      }),
       run: (chosen) => {
         if (chosen === "revert.cell" && column)
           edit.revertCell(key, column as ColumnId);
@@ -1558,42 +857,14 @@ export function MovementsSection({
   const shownPeriod = periodText(t, locale, period);
   const selectionActions =
     selected.size > 1 ? (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <IconButton
-            label={t("desktop.ledger.selection.actions")}
-            size="sm"
-            className="ledger-selection-actions"
-          >
-            <Icon name="more" />
-          </IconButton>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {CLASSIFY_KINDS.map((kind) => (
-            <DropdownMenuItem
-              key={kind}
-              icon="tick"
-              disabled={availabilityOf(kind).kind !== "ready"}
-              onSelect={() => classifySelection(kind)}
-            >
-              {t(`desktop.ledger.classify.as_${kind}`)}
-              <DropdownMenuShortcut chord={CLASSIFY_CHORDS[kind]} />
-            </DropdownMenuItem>
-          ))}
-          {onMakeRule && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                icon="filter"
-                disabled={hiddenSelected.length > 0}
-                onSelect={() => onMakeRule({ ids: [...selected] })}
-              >
-                {t("desktop.ledger.inspector.selection.make_rule")}…
-              </DropdownMenuItem>
-            </>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <SelectionActions
+        availabilityOf={availabilityOf}
+        classify={(kind) => classifySelection(kind)}
+        hidden={hiddenSelected.length > 0}
+        onMakeRule={
+          onMakeRule ? () => onMakeRule({ ids: [...selected] }) : undefined
+        }
+      />
     ) : null;
 
   return (
@@ -1684,103 +955,33 @@ export function MovementsSection({
         hidden={t("desktop.ledger.reveal.movement_hidden")}
         missing={t("desktop.ledger.reveal.movement_missing")}
       />
-      {hiddenSelected.length > 0 && (
-        <div
-          role="alert"
-          className="ledger-hidden-selection flex flex-wrap items-center gap-2"
-        >
-          <Alert
-            tone="warning"
-            role="none"
-            icon={<Icon name="alert" />}
-            className="flex-1"
-          >
-            {t("desktop.ledger.selection.hidden", {
-              hidden: hiddenSelected.length,
-              selected: selected.size,
-            })}
-          </Alert>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setFilters(NO_FILTERS);
-              setSearch("");
-              setCollapsed(new Set());
-            }}
-          >
-            {t("desktop.ledger.selection.show")}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() =>
-              setSelection(
-                new Set([...selected].filter((id) => visibleSet.has(id))),
-              )
-            }
-          >
-            {t("desktop.ledger.selection.keep_visible")}
-          </Button>
-        </div>
-      )}
-      {hiddenSelected.length === 0 &&
-        selected.size > 1 &&
-        extent === "all" &&
-        hiddenByFilters > 0 && (
-          <p
-            role="status"
-            className="flex flex-wrap items-center gap-2 text-sm"
-          >
-            {t("desktop.ledger.selection.all_shown", { count: visible.length })}
-            <Button
-              variant="link"
-              size="xs"
-              onClick={() => setSelection(new Set(rows.map(idOf)))}
-            >
-              {t("desktop.ledger.selection.select_all", {
-                count: rows.length,
-                period: shownPeriod,
-              })}
-            </Button>
-          </p>
-        )}
-      {terms.length > 0 && partial && (
-        <p
-          role="status"
-          className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground"
-        >
-          {t("desktop.ledger.search.loaded", {
-            found: filtered.length,
-            loaded: rows.length,
-          })}
-          <Button variant="link" size="xs" onClick={readAll}>
-            {t("desktop.ledger.search.load_all", { total: held.total })}
-          </Button>
-        </p>
-      )}
-      {elsewhere !== null && elsewhere > 0 && (
-        <p
-          role="status"
-          className="ledger-elsewhere flex flex-wrap items-center gap-2 text-sm text-muted-foreground"
-        >
-          {t("desktop.ledger.search.elsewhere", { count: elsewhere })}
-          <Button variant="link" size="xs" onClick={() => onPeriod(null)}>
-            {t("desktop.ledger.search.show")}
-          </Button>
-        </p>
-      )}
-      {partial && !terms.length && (
-        <p
-          role="status"
-          className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground"
-        >
-          {t("desktop.ledger.window.partial")}
-          <Button variant="link" size="xs" onClick={readAll}>
-            {t("desktop.ledger.search.load_all", { total: held.total })}
-          </Button>
-        </p>
-      )}
+      <MovementWindowNotices
+        hiddenSelected={hiddenSelected.length}
+        selected={selected.size}
+        allShownSelected={extent === "all"}
+        hiddenByFilters={hiddenByFilters}
+        shown={visible.length}
+        loaded={rows.length}
+        total={held.total}
+        found={filtered.length}
+        searching={terms.length > 0}
+        partial={partial}
+        elsewhere={elsewhere}
+        period={shownPeriod}
+        onShowHidden={() => {
+          setFilters(NO_FILTERS);
+          setSearch("");
+          setCollapsed(new Set());
+        }}
+        onKeepVisible={() =>
+          setSelection(
+            new Set([...selected].filter((id) => visibleSet.has(id))),
+          )
+        }
+        onSelectAll={() => setSelection(new Set(rows.map(idOf)))}
+        readAll={readAll}
+        onElsewhere={() => onPeriod(null)}
+      />
       <MovementsGrid
         gridRef={grid}
         order={order}
@@ -1884,114 +1085,16 @@ export function MovementsSection({
         {spoken}
       </div>
       {asking && (
-        <ClassifyDialog
-          key={asking.ids.join(" ")}
-          kind={asking.kind}
-          ratioOf={
-            asking.kind === "mixed" && asking.check
-              ? (category) =>
-                  ratioCoverage(
-                    asking.ids,
-                    byId,
-                    category,
-                    ratios,
-                    asking.check!,
-                  )
-              : undefined
-          }
+        <MovementClassifyDialog
+          asking={asking}
+          command={classify}
+          byId={byId}
+          ratios={ratios}
           onOpenRatios={onOpenRatios}
-          movements={asking.draft ? 1 : asking.ids.length}
-          split={asking.split}
-          {...(asking.share ? { initialShare: asking.share } : {})}
-          {...(asking.range
-            ? {
-                range: {
-                  count: asking.range.length,
-                  onSelect: () => {
-                    const ids = asking.range!;
-                    setSelection(new Set(ids));
-                    const kind = asking.kind;
-                    if (kind === "category") askCategory(ids);
-                    else classifySelection(kind, { ids });
-                  },
-                },
-              }
-            : {})}
-          onClosed={asking.draft ? undefined : backToGrid}
-          skipped={asking.skipped}
-          partial={asking.partial}
-          error={asking.error}
-          overwritten={asking.overwritten ?? 0}
-          onCancel={() => setAsking(null)}
-          onStage={(answer) => {
-            if (asking.draft) {
-              // A new movement's classification is filled in, not staged
-              // over a stored one: Business with its category, Mixed with
-              // its share.
-              const key = asking.draft;
-              const share =
-                answer.share === undefined ? null : parsePercent(answer.share);
-              if (share && share.kind !== "value") {
-                setAsking({
-                  ...asking,
-                  error: t("desktop.ledger.classify.share_refused", {
-                    raw: typedPoints(answer.share ?? ""),
-                  }),
-                });
-                return;
-              }
-              const edit = (field: DraftField, value: string | null) =>
-                onStage({ type: "edit_draft", key, field, value });
-              edit(
-                "business_classification",
-                CLASSIFICATION_OF[
-                  asking.kind === "mixed" ? "mixed" : "business"
-                ],
-              );
-              if (answer.category) edit("category_id", answer.category);
-              edit(
-                "business_pct",
-                share?.kind === "value" ? share.value : null,
-              );
-              setAsking(null);
-              return;
-            }
-            if (asking.kind === "category") {
-              const category = answer.category ?? "";
-              void askCheck(asking.ids, category).then((check) => {
-                if (!check) {
-                  setAsking({
-                    ...asking,
-                    error: t("desktop.ledger.apply.read_failed"),
-                  });
-                  return;
-                }
-                const outcome = categoryCells(
-                  asking.ids,
-                  category,
-                  byId,
-                  check,
-                );
-                if (outcome.kind === "staged") {
-                  onStage(outcome.event);
-                  setToast(
-                    t("desktop.ledger.classify.staged_category", {
-                      category: categoryLabel(t, category),
-                      count: outcome.movements,
-                    }),
-                  );
-                }
-                setAsking(null);
-              });
-              return;
-            }
-            void stageClassified(asking.kind, asking.ids, answer).then(
-              (error) => {
-                if (error) setAsking({ ...asking, error });
-                else setAsking(null);
-              },
-            );
-          }}
+          onStage={onStage}
+          onSelect={(ids) => setSelection(new Set(ids))}
+          say={setToast}
+          backToGrid={backToGrid}
         />
       )}
       {menu && (
