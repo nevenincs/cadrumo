@@ -5,7 +5,7 @@ tags:
 date: '2026-11-06'
 modified: '2026-11-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:ec6a5ebfef5175e041d9b26d068d689dba53decd7fafc257631adb5e6d02954f'
+body_hash: 'sha256:41dad11b58b0989904d9cbdcc390fc74150dbd7cb54d27ed9d83a9f26c22c091'
 related: []
 ---
 
@@ -37,6 +37,8 @@ How the calculation path fingerprints the loaded profile record for a profile-so
 
 - A recalculation after an unrelated profile edit, or after a bare save, derives a new revision ID. The persistence step at `src/cadrumo/application/modelo/revision_persistence.py:636-662` therefore mints a new BORRADOR instead of publishing the duplicate of the existing identity. The VERIFICADO state of the earlier revision is not reused, and the operator has to verify again.
 - Filed revisions are unaffected because they are immutable.
+
+The behaviour is pinned by `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_720_profile_contact.py:345-358`. Two calculations whose contact values match but whose `identity.email` differs, a fact no 720 binding consumes, must have different revision IDs and different profile fingerprints. The test came from step S04 of `2026-11-06-modelo-profile-bindings-plan`, which says to preserve profile-tier fingerprint provenance.
 
 ### Breadth
 

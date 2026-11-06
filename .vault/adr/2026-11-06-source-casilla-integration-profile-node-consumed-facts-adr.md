@@ -5,7 +5,7 @@ tags:
 date: '2026-11-06'
 modified: '2026-11-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:21fce8232e156d13d957c785e3df8578cc4807507168b4a8a3b6d409b9cc706d'
+body_hash: 'sha256:31e625efc02dbc6121e70c119048cbd65494fc007236d3cdb9092da9ecced489'
 related:
   - "[[2026-08-22-source-casilla-integration-adr]]"
   - "[[2026-07-24-evidence-revision-identity-adr]]"
@@ -30,6 +30,7 @@ Today the calculation path hashes the whole loaded profile record, including its
 - `2026-07-24-evidence-revision-identity-adr` requires operator sign-off for any change to content-address derivation.
 - No consumer compares a stored profile fingerprint with the live profile. Header and contact export facts are read live. Whole-record sensitivity therefore protects no current check (reference).
 - Persisted revisions re-derive their ID from the stored fingerprint string, never from a profile. A new computation therefore rewrites no history (reference).
+- One test pins the whole-record behaviour today. `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_720_profile_contact.py:345` asserts that an edit to an unconsumed fact (`identity.email`) changes the Modelo 720 revision identity even when the contact values match. It came from the modelo-profile-bindings plan step S04, which was scoped to preserve existing fingerprint provenance and did not rule on node content (reference).
 
 ## Considered options
 
@@ -70,6 +71,8 @@ Required tests:
 - An edit to a consumed scalar, row or derived fact changes the ID.
 - The terminal-origin audit still finds a non-null fingerprint on every connected profile primary.
 - A revision persisted under the whole-record scheme still loads and re-derives its stored ID.
+
+The pinned test at `test_modelo_720_profile_contact.py:345` is replaced in the same change by its inverse, because an unconsumed `identity.email` edit must keep the 720 identity. Its encrypted round trip is kept.
 
 ## Rationale
 
