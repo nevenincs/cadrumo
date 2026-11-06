@@ -207,7 +207,7 @@ describe("verdict over fixtures", () => {
     assert.equal(out.verdict, FAIL);
     assert(
       unexpected(out).some((group) =>
-        group.logger.includes("_kdf_worker_supervision"),
+        group.logger.includes("kdf_worker_supervision"),
       ),
     );
     const missing = runCase("context-missing");

@@ -38,7 +38,7 @@ Strong local controls include exact-first header mapping, formula rejection, exp
 ## Complete assigned-file coverage
 
 - invoices/__init__.py (22 lines) (`src/cadrumo/application/invoices/__init__.py`) — all lines read.
-- _bulk_import_columns.py (235 lines) (`src/cadrumo/application/invoices/bulk_import_columns.py`) — all lines read.
+- bulk_import_columns.py (235 lines) (`src/cadrumo/application/invoices/bulk_import_columns.py`) — all lines read.
 - bulk_import.py (919 lines) (`src/cadrumo/application/invoices/bulk_import.py`) — all lines read.
 - catalogue_add_operation.py (518 lines) (`src/cadrumo/application/invoices/catalogue_add_operation.py`) — all lines read.
 - catalogue_creation.py (596 lines) (`src/cadrumo/application/invoices/catalogue_creation.py`) — all lines read.
