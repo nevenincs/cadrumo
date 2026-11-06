@@ -1749,9 +1749,7 @@ fn wait_for_server(
             return Ok(server);
         }
         if started.elapsed() >= SERVER_WAIT {
-            return Err(Stop::NotRunning(NotRunningCause::NoServerWithin {
-                budget: SERVER_WAIT,
-            }));
+            return Err(no_server_within(program));
         }
         if delay == SERVER_LOOK_FIRST {
             // Best effort, as the progress figure.
@@ -1761,6 +1759,16 @@ fn wait_for_server(
         pacing.wait(delay, cancellation)?;
         delay = delay.saturating_mul(2).min(SERVER_LOOK_LONGEST);
     }
+}
+
+/// The stop of a wait that ran out with no server: with the kind of the manager's latest
+/// start when that start failed, so a missing or broken program reads apart from one that
+/// is slow to start.
+fn no_server_within(program: &Program) -> Stop {
+    Stop::NotRunning(NotRunningCause::NoServerWithin {
+        budget: SERVER_WAIT,
+        latest_start: program.latest_start_failure(),
+    })
 }
 
 /// Re-observes one activity access failure only after its known run has published an end

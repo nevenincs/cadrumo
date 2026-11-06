@@ -644,6 +644,11 @@ fn a_program_that_never_listens_or_answers_otherwise_is_ended_and_not_running() 
         ),
         "{exited}"
     );
+    assert_eq!(
+        program.latest_start_failure(),
+        Some(StartFailureKind::Closed),
+        "the failed start is recorded for an engine waiting elsewhere"
+    );
     assert_eq!(exited.category(), FailureCategory::ProgramNotRunning);
     // A program that listens but reports another version is ended.
     stand_in(&mut program, "0.0.1");
@@ -660,6 +665,11 @@ fn a_program_that_never_listens_or_answers_otherwise_is_ended_and_not_running() 
                 if found == "0.0.1"
         ),
         "{other}"
+    );
+    assert_eq!(
+        program.latest_start_failure(),
+        Some(StartFailureKind::VersionUnconfirmed),
+        "the record holds the latest failed start"
     );
     assert_eq!(other.category(), FailureCategory::ProgramNotRunning);
     assert_eq!(
@@ -701,6 +711,11 @@ fn a_program_that_never_listens_or_answers_otherwise_is_ended_and_not_running() 
         second.running_server().map(|server| server.address()),
         Some(address),
         "another engine observes the one running server"
+    );
+    assert_eq!(
+        second.latest_start_failure(),
+        None,
+        "a start that succeeded clears the failed one, and a refused start records none"
     );
     drop(second);
     assert!(

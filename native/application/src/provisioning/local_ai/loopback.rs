@@ -20,6 +20,40 @@ const ANSWER_BYTES_LIMIT: u64 = 1024 * 1024;
 /// The longest line of a streamed answer.
 const LINE_BYTES_LIMIT: u64 = 64 * 1024;
 
+/// The part of an exchange with the program that failed.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ExchangePhase {
+    /// Connecting, under the connect bound.
+    Connect,
+    /// Writing the request or reading the answer, under the read and write bound.
+    Exchange,
+}
+
+/// How one exchange with the program failed: its phase, the I/O error kind, `TimedOut`
+/// when the phase's bound ran out, and the bound that applied to that phase.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ExchangeFailure {
+    pub phase: ExchangePhase,
+    pub kind: io::ErrorKind,
+    pub bound: Duration,
+}
+
+/// Marks an error as the connect's, so the failure names the bound that applied.
+#[derive(Debug)]
+struct ConnectFailed(io::Error);
+
+impl std::fmt::Display for ConnectFailed {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl std::error::Error for ConnectFailed {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(&self.0)
+    }
+}
+
 /// One loopback address and the bounds of each exchange with it.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Loopback {
@@ -56,6 +90,26 @@ impl Loopback {
         self
     }
 
+    /// How `error`, returned by an exchange with this address, failed: its phase and the
+    /// bound this client enforced on it. A blocking socket reports a read or write that
+    /// ran out of its timeout as `WouldBlock` on Unix and as `TimedOut` on Windows, and
+    /// every socket here is blocking with a timeout set, so both read as `TimedOut`.
+    pub fn failure(&self, error: &io::Error) -> ExchangeFailure {
+        let connecting = error
+            .get_ref()
+            .is_some_and(|inner| inner.is::<ConnectFailed>());
+        let (phase, bound) = if connecting {
+            (ExchangePhase::Connect, self.connect_timeout)
+        } else {
+            (ExchangePhase::Exchange, self.io_timeout)
+        };
+        let kind = match error.kind() {
+            io::ErrorKind::WouldBlock => io::ErrorKind::TimedOut,
+            kind => kind,
+        };
+        ExchangeFailure { phase, kind, bound }
+    }
+
     fn exchange<'a>(
         &self,
         method: &str,
@@ -63,7 +117,8 @@ impl Loopback {
         body: Option<&[u8]>,
         stop: Stop<'a>,
     ) -> io::Result<(u16, Body<'a, BufReader<TcpStream>>)> {
-        let mut stream = TcpStream::connect_timeout(&self.address, self.connect_timeout)?;
+        let mut stream = TcpStream::connect_timeout(&self.address, self.connect_timeout)
+            .map_err(|error| io::Error::new(error.kind(), ConnectFailed(error)))?;
         stream.set_read_timeout(Some(self.io_timeout))?;
         stream.set_write_timeout(Some(self.io_timeout))?;
         stream.set_nodelay(true)?;
@@ -133,6 +188,9 @@ impl Loopback {
         }
     }
 }
+
+#[cfg(test)]
+mod tests;
 
 fn whole(body: impl Read) -> io::Result<Vec<u8>> {
     let mut out = Vec::new();
