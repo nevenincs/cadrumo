@@ -69,15 +69,3 @@ export type ModeloTimelineEvent = {
   event_type: BucketEventType;
   occurred_at: string;
 };
-
-/** The `modelo.history` definitions' share of `ModeloContracts`. */
-export type ModeloHistoryContracts = {
-  "modelo.history": {
-    request: ModeloHistoryOperationRequest;
-    result: ModeloHistoryOperationProjection;
-  };
-  "modelo.history.timeline": {
-    request: ModeloHistoryTimelineRequest;
-    result: ModeloHistoryTimelineProjection;
-  };
-};

@@ -162,11 +162,3 @@ export type QuickfileStageSnapshot = {
 export type QuickfileStageStatus = "ok" | "warning" | "refused" | "skipped";
 
 export type QuickfileText = string;
-
-/** The `modelo.quickfile` definitions' share of `ModeloContracts`. */
-export type ModeloQuickfileContracts = {
-  "modelo.quickfile": {
-    request: QuickfileRequest;
-    result: QuickfileProjection;
-  };
-};

@@ -7,7 +7,7 @@ import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
 import { formatAmount } from "../../../shared/numbers";
 import type { ModeloFormAddressV1 } from "../../../shell/modeloContract/modeloEditWork";
-import type { ModeloTaxationComparisonProjection } from "../../../shell/modeloContract/modeloWorkCompareTaxation";
+import type { ModeloTaxationComparisonProjection } from "../../../shell/modeloContract/modeloWork";
 import type { PublicModeloFormField } from "../../../shell/modeloContract/modeloWorkForm";
 import { useStrings } from "../../../shell/strings";
 import { BoxNumber } from "../form/BoxNumber";

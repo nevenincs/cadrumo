@@ -46,10 +46,9 @@ test("a physical line is counted under every line ending", () => {
 
 test("a module at the bound passes and one line over is refused", () => {
   assert.deepEqual(oversizedModules([["edge.ts", planted(BOUND)]], BOUND), []);
-  assert.deepEqual(
-    oversizedModules([["big.ts", planted(BOUND + 1)]], BOUND),
-    [`big.ts takes ${BOUND + 1} lines, more than ${BOUND}`],
-  );
+  assert.deepEqual(oversizedModules([["big.ts", planted(BOUND + 1)]], BOUND), [
+    `big.ts takes ${BOUND + 1} lines, more than ${BOUND}`,
+  ]);
 });
 
 test("a missing final line break or CRLF does not hide a line", () => {

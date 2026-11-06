@@ -140,23 +140,3 @@ export type ModeloIvaWalletSeedRequest = {
   period: PublicPeriod;
   amount: string;
 };
-
-/** The `modelo.iva-wallet` definitions' share of `ModeloContracts`. */
-export type ModeloIvaWalletContracts = {
-  "modelo.iva-wallet.balance": {
-    request: ModeloIvaWalletBalanceRequest;
-    result: ModeloIvaWalletBalanceProjection;
-  };
-  "modelo.iva-wallet.correct": {
-    request: ModeloIvaWalletCorrectionRequest;
-    result: ModeloIvaWalletCorrectionProjection;
-  };
-  "modelo.iva-wallet.override": {
-    request: ModeloIvaWalletOverrideRequest;
-    result: ModeloIvaWalletOverrideProjection;
-  };
-  "modelo.iva-wallet.seed": {
-    request: ModeloIvaWalletSeedRequest;
-    result: ModeloIvaWalletSeedProjection;
-  };
-};

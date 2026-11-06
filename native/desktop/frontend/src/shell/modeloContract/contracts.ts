@@ -8,29 +8,219 @@
 // is always present; a field of what the window sends may be left out where
 // the model gives it a default.
 
-import type { Modelo036Contracts } from "./modelo036";
-import type { ModeloAggregateContracts } from "./modeloAggregate";
-import type { ModeloAuditContracts } from "./modeloAudit";
-import type { ModeloBindingsContracts } from "./modeloBindings";
-import type { ModeloCompareContracts } from "./modeloCompare";
-import type { ModeloDeclarationsContracts } from "./modeloDeclarations";
-import type { ModeloEditContracts } from "./modeloEdit";
-import type { ModeloExportContracts } from "./modeloExport";
-import type { ModeloFilingRecordContracts } from "./modeloFilingRecord";
-import type { ModeloHistoryContracts } from "./modeloHistory";
-import type { ModeloIvaWalletContracts } from "./modeloIvaWallet";
-import type { ModeloM145Contracts } from "./modeloM145";
-import type { ModeloM360SolicitudContracts } from "./modeloM360Solicitud";
-import type { ModeloObservationContracts } from "./modeloObservation";
-import type { ModeloProjectContracts } from "./modeloProject";
-import type { ModeloQuickfileContracts } from "./modeloQuickfile";
-import type { ModeloReadinessContracts } from "./modeloReadiness";
-import type { ModeloReconcileContracts } from "./modeloReconcile";
-import type { ModeloRequiresContracts } from "./modeloRequires";
-import type { ModeloReviewPackageContracts } from "./modeloReviewPackage";
-import type { ModeloSpreadsheetContracts } from "./modeloSpreadsheet";
-import type { ModeloVerificationReportContracts } from "./modeloVerificationReport";
-import type { ModeloWorkContracts } from "./modeloWork";
+import type {
+  M036QueryProjection,
+  M036ReadProjection,
+  M036ReadRequest,
+  M036RecordProjection,
+  M036RecordRequest,
+} from "./modelo036";
+import type {
+  ModeloAggregateOperationRequest,
+  ModeloAggregateProjection,
+  ModeloInvoiceWithholdingCaptureProjection,
+  ModeloInvoiceWithholdingCaptureRequest,
+} from "./modeloAggregate";
+import type {
+  ModeloAuditExportProjection,
+  ModeloAuditExportRequest,
+  ModeloAuditQueryProjection,
+  ModeloAuditReadProjection,
+  ModeloAuditReadRequest,
+} from "./modeloAudit";
+import type {
+  ModeloBindingsListProjection,
+  ModeloBindingsListRequest,
+  ModeloBindingsResolveProjection,
+  ModeloBindingsResolveRequest,
+  ModeloBindingsResolveTypedProjection,
+} from "./modeloBindings";
+import type {
+  ModeloCompareOperationProjection,
+  ModeloCompareOperationRequest,
+} from "./modeloCompare";
+import type {
+  ModeloDeclarationsListProjectionV1,
+  ModeloDeclarationsListRequest,
+} from "./modeloDeclarations";
+import type {
+  ModeloEditApplyOperationRequestV2,
+  ModeloEditApplyPrerequisiteProjectionV1,
+  ModeloEditApplyPrerequisiteRequest,
+  ModeloEditApplyPublicResultV1,
+  ModeloEditPreflightProjectionV1,
+  ModeloEditPreflightRequestV2,
+  ModeloEditRenewRequest,
+  ModeloEditRenewalProjectionV1,
+} from "./modeloEdit";
+import type {
+  ModeloExportPublicResultV3,
+  ModeloExportRequest,
+} from "./modeloExport";
+import type {
+  ModeloFilingRecordImportProjection,
+  ModeloFilingRecordImportRequest,
+  ModeloFilingRecordListProjection,
+  ModeloFilingRecordListRequest,
+  ModeloFilingRecordViewProjection,
+  ModeloFilingRecordViewRequest,
+} from "./modeloFilingRecord";
+import type {
+  ModeloHistoryOperationProjection,
+  ModeloHistoryOperationRequest,
+  ModeloHistoryTimelineProjection,
+  ModeloHistoryTimelineRequest,
+} from "./modeloHistory";
+import type {
+  ModeloIvaWalletBalanceProjection,
+  ModeloIvaWalletBalanceRequest,
+  ModeloIvaWalletCorrectionProjection,
+  ModeloIvaWalletCorrectionRequest,
+  ModeloIvaWalletOverrideProjection,
+  ModeloIvaWalletOverrideRequest,
+  ModeloIvaWalletSeedProjection,
+  ModeloIvaWalletSeedRequest,
+} from "./modeloIvaWallet";
+import type {
+  M145CommunicationCreateRequest,
+  M145CommunicationExportRequest,
+  M145CommunicationMarkCompletedRequest,
+  M145CommunicationMarkDeliveredRequest,
+  M145CommunicationOperationResult,
+  M145CommunicationValidateRequest,
+} from "./modeloM145";
+import type {
+  Modelo360SolicitudRequest,
+  Modelo360SolicitudResult,
+} from "./modeloM360Solicitud";
+import type {
+  ModeloLocalObservationMutationProjection,
+  ModeloLocalObservationMutationRequest,
+} from "./modeloObservation";
+import type {
+  ModeloProjectOperationProjection,
+  ModeloProjectOperationRequest,
+} from "./modeloProject";
+import type { QuickfileProjection, QuickfileRequest } from "./modeloQuickfile";
+import type {
+  ModeloReadinessOperationRequest,
+  ModeloReadinessProjection,
+  ModeloReadinessSummaryProjection,
+} from "./modeloReadiness";
+import type {
+  ModeloReconciliationImportProjection,
+  ModeloReconciliationImportRequest,
+  ModeloReconciliationListProjection,
+  ModeloReconciliationListRequest,
+  ModeloReconciliationPullRequest,
+  ReconciliationExportXlsxProjection,
+  ReconciliationExportXlsxRequest,
+} from "./modeloReconcile";
+import type {
+  ModeloRequiresProjection,
+  ModeloRequiresRequest,
+} from "./modeloRequires";
+import type {
+  ModeloReviewPackageBuildPublicResultV1,
+  ModeloReviewPackageBuildRequest,
+  ModeloReviewPackageCounterSignProjection,
+  ModeloReviewPackageCounterSignRequest,
+  ModeloReviewPackageDecryptProjection,
+  ModeloReviewPackageDecryptRequest,
+  ModeloReviewPackageEncryptFeedbackProjection,
+  ModeloReviewPackageEncryptFeedbackRequest,
+  ModeloReviewPackageEncryptForRecipientProjection,
+  ModeloReviewPackageEncryptForRecipientRequest,
+  ModeloReviewPackageImportFeedbackProjection,
+  ModeloReviewPackageImportFeedbackRequest,
+  ModeloReviewPackageSignProjection,
+  ModeloReviewPackageSignRequest,
+} from "./modeloReviewPackage";
+import type {
+  ModeloSpreadsheetExportOutcome,
+  ModeloSpreadsheetExportRequest,
+} from "./modeloSpreadsheet";
+import type {
+  ModeloVerificationReportListProjection,
+  ModeloVerificationReportListRequest,
+  ModeloVerificationReportViewProjection,
+  ModeloVerificationReportViewRequest,
+} from "./modeloVerificationReport";
+import type {
+  CreditResolutionAcceptRequest,
+  CreditResolutionListProjection,
+  CreditResolutionListRequest,
+  CreditResolutionMutationProjection,
+  CreditResolutionRevokeRequest,
+  ModeloMaritimePreviewProjection,
+  ModeloMaritimePreviewRequest,
+  ModeloTaxationComparisonProjection,
+  ModeloTaxationComparisonRequest,
+  ModeloWorkCalculatePublicResultV3,
+  ModeloWorkCalculateRequest,
+  ModeloWorkCreateProjection,
+  ModeloWorkCreateRequest,
+  ModeloWorkDiscardPublicResultV2,
+  ModeloWorkDiscardRequest,
+  ModeloWorkFilePublicResultV2,
+  ModeloWorkFileRequest,
+  ModeloWorkFilingRecordProjection,
+  ModeloWorkFilingRecordRequest,
+  ModeloWorkListProjection,
+  ModeloWorkListRequest,
+  ModeloWorkM303AttestationPublicResultV2,
+  ModeloWorkM303AttestationRequest,
+  ModeloWorkMetadataProjection,
+  ModeloWorkMetadataRequest,
+  ModeloWorkRenamePublicResultV2,
+  ModeloWorkRenameRequest,
+  ModeloWorkRevisionProjection,
+  ModeloWorkRevisionRequest,
+  ModeloWorkRevisionSnapshotProjection,
+  ModeloWorkRevisionSnapshotRequest,
+  ModeloWorkRevisionsProjection,
+  ModeloWorkRevisionsRequest,
+  ModeloWorkWizardAttemptProjection,
+  ModeloWorkWizardAttemptRequest,
+  ModeloWorkWizardContextProjection,
+  ModeloWorkWizardContextRequest,
+} from "./modeloWork";
+import type {
+  ModeloWorkAmendPublicResultV2,
+  ModeloWorkAmendRequest,
+} from "./modeloWorkAmend";
+import type {
+  ModeloWorkAmendmentContextProjection,
+  ModeloWorkAmendmentContextRequest,
+} from "./modeloWorkAmendmentContext";
+import type {
+  ModeloCasillaHelpProjectionV1,
+  ModeloCasillaHelpRequest,
+} from "./modeloWorkCasillaHelp";
+import type {
+  ModeloDependencyProjection,
+  ModeloDependencyRequest,
+} from "./modeloWorkDependencies";
+import type {
+  ModeloWorkbenchFormProjectionV1,
+  ModeloWorkbenchFormRequest,
+} from "./modeloWorkForm";
+import type {
+  ModeloWorkHistoryProjection,
+  ModeloWorkHistoryRequest,
+} from "./modeloWorkHistory";
+import type {
+  ModeloCalculationReportVerificationProjection,
+  ModeloCalculationReportVerificationRequest,
+} from "./modeloWorkReportVerify";
+import type {
+  ModeloWorkReviewProjection,
+  ModeloWorkReviewRequest,
+} from "./modeloWorkReview";
+import type {
+  ModeloWorkVerifyPublicResultV2,
+  ModeloWorkVerifyRequest,
+} from "./modeloWorkVerify";
 
 /** The definitions the host admits, mirroring its closed list. */
 export const MODELO_DEFINITIONS = [
@@ -138,6 +328,416 @@ export const MODELO_STORED_SUBJECT_DEFINITIONS = [
   "modelo.work.revoke_disagreement",
   "modelo.work.verify",
 ] as const;
+
+/** The `modelo.036` definitions' share of `ModeloContracts`. */
+type Modelo036Contracts = {
+  "modelo.036.query": { request: M036ReadRequest; result: M036QueryProjection };
+  "modelo.036.read": { request: M036ReadRequest; result: M036ReadProjection };
+  "modelo.036.record": {
+    request: M036RecordRequest;
+    result: M036RecordProjection;
+  };
+};
+
+/** The `modelo.aggregate` definitions' share of `ModeloContracts`. */
+type ModeloAggregateContracts = {
+  "modelo.aggregate": {
+    request: ModeloAggregateOperationRequest;
+    result: ModeloAggregateProjection;
+  };
+  "modelo.aggregate.capture_received_invoice_retencion": {
+    request: ModeloInvoiceWithholdingCaptureRequest;
+    result: ModeloInvoiceWithholdingCaptureProjection;
+  };
+};
+
+/** The `modelo.audit` definitions' share of `ModeloContracts`. */
+type ModeloAuditContracts = {
+  "modelo.audit.export": {
+    request: ModeloAuditExportRequest;
+    result: ModeloAuditExportProjection;
+  };
+  "modelo.audit.query": {
+    request: ModeloAuditReadRequest;
+    result: ModeloAuditQueryProjection;
+  };
+  "modelo.audit.read": {
+    request: ModeloAuditReadRequest;
+    result: ModeloAuditReadProjection;
+  };
+};
+
+/** The `modelo.bindings` definitions' share of `ModeloContracts`. */
+type ModeloBindingsContracts = {
+  "modelo.bindings.list": {
+    request: ModeloBindingsListRequest;
+    result: ModeloBindingsListProjection;
+  };
+  "modelo.bindings.resolve": {
+    request: ModeloBindingsResolveRequest;
+    result: ModeloBindingsResolveProjection;
+  };
+  "modelo.bindings.resolve.typed": {
+    request: ModeloBindingsResolveRequest;
+    result: ModeloBindingsResolveTypedProjection;
+  };
+};
+
+/** The `modelo.compare` definitions' share of `ModeloContracts`. */
+type ModeloCompareContracts = {
+  "modelo.compare": {
+    request: ModeloCompareOperationRequest;
+    result: ModeloCompareOperationProjection;
+  };
+};
+
+/** The `modelo.declarations` definitions' share of `ModeloContracts`. */
+type ModeloDeclarationsContracts = {
+  "modelo.declarations.list": {
+    request: ModeloDeclarationsListRequest;
+    result: ModeloDeclarationsListProjectionV1;
+  };
+};
+
+/** The `modelo.edit` definitions' share of `ModeloContracts`. */
+type ModeloEditContracts = {
+  "modelo.edit.apply": {
+    request: ModeloEditApplyOperationRequestV2;
+    result: ModeloEditApplyPublicResultV1;
+  };
+  "modelo.edit.apply_prerequisite": {
+    request: ModeloEditApplyPrerequisiteRequest;
+    result: ModeloEditApplyPrerequisiteProjectionV1;
+  };
+  "modelo.edit.preflight": {
+    request: ModeloEditPreflightRequestV2;
+    result: ModeloEditPreflightProjectionV1;
+  };
+  "modelo.edit.renew": {
+    request: ModeloEditRenewRequest;
+    result: ModeloEditRenewalProjectionV1;
+  };
+};
+
+/** The `modelo.export` definitions' share of `ModeloContracts`. */
+type ModeloExportContracts = {
+  "modelo.export": {
+    request: ModeloExportRequest;
+    result: ModeloExportPublicResultV3;
+  };
+};
+
+/** The `modelo.filing_record` definitions' share of `ModeloContracts`. */
+type ModeloFilingRecordContracts = {
+  "modelo.filing_record.import": {
+    request: ModeloFilingRecordImportRequest;
+    result: ModeloFilingRecordImportProjection;
+  };
+  "modelo.filing_record.list": {
+    request: ModeloFilingRecordListRequest;
+    result: ModeloFilingRecordListProjection;
+  };
+  "modelo.filing_record.view": {
+    request: ModeloFilingRecordViewRequest;
+    result: ModeloFilingRecordViewProjection;
+  };
+};
+
+/** The `modelo.history` definitions' share of `ModeloContracts`. */
+type ModeloHistoryContracts = {
+  "modelo.history": {
+    request: ModeloHistoryOperationRequest;
+    result: ModeloHistoryOperationProjection;
+  };
+  "modelo.history.timeline": {
+    request: ModeloHistoryTimelineRequest;
+    result: ModeloHistoryTimelineProjection;
+  };
+};
+
+/** The `modelo.iva-wallet` definitions' share of `ModeloContracts`. */
+type ModeloIvaWalletContracts = {
+  "modelo.iva-wallet.balance": {
+    request: ModeloIvaWalletBalanceRequest;
+    result: ModeloIvaWalletBalanceProjection;
+  };
+  "modelo.iva-wallet.correct": {
+    request: ModeloIvaWalletCorrectionRequest;
+    result: ModeloIvaWalletCorrectionProjection;
+  };
+  "modelo.iva-wallet.override": {
+    request: ModeloIvaWalletOverrideRequest;
+    result: ModeloIvaWalletOverrideProjection;
+  };
+  "modelo.iva-wallet.seed": {
+    request: ModeloIvaWalletSeedRequest;
+    result: ModeloIvaWalletSeedProjection;
+  };
+};
+
+/** The `modelo.m145` definitions' share of `ModeloContracts`. */
+type ModeloM145Contracts = {
+  "modelo.m145.create": {
+    request: M145CommunicationCreateRequest;
+    result: M145CommunicationOperationResult;
+  };
+  "modelo.m145.export": {
+    request: M145CommunicationExportRequest;
+    result: M145CommunicationOperationResult;
+  };
+  "modelo.m145.mark_delivered_to_payer": {
+    request: M145CommunicationMarkDeliveredRequest;
+    result: M145CommunicationOperationResult;
+  };
+  "modelo.m145.mark_locally_completed": {
+    request: M145CommunicationMarkCompletedRequest;
+    result: M145CommunicationOperationResult;
+  };
+  "modelo.m145.validate": {
+    request: M145CommunicationValidateRequest;
+    result: M145CommunicationOperationResult;
+  };
+};
+
+/** The `modelo.m360_solicitud` definitions' share of `ModeloContracts`. */
+type ModeloM360SolicitudContracts = {
+  "modelo.m360_solicitud": {
+    request: Modelo360SolicitudRequest;
+    result: Modelo360SolicitudResult;
+  };
+};
+
+/** The `modelo.observation` definitions' share of `ModeloContracts`. */
+type ModeloObservationContracts = {
+  "modelo.observation.local": {
+    request: ModeloLocalObservationMutationRequest;
+    result: ModeloLocalObservationMutationProjection;
+  };
+};
+
+/** The `modelo.project` definitions' share of `ModeloContracts`. */
+type ModeloProjectContracts = {
+  "modelo.project": {
+    request: ModeloProjectOperationRequest;
+    result: ModeloProjectOperationProjection;
+  };
+};
+
+/** The `modelo.quickfile` definitions' share of `ModeloContracts`. */
+type ModeloQuickfileContracts = {
+  "modelo.quickfile": {
+    request: QuickfileRequest;
+    result: QuickfileProjection;
+  };
+};
+
+/** The `modelo.readiness` definitions' share of `ModeloContracts`. */
+type ModeloReadinessContracts = {
+  "modelo.readiness": {
+    request: ModeloReadinessOperationRequest;
+    result: ModeloReadinessProjection;
+  };
+  "modelo.readiness.summary": {
+    request: ModeloReadinessOperationRequest;
+    result: ModeloReadinessSummaryProjection;
+  };
+};
+
+/** The `modelo.reconcile` definitions' share of `ModeloContracts`. */
+type ModeloReconcileContracts = {
+  "modelo.reconcile.export-xlsx": {
+    request: ReconciliationExportXlsxRequest;
+    result: ReconciliationExportXlsxProjection;
+  };
+  "modelo.reconcile.import": {
+    request: ModeloReconciliationImportRequest;
+    result: ModeloReconciliationImportProjection;
+  };
+  "modelo.reconcile.list": {
+    request: ModeloReconciliationListRequest;
+    result: ModeloReconciliationListProjection;
+  };
+  "modelo.reconcile.pull": {
+    request: ModeloReconciliationPullRequest;
+    result: ModeloReconciliationImportProjection;
+  };
+};
+
+/** The `modelo.requires` definitions' share of `ModeloContracts`. */
+type ModeloRequiresContracts = {
+  "modelo.requires": {
+    request: ModeloRequiresRequest;
+    result: ModeloRequiresProjection;
+  };
+};
+
+/** The `modelo.review_package` definitions' share of `ModeloContracts`. */
+type ModeloReviewPackageContracts = {
+  "modelo.review_package.build": {
+    request: ModeloReviewPackageBuildRequest;
+    result: ModeloReviewPackageBuildPublicResultV1;
+  };
+  "modelo.review_package.counter_sign": {
+    request: ModeloReviewPackageCounterSignRequest;
+    result: ModeloReviewPackageCounterSignProjection;
+  };
+  "modelo.review_package.decrypt": {
+    request: ModeloReviewPackageDecryptRequest;
+    result: ModeloReviewPackageDecryptProjection;
+  };
+  "modelo.review_package.encrypt_feedback": {
+    request: ModeloReviewPackageEncryptFeedbackRequest;
+    result: ModeloReviewPackageEncryptFeedbackProjection;
+  };
+  "modelo.review_package.encrypt_for_recipient": {
+    request: ModeloReviewPackageEncryptForRecipientRequest;
+    result: ModeloReviewPackageEncryptForRecipientProjection;
+  };
+  "modelo.review_package.import_feedback": {
+    request: ModeloReviewPackageImportFeedbackRequest;
+    result: ModeloReviewPackageImportFeedbackProjection;
+  };
+  "modelo.review_package.sign": {
+    request: ModeloReviewPackageSignRequest;
+    result: ModeloReviewPackageSignProjection;
+  };
+};
+
+/** The `modelo.spreadsheet` definitions' share of `ModeloContracts`. */
+type ModeloSpreadsheetContracts = {
+  "modelo.spreadsheet.export": {
+    request: ModeloSpreadsheetExportRequest;
+    result: ModeloSpreadsheetExportOutcome;
+  };
+};
+
+/** The `modelo.verification_report` definitions' share of `ModeloContracts`. */
+type ModeloVerificationReportContracts = {
+  "modelo.verification_report.list": {
+    request: ModeloVerificationReportListRequest;
+    result: ModeloVerificationReportListProjection;
+  };
+  "modelo.verification_report.view": {
+    request: ModeloVerificationReportViewRequest;
+    result: ModeloVerificationReportViewProjection;
+  };
+};
+
+/** The `modelo.work` definitions' share of `ModeloContracts`. */
+type ModeloWorkContracts = {
+  "modelo.work.accept_disagreement": {
+    request: CreditResolutionAcceptRequest;
+    result: CreditResolutionMutationProjection;
+  };
+  "modelo.work.amend": {
+    request: ModeloWorkAmendRequest;
+    result: ModeloWorkAmendPublicResultV2;
+  };
+  "modelo.work.amendment_context": {
+    request: ModeloWorkAmendmentContextRequest;
+    result: ModeloWorkAmendmentContextProjection;
+  };
+  "modelo.work.calculate": {
+    request: ModeloWorkCalculateRequest;
+    result: ModeloWorkCalculatePublicResultV3;
+  };
+  "modelo.work.casilla_help": {
+    request: ModeloCasillaHelpRequest;
+    result: ModeloCasillaHelpProjectionV1;
+  };
+  "modelo.work.compare_taxation": {
+    request: ModeloTaxationComparisonRequest;
+    result: ModeloTaxationComparisonProjection;
+  };
+  "modelo.work.create": {
+    request: ModeloWorkCreateRequest;
+    result: ModeloWorkCreateProjection;
+  };
+  "modelo.work.dependencies": {
+    request: ModeloDependencyRequest;
+    result: ModeloDependencyProjection;
+  };
+  "modelo.work.disagreements": {
+    request: CreditResolutionListRequest;
+    result: CreditResolutionListProjection;
+  };
+  "modelo.work.discard": {
+    request: ModeloWorkDiscardRequest;
+    result: ModeloWorkDiscardPublicResultV2;
+  };
+  "modelo.work.file": {
+    request: ModeloWorkFileRequest;
+    result: ModeloWorkFilePublicResultV2;
+  };
+  "modelo.work.filing_record": {
+    request: ModeloWorkFilingRecordRequest;
+    result: ModeloWorkFilingRecordProjection;
+  };
+  "modelo.work.form": {
+    request: ModeloWorkbenchFormRequest;
+    result: ModeloWorkbenchFormProjectionV1;
+  };
+  "modelo.work.history": {
+    request: ModeloWorkHistoryRequest;
+    result: ModeloWorkHistoryProjection;
+  };
+  "modelo.work.list": {
+    request: ModeloWorkListRequest;
+    result: ModeloWorkListProjection;
+  };
+  "modelo.work.m303_attestation": {
+    request: ModeloWorkM303AttestationRequest;
+    result: ModeloWorkM303AttestationPublicResultV2;
+  };
+  "modelo.work.metadata": {
+    request: ModeloWorkMetadataRequest;
+    result: ModeloWorkMetadataProjection;
+  };
+  "modelo.work.preview_maritime_exemption": {
+    request: ModeloMaritimePreviewRequest;
+    result: ModeloMaritimePreviewProjection;
+  };
+  "modelo.work.rename": {
+    request: ModeloWorkRenameRequest;
+    result: ModeloWorkRenamePublicResultV2;
+  };
+  "modelo.work.report_verify": {
+    request: ModeloCalculationReportVerificationRequest;
+    result: ModeloCalculationReportVerificationProjection;
+  };
+  "modelo.work.review": {
+    request: ModeloWorkReviewRequest;
+    result: ModeloWorkReviewProjection;
+  };
+  "modelo.work.revision": {
+    request: ModeloWorkRevisionRequest;
+    result: ModeloWorkRevisionProjection;
+  };
+  "modelo.work.revision_snapshot": {
+    request: ModeloWorkRevisionSnapshotRequest;
+    result: ModeloWorkRevisionSnapshotProjection;
+  };
+  "modelo.work.revisions": {
+    request: ModeloWorkRevisionsRequest;
+    result: ModeloWorkRevisionsProjection;
+  };
+  "modelo.work.revoke_disagreement": {
+    request: CreditResolutionRevokeRequest;
+    result: CreditResolutionMutationProjection;
+  };
+  "modelo.work.verify": {
+    request: ModeloWorkVerifyRequest;
+    result: ModeloWorkVerifyPublicResultV2;
+  };
+  "modelo.work.wizard_attempt": {
+    request: ModeloWorkWizardAttemptRequest;
+    result: ModeloWorkWizardAttemptProjection;
+  };
+  "modelo.work.wizard_context": {
+    request: ModeloWorkWizardContextRequest;
+    result: ModeloWorkWizardContextProjection;
+  };
+};
 
 /** Each admitted definition's registered request, result and review, as the
  * runtime's contract names them; a request names the profile the host fills. */

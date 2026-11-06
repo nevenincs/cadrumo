@@ -61,11 +61,3 @@ export type ModeloLocalObservationMutationRequest = {
   actor?: string | null;
   reason: string;
 };
-
-/** The `modelo.observation` definitions' share of `ModeloContracts`. */
-export type ModeloObservationContracts = {
-  "modelo.observation.local": {
-    request: ModeloLocalObservationMutationRequest;
-    result: ModeloLocalObservationMutationProjection;
-  };
-};

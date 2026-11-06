@@ -229,35 +229,3 @@ export type ModeloReviewPackageSignRequest = {
   package: string;
   output: string;
 };
-
-/** The `modelo.review_package` definitions' share of `ModeloContracts`. */
-export type ModeloReviewPackageContracts = {
-  "modelo.review_package.build": {
-    request: ModeloReviewPackageBuildRequest;
-    result: ModeloReviewPackageBuildPublicResultV1;
-  };
-  "modelo.review_package.counter_sign": {
-    request: ModeloReviewPackageCounterSignRequest;
-    result: ModeloReviewPackageCounterSignProjection;
-  };
-  "modelo.review_package.decrypt": {
-    request: ModeloReviewPackageDecryptRequest;
-    result: ModeloReviewPackageDecryptProjection;
-  };
-  "modelo.review_package.encrypt_feedback": {
-    request: ModeloReviewPackageEncryptFeedbackRequest;
-    result: ModeloReviewPackageEncryptFeedbackProjection;
-  };
-  "modelo.review_package.encrypt_for_recipient": {
-    request: ModeloReviewPackageEncryptForRecipientRequest;
-    result: ModeloReviewPackageEncryptForRecipientProjection;
-  };
-  "modelo.review_package.import_feedback": {
-    request: ModeloReviewPackageImportFeedbackRequest;
-    result: ModeloReviewPackageImportFeedbackProjection;
-  };
-  "modelo.review_package.sign": {
-    request: ModeloReviewPackageSignRequest;
-    result: ModeloReviewPackageSignProjection;
-  };
-};

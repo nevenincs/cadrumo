@@ -10,7 +10,7 @@ import {
 import { translator } from "../../../shell/strings";
 import type { ModeloPort } from "../../../shell/modelo";
 import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
-import type { ModeloTaxationComparisonProjection } from "../../../shell/modeloContract/modeloWorkCompareTaxation";
+import type { ModeloTaxationComparisonProjection } from "../../../shell/modeloContract/modeloWork";
 import type {
   ModeloFormElection,
   PublicModeloFormExportOffer,

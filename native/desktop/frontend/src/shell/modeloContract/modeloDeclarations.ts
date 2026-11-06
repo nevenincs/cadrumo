@@ -227,11 +227,3 @@ export type OverviewAeatSubmissionState =
  */
 export type OverviewLocalFilingState =
   "not_ready_to_file" | "ready_to_file" | "external_baseline_imported";
-
-/** The `modelo.declarations` definitions' share of `ModeloContracts`. */
-export type ModeloDeclarationsContracts = {
-  "modelo.declarations.list": {
-    request: ModeloDeclarationsListRequest;
-    result: ModeloDeclarationsListProjectionV1;
-  };
-};

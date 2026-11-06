@@ -47,50 +47,6 @@ import type {
   WorkUnitId,
 } from "./modelo";
 import type { BindingId } from "./modeloEditWork";
-import type {
-  ModeloWorkAmendPublicResultV2,
-  ModeloWorkAmendRequest,
-} from "./modeloWorkAmend";
-import type {
-  ModeloWorkAmendmentContextProjection,
-  ModeloWorkAmendmentContextRequest,
-} from "./modeloWorkAmendmentContext";
-import type {
-  ModeloCasillaHelpProjectionV1,
-  ModeloCasillaHelpRequest,
-} from "./modeloWorkCasillaHelp";
-import type {
-  ModeloTaxationComparisonProjection,
-  ModeloTaxationComparisonRequest,
-} from "./modeloWorkCompareTaxation";
-import type {
-  ModeloDependencyProjection,
-  ModeloDependencyRequest,
-} from "./modeloWorkDependencies";
-import type {
-  ModeloWorkbenchFormProjectionV1,
-  ModeloWorkbenchFormRequest,
-} from "./modeloWorkForm";
-import type {
-  ModeloWorkHistoryProjection,
-  ModeloWorkHistoryRequest,
-} from "./modeloWorkHistory";
-import type {
-  ModeloMaritimePreviewProjection,
-  ModeloMaritimePreviewRequest,
-} from "./modeloWorkPreviewMaritimeExemption";
-import type {
-  ModeloCalculationReportVerificationProjection,
-  ModeloCalculationReportVerificationRequest,
-} from "./modeloWorkReportVerify";
-import type {
-  ModeloWorkReviewProjection,
-  ModeloWorkReviewRequest,
-} from "./modeloWorkReview";
-import type {
-  ModeloWorkVerifyPublicResultV2,
-  ModeloWorkVerifyRequest,
-} from "./modeloWorkVerify";
 
 /**
  * Every current canonical diagnostic field, with no open-ended wire payload.
@@ -366,6 +322,34 @@ export type M303RectificativaMotive =
   "rectificaciones" | "discrepancia_criterio_administrativo";
 
 /**
+ * The existing derived flat view, encoded with a closed row schema.
+ */
+export type MaritimePreviewCasillaValue = {
+  casilla_id: CasillaId;
+  value: string;
+};
+
+/**
+ * Complete canonical observation, retaining ordered legal and source
+ * grounding.
+ */
+export type MaritimePreviewObservation = {
+  casilla_id: CasillaId;
+  value: string;
+  formula_id: FormulaId | null;
+  legal_refs: LegalRefId[];
+  source_refs: SourceRefId[];
+};
+
+/**
+ * Registered nonblocking warning and its sole canonical interpolation fact.
+ */
+export type MaritimePreviewRetmarWarning = {
+  code: "ERROR_RENTA_PROFILE_COMPLETENESS_WARNING";
+  legal_ref: LegalRefId;
+};
+
+/**
  * One member's attributed base and the registry-declared handoff target.
  */
 export type Modelo184SocioHandoffV1 = {
@@ -589,6 +573,33 @@ export type ModeloM210PlazoAdvisoryV1 = {
 };
 
 /**
+ * Complete current human preview facts, without raw exception messages.
+ */
+export type ModeloMaritimePreviewProjection = {
+  profile_id: string;
+  worker_class: string | null;
+  vessel_flag: string | null;
+  waters_type: string | null;
+  vessel_registry: string | null;
+  retmar_registered: boolean;
+  retmar_mandatory_filing: boolean;
+  retmar_warning: MaritimePreviewRetmarWarning | null;
+  observations: MaritimePreviewObservation[];
+  casilla_values: MaritimePreviewCasillaValue[];
+};
+
+/**
+ * Original optional inputs, held in encrypted operation operand custody.
+ */
+export type ModeloMaritimePreviewRequest = {
+  profile_id: string;
+  annual_salary?: string | null;
+  qualifying_days?: number | null;
+  gross_navigation_income?: string | null;
+  filing_year?: number | null;
+};
+
+/**
  * What a calculation did with the entries the person made in the head it
  * replaced.
  */
@@ -642,6 +653,43 @@ export type ModeloSettlementSnapshot = {
   refund_payment_evidence_reference: FilingEvidenceReference | null;
   refund_payment_effective_at: string | null;
   credit_snapshot: ModeloCreditSnapshot;
+};
+
+/**
+ * Bounded comparison with the single-earner scope caveat intact.
+ *
+ * `recommendation_reason` is the closed token of why the mode is recommended;
+ * `recommendation_reason_words` is the same reason in words naming the results
+ * it compares, in `words_language`; `individual_branch_caveat` states in the
+ * same language why the individual figure is reliable only for a single-earner
+ * household.
+ */
+export type ModeloTaxationComparisonProjection = {
+  result_version: 2;
+  profile_id: string;
+  work_unit_id: string;
+  filing_year: number;
+  modelo: string;
+  revision: string;
+  conjunta_cuota_resultante: string;
+  individual_cuota_resultante: string;
+  conjunta_resultado: string;
+  individual_resultado: string;
+  delta_resultado: string;
+  recommendation: TaxationRecommendation;
+  recommendation_reason: TaxationRecommendationReason;
+  recommendation_reason_words: string;
+  words_language: OutputLanguage;
+  individual_branch_single_earner_only: true;
+  individual_branch_caveat: string;
+};
+
+/**
+ * Select one work unit inside the authenticated profile.
+ */
+export type ModeloTaxationComparisonRequest = {
+  profile_id: string;
+  work_unit_id: string;
 };
 
 /**
@@ -1183,6 +1231,24 @@ export type SourceSurface =
   "ledger" | "withholding" | "profile" | "declarations" | "none";
 
 /**
+ * Recommended filing mode based on the computed cuota differential.
+ *
+ * The enum reports the lower-tax path after applying the materiality
+ * threshold, or `INDIFFERENT` when the two calculated results differ by less
+ * than one euro.
+ */
+export type TaxationRecommendation = "conjunta" | "individual" | "indifferent";
+
+/**
+ * Why the comparison recommends what it does, as a closed token.
+ *
+ * The words for a reason, with the amounts it rests on, are served by
+ * `taxation_comparison_words`.
+ */
+export type TaxationRecommendationReason =
+  "conjunta_lower_result" | "individual_lower_result" | "below_materiality";
+
+/**
  * Closed enumeration of work-unit lifecycle states.
  *
  * * `BORRADOR` — default state at creation. The work unit participates in
@@ -1192,119 +1258,3 @@ export type SourceSurface =
  * remain in storage for audit; the work unit cannot be re-activated.
  */
 export type WorkUnitState = "borrador" | "descartado";
-
-/** The `modelo.work` definitions' share of `ModeloContracts`. */
-export type ModeloWorkContracts = {
-  "modelo.work.accept_disagreement": {
-    request: CreditResolutionAcceptRequest;
-    result: CreditResolutionMutationProjection;
-  };
-  "modelo.work.amend": {
-    request: ModeloWorkAmendRequest;
-    result: ModeloWorkAmendPublicResultV2;
-  };
-  "modelo.work.amendment_context": {
-    request: ModeloWorkAmendmentContextRequest;
-    result: ModeloWorkAmendmentContextProjection;
-  };
-  "modelo.work.calculate": {
-    request: ModeloWorkCalculateRequest;
-    result: ModeloWorkCalculatePublicResultV3;
-  };
-  "modelo.work.casilla_help": {
-    request: ModeloCasillaHelpRequest;
-    result: ModeloCasillaHelpProjectionV1;
-  };
-  "modelo.work.compare_taxation": {
-    request: ModeloTaxationComparisonRequest;
-    result: ModeloTaxationComparisonProjection;
-  };
-  "modelo.work.create": {
-    request: ModeloWorkCreateRequest;
-    result: ModeloWorkCreateProjection;
-  };
-  "modelo.work.dependencies": {
-    request: ModeloDependencyRequest;
-    result: ModeloDependencyProjection;
-  };
-  "modelo.work.disagreements": {
-    request: CreditResolutionListRequest;
-    result: CreditResolutionListProjection;
-  };
-  "modelo.work.discard": {
-    request: ModeloWorkDiscardRequest;
-    result: ModeloWorkDiscardPublicResultV2;
-  };
-  "modelo.work.file": {
-    request: ModeloWorkFileRequest;
-    result: ModeloWorkFilePublicResultV2;
-  };
-  "modelo.work.filing_record": {
-    request: ModeloWorkFilingRecordRequest;
-    result: ModeloWorkFilingRecordProjection;
-  };
-  "modelo.work.form": {
-    request: ModeloWorkbenchFormRequest;
-    result: ModeloWorkbenchFormProjectionV1;
-  };
-  "modelo.work.history": {
-    request: ModeloWorkHistoryRequest;
-    result: ModeloWorkHistoryProjection;
-  };
-  "modelo.work.list": {
-    request: ModeloWorkListRequest;
-    result: ModeloWorkListProjection;
-  };
-  "modelo.work.m303_attestation": {
-    request: ModeloWorkM303AttestationRequest;
-    result: ModeloWorkM303AttestationPublicResultV2;
-  };
-  "modelo.work.metadata": {
-    request: ModeloWorkMetadataRequest;
-    result: ModeloWorkMetadataProjection;
-  };
-  "modelo.work.preview_maritime_exemption": {
-    request: ModeloMaritimePreviewRequest;
-    result: ModeloMaritimePreviewProjection;
-  };
-  "modelo.work.rename": {
-    request: ModeloWorkRenameRequest;
-    result: ModeloWorkRenamePublicResultV2;
-  };
-  "modelo.work.report_verify": {
-    request: ModeloCalculationReportVerificationRequest;
-    result: ModeloCalculationReportVerificationProjection;
-  };
-  "modelo.work.review": {
-    request: ModeloWorkReviewRequest;
-    result: ModeloWorkReviewProjection;
-  };
-  "modelo.work.revision": {
-    request: ModeloWorkRevisionRequest;
-    result: ModeloWorkRevisionProjection;
-  };
-  "modelo.work.revision_snapshot": {
-    request: ModeloWorkRevisionSnapshotRequest;
-    result: ModeloWorkRevisionSnapshotProjection;
-  };
-  "modelo.work.revisions": {
-    request: ModeloWorkRevisionsRequest;
-    result: ModeloWorkRevisionsProjection;
-  };
-  "modelo.work.revoke_disagreement": {
-    request: CreditResolutionRevokeRequest;
-    result: CreditResolutionMutationProjection;
-  };
-  "modelo.work.verify": {
-    request: ModeloWorkVerifyRequest;
-    result: ModeloWorkVerifyPublicResultV2;
-  };
-  "modelo.work.wizard_attempt": {
-    request: ModeloWorkWizardAttemptRequest;
-    result: ModeloWorkWizardAttemptProjection;
-  };
-  "modelo.work.wizard_context": {
-    request: ModeloWorkWizardContextRequest;
-    result: ModeloWorkWizardContextProjection;
-  };
-};
