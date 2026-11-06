@@ -79,7 +79,7 @@ def _profile(operation, *facts: UserProfileFact) -> ModeloWorkProfile:
         record=create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=BUCKET_ID,
-            facts=(UserProfileFact(path="identity.tax_id", value="X1234567L"), *facts, *cash_criterion_facts(2025)),
+            facts=(UserProfileFact(path="identity.tax_id", value="X0001500M"), *facts, *cash_criterion_facts(2025)),
             context=leased_profile_create_context(),
         ),
         profile_decode_context=operation.profile_decode_context(),

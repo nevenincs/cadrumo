@@ -67,7 +67,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _OTHER_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _NOW = datetime(2026, 9, 29, 10, 30, tzinfo=UTC)
-_NIF = "B12345674"
+_NIF = "B00015016"
 
 
 def _observation(

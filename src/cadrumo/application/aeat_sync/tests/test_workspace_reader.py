@@ -457,7 +457,7 @@ def test_saved_census_is_available_and_compares_only_observed_facts(observed_nif
         )
 
 
-_FILED_SUBJECT = "X1234567L"
+_FILED_SUBJECT = "X0001500M"
 _CAPTURED_AT = datetime(2025, 4, 16, 8, 0, tzinfo=UTC)
 
 

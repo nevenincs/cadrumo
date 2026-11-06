@@ -24,7 +24,7 @@ def _legal_entity_with_iva_group_role(
     group_dominant: bool = False,
 ) -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         legal_entity_form=LegalEntityForm.from_registry("SL"),
         iva_regime=IVARegime("GENERAL"),

@@ -42,7 +42,7 @@ def _issued_invoice(*, retention_amount: Decimal | None) -> Invoice:
             "invoice_number": "F-2026-001",
             "issued_at": _ISSUED_ON,
             "counterparty_name": "Beta Logistica Mediterranea SL",
-            "counterparty_tax_id": "B92000025",
+            "counterparty_tax_id": "B00015073",
             "counterparty_country": "ES",
             "base_total": Decimal("1500.00"),
             "iva_total": Decimal("315.00"),

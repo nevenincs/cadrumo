@@ -94,7 +94,7 @@ _M303_SOURCE_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_M303_S
 
 def workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         iva_regime=IVARegime("GENERAL"),
     )
 
@@ -274,7 +274,7 @@ def _persist_justificante_metadata(csv: str, *, modelo: str, period: str, filing
             ejercicio=str(filing_year),
             presentation_id=None,
             presented_at=_CLOCK,
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             total_a_ingresar=None,
             total_a_devolver=None,
             verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
@@ -354,7 +354,7 @@ def _seed_303_cross_period_sources(
                 filing_repository=filing_repository,
                 bucket_event_repository=bucket_event_repository,
                 observation_repository=observation_repository,
-                expected_tax_id="X1234567L",
+                expected_tax_id="X0001500M",
                 clock=_CLOCK,
             )
         observation_repository.save(
@@ -378,7 +378,7 @@ def _seed_303_cross_period_sources(
                     "aeat_register_status": "ALTA",
                     "aeat_expediente_id": f"EXP-303-2025-{period}",
                     "aeat_justificante_csv": evidence_reference_id,
-                    "authenticated_identity": "X1234567L",
+                    "authenticated_identity": "X0001500M",
                 },
             )
         )

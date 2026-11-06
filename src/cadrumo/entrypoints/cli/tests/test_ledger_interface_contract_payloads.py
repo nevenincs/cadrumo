@@ -442,7 +442,7 @@ def test_invoice_inventory_evidence_and_rule_apply_lists_use_typed_rows() -> Non
                     "invoice_number": "F-001",
                     "issued_at": date(2026, 4, 5),
                     "counterparty_name": "Proveedor SL",
-                    "counterparty_tax_id": "B12345674",
+                    "counterparty_tax_id": "B00015016",
                     "counterparty_country": "ES",
                     "base_total": Decimal("100.00"),
                     "iva_total": Decimal("21.00"),

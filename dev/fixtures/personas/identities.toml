@@ -26,8 +26,9 @@ generic_use = "A persona role value appears only in its persona's own files and 
 # Values for tests that need any checksum-valid identifier and no persona. The
 # gate (dev.identity) accepts a pool member anywhere in tests and fixtures and
 # refuses a pool member bound to a role. 12345678Z and 00000000T stay in the
-# pool because they are in wide generic use; the ranges start above every
-# persona counter.
+# pool because they are in wide generic use; each range is a bounded block of one thousand counters, 1000 to 1999, above every
+# persona counter and below any value a real issuer is likely to hold; a value
+# outside the block is refused even when its check character is valid.
 
 [convention.generic_pool]
 values = ["12345678Z", "00000000T"]
@@ -35,25 +36,25 @@ values = ["12345678Z", "00000000T"]
 [[convention.generic_pool.ranges]]
 kind = "nif"
 first = 1000
-last = 99999999
+last = 1999
 
 [[convention.generic_pool.ranges]]
 kind = "nie"
 letters = ["X", "Y", "Z"]
 first = 1000
-last = 9999999
+last = 1999
 
 [[convention.generic_pool.ranges]]
 kind = "prefixed_nif"
 letters = ["K", "L", "M"]
 first = 1000
-last = 9999999
+last = 1999
 
 [[convention.generic_pool.ranges]]
 kind = "cif"
 letters = ["A", "B", "C", "D", "E", "F", "G", "H", "J", "N", "P", "Q", "R", "S", "U", "V", "W"]
 first = 1000
-last = 9999999
+last = 1999
 
 # Generated projections derive from the personas, so they may state any role
 # value. Each entry is a path prefix.

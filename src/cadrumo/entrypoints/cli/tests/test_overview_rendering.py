@@ -347,7 +347,7 @@ def test_calendar_warning_messages_are_translated_for_simplificado_forfait_gap()
     """A régimen simplificado calendar-gap warning must render operator text, not a raw locale key."""
 
     profile = TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),

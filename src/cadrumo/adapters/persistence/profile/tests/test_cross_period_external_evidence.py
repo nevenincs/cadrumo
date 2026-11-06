@@ -37,14 +37,14 @@ _PluralJustificanteCsvCase = tuple[str, str, bool]
 #: the stored receipt belongs to someone else. Carrying the expected member
 #: rather than a boolean is what makes that distinction assertable at all.
 _TAXPAYER_IDENTITY_EVIDENCE_CASES: tuple[_TaxpayerIdentityEvidenceCase, ...] = (
-    ("matching-taxpayer", "LIVECAP130MATCH01", "X1234567L", None),
+    ("matching-taxpayer", "LIVECAP130MATCH01", "X0001500M", None),
     (
         "missing-expected-taxpayer",
         "LIVECAP130NOIDENT",
         None,
         CrossPeriodCleanStateBlocker.UNRESOLVED_TAXPAYER_IDENTITY,
     ),
-    ("case-insensitive-taxpayer", "LIVECAP130CASE01", "x1234567l", None),
+    ("case-insensitive-taxpayer", "LIVECAP130CASE01", "x0001500m", None),
 )
 
 _PLURAL_JUSTIFICANTE_CSV_CASES: tuple[_PluralJustificanteCsvCase, ...] = (
@@ -93,7 +93,7 @@ def test_live_capture_evidence_rejects_mismatched_typed_justificante_period(tmp_
                 ejercicio="2026",
                 presentation_id=None,
                 presented_at=CLOCK,
-                tax_id="X1234567L",
+                tax_id="X0001500M",
                 total_a_ingresar=None,
                 total_a_devolver=None,
                 verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
@@ -123,7 +123,7 @@ def test_live_capture_evidence_rejects_mismatched_filed_history_justificante_csv
             "aeat_sede_justificante",
             source_metadata={
                 "aeat_register_status": "ALTA",
-                "authenticated_identity": "X1234567L",
+                "authenticated_identity": "X0001500M",
                 "aeat_justificante_csv": "OTHER",
             },
         )
@@ -148,7 +148,7 @@ def test_live_capture_evidence_reconciles_plural_filed_history_justificante_csv(
                 "aeat_sede_justificante",
                 source_metadata={
                     "aeat_register_status": "ALTA",
-                    "authenticated_identity": "X1234567L",
+                    "authenticated_identity": "X0001500M",
                     "aeat_justificante_csvs": csvs_metadata.format(csv=csv),
                 },
             )
@@ -201,7 +201,7 @@ def test_register_identifiers_are_compared_within_their_own_namespace(tmp_path: 
                 "aeat_sede_justificante",
                 source_metadata={
                     "aeat_register_status": "ALTA",
-                    "authenticated_identity": "X1234567L",
+                    "authenticated_identity": "X0001500M",
                     "aeat_expediente_id": metadata_expediente,
                 },
             )
@@ -227,7 +227,7 @@ def test_an_expediente_is_never_compared_with_a_receipt_identifier(
             "aeat_sede_justificante",
             source_metadata={
                 "aeat_register_status": "ALTA",
-                "authenticated_identity": "X1234567L",
+                "authenticated_identity": "X0001500M",
                 "aeat_expediente_id": "EXPEDIENTE-WITHOUT-CSV-REFERENCE",
             },
         )
@@ -262,7 +262,7 @@ def test_filed_history_csv_reference_reconciles_however_the_register_spelled_it(
             "aeat_sede_justificante",
             source_metadata={
                 "aeat_register_status": "ALTA",
-                "authenticated_identity": "X1234567L",
+                "authenticated_identity": "X0001500M",
                 "aeat_justificante_csv": metadata_spelling,
                 "aeat_justificante_csvs": f"OTHER-RECEIPT-CSV,{metadata_spelling}",
             },
@@ -287,7 +287,7 @@ def test_filed_history_csv_reference_still_refuses_a_different_receipt(tmp_path:
             "aeat_sede_justificante",
             source_metadata={
                 "aeat_register_status": "ALTA",
-                "authenticated_identity": "X1234567L",
+                "authenticated_identity": "X0001500M",
                 "aeat_justificante_csv": "  livecap130spell2x  ",
             },
         )

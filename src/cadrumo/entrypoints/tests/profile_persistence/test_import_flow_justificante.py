@@ -102,7 +102,7 @@ def test_import_refuses_justificante_evidence_for_different_taxpayer(
             repos,
             work_unit,
             evidence_reference_id="JUSTWRONGTAXPAYER",
-            expected_tax_id="B12345674",
+            expected_tax_id="B00015016",
             clock=T1,
         )
 
@@ -118,14 +118,14 @@ def test_import_justificante_taxpayer_match_is_case_insensitive(
         "JUSTCASETAXPAYER",
         work_unit,
         captured_at=T1,
-        tax_id="X1234567L",
+        tax_id="X0001500M",
     )
 
     filing = import_external_filing(
         repos,
         work_unit,
         evidence_reference_id="JUSTCASETAXPAYER",
-        expected_tax_id="x1234567l",
+        expected_tax_id="x0001500m",
         clock=T1,
     )
 

@@ -99,7 +99,7 @@ BASELINE_DIGEST = "d" * 64
 PROPOSED_EFFECT_DIGEST = "e" * 64
 
 SENSITIVE_EXCEPTION_DETAIL = (
-    f"B12345674 {REDACTION_TOKEN_QUERY_URL_CANARY} "
+    f"B00015016 {REDACTION_TOKEN_QUERY_URL_CANARY} "
     "C:/Users/operator/private-key.p12 Bearer correct-horse-battery-staple"
 )
 

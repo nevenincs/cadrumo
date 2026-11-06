@@ -138,7 +138,7 @@ def cash_criterion_profile(*years: int, extra_facts: tuple[UserProfileFact, ...]
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=BUCKET_ID,
             facts=(
-                UserProfileFact(path="identity.tax_id", value="X1234567L"),
+                UserProfileFact(path="identity.tax_id", value="X0001500M"),
                 *extra_facts,
                 *cash_criterion_facts(*years),
             ),
@@ -327,7 +327,7 @@ def ledger_source_mesh_invoice(tx_id: str, *, bucket_id: str = BUCKET_ID) -> Inv
             "invoice_number": f"INV-{tx_id}",
             "issued_at": date(2025, 4, 1),
             "counterparty_name": "Proveedor SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": Decimal("100.00"),
             "iva_total": Decimal("21.00"),
@@ -351,7 +351,7 @@ def domestic_iva_invoice(
     linked_transaction_ids: tuple[str, ...] = (),
     operation_date: date | None = None,
     counterparty_country: str = "ES",
-    counterparty_tax_id: str = "B12345674",
+    counterparty_tax_id: str = "B00015016",
 ) -> Invoice:
     line = InvoiceLine(
         description="Operacion interior con IVA",

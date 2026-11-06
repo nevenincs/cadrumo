@@ -81,7 +81,7 @@ __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_fil
 
 # A real Spanish CIF (Agencia Tributaria checksum-valid: leading letter B,
 # 7 digits, digit control character computed by the AEAT algorithm).
-_SUPPLIER_CIF = "B12345674"
+_SUPPLIER_CIF = "B00015016"
 
 _FULL_INVOICE_LINES = (
     "Factura de Acme Suministros SL",

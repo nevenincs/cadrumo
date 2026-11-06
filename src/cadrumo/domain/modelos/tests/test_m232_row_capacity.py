@@ -24,13 +24,13 @@ def test_no_rows_materialise_nothing() -> None:
 
 
 def test_rows_fill_the_declared_slots_in_order() -> None:
-    values = m232_related_party_row_casilla_values((_row("12345678Z", "100.50"), _row("87654321X", "7")))
+    values = m232_related_party_row_casilla_values((_row("12345678Z", "100.50"), _row("X0001502F", "7")))
 
     assert values["vinculada-1-nif"] == "12345678Z"
     assert values["vinculada-1-tipo-vinculacion"] == "A"
     assert values["vinculada-1-tipo-operacion"] == "01"
     assert values["vinculada-1-importe"] == Decimal("100.50")
-    assert values["vinculada-2-nif"] == "87654321X"
+    assert values["vinculada-2-nif"] == "X0001502F"
     assert values["vinculada-2-importe"] == Decimal("7")
     assert not any(casilla_id.startswith("vinculada-3-") for casilla_id in values)
 

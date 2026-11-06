@@ -213,9 +213,9 @@ def test_resolver_materialises_distinct_percepcion_count(authority_operation: Pi
         filing_year=2024,
         period=period,
         observations=[
-            perceptor_observation("11111111H", RetencionClave.from_registry("A")),
-            perceptor_observation("11111111H", RetencionClave.from_registry("G")),
-            perceptor_observation("22222222J", RetencionClave.from_registry("A")),
+            perceptor_observation("00001500M", RetencionClave.from_registry("A")),
+            perceptor_observation("00001500M", RetencionClave.from_registry("G")),
+            perceptor_observation("00001501Y", RetencionClave.from_registry("A")),
         ],
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
@@ -233,7 +233,7 @@ def _two_quarter_repository() -> _InMemoryPercepcionObservationRepository:
         modelo="111",
         filing_year=2024,
         period=Period.from_year_and_code(2024, "1T"),
-        observations=[perceptor_observation("11111111H", RetencionClave.from_registry("A"))],
+        observations=[perceptor_observation("00001500M", RetencionClave.from_registry("A"))],
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
     repository.replace_observations(
@@ -241,10 +241,10 @@ def _two_quarter_repository() -> _InMemoryPercepcionObservationRepository:
         filing_year=2024,
         period=Period.from_year_and_code(2024, "2T"),
         observations=[
-            perceptor_observation("11111111H", RetencionClave.from_registry("A")).model_copy(
+            perceptor_observation("00001500M", RetencionClave.from_registry("A")).model_copy(
                 update={"transaction_date": date(2024, 4, 2)}
             ),
-            perceptor_observation("22222222J", RetencionClave.from_registry("G")),
+            perceptor_observation("00001501Y", RetencionClave.from_registry("G")),
         ],
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )

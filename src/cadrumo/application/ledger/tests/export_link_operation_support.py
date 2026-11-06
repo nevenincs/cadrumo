@@ -137,7 +137,7 @@ class Subject:
             bucket_id=str(PROFILE_ID),
             kind=InvoiceKind.RECEIVED,
             counterparty_name="Synthetic supplier",
-            counterparty_tax_id="B12345674",
+            counterparty_tax_id="B00015016",
             counterparty_country="ES",
             invoice_number="synthetic-link",
             issued_at=date(2024, 4, 10),

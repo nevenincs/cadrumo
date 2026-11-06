@@ -17,7 +17,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def _legal_entity() -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         iva_regime=IVARegime("GENERAL"),
         has_employees=False,

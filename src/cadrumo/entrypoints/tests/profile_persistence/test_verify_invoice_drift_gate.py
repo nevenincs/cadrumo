@@ -107,7 +107,7 @@ _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _LATER = itertools.count()
 _DRIFT_KEY = "application.modelo.findings.invoice_fingerprint_drift"
 _ABSENT_KEY = "application.modelo.findings.invoice_fingerprint_absent"
-_SUPPLIER = "B12345674"
+_SUPPLIER = "B00015016"
 _ROW_IMPORTE = "modelo-347-contraparte-row-importe"
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

@@ -291,7 +291,7 @@ def test_work_create_not_applicable_m130_wins_over_pre_activity_for_irnr_profile
             "taxpayer_type.entity_type": "natural_person",
             "taxpayer_type.irpf_income_categories": "actividad_economica",
             "irpf.estimation_regime": "directa_normal",
-            "identity.tax_id": "X1234567L",
+            "identity.tax_id": "X0001500M",
             "identity.name": "Non Resident",
             "identity.surnames": "Readiness",
             "activities.description": "design",

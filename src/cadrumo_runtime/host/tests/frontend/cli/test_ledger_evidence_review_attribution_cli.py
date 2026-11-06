@@ -54,7 +54,7 @@ _NOTICE_CODE: Final = "ledger.evidence.review.party_attribution_unverified"
 _PAGE: Final = (
     "FACTURA 2026-0142\n"
     "Emisor: Acme Suministros SL\n"
-    "NIF B12345674\n"
+    "NIF B00015016\n"
     "Calle Mayor 3, 28001 Madrid\n"
     "Espana\n"
     "Cliente: Islas Comercial SL\n"
@@ -77,7 +77,7 @@ def _reader_envelope(field: str, anchor: str) -> FieldProvenance:
 def _grounded_draft(*, operation: PinnedAuthorityOperation) -> InvoiceDraft:
     """Return the draft the reading path produces for the page above."""
     draft = InvoiceDraft(
-        supplier_tax_id="B12345674",
+        supplier_tax_id="B00015016",
         supplier_name="Acme Suministros SL",
         supplier_postal_code="28001",
         supplier_country="Espana",

@@ -1078,7 +1078,7 @@ def test_staged_publication_discards_cleartext_staging_on_an_interrupt(tmp_path:
     survives beside the destination under a name nothing will ever clean up.
     """
     target = tmp_path / "declaracion.txt"
-    sensitive = b"<T30301>99999999R" + b"9" * 200
+    sensitive = b"<T30301>00001506B" + b"9" * 200
 
     with pytest.raises(KeyboardInterrupt), hardened_staged_publication(target) as staged:
         staged.path.write_bytes(sensitive)

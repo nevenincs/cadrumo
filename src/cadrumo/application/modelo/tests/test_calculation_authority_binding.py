@@ -47,7 +47,7 @@ def test_modelo_202_summary_uses_supplied_operation_without_bundled_fallback(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
-            UserProfileFact(path="identity.tax_id", value="B12345674"),
+            UserProfileFact(path="identity.tax_id", value="B00015016"),
             UserProfileFact(path="identity.legal_name", value="Example SL"),
             UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
             UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),

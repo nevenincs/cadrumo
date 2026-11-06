@@ -260,8 +260,6 @@ profile:
         tax_id:
           label: NIF/NIE/CIF de identificación
       irpf:
-        activity_income_cash_criterion_elected:
-          label: Criterio de cobros y pagos consignado en la declaración
         activity_income_imputation_criterion:
           choices:
             cobros_y_pagos: Cobros y pagos (art. 7.2 RIRPF)
@@ -276,10 +274,6 @@ profile:
           label: Cumple la excepción del 70 % del art. 109 RIRPF
         codigo_comercio_accounting:
           label: Llevas contabilidad ajustada al Código de Comercio
-        estimation_directa:
-          label: El régimen de estimación es la estimación directa
-        estimation_directa_normal:
-          label: Modalidad normal de la estimación directa
         estimation_regime:
           choices:
             directa_normal: Estimación directa normal

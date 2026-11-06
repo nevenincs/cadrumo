@@ -205,7 +205,7 @@ def _create_legal_profile(environment: dict[str, str]) -> None:
             **native_general_iva_facts(),
             "taxpayer_type.entity_type": "legal_entity",
             "taxpayer_type.legal_entity_form": "sl",
-            "identity.tax_id": "B12345674",
+            "identity.tax_id": "B00015016",
             "identity.legal_name": "Entidad de prueba SL",
             "activities.description": "actividad",
             "taxpayer_type.incn_prior_12_months": "500000",

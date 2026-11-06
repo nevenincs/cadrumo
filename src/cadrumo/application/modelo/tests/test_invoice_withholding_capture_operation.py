@@ -269,7 +269,7 @@ def test_typed_annual_detail_preserves_all_canonical_fields_under_pinned_authori
     with validating_governed_facts(authority_operation):
         detail = WithholdingObservation(
             source_id="invoice-source",
-            perceptor_tax_id="11111111H",
+            perceptor_tax_id="00001500M",
             transaction_date=datetime(2024, 6, 1, tzinfo=UTC).date(),
             clave=RetencionClave.from_registry("G"),
             percibido_dinerario=Decimal("1000"),
@@ -323,7 +323,7 @@ class _WithholdingService(WithholdingWindowServiceFixture):
             RetencionObservation(
                 source_kind=BindingSourceKind.PAYABLE_INVOICE,
                 source_object_id="b" * 64,
-                perceptor_nif="11111111H",
+                perceptor_nif="00001500M",
                 perceptor_name="Synthetic recipient",
                 scheme=RetencionScheme("actividades_profesionales"),
                 taxable_base=Decimal("100.00"),

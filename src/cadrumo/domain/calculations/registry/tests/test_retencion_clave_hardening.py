@@ -47,7 +47,7 @@ def _observation(*, clave: RetencionClave | str, subclave: str = "") -> Withhold
     return WithholdingObservation.model_validate(
         {
             "source_id": "row-1",
-            "perceptor_tax_id": "11111111H",
+            "perceptor_tax_id": "00001500M",
             "transaction_date": date(2024, 3, 15),
             "clave": clave,  # pydantic mode="before" validator coerces str → RetencionClave
             "subclave": subclave,

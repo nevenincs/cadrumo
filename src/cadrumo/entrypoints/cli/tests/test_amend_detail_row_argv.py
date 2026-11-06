@@ -44,7 +44,7 @@ _AMEND_ROW_KEYS = (
     "amend_no_detail_rows_help",
     "amend_rows_contradiction",
 )
-_ROW_SPEC = "vinculada nif=B12345674 nombre=Acme pais=ES importe=1000.00"
+_ROW_SPEC = "vinculada nif=B00015016 nombre=Acme pais=ES importe=1000.00"
 
 
 def _amend_spec() -> CommandSpec:
@@ -95,18 +95,18 @@ def test_a_row_spec_is_parsed_into_the_typed_domain_row() -> None:
     assert len(resolved) == 1
     row = resolved[0]
     assert isinstance(row, Modelo232VinculadaRowWireV1)
-    assert row.nif == "B12345674"
+    assert row.nif == "B00015016"
 
 
 def test_several_rows_are_carried_in_the_order_given() -> None:
     """Repetition is how an operator declares more than one counterparty."""
-    other = _ROW_SPEC.replace("B12345674", "B12345675").replace("Acme", "Beta")
+    other = _ROW_SPEC.replace("B00015016", "B12345675").replace("Acme", "Beta")
 
     resolved = resolve_amendment_detail_rows((_ROW_SPEC, other), declared_none=False)
 
     assert resolved is not None
     vinculadas = [row for row in resolved if isinstance(row, Modelo232VinculadaRowWireV1)]
-    assert [row.nif for row in vinculadas] == ["B12345674", "B12345675"]
+    assert [row.nif for row in vinculadas] == ["B00015016", "B12345675"]
 
 
 def test_declaring_none_while_also_giving_rows_is_refused() -> None:
@@ -122,7 +122,7 @@ def test_declaring_none_while_also_giving_rows_is_refused() -> None:
 def test_a_malformed_row_spec_is_refused_at_the_boundary() -> None:
     """Row grammar is parsed here, so a bad spec fails before any authority runs."""
     with pytest.raises(typer.BadParameter):
-        resolve_amendment_detail_rows(("not_a_row_type nif=B12345674",), declared_none=False)
+        resolve_amendment_detail_rows(("not_a_row_type nif=B00015016",), declared_none=False)
 
 
 def test_the_command_declares_both_row_options() -> None:

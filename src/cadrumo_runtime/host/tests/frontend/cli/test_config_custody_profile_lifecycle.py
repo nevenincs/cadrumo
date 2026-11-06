@@ -789,7 +789,7 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
         "beta",
         **{
             **native_general_iva_facts(),
-            "identity.tax_id": "87654321X",
+            "identity.tax_id": "X0001502F",
             "identity.name": "Beta Operator",
             "identity.surnames": "Operator",
             "activities.description": "design",

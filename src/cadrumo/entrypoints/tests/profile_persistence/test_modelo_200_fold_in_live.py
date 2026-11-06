@@ -200,7 +200,7 @@ def _seed_m200_sociedad_profile(*, activity_start_date: date | None = None) -> N
         profile_id=_BUCKET_ID,
         facts=persona_facts_beneath(
             (
-                UserProfileFact(path="identity.tax_id", value="B12345674"),
+                UserProfileFact(path="identity.tax_id", value="B00015016"),
                 UserProfileFact(path="identity.legal_name", value="Test Runtime Profile SL"),
                 UserProfileFact(path="activities.description", value="software consultancy"),
                 UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),

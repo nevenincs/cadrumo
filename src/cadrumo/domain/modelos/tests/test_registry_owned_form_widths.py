@@ -23,7 +23,7 @@ def _pinned_authority() -> Iterator[None]:
 
 
 def _vinculada(**codes: str) -> Modelo232VinculadaRow:
-    return Modelo232VinculadaRow.model_validate({"nif": "B12345674", "pais": "ES", "importe": Decimal("1"), **codes})
+    return Modelo232VinculadaRow.model_validate({"nif": "B00015016", "pais": "ES", "importe": Decimal("1"), **codes})
 
 
 def _afiliado(numero: str) -> Modelo156AfiliadoRow:

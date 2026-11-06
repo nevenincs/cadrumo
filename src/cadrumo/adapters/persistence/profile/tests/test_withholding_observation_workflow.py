@@ -81,7 +81,7 @@ def entry(
             retencion=RetencionObservation(
                 source_kind=BindingSourceKind.LEDGER_TRANSACTION,
                 source_object_id=source_object_id,
-                perceptor_nif="11111111H",
+                perceptor_nif="00001500M",
                 perceptor_name="Synthetic recipient",
                 scheme=RetencionScheme("actividades_economicas"),
                 taxable_base=Decimal("100"),
@@ -94,7 +94,7 @@ def entry(
         allocation=allocation,
         percepcion=WithholdingObservation(
             source_id=source_object_id,
-            perceptor_tax_id="11111111H",
+            perceptor_tax_id="00001500M",
             perceptor_legal_name="Synthetic recipient",
             country_code="ES",
             transaction_date=date(2024, 3, 15),
@@ -398,7 +398,7 @@ def test_repeated_same_recipient_scheme_survives_by_composite_identity(tmp_path:
         )
         assert len(observations) == 2
         assert {(item.perceptor_nif, item.scheme) for item in observations} == {
-            ("11111111H", RetencionScheme("actividades_economicas")),
+            ("00001500M", RetencionScheme("actividades_economicas")),
         }
 
 

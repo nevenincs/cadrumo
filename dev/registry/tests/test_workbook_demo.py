@@ -420,7 +420,7 @@ def test_193_expense_rows_do_not_leak_into_recipient_sections(case: DemoCase) ->
     assert expected_result(snapshot, values, changed, "decl.base-total") == Decimal("3000")
     form_values = [cell.value for cell in plan.value_cells if cell.address.tab is TabName.FORM]
     assert "Perceptor ficticio A" in form_values and "Perceptor ficticio B" in form_values
-    assert "Empresa ficticia Ejemplo" in form_values and "B12345674" in form_values
+    assert "Empresa ficticia Ejemplo" in form_values and "B00015016" in form_values
     assert "00000000T" not in form_values and "Presentador ficticio" not in form_values
     assert "08" in form_values
 
@@ -458,7 +458,7 @@ def test_190_sections_keep_recipient_identity_and_unknown_circumstances(case: De
     form_values = [c.value for c in plan.value_cells if c.address.tab is TabName.FORM]
     assert "Persona ficticia A" in form_values and "Persona ficticia B" in form_values
     assert "Empresa ficticia Ejemplo" in form_values
-    assert "B12345674" in form_values
+    assert "B00015016" in form_values
     assert case.filing_year in form_values
     assert "Presentador ficticio" not in form_values
     assert "00000000T" not in form_values

@@ -53,10 +53,10 @@ SEPARATED_IDENTITIES = [
 #: Present so a regression that traded one spelling for the other is visible.
 COMPACT_IDENTITIES = [
     "SE556677889901",
-    "ESB12345674",
-    "B12345674",
+    "ESB00015016",
+    "B00015016",
     "12345678Z",
-    "ES B12345674",
+    "ES B00015016",
 ]
 
 #: Operator text that must survive untouched. The first two are MEASURED false

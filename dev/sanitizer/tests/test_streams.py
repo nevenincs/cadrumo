@@ -25,7 +25,7 @@ from ..streams import apply_token_map_to_pdf
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("published_authority_scope")]
 
-_REAL_NIE_CANARY = "Y1234567X"
+_REAL_NIE_CANARY = "Y0001500L"
 _REAL_NIE_CANARY_PREFIX = "Y1234567"
 _REAL_NAME_CANARY = "PERSONA PRUEBA UNO"
 _SYNTHETIC_NIE = "Y0001006P"
@@ -96,7 +96,7 @@ def _name_mapping() -> TokenMap:
 _RewriteCase = tuple[str, bytes, Callable[[], TokenMap], str, str]
 
 _SINGLE_REWRITE_CASES: tuple[_RewriteCase, ...] = (
-    ("literal-tj", b"BT /F1 12 Tf 100 700 Td (Y1234567X) Tj ET\n", _nif_mapping, _REAL_NIE_CANARY, _SYNTHETIC_NIE),
+    ("literal-tj", b"BT /F1 12 Tf 100 700 Td (Y0001500L) Tj ET\n", _nif_mapping, _REAL_NIE_CANARY, _SYNTHETIC_NIE),
     (
         "ascii-hex-tj",
         b"BT /F1 12 Tf 100 700 Td <593132333435363758> Tj ET\n",
@@ -111,10 +111,10 @@ _SINGLE_REWRITE_CASES: tuple[_RewriteCase, ...] = (
         _REAL_NAME_CANARY,
         _SYNTHETIC_NAME,
     ),
-    ("quote", b"BT /F1 12 Tf 100 700 Td (Y1234567X) ' ET\n", _nif_mapping, _REAL_NIE_CANARY, _SYNTHETIC_NIE),
+    ("quote", b"BT /F1 12 Tf 100 700 Td (Y0001500L) ' ET\n", _nif_mapping, _REAL_NIE_CANARY, _SYNTHETIC_NIE),
     (
         "doublequote",
-        b'BT /F1 12 Tf 100 700 Td 0 0 (Y1234567X) " ET\n',
+        b'BT /F1 12 Tf 100 700 Td 0 0 (Y0001500L) " ET\n',
         _nif_mapping,
         _REAL_NIE_CANARY,
         _SYNTHETIC_NIE,
@@ -142,7 +142,7 @@ def test_rewrites_single_text_show_operator_cases() -> None:
 def test_no_edits_when_no_cleartext_match_or_mapping_empty() -> None:
     cases = (
         ("cleartext-absent", b"BT /F1 12 Tf 100 700 Td (only a banner) Tj ET\n", _nif_mapping()),
-        ("mapping-empty", b"BT /F1 12 Tf 100 700 Td (Y1234567X) Tj ET\n", TokenMap()),
+        ("mapping-empty", b"BT /F1 12 Tf 100 700 Td (Y0001500L) Tj ET\n", TokenMap()),
     )
     for case_id, stream_bytes, mapping in cases:
         pdf = _pdf_with_content_stream(stream_bytes)
@@ -154,7 +154,7 @@ class TestMultipleOccurrences:
 
     def test_two_hits_in_one_operand(self) -> None:
         pdf = _pdf_with_content_stream(
-            b"BT /F1 12 Tf 100 700 Td (Y1234567X and again Y1234567X) Tj ET\n",
+            b"BT /F1 12 Tf 100 700 Td (Y0001500L and again Y0001500L) Tj ET\n",
         )
         mapping = TokenMap(
             nif=(
@@ -180,7 +180,7 @@ class TestLongestMatchPriority:
         # could leave the synthetic "X" still in the output. Sort by descending
         # real-length to defend against this.
         pdf = _pdf_with_content_stream(
-            b"BT /F1 12 Tf 100 700 Td (Y1234567X) Tj ET\n",
+            b"BT /F1 12 Tf 100 700 Td (Y0001500L) Tj ET\n",
         )
         mapping = TokenMap(
             arbitrary=(

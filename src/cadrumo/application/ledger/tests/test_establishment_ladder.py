@@ -82,7 +82,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 _BUCKET_ID = "37373737-3737-4737-8737-373737373737"
-_SPANISH_CIF = "B12345674"
+_SPANISH_CIF = "B00015016"
 _GERMAN_IVA = "DE811234567"
 _GREEK_IVA = "EL123456789"
 _ASSERTED_AT = datetime(2026, 5, 12, 9, 30, tzinfo=UTC)

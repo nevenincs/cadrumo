@@ -204,7 +204,7 @@ def _capture_m115_invoice_withholding(session: NativeApiCliSession[None]) -> Non
         "app", "ledger", "invoice", "add",
         "--kind", "received",
         "--counterparty-name", "Arrendador Ejemplo SL",
-        "--counterparty-nif", "B12345674",
+        "--counterparty-nif", "B00015016",
         "--invoice-number", "M115-RENT-2025-001",
         "--invoice-date", paid_on.isoformat(),
         "--country-code", "ES",
@@ -356,7 +356,7 @@ def _store_one_m111_retencion(bucket_id: str, period: Period) -> None:
             RetencionObservation(
                 source_kind=BindingSourceKind.PAYABLE_INVOICE,
                 source_object_id="a" * 64,
-                perceptor_nif="B12345674",
+                perceptor_nif="B00015016",
                 perceptor_name="Asesoria Profesional SL",
                 scheme=RetencionScheme("actividades_profesionales"),
                 taxable_base=Decimal("1000.00"),

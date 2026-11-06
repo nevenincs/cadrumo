@@ -44,7 +44,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET = "20202020-2020-4202-8202-202020202020"
 _ATTACHMENT = "a" * 64
-_COUNTERPARTY = "B12345674"
+_COUNTERPARTY = "B00015016"
 
 
 class _InvoiceRepository:

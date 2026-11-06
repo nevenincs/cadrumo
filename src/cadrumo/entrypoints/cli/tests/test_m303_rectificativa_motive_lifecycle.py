@@ -106,7 +106,7 @@ from .cli_runner import invoke_cached_cli
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "0479178a-6678-4c43-8b7d-46fba6483f11"  # was 'm303-rectificativa-motive'
-_TAX_ID = "X1234567L"
+_TAX_ID = "X0001500M"
 _CSV = "S92RECTIFICA2025"
 _RECEIPT = "1234567890123"
 _NOW = datetime(2026, 8, 14, 8, 0, 0, tzinfo=UTC)

@@ -29,7 +29,7 @@ def issued_services_invoice(invoice_number: str, **overrides: Any) -> Invoice:
         "invoice_number": invoice_number,
         "issued_at": date(2026, 4, 15),
         "counterparty_name": "Cliente SL",
-        "counterparty_tax_id": "B12345674",
+        "counterparty_tax_id": "B00015016",
         "counterparty_country": "ES",
         "base_total": _BASE,
         "iva_total": _CUOTA,

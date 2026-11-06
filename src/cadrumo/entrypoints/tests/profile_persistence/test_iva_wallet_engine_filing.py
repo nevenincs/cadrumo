@@ -80,7 +80,7 @@ _FILING_WALLET_CAPTURED_AT = datetime(2026, 7, 15, 8, 0, 0, tzinfo=UTC)
 def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_preflight(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    taxpayer_nif = "X1234567L"
+    taxpayer_nif = "X0001500M"
     with frozen_clock(_FILING_WALLET_CAPTURED_AT), secure_backend(tmp_path):
         store_operator_profile_with_tax_id(taxpayer_nif)
         snapshot = snapshot_303()
@@ -350,7 +350,7 @@ def test_refiling_local_modelo_303_preserves_each_settlement_credit_snapshot_and
     retains the original 303's filing-time credit snapshot for audit, while
     only the current record exposes the replacement snapshot.
     """
-    taxpayer_nif = "X1234567L"
+    taxpayer_nif = "X0001500M"
     verification_times = (
         datetime(2026, 7, 15, 9, 0, 0, tzinfo=UTC),
         datetime(2026, 7, 16, 9, 0, 0, tzinfo=UTC),
@@ -401,7 +401,7 @@ def test_refiling_local_modelo_303_preserves_each_settlement_credit_snapshot_and
 def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_still_requires_authority(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    taxpayer_nif = "X1234567L"
+    taxpayer_nif = "X0001500M"
     filed_period = period(TARGET_YEAR, "1T")
     decided_1t_at = datetime(2026, 3, 19, 12, 0, 0, tzinfo=UTC)
     filing_profile = workflow_profile(taxpayer_nif).model_copy(

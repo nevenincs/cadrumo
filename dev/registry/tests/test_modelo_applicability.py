@@ -185,7 +185,7 @@ def test_registry_rules_derive_per_entity_and_per_regime_verdicts() -> None:
     """Real profiles exercise entity and IRPF-regime applicability gates."""
 
     direct_autonomo = TaxpayerProfile(
-        tax_id="A45678901",
+        tax_id="A00015024",
         entity_type=_NATURAL_PERSON,
         irpf_income_categories=frozenset({_ACTIVIDAD_ECONOMICA}),
         irpf_estimation_regime=_DIRECTA_SIMPLIFICADA,
@@ -193,7 +193,7 @@ def test_registry_rules_derive_per_entity_and_per_regime_verdicts() -> None:
     )
     objetiva_autonomo = direct_autonomo.model_copy(update={"irpf_estimation_regime": _OBJETIVA})
     sociedad_limitada = TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=_LEGAL_ENTITY,
         legal_entity_form=_LEGAL_FORM_SL,
         iva_regime=_IVA_GENERAL,
@@ -218,7 +218,7 @@ def _attribution_entity_profile(
 ) -> TaxpayerProfile:
     """An attribution entity whose payer facts stay unanswered unless a test states them."""
     return TaxpayerProfile(
-        tax_id="E12345674",
+        tax_id="E00015008",
         entity_type=_ATTRIBUTION_ENTITY,
         iva_regime=iva_regime,
         has_employees=has_employees,
@@ -327,7 +327,7 @@ def test_actividad_economica_without_declared_regime_defaults_to_directa_m130() 
     """
 
     autonomo_no_regime = TaxpayerProfile(
-        tax_id="A45678901",
+        tax_id="A00015024",
         entity_type=_NATURAL_PERSON,
         irpf_income_categories=frozenset({_ACTIVIDAD_ECONOMICA}),
         iva_regime=_IVA_GENERAL,
@@ -344,7 +344,7 @@ def test_non_resident_irnr_natural_person_does_not_owe_modelo_130() -> None:
     """Declared IRNR non-residency positively excludes the resident-IRPF M130."""
 
     non_resident_autonomo = TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=_NATURAL_PERSON,
         irpf_income_categories=frozenset({_ACTIVIDAD_ECONOMICA}),
         irpf_estimation_regime=_DIRECTA_NORMAL,
@@ -366,7 +366,7 @@ def test_non_resident_irnr_natural_person_does_not_owe_modelo_100() -> None:
     """Declared IRNR non-residency positively excludes the resident-IRPF M100."""
 
     non_resident_autonomo = TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=_NATURAL_PERSON,
         irpf_income_categories=frozenset({_ACTIVIDAD_ECONOMICA}),
         irpf_estimation_regime=_DIRECTA_NORMAL,
@@ -388,13 +388,13 @@ def test_non_resident_irnr_legal_entity_without_pe_does_not_owe_modelo_200() -> 
     """Declared IRNR non-residency must not be treated as resident-company M200."""
 
     resident_company = TaxpayerProfile(
-        tax_id="B66012345",
+        tax_id="B00015032",
         entity_type=_LEGAL_ENTITY,
         legal_entity_form=_LEGAL_FORM_SL,
         iva_regime=_IVA_GENERAL,
     )
     non_resident_company = TaxpayerProfile(
-        tax_id="B66012345",
+        tax_id="B00015032",
         entity_type=_LEGAL_ENTITY,
         legal_entity_form=_LEGAL_FORM_SL,
         iva_regime=_IVA_GENERAL,
@@ -419,7 +419,7 @@ def test_objective_estimation_regime_routes_to_m131() -> None:
     """An autónomo who explicitly elects módulos owes M131, not M130."""
 
     autonomo_modulos = TaxpayerProfile(
-        tax_id="A45678901",
+        tax_id="A00015024",
         entity_type=_NATURAL_PERSON,
         irpf_income_categories=frozenset({_ACTIVIDAD_ECONOMICA}),
         iva_regime=_IVA_GENERAL,
@@ -442,7 +442,7 @@ def test_pure_landlord_without_actividad_economica_owes_no_m130() -> None:
     """
 
     landlord = TaxpayerProfile(
-        tax_id="A45678901",
+        tax_id="A00015024",
         entity_type=_NATURAL_PERSON,
         irpf_income_categories=frozenset({_CAPITAL_INMOBILIARIO}),
         iva_regime=_IVA_GENERAL,
@@ -457,7 +457,7 @@ def _beckham_profile(
     bienes_extranjero_above_threshold: bool = False,
 ) -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=_NATURAL_PERSON,
         irpf_income_categories=frozenset({_TRABAJO}),
         iva_regime=_IVA_GENERAL,
@@ -497,7 +497,7 @@ def test_general_regime_profile_with_bienes_declared_modelo_720_applicable() -> 
     """
 
     general_profile = TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=_NATURAL_PERSON,
         irpf_income_categories=frozenset({_TRABAJO}),
         iva_regime=_IVA_GENERAL,
@@ -518,7 +518,7 @@ def test_modelo_721_uses_crypto_abroad_threshold_not_modelo_720_bienes_fact() ->
     """
 
     base_profile = TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=_NATURAL_PERSON,
         irpf_income_categories=frozenset({_TRABAJO}),
         iva_regime=_IVA_GENERAL,
@@ -589,7 +589,7 @@ def test_non_impatriado_profile_does_not_route_to_modelo_151() -> None:
 
     for special_regime in _NON_IMPATRIADO_SPECIAL_REGIMES:
         general_profile = TaxpayerProfile(
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             entity_type=_NATURAL_PERSON,
             irpf_income_categories=frozenset({_TRABAJO}),
             iva_regime=_IVA_GENERAL,

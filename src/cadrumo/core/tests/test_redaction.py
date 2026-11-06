@@ -32,7 +32,7 @@ _NIF = "12345678Z"
 # Entity tax identities carrying the check character AEAT's algorithm
 # computes, and a same-shaped reference that does not (an invoice number
 # ``F1234567B`` is exactly the CIF shape).
-_CIF = "B12345674"
+_CIF = "B00015016"
 _CIF_OTHER = "B00010157"
 _CIF_LOOKALIKE = "F1234567B"
 # Bank accounts across countries -- foreign accounts are declarable, so the

@@ -84,7 +84,7 @@ def _iva(**facts: bool) -> ModeloIVAProfile:
 def _sociedad(**facts: object) -> TaxpayerProfile:
     return TaxpayerProfile.model_validate(
         {
-            "tax_id": "B12345674",
+            "tax_id": "B00015016",
             "entity_type": require_entity_type("legal_entity"),
             "legal_entity_form": require_legal_entity_form("sl"),
             "iva_regime": require_iva_regime("GENERAL"),
@@ -96,7 +96,7 @@ def _sociedad(**facts: object) -> TaxpayerProfile:
 def _persona(categories: tuple[str, ...], iva_regime: str, **facts: object) -> TaxpayerProfile:
     return TaxpayerProfile.model_validate(
         {
-            "tax_id": "X1234567L",
+            "tax_id": "X0001500M",
             "entity_type": require_entity_type("natural_person"),
             "irpf_income_categories": frozenset(require_irpf_income_category(token) for token in categories),
             "iva_regime": require_iva_regime(iva_regime),

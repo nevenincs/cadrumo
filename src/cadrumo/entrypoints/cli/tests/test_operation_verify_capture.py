@@ -32,7 +32,7 @@ _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 _FOREIGN_PROFILE = UUID("6bb00000-0000-4000-8000-0000000000bb")
 _OPERATION_ID = "a" * 64
 _NOW = datetime(2026, 9, 29, 10, 30, tzinfo=UTC)
-_NIF = "B12345674"
+_NIF = "B00015016"
 _OBSERVATION_ID = "c" * 64
 
 
@@ -106,7 +106,7 @@ def test_capture_submits_exact_profile_shape_and_accepts_only_success_effects(
     effect: OperationEffect,
 ) -> None:
     submitted, bound_profiles = _bind(monkeypatch, _projection(), effect=effect)
-    raw_nif = " b12345674 "
+    raw_nif = " b00015016 "
 
     result = bridge.read_verify_capture_for_cli(
         _context(),

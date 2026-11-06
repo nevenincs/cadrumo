@@ -88,7 +88,7 @@ from ..aggregation.invoice_filing_fingerprint import capture_invoice_fingerprint
 from ..aggregation.renta_imputation import declared_imputation_criteria
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError
-from ..user_profile.projections import profile_fact_index, record_to_path_values
+from ..user_profile.projections import record_to_path_values
 from .action_errors import (
     ModeloClearedCasillaSourceFedError,
 )
@@ -121,7 +121,7 @@ from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_mod
 from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 from .m303_regimen_simplificado_scope import m303_general_regime_claimed
 from .printed_boxes import snapshot_printed_boxes
-from .profile_export_binding import resolve_profile_text_casilla_inputs
+from .profile_export_binding import profile_text_fact_index, resolve_profile_text_casilla_inputs
 from .revision_persistence import persist_calculation_revision
 from .work_missing_input import ModeloWorkMissingInputError
 from .work_profile import ModeloWorkProfile
@@ -749,7 +749,11 @@ def _evaluate_prepared_calculation(
         text_casilla_inputs=text_casilla_inputs,
         profile_text_casilla_inputs=resolve_profile_text_casilla_inputs(
             snapshot.revision,
-            profile_fact_index(prepared.profile.record, prepared.profile.profile_decode_context.schema),
+            profile_text_fact_index(
+                prepared.profile.record,
+                prepared.profile.profile_decode_context.schema,
+                operation=ports.operation,
+            ),
         ).values,
     )
     resolved_inputs = channel_inputs.casilla_inputs

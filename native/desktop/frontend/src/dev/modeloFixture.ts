@@ -1,3 +1,4 @@
+import { requireServed } from "./servedFixtures";
 // The scenario host's modelo family: the modelo port answered from the
 // envelopes in @fixtures/modelo/, which scripts/modelo-fixtures.mjs reads
 // through the application's own read path for a synthetic taxpayer. The
@@ -380,9 +381,12 @@ export type ModeloEnvelopes = Record<string, () => Promise<unknown>>;
 
 /** The envelopes on disk, as the development server serves them. */
 function servedEnvelopes(): ModeloEnvelopes {
-  const found = import.meta.glob<unknown>("@fixtures/modelo/*.json", {
-    import: "default",
-  });
+  const found = requireServed(
+    "modelo/*.json",
+    import.meta.glob<unknown>("@fixtures/modelo/*.json", {
+      import: "default",
+    }),
+  );
   return Object.fromEntries(
     Object.entries(found).map(([path, load]) => [
       path.slice(path.lastIndexOf("/") + 1, -".json".length),

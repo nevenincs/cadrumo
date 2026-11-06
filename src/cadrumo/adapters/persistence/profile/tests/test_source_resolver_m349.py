@@ -449,7 +449,7 @@ def test_canonical_invoice_refuses_the_tax_id_country_mismatch_slim_permits(
             kind=InvoiceKind.RECEIVED,
             invoice_number="IT-SERV-2026-002",
             issued_at=date(2026, 3, 11),
-            counterparty_tax_id="B12345674",
+            counterparty_tax_id="B00015016",
             counterparty_name="Servizi SRL",
             counterparty_country="DE",
             base_total=Decimal("3000.00"),

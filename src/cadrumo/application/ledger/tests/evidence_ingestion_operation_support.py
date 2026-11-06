@@ -244,8 +244,8 @@ class Subject(ActionSubject):
                 raise StructuredInvoiceReadError()
             return StructuredInvoiceRecord(
                 shape=DocumentShape.XML_CII,
-                supplier_tax_id="B12345674",
-                customer_tax_id="X1234567L",
+                supplier_tax_id="B00015016",
+                customer_tax_id="X0001500M",
                 supplier_name="Synthetic supplier",
                 customer_name="Synthetic customer",
                 supplier_postal_code="28013",

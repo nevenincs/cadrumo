@@ -80,7 +80,7 @@ def test_calendar_entry_warns_when_local_and_filed_history_aeat_references_disag
         ),
         verified_filed_declaration_artefact_refs=(FILED_JUSTIFICANTE_STORAGE_REF,),
         verified_filed_declaration_artefact_csvs={FILED_JUSTIFICANTE_STORAGE_REF: verified_csv},
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     calendar = build_overview_calendar(
@@ -136,7 +136,7 @@ def test_calendar_does_not_conflict_live_capture_csv_with_matching_filed_history
         ),
         verified_filed_declaration_artefact_refs=(FILED_JUSTIFICANTE_STORAGE_REF,),
         verified_filed_declaration_artefact_csvs={FILED_JUSTIFICANTE_STORAGE_REF: csv},
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     calendar, row = _april_2025_303_filing_row(evidence, authority_operation)
@@ -158,7 +158,7 @@ def test_calendar_does_not_conflict_matching_verified_csv_across_reference_names
             "aeat_register_status": "ALTA",
             "aeat_expediente_id": expediente_id,
             "aeat_justificante_csv": csv,
-            "authenticated_identity": "X1234567L",
+            "authenticated_identity": "X0001500M",
         },
     )
     evidence = calendar_filing_evidence_from_sources(
@@ -175,7 +175,7 @@ def test_calendar_does_not_conflict_matching_verified_csv_across_reference_names
         ),
         calculation_observations=(payload,),
         justificantes=(justificante_metadata(csv=csv),),
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     calendar, row = _april_2025_303_filing_row(evidence, authority_operation)

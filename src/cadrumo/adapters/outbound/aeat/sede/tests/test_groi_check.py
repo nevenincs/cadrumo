@@ -59,14 +59,14 @@ def test_default_timeout_is_thirty_seconds() -> None:
 
 def test_direct_driver_query_guard_rejects_unclassified_browser_action() -> None:
     assert_query_browser_action("open-groi-form")
-    assert_query_browser_action("check-nif-A28015865")
+    assert_query_browser_action("check-nif-A00015016")
     with pytest.raises(RegistryValidationError, match="explicit read-only allow-list"):
         assert_query_browser_action("new-unreviewed-groi-action")
 
 
 def test_observation_model_round_trips_through_strict_frozen_pydantic() -> None:
     observation = GroiNifVerdict(
-        nif="A28015865",
+        nif="A00015016",
         verdict="valid",
         raw_evidence_locator=Settings.external_constants().aeat.oracles.groi_check,
     )
@@ -76,7 +76,7 @@ def test_observation_model_round_trips_through_strict_frozen_pydantic() -> None:
 
 def test_observation_model_rejects_unknown_verdict() -> None:
     with pytest.raises(ValidationError, match=r"verdict|Input should be"):
-        GroiNifVerdict.model_validate({"nif": "A28015865", "verdict": "registered"})
+        GroiNifVerdict.model_validate({"nif": "A00015016", "verdict": "registered"})
 
 
 def test_observation_model_rejects_empty_nif() -> None:
@@ -85,7 +85,7 @@ def test_observation_model_rejects_empty_nif() -> None:
 
 
 def test_observation_model_is_frozen() -> None:
-    observation = GroiNifVerdict(nif="A28015865", verdict="valid")
+    observation = GroiNifVerdict(nif="A00015016", verdict="valid")
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         observation.nif = "B12345678"
 
@@ -96,19 +96,19 @@ def test_result_model_defaults_to_empty_observations() -> None:
 
 # ---------------------------------------------------------------------------
 # Verdict parser fixtures derived from live AEAT response samples captured
-# 2026-05-07 (.tmp/nif_iva_capture/groi_response_A28015865.html and
+# 2026-05-07 (.tmp/nif_iva_capture/groi_response_A00015016.html and
 # groi_response_B00000001.html). The marker text is what AEAT produced live;
 # the parser is the unit under test, the response text is the authority.
 # ---------------------------------------------------------------------------
 
 
 def test_verdict_parser_recognises_valid_response_for_registered_operator() -> None:
-    """Real AEAT response for A28015865 (Telefónica, ROI-registered)."""
+    """Real AEAT response for A00015016 (Telefónica, ROI-registered)."""
 
     body_text = (
         "La Agencia Tributaria certifica que: "
         "A FECHA 07-05-2026 13:10:51 CONSTA UN OPERADOR INTRACOMUNITARIO EN ESPAÑA "
-        "CON EL NÚMERO DE IVA ESA28015865"
+        "CON EL NÚMERO DE IVA ESA00015016"
     )
     assert extract_marker_verdict(body_text, positive_markers=GROI_CHECK_POSITIVE_MARKERS) == "valid"
 

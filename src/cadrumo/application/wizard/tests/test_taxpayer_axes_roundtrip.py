@@ -50,7 +50,7 @@ class TestSetupAnswersTaxpayerAxes:
 
     def test_legal_entity_form_accepts_a_recognised_form(self) -> None:
         answers = SetupAnswers(
-            tax_id="B12345674",
+            tax_id="B00015016",
             activity="Cooperative trading",
             entity_type=EntityType.from_registry("legal_entity"),
             legal_entity_form=LegalEntityForm.from_registry("cooperativa"),
@@ -232,7 +232,7 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
         new_entity: bool | str = "",
     ) -> SetupAnswers:
         return SetupAnswers(
-            tax_id="B66012345",
+            tax_id="B00015032",
             activity="Software development",
             entity_type=EntityType.from_registry("legal_entity"),
             legal_entity_form=LegalEntityForm.from_registry("sl"),
@@ -287,7 +287,7 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
             # blank). The required-flag tax-id and activity must be seeded
             # explicitly — they are unconditionally required.
             canonical: dict[str, str] = {
-                "tax-id": "B66012345",
+                "tax-id": "B00015032",
                 "activity": "Software development",
                 "entity-type": "legal_entity",
                 "legal-entity-form": "sl",

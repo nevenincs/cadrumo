@@ -66,7 +66,7 @@ def _read() -> bridge.IvaWalletCaptureRead:
         cast(typer.Context, cast(object, None)),
         target_year=2025,
         target_period=_PERIOD,
-        taxpayer_nif="X1234567L",
+        taxpayer_nif="X0001500M",
     )
 
 
@@ -86,7 +86,7 @@ def test_registered_wallet_capture_uses_exact_profile_and_period_scope(
         profile_id=_PROFILE,
         target_year=2025,
         target_period="1T",
-        taxpayer_nif="X1234567L",
+        taxpayer_nif="X0001500M",
     )
     assert options["definition_id"] == IVA_WALLET_CAPTURE_DEFINITION_ID
     assert options["subject_ref"] == profile_operation_subject(str(_PROFILE))
@@ -149,7 +149,7 @@ def test_wallet_pull_command_emits_existing_payload_and_text_from_projection(
         cast(typer.Context, cast(object, None)),
         year=2025,
         period="1T",
-        taxpayer_nif="X1234567L",
+        taxpayer_nif="X0001500M",
     )
 
     assert len(envelopes) == 1

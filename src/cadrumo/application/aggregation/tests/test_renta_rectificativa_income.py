@@ -92,7 +92,7 @@ def _rectificativa(
             "invoice_number": number,
             "issued_at": on,
             "counterparty_name": "Cliente SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "bucket_id": BUCKET_ID,
             "base_total": base,

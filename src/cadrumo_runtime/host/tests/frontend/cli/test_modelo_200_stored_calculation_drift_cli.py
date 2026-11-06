@@ -36,7 +36,7 @@ def test_verify_after_profile_activity_start_change_reports_scoped_advisories_wi
             **native_general_iva_facts(),
             "taxpayer_type.entity_type": "legal_entity",
             "taxpayer_type.legal_entity_form": "sa",
-            "identity.tax_id": "A12345674",
+            "identity.tax_id": "A00015008",
             "identity.legal_name": "S.A. Drift Test",
             "activities.description": "industrial services",
             "taxpayer_type.incn_prior_12_months": "500000",

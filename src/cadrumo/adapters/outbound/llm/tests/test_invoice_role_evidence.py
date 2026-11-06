@@ -158,7 +158,7 @@ class TestThePromptAsksForPrintedEvidenceRatherThanAConclusion:
         parsed = parse_invoice_extraction_response(
             json.dumps(
                 {
-                    "supplier_tax_id": "B12345674",
+                    "supplier_tax_id": "B00015016",
                     f"supplier_tax_id{ROLE_EVIDENCE_KEY_SUFFIX}": "Proveedor:",
                     "customer_tax_id": "A00010017",
                     f"customer_tax_id{ROLE_EVIDENCE_KEY_SUFFIX}": "Cliente:",
@@ -193,7 +193,7 @@ class TestTheStrictClosedPayloadRefuses:
         """
         payload = json.dumps(
             {
-                "supplier_tax_id": "B12345674",
+                "supplier_tax_id": "B00015016",
                 f"grand_total{ROLE_EVIDENCE_KEY_SUFFIX}": "Total:",
             },
         )
@@ -210,7 +210,7 @@ class TestTheStrictClosedPayloadRefuses:
         Splitting the reply into three halves must not have opened a route where
         an unknown key lands in whichever bucket its name happens to suffix.
         """
-        payload = json.dumps({"supplier_tax_id": "B12345674", "vendor_confidence": "high"})
+        payload = json.dumps({"supplier_tax_id": "B00015016", "vendor_confidence": "high"})
 
         with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
             parse_invoice_extraction_response(payload)
@@ -225,9 +225,9 @@ class TestTheStrictClosedPayloadRefuses:
         here costs no safety -- while rejecting the reply would lose every other
         field the model read correctly.
         """
-        parsed = parse_invoice_extraction_response(json.dumps({"supplier_tax_id": "B12345674"}))
+        parsed = parse_invoice_extraction_response(json.dumps({"supplier_tax_id": "B00015016"}))
 
-        assert parsed.fields.supplier_tax_id == "B12345674"
+        assert parsed.fields.supplier_tax_id == "B00015016"
         assert parsed.role_evidence.supplier_tax_id is None
         assert parsed.role_evidence.customer_tax_id is None
 
@@ -240,14 +240,14 @@ class TestTheStrictClosedPayloadRefuses:
         parsed = parse_invoice_extraction_response(
             json.dumps(
                 {
-                    "supplier_tax_id": "B12345674",
+                    "supplier_tax_id": "B00015016",
                     f"supplier_tax_id{ANCHOR_KEY_SUFFIX}": "B-12345674",
                     f"supplier_tax_id{ROLE_EVIDENCE_KEY_SUFFIX}": "Proveedor:",
                 },
             ),
         )
 
-        assert parsed.fields.supplier_tax_id == "B12345674"
+        assert parsed.fields.supplier_tax_id == "B00015016"
         assert parsed.anchors.supplier_tax_id == "B-12345674"
         assert parsed.role_evidence.supplier_tax_id == "Proveedor:"
         assert set(ExtractedRoleEvidence.model_fields) <= set(ExtractedInvoiceFields.model_fields)

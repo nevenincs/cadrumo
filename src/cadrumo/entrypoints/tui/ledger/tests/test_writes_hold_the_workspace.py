@@ -808,7 +808,7 @@ def _invoice_entry(gate: Gate, _tmp_path: Path) -> _Flow:
     async def submit(pilot: Pilot[None]) -> LedgerWorkspaceScreen:
         for name, value in (
             ("counterparty-name", "Hardware Profesional Sur SL"),
-            ("counterparty-nif", "B92000090"),
+            ("counterparty-nif", "B00015099"),
             ("invoice-number", "A-0003"),
             ("invoice-date", "2026-03-27"),
             ("taxable-base", "1200.00"),

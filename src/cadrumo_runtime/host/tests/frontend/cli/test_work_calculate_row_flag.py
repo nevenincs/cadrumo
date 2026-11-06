@@ -329,7 +329,7 @@ class TestRevisionViewSurfacesDetailRows:
                 "create",
                 "cb",
                 "--tax-id",
-                "E12345674",
+                "E00015008",
                 "--entity-type",
                 "attribution_entity",
                 "--name",

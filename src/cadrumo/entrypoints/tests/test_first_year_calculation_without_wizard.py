@@ -65,7 +65,7 @@ with isolated_runtime_profile(tmp_path=tmp, bucket_id=_BUCKET) as profile:
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
-            UserProfileFact(path="identity.tax_id", value="B12345674"),
+            UserProfileFact(path="identity.tax_id", value="B00015016"),
             UserProfileFact(path="identity.legal_name", value="No Wizard SL"),
             UserProfileFact(path="activities.description", value="economic activity"),
             UserProfileFact(path="iva.regime", value="GENERAL"),

@@ -67,7 +67,7 @@ from ...core.hashing import sha256_hex
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "13000000-0000-4000-8000-0000000000c1"
-_TAX_ID = "X1234567L"
+_TAX_ID = "X0001500M"
 _REVISION_ID = "2019-y-siguientes"
 _PERIOD = Period.from_year_and_code(2026, "1T")
 _T0 = datetime(2026, 4, 1, 9, 0, tzinfo=UTC)

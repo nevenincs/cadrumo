@@ -34,7 +34,7 @@ _SII_SUBMISSION = f"""<?xml version="1.0" encoding="UTF-8"?>
     <sii:IDVersionSii>1.1</sii:IDVersionSii>
     <sii:Titular>
       <sii:NombreRazon>Example Taxpayer</sii:NombreRazon>
-      <sii:NIF>B12345674</sii:NIF>
+      <sii:NIF>B00015016</sii:NIF>
     </sii:Titular>
     <sii:TipoComunicacion>A0</sii:TipoComunicacion>
   </sii:Cabecera>
@@ -44,7 +44,7 @@ _SII_SUBMISSION = f"""<?xml version="1.0" encoding="UTF-8"?>
       <sii:Periodo>01</sii:Periodo>
     </sii:PeriodoLiquidacion>
     <siiLR:IDFactura>
-      <sii:IDEmisorFactura><sii:NIF>B12345674</sii:NIF></sii:IDEmisorFactura>
+      <sii:IDEmisorFactura><sii:NIF>B00015016</sii:NIF></sii:IDEmisorFactura>
       <sii:NumSerieFacturaEmisor>F-1</sii:NumSerieFacturaEmisor>
       <sii:FechaExpedicionFacturaEmisor>31-01-2026</sii:FechaExpedicionFacturaEmisor>
     </siiLR:IDFactura>
@@ -65,21 +65,21 @@ _VERIFACTU_SUBMISSION = f"""<?xml version="1.0" encoding="UTF-8"?>
   <sfLR:Cabecera>
     <sf:ObligadoEmision>
       <sf:NombreRazon>Example Taxpayer</sf:NombreRazon>
-      <sf:NIF>B12345674</sf:NIF>
+      <sf:NIF>B00015016</sf:NIF>
     </sf:ObligadoEmision>
   </sfLR:Cabecera>
   <sfLR:RegistroFactura>
     <sf:RegistroAnulacion>
       <sf:IDVersion>1.0</sf:IDVersion>
       <sf:IDFactura>
-        <sf:IDEmisorFacturaAnulada>B12345674</sf:IDEmisorFacturaAnulada>
+        <sf:IDEmisorFacturaAnulada>B00015016</sf:IDEmisorFacturaAnulada>
         <sf:NumSerieFacturaAnulada>F-1</sf:NumSerieFacturaAnulada>
         <sf:FechaExpedicionFacturaAnulada>31-01-2026</sf:FechaExpedicionFacturaAnulada>
       </sf:IDFactura>
       <sf:Encadenamiento><sf:PrimerRegistro>S</sf:PrimerRegistro></sf:Encadenamiento>
       <sf:SistemaInformatico>
         <sf:NombreRazon>Example Software</sf:NombreRazon>
-        <sf:NIF>B12345674</sf:NIF>
+        <sf:NIF>B00015016</sf:NIF>
         <sf:NombreSistemaInformatico>Emitter</sf:NombreSistemaInformatico>
         <sf:IdSistemaInformatico>01</sf:IdSistemaInformatico>
         <sf:Version>1.0</sf:Version>

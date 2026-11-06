@@ -70,7 +70,7 @@ def renta_rectificativa_expense_correction(
             "invoice_number": number,
             "issued_at": on,
             "counterparty_name": "Proveedor SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": base,
             "iva_total": iva,

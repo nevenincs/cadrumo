@@ -67,7 +67,7 @@ def _invoice(bucket_id: str) -> Invoice:
                 "invoice_number": "RUNTIME-001",
                 "issued_at": date(2026, 4, 1),
                 "counterparty_name": "Proveedor SL",
-                "counterparty_tax_id": "B12345674",
+                "counterparty_tax_id": "B00015016",
                 "counterparty_country": "ES",
                 "base_total": Decimal("100.00"),
                 "iva_total": Decimal("21.00"),

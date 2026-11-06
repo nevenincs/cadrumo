@@ -58,8 +58,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _PROFILE = UUID("9f4a6b8c-0d1e-4f2a-9b3c-8d9e0f1a2b3c")
 
 #: Figures with no label the rules read, so each document needs the text model.
-_NO_LABELS = ("B1234567X B17283946 766,30",)
-_OTHER_NO_LABELS = ("B7654321X B17283946 412,90",)
+_NO_LABELS = ("B1234567X B00015024 766,30",)
+_OTHER_NO_LABELS = ("B7654321X B00015024 412,90",)
 
 
 @pytest.fixture

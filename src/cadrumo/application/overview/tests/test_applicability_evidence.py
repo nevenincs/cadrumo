@@ -149,7 +149,7 @@ def _derive(
 
 
 # 2.483,53 + 21 % = 3.005,07; 2.483,52 + 21 % = 3.005,06; 1.652,89 + 21 % = 2.000,00.
-def _sale(number: str, *, base: str = "2483.53", iva: str = "521.54", tax_id: str = "B87654323") -> Invoice:
+def _sale(number: str, *, base: str = "2483.53", iva: str = "521.54", tax_id: str = "B00015057") -> Invoice:
     return _invoice(kind=InvoiceKind.ISSUED, number=number, tax_id=tax_id, base=base, iva=iva)
 
 
@@ -168,7 +168,7 @@ def test_entregas_and_adquisiciones_are_judged_apart(operation: PinnedAuthorityO
     purchase = _invoice(
         kind=InvoiceKind.RECEIVED,
         number="P-1",
-        tax_id="B87654323",
+        tax_id="B00015057",
         base="1652.89",
         iva="347.11",
     )
@@ -191,7 +191,7 @@ def test_a_withheld_operation_makes_a_zero_count_unknown(operation: PinnedAuthor
     foreign = _invoice(
         kind=InvoiceKind.ISSUED,
         number="V-USD",
-        tax_id="B12345674",
+        tax_id="B00015016",
         base="100.00",
         iva="21.00",
         currency="USD",
@@ -223,7 +223,7 @@ def _iva_outside_sii() -> ModeloIVAProfile:
 
 def _autonomo(*, threshold: bool | None, collector: bool = False, sii: bool = False) -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
@@ -460,7 +460,7 @@ def test_explain_and_the_calendar_decide_a_ledger_yes_alike(
 
 
 _AUTONOMO_FACTS: tuple[UserProfileFact, ...] = persona_facts_beneath(
-    (UserProfileFact(path="identity.tax_id", value="X1234567L"),)
+    (UserProfileFact(path="identity.tax_id", value="X0001500M"),)
 )
 
 

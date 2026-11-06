@@ -106,7 +106,7 @@ def test_pending_ordinary_and_atraso_rows_carry_their_pendiente_and_devengo_byte
         [
             _row(_PENDING_NIF, _PENDING_NAME, pendiente="X"),
             _row("12345678Z", "PERCEPTOR ORDINARIO"),
-            _row("87654321X", "PERCEPTOR ATRASO", ejercicio_devengo="2024"),
+            _row("X0001502F", "PERCEPTOR ATRASO", ejercicio_devengo="2024"),
         ],
     )
     assert pending[116:117] == "X"

@@ -53,7 +53,7 @@ def check_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profile
 
     monthly_profiles = (
         TaxpayerProfile(
-            tax_id="B12345674",
+            tax_id="B00015016",
             iva_regime=IVARegime("GENERAL"),
             iva=ModeloIVAProfile(
                 tax_territory=M303TaxTerritory.from_registry("common_regime"),
@@ -65,7 +65,7 @@ def check_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profile
             ),
         ),
         TaxpayerProfile(
-            tax_id="C12345674",
+            tax_id="C00015008",
             iva_regime=IVARegime("GENERAL"),
             iva=ModeloIVAProfile(
                 tax_territory=M303TaxTerritory.from_registry("common_regime"),
@@ -79,7 +79,7 @@ def check_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profile
         ),
     )
     voluntary_sii_profile = TaxpayerProfile(
-        tax_id="A12345674",
+        tax_id="A00015008",
         iva_regime=IVARegime("GENERAL"),
         iva=ModeloIVAProfile(
             tax_territory=M303TaxTerritory.from_registry("common_regime"),
@@ -93,7 +93,7 @@ def check_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profile
         enrollment=ModeloEnrollment(large_company=False),
     )
     ordinary_quarterly_profile = TaxpayerProfile(
-        tax_id="D98765431",
+        tax_id="D00015016",
         iva_regime=IVARegime("GENERAL"),
         iva=ModeloIVAProfile(
             tax_territory=M303TaxTerritory.from_registry("common_regime"),

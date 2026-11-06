@@ -55,7 +55,7 @@ def _read_draft() -> InvoiceDraft:
     that retains the origin from one that stamps a constant.
     """
     return InvoiceDraft(
-        supplier_tax_id="ESB12345674",
+        supplier_tax_id="ESB00015016",
         supplier_name="Proveedor Ejemplo SL",
         invoice_number="PROV-2024-0001",
         invoice_date="2024-11-15",
@@ -70,7 +70,7 @@ def _read_draft() -> InvoiceDraft:
                 field="supplier_tax_id",
                 origin=FieldOrigin.EXACT_STRUCTURED,
                 grounding=FieldGroundingOutcome.RECONCILED,
-                anchor="ESB12345674",
+                anchor="ESB00015016",
                 note="control character checks out",
             ),
             # Deliberately ANCHORED and carrying an anchor. A fixture whose
@@ -100,16 +100,16 @@ def test_an_override_re_stamps_operator_while_the_record_keeps_the_prior_value()
 
     assertions = field_assertions(
         draft=draft,
-        overrides={"taxable_base": Decimal("150.00"), "supplier_tax_id": "ESX1234567L"},
+        overrides={"taxable_base": Decimal("150.00"), "supplier_tax_id": "ESX0001500M"},
     )
 
     by_field = {assertion.field: assertion for assertion in assertions}
     assert by_field["taxable_base"].prior_value == "100.00"
     assert by_field["taxable_base"].prior_origin is FieldOrigin.VISION
     assert by_field["taxable_base"].asserted_value == "150.00"
-    assert by_field["supplier_tax_id"].prior_value == "ESB12345674"
+    assert by_field["supplier_tax_id"].prior_value == "ESB00015016"
     assert by_field["supplier_tax_id"].prior_origin is FieldOrigin.EXACT_STRUCTURED
-    assert by_field["supplier_tax_id"].asserted_value == "ESX1234567L"
+    assert by_field["supplier_tax_id"].asserted_value == "ESX0001500M"
 
     confirmed = re_stamped_provenance(draft=draft, assertions=assertions)
     stamped = {envelope.field: envelope for envelope in confirmed}
@@ -146,7 +146,7 @@ def test_a_field_the_operator_left_alone_keeps_its_reading() -> None:
     stamped = {envelope.field: envelope for envelope in re_stamped_provenance(draft=draft, assertions=assertions)}
 
     assert stamped["supplier_tax_id"].origin is FieldOrigin.EXACT_STRUCTURED
-    assert stamped["supplier_tax_id"].anchor == "ESB12345674"
+    assert stamped["supplier_tax_id"].anchor == "ESB00015016"
 
 
 def test_silence_is_not_an_assertion() -> None:
@@ -158,11 +158,11 @@ def test_a_supplied_value_where_the_document_was_silent_records_no_prior_origin(
     """Supplying and correcting are different acts and the record distinguishes them."""
     draft = _read_draft().model_copy(update={"customer_tax_id": None})
 
-    assertions = field_assertions(draft=draft, overrides={"customer_tax_id": "ESX1234567L"})
+    assertions = field_assertions(draft=draft, overrides={"customer_tax_id": "ESX0001500M"})
 
     assert assertions[0].prior_value is None
     assert assertions[0].prior_origin is None
-    assert assertions[0].asserted_value == "ESX1234567L"
+    assert assertions[0].asserted_value == "ESX0001500M"
 
 
 def test_the_derived_id_is_clock_free() -> None:

@@ -334,8 +334,8 @@ class TestEveryRowDeclaringTheIdentificationTurnsOnIt:
 # design because registration is not establishment, and this is reached only
 # where that resolver already declined.
 
-_SPANISH_CIF = "B12345674"
-_SPANISH_IVA = "ESB12345674"
+_SPANISH_CIF = "B00015016"
+_SPANISH_IVA = "ESB00015016"
 
 
 def test_a_spanish_iva_number_now_states_its_identification() -> None:
@@ -348,7 +348,7 @@ def test_a_spanish_iva_number_now_states_its_identification() -> None:
 
 @pytest.mark.parametrize(
     "printed",
-    ["ES B12345674", "ES B-1234567-4", "esb12345674", "  ESB12345674  "],
+    ["ES B00015016", "ES B-1234567-4", "esb00015016", "  ESB00015016  "],
     ids=["spaced", "punctuated", "lowercase", "padded"],
 )
 def test_the_printed_spelling_does_not_change_the_identification(printed: str) -> None:

@@ -62,7 +62,7 @@ DEVENGO_DATES: Final = (
 """Every date a transitional slot enters or leaves force, the days either side, and a spread."""
 
 COUNTERPARTIES: Final = (
-    ("B12345674", "ES"),
+    ("B00015016", "ES"),
     ("DE123456789", "DE"),
     ("FR12345678901", "FR"),
     ("IT12345678901", "IT"),
@@ -99,7 +99,7 @@ class SeedCase:
     slots: tuple[str, ...]
     issued_offset: int = 0
     kind: str = "issued"
-    counterparty: tuple[str | None, str] = ("B12345674", "ES")
+    counterparty: tuple[str | None, str] = ("B00015016", "ES")
     extra: Mapping[str, object] = field(default_factory=dict)
 
 

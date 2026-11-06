@@ -52,8 +52,8 @@ from .portable_human_cli_runtime import portable_human_cli_runtime
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_FILER_CIF = "B17283946"
-_COUNTERPARTY_CIF = "B12345674"
+_FILER_CIF = "B00015024"
+_COUNTERPARTY_CIF = "B00015016"
 _BAD_CHECKSUM_CIF = "B1234567X"
 
 #: A purchase invoice: the filer is the party being BILLED, so the document

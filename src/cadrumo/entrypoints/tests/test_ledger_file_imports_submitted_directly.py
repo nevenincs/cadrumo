@@ -53,8 +53,8 @@ _LATER_STATEMENT = (
 _NOT_A_STATEMENT = "colonna_a,colonna_b\nvalore,altro\n"
 _INVOICE_BOOK = (
     b"counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate,currency,country_code\n"
-    b"B12345674,Synthetic Supplier,BOOK-2025-001,2025-02-03,100.00,21,EUR,ES\n"
-    b"B12345674,Synthetic Supplier,BOOK-2025-002,2025-02-10,200.00,21,EUR,ES\n"
+    b"B00015016,Synthetic Supplier,BOOK-2025-001,2025-02-03,100.00,21,EUR,ES\n"
+    b"B00015016,Synthetic Supplier,BOOK-2025-002,2025-02-10,200.00,21,EUR,ES\n"
 )
 
 

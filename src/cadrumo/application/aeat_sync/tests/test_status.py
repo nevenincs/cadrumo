@@ -49,7 +49,7 @@ from ..workspace_reader import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 10, 29, 12, 0, tzinfo=UTC)
-_SUBJECT = "X1234567L"
+_SUBJECT = "X0001500M"
 _UNREADABLE = "aeat_sync.status.store_unreadable"
 _YEARS = (2025, 2026)
 

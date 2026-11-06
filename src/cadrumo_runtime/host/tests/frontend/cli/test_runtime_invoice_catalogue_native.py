@@ -72,7 +72,7 @@ def _invoice(profile_id: UUID, invoice_number: str, authority: PinnedAuthorityOp
                 "issued_at": "2025-05-01",
                 "counterparty_name": "Native catalogue supplier",
                 "notes": "Original invoice note kept by a partial update.",
-                "counterparty_tax_id": "B12345674",
+                "counterparty_tax_id": "B00015016",
                 "counterparty_country": "ES",
                 "base_total": Decimal("100.00"),
                 "iva_total": Decimal("21.00"),

@@ -128,7 +128,7 @@ def _seed_first_year_modalidad_cuota_profile() -> None:
         profile_id=_BUCKET_ID,
         facts=persona_facts_beneath(
             (
-                UserProfileFact(path="identity.tax_id", value="B12345674"),
+                UserProfileFact(path="identity.tax_id", value="B00015016"),
                 UserProfileFact(path="identity.legal_name", value="First Year Cuota Test SL"),
                 UserProfileFact(path="activities.description", value="software consultancy"),
                 UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
@@ -232,7 +232,7 @@ def test_first_year_modalidad_cuota_m200_calculates_drafts_and_verifies(
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
             actor="system",
-            workflow_profile=TaxpayerProfile(tax_id="B12345674", iva_regime=IVARegime("GENERAL")),
+            workflow_profile=TaxpayerProfile(tax_id="B00015016", iva_regime=IVARegime("GENERAL")),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=_authority_operation_for_test,
         ).report

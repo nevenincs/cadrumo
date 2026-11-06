@@ -35,7 +35,7 @@ _TIMESTAMP = datetime(2026, 5, 3, 12, 0, tzinfo=UTC)
 # checksum on its own, which is exactly why per-field typing cannot catch the
 # divergence between them.
 _PROFILE_NIF = "12345678Z"
-_OTHER_NIF = "87654321X"
+_OTHER_NIF = "X0001502F"
 
 
 def _draft_kwargs() -> dict[str, object]:

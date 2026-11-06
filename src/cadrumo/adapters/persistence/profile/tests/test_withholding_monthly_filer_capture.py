@@ -98,7 +98,7 @@ def received_professional_invoice() -> Invoice:
             "invoice_number": "MONTHLY-PRO-001",
             "issued_at": date(YEAR, 3, 31),
             "counterparty_name": "Synthetic Recipient SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": subtotal,
             "iva_total": line.iva_amount,

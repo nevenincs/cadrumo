@@ -136,7 +136,7 @@ def test_a_gated_spouse_slot_is_neither_filled_nor_reported_for_an_individual_fi
         _fact_index(
             *_DECLARANTE,
             UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            UserProfileFact(path="renta_spouse.tax_id", value="87654321X"),
+            UserProfileFact(path="renta_spouse.tax_id", value="X0001502F"),
         ),
     )
 

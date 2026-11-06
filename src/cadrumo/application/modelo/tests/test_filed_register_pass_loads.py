@@ -164,7 +164,7 @@ def world(operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch):
         record=create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=BUCKET_ID,
-            facts=(UserProfileFact(path="identity.tax_id", value="X1234567L"),),
+            facts=(UserProfileFact(path="identity.tax_id", value="X0001500M"),),
             context=leased_profile_create_context(),
         ),
         profile_decode_context=operation.profile_decode_context(),

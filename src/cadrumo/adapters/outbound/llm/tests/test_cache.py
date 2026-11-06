@@ -156,7 +156,7 @@ def test_a_response_redaction_would_alter_is_never_replayed(tmp_path: Path) -> N
     """
     cache = LLMCache(root_dir=tmp_path)
     request = LLMRequest(prompt="Read the invoice", temperature=0.0, language="es")
-    identity_bearing = _response().model_copy(update={"text": '{"supplier_tax_id": "B92000090"}'})
+    identity_bearing = _response().model_copy(update={"text": '{"supplier_tax_id": "B00015099"}'})
 
     cache.write(request, identity_bearing)
 

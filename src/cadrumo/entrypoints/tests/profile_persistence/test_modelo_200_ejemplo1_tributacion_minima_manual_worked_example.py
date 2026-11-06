@@ -332,7 +332,7 @@ def _seed_sociedad_profile(filing_year: int) -> None:
         profile_id=_BUCKET_ID,
         facts=persona_facts_beneath(
             (
-                UserProfileFact(path="identity.tax_id", value="A12345674"),
+                UserProfileFact(path="identity.tax_id", value="A00015008"),
                 UserProfileFact(path="identity.legal_name", value="Sociedad A Ejemplo1 SL"),
                 UserProfileFact(path="activities.description", value="fabricacion industrial"),
                 UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("25000000")),

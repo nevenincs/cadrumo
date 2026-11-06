@@ -217,7 +217,7 @@ def test_invoice_add_id_is_linkable(
         added = session.invoke_password(
             "app", "ledger", "add",
             "--date", "2026-03-10", "--amount", "121.00",
-            "--direction", "OUTGOING", "--description", "Supplier payment B12345674",
+            "--direction", "OUTGOING", "--description", "Supplier payment B00015016",
             output_format="text",
         )  # fmt: skip
         assert added.exit_code == 0, added.output
@@ -226,7 +226,7 @@ def test_invoice_add_id_is_linkable(
         invoice = session.invoke_password(
             "app", "ledger", "invoice", "add",
             "--kind", "received",
-            "--counterparty-nif", "B12345674",
+            "--counterparty-nif", "B00015016",
             "--counterparty-name", "Proveedor SL",
             "--invoice-number", "2026-0142",
             "--invoice-date", "2026-03-10",
@@ -289,7 +289,7 @@ def test_check_reports_a_one_sided_invoice_link(
         added = session.invoke_password(
             "app", "ledger", "add",
             "--date", "2026-03-10", "--amount", "121.00",
-            "--direction", "OUTGOING", "--description", "Supplier payment B12345674",
+            "--direction", "OUTGOING", "--description", "Supplier payment B00015016",
             "--idempotency-key", "check-link-drift",
             output_format="text",
         )  # fmt: skip
@@ -299,7 +299,7 @@ def test_check_reports_a_one_sided_invoice_link(
         created = session.invoke_password(
             "app", "ledger", "invoice", "add",
             "--kind", "received",
-            "--counterparty-nif", "B12345674",
+            "--counterparty-nif", "B00015016",
             "--counterparty-name", "Proveedor SL",
             "--invoice-number", "2026-0143",
             "--invoice-date", "2026-03-10",

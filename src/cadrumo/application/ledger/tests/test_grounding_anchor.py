@@ -458,7 +458,7 @@ class TestAShortCodeIsNotAFragmentOfAnIdentifier:
         evaluation = evaluate_anchor(
             value="ES",
             anchor="ES",
-            transcription=_transcription("INV-001 ESB12345674 Reformas Delta SL\n"),
+            transcription=_transcription("INV-001 ESB00015016 Reformas Delta SL\n"),
         )
 
         assert evaluation.outcome is FieldGroundingOutcome.UNANCHORED
@@ -475,7 +475,7 @@ class TestAShortCodeIsNotAFragmentOfAnIdentifier:
         evaluation = evaluate_anchor(
             value="ES",
             anchor="ES",
-            transcription=_transcription("Pais: ES\nNIF: B12345674\n"),
+            transcription=_transcription("Pais: ES\nNIF: B00015016\n"),
         )
 
         assert evaluation.outcome is FieldGroundingOutcome.ANCHORED

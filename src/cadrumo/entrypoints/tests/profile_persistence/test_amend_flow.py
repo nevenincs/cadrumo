@@ -128,7 +128,7 @@ _PROFILE_ID = "10000000-0000-4000-8000-000000000130"
 _PROFILE_LABEL = "Test runtime profile"
 _READY_PROFILE_FACTS = persona_facts_beneath(
     (
-        UserProfileFact(path="identity.tax_id", value="X1234567L"),
+        UserProfileFact(path="identity.tax_id", value="X0001500M"),
         UserProfileFact(path="identity.name", value="Ready"),
         UserProfileFact(path="identity.surnames", value="Operator"),
         UserProfileFact(path="activities.description", value="file-flow"),
@@ -443,7 +443,7 @@ def test_amend_refuses_without_external_evidence(repos: _Repos, *, operation: Pi
             workflow_profile=workflow_profile(),
             settings=Settings(
                 cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
-                cadrumo_clave_movil_dni_nie=SecretStr("X1234567L"),
+                cadrumo_clave_movil_dni_nie=SecretStr("X0001500M"),
             ),
             clock=_T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,

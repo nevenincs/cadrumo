@@ -189,7 +189,7 @@ def test_resolver_materialises_distinct_perceptor_count() -> None:
     """Two perceptors across three rows materialise a DISTINCT count of 2, not 3."""
     repository = _InMemoryRetencionObservationRepository()
     period = Period.from_year_and_code(2024, "1T")
-    # 11111111H appears twice (e.g. two payments) but is ONE perceptor; the
+    # 00001500M appears twice (e.g. two payments) but is ONE perceptor; the
     # distinct-NIF count is 2. (Same NIF, same scheme → the second overwrites,
     # so seed via two NIFs plus a repeat to prove distinctness through the
     # aggregator, not the store.)
@@ -197,7 +197,7 @@ def test_resolver_materialises_distinct_perceptor_count() -> None:
         modelo="115",
         filing_year=2024,
         period=period,
-        observations=[_observation("11111111H"), _observation("22222222J")],
+        observations=[_observation("00001500M"), _observation("00001501Y")],
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
     resolution = _resolver(repository).resolve(_context(_m180_revision_with_retenciones_source()))
@@ -205,8 +205,8 @@ def test_resolver_materialises_distinct_perceptor_count() -> None:
     assert resolution.binding_values == {_PERCEPTOR_BINDING_ID: Decimal(2)}
     assert resolution.diagnostics == ()
     assert {item.source_ref for item in resolution.provenance} == {
-        "perceptor:11111111H",
-        "perceptor:22222222J",
+        "perceptor:00001500M",
+        "perceptor:00001501Y",
     }
 
 
@@ -311,7 +311,7 @@ def test_resolver_materialises_modelo_111_scheme_filtered_bindings_from_applicat
             RetencionObservation(
                 source_kind=BindingSourceKind.LEDGER_TRANSACTION,
                 source_object_id="payroll-row-001",
-                perceptor_nif="11111111H",
+                perceptor_nif="00001500M",
                 perceptor_name="Trabajador Ejemplo",
                 scheme=RetencionScheme("rendimientos_trabajo"),
                 taxable_base=Decimal("100.00"),
@@ -321,7 +321,7 @@ def test_resolver_materialises_modelo_111_scheme_filtered_bindings_from_applicat
             RetencionObservation(
                 source_kind=BindingSourceKind.LEDGER_TRANSACTION,
                 source_object_id="activity-row-001",
-                perceptor_nif="22222222J",
+                perceptor_nif="00001501Y",
                 perceptor_name="Profesional Ejemplo A",
                 scheme=RetencionScheme("actividades_economicas"),
                 taxable_base=Decimal("200.00"),
@@ -331,7 +331,7 @@ def test_resolver_materialises_modelo_111_scheme_filtered_bindings_from_applicat
             RetencionObservation(
                 source_kind=BindingSourceKind.LEDGER_TRANSACTION,
                 source_object_id="professional-row-001",
-                perceptor_nif="33333333P",
+                perceptor_nif="00001502F",
                 perceptor_name="Profesional Ejemplo B",
                 scheme=RetencionScheme("actividades_profesionales"),
                 taxable_base=Decimal("300.00"),
@@ -341,7 +341,7 @@ def test_resolver_materialises_modelo_111_scheme_filtered_bindings_from_applicat
             RetencionObservation(
                 source_kind=BindingSourceKind.LEDGER_TRANSACTION,
                 source_object_id="prize-row-001",
-                perceptor_nif="44444444A",
+                perceptor_nif="00001503P",
                 perceptor_name="Premio Ejemplo",
                 scheme=RetencionScheme("premios"),
                 taxable_base=Decimal("400.00"),
@@ -360,10 +360,10 @@ def test_resolver_materialises_modelo_111_scheme_filtered_bindings_from_applicat
     assert resolution.binding_values == _M111_BINDING_VALUES
     assert resolution.diagnostics == ()
     assert {item.source_ref for item in resolution.provenance} == {
-        "perceptor:11111111H",
-        "perceptor:22222222J",
-        "perceptor:33333333P",
-        "perceptor:44444444A",
+        "perceptor:00001500M",
+        "perceptor:00001501Y",
+        "perceptor:00001502F",
+        "perceptor:00001503P",
     }
 
 

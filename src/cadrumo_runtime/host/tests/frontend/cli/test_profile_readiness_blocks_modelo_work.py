@@ -260,7 +260,7 @@ def test_attribution_entity_without_activity_remains_status_blocked() -> None:
         facts={
             "preferences.output_language": "en",
             "taxpayer_type.entity_type": "attribution_entity",
-            "identity.tax_id": "E12345674",
+            "identity.tax_id": "E00015008",
             "identity.name": "Comunidad sin actividad",
             "activities.description": "",
         },

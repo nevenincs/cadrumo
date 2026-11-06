@@ -304,14 +304,25 @@ def _writable_yes_no_addresses(
     return found
 
 
+#: Each way a published declaration offers a yes/no: Modelo 100 writes boolean casillas directly, and
+#: Modelo 131 offers manual-input boolean bindings, the only source of a writable binding override.
+_YES_NO_SOURCES = (
+    pytest.param("100", "0A", ModeloEditScalarAddressV1, id="scalar-casilla"),
+    pytest.param("131", "1T", ModeloEditBindingAddressV1, id="binding-override"),
+)
+
+
+@pytest.mark.parametrize(("modelo", "code", "address_type"), _YES_NO_SOURCES)
 @pytest.mark.parametrize("language", list(OutputLanguage))
 def test_every_yes_or_no_on_a_published_declaration_reads_the_1_or_0_its_editor_sends(
-    language: OutputLanguage,
+    language: OutputLanguage, modelo: str, code: str, address_type: type[ModeloEditValueAddressV1]
 ) -> None:
-    baseline = _published_modelo_100_baseline()
-    addresses = _writable_yes_no_addresses(baseline)
+    baseline = _published_baseline(modelo, filing_year=2025, code=code)
+    addresses = [
+        (address, grammar) for address, grammar in _writable_yes_no_addresses(baseline) if type(address) is address_type
+    ]
 
-    assert {type(address) for address, _ in addresses} == {ModeloEditScalarAddressV1, ModeloEditBindingAddressV1}
+    assert addresses
     for address, grammar in addresses:
         for lexeme, expected, channel in (("1", True, "1"), ("0", False, "0")):
             read = _read_entry(baseline, address, lexeme, language)

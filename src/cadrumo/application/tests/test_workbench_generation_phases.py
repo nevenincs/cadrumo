@@ -421,7 +421,7 @@ def test_a_resident_s_calendar_survives_the_registered_result_round_trip(
         setup_state=ProfileSetupState.COMPLETE,
         facts=persona_facts_beneath(
             (
-                UserProfileFact(path="identity.tax_id", value="X1234567L"),
+                UserProfileFact(path="identity.tax_id", value="X0001500M"),
                 UserProfileFact(path="taxpayer_type.fiscal_residency", value="resident_irpf"),
             )
         ),
@@ -468,7 +468,7 @@ def test_stored_filed_captures_reach_aeat_sync_through_the_calendar_reader(
         )
 
     profile = Repository(
-        profile_record(authority_operation, facts=(UserProfileFact(path="identity.tax_id", value="X1234567L"),))
+        profile_record(authority_operation, facts=(UserProfileFact(path="identity.tax_id", value="X0001500M"),))
     )
     door = replace(
         plain_generation_door(authority_operation, profile=profile),

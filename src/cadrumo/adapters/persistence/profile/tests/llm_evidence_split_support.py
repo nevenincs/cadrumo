@@ -117,7 +117,7 @@ def seed_received_invoice(objects: SecureObjectRepository, *, invoice_number: st
             "invoice_number": invoice_number,
             "issued_at": date(2026, 5, 2),
             "counterparty_name": "Proveedor Mixto SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": Decimal("100.00"),
             "iva_total": Decimal("21.00"),

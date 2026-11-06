@@ -370,12 +370,13 @@ semantic_role = "dr303_59"
 continuidad_id = "dr303-59"
 input_kind = "bound"
 binding = "modelo-303-casilla-59-entregas-intracomunitarias-base"
-# Casilla 59 reports the base imponible of exempt intra-community supplies
-# (entregas intracomunitarias exentas). The substantive ground is LIVA art. 25
-# (exenciones en las entregas de bienes destinados a otro Estado miembro), not
-# the repercusión/deducción articles 88/92 — an exempt entrega carries no cuota
-# repercutida nor deducible, so this is an informativa base-only box.
-legal_refs = ["ley-37-1992:art-25", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+# Casilla 59 reports the base imponible of the exempt intra-community supplies
+# of goods (LIVA art. 25) and of the intra-community supplies of services, the
+# services located in another Member State by LIVA art. 69.Uno.1 (Modelo 303
+# instructions, Informacion adicional, box 59). Neither leg carries a cuota
+# repercutida or deducible, so the repercusión/deducción articles 88/92 do not
+# apply and this is an informativa base-only box.
+legal_refs = ["ley-37-1992:art-25", "ley-37-1992:art-69", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2022.casillas]]
 id = "60"
@@ -396,9 +397,19 @@ legal_refs = ["ley-37-1992:art-21", "ley-37-1992:art-22", "rd-1624-1992:art-71",
 # The 2022 diseno de registro prints this box at position 46, length 17, as
 # "Operaciones no sujetas por reglas de localizacion (excepto las incluidas en la
 # casilla 123) [120]" (aeat-dr-303-2022) -- the same position, width and concept
-# every later design prints, which only prefixes its apartado name. The ledger
-# already classifies the acquisitions it reports, so the box is derived here
-# rather than left as a figure the operator restates.
+# every later design prints, which only prefixes its apartado name.
+#
+# The box is entered by the operator, not bound. The Modelo 303 instructions
+# (Informacion adicional, box 120) fill it with distance sales not subject under
+# LIVA art. 68.Cuatro outside the Union scheme, distance sales of imported goods
+# outside the Import scheme, not-subject services other than the intra-community
+# services of box 59 and the one-stop-shop services of box 123, goods installed or
+# assembled in another Member State, and any other supply not subject by the
+# place-of-supply rules. No ledger category isolates that population: the
+# intra-community services belong in box 59, and the generic not-subject
+# categories also carry LIVA art. 7 operations and one-stop-shop operations,
+# which the box excludes. Binding either would declare operations the box does
+# not hold.
 [[revisions.2022.casillas]]
 id = "120"
 number = "120"

@@ -104,7 +104,7 @@ def _recargo_invoice(row: Transaction) -> Invoice:
             "invoice_number": "MAY-1",
             "issued_at": date(YEAR, 2, 5),
             "counterparty_name": "Mayorista SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": Decimal("6800.00"),
             "iva_total": Decimal("1428.00"),

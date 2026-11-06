@@ -40,7 +40,7 @@ from ..invoice_draft_records import FieldAmbiguityCandidate, FieldProvenance, In
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_FIRST = "B12345674"
+_FIRST = "B00015016"
 _SECOND = "A00010017"
 
 
@@ -106,13 +106,13 @@ def test_a_digest_of_a_reading_the_document_never_offered_is_refused() -> None:
     than a choice: the document never offered that reading.
     """
     with pytest.raises(ConfirmationBlockedError):
-        _resolve_with(redact_for_cli_output("X1234567L"))
+        _resolve_with(redact_for_cli_output("X0001500M"))
 
 
 def test_a_value_the_document_never_offered_is_still_refused() -> None:
     """The pre-existing guarantee, unchanged by admitting the second form."""
     with pytest.raises(ConfirmationBlockedError):
-        _resolve_with("X1234567L")
+        _resolve_with("X0001500M")
 
 
 def test_the_refusal_names_the_digests_rather_than_the_values() -> None:
@@ -122,7 +122,7 @@ def test_the_refusal_names_the_digests_rather_than_the_values() -> None:
     what they were shown, and they were shown digests.
     """
     with pytest.raises(ConfirmationBlockedError) as raised:
-        _resolve_with("X1234567L")
+        _resolve_with("X0001500M")
 
     # The digests ride on the refusal's facts rather than in an authored
     # sentence, so the confidentiality property is asserted over everything the

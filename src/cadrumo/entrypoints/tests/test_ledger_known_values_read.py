@@ -292,7 +292,7 @@ def test_each_kind_counts_its_own_distinct_values_across_the_whole_history(
 @pytest.mark.usefixtures("profile")
 def test_a_movement_name_joins_the_only_tax_id_it_can_mean(authority_operation: PinnedAuthorityOperation) -> None:
     """One folded name under one tax id joins; the movement name stays with that party."""
-    _save_invoices(_invoice("U-1", name="Gestoría Núñez SL", tax_id="B12345674", issued=date(2026, 1, 10)))
+    _save_invoices(_invoice("U-1", name="Gestoría Núñez SL", tax_id="B00015016", issued=date(2026, 1, 10)))
     _save_movements(
         (
             _movement("named", booked=date(2027, 5, 1), counterparty="GESTORIA NUNEZ SL"),
@@ -304,7 +304,7 @@ def test_a_movement_name_joins_the_only_tax_id_it_can_mean(authority_operation: 
 
     assert [(row.name, row.tax_id, row.country, row.uses, row.last_used) for row in result.counterparties] == [
         ("Sin Factura SA", None, None, 1, date(2027, 7, 1)),
-        ("GESTORIA NUNEZ SL", "B12345674", "ES", 2, date(2027, 5, 1)),
+        ("GESTORIA NUNEZ SL", "B00015016", "ES", 2, date(2027, 5, 1)),
     ]
 
 
@@ -312,7 +312,7 @@ def test_a_movement_name_joins_the_only_tax_id_it_can_mean(authority_operation: 
 def test_a_name_under_two_tax_ids_gives_a_movement_neither(authority_operation: PinnedAuthorityOperation) -> None:
     """The ambiguous name keeps both invoice parties, and its movement joins neither."""
     _save_invoices(
-        _invoice("A-1", name="Comercial Duero SL", tax_id="B12345674", issued=date(2026, 1, 10)),
+        _invoice("A-1", name="Comercial Duero SL", tax_id="B00015016", issued=date(2026, 1, 10)),
         _invoice("A-2", name="comercial duero sl", tax_id="B00010157", issued=date(2026, 2, 10)),
     )
     _save_movements((_movement("ambiguous", booked=date(2027, 5, 1), counterparty="Comercial Duero SL"),))
@@ -322,7 +322,7 @@ def test_a_name_under_two_tax_ids_gives_a_movement_neither(authority_operation: 
     assert [(row.name, row.tax_id, row.uses) for row in result.counterparties] == [
         ("Comercial Duero SL", None, 1),
         ("comercial duero sl", "B00010157", 1),
-        ("Comercial Duero SL", "B12345674", 1),
+        ("Comercial Duero SL", "B00015016", 1),
     ]
 
 

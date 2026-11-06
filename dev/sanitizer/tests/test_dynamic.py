@@ -133,7 +133,7 @@ class TestStripAcroform:
 
     def test_clears_field_values_in_place(self) -> None:
         pdf = _new_one_page_pdf()
-        field = pikepdf.Dictionary(T="taxpayer_nif", V="Y1234567X", DV="Y1234567X")
+        field = pikepdf.Dictionary(T="taxpayer_nif", V="Y0001500L", DV="Y0001500L")
         pdf.Root["/AcroForm"] = pikepdf.Dictionary(Fields=pikepdf.Array([field]))
         result, warnings = strip_acroform(pdf)
         assert result.surface == "acroform_field_value"

@@ -48,6 +48,7 @@ legal_refs = [
 source_refs = [
     "aeat-dr-303-2022",
     "aeat-modelo-303-procedure",
+    "aeat-modelo-303-instructions-20261106",
     "boe-modelo-303-2008-form",
     "aeat-calendario-contribuyente-2022",
     "aeat-calendario-contribuyente-2023",

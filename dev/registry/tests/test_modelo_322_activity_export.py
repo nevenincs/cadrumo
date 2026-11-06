@@ -58,12 +58,12 @@ def test_activity_byte_reads_only_the_explicit_fact(
     ref = RegistrySnapshotRef(modelo="322", revision_id=str(revision.id), modelo_year=year, period="12")
     draft = ModeloDraft(
         draft_id=compute_modelo_draft_id(
-            modelo="322", period=period, profile_tax_id="B12345674", snapshot_ref=ref, values=()
+            modelo="322", period=period, profile_tax_id="B00015016", snapshot_ref=ref, values=()
         ),
         modelo="322",
         period=period,
-        profile_tax_id="B12345674",
-        subject_tax_id="B12345674",
+        profile_tax_id="B00015016",
+        subject_tax_id="B00015016",
         snapshot_ref=ref,
         status=ModeloDraftStatus.BORRADOR,
         values=(),

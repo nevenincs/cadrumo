@@ -41,7 +41,7 @@ from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
-from ..user_profile.projections import profile_fact_index, record_to_path_values
+from ..user_profile.projections import record_to_path_values
 from .action_errors import (
     ModeloAggregationBindingError,
 )
@@ -68,7 +68,7 @@ from .m349_ledger_guard import (
 )
 from .operator_override_advisory import collect_operator_override_divergence_diagnostics
 from .printed_boxes import snapshot_printed_boxes
-from .profile_export_binding import profile_text_casilla_gap_diagnostics
+from .profile_export_binding import profile_text_casilla_gap_diagnostics, profile_text_fact_index
 from .projection import (
     ModeloProjectionUnresolvedBinding,
     ModeloProjectionUnresolvedCasilla,
@@ -706,7 +706,11 @@ def _bucket_aggregation_source_diagnostics(
     )
     profile_text_diagnostics = profile_text_casilla_gap_diagnostics(
         preparation.snapshot.revision,
-        profile_fact_index(preparation.profile.record, preparation.profile.profile_decode_context.schema),
+        profile_text_fact_index(
+            preparation.profile.record,
+            preparation.profile.profile_decode_context.schema,
+            operation=ports.operation,
+        ),
         supplied_casilla_ids=frozenset(revision.input_values_by_casilla_id),
     )
     source_diagnostics = (

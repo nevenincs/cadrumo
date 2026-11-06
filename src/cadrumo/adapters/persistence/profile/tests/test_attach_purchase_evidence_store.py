@@ -242,7 +242,7 @@ def test_invoice_id_is_refused_by_attach(profile: TestRuntimeProfile) -> None:
         kind=InvoiceKind.RECEIVED,
         invoice_number="INV-2026-001",
         issued_at=date(2026, 5, 1),
-        counterparty_tax_id="B12345674",
+        counterparty_tax_id="B00015016",
         currency="EUR",
         grand_total=Decimal("121.00"),
     )

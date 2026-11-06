@@ -61,7 +61,7 @@ _MIGRATED_AT = datetime(2026, 9, 1, 10, 0, 0, tzinfo=UTC)
 _CLEARED = (_M721, _M347)
 
 _UNTOUCHED_FACTS = (
-    UserProfileFact(path="identity.tax_id", value="X1234567L"),
+    UserProfileFact(path="identity.tax_id", value="X0001500M"),
     UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
     UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
     UserProfileFact(path="withholding.has_employees", value=False),

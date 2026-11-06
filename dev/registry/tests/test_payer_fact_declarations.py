@@ -76,7 +76,7 @@ _THREE_STATE_CASES = (
 def _natural_person(**facts: object) -> TaxpayerProfile:
     return TaxpayerProfile.model_validate(
         {
-            "tax_id": "X1234567L",
+            "tax_id": "X0001500M",
             "entity_type": require_entity_type("natural_person"),
             "irpf_income_categories": frozenset({require_irpf_income_category("actividad_economica")}),
             "iva_regime": require_iva_regime("GENERAL"),
@@ -150,7 +150,7 @@ def test_modelo_136_yes_without_quarters_is_incomplete_and_names_the_quarters(
 def test_modelo_136_is_not_applicable_to_a_legal_entity_whatever_the_fact_says() -> None:
     profile = TaxpayerProfile.model_validate(
         {
-            "tax_id": "B12345674",
+            "tax_id": "B00015016",
             "entity_type": require_entity_type("legal_entity"),
             "iva_regime": require_iva_regime("GENERAL"),
             "premio_loteria_gravamen_especial_sin_retencion": True,

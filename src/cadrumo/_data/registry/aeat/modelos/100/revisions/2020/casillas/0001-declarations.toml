@@ -1235,7 +1235,7 @@ section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 data_type = "text"
 semantic_role = "irpf_ed_modalidad_clave"
 input_kind = "bound"
-binding = "renta-modelo-100-estimacion-directa-es-normal"
+binding = "renta-modelo-100-estimacion-directa-modalidad-clave"
 continuidad_id = "irpf-ed-modalidad-clave"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
 [[revisions."2020".casillas]]

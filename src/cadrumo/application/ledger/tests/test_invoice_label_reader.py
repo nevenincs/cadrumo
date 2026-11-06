@@ -59,7 +59,7 @@ _FILER = "12345678Z"
 
 _SINGLE_RATE = """FACTURA
 Proveedor: Hardware Profesional Sur SL
-NIF: B92000090
+NIF: B00015099
 Numero de factura: A-0003
 Fecha de expedicion: 2026-03-27
 Destinatario: Javier Ortega Llorens NIF: 12345678Z
@@ -71,7 +71,7 @@ Total factura: 1452.00 EUR"""
 
 _TWO_RATE_TABLE = """FACTURA
 Emisor: Distribuciones Levante SL
-CIF: B92000017
+CIF: B00015065
 Cliente: Javier Ortega Llorens
 NIF: 12345678Z
 Número de factura: 2026/0117
@@ -98,7 +98,7 @@ Laura Pérez Consultoría
 NIF: 00000000T
 CLIENTE
 Beta Logistica Mediterranea SL
-CIF: B92000025
+CIF: B00015073
 Factura nº F-2026-001
 Fecha de expedición: 03-02-2026
 Base imponible 1.500,00
@@ -110,7 +110,7 @@ Retención IRPF 15% (art. 95 RIRPF)."""
 
 _CATALAN = """FACTURA
 Proveïdor: Hotel Mirador Castelló SL
-NIF: B92000108
+NIF: B00015107
 Client: Javier Ortega Llorens
 NIF: 12345678Z
 Número de factura: HM-0931
@@ -123,7 +123,7 @@ _ENGLISH_REVERSE_CHARGE = """INVOICE
 Supplier: Nordwerk Software GmbH
 VAT ID: DE123456789
 Bill to: Hardware Profesional Sur SL
-VAT ID: ESB92000090
+VAT ID: ESB00015099
 Invoice No.: INV-2026-117
 Invoice date: March 3, 2026
 Net amount: 1250.00 EUR
@@ -131,7 +131,7 @@ VAT 0%: 0.00 EUR (reverse charge, Art. 196 Directive 2006/112/EC)
 Total: 1250.00 EUR"""
 
 _SIMPLIFIED = """Estación de Servicio Albufera SL
-NIF: B92000082
+NIF: B00015081
 FACTURA SIMPLIFICADA
 Nº: T-0042-2026
 Fecha: 14.02.2026
@@ -197,7 +197,7 @@ _LAYOUTS: dict[str, tuple[str, str, dict[str, object]]] = {
             "invoice_number": "A-0003",
             "invoice_date": "2026-03-27",
             "supplier_name": "Hardware Profesional Sur SL",
-            "supplier_tax_id": "B92000090",
+            "supplier_tax_id": "B00015099",
             "customer_name": "Javier Ortega Llorens",
             "customer_tax_id": "12345678Z",
             "taxable_base": Decimal("1200.00"),
@@ -213,7 +213,7 @@ _LAYOUTS: dict[str, tuple[str, str, dict[str, object]]] = {
         {
             "invoice_number": "2026/0117",
             "invoice_date": "2026-04-12",
-            "supplier_tax_id": "B92000017",
+            "supplier_tax_id": "B00015065",
             "customer_tax_id": "12345678Z",
             "taxable_base": Decimal("1250.00"),
             "iva_rate": None,
@@ -262,10 +262,10 @@ _LAYOUTS: dict[str, tuple[str, str, dict[str, object]]] = {
     ),
     "english_reverse_charge": (
         _ENGLISH_REVERSE_CHARGE,
-        "B92000090",
+        "B00015099",
         {
             "supplier_tax_id": "DE123456789",
-            "customer_tax_id": "B92000090",
+            "customer_tax_id": "B00015099",
             "invoice_number": "INV-2026-117",
             "invoice_date": "2026-03-03",
             "taxable_base": Decimal("1250.00"),
@@ -334,7 +334,7 @@ def test_a_simplified_invoice_reads_its_issuer_identifier_but_not_a_letterhead_n
 ) -> None:
     reading = _read(_SIMPLIFIED, operation)
 
-    assert reading.draft.supplier_tax_id == "B92000082"
+    assert reading.draft.supplier_tax_id == "B00015081"
     assert reading.draft.customer_tax_id is None
     assert reading.draft.supplier_name is None
     assert reading.missing_required_fields == {"supplier_name"}
@@ -425,7 +425,7 @@ def test_a_retention_the_amount_payable_contradicts_is_left_empty(operation: Pin
 
 
 def test_an_identifier_failing_its_control_character_is_not_read(operation: PinnedAuthorityOperation) -> None:
-    text = _SINGLE_RATE.replace("NIF: B92000090", "NIF: B92000091")
+    text = _SINGLE_RATE.replace("NIF: B00015099", "NIF: B92000091")
 
     reading = _read(text, operation)
 
@@ -514,7 +514,7 @@ def test_the_model_fills_only_what_the_rules_could_not_read(operation: PinnedAut
     reading = _read(_SIMPLIFIED, operation)
     model_draft = InvoiceDraft(
         supplier_name="Estación de Servicio Albufera SL",
-        supplier_tax_id="B92000090",
+        supplier_tax_id="B00015099",
         grand_total=Decimal("99.99"),
         provenance=(
             FieldProvenance(
@@ -540,7 +540,7 @@ def test_the_model_fills_only_what_the_rules_could_not_read(operation: PinnedAut
 
     assert merged.supplier_name == "Estación de Servicio Albufera SL"
     assert origins["supplier_name"] is FieldOrigin.TEXT_LAYER
-    assert merged.supplier_tax_id == "B92000082"
+    assert merged.supplier_tax_id == "B00015081"
     assert merged.grand_total == Decimal("72.60")
     assert origins["grand_total"] is FieldOrigin.TEXT_RULES
     assert merged.discrepancies == ()
@@ -636,7 +636,7 @@ def test_an_absent_model_leaves_the_partial_rule_reading_standing(operation: Pin
     draft = _extract(_router_ports((_SIMPLIFIED,), read_text=unavailable), operation)
 
     assert draft.supplier_name is None
-    assert draft.supplier_tax_id == "B92000082"
+    assert draft.supplier_tax_id == "B00015081"
     assert draft.grand_total == Decimal("72.60")
     # The empty field must read as a reading the machine could not finish, not
     # as a document that prints no supplier name.
@@ -664,7 +664,7 @@ def test_a_refused_model_load_leaves_the_partial_rule_reading_standing(operation
     draft = _extract(_router_ports((_SIMPLIFIED,), read_text=refused), operation)
 
     assert draft.supplier_name is None
-    assert draft.supplier_tax_id == "B92000082"
+    assert draft.supplier_tax_id == "B00015081"
     assert draft.grand_total == Decimal("72.60")
     assert draft.label_reading_fallback == LabelReadingFallback(
         cause=LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED,
@@ -682,7 +682,7 @@ def test_a_refused_model_load_still_refuses_when_the_rules_read_nothing(operatio
         raise InvoiceDraftReaderHeadroomRefusedError(refusal, failed_condition_id=None)
 
     with pytest.raises(_HeadroomRefusalForTestError) as raised:
-        _extract(_router_ports(("B1234567X B17283946 766,30",), read_text=refused), operation)
+        _extract(_router_ports(("B1234567X B00015024 766,30",), read_text=refused), operation)
 
     assert raised.value is refusal
 
@@ -694,7 +694,7 @@ def test_an_absent_model_still_refuses_when_the_rules_read_nothing(operation: Pi
         raise InvoiceDraftReaderUnavailableError(ConnectionError("runtime stopped"))
 
     with pytest.raises(PurchaseInvoiceEvidenceReaderError):
-        _extract(_router_ports(("B1234567X B17283946 766,30",), read_text=unavailable), operation)
+        _extract(_router_ports(("B1234567X B00015024 766,30",), read_text=unavailable), operation)
 
 
 def test_an_incomplete_rule_reading_asks_the_model_for_the_rest(operation: PinnedAuthorityOperation) -> None:
@@ -783,7 +783,7 @@ def test_an_unrated_base_beside_rate_lines_is_the_total_they_must_sum_to(operati
 
 
 def test_a_heading_word_is_never_read_as_a_party_name(operation: PinnedAuthorityOperation) -> None:
-    text = "EMISOR\nInmueblesCastellana200SL DESTINATARIO/CLIENTE\nNIF: B92000017"
+    text = "EMISOR\nInmueblesCastellana200SL DESTINATARIO/CLIENTE\nNIF: B00015065"
 
     assert _read(text, operation).draft.supplier_name is None
 

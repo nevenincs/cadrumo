@@ -531,7 +531,7 @@ def test_persisted_m180_row_bindings_export_two_records_with_control_totals(
 ) -> None:
     """The canonical exporter carries two persisted property rows to disk."""
     rows = {
-        "modelo-180-perceptor-row-nif": {"1": "B12345674", "2": "B12345674"},
+        "modelo-180-perceptor-row-nif": {"1": "B00015016", "2": "B00015016"},
         "modelo-180-perceptor-row-name": {"1": "ARRENDADOR UNO SL", "2": "ARRENDADOR DOS SL"},
         "modelo-180-perceptor-row-recipient-province": {"1": "28", "2": "28"},
         "modelo-180-perceptor-row-modality": {"1": "1", "2": "1"},
@@ -573,7 +573,7 @@ def test_persisted_m180_row_bindings_export_two_records_with_control_totals(
     parsed = parse_export_payload(layout, output_path.read_bytes(), sources=provider.sources)
 
     assert receipt.byte_size == output_path.stat().st_size == 1500
-    assert _parsed_field_values(parsed, "modelo-180-perc-nif") == ("B12345674", "B12345674")
+    assert _parsed_field_values(parsed, "modelo-180-perc-nif") == ("B00015016", "B00015016")
     assert _parsed_field_values(parsed, "modelo-180-decl-total-perceptores") == (Decimal("2"),)
     assert _parsed_field_values(parsed, "modelo-180-decl-base-total") == (Decimal("5000.00"),)
     # Both contiguous components declare one total, so each parsed slot carries
@@ -587,7 +587,7 @@ def test_persisted_m180_row_bindings_export_two_records_with_control_totals(
 def test_persisted_m190_row_bindings_export_optional_zero_filled_rows_with_control_totals(tmp_path: Path) -> None:
     """Optional annual-detail slots remain absent without breaking read-back."""
     rows = {
-        "modelo-190-perceptor-row-nif": {"1": "B12345674", "2": "B12345674"},
+        "modelo-190-perceptor-row-nif": {"1": "B00015016", "2": "B00015016"},
         "modelo-190-perceptor-row-name": {"1": "PERCEPTOR UNO SL", "2": "PERCEPTOR DOS SL"},
         "modelo-190-perceptor-row-provincia": {"1": "28", "2": "28"},
         "modelo-190-perceptor-row-clave": {"1": "G", "2": "G"},
@@ -624,7 +624,7 @@ def test_persisted_m190_row_bindings_export_optional_zero_filled_rows_with_contr
     parsed = parse_export_payload(layout, output_path.read_bytes(), sources=provider.sources)
 
     assert receipt.byte_size == output_path.stat().st_size == 1500
-    assert _parsed_field_values(parsed, "modelo-190-perc-nif") == ("B12345674", "B12345674")
+    assert _parsed_field_values(parsed, "modelo-190-perc-nif") == ("B00015016", "B00015016")
     # This optional unsigned-integer slot uses zero fill, and zero is a valid
     # count. The wire alone cannot distinguish absent input from measured zero.
     assert _parsed_field_values(parsed, "modelo-190-perc-descendientes-menores-3-total") == (
@@ -667,7 +667,7 @@ def _m190_2022_draft(*, text_inputs: dict[CasillaId, str] | None = None):
             "modelo-190-perceptor-rows-incapacidad-ingreso-a-cuenta-total": Decimal("0"),
         },
         row_binding_values={
-            "modelo-190-perceptor-row-nif": {"1": "B12345674"},
+            "modelo-190-perceptor-row-nif": {"1": "B00015016"},
             "modelo-190-perceptor-row-name": {"1": "PERCEPTOR UNO SL"},
             "modelo-190-perceptor-row-provincia": {"1": "28"},
             "modelo-190-perceptor-row-clave": {"1": "G"},
@@ -760,7 +760,7 @@ def test_m180_required_row_binding_refuses_before_any_export_bytes_are_written(
 ) -> None:
     """A required property field cannot become an accepted blank wire slot."""
     rows = {
-        "modelo-180-perceptor-row-nif": {"1": "B12345674"},
+        "modelo-180-perceptor-row-nif": {"1": "B00015016"},
         "modelo-180-perceptor-row-name": {"1": "ARRENDADOR UNO SL"},
         "modelo-180-perceptor-row-recipient-province": {"1": "28"},
         "modelo-180-perceptor-row-modality": {"1": "1"},

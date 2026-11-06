@@ -79,7 +79,7 @@ def _stored_record(advance_collected: date, payment_status: PaymentStatus) -> di
             "invoice_number": "ANT-300",
             "issued_at": advance_collected,
             "counterparty_name": "Cliente Anticipo SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": _BASE,
             "iva_total": cuota,

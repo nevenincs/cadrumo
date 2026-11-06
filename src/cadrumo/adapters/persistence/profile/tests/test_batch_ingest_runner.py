@@ -74,7 +74,7 @@ _POISON = "adversarial_malformed.pdf"
 _SCAN = "scanned_invoice_from_commons_1.pdf"
 
 _GIB = 1024**3
-_SUPPLIER_CIF = "B12345674"
+_SUPPLIER_CIF = "B00015016"
 
 
 @pytest.fixture

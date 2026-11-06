@@ -95,7 +95,7 @@ def _invoice(
             "invoice_number": f"INV-{tx_id[:8]}",
             "issued_at": issued_at,
             "counterparty_name": "Proveedor SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": base_total,
             "iva_total": Decimal("21.00"),
@@ -622,7 +622,7 @@ def test_region_override_undeclared_residence_fails_closed() -> None:
 
 def _profile_with_ccaa(ccaa_value: str | None) -> UserProfileRecord:
     """A user profile carrying an optional ``tax_residence.ccaa`` fact."""
-    facts = (UserProfileFact(path="identity.tax_id", value="X1234567L"),)
+    facts = (UserProfileFact(path="identity.tax_id", value="X0001500M"),)
     if ccaa_value is not None:
         facts = (*facts, UserProfileFact(path="tax_residence.ccaa", value=ccaa_value))
     return create_user_profile_record(

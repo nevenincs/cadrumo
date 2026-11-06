@@ -53,7 +53,7 @@ _REFERENCE = "ev-structured-001"
 def _two_rate_draft() -> InvoiceDraft:
     """A draft with every campaign-added field populated non-default."""
     return InvoiceDraft(
-        supplier_tax_id="ESB12345674",
+        supplier_tax_id="ESB00015016",
         invoice_number="UBL-2024-0042",
         invoice_date="2024-11-15",
         taxable_base=Decimal("150.00"),
@@ -144,7 +144,7 @@ def test_a_correction_replaces_the_pending_draft_rather_than_forking_a_second(
         extractor="en16931-ubl",
         settings=profile.settings,
     )
-    corrected = _two_rate_draft().model_copy(update={"supplier_tax_id": "ESX1234567L"})
+    corrected = _two_rate_draft().model_copy(update={"supplier_tax_id": "ESX0001500M"})
     write_extraction_draft(
         bucket_id=profile.bucket_id,
         evidence_reference=_REFERENCE,
@@ -169,7 +169,7 @@ def test_a_correction_replaces_the_pending_draft_rather_than_forking_a_second(
         settings=profile.settings,
     )
     assert pending is not None
-    assert pending.draft.supplier_tax_id == "ESX1234567L"
+    assert pending.draft.supplier_tax_id == "ESX0001500M"
     assert pending.extractor == "operator-correction"
 
 
@@ -259,7 +259,7 @@ def _provenance_bearing_draft() -> InvoiceDraft:
     that persists all of them.
     """
     return InvoiceDraft(
-        supplier_tax_id="ESB12345674",
+        supplier_tax_id="ESB00015016",
         supplier_name="Proveedor Ejemplo SL",
         invoice_number="PROV-2024-0001",
         invoice_date="2024-11-15",
@@ -279,9 +279,9 @@ def _provenance_bearing_draft() -> InvoiceDraft:
                 field="supplier_tax_id",
                 origin=FieldOrigin.TEXT_LAYER,
                 grounding=FieldGroundingOutcome.AMBIGUOUS,
-                anchor="ESB12345674",
+                anchor="ESB00015016",
                 candidates=(
-                    FieldAmbiguityCandidate(value="ESB12345674", anchor="NIF: ESB12345674", note="header block"),
+                    FieldAmbiguityCandidate(value="ESB00015016", anchor="NIF: ESB00015016", note="header block"),
                     FieldAmbiguityCandidate(value="ESB87654321", anchor="ESB87654321", note="footer block"),
                 ),
                 note="two tax ids printed on the same document",
@@ -334,7 +334,7 @@ def test_field_provenance_survives_the_real_encrypted_boundary(profile: TestRunt
     ambiguous = by_field["supplier_tax_id"]
     assert ambiguous.grounding is FieldGroundingOutcome.AMBIGUOUS
     assert len(ambiguous.candidates) == 2
-    assert {candidate.value for candidate in ambiguous.candidates} == {"ESB12345674", "ESB87654321"}
+    assert {candidate.value for candidate in ambiguous.candidates} == {"ESB00015016", "ESB87654321"}
     assert all(candidate.note for candidate in ambiguous.candidates), "a candidate lost the note that distinguishes it"
 
     contradicted = by_field["grand_total"]

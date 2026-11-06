@@ -65,7 +65,7 @@ def _work_unit(*, modelo: str = "131", filing_year: int = 2024) -> WorkUnit:
 
 def _objective_profile(**overrides: Any) -> TaxpayerProfile:
     base_data: dict[str, Any] = {
-        "tax_id": "X1234567L",
+        "tax_id": "X0001500M",
         "iva_regime": IVARegime("GENERAL"),
         "irpf_estimation_regime": IrpfEstimationRegime.from_registry("objetiva"),
     }
@@ -229,7 +229,7 @@ def test_revision_verification_collects_objective_estimation_exclusion_advisory(
 
 def test_objective_estimation_exclusion_advisory_does_not_apply_direct_estimation_profile() -> None:
     profile = TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         iva_regime=IVARegime("GENERAL"),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
         objective_estimation_prior_year_gross_income_eur=Decimal("999999.00"),

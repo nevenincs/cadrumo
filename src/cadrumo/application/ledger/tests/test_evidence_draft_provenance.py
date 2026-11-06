@@ -48,9 +48,9 @@ _TRANSCRIPTION_SHA = "b" * 64
 def fully_populated_draft() -> InvoiceDraft:
     """Return a draft with every defaultable field set to a non-default value."""
     return InvoiceDraft(
-        supplier_tax_id="B12345674",
+        supplier_tax_id="B00015016",
         supplier_name="Proveedor Ejemplo SL",
-        customer_tax_id="X1234567L",
+        customer_tax_id="X0001500M",
         customer_name="Cliente Ejemplo SL",
         # Off-default and DIFFERENT from each other: two parties sharing one
         # code would let a projection that carried only the supplier's satisfy
@@ -131,8 +131,8 @@ def fully_populated_draft() -> InvoiceDraft:
                 grounding=FieldGroundingOutcome.AMBIGUOUS,
                 anchor="B-12345674",
                 candidates=(
-                    FieldAmbiguityCandidate(value="B12345674", anchor="B-12345674", note="issuer block"),
-                    FieldAmbiguityCandidate(value="X1234567L", anchor="X-1234567-L", note="footer block"),
+                    FieldAmbiguityCandidate(value="B00015016", anchor="B-12345674", note="issuer block"),
+                    FieldAmbiguityCandidate(value="X0001500M", anchor="X-1234567-L", note="footer block"),
                 ),
                 # Populated non-default so the projection gate exercises a real
                 # value rather than agreeing that two ``None``s match: a
@@ -252,7 +252,7 @@ def test_an_ambiguous_field_must_record_competing_candidates() -> None:
             field="supplier_tax_id",
             origin=FieldOrigin.VISION,
             grounding=FieldGroundingOutcome.AMBIGUOUS,
-            candidates=(FieldAmbiguityCandidate(value="B12345674"),),
+            candidates=(FieldAmbiguityCandidate(value="B00015016"),),
         )
 
 
@@ -263,8 +263,8 @@ def test_candidates_under_a_decided_outcome_are_refused() -> None:
             origin=FieldOrigin.VISION,
             grounding=FieldGroundingOutcome.RECONCILED,
             candidates=(
-                FieldAmbiguityCandidate(value="B12345674"),
-                FieldAmbiguityCandidate(value="X1234567L"),
+                FieldAmbiguityCandidate(value="B00015016"),
+                FieldAmbiguityCandidate(value="X0001500M"),
             ),
         )
 

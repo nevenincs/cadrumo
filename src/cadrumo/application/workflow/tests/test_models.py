@@ -52,8 +52,8 @@ class TestComputeRunId:
     def test_deterministic(self) -> None:
         """Same seed → same 16-char hex id."""
         started = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
-        a = compute_run_id(tax_id="X1234567L", modelo="130", period=_period(), started_at=started)
-        b = compute_run_id(tax_id="X1234567L", modelo="130", period=_period(), started_at=started)
+        a = compute_run_id(tax_id="X0001500M", modelo="130", period=_period(), started_at=started)
+        b = compute_run_id(tax_id="X0001500M", modelo="130", period=_period(), started_at=started)
         assert a == b
         assert a == "71f95b6c466e52b7"
         assert len(a) == 16
@@ -71,7 +71,7 @@ class TestComputeRunId:
         combined_period = cast(Any, "2026Q1")
         with pytest.raises(TypeError, match=r"cadrumo\.core\.period\.Period"):
             compute_run_id(
-                tax_id="X1234567L",
+                tax_id="X0001500M",
                 modelo="130",
                 period=combined_period,
                 started_at=_RUN_STARTED_AT,

@@ -75,7 +75,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
                 source_metadata={
                     "aeat_register_status": "ALTA",
                     "aeat_expediente_id": "12345678901234567890",
-                    "authenticated_identity": "X1234567L",
+                    "authenticated_identity": "X0001500M",
                 },
                 source_headers=(
                     ObservedHeaderFact(
@@ -109,7 +109,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
                 expediente_id="12345678901234567890",
                 status="ALTA",
                 presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
-                authenticated_identity="X1234567L",
+                authenticated_identity="X0001500M",
                 artefacts=(artefact,),
                 registry_snapshot_ref=_registry_snapshot_ref(
                     modelo="303", filing_year=2025, period=Period.from_year_and_code(2025, "1T")
@@ -124,7 +124,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
                 expediente_id="12345678901234567891",
                 status="ALTA",
                 presented_at=datetime(2025, 7, 15, 9, 30, tzinfo=UTC),
-                authenticated_identity="X1234567L",
+                authenticated_identity="X0001500M",
                 artefacts=(
                     FiledDeclaracionArtefact(
                         kind="justificante_pdf",
@@ -162,7 +162,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
                 expediente_id="12345678901234567892",
                 status="ALTA",
                 presented_at=datetime(2025, 10, 15, 9, 30, tzinfo=UTC),
-                authenticated_identity="Y7654321G",
+                authenticated_identity="Y0001503E",
                 artefacts=(wrong_identity_artefact,),
                 registry_snapshot_ref=_registry_snapshot_ref(
                     modelo="303", filing_year=2025, period=Period.from_year_and_code(2025, "3T")
@@ -190,7 +190,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
                 expediente_id="12345678901234567893",
                 status="BAJA",
                 presented_at=datetime(2026, 1, 15, 9, 30, tzinfo=UTC),
-                authenticated_identity="X1234567L",
+                authenticated_identity="X0001500M",
                 artefacts=(non_active_artefact,),
                 registry_snapshot_ref=_registry_snapshot_ref(
                     modelo="303", filing_year=2025, period=Period.from_year_and_code(2025, "4T")
@@ -212,7 +212,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
             PRIMARY_PROFILE_ID,
             (),
             operation=operation,
-            expected_tax_id="X1234567L",
+            expected_tax_id="X0001500M",
         )
 
     assert second_evidence == ()
@@ -325,7 +325,7 @@ def test_local_calendar_filing_evidence_resolves_persisted_justificante_metadata
                 PRIMARY_PROFILE_ID,
                 (),
                 operation=operation,
-                expected_tax_id="X1234567L",
+                expected_tax_id="X0001500M",
             )
 
     matching = [

@@ -187,7 +187,7 @@ def _expedientes_snapshot(authenticated_identity: str) -> PersistedExpedientesSn
 
 
 def test_expedientes_snapshots_project_filing_events_inside_range() -> None:
-    snapshot = _expedientes_snapshot("X1234567L")
+    snapshot = _expedientes_snapshot("X0001500M")
 
     events = calendar_events_from_expedientes_snapshots(
         (snapshot,),
@@ -203,16 +203,16 @@ def test_expedientes_snapshots_project_filing_events_inside_range() -> None:
     assert event.period == Period.from_year_and_code(2025, "1T")
     assert event.reference_id == "12345678901234567890"
     assert event.aeat_submitted_at == datetime(2025, 4, 15, 9, 30, tzinfo=UTC)
-    assert event.authenticated_identity == "X1234567L"
+    assert event.authenticated_identity == "X0001500M"
 
 
 def test_expedientes_snapshot_for_wrong_identity_does_not_project_filing_event() -> None:
-    snapshot = _expedientes_snapshot("Y7654321G")
+    snapshot = _expedientes_snapshot("Y0001503E")
 
     events = calendar_events_from_expedientes_snapshots(
         (snapshot,),
         OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
     )
 
     assert events == ()
@@ -223,9 +223,9 @@ def test_notification_snapshots_project_message_events_on_notification_date() ->
         certificado_id="2596230606502",
         tipo="notificacion",
         concepto="Requerimiento censal",
-        titular_nif="B12345674",
+        titular_nif="B00015016",
         titular_nombre="Test S.L.",
-        destinatario_nif="B12345674",
+        destinatario_nif="B00015016",
         destinatario_nombre="Test S.L.",
         fecha_emision=date(2025, 3, 10),
         fecha_notificacion=date(2025, 3, 12),
@@ -268,9 +268,9 @@ def test_notification_filing_like_text_stays_unlinked_and_replay_is_idempotent()
         certificado_id="2596230606502",
         tipo="notificacion",
         concepto="Modelo 303 1T 2025 pagado con justificante",
-        titular_nif="B12345674",
+        titular_nif="B00015016",
         titular_nombre="Test S.L.",
-        destinatario_nif="B12345674",
+        destinatario_nif="B00015016",
         destinatario_nombre="Test S.L.",
         fecha_emision=date(2025, 4, 20),
         fecha_notificacion=date(2025, 4, 21),
@@ -283,7 +283,7 @@ def test_notification_filing_like_text_stays_unlinked_and_replay_is_idempotent()
         bucket_id=BUCKET_ID,
         captured_at=datetime(2025, 4, 21, 10, 0, tzinfo=UTC),
         source_url=SOURCE_URL,
-        authenticated_identity="B12345674",
+        authenticated_identity="B00015016",
         rows=(row,),
         persisted_at=datetime(2025, 4, 21, 10, 5, tzinfo=UTC),
     )
@@ -299,7 +299,7 @@ def test_notification_filing_like_text_stays_unlinked_and_replay_is_idempotent()
         (first, replay),
         OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
         as_of=date(2025, 4, 22),
-        expected_tax_id="B12345674",
+        expected_tax_id="B00015016",
     )
 
     assert len(events) == 1
@@ -320,9 +320,9 @@ def test_notification_snapshots_filter_message_events_by_expected_taxpayer() -> 
         certificado_id="2596230606502",
         tipo="notificacion",
         concepto="Requerimiento censal",
-        titular_nif="B12345674",
+        titular_nif="B00015016",
         titular_nombre="Test S.L.",
-        destinatario_nif="B12345674",
+        destinatario_nif="B00015016",
         destinatario_nombre="Test S.L.",
         fecha_emision=date(2025, 3, 10),
         fecha_notificacion=date(2025, 3, 12),
@@ -334,9 +334,9 @@ def test_notification_snapshots_filter_message_events_by_expected_taxpayer() -> 
         certificado_id="2699101808461",
         tipo="comunicacion",
         concepto="Comunicacion de otro contribuyente",
-        titular_nif="C12345674",
+        titular_nif="C00015008",
         titular_nombre="Other S.L.",
-        destinatario_nif="C12345674",
+        destinatario_nif="C00015008",
         destinatario_nombre="Other S.L.",
         fecha_emision=date(2025, 3, 11),
         fecha_notificacion=None,
@@ -357,7 +357,7 @@ def test_notification_snapshots_filter_message_events_by_expected_taxpayer() -> 
         (snapshot,),
         OverviewCalendarRange(from_date=date(2025, 3, 1), to_date=date(2025, 3, 31)),
         as_of=date(2025, 3, 13),
-        expected_tax_id="B12345674",
+        expected_tax_id="B00015016",
     )
 
     assert tuple(event.reference_id for event in events) == ("2596230606502",)
@@ -368,9 +368,9 @@ def test_notification_snapshots_filter_message_events_by_authenticated_snapshot_
         certificado_id="2596230606502",
         tipo="notificacion",
         concepto="Requerimiento censal",
-        titular_nif="B12345674",
+        titular_nif="B00015016",
         titular_nombre="Test S.L.",
-        destinatario_nif="B12345674",
+        destinatario_nif="B00015016",
         destinatario_nombre="Test S.L.",
         fecha_emision=date(2025, 3, 10),
         fecha_notificacion=date(2025, 3, 12),
@@ -382,9 +382,9 @@ def test_notification_snapshots_filter_message_events_by_authenticated_snapshot_
         certificado_id="2699101808461",
         tipo="comunicacion",
         concepto="Comunicacion de otro contribuyente",
-        titular_nif="C12345674",
+        titular_nif="C00015008",
         titular_nombre="Other S.L.",
-        destinatario_nif="C12345674",
+        destinatario_nif="C00015008",
         destinatario_nombre="Other S.L.",
         fecha_emision=date(2025, 3, 11),
         fecha_notificacion=None,
@@ -397,7 +397,7 @@ def test_notification_snapshots_filter_message_events_by_authenticated_snapshot_
         bucket_id=BUCKET_ID,
         captured_at=datetime(2025, 3, 13, 10, 0, tzinfo=UTC),
         source_url=SOURCE_URL,
-        authenticated_identity="B12345674",
+        authenticated_identity="B00015016",
         rows=(matching, explicit_other_taxpayer),
         persisted_at=datetime(2025, 3, 13, 10, 5, tzinfo=UTC),
     )
@@ -406,7 +406,7 @@ def test_notification_snapshots_filter_message_events_by_authenticated_snapshot_
         bucket_id=BUCKET_ID,
         captured_at=datetime(2025, 3, 14, 10, 0, tzinfo=UTC),
         source_url=SOURCE_URL,
-        authenticated_identity="C12345674",
+        authenticated_identity="C00015008",
         rows=(matching,),
         persisted_at=datetime(2025, 3, 14, 10, 5, tzinfo=UTC),
     )
@@ -415,7 +415,7 @@ def test_notification_snapshots_filter_message_events_by_authenticated_snapshot_
         (matching_snapshot, other_snapshot),
         OverviewCalendarRange(from_date=date(2025, 3, 1), to_date=date(2025, 3, 31)),
         as_of=date(2025, 3, 13),
-        expected_tax_id="B12345674",
+        expected_tax_id="B00015016",
     )
 
     assert tuple(event.reference_id for event in events) == ("2596230606502",)

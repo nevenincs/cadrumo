@@ -111,7 +111,7 @@ TAX_ID = "12345678Z"
 IRENE_YEAR = split_exercise_revisions("303", early_period="2T", late_period="3T")[0].valid_from.year
 
 
-IRENE_TAX_ID = "B12345674"
+IRENE_TAX_ID = "B00015016"
 
 
 FILE_AT = datetime(2025, 4, 10, 12, 0, tzinfo=UTC)

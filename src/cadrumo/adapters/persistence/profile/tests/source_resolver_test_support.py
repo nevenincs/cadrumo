@@ -227,7 +227,7 @@ def domestic_invoice(
 
 def public_administration_profile_facts() -> tuple[UserProfileFact, ...]:
     return (
-        UserProfileFact(path="identity.tax_id", value="Q1234567D"),
+        UserProfileFact(path="identity.tax_id", value="Q0001500H"),
         UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
         UserProfileFact(path="iva.regime", value="GENERAL"),
         UserProfileFact(path="iva.m303_regime_composition", value="general"),
@@ -245,7 +245,7 @@ def public_administration_profile_facts() -> tuple[UserProfileFact, ...]:
 def statutory_information_duty_profile_facts() -> tuple[UserProfileFact, ...]:
     return persona_facts_beneath(
         (
-            UserProfileFact(path="identity.tax_id", value="B12345674"),
+            UserProfileFact(path="identity.tax_id", value="B00015016"),
             UserProfileFact(
                 path="taxpayer_type.declaration_roles",
                 value=ThirdPartyDeclarationRole.from_registry("statutory_information_duty_entity").value,

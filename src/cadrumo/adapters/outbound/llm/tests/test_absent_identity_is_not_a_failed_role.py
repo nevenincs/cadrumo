@@ -22,8 +22,8 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 #: The filer's own identifier, and a real third party's. Both verify.
-_FILER_CIF = "B17283946"
-_COUNTERPARTY_CIF = "B12345674"
+_FILER_CIF = "B00015024"
+_COUNTERPARTY_CIF = "B00015016"
 #: Correct shape, wrong control character -- the misread that hides a real
 #: supplier from a validating read.
 _BAD_CHECKSUM_CIF = "B1234567X"
