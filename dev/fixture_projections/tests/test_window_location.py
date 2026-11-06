@@ -188,8 +188,20 @@ def test_the_window_seed_is_an_incremental_step_whose_output_is_the_index() -> N
     body = command.group(1)
     assert re.search(r"dev\.fixture_projections seed --window --depfile \"\$\{desktop_window_depfile\}\"", body)
     assert 'DEPFILE "${desktop_window_depfile}"' in body
-    assert "DEPENDS ${desktop_window_seeder}" in body
+    assert 'DEPENDS ${desktop_window_seeder} "${desktop_window_listing}"' in body
     assert re.search(r'add_custom_target\(desktop-window-fixtures DEPENDS "\$\{desktop_window_index\}"\)', source)
+
+
+def test_an_input_file_added_beside_the_others_reruns_the_seed_through_the_listing_and_no_directory() -> None:
+    source = _DESKTOP_CMAKE.read_text(encoding="utf-8")
+    listing = re.search(r"add_custom_target\(desktop-window-inputs\s(.*?)VERBATIM\)", source, re.DOTALL)
+    assert listing is not None
+    body = listing.group(1)
+    # A custom target runs on every build; its byproduct changes only when the listing does, so the seed reruns
+    # only then, under the Visual Studio and the Ninja generators alike.
+    assert re.search(r"dev\.fixture_projections window-listing \"\$\{desktop_window_listing\}\"", body)
+    assert 'BYPRODUCTS "${desktop_window_listing}"' in body
+    assert re.search(r"add_dependencies\(desktop-window-fixtures [^)]*\bdesktop-window-inputs\b", source)
 
 
 def test_every_cmake_target_that_type_checks_the_frontend_seeds_the_window_projections_first() -> None:

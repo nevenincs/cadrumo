@@ -18,13 +18,18 @@ The window projections belong to the selected CMake build tree
 outputs in the window index, which the frontend's type check verifies; one that
 does not removes it. ``seed --window --depfile FILE`` also writes a Makefile
 dependency file naming the index as its target and every input, output and stamp
-the window families' freshness reads, so CMake reruns the seed only when one of
-them changes.
+file the window families' freshness reads, so CMake reruns the seed only when one
+of them changes. It names files only: a generator that meets a directory there
+takes it for a missing file and reruns the seed on every build. A file added
+beside the inputs changes no file the depfile names, so ``window-listing FILE``,
+which the build runs every time, rewrites FILE with the window families' input
+files only when that set has changed, and the seed depends on FILE as well.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import shutil
@@ -38,6 +43,7 @@ from pathlib import Path
 
 from ..packaging.command_execution import run_command
 from ..paths import REPO_ROOT, TEMP_ROOT
+from ..source_tree import repository_files
 from ..temporary_output import prepare_temp_root
 from .location import (
     WINDOW_INDEX,
@@ -259,21 +265,82 @@ def _make_word(path: Path) -> str:
 
 
 def window_dependencies(workspace: Workspace, digests: InputDigests) -> tuple[Path, ...]:
-    """Every file and directory the window families' freshness reads, sorted.
+    """Every existing file the window families' freshness reads, sorted.
 
-    Each input file's directory is listed too, so a file added beside existing
-    inputs reruns the seed; outputs and stamps are listed so a removed one does.
+    Outputs and stamps are listed so a removed one reruns the seed. A file added beside the inputs is the window
+    listing's to notice (see ``write_window_listing``).
     """
     paths: set[Path] = {workspace.authority_source()}
     for family in window_families(workspace.families):
         for group in family.inputs:
-            for member in digests.group(group.paths):
-                source = workspace.root / member
-                paths.add(source)
-                paths.update(source.parents[: len(source.relative_to(workspace.root).parts) - 1])
+            paths.update(workspace.root / member for member in digests.group(group.paths))
         paths.update(output_paths(family, workspace.root))
         paths.add(stamp_path(family, workspace.root))
-    return tuple(sorted(paths))
+    return tuple(sorted(path for path in paths if path.is_file()))
+
+
+def _window_input_paths(workspace: Workspace) -> tuple[str, ...]:
+    """Every file or directory a window family names as an input, relative to the checkout."""
+    return tuple(
+        sorted(
+            {path for family in window_families(workspace.families) for group in family.inputs for path in group.paths}
+        )
+    )
+
+
+def _walk_key(root: Path, paths: Sequence[str]) -> str:
+    """A digest of every entry the filesystem lists under ``paths``, ignored or not, and of the ignore files.
+
+    It is cheap where the repository's membership is not: the membership is read again only when this changes.
+    """
+    digest = hashlib.sha256()
+    prefix = len(str(root)) + 1
+
+    def ignore_file(directory: str) -> None:
+        rules = os.path.join(directory, ".gitignore")
+        if os.path.isfile(rules):
+            stat = os.stat(rules)
+            digest.update(f"rules\0{rules[prefix:]}\0{stat.st_mtime_ns}\0{stat.st_size}\n".encode())
+
+    for relative in paths:
+        source = root / relative
+        for directory in (root, *reversed(source.parents[: len(Path(relative).parts) - 1])):
+            ignore_file(str(directory))
+        if source.is_file():
+            digest.update(f"file\0{relative}\n".encode())
+            continue
+        for directory, directories, files in os.walk(source):
+            directories.sort()
+            files.sort()
+            if ".gitignore" in files:
+                ignore_file(directory)
+            digest.update(f"directory\0{directory[prefix:]}\0{'\0'.join(files)}\n".encode())
+    return digest.hexdigest()
+
+
+def write_window_listing(listing: Path, workspace: Workspace | None = None) -> bool:
+    """Write the window families' input files to ``listing`` when that set has changed; whether it was written.
+
+    The build runs this on every build and the seed depends on ``listing``, so a file added beside the inputs, or
+    one removed, reruns the seed, and an unchanged set leaves ``listing``'s time and every dependent alone. The
+    repository's membership is read only when the files the filesystem lists, or the ignore files, have changed.
+    """
+    workspace = workspace or Workspace()
+    paths = _window_input_paths(workspace)
+    walked = listing.with_name(listing.name + ".walk")
+    key = _walk_key(workspace.root, paths)
+    if listing.is_file() and walked.is_file() and walked.read_text(encoding="utf-8").strip() == key:
+        return False
+    try:
+        members = repository_files(workspace.root, under=paths, must_exist=True)
+    except FileNotFoundError as exc:
+        raise FixtureProjectionError(str(exc)) from exc
+    text = "".join(f"{member}\n" for member in members)
+    written = not listing.is_file() or listing.read_text(encoding="utf-8") != text
+    if written:
+        _write_replacing(listing, text)
+    _write_replacing(walked, key + "\n")
+    return written
 
 
 def write_window_depfile(depfile: Path, index: Path, dependencies: Sequence[Path]) -> None:
@@ -475,6 +542,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--depfile", type=Path, help="With --window, write the window index's dependencies to this Makefile depfile."
     )
     seeding.add_argument("families", nargs="*")
+    listing = verbs.add_parser(
+        "window-listing", help="Rewrite a file with the window families' input files when that set has changed."
+    )
+    listing.add_argument("listing", type=Path)
     for verb, summary in (
         ("status", "Report fresh, stale, unstamped or missing."),
         ("clean", "Remove generated outputs."),
@@ -489,6 +560,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         if args.verb == "seed":
             return seed(args.families, force=args.force, window=args.window, depfile=args.depfile)
+        if args.verb == "window-listing":
+            write_window_listing(args.listing)
+            return 0
         if args.verb == "status":
             return status(args.families)
         if args.verb == "check":

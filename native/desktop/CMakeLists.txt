@@ -260,16 +260,29 @@ add_custom_target(desktop-frontend-generated
 # own tree, so every target that type-checks the frontend produces them first.
 # The seed writes them into this build's window_fixtures directory, which it
 # finds through CADRUMO_CMAKE_BINARY_DIR, and records them in its index, this
-# step's output. Its depfile names every input, output and stamp the window
+# step's output. Its depfile names every input, output and stamp file the window
 # families' freshness reads, so the step reruns only when one changes, and the
-# seed, digest-stamped, then produces only the families that are not fresh. A
-# producer that cannot run, for want of a published authority or the frontend
-# packages, fails this step and names its remedy. Only the generated window
-# families are selected: a committed family's outputs are source, never build
-# output.
+# seed, digest-stamped, then produces only the families that are not fresh. The
+# depfile names files only, since a generator takes a directory there for a
+# missing file and reruns the step on every build. A file added beside the
+# inputs is noticed by the listing step instead: it runs on every build and
+# rewrites its listing of the window families' input files only when that set
+# changes, and the seed depends on the listing. A producer that cannot run, for
+# want of a published authority or the frontend packages, fails this step and
+# names its remedy. Only the generated window families are selected: a committed
+# family's outputs are source, never build output.
 set(desktop_window_index "${CADRUMO_PATH_WINDOW_FIXTURES}/.window-projections.json")
 set(desktop_window_depfile "${CADRUMO_PATH_DESKTOP_CACHE}/window-fixtures.d")
+set(desktop_window_listing "${CADRUMO_PATH_DESKTOP_CACHE}/window-inputs.listing")
 file(GLOB desktop_window_seeder CONFIGURE_DEPENDS "${CADRUMO_SOURCE_ROOT}/dev/fixture_projections/*.py")
+cadrumo_build_step(step_comment desktop-window-inputs GROUP desktop
+  SUMMARY "list the window projections' input files, rewritten only when that set changes"
+  OUTPUTS "${desktop_window_listing}")
+add_custom_target(desktop-window-inputs
+  COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment}
+    ${desktop_generator} dev.fixture_projections window-listing "${desktop_window_listing}"
+  BYPRODUCTS "${desktop_window_listing}"
+  WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${step_comment}" VERBATIM)
 cadrumo_build_step(step_comment desktop-window-fixtures GROUP desktop
   SUMMARY "seed the generated window projections the frontend imports"
   OUTPUTS "${desktop_window_index}")
@@ -277,10 +290,10 @@ add_custom_command(OUTPUT "${desktop_window_index}"
   COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment} ${desktop_node_path_arguments}
     ${desktop_generator} dev.fixture_projections seed --window --depfile "${desktop_window_depfile}"
   DEPFILE "${desktop_window_depfile}"
-  DEPENDS ${desktop_window_seeder}
+  DEPENDS ${desktop_window_seeder} "${desktop_window_listing}"
   WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
 add_custom_target(desktop-window-fixtures DEPENDS "${desktop_window_index}")
-add_dependencies(desktop-window-fixtures desktop-frontend-install registry_authority)
+add_dependencies(desktop-window-fixtures desktop-window-inputs desktop-frontend-install registry_authority)
 foreach(action IN ITEMS build test check)
   add_dependencies(desktop-frontend-${action} desktop-frontend-generated desktop-window-fixtures)
 endforeach()

@@ -26,6 +26,7 @@ from ..cli import (
     removable_targets,
     seed,
     status,
+    write_window_listing,
 )
 from ..location import (
     BINARY_DIRECTORY_VARIABLE,
@@ -224,15 +225,45 @@ def test_the_window_seed_writes_inside_the_selected_build_and_never_the_host_pre
     target, *listed = depfile.read_text(encoding="utf-8").rstrip("\n").split(" \\\n")
     assert target == f"{(projections / WINDOW_INDEX).as_posix()}:"
     dependencies = {line.strip() for line in listed}
+    # A directory is never a dependency: a generator that takes it for a missing file reruns the seed on every build.
+    assert all(Path(dependency).is_file() for dependency in dependencies), sorted(dependencies)
     for expected in (
         root / "tools" / "produce.py",
-        root / "tools",
         root / "inputs" / "source.txt",
         root / "authority.json",
         projections / "fixture.json",
         stamp_path(window, root),
     ):
         assert expected.as_posix() in dependencies, expected
+
+
+def test_the_window_listing_is_rewritten_only_when_an_input_file_is_added_or_removed(tmp_path: Path) -> None:
+    root = _checkout(tmp_path / "repo")
+    (root / ".gitignore").write_text("__pycache__/\n", encoding="utf-8")
+    window = replace(_family(producer=("--into", WINDOW_ROOT)), name="window", output_root=WINDOW_ROOT)
+    workspace = _workspace(root, window)
+    listing = tmp_path / "cache" / "window-inputs.listing"
+
+    assert write_window_listing(listing, workspace) is True
+    assert listing.read_text(encoding="utf-8").splitlines() == ["inputs/source.txt", "tools/produce.py"]
+    written = listing.stat().st_mtime_ns
+
+    # Nothing changed: the listing keeps its bytes and its time, so nothing that depends on it reruns.
+    assert write_window_listing(listing, workspace) is False
+    # An ignored file is no input, and an edited input is the depfile's to notice.
+    (root / "inputs" / "__pycache__").mkdir()
+    (root / "inputs" / "__pycache__" / "source.cpython.pyc").write_bytes(b"")
+    (root / "inputs" / "source.txt").write_text("edited", encoding="utf-8")
+    assert write_window_listing(listing, workspace) is False
+    assert listing.stat().st_mtime_ns == written
+
+    (root / "inputs" / "added.txt").write_text("new", encoding="utf-8")
+    assert write_window_listing(listing, workspace) is True
+    assert "inputs/added.txt" in listing.read_text(encoding="utf-8").splitlines()
+
+    (root / "inputs" / "added.txt").unlink()
+    assert write_window_listing(listing, workspace) is True
+    assert "inputs/added.txt" not in listing.read_text(encoding="utf-8").splitlines()
 
 
 def test_a_window_family_that_is_not_fresh_removes_the_index_and_fails_the_depfile(
