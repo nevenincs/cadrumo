@@ -8,7 +8,7 @@ import {
   chordText,
   type ChordKeys,
 } from "@/shared/chords";
-import type { BridgeChord } from "../ipc/contract";
+import type { BridgeChord } from "../ipc/docsBridge";
 import { elementOf, type NavigationRegister } from "./navigation/register";
 import { WINDOW_VIEWS } from "./navigation/windowViews";
 import type { Translate } from "./strings";

@@ -17,10 +17,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def test_contact_providers_preserve_the_grounded_optional_export_slots() -> None:
     modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "720"))
-    revision = modelo.revisions["2013-y-siguientes"]
-    for suffix, profile_key, offset, length in (
-        ("telefono-contacto", "contact.contact_person_phone", 59, 9),
-        ("nombre-contacto", "contact.contact_person_name", 68, 40),
+    assert modelo.revisions
+    for revision, (suffix, profile_key, offset, length) in (
+        (revision, slot)
+        for revision in modelo.revisions.values()
+        for slot in (
+            ("telefono-contacto", "contact.contact_person_phone", 59, 9),
+            ("nombre-contacto", "contact.contact_person_name", 68, 40),
+        )
     ):
         binding_id = f"modelo-720.type_1.{suffix}"
         binding = next(binding for binding in revision.bindings if binding.id == binding_id)
@@ -43,22 +47,27 @@ def test_candidate_contact_text_uses_existing_string_channel_without_a_formula(
     operation: PinnedAuthorityOperation,
 ) -> None:
     modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "720"))
-    bindings = tuple(
-        binding
-        for binding in modelo.revisions["2013-y-siguientes"].bindings
-        if binding.id in {"modelo-720.type_1.telefono-contacto", "modelo-720.type_1.nombre-contacto"}
-    )
-    assert len(bindings) == 2
-    resolved = resolve_profile_binding_channels(
-        bindings,
-        {"contact.contact_person_phone": Decimal("900000000"), "contact.contact_person_name": "Contacto Prueba Berta"},
-        caller_binding_ids=frozenset(),
-        formula_date_consumed=frozenset(),
-        enum_bindings=frozenset(),
-        operation=operation,
-    )
-    assert resolved.enum_values == {
-        "modelo-720.type_1.telefono-contacto": "900000000",
-        "modelo-720.type_1.nombre-contacto": "Contacto Prueba Berta",
-    }
-    assert resolved.decimal_values == {}
+    assert modelo.revisions
+    for revision in modelo.revisions.values():
+        bindings = tuple(
+            binding
+            for binding in revision.bindings
+            if binding.id in {"modelo-720.type_1.telefono-contacto", "modelo-720.type_1.nombre-contacto"}
+        )
+        assert len(bindings) == 2
+        resolved = resolve_profile_binding_channels(
+            bindings,
+            {
+                "contact.contact_person_phone": Decimal("900000000"),
+                "contact.contact_person_name": "Contacto Prueba Berta",
+            },
+            caller_binding_ids=frozenset(),
+            formula_date_consumed=frozenset(),
+            enum_bindings=frozenset(),
+            operation=operation,
+        )
+        assert resolved.enum_values == {
+            "modelo-720.type_1.telefono-contacto": "900000000",
+            "modelo-720.type_1.nombre-contacto": "Contacto Prueba Berta",
+        }
+        assert resolved.decimal_values == {}

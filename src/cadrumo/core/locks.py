@@ -102,7 +102,7 @@ if sys.platform == "win32":  # pragma: no cover - branch covered on Windows only
             return False
 
     def release_lock(fd: int, *, log_events: bool = True) -> None:
-        """Release the exclusive lock previously acquired via :func:`_try_lock`."""
+        """Release the exclusive lock previously acquired via :func:`try_lock`."""
         # Best-effort: the OS already releases the lock when the
         # descriptor is closed. Avoid raising during teardown.
         try:

@@ -11,7 +11,7 @@ import {
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
-import type { SignInRefusal } from "@/ipc/contract";
+import type { SignInRefusal } from "@/ipc/account";
 import {
   nameProblem,
   passwordProblem,

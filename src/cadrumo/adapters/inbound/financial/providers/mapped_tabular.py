@@ -11,7 +11,7 @@ deterministic parse into an inferred one.
 
 The lane itself is deterministic end to end. :mod:`core.tabular` resolves
 the file's shape, a mapping supplies one :class:`~core.field_role.FieldRole` per column,
-and :mod:`._tabular_projection` copies each cell into its role byte-for-byte.
+and :mod:`.tabular_projection` copies each cell into its role byte-for-byte.
 Only the mapping is a judgement, and it is made once per file over a closed
 allow-list of roles, never over a cell value.
 
@@ -120,7 +120,7 @@ def default_tabular_mapping_resolver() -> TabularMappingResolver | None:
     The single wiring point between this lane and whatever establishes column
     roles. It resolves to the semantic column-role mapper, which decides one
     role per column from the file's header vocabulary alone, once per file.
-    Every cell is still copied by :mod:`._tabular_projection` under that
+    Every cell is still copied by :mod:`.tabular_projection` under that
     mapping, so nothing about how values reach a row changed when this stopped
     returning ``None``.
     """

@@ -265,7 +265,7 @@ _REPLACEMENT_SPECIMENS: tuple[_ReplacementSpecimen, ...] = (
 
 
 def _declaracion_profile(specimen: _AnnexSpecimen | _ReplacementSpecimen):
-    """Select the profile by CALLING :func:`_select_extraction_profile`.
+    """Select the profile by CALLING :func:`select_extraction_profile`.
 
     This gate exists to prove a profile can read a real AEAT render, which is
     only true of the profile production would actually choose. It previously

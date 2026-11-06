@@ -10,6 +10,8 @@ import {
 } from "../support/scenarioShell";
 import { calendarButton } from "../support/scenarioRail";
 
+// Where the keyboard goes as the filing calendar is shown, put aside, signed out of and replaced.
+
 test.beforeEach(async ({ page: target }) => {
   await startFromDocs(target);
 });

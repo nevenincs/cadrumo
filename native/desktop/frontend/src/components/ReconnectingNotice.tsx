@@ -1,7 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import type { Reconnecting } from "../ipc/contract";
+import type { Reconnecting } from "../ipc/account";
 import { useStrings } from "../shell/strings";
 
 /**

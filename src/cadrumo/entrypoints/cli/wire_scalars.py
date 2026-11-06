@@ -16,7 +16,7 @@ no longer carry a movement kind or valuation method the domain would reject,
 nor a ``movement_date`` that is not a real calendar day.
 
 Decimal magnitudes have the same problem and are handled by the sibling
-:mod:`_decimal_wire` module.
+:mod:`decimal_wire` module.
 """
 
 from __future__ import annotations

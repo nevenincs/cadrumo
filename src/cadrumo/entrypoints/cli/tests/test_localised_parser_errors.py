@@ -1,6 +1,6 @@
 """Localised refusal-payload tests for the shared amount / date parsers.
 
-Drives the real :func:`parse_decimal_amount` and :func:`_parse_iso_date`
+Drives the real :func:`parse_decimal_amount` and :func:`parse_iso_date`
 helpers in :mod:`cadrumo.entrypoints.cli.common` once under each of the four
 target locales (``en``, ``es``, ``ca``, ``hu``) and asserts the rendered
 refusal payload carries the field label, the raw operator value, and — for the

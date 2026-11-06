@@ -2,7 +2,6 @@ import {
   useCallback,
   useEffect,
   useImperativeHandle,
-  useId,
   useMemo,
   useRef,
   useState,
@@ -10,65 +9,28 @@ import {
   type Ref,
 } from "react";
 import { Button } from "@/components/ui/button";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { isCadrumoLink } from "../shell/navigation/links";
-import { EmptyState } from "@/components/ui/empty";
-import { Icon, type IconName } from "@/components/ui/icon";
+import { Icon } from "@/components/ui/icon";
 import { failureCode } from "../errors";
-import {
-  CATALOG_BUSY_RETRIES,
-  CATALOG_BUSY_PAUSE_MS,
-  catalogReadBusy,
-  catalogReadRetry,
-} from "../shell/catalogReadPolicy";
 import { useAgentAccess, type AgentAccess } from "../shell/agentAccess";
-import {
-  catalogChoices,
-  ranSelection,
-  restoredSelection,
-  selectionRecord,
-} from "../shell/agentCatalog";
-import { useRememberedChoice } from "../shell/agentChoice";
-import { useReadingModel, type ReadingModelHost } from "../shell/readingModel";
-import {
-  DocumentLister,
-  documentRefs,
-  extensionOf,
-  fileKindOf,
-  MAX_REFERENCES,
-} from "../shell/agentDocuments";
+import { DocumentLister } from "../shell/agentDocuments";
 import { useDocumentInventory } from "../shell/agentDocumentInventory";
 import { useStagedDocuments } from "../shell/agentStaging";
 import { useAgentDrops } from "../shell/agentDrops";
 import { DropOverlay } from "./agent/DropOverlay";
-import { DocumentsPanel } from "./agent/DocumentsPanel";
 import { StagedAttachmentsDialog } from "./agent/StagedAttachmentsDialog";
 import {
   newestReply,
   useAgentStatus,
   useLiveConversation,
 } from "../shell/agentLive";
-import type {
-  AgentApproval,
-  AgentQuestionnaire,
-  AgentQuestionnaireAnswer,
-  AgentSendRequest,
-  AgentServiceStatus,
-  AgentSession,
-  AgentToolRefusal,
-} from "../shell/agentSession";
+import type { AgentSession, AgentToolRefusal } from "../shell/agentSession";
 import {
   archivedCount,
-  createTranscriptProjection,
   newestRanWith,
   replyFacts,
-  replyIdOf,
-  transcriptItems,
   useAgentRead,
   useConversationGroups,
-  type AgentRead,
-  type AgentDocumentReference,
   type AgentViews,
 } from "../shell/agentViews";
 import { queuedWords, runStateWords } from "../shell/agentWords";
@@ -76,66 +38,34 @@ import {
   useProviderSettings,
   type ProviderSettings,
 } from "../shell/providerSettings";
-import { useStrings, type Translate } from "../shell/strings";
+import { useStrings } from "../shell/strings";
 import type { OpenMenu } from "./ContextMenu";
 import { AgentHeader } from "./agent/AgentHeader";
+import type { AgentColumnView, Panel } from "./agent/agentColumnView";
+import { refusalWords, serviceWords } from "./agent/agentRefusalWords";
+import { agentSending } from "./agent/agentSending";
+import { AgentSettingsPanel } from "./agent/AgentSettingsPanel";
 import { AgentWelcome } from "./agent/AgentWelcome";
-import { ApprovalPrompt } from "./agent/ApprovalPrompt";
-import { AttachmentGrants } from "./agent/AttachmentGrants";
-import { AttachmentReadPrompt } from "./agent/AttachmentReadPrompt";
-import { Composer, type ComposerReferences } from "./agent/Composer";
+import { Composer } from "./agent/Composer";
 import { documentSource } from "./agent/DocumentMentions";
 import { HistoryList } from "./agent/HistoryList";
-import { QuestionsPrompt } from "./agent/QuestionsPrompt";
+import { ReadState } from "./agent/ReadState";
+import { ReplyFacts } from "./agent/ReplyFacts";
+import { RunPrompts } from "./agent/RunPrompts";
+import { useShownTranscript } from "./agent/useShownTranscript";
+import { ColumnNotice } from "./agent/ColumnNotice";
+import { ConversationDocuments } from "./agent/ConversationDocuments";
 import { SkillDialog } from "./agent/SkillDialog";
 import { useSkillInventory } from "./agent/SlashSuggestions";
-import { catalogLanes } from "../shell/localModelLanes";
-import type { LocalModelHost } from "../shell/localModels";
+import { useAgentCatalog } from "./agent/useAgentCatalog";
+import { useLocalModelHosts } from "./agent/useLocalModelHosts";
 import type { SkillCommand } from "../shell/agentSkills";
-import { AgentAccess as AgentAccessSection } from "./settings/AgentAccess";
-import { LocalModels } from "./settings/LocalModels";
-import { LocalAi } from "./setup/LocalAi";
-import { ProviderSettings as ProviderSettingsSection } from "./settings/ProviderSettings";
 import { Transcript } from "./agent/Transcript";
 import type {
   AgentSelection,
   ModelOption,
   ProviderOption,
 } from "./agent/types";
-
-function SettingsDisclosure({
-  title,
-  visible,
-  searching,
-  children,
-}: {
-  title: string;
-  visible: boolean;
-  searching: boolean;
-  children: ReactNode;
-}) {
-  const details = useRef<HTMLDetailsElement>(null);
-  useEffect(() => {
-    if (searching && visible && details.current) details.current.open = true;
-  }, [searching, visible]);
-  return (
-    <details
-      ref={details}
-      open
-      hidden={!visible}
-      className="group/settings rounded-lg bg-card p-3"
-    >
-      <summary className="flex min-h-control-lg cursor-pointer items-center justify-between gap-2 rounded-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring">
-        {title}
-        <Icon
-          name="chevronDown"
-          className="shrink-0 transition-transform group-open/settings:rotate-180"
-        />
-      </summary>
-      <div className="pt-3">{children}</div>
-    </details>
-  );
-}
 
 // What the composer is given while nothing serves it: nothing. Sending,
 // adding files and choosing a model each say they are not available yet.
@@ -147,75 +77,10 @@ const NO_SELECTION: AgentSelection = {
   modelId: "",
 };
 
-type Panel = "none" | "history" | "settings" | "documents";
-
 export type AgentColumnControl = {
   /** Shows the conversation with the model picker open. */
   openModelPicker(): void;
 };
-
-type PendingSend = {
-  id: string;
-  conversationId: string | null;
-  replyId: string | null;
-  text: string;
-  attachments: AgentDocumentReference[];
-  skills: string[];
-  previousReplies: string[];
-};
-
-/** Why the agent service is not serving, in words; null when it is. */
-function serviceWords(t: Translate, status: AgentServiceStatus): string | null {
-  if (status.state === "ready") return null;
-  if (status.state === "starting") return t("desktop.agent.service_starting");
-  if (status.state === "stopped") return t("desktop.agent.service_stopped");
-  return refusalWords(t, status.code);
-}
-
-/** A refusal code of the agent's, in words where it is one we know. */
-function refusalWords(t: Translate, code: string): string {
-  switch (code) {
-    case "agent_platform_unsupported":
-      return t("desktop.agent.platform_unsupported");
-    case "agent_service_absent":
-      return t("desktop.agent.service_absent");
-    case "agent_service_incompatible":
-      return t("desktop.agent.service_incompatible");
-    case "agent_signed_out":
-      return t("desktop.agent.service_signed_out");
-    case "agent_runtime_unavailable":
-      return t("desktop.agent.service_runtime_unavailable");
-    case "agent_provider_credential_missing":
-      return t("desktop.agent.service_credential_missing");
-    case "agent_service_failed":
-      return t("desktop.agent.service_failed");
-    case "agent_timeout":
-      return t("desktop.agent.service_timeout");
-    case "agent_service_busy":
-      return t("desktop.agent.service_starting");
-    case "agent_reconnecting":
-      return t("desktop.account.reconnecting");
-    case "agent_reply_in_progress":
-      return t("desktop.agent.reply_in_progress");
-    case "agent_conversation_delete_incomplete":
-      return t("desktop.agent.delete_incomplete");
-    case "agent_gateway_attachment_not_found":
-      return t("desktop.agent.reference_missing");
-    case "agent_gateway_attachment_changed":
-      return t("desktop.agent.reference_changed");
-    case "agent_gateway_attachment_refused":
-    case "agent_gateway_attachments_invalid":
-      return t("desktop.agent.reference_refused");
-    case "agent_gateway_attachments_unavailable":
-      return t("desktop.agent.references_unavailable");
-    case "agent_gateway_conversation_deleting":
-      return t("desktop.agent.conversation_deleting");
-    case "agent_gateway_conversation_id_taken":
-      return t("desktop.agent.conversation_id_taken");
-    default:
-      return t("desktop.agent.request_failed");
-  }
-}
 
 /**
  * The agent column's content: its header, the conversation or the history or
@@ -285,7 +150,6 @@ export function AgentColumn({
   control?: Ref<AgentColumnControl>;
 }) {
   const t = useStrings();
-  const searchId = useId();
   const [setupCheck, setSetupCheck] = useState<{
     reader: string;
     conversation: string | null;
@@ -295,23 +159,19 @@ export function AgentColumn({
   // What the column is showing belongs to the profile it was shown for: a
   // new reader starts on a new conversation with nothing open, and nothing
   // asked or chosen for the last one carries over.
-  const [view, setView] = useState({
+  const [view, setView] = useState<AgentColumnView>({
     reader,
-    panel: "none" as Panel,
+    panel: "none",
     archived: false,
-    conversationId: null as string | null,
-    chosen: null as AgentSelection | null,
+    conversationId: null,
+    chosen: null,
     sending: false,
-    interactionId: null as string | null,
-    pending: null as PendingSend | null,
-    sendFailure: null as string | null,
-    // Why the history's last action was refused.
-    archiveFailure: null as string | null,
+    interactionId: null,
+    pending: null,
+    sendFailure: null,
+    archiveFailure: null,
     historyBusy: false,
-    // The composer is drawn anew with this draft when a send is given back.
     draft: { key: 0, text: "" },
-    // Counts the messages sent and the replies finished, each a reason to
-    // read the conversations again.
     revision: 0,
   });
   if (view.reader !== reader)
@@ -401,51 +261,7 @@ export function AgentColumn({
     view.reader === reader && view.pending?.conversationId === conversationId
       ? view.pending
       : null;
-  const projectTranscript = useMemo(() => createTranscriptProjection(), []);
-  const history = useMemo((): AgentRead<ReturnType<typeof transcriptItems>> => {
-    if (live.read.kind !== "ready" && !pending) return live.read;
-    const records = live.read.kind === "ready" ? [...live.read.value] : [];
-    // Keep the person's words ahead of any events that beat the send
-    // acknowledgement, and through an initial history read still in flight.
-    const echoed =
-      pending &&
-      records.some(
-        (record) =>
-          record.kind === "person" &&
-          record.text === pending.text &&
-          (pending.replyId
-            ? record.reply_id === pending.replyId
-            : !pending.previousReplies.includes(record.reply_id)),
-      );
-    if (pending && !echoed) {
-      const nextReply = records.findIndex((record) =>
-        pending.replyId
-          ? replyIdOf(record) === pending.replyId
-          : !pending.previousReplies.includes(replyIdOf(record)),
-      );
-      records.splice(nextReply < 0 ? records.length : nextReply, 0, {
-        kind: "person",
-        id: pending.id,
-        reply_id: pending.replyId ?? pending.id,
-        text: pending.text,
-        sent_at: null,
-        attachments: pending.attachments,
-        skills: pending.skills,
-      });
-    }
-    const items = projectTranscript(records, locale, t);
-    return {
-      kind: "ready",
-      value: items.map((item) =>
-        pending &&
-        pending.replyId === null &&
-        item.kind === "person" &&
-        item.id === `person:${pending.id}:${pending.id}`
-          ? { ...item, sending: true }
-          : item,
-      ),
-    };
-  }, [live.read, pending, locale, t, projectTranscript]);
+  const history = useShownTranscript(live.read, pending, locale, t);
   // What the agent served of the conversation's replies beside their words: the
   // state of the newest, what they ran with, and the tokens they used.
   const newest =
@@ -480,46 +296,10 @@ export function AgentColumn({
     }),
     [openModelPicker],
   );
-  // The models the person added to the local lanes' lists, where the host
-  // offers reading and changing them. The service has no connection to the
-  // host while the agent starts and refuses every list read then, so the
-  // lists are offered only once the agent runs.
-  const localModelHost = useMemo((): LocalModelHost | null => {
-    if (
-      !ready ||
-      !session?.localModels ||
-      !session.addLocalModel ||
-      !session.removeLocalModel ||
-      !session.resetLocalModels
-    )
-      return null;
-    const changed = <T,>(made: Promise<T>) =>
-      made.then((value) => {
-        setListChanges((count) => count + 1);
-        return value;
-      });
-    const add = session.addLocalModel.bind(session);
-    const remove = session.removeLocalModel.bind(session);
-    const reset = session.resetLocalModels.bind(session);
-    return {
-      read: session.localModels.bind(session),
-      add: (lane, model, revision) => changed(add(lane, model, revision)),
-      remove: (lane, model, revision) => changed(remove(lane, model, revision)),
-      reset: (revision) => changed(reset(revision)),
-    };
-  }, [session, ready]);
-  // Changes made to the lists in the settings, which the picker reads again.
-  const [listChanges, setListChanges] = useState(0);
-  // Read like the lists above: nothing is asked while the agent starts, and
-  // the host changing to a readable one at ready is what reads them.
-  const readingHost = useMemo((): ReadingModelHost | null => {
-    if (!ready || !session?.localModels || !session.chooseReadingModel)
-      return null;
-    return {
-      read: session.localModels.bind(session),
-      choose: session.chooseReadingModel.bind(session),
-    };
-  }, [session, ready]);
+  const { localModelHost, readingHost, listChanges } = useLocalModelHosts(
+    session,
+    ready,
+  );
   // The agent's settings belong to the signed-in profile, and are read only
   // while they are open: the first time behind one loader, and after that
   // again behind what was read last, each time they open.
@@ -538,143 +318,25 @@ export function AgentColumn({
     settingsOpen && shown,
     opened,
   );
-  // What it can run is the agent's own catalog, every lane of it. While the
-  // agent starts, the service answers with the lanes the agent declares,
-  // which are listed but cannot be chosen; the catalog is read again once the
-  // agent is ready.
-  const starting = status?.state === "starting";
-  const [catalogRetry, setCatalogRetry] = useState(0);
-  const catalogRequest = useMemo(
-    () => ({ reader, ready, starting, session, retry: catalogRetry }),
-    [reader, ready, starting, session, catalogRetry],
-  );
-  const readCatalog = useMemo(() => {
-    const { reader, ready, starting, session } = catalogRequest;
-    return reader !== null && (ready || starting) && session
-      ? () =>
-          session.providerCatalog(
-            catalogReadRetry(
-              () => busyCatalogReads.current < CATALOG_BUSY_RETRIES,
-            ),
-          )
-      : null;
-  }, [catalogRequest]);
-  // Setup and provider settings invalidate the catalog independently.
-  const [catalogAgain, setCatalogAgain] = useState(0);
-  // Reads asked for while the service was busy.
-  const [busyReads, setBusyReads] = useState(0);
-  const catalog = useAgentRead(
-    readCatalog,
-    catalogAgain + settings.changes + busyReads + opened,
-  );
-  // A settled setup may have downloaded a model: what the catalog says this
-  // computer holds is read again.
-  useEffect(() => {
-    if (setupSettled) setCatalogAgain((count) => count + 1);
-  }, [setupSettled]);
-  // The catalog's lanes with their models, whose list a lane on this computer
-  // shows in its provider settings.
-  const localLanes = useMemo(
-    () => (catalog.kind === "ready" ? catalogLanes(catalog.value) : []),
-    [catalog],
-  );
-  // A service still busy starting the agent answers the catalog late. The
-  // column says the agent is still starting and asks again at the service's
-  // next published status; a few reads, each after a longer pause, are the
-  // bounded fallback when it publishes none. A session the runtime keeps
-  // suspended is the same wait: it is not a sign-out and it comes back.
-  const catalogBusy =
-    catalog.kind === "failed" && catalogReadBusy(catalog.code);
-  const busyCatalogReads = useRef(0);
-  const statusAtBusyRead = useRef(status);
-  useEffect(() => {
-    if (catalog.kind === "ready") busyCatalogReads.current = 0;
-    if (!catalogBusy) return;
-    if (statusAtBusyRead.current !== status) {
-      statusAtBusyRead.current = status;
-      setBusyReads((count) => count + 1);
-      return;
-    }
-    if (busyCatalogReads.current >= CATALOG_BUSY_RETRIES) return;
-    const pause = CATALOG_BUSY_PAUSE_MS * 2 ** busyCatalogReads.current;
-    busyCatalogReads.current += 1;
-    const again = window.setTimeout(
-      () => setBusyReads((count) => count + 1),
-      pause,
-    );
-    return () => window.clearTimeout(again);
-  }, [catalog, catalogBusy, status]);
-  // What the next message runs with: what the person chose while this
-  // conversation is shown, else what the conversation last ran with, else the
-  // profile's last choice, each only where the catalog still offers it.
-  const { remembered, remember } = useRememberedChoice(reader);
-  // The person's last choice is also the model documents are read with. The
-  // service keeps it beside the local lists, which are also what the picker
-  // offers of a lane on this computer.
-  const [rememberedRecord, setRememberedRecord] = useState<{
-    lane: string;
-    model: string;
-  } | null>(null);
-  // Read only where the catalog is: a profile is signed in and the agent runs.
-  const stored = useReadingModel(
-    readCatalog ? readingHost : null,
-    rememberedRecord,
-    catalogAgain + settings.changes + opened + listChanges,
-    reader,
-  );
-  const offer = useMemo(() => {
-    if (catalog.kind !== "ready") return null;
-    const lists =
-      stored === null
-        ? null
-        : {
-            lanes: stored.local_lanes,
-            added: (lane: string) =>
-              stored.state === "readable"
-                ? stored.models
-                    .filter((entry) => entry.lane === lane)
-                    .map((entry) => entry.model)
-                : [],
-          };
-    return catalogChoices(t, catalog.value, lists);
-  }, [catalog, t, stored]);
-  // Only a choice the picker still offers is the one documents are read
-  // with; one it no longer offers, such as a model taken off its list, is not.
-  const restoredRemembered =
-    offer && remembered ? restoredSelection(offer, [remembered]) : null;
-  const offeredRemembered =
-    remembered &&
-    restoredRemembered?.wayId === remembered.wayId &&
-    restoredRemembered.modelId === remembered.modelId &&
-    catalog.kind === "ready"
-      ? selectionRecord(catalog.value, remembered)
-      : null;
-  const wantedLane = offeredRemembered
-    ? `${offeredRemembered.provider}_${offeredRemembered.transport}`
-    : null;
-  const wantedModel = offeredRemembered?.model ?? null;
-  if (
-    (rememberedRecord?.lane ?? null) !== wantedLane ||
-    (rememberedRecord?.model ?? null) !== wantedModel
-  )
-    setRememberedRecord(
-      wantedLane !== null && wantedModel !== null
-        ? { lane: wantedLane, model: wantedModel }
-        : null,
-    );
   const ranWith =
     conversationId !== null && live.read.kind === "ready"
       ? newestRanWith(live.read.value)
       : undefined;
-  const selection = offer
-    ? restoredSelection(offer, [
-        view.chosen,
-        ranWith && catalog.kind === "ready"
-          ? ranSelection(catalog.value, ranWith)
-          : null,
-        remembered,
-      ])
-    : null;
+  const agentCatalog = useAgentCatalog({
+    t,
+    reader,
+    session,
+    status,
+    readingHost,
+    setupSettled,
+    settingsChanges: settings.changes,
+    opened,
+    listChanges,
+    chosen: view.chosen,
+    ranWith,
+  });
+  const { catalog, catalogBusy, localLanes, offer, selection, remember } =
+    agentCatalog;
 
   const current =
     conversations.kind === "ready" && conversationId !== null
@@ -818,17 +480,6 @@ export function AgentColumn({
         }
       : undefined;
 
-  const query = settingsQuery.trim().toLocaleLowerCase();
-  const titleMatches = (title: string) =>
-    Boolean(query) && title.toLocaleLowerCase().includes(query);
-  const providerTitleMatches = titleMatches(t("desktop.providers.title"));
-  const accessTitleMatches = titleMatches(t("desktop.automation_access.title"));
-  const providerVisible =
-    Boolean(providerSettings) &&
-    (!query || providerTitleMatches || providerMatches);
-  const accessVisible =
-    Boolean(agentAccess) && (!query || accessTitleMatches || accessMatches);
-
   // The stored documents the next message names: chosen with `@`, or
   // attached and stored first. A send that does not go keeps them.
   const [documentsVersion, setDocumentsVersion] = useState(0);
@@ -892,7 +543,6 @@ export function AgentColumn({
         : held,
     );
   }, [pending, live.read, staging, reader]);
-  const namedFor = staging.namedFor;
   const lister = useMemo(
     () => (agent?.documents ? new DocumentLister(agent.documents) : null),
     [agent],
@@ -947,215 +597,26 @@ export function AgentColumn({
     },
   });
 
-  // A send that did not go is given back to the composer to try again.
-  const giveBack = (text: string, failure: string | null) =>
-    setView((held) => ({
-      ...held,
-      sending: false,
-      pending: null,
-      sendFailure: failure,
-      draft: { key: held.draft.key + 1, text },
-    }));
-  const deliver = async (
-    request: AgentSendRequest,
-    submission: PendingSend,
-  ) => {
-    if (!session) return;
-    const current = () =>
-      currentReader.current === reader && currentSend.current === submission.id;
-    try {
-      const { reply_id } = await session.send(request);
-      if (!current()) return;
-      // The agent returns no id for the message, so it is shown as sent until
-      // the history has it.
-      live.sent({
-        reply_id,
-        text: request.text,
-        at: "start",
-        attachments: submission.attachments,
-        ...(request.skills ? { skills: request.skills } : {}),
-      });
-      // What the message named went with it.
-      staging.sent(request.conversation_id);
-      // A message sent may name the conversation, so it is read again.
-      setView((held) => ({
-        ...held,
-        sending: false,
-        pending:
-          held.pending?.id === submission.id
-            ? { ...held.pending, replyId: reply_id }
-            : held.pending,
-        revision: held.revision + 1,
-      }));
-    } catch (error) {
-      if (current()) giveBack(request.text, failureCode(error));
-    }
-  };
-  // Pressing Send is the person's decision: the message goes, and nothing
-  // asks them again.
-  const submit = async (
-    text: string,
-    chosen: AgentSelection,
-    references: ComposerReferences,
-  ) => {
-    if (!session || catalog.kind !== "ready") return;
-    pendingPrompt.current = null;
-    const runs = selectionRecord(catalog.value, chosen);
-    if (!runs) {
-      giveBack(text, "agent_selection_unavailable");
-      return;
-    }
-    const submission: PendingSend = {
-      id: crypto.randomUUID(),
+  const { questionnaire, answering, answer, decide, send, stop } = agentSending(
+    {
+      session,
+      reader,
       conversationId,
-      replyId: null,
-      text,
-      attachments: conversationId
-        ? namedFor(conversationId).map(({ name, sha256, media_type }) => ({
-            name,
-            sha256,
-            media_type,
-          }))
-        : [],
-      skills: references.skills,
-      previousReplies:
-        live.read.kind === "ready" ? live.read.value.map(replyIdOf) : [],
-    };
-    currentSend.current = submission.id;
-    change({ pending: submission, interactionId: null });
-    const current = () =>
-      currentReader.current === reader && currentSend.current === submission.id;
-    let request: AgentSendRequest;
-    try {
-      // A new conversation begins with its first message, never on its own.
-      let id = conversationId;
-      if (id === null) {
-        id = (await session.startConversation()).id;
-        if (!current()) return;
-        setView((held) => ({
-          ...held,
-          conversationId: id,
-          pending: held.pending
-            ? { ...held.pending, conversationId: id }
-            : null,
-        }));
-      }
-      // Watched before anything is sent, so the reply is followed from its
-      // first word.
-      await live.watch(id);
-      if (!current()) return;
-      request = { conversation_id: id, text, selection: runs };
-      if (references.skills.length > 0) request.skills = references.skills;
-      const named = namedFor(id);
-      if (named.length > 0) request.attachments = documentRefs(named);
-    } catch (error) {
-      if (current()) giveBack(text, failureCode(error));
-      return;
-    }
-    // A send that fails is given back by `deliver` itself.
-    await deliver(request, submission);
-  };
-  // What the reply waits on. While it asks questions, a message written
-  // below answers them in the person's own words, and goes on with the
-  // same reply.
-  const questionnaire = live.questionnaires[0];
-  const resolvePrompt = async (
-    send: () => Promise<unknown>,
-    accepted: () => void,
-    returnedText?: string,
-  ) => {
-    if (!session || pendingPrompt.current?.owner === promptOwner) return;
-    const ticket = { owner: promptOwner, id: crypto.randomUUID() };
-    pendingPrompt.current = ticket;
-    const current = () =>
-      currentPromptOwner.current === ticket.owner &&
-      pendingPrompt.current === ticket;
-    change({ sending: true, sendFailure: null, interactionId: ticket.id });
-    let failed = false;
-    let failure: string | null = null;
-    try {
-      await send();
-      if (current()) accepted();
-    } catch (error) {
-      failed = true;
-      failure = failureCode(error);
-    } finally {
-      if (current())
-        setView((held) =>
-          held.interactionId === ticket.id
-            ? {
-                ...held,
-                interactionId: null,
-                sending: false,
-                sendFailure: failure,
-                ...(failed && returnedText !== undefined
-                  ? { draft: { key: held.draft.key + 1, text: returnedText } }
-                  : {}),
-              }
-            : held,
-        );
-      if (pendingPrompt.current === ticket) pendingPrompt.current = null;
-    }
-  };
-  const answer = async (
-    asked: AgentQuestionnaire,
-    reply: AgentQuestionnaireAnswer,
-  ) => {
-    if (!session) return;
-    await resolvePrompt(
-      () => session.answerQuestions(asked, reply),
-      () => {
-        // An answer in words continues the run in place: shown as sent, as a
-        // message is.
-        if (reply.kind === "message")
-          live.sent({ reply_id: asked.reply_id, text: reply.text, at: "end" });
-        live.resolved(asked.request_id);
-      },
-      reply.kind === "message" ? reply.text : undefined,
-    );
-  };
-  const decide = async (approval: AgentApproval, optionId: string) => {
-    if (!session) return;
-    await resolvePrompt(
-      () => session.decideApproval(approval, optionId),
-      () => {
-        live.resolved(approval.request_id);
-      },
-    );
-  };
-  const answering = session && ready && !view.sending;
-  // The agent takes no message while a run needs repair or is being
-  // reconciled.
-  const heldByRun =
-    newest?.status === "repair_needed" ||
-    newest?.status === "reconciling" ||
-    newest?.status === "deleting";
-  // A selection the catalog names in full: a model not yet chosen or written
-  // cannot be run.
-  const runnable =
-    catalog.kind === "ready" &&
-    selection !== null &&
-    selectionRecord(catalog.value, selection) !== null;
-  const send =
-    answering && questionnaire
-      ? (text: string) => void answer(questionnaire, { kind: "message", text })
-      : answering && selection && runnable && !heldByRun
-        ? (text: string, references: ComposerReferences) => {
-            change({ sending: true, sendFailure: null });
-            void submit(text, selection, references);
-          }
-        : undefined;
-  const stop =
-    session && live.open
-      ? () => {
-          const replyId = live.open;
-          if (replyId)
-            session.cancel(replyId).then(
-              () => live.stopping(replyId),
-              (error: unknown) => change({ sendFailure: failureCode(error) }),
-            );
-        }
-      : undefined;
+      catalog,
+      selection,
+      newest,
+      ready,
+      sending: view.sending,
+      live,
+      staging,
+      setView,
+      currentReader,
+      currentSend,
+      promptOwner,
+      currentPromptOwner,
+      pendingPrompt,
+    },
+  );
 
   // No provider the agent can run: a key is missing, or every lane is held
   // back. That is not a failure, and the way to a key is offered.
@@ -1249,211 +710,60 @@ export function AgentColumn({
         className="agent-body flex min-h-0 flex-1 flex-col overflow-y-auto focus-visible:-outline-offset-2"
       >
         {settingsOpen ? (
-          settingsLoading ? (
-            // One loader for the whole panel, and only until its sections
-            // have first been read: after that the last answers stay on screen
-            // while they are read again.
-            <ReadState read={{ kind: "loading" }} icon="settings" />
-          ) : (
-            // Each section the host offers is shown, or says it failed, on its
-            // own: provider settings and sign-in, plus keys for agents outside
-            // Cadrumo.
-            <div className="grid gap-6 p-3">
-              <Field>
-                <FieldLabel htmlFor={searchId}>
-                  {t("desktop.settings.agent_search")}
-                </FieldLabel>
-                <Input
-                  id={searchId}
-                  type="search"
-                  value={settingsQuery}
-                  onChange={(event) =>
-                    setSettingsQuery(event.currentTarget.value)
-                  }
-                />
-              </Field>
-              {providerSettings && (
-                <SettingsDisclosure
-                  title={t("desktop.providers.title")}
-                  visible={providerVisible}
-                  searching={Boolean(query)}
-                >
-                  {providerSettings &&
-                    (settings.read.kind === "ready" ? (
-                      <ProviderSettingsSection
-                        query={providerTitleMatches ? "" : query}
-                        searching={Boolean(query)}
-                        embedded
-                        onMatch={setProviderMatches}
-                        providers={settings.read.value.providers}
-                        signIn={providerSettings.signIn}
-                        signInProviders={settings.read.value.signInProviders}
-                        signInMethods={settings.read.value.signInMethods}
-                        revisions={settings.read.value.revisions}
-                        identity={reader}
-                        busyId={settings.busyId}
-                        outcomes={settings.outcomes}
-                        onSave={settings.save}
-                        onTurnOff={settings.turnOff}
-                        onTurnOn={settings.turnOn}
-                        onReset={settings.reset}
-                        onRefresh={settings.refresh}
-                        onSignInTerminal={refreshProviderAfterSignIn}
-                        localModels={
-                          localModelHost
-                            ? (lane) => {
-                                const listed =
-                                  localLanes.find(
-                                    (held) => held.id === lane.id,
-                                  ) ?? null;
-                                const removed = () =>
-                                  setCatalogAgain((count) => count + 1);
-                                // The lane on this computer is the local AI:
-                                // its program and its model list together.
-                                return lane.id === localProvider?.id ? (
-                                  <LocalAi
-                                    key={lane.id}
-                                    lanes={listed ? [listed] : []}
-                                    status={
-                                      catalog.kind === "ready"
-                                        ? "ready"
-                                        : catalog.kind === "loading"
-                                          ? "loading"
-                                          : "failed"
-                                    }
-                                    onRetry={() =>
-                                      setCatalogRetry((count) => count + 1)
-                                    }
-                                    host={localModelHost}
-                                    locale={locale}
-                                    onRemoved={removed}
-                                  />
-                                ) : (
-                                  <LocalModels
-                                    key={lane.id}
-                                    lane={listed}
-                                    laneStatus={
-                                      catalog.kind === "ready"
-                                        ? "ready"
-                                        : catalog.kind === "loading"
-                                          ? "loading"
-                                          : "failed"
-                                    }
-                                    onRetryLane={() =>
-                                      setCatalogRetry((count) => count + 1)
-                                    }
-                                    host={localModelHost}
-                                    locale={locale}
-                                    onRemoved={removed}
-                                  />
-                                );
-                              }
-                            : undefined
-                        }
-                      />
-                    ) : settings.read.kind === "failed" ? (
-                      <SectionFailure
-                        words={t("desktop.providers.load_failed")}
-                        onRetry={settings.refresh}
-                      />
-                    ) : (
-                      <ReadState read={settings.read} icon="settings" />
-                    ))}
-                </SettingsDisclosure>
-              )}
-              {agentAccess && (
-                <SettingsDisclosure
-                  title={t("desktop.automation_access.title")}
-                  visible={accessVisible}
-                  searching={Boolean(query)}
-                >
-                  {agentAccess &&
-                    (access.read.kind === "ready" ? (
-                      <AgentAccessSection
-                        query={accessTitleMatches ? "" : query}
-                        embedded
-                        onMatch={setAccessMatches}
-                        credentials={access.read.value.credentials}
-                        locale={locale}
-                        busyId={access.busyId}
-                        outcomes={access.outcomes}
-                        issuing={access.issuing}
-                        issueRefusal={access.issueRefusal}
-                        issued={access.issued}
-                        onIssue={access.issue}
-                        onCloseIssue={access.closeIssue}
-                        onRevoke={access.revoke}
-                        onRefresh={access.refresh}
-                        onCopy={writeClipboard}
-                      />
-                    ) : access.read.kind === "failed" ? (
-                      <SectionFailure
-                        words={t("desktop.agent.read_failed")}
-                        onRetry={access.refresh}
-                      />
-                    ) : (
-                      <ReadState read={access.read} icon="settings" />
-                    ))}
-                </SettingsDisclosure>
-              )}
-              {query && !providerVisible && !accessVisible && (
-                <p role="status">{t("desktop.settings.agent_search_empty")}</p>
-              )}
-            </div>
-          )
+          <AgentSettingsPanel
+            loading={settingsLoading}
+            query={settingsQuery}
+            onQuery={setSettingsQuery}
+            providerMatches={providerMatches}
+            onProviderMatch={setProviderMatches}
+            accessMatches={accessMatches}
+            onAccessMatch={setAccessMatches}
+            providerSettings={providerSettings}
+            settings={settings}
+            agentAccess={agentAccess}
+            access={access}
+            reader={reader}
+            locale={locale}
+            writeClipboard={writeClipboard}
+            onSignInTerminal={refreshProviderAfterSignIn}
+            localModelHost={localModelHost}
+            localLanes={localLanes}
+            localProviderId={localProvider?.id}
+            catalogStatus={
+              catalog.kind === "ready"
+                ? "ready"
+                : catalog.kind === "loading"
+                  ? "loading"
+                  : "failed"
+            }
+            onRetryCatalog={agentCatalog.retry}
+            onLocalModelRemoved={agentCatalog.refresh}
+          />
         ) : documentsOpen ? (
-          <div className="flex min-h-0 flex-1 flex-col">
-            {documents.failed && (
-              <p role="alert" className="px-3 py-2 text-sm text-destructive">
-                {t("desktop.agent.document_remove_failed")}
-              </p>
-            )}
-            {documents.read.kind === "ready" ? (
-              <DocumentsPanel
-                key={`${reader}:${conversationId}`}
-                documents={documents.read.value.map((document) => ({
-                  id: document.name,
-                  name: document.name,
-                  extension: extensionOf(document.name),
-                  sizeBytes: document.size_bytes,
-                  kind: fileKindOf(document.name, document.media_type),
-                }))}
-                locale={locale}
-                busy={documents.busy}
-                selectionLimit={MAX_REFERENCES}
-                selectedIds={staging
-                  .namedFor(conversationId)
-                  .map((document) => document.name)}
-                footer={
-                  session ? <AttachmentGrants session={session} /> : undefined
-                }
-                onClose={() => change({ panel: "none" })}
-                onAddFiles={attach ? () => void attach() : undefined}
-                onRefresh={documents.refresh}
-                onUse={(name) => {
-                  const document =
-                    documents.read.kind === "ready"
-                      ? documents.read.value.find(
-                          (document) => document.name === name,
-                        )
-                      : undefined;
-                  if (document) staging.name(document);
-                }}
-                onRemove={
-                  documents.remove
-                    ? (name) => void removeDocument(name)
-                    : undefined
-                }
-              />
-            ) : documents.read.kind === "failed" ? (
-              <SectionFailure
-                words={t("desktop.agent.mention_failed")}
-                onRetry={documents.refresh}
-              />
-            ) : (
-              <ReadState read={documents.read} icon="page" />
-            )}
-          </div>
+          <ConversationDocuments
+            documents={documents}
+            reader={reader}
+            conversationId={conversationId}
+            session={session}
+            locale={locale}
+            named={staging
+              .namedFor(conversationId)
+              .map((document) => document.name)}
+            onClose={() => change({ panel: "none" })}
+            onAddFiles={attach ? () => void attach() : undefined}
+            onName={(name) => {
+              const document =
+                documents.read.kind === "ready"
+                  ? documents.read.value.find(
+                      (document) => document.name === name,
+                    )
+                  : undefined;
+              if (document) staging.name(document);
+            }}
+            onRemove={
+              documents.remove ? (name) => void removeDocument(name) : undefined
+            }
+          />
         ) : historyOpen ? (
           groups ? (
             <div className="flex min-h-0 flex-1 flex-col">
@@ -1554,65 +864,15 @@ export function AgentColumn({
                 {t("desktop.agent.aeat_setup_check")}
               </Button>
             )}
-          {live.approvals.map((approval) => {
-            const prompt = (
-              <ApprovalPrompt
-                key={approval.request_id}
-                source={approval.source}
-                toolCall={approval.tool_call}
-                toolServer={approval.tool_server}
-                toolKind={approval.tool_kind}
-                description={approval.description}
-                options={approval.options}
-                onDecide={
-                  answering
-                    ? (optionId) => void decide(approval, optionId)
-                    : undefined
-                }
-              />
-            );
-            if (
-              !session ||
-              approval.tool_call !== "read_attachment" ||
-              approval.tool_server
-            )
-              return prompt;
-            const refuse = approval.options.find(
-              (option) => option.kind === "reject_once",
-            )?.option_id;
-            return (
-              <AttachmentReadPrompt
-                key={approval.request_id}
-                session={session}
-                approval={approval}
-                disabled={!answering}
-                onSettled={() => live.resolved(approval.request_id)}
-                onDecline={
-                  answering && refuse
-                    ? () => void decide(approval, refuse)
-                    : undefined
-                }
-                plain={prompt}
-              />
-            );
-          })}
-          {questionnaire && (
-            <QuestionsPrompt
-              key={questionnaire.request_id}
-              questions={questionnaire.questions}
-              onAnswer={
-                answering
-                  ? (answers) =>
-                      void answer(questionnaire, { kind: "answers", answers })
-                  : undefined
-              }
-              onDecline={
-                answering
-                  ? () => void answer(questionnaire, { kind: "decline" })
-                  : undefined
-              }
-            />
-          )}
+          <RunPrompts
+            session={session}
+            approvals={live.approvals}
+            questionnaire={questionnaire}
+            answering={!!answering}
+            onDecide={(approval, optionId) => void decide(approval, optionId)}
+            onAnswer={(asked, reply) => void answer(asked, reply)}
+            onResolved={live.resolved}
+          />
           {conversationId !== null && (
             <ReplyFacts
               state={newest ? runStateWords(t, newest.status) : null}
@@ -1625,46 +885,22 @@ export function AgentColumn({
               usage={facts.usage}
             />
           )}
-          {view.sendFailure !== null ? (
-            <p role="alert" className="flex items-start gap-2 text-sm">
-              <Icon name="alert" className="mt-0.5 text-destructive" />
-              <span>{refusalWords(t, view.sendFailure)}</span>
-            </p>
-          ) : (
-            notice && (
-              <p
-                role="status"
-                className="flex items-start gap-2 text-sm text-muted-foreground"
-              >
-                <Icon name="info" className="mt-0.5" />
-                <span className="grid justify-items-start gap-1.5">
-                  {notice}
-                  {status?.state === "refused" &&
-                    !unsupported &&
-                    session?.retry && (
-                      <Button
-                        variant="outline"
-                        size="xs"
-                        onClick={() => {
-                          void session
-                            .retry?.()
-                            .catch((error: unknown) =>
-                              change({ sendFailure: failureCode(error) }),
-                            );
-                        }}
-                      >
-                        {t("desktop.agent.retry")}
-                      </Button>
-                    )}
-                  {noProvider && openSettings && (
-                    <Button variant="outline" size="xs" onClick={openSettings}>
-                      {t("desktop.agent.set_up_providers")}
-                    </Button>
-                  )}
-                </span>
-              </p>
-            )
-          )}
+          <ColumnNotice
+            failure={view.sendFailure}
+            notice={notice}
+            onRetry={
+              status?.state === "refused" && !unsupported && session?.retry
+                ? () => {
+                    void session
+                      .retry?.()
+                      .catch((error: unknown) =>
+                        change({ sendFailure: failureCode(error) }),
+                      );
+                  }
+                : undefined
+            }
+            onSetUpProviders={noProvider ? openSettings : undefined}
+          />
           <Composer
             key={view.draft.key}
             defaultDraft={view.draft.text}
@@ -1742,93 +978,5 @@ export function AgentColumn({
         locale={locale}
       />
     </div>
-  );
-}
-
-/** What the agent served of the conversation's newest reply beside its words:
- * a run state the transcript draws no indicator for, the messages queued behind
- * it, what the replies ran with and the tokens they used. Each is said only
- * where the agent served it. */
-function ReplyFacts({
-  state,
-  queued,
-  ranWith,
-  usage,
-}: {
-  state: string | null;
-  queued: string | null;
-  ranWith: string | null;
-  usage: string | null;
-}) {
-  return (
-    <>
-      {[state, queued].map(
-        (words) =>
-          words && (
-            <p
-              key={words}
-              role="status"
-              className="agent-reply-state flex items-start gap-2 text-sm text-muted-foreground"
-            >
-              <Icon name="info" className="mt-0.5" />
-              <span>{words}</span>
-            </p>
-          ),
-      )}
-      {[ranWith, usage].map(
-        (words) =>
-          words && (
-            <p
-              key={words}
-              className="agent-reply-facts text-xs text-muted-foreground"
-            >
-              {words}
-            </p>
-          ),
-      )}
-    </>
-  );
-}
-
-/** A settings section that could not be read, and the way to read it again. */
-function SectionFailure({
-  words,
-  onRetry,
-}: {
-  words: string;
-  onRetry: () => void;
-}) {
-  const t = useStrings();
-  return (
-    <div role="alert" className="grid justify-items-start gap-2">
-      <p className="text-sm text-foreground">{words}</p>
-      <Button variant="outline" size="sm" onClick={onRetry}>
-        {t("desktop.providers.refresh")}
-      </Button>
-    </div>
-  );
-}
-
-/** A read that has no answer to show: not offered, on its way, or refused.
- * None of them is shown as empty. */
-function ReadState({
-  read,
-  icon,
-}: {
-  read: AgentRead<unknown>;
-  icon: IconName;
-}) {
-  const t = useStrings();
-  if (read.kind === "loading") return <EmptyState role="status" busy />;
-  return (
-    <EmptyState
-      role={read.kind === "failed" ? "alert" : "status"}
-      icon={read.kind === "failed" ? "alert" : icon}
-      heading={
-        read.kind === "failed"
-          ? t("desktop.agent.read_failed")
-          : t("desktop.agent.unavailable")
-      }
-    />
   );
 }

@@ -71,7 +71,7 @@ _ACCEPTED_PERIOD_PROBE_YEAR = FOUR_DIGIT_YEAR_FIRST
 def _ledger_period_accepted_tokens() -> tuple[str, ...]:
     """Return the span-shaped registry tokens the ledger ``--period`` accepts.
 
-    Derived from the same rule :func:`_canonical_period` applies: a
+    Derived from the same rule :func:`period_parsing_canonical_period` applies: a
     :class:`StandardPeriodCode` member the ledger normalises
     (:func:`_ledger_aeat_token`) AND whose ``(year, token)`` :class:`Period`
     carries a calendar date span. The instalment claves (``1P``-``4P``) and the
@@ -172,7 +172,7 @@ def optional_canonical_period(period: str | None, *, year: int | None) -> Period
     Returns ``None`` when no ``--period`` is supplied (the command scopes the
     whole ledger). When ``--period`` is supplied it requires ``--year`` (the
     AEAT token carries no year of its own) and converts the pair through
-    :func:`_canonical_period`; a ``--period``
+    :func:`period_parsing_canonical_period`; a ``--period``
     with no ``--year`` refuses with an instructive message naming the
     ``--year`` argument.
     """

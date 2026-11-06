@@ -7,7 +7,7 @@ import type {
   InvoiceKind,
   InvoicePreviewFinding,
   InvoicePreviewRateSlot,
-} from "../../../shell/ledger";
+} from "../../../shell/ledgerInvoiceOperations";
 import type { Translate } from "../../../shell/strings";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatDecimal } from "../../../shared/numbers";

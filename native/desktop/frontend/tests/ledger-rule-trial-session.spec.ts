@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { LedgerRuleTrialResult } from "../src/shell/ledger";
+import type { LedgerRuleTrialResult } from "../src/shell/ledgerMovementOperations";
 import {
   RuleTrialSession,
   type RuleTrial,

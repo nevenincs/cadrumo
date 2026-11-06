@@ -534,7 +534,7 @@ def _emit_abort() -> NoReturn:
     """Render the interactive abort the way Typer's standalone main would.
 
     Reads ``typer.core.HAS_RICH`` live for the same reason
-    :func:`_render_click_exception_text` does — see its docstring.
+    :func:`render_click_exception_text` does — see its docstring.
     """
     import typer.core as _typer_core
 
