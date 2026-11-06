@@ -776,7 +776,7 @@ def _build_amendment_draft_revision(
     not inherit the baseline's.
 
     ``detail_rows`` arrives already resolved, from
-    :func:`_require_amendment_detail_rows`. Neither
+    :func:`require_amendment_detail_rows`. Neither
     :func:`_verified_amendment_revision` nor :func:`.filing_revision_persistence.filed_calculation_revision`
     recomputes anything — both are pure state transitions — so whatever is set
     here is what an amended M347, M349, M184 or M232 declares. Defaulting it
@@ -793,7 +793,7 @@ def _build_amendment_draft_revision(
     overwrite whatever already sat at that address.
 
     ``ledger_filing_snapshot`` and ``ledger_filing_evidence`` are absent on the
-    DRAFT and supplied by :func:`_amendment_ledger_anchor` at the verify
+    DRAFT and supplied by :func:`amendment_ledger_anchor` at the verify
     transition, which is where the verify path captures them too.
     """
     return CalculationRevision.model_validate(

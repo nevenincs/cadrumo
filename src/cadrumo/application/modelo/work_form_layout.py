@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .work_form_context import WorkFormContext
 
 from ...core.casilla_id import CasillaId
+from ...core.filing_producer_key import FilingProducerKey
 from ...domain.calculations.registry.export_semantics import ExportDraftAttribute
 from ...domain.calculations.registry.form_context import form_context_choice, resolve_form_context_field
 from ...domain.calculations.registry.form_projection_fields import resolve_form_projection_fields
@@ -27,7 +29,6 @@ from ...domain.calculations.registry.schema_form_layouts import (
     FormRepeatingGroupBlock,
     FormSectionDefinition,
 )
-from ..filing.producer_snapshot import FilingProducerSnapshot
 from .work_form_context_values import form_context_value
 from .work_form_counts import count_work_form_fields
 from .work_form_errors import ModeloWorkFormLayoutError
@@ -48,6 +49,7 @@ from .work_form_models import (
     ModeloFormOrigin,
     ModeloFormPage,
     ModeloFormRepeatingBlock,
+    ModeloFormScalar,
     ModeloFormSection,
     ModeloFormStanding,
     ModeloFormText,
@@ -76,12 +78,14 @@ class LayoutWalker:
         layout: FormLayoutDefinition,
         context: WorkFormContext,
         *,
-        producer_snapshot: FilingProducerSnapshot | None = None,
+        producer_values: Mapping[FilingProducerKey, ModeloFormScalar] | None = None,
+        profile_binding_values: Mapping[BindingId, ModeloFormScalar] | None = None,
     ) -> None:
         """Prepare placement indexes and an empty set of casillas encountered on pages."""
         self.layout = layout
         self.context = context
-        self.producer_snapshot = producer_snapshot
+        self.producer_values = producer_values
+        self.profile_binding_values = profile_binding_values
         self.placements: dict[str, FormPlacementDefinition] = {item.casilla_id: item for item in layout.placements}
         self.aliases: dict[str, tuple[str, ...]] = {
             item.casilla_id: tuple(alias.official_ref or alias.page_id for alias in item.aliases)
@@ -210,12 +214,12 @@ class LayoutWalker:
         owner = resolve_form_context_field(self.context.snapshot.revision, block)
         label = localized_heading(block.heading_key, block.official_heading, "Dato del formulario", language)
         value = (
-            project_binding_field(owner.binding, self.context).value
+            self._binding_context_value(owner.binding)
             if owner.binding is not None
             else form_context_value(
                 self.context.snapshot,
                 block,
-                producer_snapshot=self.producer_snapshot,
+                producer_values=self.producer_values,
                 revision=self.context.revision,
             )
         )
@@ -236,6 +240,17 @@ class LayoutWalker:
             value=value,
             value_text=context_value_text(value, language, period=period if shows_period else None),
         )
+
+    def _binding_context_value(self, binding_id: BindingId) -> ModeloFormScalar:
+        """Keep every saved answer; otherwise use the caller's admitted profile context."""
+        revision = self.context.revision
+        if (
+            (revision is None or binding_id not in revision.binding_overrides)
+            and self.profile_binding_values is not None
+            and binding_id in self.profile_binding_values
+        ):
+            return self.profile_binding_values[binding_id]
+        return project_binding_field(binding_id, self.context).value
 
     def _field_block(self, block: FormFieldBlock) -> ModeloFormBlock:
         if block.casilla_id is not None and block.casilla_id in self.seen:

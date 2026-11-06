@@ -31,7 +31,7 @@ from ...aggregation.tests.ledger_source_mesh_support import (
 )
 from ...aggregation.tests.test_modelo_bindings_asset_disposal import disposed_asset_history
 from ...ledger.stale_filing_query import read_stale_ledger_filings
-from ..calculation_bucket_actions import source_provenance_refs
+from ..calculation_resolution import calculation_source_provenance_refs
 from ..filed_register_reader import filed_register_reader
 from .empty_borrador_revision_support import empty_borrador_revision
 
@@ -67,7 +67,7 @@ def _filed(history: ActivityAssetHistory, *, state: CalculationRevisionState) ->
     """Calculate through the real resolver and seal what its provenance says."""
     snapshot = published_snapshot("100", filing_year=2025, period="0A")
     work_unit = _work_unit(snapshot.revision.id)
-    provenance = source_provenance_refs(resolve_m100(history))
+    provenance = calculation_source_provenance_refs(resolve_m100(history).provenance)
     revision = empty_borrador_revision(work_unit, snapshot.snapshot_ref, provenance, at=_AT)
     return work_unit, revision.model_copy(update={"state": state})
 

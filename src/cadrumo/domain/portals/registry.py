@@ -3,7 +3,7 @@
 Imports every ``_entries/portal_*.py`` module, collects its module-level
 ``ENTRY`` object, and freezes the result as the public
 :data:`PORTAL_REGISTRY` mapping. Structural invariants are enforced at
-import time via :func:`_finalise_registry`; any violation raises
+import time via :func:`finalise_registry`; any violation raises
 :class:`cadrumo.domain.portals.errors.PortalIntegrityError` and aborts package
 import.
 """

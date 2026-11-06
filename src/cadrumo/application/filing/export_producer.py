@@ -28,9 +28,10 @@ from ...domain.modelos.calculation_revision_m303_evidence import (
     M303InsolvencyFilingSubtype,
 )
 from ..aggregation.m303_arrivals import M303ProrrataTransitionArrival
+from . import producer_ownership
 from .export_producer_m200_account import m200_account_values
 from .export_producer_m360 import M360_PRODUCER_KEYS, m360_producer_values
-from .producer_ownership import filing_producer_ownership
+from .identity_contact_producer import identity_contact_producer_values
 from .producer_snapshot import (
     AmendmentEvidence,
     ChargeAccountSelection,
@@ -949,30 +950,16 @@ def _shared_filing_producer_values(
     m303_filing: M303FilingLexicals,
     m303_motive: dict[FilingProducerKey, bool | None],
 ) -> dict[FilingProducerKey, object]:
-    identity = snapshot.taxpayer_identity
     values: dict[FilingProducerKey, object] = {
+        **identity_contact_producer_values(
+            taxpayer_tax_id=snapshot.taxpayer_tax_id,
+            identity=snapshot.taxpayer_identity,
+            contact=snapshot.declaration_contact,
+        ),
         FilingProducerKey.PRESENTER_TAX_ID: snapshot.presenter.tax_id,
         FilingProducerKey.FILING_RESULT_DISPOSITION: (
             None if snapshot.elections.result_disposition is None else snapshot.elections.result_disposition.value
         ),
-        FilingProducerKey.TAXPAYER_TAX_ID: snapshot.taxpayer_tax_id,
-        FilingProducerKey.TAXPAYER_LEGAL_NAME: identity.legal_name,
-        FilingProducerKey.TAXPAYER_GIVEN_NAME: identity.given_name,
-        FilingProducerKey.TAXPAYER_SURNAMES: identity.surnames,
-        FilingProducerKey.TAXPAYER_FULL_NAME: identity.full_name,
-        # "Apellidos o Razon Social": the two are mutually exclusive by
-        # construction -- a natural person carries surnames and no legal_name,
-        # an entity carries legal_name and no surnames -- so this resolves to
-        # whichever the filer actually has, and stays absent only when both are.
-        FilingProducerKey.TAXPAYER_SURNAMES_OR_LEGAL_NAME: identity.surnames or identity.legal_name,
-        # Read from the declaration's own contact fact, never from the taxpayer
-        # or the presenter: under a gestor the persona con quien relacionarse is
-        # routinely neither, and substituting either would name the wrong person
-        # in AEAT's informativa header.
-        FilingProducerKey.CONTACT_PERSON_PHONE: snapshot.declaration_contact.phone,
-        FilingProducerKey.CONTACT_PERSON_NAME: snapshot.declaration_contact.full_name,
-        FilingProducerKey.CONTACT_PERSON_SECONDARY_PHONE: snapshot.declaration_contact.secondary_phone,
-        FilingProducerKey.CONTACT_PERSON_EMAIL: snapshot.declaration_contact.email,
         **_amendment_producer_values(snapshot.amendment_evidence, m303_motive),
         FilingProducerKey.SELECTED_ACCOUNT_IBAN: account.iban,
         FilingProducerKey.SELECTED_ACCOUNT_SWIFT_BIC: account.swift_bic,
@@ -1054,7 +1041,7 @@ def _model_specific_producer_values(snapshot: FilingProducerSnapshot) -> dict[Fi
 def _validate_shared_producer_values(values: dict[FilingProducerKey, object]) -> None:
     shared_owned = {
         key
-        for key, owner in filing_producer_ownership(
+        for key, owner in producer_ownership.filing_producer_ownership(
             shared_snapshot_keys=SHARED_SNAPSHOT_PRODUCER_KEYS,
         ).items()
         if owner == "shared_snapshot"

@@ -163,11 +163,3 @@ export type ModeloExportRequest = {
  */
 export type PaymentInstalmentElection =
   "single" | "two_instalments_second_debited" | "two_instalments_second_paid";
-
-/** The `modelo.export` definitions' share of `ModeloContracts`. */
-export type ModeloExportContracts = {
-  "modelo.export": {
-    request: ModeloExportRequest;
-    result: ModeloExportPublicResultV3;
-  };
-};

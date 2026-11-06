@@ -136,19 +136,3 @@ export type ModeloTypedBindingValue = {
   channel: BindingValueChannel;
   value: string;
 };
-
-/** The `modelo.bindings` definitions' share of `ModeloContracts`. */
-export type ModeloBindingsContracts = {
-  "modelo.bindings.list": {
-    request: ModeloBindingsListRequest;
-    result: ModeloBindingsListProjection;
-  };
-  "modelo.bindings.resolve": {
-    request: ModeloBindingsResolveRequest;
-    result: ModeloBindingsResolveProjection;
-  };
-  "modelo.bindings.resolve.typed": {
-    request: ModeloBindingsResolveRequest;
-    result: ModeloBindingsResolveTypedProjection;
-  };
-};

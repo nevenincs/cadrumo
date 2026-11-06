@@ -15,7 +15,7 @@ printed total) a ``totals_not_reconciled`` advisory discloses it so an
 identity-only ``matches`` is never a silent false green.
 
 For a filed declaración, the same header comparison runs, and — for the
-modelos enrolled in :data:`forms_for_role(_DECLARATION_RECONCILE_ROLE)` — every
+modelos enrolled in :data:`forms_for_role(DECLARATION_RECONCILE_ROLE)` — every
 casilla the registry's verification policy reconciles is compared, one by one,
 against the persisted revision's ``casilla_values`` via
 :func:`application.modelo.reconcile_casilla.detect_casilla_divergences`.
@@ -201,7 +201,7 @@ class ModeloReconciliationCommand(BaseModel):
     ``source_path`` points to the operator-supplied evidence file and
     ``source_kind`` records how that file must be parsed. Justificante PDFs are
     supported for every modelo; declaration PDFs are supported (casilla-level)
-    only for modelos under :data:`_DECLARATION_RECONCILE_ROLE` — an
+    only for modelos under :data:`DECLARATION_RECONCILE_ROLE` — an
     unenrolled modelo is refused before parsing.
     """
 
@@ -324,7 +324,7 @@ def _require_declaration_enrolled_modelo(
     """Refuse an unenrolled modelo before spending effort parsing its PDF.
 
     Declaración parsing (template detection, registry-profile extraction) is
-    real work; a modelo outside :data:`_DECLARATION_RECONCILE_ROLE`
+    real work; a modelo outside :data:`DECLARATION_RECONCILE_ROLE`
     is refused immediately from the work unit's own declared modelo, before any
     file is opened, rather than only after a parse attempt happens to fail for
     an unrelated reason.
@@ -364,7 +364,7 @@ def prepare_modelo_reconcile(
     ``reconciliation_total_casilla_ids``.
 
     For a declaración, consumes the parser port's structural observation and,
-    for modelos enrolled in :data:`forms_for_role(_DECLARATION_RECONCILE_ROLE)`,
+    for modelos enrolled in :data:`forms_for_role(DECLARATION_RECONCILE_ROLE)`,
     compares every registry-reconciled casilla against the persisted revision's
     ``casilla_values``, surfacing each divergence as a typed ``casilla`` diff. A
     modelo outside that set raises

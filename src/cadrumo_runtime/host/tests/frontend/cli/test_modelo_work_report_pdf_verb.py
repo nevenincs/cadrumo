@@ -153,6 +153,9 @@ def _report_session(
             "activities.description": "consulting",
             "censo.activity_start_date": "2026-01-01",
             "withholding.colegio_concertado": "false",
+            # The Modelo 111 report seeds the retención withheld from a professional's invoice,
+            # and Modelo 111 applies only to a payer of income subject to retención.
+            "withholding.pays_professionals_with_retencion": "true",
         }
         facts = complete_profile_facts(
             operation.profile_schema(),

@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_exports import ExportRecordDefinition
-from cadrumo.domain.calculations.registry.schema_form_layouts import FormDesignSource
+from cadrumo.domain.calculations.registry.schema_form_layouts import FormContextFieldBlock, FormDesignSource
 
 
 @dataclass(slots=True)
@@ -21,6 +21,7 @@ class Position:
     records: dict[str, ExportRecordDefinition] = field(default_factory=dict)
     casilla_ids: list[str] = field(default_factory=list)
     binding_ids: list[str] = field(default_factory=list)
+    context_fields: list[FormContextFieldBlock] = field(default_factory=list)
     literal: str | None = None
     literal_decimals: int | None = None
     xml_container: tuple[str, ...] | None = None
@@ -28,11 +29,12 @@ class Position:
 
 @dataclass(frozen=True, slots=True)
 class Item:
-    """One thing a section shows: a casilla, a binding input, or a design constant."""
+    """One thing a section shows: a casilla, binding input, read-only context, or design constant."""
 
     position: int
     casilla_id: str | None = None
     binding_id: str | None = None
+    context_field: FormContextFieldBlock | None = None
     literal: str | None = None
     literal_decimals: int | None = None
 

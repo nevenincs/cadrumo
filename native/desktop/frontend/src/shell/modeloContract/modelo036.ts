@@ -93,13 +93,3 @@ export type M036RecordRequest = {
   sede_justificante?: string | null;
   note?: string | null;
 };
-
-/** The `modelo.036` definitions' share of `ModeloContracts`. */
-export type Modelo036Contracts = {
-  "modelo.036.query": { request: M036ReadRequest; result: M036QueryProjection };
-  "modelo.036.read": { request: M036ReadRequest; result: M036ReadProjection };
-  "modelo.036.record": {
-    request: M036RecordRequest;
-    result: M036RecordProjection;
-  };
-};

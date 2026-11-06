@@ -59,11 +59,3 @@ export type ModeloRequiresRequest = {
   period: PublicPeriod;
   language?: OutputLanguage;
 };
-
-/** The `modelo.requires` definitions' share of `ModeloContracts`. */
-export type ModeloRequiresContracts = {
-  "modelo.requires": {
-    request: ModeloRequiresRequest;
-    result: ModeloRequiresProjection;
-  };
-};

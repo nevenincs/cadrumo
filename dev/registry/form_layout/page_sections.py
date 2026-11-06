@@ -12,6 +12,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormBlockDefinition,
     FormCell,
     FormCellKind,
+    FormContextFieldBlock,
     FormFieldBlock,
     FormGridBlock,
     FormGridColumn,
@@ -46,6 +47,7 @@ def _items_for(build: Build, index: int, primary: Mapping[str, int]) -> list[Ite
         for binding_id in position.binding_ids
         if build.binding_primary.get(binding_id) == index
     )
+    items.extend(Item(position=index, context_field=context) for context in position.context_fields)
     if not items and position.literal is not None and position.box is not None:
         items.append(Item(position=index, literal=position.literal, literal_decimals=position.literal_decimals))
     return items
@@ -75,7 +77,7 @@ def row_drafts(build: Build, items: Sequence[Item]) -> list[RowDraft | Item]:
     for item in items:
         position = build.positions[item.position]
         path = description_path(position.description) if position.xml_container is None else description_path(None)
-        if path.stem is None or path.column is None:
+        if item.context_field is not None or path.stem is None or path.column is None:
             current = None
             out.append(item)
             continue
@@ -119,7 +121,9 @@ def _cell(item: Item) -> FormCell:
     )
 
 
-def _field_block(block_id: str, item: Item) -> FormFieldBlock | None:
+def _field_block(block_id: str, item: Item) -> FormFieldBlock | FormContextFieldBlock | None:
+    if item.context_field is not None:
+        return item.context_field.model_copy(update={"id": block_id})
     if item.casilla_id is not None:
         return FormFieldBlock(
             id=block_id,

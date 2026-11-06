@@ -123,11 +123,3 @@ export type ProjectionOverride = {
   key: string;
   value: string;
 };
-
-/** The `modelo.project` definitions' share of `ModeloContracts`. */
-export type ModeloProjectContracts = {
-  "modelo.project": {
-    request: ModeloProjectOperationRequest;
-    result: ModeloProjectOperationProjection;
-  };
-};

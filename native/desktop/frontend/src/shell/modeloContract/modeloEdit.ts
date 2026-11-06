@@ -399,23 +399,3 @@ export type ModeloFormRebaseEntryV1 = {
  * What the declaration's move did to one held change.
  */
 export type ModeloFormRebaseOutcome = "kept" | "changed" | "dropped";
-
-/** The `modelo.edit` definitions' share of `ModeloContracts`. */
-export type ModeloEditContracts = {
-  "modelo.edit.apply": {
-    request: ModeloEditApplyOperationRequestV2;
-    result: ModeloEditApplyPublicResultV1;
-  };
-  "modelo.edit.apply_prerequisite": {
-    request: ModeloEditApplyPrerequisiteRequest;
-    result: ModeloEditApplyPrerequisiteProjectionV1;
-  };
-  "modelo.edit.preflight": {
-    request: ModeloEditPreflightRequestV2;
-    result: ModeloEditPreflightProjectionV1;
-  };
-  "modelo.edit.renew": {
-    request: ModeloEditRenewRequest;
-    result: ModeloEditRenewalProjectionV1;
-  };
-};

@@ -7,7 +7,7 @@ after a command has established that no explicit channel was selected. No
 secret value is accepted as an ``argv`` option, so passphrases and recovery
 codes do not appear in the process table or shell history.
 
-Both machine channels read at most :data:`_MAX_SECRETS_BYTES` and validate the
+Both machine channels read at most :data:`MAX_SECRETS_BYTES` and validate the
 parsed object against a strict ``extra="forbid"`` pydantic model whose secret
 fields are :class:`~pydantic.SecretStr`, so a missing/extra field refuses and the
 values never render in a repr. Parsing rejects a repeated object key at any
@@ -205,7 +205,7 @@ def _read_secrets_stdin[SecretsModelT: BaseModel](
 
     The payload must be a single JSON object carrying exactly the fields ``model``
     declares (``extra="forbid"``). A payload larger than
-    :data:`_MAX_SECRETS_BYTES`, invalid UTF-8, non-object JSON, malformed
+    :data:`MAX_SECRETS_BYTES`, invalid UTF-8, non-object JSON, malformed
     JSON, a repeated object key at any nesting depth (see
     :func:`~cadrumo.core.hashing.reject_duplicate_json_members`), or a missing/unexpected field
     refuses with a localised :class:`CliRefusedBoundaryError`; the raw bytes
@@ -540,7 +540,7 @@ def prompt_secret_no_echo(prompt: str) -> str:
     echoed: when echo suppression cannot be guaranteed this refuses
     (``REFUSED``, exit 2) rather than degrading to a visible read, and when the
     channel is not a real console it refuses rather than reaching a prompt that
-    would block forever (see :func:`_stdin_is_a_real_console`).
+    would block forever (see :func:`stdin_is_a_real_console`).
 
     :func:`getpass.getpass` silently falls back to an *echoing* read
     (``fallback_getpass``) whenever it cannot control the terminal — on Windows

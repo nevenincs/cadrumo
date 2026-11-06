@@ -980,6 +980,83 @@ def test_calendar_warnings_include_registry_deadline_window_predicates(
     assert "130" in warnings_by_code["art109_activity_income_withholding_ge_70pct"].affected_modelos
 
 
+def _has_employees_warning_through_record_projection(
+    *,
+    authority_operation: PinnedAuthorityOperation,
+    has_employees: bool | None,
+) -> bool:
+    """Run the real stored-record projection the TUI/workbench pipeline uses.
+
+    ``cadrumo.application.workbench_generation_reader`` projects the stored
+    :class:`UserProfileRecord` through
+    :func:`~cadrumo.application.user_profile.projections.record_to_path_values`
+    before calling :func:`build_overview_calendar`, so production
+    ``raw_values`` there is keyed by the canonical dotted schema path
+    (``"withholding.has_employees"``), not the bare registry selector
+    (``"has_employees"``) the gating map's code names. Driving the real
+    fact, record, and projection here - instead of a hand-built
+    selector-keyed dict - reproduces whatever that real pipeline does.
+    """
+    from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+    from ...user_profile.projections import record_to_path_values
+
+    facts = [
+        UserProfileFact(path="identity.tax_id", value="X0001500M"),
+        UserProfileFact(path="iva.regime", value="GENERAL"),
+        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+        UserProfileFact(path="iva.m303_regime_composition", value="general"),
+        UserProfileFact(path="iva.redeme_enrolled", value=False),
+        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+    ]
+    if has_employees is not None:
+        facts.append(UserProfileFact(path="withholding.has_employees", value=has_employees))
+    record = create_user_profile_record(
+        context=authority_operation.profile_create_context(),
+        profile_id=BUCKET_ID,
+        facts=tuple(facts),
+        setup_state=ProfileSetupState.COMPLETE,
+    )
+    raw_values = record_to_path_values(record)
+    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
+    cal = build_overview_calendar(
+        calendar_profile(),
+        rng,
+        operation=authority_operation,
+        today=date(2026, 4, 1),
+        raw_values=raw_values,
+    )
+    return any(warning.code == "has_employees" for warning in cal.warnings)
+
+
+def test_calendar_completeness_matches_dotted_schema_path_raw_values(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """A fact stored and projected by schema path must still clear its warning.
+
+    Before this was fixed, ``build_completeness_and_warnings`` only ever
+    looked ``raw_values`` up by the bare registry selector
+    (``"has_employees"``), so a caller supplying the canonical dotted schema
+    path instead - exactly what
+    :func:`~cadrumo.application.user_profile.projections.record_to_path_values`
+    produces - always missed, and the "unset" warning fired regardless of
+    the stored answer.
+    """
+    assert (
+        _has_employees_warning_through_record_projection(authority_operation=authority_operation, has_employees=None)
+        is True
+    )
+    assert (
+        _has_employees_warning_through_record_projection(authority_operation=authority_operation, has_employees=True)
+        is False
+    )
+    assert (
+        _has_employees_warning_through_record_projection(authority_operation=authority_operation, has_employees=False)
+        is False
+    )
+
+
 # 2026-01-31 is a Saturday: the annual 2025 campaigns that close on it move to
 # Monday 2026-02-02, inside a February range that the nominal date misses.
 _SATURDAY_CLOSE = date(2026, 1, 31)
