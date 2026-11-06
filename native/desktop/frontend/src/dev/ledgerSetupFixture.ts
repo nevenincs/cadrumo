@@ -50,6 +50,7 @@ import { inventoryOperations } from "./ledgerInventoryFixture";
 import { prorrataOperations } from "./ledgerProrrataFixture";
 import {
   SetupKeptInPart,
+  SetupRequestUnrecorded,
   SetupStopped,
   fromKeys,
   invalid,
@@ -522,6 +523,9 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
     now,
     hex64,
     invalid,
+    unrecorded: (): never => {
+      throw new SetupRequestUnrecorded();
+    },
     stop: (reason, detail) => {
       throw new SetupStopped(reason, detail);
     },

@@ -1189,7 +1189,7 @@ _test-registry-calculations-parallel:
 # they read first. A current family is left unchanged.
 [private]
 _test-registry-seed:
-    @uv run --no-sync python -m dev.fixture_projections seed assets-served-words desktop-year-authority
+    @uv run --no-sync python -m dev.fixture_projections seed assets-served-words desktop-year-authority assets-register
 
 [private]
 _test-registry-conformance: _test-registry-seed

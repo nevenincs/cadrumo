@@ -25,13 +25,13 @@ import {
   createRequest,
   type RevisionBase,
 } from "../../src/components/ledger/assets/assetRevision";
+import { SERVED_METHOD_FACTS } from "../../src/dev/assetsFixtureBase";
 import {
-  SERVED_ACTIVITIES,
-  SERVED_METHOD_FACTS,
-  SERVED_SHAPES,
-  TODAY,
-} from "../../src/dev/assetsFixture";
-import { TABLE_GROUPS } from "../../src/dev/assetsSeed";
+  ACQUISITION_SHAPES,
+  DECLARED_ACTIVITIES,
+  SCENARIO_TODAY,
+  TABLE_GROUPS,
+} from "../../src/dev/assetsRegister";
 import { servedEditionOf } from "../../src/dev/servedYearAuthority";
 import type {
   AcquisitionCandidate,
@@ -84,41 +84,20 @@ type Scenario =
 type Input = {
   served: Served;
   limits: LedgerEntryLimits;
+  /** The payments the ledger offers, as it accounts for them. A draft picks one
+   * by its identifier, the way the window picks from what the register serves;
+   * a draft that names none takes the first. */
+  candidates: AcquisitionCandidate[];
   scenarios: Scenario[];
 };
 
+/** What one run was given beyond its scenarios. */
+type Given = { served: Served; candidates: AcquisitionCandidate[] };
+
 const hex = (seed: string) => seed.repeat(64).slice(0, 64);
 
-/** The purchase the person picks: the ledger's own account of it. */
-const CANDIDATE: AcquisitionCandidate = {
-  transaction_id: hex("a"),
-  booked_date: "2026-05-06",
-  description: "Compra",
-  amount: { decimal: "1089.00" },
-  currency: "EUR",
-  paid_in_euro: { decimal: "1089.00" },
-  taxable_base: { decimal: "900.00" },
-  iva_amount: { decimal: "189.00" },
-  non_deductible_iva_state: "known",
-  non_deductible_iva_state_key:
-    "ledger.actividad_asset.non_deductible_iva_state.known",
-  non_deductible_iva: { decimal: "0.00" },
-  invoice_evidence_id: hex("b"),
-  evidence_fingerprint: hex("c"),
-};
-
-/** The later payment the person picks for an element bought outside the
- * ledger: the ledger's own account of it. */
-const FURTHER: AcquisitionCandidate = {
-  ...CANDIDATE,
-  transaction_id: hex("e"),
-  description: "Segundo plazo",
-  invoice_evidence_id: null,
-  evidence_fingerprint: null,
-};
-
 /** The scenario's own year, read from its date. */
-const scenarioYear = Number(TODAY.slice(0, 4));
+const scenarioYear = Number(SCENARIO_TODAY.slice(0, 4));
 
 const optionsFor = (kind: string, served: Served): FormOptions => ({
   tax_year: scenarioYear,
@@ -142,7 +121,16 @@ const contextFor = (
   options,
 });
 
-function run(scenario: Scenario, served: Served) {
+/** The payment a draft picks, or the first on offer where it names none. */
+const pickedBy = (
+  candidates: AcquisitionCandidate[],
+  named: string | undefined,
+): AcquisitionCandidate | null =>
+  candidates.find((found) => found.transaction_id === named) ??
+  (named === undefined ? (candidates[0] ?? null) : null);
+
+function run(scenario: Scenario, given: Given) {
+  const { served, candidates } = given;
   if (scenario.kind === "forecast")
     return {
       id: scenario.id,
@@ -209,8 +197,8 @@ function run(scenario: Scenario, served: Served) {
     return {
       id: scenario.id,
       facts: SERVED_METHOD_FACTS,
-      shapes: SERVED_SHAPES,
-      activities: SERVED_ACTIVITIES,
+      shapes: ACQUISITION_SHAPES,
+      activities: DECLARED_ACTIVITIES,
     };
   if (scenario.kind === "baja")
     return {
@@ -228,11 +216,8 @@ function run(scenario: Scenario, served: Served) {
     const request = createRequest(stated.values, {
       assetId: hex("d"),
       regime: "normal",
-      candidate: CANDIDATE,
-      further:
-        scenario.draft[FURTHER_PURCHASE] === FURTHER.transaction_id
-          ? FURTHER
-          : null,
+      candidate: pickedBy(candidates, scenario.draft.acquisition),
+      further: pickedBy(candidates, scenario.draft[FURTHER_PURCHASE]),
       base: null,
       options,
     });
@@ -267,9 +252,11 @@ let input = "";
 process.stdin.setEncoding("utf8");
 process.stdin.on("data", (chunk) => (input += chunk));
 process.stdin.on("end", () => {
-  const { served, limits, scenarios } = JSON.parse(input) as Input;
+  const { served, limits, candidates, scenarios } = JSON.parse(input) as Input;
   holdLedgerLimits(limits);
   process.stdout.write(
-    JSON.stringify(scenarios.map((scenario) => run(scenario, served))),
+    JSON.stringify(
+      scenarios.map((scenario) => run(scenario, { served, candidates })),
+    ),
   );
 });

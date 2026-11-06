@@ -71,6 +71,13 @@ export const servedEditionYears = {
   last: Math.max(...recordedYears),
 };
 
+/** The tax years the envelope admits up to the last admitted one, oldest
+ * first: the years a filer can file for. */
+export const servedFilingYears: readonly number[] = recorded.asset_editions
+  .filter((row) => row.admitted && !row.beyond_last_admitted)
+  .map((row) => row.tax_year)
+  .sort((a, b) => a - b);
+
 /** Whether the recording holds an answer for this tax year. */
 export const recordsEditionFor = (taxYear: number): boolean =>
   years.has(taxYear);

@@ -70,6 +70,8 @@ export const reject = (
 };
 /** A request its registered contract would not decode. */
 export const invalid = () => reject("refused", { reason: "invalid" });
+/** A request the recordings behind the scenario hold no answer for. */
+export const unrecorded = () => reject("refused", { reason: "unrecorded" });
 
 export const text = (value: JsonValue | undefined) =>
   typeof value === "string" ? value : null;
