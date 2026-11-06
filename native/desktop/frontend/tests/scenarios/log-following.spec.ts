@@ -2,6 +2,8 @@ import { expect, test } from "@playwright/test";
 import { startFromDocs } from "../support/scenarioShell";
 import { openLogs, errorsHeld, overLog } from "../support/scenarioLogView";
 
+// Whether the log follows its newest record: scrolls, keys and the end of a busy log.
+
 test.beforeEach(async ({ page: target }) => {
   await startFromDocs(target);
 });

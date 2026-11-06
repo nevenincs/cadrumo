@@ -10,6 +10,8 @@ import {
   goToSection,
 } from "../support/userProfilePage";
 
+// How the profile page saves: external changes, conflicts, repeatable entries, refusals and uncertain saves.
+
 test("external changes refresh once, preserve drafts and block stale saves", async ({
   page,
 }) => {

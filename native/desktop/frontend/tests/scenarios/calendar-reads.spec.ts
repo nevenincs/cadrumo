@@ -12,6 +12,8 @@ import {
 import { calendarButton, messagesButton } from "../support/scenarioRail";
 import { calendarReads, FIXTURE_DAY } from "../support/scenarioCalendar";
 
+// When the filing calendar is read: on showing, after sign-out, past midnight, and when a read fails.
+
 test.beforeEach(async ({ page: target }) => {
   await startFromDocs(target);
 });

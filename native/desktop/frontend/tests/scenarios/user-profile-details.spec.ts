@@ -14,6 +14,8 @@ import {
   goToSection,
 } from "../support/userProfilePage";
 
+// The profile page's details: the Censo summary, search and sort, per-year details and opening them for edit.
+
 /** Opens the compact view's options and chooses one of them. */
 async function viewOption(page: Page, key: string) {
   await page

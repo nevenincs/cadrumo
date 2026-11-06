@@ -9,6 +9,8 @@ import {
   calls,
 } from "../support/scenarioShell";
 
+// The sign-in rules: one submission, no retry, sign-out and sign-in again.
+
 test.beforeEach(async ({ page: target }) => {
   await startFromDocs(target);
 });

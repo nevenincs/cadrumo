@@ -4,6 +4,8 @@ import { label } from "../support/strings";
 import { showTui } from "../support/tui";
 import { startFromDocs, open, tui } from "../support/scenarioShell";
 
+// The shell's terminal pane: session failure and restart, maximizing, keyboard focus and the rail's order.
+
 test.beforeEach(async ({ page: target }) => {
   await startFromDocs(target);
 });

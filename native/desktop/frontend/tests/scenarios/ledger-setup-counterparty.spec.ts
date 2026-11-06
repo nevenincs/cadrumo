@@ -9,6 +9,8 @@ import {
   area,
 } from "../support/ledgerSetup";
 
+// The Ledger page's Setup sections over the scenario host's made-up ledger: counterparty lookups, drafts, conflicts and updates, and the identity each reply belongs to.
+
 declare global {
   interface Window {
     __counterpartyReply?: (at: number) => void;

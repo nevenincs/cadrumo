@@ -6,6 +6,8 @@ import { startFromDocs, open } from "../support/scenarioShell";
 import { calendarButton } from "../support/scenarioRail";
 import { showCalendar, calendarReads } from "../support/scenarioCalendar";
 
+// The reader's place in the calendar's months and list, kept across layouts, returns and choices.
+
 test.beforeEach(async ({ page: target }) => {
   await startFromDocs(target);
 });

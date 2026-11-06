@@ -5,6 +5,8 @@ import { startFromDocs, open } from "../support/scenarioShell";
 import { calendarButton } from "../support/scenarioRail";
 import { calendarReads } from "../support/scenarioCalendar";
 
+// The filing calendar's look: pill colours, head height, forced system colours and crowded months.
+
 test.beforeEach(async ({ page: target }) => {
   await startFromDocs(target);
 });

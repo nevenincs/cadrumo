@@ -13,6 +13,8 @@ import {
 import { errorsHeld } from "../support/scenarioLogView";
 import { calendarButton } from "../support/scenarioRail";
 
+// Where the keyboard goes around the sign-in dialog: refusals, origins, admission and tui-unavailable.
+
 test.beforeEach(async ({ page: target }) => {
   await startFromDocs(target);
 });

@@ -9,6 +9,8 @@ import {
   FIXTURE_DAY,
 } from "../support/scenarioCalendar";
 
+// The calendar's months: filing windows across their days, week start, the list beside them and the legend.
+
 test.beforeEach(async ({ page: target }) => {
   await startFromDocs(target);
 });

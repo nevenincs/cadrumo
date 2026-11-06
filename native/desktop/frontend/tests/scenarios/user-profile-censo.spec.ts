@@ -3,6 +3,8 @@ import { label } from "../support/strings";
 import { profileStated } from "../support/profileFixture";
 import { open, band, row, save } from "../support/userProfilePage";
 
+// The profile page's Censo review: prerequisites, approval before save, uncertain starts and late readiness.
+
 test("Censo checks saved prerequisites and edits the missing identity", async ({
   page,
 }) => {
