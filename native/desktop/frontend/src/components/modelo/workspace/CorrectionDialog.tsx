@@ -23,12 +23,12 @@ import {
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { facts } from "../../../shell/compose";
+import type { FilingDeclarationKind } from "../../../shell/modeloContract/modelo";
+import type { M303RectificativaMotive } from "../../../shell/modeloContract/modeloWork";
 import type {
-  FilingDeclarationKind,
-  M303RectificativaMotive,
   ModeloAmendmentCorrectionContextV1,
   ModeloAmendmentCorrectionRowV1,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloWorkAmendmentContext";
 import { useStrings } from "../../../shell/strings";
 import { BoxNumber } from "../form/BoxNumber";
 import { ScopedWriteHoldNotice } from "../WriteScope";

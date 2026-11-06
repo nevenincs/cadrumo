@@ -6,10 +6,8 @@ import {
   createWorkRequest,
   type ModeloPort,
 } from "../../../shell/modelo";
-import type {
-  ModeloProjectOperationProjection,
-  PublicModeloFormField,
-} from "../../../shell/modeloContract";
+import type { ModeloProjectOperationProjection } from "../../../shell/modeloContract/modeloProject";
+import type { PublicModeloFormField } from "../../../shell/modeloContract/modeloWorkForm";
 import type { OperationRun } from "../dialogs/operationRun";
 
 // The estimate of the annual return from the quarterly declarations, asked

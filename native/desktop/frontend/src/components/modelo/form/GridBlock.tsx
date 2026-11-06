@@ -8,7 +8,7 @@ import type {
   PublicModeloFormField,
   PublicModeloFormGridBlock,
   PublicModeloFormGridCell,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloWorkForm";
 import { factsGap } from "../../../shell/compose";
 import { useStrings } from "../../../shell/strings";
 import { BoxNoteMark } from "./BoxNoteList";
