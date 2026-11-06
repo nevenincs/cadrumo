@@ -331,7 +331,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "revision_id",
-          "value": "60f2f7e1f7d6e178088a937ce43e5a10db5051a9683001fa82fc13cabca97b0e"
+          "value": "f4399f46329e589c6c929e27e70c3748e31fa2747d082334664d7e398504cfa1"
         }
       ],
       "envelope": null,
@@ -350,7 +350,7 @@
         "modelo",
         "work",
         "revision",
-        "60f2f7e1f7d6e178088a937ce43e5a10db5051a9683001fa82fc13cabca97b0e"
+        "f4399f46329e589c6c929e27e70c3748e31fa2747d082334664d7e398504cfa1"
       ],
       "captures": [],
       "envelope": {
@@ -418,7 +418,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "60f2f7e1f7d6e178088a937ce43e5a10db5051a9683001fa82fc13cabca97b0e",
+          "calculation_revision_id": "f4399f46329e589c6c929e27e70c3748e31fa2747d082334664d7e398504cfa1",
           "casilla_values": {
             "01": "0.00",
             "02": "0",

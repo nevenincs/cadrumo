@@ -709,7 +709,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "dcc3dd2377ce8cca7c3f968c7c4f1d378e8a9fd10eeb416e7ba953cf01c5c23a",
+          "calculation_revision_id": "588643c10309af0c7481c33c9bd4f38e91b7dbfb624d4e5f060a78f59e9d691d",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -1276,7 +1276,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision dcc3dd2377ce8cca7c3f968c7c4f1d378e8a9fd10eeb416e7ba953cf01c5c23a (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 588643c10309af0c7481c33c9bd4f38e91b7dbfb624d4e5f060a78f59e9d691d (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
