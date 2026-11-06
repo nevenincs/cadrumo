@@ -28,10 +28,10 @@ from ...domain.modelos.calculation_revision_m303_evidence import (
     M303InsolvencyFilingSubtype,
 )
 from ..aggregation.m303_arrivals import M303ProrrataTransitionArrival
+from . import producer_ownership
 from .export_producer_m200_account import m200_account_values
 from .export_producer_m360 import M360_PRODUCER_KEYS, m360_producer_values
 from .identity_contact_producer import identity_contact_producer_values
-from .producer_ownership import filing_producer_ownership
 from .producer_snapshot import (
     AmendmentEvidence,
     ChargeAccountSelection,
@@ -1041,7 +1041,7 @@ def _model_specific_producer_values(snapshot: FilingProducerSnapshot) -> dict[Fi
 def _validate_shared_producer_values(values: dict[FilingProducerKey, object]) -> None:
     shared_owned = {
         key
-        for key, owner in filing_producer_ownership(
+        for key, owner in producer_ownership.filing_producer_ownership(
             shared_snapshot_keys=SHARED_SNAPSHOT_PRODUCER_KEYS,
         ).items()
         if owner == "shared_snapshot"
