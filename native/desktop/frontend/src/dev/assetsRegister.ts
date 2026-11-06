@@ -54,6 +54,10 @@ export type ScenarioElement = {
   /** The whole charge the register answered for each of those spans, with the
    * revision it rests on and the provisions it cites. */
   charges: Record<string, JsonObject>;
+  /** What the register answers a method that leaves the amount to the person:
+   * the provisions its election rests on, beside the probe amount it was asked
+   * with. Null where no election of the element leaves the amount open. */
+  free_election_charge: JsonObject | null;
   /** Null where the register cannot work the baja out. */
   disposal: ScenarioDisposal | null;
 };
@@ -77,7 +81,7 @@ type RecordedElement = Omit<
   ScenarioElement,
   "id" | "list" | "annual" | "forecasts" | "charges"
 > & {
-  forecasts: Record<string, JsonObject & { amount: string }>;
+  forecasts: Record<string, JsonObject & { amount: { decimal: string } }>;
 };
 
 type Recording = {
@@ -168,7 +172,7 @@ export const SCENARIO_ELEMENTS: readonly ScenarioElement[] = register.list.map(
       forecasts: Object.fromEntries(
         Object.entries(element.forecasts).map(([span, charge]) => [
           span,
-          charge.amount,
+          charge.amount.decimal,
         ]),
       ),
       charges: element.forecasts,
@@ -190,7 +194,7 @@ export const SCENARIO_CREATIONS: readonly ScenarioCreation[] =
     forecasts: Object.fromEntries(
       Object.entries(recorded.forecasts).map(([span, charge]) => [
         span,
-        charge.amount,
+        charge.amount.decimal,
       ]),
     ),
     charges: recorded.forecasts,

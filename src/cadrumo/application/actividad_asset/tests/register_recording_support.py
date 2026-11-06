@@ -40,6 +40,7 @@ from ..fact_wording import timeline_field_paths
 from ..operation_dtos import (
     ActivityAssetCorrectionRevisionSnapshot,
     ActivityAssetRevisionSnapshot,
+    ScheduledAmortizationChargeSnapshot,
 )
 from ..operations import ActivityAssetOperations
 from ..register_reads import TABLE_BOUND_METHODS, register_years
@@ -285,16 +286,57 @@ def _asked_spans(row: dict[str, Any]) -> tuple[tuple[date, date], ...]:
     return tuple(sorted(asked))
 
 
+def _charge(
+    operations: ActivityAssetOperations, asset_id: str, start: date, end: date, free: Decimal | None
+) -> dict[str, Any] | None:
+    """The charge the register answers for one span, in the public wire form.
+
+    The window receives decimals as public decimals and the last day covered
+    stated beside the boundary, so the recording holds that shape rather than
+    the domain charge.
+    """
+    try:
+        charge = operations.forecast(
+            asset_id=asset_id, covered_from=start, covered_until=end, requested_free_amount=free
+        )
+    except ActividadAssetError:
+        return None
+    return ScheduledAmortizationChargeSnapshot.from_domain(charge).model_dump(mode="json")
+
+
+#: An amount asked of a method that leaves it to the person, so the register answers a charge at all.
+_PROBE_FREE_AMOUNT: Final = Decimal("1.00")
+
+
 def _forecasts(operations: ActivityAssetOperations, asset_id: str, plan: list[dict[str, Any]]) -> dict[str, Any]:
     offered: dict[str, Any] = {}
     for row in plan:
         for start, end in _asked_spans(row):
-            try:
-                charge = operations.forecast(asset_id=asset_id, covered_from=start, covered_until=end)
-            except ActividadAssetError:
-                continue
-            offered[f"{start.isoformat()}/{end.isoformat()}"] = charge.model_dump(mode="json")
+            charge = _charge(operations, asset_id, start, end, None)
+            if charge is not None:
+                offered[f"{start.isoformat()}/{end.isoformat()}"] = charge
     return offered
+
+
+def _free_election_charge(
+    operations: ActivityAssetOperations, asset_id: str, plan: list[dict[str, Any]]
+) -> dict[str, Any] | None:
+    """What the register answers a method that leaves the amount to the person.
+
+    Such a method states no figure of its own, so the register refuses a forecast
+    that asks for none. Asking with a probe amount gets the rest of its answer:
+    the provisions the election rests on, which the window carries back beside
+    whatever amount the person states. The probe amount itself is answered back
+    and is never read.
+    """
+    for row in plan:
+        if row["absence"] != "free_election":
+            continue
+        for start, end in _asked_spans(row):
+            charge = _charge(operations, asset_id, start, end, _PROBE_FREE_AMOUNT)
+            if charge is not None:
+                return charge
+    return None
 
 
 def _disposal(operations: ActivityAssetOperations, asset_id: str, today: date) -> dict[str, Any] | None:
@@ -331,6 +373,7 @@ def _element(operations: ActivityAssetOperations, asset_id: str, today: date) ->
             for revision in operations.inspect(asset_id)
         ],
         "forecasts": _forecasts(operations, asset_id, plan),
+        "free_election_charge": _free_election_charge(operations, asset_id, plan),
         "disposal": _disposal(operations, asset_id, today),
     }
 
@@ -354,9 +397,15 @@ def _creation(frame: dict[str, Any], elements: tuple[dict[str, Any], ...], made:
         origin=_ORIGIN_CREATE,
     )
     row = next(item for item in operations.list_elements() if item.asset_id == made["id"])
-    return {"id": made["id"], "draft": made["draft"], "list": row.model_dump(mode="json")} | _element(
-        operations, made["id"], today
-    )
+    # The draft is recorded with every payment named by the identifier the
+    # ledger minted for it. The provider name is how the corpus is committed, so
+    # that the committed request survives a change to a payment's facts; the
+    # window types the draft into its own form and knows only identifiers.
+    return {
+        "id": made["id"],
+        "draft": resolved_payments(made["draft"], named),
+        "list": row.model_dump(mode="json"),
+    } | _element(operations, made["id"], today)
 
 
 def recorded_candidates(operations: ActivityAssetOperations) -> tuple[Any, ...]:

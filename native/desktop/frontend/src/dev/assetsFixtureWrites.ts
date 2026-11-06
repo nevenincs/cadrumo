@@ -909,7 +909,7 @@ export function makeWrites(register: Register) {
     // A method that leaves the amount to the person: the register states no
     // figure, and the forecast carries back the one that was asked for, with
     // the provisions the register cited for this election.
-    const cited = recordedChargeFor(element, from, until);
+    const cited = element.free_election_charge;
     if (cited === null) return unrecorded();
     return json({
       ...ok,

@@ -56,6 +56,7 @@ import {
   asCount,
   asDate,
   asPercent,
+  dayAfter,
   dec,
   decimalOf,
   earlier,
@@ -101,7 +102,13 @@ export function makeRegister(
                   supplier_name: null,
                   supplier_tax_id: null,
                 },
-          outOfService: null,
+          // An element the register already records a baja for stands out of
+          // service the day after its last day, so its service window ends
+          // where the register says it ends rather than at the year.
+          outOfService:
+            copy.list.disposal === null
+              ? null
+              : dayAfter(copy.list.disposal.disposal_date),
           baja: null,
         },
       ];
@@ -1015,7 +1022,10 @@ export function makeRegister(
       list: { ...copy.list, asset_id: id, name: descriptor.name },
       events: [],
       descriptor,
-      outOfService: null,
+      outOfService:
+        copy.list.disposal === null
+          ? null
+          : dayAfter(copy.list.disposal.disposal_date),
       baja: null,
     };
   };
