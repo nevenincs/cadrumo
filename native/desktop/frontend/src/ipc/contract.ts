@@ -1646,17 +1646,17 @@ export interface HostCommands {
   /** Every row of the signed-in profile's declarations list. */
   modelo_declarations: {
     args: Authorized<{
-      outputLanguage: import("../shell/modeloContract").OutputLanguage;
+      outputLanguage: import("../shell/modeloContract/modelo").OutputLanguage;
     }>;
-    result: import("../shell/modeloContract").ModeloDeclarationsListProjectionV1;
+    result: import("../shell/modeloContract/modeloDeclarations").ModeloDeclarationsListProjectionV1;
   };
   /** One declaration's form, with its admitted edit baseline or refusal. */
   modelo_form: {
     args: Authorized<{
       workUnitId: string;
-      outputLanguage: import("../shell/modeloContract").OutputLanguage;
+      outputLanguage: import("../shell/modeloContract/modelo").OutputLanguage;
     }>;
-    result: import("../shell/modeloContract").ModeloWorkbenchFormProjectionV1;
+    result: import("../shell/modeloContract/modeloWorkForm").ModeloWorkbenchFormProjectionV1;
   };
   modelo_casilla_help: {
     args: Authorized<{
@@ -1664,9 +1664,9 @@ export interface HostCommands {
       casillaId: string;
       registryRevisionId: string;
       calculationRevisionId: string | null;
-      outputLanguage: import("../shell/modeloContract").OutputLanguage;
+      outputLanguage: import("../shell/modeloContract/modelo").OutputLanguage;
     }>;
-    result: import("../shell/modeloContract").ModeloCasillaHelpProjectionV1;
+    result: import("../shell/modeloContract/modeloWorkCasillaHelp").ModeloCasillaHelpProjectionV1;
   };
   /** Submits one admitted modelo operation with its request, without the
    * profile. `workUnit` names the form's declaration for a definition whose
