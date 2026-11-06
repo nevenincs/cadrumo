@@ -19,6 +19,8 @@ import { facts, factsGap, labelled } from "@/shell/compose";
 import type {
   CatalogueInvoice,
   LedgerInvoiceMatchJudgement,
+} from "../../../shell/ledgerInvoiceOperations";
+import type {
   LedgerPort,
   LedgerRow,
   OutputLanguage,

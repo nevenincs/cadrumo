@@ -16,7 +16,6 @@ import { recordedSpan } from "./periodRecording";
 import { isClassification, isDirection } from "../shell/ledgerContract";
 import {
   isLedgerDefinition,
-  type CatalogueInvoice,
   type FilePicks,
   type FilePurpose,
   type FileToken,
@@ -36,11 +35,16 @@ import {
   type LedgerSortField,
   type LedgerTransaction,
   type PublicPeriod,
-  type LedgerInvoiceDuplicateRequest,
-  type LedgerInvoiceMatchRequest,
-  type LedgerSplitCheckRequest,
-  type LedgerStagedCheckRequest,
 } from "../shell/ledger";
+import type {
+  CatalogueInvoice,
+  LedgerInvoiceDuplicateRequest,
+  LedgerInvoiceMatchRequest,
+} from "../shell/ledgerInvoiceOperations";
+import type {
+  LedgerSplitCheckRequest,
+  LedgerStagedCheckRequest,
+} from "../shell/ledgerMovementOperations";
 import {
   LEDGER_UPDATE_FIELDS,
   type LedgerUpdateField,

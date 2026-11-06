@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { TextEditor } from "@/components/editors/TextEditor";
-import type { SedeViewDialog } from "../../ipc/contract";
+import type { SedeViewDialog } from "../../ipc/sedeViewMessages";
 import { useStrings } from "../../shell/strings";
 
 /** The most characters of an answer the host takes. */

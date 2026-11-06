@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { answerSplitCheck } from "../src/dev/ledgerSplitCheckFixture";
-import type { LedgerSplitCheckRequest } from "../src/shell/ledger";
+import type { LedgerSplitCheckRequest } from "../src/shell/ledgerMovementOperations";
 import recorded from "@fixtures/ledger-recordings/ledgerSplitCheck.json" with { type: "json" };
 
 // The stand-in stories use for `ledger.split.check`, held to what the real

@@ -17,8 +17,8 @@ import type {
   LedgerInvoiceMatchRequest,
   LedgerInvoiceMatchResult,
   LedgerInvoiceMatchSuggestion,
-  LedgerRow,
-} from "../shell/ledger";
+} from "../shell/ledgerInvoiceOperations";
+import type { LedgerRow } from "../shell/ledger";
 
 /** The movements the stand-in reads need nothing of a row but the movement. */
 type HeldRow = Pick<LedgerRow, "transaction">;

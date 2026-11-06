@@ -15,7 +15,10 @@ import {
 } from "@/components/ui/segmented-control";
 import type { Suggestion } from "@/components/ui/suggestions";
 import { localDay } from "../../../shared/dates";
-import type { CatalogueInvoice, InvoiceKind } from "../../../shell/ledger";
+import type {
+  CatalogueInvoice,
+  InvoiceKind,
+} from "../../../shell/ledgerInvoiceOperations";
 import { useStrings } from "../../../shell/strings";
 import { wordOrToken } from "../../../shell/tokenWords";
 import { ServedOptions } from "../suggestions/ServedOptions";

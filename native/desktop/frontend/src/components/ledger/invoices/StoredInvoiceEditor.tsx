@@ -7,7 +7,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 import type { Suggestion } from "@/components/ui/suggestions";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount } from "../../../shared/numbers";
-import type { CatalogueInvoice } from "../../../shell/ledger";
+import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
 import {
   PAYMENT_STATUSES,
   type PaymentStatus,

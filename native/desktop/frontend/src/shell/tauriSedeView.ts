@@ -1,5 +1,8 @@
 import { Channel } from "@tauri-apps/api/core";
-import type { ChannelRawFrame, SedeViewDelivery } from "../ipc/contract";
+import type {
+  ChannelRawFrame,
+  SedeViewDelivery,
+} from "../ipc/sedeViewMessages";
 import type { HostCall } from "./hostCall";
 import { sedeViewReader, type SedeViewPort } from "./sedeView";
 

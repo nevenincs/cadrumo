@@ -1,3244 +1,564 @@
-import {
-  useWorkspaceFocus,
-  WORKSPACE_COLUMNS,
-} from "./shell/useWorkspaceFocus";
-import { useShellShortcuts } from "./shell/useShellShortcuts";
 import settings from "virtual:operational-settings";
-import { useShellMenus } from "./shell/useShellMenus";
-import { useToastMessage } from "./shell/useToastMessage";
-import { ShellContexts } from "./shell/ShellContexts";
-import { usePersistedLayout } from "./shell/usePersistedLayout";
-import { useWindowCloseGuard } from "./shell/navigation/useWindowCloseGuard";
-import { observeInternalFailures } from "./shell/internalFailures";
-import { useLanguage } from "./shell/useLanguage";
-import { saveLogs } from "./shell/saveLogs";
-import { facts, labelled } from "./shell/compose";
-import { sessionFailedText } from "./shell/sessionWords";
-import { useDesktopEnvironment } from "./shell/useDesktopEnvironment";
-import { useWindowPresentation } from "./shell/useWindowPresentation";
-import { useFullscreen } from "./shell/useFullscreen";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type SetStateAction,
-} from "react";
-import { cn } from "@/components/ui/cn";
-import { EmptyState } from "@/components/ui/empty";
-import { IconButton } from "@/components/ui/icon-button";
-import { DockWorkspace } from "./components/docking/DockWorkspace";
-import {
-  activateDockPane,
-  dockGeometry,
-  dockPanes,
-  initialDockLayout,
-  orientDockPane,
-  returnDockPane,
-  swapDockPane,
-  type DockLayout,
-  type DockPane,
-} from "./shell/docking";
-import { Toast } from "@/components/ui/toast";
-import {
-  CommandPalette,
-  type DocsSearch,
-  type PastedLink,
-} from "./components/CommandPalette";
-import {
-  ContextMenu,
-  type MenuAction,
-  type MenuAnchor,
-  type MenuEntry,
-} from "./components/ContextMenu";
-import { Icon } from "@/components/ui/icon";
-import { DocsFrame, type DocsFrameApi } from "./components/DocsFrame";
-import type { DocsTheme } from "./ipc/contract";
-import { PaneHeader, type PaneControl } from "./components/PaneHeader";
-import { Rail, type RailItem } from "./components/Rail";
-import { AgentColumn, type AgentColumnControl } from "./components/AgentColumn";
-import { NavigationPrompt } from "./components/NavigationPrompt";
-import { AttendanceRequests } from "./components/AttendanceRequests";
-import { ReconnectingNotice } from "./components/ReconnectingNotice";
-import { BrowserPage } from "./components/browser/BrowserPage";
-import { HostRecordList } from "./components/HostRecordList";
-import {
-  DEFAULT_FILTERS,
-  levelRank,
-  type RecordFilters,
-} from "./shell/records";
-import { Settings } from "./components/Settings";
-import { GoogleAccount } from "./components/GoogleAccount";
-import { ProvisioningPanel } from "./components/setup/ProvisioningPanel";
-import {
-  canSignInGoogle,
-  itemName,
-  outcomeToast,
-} from "./components/setup/setupWords";
-import {
-  liveRunOf,
-  runOf,
-  liveRuns,
-  needsSetup,
-  useSetup,
-} from "./shell/setup";
-import { useProvisioningStore } from "./shell/provisioning";
-import {
-  provisionActionOf,
-  routeCensoRefusals,
-  routeProvisioningRefusals,
-} from "./shell/provisioningRecovery";
-import { ModelListContext, type ModelList } from "./shell/agentModelList";
-import { useAbout } from "./shell/about";
-import { accountLabel } from "./components/accountWords";
-import { SignedOut, SignInDialog } from "./components/SignIn";
-import { AboutDialog } from "./components/AboutDialog";
-import { UserProfilePage } from "./components/profile/UserProfilePage";
-import { AeatSyncPage } from "./components/aeatSync/AeatSyncPage";
-import { LedgerPage, type LedgerMemory } from "./components/ledger/LedgerPage";
-import type { LeaveGuard } from "./components/ledger/editing/LedgerEditing";
-import { useLedgerPeriodsReader } from "./shell/ledgerPeriods";
-import { DeclarationsPane } from "./components/modelo/declarations/DeclarationsPane";
-import type { DeclarationsMemory } from "./components/modelo/declarations/DeclarationsPage";
-import type { OutputLanguage } from "./shell/modeloContract/modelo";
-import { AccountMenu } from "./components/AccountMenu";
-import { ManageProfiles } from "./components/account/ManageProfiles";
-import { Titlebar } from "./components/Titlebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useFilingCalendar } from "./shell/calendar";
-import { useUserProfile } from "./shell/userProfile";
-import { useMessages } from "./shell/messages";
+import { AccountDialogs } from "./components/AccountDialogs";
+import { AttendanceRequests } from "./components/AttendanceRequests";
+import { MainPane } from "./components/MainPane";
+import { Rail } from "./components/Rail";
+import { railItems } from "./components/railItems";
+import { ShellDock } from "./components/ShellDock";
+import { WindowOverlays } from "./components/WindowOverlays";
+import { WindowTitlebar } from "./components/WindowTitlebar";
+import { useAbout } from "./shell/about";
+import type { Host } from "./shell/host";
+import { paneControls } from "./shell/paneControls";
+import { ShellContexts } from "./shell/ShellContexts";
 import { useSignIn } from "./shell/signIn";
-import { usePersonActivity } from "./shell/usePersonActivity";
-import {
-  FilingCalendarView,
-  type CalendarMemory,
-} from "./components/FilingCalendar";
-import { Button } from "@/components/ui/button";
-import {
-  TerminalPane,
-  type TerminalApi,
-  type TerminalStatus,
-} from "./components/TerminalPane";
-import {
-  primaryChord,
-  viewActions,
-  type Action,
-  type ViewActionSpec,
-} from "./shell/actions";
-import type { Host, TerminalKind } from "./shell/host";
-import type { AgentToolRefusal } from "./shell/agentSession";
-import {
-  DEFAULT_LAYOUT,
-  DEFAULT_PREFS,
-  loadState,
-  type Layout,
-  type LedgerView,
-  type Maximized,
-  type PanelTab,
-  type Prefs,
-  type ProfileView,
-} from "./shell/layout";
-import { useMetric, useTerminalFontSize } from "./shell/metrics";
-import { AEAT_SEDE } from "./shell/links";
-import {
-  SOURCE_LOCALE,
-  OUTPUT_LANGUAGES,
-  translator,
-  type Translate,
-} from "./shell/strings";
-import {
-  DARK_TERMINAL,
-  LIGHT_TERMINAL,
-  DARK_TUI,
-  LIGHT_TUI,
-} from "./shell/terminalThemes";
-import { failureCode } from "./errors";
-import {
-  formatViewLink,
-  isCadrumoLink,
-  parseViewLink,
-} from "./shell/navigation/links";
-import { NAVIGATION } from "./shell/navigation/projection";
-import { elementOf } from "./shell/navigation/register";
-import {
-  refusalReasonText,
-  useNavigator,
-} from "./shell/navigation/useNavigator";
-import {
-  mountedNow,
-  pageViewId,
-  type WindowViewEntry,
-} from "./shell/navigation/windowViews";
+import { useActionRunner } from "./shell/useActionRunner";
+import { useColumnCommands } from "./shell/useColumnCommands";
+import { useDesktopEnvironment } from "./shell/useDesktopEnvironment";
+import { useDocsFrameState } from "./shell/useDocsFrameState";
+import { useDocsNavigation } from "./shell/useDocsNavigation";
+import { useFocusCycle } from "./shell/useFocusCycle";
+import { useFocusWish } from "./shell/useFocusWish";
+import { useGateFocus } from "./shell/useGateFocus";
+import { useHostClipboard } from "./shell/useHostClipboard";
+import { useHostNotices } from "./shell/useHostNotices";
+import { useLogControls } from "./shell/useLogControls";
+import { useOpenExternal } from "./shell/useOpenExternal";
+import { usePageArrival } from "./shell/usePageArrival";
+import { usePageMemories } from "./shell/usePageMemories";
+import { usePastedLink } from "./shell/usePastedLink";
+import { usePersistedLayout } from "./shell/usePersistedLayout";
+import { useProfilePageAsks } from "./shell/useProfilePageAsks";
+import { useReadingModelPicker } from "./shell/useReadingModelPicker";
+import { useShellActions } from "./shell/useShellActions";
+import { useShellMenus } from "./shell/useShellMenus";
+import { useShellShortcuts } from "./shell/useShellShortcuts";
+import { useSignInFlow } from "./shell/useSignInFlow";
+import { useTerminalSessions } from "./shell/useTerminalSessions";
+import { useToastMessage } from "./shell/useToastMessage";
+import { useWindowAppearance } from "./shell/useWindowAppearance";
+import { useWindowLanguage } from "./shell/useWindowLanguage";
+import { useWindowNavigation } from "./shell/useWindowNavigation";
+import { useWindowOverlays } from "./shell/useWindowOverlays";
+import { useWindowReads } from "./shell/useWindowReads";
+import { useWindowSetup } from "./shell/useWindowSetup";
+import { useWorkspaceArrangement } from "./shell/useWorkspaceArrangement";
+import { useWorkspaceFocus } from "./shell/useWorkspaceFocus";
+import { useWorkspaceMetrics } from "./shell/useWorkspaceMetrics";
+import { useWorkspaceVisibility } from "./shell/useWorkspaceVisibility";
+import { windowViewApplication } from "./shell/windowViewApplication";
 
-type OpenMenu = { items: MenuEntry[]; at: MenuAnchor };
-
-const isAction = (item: MenuEntry): item is MenuAction => "id" in item;
-
-/** The exit code of a session that has exited, null when it is unknown. */
-const exitCode = (status: TerminalStatus): number | null | undefined =>
-  status.phase === "exited" ? status.code : undefined;
-
-/** The host's code for why a session could not start or carry on, when it has
- * failed; `sessionFailedText` words it. */
-const failure = (status: TerminalStatus): string | undefined =>
-  status.phase === "failed" ? status.message : undefined;
-
-type Area = Exclude<Maximized, null>;
-
-/** The columns of the workspace, each shown and put away on its own. */
-
-/** The workspace area that holds focus, the documentation frame included. */
-const focusedArea = (): Area | "rail" | null => {
-  const element = document.activeElement;
-  if (!element || element === document.body) return null;
-  if (element.closest(".pane-agent")) return "agent";
-  if (element.closest(".pane-docs")) return "docs";
-  if (element.closest(".pane-tui")) return "tui";
-  if (
-    element.closest(
-      '[data-dock-pane="console"], [data-dock-pane="python"], [data-dock-pane="logs"]',
-    )
-  )
-    return "panel";
-  if (element.closest(".rail")) return "rail";
-  return null;
-};
-
-const activeTerminal = (): TerminalKind | null => {
-  const owner = document.activeElement?.closest<HTMLElement>("[data-terminal]");
-  const kind = owner?.dataset.terminal;
-  return kind === "console" || kind === "python" || kind === "tui"
-    ? kind
-    : null;
-};
-
+/** The desktop window: composes the hooks that own its state and behaviour
+ * and the components that draw it. Hooks run in call order, and so do their
+ * effects: the order below is part of the window's behaviour. */
 export function App({ host }: { host: Host }) {
+  const { toast, say } = useToastMessage(settings.shell_toast_ms);
   const account = useSignIn(host);
   const environment = useDesktopEnvironment(host);
-  const language = useLanguage(
+  const { language, locale, languages, languageControl, t } = useWindowLanguage(
     host,
-    environment.state === "ready"
-      ? environment.value.outputLanguage
-      : SOURCE_LOCALE,
-    { phase: account.phase, profile: account.status?.active_profile ?? null },
+    environment,
+    account,
   );
-  const locale = language.locale;
-  const languages = OUTPUT_LANGUAGES;
-  const languageControl = {
-    value: locale,
-    languages,
-    pending: language.pending,
-    failed: language.failed,
-    onChange: (code: string) => void language.change(code),
-  };
 
-  const workspace = useRef<HTMLDivElement>(null);
-  const { viewportWidth, prefersDark } = useWindowPresentation(workspace);
-  // How many log records are errors, as the log view reports it.
-  const [errorCount, setErrorCount] = useState(0);
-  const initial = useMemo(loadState, []);
-  const [prefs, setPrefs] = useState<Prefs>(initial.prefs);
-  // Panes whose side-by-side split the window is too narrow to draw.
-  const [narrowedPanes, setNarrowedPanes] = useState<readonly DockPane[]>([]);
-  const [layout, setLayout] = useState<Layout>(() => {
-    let docking =
-      initial.layout.docking ??
-      initialDockLayout(initial.prefs, initial.layout);
-    for (const pane of [
-      "agent",
-      "docs",
-      "tui",
-      "console",
-      "python",
-      "logs",
-    ] as const) {
-      if (
-        !dockPanes(docking.root).includes(pane) &&
-        !docking.floating.some((item) => item.pane === pane)
-      )
-        docking = returnDockPane(docking, pane);
-    }
-    return { ...initial.layout, docking };
+  const arrangement = useWorkspaceArrangement({
+    host,
+    phase: account.phase,
+    say,
+    t,
   });
-  const docking = layout.docking ?? initialDockLayout(prefs, layout);
-  const changeDocking = useCallback(
-    (update: (current: DockLayout) => DockLayout) => {
-      setLayout((current) => ({
-        ...current,
-        docking: update(current.docking ?? initialDockLayout(prefs, current)),
-      }));
-    },
-    [prefs],
-  );
-  const fullscreen = useFullscreen(host, () =>
-    say(t("desktop.titlebar.failed")),
-  );
-  const enterFullscreen = fullscreen.toggle;
-  const revealPane = fullscreen.reveal;
-  const activatePane = useCallback(
-    (pane: DockPane) => {
-      revealPane(pane);
-      changeDocking((current) => activateDockPane(current, pane));
-    },
-    [changeDocking, revealPane],
-  );
-  // The least width the Ledger page asks beside the agent, while it shows.
-  const [ledgerFloor, setLedgerFloor] = useState<number | null>(null);
-  const setMaximized = useCallback((update: SetStateAction<Maximized>) => {
-    setLayout((current) => ({
-      ...current,
-      maximized:
-        typeof update === "function" ? update(current.maximized) : update,
-    }));
-  }, []);
-  // Account gating affects presentation without erasing the saved arrangement.
-  const maximized =
-    layout.maximized === "agent" && account.phase !== "signed-in"
-      ? null
-      : layout.maximized;
-  // What the first pane shows: the documentation, or a view of the profile
-  // where the host offers one. The documentation stays loaded underneath.
-  const page = layout.page;
-  // Every navigation passes one guard register and one navigator: a link,
-  // the palette, the rail, a page, sign-out, a profile switch and the
-  // window's close. What it calls back is read when it runs, after render.
-  const layoutNow = useRef(layout);
-  layoutNow.current = layout;
-  const nav = useNavigator({
-    register: NAVIGATION,
-    t: (key, values) => t(key, values),
-    say: (text) => say(text),
-    shown: () => ({
-      page: layoutNow.current.page,
-      ledgerSection: layoutNow.current.ledgerView.section,
-    }),
-    hasPort: (port) => host[port] !== undefined,
-    signedIn: () => accountRef.current.phase === "signed-in",
-    showInWindow: (id, entry) => showInWindow(id, entry),
-    askSignIn: () => askSignIn(),
+  const {
+    prefs,
+    setPrefs,
+    layout,
+    setLayout,
+    layoutNow,
+    maximized,
+    setMaximized,
+    fullscreen,
+    patch,
+    showPage,
+    changeLedgerView,
+  } = arrangement;
+  const navigation = useWindowNavigation({
+    host,
+    t,
+    say,
+    account,
+    layoutNow,
+    setMaximized,
+    patch,
+    showPage,
+    activatePane: arrangement.activatePane,
   });
-  const guardNavigation = nav.guard;
-  // An owner that hands the shell a leave guard of its own is registered as
-  // dirty work of the page it was shown on; its guard asks only when it has
-  // something staged. `guarded` leaves the page shown.
-  const ownerGuard = useRef<(() => void) | null>(null);
-  const guardLeave = useCallback(
-    (guard: LeaveGuard | null) => {
-      ownerGuard.current?.();
-      ownerGuard.current = guard
-        ? nav.runtime.guards.register({
-            owner: layoutNow.current.page,
-            state: () => "dirty",
-            ask: guard,
-          })
-        : null;
-    },
-    [nav.runtime],
-  );
-  const guarded = useCallback(
-    (proceed: () => void, stay?: () => void) =>
-      guardNavigation(
-        {
-          kind: "navigate",
-          unmounted: mountedNow(
-            layoutNow.current.page,
-            layoutNow.current.ledgerView.section,
-          ),
-        },
-        proceed,
-        stay,
-      ),
-    [guardNavigation],
-  );
-  useWindowCloseGuard(host, guardNavigation);
-  // Shows a page through the layout store; only the navigator, past the
-  // guards, calls it directly.
-  const showPage = useCallback(
-    (page: Layout["page"]) => {
-      revealPane("docs");
-      setLayout((current) => ({
-        ...current,
-        page,
-        docking: current.docking
-          ? activateDockPane(current.docking, "docs")
-          : null,
-      }));
-    },
-    [revealPane],
-  );
-  // Leaving the page shown takes it down, so its owners are asked first.
-  const setPage = useCallback(
-    (next: Layout["page"]) => {
-      const shown = layoutNow.current;
-      if (next === shown.page) {
-        activatePane("docs");
-        return;
-      }
-      guardNavigation(
-        {
-          kind: "navigate",
-          unmounted: mountedNow(shown.page, shown.ledgerView.section),
-        },
-        () => showPage(next),
-      );
-    },
-    [guardNavigation, showPage, activatePane],
-  );
-  // The census pull was asked for from any page: the profile page takes the
-  // one census flow over once it has the profile, and starts it only when
-  // none is running. Leaving the page withdraws the ask.
-  const [censoAsked, setCensoAsked] = useState(false);
-  const censoHandled = useCallback(() => setCensoAsked(false), []);
-  const askCenso = useCallback(() => {
-    const shown = layoutNow.current;
-    const proceed = () => {
-      setCensoAsked(true);
-      setLayout((current) => ({
-        ...current,
-        page: "profile",
-        maximized: null,
-      }));
-    };
-    if (shown.page === "profile") proceed();
-    else
-      guardNavigation(
-        {
-          kind: "navigate",
-          unmounted: mountedNow(shown.page, shown.ledgerView.section),
-        },
-        proceed,
-      );
-  }, [guardNavigation]);
-  const calendarPage = useRef<HTMLElement>(null);
-  const aeatSyncPage = useRef<HTMLElement>(null);
-  const profilePage = useRef<HTMLElement>(null);
-  const ledgerPage = useRef<HTMLElement>(null);
-  // The ledger was asked for: it takes focus once it is laid out.
-  const wantsLedger = useRef(false);
-  const declarationsPage = useRef<HTMLElement>(null);
-  // The declarations, or one declaration, were asked for: the page takes
-  // focus once it is laid out.
-  const wantsDeclarations = useRef(false);
-  const browserPage = useRef<HTMLElement>(null);
-  // The browser was asked for: the page takes focus once it is laid out.
-  const wantsBrowser = useRef(false);
-  // The agent column was asked for: it takes focus once it is laid out.
-  const wantsAgent = useRef(false);
-  const agentBody = useRef<HTMLElement>(null);
-  // Where the keyboard goes when a navigation opens each page or the agent.
-  // The window provides the navigation context, so it registers its own
-  // targets on the runtime directly; its commits are their mount signal.
-  useEffect(() => {
-    const focus = nav.runtime.focus;
-    const targets: [string, { current: HTMLElement | null }][] = [
-      ["profile", profilePage],
-      ["calendar", calendarPage],
-      ["aeat-sync", aeatSyncPage],
-      ["ledger", ledgerPage],
-      ["declarations", declarationsPage],
-      ["agent", agentBody],
-      // The documentation is a frame the window does not hold a ref to.
-      [
-        "docs",
-        {
-          get current() {
-            return document.querySelector<HTMLElement>(".docs-frame");
-          },
-        },
-      ],
-    ];
-    const releases = targets.map(([id, ref]) =>
-      focus.register(id, () => ref.current),
-    );
-    return () => releases.forEach((release) => release());
-  }, [nav.runtime]);
-  // The calendar was asked for: it takes focus once it is laid out.
-  const wantsCalendar = useRef(false);
-  // What held focus when the sign-in dialog was asked for, and whether
-  // that was in the calendar: the control itself may be gone by the close.
-  const signInOpener = useRef<{
-    element: Element | null;
-    calendar: boolean;
-  } | null>(null);
-  const [docsTheme, setDocsTheme] = useState<DocsTheme>("auto");
-  const [docsSearchReady, setDocsSearchReady] = useState(false);
-  const [status, setStatus] = useState<Record<TerminalKind, TerminalStatus>>({
-    console: { phase: "starting" },
-    python: { phase: "starting" },
-    tui: { phase: "starting" },
+  const { nav, guardNavigation, guarded, setPage, closePage } = navigation;
+  const { openView, openLink: openViewLink, resolve: resolveView } = nav;
+  const pageAsks = useProfilePageAsks({
+    page: layout.page,
+    layoutNow,
+    setLayout,
+    guardNavigation,
   });
-  const [paletteOpen, setPaletteOpen] = useState(false);
-  // What the shown page offers the palette besides the window's own actions,
-  // read as the palette opens and listed before them.
-  const contributed = useRef<(() => Action[]) | null>(null);
-  const [paletteExtra, setPaletteExtra] = useState<Action[]>([]);
-  const contribute = useCallback((actions: (() => Action[]) | null) => {
-    contributed.current = actions;
-  }, []);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [aboutOpen, setAboutOpen] = useState(false);
   const about = useAbout(host);
-  const [menu, setMenu] = useState<OpenMenu | null>(null);
-  const { toast, say } = useToastMessage(settings.shell_toast_ms);
-  // The sign-in dialog opens by itself whenever the TUI becomes gated; a
-  // person who dismisses it, or who has just signed out here, reopens it.
-  const [signInDismissed, setSignInDismissed] = useState(false);
-  // The dialog as the form that creates a profile, where one was asked for.
-  const [creatingProfile, setCreatingProfile] = useState(false);
-  const [managingProfiles, setManagingProfiles] = useState(false);
-  const signInButton = useRef<HTMLButtonElement>(null);
-  const defaultFilters = useMemo(
-    () => ({
-      ...DEFAULT_FILTERS,
-      minLevel: levelRank(
-        environment.state === "ready" ? environment.value.logLevel : "INFO",
-      ),
-    }),
-    [environment],
-  );
-  const [filterOverride, setFilterOverride] = useState<RecordFilters | null>(
-    null,
-  );
-  const filters = useMemo(
-    () => ({
-      ...(filterOverride ?? defaultFilters),
-      minLevel: layout.logLevel ?? defaultFilters.minLevel,
-    }),
-    [filterOverride, defaultFilters, layout.logLevel],
-  );
-  const filtersRef = useRef(filters);
-  filtersRef.current = filters;
-  const setFilters = useCallback(
-    (update: SetStateAction<RecordFilters>) => {
-      const next =
-        typeof update === "function" ? update(filtersRef.current) : update;
-      filtersRef.current = next;
-      setFilterOverride(next);
-      if (update === defaultFilters)
-        setLayout((current) => ({ ...current, logLevel: null }));
-    },
-    [defaultFilters],
-  );
-  const selectLogLevel = useCallback(
-    (minLevel: number) => {
-      setFilters((current) => ({ ...current, minLevel }));
-      setLayout((current) => ({ ...current, logLevel: minLevel }));
-    },
-    [setFilters],
-  );
-  const docs = useRef<DocsFrameApi>(null);
-  const terminals = useRef<Partial<Record<TerminalKind, TerminalApi>>>({});
-
-  // Layout geometry, read from the canonical tokens (src/styles/tokens.css) instead
-  // of duplicated as literals; each metric re-reads on resize.
-  const splitMinA = useMetric("--split-min-a", 260);
-  const splitMinBRow = useMetric("--split-min-b-row", 320);
-  const railWidth = useMetric("--rail-w", 48);
-  const agentMin = useMetric("--agent-min", 240);
-  const docsMin = useMetric("--docs-min", 200);
-  const panelMin = useMetric("--panel-min", 140);
-  const terminalFontSize = useTerminalFontSize(prefs.fontSize);
-
-  const patch = useCallback(
-    (change: Partial<Layout>) => {
-      const pane =
-        change.tab ??
-        (change.agentShown
-          ? "agent"
-          : change.tuiShown
-            ? "tui"
-            : change.docsShown
-              ? "docs"
-              : change.panelOpen
-                ? layoutNow.current.tab
-                : null);
-      if (pane) revealPane(pane);
-      setLayout((current) => {
-        let docking = current.docking;
-        if (docking && pane) docking = activateDockPane(docking, pane);
-        return { ...current, docking, ...change };
-      });
-    },
-    [revealPane],
-  );
-  // The documentation asked for by name: its pane is shown first.
-  const showDocs = useCallback(() => {
-    setPage("docs");
-    setMaximized((area) => (area === "docs" ? area : null));
-    patch({ docsShown: true });
-  }, [patch, setPage, setMaximized]);
-
+  const overlays = useWindowOverlays();
+  const { setSettingsOpen } = overlays;
+  const docsFrame = useDocsFrameState();
+  const { docs } = docsFrame;
+  const sessions = useTerminalSessions();
+  const { terminals } = sessions;
+  const metrics = useWorkspaceMetrics(prefs.fontSize);
   usePersistedLayout(prefs, layout, settings.layout_save_delay_ms);
 
-  const gated = account.gated;
-  const phase = account.phase;
-  const signedIn = phase === "signed-in";
-  // The sign-in form is asked for by a gate that withholds the TUI, and by a
-  // session the runtime keeps suspended that only the password can bring back.
-  const signInAsked = gated || account.reconnecting?.passwordRequired === true;
-  usePersonActivity(host, signedIn);
-  const accountRef = useRef(account);
-  accountRef.current = account;
-  const signOut = useCallback(() => {
-    guardNavigation({ kind: "sign_out" }, () => {
-      // Signing out here is not a reason to ask for the password again.
-      setSignInDismissed(true);
-      void accountRef.current.signOut();
-    });
-  }, [guardNavigation]);
-  // The palette shortcut enters the same account flow as the header.
-  const switchProfile = useCallback(() => {
-    guardNavigation({ kind: "switch" }, () => {
-      setSettingsOpen(false);
-      signInOpener.current = null;
-      setSignInDismissed(false);
-      void accountRef.current.signOut();
-    });
-  }, [guardNavigation]);
-  useEffect(() => {
-    if (signInAsked) return;
-    // Admitted: the next time the gate closes, the dialog opens again, and
-    // as the sign-in, whatever it was last asked to be.
-    setSignInDismissed(false);
-    setCreatingProfile(false);
-  }, [signInAsked]);
-  const signOutFailed = account.signOutFailure !== null;
-  useEffect(() => {
-    // A sign-out that failed leaves the person signed in: the next time the
-    // gate closes it is not by their choice, so the dialog opens.
-    if (signOutFailed) setSignInDismissed(false);
-  }, [signOutFailed]);
-  const mayEnterPassword = account.canSignIn;
-
+  const signIn = useSignInFlow({
+    host,
+    account,
+    guardNavigation,
+    setSettingsOpen,
+  });
+  const { gated, phase, signedIn, reader, signInButton } = signIn;
   const views = host.views;
-  // What is on screen: a maximized area alone, otherwise every area that is
-  // shown. The first pane holds the documentation or a view of the profile,
-  // and is on screen while either is asked for.
-  const profileOn = host.userProfile !== undefined && page === "profile";
-  const calendarOn = views !== undefined && page === "calendar";
-  const ledgerOn = host.ledger !== undefined && page === "ledger";
-  const declarationsOn = host.modelo !== undefined && page === "declarations";
-  const browserOn = host.sedeView !== undefined && page === "browser";
-  const aeatSyncOn = host.aeatSync !== undefined && page === "aeat-sync";
-  // A page of the window holds the first pane, in place of the documentation.
-  const pageOn =
-    calendarOn ||
-    profileOn ||
-    ledgerOn ||
-    declarationsOn ||
-    browserOn ||
-    aeatSyncOn;
-  const besideRail = Math.max(0, viewportWidth - railWidth);
-  const mainMin = Math.max(splitMinA, ledgerOn ? (ledgerFloor ?? 0) : 0);
-  const agentFits = besideRail >= agentMin + mainMin;
-  const agentTab = dockGeometry(docking, [
-    "agent",
-    "docs",
-    "tui",
-    "console",
-    "python",
-    "logs",
-  ]).groups.find((entry) => entry.group.tabs.includes("agent"));
-  const agentHasRoom =
-    agentFits ||
-    maximized === "agent" ||
-    fullscreen.pane === "agent" ||
-    docking.floating.some((entry) => entry.pane === "agent") ||
-    (agentTab?.group.tabs.length ?? 0) > 1 ||
-    (!layout.docsShown && !pageOn && !layout.tuiShown && !layout.panelOpen);
-  const dockOffered = useMemo<DockPane[]>(
-    () =>
-      [
-        ...(signedIn && layout.agentShown && agentHasRoom
-          ? ["agent" as const]
-          : []),
-        ...(layout.docsShown || pageOn ? ["docs" as const] : []),
-        ...(layout.tuiShown ? ["tui" as const] : []),
-        ...(layout.panelOpen ? (["console", "python", "logs"] as const) : []),
-      ].filter((pane) => !docking.closed.includes(pane)),
-    [
-      signedIn,
-      layout.agentShown,
-      agentHasRoom,
-      layout.docsShown,
-      pageOn,
-      layout.tuiShown,
-      layout.panelOpen,
-      docking.closed,
-    ],
-  );
-  const requestedExpansion =
-    fullscreen.pane ?? (maximized === "panel" ? layout.tab : maximized);
-  const expandedPane =
-    requestedExpansion && dockOffered.includes(requestedExpansion)
-      ? requestedExpansion
-      : null;
-  const activePanes = useMemo(
-    () =>
-      expandedPane
-        ? [expandedPane]
-        : [
-            ...dockGeometry(docking, dockOffered).groups.map(
-              (item) => item.group.active,
-            ),
-            ...docking.floating
-              .filter((item) => dockOffered.includes(item.pane))
-              .map((item) => item.pane),
-          ],
-    [expandedPane, docking, dockOffered],
-  );
-  const unhidden = (area: Area) =>
-    area === "panel"
-      ? activePanes.some(
-          (pane) => pane === "console" || pane === "python" || pane === "logs",
-        )
-      : activePanes.includes(area);
-  const firstPaneShown =
-    (layout.docsShown || pageOn || maximized === "docs") && unhidden("docs");
-  const fitLedger =
-    ledgerOn &&
-    firstPaneShown &&
-    !docking.floating.some((entry) => entry.pane === "docs");
-  const dockMinimumWidths = useMemo(
-    () => (fitLedger ? { docs: mainMin, agent: agentMin } : undefined),
-    [fitLedger, mainMin, agentMin],
-  );
-  // Side by side needs room for both panes' minimums; a narrower window
-  // stacks them without changing the remembered arrangement.
-  const dockBesideWidths = useMemo(
-    () => ({ docs: mainMin, tui: splitMinBRow }),
-    [mainMin, splitMinBRow],
-  );
-  // The panel keeps a usable handful of rows and the panes above it their
-  // floor; a window too short for both shares its height between them.
-  const dockMinimumHeights = useMemo(
-    () => ({
-      docs: docsMin,
-      tui: docsMin,
-      agent: docsMin,
-      console: panelMin,
-      python: panelMin,
-      logs: panelMin,
-    }),
-    [docsMin, panelMin],
-  );
-  const docsVisible = firstPaneShown && !pageOn;
-  const calendarVisible = calendarOn && firstPaneShown;
-  const ledgerVisible = ledgerOn && firstPaneShown;
-  const declarationsVisible = declarationsOn && firstPaneShown;
-  const browserVisible = browserOn && firstPaneShown;
-  const tuiVisible =
-    (layout.tuiShown || maximized === "tui") && unhidden("tui");
-  const panelVisible = layout.panelOpen && unhidden("panel");
-  const mainOccupied = firstPaneShown || tuiVisible || panelVisible;
-  // The agent works only for a profile signed in here: signed out, it is
-  // not there at all, and it comes back as it was laid out on signing in.
-  const agentVisible =
-    signedIn &&
-    (layout.agentShown || maximized === "agent") &&
-    unhidden("agent");
-  // Whose views are read: the signed-in profile's. Where the platform signs
-  // in inside the TUI the shell cannot tell, so it asks and shows the answer.
-  const reader =
-    signedIn || phase === "unsupported"
-      ? (account.status?.active_profile ?? "")
-      : null;
-  const recheckAccount = useCallback(() => accountRef.current.recheck(), []);
-  // The browser's view goes on while its page is put aside: the page stays
-  // mounted, hidden, for the profile that opened it, until the person closes
-  // it or that profile is no longer the one signed in.
-  const [browserKeptFor, setBrowserKeptFor] = useState<string | null>(null);
-  const browserReader = browserOn
-    ? reader
-    : reader === browserKeptFor
-      ? browserKeptFor
-      : null;
-  if (browserReader !== browserKeptFor) setBrowserKeptFor(browserReader);
-  const browserMounted = browserOn || browserReader !== null;
-  // Raised to send an open view to its home page, the Sede.
-  const [browserHome, setBrowserHome] = useState(0);
-  // What the reader has made of the calendar, kept while its page is away:
-  // the page is taken down when it is put away, and comes back as it was.
-  // A calendar belongs to its profile, and so does what was made of it: a
-  // new memory for each profile, and for each time one is signed in.
-  const [calendarKept, setCalendarKept] = useState(() => ({
+  const visibility = useWorkspaceVisibility({
+    host,
+    layout,
+    docking: arrangement.docking,
+    maximized,
+    fullscreenPane: fullscreen.pane,
+    signedIn,
+    viewportWidth: arrangement.viewportWidth,
+    railWidth: metrics.railWidth,
+    splitMinA: metrics.splitMinA,
+    splitMinBRow: metrics.splitMinBRow,
+    agentMin: metrics.agentMin,
+    docsMin: metrics.docsMin,
+    panelMin: metrics.panelMin,
+    ledgerFloor: arrangement.ledgerFloor,
+  });
+  const {
+    pageOn,
+    firstPaneShown,
+    activePanes,
+    docsVisible,
+    calendarVisible,
+    ledgerVisible,
+    declarationsVisible,
+    browserVisible,
+    tuiVisible,
+    panelVisible,
+    agentVisible,
+  } = visibility;
+  const memories = usePageMemories({
     reader,
-    memory: { current: {} as CalendarMemory },
-  }));
-  if (calendarKept.reader !== reader)
-    setCalendarKept({ reader, memory: { current: {} } });
-  const calendarMemory = calendarKept.memory;
-  // The ledger's period, kept while its page is away, for one profile and
-  // one sign-in, in memory only.
-  const [ledgerKept, setLedgerKept] = useState(() => ({
+    browserOn: visibility.browserOn,
+    wantsDeclarations: navigation.wantsDeclarations,
+  });
+  const reads = useWindowReads({
+    host,
     reader,
-    memory: { current: {} as LedgerMemory },
-  }));
-  if (ledgerKept.reader !== reader)
-    setLedgerKept({ reader, memory: { current: {} } });
-  // The declaration open in the workspace, and what the list keeps of
-  // itself meanwhile, for one profile and one sign-in, in memory only; no
-  // declaration shows the list.
-  const [openDeclaration, setOpenDeclaration] = useState(() => ({
+    calendarVisible,
+    recheckAccount: signIn.recheckAccount,
+    locale,
+  });
+  const { messages } = reads;
+  const { showBrowser, showSede } = usePageArrival({
+    calendarVisible,
+    ledgerVisible,
+    declarationsVisible,
+    browserVisible,
+    firstPaneShown,
+    openDeclaration: memories.openDeclaration,
+    calendarPage: navigation.calendarPage,
+    ledgerPage: navigation.ledgerPage,
+    declarationsPage: navigation.declarationsPage,
+    browserPage: navigation.browserPage,
+    wantsCalendar: navigation.wantsCalendar,
+    wantsLedger: navigation.wantsLedger,
+    wantsDeclarations: navigation.wantsDeclarations,
+    wantsBrowser: navigation.wantsBrowser,
+    docs,
+    browserMounted: memories.browserMounted,
+    setBrowserHome: memories.setBrowserHome,
+    setMaximized,
+    setPage,
+  });
+  const { scheme, terminalTheme } = useWindowAppearance({
+    docsTheme: docsFrame.docsTheme,
+    prefersDark: arrangement.prefersDark,
+    prefs,
+    locale,
+  });
+
+  const { docsEntry, goHome, openDoc, searchDocs } = useDocsNavigation({
+    environment,
+    locale,
+    docs,
+    docsSearchReady: docsFrame.docsSearchReady,
+    showDocs: navigation.showDocs,
+  });
+  useHostNotices({ host, manager: account.manager, say, t });
+  const openLink = useOpenExternal(host, say, t);
+  const { copy, paste } = useHostClipboard({ host, terminals, say, t });
+  const setup = useWindowSetup({
+    host,
     reader,
-    workUnitId: null as string | null,
-    memory: { current: {} as DeclarationsMemory },
-  }));
-  if (openDeclaration.reader !== reader)
-    setOpenDeclaration({ reader, workUnitId: null, memory: { current: {} } });
-  const openWorkUnit = (workUnitId: string | null) => {
-    wantsDeclarations.current = true;
-    setOpenDeclaration((held) => ({ ...held, workUnitId }));
-  };
-  const calendar = useFilingCalendar(
+    signedIn,
+    locale,
+    held: signIn.dialogHeld,
+    setSettingsOpen,
+    say,
+    t,
+  });
+  const logs = useLogControls({
+    host,
+    environment,
+    logLevel: layout.logLevel,
+    setLayout,
+    say,
+    t,
+  });
+  const { grantFocus, focusView, focusRail } = useFocusWish({
+    signInButton,
+    terminals,
+  });
+  useGateFocus({
+    gated,
+    phase,
+    signInDismissed: signIn.signInDismissed,
+    focusView,
+  });
+
+  const columns = useColumnCommands({
+    layout,
+    maximized,
+    setMaximized,
+    patch,
+    focusView,
+    guarded,
+    showPage,
+    showDocs: navigation.showDocs,
+    pageOn,
+    panelVisible,
+    activePanes,
+    agentVisible,
+    agentFits: visibility.agentFits,
+    tuiVisible,
+    docsVisible,
+    mainOccupied: visibility.mainOccupied,
+    wantsAgent: navigation.wantsAgent,
+  });
+  const { showTui, openTab, toggleMaximize } = columns;
+  const cycleFocus = useFocusCycle({
+    agentVisible,
+    firstPaneShown,
+    tuiVisible,
+    panelVisible,
+    activePanes,
+    gated,
+    status: sessions.status,
+    focusView,
+    focusRail,
+    profilePage: navigation.profilePage,
+    ledgerPage: navigation.ledgerPage,
+    declarationsPage: navigation.declarationsPage,
+    calendarPage: navigation.calendarPage,
+    aeatSyncPage: navigation.aeatSyncPage,
+    docs,
+    signInButton,
+    agentBody: navigation.agentBody,
+  });
+
+  const { agentControl, modelList } = useReadingModelPicker(
+    host.agentSession,
+    openView,
+  );
+  const pastedLink = usePastedLink(t, resolveView, openViewLink);
+
+  const actions = useShellActions({
+    t,
+    fullscreen,
+    enterFullscreen: arrangement.enterFullscreen,
+    setPaletteExtra: overlays.setPaletteExtra,
+    setPaletteOpen: overlays.setPaletteOpen,
+    contributed: overlays.contributed,
+    docsSearchReady: docsFrame.docsSearchReady,
+    docsEntry,
+    docs,
+    goHome,
+    pageOn,
+    patch,
+    layout,
+    prefs,
+    maximized,
+    setMaximized,
+    toggleMaximize,
+    agentVisible,
+    tuiVisible,
+    docsVisible,
+    firstPaneShown,
+    panelVisible,
+    activePanes,
+    narrowedPanes: arrangement.narrowedPanes,
+    changeDocking: arrangement.changeDocking,
+    setPrefs,
+    selectLogLevel: logs.selectLogLevel,
+    openTab,
+    setFilters: logs.setFilters,
+    defaultFilters: logs.defaultFilters,
+    host,
+    revealLogs: logs.revealLogs,
+    setSettingsOpen,
+    about,
+    setAboutOpen: overlays.setAboutOpen,
+    setup: setup.setup,
+    setupOffered: setup.setupOffered,
+    setupSnapshot: setup.setupSnapshot,
+    setupLive: setup.setupLive,
+    setupRetryable: setup.setupRetryable,
+    setupCancellable: setup.setupCancellable,
+    openSetup: setup.openSetup,
+    calendarVisible,
+    ledgerVisible,
+    declarationsVisible,
+    browserVisible,
+    wantsCalendar: navigation.wantsCalendar,
+    wantsLedger: navigation.wantsLedger,
+    wantsDeclarations: navigation.wantsDeclarations,
+    setPage,
+    showBrowser,
+    toggleColumn: columns.toggleColumn,
+    resolveView,
+    openView,
+    copy,
     views,
-    reader,
-    calendarVisible,
-    recheckAccount,
-    locale,
-  );
-  const calendarProfile = useUserProfile(
-    host.userProfile,
-    reader,
-    locale,
-    calendarVisible,
-  );
-  const observedMessages = useMessages(views, reader, recheckAccount, locale);
-  // Withhold private counts in the same render as the account gate. The
-  // existing hook settles old reads and clears its cache in its effect.
-  const messages = useMemo(
-    () => (reader === null ? { kind: "unknown" as const } : observedMessages),
-    [reader, observedMessages],
-  );
-  // The keyboard goes to the calendar when it was asked for and is laid
-  // out. Put away, focus stays where it is, unless it was in the page: then
-  // it goes to what the pane shows instead.
-  const calendarWas = useRef(calendarVisible);
-  useEffect(() => {
-    if (calendarVisible && wantsCalendar.current) {
-      wantsCalendar.current = false;
-      calendarPage.current?.focus();
-    } else if (
-      !calendarVisible &&
-      calendarWas.current &&
-      firstPaneShown &&
-      document.activeElement === document.body
-    )
-      (
-        docs.current ??
-        document.querySelector<HTMLElement>(".rail [role=toolbar]")
-      )?.focus();
-    calendarWas.current = calendarVisible;
-  }, [calendarVisible, firstPaneShown]);
-  useEffect(() => {
-    if (ledgerVisible && wantsLedger.current) {
-      wantsLedger.current = false;
-      ledgerPage.current?.focus();
-    }
-  }, [ledgerVisible]);
-  useEffect(() => {
-    if (declarationsVisible && wantsDeclarations.current) {
-      wantsDeclarations.current = false;
-      declarationsPage.current?.focus();
-    }
-  }, [declarationsVisible, openDeclaration]);
-  useEffect(() => {
-    if (browserVisible && wantsBrowser.current) {
-      wantsBrowser.current = false;
-      browserPage.current?.focus();
-    }
-  }, [browserVisible]);
-  // The page asks for the Sede itself, so opening it names no address; shown
-  // already, it only takes the keyboard.
-  const showBrowser = useCallback(() => {
-    if (browserVisible) {
-      browserPage.current?.focus();
-      return;
-    }
-    wantsBrowser.current = true;
-    setMaximized((area) => (area === "docs" ? area : null));
-    setPage("browser");
-  }, [browserVisible, setMaximized, setPage]);
-  // The AEAT shortcut: the browser at the Sede. A view already open is sent
-  // back there; a new one starts there.
-  const showSede = useCallback(() => {
-    if (browserMounted) setBrowserHome((count) => count + 1);
-    showBrowser();
-  }, [browserMounted, showBrowser]);
-  const askSignIn = useCallback(() => {
-    const element = document.activeElement;
-    signInOpener.current = {
-      element,
-      calendar: element?.closest(".calendar-page") != null,
-    };
-    setSignInDismissed(false);
-  }, []);
-  const canCreateProfile = account.canCreate;
-  // Another profile, or a new one, only while nobody is signed in.
-  const offersProfiles = account.offering;
-  const askNewProfile = useCallback(() => {
-    setSettingsOpen(false);
-    askSignIn();
-    setCreatingProfile(true);
-  }, [askSignIn]);
-
-  const t: Translate = useMemo(() => translator(locale), [locale]);
-
-  const docsResolved =
-    docsTheme === "auto" ? (prefersDark ? "dark" : "light") : docsTheme;
-  const scheme =
-    prefs.appearance === "follow" ? docsResolved : prefs.appearance;
-  const terminalTheme =
-    prefs.terminals === "dark" || scheme === "dark"
-      ? DARK_TERMINAL
-      : LIGHT_TERMINAL;
-
-  useEffect(() => {
-    document.documentElement.dataset.scheme = scheme;
-    document.documentElement.lang = locale;
-  }, [scheme, locale]);
-
-  const docsEntry = useMemo(() => {
-    if (environment.state !== "ready") return null;
-    const docs = environment.value.docs;
-    if (docs.state !== "bundled") return null;
-    const { languages: bundled } = docs;
-    return (
-      bundled.find((language) => language.code === locale) ?? bundled[0] ?? null
-    );
-  }, [environment, locale]);
-
-  // The previous close ended changes before they reported: say once that
-  // their outcome is unknown, so none is repeated blindly. The host gives the
-  // answer only once, so it is asked only once.
-  const previousClose = host.previousClose;
-  const previousCloseAsked = useRef(false);
-  const [previousCloseUnknown, setPreviousCloseUnknown] = useState(false);
-  useEffect(() => {
-    if (!previousClose || previousCloseAsked.current) return;
-    previousCloseAsked.current = true;
-    previousClose().then(
-      (interrupted) => setPreviousCloseUnknown(interrupted > 0),
-      () => undefined,
-    );
-  }, [previousClose]);
-  useEffect(() => {
-    if (!previousCloseUnknown) return;
-    setPreviousCloseUnknown(false);
-    say(t("desktop.toast.previous_close_interrupted"));
-  }, [previousCloseUnknown, say, t]);
-
-  useEffect(
-    () => observeInternalFailures(() => say(t("desktop.error.internal"))),
-    [say, t],
-  );
-
-  const previousManager = useRef(account.manager?.state);
-  useEffect(() => {
-    const state = account.manager?.state;
-    const previous = previousManager.current;
-    previousManager.current = state;
-    if (!state || state === previous) return;
-    if (state === "recovering" || state === "waiting")
-      say(t("desktop.signin.recovering_services"));
-    else if (state === "failed" || state === "stopped")
-      say(t("desktop.signin.refused.manager"));
-    else if (
-      state === "ready" &&
-      (previous === "recovering" || previous === "waiting")
-    )
-      say(t("desktop.signin.services_recovered"));
-  }, [account.manager, say, t]);
-
-  // An address opened in the system browser. A refusal is said aloud: the
-  // person must not wait for a page that is not coming.
-  const openLink = useCallback(
-    (url: string) => {
-      host.openExternal(url).catch(() => say(t("desktop.toast.open_failed")));
-    },
-    [host, say, t],
-  );
-
-  const copy = useCallback(
-    (text: string) => {
-      if (!text) return;
-      // A refused write, including one over the host's size cap, is said
-      // aloud: the person must not believe a copy happened when it did not.
-      host.writeClipboard(text).then(
-        () => say(t("desktop.toast.copied")),
-        () => say(t("desktop.toast.copy_failed")),
-      );
-    },
-    [host, say, t],
-  );
-
-  // Component setup, this installation's whether or not anyone is signed
-  // in; only the profile's Google account and its person's model list wait
-  // for a sign-in. Setup incomplete is never treated as optional, but it
-  // never holds the window either: the dialog opens once per launch and
-  // closes at any time.
-  const setup = useSetup(host.setup, reader);
-  const setupOffered = setup.offered;
-  const setupSnapshot = setup.snapshot;
-  const google = signedIn && setupOffered ? setupSnapshot?.google : null;
-  const driveFolder = google?.drive_folder_id;
-  const driveUrl =
-    signedIn &&
-    google?.state === "signed_in" &&
-    google.stage !== "signing_in" &&
-    google.stage !== "signing_out" &&
-    driveFolder &&
-    /^[A-Za-z0-9_-]{1,256}$/.test(driveFolder)
-      ? `https://drive.google.com/drive/folders/${driveFolder}`
-      : null;
-  const setupRuns = setupSnapshot?.runs;
-  const setupLive = useMemo(() => liveRuns(setupSnapshot), [setupSnapshot]);
-  // The items the palette sets up again: each whose setup ended short of
-  // done, or whose row failed, while it is not setting up now.
-  const setupRetryable = useMemo(
-    () =>
-      (setupSnapshot?.rows ?? []).flatMap((row) => {
-        const run = runOf(setupSnapshot, row.item);
-        if (run && run.stage !== "settled") return [];
-        const ended = run?.outcome ?? null;
-        const again =
-          ended === "failed" ||
-          ended === "interrupted" ||
-          ended === "cancelled" ||
-          ended === "not_enough_space" ||
-          ended === "plan_changed" ||
-          row.state === "failed";
-        return again
-          ? [{ item: row.item, resume: ended === "interrupted" }]
-          : [];
-      }),
-    [setupSnapshot],
-  );
-  const setupCancellable = useMemo(
-    () => setupLive.filter((run) => run.cancellable && !run.cancel_requested),
-    [setupLive],
-  );
-  // Changes whenever another setup settles, so what depends on a component
-  // reads again.
-  const settledSetups = useMemo(() => {
-    const settled = (setupRuns ?? [])
-      .filter((run) => run.stage === "settled")
-      .map((run) => run.operation_id);
-    return settled.length > 0 ? settled.join(" ") : null;
-  }, [setupRuns]);
-  // The one provisioning store every surface reads, and the one panel it
-  // opens: once per launch while setup is not complete, and on every
-  // recovery, on the element the recovery names.
-  // The launch's own opening waits while the sign-in dialog, or the profiles
-  // it leads to, owns the window; it opens as that closes.
-  const provisioning = useProvisioningStore(
-    setup,
-    reader,
-    () => setSettingsOpen(false),
-    (signInAsked && !signInDismissed) || managingProfiles,
-  );
-  const setupIncomplete = provisioning.incomplete;
-  const openSetup = provisioning.open;
-  // One toast for each setup this window watched run, once it settles.
-  const setupWatched = useRef(new Set<string>());
-  useEffect(() => {
-    for (const run of setupRuns ?? []) {
-      if (run.stage !== "settled") {
-        setupWatched.current.add(run.operation_id);
-        continue;
-      }
-      if (!setupWatched.current.delete(run.operation_id) || !run.outcome)
-        continue;
-      const text = outcomeToast(t, run.outcome);
-      if (text) say(text);
-    }
-  }, [setupRuns, say, t]);
-  // Something the product refused for a component that is not set up opens
-  // the panel on that component; an action that is not about setup opens
-  // nothing. The refusal's code is never shown.
-  const raiseSetup = provisioning.raise;
-  // A tool call's refusal opens it once per refusal: each new call that is
-  // refused opens it again, and a conversation read again raises none twice.
-  const toolRefusalsSeen = useRef(new Set<string>());
-  const onToolRefused = useCallback(
-    (key: string, refusal: AgentToolRefusal) => {
-      if (toolRefusalsSeen.current.has(key)) return;
-      toolRefusalsSeen.current.add(key);
-      const action = provisionActionOf(refusal);
-      if (action !== null) raiseSetup(action);
-    },
-    [raiseSetup],
-  );
-  // A ledger operation's refusal opens it once per operation, and the page
-  // still shows the refusal itself.
-  const routedLedger = useMemo(
-    () => host.ledger && routeProvisioningRefusals(host.ledger, raiseSetup),
-    [host.ledger, raiseSetup],
-  );
-  // The filing periods any part of the window shows are read through it.
-  useLedgerPeriodsReader(routedLedger, reader, locale);
-  // So does a Censo pull that stopped for want of a component.
-  const profileHost = useMemo(
-    () =>
-      host.censo
-        ? { ...host, censo: routeCensoRefusals(host.censo, raiseSetup) }
-        : host,
-    [host, raiseSetup],
-  );
-
-  const copyLogs = useCallback(
-    (text: string) => {
-      if (!text) return;
-      (host.copyLogs ? host.copyLogs(text) : host.writeClipboard(text)).then(
-        () => say(t("desktop.toast.copied")),
-        () => say(t("desktop.toast.copy_failed")),
-      );
-    },
-    [host, say, t],
-  );
-
-  const revealLogs = useCallback(() => {
-    host.revealLogs?.().catch(() => say(t("desktop.toast.open_failed")));
-  }, [host, say, t]);
-
-  const exportLogs = useCallback(
-    async (text: string) => {
-      try {
-        if (host.exportLogs) {
-          const path = await host.exportLogs(text);
-          say(t("desktop.logs.exported", { path }));
-        } else {
-          await saveLogs(text, t("desktop.logs.file_type"));
-        }
-      } catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError")
-          return;
-        say(t("desktop.logs.export_failed"));
-      }
-    },
-    [host, say, t],
-  );
-
-  // Focus asked for a view that may not be on screen yet: showing it is a
-  // state change, and that commits later than the request does. The wish is
-  // kept and granted after the commit that shows the view, or dropped when
-  // none does in time. Granted, it is kept for the rest of its life: a view
-  // that is rebuilt as it starts takes its focus with it, and the commit
-  // that follows gives it back, unless focus has gone somewhere by then.
-  const wanted = useRef<{
-    view: TerminalKind | "logs";
-    since: number;
-    granted?: boolean;
-    waitingForTerminal?: boolean;
-  } | null>(null);
-  const grantFocus = useCallback(() => {
-    const wish = wanted.current;
-    if (!wish) return;
-    if (
-      !wish.waitingForTerminal &&
-      performance.now() > wish.since + settings.focus_wish_ms
-    ) {
-      wanted.current = null;
-      return;
-    }
-    if (wish.granted && document.activeElement !== document.body) return;
-    // The sign-in dialog holds the keyboard while it is up: nothing behind
-    // it is given focus, whatever was wished for before it opened. On its
-    // way out it holds nothing, and a wish made then is granted at once.
-    if (document.querySelector('.sign-in[data-state="open"]')) return;
-    // A closing Radix menu keeps its focus scope until the exit animation
-    // unmounts it. Retain the wish until the menu reports that it has closed.
-    if (document.querySelector("[data-dock-menu]")) return;
-    // Withheld, the TUI's pane holds the way in instead of a terminal.
-    const wayIn = signInButton.current;
-    if (wish.view === "tui" && wayIn && wayIn.offsetParent !== null) {
-      wayIn.focus();
-      wish.granted = true;
-      return;
-    }
-    const target = document.querySelector<HTMLElement>(
-      wish.view === "logs"
-        ? ".logview .filter-text"
-        : `[data-terminal="${wish.view}"]`,
-    );
-    // Laid out means shown: a hidden pane's content has no offset parent.
-    if (!target || target.offsetParent === null) return;
-    if (wish.view === "logs") target.focus();
-    else if (
-      terminals.current[wish.view] &&
-      target.getAttribute("aria-busy") !== "true"
-    )
-      terminals.current[wish.view]?.focus();
-    else {
-      // Fonts and the first usable TUI frame can both delay focus. Later
-      // user input cancels this wish; loading time alone must not lose it.
-      wish.waitingForTerminal = true;
-      return;
-    }
-    wish.waitingForTerminal = false;
-    wish.granted = true;
-  }, []);
-  useEffect(grantFocus);
-  useEffect(() => {
-    // Whatever the person presses next decides where focus is: a wish from
-    // before that press is dropped, never granted over it. The press that
-    // made the wish is older than the wish and leaves it alone.
-    const drop = (event: Event) => {
-      if (wanted.current && wanted.current.since < event.timeStamp)
-        wanted.current = null;
-    };
-    window.addEventListener("pointerdown", drop, true);
-    window.addEventListener("keydown", drop, true);
-    return () => {
-      window.removeEventListener("pointerdown", drop, true);
-      window.removeEventListener("keydown", drop, true);
-    };
-  }, []);
-  const focusView = useCallback(
-    (view: TerminalKind | "logs") => {
-      wanted.current = { view, since: performance.now() };
-      grantFocus();
-    },
-    [grantFocus],
-  );
-  const focusRail = useCallback(
-    () => document.querySelector<HTMLElement>(".rail [role=toolbar]")?.focus(),
-    [],
-  );
-  // The TUI is where the profile is worked on: shown, with the keyboard.
-  const showTui = useCallback(() => {
-    setMaximized((area) => (area === "tui" ? area : null));
-    patch({ tuiShown: true });
-    focusView("tui");
-  }, [patch, focusView, setMaximized]);
-  // Whether the last render showed a gate the person could act on, with
-  // the dialog put aside. The first status read is a gate too, but not one
-  // anybody was standing at: being let through it at startup moves no
-  // focus. And with the dialog still up, its own close decides where focus
-  // goes: this must not get there first.
-  const stoodAtGate = useRef(false);
-  useEffect(() => {
-    // Admitted after the dialog was put aside: the way in that held focus
-    // went with the gate, and the TUI that has started takes it.
-    if (
-      stoodAtGate.current &&
-      !gated &&
-      document.activeElement === document.body
-    )
-      focusView("tui");
-    stoodAtGate.current =
-      gated && phase !== "checking" && phase !== "starting" && signInDismissed;
-  }, [gated, phase, signInDismissed, focusView]);
-  useEffect(() => {
-    // Signed out from here, no dialog follows. If the terminal that held
-    // focus went with the session, the pane's way back in takes it.
-    if (gated && signInDismissed && document.activeElement === document.body)
-      focusView("tui");
-  }, [gated, signInDismissed, focusView]);
-
-  const openTab = useCallback(
-    (tab: PanelTab, { toggle = true }: { toggle?: boolean } = {}) => {
-      if (
-        toggle &&
-        panelVisible &&
-        activePanes.includes(tab) &&
-        layout.tab === tab
-      ) {
-        patch({ panelOpen: false });
-        if (maximized === "panel") setMaximized(null);
-        return;
-      }
-      if (maximized && maximized !== "panel") setMaximized(null);
-      patch({ panelOpen: true, tab });
-      focusView(tab);
-    },
-    [
-      panelVisible,
-      activePanes,
-      layout.tab,
-      maximized,
+    messages,
+    say,
+    showTui,
+    openLink,
+    driveUrl: setup.driveUrl,
+    mayEnterPassword: signIn.mayEnterPassword,
+    askSignIn: signIn.askSignIn,
+    canCreateProfile: signIn.canCreateProfile,
+    offersProfiles: signIn.offersProfiles,
+    askNewProfile: signIn.askNewProfile,
+    signedIn,
+    signOut: signIn.signOut,
+    setSignInDismissed: signIn.setSignInDismissed,
+    setManagingProfiles: signIn.setManagingProfiles,
+    switchProfile: signIn.switchProfile,
+    askCenso: pageAsks.askCenso,
+    cycleFocus,
+    terminals,
+    paste,
+  });
+  const { actionsRef, byId, runAction, profileAccountActions } =
+    useActionRunner(actions);
+  navigation.bindWindow({
+    showInWindow: windowViewApplication({
+      tab: layout.tab,
+      agentFits: visibility.agentFits,
+      mainOccupied: visibility.mainOccupied,
+      setMaximized,
       patch,
-      focusView,
-      setMaximized,
-    ],
-  );
-
-  const toggleMaximize = useCallback(
-    (area: Exclude<Maximized, null>) => {
-      if (maximized === area) {
-        setMaximized(null);
-        return;
-      }
-      if (area === "agent" && !layout.agentShown) patch({ agentShown: true });
-      if (area === "tui" && !layout.tuiShown) patch({ tuiShown: true });
-      if (area === "docs" && !layout.docsShown && !pageOn)
-        patch({ docsShown: true });
-      if (area === "panel" && !layout.panelOpen) patch({ panelOpen: true });
-      setMaximized(area);
-      if (area === "tui") focusView("tui");
-    },
-    [
-      maximized,
-      setMaximized,
-      layout.agentShown,
-      layout.tuiShown,
-      layout.docsShown,
-      layout.panelOpen,
-      pageOn,
-      patch,
-      focusView,
-    ],
-  );
-
-  // A column's own close: put away, and the layout restored if it was the
-  // one maximized.
-  const closeColumn = useCallback(
-    (column: (typeof WORKSPACE_COLUMNS)[number]) => {
-      if (column === "docs") {
-        guarded(() => {
-          showPage("docs");
-          patch({ docsShown: false });
-          setMaximized((area) => (area === column ? null : area));
-        });
-      } else {
-        setMaximized((area) => (area === column ? null : area));
-        patch(column === "agent" ? { agentShown: false } : { tuiShown: false });
-      }
-    },
-    [patch, setMaximized, guarded, showPage],
-  );
-  // A column asked for from the rail, the palette or a shortcut: put away
-  // when it is on screen, else shown with the layout restored around it.
-  const toggleColumn = useCallback(
-    (column: (typeof WORKSPACE_COLUMNS)[number]) => {
-      const onScreen =
-        column === "agent"
-          ? agentVisible
-          : column === "tui"
-            ? tuiVisible
-            : docsVisible;
-      if (onScreen && maximized === null) return closeColumn(column);
-      if (column === "agent" && !agentFits) {
-        // Too narrow to sit beside anything: the agent takes the window.
-        if (onScreen) return closeColumn(column);
-        patch({ agentShown: true });
-        setMaximized(mainOccupied ? "agent" : null);
-        wantsAgent.current = true;
-        return;
-      }
-      setMaximized(null);
-      if (column === "docs") showDocs();
-      else if (column === "agent") {
-        patch({ agentShown: true });
-        wantsAgent.current = true;
-      } else {
-        patch({ tuiShown: true });
-        focusView("tui");
-      }
-    },
-    [
-      agentVisible,
-      agentFits,
-      mainOccupied,
-      tuiVisible,
-      docsVisible,
-      maximized,
-      closeColumn,
-      setMaximized,
-      showDocs,
-      patch,
-      focusView,
-    ],
-  );
-
-  // The keyboard's way between the areas of the window, in the order they
-  // are laid out. A focused terminal keeps Tab for itself, so this is how
-  // focus leaves one.
-  const cycleFocus = useCallback(
-    (step: 1 | -1) => {
-      type Stop = [DockPane | "rail", boolean, () => void];
-      const docsStop: Stop = [
-        "docs",
-        firstPaneShown &&
-          (profilePage.current !== null ||
-            ledgerPage.current !== null ||
-            declarationsPage.current !== null ||
-            calendarPage.current !== null ||
-            aeatSyncPage.current !== null ||
-            !!docs.current),
-        () =>
-          (
-            profilePage.current ??
-            ledgerPage.current ??
-            declarationsPage.current ??
-            calendarPage.current ??
-            aeatSyncPage.current ??
-            docs.current
-          )?.focus(),
-      ];
-      const tuiStop: Stop = [
-        "tui",
-        // Only where the pane holds something to focus: the way in while
-        // signed out, or a session.
-        tuiVisible &&
-          (signInButton.current !== null ||
-            (!gated && status.tui.phase !== "unavailable")),
-        () => focusView("tui"),
-      ];
-      const stops: Stop[] = [
-        ["agent", agentVisible, () => agentBody.current?.focus()],
-        tuiStop,
-        docsStop,
-        ...(["console", "python", "logs"] as const).map((tab): Stop => [
-          tab,
-          panelVisible && activePanes.includes(tab),
-          () => {
-            if (tab === "logs")
-              document
-                .querySelector<HTMLElement>(".logview .filter-text")
-                ?.focus();
-            // Without a session there is no terminal to focus; its tab is.
-            else if (status[tab].phase === "unavailable")
-              document.getElementById(`tab-${tab}`)?.focus();
-            else focusView(tab);
-          },
-        ]),
-      ];
-      const shown: Stop[] = activePanes.flatMap((pane) =>
-        stops.filter(([id, on]) => id === pane && on),
-      );
-      shown.push(["rail", true, focusRail]);
-      const focused =
-        document.activeElement?.closest<HTMLElement>("[data-dock-pane]")
-          ?.dataset.dockPane ?? focusedArea();
-      const at = shown.findIndex(([area]) => area === focused);
-      const to =
-        at === -1
-          ? step === 1
-            ? 0
-            : shown.length - 1
-          : (at + step + shown.length) % shown.length;
-      shown[to]?.[2]();
-    },
-    [
-      agentVisible,
-      firstPaneShown,
-      tuiVisible,
-      panelVisible,
-      activePanes,
-      gated,
-      status,
-      focusView,
-      focusRail,
-    ],
-  );
-
-  const paste = useCallback(
-    (kind: TerminalKind | null) => {
-      if (!kind) return;
-      host.readClipboard().then(
-        (text) => terminals.current[kind]?.paste(text),
-        // The host refuses rather than truncates an oversized clipboard, so
-        // say why nothing arrived.
-        (error: unknown) =>
-          say(
-            t(
-              failureCode(error) === "output_limit"
-                ? "desktop.toast.paste_too_large"
-                : "desktop.toast.paste_failed",
-            ),
-          ),
-      );
-    },
-    [host, say, t],
-  );
-
-  const goHome = useCallback(() => {
-    showDocs();
-    if (docs.current?.home()) return;
-    // A documentation page without the home command still reloads its entry.
-    const frame = document.querySelector<HTMLIFrameElement>(".docs-frame");
-    if (frame && docsEntry) frame.src = docsEntry.entry;
-  }, [docsEntry, showDocs]);
-
-  const openDoc = useCallback(
-    (url: string) => {
-      showDocs();
-      if (docs.current?.navigate(url)) return;
-      const frame = document.querySelector<HTMLIFrameElement>(".docs-frame");
-      if (
-        !frame ||
-        environment.state !== "ready" ||
-        environment.value.docs.state !== "bundled"
-      )
-        return;
-      // Only a documentation-origin address ever becomes the frame's source.
-      let origin: string;
-      try {
-        origin = new URL(url).origin;
-      } catch {
-        return;
-      }
-      if (origin === environment.value.docs.origin) frame.src = url;
-    },
-    [environment, showDocs],
-  );
-
-  const { openView, openLink: openViewLink, resolve: resolveView } = nav;
-  // The model documents are read with is picked in the agent column's model
-  // picker; a page beside a reading with no model leads to the picker.
-  const agentSession = host.agentSession;
-  const agentControl = useRef<AgentColumnControl>(null);
-  const modelList = useMemo<ModelList | null>(
-    () =>
-      agentSession?.localModels && agentSession.chooseReadingModel
-        ? {
-            open: () => {
-              openView("agent");
-              agentControl.current?.openModelPicker();
-            },
-          }
-        : null,
-    [agentSession, openView],
-  );
-  // The register element of the main view shown: the first pane's page, or
-  // its Ledger section; nothing while the first pane is put away.
-  const shownViewId = firstPaneShown
-    ? pageViewId(pageOn ? page : "docs", layout.ledgerView.section)
-    : undefined;
-  // A query that is a `cadrumo:` link is one palette entry: the view it
-  // opens, or why it opens none.
-  const pastedLink = useCallback(
-    (text: string): PastedLink | null => {
-      if (!isCadrumoLink(text)) return null;
-      const parsed = parseViewLink(text, NAVIGATION);
-      if (parsed.kind === "refused")
-        return {
-          label: refusalReasonText(t, NAVIGATION, parsed.reason, null),
-          open: null,
-        };
-      const resolved = resolveView(parsed.link);
-      if (resolved.kind === "refused")
-        return {
-          label: refusalReasonText(
-            t,
-            NAVIGATION,
-            resolved.reason,
-            parsed.link.viewId,
-          ),
-          open: null,
-        };
-      const element = elementOf(NAVIGATION, resolved.opened);
-      return {
-        label: t("desktop.palette.open_link", {
-          view: element ? t(element.label) : resolved.opened,
-        }),
-        open: () => openViewLink(text),
-      };
-    },
-    [t, resolveView, openViewLink],
-  );
-
-  // The single action registry.
-  const actions = useMemo<Action[]>(
-    () => [
-      {
-        id: "window.fullscreen",
-        label: t(
-          fullscreen.fullscreen
-            ? "desktop.dock.exit_fullscreen"
-            : "desktop.dock.fullscreen",
-        ),
-        group: "layout",
-        icon: "windowMaximize",
-        chords: [{ code: "F11", key: "F11", scope: "global" }],
-        run: () => enterFullscreen(),
-      },
-      {
-        id: "window.leaveFullscreen",
-        label: t("desktop.dock.exit_fullscreen"),
-        group: "layout",
-        icon: "restore",
-        hidden: true,
-        chords: [{ code: "Escape", key: "Esc", scope: "global" }],
-        enabled: () => fullscreen.fullscreen,
-        run: () => enterFullscreen(),
-      },
-      {
-        id: "palette.open",
-        label: t("desktop.palette.placeholder"),
-        group: "general",
-        icon: "search",
-        hidden: true,
-        chords: [
-          { mod: true, code: "KeyK", key: "K", scope: "app" },
-          { mod: true, shift: true, code: "KeyK", key: "K", scope: "global" },
-        ],
-        run: () => {
-          setPaletteExtra(contributed.current?.() ?? []);
-          setPaletteOpen((open) => !open);
-        },
-      },
-      {
-        id: "docs.search",
-        label: t("desktop.palette.documentation"),
-        group: "docs",
-        icon: "book",
-        enabled: () => !docsSearchReady && docsEntry !== null,
-        run: () => docs.current?.openSearch(),
-      },
-      {
-        id: "docs.home",
-        label: t("desktop.rail.docs_home"),
-        group: "docs",
-        icon: "book",
-        chords: [{ alt: true, code: "Home", key: "Home", scope: "docs" }],
-        run: goHome,
-      },
-      {
-        id: "docs.back",
-        label: t("desktop.action.docs_back"),
-        group: "docs",
-        icon: "back",
-        chords: [{ alt: true, code: "ArrowLeft", key: "←", scope: "docs" }],
-        enabled: () => !pageOn,
-        run: () => docs.current?.back(),
-      },
-      {
-        id: "docs.forward",
-        label: t("desktop.action.docs_forward"),
-        group: "docs",
-        icon: "forward",
-        chords: [{ alt: true, code: "ArrowRight", key: "→", scope: "docs" }],
-        enabled: () => !pageOn,
-        run: () => docs.current?.forward(),
-      },
-      {
-        id: "docs.zoomIn",
-        label: t("desktop.action.zoom_in"),
-        group: "docs",
-        icon: "zoomIn",
-        chords: [{ mod: true, code: "Equal", key: "=", scope: "docs" }],
-        enabled: () => !pageOn,
-        run: () =>
-          patch({
-            zoom: Math.min(2, Math.round((layout.zoom + 0.1) * 10) / 10),
-          }),
-      },
-      {
-        id: "docs.zoomOut",
-        label: t("desktop.action.zoom_out"),
-        group: "docs",
-        icon: "zoomOut",
-        chords: [{ mod: true, code: "Minus", key: "-", scope: "docs" }],
-        enabled: () => !pageOn,
-        run: () =>
-          patch({
-            zoom: Math.max(0.5, Math.round((layout.zoom - 0.1) * 10) / 10),
-          }),
-      },
-      {
-        id: "docs.zoomReset",
-        label: t("desktop.action.zoom_reset"),
-        group: "docs",
-        icon: "reset",
-        chords: [{ mod: true, code: "Digit0", key: "0", scope: "docs" }],
-        enabled: () => !pageOn,
-        run: () => patch({ zoom: 1 }),
-      },
-      {
-        id: "view.maximize",
-        label: maximized
-          ? t("desktop.pane.restore")
-          : t("desktop.pane.maximize_focused"),
-        group: "layout",
-        icon: maximized ? "restore" : "maximize",
-        chords: [
-          { mod: true, shift: true, code: "KeyM", key: "M", scope: "global" },
-        ],
-        run: () => {
-          if (maximized) return setMaximized(null);
-          const area = focusedArea();
-          toggleMaximize(
-            area && area !== "rail"
-              ? area
-              : (WORKSPACE_COLUMNS.find((column) =>
-                  column === "agent"
-                    ? agentVisible
-                    : column === "tui"
-                      ? tuiVisible
-                      : firstPaneShown,
-                ) ?? "docs"),
-          );
-        },
-      },
-      {
-        id: "view.maximizeAgent",
-        label: t("desktop.pane.maximize_agent"),
-        group: "layout",
-        icon: "maximize",
-        enabled: () => maximized !== "agent",
-        run: () => toggleMaximize("agent"),
-      },
-      {
-        id: "view.maximizeDocs",
-        label: t("desktop.pane.maximize_docs"),
-        group: "layout",
-        icon: "maximize",
-        enabled: () => maximized !== "docs",
-        run: () => toggleMaximize("docs"),
-      },
-      {
-        id: "view.maximizeTui",
-        label: t("desktop.pane.maximize_tui"),
-        group: "layout",
-        icon: "maximize",
-        enabled: () => maximized !== "tui",
-        run: () => toggleMaximize("tui"),
-      },
-      {
-        id: "view.maximizePanel",
-        label: t("desktop.pane.maximize_panel"),
-        group: "layout",
-        icon: "maximize",
-        enabled: () => maximized !== "panel",
-        run: () => toggleMaximize("panel"),
-      },
-      {
-        id: "split.orientation",
-        label:
-          prefs.orientation === "row"
-            ? t("desktop.split.stack")
-            : t("desktop.split.side_by_side"),
-        group: "layout",
-        icon: prefs.orientation === "row" ? "splitColumn" : "splitRow",
-        // While the window forces stacking, the choice would change nothing
-        // visible, so it is not offered.
-        enabled: () => !narrowedPanes.includes("docs"),
-        run: () => {
-          changeDocking((current) => orientDockPane(current, "docs"));
-          setPrefs((p) => ({
-            ...p,
-            orientation: p.orientation === "row" ? "column" : "row",
-          }));
-        },
-      },
-      {
-        id: "split.swap",
-        label: t("desktop.split.swap"),
-        group: "layout",
-        icon: "swap",
-        run: () => {
-          changeDocking((current) => swapDockPane(current, "docs"));
-          setPrefs((p) => ({
-            ...p,
-            order: p.order === "docs" ? "tui" : "docs",
-          }));
-        },
-      },
-      {
-        id: "logs.errors",
-        label: t("desktop.action.logs_errors"),
-        group: "logs",
-        icon: "logs",
-        run: () => {
-          selectLogLevel(levelRank("ERROR"));
-          openTab("logs", { toggle: false });
-        },
-      },
-      {
-        id: "logs.reset",
-        label: t("desktop.action.logs_reset"),
-        group: "logs",
-        icon: "logs",
-        run: () => setFilters(defaultFilters),
-      },
-      {
-        id: "logs.reveal",
-        label: t("desktop.logs.reveal"),
-        group: "logs",
-        icon: "logs",
-        enabled: () => !!host.revealLogs,
-        run: revealLogs,
-      },
-      {
-        id: "settings.open",
-        label: t("desktop.settings.title"),
-        group: "general",
-        icon: "settings",
-        chords: [{ mod: true, code: "Comma", key: ",", scope: "app" }],
-        run: () => setSettingsOpen((open) => !open),
-      },
-      {
-        id: "about.open",
-        label: t("desktop.about.open"),
-        group: "general",
-        icon: "info",
-        keywords: t("desktop.palette.keywords.about"),
-        enabled: () => about !== null,
-        run: () => {
-          setSettingsOpen(false);
-          setAboutOpen(true);
-        },
-      },
-      {
-        id: "setup.open",
-        label: t("desktop.setup.palette_open"),
-        group: "setup",
-        icon: "download",
-        keywords: t("desktop.palette.keywords.setup_open"),
-        enabled: () => setupOffered,
-        run: () => openSetup(null),
-      },
-      {
-        id: "setup.check",
-        label: t("desktop.setup.palette_check"),
-        group: "setup",
-        icon: "check",
-        keywords: t("desktop.palette.keywords.setup_check"),
-        enabled: () => setupOffered && setupLive.length === 0,
-        run: () => {
-          openSetup(null);
-          setup.check("full");
-        },
-      },
-      // One way to each element the engine reports: it opens the panel on
-      // that element, and sets it up where it can be.
-      ...(setupSnapshot?.rows ?? []).map((row): Action => ({
-        id: `setup.item.${row.item}`,
-        label: t("desktop.setup.palette_item", {
-          name: itemName(t, row.item),
-        }),
-        group: "setup",
-        icon: "download",
-        enabled: () => setupOffered,
-        run: () => {
-          openSetup(row.item);
-          if (needsSetup(row) && liveRunOf(setupSnapshot, row.item) === null)
-            setup.start(row.item, { resume: row.recovery === "resume" });
-        },
-      })),
-      {
-        id: "setup.retry",
-        label: t("desktop.setup.palette_retry"),
-        group: "setup",
-        icon: "reset",
-        enabled: () => setupOffered && setupRetryable.length > 0,
-        run: () => {
-          openSetup(null);
-          for (const { item, resume } of setupRetryable)
-            setup.start(item, { resume });
-        },
-      },
-      {
-        id: "setup.cancel",
-        label: t("desktop.setup.palette_cancel"),
-        group: "setup",
-        icon: "stop",
-        enabled: () => setupOffered && setupCancellable.length > 0,
-        run: () => {
-          for (const run of setupCancellable) setup.cancel(run.item);
-        },
-      },
-      // Every view the register names, each declared once: its label and
-      // keywords come from the register, and choosing one by name opens it
-      // through the navigator. Only what the window adds is said here: an
-      // older id, an icon, a chord, and for a page or a pane the toggle its
-      // chord and rail button keep. Pages take no chord where none is
-      // declared: the shell's own are spoken for, and a page's grid keeps
-      // the plain and Alt keys.
-      ...viewActions(
-        NAVIGATION,
-        t,
-        {
-          profile: { icon: "user", group: "views" },
-          calendar: {
-            id: "view.calendar",
-            icon: "calendar",
-            group: "views",
-            chords: [
-              {
-                mod: true,
-                shift: true,
-                code: "KeyD",
-                key: "D",
-                scope: "global",
-              },
-            ],
-            run: () => {
-              if (calendarVisible) {
-                setPage("docs");
-                return;
-              }
-              wantsCalendar.current = true;
-              setMaximized((area) => (area === "docs" ? area : null));
-              setPage("calendar");
-            },
-          },
-          ledger: {
-            id: "view.ledger",
-            icon: "ledger",
-            group: "views",
-            run: () => {
-              if (ledgerVisible) {
-                setPage("docs");
-                return;
-              }
-              wantsLedger.current = true;
-              setMaximized((area) => (area === "docs" ? area : null));
-              setPage("ledger");
-            },
-          },
-          // Every Ledger section the window draws, as the register lists
-          // them, wears the Ledger's icon.
-          ...Object.fromEntries(
-            NAVIGATION.elements
-              .filter(
-                (element) =>
-                  element.parent === "ledger" &&
-                  element.surfaces.includes("gui"),
-              )
-              .map((element) => [
-                element.id,
-                { icon: "ledger", group: "views" } as const,
-              ]),
-          ),
-          declarations: {
-            id: "view.declarations",
-            icon: "page",
-            group: "views",
-            run: () => {
-              if (declarationsVisible) {
-                setPage("docs");
-                return;
-              }
-              wantsDeclarations.current = true;
-              setMaximized((area) => (area === "docs" ? area : null));
-              setPage("declarations");
-            },
-          },
-          browser: {
-            icon: "globe",
-            group: "views",
-            run: () => {
-              if (browserVisible) {
-                setPage("docs");
-                return;
-              }
-              showBrowser();
-            },
-          },
-          docs: {
-            id: "docs.toggle",
-            icon: "book",
-            group: "layout",
-            chords: [
-              {
-                mod: true,
-                shift: true,
-                code: "KeyH",
-                key: "H",
-                scope: "global",
-              },
-            ],
-            run: () => toggleColumn("docs"),
-            shown: docsVisible && !maximized,
-          },
-          agent: {
-            id: "agent.toggle",
-            icon: "agent",
-            group: "layout",
-            chords: [
-              {
-                mod: true,
-                shift: true,
-                code: "KeyA",
-                key: "A",
-                scope: "global",
-              },
-            ],
-            enabled: () => signedIn,
-            run: () => toggleColumn("agent"),
-            shown: agentVisible && !maximized,
-          },
-          terminal: {
-            id: "tui.toggle",
-            icon: "tui",
-            group: "layout",
-            chords: [
-              {
-                mod: true,
-                shift: true,
-                code: "KeyT",
-                key: "T",
-                scope: "global",
-              },
-            ],
-            run: () => toggleColumn("tui"),
-            shown: tuiVisible && !maximized,
-          },
-          panel: {
-            id: "panel.toggle",
-            icon: layout.panelOpen ? "chevronDown" : "chevronUp",
-            group: "layout",
-            chords: [
-              { ctrl: true, code: "Backquote", key: "`", scope: "global" },
-            ],
-            run: () => {
-              if (!panelVisible) openTab(layout.tab, { toggle: false });
-              else {
-                patch({ panelOpen: false });
-                if (maximized === "panel") setMaximized(null);
-              }
-            },
-            shown: panelVisible,
-          },
-          "panel/console": {
-            id: "panel.console",
-            icon: "console",
-            group: "panel",
-            chords: [
-              {
-                mod: true,
-                shift: true,
-                code: "Digit1",
-                key: "1",
-                scope: "global",
-              },
-            ],
-            run: () => openTab("console"),
-            shown: panelVisible && activePanes.includes("console"),
-          },
-          "panel/python": {
-            id: "panel.python",
-            icon: "python",
-            group: "panel",
-            chords: [
-              {
-                mod: true,
-                shift: true,
-                code: "Digit2",
-                key: "2",
-                scope: "global",
-              },
-            ],
-            run: () => openTab("python"),
-            shown: panelVisible && activePanes.includes("python"),
-          },
-          "panel/logs": {
-            id: "panel.logs",
-            icon: "logs",
-            group: "panel",
-            chords: [
-              {
-                mod: true,
-                shift: true,
-                code: "Digit3",
-                key: "3",
-                scope: "global",
-              },
-              {
-                mod: true,
-                shift: true,
-                code: "KeyL",
-                key: "L",
-                scope: "global",
-              },
-            ],
-            run: () => openTab("logs"),
-            shown: panelVisible && activePanes.includes("logs"),
-          },
-        } satisfies Record<string, ViewActionSpec>,
-        (id) => {
-          const resolved = resolveView({
-            viewId: id,
-            params: {},
-            prefer: null,
-          });
-          return resolved.kind === "opened" && resolved.opened === id;
-        },
-        (id) => openView(id),
-      ),
-      {
-        // The link to the main view shown: the first pane's page, or its
-        // Ledger section. A pane beside it is not a place a link returns to.
-        id: "view.copyLink",
-        label: t("desktop.palette.copy_link"),
-        group: "views",
-        icon: "link",
-        keywords: t("desktop.palette.keywords.copy_link"),
-        enabled: () => shownViewId !== undefined,
-        run: () => {
-          if (shownViewId !== undefined)
-            copy(formatViewLink(NAVIGATION, shownViewId));
-        },
-      },
-      {
-        id: "view.messages",
-        label: t("desktop.rail.messages"),
-        group: "views",
-        icon: "mail",
-        keywords: t("desktop.palette.keywords.messages"),
-        enabled: () => views !== undefined,
-        // The notifications are read in the TUI; the window shows the count.
-        // Why there is no count is said where a tap reaches too, not only
-        // in a tooltip.
-        run: () => {
-          if (messages.kind === "failed")
-            say(
-              labelled(
-                t,
-                t("desktop.rail.messages"),
-                t("desktop.messages.failed"),
-              ),
-            );
-          else if (
-            messages.kind === "ready" &&
-            messages.summary.captured_at === null
-          )
-            say(
-              labelled(
-                t,
-                t("desktop.rail.messages"),
-                t("desktop.messages.never"),
-              ),
-            );
-          showTui();
-        },
-      },
-      {
-        id: "link.aeat",
-        label: t("desktop.browser.external"),
-        context: t("desktop.rail.aeat"),
-        group: "links",
-        icon: "external",
-        keywords: t("desktop.palette.keywords.aeat_link"),
-        run: () => openLink(AEAT_SEDE),
-      },
-      {
-        id: "link.drive",
-        label: t("desktop.google.open_drive"),
-        group: "links",
-        icon: "folder",
-        keywords: t("desktop.palette.keywords.drive_link"),
-        enabled: () => driveUrl !== null,
-        run: () => {
-          if (driveUrl) openLink(driveUrl);
-        },
-      },
-      {
-        id: "account.signIn",
-        label: t("desktop.signin.submit"),
-        group: "account",
-        icon: "lock",
-        keywords: t("desktop.palette.keywords.sign_in"),
-        enabled: () => mayEnterPassword,
-        run: askSignIn,
-      },
-      {
-        id: "account.createProfile",
-        label: t("desktop.account.new_profile"),
-        group: "account",
-        icon: "userAdd",
-        keywords: t("desktop.palette.keywords.create_profile"),
-        enabled: () => canCreateProfile && offersProfiles,
-        run: askNewProfile,
-      },
-      {
-        id: "account.signOut",
-        label: t("desktop.account.sign_out"),
-        group: "account",
-        icon: "signOut",
-        keywords: t("desktop.palette.keywords.sign_out"),
-        enabled: () => signedIn,
-        run: signOut,
-      },
-      {
-        // The profile's own Google sign-in; not part of setup.
-        id: "account.google",
-        label: t("desktop.google.palette_sign_in"),
-        group: "account",
-        icon: "user",
-        keywords: t("desktop.palette.keywords.google_sign_in"),
-        enabled: () =>
-          signedIn &&
-          setupOffered &&
-          canSignInGoogle(setupSnapshot?.google ?? null),
-        run: () => setup.signInGoogle(),
-      },
-      {
-        id: "account.manageProfiles",
-        label: t("desktop.account.manage.title"),
-        group: "account",
-        icon: "users",
-        keywords: t("desktop.palette.keywords.manage_profiles"),
-        enabled: () => host.profiles !== undefined,
-        run: () => {
-          setSignInDismissed(true);
-          setManagingProfiles(true);
-        },
-      },
-      {
-        id: "account.switchProfile",
-        label: t("desktop.account.switch_profile"),
-        group: "account",
-        icon: "swap",
-        keywords: t("desktop.palette.keywords.switch_profile"),
-        enabled: () => signedIn && canCreateProfile,
-        run: switchProfile,
-      },
-      {
-        // The one census flow, from any page: the profile page runs it.
-        id: "census.sync",
-        label: t("desktop.profile.censo.title"),
-        group: "profile",
-        icon: "sync",
-        keywords: t("desktop.palette.keywords.census_sync"),
-        enabled: () => signedIn && !!host.censo && !!host.userProfile,
-        run: askCenso,
-      },
-      {
-        id: "focus.next",
-        label: t("desktop.action.focus_next"),
-        group: "general",
-        icon: "arrow",
-        keywords: t("desktop.palette.keywords.focus"),
-        chords: [{ code: "F6", key: "F6", scope: "global" }],
-        run: () => cycleFocus(1),
-      },
-      {
-        id: "focus.previous",
-        label: t("desktop.action.focus_previous"),
-        group: "general",
-        icon: "back",
-        keywords: t("desktop.palette.keywords.focus"),
-        chords: [{ shift: true, code: "F6", key: "F6", scope: "global" }],
-        run: () => cycleFocus(-1),
-      },
-      {
-        id: "terminal.copy",
-        label: t("desktop.menu.copy"),
-        group: "terminal",
-        icon: "copy",
-        hidden: true,
-        chords: [
-          { mod: true, shift: true, code: "KeyC", key: "C", scope: "terminal" },
-        ],
-        // Only the focused terminal's selection; without one, nothing.
-        run: () => {
-          const kind = activeTerminal();
-          if (kind) copy(terminals.current[kind]?.selection() ?? "");
-        },
-      },
-      {
-        id: "terminal.paste",
-        label: t("desktop.menu.paste"),
-        group: "terminal",
-        icon: "paste",
-        hidden: true,
-        chords: [
-          { mod: true, shift: true, code: "KeyV", key: "V", scope: "terminal" },
-        ],
-        run: () => paste(activeTerminal()),
-      },
-    ],
-    [
-      t,
-      fullscreen.fullscreen,
-      panelVisible,
-      activePanes,
-      enterFullscreen,
-      changeDocking,
-      setMaximized,
-      setPage,
-      about,
-      agentVisible,
-      tuiVisible,
-      docsVisible,
-      firstPaneShown,
-      toggleColumn,
-      openView,
-      resolveView,
-      shownViewId,
-      layout.panelOpen,
-      layout.tab,
-      layout.zoom,
-      prefs.orientation,
-      narrowedPanes,
-      maximized,
-      docsSearchReady,
-      docsEntry,
-      views,
-      messages,
-      say,
+      showPage,
+      changeLedgerView,
+      setAeatAsked: pageAsks.setAeatAsked,
       showTui,
-      pageOn,
-      calendarVisible,
-      ledgerVisible,
-      declarationsVisible,
-      browserVisible,
-      showBrowser,
-      askSignIn,
-      askNewProfile,
-      canCreateProfile,
-      offersProfiles,
-      mayEnterPassword,
-      signedIn,
-      signOut,
-      switchProfile,
-      askCenso,
-      cycleFocus,
-      openLink,
-      driveUrl,
-      host,
-      revealLogs,
-      goHome,
-      patch,
-      toggleMaximize,
       openTab,
-      copy,
-      paste,
-      setFilters,
-      selectLogLevel,
-      defaultFilters,
-      setup,
-      setupOffered,
-      setupSnapshot,
-      setupLive,
-      setupRetryable,
-      setupCancellable,
-      openSetup,
-    ],
-  );
-  const actionsRef = useRef(actions);
-  actionsRef.current = actions;
-  const byId = (id: string) => actions.find((action) => action.id === id);
-  // The profile page is large: what it is given stays the same object from
-  // one render of the window to the next, so it draws only when it changes.
-  const profileAccountActions = useCallback(
-    () =>
-      ["account.switchProfile", "account.manageProfiles", "account.signOut"]
-        .map((id) => actionsRef.current.find((action) => action.id === id))
-        .filter((action) => action !== undefined),
-    [],
-  );
-  const toggleProfileMaximized = useCallback(
-    () => toggleMaximize("docs"),
-    [toggleMaximize],
-  );
-  const changeProfileView = useCallback(
-    (update: (current: ProfileView) => ProfileView) =>
-      setLayout((current) => ({
-        ...current,
-        profileView: update(current.profileView),
-      })),
-    [setLayout],
-  );
-  const changeLedgerView = useCallback(
-    (update: (current: LedgerView) => LedgerView) =>
-      setLayout((current) => ({
-        ...current,
-        ledgerView: update(current.ledgerView),
-      })),
-    [setLayout],
-  );
-  // The AEAT access editor was asked for: the profile page opens it once it
-  // has the profile. Leaving the page withdraws the ask.
-  const [aeatAsked, setAeatAsked] = useState(false);
-  const aeatHandled = useCallback(() => setAeatAsked(false), []);
-  useEffect(() => {
-    if (layout.page !== "profile") {
-      setAeatAsked(false);
-      setCensoAsked(false);
-    }
-  }, [layout.page]);
-  // A register element the navigator let through, applied to the layout
-  // store. A page and the agent take the keyboard through the focus
-  // register; the terminals and the panel through their own focus wishes.
-  const showInWindow = (_id: string, entry: WindowViewEntry) => {
-    const view = entry.view;
-    if (view.kind === "page") {
-      const section = view.section;
-      if (section !== null)
-        changeLedgerView((current) => ({ ...current, section }));
-      setMaximized((area) => (area === "docs" ? area : null));
-      if (view.page === "docs") patch({ docsShown: true });
-      setAeatAsked(view.dialog === "aeat-access");
-      showPage(view.page);
-    } else if (view.kind === "agent") {
-      if (agentFits) setMaximized((area) => (area === "agent" ? area : null));
-      else setMaximized(mainOccupied ? "agent" : null);
-      patch({ agentShown: true });
-    } else if (view.kind === "terminal") showTui();
-    else openTab(view.tab ?? layout.tab, { toggle: false });
-  };
-  const runAction = useCallback(
-    (id: string) =>
-      actionsRef.current.find((action) => action.id === id)?.run(),
-    [],
-  );
+    }),
+    askSignIn: signIn.askSignIn,
+  });
   const { isShellChord, chords, runShortcut } = useShellShortcuts(
     actions,
     actionsRef,
-    paletteOpen,
-    menu !== null ||
-      (signInAsked && !signInDismissed && account.status !== null),
+    overlays.paletteOpen,
+    overlays.menu !== null ||
+      (signIn.signInAsked &&
+        !signIn.signInDismissed &&
+        account.status !== null),
   );
-
-  // Menus: the shell draws every one, in the Cadrumo theme, whichever host it
-  // runs in. The caller places it: at the pointer, or at what holds focus.
-  const openMenu = useCallback(
-    (items: MenuEntry[], at: MenuAnchor) => setMenu({ items, at }),
-    [],
-  );
-
   const { docsMenu, aeatMenu, terminalMenu, recordMenu } = useShellMenus({
     actionsRef,
     terminals,
-    openMenu,
+    openMenu: overlays.openMenu,
     t,
     copy,
-    copyLogs,
+    copyLogs: logs.copyLogs,
     paste,
     runAction,
-    setFilters,
-    selectLogLevel,
+    setFilters: logs.setFilters,
+    selectLogLevel: logs.selectLogLevel,
   });
-
-  const searchDocs: DocsSearch = useMemo(
-    () =>
-      docsSearchReady && locale
-        ? (query: string) =>
-            docs.current?.search(query) ??
-            Promise.reject(new Error("docs-unmounted"))
-        : null,
-    [docsSearchReady, locale],
-  );
-
-  const tabOpen = (tab: PanelTab) => panelVisible && activePanes.includes(tab);
   const panelMaximized = useWorkspaceFocus({
     agentVisible,
     tuiVisible,
     firstPaneShown,
     maximized,
     gated,
-    tuiPhase: status.tui.phase,
+    tuiPhase: sessions.status.tui.phase,
     tab: layout.tab,
     focusView,
     focusRail,
     signInButton,
-    profilePage,
-    ledgerPage,
-    declarationsPage,
-    calendarPage,
-    aeatSyncPage,
+    profilePage: navigation.profilePage,
+    ledgerPage: navigation.ledgerPage,
+    declarationsPage: navigation.declarationsPage,
+    calendarPage: navigation.calendarPage,
+    aeatSyncPage: navigation.aeatSyncPage,
     docs,
-    agentBody,
-    wantsAgent,
+    agentBody: navigation.agentBody,
+    wantsAgent: navigation.wantsAgent,
   });
 
-  // What a session's header says beside its state: how it ended, or why it
-  // could not start.
-  const sessionNote = (kind: TerminalKind) => {
-    const reason = failure(status[kind]);
-    if (reason !== undefined) return sessionFailedText(t, reason);
-    const code = exitCode(status[kind]);
-    if (code === undefined) return undefined;
-    return facts(t, [
-      t("desktop.session.exited", { code: code ?? "?" }),
-      t("desktop.session.enter_restarts"),
-    ]);
-  };
-  const maximizeControl = (
-    area: Exclude<Maximized, null>,
-    labelKey: string,
-  ): PaneControl => {
-    const on = maximized === area;
-    return {
-      id: "maximize",
-      icon: on ? "restore" : "maximize",
-      label: on ? t("desktop.pane.restore") : t(labelKey),
-      shortcut: primaryChord(byId("view.maximize")),
-      pressed: on,
-      run: () => toggleMaximize(area),
-    };
-  };
-  const orientation = prefs.orientation;
+  const { maximizeControl, splitControls } = paneControls({
+    t,
+    maximized,
+    firstPaneShown,
+    tuiVisible,
+    prefs,
+    byId,
+    runAction,
+    toggleMaximize,
+  });
+  const { top: railTop, bottom: railBottom } = railItems({
+    t,
+    byId,
+    runAction,
+    host,
+    views,
+    layout,
+    setLayout,
+    setPage,
+    paletteOpen: overlays.paletteOpen,
+    settingsOpen: overlays.settingsOpen,
+    setSettingsOpen,
+    signedIn,
+    phase,
+    reader,
+    messages,
+    agentVisible,
+    tuiVisible,
+    docsVisible,
+    firstPaneShown,
+    profileOn: visibility.profileOn,
+    aeatSyncOn: visibility.aeatSyncOn,
+    ledgerVisible,
+    declarationsVisible,
+    calendarVisible,
+    browserVisible,
+    panelVisible,
+    showSede,
+    aeatMenu,
+    driveUrl: setup.driveUrl,
+    errorCount: logs.errorCount,
+    provisioning: setup.provisioning,
+    setupIncomplete: setup.setupIncomplete,
+  });
 
-  // The split's own controls, only while it holds both panes.
-  const splitControls: PaneControl[] =
-    maximized || !(firstPaneShown && tuiVisible)
-      ? []
-      : [
-          {
-            id: "swap",
-            icon: "swap",
-            label: t("desktop.split.swap"),
-            run: () => runAction("split.swap"),
-          },
-          // While the window forces stacking, the orientation choice would
-          // change nothing visible, so it is not offered.
-          ...(orientation === prefs.orientation
-            ? [
-                {
-                  id: "orientation",
-                  icon: byId("split.orientation")?.icon ?? "splitColumn",
-                  label: byId("split.orientation")?.label ?? "",
-                  run: () => runAction("split.orientation"),
-                },
-              ]
-            : []),
-        ];
-
-  const railTop: RailItem[] = [
-    {
-      id: "search",
-      icon: "search",
-      label: t("desktop.rail.search"),
-      shortcut: primaryChord(byId("palette.open")),
-      expanded: paletteOpen,
-      onClick: () => runAction("palette.open"),
-    },
-    // The window's columns, in the order they are laid out by default.
-    {
-      id: "agent",
-      dockPane: "agent",
-      icon: "agent",
-      label: t("desktop.rail.agent"),
-      shortcut: primaryChord(byId("agent.toggle")),
-      pressed: agentVisible,
-      ...(signedIn ? {} : { heldBy: t("desktop.agent.sign_in_first") }),
-      divided: true,
-      onClick: () => runAction("agent.toggle"),
-    },
-    {
-      id: "tui",
-      dockPane: "tui",
-      icon: "tui",
-      label: t("desktop.rail.tui"),
-      shortcut: primaryChord(byId("tui.toggle")),
-      pressed: tuiVisible,
-      onClick: () => runAction("tui.toggle"),
-    },
-    {
-      id: "docs",
-      dockPane: "docs",
-      icon: "book",
-      label: t("desktop.rail.docs"),
-      shortcut: primaryChord(byId("docs.toggle")),
-      pressed: docsVisible,
-      onClick: () => runAction("docs.toggle"),
-    },
-    ...(host.userProfile
-      ? [
-          {
-            id: "profile",
-            icon: "user",
-            label: t("desktop.profile.title"),
-            pressed: profileOn && firstPaneShown,
-            onClick: () => {
-              setPage("profile");
-              setLayout((current) => ({ ...current, maximized: null }));
-            },
-          } satisfies RailItem,
-        ]
-      : []),
-    ...(host.aeatSync
-      ? [
-          {
-            id: "aeat-sync",
-            icon: "sync",
-            label: t("desktop.aeat_sync.title"),
-            pressed: aeatSyncOn && firstPaneShown,
-            onClick: () => {
-              setPage("aeat-sync");
-              setLayout((current) => ({ ...current, maximized: null }));
-            },
-          } satisfies RailItem,
-        ]
-      : []),
-    ...(host.ledger
-      ? [
-          {
-            id: "ledger",
-            icon: "ledger",
-            label: t("desktop.ledger.title"),
-            pressed: ledgerVisible,
-            onClick: () => runAction("view.ledger"),
-          } satisfies RailItem,
-        ]
-      : []),
-    ...(host.modelo
-      ? [
-          {
-            id: "declarations",
-            icon: "page",
-            label: t("workspace.declarations.destination.overview"),
-            pressed: declarationsVisible,
-            onClick: () => runAction("view.declarations"),
-          } satisfies RailItem,
-        ]
-      : []),
-    // Shortcuts, between the window's own toggles and the bottom panel's:
-    // the profile's views where the host offers them, then the ways out of
-    // the window.
-    ...(views
-      ? [
-          {
-            id: "calendar",
-            icon: "calendar",
-            label: t("desktop.calendar.title"),
-            shortcut: primaryChord(byId("view.calendar")),
-            pressed: calendarVisible,
-            divided: true,
-            onClick: () => runAction("view.calendar"),
-          } satisfies RailItem,
-          {
-            id: "messages",
-            icon: "mail",
-            label: t("desktop.rail.messages"),
-            ...(messages.kind === "ready"
-              ? messages.summary.captured_at === null
-                ? { hint: t("desktop.messages.never"), pin: "unknown" }
-                : messages.summary.unread > 0
-                  ? {
-                      badge: messages.summary.unread,
-                      badgeLabel: t("desktop.messages.unread", {
-                        count: messages.summary.unread,
-                      }),
-                    }
-                  : { hint: t("desktop.messages.none_unread") }
-              : messages.kind === "failed"
-                ? {
-                    hint: t("desktop.messages.failed"),
-                    pin: "failed",
-                  }
-                : // Not read: while the account withholds it, for the
-                  // account's own reason; otherwise the answer is on its way.
-                  {
-                    pin: "unknown",
-                    ...(reader === null && accountLabel(phase)
-                      ? { hint: t(accountLabel(phase) ?? "") }
-                      : {}),
-                  }),
-            onClick: () => runAction("view.messages"),
-          } satisfies RailItem,
-        ]
-      : []),
-    ...(host.sedeView
-      ? [
-          {
-            id: "browser",
-            icon: "globe",
-            label: t("desktop.browser.title"),
-            pressed: browserVisible,
-            divided: !views,
-            onClick: () => runAction("view.browser"),
-          } satisfies RailItem,
-        ]
-      : []),
-    {
-      id: "aeat",
-      icon: "office",
-      label: t("desktop.rail.aeat"),
-      divided: !views && !host.sedeView,
-      // Where the window has a browser the shortcut opens it, and the
-      // person's own browser is its menu's choice.
-      ...(host.sedeView
-        ? { onClick: showSede, onMenu: aeatMenu }
-        : { onClick: () => runAction("link.aeat") }),
-    },
-    ...(driveUrl
-      ? [
-          {
-            id: "drive",
-            icon: "folder",
-            label: t("desktop.google.open_drive"),
-            onClick: () => runAction("link.drive"),
-          } satisfies RailItem,
-        ]
-      : []),
-    {
-      id: "panel",
-      dockPane: layout.tab,
-      icon: "console",
-      label: t("desktop.panel.label"),
-      shortcut: primaryChord(byId("panel.toggle")),
-      pressed: panelVisible,
-      divided: true,
-      badge: errorCount,
-      badgeLabel: t("desktop.logs.errors", { count: errorCount }),
-      onClick: () => runAction("panel.toggle"),
-    },
-  ];
-  const railBottom: RailItem[] = [
-    {
-      id: "settings",
-      icon: "settings",
-      label: t("desktop.rail.settings"),
-      shortcut: primaryChord(byId("settings.open")),
-      expanded: settingsOpen,
-      ...(provisioning.anyLive
-        ? { pin: "busy", hint: t("desktop.setup.rail_busy") }
-        : setupIncomplete
-          ? { pin: "attention", hint: t("desktop.setup.rail_incomplete") }
-          : {}),
-      onClick: () => setSettingsOpen((open) => !open),
-    },
-  ];
-
-  const terminalPane = (
-    kind: TerminalKind,
-    shown: boolean,
-    theme = terminalTheme,
-  ) => (
-    <TerminalPane
+  const docsPane = (
+    <MainPane
       host={host}
-      kind={kind}
-      shown={shown}
-      theme={theme}
-      fontSize={terminalFontSize}
-      label={
-        kind === "tui"
-          ? t("desktop.tui.label")
-          : t(
-              kind === "console"
-                ? "desktop.rail.console"
-                : "desktop.rail.python",
-            )
-      }
+      reader={reader}
+      account={account}
+      t={t}
+      locale={locale}
+      signedIn={signedIn}
+      layout={layout}
+      prefs={prefs}
+      maximized={maximized}
+      pageOn={pageOn}
+      firstPaneShown={firstPaneShown}
+      declarationsOn={visibility.declarationsOn}
+      ledgerOn={visibility.ledgerOn}
+      browserOn={visibility.browserOn}
+      browserMounted={memories.browserMounted}
+      profileOn={visibility.profileOn}
+      aeatSyncOn={visibility.aeatSyncOn}
+      calendarOn={visibility.calendarOn}
+      openDeclaration={memories.openDeclaration}
+      openWorkUnit={memories.openWorkUnit}
+      guarded={guarded}
+      askCenso={pageAsks.askCenso}
+      askSignIn={signIn.askSignIn}
+      runAction={runAction}
+      openView={openView}
+      openViewLink={openViewLink}
+      ledgerMemory={memories.ledgerMemory}
+      setPage={setPage}
+      showPage={showPage}
+      setMaximized={setMaximized}
+      openLink={openLink}
+      guardLeave={navigation.guardLeave}
+      declarationsPage={navigation.declarationsPage}
+      ledgerPage={navigation.ledgerPage}
+      browserPage={navigation.browserPage}
+      profilePage={navigation.profilePage}
+      aeatSyncPage={navigation.aeatSyncPage}
+      calendarPage={navigation.calendarPage}
+      toggleMaximize={toggleMaximize}
+      maximizeControl={maximizeControl}
+      splitControls={splitControls}
+      closePage={closePage}
+      routedLedger={setup.routedLedger}
+      modelList={modelList}
+      changeLedgerView={changeLedgerView}
+      changeProfileView={arrangement.changeProfileView}
+      contribute={overlays.contribute}
+      setLedgerFloor={arrangement.setLedgerFloor}
+      browserHome={memories.browserHome}
       isShellChord={isShellChord}
-      onStatus={(k, s) => {
-        setStatus((all) => ({ ...all, [k]: s }));
-        if (k !== "tui") return;
-        // The TUI's session has ended: what it did to the account is read
-        // again.
-        if (s.phase === "exited" || s.phase === "failed") account.tuiExited();
-      }}
-      onMenu={terminalMenu}
-      register={(k, api) => {
-        terminals.current[k] = api;
-      }}
-      tabPanel={kind !== "tui"}
+      setBrowserKeptFor={memories.setBrowserKeptFor}
+      byId={byId}
+      openMenu={overlays.openMenu}
+      profileAccountActions={profileAccountActions}
+      copy={copy}
+      say={say}
+      profileHost={setup.profileHost}
+      aeatAsked={pageAsks.aeatAsked}
+      aeatHandled={pageAsks.aeatHandled}
+      censoAsked={pageAsks.censoAsked}
+      censoHandled={pageAsks.censoHandled}
+      calendar={reads.calendar}
+      calendarProfile={reads.calendarProfile}
+      calendarMemory={memories.calendarMemory}
+      patch={patch}
+      environment={environment}
+      docsEntry={docsEntry}
+      docs={docs}
+      languages={languages}
+      language={language}
+      chords={chords}
+      setDocsTheme={docsFrame.setDocsTheme}
+      setDocsSearchReady={docsFrame.setDocsSearchReady}
+      runShortcut={runShortcut}
+      docsMenu={docsMenu}
     />
   );
 
-  const pane = "pane flex min-h-0 min-w-0 flex-1 flex-col bg-background";
-  // A page of the first pane is put away by its own close, back to the
-  // documentation where that is shown.
-  const closePage = () => {
-    setPage("docs");
-    setMaximized(null);
-  };
-  const docsPane = (
-    <div className={cn(pane, "pane-docs")}>
-      {declarationsOn && host.modelo ? (
-        <DeclarationsPane
-          port={host.modelo}
-          reader={reader}
-          workUnitId={openDeclaration.workUnitId}
-          onOpen={openWorkUnit}
-          onOpenWork={(id) => guarded(() => openWorkUnit(id))}
-          // The one census flow, as the palette offers it.
-          onCensus={
-            signedIn && host.censo && host.userProfile ? askCenso : undefined
-          }
-          onBack={() => guarded(() => openWorkUnit(null))}
-          onOpenSurface={(surface) => {
-            if (surface === "declarations") guarded(() => openWorkUnit(null));
-            else if (surface === "ledger") runAction("view.ledger");
-            else if (surface === "withholding")
-              // The Ledger page opens on the area asked for, once shown.
-              openView("ledger/registers", {}, null, {
-                opened: () => {
-                  ledgerKept.memory.current.registersArea = "withholding";
-                },
-              });
-            else if (surface === "profile") setPage("profile");
-          }}
-          // Only an area this window has a page for is linked.
-          canOpenSurface={(surface) =>
-            surface === "declarations" ||
-            (surface === "ledger" && host.ledger !== undefined) ||
-            (surface === "withholding" && host.ledger !== undefined) ||
-            (surface === "profile" && host.userProfile !== undefined)
-          }
-          openLink={openLink}
-          guardLeave={guardLeave}
-          memory={openDeclaration.memory}
-          withheld={
-            <SignedOut
-              account={account}
-              lead={t("desktop.declarations.signed_out")}
-              quiet
-              onSignIn={askSignIn}
-            />
-          }
-          // The desktop's locales are the read models' output languages.
-          language={locale as OutputLanguage}
-          locale={locale}
-          shown={firstPaneShown}
-          page={declarationsPage}
-          profileCompanions={
-            host.profileCompanions && host.userProfile
-              ? {
-                  reads: host.profileCompanions,
-                  change: host.userProfile.change,
-                }
-              : undefined
-          }
-          borrador={host.borrador}
-          pane={{
-            title: t("workspace.declarations.destination.overview"),
-            onToggleMaximize: () => toggleMaximize("docs"),
-            controls: [
-              maximizeControl("docs", "desktop.declarations.maximize"),
-              ...splitControls.map((control) => ({
-                ...control,
-                yields: true,
-              })),
-              {
-                id: "close",
-                icon: "close",
-                label: t("desktop.declarations.close"),
-                run: closePage,
-              },
-            ],
-          }}
-        />
-      ) : ledgerOn && routedLedger ? (
-        <ModelListContext.Provider value={modelList}>
-          <LedgerPage
-            key={reader ?? ""}
-            port={routedLedger}
-            reader={reader}
-            withheld={
-              <SignedOut
-                account={account}
-                lead={t("desktop.ledger.signed_out")}
-                quiet
-                onSignIn={askSignIn}
-              />
-            }
-            locale={locale}
-            shown={firstPaneShown}
-            page={ledgerPage}
-            view={layout.ledgerView}
-            onViewChange={changeLedgerView}
-            memory={ledgerKept.memory}
-            contribute={contribute}
-            copy={(text) => host.writeClipboard(text)}
-            onOpenLink={openLink}
-            onFloor={setLedgerFloor}
-            pane={{
-              title: t("desktop.ledger.title"),
-              onToggleMaximize: () => toggleMaximize("docs"),
-              controls: [
-                maximizeControl("docs", "desktop.ledger.maximize"),
-                ...splitControls.map((control) => ({
-                  ...control,
-                  yields: true,
-                })),
-                {
-                  id: "close",
-                  icon: "close",
-                  label: t("desktop.ledger.close"),
-                  run: closePage,
-                },
-              ],
-            }}
-          />
-        </ModelListContext.Provider>
-      ) : null}
-      {browserMounted && host.sedeView && (
-        // A view the runtime refuses for a missing component offers its setup.
-        <BrowserPage
-          key={reader ?? ""}
-          port={host.sedeView}
-          withheld={
-            reader === null ? (
-              <SignedOut
-                account={account}
-                lead={t("desktop.browser.failure.not_signed_in")}
-                quiet
-                onSignIn={askSignIn}
-              />
-            ) : undefined
-          }
-          page={browserPage}
-          shown={browserOn && firstPaneShown}
-          home={browserHome}
-          isShellChord={isShellChord}
-          pane={{
-            title: t("desktop.browser.title"),
-            onToggleMaximize: () => toggleMaximize("docs"),
-            controls: [
-              maximizeControl("docs", "desktop.browser.maximize"),
-              ...splitControls.map((control) => ({
-                ...control,
-                yields: true,
-              })),
-              {
-                id: "close",
-                icon: "close",
-                label: t("desktop.browser.close"),
-                // Closing the page, unlike leaving it, ends the view.
-                run: () => {
-                  guarded(() => {
-                    setBrowserKeptFor(null);
-                    showPage("docs");
-                  });
-                  setMaximized(null);
-                },
-              },
-            ],
-          }}
-        />
-      )}
-      {profileOn &&
-        (reader !== null ? (
-          <UserProfilePage
-            maximized={maximized === "docs"}
-            onToggleMaximize={toggleProfileMaximized}
-            maximizeChord={byId("view.maximize")?.chords?.[0]}
-            contribute={contribute}
-            openMenu={openMenu}
-            accountActions={profileAccountActions}
-            onCopy={copy}
-            onNotice={say}
-            view={layout.profileView}
-            onViewChange={changeProfileView}
-            page={profilePage}
-            key={reader}
-            host={profileHost}
-            reader={reader}
-            language={locale}
-            shown={firstPaneShown}
-            aeatAsked={aeatAsked}
-            onAeatHandled={aeatHandled}
-            censoAsked={censoAsked}
-            onCensoHandled={censoHandled}
-          />
-        ) : (
-          <SignedOut
-            account={account}
-            lead={t("desktop.profile.signed_out")}
-            quiet
-            onSignIn={askSignIn}
-          />
-        ))}
-      {aeatSyncOn &&
-        host.aeatSync &&
-        (reader !== null ? (
-          <AeatSyncPage
-            key={reader}
-            port={host.aeatSync}
-            reader={reader}
-            language={locale}
-            shown={firstPaneShown}
-            page={aeatSyncPage}
-            results={host.aeatSyncResults}
-            run={host.aeatSyncRun}
-            prepare={host.aeatSyncPrepare}
-            onOpenAccess={() => openView("profile/aeat-access")}
-            onOpenAeat={() => openView("browser")}
-            onReviewCensus={askCenso}
-          />
-        ) : (
-          <SignedOut
-            account={account}
-            lead={t("desktop.aeat_sync.signed_out")}
-            quiet
-            onSignIn={askSignIn}
-          />
-        ))}
-      {calendarOn && (
-        <FilingCalendarView
-          page={calendarPage}
-          state={calendar.state}
-          profile={
-            calendarProfile.loading || calendarProfile.error
-              ? null
-              : calendarProfile.data
-          }
-          onNavigate={openViewLink}
-          attempt={calendar.attempt}
-          today={calendar.today}
-          memory={calendarMemory}
-          defaultView={layout.calendarView}
-          onViewChange={(calendarView) => patch({ calendarView })}
-          // Withheld, it says what the TUI pane says of the account, with
-          // the same ways on.
-          withheld={
-            <SignedOut
-              account={account}
-              lead={t("desktop.calendar.signed_out")}
-              quiet
-              onSignIn={askSignIn}
-            />
-          }
-          locale={locale}
-          refreshing={calendar.refreshing}
-          onRefresh={calendar.refresh}
-        />
-      )}
-      {/* Put aside, not unloaded: the page it was on is there on return. */}
-      <div className={pageOn ? "hidden" : "contents"}>
-        {environment.state === "ready" &&
-        environment.value.docs.state === "bundled" &&
-        docsEntry ? (
-          <DocsFrame
-            ref={docs}
-            origin={environment.value.docs.origin}
-            entry={docsEntry.entry}
-            language={docsEntry.code}
-            languages={languages}
-            onLanguage={(code) => void language.change(code)}
-            title={t("desktop.docs.frame_title")}
-            chords={chords}
-            zoom={layout.zoom}
-            appearance={prefs.appearance === "follow" ? null : prefs.appearance}
-            onReady={({ theme, features }) => {
-              setDocsTheme(theme);
-              setDocsSearchReady(features.includes("search"));
-            }}
-            onTheme={setDocsTheme}
-            onShortcut={runShortcut}
-            onOpenExternal={(url) =>
-              void host.openExternal(url).catch(() => undefined)
-            }
-            onMenu={docsMenu}
-          />
-        ) : environment.state === "ready" &&
-          environment.value.docs.state !== "bundled" ? (
-          <EmptyState
-            role="status"
-            icon="book"
-            description={t(
-              environment.value.docs.state === "notBundled"
-                ? "desktop.docs.not_bundled"
-                : "desktop.docs.unavailable",
-            )}
-          />
-        ) : environment.state === "unavailable" ? (
-          <EmptyState
-            role="status"
-            icon="unplug"
-            description={t("desktop.host.unavailable")}
-          />
-        ) : environment.state === "failed" ? (
-          <EmptyState
-            role="alert"
-            icon="alert"
-            description={t("desktop.host.failed")}
-          />
-        ) : (
-          <EmptyState
-            role="status"
-            busy
-            description={t("desktop.docs.loading")}
-          />
-        )}
-      </div>
-    </div>
-  );
-  const tuiPane = (
-    <div className={cn(pane, "pane-tui")} data-scheme={scheme}>
-      <PaneHeader
-        title={t("desktop.pane.tui")}
-        // While the account withholds the TUI there is no session: the
-        // header says the account's phase, not the last session's.
-        status={
-          account.gated
-            ? {
-                phase:
-                  phase === "checking" ||
-                  phase === "starting" ||
-                  account.startingServices
-                    ? "starting"
-                    : "unavailable",
-                note: t(accountLabel(phase) ?? "desktop.account.unknown"),
-              }
-            : { phase: status.tui.phase, note: sessionNote("tui") }
-        }
-        onToggleMaximize={() => toggleMaximize("tui")}
-        controls={[
-          maximizeControl("tui", "desktop.pane.maximize_tui"),
-          ...splitControls,
-          {
-            id: "close",
-            icon: "close",
-            label: t("desktop.tui.hide"),
-            shortcut: primaryChord(byId("tui.toggle")),
-            run: () => closeColumn("tui"),
-          },
-        ]}
-      />
-      {account.gated ? (
-        <SignedOut
-          account={account}
-          onSignIn={askSignIn}
-          signInButton={signInButton}
-        />
-      ) : (
-        terminalPane(
-          "tui",
-          tuiVisible,
-          scheme === "dark" ? DARK_TUI : LIGHT_TUI,
-        )
-      )}
-    </div>
-  );
-  const agentPane = (
-    <div className={cn(pane, "pane-agent")}>
-      {/* One bar: the conversation's own actions, then the column's maximize
-          and close as every column has them. */}
-      <AgentColumn
-        control={agentControl}
-        agent={host.agent}
-        session={host.agentSession}
-        providerSettings={host.providerSettings}
-        agentAccess={host.agentAccess}
-        writeClipboard={(text) => host.writeClipboard(text)}
-        // The agent works only for a profile that is signed in here: not
-        // for one the shell cannot tell about.
-        reader={signedIn ? (account.status?.active_profile ?? null) : null}
-        shown={agentVisible}
-        locale={locale}
-        body={agentBody}
-        onToggleMaximize={() => toggleMaximize("agent")}
-        onMenu={openMenu}
-        onToolRefused={onToolRefused}
-        onOpenLink={openLink}
-        setupSettled={settledSetups}
-        onOpenView={(url, opened) =>
-          nav.openLink(url, {
-            opened: (shown) => opened?.(shown.opened),
-          })
-        }
-        trailing={[
-          maximizeControl("agent", "desktop.pane.maximize_agent"),
-          {
-            id: "close",
-            icon: "close",
-            label: t("desktop.agent.hide"),
-            shortcut: primaryChord(byId("agent.toggle")),
-            run: () => closeColumn("agent"),
-          } satisfies PaneControl,
-        ].map((control) => (
-          <IconButton
-            key={control.id}
-            label={control.label}
-            shortcut={control.shortcut}
-            aria-pressed={control.pressed}
-            onClick={control.run}
-          >
-            <Icon name={control.icon} />
-          </IconButton>
-        ))}
-      />
-    </div>
-  );
-  // Nothing open above the bottom panel: the main area says so, and offers
-  // each column back.
-  const canvas = (
-    <EmptyState
-      className="canvas bg-background"
-      icon="canvas"
-      heading={t("desktop.canvas.title")}
-      description={t("desktop.canvas.lead")}
-    >
-      <div className="flex flex-wrap justify-center gap-2">
-        {(
-          [
-            [
-              "agent.toggle",
-              "agent",
-              "desktop.agent.show",
-              signedIn && !agentVisible,
-            ],
-            ["tui.toggle", "tui", "desktop.tui.show", true],
-            ["docs.toggle", "book", "desktop.docs.show", true],
-          ] as const
-        ).map(
-          ([id, icon, labelKey, offered]) =>
-            offered && (
-              <Button key={id} variant="outline" onClick={() => runAction(id)}>
-                <Icon name={icon} />
-                {t(labelKey)}
-              </Button>
-            ),
-        )}
-      </div>
-    </EmptyState>
-  );
-
   return (
-    <ShellContexts t={t} navigation={nav.runtime} provisioning={provisioning}>
+    <ShellContexts
+      t={t}
+      navigation={nav.runtime}
+      provisioning={setup.provisioning}
+    >
       <TooltipProvider>
         <div className="desktop-window flex h-dvh min-w-0 flex-col bg-chrome">
-          <Titlebar
+          <WindowTitlebar
             host={host}
-            onPresentation={fullscreen.observe}
-            guardClose={(proceed) =>
-              guardNavigation({ kind: "close" }, proceed)
-            }
-            onFailure={() => say(t("desktop.titlebar.failed"))}
-          >
-            <AccountMenu
-              account={account}
-              onSignIn={() => {
-                setSettingsOpen(false);
-                signInOpener.current = null;
-                setCreatingProfile(false);
-                setSignInDismissed(false);
-              }}
-              google={
-                signedIn && setupOffered && setupSnapshot ? (
-                  <GoogleAccount
-                    google={setupSnapshot.google}
-                    disabled={setup.pending || account.busy}
-                    refusal={setup.refusal}
-                    onSignIn={setup.signInGoogle}
-                    onSignOut={setup.signOutGoogle}
-                  />
-                ) : undefined
-              }
-              onProfile={
-                host.userProfile
-                  ? () => {
-                      setPage("profile");
-                      setLayout((current) => ({
-                        ...current,
-                        maximized: null,
-                      }));
-                    }
-                  : undefined
-              }
-              onSignOut={signOut}
-              onCreate={askNewProfile}
-              onManage={
-                host.profiles
-                  ? () => {
-                      setSignInDismissed(true);
-                      setManagingProfiles(true);
-                    }
-                  : undefined
-              }
-              onAbout={
-                about
-                  ? () => {
-                      setSettingsOpen(false);
-                      setAboutOpen(true);
-                    }
-                  : undefined
-              }
-            />
-          </Titlebar>
+            t={t}
+            account={account}
+            signIn={signIn}
+            setup={setup}
+            fullscreen={fullscreen}
+            guardNavigation={guardNavigation}
+            say={say}
+            about={about}
+            setSettingsOpen={setSettingsOpen}
+            setAboutOpen={overlays.setAboutOpen}
+            setPage={setPage}
+            setLayout={setLayout}
+          />
           <div
-            ref={workspace}
+            ref={arrangement.workspace}
             className="shell grid min-h-0 flex-1 grid-cols-[auto_1fr] grid-rows-[minmax(0,1fr)] bg-chrome"
           >
             <Rail
@@ -3246,373 +566,131 @@ export function App({ host }: { host: Host }) {
               top={railTop}
               bottom={railBottom}
             />
-            <DockWorkspace
-              layout={docking}
-              minimumWidths={dockMinimumWidths}
-              besideWidths={dockBesideWidths}
-              minimumHeights={dockMinimumHeights}
-              visible={dockOffered}
-              expanded={expandedPane}
-              fullscreen={fullscreen.fullscreen}
-              onChange={changeDocking}
-              onMenuClosed={grantFocus}
-              onFocusPane={(pane) => {
-                if (
-                  pane === "console" ||
-                  pane === "python" ||
-                  pane === "logs" ||
-                  pane === "tui"
-                )
-                  focusView(pane);
-              }}
-              onActivate={(pane) => {
-                if (pane === "console" || pane === "python" || pane === "logs")
-                  patch({ panelOpen: true, tab: pane });
-                else if (pane === "agent") patch({ agentShown: true });
-                else if (pane === "tui") patch({ tuiShown: true });
-                else patch({ docsShown: true });
-              }}
-              onClose={(pane) => {
-                if (fullscreen.pane === pane) enterFullscreen();
-                if (pane === "docs") {
-                  if (browserOn) {
-                    guarded(() => {
-                      setBrowserKeptFor(null);
-                      showPage("docs");
-                    });
-                    setMaximized(null);
-                  } else if (pageOn) closePage();
-                  else closeColumn("docs");
-                  return;
-                }
-                if (pane === "agent" || pane === "tui") {
-                  closeColumn(pane);
-                  return;
-                }
-                setLayout((current) => {
-                  const dock =
-                    current.docking ?? initialDockLayout(prefs, current);
-                  const closed = [...new Set([...dock.closed, pane])];
-                  return {
-                    ...current,
-                    docking: { ...dock, closed },
-                    panelOpen: ["console", "python", "logs"].some(
-                      (id) => !closed.some((pane) => pane === id),
-                    ),
-                  };
-                });
-                if (maximized === "panel") setMaximized(null);
-                focusRail();
-              }}
-              onExpand={(pane) => {
-                if (fullscreen.pane) {
-                  revealPane(null);
-                  setMaximized(null);
-                  return;
-                }
-                if (
-                  pane === "console" ||
-                  pane === "python" ||
-                  pane === "logs"
-                ) {
-                  patch({ tab: pane });
-                  toggleMaximize("panel");
-                } else toggleMaximize(pane);
-              }}
-              onFullscreen={(pane) => enterFullscreen(pane)}
-              onNarrowed={setNarrowedPanes}
-              empty={canvas}
-              panes={[
-                {
-                  id: "agent",
-                  className: "agent-column",
-                  title: t("desktop.pane.agent"),
-                  content: agentPane,
-                },
-                {
-                  id: "docs",
-                  className: "main-area",
-                  title: t(
-                    profileOn
-                      ? "desktop.profile.title"
-                      : calendarOn
-                        ? "desktop.calendar.title"
-                        : ledgerOn
-                          ? "desktop.ledger.title"
-                          : declarationsOn
-                            ? "workspace.declarations.destination.overview"
-                            : browserOn
-                              ? "desktop.browser.title"
-                              : aeatSyncOn
-                                ? "desktop.aeat_sync.title"
-                                : "desktop.pane.docs",
-                  ),
-                  content: docsPane,
-                  pageActions:
-                    !pageOn && docsEntry ? (
-                      <>
-                        <IconButton
-                          label={t("desktop.action.docs_back")}
-                          shortcut={primaryChord(byId("docs.back"))}
-                          onClick={() => runAction("docs.back")}
-                        >
-                          <Icon name="back" />
-                        </IconButton>
-                        <IconButton
-                          label={t("desktop.action.docs_forward")}
-                          shortcut={primaryChord(byId("docs.forward"))}
-                          onClick={() => runAction("docs.forward")}
-                        >
-                          <Icon name="forward" />
-                        </IconButton>
-                      </>
-                    ) : undefined,
-                },
-                {
-                  id: "tui",
-                  title: t("desktop.pane.tui"),
-                  content: tuiPane,
-                  status: account.gated
-                    ? {
-                        phase:
-                          phase === "checking" ||
-                          phase === "starting" ||
-                          account.startingServices
-                            ? "starting"
-                            : "unavailable",
-                        note: t(
-                          accountLabel(phase) ?? "desktop.account.unknown",
-                        ),
-                      }
-                    : { phase: status.tui.phase, note: sessionNote("tui") },
-                },
-                {
-                  id: "console",
-                  status: {
-                    phase: status.console.phase,
-                    note: sessionNote("console"),
-                  },
-                  className: cn(
-                    "[container:panel/size]",
-                    layout.tab === "console" && "panel",
-                  ),
-                  title: t("desktop.rail.console"),
-                  content: (
-                    <div className="relative flex min-h-0 flex-1">
-                      {terminalPane("console", tabOpen("console"))}
-                    </div>
-                  ),
-                },
-                {
-                  id: "python",
-                  status: {
-                    phase: status.python.phase,
-                    note: sessionNote("python"),
-                  },
-                  className: cn(
-                    "[container:panel/size]",
-                    layout.tab === "python" && "panel",
-                  ),
-                  title: t("desktop.rail.python"),
-                  content: (
-                    <div className="relative flex min-h-0 flex-1">
-                      {terminalPane("python", tabOpen("python"))}
-                    </div>
-                  ),
-                },
-                {
-                  id: "logs",
-                  className: cn(
-                    "[container:panel/size]",
-                    layout.tab === "logs" && "panel",
-                  ),
-                  title: t("desktop.rail.logs"),
-                  content: (
-                    <div className="relative flex min-h-0 flex-1">
-                      <HostRecordList
-                        host={host}
-                        onErrors={setErrorCount}
-                        filters={filters}
-                        defaultFilters={defaultFilters}
-                        setFilters={setFilters}
-                        onLevelChange={selectLogLevel}
-                        onMenu={recordMenu}
-                        onCopy={copyLogs}
-                        onExport={(text) => void exportLogs(text)}
-                        onReveal={host.revealLogs ? revealLogs : undefined}
-                        shown={tabOpen("logs")}
-                      />
-                    </div>
-                  ),
-                },
-              ]}
-            />
-
-            {settingsOpen && (
-              <Settings
-                prefs={prefs}
-                setPrefs={setPrefs}
-                language={languageControl}
-                close={() => setSettingsOpen(false)}
-                about={
-                  about
-                    ? {
-                        state: about,
-                        onOpen: () => {
-                          setSettingsOpen(false);
-                          setAboutOpen(true);
-                        },
-                      }
-                    : undefined
-                }
-                onReset={() => {
-                  setPrefs(DEFAULT_PREFS);
-                  setLayout((current) => ({
-                    ...DEFAULT_LAYOUT,
-                    logLevel: current.logLevel,
-                    calendarView: current.calendarView,
-                    profileView: current.profileView,
-                    ledgerView: current.ledgerView,
-                  }));
-                  setMaximized(null);
-                  say(t("desktop.settings.layout_reset"));
-                }}
-              />
-            )}
-            <AboutDialog
-              open={aboutOpen && about !== null}
-              onOpenChange={setAboutOpen}
-              state={about}
-              onCopy={copy}
-            />
-            {paletteOpen && (
-              <CommandPalette
-                actions={[...paletteExtra, ...actions]}
-                pastedLink={pastedLink}
-                language={languageControl}
-                searchDocs={searchDocs}
-                openDoc={openDoc}
-                close={() => setPaletteOpen(false)}
-                fallbackFocus={focusRail}
-              />
-            )}
-            {menu && (
-              <ContextMenu
-                // Each menu is its own: it remembers where its own focus came
-                // from.
-                key={`${menu.at.x}:${menu.at.y}`}
-                label={t("desktop.palette.actions")}
-                items={menu.items}
-                at={menu.at}
-                choose={(id) => {
-                  const items = menu.items;
-                  setMenu(null);
-                  items
-                    .find(
-                      (item): item is MenuAction =>
-                        isAction(item) && item.id === id,
-                    )
-                    ?.run?.();
-                }}
-              />
-            )}
-            <Toast>{toast}</Toast>
-            <ReconnectingNotice
-              reconnecting={account.reconnecting}
-              onSignIn={askSignIn}
-            />
-            {nav.prompt && <NavigationPrompt prompt={nav.prompt} />}
-            {setupOffered && (
-              <ProvisioningPanel
-                locale={locale}
-                onCopyDetails={copy}
-                signedOut={!signedIn}
-                localAi={
-                  signedIn && agentSession && host.providerSettings
-                    ? {
-                        session: agentSession,
-                        providerSettings: host.providerSettings,
-                        reader,
-                      }
-                    : null
-                }
-              />
-            )}
-            {managingProfiles && host.profiles && (
-              <ManageProfiles
-                profiles={host.profiles}
-                account={account}
-                onClose={() => setManagingProfiles(false)}
-                onCreate={() => {
-                  setManagingProfiles(false);
-                  askNewProfile();
-                }}
-              />
-            )}
-            <SignInDialog
+            <ShellDock
+              host={host}
+              t={t}
+              locale={locale}
               account={account}
-              open={signInAsked && !signInDismissed && !managingProfiles}
-              onOpenChange={(open) => {
-                setSignInDismissed(!open);
-                if (!open) accountRef.current.settle();
-              }}
-              create={creatingProfile}
-              onCreateChange={setCreatingProfile}
-              onManage={
-                host.profiles
-                  ? () => {
-                      setSignInDismissed(true);
-                      setManagingProfiles(true);
-                    }
-                  : undefined
-              }
-              // Opened by the gate closing rather than by a press, the dialog
-              // still took focus from somewhere: that is where it returns.
-              onOpening={(from) => {
-                signInOpener.current ??= {
-                  element: from,
-                  calendar: from?.closest(".calendar-page") != null,
-                };
-              }}
-              // Put aside, focus goes back to what the dialog took it from
-              // while that is on screen, else to the page it was in, else to
-              // the TUI's way back in. Admitted, it goes on: to the calendar
-              // the sign-in was asked from, else to the TUI that has started.
-              // The rail is the last resort of both.
-              onClosed={() => {
-                const opener = signInOpener.current;
-                signInOpener.current = null;
-                // Something asked for while the dialog was up comes first.
-                grantFocus();
-                // The dialog takes a moment to leave. Focus the person has
-                // already put somewhere in that moment is left where it is.
-                const held = document.activeElement;
-                if (held && held !== document.body && !held.closest(".sign-in"))
-                  return;
-                const shown = (
-                  element: Element | null,
-                ): element is HTMLElement =>
-                  element instanceof HTMLElement &&
-                  element.isConnected &&
-                  element.offsetParent !== null;
-                const from = opener?.element ?? null;
-                const page = calendarPage.current;
-                const frame = document.querySelector(".docs-frame");
-                if (account.gated) {
-                  if (shown(from)) from.focus();
-                  else if (opener?.calendar && shown(page)) page.focus();
-                  else if (shown(signInButton.current))
-                    signInButton.current.focus();
-                  else if (shown(page)) page.focus();
-                  else if (shown(frame) && docs.current) docs.current.focus();
-                  else focusRail();
-                } else if (opener?.calendar && shown(page)) page.focus();
-                else if (panelMaximized) focusView(layout.tab);
-                else if (tuiVisible) focusView("tui");
-                else if (shown(page)) page.focus();
-                else if (shown(frame) && docs.current) docs.current.focus();
-                else focusRail();
-              }}
+              phase={phase}
+              signedIn={signedIn}
+              scheme={scheme}
+              terminalTheme={terminalTheme}
+              terminalFontSize={metrics.terminalFontSize}
+              status={sessions.status}
+              setStatus={sessions.setStatus}
+              terminals={terminals}
+              isShellChord={isShellChord}
+              terminalMenu={terminalMenu}
+              recordMenu={recordMenu}
+              signInButton={signInButton}
+              askSignIn={signIn.askSignIn}
+              agentControl={agentControl}
+              agentBody={navigation.agentBody}
+              openMenu={overlays.openMenu}
+              onToolRefused={setup.onToolRefused}
+              openLink={openLink}
+              openViewLink={openViewLink}
+              settledSetups={setup.settledSetups}
+              byId={byId}
+              runAction={runAction}
+              maximizeControl={maximizeControl}
+              splitControls={splitControls}
+              layout={layout}
+              prefs={prefs}
+              setLayout={setLayout}
+              maximized={maximized}
+              setMaximized={setMaximized}
+              patch={patch}
+              docking={arrangement.docking}
+              changeDocking={arrangement.changeDocking}
+              setNarrowedPanes={arrangement.setNarrowedPanes}
+              dockMinimumWidths={visibility.dockMinimumWidths}
+              dockBesideWidths={visibility.dockBesideWidths}
+              dockMinimumHeights={visibility.dockMinimumHeights}
+              dockOffered={visibility.dockOffered}
+              expandedPane={visibility.expandedPane}
+              fullscreen={fullscreen}
+              enterFullscreen={arrangement.enterFullscreen}
+              revealPane={arrangement.revealPane}
+              grantFocus={grantFocus}
+              focusView={focusView}
+              focusRail={focusRail}
+              toggleMaximize={toggleMaximize}
+              closeColumn={columns.closeColumn}
+              guarded={guarded}
+              showPage={showPage}
+              closePage={closePage}
+              setBrowserKeptFor={memories.setBrowserKeptFor}
+              agentVisible={agentVisible}
+              tuiVisible={tuiVisible}
+              panelVisible={panelVisible}
+              activePanes={activePanes}
+              pageOn={pageOn}
+              profileOn={visibility.profileOn}
+              calendarOn={visibility.calendarOn}
+              ledgerOn={visibility.ledgerOn}
+              declarationsOn={visibility.declarationsOn}
+              browserOn={visibility.browserOn}
+              aeatSyncOn={visibility.aeatSyncOn}
+              docsEntry={docsEntry}
+              setErrorCount={logs.setErrorCount}
+              filters={logs.filters}
+              defaultFilters={logs.defaultFilters}
+              setFilters={logs.setFilters}
+              selectLogLevel={logs.selectLogLevel}
+              copyLogs={logs.copyLogs}
+              exportLogs={logs.exportLogs}
+              revealLogs={logs.revealLogs}
+              main={docsPane}
+            />
+            <WindowOverlays
+              host={host}
+              t={t}
+              locale={locale}
+              account={account}
+              signedIn={signedIn}
+              reader={reader}
+              overlays={overlays}
+              prefs={prefs}
+              setPrefs={setPrefs}
+              setLayout={setLayout}
+              setMaximized={setMaximized}
+              languageControl={languageControl}
+              about={about}
+              actions={actions}
+              pastedLink={pastedLink}
+              searchDocs={searchDocs}
+              openDoc={openDoc}
+              focusRail={focusRail}
+              copy={copy}
+              say={say}
+              toast={toast}
+              askSignIn={signIn.askSignIn}
+              prompt={nav.prompt}
+              setupOffered={setup.setupOffered}
+            />
+            <AccountDialogs
+              host={host}
+              account={account}
+              accountRef={signIn.accountRef}
+              signInAsked={signIn.signInAsked}
+              signInDismissed={signIn.signInDismissed}
+              setSignInDismissed={signIn.setSignInDismissed}
+              creatingProfile={signIn.creatingProfile}
+              setCreatingProfile={signIn.setCreatingProfile}
+              managingProfiles={signIn.managingProfiles}
+              setManagingProfiles={signIn.setManagingProfiles}
+              askNewProfile={signIn.askNewProfile}
+              signInOpener={signIn.signInOpener}
+              signInButton={signInButton}
+              calendarPage={navigation.calendarPage}
+              docs={docs}
+              grantFocus={grantFocus}
+              focusView={focusView}
+              focusRail={focusRail}
+              panelMaximized={panelMaximized}
+              tab={layout.tab}
+              tuiVisible={tuiVisible}
             />
           </div>
         </div>

@@ -11,8 +11,8 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type {
   InvoicePreviewRequest,
   InvoicePreviewResult,
-  LedgerPort,
-} from "../../../shell/ledger";
+} from "../../../shell/ledgerInvoiceOperations";
+import type { LedgerPort } from "../../../shell/ledger";
 import { readAnswer } from "../../../shell/ledgerWindow";
 
 export type PreviewReply =

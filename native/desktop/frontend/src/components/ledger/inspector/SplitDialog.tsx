@@ -17,11 +17,8 @@ import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
-import type {
-  LedgerPort,
-  LedgerRow,
-  LedgerSplitCheckResult,
-} from "../../../shell/ledger";
+import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
+import type { LedgerSplitCheckResult } from "../../../shell/ledgerMovementOperations";
 import { DECIDED_CLASSIFICATIONS } from "../../../shell/ledgerContract";
 import {
   keepsCategory,
