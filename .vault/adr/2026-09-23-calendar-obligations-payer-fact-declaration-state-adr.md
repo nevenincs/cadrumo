@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#calendar-obligations'
 date: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-11-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:35be4a07041d8f3583bfec014c934a93ea770cc0bfa10472d721ba64792cb5cd'
+body_hash: 'sha256:acb26c2275758b9ec25f9c5b19e9b4418ff79a121f34d8ac6379d722f3a9eadf'
 related:
   - "[[2026-09-23-calendar-obligations-holiday-jurisdiction-adr]]"
   - "[[2026-06-30-obligation-coverage-completeness-adr]]"
@@ -84,3 +84,22 @@ The three-state contract is the only option under which an operator who answered
 - Every stored profile moves to schema 7 on first open after the upgrade. A profile bundle exported at version 6 must pass through the same migration before import.
 - The `includes` operation is available to any future per-period obligation. A quarter token that matches no window is inert, not an error, so declared quarters outside a window's range produce no row.
 - Docs sequence goldens that show setup flags, explain facts or applicability listings change with the new questions and must be regenerated in the same window.
+
+## Amendment 2026-11-06: the coded payer facts lose their defaults
+
+Accepted 2026-11-06 on the user's explicit approval, given in the FIXTURES session after the triage of the Modelo 111 fixture regression.
+
+The Implementation section kept the coded payer facts (withholding, intracommunity) on their own evaluators. Those facts have since moved to the three-state contract: `_THREE_STATE_PAYER_FACTS` in `src/cadrumo/domain/calculations/registry/applicability_payer_facts.py`. Their setup defaults were never removed, though:
+
+- `src/cadrumo/_data/registry/aeat/facts/0096-ley-49-2002-profile-binding-catalogue.toml` still declares `|bool|false` for `iva.does_intracomunitario`, `withholding.has_employees`, `withholding.pays_professionals_with_retencion` and `withholding.pays_rent_with_retencion`;
+- the setup questions in `src/cadrumo/application/wizard/setup_tax_sections.py` still default to `"false"`.
+
+`setup_answer_projection.py` fills an absent path with that default. An unanswered profile therefore reaches the three-state evaluator as a declared no, and Modelos 111, 115, 180, 190, 216, 296 and 349 are refused as not applicable instead of reported as incomplete. That is the silent under-declaration this decision rejected.
+
+The amendment extends the dated-fact contract to these four paths:
+
+- **Defaults:** the four catalogue entries and their setup questions carry no default, as `withholding.colegio_concertado` and the Modelo 347 and 720 questions already do. Only an interactive answer or an explicit CLI flag writes `true` or `false`.
+- **Migration:** the next profile schema version records that a stored `false` on these paths is an answer. Its forward migration keeps every stored `true`, drops every stored `false` on the four paths, and leaves every other fact untouched. It runs atomically per profile inside the profile store's persistence boundary and is idempotent. It records the cleared facts, so the existing localized notice names each one and the step that answers it.
+- **Unchanged:** the two-state facts (`pays_capital_income_with_retencion`, `art109_activity_income_withholding_ge_70pct`) and the filing-cadence predicates (`censo.large_company`, `censo.public_administration_budget_gt_6000000`) keep their current treatment.
+
+The rationale is the original one: asking again costs the operator one question, while a kept defaulted negative could hide a withholding or intracommunity obligation.
