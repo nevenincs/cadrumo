@@ -2,8 +2,16 @@ import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import hooks from "eslint-plugin-react-hooks";
 import globals from "globals";
+import { readFileSync } from "node:fs";
 import designSystem from "./dev/eslint/design-system.mjs";
-import { MODULE_LINE_LIMIT } from "./scripts/module-line-limit.mjs";
+import { moduleBound } from "./scripts/generated-module-bound.mjs";
+
+// The repository's module bound, as the Modelo generator wrote it from its one
+// definition; a missing or malformed file stops the lint, never defaulting.
+const boundFile = new URL("./src/shell/moduleBound.json", import.meta.url);
+const MODULE_LINE_BOUND = moduleBound(
+  JSON.parse(readFileSync(boundFile, "utf8")).physicalLines,
+);
 
 // Import boundaries. One rule holds one list per file, so each group of files
 // below gets the whole list that applies to it.
@@ -88,7 +96,7 @@ export default tseslint.config(
     rules: {
       "max-lines": [
         "error",
-        { max: MODULE_LINE_LIMIT, skipBlankLines: false, skipComments: false },
+        { max: MODULE_LINE_BOUND, skipBlankLines: false, skipComments: false },
       ],
     },
   },

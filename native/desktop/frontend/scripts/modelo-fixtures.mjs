@@ -3,13 +3,14 @@
 // scripts/modelo_fixtures.py, and formats what it writes as the frontend's
 // formatter does. `--contract` selects the wire types and relay bounds
 // (the modules under src/shell/modeloContract/ and relayBounds.ts,
-// committed); `--envelopes`
+// committed), and the module bound the producer reports, written to
+// src/shell/moduleBound.json for the lint rule; `--envelopes`
 // selects the scenario envelopes, which are build output in the host's build
 // tree (see fixture-paths.mjs) and never committed; with neither, both. The
 // envelopes are stored as the producer writes them, compact and the Modelo 100
 // forms as patches; `--pack` stores the ones already on disk that way.
 // The wire types are refused, none written or compared, when a formatted
-// module would be longer than the module bound in module-line-limit.mjs.
+// module would be longer than the module bound the producer reports.
 // `--check` writes nothing: for the wire types it fails when they differ from
 // fresh output, a module is missing or left over, or the host's admitted list
 // differs from the registered family,
@@ -22,6 +23,7 @@
 import { spawnSync } from "node:child_process";
 import {
   existsSync,
+  lstatSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -34,7 +36,7 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { format, resolveConfig } from "prettier";
 import { windowFixtures } from "./fixture-paths.mjs";
-import { refuseOversizedModules } from "./module-line-limit.mjs";
+import { refuseOversizedModules } from "./generated-module-bound.mjs";
 
 const { values } = parseArgs({
   options: {
@@ -94,6 +96,8 @@ const CONTRACT_MODULES = [
 ];
 const contractDirectory = resolve(frontend, "src/shell/modeloContract");
 const bounds = resolve(frontend, "src/shell/relayBounds.ts");
+// The module bound as the producer reported it, for the lint rule to read.
+const moduleBound = resolve(frontend, "src/shell/moduleBound.json");
 const fixtures = resolve(windowFixtures(), "modelo");
 const producer = resolve(frontend, "scripts/modelo_fixtures.py");
 // Every envelope the producer wrote into its own scratch directory.
@@ -152,7 +156,8 @@ let failed = false;
 if (wireTypes) {
   const generated = python("contract");
   if (generated.status !== 0) process.exit(generated.status);
-  const modules = Object.entries(JSON.parse(generated.output));
+  const { bound, modules: emitted } = JSON.parse(generated.output);
+  const modules = Object.entries(emitted);
   const listed = CONTRACT_MODULES.map((path) => basename(path));
   const unlisted = modules
     .map(([name]) => name)
@@ -188,8 +193,13 @@ if (wireTypes) {
   // any is written or compared.
   refuseOversizedModules(
     targets.map(([path, text]) => [basename(path), text]),
-    "lower the producer's module line budget",
+    bound,
+    "split what the producer emits",
   );
+  targets.push([
+    values.output ? resolve(values.output, "moduleBound.json") : moduleBound,
+    await formatted(JSON.stringify({ physicalLines: bound }), moduleBound),
+  ]);
   // A module the producer no longer writes is stale, not left to be imported.
   const leftover = existsSync(directory)
     ? readdirSync(directory).filter((name) => !listed.includes(name))
@@ -222,6 +232,18 @@ if (wireTypes) {
       failed = true;
     }
   } else {
+    // Only a plain file the generator could have written is removed; anything
+    // else in its directory is refused, and nothing is written.
+    const foreign = leftover.filter(
+      (name) => !lstatSync(resolve(directory, name)).isFile(),
+    );
+    if (foreign.length) {
+      for (const name of foreign)
+        console.error(
+          `${resolve(directory, name)} is not a generated module; remove it by hand`,
+        );
+      process.exit(1);
+    }
     mkdirSync(directory, { recursive: true });
     for (const name of leftover) {
       rmSync(resolve(directory, name));

@@ -170,11 +170,12 @@ def _script(
 
 _MODELO_PRODUCER: Final = f"{_SCRIPTS}/modelo_fixtures.py"
 _MODELO_DRIVER: Final = f"{_SCRIPTS}/modelo-fixtures.mjs"
-#: The module bound the driver refuses a generated wire-type module past.
-_MODULE_LINE_LIMIT: Final = f"{_SCRIPTS}/module-line-limit.mjs"
+#: The module bound's one definition, which the producer sizes its modules within and reports, and the driver's
+#: refusal of a generated module past it.
+_MODULE_BOUND: Final = ("dev/quality/typescript_module_size.py", f"{_SCRIPTS}/generated-module-bound.mjs")
 #: The Modelo wire types and the envelopes read the same application, host sources and personas.
 _MODELO_INPUTS: Final = (
-    *_common(_MODELO_PRODUCER, _MODELO_DRIVER, _MODULE_LINE_LIMIT),
+    *_common(_MODELO_PRODUCER, _MODELO_DRIVER, *_MODULE_BOUND),
     InputGroup(
         "host-source",
         (
@@ -212,7 +213,7 @@ FAMILIES: Final[tuple[FixtureFamily, ...]] = (
         producer=Command(("node", _MODELO_DRIVER, "--contract")),
         check=(Command(("node", _MODELO_DRIVER, "--contract", "--check")),),
         output_root=f"{FRONTEND}/src",
-        outputs=("shell/modeloContract/*.ts", "shell/relayBounds.ts"),
+        outputs=("shell/modeloContract/*.ts", "shell/relayBounds.ts", "shell/moduleBound.json"),
         determinism=Command(("node", _MODELO_DRIVER, "--contract", "--output", OUTPUT)),
         prerequisites=(_FRONTEND_PACKAGES,),
         check_proves_outputs=True,

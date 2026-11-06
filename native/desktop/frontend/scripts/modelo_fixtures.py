@@ -4,9 +4,11 @@ The modules under ``src/shell/modeloContract/`` are generated from the JSON
 schema of every request and result the desktop's admitted ``modelo.*``
 definitions register, plus the edit operator input the financial body carries.
 Each type is written once, in the module of the definitions that reach it (see
-``contract_modules``), and a module larger than ``_MODULE_LINE_BUDGET`` hands
-groups of its types to modules of their own; a module that cannot be split
-within the budget is refused, and nothing is written.
+``contract_modules``). A module larger than ``_MODULE_LINE_BUDGET``, derived
+from the repository's TypeScript module bound, hands groups of its types to
+modules of their own and is finally cut into consecutive parts; only a single
+type larger than the budget is refused, and then nothing is written. The
+definition-keyed map lives in ``contracts.ts``.
 ``src/shell/relayBounds.ts`` is generated from the host's relay bounds, as the
 Rust sources state them. The envelopes under
 ``build/<preset>/fixtures/window/modelo/`` are read through the application's own read path
@@ -15,10 +17,11 @@ published authority, with each scenario's own state stated over it through the
 profile operations.
 
 ``scripts/modelo-fixtures.mjs`` drives this module and formats what it writes;
-run that, not this. It refuses, writing nothing, when a formatted module would
-be longer than the repository's TypeScript module bound. ``contract`` writes the unformatted modules to standard
-output as one JSON object keyed by file name; ``bounds`` writes the
-unformatted relay bounds module; ``envelopes``
+run that, not this. ``contract`` writes one JSON object to standard output:
+the repository's module bound as ``bound`` and the unformatted modules as
+``modules``, keyed by file name. The driver refuses, writing nothing, when any
+formatted module it generates would be longer than that bound. ``bounds``
+writes the unformatted relay bounds module; ``envelopes``
 writes the envelopes, stored compactly and the Modelo 100 forms as patches;
 ``pack`` stores the envelopes already on disk that way; ``validate`` fails when the host's admitted list differs
 from the registered family or a stored envelope no longer validates against
@@ -49,6 +52,7 @@ from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
 
 from dev.fixture_projections.location import family_directory
+from dev.quality.typescript_module_size import MAX_PHYSICAL_LINES
 from dev.temporary_output import prepare_temp_root
 from pydantic import BaseModel
 from pydantic.json_schema import models_json_schema
@@ -493,8 +497,9 @@ _HEADER = """\
 #: The definition id segments that name an operation family: ``modelo`` and the family, as in ``modelo.work``.
 _FAMILY_DEPTH = 2
 #: The most lines a module may take before the formatter writes it, counting a line for each type it imports.
-#: The formatter lengthens a module, so this leaves room under the length the driver admits for a formatted one.
-_MODULE_LINE_BUDGET = 1200
+#: The formatter lengthens a module, so this keeps a fifth of the repository's module bound, which the driver
+#: holds the formatted module to, free for it.
+_MODULE_LINE_BUDGET = MAX_PHYSICAL_LINES * 4 // 5
 #: The module holding the definition-keyed map and the admitted lists.
 CONTRACTS_MODULE = "contracts"
 
@@ -563,12 +568,10 @@ class WrittenDefinition:
     named: frozenset[str]
 
 
-def _module_lines(
-    names: Iterable[str], written: Mapping[str, WrittenDefinition], extra: WrittenDefinition | None = None
-) -> int:
-    """The lines a module of ``names`` takes, with ``extra`` written beside them: one more per type it imports."""
-    parts = [written[name] for name in names] + ([extra] if extra is not None else [])
+def _module_lines(names: Iterable[str], written: Mapping[str, WrittenDefinition]) -> int:
+    """The lines a module of ``names`` takes: one more per type it imports."""
     own = set(names)
+    parts = [written[name] for name in own]
     imported = {named for part in parts for named in part.named} - own
     return sum(part.lines for part in parts) + len(imported)
 
@@ -577,7 +580,6 @@ def contract_modules(
     names: Iterable[str],
     owners: Mapping[str, frozenset[str]],
     written: Mapping[str, WrittenDefinition],
-    maps: Mapping[str, WrittenDefinition],
 ) -> list[ContractModule]:
     """Group the written definitions into modules, each within the line budget.
 
@@ -585,10 +587,11 @@ def contract_modules(
     ``modelo.work`` holds what several work definitions reach and ``modelo`` what several families reach. A
     module over the budget hands its largest deeper prefixes, such as ``modelo.work.form``, to modules of their
     own until it fits; where that is not enough, it hands out its largest groups of definitions reached from the
-    same next-level owners, each named by them, such as ``modelo+edit+work``. Every family keeps its module,
-    which holds its slice of the definition-keyed map, ``maps`` by family.
+    same next-level owners, each named by them, such as ``modelo+edit+work``. What still does not fit is cut,
+    in name order, into consecutive parts that each fit, named after the module, such as ``modelo.work+part2``,
+    so a group's growth never stops generation. Only a single definition larger than the budget is refused.
     """
-    grouped: dict[_Key, list[str]] = {("modelo", family): [] for family in maps}
+    grouped: dict[_Key, list[str]] = {}
     for name in names:
         grouped.setdefault(_shared_prefix(owners[name])[:_FAMILY_DEPTH], []).append(name)
     pending = [ContractModule(key, found) for key, found in sorted(grouped.items())]
@@ -605,8 +608,7 @@ def contract_modules(
             else:
                 reached_from = sorted({owner.split(".")[depth] for owner in owners[name] if owner.count(".") >= depth})
                 alike.setdefault((*module.key[:-1], "+".join((module.key[-1], *reached_from))), []).append(name)
-        extra = maps.get(module.key[1]) if len(module.key) == _FAMILY_DEPTH else None
-        size = _module_lines(module.names, written, extra)
+        size = _module_lines(module.names, written)
         for key, part in (
             *sorted(deeper.items(), key=lambda item: (-_module_lines(item[1], written), item[0])),
             *sorted(alike.items(), key=lambda item: (-_module_lines(item[1], written), item[0])),
@@ -616,15 +618,36 @@ def contract_modules(
             if len(part) == len(module.names):
                 continue
             module.names = [name for name in module.names if name not in part]
-            size = _module_lines(module.names, written, extra)
+            size = _module_lines(module.names, written)
             pending.append(ContractModule(key, part))
         if size > _MODULE_LINE_BUDGET:
-            raise SystemExit(f"the {'.'.join(module.key)} types take {size} lines and cannot be split further")
+            first, *rest = _parts(module.names, written)
+            module.names = first
+            modules.extend(
+                ContractModule((*module.key[:-1], f"{module.key[-1]}+part{index}"), part)
+                for index, part in enumerate(rest, start=2)
+            )
         modules.append(module)
     stems = [_module_name(module.key) for module in modules]
     if len(set(stems)) != len(stems) or CONTRACTS_MODULE in stems:
         raise SystemExit(f"two contract modules would share a file name: {sorted(stems)}")
     return sorted(modules, key=lambda module: _module_name(module.key))
+
+
+def _parts(names: list[str], written: Mapping[str, WrittenDefinition]) -> list[list[str]]:
+    """``names`` cut, in their order, into consecutive parts that each fit the budget.
+
+    Raises:
+        SystemExit: When one definition alone is larger than the budget, which no split can fix.
+    """
+    parts: list[list[str]] = [[]]
+    for name in names:
+        if parts[-1] and _module_lines([*parts[-1], name], written) > _MODULE_LINE_BUDGET:
+            parts.append([])
+        parts[-1].append(name)
+        if (size := _module_lines(parts[-1], written)) > _MODULE_LINE_BUDGET:
+            raise SystemExit(f"the {name} type takes {size} lines alone and cannot be split further")
+    return parts
 
 
 def _imports(named: Mapping[str, set[str]], stem: str) -> list[str]:
@@ -656,48 +679,43 @@ def render_contract() -> dict[str, str]:
         family = by_family.setdefault(definition_id.split(".")[1], {})
         family.setdefault(definition_id, []).append((role, model.__name__))
     families = sorted(by_family)
-    # A map entry the formatter breaks takes a line for its key, each role and its close.
-    maps = {
-        family: WrittenDefinition(
-            3 + sum(2 + len(parts) for parts in entries.values()),
-            frozenset(model_name for parts in entries.values() for _, model_name in parts),
-        )
-        for family, entries in by_family.items()
-    }
-    modules = contract_modules(names, _owners(defs, roots, sent), sized, maps)
+    modules = contract_modules(names, _owners(defs, roots, sent), sized)
     home = {name: _module_name(module.key) for module in modules for name in module.names}
     written: dict[str, str] = {}
     for module in modules:
         stem = _module_name(module.key)
         blocks = [rendered[name] for name in module.names]
         used = {named for name in module.names for named in sized[name].named}
-        if len(module.key) == _FAMILY_DEPTH and module.key[1] in by_family:
-            family = module.key[1]
-            used |= maps[family].named
-            entries = (
-                f"  {_literal(definition_id)}: {{ "
-                + " ".join(f"{role}: {_ts_name(model_name)};" for role, model_name in parts)
-                + " };"
-                for definition_id, parts in sorted(by_family[family].items())
-            )
-            blocks.append(
-                f"/** The `modelo.{family}` definitions' share of `ModeloContracts`. */\n"
-                f"export type {_family_map_name(family)} = {{\n" + "\n".join(entries) + "\n};"
-            )
         named: dict[str, set[str]] = {}
         for name in used:
             named.setdefault(home[name], set()).add(_ts_name(name))
         imports = _imports(named, stem)
         written[f"{stem}.ts"] = "\n\n".join([_HEADER, *(["\n".join(imports)] if imports else []), *blocks]) + "\n"
+    # The definition-keyed map names types from every module, so it lives in a module of its own: kept beside
+    # a family's types, it made that module and the modules it names import each other.
+    family_maps = [
+        f"/** The `modelo.{family}` definitions' share of `ModeloContracts`. */\n"
+        f"type {_family_map_name(family)} = {{\n"
+        + "\n".join(
+            f"  {_literal(definition_id)}: {{ "
+            + " ".join(f"{role}: {_ts_name(model_name)};" for role, model_name in parts)
+            + " };"
+            for definition_id, parts in sorted(by_family[family].items())
+        )
+        + "\n};"
+        for family in families
+    ]
+    mapped: dict[str, set[str]] = {}
+    for entries in by_family.values():
+        for parts in entries.values():
+            for _, model_name in parts:
+                mapped.setdefault(home[model_name], set()).add(_ts_name(model_name))
     operations = host_operations()
     written[f"{CONTRACTS_MODULE}.ts"] = (
         "\n\n".join(
             [
                 _HEADER,
-                "\n".join(
-                    f'import type {{ {_family_map_name(family)} }} from "./{_module_name(("modelo", family))}";'
-                    for family in families
-                ),
+                "\n".join(_imports(mapped, CONTRACTS_MODULE)),
                 _constant_list(
                     "The definitions the host admits, mirroring its closed list.", "MODELO_DEFINITIONS", definitions()
                 ),
@@ -714,6 +732,7 @@ def render_contract() -> dict[str, str]:
                     "MODELO_STORED_SUBJECT_DEFINITIONS",
                     sorted(key for key, facts in operations.items() if facts["subject"]["kind"] == "stored_work_unit"),
                 ),
+                *family_maps,
                 "/** Each admitted definition's registered request, result and review, as the\n"
                 " * runtime's contract names them; a request names the profile the host fills. */\n"
                 f"export type ModeloContracts = {' & '.join(_family_map_name(family) for family in families)};",
@@ -3672,7 +3691,7 @@ def main() -> int:
     )
     args = parser.parse_args()
     if args.step == "contract":
-        sys.stdout.write(json.dumps(render_contract(), ensure_ascii=False))
+        sys.stdout.write(json.dumps({"bound": MAX_PHYSICAL_LINES, "modules": render_contract()}, ensure_ascii=False))
         return 0
     if args.step == "bounds":
         sys.stdout.write(render_bounds())

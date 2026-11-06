@@ -1,4 +1,4 @@
-"""Gate: no TypeScript module in the repository holds more than 1500 physical lines.
+"""Gate: no TypeScript module in the repository holds more than ``MAX_PHYSICAL_LINES`` physical lines.
 
 A module that size carries many responsibilities at once: a reader cannot hold
 it, a reviewer cannot see what a change touches, and every edit collides with
@@ -6,10 +6,11 @@ another. The bound applies to every TypeScript module the repository keeps:
 product code, scenario fixtures, stories, prototypes, specs and scripts alike,
 under any root, not only the desktop's.
 
-A generated module counts too. The Modelo wire-type generator
-(``native/desktop/frontend/scripts/modelo-fixtures.mjs``) refuses to write a
-formatted module over the same bound, so a generated module is split by its
-generator and never by hand; this gate also measures what it committed.
+``MAX_PHYSICAL_LINES`` is the bound's only definition. The frontend's
+generators receive it from their Python producers and refuse to write a module
+past it, so a generated module is split by its generator and never by hand; the
+Modelo generator also writes it to ``src/shell/moduleBound.json`` for the lint
+rule. This gate measures what every generator committed as well.
 
 What counts
 -----------
