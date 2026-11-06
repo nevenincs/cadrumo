@@ -2,6 +2,7 @@ import { openPanelTab } from "../support/panel";
 import { expect, test, type Page } from "@playwright/test";
 import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
+import { showTui } from "../support/tui";
 
 // The shell on a small touch screen: a phone-sized viewport with a coarse
 // pointer and no hover. Controls grow to finger size through the density
@@ -229,13 +230,14 @@ test("a tap on messages says why there is no count", async ({
 });
 
 // Spanish has the longest name for the calendar.
-test("a narrow header gives up a duplicate control before it cuts its title", async ({
+test("a narrow header keeps its controls inside it and its whole title in the tab", async ({
   page: target,
 }) => {
   await seedLayout(target);
   await target.goto(
     "/scenarios.html?scenario=signed-in&latency=0&bar=off&lang=es",
   );
+  await showTui(target, { touch: true, lang: "es" });
   await target
     .getByRole("button", {
       name: label("desktop.calendar.title", {}, "es"),
@@ -243,20 +245,21 @@ test("a narrow header gives up a duplicate control before it cuts its title", as
     })
     .tap();
   await expect(target.locator(".calendar-page")).toBeVisible();
-  const title = target.locator(".pane-docs .pane-title");
-  expect(
-    await title.evaluate(
-      (element) => element.scrollWidth <= element.clientWidth,
-    ),
-  ).toBe(true);
-  // What it gave up is the swap, which the TUI's header still has: maximize
-  // and close here; maximize, swap and close there.
-  await expect(
-    target.locator(".pane-docs .pane-head button:visible"),
-  ).toHaveCount(2);
-  await expect(
-    target.locator(".pane-tui .pane-head button:visible"),
-  ).toHaveCount(3);
+  // Where the header is too narrow to show the whole title, the tab still
+  // names it whole, and its tooltip shows it.
+  const whole = label("desktop.calendar.title", {}, "es");
+  const tab = target.getByRole("tab", { name: whole, exact: true });
+  await expect(tab).toHaveAttribute("id", "tab-docs");
+  await expect(tab).toHaveAttribute("title", new RegExp(`^${whole}`));
+  for (const pane of ["docs", "tui"]) {
+    const header = target.locator(`[data-dock-header="${pane}"]`);
+    const edge = (await header.boundingBox())!;
+    for (const button of await header.locator("button:visible").all()) {
+      const box = (await button.boundingBox())!;
+      expect(box.x).toBeGreaterThanOrEqual(edge.x - 1);
+      expect(box.x + box.width).toBeLessThanOrEqual(edge.x + edge.width + 1);
+    }
+  }
 });
 
 test("the shell stacks its panes and never scrolls sideways", async ({
@@ -264,11 +267,19 @@ test("the shell stacks its panes and never scrolls sideways", async ({
 }) => {
   await seedLayout(target);
   await open(target);
-  await expect(target.locator(".split")).toHaveClass(/split-column/);
+  await showTui(target, { touch: true });
+  // Side by side is the stored arrangement; a phone's width stacks it.
+  const docs = (await target.locator('[data-dock-pane="docs"]').boundingBox())!;
+  const tui = (await target.locator('[data-dock-pane="tui"]').boundingBox())!;
+  expect(docs.y + docs.height).toBeLessThanOrEqual(tui.y + 1);
+  expect(docs.width).toBeCloseTo(tui.width, 0);
   expect(await overflowing(target)).toBe(false);
-  // The tab row keeps every control inside the panel.
-  const panel = await target.locator("section.panel").boundingBox();
-  for (const button of await target.locator(".tabstrip button").all()) {
+  // The panel's header keeps every control inside it.
+  const header = target.locator("[data-dock-header]:has(#tab-console)");
+  const panel = await header.boundingBox();
+  const controls = await header.locator("button:visible").all();
+  expect(controls.length).toBeGreaterThan(0);
+  for (const button of controls) {
     const box = await button.boundingBox();
     expect(box && panel && box.x + box.width <= panel.x + panel.width + 1).toBe(
       true,
@@ -361,12 +372,15 @@ test("a finger drawn down the log leaves its end, and the controls fit in two ro
 
 test("a touch drag resizes the panel", async ({ page: target }) => {
   await open(target);
-  const handle = target.getByRole("separator", {
-    name: label("desktop.panel.resize"),
-  });
+  // The divider above the panel names the panes it parts, the panel's among
+  // them.
+  const handle = target
+    .getByRole("separator")
+    .and(target.locator(`[aria-label*="${label("desktop.rail.console")}"]`));
+  const panel = target.locator("section.panel");
   const box = await handle.boundingBox();
   if (!box) throw new Error("The panel handle is not on screen.");
-  const before = Number(await handle.getAttribute("aria-valuenow"));
+  const before = (await panel.boundingBox())!.height;
   const client = await target.context().newCDPSession(target);
   const x = box.x + box.width / 2;
   const y = box.y + box.height / 2;
@@ -379,8 +393,8 @@ test("a touch drag resizes the panel", async ({ page: target }) => {
   for (let step = 1; step <= 8; step++) await touch("touchMove", y - step * 15);
   await touch("touchEnd", y - 120);
   await expect
-    .poll(async () => Number(await handle.getAttribute("aria-valuenow")))
-    .toBeGreaterThan(before);
+    .poll(async () => (await panel.boundingBox())!.height)
+    .toBeGreaterThan(before + 60);
 });
 
 test("the sign-in dialog fits the screen and takes a tapped password", async ({
@@ -396,6 +410,7 @@ test("the sign-in dialog fits the screen and takes a tapped password", async ({
   await target
     .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
     .tap();
+  await showTui(target, { touch: true });
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
 });
 
@@ -474,6 +489,7 @@ test("the profile choice and the form that creates one fit the screen under a fi
   await form.locator("button[type=submit]").tap();
   // The submitted passphrase authenticates the created profile.
   await expect(dialog).toHaveCount(0);
+  await showTui(target, { touch: true });
   await expect(target.locator(".pane-tui .xterm")).toHaveCount(1);
   await expect(
     target.locator('.titlebar [title="Marta Ruiz Ferrer"]'),

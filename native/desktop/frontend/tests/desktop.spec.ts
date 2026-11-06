@@ -390,6 +390,20 @@ async function revealTui(target: Page) {
     .click();
 }
 
+/** How the documentation's pane and the TUI's stand: side by side, or one
+ * above the other. */
+async function arrangement(target: Page): Promise<"row" | "column"> {
+  const docs = await target.locator('[data-dock-pane="docs"]').boundingBox();
+  const tui = await target.locator('[data-dock-pane="tui"]').boundingBox();
+  if (!docs || !tui)
+    throw new Error("The documentation and TUI are not both shown.");
+  const [first, second] =
+    docs.x <= tui.x && docs.y <= tui.y ? [docs, tui] : [tui, docs];
+  if (second.x >= first.x + first.width - 1) return "row";
+  if (second.y >= first.y + first.height - 1) return "column";
+  throw new Error("The documentation and TUI overlap.");
+}
+
 test("a saved open and maximized TUI stays closed until asked for", async ({
   page,
 }) => {
@@ -1691,8 +1705,19 @@ test("without a host the shell lays out every area and invents nothing", async (
   await expect(
     target.getByRole("tab", { name: label("desktop.rail.logs") }),
   ).toHaveAttribute("aria-selected", "true");
-  await expect(target.locator(".source-banner")).toHaveText(
-    label("desktop.host.unavailable"),
+  // The banner says the host is missing, and offers its one way back.
+  const banner = target.locator(".source-banner");
+  await expect(
+    banner.getByText(label("desktop.host.unavailable"), { exact: true }),
+  ).toBeVisible();
+  await expect(
+    banner.getByRole("button", {
+      name: label("desktop.logs.reconnect"),
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(banner).toHaveText(
+    label("desktop.host.unavailable") + label("desktop.logs.reconnect"),
   );
   await expect(target.locator(".record")).toHaveCount(0);
 });
@@ -1732,19 +1757,31 @@ test("maximize, swap, orientation and hide never reload the documentation", asyn
   await docs.evaluate(() => {
     (window as unknown as { kept: boolean }).kept = true;
   });
-  const docsHead = target.locator(".pane-docs .pane-head");
-  await docsHead.getByRole("button").first().click();
+  const docsHead = target.locator('[data-dock-header="docs"]');
+  await docsHead
+    .getByRole("button", { name: label("desktop.dock.expand"), exact: true })
+    .click();
   await expect(target.locator(".pane-tui")).toBeHidden();
   await expect(target.locator("section.panel")).toBeHidden();
-  await docsHead.getByRole("button").first().click();
+  await docsHead
+    .getByRole("button", { name: label("desktop.dock.restore"), exact: true })
+    .click();
   await expect(target.locator(".pane-tui")).toBeVisible();
+  // Swapped from the pane's arrangement menu, stacked from the palette.
   await docsHead
-    .getByRole("button", { name: label("desktop.split.swap") })
+    .getByRole("button", { name: label("desktop.dock.arrange"), exact: true })
     .click();
-  await docsHead
-    .getByRole("button", { name: label("desktop.split.stack") })
+  await target
+    .getByRole("menuitem", { name: label("desktop.split.swap"), exact: true })
     .click();
-  await expect(target.locator(".split")).toHaveClass(/split-column/);
+  await expect.poll(() => arrangement(target)).toBe("row");
+  await target.keyboard.press("ControlOrMeta+Shift+KeyK");
+  await target
+    .locator(".palette")
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill(label("desktop.split.stack"));
+  await target.keyboard.press("Enter");
+  await expect.poll(() => arrangement(target)).toBe("column");
   const rail = target.getByRole("navigation", {
     name: label("desktop.rail.label"),
   });
@@ -1763,19 +1800,13 @@ test("a window too narrow for side by side stacks without changing the choice", 
   await seedLayout(target);
   await target.goto("/");
   await revealTui(target);
-  const docsHead = target.locator(".pane-docs .pane-head");
-  const stack = docsHead.getByRole("button", {
-    name: label("desktop.split.stack"),
-  });
-  await expect(target.locator(".split")).toHaveClass(/split-row/);
-  await expect(stack).toBeVisible();
+  await expect.poll(() => arrangement(target)).toBe("row");
   await target.setViewportSize({ width: 520, height: 600 });
-  await expect(target.locator(".split")).toHaveClass(/split-column/);
-  // The choice cannot take effect here, so it is not offered.
-  await expect(stack).toHaveCount(0);
+  await expect.poll(() => arrangement(target)).toBe("column");
+  // The window stacks them without changing the choice: given the room
+  // again, they stand side by side as they were left.
   await target.setViewportSize({ width: 1280, height: 720 });
-  await expect(target.locator(".split")).toHaveClass(/split-row/);
-  await expect(stack).toBeVisible();
+  await expect.poll(() => arrangement(target)).toBe("row");
 });
 
 test("the documentation can relay only the chords the shell published to it", async ({
@@ -1844,7 +1875,7 @@ test("the remembered layout survives a reload", async ({ page: target }) => {
     .getByRole("radiogroup", { name: label("desktop.settings.docs_and_tui") })
     .getByRole("radio", { name: label("desktop.settings.stacked") })
     .click();
-  await expect(target.locator(".split")).toHaveClass(/split-column/);
+  await expect.poll(() => arrangement(target)).toBe("column");
   await target.keyboard.press("Escape");
   await openPanelTab(target, "python");
   await expect
@@ -1858,7 +1889,7 @@ test("the remembered layout survives a reload", async ({ page: target }) => {
     .toBe("python");
   await target.reload();
   await revealTui(target);
-  await expect(target.locator(".split")).toHaveClass(/split-column/);
+  await expect.poll(() => arrangement(target)).toBe("column");
   await expect(target.locator("section.panel")).toBeVisible();
   await expect(
     target.getByRole("tab", { name: label("desktop.rail.python") }),

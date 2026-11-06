@@ -2,6 +2,7 @@ import { openLogFilters, openPanelTab } from "../support/panel";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
+import { showTui } from "../support/tui";
 
 // The shell by keyboard alone: tab stops, arrow-key patterns, shortcuts, and
 // where focus goes when a surface opens and closes.
@@ -102,6 +103,7 @@ test("both splitters move by the arrow keys and report their position", async ({
 }) => {
   await seedLayout(target);
   await open(target);
+  await showTui(target);
   // Each docking separator reports its first branch's share and names
   // the panes it separates, regardless of where the split is nested.
   const handles = target.locator("[data-dock-divider]");
@@ -264,7 +266,8 @@ test("no chord reaches the shell from under the sign-in dialog", async ({
   await target.keyboard.press("F6");
   await expect(target.locator(".settings")).toHaveCount(0);
   await expect(target.locator(".palette")).toHaveCount(0);
-  await expect(target.locator(".pane-tui")).toBeVisible();
+  // The TUI's chord did not open it.
+  await expect(target.locator(".pane-tui")).toBeHidden();
   await expect(focusedWithin(dialog)).toHaveCount(1);
 });
 
@@ -325,6 +328,7 @@ test("F6 reaches the calendar where the documentation would be", async ({
   // Short enough that the calendar has more than it can show at once.
   await target.setViewportSize({ width: 1280, height: 520 });
   await open(target);
+  await showTui(target);
   await rail(target)
     .getByRole("button", { name: label("desktop.calendar.title") })
     .click();
@@ -408,6 +412,7 @@ test("the calendar's chord shows it from a terminal and puts it away again", asy
 }) => {
   await seedLayout(target);
   await open(target);
+  await showTui(target);
   await target.locator('[data-terminal="tui"] .xterm-screen').click();
   await expect(target.locator('[data-terminal="tui"] textarea')).toBeFocused();
   await target.keyboard.press("ControlOrMeta+Shift+D");
@@ -443,6 +448,7 @@ test("F6 moves focus from area to area and back", async ({ page: target }) => {
   await seedLayout(target);
   await open(target);
   await expect(target.locator(".docs-frame")).toBeVisible();
+  await showTui(target);
   await rail(target).getByRole("button").first().focus();
   await target.keyboard.press("F6");
   await expect(target.locator(".docs-frame")).toBeFocused();
@@ -471,7 +477,7 @@ test("F6 keeps a terminal focus request while its fonts load", async ({
     waiting.push(() => route.continue());
   });
   await seedLayout(target, {
-    layout: { agentShown: false, docsShown: false, tuiShown: true },
+    layout: { agentShown: false, docsShown: false },
   });
   await target.goto("/scenarios.html?scenario=signed-in&latency=0&bar=off", {
     waitUntil: "domcontentloaded",
@@ -482,6 +488,8 @@ test("F6 keeps a terminal focus request while its fonts load", async ({
       exact: true,
     }),
   ).not.toHaveAttribute("aria-disabled", "true");
+  // The TUI is opened, and its terminal waits for its fonts.
+  await showTui(target);
   await expect.poll(() => waiting.length).toBeGreaterThan(0);
   const input = target.locator('[data-terminal="tui"] textarea');
   await expect(input).toHaveCount(0);
@@ -566,6 +574,10 @@ test("the shell's chords reach their actions from the chrome", async ({
   await seedLayout(target);
   await open(target);
   await rail(target).getByRole("button").first().focus();
+  await expect(target.locator(".pane-tui")).toBeHidden();
+  await target.keyboard.press("Control+Shift+KeyT");
+  await expect(target.locator(".pane-tui")).toBeVisible();
+  await rail(target).getByRole("button").first().focus();
   await target.keyboard.press("Control+Shift+KeyT");
   await expect(target.locator(".pane-tui")).toBeHidden();
   await target.keyboard.press("Control+Shift+KeyT");
@@ -615,12 +627,8 @@ test("the sign-in dialog keeps Tab inside it and Escape hands focus on", async (
   }
   await target.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
-  await expect(
-    target.locator(".pane-tui").getByRole("button", {
-      name: label("desktop.signin.submit"),
-      exact: true,
-    }),
-  ).toBeFocused();
+  // With no TUI opened to offer a way in, the pane that is shown takes it.
+  await expect(target.locator(".docs-frame")).toBeFocused();
 });
 
 test("the reveal control shows and hides the password by keyboard", async ({
@@ -814,7 +822,8 @@ test("a chord sent from the documentation does not act under the sign-in dialog"
   await page.press("Control+Shift+KeyT");
   await target.waitForTimeout(300);
   await expect(target.locator(".settings")).toHaveCount(0);
-  await expect(target.locator(".pane-tui")).toBeVisible();
+  // The TUI's chord did not open it.
+  await expect(target.locator(".pane-tui")).toBeHidden();
 });
 
 test("a press outside a record's menu keeps what it pressed", async ({
