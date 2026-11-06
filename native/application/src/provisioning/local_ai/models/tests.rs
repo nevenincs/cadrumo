@@ -652,6 +652,24 @@ fn the_full_check_looks_the_model_up_in_the_servers_list_and_generates_one_token
         fixture.models.observe_full(&server, model, &ROOMY),
         Observation::Failed(FailureCategory::ProgramNotRunning)
     );
+    // The setup's check keeps which request failed, so a server that went away reads
+    // apart from one too busy to answer within a budget.
+    let gone = fixture
+        .models
+        .check_full(&server, model, &ROOMY)
+        .expect_err("a server that went away fails the full check");
+    assert_eq!(gone.category(), FailureCategory::ProgramNotRunning);
+    assert!(
+        matches!(
+            &gone,
+            LocalAiError::NotRunning(NotRunningCause::Request {
+                call: ServerCall::ListModels,
+                budget: None,
+                ..
+            })
+        ),
+        "{gone:?}"
+    );
 }
 
 /// The pull path end to end for a model no catalogue has: pulled by the name the

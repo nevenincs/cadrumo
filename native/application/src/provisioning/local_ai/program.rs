@@ -38,7 +38,7 @@
 //! measured ratio, and hold 1024 members, over twelve times the most measured.
 
 use super::{
-    LaunchStep, LocalAiError, ServerStartFailure, VersionFailure,
+    LaunchStep, LocalAiError, NotRunningCause, ServerStartFailure, VersionFailure,
     lease::{Leases, PROGRAM_CHANGE_BUDGET, ProgramChange, ServerLease},
     loopback::Loopback,
 };
@@ -395,7 +395,7 @@ impl Server {
         });
         if let Err(cause) = answered {
             server.halt();
-            return Err(LocalAiError::ServerStart(cause));
+            return Err(LocalAiError::NotRunning(NotRunningCause::Start(cause)));
         }
         Ok(server)
     }
@@ -511,10 +511,10 @@ impl Drop for Server {
 
 /// The failure of one step of launching the server, which the operating system refused.
 fn launch_failure(step: LaunchStep, error: &io::Error) -> LocalAiError {
-    LocalAiError::ServerStart(ServerStartFailure::Launch {
+    LocalAiError::NotRunning(NotRunningCause::Start(ServerStartFailure::Launch {
         step,
         kind: error.kind(),
-    })
+    }))
 }
 
 /// Unloads every model a server reports loaded; a server that does not answer is left

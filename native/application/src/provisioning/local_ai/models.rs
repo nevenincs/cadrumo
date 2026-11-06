@@ -26,7 +26,7 @@
 //! Role fitness, how well a model answers for its role, is no part of this state: it
 //! is the consumer's admission check.
 
-use super::{LocalAiError, hardware::Hardware, program::Server};
+use super::{LocalAiError, NotRunningCause, ServerCall, hardware::Hardware, program::Server};
 use crate::{
     component::Cancellation,
     error::Error,
@@ -307,20 +307,30 @@ impl Models {
         model: &SelectedModel,
         hardware: &Hardware,
     ) -> Observation {
+        self.check_full(server, model, hardware)
+            .unwrap_or_else(|error| Observation::Failed(error.category()))
+    }
+
+    /// The full check as [`Models::observe_full`] reads it, with a failed request kept as
+    /// the error that says what failed, for a setup that records why it stopped.
+    pub fn check_full(
+        &self,
+        server: &Server,
+        model: &SelectedModel,
+        hardware: &Hardware,
+    ) -> Result<Observation, LocalAiError> {
         let quick = self.observe_quick(model, hardware);
         if quick != Observation::Present {
-            return quick;
+            return Ok(quick);
         }
-        match listed(server, &model.name) {
-            Err(error) => return Observation::Failed(error.category()),
-            Ok(false) => return Observation::Absent,
-            Ok(true) => {}
+        if !listed(server, &model.name)? {
+            return Ok(Observation::Absent);
         }
-        match generate_one_token(server, &model.name) {
-            Ok(true) => Observation::Present,
-            Ok(false) => Observation::Absent,
-            Err(error) => Observation::Failed(error.category()),
-        }
+        Ok(if generate_one_token(server, &model.name)? {
+            Observation::Present
+        } else {
+            Observation::Absent
+        })
     }
 
     /// Pulls `model` through `server` unless it is already present, then reads it back as
@@ -576,8 +586,14 @@ fn pull_once(
     let (status, body) = match answer {
         Ok(answer) => answer,
         // The engine's own connection to the program broke: the program, not the
-        // registry, is the problem.
-        Err(_) => return Ok(Attempt::Failed(FailureCategory::ProgramNotRunning)),
+        // registry, is the problem, and it is not retried.
+        Err(error) => {
+            return Err(LocalAiError::NotRunning(NotRunningCause::Request {
+                call: ServerCall::PullModel,
+                kind: error.kind(),
+                budget: Some(FULL_CHECK_BUDGET),
+            }));
+        }
     };
     if !(200..300).contains(&status) {
         let error = serde_json::from_slice::<serde_json::Value>(&body)
@@ -664,12 +680,17 @@ pub fn pull_error_category(message: &str) -> FailureCategory {
 
 /// Whether the server's own list of installed models holds `name`.
 fn listed(server: &Server, name: &ModelName) -> Result<bool, LocalAiError> {
-    let (status, body) = server
-        .loopback()
-        .get("/api/tags")
-        .map_err(|_| LocalAiError::Failed(FailureCategory::ProgramNotRunning))?;
+    let (status, body) = server.loopback().get("/api/tags").map_err(|error| {
+        LocalAiError::NotRunning(NotRunningCause::Request {
+            call: ServerCall::ListModels,
+            kind: error.kind(),
+            budget: None,
+        })
+    })?;
     if status != 200 {
-        return Err(LocalAiError::Failed(FailureCategory::ProgramNotRunning));
+        return Err(LocalAiError::NotRunning(NotRunningCause::ListStatus {
+            status,
+        }));
     }
     let value: serde_json::Value = serde_json::from_slice(&body)
         .map_err(|_| LocalAiError::Failed(FailureCategory::Unexpected))?;
@@ -700,7 +721,13 @@ fn generate_one_token(server: &Server, name: &ModelName) -> Result<bool, LocalAi
         .loopback()
         .with_io_timeout(FULL_CHECK_BUDGET)
         .post("/api/generate", request.to_string().as_bytes())
-        .map_err(|_| LocalAiError::Failed(FailureCategory::ProgramNotRunning))?;
+        .map_err(|error| {
+            LocalAiError::NotRunning(NotRunningCause::Request {
+                call: ServerCall::Generate,
+                kind: error.kind(),
+                budget: Some(FULL_CHECK_BUDGET),
+            })
+        })?;
     let value: serde_json::Value = serde_json::from_slice(&body).unwrap_or_default();
     if status == 200 && value["done"] == true {
         return Ok(true);

@@ -53,10 +53,43 @@ pub fn reading(
 #[derive(Debug)]
 pub enum LocalAiError {
     Failed(FailureCategory),
-    /// The server did not come up. Its category is always `program_not_running`; the
-    /// cause is for logs and tests, and no surface words it.
-    ServerStart(ServerStartFailure),
+    /// The server did not come up or did not answer. Its category is always
+    /// `program_not_running`; the cause is for logs and tests, and no surface words it.
+    NotRunning(NotRunningCause),
     Engine(Error),
+}
+
+/// Why the local AI reads `program_not_running`: which start, wait or request ran out or
+/// broke. Locale-neutral facts for a diagnostic report or a test, so a host too busy to
+/// answer within a budget is not read as a program that is missing.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum NotRunningCause {
+    /// A start of the server failed.
+    Start(ServerStartFailure),
+    /// No server was running by the end of the setup's wait for the manager to start it.
+    NoServerWithin { budget: Duration },
+    /// No server is recorded as running.
+    NoServer,
+    /// A request to the running server failed before it answered: `kind` is
+    /// `TimedOut` when `budget` ran out.
+    Request {
+        call: ServerCall,
+        kind: io::ErrorKind,
+        budget: Option<Duration>,
+    },
+    /// The running server answered the model list with an unexpected HTTP status.
+    ListStatus { status: u16 },
+}
+
+/// The request to the running server that a [`NotRunningCause`] names.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ServerCall {
+    /// Listing the models the server holds.
+    ListModels,
+    /// Pulling a model through the server.
+    PullModel,
+    /// Generating one token to check a model loads.
+    Generate,
 }
 
 impl LocalAiError {
@@ -64,7 +97,7 @@ impl LocalAiError {
     pub fn category(&self) -> FailureCategory {
         match self {
             Self::Failed(category) => *category,
-            Self::ServerStart(_) => FailureCategory::ProgramNotRunning,
+            Self::NotRunning(_) => FailureCategory::ProgramNotRunning,
             Self::Engine(Error::Download(failure)) => failure.category,
             Self::Engine(Error::Cancelled) => FailureCategory::Cancelled,
             Self::Engine(Error::Io(error)) => super::transfer::file_failure(error).category,
@@ -92,7 +125,7 @@ impl fmt::Display for LocalAiError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Failed(category) => write!(f, "local AI failed: {category}"),
-            Self::ServerStart(cause) => write!(
+            Self::NotRunning(cause) => write!(
                 f,
                 "local AI failed: {}: {cause}",
                 FailureCategory::ProgramNotRunning
@@ -167,6 +200,78 @@ impl fmt::Display for ServerStartFailure {
             ),
             Self::Version(failure) => write!(f, "its version could not be confirmed: {failure}"),
         }
+    }
+}
+
+impl NotRunningCause {
+    /// A static identifier for this cause, as a diagnostic record keeps it.
+    pub fn reason(&self) -> &'static str {
+        match self {
+            Self::Start(ServerStartFailure::Launch { .. }) => "server_launch_failed",
+            Self::Start(ServerStartFailure::LogUnreadable) => "server_log_unreadable",
+            Self::Start(ServerStartFailure::Closed { .. }) => "server_closed_before_listening",
+            Self::Start(ServerStartFailure::Silent { .. }) => "server_start_budget_expired",
+            Self::Start(ServerStartFailure::Version(_)) => "server_version_unconfirmed",
+            Self::NoServerWithin { .. } => "server_wait_expired",
+            Self::NoServer => "server_not_recorded",
+            Self::Request { call, .. } => match call {
+                ServerCall::ListModels => "model_list_request_failed",
+                ServerCall::PullModel => "model_pull_request_failed",
+                ServerCall::Generate => "generate_request_failed",
+            },
+            Self::ListStatus { .. } => "model_list_status_unexpected",
+        }
+    }
+
+    /// The I/O error kind behind this cause, `TimedOut` when a request's budget ran out.
+    pub fn io_kind(&self) -> Option<io::ErrorKind> {
+        match self {
+            Self::Start(ServerStartFailure::Launch { kind, .. }) | Self::Request { kind, .. } => {
+                Some(*kind)
+            }
+            _ => None,
+        }
+    }
+}
+
+impl fmt::Display for NotRunningCause {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Start(failure) => failure.fmt(f),
+            Self::NoServerWithin { budget } => write!(
+                f,
+                "no server was running within the {}s wait",
+                budget.as_secs()
+            ),
+            Self::NoServer => f.write_str("no server is recorded as running"),
+            Self::Request {
+                call,
+                kind,
+                budget: Some(budget),
+            } => write!(
+                f,
+                "the {call} request failed: {kind} (budget {}s)",
+                budget.as_secs()
+            ),
+            Self::Request {
+                call,
+                kind,
+                budget: None,
+            } => write!(f, "the {call} request failed: {kind}"),
+            Self::ListStatus { status } => {
+                write!(f, "the model list was answered with status {status}")
+            }
+        }
+    }
+}
+
+impl fmt::Display for ServerCall {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Self::ListModels => "model list",
+            Self::PullModel => "model pull",
+            Self::Generate => "generate",
+        })
     }
 }
 
