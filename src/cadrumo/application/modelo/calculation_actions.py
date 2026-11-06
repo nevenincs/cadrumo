@@ -473,7 +473,7 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         operator_layer=operator_layer,
         observations=evaluation.typed_observations,
         unresolved_outcomes=evaluation.engine_result.unresolved_outcomes,
-        source_provenance=source_provenance,
+        source_provenance=(*source_provenance, *channels.profile_source_provenance),
         source_issues=revision_source_issues,
         filing_instance_evidence=evaluation.filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=m303_regimen_simplificado_annual_summary_handoff,

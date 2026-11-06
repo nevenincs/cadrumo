@@ -22,7 +22,7 @@ new filing year is registry work rather than a code edit.
 Channel selection is the load-bearing decision. The registry runtime
 resolves profile bindings through four engine channels:
 ``date_binding_values`` for date operands, ``enum_binding_values`` for
-dispatch keys, ``boolean_binding_values`` for truth values, and
+dispatch keys and calculation-only text inputs, ``boolean_binding_values`` for truth values, and
 Decimal-valued ``binding_values`` for numeric operands. The boolean channel
 is selected from the binding's OWN declared value contract
 (``value.channel = "boolean"``), never from the Python type of the fact that
@@ -209,6 +209,7 @@ def _route_resolved_binding(
     *,
     is_date_channel: bool,
     is_enum_channel: bool,
+    is_text_input_channel: bool,
     declared_channel: BindingValueChannel,
     channels: _ResolvedBindingChannels,
 ) -> None:
@@ -253,7 +254,7 @@ def _route_resolved_binding(
     if declared_channel is BindingValueChannel.BOOLEAN:
         channels.boolean_values[binding_id] = _boolean_value(binding_id, value)
         return
-    if declared_channel is BindingValueChannel.ENUM or is_enum_channel:
+    if declared_channel is BindingValueChannel.ENUM or is_enum_channel or is_text_input_channel:
         # Boolean-typed facts must never reach the enum dispatch channel --
         # enum dispatch keys are string category codes, not yes/no flags.
         # A bool here signals a mis-wired registry binding; refuse early
@@ -265,6 +266,9 @@ def _route_resolved_binding(
                 translated_message="application.modelo.profile_binding.errors.enum_boolean_invalid",
                 context={"binding_id": binding_id, "value_type": "bool"},
             )
+        # Unaddressed profile TEXT inputs use the existing string channel.
+        # Dictionary/XSD-addressed numeric controls retain their established
+        # calculation shaping; their export text is resolved separately.
         channels.enum_values[binding_id] = str(value)
         return
     if isinstance(value, bool):
@@ -517,6 +521,9 @@ def resolve_profile_binding_channels(
             value,
             is_date_channel=binding_id in formula_date_consumed,
             is_enum_channel=binding_id in enum_bindings or binding.value.typed_enum is not None,
+            is_text_input_channel=(
+                binding.value.channel is BindingValueChannel.TEXT and _is_calculation_only_profile_binding(binding)
+            ),
             declared_channel=binding.value.channel,
             channels=channels,
         )

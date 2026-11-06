@@ -192,6 +192,22 @@ period_selector = { year_from = 2012, periods = ["0A"] }
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/modelo_720.pdf"
 review_status = "pending_review"
 
+# DR720's field instructions (physical page 6, printed page 15) establish
+# the declaration-contact role and its telephone/name components. This role
+# reuses the pinned document receipt; aeat-dr-720 remains its layout authority.
+[sources."aeat-modelo-720-contact-instructions"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_720/files/01-720-599-kb-pdf.pdf"
+sha256 = "ac324b935b690f0b6fe12dc8351c324cc804170750f483b0768d6417dd4976b7"
+bytes = 612620
+retrieved_at = 2026-05-03
+applies_from = 2013-02-01
+period_selector = { year_from = 2012, periods = ["0A"] }
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/modelo_720.pdf"
+review_status = "pending_review"
+
 [sources."aeat-modelo-720-procedure"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"

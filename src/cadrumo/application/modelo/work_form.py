@@ -138,6 +138,7 @@ def build_modelo_work_form(
     calculation_filed_before_grade_cap: CasillaId | None = None,
     known_truths: Mapping[BindingId, bool] | None = None,
     producer_values: Mapping[FilingProducerKey, ModeloFormScalar] | None = None,
+    profile_binding_values: Mapping[BindingId, ModeloFormScalar] | None = None,
     resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
 ) -> ModeloWorkForm:
     """Join one work review with its revision's declared layout into a classified editor form.
@@ -183,6 +184,10 @@ def build_modelo_work_form(
     ``producer_values`` are admitted context facts supplied by the caller.
     Only a layout's declared context fields select them; they never replace
     saved casillas or binding edits. Omit current facts for a historical form.
+
+    ``profile_binding_values`` are admitted current profile scalars for declared
+    read-only binding context. They fill only a binding with no saved answer;
+    saved empty, false and zero answers retain precedence.
 
     Raises:
         ModeloWorkFormLayoutError: the layout places a casilla the revision does
@@ -231,7 +236,9 @@ def build_modelo_work_form(
     if layout is None:
         raise ValueError("usable form layout is absent")
     usable_layout = layout
-    pages, working, unplaced = _project_layout(usable_layout, context, producer_values=producer_values)
+    pages, working, unplaced = _project_layout(
+        usable_layout, context, producer_values=producer_values, profile_binding_values=profile_binding_values
+    )
     form_fields = [field for page in pages for section in page.sections for field in section_fields(section)]
     laid_out = [*form_fields, *working, *(item.field for item in unplaced)]
     answers = list(answer_fields(usable_layout, context, laid_out))
@@ -286,13 +293,14 @@ def _project_layout(
     context: WorkFormContext,
     *,
     producer_values: Mapping[FilingProducerKey, ModeloFormScalar] | None,
+    profile_binding_values: Mapping[BindingId, ModeloFormScalar] | None,
 ) -> tuple[tuple[ModeloFormPage, ...], list[ModeloFormField], list[ModeloFormUnplacedField]]:
     context.placed_boxes = {
         placement.casilla_id: placement.box_number
         for placement in layout.placements
         if placement.box_number is not None
     }
-    walk = LayoutWalker(layout, context, producer_values=producer_values)
+    walk = LayoutWalker(layout, context, producer_values=producer_values, profile_binding_values=profile_binding_values)
     pages = tuple(walk.page(page) for page in layout.pages)
     working, unplaced = _project_other_placements(layout, context, walk)
     _ensure_layout_is_total(context, walk, working, unplaced)
