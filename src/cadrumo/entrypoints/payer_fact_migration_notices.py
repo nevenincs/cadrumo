@@ -19,8 +19,6 @@ from ..core.i18n.render import tr
 from ..core.json_contract import Notice, NoticeSeverity
 
 if TYPE_CHECKING:
-    from ..domain.calculations.registry.applicability_models import ModeloApplicabilityRule
-    from ..domain.calculations.registry.applicability_payer_facts import PayerFactValue
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..domain.user_profile.values import UserProfileRecord
 
@@ -88,7 +86,9 @@ def payer_fact_gated_modelos(path: str, *, operation: PinnedAuthorityOperation) 
     A rule gates its modelo through the fact it requires and equally through
     the fact an exclusion reads: the Art. 109 RIRPF coverage fact excludes
     Modelo 130 rather than requiring it, and a cleared answer has to be asked
-    again on that modelo too.
+    again on that modelo too. ``gating_payer_facts`` is the rule's own
+    enumeration of both, so this notice and the explain payload name the same
+    facts.
     """
     from ..domain.calculations.registry.applicability import iter_modelo_applicability_rules
     from ..domain.calculations.registry.applicability_payer_facts import payer_fact_profile_keys
@@ -97,17 +97,9 @@ def payer_fact_gated_modelos(path: str, *, operation: PinnedAuthorityOperation) 
     return frozenset(
         str(rule.modelo)
         for rule in iter_modelo_applicability_rules()
-        for fact in _rule_payer_facts(rule)
+        for fact in rule.gating_payer_facts
         if any(schema.path_for_model_selector(key) == path for key in payer_fact_profile_keys(fact))
     )
-
-
-def _rule_payer_facts(rule: ModeloApplicabilityRule) -> tuple[PayerFactValue, ...]:
-    """Return every payer fact one applicability rule reads, required or excluding."""
-    exclusion_facts = tuple(exclusion.payer_fact for exclusion in rule.exclusions if exclusion.payer_fact is not None)
-    if rule.required_payer_fact is None:
-        return exclusion_facts
-    return (rule.required_payer_fact, *exclusion_facts)
 
 
 def pending_payer_fact_notices(

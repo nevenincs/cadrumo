@@ -349,6 +349,7 @@ class SetupAnswers(BaseModel):
         "has_employees",
         "pays_professionals_with_retencion",
         "pays_rent_with_retencion",
+        "art109_activity_income_withholding_ge_70pct",
         "does_intracomunitario",
         "third_party_transactions_above_347_threshold",
         "bienes_extranjero_above_threshold",

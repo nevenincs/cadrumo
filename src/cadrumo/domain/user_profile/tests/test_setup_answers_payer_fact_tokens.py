@@ -29,6 +29,7 @@ WITHHOLDING_PAYER_FACTS = (
     "has_employees",
     "pays_professionals_with_retencion",
     "pays_rent_with_retencion",
+    "art109_activity_income_withholding_ge_70pct",
     "does_intracomunitario",
 )
 """The family that carried no validator before this contract was shared."""
