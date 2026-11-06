@@ -91,7 +91,9 @@ export default tseslint.config(
   },
   {
     // Editing feedback for the repository's module-size gate: every physical
-    // line counts, blank lines and comments included.
+    // line counts, blank lines and comments included. Only whole modules are
+    // bounded: no limit on a single function, component or hook exists yet,
+    // and that callable bound is still open.
     files: ["**/*.{ts,tsx,mts,cts}"],
     rules: {
       "max-lines": [

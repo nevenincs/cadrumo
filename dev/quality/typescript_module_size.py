@@ -27,6 +27,14 @@ symbols, and point every consumer at the defining module. A barrel or
 re-exporting module, or a line-count trick such as joining lines, does not
 satisfy the intent of this gate. There is no allowance list, baseline or
 exemption.
+
+What this gate does not bound
+-----------------------------
+It measures whole modules only. The size of a single function, component or
+hook inside a module is not bounded by this gate or by any other check yet, so
+a module under the bound can still hold one oversized callable. A callable
+bound is an open item, to be set from measurements of the current sources
+rather than chosen here.
 """
 
 from __future__ import annotations
