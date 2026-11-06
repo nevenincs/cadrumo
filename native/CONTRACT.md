@@ -1892,7 +1892,7 @@ defaults to `ON`.
 | Target | Operation |
 | --- | --- |
 | `desktop-frontend-install` | Validate checkout-owned dependencies against the lockfile without installing, deleting or locking the source tree |
-| `desktop-window-fixtures` | Seed the generated window projections the frontend imports into the host preset's `fixtures/window`, through `python -m dev.fixture_projections seed --window`; refuses without a published authority or the frontend packages |
+| `desktop-window-fixtures` | Seed the generated window projections the frontend imports into this build's `fixtures/window` and record them in its `.window-projections.json`, through `python -m dev.fixture_projections seed --window`; reruns only when an input named in its depfile changes, and refuses without a published authority or the frontend packages |
 | `desktop-frontend-check` | Seed the window projections, then type check against them, lint and `prettier --check` the frontend, scripts and tests |
 | `desktop-frontend-build`, `desktop-frontend-test` | Regenerate chrome strings and palette and seed the window projections, then build the frontend or run its browser tests |
 | `desktop-frontend-generated` | Write the chrome strings and the palette into the binary directory (`desktop/frontend-generated`), never into the source tree: with `npm ci`, all that developing the frontend in a browser needs (`native/desktop/frontend/README.md`) |

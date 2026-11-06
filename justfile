@@ -399,9 +399,10 @@ check-operation-contract-manifest:
 # Every family is declared once in dev/fixture_projections/registry.py. A digest
 # stamp records the content each family's outputs were produced from, so
 # freshness never reads a modification time. Test processes never seed. The
-# window's Modelo envelopes are generated into build/<preset>/fixtures/window,
-# which the frontend resolves through the @fixtures alias and CMake hands to the
-# Rust tests; they are never committed.
+# window projections are generated into build/<preset>/fixtures/window of the
+# host's own configure preset, the same directory that preset's CMake build
+# seeds, binds to the frontend's @fixtures alias and hands to the Rust tests;
+# they are never committed.
 
 [doc('Produce the fixture projections that are not fresh, adopting unstamped outputs their check proves; FAMILY narrows to one.')]
 [group('generate')]

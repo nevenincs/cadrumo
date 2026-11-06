@@ -8,6 +8,7 @@ an output root outside the checkout, a link, or a leftover recording switch.
 
 from __future__ import annotations
 
+import json
 import os
 import sys
 from dataclasses import replace
@@ -26,7 +27,14 @@ from ..cli import (
     seed,
     status,
 )
-from ..location import window_projections
+from ..location import (
+    BINARY_DIRECTORY_VARIABLE,
+    WINDOW_INDEX,
+    WINDOW_INDEX_FORMAT,
+    WINDOW_ROOT,
+    host_preset,
+    window_member,
+)
 from ..registry import OUTPUT, PYTHON, RECORDING_SWITCHES, Command, FixtureFamily, InputGroup, Prerequisite
 from ..stamps import FixtureState, InputDigests, family_inputs, family_status, stamp_path
 
@@ -91,6 +99,7 @@ def _checkout(root: Path) -> Path:
     (root / "inputs").mkdir()
     (root / "inputs" / "source.txt").write_text("hello", encoding="utf-8")
     (root / "out").mkdir()
+    (root / "authority.json").write_text("{}", encoding="utf-8")
     return root
 
 
@@ -99,6 +108,7 @@ def _workspace(root: Path, *families: FixtureFamily) -> Workspace:
         root=root,
         families=families or (_family(),),
         authority=lambda: _AUTHORITY,
+        authority_source=lambda: root / "authority.json",
         persona_check=lambda: (),
         cache_directory=root.parent / "cache",
         scratch_root=root.parent / "scratch",
@@ -160,21 +170,95 @@ def test_an_absent_prerequisite_refuses_seed_and_check_without_running_anything(
     assert check([], determinism=False, workspace=workspace) == 0
 
 
-def test_seed_window_produces_only_the_generated_window_projections(tmp_path: Path) -> None:
+#: A configure preset other than the host's own, as an installer build selects.
+_OTHER_PRESET = "windows-installers-x64" if host_preset() != "windows-installers-x64" else "windows-x64"
+
+
+def _select_build(monkeypatch: pytest.MonkeyPatch, root: Path, preset: str = _OTHER_PRESET) -> Path:
+    """Name ``root``'s ``build/<preset>`` as the CMake build directory, as every CMake action does."""
+    build = root / "build" / preset
+    build.mkdir(parents=True)
+    monkeypatch.setenv(BINARY_DIRECTORY_VARIABLE, str(build))
+    return build.joinpath(*window_member().parts)
+
+
+def test_seed_window_produces_only_the_generated_window_projections(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     root = _checkout(tmp_path / "repo")
-    projections = window_projections()
+    projections = _select_build(monkeypatch, root)
     elsewhere = replace(_family(), name="elsewhere")
     committed = replace(
-        _family(producer=("--into", projections), committed=True), name="committed", output_root=projections
+        _family(producer=("--into", WINDOW_ROOT), committed=True), name="committed", output_root=WINDOW_ROOT
     )
-    window = replace(_family(producer=("--into", projections)), name="window", output_root=projections)
+    window = replace(_family(producer=("--into", WINDOW_ROOT)), name="window", output_root=WINDOW_ROOT)
     workspace = _workspace(root, elsewhere, committed, window)
 
     assert seed([], force=False, window=True, workspace=workspace) == 0
     assert _writes(root) == [f"--into {projections}"]
-    assert (root / projections / "fixture.json").read_text(encoding="utf-8") == "HELLO"
+    assert (projections / "fixture.json").read_text(encoding="utf-8") == "HELLO"
     assert not (root / "out" / "fixture.json").exists()
     assert _state(workspace, window) is FixtureState.FRESH
+
+
+def test_the_window_seed_writes_inside_the_selected_build_and_never_the_host_presets(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = _checkout(tmp_path / "repo")
+    projections = _select_build(monkeypatch, root)
+    window = replace(_family(producer=("--into", WINDOW_ROOT)), name="window", output_root=WINDOW_ROOT)
+    workspace = _workspace(root, window)
+    depfile = tmp_path / "cache" / "window.d"
+
+    assert seed([], force=False, window=True, depfile=depfile, workspace=workspace) == 0
+
+    build = root / "build" / _OTHER_PRESET
+    written = {path for path in (root / "build").rglob("*") if path.is_file()}
+    assert written
+    assert all(path.is_relative_to(build) for path in written), sorted(written)
+    assert not (root / "build" / host_preset()).exists()
+    index = json.loads((projections / WINDOW_INDEX).read_text(encoding="utf-8"))
+    assert index["format"] == WINDOW_INDEX_FORMAT
+    assert set(index["families"]) == {"window"}
+    assert set(index["families"]["window"]) == {"fixture.json"}
+    target, *listed = depfile.read_text(encoding="utf-8").rstrip("\n").split(" \\\n")
+    assert target == f"{(projections / WINDOW_INDEX).as_posix()}:"
+    dependencies = {line.strip() for line in listed}
+    for expected in (
+        root / "tools" / "produce.py",
+        root / "tools",
+        root / "inputs" / "source.txt",
+        root / "authority.json",
+        projections / "fixture.json",
+        stamp_path(window, root),
+    ):
+        assert expected.as_posix() in dependencies, expected
+
+
+def test_a_window_family_that_is_not_fresh_removes_the_index_and_fails_the_depfile(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = _checkout(tmp_path / "repo")
+    projections = _select_build(monkeypatch, root)
+    window = replace(_family(producer=("--into", WINDOW_ROOT)), name="window", output_root=WINDOW_ROOT)
+    depfile = tmp_path / "cache" / "window.d"
+    assert seed([], force=False, window=True, workspace=_workspace(root, window)) == 0
+    assert (projections / WINDOW_INDEX).is_file()
+
+    failing = replace(window, producer=Command((PYTHON, "tools/produce.py", "--fail")))
+    (root / "inputs" / "source.txt").write_text("changed", encoding="utf-8")
+    assert seed([], force=False, window=True, depfile=depfile, workspace=_workspace(root, failing)) == 1
+
+    assert not (projections / WINDOW_INDEX).exists()
+    assert not depfile.exists()
+
+
+def test_a_depfile_is_refused_without_the_window_selection(tmp_path: Path) -> None:
+    root = _checkout(tmp_path / "repo")
+
+    with pytest.raises(FixtureProjectionError, match="only for the window projections"):
+        seed([], force=False, depfile=tmp_path / "window.d", workspace=_workspace(root))
+    assert _writes(root) == []
 
 
 def test_seed_window_refuses_when_no_family_writes_the_window_projections(tmp_path: Path) -> None:
@@ -186,10 +270,10 @@ def test_seed_window_refuses_when_no_family_writes_the_window_projections(tmp_pa
     assert _writes(root) == []
 
 
-def test_seed_window_refuses_named_families_beside_it(tmp_path: Path) -> None:
+def test_seed_window_refuses_named_families_beside_it(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     root = _checkout(tmp_path / "repo")
-    projections = window_projections()
-    window = replace(_family(producer=("--into", projections)), name="window", output_root=projections)
+    _select_build(monkeypatch, root)
+    window = replace(_family(producer=("--into", WINDOW_ROOT)), name="window", output_root=WINDOW_ROOT)
 
     with pytest.raises(FixtureProjectionError, match="not both"):
         seed(["window"], force=False, window=True, workspace=_workspace(root, window))

@@ -1,4 +1,5 @@
 import { buildPath } from "../scripts/build-paths.mjs";
+import { writeAliasProject } from "./scripts/fixture-alias.mjs";
 import {
   testRunDirectory,
   reserveTestRunPorts,
@@ -15,6 +16,12 @@ const scenarios = `http://127.0.0.1:${scenariosPort}`;
 const hot = `http://127.0.0.1:${hotPort}`;
 const viewport = { width: 1440, height: 1050 };
 const run = process.env.CADRUMO_DESKTOP_TEST_RUN!;
+// The specs import the window projections through @fixtures. tsconfig.json can
+// only list candidate build trees, so the specs resolve the alias through a
+// project file bound to this build's own projections, in this build's tree.
+const tsconfig = writeAliasProject(
+  resolve(buildPath("desktop_testing"), "playwright-tsconfig.json"),
+);
 // The record `--last-failed` reads sits beside the runs, not in one of them.
 process.env.PLAYWRIGHT_LAST_RUN_OUTPUT_FILE = resolve(
   buildPath("desktop_results"),
@@ -34,6 +41,7 @@ process.env.PLAYWRIGHT_LAST_RUN_OUTPUT_FILE = resolve(
 // client, so it alone runs on a development server.
 export default defineConfig({
   testDir: "./tests",
+  tsconfig,
   // Playwright empties this directory when a run starts, so it is the run's
   // own, under `runs/` of the build's test results: a concurrent run keeps
   // its traces, and the benchmark, the catalogue screenshots and the

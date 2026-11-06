@@ -19,15 +19,17 @@ from dev.prettier_json import dump_json
 from cadrumo.application.ledger.tests.staged_check_recording_support import committed_questions, recording
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
-RECORDING = family_directory("ledger-staged-check") / "ledgerStagedCheck.json"
-
 
 def main() -> None:
     """Write, check or redirect the staged-check recording."""
     arguments = producer_arguments(__doc__)
     with bundled_indexed_authority().operation():
         rendered = dump_json(recording(committed_questions()))
-    emit({RECORDING: rendered}, arguments, remedy="just fixtures-seed ledger-staged-check")
+    emit(
+        {family_directory("ledger-staged-check") / "ledgerStagedCheck.json": rendered},
+        arguments,
+        remedy="just fixtures-seed ledger-staged-check",
+    )
 
 
 if __name__ == "__main__":

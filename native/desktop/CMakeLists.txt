@@ -256,20 +256,30 @@ add_custom_target(desktop-frontend-generated
   DEPENDS desktop-frontend-settings desktop-frontend-chrome desktop-frontend-palette desktop-frontend-icons desktop-frontend-navigation
   COMMENT "${step_comment}")
 # The type check, stories and specs import the generated window projections
-# through @fixtures, and the frontend's type check reads them from the host
-# preset's build tree, so every target that type-checks the frontend produces
-# them first. Seeding is digest-stamped and leaves a current tree unchanged; a
+# through @fixtures, and the frontend's type check reads them from this build's
+# own tree, so every target that type-checks the frontend produces them first.
+# The seed writes them into this build's window_fixtures directory, which it
+# finds through CADRUMO_CMAKE_BINARY_DIR, and records them in its index, this
+# step's output. Its depfile names every input, output and stamp the window
+# families' freshness reads, so the step reruns only when one changes, and the
+# seed, digest-stamped, then produces only the families that are not fresh. A
 # producer that cannot run, for want of a published authority or the frontend
-# packages, fails this target and names its remedy. Only the generated window
+# packages, fails this step and names its remedy. Only the generated window
 # families are selected: a committed family's outputs are source, never build
 # output.
+set(desktop_window_index "${CADRUMO_PATH_WINDOW_FIXTURES}/.window-projections.json")
+set(desktop_window_depfile "${CADRUMO_PATH_DESKTOP_CACHE}/window-fixtures.d")
+file(GLOB desktop_window_seeder CONFIGURE_DEPENDS "${CADRUMO_SOURCE_ROOT}/dev/fixture_projections/*.py")
 cadrumo_build_step(step_comment desktop-window-fixtures GROUP desktop
   SUMMARY "seed the generated window projections the frontend imports"
-  OUTPUTS "${CADRUMO_WINDOW_FIXTURES}")
-add_custom_target(desktop-window-fixtures
+  OUTPUTS "${desktop_window_index}")
+add_custom_command(OUTPUT "${desktop_window_index}"
   COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment} ${desktop_node_path_arguments}
-    ${desktop_generator} dev.fixture_projections seed --window
+    ${desktop_generator} dev.fixture_projections seed --window --depfile "${desktop_window_depfile}"
+  DEPFILE "${desktop_window_depfile}"
+  DEPENDS ${desktop_window_seeder}
   WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
+add_custom_target(desktop-window-fixtures DEPENDS "${desktop_window_index}")
 add_dependencies(desktop-window-fixtures desktop-frontend-install registry_authority)
 foreach(action IN ITEMS build test check)
   add_dependencies(desktop-frontend-${action} desktop-frontend-generated desktop-window-fixtures)
@@ -386,7 +396,7 @@ foreach(action IN ITEMS test clippy unit-test unit-clippy)
       "CADRUMO_DESKTOP_PACKAGE_ROOT=${CADRUMO_DESKTOP_PACKAGE_ROOT}"
       "CADRUMO_PACKAGE_USER_DOCS=${desktop_test_user_docs}"
       "CADRUMO_PROVIDER_STATUS_CONTRACT_FIXTURE=${CADRUMO_PATH_DESKTOP_TESTING}/provider-status-contract.json"
-      "CADRUMO_WINDOW_FIXTURES=${CADRUMO_WINDOW_FIXTURES}"
+      "CADRUMO_WINDOW_FIXTURES=${CADRUMO_PATH_WINDOW_FIXTURES}"
       "${CADRUMO_STORAGE_ROOT_VARIABLE}=${CADRUMO_PATH_DESKTOP_TESTING}/storage"
       "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs" ${host_driver_action}
     DEPENDS ${host_dependencies}

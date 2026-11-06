@@ -67,8 +67,8 @@ if TYPE_CHECKING:
     from cadrumo.tests.personas import Persona, WithholdingCertificate, YearEnvelope
 
 FRONTEND = Path(__file__).resolve().parents[1]
-#: The scenario envelopes are build output in the host's build tree, never committed.
-FIXTURES = family_directory("modelo")
+#: The scenario envelopes' folder in the window projections, build output that is never committed.
+ENVELOPE_FAMILY = "modelo"
 
 #: The host's closed list of admitted definitions, which the generated mirror is pinned to.
 ADMITTED = FRONTEND.parent / "src-tauri" / "src" / "shell" / "modelo" / "admitted.rs"
@@ -3648,8 +3648,10 @@ def _result_model(definition_id: str) -> type[BaseModel]:
     return registry.lookup_public_schema_binding(schema).model_type
 
 
-def validate(*, envelopes: bool = True) -> int:
+def validate(directory: Path | None, *, envelopes: bool = True) -> int:
     """Whether the host's admitted list and, unless ``envelopes`` is false, every stored envelope match the models.
+
+    The envelopes are read from ``directory``, or from the window projections when it is ``None``.
 
     Raises:
         SystemExit: When envelopes are asked for and none has been seeded, naming the command that seeds them.
@@ -3662,10 +3664,11 @@ def validate(*, envelopes: bool = True) -> int:
             f"unadmitted {sorted(set(registered) - set(admitted))}, "
             f"unregistered {sorted(set(admitted) - set(registered))}"
         )
-    if envelopes and not any(FIXTURES.glob("*.json")):
-        raise SystemExit(f"No modelo envelope is seeded in {FIXTURES}; run `just fixtures-seed modelo-envelopes`")
+    stored = directory if directory is not None else family_directory(ENVELOPE_FAMILY)
+    if envelopes and not any(stored.glob("*.json")):
+        raise SystemExit(f"No modelo envelope is seeded in {stored}; run `just fixtures-seed modelo-envelopes`")
     for pattern, model in _fixture_models() if envelopes else ():
-        paths = sorted(FIXTURES.glob(pattern))
+        paths = sorted(stored.glob(pattern))
         if not paths:
             failures.append(f"no fixture matches {pattern}")
         for path in paths:
@@ -3684,7 +3687,10 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("step", choices=("contract", "bounds", "envelopes", "pack", "validate"))
     parser.add_argument(
-        "directory", nargs="?", type=Path, default=FIXTURES, help="Where `envelopes` writes and `pack` stores."
+        "directory",
+        nargs="?",
+        type=Path,
+        help="Where `envelopes` writes, `pack` stores and `validate` reads; by default the window projections.",
     )
     parser.add_argument(
         "--definitions", action="store_true", help="With `validate`, check the host's admitted list and no envelope."
@@ -3696,13 +3702,14 @@ def main() -> int:
     if args.step == "bounds":
         sys.stdout.write(render_bounds())
         return 0
+    if args.step == "validate":
+        return validate(None if args.definitions else args.directory, envelopes=not args.definitions)
+    directory = args.directory if args.directory is not None else family_directory(ENVELOPE_FAMILY)
     if args.step == "envelopes":
-        write_envelopes(args.directory)
+        write_envelopes(directory)
         return 0
-    if args.step == "pack":
-        pack_envelopes(args.directory)
-        return 0
-    return validate(envelopes=not args.definitions)
+    pack_envelopes(directory)
+    return 0
 
 
 if __name__ == "__main__":
