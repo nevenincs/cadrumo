@@ -307,22 +307,27 @@ if (scenarios) {
   const scratch = mkdtempSync(
     resolve(temporary.stdout.trim(), "modelo-envelopes-"),
   );
+  // A failed read sets the exit code rather than exiting, so the scratch is
+  // still removed; a reader killed by a signal has no status and still fails.
   try {
     const read = python("envelopes", scratch);
-    if (read.status !== 0) process.exit(read.status);
-    const names = readdirSync(scratch).filter((name) => ENVELOPE.test(name));
-    // A seed leaves exactly the envelopes this read produced: one an earlier
-    // read wrote and this one does not is gone, not left to be mistaken for current.
-    for (const name of readdirSync(target))
-      if (ENVELOPE.test(name) && !names.includes(name))
-        rmSync(resolve(target, name));
-    for (const name of names) {
-      await written(
-        resolve(target, name),
-        readFileSync(resolve(scratch, name), "utf8"),
-      );
+    if (read.status !== 0) {
+      process.exitCode = read.status ?? 1;
+    } else {
+      const names = readdirSync(scratch).filter((name) => ENVELOPE.test(name));
+      // A seed leaves exactly the envelopes this read produced: one an earlier
+      // read wrote and this one does not is gone, not left to be mistaken for current.
+      for (const name of readdirSync(target))
+        if (ENVELOPE.test(name) && !names.includes(name))
+          rmSync(resolve(target, name));
+      for (const name of names) {
+        await written(
+          resolve(target, name),
+          readFileSync(resolve(scratch, name), "utf8"),
+        );
+      }
+      console.log(`wrote ${names.length} envelopes`);
     }
-    console.log(`wrote ${names.length} envelopes`);
   } finally {
     rmSync(scratch, { recursive: true, force: true });
   }
