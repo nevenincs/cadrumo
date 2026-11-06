@@ -25,14 +25,14 @@ import pytest
 from ....core.filing_timeliness import FilingTimeliness
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.deadlines.festivos import DeadlineHolidayCoverage
-from ....domain.modelos.filing_record import FilingDeclarationKind
-from ..effective_deadline import (
+from ....domain.deadlines.effective_close import (
     EffectiveFilingDeadline,
     decide_filing_timeliness,
     resolve_effective_filing_deadline,
     resolve_filing_timeliness,
 )
+from ....domain.deadlines.festivos import DeadlineHolidayCoverage
+from ....domain.modelos.filing_record import FilingDeclarationKind
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

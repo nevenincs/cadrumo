@@ -65,6 +65,7 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...domain.deadlines.effective_close import decide_filing_timeliness
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.justificante.schema import Justificante
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
@@ -104,7 +105,6 @@ from ..workflow.active_profile import require_active_profile_bucket_id
 from .action_errors import ExternalModeloImportError
 from .calculation_helpers import external_filing_observations
 from .calculation_repository import calculation_revision_catalogue_repository
-from .effective_deadline import decide_filing_timeliness
 from .filing_repository import modelo_record_catalogue_repository
 from .justificante_repository import justificante_repository as resolve_justificante_repository
 from .registry_helpers import reject_unknown_import_casillas

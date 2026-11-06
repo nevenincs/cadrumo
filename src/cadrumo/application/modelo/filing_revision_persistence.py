@@ -21,6 +21,7 @@ from ...domain.calculations.registry.prorrata_register_catalogue import (
 )
 from ...domain.calculations.registry.result_casillas import canonical_result_amount, result_disposition_casilla_ids
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...domain.deadlines.effective_close import decide_filing_timeliness
 from ...domain.iva.m303_settlement import is_m303_annual_settlement_period
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
@@ -73,7 +74,6 @@ from .action_errors import (
     VerificationReportNotFoundError,
     WorkUnitMutationRefusedError,
 )
-from .effective_deadline import decide_filing_timeliness
 from .filed_revision_observation import (
     PreparedFiledRevisionObservation,
     filed_revision_observation_writes,

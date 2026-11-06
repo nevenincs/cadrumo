@@ -19,6 +19,7 @@ import pytest
 from ....core.filing_timeliness import FilingTimeliness
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.deadlines.effective_close import resolve_effective_filing_deadline
 from ....domain.modelos.filing_record import (
     AeatRegisterRef,
     ExternalEvidenceKind,
@@ -26,7 +27,6 @@ from ....domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ..effective_deadline import resolve_effective_filing_deadline
 from ..external_import_actions import build_external_filing_record
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]

@@ -59,7 +59,6 @@ from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ....application.modelo.calculation_revision_queries import get_calculation_revision
-from ....application.modelo.effective_deadline import resolve_effective_filing_deadline
 from ....application.modelo.export import export_modelo_revision
 from ....application.modelo.export_contracts import ModeloExportCommand, ModeloExportEvidenceMissingError
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
@@ -77,6 +76,7 @@ from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from ....domain.deadlines.effective_close import resolve_effective_filing_deadline
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,

@@ -20,7 +20,7 @@ for the declaration's axis, or declares one whose close date is unpublished:
 lateness cannot be judged, and a missing window is not proof of punctuality.
 
 The judgement itself belongs to the one owner of the effective close date,
-:meth:`~cadrumo.application.modelo.effective_deadline.EffectiveFilingDeadline.timeliness_on`,
+:meth:`~cadrumo.domain.deadlines.effective_close.EffectiveFilingDeadline.timeliness_on`,
 so no surface can compare a presentation date against the nominal close while
 another compares it against the business-day-shifted one.
 """

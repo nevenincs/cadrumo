@@ -57,6 +57,7 @@ from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...domain.deadlines.effective_close import decide_filing_timeliness
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -112,7 +113,6 @@ from .calculation_helpers import amendment_observations as calculation_amendment
 from .calculation_helpers import resolve_registry_snapshot_for_work_unit
 from .calculation_modelo_adjustments import detail_row_declaration_modelos
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
-from .effective_deadline import decide_filing_timeliness
 from .filed_revision_observation import filed_revision_observation_writes, prepare_filed_revision_observation
 from .filing_revision_persistence import filed_calculation_revision
 from .ledger_anchor_capture import capture_revision_ledger_evidence

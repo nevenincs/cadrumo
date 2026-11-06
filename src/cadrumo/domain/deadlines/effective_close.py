@@ -38,19 +38,19 @@ from ...core.filing_timeliness import FilingTimeliness
 from ...core.logging import get_logger
 from ...core.period import Period
 from ...core.time.clock import MADRID_TZ
-from ...domain.calculations.registry.errors import RegistryError
-from ...domain.deadlines.errors import DeadlineValidationError
-from ...domain.deadlines.festivos import (
+from ..calculations.registry.errors import RegistryError
+from ..modelos.filing_record import FilingDeclarationKind, declaration_kind_is_timed_against_the_plazo
+from .errors import DeadlineValidationError
+from .festivos import (
     DeadlineHolidayCoverage,
     HolidayJurisdiction,
     shift_deadline,
 )
-from ...domain.deadlines.filing_window_projection import ProjectedFilingWindowCloseUnavailable
-from ...domain.deadlines.plazo import resolve_filing_window
-from ...domain.modelos.filing_record import FilingDeclarationKind, declaration_kind_is_timed_against_the_plazo
+from .filing_window_projection import ProjectedFilingWindowCloseUnavailable
+from .plazo import resolve_filing_window
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ..calculations.registry.authority import PinnedAuthorityOperation
 
 _LOG = get_logger(__name__)
 
