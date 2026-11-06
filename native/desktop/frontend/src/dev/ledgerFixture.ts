@@ -79,12 +79,12 @@ import {
   MovementActionStopped,
   movementActionOperations,
 } from "./ledgerMovementActionFixture";
+import { setupOperations } from "./ledgerSetupFixture";
 import {
   SetupKeptInPart,
   SetupRequestInvalid,
   SetupStopped,
-  setupOperations,
-} from "./ledgerSetupFixture";
+} from "./ledgerSetupSupport";
 
 /** The longest reply, in bytes of compact JSON, the host takes from the
  * relay; one longer is lost. */
