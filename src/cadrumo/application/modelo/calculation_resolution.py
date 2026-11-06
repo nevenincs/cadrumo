@@ -62,7 +62,11 @@ from ...domain.modelos.filing_record import FilingDeclarationKind
 from ...domain.modelos.source_disagreement import SourceDisagreementFact, SourceDisagreementRole
 from ...domain.modelos.work_unit import WorkUnit
 from ..aggregation.source_diagnostic_reason import CalculationSourceDiagnosticReason
-from ..aggregation.source_mesh import CalculationSourceDiagnostic, CalculationSourceResolution
+from ..aggregation.source_mesh import (
+    CalculationSourceDiagnostic,
+    CalculationSourceProvenance,
+    CalculationSourceResolution,
+)
 from ..aggregation.source_resolution_operations import (
     PrecedenceKeyKind,
     PrecedenceTier,
@@ -77,6 +81,7 @@ from .binding_resolution import (
     resolve_declaration_period_inputs,
     resolve_profile_source_tier,
 )
+from .profile_binding import profile_resolved_binding_ids
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -107,6 +112,8 @@ class ResolvedCalculationChannels:
     """Every value a higher tier replaced that a lower tier held differently, as the screen reports it."""
     profile_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
     """The profile's unanswered bindings that no higher tier answered, each naming the box and the fact to record."""
+    profile_source_provenance: tuple[CalculationSourceRef, ...] = ()
+    """Scalar profile evidence considered by the overlay, including evidence a caller value superseded."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -275,6 +282,7 @@ def resolve_calculation_binding_channels(
         | resolved_date_bindings.keys()
         | resolved_boolean_bindings.keys()
     )
+    profile_scalar_binding_ids = profile_resolved_binding_ids(profile_resolution)
     return ResolvedCalculationChannels(
         bindings=resolved_bindings,
         enum_bindings=resolved_enum_bindings,
@@ -298,6 +306,14 @@ def resolve_calculation_binding_channels(
             diagnostic
             for diagnostic in profile_resolution.diagnostics
             if diagnostic.reason == "unresolved_binding" and diagnostic.binding_id not in answered_binding_ids
+        ),
+        profile_source_provenance=calculation_source_provenance_refs(
+            tuple(
+                row
+                for row in profile_resolution.provenance
+                if _BINDING_REF_MARKER in row.source_ref
+                and row.source_ref.rsplit(_BINDING_REF_MARKER, 1)[1] in profile_scalar_binding_ids
+            )
         ),
     )
 
@@ -831,6 +847,48 @@ def _row_binding_replay_values(
     return replay_values
 
 
+def calculation_source_provenance_refs(
+    provenance_rows: Sequence[CalculationSourceProvenance],
+) -> tuple[CalculationSourceRef, ...]:
+    """Project application source evidence into persisted domain refs.
+
+    Maps each :class:`~application.aggregation.source_mesh.CalculationSourceProvenance`
+    row (the resolver→source-object→fingerprint trace) into the domain-side
+    :class:`~CalculationSourceRef` that
+    :func:`~application.modelo.revision_persistence.persist_calculation_revision`
+    persists on the :class:`~CalculationRevision`. This is the
+    application→domain boundary map: the domain never imports the application
+    provenance model, and the compact ref deliberately drops the per-casilla
+    ``legal_refs`` / ``source_refs`` (carried by the revision's ``observations``)
+    to avoid duplicating that grounding. ``dependency_treatment`` is NOT dropped:
+    unlike the per-casilla refs, nothing else on the revision carries it, so it
+    survives onto the persisted ref unchanged. ``source_casilla_ids`` is also NOT
+    dropped: it is a subject identity, not grounding, and the anti-
+    duplication rationale for ``legal_refs``/``source_refs`` does not extend to
+    it -- nothing else on the revision recovers which casilla a general
+    (non-row-materialized) source object explains. ``source_filing_year`` is
+    kept for the same reason: it is the only persisted trace of a Modelo 193
+    disclosure phase row's accrual year, which tells a settled prior-accrual
+    row from a pending one.
+    """
+    return tuple(
+        CalculationSourceRef(
+            resolver_id=provenance.resolver_id,
+            resolved_binding_source=provenance.resolved_binding_source,
+            contributor_source_kind=provenance.contributor_source_kind,
+            contributor_binding_source=provenance.contributor_binding_source,
+            lineage_role=provenance.lineage_role,
+            source_ref=provenance.source_ref,
+            parent_source_ref=provenance.parent_source_ref,
+            fingerprint=provenance.fingerprint,
+            source_casilla_ids=provenance.source_casilla_ids,
+            dependency_treatment=provenance.dependency_treatment,
+            source_filing_year=provenance.source_filing_year,
+        )
+        for provenance in provenance_rows
+    )
+
+
 __all__ = [
     "OPERATOR_INPUT_SOURCE_FAMILY",
     "PRECEDENCE_TIER_DIVERGENCE_ADVISORY_REASON",
@@ -840,6 +898,7 @@ __all__ = [
     "ResolvedCalculationChannels",
     "ResolvedCalculationInputs",
     "build_calculation_replay_payloads",
+    "calculation_source_provenance_refs",
     "operator_over_source_divergences",
     "precedence_divergence_diagnostics",
     "precedence_screen_context",
