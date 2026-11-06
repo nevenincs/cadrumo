@@ -251,7 +251,8 @@ class SetupAnswers(BaseModel):
     colegio_concertado: OptionalWizardBool = ""
     pays_professionals_with_retencion: OptionalWizardBool = ""
     """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
-    art109_activity_income_withholding_ge_70pct: bool = False
+    art109_activity_income_withholding_ge_70pct: OptionalWizardBool = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
     pays_rent_with_retencion: OptionalWizardBool = ""
     """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
     pays_capital_income_with_retencion: bool = False

@@ -181,7 +181,7 @@ class _ProfileWithholdingFields(TypedDict):
     has_employees: bool | None
     colegio_concertado: bool | None
     pays_professionals_with_retencion: bool | None
-    art109_activity_income_withholding_ge_70pct: bool
+    art109_activity_income_withholding_ge_70pct: bool | None
     pays_rent_with_retencion: bool | None
     pays_capital_income_with_retencion: bool
 
@@ -314,7 +314,9 @@ def _resolve_profile_withholding_fields(typed: SetupAnswers) -> _ProfileWithhold
         "has_employees": _declared_bool(typed.has_employees),
         "colegio_concertado": colegio_concertado,
         "pays_professionals_with_retencion": _declared_bool(typed.pays_professionals_with_retencion),
-        "art109_activity_income_withholding_ge_70pct": typed.art109_activity_income_withholding_ge_70pct,
+        "art109_activity_income_withholding_ge_70pct": _declared_bool(
+            typed.art109_activity_income_withholding_ge_70pct,
+        ),
         "pays_rent_with_retencion": _declared_bool(typed.pays_rent_with_retencion),
         "pays_capital_income_with_retencion": typed.pays_capital_income_with_retencion,
     }

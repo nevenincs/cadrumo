@@ -513,7 +513,11 @@ class TaxpayerProfile(BaseModel):
             RIRPF 70% income-coverage exception is met for covered
             professional, agricultural, livestock, or forestry activity
             income. For activity-start cases this is the current payment
-            period coverage fact rather than a prior-year fact.
+            period coverage fact rather than a prior-year fact. ``None``
+            when unanswered, which keeps Modelo 130 incomplete: a stored
+            ``False`` is the taxpayer's own statement that the exception
+            does not hold, and only that statement puts the pago
+            fraccionado beyond doubt.
         pays_rent_with_retencion: Whether the taxpayer pays alquiler de
             local with retención.
         pays_capital_income_with_retencion: Whether the taxpayer pays
@@ -591,7 +595,7 @@ class TaxpayerProfile(BaseModel):
     has_employees: bool | None = None
     colegio_concertado: bool | None = None
     pays_professionals_with_retencion: bool | None = None
-    art109_activity_income_withholding_ge_70pct: bool = False
+    art109_activity_income_withholding_ge_70pct: bool | None = None
     pays_rent_with_retencion: bool | None = None
     pays_capital_income_with_retencion: bool = False
     objective_estimation_prior_year_gross_income_eur: Decimal | None = None

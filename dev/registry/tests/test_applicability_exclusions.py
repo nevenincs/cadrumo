@@ -366,9 +366,13 @@ def test_a_professional_with_seventy_percent_withholding_does_not_file_modelo_13
     assert "artículo 109.1" in result.reason
 
 
-@pytest.mark.parametrize("facts", ({}, {_ART109_FACT: False}), ids=("unanswered", "below-seventy-percent"))
-def test_an_activity_below_the_art109_coverage_files_modelo_130(facts: dict[str, bool]) -> None:
-    assert _m130(_autonomo(**facts)).verdict is ApplicabilityVerdict.APPLICABLE
+def test_an_activity_below_the_art109_coverage_files_modelo_130() -> None:
+    assert _m130(_autonomo(**{_ART109_FACT: False})).verdict is ApplicabilityVerdict.APPLICABLE
+
+
+def test_an_unanswered_art109_coverage_leaves_modelo_130_incomplete() -> None:
+    """A defaulted negative would assert an answer nobody gave, so the verdict stays open."""
+    assert _m130(_autonomo()).verdict is ApplicabilityVerdict.INCOMPLETE
 
 
 def test_the_art109_fact_is_declared_for_every_supported_filing_year() -> None:

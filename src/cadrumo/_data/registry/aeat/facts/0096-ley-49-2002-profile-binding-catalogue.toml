@@ -21,7 +21,7 @@ entries = [
   { key = "setup.field.activity", value = "activities.description|str|" },
   { key = "setup.field.activity_start_date", value = "censo.activity_start_date|str|" },
   { key = "setup.field.address_postcode", value = "contact.postcode|str|" },
-  { key = "setup.field.art109_activity_income_withholding_ge_70pct", value = "irpf.art109_activity_income_withholding_ge_70pct|bool|false" },
+  { key = "setup.field.art109_activity_income_withholding_ge_70pct", value = "irpf.art109_activity_income_withholding_ge_70pct|bool|" },
   { key = "setup.field.bienes_extranjero_above_threshold", value = "obligations.bienes_extranjero_above_threshold|bool|" },
   { key = "setup.field.country_of_fiscal_residence", value = "taxpayer_type.country_of_fiscal_residence|str|" },
   { key = "setup.field.declaration_roles", value = "taxpayer_type.declaration_roles|str|" },

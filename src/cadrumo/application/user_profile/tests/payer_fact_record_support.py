@@ -1,9 +1,10 @@
-"""A declared profile record whose four three-state payer facts are the only variable.
+"""A declared profile record whose three-state payer facts are the only variable.
 
 The withholding and intracommunity payer facts gate Modelos 111, 115, 180,
-190, 216, 296 and 349. Tests of that gate need a taxpayer who is otherwise
-fully declared, so a verdict can only turn on the payer answer. The record is
-built through the production creation door under the caller's pinned authority.
+190, 216, 296 and 349, and the Art. 109 RIRPF coverage fact gates Modelo 130.
+Tests of those gates need a taxpayer who is otherwise fully declared, so a
+verdict can only turn on the payer answer. The record is built through the
+production creation door under the caller's pinned authority.
 """
 
 from __future__ import annotations
@@ -28,6 +29,12 @@ PAYER_FACT_PATHS = (
     "iva.does_intracomunitario",
 )
 
+ART109_PATH = "irpf.art109_activity_income_withholding_ge_70pct"
+"""The Art. 109 RIRPF coverage fact, which excludes Modelo 130 on a declared yes."""
+
+ART109_GATED_MODELO = "130"
+"""The modelo that coverage fact alone gates."""
+
 DECLARED_TAXPAYER_FACTS = (
     UserProfileFact(path="identity.tax_id", value="X0001500M"),
     UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
@@ -46,7 +53,21 @@ DECLARED_TAXPAYER_FACTS = (
 
 def payer_fact_record(operation: PinnedAuthorityOperation, *, answer: bool | None) -> UserProfileRecord:
     """Return a declared record whose four payer facts carry ``answer``, or nothing."""
-    answers = () if answer is None else tuple(UserProfileFact(path=path, value=answer) for path in PAYER_FACT_PATHS)
+    return _record(operation, paths=PAYER_FACT_PATHS, answer=answer)
+
+
+def art109_record(operation: PinnedAuthorityOperation, *, answer: bool | None) -> UserProfileRecord:
+    """Return the same declared autónomo with the Art. 109 coverage fact answered, or absent."""
+    return _record(operation, paths=(ART109_PATH,), answer=answer)
+
+
+def _record(
+    operation: PinnedAuthorityOperation,
+    *,
+    paths: tuple[str, ...],
+    answer: bool | None,
+) -> UserProfileRecord:
+    answers = () if answer is None else tuple(UserProfileFact(path=path, value=answer) for path in paths)
     return create_user_profile_record(
         context=operation.profile_create_context(),
         profile_id=PROFILE_ID,
@@ -56,9 +77,12 @@ def payer_fact_record(operation: PinnedAuthorityOperation, *, answer: bool | Non
 
 
 __all__ = [
+    "ART109_GATED_MODELO",
+    "ART109_PATH",
     "DECLARED_TAXPAYER_FACTS",
     "PAYER_FACT_GATED_MODELOS",
     "PAYER_FACT_PATHS",
     "PROFILE_ID",
+    "art109_record",
     "payer_fact_record",
 ]
