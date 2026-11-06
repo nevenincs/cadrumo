@@ -14,7 +14,7 @@ import type {
   KnownText,
   LedgerRow,
 } from "../../../shell/ledger";
-import type { CapitalGood } from "../../../shell/ledgerSetup";
+import type { CapitalGood } from "../../../shell/ledgerRegisterOperations";
 
 /** The sibling fields a counterparty pick can fill. */
 export type PartyFill = "name" | "tax_id" | "country";

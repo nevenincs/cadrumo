@@ -29,9 +29,9 @@ import type {
 import type { OutputLanguage } from "../../../shell/ledger";
 import type {
   CapitalGood,
-  LedgerEntryOptionsResult,
   ProrrataListedEntry,
-} from "../../../shell/ledgerSetup";
+} from "../../../shell/ledgerRegisterOperations";
+import type { LedgerEntryOptionsResult } from "../../../shell/ledgerSetup";
 import {
   NO_VOCABULARY,
   servedVocabulary,
