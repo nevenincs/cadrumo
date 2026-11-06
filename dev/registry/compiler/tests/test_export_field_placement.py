@@ -157,14 +157,15 @@ def test_a_casilla_split_across_two_consecutive_fields_passes() -> None:
 
 
 def test_a_binding_derived_record_is_judged_on_its_binding_spans_too() -> None:
-    """Modelo 720's head is declared by bindings, and must not read as unwritten.
+    """Modelo 720's ``type_1`` record is placed by two sites, and must not read as unwritten.
 
-    The ``type_1`` record declares ONE inline field, a reserved tail at position
-    181. Its first 180 positions come from the fixed export selectors of the
-    bindings naming ``type_1``. Judged on the inline field alone the record
-    looks like 180 unclaimed opening positions; judged on both declaration
-    sites it is contiguous from position 1. This is the case that decides
-    whether the check reports a real defect or its own blind spot.
+    Some of the record's positions belong to the fixed export selectors of the
+    bindings naming ``type_1``; the rest, including the reserved tail at
+    position 181 and the profile-fed contact fields, which have no fixed
+    selector, are declared inline. Judged on the inline fields alone the record
+    has holes wherever a selector writes; judged on both declaration sites it is
+    contiguous from position 1. This is the case that decides whether the check
+    reports a real defect or its own blind spot.
     """
     modelo = load_modelo_directory(bundled_registry_root() / "modelos" / "720")
     revision_id, revision = next(iter(modelo.revisions.items()))
@@ -174,15 +175,26 @@ def test_a_binding_derived_record_is_judged_on_its_binding_spans_too() -> None:
         for candidate in layout.records
         if candidate.id == "modelo-720-type-1"
     )
-    # Generated publication now expands the body. Reconstruct the unresolved
-    # inline-plus-binding declaration whose merge behavior this test proves.
-    assert all(field.offset is not None for field in record.fields)
-    inline = tuple(
-        field for field in record.fields if field.offset is not None and (field.offset < 58 or field.offset == 181)
-    )
-    record = record.model_copy(update={"fields": inline, "binding_record": "type_1"})
     prefix = f"modelo {modelo.id} revision {revision_id}"
     spans = binding_export_spans(revision)
+    # Generated publication expands the body, so every selector's positions also
+    # appear inline. Reconstruct the unresolved inline-plus-binding declaration
+    # whose merge behavior this test proves: drop exactly the inline fields whose
+    # positions a fixed selector of this record already places.
+    assert record.binding_record is not None
+    assert all(field.offset is not None and field.length is not None for field in record.fields)
+    selector_positions = {
+        position for span in spans[record.binding_record] for position in range(span.offset, span.end)
+    }
+    inline = tuple(
+        field
+        for field in record.fields
+        if field.offset is not None
+        and field.length is not None
+        and selector_positions.isdisjoint(range(field.offset, field.offset + field.length))
+    )
+    assert len(inline) < len(record.fields)
+    record = record.model_copy(update={"fields": inline})
 
     inline_only = record_placed_spans(record)
     assert inline_only[0].offset == 1
