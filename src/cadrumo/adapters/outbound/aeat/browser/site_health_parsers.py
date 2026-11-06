@@ -152,7 +152,7 @@ def body_outside_title(lowered: str) -> str:
     title-only page satisfied a guard written to reject it.
 
     Only the FIRST title element is removed, matching what
-    :func:`_extract_title` reads as the document title. A later ``<title>``
+    :func:`extract_title` reads as the document title. A later ``<title>``
     inside an inline SVG is ordinary body content and is left to be scanned as
     such.
     """

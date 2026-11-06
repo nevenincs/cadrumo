@@ -9,6 +9,8 @@ import {
   calls,
 } from "../support/scenarioShell";
 
+// The account states (no profile, locked, runtime unavailable, wrong password): every element of the window reads the same state.
+
 test.beforeEach(async ({ page: target }) => {
   await startFromDocs(target);
 });

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { DesktopEnvironment } from "@/ipc/contract";
+import type { DesktopEnvironment } from "@/ipc/environment";
 import { HostUnavailable, type Host } from "./host";
 
 type Environment =

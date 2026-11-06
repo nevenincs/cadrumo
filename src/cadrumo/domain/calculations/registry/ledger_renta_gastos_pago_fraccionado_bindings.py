@@ -137,7 +137,7 @@ def _renta_gastos_pago_fraccionado_reachability_probe(
     It is kept rather than deleted because it costs nothing and becomes live
     the moment this family's matcher tests anything the selector declares as a
     SET -- the shape that makes the sibling
-    :func:`_iva_reachability_probe` genuinely bite. The tautology is pinned by
+    :func:`iva_reachability_probe` genuinely bite. The tautology is pinned by
     ``test_a_casilla_keyed_selector_probe_is_structurally_unable_to_fail``,
     which reddens if the match rule changes, forcing this paragraph to be
     rewritten instead of quietly outliving its truth.

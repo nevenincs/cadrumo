@@ -9,7 +9,7 @@ application does not implement -- ISD is ceded to the autonomous communities and
 filed through their own surfaces. ``guard_unsupported_work_modelo`` refuses it
 with the governing legal reference, but that guard lives INSIDE the handler,
 while ``modelo.work.create`` declares ``write_route = "profile-bound"``. The
-profile-bound write gate in :mod:`._profile_session_gate` therefore refuses
+profile-bound write gate in :mod:`.profile_session_gate` therefore refuses
 first with ``profile.active``, telling the operator to create a profile -- after
 which the modelo is refused anyway. The instructive refusal loses to the generic
 one purely on gate ordering.

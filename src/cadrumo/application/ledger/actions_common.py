@@ -744,7 +744,7 @@ def mutation_signature(transaction: Transaction) -> tuple[object, ...]:
     from here is therefore not merely uncompared — an edit touching ONLY that
     field is rejected and the operator's correction is dropped.
 
-    It must stay key-for-key with :func:`_transaction_idempotency_fields`, minus
+    It must stay key-for-key with :func:`transaction_idempotency_fields`, minus
     ``classified_by`` alone. That exclusion is deliberate: ``classified_by`` is
     provenance a write stamps, not a value the operator set, so comparing it
     would make every re-classification look like a change and defeat the guard.
@@ -836,7 +836,7 @@ def command_idempotency_fields(command: ManualLedgerTransactionCommand) -> dict[
     The full-field idempotency contract (``aeat-cli-contract``)
     requires the no-op match to compare EVERY persisted field. Keeping the field set as one
     ordered mapping makes a new model field omitted here a single greppable site, paired with
-    :func:`_transaction_idempotency_fields` key-for-key.
+    :func:`transaction_idempotency_fields` key-for-key.
 
     The mapping is the single source for both consumers:
     :func:`_command_idempotency_projection` folds it to the positional tuple the
@@ -903,7 +903,7 @@ def command_idempotency_fields(command: ManualLedgerTransactionCommand) -> dict[
 
 
 def _command_idempotency_projection(command: ManualLedgerTransactionCommand) -> tuple[object, ...]:
-    """Fold :func:`_command_idempotency_fields` into the positional idempotency tuple."""
+    """Fold :func:`command_idempotency_fields` into the positional idempotency tuple."""
     return tuple(command_idempotency_fields(command).values())
 
 
@@ -912,7 +912,7 @@ def transaction_idempotency_fields(current: Transaction) -> dict[str, object]:
 
     The banking-boundary fields read from ``current.raw``; the classification and
     provenance fields read from the transaction directly — key-for-key with
-    :func:`_command_idempotency_fields`. The ``classified_by`` entry holds the stored
+    :func:`command_idempotency_fields`. The ``classified_by`` entry holds the stored
     stamp, compared against the value a write of the command would persist
     (:func:`_persisted_classified_by`).
     """
@@ -958,7 +958,7 @@ def transaction_idempotency_fields(current: Transaction) -> dict[str, object]:
 
 
 def _transaction_idempotency_projection(current: Transaction) -> tuple[object, ...]:
-    """Fold :func:`_transaction_idempotency_fields` into the positional idempotency tuple."""
+    """Fold :func:`transaction_idempotency_fields` into the positional idempotency tuple."""
     return tuple(transaction_idempotency_fields(current).values())
 
 

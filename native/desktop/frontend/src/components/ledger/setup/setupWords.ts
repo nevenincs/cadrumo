@@ -4,7 +4,7 @@
 
 import { facts } from "@/shell/compose";
 import type { GrammarRefusal } from "../../../shell/ledgerGrammar";
-import type { LedgerRuleRow } from "../../../shell/ledgerSetup";
+import type { LedgerRuleRow } from "../../../shell/ledgerClassificationSetup";
 import type { Translate } from "../../../shell/strings";
 import { categoryLabel, classificationLabel } from "../movements/movementWords";
 import { patternWords, type SetupCall } from "./setupModel";

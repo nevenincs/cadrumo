@@ -8,7 +8,7 @@ size budget. These nested branch payloads share the graph-declared
 ``ledger.classify`` command key, and validated instances enter
 :class:`SchemaEnvelope` through
 :func:`emit_envelope`. They are imported directly
-by :mod:`._ledger_llm_cli` rather than re-exported from the
+by :mod:`.ledger_llm_cli` rather than re-exported from the
 parent payload module.
 
 The application layer owns the suggestion contracts:

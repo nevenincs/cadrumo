@@ -49,7 +49,7 @@ SPANISH_AMOUNT_RE = re.compile(r"\d{1,3}(?:" + _AMOUNT_SEPARATOR_CLASS + r"\d{3}
 The anchored counterpart -- mandating the printed figure IS the two-decimal
 comma-tailed AEAT money shape end to end rather than merely containing one --
 is :func:`~cadrumo.core.decimal.printed_money.is_aeat_printed_money`, enforced by
-:func:`_parse_spanish_decimal` on every caller.
+:func:`parse_spanish_decimal` on every caller.
 
 The separator class is built from
 :data:`~cadrumo.core.decimal.printed_money.AEAT_THOUSANDS_SEPARATORS` rather than spelled
@@ -629,7 +629,7 @@ def parse_spanish_decimal(value: str) -> Decimal:
     What the cartera source DOES guarantee, and what this function enforces
     rather than assumes, is AEAT's own UNE 82100 printed-money convention: a
     mandatory two-decimal comma tail. The aggregate "pendientes de períodos
-    anteriores" total is read through :data:`_SPANISH_AMOUNT_RE`, which
+    anteriores" total is read through :data:`SPANISH_AMOUNT_RE`, which
     already mandates that shape; this shared parser applies the same
     anchored check (:func:`~cadrumo.core.decimal.printed_money.is_aeat_printed_money`) to
     every caller, closing

@@ -4,7 +4,7 @@ import {
   purchaseOf,
 } from "../../src/components/ledger/assets/assetWrites";
 import { exampleInvoices } from "../../src/dev/fixtures/ledgerInvoices";
-import type { CatalogueInvoice } from "../../src/shell/ledger";
+import type { CatalogueInvoice } from "../../src/shell/ledgerInvoiceOperations";
 import type { ActivityAssetRevision } from "../../src/shell/ledgerSetup";
 import { label } from "../support/strings";
 

@@ -83,7 +83,7 @@ def optional_text_option(name: str, declarations: tuple[str, ...], help_key: str
 def required_text_option(name: str, declarations: tuple[str, ...], help_key: str) -> OptionSpec:
     """Declare a mandatory free-text option.
 
-    Distinct from :func:`_optional_text_option` in exactly one field, and the
+    Distinct from :func:`optional_text_option` in exactly one field, and the
     distinction is a contract rather than a detail: a required parameter has no
     absent state, so its handler never sees ``None``.
 
@@ -116,7 +116,7 @@ def required_text_option(name: str, declarations: tuple[str, ...], help_key: str
 def blank_default_text_option(name: str, declarations: tuple[str, ...], help_key: str) -> OptionSpec:
     """Declare a free-text option defaulting to the empty string.
 
-    The empty default is not the same state as :func:`_optional_text_option`'s
+    The empty default is not the same state as :func:`optional_text_option`'s
     absent default: this parameter always carries a string, so a handler cannot
     distinguish "not supplied" from "supplied empty". Kept separate for that
     reason rather than folded in behind a default argument.

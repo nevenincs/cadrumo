@@ -260,7 +260,7 @@ def bind_error_code(error_type: type[BaseException]) -> ErrorCode | None:
 
     Called from ``CadrumoError.__init_subclass__`` at class-creation
     time. Until the declared-code catalogue has been loaded, including while
-    it is loading, the class is added to :data:`_DEFERRED_BIND` and bound on
+    it is loading, the class is added to :data:`DEFERRED_BIND` and bound on
     first use via :func:`get_registered_error_code`; once it is loaded, an
     undeclared class is refused at creation.
 
@@ -332,7 +332,7 @@ def scrub_error_context(context: Mapping[str, object] | None) -> dict[str, str] 
     """Redact secret-looking keys and strip internal keys from ``context``.
 
     Keys classified by :func:`is_sensitive_redaction_key` are replaced with
-    ``"<redacted>"``. Keys in :data:`_INTERNAL_CONTEXT_KEYS` are dropped
+    ``"<redacted>"``. Keys in :data:`INTERNAL_CONTEXT_KEYS` are dropped
     entirely — they are implementation detail (e.g. widget prompt identifiers)
     and must not appear in operator-facing output.
     """

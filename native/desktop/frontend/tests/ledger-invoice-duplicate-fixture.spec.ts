@@ -3,7 +3,7 @@ import { answerInvoiceDuplicate } from "../src/dev/ledgerDuplicateFixture";
 import type {
   CatalogueInvoice,
   LedgerInvoiceDuplicateRequest,
-} from "../src/shell/ledger";
+} from "../src/shell/ledgerInvoiceOperations";
 import recorded from "@fixtures/ledger-recordings/ledgerInvoiceDuplicate.json" with { type: "json" };
 
 // The stand-in stories use for `ledger.invoice.duplicate`, held to what the real

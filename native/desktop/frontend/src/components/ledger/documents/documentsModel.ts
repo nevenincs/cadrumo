@@ -10,6 +10,10 @@ import type { FieldSpec } from "../../../shared/fieldKind";
 import { heldDecimal } from "../../../shared/numbers";
 import type {
   CatalogueInvoice,
+  InvoiceKind,
+  LedgerInvoiceDuplicateRequest,
+} from "../../../shell/ledgerInvoiceOperations";
+import type {
   ConfirmationBlocker,
   EvidenceConfirmRequest,
   EvidenceDraft,
@@ -18,10 +22,8 @@ import type {
   FieldProvenance,
   FindingResolution,
   FindingResolutionAction,
-  InvoiceKind,
-  JsonValue,
-  LedgerInvoiceDuplicateRequest,
-} from "../../../shell/ledger";
+} from "../../../shell/ledgerDocumentOperations";
+import type { JsonValue } from "../../../shell/ledger";
 import type { EvidenceUpdateField } from "../../../shell/ledgerContract";
 import {
   TAX_AMOUNT_RULE,

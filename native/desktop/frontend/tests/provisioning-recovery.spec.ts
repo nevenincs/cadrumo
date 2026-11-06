@@ -7,7 +7,7 @@ import {
 } from "../src/shell/provisioningRecovery";
 import type { LedgerPort } from "../src/shell/ledger";
 import { setupTargetOf } from "../src/shell/setup";
-import type { SetupRow } from "../src/ipc/contract";
+import type { SetupRow } from "../src/ipc/componentSetup";
 
 /** The action the engine names as the local AI's recovery. */
 const LOCAL_AI_SETUP_ACTION = "operator.provision.local_ai";

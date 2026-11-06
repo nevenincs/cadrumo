@@ -6,7 +6,8 @@
 // says nothing, and with no answer the draft stays and the save waits.
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import type { LedgerPort, LedgerRow, LedgerRuleTrialResult } from "./ledger";
+import type { LedgerPort, LedgerRow } from "./ledger";
+import type { LedgerRuleTrialResult } from "./ledgerMovementOperations";
 import { LatestAnswerSession, type LatestAnswer } from "./ledgerLatestAnswer";
 import { readAnswer } from "./ledgerWindow";
 
