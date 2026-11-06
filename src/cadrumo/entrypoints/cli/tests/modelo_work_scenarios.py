@@ -147,19 +147,23 @@ def create_m303_work_unit() -> str:
     )
 
 
-def m111_withholding_invoice_arguments() -> list[str]:
-    """Return the ``ledger invoice add`` arguments for the Modelo 111 2025 1T withholding invoice.
+def m111_withholding_invoice_arguments(
+    *, paid_on: date = _M111_PAID_ON, invoice_number: str = "M111-PROF-2025-001"
+) -> list[str]:
+    """Return the ``ledger invoice add`` arguments for one Modelo 111 withholding invoice.
 
     The received professional invoice carries a 15% retención: 1000.00 base,
-    150.00 withheld. Callers prepend their own global options.
+    150.00 withheld. Callers prepend their own global options. Defaults to the
+    canonical 2025 1T coordinate; a caller targeting a different quarter
+    supplies its own ``paid_on`` and ``invoice_number``.
     """
     return [
         "app", "ledger", "invoice", "add",
         "--kind", "received",
         "--counterparty-name", _M111_PROFESSIONAL_NAME,
         "--counterparty-nif", _M111_PROFESSIONAL_NIF,
-        "--invoice-number", "M111-PROF-2025-001",
-        "--invoice-date", _M111_PAID_ON.isoformat(),
+        "--invoice-number", invoice_number,
+        "--invoice-date", paid_on.isoformat(),
         "--country-code", "ES",
         "--taxable-base", "1000.00", "--iva-rate", "21",
         "--retention-rate", "0.15", "--retention-amount", "150.00",
@@ -167,11 +171,20 @@ def m111_withholding_invoice_arguments() -> list[str]:
     ]  # fmt: skip
 
 
-def m111_withholding_aggregate_arguments(invoice_id: str) -> list[str]:
+def m111_withholding_aggregate_arguments(
+    invoice_id: str,
+    *,
+    filing_year: int = 2025,
+    period: str = "1T",
+    paid_on: date = _M111_PAID_ON,
+    allocation_id: str = "m111-professional-allocation-1",
+) -> list[str]:
     """Return the ``modelo aggregate`` arguments recording the invoice's single paid allocation.
 
     The settlement is the invoice grand total (1000.00 + 21% IVA = 1210.00)
-    less the retención: 1060.00.
+    less the retención: 1060.00. Defaults to the canonical 2025 1T coordinate;
+    a caller targeting a different quarter supplies its own ``filing_year``,
+    ``period``, ``paid_on`` and ``allocation_id``.
     """
     request = InvoiceWithholdingEvidenceRequest(
         invoice_id=invoice_id,
@@ -179,19 +192,19 @@ def m111_withholding_aggregate_arguments(invoice_id: str) -> list[str]:
         scheme="actividades_profesionales",
         recipient_tax_status=WithholdingRecipientTaxStatus.RESIDENT,
         recipient_tax_regime=WithholdingRecipientTaxRegime.IRPF,
-        payment_event_id="m111-professional-payment-2025-01-15",
-        payment_occurred_on=_M111_PAID_ON,
-        allocation_id="m111-professional-allocation-1",
+        payment_event_id=f"m111-professional-payment-{paid_on.isoformat()}",
+        payment_occurred_on=paid_on,
+        allocation_id=allocation_id,
         allocated_base=Decimal("1000.00"),
         allocated_withholding=Decimal("150.00"),
         allocated_settlement=Decimal("1060.00"),
-        idempotency_key="m111-professional-allocation-1",
+        idempotency_key=allocation_id,
         modelo_190_detail=WithholdingObservation(
             source_id=invoice_id,
-            source_allocation_id="m111-professional-allocation-1",
+            source_allocation_id=allocation_id,
             perceptor_tax_id=_M111_PROFESSIONAL_NIF,
             perceptor_legal_name=_M111_PROFESSIONAL_NAME,
-            transaction_date=_M111_PAID_ON,
+            transaction_date=paid_on,
             clave=RetencionClave.from_registry("G"),
             subclave="01",
             percibido_dinerario=Decimal("1000.00"),
@@ -203,37 +216,73 @@ def m111_withholding_aggregate_arguments(invoice_id: str) -> list[str]:
     )
     return [
         "app", "modelo", "aggregate",
-        "--modelo", "111", "--year", "2025", "--period", "1T",
+        "--modelo", "111", "--year", str(filing_year), "--period", period,
         "--received-invoice-retencion", request.model_dump_json(),
     ]  # fmt: skip
 
 
-def capture_m111_invoice_withholding() -> None:
-    """Capture one received professional invoice's retención as Modelo 111 2025 1T evidence.
+def capture_m111_invoice_withholding(
+    *,
+    filing_year: int = 2025,
+    period: str = "1T",
+    paid_on: date = _M111_PAID_ON,
+) -> None:
+    """Capture one received professional invoice's retención as Modelo 111 evidence.
 
     Modelo 111 calculation refuses an all-blank quarter rather than filing a
     silent zero, so a calculable work unit needs one real percepción. The
     evidence enters through the public path only: ``ledger invoice add`` mints
     the invoice, then ``modelo aggregate --received-invoice-retencion`` records
-    its paid allocation.
+    its paid allocation. Defaults to the canonical 2025 1T coordinate; a
+    caller targeting a different quarter -- for example, one whose filing
+    window has not opened yet -- supplies its own ``filing_year``, ``period``
+    and ``paid_on``.
     """
-    created = invoke_modelo_scenario_cli(["--format", "json", *m111_withholding_invoice_arguments()])
+    canonical = (filing_year, period) == (2025, "1T")
+    invoice_number = "M111-PROF-2025-001" if canonical else f"M111-PROF-{filing_year}-{period}-001"
+    allocation_id = (
+        "m111-professional-allocation-1" if canonical else f"m111-professional-allocation-{filing_year}-{period}"
+    )
+    created = invoke_modelo_scenario_cli(
+        [
+            "--format", "json",
+            *m111_withholding_invoice_arguments(paid_on=paid_on, invoice_number=invoice_number),
+        ],
+    )  # fmt: skip
     assert created.exit_code == 0, created.output
     invoice_id = unwrap_schema_envelope(created.output)["invoice_id"]
     assert isinstance(invoice_id, str) and invoice_id, created.output
-    captured = invoke_modelo_scenario_cli(["--format", "json", *m111_withholding_aggregate_arguments(invoice_id)])
+    captured = invoke_modelo_scenario_cli(
+        [
+            "--format", "json",
+            *m111_withholding_aggregate_arguments(
+                invoice_id,
+                filing_year=filing_year,
+                period=period,
+                paid_on=paid_on,
+                allocation_id=allocation_id,
+            ),
+        ],
+    )  # fmt: skip
     assert captured.exit_code == 0, captured.output
 
 
-def create_calculable_modelo_work_unit() -> str:
-    """Create a Modelo 111 2025 1T work unit whose ``work calculate`` succeeds."""
+def create_calculable_modelo_work_unit(
+    *, filing_year: int = 2025, period: str = "1T", paid_on: date = _M111_PAID_ON
+) -> str:
+    """Create a Modelo 111 work unit whose ``work calculate`` succeeds.
+
+    Defaults to the canonical 2025 1T coordinate; a caller targeting a
+    different quarter supplies its own ``filing_year``, ``period`` and
+    ``paid_on``.
+    """
     work_unit_id = create_modelo_work_unit_via_cli(
         modelo="111",
-        filing_year=2025,
-        period="1T",
+        filing_year=filing_year,
+        period=period,
         revision="2019-y-siguientes",
     )
-    capture_m111_invoice_withholding()
+    capture_m111_invoice_withholding(filing_year=filing_year, period=period, paid_on=paid_on)
     return work_unit_id
 
 

@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import json
 import re
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -524,6 +525,75 @@ def test_work_file_defaults_to_current_verified_for_visible_target(seed_profile:
     )  # fmt: skip
     assert filed_status.exit_code == 0, filed_status.output
     assert unwrap_schema_envelope(filed_status.output)["state"] == "presentado"
+
+
+def test_work_file_refuses_no_pending_obligation_for_a_filing_window_not_yet_open(
+    seed_profile: ProfileSeeder,
+) -> None:
+    """`work file` reports NO_PENDING_OBLIGATION, in Catalan, for a quarter whose filing window has not opened.
+
+    Unlike the overdue 1T 2025 target above, this target genuinely has no
+    pending obligation for a different reason: the 4T window of the published
+    registry's horizon year opens only after the quarter ends, so a targeted
+    ``work file`` run today -- before that window opens -- resolves
+    ``obligation.opens_on > today`` and the workflow aborts at
+    ``COMPUTING_DEADLINES`` with ``WorkflowAbortReason.NO_PENDING_OBLIGATION``
+    (``application/workflow/deadline_decisions.py::decide_filing_deadline``),
+    never reaching the filing-window-closed (overdue/extemporánea) branch. The
+    horizon year comes from the published support envelope, never a literal, so
+    the target stays inside what the registry actually supports. Calculation
+    and verification are unaffected: ``work verify`` treats a filing window as
+    purely informational and never aborts on it
+    (``application/workflow/deadline_stage.py::_record_verify_deadline_context``),
+    so the work unit calculates and verifies exactly as the overdue one does.
+    """
+
+    horizon = PublishedGovernedFactSource().supported_filing_years().horizon
+    period = "4T"
+    paid_on = date(horizon, 11, 15)
+
+    seed_profile(label="operator", facts=operator_profile_facts())
+    create_calculable_modelo_work_unit(filing_year=horizon, period=period, paid_on=paid_on)
+    calculated = invoke_modelo_scenario_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate",
+            "--modelo", "111", "--year", str(horizon), "--period", period,
+        ],
+    )  # fmt: skip
+    assert calculated.exit_code == 0, calculated.output
+
+    verified = invoke_modelo_scenario_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "verify",
+            "--modelo", "111", "--year", str(horizon), "--period", period,
+        ],
+    )  # fmt: skip
+    assert verified.exit_code == 0, verified.output
+    revision_id = unwrap_schema_envelope(verified.output)["calculation_revision_id"]
+    status = invoke_modelo_scenario_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "status",
+            "--modelo", "111", "--year", str(horizon), "--period", period,
+        ],
+    )  # fmt: skip
+    assert status.exit_code == 0, status.output
+    assert unwrap_schema_envelope(status.output)["current_calculation_revision_id"] == revision_id
+
+    result = invoke_modelo_scenario_cli(
+        [
+            "app", "modelo", "work", "file",
+            "--modelo", "111", "--year", str(horizon), "--period", period,
+            "--output-language", "ca",
+        ],
+    )  # fmt: skip
+    assert result.exit_code != 0
+    assert "file requires a verified-complete revision" not in result.output
+    assert "No pending filing obligation" not in result.output
+    assert "No hi ha cap obligació de presentació pendent" in result.output
+    assert "NO_PENDING_OBLIGATION" in result.output
 
 
 def test_work_file_help_exposes_explicit_result_elections() -> None:
