@@ -12,11 +12,20 @@ declares no such build as ``determinism undeclared``; a full build can take
 many minutes, so it is a scheduled or manual proof, not part of the fast check.
 ``clean`` removes only outputs a family declares generated; committed outputs
 are refused, never deleted.
+
+The window projections belong to the selected CMake build tree
+(``location.py``). A seed that leaves every window family fresh records their
+outputs in the window index, which the frontend's type check verifies; one that
+does not removes it. ``seed --window --depfile FILE`` also writes a Makefile
+dependency file naming the index as its target and every input, output and stamp
+the window families' freshness reads, so CMake reruns the seed only when one of
+them changes.
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import shutil
 import sys
@@ -30,7 +39,25 @@ from pathlib import Path
 from ..packaging.command_execution import run_command
 from ..paths import REPO_ROOT, TEMP_ROOT
 from ..temporary_output import prepare_temp_root
-from .registry import FAMILIES, OUTPUT, PERSONA_ROOT, PYTHON, RECORDING_SWITCHES, Command, FixtureFamily, family_named
+from .location import (
+    WINDOW_INDEX,
+    WINDOW_INDEX_FORMAT,
+    WINDOW_ROOT,
+    WindowProjectionsUnavailableError,
+    output_directory,
+    window_projections,
+)
+from .registry import (
+    FAMILIES,
+    OUTPUT,
+    PERSONA_ROOT,
+    PYTHON,
+    RECORDING_SWITCHES,
+    Command,
+    FixtureFamily,
+    family_named,
+    window_families,
+)
 from .stamps import (
     FixtureState,
     InputDigests,
@@ -71,6 +98,13 @@ def authority_identity() -> dict[str, str]:
     return {"database_sha256": descriptor.database_sha256, "logical_generation": descriptor.logical_generation}
 
 
+def authority_descriptor() -> Path:
+    """The published authority's descriptor file, whose content names the database it records."""
+    from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
+
+    return bundled_authority_descriptor_path()
+
+
 def _repository_persona_check() -> tuple[str, ...]:
     from .personas import persona_catalogue_findings
 
@@ -84,16 +118,19 @@ class Workspace:
     root: Path = REPO_ROOT
     families: tuple[FixtureFamily, ...] = FAMILIES
     authority: Callable[[], Mapping[str, str]] = authority_identity
+    authority_source: Callable[[], Path] = authority_descriptor
     persona_check: Callable[[], tuple[str, ...]] = _repository_persona_check
     cache_directory: Path | None = None
     scratch_root: Path = TEMP_ROOT
 
 
-def _argv(command: Command, *, output: Path | None = None) -> list[str]:
+def _argv(command: Command, root: Path, *, output: Path | None = None) -> list[str]:
     resolved = []
     for token in command.argv:
         if token == PYTHON:
             resolved.append(sys.executable)
+        elif token == WINDOW_ROOT:
+            resolved.append(str(window_projections(root)))
         elif token == OUTPUT:
             if output is None:
                 raise FixtureProjectionError("A command naming an output directory was run without one")
@@ -114,7 +151,7 @@ def child_environment(command: Command, root: Path, inherited: Mapping[str, str]
 
 
 def _run(workspace: Workspace, command: Command, *, output: Path | None = None) -> int:
-    argv = _argv(command, output=output)
+    argv = _argv(command, workspace.root, output=output)
     executable = shutil.which(argv[0])
     if executable is None:
         print(f"  cannot run {argv[0]!r}: not on PATH", file=sys.stderr)
@@ -135,7 +172,16 @@ def _unmet_prerequisites(workspace: Workspace, family: FixtureFamily) -> tuple[s
     )
 
 
-def _selected(workspace: Workspace, names: Sequence[str]) -> tuple[FixtureFamily, ...]:
+def _selected(workspace: Workspace, names: Sequence[str], *, window: bool = False) -> tuple[FixtureFamily, ...]:
+    if window:
+        # A build that imports the window projections names no family; an empty
+        # selection would let it go on to meet missing modules.
+        if names:
+            raise FixtureProjectionError("Name families or select the window projections, not both")
+        selected = window_families(workspace.families)
+        if not selected:
+            raise FixtureProjectionError("No generated family writes the window projections")
+        return selected
     try:
         return tuple(family_named(name, workspace.families) for name in names) if names else workspace.families
     except KeyError as exc:
@@ -180,13 +226,84 @@ def _adopted(workspace: Workspace, family: FixtureFamily, inputs: InputRecord) -
     return True
 
 
-def seed(names: Sequence[str], *, force: bool, workspace: Workspace | None = None) -> int:
-    """Run the producer of each selected family that is not fresh, or of each one under ``force``."""
+def _write_replacing(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    staged = path.with_name(path.name + ".partial")
+    staged.write_text(text, encoding="utf-8", newline="\n")
+    staged.replace(path)
+
+
+def record_window_index(workspace: Workspace, digests: InputDigests, authority: Mapping[str, str]) -> Path | None:
+    """Record every window family's outputs in the window index when all are fresh, else remove the index.
+
+    Returns:
+        The index written, or ``None`` when a window family is not fresh and no index stands.
+    """
+    index = window_projections(workspace.root) / WINDOW_INDEX
+    families: dict[str, dict[str, str]] = {}
+    for family in window_families(workspace.families):
+        inputs = _inputs(family, digests, authority)
+        current = family_status(family, workspace.root, inputs, cache_directory=workspace.cache_directory)
+        if current.state is not FixtureState.FRESH:
+            index.unlink(missing_ok=True)
+            print(f"The window projections are incomplete: {family.name} is {current.state}", file=sys.stderr)
+            return None
+        families[family.name] = output_digests(family, workspace.root)
+    document = {"format": WINDOW_INDEX_FORMAT, "families": families}
+    _write_replacing(index, json.dumps(document, sort_keys=True, indent=2) + "\n")
+    return index
+
+
+def _make_word(path: Path) -> str:
+    return path.as_posix().replace("$", "$$").replace("#", "\\#").replace(" ", "\\ ")
+
+
+def window_dependencies(workspace: Workspace, digests: InputDigests) -> tuple[Path, ...]:
+    """Every file and directory the window families' freshness reads, sorted.
+
+    Each input file's directory is listed too, so a file added beside existing
+    inputs reruns the seed; outputs and stamps are listed so a removed one does.
+    """
+    paths: set[Path] = {workspace.authority_source()}
+    for family in window_families(workspace.families):
+        for group in family.inputs:
+            for member in digests.group(group.paths):
+                source = workspace.root / member
+                paths.add(source)
+                paths.update(source.parents[: len(source.relative_to(workspace.root).parts) - 1])
+        paths.update(output_paths(family, workspace.root))
+        paths.add(stamp_path(family, workspace.root))
+    return tuple(sorted(paths))
+
+
+def write_window_depfile(depfile: Path, index: Path, dependencies: Sequence[Path]) -> None:
+    """Write a Makefile dependency file whose one target is the window index."""
+    lines = [f"{_make_word(index)}:", *(f"  {_make_word(path)}" for path in dependencies)]
+    _write_replacing(depfile, " \\\n".join(lines) + "\n")
+
+
+def seed(
+    names: Sequence[str],
+    *,
+    force: bool,
+    window: bool = False,
+    depfile: Path | None = None,
+    workspace: Workspace | None = None,
+) -> int:
+    """Run the producer of each selected family that is not fresh, or of each one under ``force``.
+
+    ``window`` selects the generated families whose outputs are the window
+    projections, the ones a frontend build imports, instead of named families.
+    ``depfile``, only with ``window``, receives the dependencies of the window index.
+    """
     workspace = workspace or Workspace()
+    if depfile is not None and not window:
+        raise FixtureProjectionError("A dependency file is written only for the window projections")
+    selected = _selected(workspace, names, window=window)
     digests = InputDigests(workspace.root)
     authority = workspace.authority()
     failed: list[str] = []
-    for family in _selected(workspace, names):
+    for family in selected:
         if family.producer is None:
             continue
         # Inputs are read before the producer runs: an input edited during the
@@ -218,9 +335,16 @@ def seed(names: Sequence[str], *, force: bool, workspace: Workspace | None = Non
             failed.append(family.name)
             continue
         write_stamp(family, workspace.root, inputs, cache_directory=workspace.cache_directory)
+    index = None
+    if any(family.output_root == WINDOW_ROOT for family in selected):
+        index = record_window_index(workspace, digests, authority)
     if failed:
         print(f"Producers failed: {', '.join(failed)}", file=sys.stderr)
         return 1
+    if depfile is not None:
+        if index is None:
+            return 1
+        write_window_depfile(depfile, index, window_dependencies(workspace, digests))
     return 0
 
 
@@ -307,7 +431,7 @@ def removable_targets(family: FixtureFamily, root: Path) -> list[Path]:
     if family.output_root is None:
         return []
     checkout = root.resolve()
-    output_root = (root / family.output_root).resolve()
+    output_root = output_directory(family.output_root, root).resolve()
     if not output_root.is_relative_to(checkout) or output_root == checkout:
         raise FixtureProjectionError(f"{family.name}: output root {output_root} is not inside the checkout")
     targets = [*output_paths(family, root), stamp_path(family, root)]
@@ -344,6 +468,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     verbs = parser.add_subparsers(dest="verb", required=True)
     seeding = verbs.add_parser("seed", help="Produce or adopt families that are not fresh.")
     seeding.add_argument("--force", action="store_true", help="Produce every selected family.")
+    seeding.add_argument(
+        "--window", action="store_true", help="Select the generated families the desktop frontend imports."
+    )
+    seeding.add_argument(
+        "--depfile", type=Path, help="With --window, write the window index's dependencies to this Makefile depfile."
+    )
     seeding.add_argument("families", nargs="*")
     for verb, summary in (
         ("status", "Report fresh, stale, unstamped or missing."),
@@ -358,12 +488,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         if args.verb == "seed":
-            return seed(args.families, force=args.force)
+            return seed(args.families, force=args.force, window=args.window, depfile=args.depfile)
         if args.verb == "status":
             return status(args.families)
         if args.verb == "check":
             return check(args.families, determinism=args.determinism)
         return clean(args.families)
-    except FixtureProjectionError as exc:
+    except (FixtureProjectionError, WindowProjectionsUnavailableError) as exc:
         print(str(exc), file=sys.stderr)
         return 2

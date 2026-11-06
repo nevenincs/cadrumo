@@ -17,15 +17,17 @@ from dev.prettier_json import dump_json
 from cadrumo.application.ledger.tests.entry_option_periods_recording_support import committed_questions, recording
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
-RECORDING = family_directory("ledger-entry-options") / "ledgerEntryOptions.json"
-
 
 def main() -> None:
     """Write, check or redirect the entry-options recording."""
     arguments = producer_arguments(__doc__)
     with bundled_indexed_authority().operation() as operation:
         rendered = dump_json(recording(committed_questions(), operation))
-    emit({RECORDING: rendered}, arguments, remedy="just fixtures-seed ledger-entry-options")
+    emit(
+        {family_directory("ledger-entry-options") / "ledgerEntryOptions.json": rendered},
+        arguments,
+        remedy="just fixtures-seed ledger-entry-options",
+    )
 
 
 if __name__ == "__main__":

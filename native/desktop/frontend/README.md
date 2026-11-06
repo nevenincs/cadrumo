@@ -46,6 +46,25 @@ nothing. `desktop-frontend-dev` (what `just dev` builds), `desktop-frontend-buil
 and `desktop-frontend-test` depend on it; `npm run dev` only reads the build and
 never configures or builds it.
 
+The stories, specs and development tools import the generated window
+projections through the `@fixtures` alias. They are build output of the
+selected build's own tree, the `window_fixtures` directory of its build-path
+manifest (`build/<preset>/fixtures/window`), never committed. The
+`desktop-window-fixtures` target seeds them through
+`python -m dev.fixture_projections seed --window` and reruns only when an input
+of theirs changes; `desktop-frontend-build`, `desktop-frontend-check` and
+`desktop-frontend-test` depend on it. `just fixtures-seed` seeds the host
+preset's tree. The seed records the projections and their digests in
+`.window-projections.json` beside them. The type check,
+`node scripts/typecheck.mjs`, which `npm run check` and `npm run build` run,
+binds the alias to the selected build's directory through
+`scripts/fixture-alias.mjs`, as Vite does, and refuses to start unless that
+directory holds the recorded set. Playwright reads the alias from a project file
+that module writes into the build's `desktop/testing` directory. The
+`@fixtures` list in `tsconfig.json`, one entry per configure preset, serves only
+tools that run outside a build, such as an editor or a bare `tsc`, which take
+the first tree that exists.
+
 The servers bind the address in `../development-server.json`. Another address
 is a configure option of the repository build, for example
 `cmake --preset windows-x64 -DCADRUMO_DESKTOP_BIND_ADDRESS=127.0.0.1`. Ports

@@ -67,8 +67,8 @@ if TYPE_CHECKING:
     from cadrumo.tests.personas import Persona, WithholdingCertificate, YearEnvelope
 
 FRONTEND = Path(__file__).resolve().parents[1]
-#: The scenario envelopes are build output in the host's build tree, never committed.
-FIXTURES = family_directory("modelo")
+#: The scenario envelopes' folder in the window projections, build output that is never committed.
+ENVELOPE_FAMILY = "modelo"
 
 #: The host's closed list of admitted definitions, which the generated mirror is pinned to.
 ADMITTED = FRONTEND.parent / "src-tauri" / "src" / "shell" / "modelo" / "admitted.rs"
@@ -895,10 +895,11 @@ def _write(directory: Path, name: str, model: BaseModel) -> None:
 
     The written envelope is what the host hands the window. Once every envelope is written, the opaque ids a run
     mints afresh are named stably across them (see ``_name_minted_ids``); the calculations an envelope names are
-    read for that here, while their profile is open.
+    read for that here, while their profile is open, and the profile it was written in is recorded.
     """
     shown = _host_view(json.loads(model.model_dump_json()), _result_path_keys(), _FILE_FOLDERS)
     _name_calculations(shown)
+    _ENVELOPE_PROFILES[name] = _open_profile()
     text = json.dumps(shown, ensure_ascii=False, separators=(",", ":"))
     (directory / name).write_text(text, "utf-8", newline="\n")
     sys.stdout.write(f"{name}\n")
@@ -916,6 +917,45 @@ _MINTED_IDS: dict[str, str] = {}
 
 #: What each name was stated by, so two ids stated alike can be told apart in the refusal.
 _STATED: dict[str, Any] = {}
+#: The profile each envelope was written in, by its file name; one written outside every profile has none.
+_ENVELOPE_PROFILES: dict[str, str | None] = {}
+
+
+def _open_profile() -> str | None:
+    """The profile open now, as its own storage root, or ``None`` outside every profile.
+
+    Each scenario opens its own copy of a persona's profile, and every copy carries the same profile id; the
+    storage root the copy was opened in is what tells two scenarios' profiles apart.
+    """
+    from cadrumo.adapters.persistence.storage.master_key.active_session import current_active_bucket_session
+    from cadrumo.core.config import load_settings
+
+    if current_active_bucket_session() is None:
+        return None
+    return str(load_settings().cadrumo_storage_root)
+
+
+def _profiles_holding(envelopes: Mapping[str, Any], raws: Iterable[str]) -> dict[str, set[str | None]]:
+    """The profiles whose envelopes hold each of ``raws``; ``None`` stands for an envelope of no known profile."""
+    wanted = set(raws)
+    holding: dict[str, set[str | None]] = {raw: set() for raw in wanted}
+    for name, envelope in envelopes.items():
+        for found in wanted.intersection(_all_strings(envelope)):
+            holding[found].add(_ENVELOPE_PROFILES.get(name))
+    return {raw: profiles or {None} for raw, profiles in holding.items()}
+
+
+def _all_strings(value: Any) -> Generator[str]:
+    """Every string ``value`` holds as a key or a value, at any depth."""
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, list):
+        for item in value:
+            yield from _all_strings(item)
+    elif isinstance(value, dict):
+        for key, item in value.items():
+            yield str(key)
+            yield from _all_strings(item)
 
 
 def _token(kind: str, stated: Any) -> str:
@@ -1106,6 +1146,11 @@ def _name_minted_ids(directory: Path, names: Iterable[str]) -> None:
     A name is a digest of what its own row states, never of where the id was met first, so each id is named the
     same wherever it recurs and whatever order the envelopes are read in; an id another row cites, or the window
     hands back as the one it read, is replaced by the same name.
+
+    Two ids may share a name only where no one profile holds both. Each scenario reads its own copy of a persona's
+    profile, whose keyed references differ, so one calculation read alike in two scenarios mints two ids that state
+    the same row; no envelope of either profile can tell them apart, so they share its name. Within one profile, or
+    where an envelope's profile is not known, two ids stated alike would merge under one name, and are refused.
     """
     envelopes = {name: json.loads((directory / name).read_text("utf-8")) for name in names}
     for envelope in envelopes.values():
@@ -1115,12 +1160,21 @@ def _name_minted_ids(directory: Path, names: Iterable[str]) -> None:
     derived: dict[str, str] = {}
     for envelope in envelopes.values():
         _derived_names(envelope, derived)
-    named: dict[str, str] = {}
+    named: dict[str, list[str]] = {}
     for raw, token in [*_MINTED_IDS.items(), *derived.items()]:
-        if named.setdefault(token, raw) != raw:
-            raise SystemExit(
-                f"{named[token]} and {raw} state the same row, so their names would merge them: {_STATED.get(token)}"
-            )
+        if raw not in named.setdefault(token, []):
+            named[token].append(raw)
+    shared = [raw for raws in named.values() if len(raws) > 1 for raw in raws]
+    profiles = _profiles_holding(envelopes, shared)
+    for token, raws in named.items():
+        for position, raw in enumerate(raws):
+            for other in raws[:position]:
+                common = profiles[other] & profiles[raw]
+                if common or None in profiles[other] | profiles[raw]:
+                    raise SystemExit(
+                        f"{other} and {raw} state the same row in one profile, so their names would merge them: "
+                        f"{_STATED.get(token)}"
+                    )
     _MINTED_IDS.update(derived)
     for name, envelope in envelopes.items():
         text = json.dumps(_with_minted_names(envelope), ensure_ascii=False, separators=(",", ":"))
@@ -3648,8 +3702,10 @@ def _result_model(definition_id: str) -> type[BaseModel]:
     return registry.lookup_public_schema_binding(schema).model_type
 
 
-def validate(*, envelopes: bool = True) -> int:
+def validate(directory: Path | None, *, envelopes: bool = True) -> int:
     """Whether the host's admitted list and, unless ``envelopes`` is false, every stored envelope match the models.
+
+    The envelopes are read from ``directory``, or from the window projections when it is ``None``.
 
     Raises:
         SystemExit: When envelopes are asked for and none has been seeded, naming the command that seeds them.
@@ -3662,10 +3718,11 @@ def validate(*, envelopes: bool = True) -> int:
             f"unadmitted {sorted(set(registered) - set(admitted))}, "
             f"unregistered {sorted(set(admitted) - set(registered))}"
         )
-    if envelopes and not any(FIXTURES.glob("*.json")):
-        raise SystemExit(f"No modelo envelope is seeded in {FIXTURES}; run `just fixtures-seed modelo-envelopes`")
+    stored = directory if directory is not None else family_directory(ENVELOPE_FAMILY)
+    if envelopes and not any(stored.glob("*.json")):
+        raise SystemExit(f"No modelo envelope is seeded in {stored}; run `just fixtures-seed modelo-envelopes`")
     for pattern, model in _fixture_models() if envelopes else ():
-        paths = sorted(FIXTURES.glob(pattern))
+        paths = sorted(stored.glob(pattern))
         if not paths:
             failures.append(f"no fixture matches {pattern}")
         for path in paths:
@@ -3684,7 +3741,10 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("step", choices=("contract", "bounds", "envelopes", "pack", "validate"))
     parser.add_argument(
-        "directory", nargs="?", type=Path, default=FIXTURES, help="Where `envelopes` writes and `pack` stores."
+        "directory",
+        nargs="?",
+        type=Path,
+        help="Where `envelopes` writes, `pack` stores and `validate` reads; by default the window projections.",
     )
     parser.add_argument(
         "--definitions", action="store_true", help="With `validate`, check the host's admitted list and no envelope."
@@ -3696,13 +3756,14 @@ def main() -> int:
     if args.step == "bounds":
         sys.stdout.write(render_bounds())
         return 0
+    if args.step == "validate":
+        return validate(None if args.definitions else args.directory, envelopes=not args.definitions)
+    directory = args.directory if args.directory is not None else family_directory(ENVELOPE_FAMILY)
     if args.step == "envelopes":
-        write_envelopes(args.directory)
+        write_envelopes(directory)
         return 0
-    if args.step == "pack":
-        pack_envelopes(args.directory)
-        return 0
-    return validate(envelopes=not args.definitions)
+    pack_envelopes(directory)
+    return 0
 
 
 if __name__ == "__main__":

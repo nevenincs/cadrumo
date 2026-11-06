@@ -22,7 +22,6 @@ from dev.fixture_projections.producer_output import emit, producer_arguments
 from pydantic import TypeAdapter
 
 LANGUAGES = ("en", "es", "ca", "hu")
-TARGET = family_directory("ledger-served-words") / "ledgerServedWords.json"
 
 #: A sentence in each language, by reason, by operation family.
 _Words = dict[str, dict[str, dict[str, str]]]
@@ -159,7 +158,7 @@ def render_fixture() -> str:
 def main() -> None:
     """Write, verify or redirect the browser fixture."""
     emit(
-        {TARGET: render_fixture()},
+        {family_directory("ledger-served-words") / "ledgerServedWords.json": render_fixture()},
         producer_arguments(__doc__),
         remedy="uv run --no-sync python native/desktop/frontend/scripts/ledger_served_words.py",
     )

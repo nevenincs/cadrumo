@@ -27,6 +27,7 @@ from cadrumo.core.hashing import sha256_file
 
 from ..cache_root import dev_cache_dir
 from ..source_tree import normalised_contents, repository_files
+from .location import WINDOW_INDEX, output_directory
 from .registry import FixtureFamily
 
 STAMP_FORMAT: Final[str] = "cadrumo-fixture-projection-stamp-v1"
@@ -104,16 +105,19 @@ def input_digest(inputs: InputRecord) -> str:
 
 
 def output_paths(family: FixtureFamily, root: Path) -> tuple[Path, ...]:
-    """Every file under the family's output root that its output patterns name, sorted."""
+    """Every file under the family's output root that its output patterns name, sorted.
+
+    The family's stamp and the window index beside the outputs are records of them, never outputs.
+    """
     if family.output_root is None:
         return ()
-    output_root = root / family.output_root
-    stamp_name = _stamp_name(family)
+    output_root = output_directory(family.output_root, root)
+    records = {output_root / _stamp_name(family), output_root / WINDOW_INDEX}
     found = {
         path
         for pattern in family.outputs
         for path in output_root.glob(pattern)
-        if path.is_file() and path.name != stamp_name
+        if path.is_file() and path not in records
     }
     return tuple(sorted(found))
 
@@ -122,7 +126,7 @@ def output_digests(family: FixtureFamily, root: Path) -> dict[str, str]:
     """The sha256 of every output, keyed by its path relative to the output root."""
     if family.output_root is None:
         return {}
-    output_root = root / family.output_root
+    output_root = output_directory(family.output_root, root)
     return {path.relative_to(output_root).as_posix(): sha256_file(path) for path in output_paths(family, root)}
 
 
@@ -135,7 +139,7 @@ def stamp_path(family: FixtureFamily, root: Path, *, cache_directory: Path | Non
     if family.committed or family.output_root is None:
         directory = cache_directory if cache_directory is not None else dev_cache_dir(STAMP_CACHE)
         return directory / f"{family.name}.json"
-    return root / family.output_root / _stamp_name(family)
+    return output_directory(family.output_root, root) / _stamp_name(family)
 
 
 def write_stamp(family: FixtureFamily, root: Path, inputs: InputRecord, *, cache_directory: Path | None = None) -> Path:
