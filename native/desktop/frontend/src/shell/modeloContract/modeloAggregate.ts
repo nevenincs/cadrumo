@@ -466,15 +466,3 @@ export type WithholdingRecipientTaxRegime = "irpf" | "is" | "irnr" | "unknown";
  */
 export type WithholdingRecipientTaxStatus =
   "resident" | "nonresident" | "unknown";
-
-/** The `modelo.aggregate` definitions' share of `ModeloContracts`. */
-export type ModeloAggregateContracts = {
-  "modelo.aggregate": {
-    request: ModeloAggregateOperationRequest;
-    result: ModeloAggregateProjection;
-  };
-  "modelo.aggregate.capture_received_invoice_retencion": {
-    request: ModeloInvoiceWithholdingCaptureRequest;
-    result: ModeloInvoiceWithholdingCaptureProjection;
-  };
-};

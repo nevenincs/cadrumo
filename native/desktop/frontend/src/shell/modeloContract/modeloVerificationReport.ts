@@ -96,15 +96,3 @@ export type ModeloVerificationReportViewRequest = {
   profile_id: string;
   verification_report_id: VerificationReportId;
 };
-
-/** The `modelo.verification_report` definitions' share of `ModeloContracts`. */
-export type ModeloVerificationReportContracts = {
-  "modelo.verification_report.list": {
-    request: ModeloVerificationReportListRequest;
-    result: ModeloVerificationReportListProjection;
-  };
-  "modelo.verification_report.view": {
-    request: ModeloVerificationReportViewRequest;
-    result: ModeloVerificationReportViewProjection;
-  };
-};

@@ -14,15 +14,19 @@ same goes for a static route: which facts make a movement's identity, which fiel
 reason is put right in, which correction waits on a verdict.
 
 ``scripts/ledger-contract.mjs`` drives this module and formats what it writes; run that, not
-this. This module writes the unformatted source to standard output.
+this. This module writes one JSON object to standard output: the repository's TypeScript module
+bound as ``bound``, which the driver refuses a longer formatted module by, and the unformatted
+source as ``module``.
 """
 
 from __future__ import annotations
 
+import json
 import sys
 from collections.abc import Iterable, Mapping, Sequence
 from enum import StrEnum
 
+from dev.quality.typescript_module_size import MAX_PHYSICAL_LINES
 from pydantic import BaseModel
 
 from cadrumo.application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
@@ -401,8 +405,8 @@ def render() -> str:
 
 
 def main() -> None:
-    """Write the unformatted module to standard output."""
-    sys.stdout.write(render())
+    """Write the module bound and the unformatted module to standard output."""
+    sys.stdout.write(json.dumps({"bound": MAX_PHYSICAL_LINES, "module": render()}, ensure_ascii=False))
 
 
 if __name__ == "__main__":

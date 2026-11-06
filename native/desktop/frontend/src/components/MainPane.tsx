@@ -1,4 +1,9 @@
-import type { ComponentProps, RefObject, SetStateAction } from "react";
+import {
+  useCallback,
+  type ComponentProps,
+  type RefObject,
+  type SetStateAction,
+} from "react";
 import { EmptyState } from "@/components/ui/empty";
 import type { DocsLanguage } from "../ipc/environment";
 import type { Action } from "../shell/actions";
@@ -93,7 +98,6 @@ export function MainPane({
   browserHome,
   isShellChord,
   setBrowserKeptFor,
-  toggleProfileMaximized,
   byId,
   openMenu,
   profileAccountActions,
@@ -173,7 +177,6 @@ export function MainPane({
   browserHome: number;
   isShellChord: ReturnType<typeof useShellShortcuts>["isShellChord"];
   setBrowserKeptFor: (reader: string | null) => void;
-  toggleProfileMaximized: () => void;
   byId: (id: string) => Action | undefined;
   openMenu: OpenMenu;
   profileAccountActions: () => Action[];
@@ -199,6 +202,12 @@ export function MainPane({
   runShortcut: ReturnType<typeof useShellShortcuts>["runShortcut"];
   docsMenu: ReturnType<typeof useShellMenus>["docsMenu"];
 }) {
+  // The profile page is large: what it is given stays the same object from
+  // one render of the window to the next, so it draws only when it changes.
+  const toggleProfileMaximized = useCallback(
+    () => toggleMaximize("docs"),
+    [toggleMaximize],
+  );
   return (
     <>
       {declarationsOn && host.modelo ? (

@@ -872,6 +872,7 @@
         "dev.quality.suite",
         "dev.quality.type_checking_runtime_use_scan",
         "dev.quality.types",
+        "dev.quality.typescript_module_size",
         "dev.quality.unconsumed_export_coverage",
         "dev.quality.unreachable_module_coverage",
         "dev.quality.unread_inputs",

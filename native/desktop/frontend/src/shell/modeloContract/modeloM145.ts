@@ -237,27 +237,3 @@ export type M145CommunicationValidationProjection = {
   legal_refs: LegalRefId[];
   source_refs: SourceRefId[];
 };
-
-/** The `modelo.m145` definitions' share of `ModeloContracts`. */
-export type ModeloM145Contracts = {
-  "modelo.m145.create": {
-    request: M145CommunicationCreateRequest;
-    result: M145CommunicationOperationResult;
-  };
-  "modelo.m145.export": {
-    request: M145CommunicationExportRequest;
-    result: M145CommunicationOperationResult;
-  };
-  "modelo.m145.mark_delivered_to_payer": {
-    request: M145CommunicationMarkDeliveredRequest;
-    result: M145CommunicationOperationResult;
-  };
-  "modelo.m145.mark_locally_completed": {
-    request: M145CommunicationMarkCompletedRequest;
-    result: M145CommunicationOperationResult;
-  };
-  "modelo.m145.validate": {
-    request: M145CommunicationValidateRequest;
-    result: M145CommunicationOperationResult;
-  };
-};

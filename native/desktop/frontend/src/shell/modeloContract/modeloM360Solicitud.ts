@@ -187,11 +187,3 @@ export type Modelo360SolicitudResult = {
 };
 
 export type SubjectTaxId = string;
-
-/** The `modelo.m360_solicitud` definitions' share of `ModeloContracts`. */
-export type ModeloM360SolicitudContracts = {
-  "modelo.m360_solicitud": {
-    request: Modelo360SolicitudRequest;
-    result: Modelo360SolicitudResult;
-  };
-};

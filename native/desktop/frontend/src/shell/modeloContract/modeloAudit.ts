@@ -200,19 +200,3 @@ export type VerificationCheck =
   | "bucket_binding"
   | "work_unit_binding"
   | "object_reachability";
-
-/** The `modelo.audit` definitions' share of `ModeloContracts`. */
-export type ModeloAuditContracts = {
-  "modelo.audit.export": {
-    request: ModeloAuditExportRequest;
-    result: ModeloAuditExportProjection;
-  };
-  "modelo.audit.query": {
-    request: ModeloAuditReadRequest;
-    result: ModeloAuditQueryProjection;
-  };
-  "modelo.audit.read": {
-    request: ModeloAuditReadRequest;
-    result: ModeloAuditReadProjection;
-  };
-};

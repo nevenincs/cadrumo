@@ -66,11 +66,3 @@ export type SpreadsheetRefusal = {
     | "parent_not_directory"
     | "publication_failed";
 };
-
-/** The `modelo.spreadsheet` definitions' share of `ModeloContracts`. */
-export type ModeloSpreadsheetContracts = {
-  "modelo.spreadsheet.export": {
-    request: ModeloSpreadsheetExportRequest;
-    result: ModeloSpreadsheetExportOutcome;
-  };
-};
