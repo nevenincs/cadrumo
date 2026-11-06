@@ -180,49 +180,66 @@ export function DockWorkspace({
     if (Math.abs(ratio - divider.ratio) < 1e-9) return;
     onChange((current) => resizeDockSplit(current, divider.path, ratio));
   };
-  // Headers too narrow for their active title give up the expand and close
-  // buttons the arrangement menu repeats before they cut the title. Each
-  // remembers the width at which both fit again.
-  const [compact, setCompact] = useState<ReadonlySet<DockPane>>(
-    () => new Set(),
+  // Headers too narrow for their active title give up, in turn, the expand
+  // and close buttons the arrangement menu repeats and then the page actions
+  // their shortcuts and the palette reach, before they cut the title. Each
+  // step remembers, for that title, the width at which it fits again.
+  const [compact, setCompact] = useState<ReadonlyMap<DockPane, 1 | 2>>(
+    () => new Map(),
   );
-  const roomy = useRef(new Map<DockPane, number>());
+  const roomy = useRef(
+    new Map<DockPane, { title: string; widths: number[] }>(),
+  );
   const fitTitles = () => {
     const element = surface.current;
     if (!element) return;
     setCompact((before) => {
-      const after = new Set<DockPane>();
+      const after = new Map<DockPane, 1 | 2>();
       for (const header of element.querySelectorAll<HTMLElement>(
         "[data-dock-header]",
       )) {
         const pane = header.dataset.dockHeader;
         if (!isDockPane(pane)) continue;
-        if (before.has(pane)) {
-          if (header.clientWidth < (roomy.current.get(pane) ?? Infinity))
-            after.add(pane);
-          continue;
-        }
         const label = header.querySelector<HTMLElement>(
           '[aria-selected="true"] [data-dock-title]',
         );
-        // Cut by its own ellipsis, or scrolled past the edge of the tab row.
-        const row = label?.closest("[data-dock-tabs]")?.getBoundingClientRect();
-        const box = label?.getBoundingClientRect();
-        const cut =
-          label && row && box
-            ? Math.max(
-                label.scrollWidth - label.clientWidth,
-                box.right - row.right,
-                row.left - box.left,
-              )
-            : 0;
-        if (cut > 0.5) {
-          roomy.current.set(pane, header.clientWidth + cut);
-          after.add(pane);
+        const words = label?.textContent ?? "";
+        let memory = roomy.current.get(pane);
+        let level = before.get(pane) ?? 0;
+        if (memory?.title !== words) {
+          // Another title needs its own measure, taken from the full header.
+          memory = { title: words, widths: [] };
+          roomy.current.set(pane, memory);
+          if (level > 0) continue;
         }
+        if (level > 0 && header.clientWidth >= memory.widths[level - 1]!) {
+          level -= 1;
+        } else {
+          // Cut by its own ellipsis, or scrolled past the edge of the tab row.
+          const row = label
+            ?.closest("[data-dock-tabs]")
+            ?.getBoundingClientRect();
+          const box = label?.getBoundingClientRect();
+          const cut =
+            label && row && box
+              ? Math.max(
+                  label.scrollWidth - label.clientWidth,
+                  box.right - row.right,
+                  row.left - box.left,
+                )
+              : 0;
+          const deepest = header.querySelector("[data-dock-page-actions]")
+            ? 2
+            : 1;
+          if (cut > 0.5 && level < deepest) {
+            memory.widths[level] = header.clientWidth + cut;
+            level += 1;
+          }
+        }
+        if (level > 0) after.set(pane, level as 1 | 2);
       }
       return after.size === before.size &&
-        [...after].every((pane) => before.has(pane))
+        [...after].every(([pane, level]) => before.get(pane) === level)
         ? before
         : after;
     });
@@ -546,6 +563,8 @@ export function DockWorkspace({
                         : `dock-content-${pane}`
                     }
                     draggable
+                    // The active title keeps its width; the others give way.
+                    className="data-[state=active]:shrink-0"
                     title={[title(pane), status(pane)?.note]
                       .filter(Boolean)
                       .join(" · ")}
@@ -591,7 +610,13 @@ export function DockWorkspace({
               </TabsList>
             </Tabs>
             {panes.find((pane) => pane.id === item.active)?.pageActions && (
-              <div className="flex shrink-0 items-center">
+              <div
+                className={cn(
+                  "flex shrink-0 items-center",
+                  compact.get(item.active) === 2 && "hidden",
+                )}
+                data-dock-page-actions=""
+              >
                 {panes.find((pane) => pane.id === item.active)?.pageActions}
               </div>
             )}

@@ -11,6 +11,8 @@ import {
   area,
 } from "../support/ledgerSetup";
 
+// The Ledger page's Setup sections over the scenario host's made-up ledger: an own capital good named from its year, and a prorrata election the register refuses until its reference is given.
+
 test("a capital good names its purchase from the year typed", async ({
   page: target,
 }) => {
