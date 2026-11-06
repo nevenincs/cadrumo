@@ -28,7 +28,7 @@ import { ProvisioningPanel } from "./components/setup/ProvisioningPanel";
 import { ShellDock } from "./components/ShellDock";
 import type { TerminalApi, TerminalStatus } from "./components/TerminalPane";
 import { Titlebar } from "./components/Titlebar";
-import type { DocsTheme } from "./ipc/contract";
+import type { DocsTheme } from "./ipc/docsBridge";
 import { useAbout } from "./shell/about";
 import { primaryChord, type Action } from "./shell/actions";
 import type { ModelList } from "./shell/agentModelList";

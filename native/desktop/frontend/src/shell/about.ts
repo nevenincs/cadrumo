@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { AboutInfo } from "../ipc/contract";
+import type { AboutInfo } from "../ipc/environment";
 import { failureCode } from "../errors";
 import type { Host } from "./host";
 import { labelled } from "./compose";

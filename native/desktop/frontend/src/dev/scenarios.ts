@@ -11,14 +11,13 @@ import type { AeatSyncPrepareMode } from "./aeatSyncPrepareFixture";
 import type { AeatSyncResultsMode } from "./aeatSyncResultsFixture";
 import type { AeatSyncRunMode } from "./aeatSyncRunFixture";
 import type { SetupShape } from "./setupFixture";
+import type { HostErrorCode, HostFailure } from "../ipc/contract";
 import type {
-  HostErrorCode,
-  HostFailure,
   ManagerSignal,
   ManagerStatus,
   SignInSignal,
   SignInStatus,
-} from "../ipc/contract";
+} from "../ipc/account";
 
 /** What a submitted password meets. */
 export type SubmitOutcome =

@@ -6,7 +6,7 @@ import {
   targetOf,
 } from "../src/shell/profiles";
 import { canSignIn, phaseOf, GATED } from "../src/shell/signIn";
-import type { ProfileList, SignInStatus } from "../src/ipc/contract";
+import type { ProfileList, SignInStatus } from "../src/ipc/account";
 
 // The rules of choosing and creating a profile, checked at their
 // boundaries. No page is opened.

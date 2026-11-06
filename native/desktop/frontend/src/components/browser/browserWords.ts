@@ -3,7 +3,7 @@ import type {
   SedeViewFailureCode,
   SedeViewPublication,
   SedeViewTransfer,
-} from "../../ipc/contract";
+} from "../../ipc/sedeViewMessages";
 import type { Translate } from "../../shell/strings";
 import type { SaidNotice } from "./browserModel";
 

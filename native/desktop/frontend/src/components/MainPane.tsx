@@ -1,6 +1,6 @@
 import type { ComponentProps, RefObject, SetStateAction } from "react";
 import { EmptyState } from "@/components/ui/empty";
-import type { DocsLanguage } from "../ipc/contract";
+import type { DocsLanguage } from "../ipc/environment";
 import type { Action } from "../shell/actions";
 import { ModelListContext, type ModelList } from "../shell/agentModelList";
 import type { useFilingCalendar } from "../shell/calendar";
