@@ -229,6 +229,33 @@ test("a tap on messages says why there is no count", async ({
   );
 });
 
+/** The active tab of `pane`'s header shows `whole`, neither cut by its own
+ * ellipsis nor scrolled past the edge of the tab row. */
+async function expectWholeTitle(target: Page, pane: string, whole: string) {
+  const title = target.locator(
+    `[data-dock-header="${pane}"] [aria-selected="true"] [data-dock-title]`,
+  );
+  await expect(title).toHaveText(whole);
+  await expect
+    .poll(() =>
+      title.evaluate((element) => {
+        const row = element
+          .closest("[data-dock-tabs]")!
+          .getBoundingClientRect();
+        const box = element.getBoundingClientRect();
+        return (
+          element.scrollWidth <= element.clientWidth &&
+          box.left >= row.left - 1 &&
+          box.right <= row.right + 1
+        );
+      }),
+    )
+    .toBe(true);
+}
+
+const destination = (target: Page, key: string) =>
+  target.getByRole("button", { name: label(key, {}, "es"), exact: true }).tap();
+
 // Spanish has the longest name for the calendar.
 test("a narrow header keeps its controls inside it and its whole title in the tab", async ({
   page: target,
@@ -251,25 +278,7 @@ test("a narrow header keeps its controls inside it and its whole title in the ta
   await expect(tab).toHaveAttribute("title", new RegExp(`^${whole}`));
   // The header gives up the controls its arrangement menu repeats before it
   // cuts the title: the title shows whole, and the menu stays.
-  const title = target.locator(
-    '[data-dock-header="docs"] [aria-selected="true"] [data-dock-title]',
-  );
-  await expect(title).toHaveText(whole);
-  await expect
-    .poll(() =>
-      title.evaluate((element) => {
-        const row = element
-          .closest("[data-dock-tabs]")!
-          .getBoundingClientRect();
-        const box = element.getBoundingClientRect();
-        return (
-          element.scrollWidth <= element.clientWidth &&
-          box.left >= row.left - 1 &&
-          box.right <= row.right + 1
-        );
-      }),
-    )
-    .toBe(true);
+  await expectWholeTitle(target, "docs", whole);
   await expect(
     target
       .locator('[data-dock-header="docs"]')
@@ -284,6 +293,61 @@ test("a narrow header keeps its controls inside it and its whole title in the ta
       expect(box.x + box.width).toBeLessThanOrEqual(edge.x + edge.width + 1);
     }
   }
+});
+
+test("a header that shares its row with other tabs still shows the active title whole", async ({
+  page: target,
+}) => {
+  await seedLayout(target);
+  await target.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&bar=off&lang=es",
+  );
+  await showTui(target, { touch: true, lang: "es" });
+  await target
+    .locator('[data-dock-header="tui"]')
+    .getByRole("button", { name: label("desktop.dock.arrange", {}, "es") })
+    .tap();
+  await target
+    .getByRole("menuitem", {
+      name: label("desktop.dock.tab", {}, "es"),
+      exact: true,
+    })
+    .tap();
+  const group = target.locator("[data-dock-header]:has(#tab-docs)");
+  await expect(group.getByRole("tab")).toHaveCount(2);
+  await destination(target, "desktop.calendar.title");
+  const whole = label("desktop.calendar.title", {}, "es");
+  await group.getByRole("tab", { name: whole, exact: true }).tap();
+  const pane = await group.getAttribute("data-dock-header");
+  await expectWholeTitle(target, pane!, whole);
+});
+
+test("a header measures a new title afresh instead of keeping the last title's room", async ({
+  page: target,
+}) => {
+  const expand = (target: Page) =>
+    target
+      .locator('[data-dock-header="docs"]')
+      .getByRole("button", { name: label("desktop.dock.expand", {}, "es") });
+  const visit = async (keys: string[]) => {
+    await seedLayout(target);
+    await target.goto(
+      "/scenarios.html?scenario=signed-in&latency=0&bar=off&lang=es",
+    );
+    await showTui(target, { touch: true, lang: "es" });
+    for (const key of keys) {
+      await destination(target, key);
+      await expectWholeTitle(target, "docs", label(key, {}, "es"));
+    }
+    return expand(target).isVisible();
+  };
+  // The profile's header straight after launch, and after the calendar's
+  // longer title made the header give up its controls, are the same header.
+  const fresh = await visit(["desktop.profile.title"]);
+  await target.evaluate(() => sessionStorage.clear());
+  expect(await visit(["desktop.calendar.title", "desktop.profile.title"])).toBe(
+    fresh,
+  );
 });
 
 test("the shell stacks its panes and never scrolls sideways", async ({
