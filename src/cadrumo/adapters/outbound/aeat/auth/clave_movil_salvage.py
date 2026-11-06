@@ -9,7 +9,7 @@ out on an already-processed approval — closing the context unread would
 throw away the approval the operator already gave and force a second,
 avoidable Cl@ve prompt.
 
-:class:`_ClaveMovilSessionSalvageMixin` supplies the best-effort repair:
+:class:`ClaveMovilSessionSalvageMixin` supplies the best-effort repair:
 persist whatever authenticated state the failing context holds before it is
 torn down, so the next resume attempt can probe it rather than starting a
 fresh login outright. This is safety code, not an optimisation — its

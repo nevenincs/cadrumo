@@ -5,6 +5,8 @@ import { showTui } from "../support/tui";
 import { startFromDocs, open } from "../support/scenarioShell";
 import { openLogs } from "../support/scenarioLogView";
 
+// The log's loading, empty, error and missing-file states, and the levels its fixture records list.
+
 test.beforeEach(async ({ page: target }) => {
   await startFromDocs(target);
 });

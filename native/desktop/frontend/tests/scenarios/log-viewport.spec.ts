@@ -4,6 +4,8 @@ import { showTui } from "../support/tui";
 import { startFromDocs, open } from "../support/scenarioShell";
 import { openLogs, errorsHeld } from "../support/scenarioLogView";
 
+// The log's fit in small windows and large text, its toolbar, and keyboard focus as records arrive.
+
 test.beforeEach(async ({ page: target }) => {
   await startFromDocs(target);
 });

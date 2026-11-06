@@ -769,7 +769,7 @@ def invoice_catalogue_fingerprint(catalogue: InvoiceCatalogue) -> str:
     volatile timestamp fields, so a canonical JSON dump of every invoice (sorted
     by ``invoice_id``) captures the full calculation-relevant content and changes
     whenever any invoice is added, removed, or edited. An empty catalogue yields a
-    stable empty-list digest. Mirrors :func:`_transaction_catalogue_fingerprint`.
+    stable empty-list digest. Mirrors :func:`transaction_catalogue_fingerprint`.
     """
     payload = [
         invoice.model_dump(mode="json") for invoice in sorted(catalogue.values(), key=lambda item: item.invoice_id)

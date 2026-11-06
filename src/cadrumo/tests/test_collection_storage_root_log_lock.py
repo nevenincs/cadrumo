@@ -75,7 +75,7 @@ def test_an_open_log_handler_blocks_removal_on_this_platform(tmp_path: Path) -> 
 def test_releasing_the_handler_unblocks_removal(tmp_path: Path) -> None:
     """Releasing the handler is what turns the blocked removal into a real one.
 
-    Exercises :func:`_release_log_handlers_under` directly: closes and detaches
+    Exercises :func:`release_log_handlers_under` directly: closes and detaches
     only the handler writing under ``root``, leaving the removal itself to a
     second, ordinary ``shutil.rmtree`` call -- the same two-step shape
     ``register_collection_storage_root_cleanup`` now performs at ``atexit``.

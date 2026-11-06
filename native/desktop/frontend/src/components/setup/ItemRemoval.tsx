@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import type { SetupRemoval, SetupRow } from "../../ipc/contract";
+import type { SetupRemoval, SetupRow } from "../../ipc/componentSetup";
 import { useProvisioning } from "../../shell/provisioning";
 import { useStrings } from "../../shell/strings";
 import { refusalWords } from "./setupWords";

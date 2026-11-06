@@ -10,6 +10,8 @@ import {
 } from "../support/scenarioShell";
 import { messagesButton } from "../support/scenarioRail";
 
+// The messages button: unread counts, opening the TUI, and the unknown and withheld states.
+
 test.beforeEach(async ({ page: target }) => {
   await startFromDocs(target);
 });

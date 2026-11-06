@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { HostFailure } from "../ipc/contract";
 import type {
-  HostFailure,
   ManagerStatus,
   ProfileList,
   SignInRefusal,
   SignInStatus,
   SignOutResult,
-} from "../ipc/contract";
+} from "../ipc/account";
 import type { Host } from "./host";
 import { nameable, targetOf } from "./profiles";
 import { failureCode } from "../errors";

@@ -45,7 +45,7 @@ def parse_iso_date(
 def parse_iso_date_str(raw: str, *, label: str) -> str:
     """Validate ``raw`` as an ISO-8601 date and return its canonical string.
 
-    The shared ISO gate (:func:`_parse_iso_date`)
+    The shared ISO gate (:func:`parse_iso_date`)
     refuses every non-ISO ordering by construction (``15/01/2026``,
     ``01-15-2026``, ``2026/01/15``); this wrapper returns the canonical
     ``YYYY-MM-DD`` form for the several service contracts that persist the date
@@ -60,7 +60,7 @@ def parse_optional_iso_date_str(raw: str | None, *, label: str) -> str | None:
 
     Returns ``None`` when ``raw`` is ``None`` (the date was not supplied);
     otherwise delegates to
-    :func:`_parse_iso_date_str`, so a supplied
+    :func:`parse_iso_date_str`, so a supplied
     non-ISO date refuses at the CLI boundary.
     """
     if raw is None:

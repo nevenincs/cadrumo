@@ -136,14 +136,14 @@ test("a layout stored before the documentation could be put away opens in today'
   page: target,
 }) => {
   // An older shell stored the TUI's visibility and nothing of the
-  // documentation's; the TUI it stored is not started on launch.
+  // documentation's; the TUI it stored comes back as stored.
   await seedLayout(target, {
     prefs: { order: "docs" },
     layout: { tuiShown: true },
   });
   await open(target);
   await expect(target.locator(".pane-docs")).toBeHidden();
-  await showTui(target);
+  await expect(target.locator(".pane-tui")).toBeVisible();
   await railButton(target, "desktop.rail.docs").click();
   await expect(target.locator(".docs-frame")).toBeVisible();
   expect(await left(target, ".pane-tui")).toBeLessThan(

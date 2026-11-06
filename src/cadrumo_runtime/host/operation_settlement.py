@@ -65,7 +65,7 @@ async def settle_lapsed_operations(host: ProfileWorkerOperationHost) -> None:
 
     Its owner is gone, and its submitter has had a whole lease to continue
     it, so nothing else would ever settle it. Checked at most every
-    :data:`_LAPSE_CHECK_SECONDS` as the profile is used; a failure is logged
+    :data:`LAPSE_CHECK_SECONDS` as the profile is used; a failure is logged
     with the operation and never refuses the caller's own request.
     """
     now = monotonic()

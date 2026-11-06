@@ -13,7 +13,7 @@ import type {
   InvoicePreviewFigure,
   InvoicePreviewLineResult,
   InvoicePreviewRateSlot,
-} from "../../../shell/ledger";
+} from "../../../shell/ledgerInvoiceOperations";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { wordOrToken } from "../../../shell/tokenWords";
 import { formatAmount, formatDecimal } from "../../../shared/numbers";

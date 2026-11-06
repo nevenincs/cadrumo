@@ -10,6 +10,8 @@ import {
   area,
 } from "../support/ledgerSetup";
 
+// The Ledger's withholding register: certificates listed, recorded and picked as files, and every refusal said in the backend's words.
+
 /** The sentences the backend serves with every refusal of the withholding
  * record and absence operations, by reason and language, as the generated
  * fixture holds them. */

@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
 import type {
   LedgerLlmSuggestion,
-  LedgerRow,
   LedgerStagedRowAnswer,
-} from "../src/shell/ledger";
+} from "../src/shell/ledgerMovementOperations";
+import type { LedgerRow } from "../src/shell/ledger";
 import { EMPTY_CONTENT, type StagedContent } from "../src/shell/ledgerStage";
 import {
   commonValue,

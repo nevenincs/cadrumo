@@ -3,7 +3,7 @@ import type {
   SedeClipboardAction,
   SedeViewInput,
   SedeViewVerb,
-} from "../../ipc/contract";
+} from "../../ipc/sedeViewMessages";
 import {
   sedeViewFailure,
   type SedeViewEvent,

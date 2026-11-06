@@ -6,7 +6,7 @@ admitted surface entries, intent admissibility and the detail-row natural
 key. Admission lives in :mod:`.edit_admission`, parsing in
 :mod:`.edit_parsing` and preflight in :mod:`.edit_preflight`. It never writes
 -- persistence and the guarded compare-and-swap commit belong to
-:mod:`.revision_persistence` and :mod:`._edit_execution`.
+:mod:`.revision_persistence` and :mod:`.edit_execution`.
 
 A :class:`~.workspace_models.ModeloWorkspaceBaselineV1` read-consistency token
 is never accepted here as mutation authority: every coordinate below is

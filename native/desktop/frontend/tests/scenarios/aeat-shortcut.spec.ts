@@ -2,6 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { label } from "../support/strings";
 import { startFromDocs, open } from "../support/scenarioShell";
 
+// The AEAT shortcut: it opens the browser page, never restores it, and says when the host cannot open it.
+
 test.beforeEach(async ({ page: target }) => {
   await startFromDocs(target);
 });

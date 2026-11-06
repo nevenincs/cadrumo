@@ -63,12 +63,14 @@ from ...domain.modelos.source_disagreement import SourceDisagreementFact, Source
 from ...domain.modelos.work_unit import WorkUnit
 from ..aggregation.source_diagnostic_reason import CalculationSourceDiagnosticReason
 from ..aggregation.source_mesh import (
+    BorradorSourceProvenance,
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
 from ..aggregation.source_resolution_operations import (
     PrecedenceKeyKind,
+    PrecedenceOverlay,
     PrecedenceTier,
     TierDivergence,
     TierValueProvenance,
@@ -198,54 +200,14 @@ def resolve_calculation_binding_channels(
         operation=operation,
         profile=profile,
     )
-    backend_tier = CalculationSourceResolution(
-        resolver_id="calculate_backend_bindings",
-        binding_values=dict(backend_binding_values),
-    )
-    caller_tier = CalculationSourceResolution(
-        resolver_id="calculate_caller_bindings",
-        binding_values=dict(caller_binding_values),
-        enum_binding_values=dict(caller_enum_binding_values),
-    )
-    overlay = merge_source_resolutions_by_precedence(
-        (
-            PrecedenceTier(
-                role=SourceDisagreementRole.PROFILE,
-                resolution=profile_resolution,
-                source_family=BindingSourceKind.PROFILE.value,
-                provenance=_binding_keyed_provenance(profile_resolution, BindingSourceKind.PROFILE.value),
-            ),
-            PrecedenceTier(
-                role=SourceDisagreementRole.BACKEND,
-                resolution=backend_tier,
-                source_family=_BACKEND_SOURCE_FAMILY,
-                provenance=_backend_binding_provenance(
-                    snapshot.revision, backend_binding_values, backend_source_provenance
-                ),
-            ),
-            PrecedenceTier(
-                role=SourceDisagreementRole.BORRADOR,
-                resolution=borrador_resolution,
-                source_family=BindingSourceKind.BORRADOR.value,
-                provenance=_binding_keyed_provenance(
-                    borrador_resolution,
-                    BindingSourceKind.BORRADOR.value,
-                    evidence_ref=(
-                        None
-                        if borrador_resolution.borrador_provenance is None
-                        else borrador_resolution.borrador_provenance.snapshot_id
-                    ),
-                ),
-            ),
-            PrecedenceTier(
-                role=SourceDisagreementRole.CALLER,
-                resolution=caller_tier,
-                source_family=OPERATOR_INPUT_SOURCE_FAMILY,
-                provenance=_caller_provenance(
-                    PrecedenceKeyKind.BINDING, (*caller_binding_values, *caller_enum_binding_values)
-                ),
-            ),
-        ),
+    overlay = _overlay_binding_tiers(
+        snapshot,
+        profile_resolution=profile_resolution,
+        borrador_resolution=borrador_resolution,
+        caller_binding_values=caller_binding_values,
+        caller_enum_binding_values=caller_enum_binding_values,
+        backend_binding_values=backend_binding_values,
+        backend_source_provenance=backend_source_provenance,
     )
     merged = overlay.resolution
     resolved_bindings = dict(sorted(merged.binding_values.items()))
@@ -289,15 +251,7 @@ def resolve_calculation_binding_channels(
         date_bindings=resolved_date_bindings,
         boolean_bindings=resolved_boolean_bindings,
         borrador_snapshot_id=borrador_provenance.snapshot_id if borrador_provenance is not None else None,
-        bindings_sourced_from_borrador=(
-            ()
-            if borrador_provenance is None
-            else tuple(
-                binding_id
-                for binding_id in borrador_provenance.bindings_sourced
-                if overlay.selected_binding_roles.get(binding_id) is SourceDisagreementRole.BORRADOR
-            )
-        ),
+        bindings_sourced_from_borrador=_bindings_won_by_borrador(borrador_provenance, overlay),
         precedence_diagnostics=precedence_divergence_diagnostics(
             (*overlay.divergences, *casilla_divergences),
             screen=screen,
@@ -314,6 +268,81 @@ def resolve_calculation_binding_channels(
                 if _BINDING_REF_MARKER in row.source_ref
                 and row.source_ref.rsplit(_BINDING_REF_MARKER, 1)[1] in profile_scalar_binding_ids
             )
+        ),
+    )
+
+
+def _bindings_won_by_borrador(
+    borrador_provenance: BorradorSourceProvenance | None, overlay: PrecedenceOverlay
+) -> tuple[BindingId, ...]:
+    """The borrador's bindings whose final value still came from the borrador tier."""
+    if borrador_provenance is None:
+        return ()
+    return tuple(
+        binding_id
+        for binding_id in borrador_provenance.bindings_sourced
+        if overlay.selected_binding_roles.get(binding_id) is SourceDisagreementRole.BORRADOR
+    )
+
+
+def _overlay_binding_tiers(
+    snapshot: RegistrySnapshot,
+    *,
+    profile_resolution: CalculationSourceResolution,
+    borrador_resolution: CalculationSourceResolution,
+    caller_binding_values: Mapping[BindingId, Decimal],
+    caller_enum_binding_values: Mapping[BindingId, str],
+    backend_binding_values: Mapping[BindingId, Decimal],
+    backend_source_provenance: Sequence[CalculationSourceRef],
+) -> PrecedenceOverlay:
+    """Overlay the profile, backend, borrador and caller tiers in that precedence order."""
+    backend_tier = CalculationSourceResolution(
+        resolver_id="calculate_backend_bindings",
+        binding_values=dict(backend_binding_values),
+    )
+    caller_tier = CalculationSourceResolution(
+        resolver_id="calculate_caller_bindings",
+        binding_values=dict(caller_binding_values),
+        enum_binding_values=dict(caller_enum_binding_values),
+    )
+    return merge_source_resolutions_by_precedence(
+        (
+            PrecedenceTier(
+                role=SourceDisagreementRole.PROFILE,
+                resolution=profile_resolution,
+                source_family=BindingSourceKind.PROFILE.value,
+                provenance=_binding_keyed_provenance(profile_resolution, BindingSourceKind.PROFILE.value),
+            ),
+            PrecedenceTier(
+                role=SourceDisagreementRole.BACKEND,
+                resolution=backend_tier,
+                source_family=_BACKEND_SOURCE_FAMILY,
+                provenance=_backend_binding_provenance(
+                    snapshot.revision, backend_binding_values, backend_source_provenance
+                ),
+            ),
+            PrecedenceTier(
+                role=SourceDisagreementRole.BORRADOR,
+                resolution=borrador_resolution,
+                source_family=BindingSourceKind.BORRADOR.value,
+                provenance=_binding_keyed_provenance(
+                    borrador_resolution,
+                    BindingSourceKind.BORRADOR.value,
+                    evidence_ref=(
+                        None
+                        if borrador_resolution.borrador_provenance is None
+                        else borrador_resolution.borrador_provenance.snapshot_id
+                    ),
+                ),
+            ),
+            PrecedenceTier(
+                role=SourceDisagreementRole.CALLER,
+                resolution=caller_tier,
+                source_family=OPERATOR_INPUT_SOURCE_FAMILY,
+                provenance=_caller_provenance(
+                    PrecedenceKeyKind.BINDING, (*caller_binding_values, *caller_enum_binding_values)
+                ),
+            ),
         ),
     )
 
