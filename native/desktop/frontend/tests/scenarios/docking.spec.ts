@@ -22,7 +22,7 @@ test.beforeEach(async ({ page }) => {
         layout: {
           page: "docs",
           docsShown: true,
-          tuiShown: true,
+          tuiShown: false,
           agentShown: false,
           panelOpen: true,
           tab: "console",
