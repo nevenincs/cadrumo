@@ -14,6 +14,8 @@ import {
   area,
 } from "../support/ledgerSetup";
 
+// The Ledger page's Setup sections over the scenario host's made-up ledger: a rule made from a selection and its run staged, ratios by year, and an own account added through the protected body and shown masked only.
+
 test("a rule made from a selection is prefilled, saved, and its run staged", async ({
   page: target,
 }) => {

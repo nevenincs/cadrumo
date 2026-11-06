@@ -1,6 +1,6 @@
 import "./support/servedLimits";
 import { expect, test } from "@playwright/test";
-import type { LedgerRuleRow } from "../src/shell/ledgerSetup";
+import type { LedgerRuleRow } from "../src/shell/ledgerClassificationSetup";
 import { ruleApplyClashes } from "../src/shell/ledgerPlan";
 import {
   actionRows,

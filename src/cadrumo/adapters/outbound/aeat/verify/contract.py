@@ -156,7 +156,7 @@ async def _build_default_browser_session() -> VerifyBrowserSessionLike:
 
     Loads :func:`core.config.load_settings`, materialises the
     central :func:`adapters.outbound.aeat.browser.factory.default_browser_session_factory`,
-    checks the result with :func:`_is_verify_browser_session_like`, and returns
+    checks the result with :func:`is_verify_browser_session_like`, and returns
     a session the caller is responsible for closing.
     """
     from .....core.config import load_settings

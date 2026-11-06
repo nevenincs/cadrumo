@@ -4,7 +4,7 @@ import {
   movementDocuments,
 } from "../src/components/ledger/inspector/movementDocuments";
 import { effectiveFacts, storedFieldValue } from "../src/shell/ledgerStage";
-import type { EvidenceRecord } from "../src/shell/ledger";
+import type { EvidenceRecord } from "../src/shell/ledgerDocumentOperations";
 import { hexId, movement } from "./support/ledger";
 
 const record: EvidenceRecord = {

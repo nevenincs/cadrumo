@@ -3,7 +3,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Icon, type IconName } from "@/components/ui/icon";
-import type { SedeViewFailureCode } from "../../ipc/contract";
+import type { SedeViewFailureCode } from "../../ipc/sedeViewMessages";
 import { useStrings } from "../../shell/strings";
 import type { ChooserOffer, DownloadOffer, TransferNote } from "./browserModel";
 import { failureText, noticeText, transferText } from "./browserWords";

@@ -2,6 +2,8 @@ import { expect, test } from "@playwright/test";
 import { label } from "../support/strings";
 import { button, field, openLedger, openAssets } from "../support/ledgerSetup";
 
+// The Ledger page's Setup sections over the scenario host's made-up ledger: the Assets tab's Stock area: an inventory valuation preview, unit costs and the files a closing value takes.
+
 test("an inventory valuation preview records nothing", async ({
   page: target,
 }) => {

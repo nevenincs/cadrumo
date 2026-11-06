@@ -440,7 +440,7 @@ def _parse_bulk_invoice_row(
     decimal_separator: DecimalSeparatorValue = DecimalSeparator.PERIOD,
     declared_country: str | None = None,
 ) -> BulkInvoiceImportRow:
-    """Return a validated :class:`BulkInvoiceImportRow`, or raise :class:`_RowParseError`.
+    """Return a validated :class:`BulkInvoiceImportRow`, or raise :class:`RowParseError`.
 
     Every field failure is attributed to its originating column name so a
     refusal names both the row number and the field that failed

@@ -65,6 +65,7 @@ from ...domain.modelos.protocols import (
     VerificationReportCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ...domain.user_profile.errors import ProfileSchemaValidationError
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..aggregation.renta_imputation import revision_reads_imputation_criterion
 from ..live.borrador_100_import import borrador_pdf_extraction_profile
@@ -269,7 +270,13 @@ def _profile_context_values(
         for block in section.blocks
     ):
         return dict[FilingProducerKey, ModeloFormScalar]()
-    return resolve_profile_identity_producer_values(bucket_id=str(bucket_id), operation=operation)
+    try:
+        return resolve_profile_identity_producer_values(bucket_id=str(bucket_id), operation=operation)
+    except ProfileSchemaValidationError:
+        # A stored name past a producer's bound cannot be shaped into header
+        # context. The form still opens and the header states no identity; the
+        # export path is what refuses it and names the profile field to shorten.
+        return dict[FilingProducerKey, ModeloFormScalar]()
 
 
 def _profile_binding_context_values(

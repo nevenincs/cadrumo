@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { DesktopLanguage } from "../ipc/contract";
+import type { DesktopLanguage } from "../ipc/environment";
 import type { Host } from "./host";
 import type { AccountPhase } from "./signIn";
 import { OUTPUT_LANGUAGES } from "./strings";

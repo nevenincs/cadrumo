@@ -184,7 +184,7 @@ def indexed_deadline_window_year(
     """Project one filing year's complete window index from a pinned operation.
 
     Reused for a generation already projected for this year; see
-    :data:`_DEADLINE_WINDOW_INDEX`.
+    :data:`DEADLINE_WINDOW_INDEX`.
     """
     key = (operation.pin(), year)
     with _DEADLINE_WINDOW_INDEX_LOCK:

@@ -21,8 +21,7 @@ for it is the value the filed record addresses.
 
 from __future__ import annotations
 
-from collections.abc import Collection, Generator, Mapping, Sequence
-from contextlib import contextmanager
+from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 
@@ -41,12 +40,12 @@ from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevi
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.contribuyente.entity_type import entity_type_natural_person_token
-from ...domain.user_profile.errors import ProfileNotFoundError
+from ...domain.user_profile.errors import ProfileNotFoundError, UserProfileError
 from ...domain.user_profile.registry_contract import profile_binding_selectors
 from ...domain.user_profile.schema import ProfileSchemaDefinition
 from ...domain.user_profile.values import UserProfileFactValue, compose_legal_full_name
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
-from ..filing.export_producer import identity_contact_producer_values
+from ..filing.identity_contact_producer import identity_contact_producer_values
 from ..filing.producer_snapshot import DeclarationContactFacts, PresenterIdentity, TaxpayerIdentityFacts
 
 # Reuse the public defining module's canonical fact-index and scalar resolver;
@@ -564,8 +563,11 @@ def _declaration_contact_from_profile_facts(
     """Shape only the declaration's contact fields, preserving absent components."""
     phone = str(facts.get(_CONTACT_PERSON_PHONE_KEY) or "").strip()
     full_name = str(facts.get(_CONTACT_PERSON_NAME_KEY) or "").strip()
-    with _refusing_overlong_profile_text(_CONTACT_TEXT_PROFILE_FACTS, schema=schema):
-        return DeclarationContactFacts(phone=phone or None, full_name=full_name or None)
+    return _built_within_profile_text_bounds(
+        lambda: DeclarationContactFacts(phone=phone or None, full_name=full_name or None),
+        _CONTACT_TEXT_PROFILE_FACTS,
+        schema=schema,
+    )
 
 
 def identity_from_profile_facts(
@@ -606,7 +608,8 @@ def _taxpayer_identity_facts(
     schema: ProfileSchemaDefinition,
 ) -> TaxpayerIdentityFacts:
     """Shape natural-person and entity names into the producer's four facts."""
-    with _refusing_overlong_profile_text(_IDENTITY_TEXT_PROFILE_FACTS, schema=schema):
+
+    def shape() -> TaxpayerIdentityFacts:
         if entity_type == entity_type_natural_person_token().value:
             full_name = compose_legal_full_name(surnames=surnames, name=name)
             return TaxpayerIdentityFacts(
@@ -623,31 +626,48 @@ def _taxpayer_identity_facts(
             full_name=registered or None,
         )
 
+    return _built_within_profile_text_bounds(shape, _IDENTITY_TEXT_PROFILE_FACTS, schema=schema)
 
-@contextmanager
-def _refusing_overlong_profile_text(
+
+def _built_within_profile_text_bounds[Built](
+    build: Callable[[], Built],
     profile_facts: Mapping[str, str],
     *,
     schema: ProfileSchemaDefinition,
-) -> Generator[None]:
+) -> Built:
     """Report a stored text that overruns a producer's bound as the profile fact to correct.
 
     A profile written before its field declared a bound, or a composed name each of
     whose parts fits, reaches the producer here. The operator declares the profile
     fact and never sees the producer record, so the refusal names the fact.
+
+    The refusal is raised once the handler has closed, so the validation error,
+    which holds the stored text, is neither its cause nor its context.
     """
     try:
-        yield
+        return build()
     except ValidationError as exc:
-        for error in exc.errors(include_input=False, include_url=False):
-            context = error.get("ctx")
-            if error["type"] == "string_too_long" and context is not None:
-                raise profile_text_too_long_error(
-                    profile_facts[str(error["loc"][0])],
-                    limit=context["max_length"],
-                    schema=schema,
-                ) from exc
-        raise
+        refusal = _overlong_profile_text_refusal(exc, profile_facts, schema=schema)
+        if refusal is None:
+            raise
+    raise refusal
+
+
+def _overlong_profile_text_refusal(
+    exc: ValidationError,
+    profile_facts: Mapping[str, str],
+    *,
+    schema: ProfileSchemaDefinition,
+) -> UserProfileError | None:
+    for error in exc.errors(include_input=False, include_url=False):
+        context = error.get("ctx")
+        if error["type"] == "string_too_long" and context is not None:
+            return profile_text_too_long_error(
+                profile_facts[str(error["loc"][0])],
+                limit=context["max_length"],
+                schema=schema,
+            )
+    return None
 
 
 def _profile_export_values_from_facts(

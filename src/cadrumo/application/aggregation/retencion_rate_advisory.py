@@ -189,7 +189,7 @@ def art95_refs(*, effective_date: date) -> tuple[LegalRefId, ...]:
 def administrador_refs(*, effective_date: date) -> tuple[LegalRefId, ...]:
     """Return the administrator-rate grounding, resolved once per process.
 
-    Same rationale as :func:`_art95_refs`: every administrador diagnostic in
+    Same rationale as :func:`art95_refs`: every administrador diagnostic in
     this module cites the same set, so resolving it once per process keeps a
     disclosure from costing a registry load per row.
     """

@@ -3,6 +3,8 @@ import { label } from "../support/strings";
 import { startFromDocs, open } from "../support/scenarioShell";
 import { calendarButton } from "../support/scenarioRail";
 
+// The documentation pane: its origin and bridge, navigation controls, search, language and the palette's section.
+
 test.beforeEach(async ({ page: target }) => {
   await startFromDocs(target);
 });

@@ -964,7 +964,7 @@ def _redact_cli_string_cached(text: str, reveal_identifiers: bool, admission: Ha
     The cache holds each input string in PLAINTEXT, next to its redaction, for
     the lifetime of the process: a tax identifier that was redacted on the way
     out stays readable in memory until it is evicted. The bound is 16,384
-    entries of at most :data:`_CLI_STRING_CACHE_MAX_LENGTH` characters each. A
+    entries of at most :data:`CLI_STRING_CACHE_MAX_LENGTH` characters each. A
     one-shot CLI process exits moments later; the TUI and external client hosts are
     long-lived and keep the entries for as long as they run.
 

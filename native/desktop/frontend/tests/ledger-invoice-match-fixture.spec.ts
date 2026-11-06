@@ -4,8 +4,8 @@ import { settlementOf } from "../src/dev/ledgerSettlement";
 import type {
   CatalogueInvoice,
   LedgerInvoiceMatchPair,
-  LedgerRow,
-} from "../src/shell/ledger";
+} from "../src/shell/ledgerInvoiceOperations";
+import type { LedgerRow } from "../src/shell/ledger";
 import recorded from "@fixtures/ledger-recordings/ledgerInvoiceMatch.json" with { type: "json" };
 import { catalogueInvoice, hexId, movement } from "./support/ledger";
 

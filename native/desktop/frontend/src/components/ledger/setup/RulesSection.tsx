@@ -9,7 +9,7 @@ import { facts, factsGap } from "@/shell/compose";
 import type {
   LedgerRuleApplyResult,
   LedgerRuleRow,
-} from "../../../shell/ledgerSetup";
+} from "../../../shell/ledgerClassificationSetup";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold } from "../WritePause";
 import { categoryLabel, classificationLabel } from "../movements/movementWords";

@@ -72,6 +72,7 @@ from cadrumo.application.modelo.calculation_screen import calculation_screen_out
 from cadrumo.application.modelo.export_ports import ModeloExportPorts
 from cadrumo.application.modelo.export_sink import ModeloExportOutputPathError
 from cadrumo.application.modelo.review_package_signing import ensure_review_package_signing_keypair
+from cadrumo.core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from cadrumo.core.calculation_report_format import CalculationReportDocumentFormat
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.external_constants import OutputLanguage
@@ -576,18 +577,41 @@ def test_every_declared_document_format_has_a_serialiser() -> None:
 
 
 def test_report_rows_ground_every_casilla_without_inventing_a_source_trace(repos: Repos) -> None:
-    """Grounding is the registry's own, and an unsourced revision reports no trace.
+    """Grounding is the registry's own, and the only trace is one the registry justifies.
 
     The Modelo 130 baseline resolves its figures from operator inputs and a
-    previous-filing binding rather than from the ledger mesh, so the revision
-    persists no resolver provenance. The report carries that absence as absence:
-    a row with no trace is not given one, and the keyed-provenance path is
-    exercised where traces actually exist, on the Modelo 303 case below.
+    previous-filing binding rather than from the ledger mesh. Its one resolver
+    trace is the profile's: each binding the registry declares as profile-sourced
+    and the calculation consumed carries a primary profile reference, and nothing
+    else does. A profile fact feeds no single casilla at resolution time, so the
+    report attaches that trace to no row; a row with no trace is not given one,
+    and the keyed-provenance path is exercised where casilla-linked traces exist,
+    on the Modelo 303 case below.
     """
     work_unit, revision = _verified_130(repos)
     report = _report(repos, work_unit, revision)
+    registry_revision = published_authority_operation().revision(
+        str(work_unit.modelo), revision.registry_snapshot_ref.revision_id
+    )
+    consumed_profile_bindings = {
+        binding.id
+        for binding in registry_revision.bindings
+        if binding.source is BindingSourceKind.PROFILE and binding.id in revision.binding_overrides
+    }
 
-    assert revision.source_provenance == ()
+    assert consumed_profile_bindings
+    assert {ref.source_ref for ref in revision.source_provenance} == {
+        f"profile:{work_unit.bucket_id}:binding:{binding_id}" for binding_id in consumed_profile_bindings
+    }
+    assert len(revision.source_provenance) == len(consumed_profile_bindings)
+    assert all(
+        ref.resolved_binding_source is BindingSourceKind.PROFILE
+        and ref.contributor_binding_source is BindingSourceKind.PROFILE
+        and ref.lineage_role is CalculationSourceLineageRole.PRIMARY
+        and ref.parent_source_ref is None
+        and ref.source_casilla_ids == ()
+        for ref in revision.source_provenance
+    )
     assert all(row.source_provenance == () for row in report.rows)
     assert all(row.legal_refs and row.source_refs for row in report.rows)
     assert all(row.label and row.section_path and row.number for row in report.rows)

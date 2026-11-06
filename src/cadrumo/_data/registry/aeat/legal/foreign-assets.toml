@@ -192,22 +192,6 @@ period_selector = { year_from = 2012, periods = ["0A"] }
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/modelo_720.pdf"
 review_status = "pending_review"
 
-# DR720's field instructions (physical page 6, printed page 15) establish
-# the declaration-contact role and its telephone/name components. This role
-# reuses the pinned document receipt; aeat-dr-720 remains its layout authority.
-[sources."aeat-modelo-720-contact-instructions"]
-evidence_tier = "official_source_guidance"
-authority = "aeat"
-kind = "instructions"
-corpus_path = "corpus/aeat_official/disenos_registro/modelo_720/files/01-720-599-kb-pdf.pdf"
-sha256 = "ac324b935b690f0b6fe12dc8351c324cc804170750f483b0768d6417dd4976b7"
-bytes = 612620
-retrieved_at = 2026-05-03
-applies_from = 2013-02-01
-period_selector = { year_from = 2012, periods = ["0A"] }
-source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/modelo_720.pdf"
-review_status = "pending_review"
-
 [sources."aeat-modelo-720-procedure"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"
@@ -222,6 +206,23 @@ review_status = "pending_review"
 
 [sources."boe-modelo-720-2013-form"]
 evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hap-72-2013.html"
+sha256 = "8eb8c09c311f98623db7edd1fe38d777f2f237ee1ca2fc5803f9011ed1d35eb4"
+bytes = 130509
+retrieved_at = 2026-05-06
+published_at = 2013-01-31
+applies_from = 2013-02-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-954"
+review_status = "pending_review"
+
+# Anexo II of the approving Orden prints the type-1 "PERSONA CON QUIÉN
+# RELACIONARSE" instructions: 59-67 telephone and 68-107 surnames and name.
+# That text grounds what the two contact facts mean; boe-modelo-720-2013-form
+# and aeat-dr-720 remain the layout authority for the same positions.
+[sources."boe-modelo-720-2013-contact-guidance"]
+evidence_tier = "official_source_guidance"
 authority = "boe"
 kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hap-72-2013.html"

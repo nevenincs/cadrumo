@@ -176,7 +176,7 @@ class TaxpayerIdentityFacts(BaseModel):
     that exact fact, and an absent fact remains absent.
     """
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     legal_name: _NonBlankName | None
     given_name: _NonBlankName | None
@@ -212,7 +212,7 @@ class DeclarationContactFacts(BaseModel):
     a defect.
     """
 
-    model_config = STRICT_FROZEN_CONFIG
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     phone: _NonBlankName | None = None
     full_name: _NonBlankName | None = None
