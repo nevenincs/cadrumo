@@ -1188,7 +1188,7 @@ _test-registry-calculations-parallel:
 # they read first. A current family is left unchanged.
 [private]
 _test-registry-seed:
-    @uv run --no-sync python -m dev.fixture_projections seed assets-served-words
+    @uv run --no-sync python -m dev.fixture_projections seed assets-served-words desktop-year-authority
 
 [private]
 _test-registry-conformance: _test-registry-seed
@@ -1379,7 +1379,7 @@ test-gate changed_files="":
 # collection and artifact-backed runtime-load preflights before execution.
 [doc('Run the registry conformance suite (slow: walks every bundled revision).')]
 [group('test')]
-test-registry-conformance:
+test-registry-conformance: _test-registry-seed
     @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not resident_service and not external_tool and not os_keychain and not windows_only and not private_ingest_corpus" dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/form_layout/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
 
 [doc('Run the committed cli-sequence goldens gate for supplied changed paths or the full tree; reuses a recorded clean verdict.')]
