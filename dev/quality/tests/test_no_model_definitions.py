@@ -16,6 +16,9 @@ Scanned, by kind of file:
   ``src/cadrumo_mcp``, ``src/cadrumo_client`` and ``src/cadrumo_agent_service``,
   except test directories and the shared test support in ``src/cadrumo/tests``.
 - TOML: every ``.toml`` file under ``native/component-pins``.
+- JSON: ``native/llamacpp-pins.json``, the engine program's build pins, read with
+  the TOML rules. The engine program is not a model: its pins name a release, a
+  target and an archive, and no model.
 - Rust: every ``.rs`` file under ``native/application`` and ``native/desktop``,
   tests included, so a fixture names a synthetic model such as
   ``synthetic-text:test`` and never a real one.
@@ -80,6 +83,7 @@ literal is not seen.
 from __future__ import annotations
 
 import ast
+import json
 import os
 import re
 import tomllib
@@ -102,6 +106,7 @@ class Kind(StrEnum):
 
     PYTHON = "python"
     TOML = "toml"
+    JSON = "json"
     RUST = "rust"
     TYPESCRIPT = "typescript"
     ENV = "env"
@@ -142,6 +147,7 @@ _PRODUCT_ROOTS: Final = (
 )
 _TEST_SUPPORT: Final = REPO_ROOT / "src" / "cadrumo" / "tests"
 _DATA_ROOT: Final = REPO_ROOT / "native" / "component-pins"
+_ENGINE_PINS: Final = REPO_ROOT / "native" / "llamacpp-pins.json"
 _MINIMUM_PYTHON_FILES: Final = 2000
 _RUST_ROOTS: Final = (REPO_ROOT / "native" / "application", REPO_ROOT / "native" / "desktop")
 _TYPESCRIPT_ROOTS: Final = (REPO_ROOT / "native" / "desktop",)
@@ -315,9 +321,7 @@ def _toml_tables(value: object) -> Iterator[Mapping[str, object]]:
             yield from _toml_tables(child)
 
 
-def toml_findings(label: str, text: str) -> list[Finding]:
-    """Name each way one TOML file defines a model."""
-    document = tomllib.loads(text)
+def _document_findings(label: str, document: Mapping[str, object]) -> list[Finding]:
     found: list[Finding] = []
     for key, value in _toml_strings(document):
         found.extend(_literal_findings(label, 0, value))
@@ -330,6 +334,19 @@ def toml_findings(label: str, text: str) -> list[Finding]:
     if isinstance(models, list):
         found.extend(_table_findings(label, 0, len(models)))
     return found
+
+
+def toml_findings(label: str, text: str) -> list[Finding]:
+    """Name each way one TOML file defines a model."""
+    return _document_findings(label, tomllib.loads(text))
+
+
+def json_findings(label: str, text: str) -> list[Finding]:
+    """Name each way one JSON file defines a model, by the rules of a TOML file."""
+    document = json.loads(text)
+    if not isinstance(document, dict):
+        raise TypeError(f"{label} holds no JSON object")
+    return _document_findings(label, cast(Mapping[str, object], document))
 
 
 # --------------------------------------------------------------------------
@@ -633,6 +650,8 @@ def findings(kind: Kind, label: str, text: str) -> list[Finding]:
             return python_findings(label, text)
         case Kind.TOML:
             return toml_findings(label, text)
+        case Kind.JSON:
+            return json_findings(label, text)
         case Kind.RUST:
             return source_findings(label, text, rust=True)
         case Kind.TYPESCRIPT:
@@ -669,6 +688,7 @@ def _shipped_files() -> Iterator[tuple[Kind, Path]]:
         yield Kind.PYTHON, path
     for path in sorted(_DATA_ROOT.glob("*.toml")):
         yield Kind.TOML, path
+    yield Kind.JSON, _ENGINE_PINS
     for path in _native_files(_RUST_ROOTS, frozenset({".rs"})):
         yield Kind.RUST, path
     for path in _native_files(_TYPESCRIPT_ROOTS, _TYPESCRIPT_SUFFIXES):
@@ -705,6 +725,10 @@ _FIXTURES: Final[Mapping[tuple[Kind, Row], tuple[str, str]]] = {
         '[roles]\nvision = "gemma99:4b"\n',
         '[program]\nname = "ollama"\nversion = "0.40.10"\n',
     ),
+    (Kind.JSON, Row.NAME): (
+        '{"roles": {"vision": "gemma99:4b"}}\n',
+        '{"program": "llama-server", "tag": "b12184", "target": "linux-x86-64"}\n',
+    ),
     (Kind.RUST, Row.NAME): (
         'const DEFAULT: &str = "qwen99-vl:2b";\nfn raw() -> &\'static str { r#"widget:7b"# }\n',
         '/// Reads claude-sonnet-99 from the catalogue.\n// and qwen99-vl:2b\nconst P: &str = "ollama";\n'
@@ -726,6 +750,10 @@ _FIXTURES: Final[Mapping[tuple[Kind, Row], tuple[str, str]]] = {
         f'[pin]\nmanifest_digest = "{_DIGEST}"\n',
         f'[source]\nchecksum = "{_HASH}"\n',
     ),
+    (Kind.JSON, Row.DIGEST): (
+        f'{{"pin": {{"manifest_digest": "{_DIGEST}"}}}}\n',
+        f'{{"archive": {{"sha256": "{_HASH}"}}}}\n',
+    ),
     (Kind.RUST, Row.DIGEST): (
         f'const PIN: &str = "sha256:{_DIGEST}";\n',
         f'const CONTENT_HASH: &str = "{_HASH}";\n// sha256:{_DIGEST}\n',
@@ -744,6 +772,7 @@ _FIXTURES: Final[Mapping[tuple[Kind, Row], tuple[str, str]]] = {
         "OTHER = (Entry(model_id=a), Entry(model_id=b))\n",
     ),
     (Kind.TOML, Row.TABLE): ("[[models]]\ntier = 1\n\n[[models]]\ntier = 2\n", "[[models]]\ntier = 1\n"),
+    (Kind.JSON, Row.TABLE): ('{"models": [{"tier": 1}, {"tier": 2}]}\n', '{"models": [{"tier": 1}]}\n'),
     (Kind.RUST, Row.TABLE): (
         'const TABLE: [Entry; 2] = [Entry { model_id: "alpha", tier: 1 }, Entry { model_id: "beta", tier: 2 }];\n',
         'const ONE: [Entry; 1] = [Entry { model_id: "alpha", tier: 1 }];\n'
@@ -770,6 +799,10 @@ _FIXTURES: Final[Mapping[tuple[Kind, Row], tuple[str, str]]] = {
         '[model]\nmodel_id = "alpha"\nsize_bytes = 123\n',
         '[model]\nname = "alpha"\nsize_bytes = 123\n\n[floor]\nsize_bytes = 5\n',
     ),
+    (Kind.JSON, Row.SIZE): (
+        '{"model": {"model_id": "alpha", "size_bytes": 123}}\n',
+        '{"archives": [{"target": "windows-x86-64", "download_bytes": 123}]}\n',
+    ),
     (Kind.RUST, Row.SIZE): (
         'const ENTRY: Entry = Entry { model_name: "alpha", size_bytes: 1_234 };\n',
         'const ENTRY: Entry = Entry { model_name: "alpha", size_bytes };\n'
@@ -793,6 +826,10 @@ _FIXTURES: Final[Mapping[tuple[Kind, Row], tuple[str, str]]] = {
     (Kind.TOML, Row.LICENCE): (
         '[model]\nmodel_id = "alpha"\nlicence = "acme-open"\n\n[terms]\ntext = "Llama 3 Community License"\n',
         '[dependency]\nname = "alpha"\nlicence = "acme-open"\n',
+    ),
+    (Kind.JSON, Row.LICENCE): (
+        '{"model": {"model_id": "alpha", "licence": "acme-open"}, "terms": "Llama 3 Community License"}\n',
+        '{"program": {"name": "alpha", "licence": "acme-open"}}\n',
     ),
     (Kind.RUST, Row.LICENCE): (
         'const ENTRY: Entry = Entry { model_id: "alpha", spdx: "acme-open" };\n'
@@ -867,6 +904,8 @@ def test_the_census_reads_every_kind_of_shipped_source() -> None:
     assert scanned[Kind.PYTHON] > _MINIMUM_PYTHON_FILES, f"the census read only {scanned[Kind.PYTHON]} Python files"
     assert (_DATA_ROOT / "local_ai_program.toml").is_file(), "the census missed the program pin data"
     assert scanned[Kind.TOML] >= 1
+    assert _ENGINE_PINS.is_file(), "the census missed the engine program's build pins"
+    assert scanned[Kind.JSON] == 1
     assert scanned[Kind.RUST] > 100, f"the census read only {scanned[Kind.RUST]} Rust files"
     assert scanned[Kind.TYPESCRIPT] > 300, f"the census read only {scanned[Kind.TYPESCRIPT]} TypeScript files"
     assert _ENVIRONMENT_TEMPLATE.is_file()

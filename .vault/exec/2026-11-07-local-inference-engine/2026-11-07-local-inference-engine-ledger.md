@@ -5,7 +5,7 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:2a4f42df086bca1fb8fc64664075a616c18736eb9be92bb6d2665ebb54f31740'
+body_hash: 'sha256:da01d0f26784c3b37934c73709a7e0ce0317c6fbf3d9e01b87cb597b2dbad7a6'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -59,6 +59,34 @@ related:
 - `S28` `verify:` `npm run check (90 node tests, tsc, eslint, prettier)` -> `pass`
 - `S28` `verify:` `npx playwright test tests/agent-live.spec.ts (38 tests)` -> `pass`
 - `S28` `by:` `vaultspec-high-executor`
+- `S11` `A` `dev/packaging/native/llama_server.py`
+- `S11` `A` `dev/packaging/native/platforms/elf.py`
+- `S11` `A` `dev/packaging/native/platforms/tests/test_elf.py`
+- `S11` `A` `dev/packaging/native/tests/test_llama_server.py`
+- `S11` `M` `dev/packaging/native/action_selection.py`
+- `S11` `M` `dev/packaging/native/assemble.py`
+- `S11` `M` `dev/packaging/native/assembly_staging.py`
+- `S11` `M` `dev/packaging/native/cmake_build.py`
+- `S11` `M` `dev/packaging/native/platforms/windows.py`
+- `S11` `M` `dev/packaging/native/platforms/tests/test_windows.py`
+- `S11` `M` `dev/packaging/native/tests/binary_fixtures.py`
+- `S11` `M` `dev/packaging/native/tests/test_platform_enrollment.py`
+- `S11` `M` `dev/packaging/tests/test_native_layout_entrypoints.py`
+- `S11` `M` `dev/quality/tests/test_no_model_definitions.py`
+- `S11` `M` `dev/quality/metadata/import_load_targets.json`
+- `S11` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S11` `M` `native/CMakeLists.txt`
+- `S11` `M` `native/cmake/BuildPaths.cmake`
+- `S11` `M` `native/cmake/Packaging.cmake`
+- `S11` `M` `native/package-layout.json`
+- `S11` `M` `native/platforms/macos-arm64.json`
+- `S11` `M` `native/CONTRACT.md`
+- `S11` `verify:` `pytest llama_server elf layout enrollment windows no_model_definitions no_git_cli assembly_refusals` -> `pass`
+- `S11` `verify:` `ruff check and format on dev/packaging and the model gate` -> `pass`
+- `S11` `verify:` `ty check on the touched modules` -> `pass`
+- `S11` `verify:` `lint-imports quick contract check` -> `pass`
+- `S11` `verify:` `import load targets recompiled` -> `pass`
+- `S11` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -73,6 +101,8 @@ related:
 - `S14` `by:` `vaultspec-high-executor`
 - `S14` Root build slot fixed two registry progress tests that unwrapped run.result by value before borrowing run; fix committed as e972b40632
 - `S28` Full npm test: 4 `desktop-*.spec.ts` files do not load on tui since a8ebeaaa9d (desktopShell.ts bridge path resolves to native/docs); remaining 2473 tests: 2454 passed, 9 skipped, 10 failed in calendar-place, modelo-related-filings, touch and ledger-invoice-match specs, none importing P06 modules, while concurrent fixture-date commits landed
+- `S11` Pending in the root build slot: CMake configure and build of the `llama_server` step, bundle build and test-native-bundle
+- `S11` Linux llama-server archives exceed the glibc 2.28 floor (x86-64 2.34, aarch64 2.38); staging refuses them by design
 
 ## Notes
 

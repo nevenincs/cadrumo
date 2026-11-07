@@ -33,6 +33,7 @@ from .layout import (
     entrypoint_files,
 )
 from .linux_desktop_runtime import stage as stage_linux_desktop_runtime
+from .llama_server import stage_llama_server
 from .service_descriptors import stage_service_descriptors
 from .stdlib import bundle as bundle_stdlib
 from .stdlib import bundle_identity, compile_packages_bytecode, compiler_identity
@@ -147,6 +148,7 @@ def stage_binaries(
     packages: Path,
     provenance: Mapping[str, object] | None,
     target: str,
+    llama_server: Path | None,
 ) -> tuple[
     list[str],
     tuple[ApplicationImage, ...],
@@ -177,6 +179,12 @@ def stage_binaries(
         development_executable.parent.mkdir(parents=True, exist_ok=True)
         reuse.copy(build / development_executable.name, development_executable)
     reuse.copy(build / files["bridge"], native / files["bridge"])
+    if not interpreter:
+        if llama_server is None:
+            raise ValueError("Application assembly requires the acquired llama-server")
+        # Staged before relocation: the POSIX backends then check the pinned program against the
+        # deployment floor, rewrite its loader paths and, on macOS, seal each of its images.
+        stage_llama_server(llama_server, root, layout, target, copy_function=reuse.copy)
     native_manifest = _relocate_native(timings, contract, provenance, python, packages, native, root, reuse)
     modules = native_manifest["modules"]
     if not interpreter:

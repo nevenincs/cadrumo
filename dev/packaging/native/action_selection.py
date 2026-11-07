@@ -60,6 +60,9 @@ def action_toolchain(configured: Mapping[str, object], action: str, target: str)
         selected["pins"] = {"resvg_py": pins["resvg_py"]}
     elif action == "agent":
         _select_agent_toolchain(selected, configured, files)
+    elif action == "llama":
+        # No builder tool takes part: the pin file and the acquisition module are enrolled inputs.
+        selected["builder_files"] = {}
     elif action != "product":
         raise ValueError(f"No shared producer selection for {action}")
     # Product wheels use Hatchling's Python/data hooks; native compilers and SDKs

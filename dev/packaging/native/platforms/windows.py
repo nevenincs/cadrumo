@@ -50,7 +50,7 @@ def assemble_native(
     modules, relocation = _relocate_modules(python, packages, native, root, copy_function)
     paths = _wheel_paths(packages, root)
     patches = _patch_wheel_loaders(packages, native, root)
-    dll_dirs = _validated_dll_directories(native, root)
+    dll_dirs = _validated_dll_directories(native, root, root / contract["paths"]["llama_server"])
     return {
         "modules": modules,
         "dll_directories": dll_dirs,
@@ -60,10 +60,10 @@ def assemble_native(
     }
 
 
-def _validated_dll_directories(native: Path, root: Path) -> list[str]:
+def _validated_dll_directories(native: Path, root: Path, program: Path) -> list[str]:
     # Entrypoint hosts run from the native directory: no bundled DLL there may shadow a host import.
     _refuse_shadowed_host_imports(native)
-    loader_files = _native_loader_files(native)
+    loader_files = _native_loader_files(native, program)
     imported_pyds = _imported_extensions(loader_files)
     searched_files = [p for p in loader_files if p.suffix.lower() == ".dll" or p.name.casefold() in imported_pyds]
     missing = imported_pyds - {p.name.casefold() for p in searched_files}
@@ -74,8 +74,14 @@ def _validated_dll_directories(native: Path, root: Path) -> list[str]:
     return dll_dirs
 
 
-def _native_loader_files(native: Path) -> list[Path]:
-    return [path for path in native.rglob("*") if path.suffix.lower() in {".dll", ".pyd"}]
+def _native_loader_files(native: Path, program: Path) -> list[Path]:
+    # The llama-server program runs as its own process and loads its libraries from beside it, so
+    # the interpreter's DLL search directories must not include them.
+    return [
+        path
+        for path in native.rglob("*")
+        if path.suffix.lower() in {".dll", ".pyd"} and not path.is_relative_to(program)
+    ]
 
 
 def _imported_extensions(loader_files: list[Path]) -> set[str]:

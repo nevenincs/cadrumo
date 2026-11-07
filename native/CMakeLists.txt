@@ -34,8 +34,22 @@ set(provision_inputs ${shared_inputs}
   "${PROJECT_SOURCE_DIR}/dev/packaging/runtime_wheelhouse_contract.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/uv_constraints.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/command_execution.py")
+# The pinned llama-server archive is a declared input: its pin file and the code that fetches,
+# verifies and unpacks it. The archive itself lives under the build tree, never under native/.
+set(llama_server_inputs ${shared_inputs}
+  "${PROJECT_SOURCE_DIR}/native/llamacpp-pins.json"
+  "${PROJECT_SOURCE_DIR}/dev/env/llamacpp_pins.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/llama_server.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/package_inventory.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/hashing.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/platforms/elf.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/platforms/macos_macho.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/platforms/pe.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/runtime_wheelhouse_contract.py")
 list(JOIN sdk_inputs "\n" input_lines)
 file(GENERATE OUTPUT "${PROJECT_BINARY_DIR}/inputs-sdk.txt" CONTENT "${input_lines}\n")
+list(JOIN llama_server_inputs "\n" input_lines)
+file(GENERATE OUTPUT "${PROJECT_BINARY_DIR}/inputs-llama.txt" CONTENT "${input_lines}\n")
 list(JOIN provision_inputs "\n" input_lines)
 file(GENERATE OUTPUT "${PROJECT_BINARY_DIR}/inputs-provision.txt" CONTENT "${input_lines}\n")
 set(tool_inputs ${shared_inputs} "${PROJECT_SOURCE_DIR}/dev/packaging/native/build_toolchain.py")
@@ -65,6 +79,14 @@ add_custom_target(python_dependencies
   BYPRODUCTS "${CADRUMO_PATH_RUNTIME}/ready"
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
 add_dependencies(python_dependencies python_sdk)
+cadrumo_build_step(step_comment llama_server GROUP dependencies
+  SUMMARY "fetch, verify and unpack the pinned llama-server archive for ${CADRUMO_TARGET}"
+  OUTPUTS "${CADRUMO_PATH_LLAMA_SERVER}")
+add_custom_target(llama_server
+  COMMAND ${CADRUMO_HELPER} llama --build "${PROJECT_BINARY_DIR}" --inputs "${PROJECT_BINARY_DIR}/inputs-llama.txt"
+  DEPENDS ${llama_server_inputs} "${PROJECT_BINARY_DIR}/inputs-llama.txt"
+  BYPRODUCTS "${CADRUMO_PATH_LLAMA_SERVER}/ready"
+  WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
 cadrumo_build_step(step_comment native_build_tools GROUP dependencies
   SUMMARY "install the pinned build-only tools" OUTPUTS "${CADRUMO_PATH_TOOLS}")
 add_custom_target(native_build_tools
@@ -74,6 +96,7 @@ add_custom_target(native_build_tools
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
 if(COMMAND cadrumo_register_clean)
   cadrumo_register_clean(TARGET python_sdk PATHS "${CADRUMO_PATH_PYTHON_SDK}")
+  cadrumo_register_clean(TARGET llama_server PATHS "${CADRUMO_PATH_LLAMA_SERVER}")
   cadrumo_register_clean(TARGET python_dependencies PATHS "${CADRUMO_PATH_RUNTIME}")
   cadrumo_register_clean(TARGET native_build_tools PATHS "${CADRUMO_PATH_TOOLS}")
 endif()

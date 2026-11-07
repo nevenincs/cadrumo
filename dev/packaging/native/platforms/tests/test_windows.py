@@ -12,6 +12,7 @@ import pytest
 from defusedxml import ElementTree
 
 from dev.packaging.native.platforms import windows
+from dev.packaging.native.tests.binary_fixtures import pe_with_imports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -167,3 +168,15 @@ def test_application_manifest_names_are_closed() -> None:
     for image, kind in (("installer", "release"), ("process", "debug")):
         with pytest.raises(ValueError):
             windows.application_manifest_name(image, kind)
+
+
+def test_the_llama_server_directory_stays_out_of_the_interpreters_dll_search_directories(tmp_path: Path) -> None:
+    root = tmp_path / "package"
+    native = root / "bin"
+    program = native / "llama"
+    program.mkdir(parents=True)
+    for name in ("python313.dll", "module.pyd", "llama/ggml.dll", "llama/llama-server-impl.dll"):
+        pe_with_imports(native / name)
+
+    assert windows._validated_dll_directories(native, root, program) == ["bin"]
+    assert {path.name for path in windows._native_loader_files(native, program)} == {"python313.dll", "module.pyd"}
