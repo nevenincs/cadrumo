@@ -178,6 +178,58 @@ def test_failure_retains_the_exact_phase_type_and_primary_without_private_messag
     assert context["cleanup_status"] == ("unconfirmed" if stage == "start" else "completed")
 
 
+@pytest.mark.parametrize("stage", ["request_write", "result_wait"])
+def test_calibration_sample_overrunning_its_budget_before_its_result_is_a_debug_rejection(
+    stage: str,
+    simulated_worker: SupervisedKdfWorker,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.DEBUG, logger=kdf_worker_supervision.__name__)
+    primary = TimeoutError(_PRIVATE)
+
+    def fail(*_args: object, **_kwargs: object) -> None:
+        raise primary
+
+    if stage == "result_wait":
+        reads = count(1)
+
+        def read(_worker: SupervisedKdfWorker) -> tuple[int, bytes]:
+            if next(reads) == 2:
+                raise primary
+            return KDF_FRAME_CONTROL, _PRIVATE.encode()
+
+        monkeypatch.setattr(SupervisedKdfWorker, "read_response_frame", read)
+    else:
+        monkeypatch.setattr(SupervisedKdfWorker, "write_request", fail)
+    with pytest.raises(TimeoutError), simulated_worker as worker:
+        worker.calibrate(_kdf())
+    record, context = _summary(caplog)
+    assert context["outcome"] == "sample_rejected" and context["stage"] == stage
+    assert record.levelno == logging.DEBUG
+
+
+def test_password_operation_timeout_after_its_response_stays_an_error(
+    simulated_worker: SupervisedKdfWorker, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.DEBUG, logger=kdf_worker_supervision.__name__)
+
+    def fail(_worker: SupervisedKdfWorker) -> None:
+        raise TimeoutError(_PRIVATE)
+
+    monkeypatch.setattr(SupervisedKdfWorker, "require_clean_worker_exit", fail)
+    wrapped = ProfileCustodyWrappedDek(
+        nonce_b64=base64.b64encode(b"n" * 12).decode(),
+        ciphertext_b64=base64.b64encode(b"c" * 32).decode(),
+        tag_b64=base64.b64encode(b"t" * 16).decode(),
+    )
+    with pytest.raises(TimeoutError), simulated_worker as worker:
+        worker.unwrap(password=_PRIVATE.encode(), kdf=_kdf(), wrapped_dek=wrapped, associated_data=_PRIVATE.encode())
+    record, context = _summary(caplog)
+    assert context["outcome"] == "failed" and context["stage"] == "clean_exit"
+    assert record.levelno == logging.ERROR
+
+
 def test_invalid_result_has_validation_failure_after_the_existing_clean_exit_sequence(
     simulated_worker: SupervisedKdfWorker, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:

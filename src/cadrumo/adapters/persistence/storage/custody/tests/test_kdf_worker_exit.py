@@ -324,6 +324,33 @@ def test_missing_result_terminates_writer_before_closing_blocked_reader(
         assert cast(float, context["kdf_cleanup_elapsed_ms"]) < 5_000
 
 
+def test_calibration_result_at_its_bound_with_a_clean_child_exit_is_a_debug_sample_rejection(
+    settings: Settings, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A calibration frame landing on the sample bound rejects that grid point without an error record."""
+    caplog.set_level(logging.DEBUG, logger=kdf_worker_supervision.__name__)
+    worker = SupervisedKdfWorker(deadline=time.monotonic() + 30, settings=settings)
+    require_exit = worker.require_clean_worker_exit
+
+    def require_exit_after_the_bound() -> None:
+        process = worker._process
+        assert process is not None
+        # The child answers and exits on its own; the sample budget ends in between.
+        assert process.wait(timeout=10) == 0
+        worker._deadline = time.monotonic()
+        require_exit()
+
+    monkeypatch.setattr(worker, "require_clean_worker_exit", require_exit_after_the_bound)
+    with pytest.raises(TimeoutError), worker:
+        worker.calibrate(_kdf())
+    records = [r for r in delivered_records(caplog) if r.msg == "kdf_worker_lifecycle"]
+    assert [r.levelno for r in records] == [logging.DEBUG]
+    context = _summary(caplog)
+    assert context["stage"] == "clean_exit" and context["error_type"] == "TimeoutError"
+    assert context["outcome"] == "sample_rejected" and context["exit_code"] == 0
+    assert context["cleanup_status"] == "completed"
+
+
 def test_valid_result_with_delayed_exit_is_refused_and_cleanup_is_bounded(
     settings: Settings, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
