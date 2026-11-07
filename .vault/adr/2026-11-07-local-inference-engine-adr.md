@@ -5,7 +5,7 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:3898a1edbc6944e59637043e2ac2716c6de78dd6d0f8915b85251069fe1078b6'
+body_hash: 'sha256:61c4ada559f386959623de9eb224c499f78a04bb46ccd4d13e92628040fdf628'
 related:
   - "[[2026-11-07-local-inference-engine-research]]"
   - "[[2026-10-24-rust-component-provisioning-adr]]"
