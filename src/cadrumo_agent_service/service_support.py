@@ -17,12 +17,16 @@ _LOGGER = get_logger("cadrumo_agent_service.service")
 HOSTED_CERTIFICATION_CACHE_SECONDS = 5.0
 LIFECYCLE_ADMISSION_SECONDS = 2.0
 """How long a request waits for tree lifecycle work, well inside the desktop's shortest exchange bound."""
-ADMIN_READ_SECONDS = 1.5
+ADMIN_READ_SECONDS = 3.0
 """How long a catalog or status request waits for its work before it is told the service is busy.
 
 The work goes on, and a request in the next few seconds is served its result:
 a cold catalog or a provider's sign-in probe can take longer than an
-administration exchange may hold one of the service's few slots."""
+administration exchange may hold one of the service's few slots. The bound
+must exceed the agent's own bound on one provider probe plus the service's
+work around the read, or a cold catalog whose slowest probe runs to its bound
+is told busy every time; it stays well inside the desktop's six-second
+catalog exchange."""
 ADMIN_READ_FRESH_SECONDS = 5.0
 """How long a finished catalog or status read is served to the requests that follow it."""
 
