@@ -775,6 +775,7 @@ def test_operation_backed_130_successive_confirmed_corrections_recompute_and_gua
     _assert_saved_content_kept(cr_repo.load().revisions[original_revision.calculation_revision_id], original_saved)
 
     records_before_decrease = fr_repo.load().model_dump(mode="json")
+    revisions_before_decrease = cr_repo.load().model_dump(mode="json")
     with pytest.raises(AmendmentComplementariaLiabilityDecreaseError):
         amend_modelo_revision(
             ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
@@ -787,7 +788,7 @@ def test_operation_backed_130_successive_confirmed_corrections_recompute_and_gua
             operation=operation,
         )
     assert fr_repo.load().model_dump(mode="json") == records_before_decrease
-    _assert_saved_content_kept(cr_repo.load().revisions[original_revision.calculation_revision_id], original_saved)
+    assert cr_repo.load().model_dump(mode="json") == revisions_before_decrease
 
 
 def test_amend_new_filing_is_current_complementaria_record(
