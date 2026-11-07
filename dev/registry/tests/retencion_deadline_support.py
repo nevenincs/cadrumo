@@ -89,6 +89,11 @@ def _calendar_path(calendar_year: int) -> Path:
     )
 
 
+def _century_of(year: int) -> int:
+    """The first year of the century a calendar year belongs to, which completes a two-digit year printed in it."""
+    return year - year % 100
+
+
 def calendar_is_bundled(calendar_year: int) -> bool:
     """Whether the Calendario del Contribuyente of one year is part of the bundled corpus."""
     return _calendar_path(calendar_year).is_file()
@@ -113,7 +118,7 @@ def published_cutoff_exceptions(calendar_year: int) -> dict[tuple[int, str], dat
         if numbered is not None:
             ordinal, unit, short_year, day, month_name = numbered.groups()
             token = f"{int(ordinal):02d}" if unit == "m" else f"{ordinal}T"
-            period_year = 2000 + int(short_year)
+            period_year = _century_of(calendar_year) + int(short_year)
             last_month = int(ordinal) * (3 if unit == "t" else 1)
         else:
             named = _NAMED.fullmatch(found.group(0))
@@ -121,7 +126,7 @@ def published_cutoff_exceptions(calendar_year: int) -> dict[tuple[int, str], dat
             period_name, short_year, day, month_name = named.groups()
             last_month = _MONTH_NAMES.index(period_name) + 1
             token = f"{last_month:02d}"
-            period_year = 2000 + int(short_year) if short_year else calendar_year
+            period_year = _century_of(calendar_year) + int(short_year) if short_year else calendar_year
         cutoff_month = _MONTH_NAMES.index(month_name) + 1
         cutoff_year = period_year + (1 if cutoff_month <= last_month else 0)
         if int(day) <= _DOMICILIATION_LAST_DAY and cutoff_month == last_month % 12 + 1:

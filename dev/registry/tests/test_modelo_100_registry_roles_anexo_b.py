@@ -55,14 +55,7 @@ _ALL_EXERCISES = single_exercise_editions("100")
 
 
 def test_modelo_100_anexo_b_importe_satisfecho_role_is_not_rental_specific() -> None:
-    for filing_year, expected_count in (
-        (2020, 5),
-        (2021, 5),
-        (2022, 5),
-        (2023, 5),
-        (2024, 5),
-        (2025, 7),
-    ):
+    for filing_year, expected_count in zip(_ALL_EXERCISES, (5, 5, 5, 5, 5, 7), strict=True):
         revision = modelo_100_revision(filing_year)
         checked = [
             casilla
@@ -80,7 +73,7 @@ def test_modelo_100_anexo_b_importe_satisfecho_role_is_not_rental_specific() -> 
 
 
 def test_modelo_100_anexo_b_importe_anual_satisfecho_role_is_not_service_fee() -> None:
-    for filing_year, expected_count in ((2024, 24), (2025, 32)):
+    for filing_year, expected_count in zip(_ALL_EXERCISES[-2:], (24, 32), strict=True):
         revision = modelo_100_revision(filing_year)
         checked = [
             casilla
@@ -118,7 +111,7 @@ def test_modelo_100_anexo_b_other_service_amount_role_is_otros_gastos_importe_an
 
 
 def test_modelo_100_anexo_b_aav_amount_roles_are_grounded_in_official_labels() -> None:
-    revision = modelo_100_snapshot(2025).revision
+    revision = modelo_100_snapshot(_ALL_EXERCISES[-1]).revision
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in ANEXO_B_AAV_AMOUNT_ROWS}
 
     assert set(casillas_by_id) == set(ANEXO_B_AAV_AMOUNT_ROWS)
@@ -131,7 +124,7 @@ def test_modelo_100_anexo_b_aav_amount_roles_are_grounded_in_official_labels() -
 
 
 def test_modelo_100_anexo_b_account_holder_role_is_cm_vivienda_habitual() -> None:
-    revision = modelo_100_snapshot(2025).revision
+    revision = modelo_100_snapshot(_ALL_EXERCISES[-1]).revision
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in ANEXO_B_ACCOUNT_ROWS}
 
     assert set(casillas_by_id) == set(ANEXO_B_ACCOUNT_ROWS)
@@ -164,7 +157,7 @@ def test_modelo_100_anexo_b_baleares_birth_roles_are_spanish_and_label_grounded(
 
 
 def test_modelo_100_anexo_b_total_cantidades_invertidas_role_is_not_service_fee() -> None:
-    for filing_year, expected_count in ((2024, 3), (2025, 3)):
+    for filing_year, expected_count in zip(_ALL_EXERCISES[-2:], (3, 3), strict=True):
         revision = modelo_100_revision(filing_year)
         checked = [
             casilla
@@ -182,7 +175,7 @@ def test_modelo_100_anexo_b_total_cantidades_invertidas_role_is_not_service_fee(
 
 
 def test_modelo_100_anexo_b_contributor_key_role_is_spanish_code() -> None:
-    for filing_year, expected_count in ((2024, 3), (2025, 4)):
+    for filing_year, expected_count in zip(_ALL_EXERCISES[-2:], (3, 4), strict=True):
         revision = modelo_100_revision(filing_year)
         checked = [
             casilla
@@ -200,14 +193,7 @@ def test_modelo_100_anexo_b_contributor_key_role_is_spanish_code() -> None:
 
 
 def test_modelo_100_anexo_b_investment_amount_role_is_deduction_investment_amount() -> None:
-    for filing_year, expected_count in (
-        (2020, 10),
-        (2021, 10),
-        (2022, 10),
-        (2023, 10),
-        (2024, 16),
-        (2025, 22),
-    ):
+    for filing_year, expected_count in zip(_ALL_EXERCISES, (10, 10, 10, 10, 16, 22), strict=True):
         revision = modelo_100_revision(filing_year)
         checked = [
             casilla
@@ -226,14 +212,7 @@ def test_modelo_100_anexo_b_investment_amount_role_is_deduction_investment_amoun
 
 
 def test_modelo_100_anexo_b_investment_total_role_is_total_by_deduction_type() -> None:
-    for filing_year, expected_count in (
-        (2020, 5),
-        (2021, 5),
-        (2022, 5),
-        (2023, 5),
-        (2024, 8),
-        (2025, 10),
-    ):
+    for filing_year, expected_count in zip(_ALL_EXERCISES, (5, 5, 5, 5, 8, 10), strict=True):
         revision = modelo_100_revision(filing_year)
         checked = [
             casilla
@@ -289,14 +268,7 @@ def test_modelo_100_anexo_b_insurance_premium_total_role_is_spanish_eps_total() 
 
 
 def test_modelo_100_anexo_b_total_satisfecho_role_is_not_rental_specific() -> None:
-    for filing_year, expected_count in (
-        (2020, 2),
-        (2021, 2),
-        (2022, 2),
-        (2023, 2),
-        (2024, 2),
-        (2025, 3),
-    ):
+    for filing_year, expected_count in zip(_ALL_EXERCISES, (2, 2, 2, 2, 2, 3), strict=True):
         revision = modelo_100_revision(filing_year)
         checked = [
             casilla
@@ -314,14 +286,7 @@ def test_modelo_100_anexo_b_total_satisfecho_role_is_not_rental_specific() -> No
 
 
 def test_modelo_100_anexo_b_cantidades_deducibles_role_is_amount_not_boolean() -> None:
-    for filing_year, expected_count in (
-        (2020, 2),
-        (2021, 2),
-        (2022, 2),
-        (2023, 2),
-        (2024, 2),
-        (2025, 3),
-    ):
+    for filing_year, expected_count in zip(_ALL_EXERCISES, (2, 2, 2, 2, 2, 3), strict=True):
         revision = modelo_100_revision(filing_year)
         checked = [
             casilla

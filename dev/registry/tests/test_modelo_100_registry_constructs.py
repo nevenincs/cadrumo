@@ -651,7 +651,7 @@ def test_modelo_100_live_cross_references_block_declared_forbidden_actions() -> 
 
 
 def test_modelo_100_xml_dictionary_layout_reads_official_casilla_paths() -> None:
-    snapshot = modelo_100_snapshot(2023)
+    snapshot = modelo_100_snapshot(newest_authored_edition("100"))
     resolved = resolve_export_layout(snapshot)
     payload = b"""<?xml version="1.0" encoding="UTF-8"?>
 <Renta>
