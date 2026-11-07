@@ -240,6 +240,7 @@ test("bridge messages from any window but the documentation frame are ignored", 
 });
 
 test("the remembered layout survives a reload", async ({ page: target }) => {
+  await seedLayout(target);
   await target.goto("/");
   await revealTui(target);
   await target
@@ -435,7 +436,7 @@ test("the shell runs under the window's content security policy without a violat
   const pageErrors: string[] = [];
   target.on("pageerror", (error) => pageErrors.push(error.message));
   const template = JSON.parse(
-    readFileSync(local("../../src-tauri/tauri.conf.json.in"), "utf8"),
+    readFileSync(local("../../../src-tauri/tauri.conf.json.in"), "utf8"),
   ) as { app: { security: { csp: string } } };
   const policy = template.app.security.csp.replace(
     "frame-src 'none'",

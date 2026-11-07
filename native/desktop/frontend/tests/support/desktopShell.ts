@@ -393,22 +393,35 @@ export async function revealTui(target: Page) {
 /** How the documentation's pane and the TUI's stand: side by side, or one
  * above the other. */
 export async function arrangement(target: Page): Promise<"row" | "column"> {
-  const docs = await target.locator('[data-dock-pane="docs"]').boundingBox();
-  const tui = await target.locator('[data-dock-pane="tui"]').boundingBox();
+  // Both boxes are read in one task: two separate reads can straddle a
+  // re-layout and report a docs box from before it and a TUI box from after.
+  const { docs, tui } = await target.evaluate(() => {
+    const box = (pane: string) => {
+      const element = document.querySelector<HTMLElement>(
+        `[data-dock-pane="${pane}"]`,
+      );
+      if (!element || element.hidden) return null;
+      const { x, y, width, height } = element.getBoundingClientRect();
+      return width > 0 && height > 0 ? { x, y, width, height } : null;
+    };
+    return { docs: box("docs"), tui: box("tui") };
+  });
   if (!docs || !tui)
     throw new Error("The documentation and TUI are not both shown.");
-  const [first, second] =
-    docs.x <= tui.x && docs.y <= tui.y ? [docs, tui] : [tui, docs];
-  if (second.x >= first.x + first.width - 1) return "row";
-  if (second.y >= first.y + first.height - 1) return "column";
-  throw new Error("The documentation and TUI overlap.");
+  const apart = (a: number, aSize: number, b: number, bSize: number) =>
+    b >= a + aSize - 1 || a >= b + bSize - 1;
+  if (apart(docs.x, docs.width, tui.x, tui.width)) return "row";
+  if (apart(docs.y, docs.height, tui.y, tui.height)) return "column";
+  throw new Error(
+    `The documentation and TUI overlap: ${JSON.stringify({ docs, tui })}.`,
+  );
 }
 
 // A stand-in documentation origin. It is a different origin from the shell,
 // and its pages load the real desktop bridge script.
 export const DOCS = "http://docs.cadrumo.test";
 export const bridge = readFileSync(
-  local("../../../../docs/_static/cadrumo-desktop-bridge.js"),
+  local("../../../../../docs/_static/cadrumo-desktop-bridge.js"),
   "utf8",
 );
 export const page = (title: string, body: string) =>
