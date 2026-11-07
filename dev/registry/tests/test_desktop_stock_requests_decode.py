@@ -16,6 +16,7 @@ import json
 import shutil
 import subprocess
 import sys
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -46,11 +47,19 @@ from cadrumo.application.inventory.registered_requests import (
 )
 from cadrumo.application.inventory.service import InventoryMovementCommand
 from cadrumo.application.ledger.entry_limits import ledger_entry_limits
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.contribuyente.inventory.corrections import inventory_refusal_key
 from cadrumo.domain.contribuyente.inventory.records import MovementKind, MovementRecord, ValuationMethod
 from dev.paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_YEAR = filing_year_envelope().horizon
+
+
+def _on(month: int, day: int) -> date:
+    return date(_YEAR, month, day)
+
 
 _FRONTEND = REPO_ROOT / "native" / "desktop" / "frontend"
 _ENTRY = _FRONTEND / "tests" / "support" / "stockRequests.ts"
@@ -69,7 +78,7 @@ esbuild.buildSync({
 });
 """
 
-_BOOK = {"actividad_id": "Papelería y reprografía", "year": 2026}
+_BOOK = {"actividad_id": "Papelería y reprografía", "year": _YEAR}
 
 
 def _mark(character: str) -> str:
@@ -93,7 +102,7 @@ _PROOFS = {
 #: A purchase of 100 units for 1000.00 with 210.00 of IVA, all of it deductible, and nothing else.
 #: Its share is the fraction the percent editor holds, so all of it is 1.
 _PURCHASE = {
-    "date": "2026-03-04",
+    "date": _on(3, 4).isoformat(),
     "kind": "purchase",
     "quantity": "100",
     "price": "1000.00",
@@ -101,7 +110,7 @@ _PURCHASE = {
     "share": "1",
 }
 
-_DECIDED_AT = "2026-12-31T10:00:00.000Z"
+_DECIDED_AT = f"{_on(12, 31).isoformat()}T10:00:00.000Z"
 
 #: A closing value worked out from the movements, with the file that shows it.
 _CLOSING_DERIVED = {
@@ -116,7 +125,7 @@ _CLOSING_COUNTED = {
     "values": {
         "authority": "physical_observation",
         "reason": "Counted on the last day of the year",
-        "observed_on": "2026-12-31",
+        "observed_on": _on(12, 31).isoformat(),
         "closing_value": "410.00",
         "basis": "fifo_acquisition_price",
     },
@@ -133,38 +142,38 @@ _SCENARIOS: list[dict[str, Any]] = [
     {
         "id": "book",
         "kind": "book",
-        "year": 2026,
+        "year": _YEAR,
         "draft": {"name": "Papelería y reprografía", "method": "fifo", "opening": "410"},
     },
     {
         "id": "book_average",
         "kind": "book",
-        "year": 2026,
+        "year": _YEAR,
         "draft": {"name": "Venta en línea de material de dibujo", "method": "coste_medio", "opening": "0"},
     },
     {
         "id": "opening_unit_cost",
         "kind": "movement",
         "book": _BOOK,
-        "values": {"date": "2026-01-02", "kind": "opening", "quantity": "100", "unit_cost": "4.1"},
+        "values": {"date": _on(1, 2).isoformat(), "kind": "opening", "quantity": "100", "unit_cost": "4.1"},
     },
     {
         "id": "opening_total_cost",
         "kind": "movement",
         "book": _BOOK,
-        "values": {"date": "2026-01-02", "kind": "opening", "quantity": "100", "total_cost": "410"},
+        "values": {"date": _on(1, 2).isoformat(), "kind": "opening", "quantity": "100", "total_cost": "410"},
     },
     {
         "id": "sale",
         "kind": "movement",
         "book": _BOOK,
-        "values": {"date": "2026-11-20", "kind": "cogs", "quantity": "60"},
+        "values": {"date": _on(11, 20).isoformat(), "kind": "cogs", "quantity": "60"},
     },
     {
         "id": "count",
         "kind": "movement",
         "book": _BOOK,
-        "values": {"date": "2026-12-31", "kind": "count", "quantity": "2"},
+        "values": {"date": _on(12, 31).isoformat(), "kind": "count", "quantity": "2"},
     },
     {"id": "purchase", "kind": "movement", "book": _BOOK, "values": _PURCHASE, "proofs": _PROOFS},
     {
@@ -260,7 +269,7 @@ _SCENARIOS: list[dict[str, Any]] = [
         "book": _BOOK,
         "target": "7d2e9f14-6a35-4c8b-b1e0-3a5c8d9f0b32",
         "reason": "source_document_corrected",
-        "values": {"date": "2026-11-20", "kind": "cogs", "quantity": "50"},
+        "values": {"date": _on(11, 20).isoformat(), "kind": "cogs", "quantity": "50"},
     },
     {
         "id": "movement_correct_to_a_purchase",
@@ -286,7 +295,7 @@ _SCENARIOS: list[dict[str, Any]] = [
         "book": _BOOK,
         "target": "7d2e9f14-6a35-4c8b-b1e0-3a5c8d9f0b32",
         "reason": "",
-        "values": {"date": "2026-11-20", "kind": "cogs", "quantity": "50"},
+        "values": {"date": _on(11, 20).isoformat(), "kind": "cogs", "quantity": "50"},
     },
     {
         "id": "retire_for_a_correction_reason",
@@ -418,7 +427,7 @@ def test_a_book_request_the_form_makes_decodes_against_the_backend_contract(
     assert result["request"] is not None
     request = InventoryCreateRequest.model_validate_json(json.dumps({"profile_id": str(uuid4()), **result["request"]}))
 
-    assert request.year == 2026
+    assert request.year == _YEAR
     assert ValuationMethod(request.valuation_method) in set(ValuationMethod)
     drafted = next(scenario for scenario in _SCENARIOS if scenario["id"] == name)
     assert request.actividad_id == drafted["draft"]["name"]

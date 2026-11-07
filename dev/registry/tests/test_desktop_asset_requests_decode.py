@@ -44,6 +44,7 @@ from cadrumo.application.actividad_asset.register_reads import method_facts_view
 from cadrumo.application.ledger.entry_limits import ledger_entry_limits
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.tipos_actividad import TipoActividad
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.renta.actividad_asset.disposal import (
     ADMITTED_DISPOSAL_REASONS,
     ActivityAssetDisposal,
@@ -67,27 +68,21 @@ from .desktop_request_support import bundle, run
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_REGISTRY_PARAMETERS = (
-    REPO_ROOT
-    / "src"
-    / "cadrumo"
-    / "_data"
-    / "registry"
-    / "aeat"
-    / "modelos"
-    / "100"
-    / "revisions"
-    / "2022"
-    / "parameters"
-    / "0001-declarations.toml"
-)
+_YEAR = filing_year_envelope().horizon
+
+
+def _on(month: int, day: int, *, years_back: int = 0) -> date:
+    return date(_YEAR - years_back, month, day)
+
+
+_REVISIONS = REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos" / "100" / "revisions"
 
 _NEW = {
     "asset_kind": "material",
     "name": "Sierra de cinta",
     "serial_number": "SC-0412",
     "acquisition_shape": "primary_purchase",
-    "in_service_date": "2026-06-15",
+    "in_service_date": _on(6, 15).isoformat(),
     "acquired_condition": "new",
     "basis_stage": "business_allocated",
     "basis_amount": "900.00",
@@ -115,7 +110,7 @@ _CREATE: dict[str, dict[str, str]] = {
         "amortization.used_original_price.original_price": "1500.00",
         "amortization.used_original_price.evidence_reference": "valuation report of the appraiser",
     },
-    "opening_amount_known": {"opening_amount": "500.00", "opening_through": "2026", "opening_method": "linear"},
+    "opening_amount_known": {"opening_amount": "500.00", "opening_through": str(_YEAR), "opening_method": "linear"},
     "opening_missing": {"opening_status": "missing", "opening_amount": ""},
     "taxpayer_owned_basis": {"basis_stage": "taxpayer_owned", "business_use_share": "0.6"},
     "constant_percentage": {"method": "constant_percentage", "amortization.linear_coefficient": "0.1"},
@@ -146,7 +141,7 @@ _CREATE: dict[str, dict[str, str]] = {
 
 _STATED_FACTS = {
     "text": "reference-123",
-    "date": "2026-02-01",
+    "date": _on(2, 1).isoformat(),
     "whole": "8",
     "flag": "yes",
     "amount": "1000.00",
@@ -179,9 +174,9 @@ _PROPERTY = {
 
 _OUTSIDE = {
     "acquisition_shape": "acquired_outside_ledger",
-    "declared_acquisition_date": "2024-11-05",
+    "declared_acquisition_date": _on(11, 5, years_back=2).isoformat(),
     "declared_activity": "A05",
-    "acquisition_reference": "Factura 2024-118",
+    "acquisition_reference": f"Factura {_YEAR - 2}-118",
 }
 
 _OUTSIDE_WITH_LATER_PAYMENT: dict[str, str] = {
@@ -232,10 +227,10 @@ _STATED: dict[str, dict[str, str]] = {
 #: Each correction changes what the person edits in the revision of the linear creation.
 _CORRECT: dict[str, dict[str, str]] = {
     "basis": {"basis_amount": "1000.00"},
-    "in_service_date": {"in_service_date": "2026-07-01"},
+    "in_service_date": {"in_service_date": _on(7, 1).isoformat()},
     "stage": {"basis_stage": "taxpayer_owned", "business_use_share": "0.75"},
     "method_with_class_kept": {"method": "constant_percentage", "amortization.linear_coefficient": "0.1"},
-    "opening": {"opening_amount": "300.00", "opening_through": "2026", "opening_method": "linear"},
+    "opening": {"opening_amount": "300.00", "opening_through": str(_YEAR), "opening_method": "linear"},
     "elected_coefficient": {"amortization.linear_coefficient": "0.09"},
     "vehicle_declaration": _VEHICLE,
     "shift_hours": {"amortization.shift_hours_per_day": "16"},
@@ -331,7 +326,7 @@ def test_the_facts_the_form_states_reach_the_revision_where_the_backend_reads_th
     assert used.amortization.used_original_price.original_price == Decimal("1500.00")
     assert owned.basis.business_use_share is not None
     assert owned.basis.business_use_share == Decimal("0.6")
-    assert opening.opening_history.covered_through_tax_year == 2026
+    assert opening.opening_history.covered_through_tax_year == _YEAR
     assert opening.opening_history.accumulated_amount == Decimal("500.00")
     assert digits.amortization.sum_of_digits_period_years == 8
     assert digits.amortization.digit_order is not None
@@ -427,9 +422,9 @@ def test_an_element_bought_outside_the_ledger_names_its_document_date_and_activi
     assert revision.acquisition.observed_transaction_id is None
     assert revision.acquisition.observed_lineage_event_id is None
     assert revision.acquisition.evidence_fingerprint is None
-    assert revision.acquisition.invoice_evidence_id == "Factura 2024-118"
+    assert revision.acquisition.invoice_evidence_id == f"Factura {_YEAR - 2}-118"
     assert revision.further_acquisitions == ()
-    assert revision.declared_acquisition_date == date(2024, 11, 5)
+    assert revision.declared_acquisition_date == _on(11, 5, years_back=2)
     assert revision.declared_activity == TipoActividad("A05")
     ledger = created[1]["linear"]["request"]["revision"]
     assert ledger["acquisition"]["observed_transaction_id"] is not None
@@ -491,7 +486,7 @@ def _chain(
 
 
 _SALE = ActivityAssetDisposal(
-    disposal_date=date(2026, 9, 30),
+    disposal_date=_on(9, 30),
     reason=ActivityAssetDisposalReason.SALE,
     proceeds=Decimal("500.00"),
     transmission_costs=Decimal("10.00"),
@@ -531,7 +526,7 @@ def test_a_baja_is_changed_by_stating_another_and_removed_by_stating_none(
 ) -> None:
     chain = _chain(created, disposal=_SALE)
     moved = ActivityAssetDisposal(
-        disposal_date=date(2026, 6, 30),
+        disposal_date=_on(6, 30),
         reason=ActivityAssetDisposalReason.SALE,
         proceeds=Decimal("500.00"),
         transmission_costs=Decimal("10.00"),
@@ -605,13 +600,13 @@ def test_a_forecast_the_form_makes_states_the_last_day_covered_and_decodes_to_th
             {
                 "id": "half",
                 "kind": "forecast",
-                "draft": {"covered_from": "2025-01-01", "covered_through": "2025-06-30"},
+                "draft": {"covered_from": _on(1, 1).isoformat(), "covered_through": _on(6, 30).isoformat()},
                 "supersedes": None,
             },
             {
                 "id": "incomplete",
                 "kind": "forecast",
-                "draft": {"covered_from": "2025-01-01"},
+                "draft": {"covered_from": _on(1, 1).isoformat()},
                 "supersedes": None,
             },
         ],
@@ -619,10 +614,10 @@ def test_a_forecast_the_form_makes_states_the_last_day_covered_and_decodes_to_th
 
     sent = made["half"]["request"]
     assert "covered_until" not in sent
-    assert sent["covered_through"] == "2025-06-30"
+    assert sent["covered_through"] == _on(6, 30).isoformat()
     decoded = _forecast(made["half"])
-    assert decoded.covered_through == date(2025, 6, 30)
-    assert decoded.exclusive_end() == date(2025, 7, 1)
+    assert decoded.covered_through == _on(6, 30)
+    assert decoded.exclusive_end() == _on(7, 1)
     assert made["incomplete"]["request"] is None
 
 
@@ -632,12 +627,12 @@ def test_a_handoff_for_a_year_alone_sends_no_modelo_130_period_and_a_chosen_quar
     made = _run(
         created[0],
         [
-            {"id": "year", "kind": "handoff", "year": 2025, "period": ""},
-            {"id": "quarter", "kind": "handoff", "year": 2025, "period": "2T"},
+            {"id": "year", "kind": "handoff", "year": _YEAR, "period": ""},
+            {"id": "quarter", "kind": "handoff", "year": _YEAR, "period": "2T"},
         ],
     )
 
-    assert made["year"]["request"] == {"tax_year": 2025, "output_language": "es"}
+    assert made["year"]["request"] == {"tax_year": _YEAR, "output_language": "es"}
     alone = ActivityAssetFilingHandoffRequest.model_validate_json(
         json.dumps({"profile_id": str(uuid4()), **made["year"]["request"]}),
     )
@@ -672,8 +667,15 @@ def _registry_vehicle_classes() -> dict[str, bool]:
     """The registry's own classification of the classes a material element can be a restricted vehicle in."""
     import tomllib
 
-    document = tomllib.loads(_REGISTRY_PARAMETERS.read_text(encoding="utf-8"))
-    parameters = {parameter["id"]: parameter for parameter in document["revisions"]["2022"]["parameters"]}
+    (owner,) = (
+        path
+        for path in sorted(_REVISIONS.glob("*/parameters/0001-declarations.toml"))
+        if "clase-vehiculo-restringido" in path.read_text(encoding="utf-8")
+    )
+    document = tomllib.loads(owner.read_text(encoding="utf-8"))
+    parameters = {
+        parameter["id"]: parameter for parameter in document["revisions"][owner.parent.parent.name]["parameters"]
+    }
     prefix = "renta-actividad-inmovilizado-amortizacion-"
     flags = {
         entry["key"]: entry["value"] == "1"
