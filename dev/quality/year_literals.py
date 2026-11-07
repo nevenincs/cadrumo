@@ -51,6 +51,11 @@ In Python, read through the syntax tree, each of these is a finding:
   ``case`` pattern. A frozen clock, a "today", a fixture anchor, a default, a
   keyword argument or a payload field is a year a parser or a slice later turns
   into a coordinate, so it is written from the authority instead;
+- ``period text``: a string that is exactly a filing period of the filing
+  century (``2026 1T``, ``2026-2T``, ``2026-0A``, ``2026Q1``, ``2026 03``,
+  ``2026-EXT-1T``), or an f-string that starts writing one (``f"2026-{code}"``,
+  ``f"2026 1T {label}"``), anywhere except as the compared side, exactly as
+  ``date text``. A period is a filing coordinate like an edition id;
 - ``year text``: a string that is exactly a year;
 - ``edition id``: a string that is a revision id (``2026-y-siguientes``,
   ``2022-2025``, ``2024-desde-09-y-3t``) or that names one in a revision path.
@@ -66,7 +71,9 @@ revision id is ``edition id``, text holding a year opened straight into
 ``Date.parse``, ``new Date``, ``Temporal.*.from``, ``dayjs``, ``moment``,
 ``DateTime.fromISO``, ``parseISO`` or a ``parse``/``from`` date helper is
 ``year date``, and any other string or template that is exactly, or starts
-writing, a date of the filing century is ``date text`` unless it is compared:
+writing, a date of the filing century is ``date text``, and one that is
+exactly, or starts writing, a filing period is ``period text``, unless it is
+compared:
 it sits inside an expectation's argument (``toBe``, ``toEqual``,
 ``toStrictEqual``, ``toContain``, ``toMatchObject``, ``toHaveText``,
 ``toHaveBeenCalledWith`` and their kin, across lines), beside ``===``,
@@ -76,7 +83,7 @@ What may stay, and why
 ----------------------
 - Prose: comments and docstrings name years in sentences; a sentence is read
   by people, never by a resolver.
-- A date or instant compared as written: the expected side of a comparison,
+- A date, instant or filing period compared as written: the expected side of a comparison,
   an element of a literal tuple, list, set or dictionary that is such an
   operand, a ``case`` pattern, or a TypeScript expectation's argument. The
   text is the output under test, read as opaque characters; it never becomes a
@@ -176,6 +183,19 @@ DATE_TEXT: Final[re.Pattern[str]] = re.compile(
 )
 #: The start of an f-string that writes a date of the filing century, such as ``f"2026-04-{day}"``.
 _DATE_TEXT_START = re.compile(rf"^20\d\d-{_MONTH}(?:-|$)")
+_PERIOD_CODE_TEXT = r"(?:[1-4][TP]|0A|Q[1-4]|T[1-4]|EXT-[1-4]T|EVENT-\d+)"
+#: Text that is exactly a filing period of the filing century: a year and a period
+#: code (``1T``-``4T``, ``1P``-``4P``, ``0A``, ``EXT-1T``, ``EVENT-3``, and the
+#: refused calendar spellings ``Q1``/``T1``) joined directly or by a dash, space,
+#: underscore, colon, slash or dot, or a year and a month joined by a space,
+#: underscore, colon or slash (``2026 03``; ``2026-03`` is already date text).
+PERIOD_TEXT: Final[re.Pattern[str]] = re.compile(
+    rf"^20\d\d(?:[-_ :/.]?{_PERIOD_CODE_TEXT}|[_ :/]{_MONTH})$", re.IGNORECASE
+)
+#: The start of a template that writes a period: a year and a period code, or a
+#: year with at most a separator before the first interpolation (``f"2026-{code}"``).
+_PERIOD_TEXT_START = re.compile(rf"^20\d\d[-_ :/.]?{_PERIOD_CODE_TEXT}(?![0-9A-Za-z])", re.IGNORECASE)
+_YEAR_BEFORE_VALUE = re.compile(r"^20\d\d[-_ :/.]?$")
 _YEAR_IN_TEXT = re.compile(r"(?<!\d)20\d\d(?!\d)")
 #: Calls that turn text into a date, an instant or a year.
 _PARSE_CALLS = frozenset({"fromisoformat", "strptime", "isoparse", "to_datetime", "Timestamp", "datetime64"})
@@ -475,6 +495,9 @@ class _PythonVisitor(ast.NodeVisitor):
         if DATE_TEXT.match(text):
             if id(node) not in self._compared:
                 self._report(node, "date text", repr(text))
+        elif PERIOD_TEXT.match(text):
+            if id(node) not in self._compared:
+                self._report(node, "period text", repr(text))
         elif _YEAR_TEXT.match(text):
             self._report(node, "year text", repr(text))
         elif is_edition_id(text) or _EDITION_IN_TEXT.search(text):
@@ -490,11 +513,22 @@ class _PythonVisitor(ast.NodeVisitor):
             and id(node) not in self._compared | self._parsed
         ):
             self._report(node, "date text", repr(literal[:80]))
+        elif (
+            isinstance(first, ast.Constant)
+            and _starts_period(str(first.value), followed_by_value=len(node.values) > 1)
+            and id(node) not in self._compared | self._parsed
+        ):
+            self._report(node, "period text", repr(literal[:80]))
         elif _EDITION_IN_TEXT.search(literal):
             self._report(node, "edition id", repr(literal[:80]))
         for part in node.values:
             if isinstance(part, ast.FormattedValue):
                 self.visit(part)
+
+
+def _starts_period(literal: str, *, followed_by_value: bool) -> bool:
+    """Whether a template's first literal part starts writing a filing period."""
+    return bool(_PERIOD_TEXT_START.match(literal)) or (followed_by_value and bool(_YEAR_BEFORE_VALUE.match(literal)))
 
 
 def _opaque_texts(node: ast.AST) -> Iterator[int]:
@@ -695,6 +729,19 @@ def _comment_free(source: str) -> str:
     )
 
 
+def _ts_coordinate_text(body: str, *, template: bool) -> str | None:
+    """The rule a string or template body breaks by writing a date or a period, if any."""
+    if DATE_TEXT.match(body) or (template and _DATE_TEXT_START.match(body)):
+        return "date text"
+    if PERIOD_TEXT.match(body):
+        return "period text"
+    if template:
+        literal, _, rest = body.partition("${")
+        if _starts_period(literal, followed_by_value=bool(rest)):
+            return "period text"
+    return None
+
+
 def typescript_findings(source: str, path: str) -> list[Finding]:
     """Every year bound, edition computation and year coordinate in one TypeScript source text."""
     found: list[Finding] = []
@@ -720,14 +767,14 @@ def typescript_findings(source: str, path: str) -> list[Finding]:
             body = match.group("body")
             if _TS_PARSER_OPEN.search(line[: match.start()]) and _YEAR_IN_TEXT.search(body):
                 found.append(Finding(path=path, line=number, rule="year date", text=line.strip()[:80]))
-            elif DATE_TEXT.match(body) or (match.group("quote") == "`" and _DATE_TEXT_START.match(body)):
+            elif (kind := _ts_coordinate_text(body, template=match.group("quote") == "`")) is not None:
                 compared = (
                     (number, match.start()) in expected
                     or _TS_COMPARED_BEFORE.search(line[: match.start()])
                     or _TS_COMPARED_AFTER.match(line[match.end() :])
                 )
                 if not compared:
-                    found.append(Finding(path=path, line=number, rule="date text", text=match.group()[:80]))
+                    found.append(Finding(path=path, line=number, rule=kind, text=match.group()[:80]))
             elif _YEAR_TEXT.match(body):
                 found.append(Finding(path=path, line=number, rule="year text", text=match.group()))
             elif is_edition_id(body) or _EDITION_IN_TEXT.search(body):
