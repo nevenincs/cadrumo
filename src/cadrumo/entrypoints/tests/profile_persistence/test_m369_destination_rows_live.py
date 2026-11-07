@@ -70,6 +70,7 @@ from cadrumo.domain.modelos.calculation_revision_amendment import (
 from cadrumo.domain.modelos.errors import ModeloExportError
 from cadrumo.domain.modelos.verification_report import VerificationReport
 from cadrumo.domain.modelos.work_unit import WorkUnit
+from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.tests.profile_persistence.dormant_resolver_live_support import (
     T0,
     T1,
@@ -176,7 +177,12 @@ def seeded_profile(tmp_path_factory: pytest.TempPathFactory) -> SeededDurablePro
     return provision_seeded_profile(
         tmp_path_factory.mktemp("m369-rows"),
         _BUCKET,
-        lambda profile: seed_ready_profile(profile.repository, bucket_id=_BUCKET),
+        lambda profile: seed_ready_profile(
+            profile.repository,
+            bucket_id=_BUCKET,
+            # Modelo 369 applies only to a filer enrolled in the OSS/IOSS special regime.
+            extra_facts=(UserProfileFact(path="iva.oss_enrolled", value=True),),
+        ),
     )
 
 
