@@ -5,7 +5,7 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:2a4f42df086bca1fb8fc64664075a616c18736eb9be92bb6d2665ebb54f31740'
+body_hash: 'sha256:559c18ffecdf2ac553d485a8ad691758af8cf5d3f8ab255089ce3ac472e06d2a'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -59,6 +59,9 @@ related:
 - `S28` `verify:` `npm run check (90 node tests, tsc, eslint, prettier)` -> `pass`
 - `S28` `verify:` `npx playwright test tests/agent-live.spec.ts (38 tests)` -> `pass`
 - `S28` `by:` `vaultspec-high-executor`
+- `S13` `A` `native/application/src/provisioning/local_ai/fake_llamacpp.rs`
+- `S13` `M` `native/application/src/provisioning/local_ai/mod.rs`
+- `S13` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
