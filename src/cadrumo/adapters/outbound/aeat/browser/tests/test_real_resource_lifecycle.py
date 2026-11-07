@@ -72,10 +72,12 @@ from cadrumo.core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+_YEAR = filing_year_envelope().horizon
 
-_NOW = datetime(2026, 8, 28, 15, tzinfo=UTC)
+_NOW = datetime(_YEAR, 8, 28, 15, tzinfo=UTC)
 _DEFINITION_ID = "operation.supervisor.real-resource"
 _PHASE_NAVIGATE = "operation.phase.navigate"
 _PHASE_SETTLE = "operation.phase.settle"
