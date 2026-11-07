@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ....persistence.storage.sql.secure_object_records import SecureObjectRawRow
 from ..local import LocalFileSystemProvider
 from ..mirror_manifest import (
@@ -20,10 +21,12 @@ from ..mirror_manifest import (
 from ..mirror_push import push_mirror_manifests
 from ..records import RemoteMirrorIssueKind, RemoteMirrorObjectManifest
 
+_FILING_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _NAMESPACE = "aeat.remote.mirror.adverse"
-_NOW = datetime(2026, 6, 2, 12, 0, tzinfo=UTC)
+_NOW = datetime(_FILING_YEAR, 6, 2, 12, 0, tzinfo=UTC)
 
 
 @pytest.mark.parametrize("corrupted", [False, True])

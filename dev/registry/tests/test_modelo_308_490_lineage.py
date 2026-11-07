@@ -8,17 +8,33 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageOrigin
 from cadrumo.domain.calculations.registry.casilla_lineage_totality import lineage_totality
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    open_ended_revision,
+    revision_before_first_declaring,
+    split_exercise_revisions,
+)
 
 from ..compiler.loader import load_modelo_directory
 from ..compiler.validate_cross_revision import strict_cross_revision_casilla_continuity_failures
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+# Modelo 200 gains boxes 03401.. in the edition that follows the one whose printed design they are absent from.
+_REVISIONS_200 = authored_revisions("200")
+_PREVIOUS_200 = revision_before_first_declaring("200", "03401")
+_PREVIOUS_200_ID = str(_PREVIOUS_200.id)
+_CURRENT_200_ID = str(_REVISIONS_200[_REVISIONS_200.index(_PREVIOUS_200) + 1].id)
+_CURRENT_308_ID = str(open_ended_revision("308").id)
+_HISTORICAL_308_ID = str(authored_revisions("308")[-2].id)
+_EARLY_490, _LATE_490 = split_exercise_revisions("490", early_period="1T", late_period="2T")
+_EARLY_490_ID, _LATE_490_ID = str(_EARLY_490.id), str(_LATE_490.id)
+
 
 def test_200_new_cohorts_do_not_hide_predecessor_declaration_gaps() -> None:
     modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "200"))
-    previous = {row.id: row for row in modelo.revisions["2024"].casillas}
-    current = {row.id: row for row in modelo.revisions["2025-y-siguientes"].casillas}
+    previous = {row.id: row for row in modelo.revisions[_PREVIOUS_200_ID].casillas}
+    current = {row.id: row for row in modelo.revisions[_CURRENT_200_ID].casillas}
     assert lineage_totality((modelo,), ()).uncovered == ()
     # A row may call its predecessor edition silent only while that edition
     # really declares nothing for it; once the earlier row is declared, the
@@ -51,8 +67,8 @@ def modelo_490() -> ModeloDefinition:
 
 def test_200_withdrawals_preserve_surviving_detail_total() -> None:
     modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "200"))
-    before = {row.id: row for row in modelo.revisions["2024"].casillas}
-    after_revision = modelo.revisions["2025-y-siguientes"]
+    before = {row.id: row for row in modelo.revisions[_PREVIOUS_200_ID].casillas}
+    after_revision = modelo.revisions[_CURRENT_200_ID]
     after = {row.id: row for row in after_revision.casillas}
     retired = {
         evolution.continuidad_id
@@ -76,9 +92,9 @@ def test_200_withdrawals_preserve_surviving_detail_total() -> None:
 
 def test_308_enrolled_historical_fields_have_grounded_continuity() -> None:
     modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "308"))
-    current = {row.id: row for row in modelo.revisions["2019-y-siguientes"].casillas}
+    current = {row.id: row for row in modelo.revisions[_CURRENT_308_ID].casillas}
     assert lineage_totality((modelo,), ()).uncovered == ()
-    historical = {row.id: row for row in modelo.revisions["2016-2018"].casillas}
+    historical = {row.id: row for row in modelo.revisions[_HISTORICAL_308_ID].casillas}
     assert current["decl.devolucion-iban"].continuidad_origin is CasillaLineageOrigin.GROUNDED
     assert current["decl.devolucion-iban"].continuidad_id == historical["decl.devolucion-iban"].continuidad_id
     assert historical["decl.devolucion-iban"].number == "932-965"
@@ -90,8 +106,8 @@ def test_308_enrolled_historical_fields_have_grounded_continuity() -> None:
 
 
 def test_490_regularization_survives_new_numbering_and_page_movement(modelo_490: ModeloDefinition) -> None:
-    before = {row.id: row for row in modelo_490.revisions["2022-1t"].casillas}
-    after = {row.id: row for row in modelo_490.revisions["2022-2t-4t"].casillas}
+    before = {row.id: row for row in modelo_490.revisions[_EARLY_490_ID].casillas}
+    after = {row.id: row for row in modelo_490.revisions[_LATE_490_ID].casillas}
     # BOE-A-2021-9721 and BOE-A-2022-8830: second exercise, 2T;
     # third exercise, 1T; fourth exercise, 4T. New numbers above the old
     # maximum do not turn these existing table cells into introductions.
@@ -107,8 +123,8 @@ def test_490_regularization_survives_new_numbering_and_page_movement(modelo_490:
 
 
 def test_490_repeated_printed_rate_keeps_four_quarter_identities(modelo_490: ModeloDefinition) -> None:
-    before = {row.id: row for row in modelo_490.revisions["2022-1t"].casillas}
-    after = {row.id: row for row in modelo_490.revisions["2022-2t-4t"].casillas}
+    before = {row.id: row for row in modelo_490.revisions[_EARLY_490_ID].casillas}
+    after = {row.id: row for row in modelo_490.revisions[_LATE_490_ID].casillas}
     # The original form repeats [4] for all quarter rates. Its four named
     # quarter columns, not that repeated number, establish correspondence.
     pairs = (

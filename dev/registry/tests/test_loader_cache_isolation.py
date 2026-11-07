@@ -471,14 +471,15 @@ def test_synthetic_tmp_path_root_disk_cache_stays_disabled_under_pytest(tmp_path
     is the only thing loaded inside the block. The real filesystem and the real
     write path are still exercised; only the directory is test-owned.
     """
+    year = int(standard_revision_preamble_text().split('"')[1])  # the exercise the shared preamble declares
     registry_root = tmp_path / "registry" / "aeat"
     legal_dir = registry_root / "legal"
     legal_dir.mkdir(parents=True)
     (legal_dir / "supported-filing-years.toml").write_text(
-        "[supported_filing_years]\nfloor = 2025\nhorizon = 2025\n\n"
+        f"[supported_filing_years]\nfloor = {year}\nhorizon = {year}\n\n"
         "[sociedades_annual_manual_coverage]\n"
-        'dispositions = [{ year = 2025, status = "unpublished", '
-        'official_locator = "https://example.com/manuals", observed_at = 2026-09-10, '
+        f'dispositions = [{{ year = {year}, status = "unpublished", '
+        f'official_locator = "https://example.com/manuals", observed_at = {year}-09-10, '
         "acquisition_condition_key = "
         '"application.registry.manuals.coverage.recheck_aeat_publication" }]\n',
         encoding="utf-8",
@@ -489,7 +490,7 @@ def test_synthetic_tmp_path_root_disk_cache_stays_disabled_under_pytest(tmp_path
     write_fragmented_modelo(
         modelos_dir / "999",
         manifest_text=standard_manifest_text("Synthetic disk-cache isolation test"),
-        revisions={"2025": standard_revision_preamble_text()},
+        revisions={str(year): standard_revision_preamble_text()},
     )
     assert is_bundled_registry_root(registry_root.resolve()) is False
 
@@ -502,7 +503,7 @@ def test_synthetic_tmp_path_root_disk_cache_stays_disabled_under_pytest(tmp_path
         modelos, catalogues = load_registry_tree(registry_root)
         assert {modelo.id for modelo in modelos} == {"999"}
         assert catalogues.supported_filing_years is not None
-        assert catalogues.supported_filing_years.years == (2025,)
+        assert catalogues.supported_filing_years.years == (year,)
 
         after = _bundled_registry_disk_cache_files(isolated_cache_dir)
         assert after == set(), (

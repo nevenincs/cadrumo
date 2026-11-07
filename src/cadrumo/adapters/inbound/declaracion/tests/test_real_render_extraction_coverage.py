@@ -99,7 +99,7 @@ from .....tests.inventory import FIXTURES_DIR
 from ..errors import DeclaracionParseError
 from ..parser import extract_profile_values, parse_declaracion
 from ..parsers.pdfplumber_backend import extract_pages_text
-from .parser_boundary_support import filing_year_is_supported, render_extraction_profile
+from .parser_boundary_support import filing_year_is_supported, render_extraction_profile, specimen_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.usefixtures("operation")]
 
@@ -143,25 +143,36 @@ class _AnnexSpecimen:
 # 2T-4T, and box 37 is blank in 4T.
 _M303_ABSENT_COMPENSACION = frozenset({"iva.compensacion-aplicada-periodo"})
 
-_SPECIMENS: tuple[_AnnexSpecimen, ...] = (
-    _AnnexSpecimen("303", "2024-1T", 2024, "1T", frozenset()),
-    _AnnexSpecimen("303", "2024-2T", 2024, "2T", _M303_ABSENT_COMPENSACION),
-    _AnnexSpecimen("303", "2024-3T", 2024, "3T", _M303_ABSENT_COMPENSACION),
-    _AnnexSpecimen("303", "2024-4T", 2024, "4T", _M303_ABSENT_COMPENSACION | {"37"}),
-    # Modelo 390: the annual summary for the same worked example. Only the 4%
-    # and 10% rate rows are absent, because the supuesto never exercises them.
-    _AnnexSpecimen(
-        "390",
-        "2024-0A",
-        2024,
-        "0A",
-        frozenset(
+# Modelo 390: the annual summary for the same worked example. Only the 4%
+# and 10% rate rows are absent, because the supuesto never exercises them.
+_ANNEX_ABSENT: dict[str, dict[str, frozenset[str]]] = {
+    "303": {
+        "1T": frozenset(),
+        "2T": _M303_ABSENT_COMPENSACION,
+        "3T": _M303_ABSENT_COMPENSACION,
+        "4T": _M303_ABSENT_COMPENSACION | {"37"},
+    },
+    "390": {
+        "0A": frozenset(
             {
                 "iva.anual.repercutido.super-reducido",
                 "iva.anual.repercutido.reducido",
             },
         ),
-    ),
+    },
+}
+
+
+def _period_named_renders(directory: Path) -> tuple[Path, ...]:
+    """Return the renders of one fixture directory named for their filing period, oldest first."""
+    return tuple(sorted(path for path in directory.glob("*.pdf") if path.stem[:1].isdigit()))
+
+
+_SPECIMENS: tuple[_AnnexSpecimen, ...] = tuple(
+    _AnnexSpecimen(modelo, render.stem, specimen.filing_year, specimen.code, _ANNEX_ABSENT[modelo][specimen.code])
+    for modelo in _ANNEX_ABSENT
+    for render in _period_named_renders(_ANNEX_DIR / modelo)
+    for specimen in (specimen_period(render),)
 )
 
 
@@ -249,18 +260,43 @@ _M111_COVERED_FOURTH = frozenset({"30"})
 # it will catch a profile that drifts from that contract. It will not catch AEAT
 # behaviour nobody recorded, which is the thing the real renders were for. The
 # annex family above is the only external evidence left in this module.
-_REPLACEMENT_SPECIMENS: tuple[_ReplacementSpecimen, ...] = (
-    _ReplacementSpecimen("390", "2021-0A", 2021, "0A", _M390_REPLACEMENT_ABSENT),
-    _ReplacementSpecimen("111", "2024-1T", 2024, "1T", _M111_TARGETS - _M111_COVERED_QUARTERLY, frozenset({"07"})),
-    _ReplacementSpecimen("111", "2024-2T", 2024, "2T", _M111_TARGETS - _M111_COVERED_QUARTERLY, frozenset({"07"})),
-    _ReplacementSpecimen("111", "2024-3T", 2024, "3T", _M111_TARGETS - _M111_COVERED_QUARTERLY, frozenset({"07"})),
-    _ReplacementSpecimen("111", "2024-4T", 2024, "4T", _M111_TARGETS - _M111_COVERED_FOURTH),
-    # Modelo 100: three annual declarations. Every target is populated, so
-    # nothing is absent -- these are the only specimens here that exercise a
-    # fully-completed form, which is why the anti-vacuity guard below matters.
-    _ReplacementSpecimen("100", "2021-0A", 2021, "0A", frozenset()),
-    _ReplacementSpecimen("100", "2022-0A", 2022, "0A", frozenset()),
-    _ReplacementSpecimen("100", "2023-0A", 2023, "0A", frozenset()),
+# Modelo 100: three annual declarations. Every target is populated, so nothing is
+# absent -- these are the only specimens here that exercise a fully-completed
+# form, which is why the anti-vacuity guard below matters.
+_REPLACEMENT_ABSENT: dict[str, dict[str, frozenset[str]]] = {
+    "390": {"0A": _M390_REPLACEMENT_ABSENT},
+    "111": {
+        "1T": _M111_TARGETS - _M111_COVERED_QUARTERLY,
+        "2T": _M111_TARGETS - _M111_COVERED_QUARTERLY,
+        "3T": _M111_TARGETS - _M111_COVERED_QUARTERLY,
+        "4T": _M111_TARGETS - _M111_COVERED_FOURTH,
+    },
+    "100": {"0A": frozenset()},
+}
+_M111_QUARTERLY_CODES = ("1T", "2T", "3T")
+
+# The reproductions are the oldest renders of each modelo's directory; the newer ones are
+# formula-verification specimens, which the role check below refuses to mix into this table.
+_REPLACEMENT_RENDER_COUNTS: dict[str, int] = {"390": 1, "111": 4, "100": 3}
+
+
+def _replacement_specimen(modelo: str, render: Path) -> _ReplacementSpecimen:
+    specimen = specimen_period(render)
+    count_valued = frozenset({"07"}) if modelo == "111" and specimen.code in _M111_QUARTERLY_CODES else frozenset()
+    return _ReplacementSpecimen(
+        modelo,
+        render.stem,
+        specimen.filing_year,
+        specimen.code,
+        _REPLACEMENT_ABSENT[modelo][specimen.code],
+        count_valued,
+    )
+
+
+_REPLACEMENT_SPECIMENS: tuple[_ReplacementSpecimen, ...] = tuple(
+    _replacement_specimen(modelo, render)
+    for modelo, count in _REPLACEMENT_RENDER_COUNTS.items()
+    for render in _period_named_renders(_JUSTIFICANTE_DIR / modelo)[:count]
 )
 
 

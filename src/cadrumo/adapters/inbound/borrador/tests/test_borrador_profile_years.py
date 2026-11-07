@@ -62,9 +62,8 @@ def _borrador_profile(year: int) -> ExtractionProfileDefinition:
     return profiles[0]
 
 
-@pytest.mark.parametrize("year", [2024, 2025])
-def test_the_2024_and_2025_revisions_declare_a_borrador_profile(year: int) -> None:
-    assert year in _supported_years()
+@pytest.mark.parametrize("year", _supported_years())
+def test_each_supported_year_declares_the_borrador_profile(year: int) -> None:
     assert _borrador_profile(year).id == "modelo-100-borrador-pdf"
 
 

@@ -15,10 +15,12 @@ from .....application.storage.calc_sheets.records import (
     SheetValueCell,
     TabName,
 )
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from ...workbook.calc_sheets_xlsx import materialize_export_plan
 from ..calc_sheets_apply_formatting import build_cell_constraint_requests
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_YEAR = filing_year_envelope().horizon
 
 
 @pytest.mark.parametrize("allowed,limit", [(("A", "B"), None), (("B",), None), (None, 24)])
@@ -35,13 +37,13 @@ def test_unknown_input_keeps_identical_strict_constraint_in_both_transports(allo
         metadata=SheetTemplatePreviewMetadata(
             kind="template_preview",
             modelo_id="188",
-            revision_id="2022",
-            preview_year=2022,
+            revision_id=revision_covering("188", _YEAR).id,
+            preview_year=_YEAR,
             preview_period="0A",
             template_digest="a" * 64,
             engine_version="test",
             title="Ejemplo ficticio",
-            exported_at=datetime(2026, 10, 6, tzinfo=UTC),
+            exported_at=datetime(_YEAR, 10, 6, tzinfo=UTC),
         ),
         human_presentation=True,
         tabs=(TabName.ENTRADAS,),

@@ -10,6 +10,7 @@ from pydantic import AnyHttpUrl
 
 from ......core.config import Settings
 from ......core.period import Period
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope, newest_authored_edition
 from ......domain.calculations.registry.tests.published_authority import published_snapshot
 from ..iva_compensation_wallet_parsing import WALLET_URL
 from ..schema import (
@@ -31,42 +32,44 @@ def declaration_pdf_artefact(body: bytes) -> FiledDeclaracionArtefact:
         content_type="application/pdf",
         byte_count=len(body),
         sha256=hashlib.sha256(body).hexdigest(),
-        captured_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
+        captured_at=datetime(newest_authored_edition("100") + 1, 7, 1, 9, 0, 0, tzinfo=UTC),
     )
 
 
 def filed_declaration_observation(
     artefact: FiledDeclaracionArtefact, *, expediente_id: str = "202310013522456T"
 ) -> FiledDeclaracionObservation:
-    """A presented Modelo 100 / 2023 observation carrying ``artefact``."""
+    """A presented Modelo 100 observation of the newest authored exercise carrying ``artefact``."""
+    ejercicio = newest_authored_edition("100")
     return FiledDeclaracionObservation(
         modelo="100",
-        ejercicio=2023,
-        period=Period.from_year_and_code(2023, "0A"),
+        ejercicio=ejercicio,
+        period=Period.from_year_and_code(ejercicio, "0A"),
         expediente_id=expediente_id,
         status="PRESENTADA",
-        presented_at=datetime(2024, 6, 30, 12, 34, 56, tzinfo=UTC),
+        presented_at=datetime(ejercicio + 1, 6, 30, 12, 34, 56, tzinfo=UTC),
         authenticated_identity="12345678Z",
         artefacts=(artefact,),
-        registry_snapshot_ref=published_snapshot("100", filing_year=2023, period="0A").snapshot_ref,
+        registry_snapshot_ref=published_snapshot("100", filing_year=ejercicio, period="0A").snapshot_ref,
     )
 
 
 def pending_wallet_observation(captured_at: datetime) -> IvaCompensationWalletObservation:
-    """A 2026 second-quarter wallet observation holding 1200 pending from the first quarter."""
+    """A second-quarter wallet observation of the horizon exercise holding 1200 pending from the first quarter."""
+    year = filing_year_envelope().horizon
     return IvaCompensationWalletObservation(
         taxpayer_nif="12345678Z",
         authenticated_identity="12345678Z",
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, "2T"),
+        target_year=year,
+        target_period=Period.from_year_and_code(year, "2T"),
         rows=(
             IvaCompensationWalletRow(
-                generation_year=2026,
-                generation_period=Period.from_year_and_code(2026, "1T"),
+                generation_year=year,
+                generation_period=Period.from_year_and_code(year, "1T"),
                 generated_amount=Decimal("1200"),
                 applied_amount=Decimal("0"),
                 pending_amount=Decimal("1200"),
-                raw_label="2026 | 1T | 1200 | 0 | 1200",
+                raw_label=f"{year} | 1T | 1200 | 0 | 1200",
             ),
         ),
         total_pending=Decimal("1200"),

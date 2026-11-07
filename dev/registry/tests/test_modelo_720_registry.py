@@ -16,6 +16,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Modelo
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_revision_members import DependencyClassificationDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..conformance.registry_schema_support import committed_modelo
@@ -28,6 +29,8 @@ from .modelo_registry_surface_support import (
 from .profile_schema_support import committed_registry_validator, committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+
+_REVISION_ID = str(open_ended_revision("720").id)
 
 
 def _load_modelo_720() -> tuple[ModeloDefinition, RegistryCatalogues]:
@@ -58,7 +61,7 @@ _COMPLETENESS_MANIFEST_LEGAL_REFS = frozenset(
 def test_committed_modelo_720_validates_against_catalogues() -> None:
     modelo, catalogues = _load_modelo_720()
     committed_registry_validator(catalogues).validate_modelo(modelo)
-    assert set(modelo.revisions) == {"2013-y-siguientes"}
+    assert set(modelo.revisions) == {_REVISION_ID}
 
 
 def _modelo_720_with_previous_filing_classification(
@@ -70,7 +73,7 @@ def _modelo_720_with_previous_filing_classification(
     a refusal proves the direct previous-filing gate rather than a dangling id.
     """
     modelo, catalogues = _load_modelo_720()
-    revision = modelo.revisions["2013-y-siguientes"]
+    revision = modelo.revisions[_REVISION_ID]
     classification = next(item for item in revision.dependency_classifications if item.source_modelo == "720")
     construct = next(item for item in revision.constructs if classification.id in item.dependency_classifications)
     mutated_construct = construct.model_copy(
@@ -140,7 +143,7 @@ _SUPPORT = committed_supported_filing_years()
 )
 def test_committed_modelo_720_resolves_revision_by_filing_year(filing_year: int) -> None:
     """Every supported year selects the single open-ended edition."""
-    expected_revision = "2013-y-siguientes"
+    expected_revision = _REVISION_ID
     modelo, catalogues = _load_modelo_720()
     snapshot = build_snapshot(
         modelo,
@@ -251,22 +254,34 @@ def test_committed_modelo_720_filing_schedule_is_annual() -> None:
 
 
 @pytest.mark.parametrize(
-    ("filing_year", "expected_open", "expected_close"),
+    ("sample", "open_month", "close_month", "close_day"),
     [
-        # First ejercicio (2012) had a transitional plazo until 30 April 2013 per Orden HAP/72/2013 DT
-        (2012, date(2013, 2, 1), date(2013, 4, 30)),
+        # First ejercicio had a transitional plazo until 30 April of the following year per Orden HAP/72/2013 DT
+        ("first", 2, 4, 30),
         # Subsequent ejercicios run from 1 January to 31 March of the following year per art 7
-        (2013, date(2014, 1, 1), date(2014, 3, 31)),
-        (2018, date(2019, 1, 1), date(2019, 3, 31)),
-        (2024, date(2025, 1, 1), date(2025, 3, 31)),
+        ("second", 1, 3, 31),
+        ("middle", 1, 3, 31),
+        ("last", 1, 3, 31),
     ],
 )
 def test_committed_modelo_720_deadline_window_is_january_to_march_following_ejercicio(
-    filing_year: int,
-    expected_open: date,
-    expected_close: date,
+    sample: str,
+    open_month: int,
+    close_month: int,
+    close_day: int,
 ) -> None:
     modelo, _ = _load_modelo_720()
+    authored_exercises = sorted(
+        {window.filing_year for revision in modelo.revisions.values() for window in revision.deadline_windows}
+    )
+    filing_year = {
+        "first": authored_exercises[0],
+        "second": authored_exercises[1],
+        "middle": authored_exercises[len(authored_exercises) // 2],
+        "last": authored_exercises[-1],
+    }[sample]
+    expected_open = date(filing_year + 1, open_month, 1)
+    expected_close = date(filing_year + 1, close_month, close_day)
     windows = [
         window
         for revision in modelo.revisions.values()

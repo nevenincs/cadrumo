@@ -31,6 +31,7 @@ from pydantic import BaseModel, ValidationError
 
 from ......core.identity.digest import ContentDigest
 from ......core.period import Period
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......tests.aeat_literal_fixtures import (
     ACCESO_DR_DETAIL_PATH_FIXTURE,
     aeat_url,
@@ -43,7 +44,8 @@ from ..schema import (
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _DIGEST = "3a" * 32
-_CAPTURED_AT = datetime(2026, 1, 2, 12, 0, tzinfo=UTC)
+_YEAR = filing_year_envelope().horizon
+_CAPTURED_AT = datetime(_YEAR, 1, 2, 12, 0, tzinfo=UTC)
 _EXPEDIENTE_ID = "202310013522456T"
 _DETAIL_URL = aeat_url("sede", ACCESO_DR_DETAIL_PATH_FIXTURE)
 
@@ -57,8 +59,8 @@ _ARTEFACT_BASE: Mapping[str, Any] = {
 _WALLET_BASE: Mapping[str, Any] = {
     "taxpayer_nif": "12345678Z",
     "authenticated_identity": "12345678Z",
-    "target_year": 2026,
-    "target_period": Period.from_year_and_code(2026, "1T"),
+    "target_year": _YEAR,
+    "target_period": Period.from_year_and_code(_YEAR, "1T"),
     "total_pending": Decimal("0"),
     "source_url": _DETAIL_URL,
     "captured_at": _CAPTURED_AT,

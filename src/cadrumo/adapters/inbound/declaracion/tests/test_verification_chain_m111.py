@@ -29,11 +29,14 @@ from __future__ import annotations
 
 import json
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .....tests.inventory import FIXTURES_DIR
+from .parser_boundary_support import specimen_period
 from .verification_chain_support import (
     COMPUTED_CASILLAS_M111,
     calculate_engine_values_from_inputs,
@@ -86,14 +89,22 @@ _M111_EPIGRAFE_PROBES: dict[CasillaId, Decimal] = {
 }
 _M111_PAGOS_ANTERIORES_PROBE = Decimal("1234.56")
 
-_M111_QUARTER_CASES = (
+_M111_QUARTER_RENDER_CASILLAS = frozenset(validated_casilla_id(_v) for _v in ("07", "08", "09", "28", "30"))
+#: The 4T render prints casilla 30 alone. Pinning that explicitly is what
+#: makes that case assert something.
+_M111_FOURTH_QUARTER_RENDER_CASILLAS = frozenset(validated_casilla_id(_v) for _v in ("30",))
+
+
+def _m111_quarter_case(render: Path) -> tuple[str, int, str, frozenset[CasillaId]]:
+    """Describe one committed render by the period it is named for and the casilla set it prints."""
+    specimen = specimen_period(render)
+    printed = _M111_FOURTH_QUARTER_RENDER_CASILLAS if specimen.code == "4T" else _M111_QUARTER_RENDER_CASILLAS
     # (pdf_stem, year, period, the casilla set this render prints)
-    ("2024-1T", 2024, "1T", frozenset(validated_casilla_id(_v) for _v in ("07", "08", "09", "28", "30"))),
-    ("2024-2T", 2024, "2T", frozenset(validated_casilla_id(_v) for _v in ("07", "08", "09", "28", "30"))),
-    ("2024-3T", 2024, "3T", frozenset(validated_casilla_id(_v) for _v in ("07", "08", "09", "28", "30"))),
-    # The 4T render prints casilla 30 alone. Pinning that explicitly is what
-    # makes this case assert something.
-    ("2024-4T", 2024, "4T", frozenset(validated_casilla_id(_v) for _v in ("30",))),
+    return render.stem, specimen.filing_year, specimen.code, printed
+
+
+_M111_QUARTER_CASES = tuple(
+    _m111_quarter_case(render) for render in sorted((FIXTURES_DIR / "justificantes" / "111").glob("*.pdf"))
 )
 
 
@@ -174,7 +185,7 @@ def test_verification_chain_m111_aggregates_the_epigrafes_the_orden_names() -> N
     """
     engine_values = calculate_engine_values_from_inputs(
         modelo="111",
-        year=2024,
+        year=filing_year_envelope().horizon,
         period="1T",
         label="M111/probe/aggregation",
         inputs={**_M111_EPIGRAFE_PROBES, _M111_PAGOS_ANTERIORES_CASILLA: _M111_PAGOS_ANTERIORES_PROBE},

@@ -41,6 +41,7 @@ import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.ids import BindingId
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from .verification_chain_support import (
     M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
     M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
@@ -104,7 +105,7 @@ def test_m303_engine_sums_supplied_primitives_not_a_printed_total() -> None:
         M303_STATE_ATTRIBUTION_RATIO_CASILLA: Decimal("100"),
     }
 
-    base_values = _run_engine(base_inputs, 2023, "1T")
+    base_values = _run_engine(base_inputs, filing_year_envelope().horizon, "1T")
     base_devengada = base_values[M303_CUOTA_DEVENGADA_TOTAL_CASILLA]
 
     # A zero baseline would make the delta assertion pass even if the engine
@@ -118,7 +119,7 @@ def test_m303_engine_sums_supplied_primitives_not_a_printed_total() -> None:
     delta = Decimal("100.00")
     mutated_inputs = dict(base_inputs)
     mutated_inputs[_IVA_REPERCUTIDO_GENERAL_CASILLA] = primitive + delta
-    mutated_values = _run_engine(mutated_inputs, 2023, "1T")
+    mutated_values = _run_engine(mutated_inputs, filing_year_envelope().horizon, "1T")
     mutated_devengada = mutated_values[M303_CUOTA_DEVENGADA_TOTAL_CASILLA]
 
     assert mutated_devengada - base_devengada == delta, (

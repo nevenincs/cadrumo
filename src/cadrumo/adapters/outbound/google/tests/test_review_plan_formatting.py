@@ -7,16 +7,18 @@ import pytest
 
 from .....application.storage.calc_sheets.review_workbook import build_review_workbook
 from .....application.storage.calc_sheets.tests.review_fixture import review_label, review_snapshot
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..calc_sheets_apply_formatting import build_number_format_requests
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_YEAR = filing_year_envelope().horizon
 
 
 def test_native_review_date_and_decimal_formats_match_plan() -> None:
     plan = build_review_workbook(
         review_snapshot(),
         publication_id=UUID(int=2),
-        exported_at=datetime(2026, 10, 5, tzinfo=UTC),
+        exported_at=datetime(_YEAR, 10, 5, tzinfo=UTC),
         label=review_label,
     )
     requests = build_number_format_requests(

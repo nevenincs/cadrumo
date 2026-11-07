@@ -9,14 +9,14 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ..compiler.loader import load_modelo_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _MODELO = "038"
-_PREDECESSOR = "2024-desde-06"
-_SUCCESSOR = "2025-y-siguientes"
+_PREDECESSOR, _SUCCESSOR = (str(revision.id) for revision in authored_revisions(_MODELO)[-2:])
 _ATTESTED_CONTINUIDAD = "filing-year"
 
 _RESTATED_ROW_WITH_ITS_OWN_CLAIM = f"""[[revisions."{_SUCCESSOR}".casillas]]

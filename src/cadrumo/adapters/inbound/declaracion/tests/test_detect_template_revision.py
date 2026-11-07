@@ -22,9 +22,13 @@ from __future__ import annotations
 
 import pytest
 
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ..detect import detect_template_revision_from_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+
+_EXERCISE = filing_year_envelope().horizon
+_BELOW_FLOOR = filing_year_envelope().floor - 1
 
 
 def test_detect_returns_none_for_empty_pages_tuple() -> None:
@@ -34,19 +38,19 @@ def test_detect_returns_none_for_empty_pages_tuple() -> None:
 def test_detect_returns_template_revision_with_header_markers() -> None:
     """Single page with both Modelo and Ejercicio headers — the
     detector returns a TemplateRevision with detected_from='header'."""
-    page = "Modelo: 130\nEjercicio: 2025\nOther data follows.\n"
+    page = f"Modelo: 130\nEjercicio: {_EXERCISE}\nOther data follows.\n"
 
     revision = detect_template_revision_from_pages((page,))
 
     assert revision is not None
     assert revision.modelo == "130"
-    assert revision.año == 2025
+    assert revision.año == _EXERCISE
     assert revision.detected_from == "header"
 
 
 def test_detect_returns_none_when_required_header_is_missing() -> None:
     for label, page in (
-        ("missing-modelo", "Ejercicio: 2025\nOther data follows.\n"),
+        ("missing-modelo", f"Ejercicio: {_EXERCISE}\nOther data follows.\n"),
         ("missing-ejercicio", "Modelo: 130\nOther data follows.\n"),
     ):
         assert detect_template_revision_from_pages((page,)) is None, label
@@ -57,13 +61,13 @@ def test_detect_revision_tag_from_orden_hac_footer_or_ejercicio_fallback() -> No
     for label, page, expected_revision in (
         (
             "orden-hac-footer",
-            "Modelo: 303\nEjercicio: 2025\nResto del cuerpo...\nAprobado por Orden HAC/819/2024 BOE 30-07-2024.\n",
+            f"Modelo: 303\nEjercicio: {_EXERCISE}\nResto del cuerpo...\nAprobado por Orden HAC/819/2024 BOE 30-07-2024.\n",
             "2024.orden-819",
         ),
         (
             "fallback-ejercicio",
-            "Modelo: 130\nEjercicio: 2025\nNo Orden footer here.\n",
-            "2025.01",
+            f"Modelo: 130\nEjercicio: {_EXERCISE}\nNo Orden footer here.\n",
+            f"{_EXERCISE}.01",
         ),
     ):
         revision = detect_template_revision_from_pages((page,))
@@ -78,19 +82,19 @@ def test_detect_searches_first_two_pages_for_ejercicio_header() -> None:
     the Ejercicio marker to page 2; the detector unions pages 1-2
     for the header search."""
     page_one = "Modelo: 100\nINFORMACIÓN DE LA PRESENTACIÓN\n"
-    page_two = "Ejercicio: 2021\nDeclaración details.\n"
+    page_two = f"Ejercicio: {_BELOW_FLOOR}\nDeclaración details.\n"
 
     revision = detect_template_revision_from_pages((page_one, page_two))
 
     assert revision is not None
-    assert revision.año == 2021
+    assert revision.año == _BELOW_FLOOR
 
 
 def test_detect_finds_orden_hac_when_only_present_in_last_page_tail() -> None:
     """The Orden HAC regex is searched in the head span first, then
     in the tail of the last page (last 2000 chars). A footer that
     appears only in the tail still pins the revision tag."""
-    head_page = "Modelo: 303\nEjercicio: 2025\n" + "body content\n" * 20
+    head_page = f"Modelo: 303\nEjercicio: {_EXERCISE}\n" + "body content\n" * 20
     tail_page = "x" * 1500 + "\nAprobado por Orden HAC/100/2024 BOE 2024.\n"
 
     revision = detect_template_revision_from_pages((head_page, tail_page))
@@ -102,10 +106,10 @@ def test_detect_finds_orden_hac_when_only_present_in_last_page_tail() -> None:
 def test_detect_header_regex_is_case_insensitive() -> None:
     """``modelo:`` / ``EJERCICIO:`` (mixed case) still matches the
     header regexes (compiled with re.IGNORECASE)."""
-    page = "modelo: 130\nEJERCICIO: 2025\n"
+    page = f"modelo: 130\nEJERCICIO: {_EXERCISE}\n"
 
     revision = detect_template_revision_from_pages((page,))
 
     assert revision is not None
     assert revision.modelo == "130"
-    assert revision.año == 2025
+    assert revision.año == _EXERCISE

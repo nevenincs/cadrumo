@@ -46,8 +46,6 @@ _LIVE_M100_YEARS = single_exercise_editions("100")
 # formula exist in every later one.
 _ANUALIDADES_MANUAL_INPUT_YEARS = _LIVE_M100_YEARS[:2]
 _ANUALIDADES_FORMULA_YEARS = _LIVE_M100_YEARS[2:]
-# The declaración-PDF extraction profiles this pins are the second to fourth authored editions.
-_EXTRACTION_PROFILE_YEARS = _LIVE_M100_YEARS[1:4]
 
 #: Each edition's applicability window cites the redaction of an article actually in force at its devengo
 #: (the catalogue records an amended article as one row per redaction), resolved from the catalogue's own
@@ -280,7 +278,8 @@ def test_modelo_100_autonomic_quota_formula_refs_match_lirpf_articles() -> None:
 
 
 def test_modelo_100_extraction_profile_legal_refs_match_target_casillas() -> None:
-    for filing_year in _EXTRACTION_PROFILE_YEARS:
+    profiled_editions = 0
+    for filing_year in _LIVE_M100_YEARS:
         revision = _revision_for(filing_year)
         casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
         profiles_by_surface = {
@@ -288,8 +287,11 @@ def test_modelo_100_extraction_profile_legal_refs_match_target_casillas() -> Non
             for profile in revision.extraction_profiles
             if profile.surface in M100_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_SURFACE
         }
+        if not profiles_by_surface:
+            continue
+        profiled_editions += 1
 
-        assert set(profiles_by_surface) == set(M100_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_SURFACE)
+        assert set(profiles_by_surface) == set(M100_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_SURFACE), filing_year
         for surface, profile in profiles_by_surface.items():
             expected_refs = frozenset(
                 governing_redaction(reference_id, revision)
@@ -304,3 +306,7 @@ def test_modelo_100_extraction_profile_legal_refs_match_target_casillas() -> Non
             assert target_refs == expected_refs, (filing_year, surface)
             assert set(profile.legal_refs) == expected_refs, (filing_year, surface)
             assert BROAD_DEDUCTION_ART_68_REF not in profile.legal_refs
+
+    assert profiled_editions
+    assert _REVIEWED_EDITION in _LIVE_M100_YEARS
+    assert _revision_for(_REVIEWED_EDITION).extraction_profiles

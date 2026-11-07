@@ -8,6 +8,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..conformance.registry_schema_support import committed_modelo
@@ -25,6 +26,8 @@ def _load_modelo_840():
     return committed_modelo("840")
 
 
+_REVISION_ID = str(open_ended_revision("840").id)
+
 _DECLARATION_PROFILE_TARGET_LEGAL_REFS = frozenset(
     [
         "orden-hac-2572-2003:apartado-1",
@@ -36,7 +39,7 @@ _DECLARATION_PROFILE_TARGET_LEGAL_REFS = frozenset(
 def test_committed_modelo_840_validates_against_catalogues() -> None:
     modelo, catalogues = _load_modelo_840()
     committed_registry_validator(catalogues).validate_modelo(modelo)
-    assert set(modelo.revisions) == {"2003-y-siguientes"}
+    assert set(modelo.revisions) == {_REVISION_ID}
 
 
 def test_committed_modelo_840_resolves_revision_by_filing_year() -> None:
@@ -46,7 +49,7 @@ def test_committed_modelo_840_resolves_revision_by_filing_year() -> None:
     floor = catalogues.supported_filing_years.floor
     with pytest.raises(FilingYearOutsideSupportEnvelopeError):
         build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=floor - 1, period="0A")
-    for filing_year in (floor, 2024, 2026):
+    for filing_year in catalogues.supported_filing_years.years:
         # Modelo 840 is the IAE censal declaration: informative, filed on AEAT's
         # own surface, declaring no export layout, and graded `applicability`
         # accordingly. Building at the FILING default refuses on the missing
@@ -62,7 +65,7 @@ def test_committed_modelo_840_resolves_revision_by_filing_year() -> None:
             period="0A",
             grade=revision.effective_authority_grade,
         )
-        assert snapshot.revision.id == "2003-y-siguientes", filing_year
+        assert snapshot.revision.id == _REVISION_ID, filing_year
         assert snapshot.revision.orden_aplicabilidad == ("orden-hac-2572-2003:apartado-1",)
 
 

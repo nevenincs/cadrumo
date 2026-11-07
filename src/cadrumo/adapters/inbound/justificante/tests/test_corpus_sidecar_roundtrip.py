@@ -45,7 +45,7 @@ from pydantic import TypeAdapter
 
 from .....core.aeat_csv import is_aeat_csv
 from .....core.directory_scan import scan_directory
-from .....core.period import Period
+from .....core.period import Period, is_filing_period_token
 from .....domain.justificante.schema import Justificante
 from .....tests.aeat_literal_fixtures import aeat_host
 from .....tests.inventory import FIXTURES_DIR
@@ -70,35 +70,6 @@ _CSV_SYNTHETIC_RE = re.compile(r"^SANITIZED(\d{3})(\d{4})$")
 
 _REPLACEMENTS_ADAPTER: TypeAdapter[list[dict[str, object]]] = TypeAdapter(list[dict[str, object]])
 
-# Fixtures where the PDF body prints only the ejercicio year as the period
-# (no explicit "Período N" label) — the parser's observed period therefore
-# equals the year string, not the filename period token.
-_PERIOD_EQUALS_EJERCICIO: frozenset[tuple[str, str]] = frozenset(
-    {
-        # M190 Resumen anual 2024: positional layout prints only year.
-        ("190", "2024-0A"),
-        # M390 2021-0A: real multi-page PDF in English layout that omits
-        # a labelled Período token; parser promotes ejercicio as period.
-        # M390 2022-0A and 2023-0A are synthetic fixtures that print
-        # "Periodo: 0A" explicitly — their period IS "0A", not the year.
-        ("390", "2021-0A"),
-        # M100 2023: newer layout omits labelled Período token.
-        ("100", "2023-0A"),
-        # M036: censal declaracion with event codes (alta/modificacion/baja),
-        # no calendar Periodo label; parser falls back to ejercicio year.
-        ("036", "2025-0A"),
-        ("036", "2025-alta"),
-        # M184, M232, M347, M720, M840: annual informativas with no Periodo
-        # label; parser fallback returns the ejercicio year.
-        ("184", "2024-0A"),
-        ("232", "2016-0A"),
-        ("232", "2018-0A"),
-        ("347", "2024-0A"),
-        ("720", "2024-0A"),
-        ("840", "2024-0A"),
-    },
-)
-
 
 @dataclass(frozen=True)
 class _SidecarGroundTruth:
@@ -112,16 +83,16 @@ class _SidecarGroundTruth:
     expected_period: str
 
 
-def _derive_expected_period(modelo: str, stem: str, ejercicio: str, filename_period: str) -> str:
+def _derive_expected_period(ejercicio: str, filename_period: str) -> str:
     """Return the period token the parser is expected to emit for this fixture.
 
-    Most fixtures emit the period verbatim from the PDF.  A small set of
-    annual / resumen-anual layouts omit the labelled period and the parser
-    promotes the ejercicio year instead.
+    A calendar period token in the fixture name is printed in the PDF and is
+    emitted verbatim. A censal event code (alta, modificacion, baja) names no
+    calendar period, so the parser promotes the ejercicio instead.
     """
-    if (modelo, stem) in _PERIOD_EQUALS_EJERCICIO:
-        return ejercicio
-    return filename_period
+    if is_filing_period_token(filename_period):
+        return filename_period
+    return ejercicio
 
 
 def _load_ground_truth(sidecar_path: Path, modelo: str, stem: str) -> _SidecarGroundTruth | None:
@@ -164,7 +135,7 @@ def _load_ground_truth(sidecar_path: Path, modelo: str, stem: str) -> _SidecarGr
         # Inconsistent manifest — skip rather than assert garbage.
         return None  # pragma: no cover
 
-    expected_period = _derive_expected_period(modelo, stem, sidecar_ejercicio, period_from_stem)
+    expected_period = _derive_expected_period(sidecar_ejercicio, period_from_stem)
 
     return _SidecarGroundTruth(
         expected_tax_id=tax_id_token,

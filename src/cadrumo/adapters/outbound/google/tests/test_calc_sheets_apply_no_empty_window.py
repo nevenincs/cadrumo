@@ -7,13 +7,10 @@ tests do not establish real Google acceptance.
 
 from __future__ import annotations
 
-from datetime import date
-
 import pytest
 
 from .....application.storage.calc_sheets.engine import build_export_plan
 from .....application.storage.calc_sheets.records import SheetCellAddress, TabName
-from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..calc_sheets_apply_values import (
     build_evidence_value_data,
     build_formula_data,
@@ -22,13 +19,13 @@ from ..calc_sheets_apply_values import (
     build_value_data,
     written_cell_values,
 )
+from ._calc_sheets_support import modelo_130_first_quarter_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
 def _m130_plan():
-    snapshot = published_snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
-    return build_export_plan(snapshot)
+    return build_export_plan(modelo_130_first_quarter_snapshot())
 
 
 def _payload(plan) -> list[dict[str, object]]:

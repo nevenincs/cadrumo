@@ -34,7 +34,7 @@ class PayloadCapture:
         self.payload = payload.payload
 
 
-@pytest.mark.parametrize("revision_id", ("2022", "2023", "2024", "2025"))
+@pytest.mark.parametrize("revision_id", tuple(edition_export_scenarios("390")))
 def test_neutral_m390_scenario_exports_and_missing_election_still_refuses(revision_id: str) -> None:
     """Each real annual envelope exports, while unresolved election consumes nothing."""
     scenario = edition_export_scenarios("390")[revision_id]

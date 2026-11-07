@@ -29,6 +29,7 @@ from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from ......application.user_profile.censal_observation import CensalObservation
 from ......core.config import Settings
 from ......core.period import Period
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......tests.aeat_literal_fixtures import (
     CENSAL_WRITE_SURFACE_PATH_CANARIES,
     CLAVE_AUTHORIZATION_SELECTOR_HTML_FIXTURE,
@@ -607,8 +608,8 @@ class TestWalletDirectAuthenticatedEntry:
                 with pytest.raises(SedeNavigationError) as excinfo:
                     await fetch_iva_compensation_wallet(
                         offline_aeat_session().model_copy(update={"storage_state_path": Path("stored-session")}),
-                        target_year=2026,
-                        target_period=Period.from_year_and_code(2026, "2T"),
+                        target_year=filing_year_envelope().horizon,
+                        target_period=Period.from_year_and_code(filing_year_envelope().horizon, "2T"),
                     )
             finally:
                 boundary.close()

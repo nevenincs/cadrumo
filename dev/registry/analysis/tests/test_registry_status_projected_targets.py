@@ -7,8 +7,6 @@ resolver rather than a stand-in.
 
 from __future__ import annotations
 
-from typing import cast
-
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
@@ -27,7 +25,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 @pytest.fixture(scope="module")
 def authority() -> ValidatedRegistryAuthority:
-    return cast("ValidatedRegistryAuthority", compiled_bundled_authority())
+    return compiled_bundled_authority()
 
 
 def _classify(authority: ValidatedRegistryAuthority, modelo_id: str, revision_id: str) -> str | None:

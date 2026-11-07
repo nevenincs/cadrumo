@@ -28,9 +28,11 @@ fixture's synthetic origin; the no-pager fixture is a real sanitised capture.
 from __future__ import annotations
 
 import re
+from pathlib import Path
 
 import pytest
 
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......tests.inventory import FIXTURES_DIR
 from ..declarations import register_rows_from_snapshot
 from ..declarations_listbox import parse_listbox
@@ -39,6 +41,20 @@ from ..errors import SedeParseError
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _FIXTURE_ROOT = FIXTURES_DIR / "aeat-sede"
+
+_EJERCICIO = filing_year_envelope().horizon
+
+_REAL_CAPTURE = _FIXTURE_ROOT / "declaraciones-modelo-100-2022.html"
+
+
+def _capture_ejercicio(capture: Path) -> int:
+    """Return the exercise a sanitised capture is filed under, which its file name states."""
+    stated = re.search(r"-(\d{4})\.html$", capture.name)
+    assert stated is not None, f"{capture.name} states no exercise"
+    return int(stated.group(1))
+
+
+_EJERCICIO_CAPTURE = _capture_ejercicio(_REAL_CAPTURE)
 
 # Both cross-checks below are lifted from the fixture's own raw markup, never
 # from anything the production parser computes, so the comparisons are genuine
@@ -76,14 +92,14 @@ def test_page_declaring_more_records_than_it_rendered_is_refused() -> None:
     )
 
     with pytest.raises(SedeParseError) as exc_info:
-        register_rows_from_snapshot(html, modelo="100", ejercicio=2026)
+        register_rows_from_snapshot(html, modelo="100", ejercicio=_EJERCICIO)
 
     context = exc_info.value.context
     assert context is not None
     assert context["rendered_count"] == rendered_rows
     assert context["declared_total"] == declared_total
     assert context["modelo"] == "100"
-    assert context["ejercicio"] == 2026
+    assert context["ejercicio"] == _EJERCICIO
 
 
 def test_truncated_page_still_parses_its_rows_and_reports_the_declared_total() -> None:
@@ -96,7 +112,7 @@ def test_truncated_page_still_parses_its_rows_and_reports_the_declared_total() -
     """
     html = (_FIXTURE_ROOT / "declaraciones-modelo-100-paginated-synthetic.html").read_text(encoding="utf-8")
 
-    page = parse_listbox(html, modelo="100", ejercicio=2026)
+    page = parse_listbox(html, modelo="100", ejercicio=_EJERCICIO)
 
     assert page.declared_total == _fixture_declared_total(html)
     assert len(page.rows) == _fixture_rendered_rows(html)
@@ -112,11 +128,11 @@ def test_real_capture_without_a_pager_is_never_treated_as_truncated() -> None:
     on every ordinary capture, which is a worse failure than the silent
     undercount it exists to prevent.
     """
-    html = (_FIXTURE_ROOT / "declaraciones-modelo-100-2022.html").read_text(encoding="utf-8")
+    html = _REAL_CAPTURE.read_text(encoding="utf-8")
     assert _fixture_declared_total(html) is None, "fixture grew a pager label; it can no longer pin the no-pager case"
 
-    page = parse_listbox(html, modelo="100", ejercicio=2022)
-    rows = register_rows_from_snapshot(html, modelo="100", ejercicio=2022)
+    page = parse_listbox(html, modelo="100", ejercicio=_EJERCICIO_CAPTURE)
+    rows = register_rows_from_snapshot(html, modelo="100", ejercicio=_EJERCICIO_CAPTURE)
 
     assert page.declared_total is None
     assert page.truncated is False

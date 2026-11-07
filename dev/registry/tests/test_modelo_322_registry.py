@@ -12,6 +12,11 @@ from cadrumo.domain.calculations.registry.deadline_coordinate import deadline_se
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    open_ended_revision,
+)
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
@@ -30,7 +35,17 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 _CALENDAR_EXERCISE = source_first_exercise(
     source_with_sha256("8d84b3067cce798dd6bfb2c83de3cf68bcd6e199ad584802ab9ee09fb9e53a09")
 )
-_LEGACY_MONTHLY_REVISION = "2008-2022"
+_REVISIONS = authored_revisions("322")
+_LEGACY_MONTHLY_REVISION = str(_REVISIONS[0].id)
+# The two-exercise design and the open-ended one that follows it.
+_MIDDLE_REVISION = _REVISIONS[2]
+_MIDDLE_ID = str(_MIDDLE_REVISION.id)
+_MIDDLE_LAST = _MIDDLE_REVISION.valid_to.year if _MIDDLE_REVISION.valid_to else _MIDDLE_REVISION.valid_from.year
+_OPEN_ENDED_REVISION = open_ended_revision("322")
+_OPEN_ENDED_ID = str(_OPEN_ENDED_REVISION.id)
+_OPEN_ENDED_FIRST = _OPEN_ENDED_REVISION.valid_from.year
+# Every exercise after the legacy monthly one, up to the newest the registry supports.
+_LATER_EXERCISES = tuple(range(_CALENDAR_EXERCISE + 1, filing_year_envelope().horizon + 1))
 
 
 def _load_modelo_322() -> tuple[ModeloDefinition, RegistryCatalogues]:
@@ -73,10 +88,10 @@ def test_modelo_322_snapshot_builds_for_each_month() -> None:
             modelo,
             catalogues,
             source_root=bundled_path(),
-            filing_year=2025,
+            filing_year=_MIDDLE_LAST,
             period=period,
         )
-        assert snapshot.revision.id == "2024-2025"
+        assert snapshot.revision.id == _MIDDLE_ID
         assert snapshot.revision.orden_aplicabilidad == ("orden-eha-3434-2007:art-1",)
 
 
@@ -87,32 +102,32 @@ def test_modelo_322_january_period_uses_official_calendar_shift() -> None:
     # was split at ejercicio 2026, so the 2026 January window belongs to
     # `2026-y-siguientes` while the 2025 one belongs to `2024-2025`; taking both
     # from one revision only worked while there was only one.
-    windows = {w.id: w for w in modelo.revisions["2024-2025"].deadline_windows}
-    later_windows = {w.id: w for w in modelo.revisions["2026-y-siguientes"].deadline_windows}
+    windows = {w.id: w for w in modelo.revisions[_MIDDLE_ID].deadline_windows}
+    later_windows = {w.id: w for w in modelo.revisions[_OPEN_ENDED_ID].deadline_windows}
 
-    jan_2025 = windows["modelo-322-2025-01"]
-    assert jan_2025.opens_on == date(2025, 2, 1)
-    assert jan_2025.closes_on == date(2025, 2, 28)
+    jan_last_middle = windows[f"modelo-322-{_MIDDLE_LAST}-01"]
+    assert jan_last_middle.opens_on == date(_MIDDLE_LAST, 2, 1)
+    assert jan_last_middle.closes_on == date(_MIDDLE_LAST, 2, 28)
 
-    jan_2026 = later_windows["modelo-322-2026-01"]
-    assert jan_2026.opens_on == date(2026, 2, 1)
-    assert jan_2026.closes_on == date(2026, 3, 2)
-    assert "aeat-modelo-322-procedure" in jan_2026.source_refs
-    assert "aeat-calendario-contribuyente-2026-hasta-2-marzo" in jan_2026.source_refs
+    jan_first_open = later_windows[f"modelo-322-{_OPEN_ENDED_FIRST}-01"]
+    assert jan_first_open.opens_on == date(_OPEN_ENDED_FIRST, 2, 1)
+    assert jan_first_open.closes_on == date(_OPEN_ENDED_FIRST, 3, 2)
+    assert "aeat-modelo-322-procedure" in jan_first_open.source_refs
+    assert f"aeat-calendario-contribuyente-{_OPEN_ENDED_FIRST}-hasta-2-marzo" in jan_first_open.source_refs
 
 
 def test_modelo_322_other_months_close_within_30_days_of_following_month() -> None:
     modelo, _ = _load_modelo_322()
-    revision = modelo.revisions["2024-2025"]
+    revision = modelo.revisions[_MIDDLE_ID]
     windows = {w.id: w for w in revision.deadline_windows}
 
-    jun_2025 = windows["modelo-322-2025-06"]
-    assert jun_2025.opens_on == date(2025, 7, 1)
-    assert jun_2025.closes_on == date(2025, 7, 30)
+    jun_last_middle = windows[f"modelo-322-{_MIDDLE_LAST}-06"]
+    assert jun_last_middle.opens_on == date(_MIDDLE_LAST, 7, 1)
+    assert jun_last_middle.closes_on == date(_MIDDLE_LAST, 7, 30)
 
-    dec_2025 = windows["modelo-322-2025-12"]
-    assert dec_2025.opens_on == date(2026, 1, 1)
-    assert dec_2025.closes_on == date(2026, 1, 30)
+    dec_last_middle = windows[f"modelo-322-{_MIDDLE_LAST}-12"]
+    assert dec_last_middle.opens_on == date(_MIDDLE_LAST + 1, 1, 1)
+    assert dec_last_middle.closes_on == date(_MIDDLE_LAST + 1, 1, 30)
 
 
 def test_modelo_322_calendar_exercise_deadlines_exactly_match_official_aeat_calendars() -> None:
@@ -179,65 +194,81 @@ def test_modelo_322_calendar_exercise_deadlines_have_one_canonical_owner_and_pro
 
 def test_modelo_322_supported_deadlines_are_exact_complete_and_canonically_owned() -> None:
     modelo, _ = _load_modelo_322()
-    expected_rows = (
-        (2023, "01", "2023-02-01", "2023-02-28", 2023),
-        (2023, "02", "2023-03-01", "2023-03-30", 2023),
-        (2023, "03", "2023-04-01", "2023-05-02", 2023),
-        (2023, "04", "2023-05-01", "2023-05-30", 2023),
-        (2023, "05", "2023-06-01", "2023-06-30", 2023),
-        (2023, "06", "2023-07-01", "2023-07-31", 2023),
-        (2023, "07", "2023-08-01", "2023-08-30", 2023),
-        (2023, "08", "2023-09-01", "2023-10-02", 2023),
-        (2023, "09", "2023-10-01", "2023-10-30", 2023),
-        (2023, "10", "2023-11-01", "2023-11-30", 2023),
-        (2023, "11", "2023-12-01", "2024-01-02", 2023),
-        (2023, "12", "2024-01-01", "2024-01-30", 2024),
-        (2024, "01", "2024-02-01", "2024-02-29", 2024),
-        (2024, "02", "2024-03-01", "2024-04-01", 2024),
-        (2024, "03", "2024-04-01", "2024-04-30", 2024),
-        (2024, "04", "2024-05-01", "2024-05-30", 2024),
-        (2024, "05", "2024-06-01", "2024-07-01", 2024),
-        (2024, "06", "2024-07-01", "2024-07-30", 2024),
-        (2024, "07", "2024-08-01", "2024-08-30", 2024),
-        (2024, "08", "2024-09-01", "2024-09-30", 2024),
-        (2024, "09", "2024-10-01", "2024-10-30", 2024),
-        (2024, "10", "2024-11-01", "2024-12-02", 2024),
-        (2024, "11", "2024-12-01", "2024-12-30", 2024),
-        (2024, "12", "2025-01-01", "2025-01-30", 2025),
-        (2025, "01", "2025-02-01", "2025-02-28", 2025),
-        (2025, "02", "2025-03-01", "2025-03-31", 2025),
-        (2025, "03", "2025-04-01", "2025-04-30", 2025),
-        (2025, "04", "2025-05-01", "2025-05-30", 2025),
-        (2025, "05", "2025-06-01", "2025-06-30", 2025),
-        (2025, "06", "2025-07-01", "2025-07-30", 2025),
-        (2025, "07", "2025-08-01", "2025-09-01", 2025),
-        (2025, "08", "2025-09-01", "2025-09-30", 2025),
-        (2025, "09", "2025-10-01", "2025-10-30", 2025),
-        (2025, "10", "2025-11-01", "2025-12-01", 2025),
-        (2025, "11", "2025-12-01", "2025-12-30", 2025),
-        (2025, "12", "2026-01-01", "2026-01-30", 2026),
-        (2026, "01", "2026-02-01", "2026-03-02", 2026),
-        (2026, "02", "2026-03-01", "2026-03-30", 2026),
-        (2026, "03", "2026-04-01", "2026-04-30", 2026),
-        (2026, "04", "2026-05-01", "2026-06-01", 2026),
-        (2026, "05", "2026-06-01", "2026-06-30", 2026),
-        (2026, "06", "2026-07-01", "2026-07-30", 2026),
-        (2026, "07", "2026-08-01", "2026-08-31", 2026),
-        (2026, "08", "2026-09-01", "2026-09-30", 2026),
-        (2026, "09", "2026-10-01", "2026-10-30", 2026),
-        (2026, "10", "2026-11-01", "2026-11-30", 2026),
-        (2026, "11", "2026-12-01", "2026-12-30", 2026),
-        (2026, "12", "2027-01-01", "2027-02-01", 2027),
+    # Official presentation days of each exercise after the legacy monthly one, recorded in order of exercise:
+    # (period, opens year offset, opens month and day, closes year offset, closes month and day, source year offset).
+    expected_by_exercise = (
+        (
+            ("01", 0, 2, 1, 0, 2, 28, 0),
+            ("02", 0, 3, 1, 0, 3, 30, 0),
+            ("03", 0, 4, 1, 0, 5, 2, 0),
+            ("04", 0, 5, 1, 0, 5, 30, 0),
+            ("05", 0, 6, 1, 0, 6, 30, 0),
+            ("06", 0, 7, 1, 0, 7, 31, 0),
+            ("07", 0, 8, 1, 0, 8, 30, 0),
+            ("08", 0, 9, 1, 0, 10, 2, 0),
+            ("09", 0, 10, 1, 0, 10, 30, 0),
+            ("10", 0, 11, 1, 0, 11, 30, 0),
+            ("11", 0, 12, 1, 1, 1, 2, 0),
+            ("12", 1, 1, 1, 1, 1, 30, 1),
+        ),
+        (
+            ("01", 0, 2, 1, 0, 2, 29, 0),
+            ("02", 0, 3, 1, 0, 4, 1, 0),
+            ("03", 0, 4, 1, 0, 4, 30, 0),
+            ("04", 0, 5, 1, 0, 5, 30, 0),
+            ("05", 0, 6, 1, 0, 7, 1, 0),
+            ("06", 0, 7, 1, 0, 7, 30, 0),
+            ("07", 0, 8, 1, 0, 8, 30, 0),
+            ("08", 0, 9, 1, 0, 9, 30, 0),
+            ("09", 0, 10, 1, 0, 10, 30, 0),
+            ("10", 0, 11, 1, 0, 12, 2, 0),
+            ("11", 0, 12, 1, 0, 12, 30, 0),
+            ("12", 1, 1, 1, 1, 1, 30, 1),
+        ),
+        (
+            ("01", 0, 2, 1, 0, 2, 28, 0),
+            ("02", 0, 3, 1, 0, 3, 31, 0),
+            ("03", 0, 4, 1, 0, 4, 30, 0),
+            ("04", 0, 5, 1, 0, 5, 30, 0),
+            ("05", 0, 6, 1, 0, 6, 30, 0),
+            ("06", 0, 7, 1, 0, 7, 30, 0),
+            ("07", 0, 8, 1, 0, 9, 1, 0),
+            ("08", 0, 9, 1, 0, 9, 30, 0),
+            ("09", 0, 10, 1, 0, 10, 30, 0),
+            ("10", 0, 11, 1, 0, 12, 1, 0),
+            ("11", 0, 12, 1, 0, 12, 30, 0),
+            ("12", 1, 1, 1, 1, 1, 30, 1),
+        ),
+        (
+            ("01", 0, 2, 1, 0, 3, 2, 0),
+            ("02", 0, 3, 1, 0, 3, 30, 0),
+            ("03", 0, 4, 1, 0, 4, 30, 0),
+            ("04", 0, 5, 1, 0, 6, 1, 0),
+            ("05", 0, 6, 1, 0, 6, 30, 0),
+            ("06", 0, 7, 1, 0, 7, 30, 0),
+            ("07", 0, 8, 1, 0, 8, 31, 0),
+            ("08", 0, 9, 1, 0, 9, 30, 0),
+            ("09", 0, 10, 1, 0, 10, 30, 0),
+            ("10", 0, 11, 1, 0, 11, 30, 0),
+            ("11", 0, 12, 1, 0, 12, 30, 0),
+            ("12", 1, 1, 1, 1, 2, 1, 1),
+        ),
     )
+    assert len(_LATER_EXERCISES) == len(expected_by_exercise)
     expected = {
-        (year, period): (date.fromisoformat(opens), date.fromisoformat(closes), source_year)
-        for year, period, opens, closes, source_year in expected_rows
+        (year, period): (
+            date(year + opens_offset, opens_month, opens_day),
+            date(year + closes_offset, closes_month, closes_day),
+            year + source_offset,
+        )
+        for year, rows in zip(_LATER_EXERCISES, expected_by_exercise, strict=True)
+        for period, opens_offset, opens_month, opens_day, closes_offset, closes_month, closes_day, source_offset in rows
     }
     authored = {
         (window.filing_year, window.period.registry_token): (revision, window)
         for revision in modelo.revisions.values()
         for window in revision.deadline_windows
-        if 2023 <= window.filing_year <= 2026
+        if window.filing_year in _LATER_EXERCISES
     }
 
     assert set(authored) == set(expected)
@@ -247,19 +278,21 @@ def test_modelo_322_supported_deadlines_are_exact_complete_and_canonically_owned
         assert window.id == f"modelo-322-{year}-{period}"
         assert window.filing_year == window.period.filing_year == year
         assert window.period_kind == "monthly"
-        expected_payment = date(2027, 1, 27) if coordinate == (2026, "12") else None
+        expected_payment = date(_LATER_EXERCISES[-1] + 1, 1, 27) if coordinate == (_LATER_EXERCISES[-1], "12") else None
         assert (window.opens_on, window.closes_on, window.payment_cutoff_on) == (
             opens_on,
             closes_on,
             expected_payment,
         )
         expected_source = (
-            "aeat-modelo-303-procedure" if source_year == 2027 else f"aeat-calendario-contribuyente-{source_year}"
+            "aeat-modelo-303-procedure"
+            if source_year > _LATER_EXERCISES[-1]
+            else f"aeat-calendario-contribuyente-{source_year}"
         )
         assert expected_source in window.source_refs
         assert select_revision(modelo, filing_year=year, period=period) is revision
 
-    for year in range(2023, 2027):
+    for year in _LATER_EXERCISES:
         projected = compiled_bundled_authority().deadline_windows(year, modelos=("322",))
         expected_count = 12
         assert len(projected) == expected_count
@@ -274,7 +307,7 @@ def test_modelo_322_supported_deadlines_are_exact_complete_and_canonically_owned
 def test_modelo_322_deadline_sources_and_construct_links_are_closed() -> None:
     modelo, _ = _load_modelo_322()
     for revision in modelo.revisions.values():
-        if revision.valid_from.year < 2023:
+        if revision.valid_from.year <= _CALENDAR_EXERCISE:
             continue
         construct = next(item for item in revision.constructs if item.id == "modelo-322-iva-grupo-individual")
         assert set(construct.deadline_windows) == {window.id for window in revision.deadline_windows}
@@ -285,7 +318,7 @@ def test_modelo_322_deadline_sources_and_construct_links_are_closed() -> None:
 
 def test_modelo_322_live_cross_references_forbid_writes() -> None:
     modelo, _ = _load_modelo_322()
-    revision = modelo.revisions["2008-2022"]
+    revision = modelo.revisions[_LEGACY_MONTHLY_REVISION]
     cross_refs = {ref.id: ref for ref in revision.live_cross_references}
 
     filed_ref = cross_refs["modelo-322-filed-declarations-read"]
@@ -296,7 +329,7 @@ def test_modelo_322_live_cross_references_forbid_writes() -> None:
 
 def test_modelo_322_filing_schedule_is_monthly() -> None:
     modelo, _ = _load_modelo_322()
-    revision = modelo.revisions["2008-2022"]
+    revision = modelo.revisions[_LEGACY_MONTHLY_REVISION]
     schedule = next(s for s in revision.filing_schedules if s.id == "modelo-322-mensual")
     assert schedule.period_kind == "monthly"
     assert len(schedule.periods) == 12
@@ -304,7 +337,7 @@ def test_modelo_322_filing_schedule_is_monthly() -> None:
 
 def test_modelo_322_construct_links_workbook_parity() -> None:
     modelo, _ = _load_modelo_322()
-    revision = modelo.revisions["2008-2022"]
+    revision = modelo.revisions[_LEGACY_MONTHLY_REVISION]
     construct = next(c for c in revision.constructs if c.id == "modelo-322-iva-grupo-individual")
     assert "modelo-322-dr" in construct.workbook_parity_refs
     assert construct.filing_schedules == ("modelo-322-mensual",)
@@ -314,7 +347,7 @@ def test_modelo_322_declares_iva_aggregation_bindings_for_all_three_flow_directi
     """Modelo 322 declares the same IVA flow-direction binding pattern as
     Modelo 303, scoped to the individual group entity."""
     modelo, _ = _load_modelo_322()
-    revision = modelo.revisions["2008-2022"]
+    revision = modelo.revisions[_LEGACY_MONTHLY_REVISION]
     iva_bindings = {binding.id: binding for binding in revision.bindings if binding.source == "ledger_iva_aggregation"}
     assert "modelo-322-iva-repercutido-general-cuota" in iva_bindings
     assert "modelo-322-iva-repercutido-reducido-cuota" in iva_bindings
@@ -332,11 +365,11 @@ def test_modelo_322_iva_bindings_resolve_against_ledger_observations() -> None:
     )
 
     modelo, _ = _load_modelo_322()
-    revision = modelo.revisions["2008-2022"]
+    revision = modelo.revisions[_LEGACY_MONTHLY_REVISION]
     observations = [
         IvaLedgerObservation(
             ledger_id="rep-1",
-            transaction_date=date(2025, 6, 1),
+            transaction_date=date(_MIDDLE_LAST, 6, 1),
             category=IvaCategory("domestic_general"),
             rate_kind=IvaRateKind("general"),
             flow_direction=IvaFlowDirection.from_registry("repercutido"),
@@ -346,7 +379,7 @@ def test_modelo_322_iva_bindings_resolve_against_ledger_observations() -> None:
         ),
         IvaLedgerObservation(
             ledger_id="sop-1",
-            transaction_date=date(2025, 6, 5),
+            transaction_date=date(_MIDDLE_LAST, 6, 5),
             category=IvaCategory("domestic_general"),
             rate_kind=IvaRateKind("general"),
             flow_direction=IvaFlowDirection.from_registry("soportado"),
