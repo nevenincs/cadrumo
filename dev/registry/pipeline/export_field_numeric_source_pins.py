@@ -9,12 +9,12 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from .joined_record_design import JoinedRecordDesignField
 from .render_profile_model_base import RenderProfileDesignIdentity
 
-_M714_PINS: Final[dict[str, tuple[str, str]]] = {
-    "aeat-dr-714-2021": ("2021", "4c8409b0a213bc2c450428939c60eb0791fba40de70ebc82d4cb3c07c43faf4f"),
-    "aeat-dr-714-2022": ("2022", "b24b9ee856a9b4ea665e61ccbbe000fd8d50e4d70d48b34b5eeacbe74778b925"),
-    "aeat-dr-714-2023": ("2023", "b51178affa2a64ec2d538657136e807c11802457922f97e9333018d414c66299"),
-    "aeat-dr-714-2024": ("2024", "d70ce59786aa88cc91ad67197bf7f6a6630676abe087b7d66a64a0bf74a72aa5"),
-    "aeat-dr-714-2025": ("2025", "660e2ce1f4cea1405e27b4251231036e75b78aef33512afc22dec8081c7cb4d3"),
+_M714_PINS: Final[dict[str, str]] = {
+    "aeat-dr-714-2021": "4c8409b0a213bc2c450428939c60eb0791fba40de70ebc82d4cb3c07c43faf4f",
+    "aeat-dr-714-2022": "b24b9ee856a9b4ea665e61ccbbe000fd8d50e4d70d48b34b5eeacbe74778b925",
+    "aeat-dr-714-2023": "b51178affa2a64ec2d538657136e807c11802457922f97e9333018d414c66299",
+    "aeat-dr-714-2024": "d70ce59786aa88cc91ad67197bf7f6a6630676abe087b7d66a64a0bf74a72aa5",
+    "aeat-dr-714-2025": "660e2ce1f4cea1405e27b4251231036e75b78aef33512afc22dec8081c7cb4d3",
 }
 
 
@@ -49,11 +49,10 @@ def m714_checkbox_for(joined_field: JoinedRecordDesignField, identity: RenderPro
 
 
 def _reviewed_m714_source(identity: RenderProfileDesignIdentity) -> bool:
-    pin = _M714_PINS.get(str(identity.source_ref))
-    if pin is None:
+    digest = _M714_PINS.get(str(identity.source_ref))
+    if digest is None:
         return False
-    epoch, digest = pin
-    if str(identity.modelo) != "714" or identity.design_epoch != epoch or identity.source_sha256 != digest:
+    if str(identity.modelo) != "714" or identity.source_sha256 != digest:
         raise RegistryValidationError("M714 numeric source reading is unreviewed or stale")
     return True
 

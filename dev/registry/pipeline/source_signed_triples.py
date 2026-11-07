@@ -11,9 +11,10 @@ from cadrumo.domain.calculations.registry.export_value_policy import ExportValue
 
 from .joined_record_design import JoinedRecordDesignField
 
-_PINS: Final[dict[tuple[str, str], tuple[str, str, str, tuple[tuple[str, int, int, int, str], ...]]]] = {
-    ("165", "2016"): (
-        "aeat-dr-165-2016-2022",
+#: Reviewed signed triples keyed by (modelo, official design): (design SHA-256,
+#: casilla, members). The design is the reviewed object; its epoch is never restated.
+_PINS: Final[dict[tuple[str, str], tuple[str, str, tuple[tuple[str, int, int, int, str], ...]]]] = {
+    ("165", "aeat-dr-165-2016-2022"): (
         "2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5",
         "importe-fondos-propios",
         (
@@ -40,8 +41,7 @@ _PINS: Final[dict[tuple[str, str], tuple[str, str, str, tuple[tuple[str, int, in
             ),
         ),
     ),
-    ("165", "2023"): (
-        "aeat-dr-165-2026",
+    ("165", "aeat-dr-165-2026"): (
         "bcc94b07d695703cfa66a3d8cbbb176841906ebf8cef57e2acd3e3fee452a263",
         "importe-fondos-propios",
         (
@@ -68,8 +68,7 @@ _PINS: Final[dict[tuple[str, str], tuple[str, str, str, tuple[tuple[str, int, in
             ),
         ),
     ),
-    ("280", "2022"): (
-        "aeat-dr-280-2022",
+    ("280", "aeat-dr-280-2022"): (
         "45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701",
         "rendimientos-negativos-imputables",
         (
@@ -100,7 +99,7 @@ _PINS: Final[dict[tuple[str, str], tuple[str, str, str, tuple[tuple[str, int, in
 
 
 def signed_triple_policy_for(
-    joined_field: JoinedRecordDesignField, *, modelo: str, epoch: str, source_ref: str, source_sha256: str
+    joined_field: JoinedRecordDesignField, *, modelo: str, source_ref: str, source_sha256: str
 ) -> ExportValuePolicy | None:
     """Recognise a child only under its exact PDF bytes, endpoint and geometry."""
     entry = joined_field.semantic_entry
@@ -108,9 +107,7 @@ def signed_triple_policy_for(
     if not _is_signed_triple_field(field_id):
         return None
 
-    casilla_id, members = _reviewed_signed_triple_members(
-        modelo, epoch, source_ref=source_ref, source_sha256=source_sha256
-    )
+    casilla_id, members = _reviewed_signed_triple_members(modelo, source_ref=source_ref, source_sha256=source_sha256)
     member_index, member = _reviewed_member(members, field_id)
     if not _matches_reviewed_signed_triple(joined_field, modelo, casilla_id, member):
         raise RegistryValidationError("signed triple source part, geometry or casilla differs from reviewed evidence")
@@ -125,13 +122,13 @@ def _is_signed_triple_field(field_id: str) -> bool:
 
 
 def _reviewed_signed_triple_members(
-    modelo: str, epoch: str, *, source_ref: str, source_sha256: str
+    modelo: str, *, source_ref: str, source_sha256: str
 ) -> tuple[str, tuple[tuple[str, int, int, int, str], ...]]:
     """Require the exact reviewed source identity and return its casilla members."""
-    pin = _PINS.get((modelo, epoch))
-    if pin is None or (source_ref, source_sha256) != pin[:2]:
+    pin = _PINS.get((modelo, source_ref))
+    if pin is None or source_sha256 != pin[0]:
         raise RegistryValidationError("signed triple source identity is unreviewed or stale")
-    return pin[2], pin[3]
+    return pin[1], pin[2]
 
 
 def _reviewed_member(

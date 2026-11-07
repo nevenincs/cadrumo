@@ -32,7 +32,6 @@ def test_reviewed_component_admissions_refuse_reissued_source_bytes(modelo, revi
     source = inputs.joined.source
     arguments = {
         "modelo": modelo,
-        "epoch": inputs.transport_profile.design_epoch,
         "source_ref": str(source.source_ref),
         "source_sha256": source.source_sha256,
     }
