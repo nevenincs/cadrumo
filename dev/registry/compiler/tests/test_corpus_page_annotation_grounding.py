@@ -11,6 +11,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from .. import legal_grounding
 from ..legal_grounding import verify_legal_reference_grounding
@@ -29,10 +30,10 @@ def _reference() -> LegalReference:
             "document_id": "BOC-x-2025-1",
             "article": "1",
             "permalink": "https://www.boe.es/example",
-            "published_at": date(2025, 1, 1),
-            "effective_from": date(2025, 1, 2),
+            "published_at": date(filing_year_envelope().horizon - 1, 1, 1),
+            "effective_from": date(filing_year_envelope().horizon - 1, 1, 2),
             "review_status": "operator_reviewed",
-            "reviewed_at": date(2026, 9, 14),
+            "reviewed_at": date(filing_year_envelope().horizon, 9, 14),
             "reviewed_by": "operator",
             "required_text": ("exact official clause",),
         }

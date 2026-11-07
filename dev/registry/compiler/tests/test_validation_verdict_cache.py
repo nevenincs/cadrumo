@@ -4,6 +4,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ..validation_verdict_cache import (
     VERDICT_CACHE_DIR_ENV,
     is_validated,
@@ -13,12 +15,14 @@ from ..validation_verdict_cache import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+_EDITION = str(filing_year_envelope().horizon)
+
 
 def _rows(root: Path) -> tuple[tuple[str, int, int, str], ...]:
     return (
         (str(root / "legal" / "a.toml"), 10, 1, "legal-a"),
         (str(root / "modelos" / "303" / "manifest.toml"), 20, 2, "m303"),
-        (str(root / "modelos" / "303" / "revisions" / "2024" / "revision.toml"), 30, 3, "m303-2024"),
+        (str(root / "modelos" / "303" / "revisions" / _EDITION / "revision.toml"), 30, 3, f"m303-{_EDITION}"),
         (str(root / "modelos" / "100.toml"), 40, 4, "m100"),
         (str(root / "modelos"), 0, 5, ""),
     )
@@ -40,7 +44,7 @@ def test_scope_keys_each_modelo_by_its_own_rows_and_everything_shared(tmp_path: 
     assert set(scope.modelo_keys) == {"303", "100"}
     assert scope.modelo_key("999") is None
 
-    edited_303 = tuple((p, s, m, "changed" if d == "m303-2024" else d) for p, s, m, d in _rows(root))
+    edited_303 = tuple((p, s, m, "changed" if d == f"m303-{_EDITION}" else d) for p, s, m, d in _rows(root))
     edited = _scope(root, edited_303)
     assert edited.modelo_key("303") != scope.modelo_key("303")
     assert edited.modelo_key("100") == scope.modelo_key("100")

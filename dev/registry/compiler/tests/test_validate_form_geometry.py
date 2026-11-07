@@ -14,6 +14,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.form_codes import resolve_form_codes
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from cadrumo.domain.calculations.registry.prorrata_register_catalogue import resolve_prorrata_register_catalogue
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ...compiler import fact_providers
 from ...compiler import validate_form_geometry as geometry
@@ -105,7 +106,7 @@ def test_an_expired_geometry_fact_is_not_treated_as_absent(
 ) -> None:
     catalogues = _worker_compiled_authority.catalogues
     original = catalogues.facts.facts["form-row-codes"]
-    variant = original.variants[0].model_copy(update={"valid_to": date(2022, 1, 2)})
+    variant = original.variants[0].model_copy(update={"valid_to": date(filing_year_envelope().floor, 1, 2)})
     expired = original.model_copy(update={"variants": (variant,)})
     facts = catalogues.facts.model_copy(update={"facts": {**catalogues.facts.facts, "form-row-codes": expired}})
     authority = CandidateFactAuthority(facts, catalogues.require_supported_filing_years())

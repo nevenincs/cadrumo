@@ -12,6 +12,13 @@ from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    open_ended_revision,
+    revision_covering,
+    split_exercise_revisions,
+    supported_authored_exercises,
+)
 
 from .. import export_layout_record_join as record_join
 from ..loader import load_modelo_directory, load_shared_catalogues
@@ -32,6 +39,32 @@ def _catalogue():
     return load_shared_catalogues(bundled_path("registry", "aeat")).sources
 
 
+def _design_revision(modelo: str, source_ref: str) -> str:
+    """Return the revision of one modelo that covers the first exercise a catalogued design applies from."""
+    applies_from = _catalogue()[source_ref].applies_from
+    assert applies_from is not None
+    return str(revision_covering(modelo, applies_from.year).id)
+
+
+_M232_DESIGN_REVISION = _design_revision("232", "aeat-dr-232-2016")
+_M390_DESIGN_REVISION = _design_revision("390", "aeat-dr-390-2022")
+_M122_REVISION = str(open_ended_revision("122").id)
+_REAL_PREFIX_AND_BODY_REVISIONS = (
+    *(("232", str(revision.id)) for revision in authored_revisions("232")),
+    *(("390", str(revision_covering("390", exercise).id)) for exercise in supported_authored_exercises("390")),
+)
+_REAL_JOINED_HEADER_REVISIONS = (
+    ("122", _M122_REVISION),
+    *(("123", str(revision.id)) for revision in authored_revisions("123")),
+    ("126", str(open_ended_revision("126").id)),
+    ("128", str(open_ended_revision("128").id)),
+    ("490", str(split_exercise_revisions("490", early_period="1T", late_period="2T")[1].id)),
+    ("369", "esquema-exterior"),
+    ("604", str(open_ended_revision("604").id)),
+    ("714", str(authored_revisions("714")[-1].id)),
+)
+
+
 @cache
 def _revision(modelo: str, revision: str) -> ModeloRevision:
     return load_modelo_directory(bundled_path("registry", "aeat", "modelos", modelo)).revisions[revision]
@@ -50,14 +83,7 @@ def _sheet(source_ref: str, sheet_name: str) -> RecordDesignSheet:
 
 @pytest.mark.parametrize(
     ("modelo", "revision"),
-    (
-        ("232", "2016-2017"),
-        ("232", "2018-y-siguientes"),
-        ("390", "2022"),
-        ("390", "2023"),
-        ("390", "2024"),
-        ("390", "2025"),
-    ),
+    _REAL_PREFIX_AND_BODY_REVISIONS,
 )
 def test_real_variable_prefix_and_fixed_body_have_complete_separate_coverage(modelo: str, revision: str) -> None:
     selected = _revision(modelo, revision)
@@ -71,17 +97,7 @@ def test_real_variable_prefix_and_fixed_body_have_complete_separate_coverage(mod
 
 @pytest.mark.parametrize(
     ("modelo", "revision"),
-    (
-        ("122", "2017-y-siguientes"),
-        ("123", "2019-2023"),
-        ("123", "2024-y-siguientes"),
-        ("126", "2019-y-siguientes"),
-        ("128", "2019-y-siguientes"),
-        ("490", "2022-2t-4t"),
-        ("369", "esquema-exterior"),
-        ("604", "2024-y-siguientes"),
-        ("714", "2025"),
-    ),
+    _REAL_JOINED_HEADER_REVISIONS,
 )
 def test_real_source_joined_fixed_header_covers_variable_prefix(modelo: str, revision: str) -> None:
     selected = _revision(modelo, revision)
@@ -96,7 +112,7 @@ def test_real_source_joined_fixed_header_covers_variable_prefix(modelo: str, rev
 @pytest.mark.parametrize("change", ("geometry", "literal", "filler"))
 def test_source_joined_header_refuses_changed_prefix_claim(change: str) -> None:
     sheet = _sheet("aeat-dr-122-2016", "Pag. 0")
-    layout = _layout("122", "2017-y-siguientes")
+    layout = _layout("122", _M122_REVISION)
     source = _catalogue()["aeat-dr-122-2016"]
     joined = record_join.join_record(sheet, layout.records, source=source)
     assert joined is not None
@@ -121,7 +137,7 @@ def test_source_joined_header_refuses_changed_prefix_claim(change: str) -> None:
 
 @pytest.mark.parametrize("change", ("absent", "source", "hash", "identity", "extent", "equal_length_roles"))
 def test_m232_variable_prefix_refuses_missing_or_changed_envelope_claim(change: str) -> None:
-    layout = _layout("232", "2016-2017")
+    layout = _layout("232", _M232_DESIGN_REVISION)
     envelope = layout.filing_envelope
     assert envelope is not None
     if change == "absent":
@@ -166,8 +182,8 @@ def test_modelo_390_page_seven_joins_only_with_its_exact_source_adjudication() -
     source = _catalogue()["aeat-dr-390-2022"]
     assert source.sha256 == "7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe"
     sheet = _sheet("aeat-dr-390-2022", "Pág. 7")
-    assert record_join.join_record(sheet, _layout("390", "2022").records) is None
-    joined = record_join.join_record(sheet, _layout("390", "2022").records, source=source)
+    assert record_join.join_record(sheet, _layout("390", _M390_DESIGN_REVISION).records) is None
+    joined = record_join.join_record(sheet, _layout("390", _M390_DESIGN_REVISION).records, source=source)
     assert joined is not None
     assert joined.record_type == "page_07"
 
@@ -199,7 +215,7 @@ def test_modelo_390_adjudication_refuses_stale_source_or_changed_cell(change: st
         )
         sheet = sheet.model_copy(update={"fields": fields})
     with pytest.raises(RegistryValidationError, match="source-defect declaration"):
-        record_join.join_record(sheet, _layout("390", "2022").records, source=source)
+        record_join.join_record(sheet, _layout("390", _M390_DESIGN_REVISION).records, source=source)
 
 
 def test_ambiguous_multi_record_sheet_cannot_pass_from_layout_wide_bytes() -> None:
@@ -209,7 +225,7 @@ def test_ambiguous_multi_record_sheet_cannot_pass_from_layout_wide_bytes() -> No
         field.model_copy(update={"content": None}) if field.offset in {6, 1176} else field for field in sheet.fields
     )
     ambiguous = sheet.model_copy(update={"fields": fields})
-    layout = _layout("390", "2022")
+    layout = _layout("390", _M390_DESIGN_REVISION)
     assert record_join.join_record(ambiguous, layout.records, source=source) is None
     _required, _missing, unresolved, lines = missing_report(((ambiguous, source),), layout.records)
     assert unresolved == 1
@@ -219,7 +235,7 @@ def test_ambiguous_multi_record_sheet_cannot_pass_from_layout_wide_bytes() -> No
 def test_matched_fixed_record_still_refuses_real_reserved_byte_intrusion() -> None:
     source = _catalogue()["aeat-dr-232-2016"]
     sheet = _sheet("aeat-dr-232-2016", "DR23201")
-    layout = _layout("232", "2016-2017")
+    layout = _layout("232", _M232_DESIGN_REVISION)
     matched = record_join.join_record(sheet, layout.records, source=source)
     assert matched is not None
     assert record_join.reserved_write_failures(sheet, matched.fields, source=source) == []
@@ -240,7 +256,7 @@ def test_matched_fixed_record_still_refuses_real_reserved_byte_intrusion() -> No
 def test_unjoined_single_record_checks_its_own_reserved_bytes() -> None:
     source = _catalogue()["aeat-dr-232-2016"]
     sheet = _sheet("aeat-dr-232-2016", "DR23201")
-    layout = _layout("232", "2016-2017")
+    layout = _layout("232", _M232_DESIGN_REVISION)
     matched = record_join.join_record(sheet, layout.records, source=source)
     assert matched is not None
     without_identity = sheet.model_copy(

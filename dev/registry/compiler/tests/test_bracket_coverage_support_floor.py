@@ -9,13 +9,14 @@ import pytest
 
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_formula import BracketEntry, ParameterDefinition
-from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..validate_parameter_temporal import validate_bracket_table_temporal_coverage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_SUPPORT = SupportedFilingYearsCatalogue(floor=2022, horizon=2026)
+_SUPPORT = filing_year_envelope()
+_FLOOR = _SUPPORT.floor
 
 
 def _bracket(valid_from: date, valid_to: date | None) -> BracketEntry:
@@ -38,7 +39,7 @@ def _revision(valid_from: date, valid_to: date | None, *brackets: BracketEntry) 
         values=(),
     )
     return ModeloRevision.model_construct(
-        id="2019-2023",
+        id=f"{_FLOOR - 3}-{_FLOOR + 1}",
         valid_from=valid_from,
         valid_to=valid_to,
         parameters=(parameter,),
@@ -47,47 +48,53 @@ def _revision(valid_from: date, valid_to: date | None, *brackets: BracketEntry) 
 
 def test_an_edition_straddling_the_floor_owes_no_bracket_below_it() -> None:
     """The support declaration claims nothing before the floor, so no window is owed there."""
-    revision = _revision(date(2019, 1, 1), date(2023, 12, 31), _bracket(date(2022, 1, 1), date(2023, 12, 31)))
+    revision = _revision(
+        date(_FLOOR - 3, 1, 1), date(_FLOOR + 1, 12, 31), _bracket(date(_FLOOR, 1, 1), date(_FLOOR + 1, 12, 31))
+    )
 
     assert validate_bracket_table_temporal_coverage("m", revision, support=_SUPPORT) == []
 
 
 def test_the_same_edition_without_a_support_declaration_owes_its_whole_range() -> None:
-    """The clamp comes from the declaration: absent one, the gap before 2022 is still refused."""
-    revision = _revision(date(2019, 1, 1), date(2023, 12, 31), _bracket(date(2022, 1, 1), date(2023, 12, 31)))
+    """The clamp comes from the declaration: absent one, the gap before the floor is still refused."""
+    revision = _revision(
+        date(_FLOOR - 3, 1, 1), date(_FLOOR + 1, 12, 31), _bracket(date(_FLOOR, 1, 1), date(_FLOOR + 1, 12, 31))
+    )
 
     failures = validate_bracket_table_temporal_coverage("m", revision, support=None)
 
     assert len(failures) == 1
-    assert "[2019-01-01, 2021-12-31]" in failures[0]
+    assert f"[{_FLOOR - 3}-01-01, {_FLOOR - 1}-12-31]" in failures[0]
 
 
 def test_a_gap_inside_the_envelope_is_still_refused() -> None:
     """Clamping at the floor never weakens coverage above it."""
     revision = _revision(
-        date(2019, 1, 1),
-        date(2023, 12, 31),
-        _bracket(date(2019, 1, 1), date(2021, 12, 31)),
-        _bracket(date(2023, 1, 1), date(2023, 12, 31)),
+        date(_FLOOR - 3, 1, 1),
+        date(_FLOOR + 1, 12, 31),
+        _bracket(date(_FLOOR - 3, 1, 1), date(_FLOOR - 1, 12, 31)),
+        _bracket(date(_FLOOR + 1, 1, 1), date(_FLOOR + 1, 12, 31)),
     )
 
     failures = validate_bracket_table_temporal_coverage("m", revision, support=_SUPPORT)
 
     assert len(failures) == 1
-    assert "[2022-01-01, 2022-12-31]" in failures[0]
+    assert f"[{_FLOOR}-01-01, {_FLOOR}-12-31]" in failures[0]
 
 
 def test_an_edition_wholly_below_the_floor_has_nothing_to_cover() -> None:
-    revision = _revision(date(2015, 1, 1), date(2018, 12, 31), _bracket(date(2016, 1, 1), date(2018, 12, 31)))
+    revision = _revision(
+        date(_FLOOR - 7, 1, 1), date(_FLOOR - 4, 12, 31), _bracket(date(_FLOOR - 6, 1, 1), date(_FLOOR - 4, 12, 31))
+    )
 
     assert validate_bracket_table_temporal_coverage("m", revision, support=None)
     assert validate_bracket_table_temporal_coverage("m", revision, support=_SUPPORT) == []
 
 
 def test_an_open_edition_starting_at_the_floor_is_judged_as_before() -> None:
-    revision = _revision(date(2024, 1, 1), None, _bracket(date(2025, 1, 1), None))
+    revision = _revision(date(_FLOOR + 2, 1, 1), None, _bracket(date(_FLOOR + 3, 1, 1), None))
 
     failures = validate_bracket_table_temporal_coverage("m", revision, support=_SUPPORT)
 
     assert len(failures) == 1
-    assert "[2024-01-01, 2024-12-31]" in failures[0]
+    assert f"[{_FLOOR + 2}-01-01, {_FLOOR + 2}-12-31]" in failures[0]

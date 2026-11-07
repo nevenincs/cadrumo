@@ -19,6 +19,7 @@ from cadrumo.core.authority_grade import BindingGradeCapReason, RegistryAuthorit
 from cadrumo.domain.calculations.registry.binding_grade_cap import BindingGradeCap
 from cadrumo.domain.calculations.registry.binding_provider_registration import BINDING_PROVIDER_REGISTRATIONS
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 from cadrumo.domain.calculations.registry.tests.grade_cap_support import recapped_revision
 
 from ..validate_binding_grade_caps import validate_binding_grade_cap_section
@@ -29,7 +30,6 @@ if TYPE_CHECKING:
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
-_M130_REVISION = "2019-y-siguientes"
 _CAPPED_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
 _INCOME_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
 _CAP_LEGAL_REF = "rd-439-2007:art-79"
@@ -37,7 +37,7 @@ _CAP_LEGAL_REF = "rd-439-2007:art-79"
 
 def _published_m130(authority: ValidatedRegistryAuthority) -> ModeloRevision:
     (modelo,) = [modelo for modelo in authority.modelos if modelo.id == "130"]
-    return modelo.revisions[_M130_REVISION]
+    return modelo.revisions[str(open_ended_revision("130").id)]
 
 
 def _m130(authority: ValidatedRegistryAuthority) -> ModeloRevision:
