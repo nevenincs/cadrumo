@@ -258,24 +258,36 @@ if (action === "build") {
             ]
           : []),
       ]
-    : [
-        "clippy",
-        ...(selectedProfile.debug ? [] : ["--release"]),
-        "--locked",
-        "--all-targets",
-        ...(live ? ["--features", "live-package-tests"] : []),
-        "--",
-        "-D",
-        "warnings",
-      ];
-  const result = spawnSync("cargo", args, {
-    cwd: snapshot.crate,
-    env: { ...environment, TAURI_CONFIG: JSON.stringify(config) },
-    stdio: "inherit",
-    windowsHide: true,
-  });
-  if (result.error) throw result.error;
-  process.exit(result.status ?? 1);
+    : null;
+  // The test targets link cadrumo-platform's test-support feature, which that
+  // crate refuses to compile in a release build. A release lint therefore
+  // covers the binary alone, and every target, tests included, is linted under
+  // the dev profile in either configuration.
+  const lint = (scope) => [
+    "clippy",
+    ...scope,
+    "--locked",
+    ...(live ? ["--features", "live-package-tests"] : []),
+    "--",
+    "-D",
+    "warnings",
+  ];
+  const invocations = args
+    ? [args]
+    : selectedProfile.debug
+      ? [lint(["--all-targets"])]
+      : [lint(["--release", "--bins"]), lint(["--all-targets"])];
+  for (const invocation of invocations) {
+    const result = spawnSync("cargo", invocation, {
+      cwd: snapshot.crate,
+      env: { ...environment, TAURI_CONFIG: JSON.stringify(config) },
+      stdio: "inherit",
+      windowsHide: true,
+    });
+    if (result.error) throw result.error;
+    if (result.status !== 0) process.exit(result.status ?? 1);
+  }
+  process.exit(0);
 } else {
   throw new Error(`Unknown host action: ${action}`);
 }
