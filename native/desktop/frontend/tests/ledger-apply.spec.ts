@@ -41,6 +41,11 @@ import {
 import { planRecorded } from "./support/stagedCheck";
 import { readSealed } from "../src/components/ledger/useSealedMovements";
 import { readWindow } from "../src/shell/ledgerWindow";
+import {
+  fixtureDay,
+  fixtureInstant,
+  fixtureYear,
+} from "../src/dev/fixtureDates";
 
 // The apply runner over a fake port: these check the order and the
 // outcomes of the orchestration, not the ledger's own answers.
@@ -149,7 +154,7 @@ async function apply(
 test("a mixed apply sends each step once, in order, under the ids earlier steps gave", async () => {
   const draft = newDraft();
   draft.fields = {
-    booked_date: "2026-10-21",
+    booked_date: fixtureDay(10, 21),
     amount: "12",
     currency: "EUR",
     direction: "OUTGOING",
@@ -261,7 +266,7 @@ test("a refused row stays staged with its reason, and its later steps are not se
 test("an unknown outcome pauses every later write and nothing is sent again", async () => {
   const draft = newDraft();
   draft.fields = {
-    booked_date: "2026-10-21",
+    booked_date: fixtureDay(10, 21),
     amount: "12",
     currency: "EUR",
     direction: "OUTGOING",
@@ -476,7 +481,7 @@ test("a model suggestion is answered with the digest of the review the page show
 test("a replayed add is unchanged, and a saved-but-unread write pauses but is not kept", async () => {
   const draft = newDraft();
   draft.fields = {
-    booked_date: "2026-10-21",
+    booked_date: fixtureDay(10, 21),
     amount: "12",
     currency: "EUR",
     direction: "OUTGOING",
@@ -512,7 +517,7 @@ test("created draft selections follow returned stored ids and removed drafts lea
   const drafts = [newDraft(), newDraft()];
   for (const draft of drafts)
     draft.fields = {
-      booked_date: "2026-10-21",
+      booked_date: fixtureDay(10, 21),
       amount: "12",
       currency: "EUR",
       direction: "OUTGOING",
@@ -609,7 +614,7 @@ test("the read at apply names staged rows that changed or left since the page re
   };
   const read = rowsOf(before, movement(B), movement(C));
   const after = business(A, {
-    modified_at: "2026-10-23T10:58:00Z",
+    modified_at: fixtureInstant(10, 23, "10:58:00Z"),
     notes: "Otra ventana",
   });
   const fresh = rowsOf(after, movement(B));
@@ -622,7 +627,7 @@ test("the read at apply names staged rows that changed or left since the page re
   }));
   const prepared = await prepareApply(
     port,
-    { year: 2026, code: "4T" },
+    { year: fixtureYear, code: "4T" },
     content,
     read,
   );
@@ -671,7 +676,7 @@ test("a re-read tells whether an unknown write saved; an add is never told", () 
   ).toEqual(new Map([[A, "not_saved"]]));
   const draft = newDraft();
   draft.fields = {
-    booked_date: "2026-10-01",
+    booked_date: fixtureDay(10, 1),
     amount: "1",
     currency: "EUR",
     direction: "INCOMING",

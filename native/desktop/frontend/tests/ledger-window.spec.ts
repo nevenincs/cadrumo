@@ -19,10 +19,11 @@ import {
   type LedgerWindow,
 } from "../src/shell/ledgerWindow";
 import { fakePort, hexId, listPage, movement, PROFILE } from "./support/ledger";
+import { fixtureYear } from "../src/dev/fixtureDates";
 
 // The period window and the frozen readiness checks. No page is opened.
 
-const Q3 = { year: 2026, code: "3T" } as const;
+const Q3 = { year: fixtureYear, code: "3T" } as const;
 const rows = (count: number, from = 0): LedgerRow[] =>
   Array.from({ length: count }, (_, at) => movement(hexId(`m${from + at}`)));
 const page = (all: LedgerRow[], offset: number, limit = LEDGER_PAGE_SIZE) =>
@@ -50,7 +51,7 @@ function readAll(window: LedgerWindow, all: LedgerRow[]): LedgerWindow {
 test("a period is read in pages of 250 under one stable order", () => {
   const window = openWindow(1, Q3);
   expect(nextPageRequest(window)).toEqual({
-    filters: ["period=3T", "year=2026"],
+    filters: ["period=3T", `year=${fixtureYear}`],
     sort_by: "date",
     sort_order: "asc",
     offset: 0,
@@ -101,7 +102,7 @@ test("an answer to an older read is dropped", () => {
   window = reduceWindow(window, {
     type: "open",
     generation: 2,
-    period: { year: 2026, code: "4T" },
+    period: { year: fixtureYear, code: "4T" },
   });
   const stale = reduceWindow(window, {
     type: "page",
@@ -219,7 +220,7 @@ test("reading the same period again holds the whole window until the new one is 
   const other = reduceWindow(first, {
     type: "open",
     generation: 3,
-    period: { year: 2025, code: "4T" },
+    period: { year: fixtureYear - 1, code: "4T" },
   });
   expect(shownRows(other)).toBeNull();
   const otherProfile = reduceWindow(first, {
@@ -261,7 +262,7 @@ test("a whole-window read follows every page and reports a refusal as such", asy
 
 const status = (ready: boolean | null): LedgerStatusResult => ({
   profile_id: PROFILE,
-  period: { filing_year: 2026, code: "3T" },
+  period: { filing_year: fixtureYear, code: "3T" },
   business_income_total: "0",
   business_expense_total: "0",
   business_net_total: "0",
@@ -288,7 +289,7 @@ test("readiness is read through status and preflight and frozen at its check", a
     return {
       settle: {
         profile_id: PROFILE,
-        period: { filing_year: 2026, code: "3T" },
+        period: { filing_year: fixtureYear, code: "3T" },
         bucket_id: PROFILE,
         checked_transaction_count: 3,
         issues: [],

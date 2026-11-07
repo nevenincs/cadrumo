@@ -13,6 +13,7 @@ import {
   aeatEditor,
   goToSection,
 } from "../support/userProfilePage";
+import { fixtureYear } from "../../src/dev/fixtureDates";
 
 // The profile page's details: the Censo summary, search and sort, per-year details and opening them for edit.
 
@@ -166,16 +167,18 @@ test("a detail stated per ejercicio asks the year and keeps the other years' ans
     await save(dialog).click();
     await expect(dialog).toHaveCount(0);
   };
-  await answer("cobros_y_pagos", "2024");
-  await answer("devengo", "2025");
+  const cash = String(fixtureYear - 2);
+  const accrual = String(fixtureYear - 1);
+  await answer("cobros_y_pagos", cash);
+  await answer("devengo", accrual);
 
   await editButton(profile, "Income and expense timing").click();
   const dialog = page.getByRole("dialog", {
     name: "Income and expense timing",
     exact: true,
   });
-  await expect(dialog).toContainText(/2024: .*\n?/);
-  await expect(dialog).toContainText(/2025: /);
+  await expect(dialog).toContainText(new RegExp(`${cash}: .*\n?`));
+  await expect(dialog).toContainText(new RegExp(`${accrual}: `));
 });
 
 test("details open for editing by double click, Enter, F2 and the hover button", async ({

@@ -69,6 +69,14 @@ import type {
   InventoryMovement,
   InventoryOptionsResult,
 } from "../src/shell/ledgerSetup";
+import {
+  fixtureDay,
+  fixtureInstant,
+  fixtureYear,
+} from "../src/dev/fixtureDates";
+
+const YEAR = fixtureYear;
+const PRIOR = fixtureYear - 1;
 
 // The Stock panel's requests, and the words its forms use. No page is opened.
 // A request is built from the fields of a form and from nothing the person
@@ -99,7 +107,7 @@ function minter() {
   return () => `reference-${(count += 1)}`;
 }
 
-const BOOK = { actividad_id: "Papelería y reprografía", year: 2026 };
+const BOOK = { actividad_id: "Papelería y reprografía", year: YEAR };
 const MARK = (character: string) => character.repeat(64);
 
 /** What the options read serves, as it serves it: each closed choice with the
@@ -224,7 +232,7 @@ const kept = (character: string, kind = ""): ProofDraft => ({
 function purchase(): MovementDraft {
   return {
     values: {
-      date: "2026-03-04",
+      date: fixtureDay(3, 4),
       kind: "purchase",
       quantity: "100",
       price: "1000.00",
@@ -243,7 +251,7 @@ function purchase(): MovementDraft {
 // ---- A book ------------------------------------------------------------------------
 
 test("a book's fields make its request, in the year the panel stands on", () => {
-  const made = bookRequest(2026, {
+  const made = bookRequest(YEAR, {
     name: "  Papelería y reprografía ",
     method: "fifo",
     opening: "410.00",
@@ -252,18 +260,18 @@ test("a book's fields make its request, in the year the panel stands on", () => 
   expect(made.problems).toEqual({});
   expect(made.request).toEqual({
     actividad_id: "Papelería y reprografía",
-    year: 2026,
+    year: YEAR,
     valuation_method: "fifo",
     opening_stock: { decimal: "410" },
   });
 });
 
 test("a book still lacking a field, or with a refused one, makes no request and says which", () => {
-  const empty = bookRequest(2026, EMPTY_BOOK);
+  const empty = bookRequest(YEAR, EMPTY_BOOK);
   expect(empty.request).toBeNull();
   expect([...empty.missing].sort()).toEqual(["method", "name", "opening"]);
 
-  const comma = bookRequest(2026, {
+  const comma = bookRequest(YEAR, {
     name: "Papelería",
     method: "pmp",
     opening: "410,00",
@@ -273,19 +281,25 @@ test("a book still lacking a field, or with a refused one, makes no request and 
 
   // A method outside the enum is not one the form can send.
   expect(
-    bookRequest(2026, { name: "Papelería", method: "lifo", opening: "0" })
-      .request,
+    bookRequest(YEAR, {
+      name: "Papelería",
+      method: "lifo",
+      opening: "0",
+    }).request,
   ).toBeNull();
 });
 
 test("an opening value of nothing is a value the person must state, not a default", () => {
   expect(
-    bookRequest(2026, { name: "Papelería", method: "fifo", opening: "" })
+    bookRequest(YEAR, { name: "Papelería", method: "fifo", opening: "" })
       .request,
   ).toBeNull();
   expect(
-    bookRequest(2026, { name: "Papelería", method: "fifo", opening: "0" })
-      .request?.opening_stock,
+    bookRequest(YEAR, {
+      name: "Papelería",
+      method: "fifo",
+      opening: "0",
+    }).request?.opening_stock,
   ).toEqual({ decimal: "0" });
 });
 
@@ -295,7 +309,7 @@ test("a movement other than a purchase states a cost per unit, a total, or neith
   const perUnit = movementRequest(BOOK, "movement-1", {
     ...blankMovement(),
     values: {
-      date: "2026-01-02",
+      date: fixtureDay(1, 2),
       kind: "opening",
       quantity: "100",
       unit_cost: "4.10",
@@ -303,9 +317,9 @@ test("a movement other than a purchase states a cost per unit, a total, or neith
   });
   expect(perUnit.request).toEqual({
     actividad_id: BOOK.actividad_id,
-    year: 2026,
+    year: YEAR,
     movement_id: "movement-1",
-    movement_date: "2026-01-02",
+    movement_date: fixtureDay(1, 2),
     kind: "opening",
     quantity: { decimal: "100" },
     unit_cost: { decimal: "4.1" },
@@ -314,7 +328,7 @@ test("a movement other than a purchase states a cost per unit, a total, or neith
 
   const sale = movementRequest(BOOK, "movement-2", {
     ...blankMovement(),
-    values: { date: "2026-11-20", kind: "cogs", quantity: "60" },
+    values: { date: fixtureDay(11, 20), kind: "cogs", quantity: "60" },
   });
   expect(sale.request).toMatchObject({ unit_cost: null, taxable_base: null });
   expect(sale.request).not.toHaveProperty("acquisition_cost");
@@ -480,13 +494,13 @@ test("a share is held as the fraction the backend holds and sent as it is", () =
 test("an unstated cost is unknown, never zero", () => {
   const made = movementRequest(BOOK, "m", {
     ...blankMovement(),
-    values: { date: "2026-12-31", kind: "count", quantity: "2" },
+    values: { date: fixtureDay(12, 31), kind: "count", quantity: "2" },
   });
   expect(made.request).toMatchObject({ unit_cost: null, taxable_base: null });
   const zero = movementRequest(BOOK, "m", {
     ...blankMovement(),
     values: {
-      date: "2026-12-31",
+      date: fixtureDay(12, 31),
       kind: "count",
       quantity: "2",
       unit_cost: "0",
@@ -524,7 +538,7 @@ test("no field is drawn for a reference the window mints", () => {
     values: {
       movement_id: "typed",
       reference: "typed",
-      date: "2026-01-02",
+      date: fixtureDay(1, 2),
       kind: "opening",
       quantity: "1",
       unit_cost: "1",
@@ -717,10 +731,10 @@ test("the choices the options read serves are the vocabulary the builders judge 
   ]);
   // Nothing is chosen until the choices are served.
   expect(
-    bookRequest(2026, { name: "A", method: "fifo", opening: "0" }).request,
+    bookRequest(YEAR, { name: "A", method: "fifo", opening: "0" }).request,
   ).not.toBeNull();
   expect(
-    buildBook(2026, { name: "A", method: "fifo", opening: "0" }, NO_VOCABULARY)
+    buildBook(YEAR, { name: "A", method: "fifo", opening: "0" }, NO_VOCABULARY)
       .request,
   ).toBeNull();
 });
@@ -742,24 +756,24 @@ const row = (
 });
 
 test("a book is listed under the name given to it, else the activity it was started for", () => {
-  expect(bookName(row("Papelería", 2026, 0))).toBe("Papelería");
-  expect(bookName(row("Papelería", 2026, 0, "Tienda del centro"))).toBe(
+  expect(bookName(row("Papelería", YEAR, 0))).toBe("Papelería");
+  expect(bookName(row("Papelería", YEAR, 0, "Tienda del centro"))).toBe(
     "Tienda del centro",
   );
-  expect(bookName(row("Papelería", 2026, 0, "  "))).toBe("Papelería");
+  expect(bookName(row("Papelería", YEAR, 0, "  "))).toBe("Papelería");
 });
 
 test("a book write held in doubt is judged on the books listed again", () => {
-  const books = [row("Papelería", 2026, 3), row("Enmarcado", 2025, 0)];
-  expect(bookListed(books, "Papelería", 2026)).toBe("saved");
-  expect(bookListed(books, "Papelería", 2025)).toBe("not_saved");
-  expect(bookListed([], "Papelería", 2026)).toBe("not_saved");
+  const books = [row("Papelería", YEAR, 3), row("Enmarcado", PRIOR, 0)];
+  expect(bookListed(books, "Papelería", YEAR)).toBe("saved");
+  expect(bookListed(books, "Papelería", PRIOR)).toBe("not_saved");
+  expect(bookListed([], "Papelería", YEAR)).toBe("not_saved");
 });
 
 test("a movement write held in doubt landed only if its book now holds more movements", () => {
-  const book = { actividad_id: "Papelería", year: 2026 };
-  expect(movementCounted([row("Papelería", 2026, 4)], book, 3)).toBe("saved");
-  expect(movementCounted([row("Papelería", 2026, 3)], book, 3)).toBe(
+  const book = { actividad_id: "Papelería", year: YEAR };
+  expect(movementCounted([row("Papelería", YEAR, 4)], book, 3)).toBe("saved");
+  expect(movementCounted([row("Papelería", YEAR, 3)], book, 3)).toBe(
     "not_saved",
   );
   // A book that is not listed cannot be judged to hold more.
@@ -771,7 +785,7 @@ test("a movement write held in doubt landed only if its book now holds more move
 const MOVEMENT_ID = "7d2e9f14-6a35-4c8b-b1e0-3a5c8d9f0b32";
 
 test("a change names its book and the reference minted for it, and nothing the person cannot see", () => {
-  const book = { actividad_id: "Papelería", year: 2025 };
+  const book = { actividad_id: "Papelería", year: PRIOR };
 
   expect(
     describeRequest(book, "change-1", {
@@ -780,19 +794,19 @@ test("a change names its book and the reference minted for it, and nothing the p
     }).request,
   ).toEqual({
     actividad_id: "Papelería",
-    year: 2025,
+    year: PRIOR,
     correction_id: "change-1",
     label: "Tienda del centro",
     description: null,
   });
   expect(restoreRequest(book, "change-2")).toEqual({
     actividad_id: "Papelería",
-    year: 2025,
+    year: PRIOR,
     correction_id: "change-2",
   });
   expect(retireRequest(book, "change-3", "activity_ceased").request).toEqual({
     actividad_id: "Papelería",
-    year: 2025,
+    year: PRIOR,
     correction_id: "change-3",
     reason: "activity_ceased",
   });
@@ -800,7 +814,7 @@ test("a change names its book and the reference minted for it, and nothing the p
     reverseRequest(book, "change-4", MOVEMENT_ID, "duplicate_entry").request,
   ).toEqual({
     actividad_id: "Papelería",
-    year: 2025,
+    year: PRIOR,
     correction_id: "change-4",
     target_movement_id: MOVEMENT_ID,
     reason: "duplicate_entry",
@@ -808,7 +822,7 @@ test("a change names its book and the reference minted for it, and nothing the p
 });
 
 test("a reason is chosen from the backend's own list, and a change is not made without one", () => {
-  const book = { actividad_id: "Papelería", year: 2025 };
+  const book = { actividad_id: "Papelería", year: PRIOR };
 
   for (const made of [
     retireRequest(book, "c", ""),
@@ -826,7 +840,7 @@ test("a reason is chosen from the backend's own list, and a change is not made w
 });
 
 test("a correction states what changes and leaves the rest as it is", () => {
-  const book = { actividad_id: "Papelería", year: 2025 };
+  const book = { actividad_id: "Papelería", year: PRIOR };
 
   expect(
     correctRequest(book, "c", {
@@ -836,7 +850,7 @@ test("a correction states what changes and leaves the rest as it is", () => {
     }).request,
   ).toEqual({
     actividad_id: "Papelería",
-    year: 2025,
+    year: PRIOR,
     correction_id: "c",
     reason: "keying_error",
     opening_stock: { decimal: "380" },
@@ -860,10 +874,10 @@ test("a correction states what changes and leaves the rest as it is", () => {
 });
 
 test("a corrected movement is a movement of its own under a new reference, and names the one it replaces", () => {
-  const book = { actividad_id: "Papelería", year: 2026 };
+  const book = { actividad_id: "Papelería", year: YEAR };
   const draft: MovementDraft = {
     ...blankMovement(),
-    values: { date: "2026-11-20", kind: "cogs", quantity: "50" },
+    values: { date: fixtureDay(11, 20), kind: "cogs", quantity: "50" },
   };
   const made = movementCorrectionRequest(
     book,
@@ -875,12 +889,12 @@ test("a corrected movement is a movement of its own under a new reference, and n
 
   expect(made.request).toEqual({
     actividad_id: "Papelería",
-    year: 2026,
+    year: YEAR,
     correction_id: "change-5",
     target_movement_id: MOVEMENT_ID,
     reason: "source_document_corrected",
     movement_id: "movement-new",
-    movement_date: "2026-11-20",
+    movement_date: fixtureDay(11, 20),
     kind: "cogs",
     quantity: { decimal: "50" },
     unit_cost: null,
@@ -901,7 +915,7 @@ test("a change held in doubt landed only if the book's history now holds its ref
   const entry = (id: string): InventoryHistoryEntry => ({
     correction_id: id,
     kind: "retired",
-    recorded_at: "2025-12-31T18:20:00Z",
+    recorded_at: fixtureInstant(12, 31, "18:20:00Z", -1),
     actor: "runtime",
     correction_reason: null,
     retirement_reason: "activity_ceased",
@@ -924,7 +938,7 @@ test("a change held in doubt landed only if the book's history now holds its ref
 
 const movement = (id: string, quantity: string): InventoryMovement => ({
   movement_id: id,
-  movement_date: "2025-11-20",
+  movement_date: fixtureDay(11, 20, -1),
   kind: "cogs",
   sku: "papel-a3",
   quantity: { decimal: quantity },
@@ -957,7 +971,7 @@ const change = (
 
 const ledgerOf = (history: InventoryHistoryEntry[]): InventoryBook => ({
   actividad_id: "Papelería",
-  year: 2025,
+  year: PRIOR,
   valuation_method: "pmp",
   opening_stock: { decimal: "400" },
   period_movements: [movement("current", "60")],
@@ -970,28 +984,28 @@ const ledgerOf = (history: InventoryHistoryEntry[]): InventoryBook => ({
 test("the history lists the newest change first, with what each displaced and what took its place", () => {
   const rows = historyRows(
     ledgerOf([
-      change("a", "2025-02-10", "opening_corrected", {
+      change("a", fixtureDay(2, 10, -1), "opening_corrected", {
         correction_reason: "keying_error",
         prior_opening_stock: { decimal: "308" },
       }),
-      change("b", "2025-03-01", "opening_corrected", {
+      change("b", fixtureDay(3, 1, -1), "opening_corrected", {
         correction_reason: "keying_error",
         prior_opening_stock: { decimal: "380" },
         prior_valuation_method: "fifo",
       }),
-      change("c", "2025-11-24", "movement_corrected", {
+      change("c", fixtureDay(11, 24, -1), "movement_corrected", {
         correction_reason: "source_document_corrected",
         superseded_movement: movement("old", "50"),
         replacement_movement_id: "current",
       }),
-      change("d", "2025-11-25", "movement_reversed", {
+      change("d", fixtureDay(11, 25, -1), "movement_reversed", {
         correction_reason: "duplicate_entry",
         superseded_movement: movement("gone", "5"),
       }),
-      change("e", "2025-12-01", "described", {
+      change("e", fixtureDay(12, 1, -1), "described", {
         prior_descriptor: { label: "Papel", description: "Antes" },
       }),
-      change("f", "2025-12-31", "retired", {
+      change("f", fixtureDay(12, 31, -1), "retired", {
         retirement_reason: "activity_ceased",
       }),
     ]),
@@ -1006,7 +1020,7 @@ test("the history lists the newest change first, with what each displaced and wh
     "opening_corrected",
   ]);
   expect(rows[0]).toMatchObject({
-    day: "2025-12-31",
+    day: fixtureDay(12, 31, -1),
     reason: { family: "retirement", token: "activity_ceased" },
     before: [],
     after: [],
@@ -1043,7 +1057,7 @@ test("a book never changed has no history, and the history carries no reference 
   expect(historyRows(ledgerOf([]))).toEqual([]);
   const rows = historyRows(
     ledgerOf([
-      change("secret-reference", "2025-02-10", "opening_corrected", {
+      change("secret-reference", fixtureDay(2, 10, -1), "opening_corrected", {
         prior_opening_stock: { decimal: "308" },
       }),
     ]),
@@ -1079,7 +1093,7 @@ test("a closing value states its facts, its documents and the reference minted f
   expect(made.problems).toEqual({});
   expect(made.request).toEqual({
     actividad_id: BOOK.actividad_id,
-    year: 2026,
+    year: YEAR,
     facts: {
       decision_id: "decision-1",
       authority: "movement_derived",
@@ -1104,7 +1118,7 @@ test("a closing value from a count brings the count and a document for each part
     values: {
       authority: "physical_observation",
       reason: "Counted on the last day",
-      observed_on: "2026-12-31",
+      observed_on: fixtureDay(12, 31),
       closing_value: "410.00",
       basis: "fifo_acquisition_price",
     },
@@ -1117,7 +1131,7 @@ test("a closing value from a count brings the count and a document for each part
 
   expect(made.problems).toEqual({});
   expect(made.request?.facts.physical_count).toEqual({
-    observed_on: "2026-12-31",
+    observed_on: fixtureDay(12, 31),
     closing_value: { decimal: "410" },
     valuation_basis: "fifo_acquisition_price",
     evidence: [
@@ -1199,7 +1213,7 @@ test("correcting a purchase starts from what the book kept of it, so only what w
   const bought: InventoryMovement = {
     ...movement("p1", "100"),
     kind: "purchase",
-    movement_date: "2026-03-04",
+    movement_date: fixtureDay(3, 4),
     acquisition_cost: {
       consideration_excluding_iva: { decimal: "1000" },
       directly_attributable_cost_total: { decimal: "100.00" },
@@ -1339,7 +1353,7 @@ test("a count is the closing authority the options give that role", () => {
     values: {
       authority: "physical_observation",
       reason: "Counted",
-      observed_on: "2026-12-31",
+      observed_on: fixtureDay(12, 31),
       closing_value: "10",
       basis: "fifo_acquisition_price",
     },
@@ -1411,7 +1425,7 @@ test("a purchase's files come back named where the book knows the name, and as a
   const bought: InventoryMovement = {
     ...movement("p2", "10"),
     kind: "purchase",
-    movement_date: "2026-03-04",
+    movement_date: fixtureDay(3, 4),
     acquisition_cost: {
       consideration_excluding_iva: { decimal: "100" },
       directly_attributable_cost_total: { decimal: "0.00" },
@@ -1471,7 +1485,7 @@ test("a purchase's files come back named where the book knows the name, and as a
 });
 
 test("a typed text of any length is the backend's to refuse, not the form's", () => {
-  const book = { actividad_id: "Papelería", year: 2025 };
+  const book = { actividad_id: "Papelería", year: PRIOR };
   const long = "x".repeat(5000);
 
   expect(
