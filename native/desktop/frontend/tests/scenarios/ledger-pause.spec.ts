@@ -1,9 +1,9 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { label } from "../support/strings";
-import { LEDGER_FIXTURE_TODAY } from "../../src/dev/fixtures/ledger";
+import { fixtureYear } from "../../src/dev/fixtureDates";
 
 /** The year of the scenario ledger's date, whose periods the scenarios open. */
-const scenarioYear = Number(LEDGER_FIXTURE_TODAY.slice(0, 4));
+const scenarioYear = fixtureYear;
 
 // The Ledger page's one write pause over the scenario's ledger: a write
 // whose outcome was not seen holds every write on the page, in any
@@ -393,13 +393,13 @@ test("movements a finalized declaration seals are counted as skipped for the sel
   }
   await periods
     .getByRole("group", {
-      name: label("desktop.ledger.period.of_year", { year: 2026 }),
+      name: label("desktop.ledger.period.of_year", { year: scenarioYear }),
     })
     .getByRole("button", { name: "1T", exact: true })
     .click();
   await expect(periods).toBeHidden();
   await expect(dataRows(target).first()).toBeVisible();
-  // Every movement of 2026 1T is cited by the filed Modelo 303.
+  // Every movement of the first quarter is cited by the filed Modelo 303.
   await dataRows(target).nth(0).locator("input[type=checkbox]").click();
   await dataRows(target).nth(1).locator("input[type=checkbox]").click();
   if (!(await panel(target).isVisible()))

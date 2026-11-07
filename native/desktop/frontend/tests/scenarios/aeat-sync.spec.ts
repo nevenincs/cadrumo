@@ -3,6 +3,7 @@ import { DEMO_BORRADOR_YEARS } from "../../src/dev/aeatSyncFixture";
 import { AEAT_SYNC_AREAS } from "../../src/shell/aeatSync";
 import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
+import { fixtureYear } from "../../src/dev/fixtureDates";
 
 // The AEAT data page draws what the host serves for each area: whether it
 // was ever brought, how current it is and the counts beside it. An update
@@ -735,7 +736,7 @@ for (const language of ["en", "es", "ca", "hu"])
 for (const attempt of [
   { area: "notifications", part: "0", year: null },
   { area: "filed", part: "all", year: null },
-  { area: "filed", part: "1", year: 2025 },
+  { area: "filed", part: "1", year: DEMO_BORRADOR_YEARS[0]! },
 ])
   test(`an unknown ${attempt.area}/${attempt.part} retry requires acknowledgement even when saved results cannot reload`, async ({
     page: target,
@@ -819,14 +820,18 @@ test("acknowledging one year does not clear an uncertain whole-area retry", asyn
     label("desktop.aeat_sync.results.refresh_failed"),
   );
   await button(filed, "desktop.aeat_sync.results.retry_named", {
-    name: label("desktop.aeat_sync.results.part.year", { year: 2025 }),
+    name: label("desktop.aeat_sync.results.part.year", {
+      year: DEMO_BORRADOR_YEARS[0]!,
+    }),
   }).click();
   await button(filed, "desktop.aeat_sync.progress.warn_confirm").click();
   await expect(results(page)).not.toContainText(
     label("desktop.aeat_sync.results.refresh_failed"),
   );
   await button(filed, "desktop.aeat_sync.results.retry_named", {
-    name: label("desktop.aeat_sync.results.part.year", { year: 2024 }),
+    name: label("desktop.aeat_sync.results.part.year", {
+      year: DEMO_BORRADOR_YEARS[1]!,
+    }),
   }).click();
   await expect(filed).toContainText(
     label("desktop.aeat_sync.progress.warn_unknown"),
@@ -844,7 +849,9 @@ test("a pending result retry disables other retries without issuing another requ
   await update(page).click();
   const saved = results(page);
   await button(area(saved, "filed"), "desktop.aeat_sync.results.retry_named", {
-    name: label("desktop.aeat_sync.results.part.year", { year: 2025 }),
+    name: label("desktop.aeat_sync.results.part.year", {
+      year: DEMO_BORRADOR_YEARS[0]!,
+    }),
   }).click();
   const retryButtons = saved.getByRole("button", {
     name: new RegExp(label("desktop.aeat_sync.results.retry")),
@@ -892,7 +899,7 @@ const HORIZONS = [
   ["identity", 90],
 ] as const;
 const DAY = 24 * 60 * 60 * 1000;
-const NOON = new Date("2026-10-29T12:00:00Z");
+const NOON = new Date(Date.UTC(fixtureYear, 9, 29, 12));
 
 const dayOf = (days: number) =>
   new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(

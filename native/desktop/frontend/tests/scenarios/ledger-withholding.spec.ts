@@ -9,6 +9,7 @@ import {
   openSetup,
   area,
 } from "../support/ledgerSetup";
+import { fixtureYear } from "../../src/dev/fixtureDates";
 
 // The Ledger's withholding register: certificates listed, recorded and picked as files, and every refusal said in the backend's words.
 
@@ -98,7 +99,7 @@ test("the withholding register lists a payer's certificate under its class and r
     })
     .click();
   await expect(target.locator(".ledger-withholding-empty")).toHaveText(
-    label("desktop.ledger.withholding.empty", { ejercicio: 2025 }),
+    label("desktop.ledger.withholding.empty", { ejercicio: fixtureYear - 1 }),
   );
   await expect(target.locator(".ledger-withholding-class")).toHaveCount(0);
 });

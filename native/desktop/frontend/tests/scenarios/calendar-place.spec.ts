@@ -4,7 +4,12 @@ import { label } from "../support/strings";
 import { showTui } from "../support/tui";
 import { startFromDocs, open } from "../support/scenarioShell";
 import { calendarButton } from "../support/scenarioRail";
-import { showCalendar, calendarReads } from "../support/scenarioCalendar";
+import {
+  BUSY_DAY,
+  showCalendar,
+  calendarReads,
+} from "../support/scenarioCalendar";
+import { fixtureMonth, fixtureYear } from "../../src/dev/fixtureDates";
 
 // The reader's place in the calendar's months and list, kept across layouts, returns and choices.
 
@@ -24,34 +29,34 @@ test("the months come back to the month the reader left them on, in a pane and b
   });
   const heading = (month: string) =>
     page.locator(`.calendar-month[data-month="${month}"] h2`);
-  await expect(heading("2026-10")).toBeInViewport();
+  await expect(heading(fixtureMonth(10))).toBeInViewport();
   // The reader scrolls on to January, which begins a row of months in a
   // pane and beside the list alike.
   await page.evaluate((element) => {
-    const month = element.querySelector('[data-month="2027-01"]');
+    const month = element.querySelector(`[data-month="${fixtureMonth(1, 1)}"]`);
     if (!month) throw new Error("no January");
     element.scrollTop +=
       month.getBoundingClientRect().top -
       element.getBoundingClientRect().top -
       100;
   });
-  await expect(heading("2027-01")).toBeInViewport();
-  await expect(heading("2026-10")).not.toBeInViewport();
+  await expect(heading(fixtureMonth(1, 1))).toBeInViewport();
+  await expect(heading(fixtureMonth(10))).not.toBeInViewport();
   const head = target.locator('[data-dock-header="docs"]');
   // Maximized, the months are laid out anew beside the list: on January.
   await head
     .getByRole("button", { name: label("desktop.dock.expand") })
     .click();
   await expect(page.locator(".calendar-aside")).toBeVisible();
-  await expect(heading("2027-01")).toBeInViewport();
-  await expect(heading("2026-10")).not.toBeInViewport();
+  await expect(heading(fixtureMonth(1, 1))).toBeInViewport();
+  await expect(heading(fixtureMonth(10))).not.toBeInViewport();
   // And back in a pane, the same.
   await head
     .getByRole("button", { name: label("desktop.dock.restore") })
     .click();
   await expect(page.locator(".calendar-aside")).toHaveCount(0);
-  await expect(heading("2027-01")).toBeInViewport();
-  await expect(heading("2026-10")).not.toBeInViewport();
+  await expect(heading(fixtureMonth(1, 1))).toBeInViewport();
+  await expect(heading(fixtureMonth(10))).not.toBeInViewport();
   // After the list, too: the list opens on its own mark for today, and
   // the months are where they were left.
   const view = page.getByRole("radiogroup", {
@@ -64,8 +69,8 @@ test("the months come back to the month the reader left them on, in a pane and b
   await view
     .getByRole("radio", { name: label("desktop.calendar.view_months") })
     .click();
-  await expect(heading("2027-01")).toBeInViewport();
-  await expect(heading("2026-10")).not.toBeInViewport();
+  await expect(heading(fixtureMonth(1, 1))).toBeInViewport();
+  await expect(heading(fixtureMonth(10))).not.toBeInViewport();
 });
 
 test("the reader's month does not drift however often the months are laid out anew", async ({
@@ -100,7 +105,9 @@ test("the reader's month does not drift however often the months are laid out an
   // before it gone above: the row at the top is the one that is kept.
   const toMarch = () =>
     page.evaluate((element) => {
-      const month = element.querySelector('[data-month="2027-03"]');
+      const month = element.querySelector(
+        `[data-month="${fixtureMonth(3, 1)}"]`,
+      );
       if (!month) throw new Error("no March");
       const kept =
         element.querySelector<HTMLElement>(".calendar-head")?.offsetHeight ||
@@ -116,7 +123,9 @@ test("the reader's month does not drift however often the months are laid out an
   // The reader goes on to March. The place that is kept is the month that
   // begins March's row, which need not be March: the months of a row are
   // made up anew at every width, and that one month is what stays put.
-  const march = page.locator('.calendar-month[data-month="2027-03"]');
+  const march = page.locator(
+    `.calendar-month[data-month="${fixtureMonth(3, 1)}"]`,
+  );
   await toMarch();
   await expect(march.locator("h2")).toBeInViewport();
   const begins = await page.evaluate((element) => {
@@ -125,11 +134,16 @@ test("the reader's month does not drift however often the months are laid out an
     ];
     const top = (month: Element) =>
       Math.round(month.getBoundingClientRect().top);
-    const row = top(element.querySelector('[data-month="2027-03"]')!);
+    const row = top(
+      element.querySelector(`[data-month="${fixtureMonth(3, 1)}"]`)!,
+    );
     return months.find((month) => top(month) === row)?.dataset.month ?? "";
   });
   expect(begins).not.toBe("");
-  const left = { march: await under("2027-03"), begins: await under(begins) };
+  const left = {
+    march: await under(fixtureMonth(3, 1)),
+    begins: await under(begins),
+  };
   // Maximized and restored, three times over. Beside the list the month
   // that began the row is where it was, to the pixel; back in a pane so is
   // March. Nothing walks from one round to the next.
@@ -147,7 +161,7 @@ test("the reader's month does not drift however often the months are laid out an
       .click();
     await expect(page.locator(".calendar-aside")).toHaveCount(0);
     expect(
-      Math.abs((await under("2027-03")) - left.march),
+      Math.abs((await under(fixtureMonth(3, 1))) - left.march),
       `restored ${round}`,
     ).toBeLessThanOrEqual(1);
   }
@@ -160,9 +174,9 @@ test("the reader's month does not drift however often the months are laid out an
       })
       .toBeLessThanOrEqual(1);
   }
-  expect(Math.abs((await under("2027-03")) - left.march)).toBeLessThanOrEqual(
-    1,
-  );
+  expect(
+    Math.abs((await under(fixtureMonth(3, 1))) - left.march),
+  ).toBeLessThanOrEqual(1);
 
   // A reader at the very start stays at the very start, whatever the head
   // above the months comes to measure at each width. The scroll is the
@@ -188,14 +202,17 @@ test("the reader's month does not drift however often the months are laid out an
   await target.setViewportSize({ width: 1600, height: 900 });
   await page.evaluate((element) => {
     element
-      .querySelector('.calendar-bar[data-entry="303:2026-3T"]')
+      .querySelector(`.calendar-bar[data-entry="303:${fixtureYear}-3T"]`)
       ?.scrollIntoView({ block: "center" });
   });
-  await page.locator('.calendar-bar[data-entry="303:2026-3T"]').first().click();
+  await page
+    .locator(`.calendar-bar[data-entry="303:${fixtureYear}-3T"]`)
+    .first()
+    .click();
   await toMarch();
   await expect(march.locator("h2")).toBeInViewport();
   const chosenAt = {
-    march: await under("2027-03"),
+    march: await under(fixtureMonth(3, 1)),
     begins: await under(begins),
   };
   await head
@@ -210,7 +227,7 @@ test("the reader's month does not drift however often the months are laid out an
     .click();
   await expect(page.locator(".calendar-aside")).toHaveCount(0);
   expect(
-    Math.abs((await under("2027-03")) - chosenAt.march),
+    Math.abs((await under(fixtureMonth(3, 1))) - chosenAt.march),
   ).toBeLessThanOrEqual(1);
 
   // The list has its place too: left at its start in a pane, it is at its
@@ -237,7 +254,7 @@ test("the reader's month does not drift however often the months are laid out an
 test("a choice that moves another obligation's stop takes the keyboard to the new stop", async ({
   page: target,
 }) => {
-  await target.clock.setFixedTime(new Date(2027, 0, 12, 12));
+  await target.clock.setFixedTime(BUSY_DAY);
   await target.setViewportSize({ width: 1600, height: 900 });
   await open(target, "signed-in", "&calendar=busy");
   await calendarButton(target).click();
@@ -260,18 +277,21 @@ test("a choice that moves another obligation's stop takes the keyboard to the ne
     );
   // Chosen in the list, a window that January's weeks only counted takes
   // the place of the one they kept last, whose stop moves to a later week.
-  const before = await weekOf(stop("130:2026-4T"));
+  const before = await weekOf(stop(`130:${fixtureYear}-4T`));
   await aside
-    .locator('li[data-entry="303:2026-4T"]')
+    .locator(`li[data-entry="303:${fixtureYear}-4T"]`)
     .getByRole("button")
     .click();
-  await expect(stop("303:2026-4T")).toHaveAttribute("aria-pressed", "true");
-  const moved = await weekOf(stop("130:2026-4T"));
+  await expect(stop(`303:${fixtureYear}-4T`)).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  const moved = await weekOf(stop(`130:${fixtureYear}-4T`));
   expect(moved).toBeGreaterThan(before);
   // The keyboard goes to that stop and chooses it: its stop is back in the
   // first week, and the keyboard is on it, not on a part that is now only
   // for the eye.
-  await stop("130:2026-4T").focus();
+  await stop(`130:${fixtureYear}-4T`).focus();
   // With the first week of the month scrolled out of view above.
   await page.evaluate((element) => {
     const held = document.activeElement as HTMLElement;
@@ -284,14 +304,17 @@ test("a choice that moves another obligation's stop takes the keyboard to the ne
       4;
   });
   await expect(
-    page.locator('.calendar-month[data-month="2027-01"] h2'),
+    page.locator(`.calendar-month[data-month="${fixtureMonth(1, 1)}"] h2`),
   ).not.toBeInViewport();
   await target.keyboard.press("Enter");
-  await expect(stop("130:2026-4T")).toHaveAttribute("aria-pressed", "true");
-  expect(await weekOf(stop("130:2026-4T"))).toBe(before);
-  await expect(stop("130:2026-4T")).toBeFocused();
+  await expect(stop(`130:${fixtureYear}-4T`)).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  expect(await weekOf(stop(`130:${fixtureYear}-4T`))).toBe(before);
+  await expect(stop(`130:${fixtureYear}-4T`)).toBeFocused();
   // The keyboard is where it can be seen: the view went to the stop.
-  await expect(stop("130:2026-4T")).toBeInViewport({ ratio: 1 });
+  await expect(stop(`130:${fixtureYear}-4T`)).toBeInViewport({ ratio: 1 });
   expect(
     await target.evaluate(() =>
       document.activeElement?.getAttribute("aria-hidden"),
@@ -303,7 +326,7 @@ test("a choice that moves another obligation's stop takes the keyboard to the ne
     await target.evaluate(() =>
       document.activeElement?.getAttribute("data-entry"),
     ),
-  ).not.toBe("130:2026-4T");
+  ).not.toBe(`130:${fixtureYear}-4T`);
   await expect(target.locator(".calendar-bar:focus")).toHaveCount(1);
 });
 
@@ -325,7 +348,7 @@ test("a calendar brought back keeps a place the reader scrolled away from their 
   // An October window is chosen; the reader then goes to the end of the
   // months, and to the start of the list.
   const chosen = page
-    .locator('.calendar-bar[data-entry="303:2026-3T"]')
+    .locator(`.calendar-bar[data-entry="303:${fixtureYear}-3T"]`)
     .first();
   await chosen.click();
   await expect(chosen).toHaveAttribute("aria-pressed", "true");
@@ -376,7 +399,7 @@ test("a list brought back in a pane is where it was left, though something is ch
     name: label("desktop.calendar.title"),
   });
   const chosen = page
-    .locator('.calendar-bar[data-entry="303:2026-3T"]')
+    .locator(`.calendar-bar[data-entry="303:${fixtureYear}-3T"]`)
     .first();
   await chosen.click();
   await expect(chosen).toHaveAttribute("aria-pressed", "true");
@@ -384,7 +407,9 @@ test("a list brought back in a pane is where it was left, though something is ch
     name: label("desktop.calendar.view_list"),
   });
   await list.click();
-  const row = page.locator('.calendar-list li[data-entry="303:2026-3T"]');
+  const row = page.locator(
+    `.calendar-list li[data-entry="303:${fixtureYear}-3T"]`,
+  );
   await expect(row).toHaveAttribute("aria-current", "true");
   // The reader goes to the start of the list, away from what they chose.
   for (const left of [0, 40]) {
@@ -416,7 +441,7 @@ test("a list brought back in a pane is where it was left, though something is ch
 test("a month that makes the page scroll when drawn whole does not change the page's width", async ({
   page: target,
 }) => {
-  await target.clock.setFixedTime(new Date(2027, 0, 12, 12));
+  await target.clock.setFixedTime(BUSY_DAY);
   // Tall enough that the months, under the profile notice, fit without
   // scrolling until one is whole.
   await target.setViewportSize({ width: 1600, height: 1600 });
@@ -438,13 +463,17 @@ test("a month that makes the page scroll when drawn whole does not change the pa
   const before = await measure();
   expect(before.scrolls).toBe(false);
   const week = page
-    .locator('.calendar-month[data-month="2027-01"] > div:last-child > div')
+    .locator(
+      `.calendar-month[data-month="${fixtureMonth(1, 1)}"] > div:last-child > div`,
+    )
     .nth(4);
   const top = async () => Math.round((await week.boundingBox())!.y);
   const pressedAt = await top();
   await week.locator(".calendar-more").click();
   await expect(
-    page.locator('.calendar-month[data-month="2027-01"] .calendar-whole'),
+    page.locator(
+      `.calendar-month[data-month="${fixtureMonth(1, 1)}"] .calendar-whole`,
+    ),
   ).toHaveAttribute("aria-expanded", "true");
   // The page scrolls now, is as wide as it was, and the week that was
   // pressed is where it was pressed.
@@ -468,7 +497,7 @@ test("a month that makes the page scroll when drawn whole does not change the pa
 test("a reader inside a month taller than the page is kept on that month", async ({
   page: target,
 }) => {
-  await target.clock.setFixedTime(new Date(2027, 0, 12, 12));
+  await target.clock.setFixedTime(BUSY_DAY);
   await target.setViewportSize({ width: 1600, height: 900 });
   await open(target, "signed-in", "&calendar=busy");
   // With the TUI beside it, the calendar has a pane's width.
@@ -477,7 +506,9 @@ test("a reader inside a month taller than the page is kept on that month", async
   const page = target.getByRole("region", {
     name: label("desktop.calendar.title"),
   });
-  const january = page.locator('.calendar-month[data-month="2027-01"]');
+  const january = page.locator(
+    `.calendar-month[data-month="${fixtureMonth(1, 1)}"]`,
+  );
   await january.locator(".calendar-whole").click();
   // Deep inside January: its name is far above the view and the next row
   // of months is still below it.
@@ -485,7 +516,7 @@ test("a reader inside a month taller than the page is kept on that month", async
     page.evaluate((element) =>
       Math.round(
         (element
-          .querySelector('[data-month="2027-01"]')
+          .querySelector(`[data-month="${fixtureMonth(1, 1)}"]`)
           ?.getBoundingClientRect().top ?? 0) -
           element.getBoundingClientRect().top -
           (element.querySelector<HTMLElement>(".calendar-head")?.offsetHeight ||
@@ -497,7 +528,9 @@ test("a reader inside a month taller than the page is kept on that month", async
   await page.evaluate(
     (element) =>
       new Promise<void>((done) => {
-        const month = element.querySelector('[data-month="2027-01"]');
+        const month = element.querySelector(
+          `[data-month="${fixtureMonth(1, 1)}"]`,
+        );
         if (!month) throw new Error("no January");
         element.addEventListener("scroll", () => done(), { once: true });
         element.scrollTop +=
@@ -528,7 +561,7 @@ test("a reader inside a month taller than the page is kept on that month", async
 test("a calendar put away and brought back is as it was left", async ({
   page: target,
 }) => {
-  await target.clock.setFixedTime(new Date(2027, 0, 12, 12));
+  await target.clock.setFixedTime(BUSY_DAY);
   await open(target, "signed-in", "&calendar=busy");
   // With the TUI beside it, the calendar has a pane's width.
   await showTui(target);
@@ -537,27 +570,29 @@ test("a calendar put away and brought back is as it was left", async ({
     name: label("desktop.calendar.title"),
   });
   const whole = page.locator(
-    '.calendar-month[data-month="2027-01"] .calendar-whole',
+    `.calendar-month[data-month="${fixtureMonth(1, 1)}"] .calendar-whole`,
   );
   // A month asked for whole, something chosen, and a place left on.
   await whole.click();
   await expect(whole).toHaveAttribute("aria-expanded", "true");
   const chosen = page.locator(
-    '.calendar-bar[data-entry="347:2026"]:not([tabindex="-1"])',
+    `.calendar-bar[data-entry="347:${fixtureYear}"]:not([tabindex="-1"])`,
   );
   await chosen.scrollIntoViewIfNeeded();
   await chosen.click();
   await expect(chosen).toHaveAttribute("aria-pressed", "true");
   const where = () =>
     page.evaluate((element) => {
-      const month = element.querySelector('[data-month="2027-02"]');
+      const month = element.querySelector(
+        `[data-month="${fixtureMonth(2, 1)}"]`,
+      );
       return Math.round(
         (month?.getBoundingClientRect().top ?? 0) -
           element.getBoundingClientRect().top,
       );
     });
   await page.evaluate((element) => {
-    const month = element.querySelector('[data-month="2027-02"]');
+    const month = element.querySelector(`[data-month="${fixtureMonth(2, 1)}"]`);
     if (!month) throw new Error("no February");
     element.scrollTop +=
       month.getBoundingClientRect().top -
@@ -585,7 +620,7 @@ test("a calendar put away and brought back is as it was left", async ({
     page.getByRole("radio", { name: label("desktop.calendar.view_list") }),
   ).toBeChecked();
   await expect(
-    page.locator('.calendar-list li[data-entry="347:2026"]'),
+    page.locator(`.calendar-list li[data-entry="347:${fixtureYear}"]`),
   ).toHaveAttribute("aria-current", "true");
   // Nothing was read again for it.
   expect(await calendarReads(target)()).toBe(1);
