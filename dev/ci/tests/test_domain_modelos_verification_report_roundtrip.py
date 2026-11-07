@@ -234,7 +234,10 @@ def test_verification_report_refuses_non_utc_run_at(run_at: datetime) -> None:
 
 @pytest.mark.parametrize(
     "persisted_run_at",
-    ("2026-05-28T11:05:00", "2026-05-28T12:05:00+01:00"),
+    (
+        datetime(FILING_YEAR, 5, 28, 11, 5, 0).isoformat(),
+        datetime(FILING_YEAR, 5, 28, 12, 5, 0, tzinfo=timezone(timedelta(hours=1))).isoformat(),
+    ),
     ids=("naive", "non-utc"),
 )
 def test_verification_report_catalogue_refuses_non_utc_run_at_at_encrypted_load(

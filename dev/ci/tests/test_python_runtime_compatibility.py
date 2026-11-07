@@ -90,7 +90,7 @@ def _evidence(
         commands=(),
         focused_tests=(_focused_test("installed-cadrumo-mcp-help"),) if status == "passed" else (),
         failure={"category": "fixture", "detail": "failed"} if status == "failed" else None,
-        observed_at="2026-09-02T00:00:00+00:00",
+        observed_at=datetime(FILING_YEAR, 9, 2, tzinfo=UTC).isoformat(),
     )
 
 

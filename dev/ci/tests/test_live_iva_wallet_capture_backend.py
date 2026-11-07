@@ -42,6 +42,9 @@ from cadrumo.entrypoints.live_state_composition import compose_live_state, persi
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 FILING_YEAR = filing_year_envelope().horizon
+PRIOR_YEAR = FILING_YEAR - 1
+FLOOR_YEAR = filing_year_envelope().floor
+MIDDLE_YEAR = FLOOR_YEAR + 2
 
 _EXTERNAL = load_external_constants()
 WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
@@ -119,7 +122,7 @@ def test_wallet_capture_backend_persists_reloads_reconciles_and_hides_storage_id
         observation = parse_iva_compensation_wallet_html(
             _wallet_html(
                 total="1.200,00",
-                rows="<tr><td>2026</td><td>1T</td><td>1.200,00</td></tr>",
+                rows=f"<tr><td>{FILING_YEAR}</td><td>1T</td><td>1.200,00</td></tr>",
                 target_year=FILING_YEAR,
                 target_period="2T",
             ),
@@ -160,7 +163,7 @@ def test_wallet_capture_backend_persists_reloads_reconciles_and_hides_storage_id
         )
         database_bytes = read_db_at_rest_bytes(db_path)
         assert _TAXPAYER_REF.encode("ascii") not in database_bytes
-        assert f"{_TAXPAYER_REF}:2026:2T".encode("ascii") not in database_bytes
+        assert f"{_TAXPAYER_REF}:{FILING_YEAR}:2T".encode("ascii") not in database_bytes
 
 
 def test_wallet_reconciliation_uses_runtime_bound_repository_for_decision_persistence(tmp_path: Path) -> None:
@@ -175,7 +178,7 @@ def test_wallet_reconciliation_uses_runtime_bound_repository_for_decision_persis
         observation = parse_iva_compensation_wallet_html(
             _wallet_html(
                 total="1.200,00",
-                rows="<tr><td>2026</td><td>1T</td><td>1.200,00</td></tr>",
+                rows=f"<tr><td>{FILING_YEAR}</td><td>1T</td><td>1.200,00</td></tr>",
                 target_year=FILING_YEAR,
                 target_period="2T",
             ),
@@ -214,32 +217,32 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(
             IvaCompensationPeriodState(
                 provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
                 taxpayer_nif=_TAXPAYER_REF,
-                filing_year=FILING_YEAR,
-                period=Period.from_year_and_code(FILING_YEAR, "4T"),
-                registry_snapshot_ref=_snapshot_ref(2022, "4T"),
-                expediente_id="202230300000004Z",
+                filing_year=FLOOR_YEAR,
+                period=Period.from_year_and_code(FLOOR_YEAR, "4T"),
+                registry_snapshot_ref=_snapshot_ref(FLOOR_YEAR, "4T"),
+                expediente_id=f"{FLOOR_YEAR}30300000004Z",
                 status="ALTA",
                 presented_at=_CAPTURED_AT,
                 generated_amount=Decimal("100.00"),
                 applied_amount=Decimal("0.00"),
                 available_end_amount=Decimal("100.00"),
-                source_observation_key="303:2022:4T:EXP-2022-4T",
+                source_observation_key=f"303:{FLOOR_YEAR}:4T:EXP-{FLOOR_YEAR}-4T",
             ),
         )
         history_repo.save_period(
             IvaCompensationPeriodState(
                 provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
                 taxpayer_nif=_TAXPAYER_REF,
-                filing_year=FILING_YEAR,
-                period=Period.from_year_and_code(FILING_YEAR, "1T"),
-                registry_snapshot_ref=_snapshot_ref(2024, "1T"),
-                expediente_id="202430300000001Z",
+                filing_year=MIDDLE_YEAR,
+                period=Period.from_year_and_code(MIDDLE_YEAR, "1T"),
+                registry_snapshot_ref=_snapshot_ref(MIDDLE_YEAR, "1T"),
+                expediente_id=f"{MIDDLE_YEAR}30300000001Z",
                 status="ALTA",
                 presented_at=_CAPTURED_AT,
                 generated_amount=Decimal("30.00"),
                 applied_amount=Decimal("40.00"),
                 available_end_amount=Decimal("90.00"),
-                source_observation_key="303:2024:1T:EXP-2024-1T",
+                source_observation_key=f"303:{MIDDLE_YEAR}:1T:EXP-{MIDDLE_YEAR}-1T",
             ),
         )
         IvaWalletDecisionRepository().save_decision(
@@ -247,8 +250,8 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(
                 taxpayer_nif=_TAXPAYER_REF,
                 target_year=FILING_YEAR,
                 target_period=Period.from_year_and_code(FILING_YEAR, "2T"),
-                target_registry_snapshot_ref=_snapshot_ref(2026, "2T"),
-                source_registry_snapshot_refs=(_snapshot_ref(2024, "1T"),),
+                target_registry_snapshot_ref=_snapshot_ref(FILING_YEAR, "2T"),
+                source_registry_snapshot_refs=(_snapshot_ref(MIDDLE_YEAR, "1T"),),
                 selected_authority="aeat_wallet",
                 selected_amount=Decimal("90.00"),
                 wallet_amount=Decimal("90.00"),
@@ -263,18 +266,18 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(
                 authority_sources=(
                     IvaCompensationAuthoritySource(
                         source_kind="aeat_wallet",
-                        source_locator="wallet:2026:2T",
+                        source_locator=f"wallet:{FILING_YEAR}:2T",
                         amount=Decimal("90.00"),
                         registry_snapshot_refs=(),
                     ),
                     IvaCompensationAuthoritySource(
                         source_kind="filed_history_observation",
-                        source_locator="303:2024:1T:EXP-2024-1T",
+                        source_locator=f"303:{MIDDLE_YEAR}:1T:EXP-{MIDDLE_YEAR}-1T",
                         source_modelo="303",
-                        source_filing_year=FILING_YEAR,
-                        source_periods=(Period.from_year_and_code(FILING_YEAR, "1T"),),
+                        source_filing_year=MIDDLE_YEAR,
+                        source_periods=(Period.from_year_and_code(MIDDLE_YEAR, "1T"),),
                         amount=Decimal("90.00"),
-                        registry_snapshot_refs=(_snapshot_ref(2024, "1T"),),
+                        registry_snapshot_refs=(_snapshot_ref(MIDDLE_YEAR, "1T"),),
                     ),
                 ),
             ),
@@ -288,8 +291,8 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(
     assert report.row_count == 2
     assert report.carry_forward_lot_count == 2
     assert [(lot.source_filing_year, lot.source_period) for lot in report.carry_forward_lots] == [
-        (2022, Period.from_year_and_code(FILING_YEAR, "4T")),
-        (2024, Period.from_year_and_code(FILING_YEAR, "1T")),
+        (FLOOR_YEAR, Period.from_year_and_code(FLOOR_YEAR, "4T")),
+        (MIDDLE_YEAR, Period.from_year_and_code(MIDDLE_YEAR, "1T")),
     ]
     assert report.carry_forward_lots[0].applied_amount == "40.00"
     assert report.carry_forward_lots[0].remaining_amount == "60.00"
@@ -302,9 +305,9 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(
     assert any(
         "source_kind" not in source and source.startswith("aeat_wallet") for source in decision.authority_sources
     )
-    assert "wallet:2026:2T" not in report.model_dump_json()
-    assert "202230300000004Z" not in report.model_dump_json()
-    assert "202430300000001Z" not in report.model_dump_json()
+    assert f"wallet:{FILING_YEAR}:2T" not in report.model_dump_json()
+    assert f"{FLOOR_YEAR}30300000004Z" not in report.model_dump_json()
+    assert f"{MIDDLE_YEAR}30300000001Z" not in report.model_dump_json()
     assert _TAXPAYER_REF not in report.model_dump_json()
 
 
@@ -323,10 +326,10 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(
             IvaCompensationPeriodState(
                 provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
                 taxpayer_nif=_TAXPAYER_REF,
-                filing_year=FILING_YEAR,
-                period=Period.from_year_and_code(FILING_YEAR, "4T"),
-                registry_snapshot_ref=_snapshot_ref(2025, "4T"),
-                expediente_id="202530300000004Z",
+                filing_year=PRIOR_YEAR,
+                period=Period.from_year_and_code(PRIOR_YEAR, "4T"),
+                registry_snapshot_ref=_snapshot_ref(PRIOR_YEAR, "4T"),
+                expediente_id=f"{PRIOR_YEAR}30300000004Z",
                 status="ALTA",
                 presented_at=_CAPTURED_AT,
                 prior_pending_amount=Decimal("25.00"),
@@ -336,14 +339,14 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(
                 final_result_amount=Decimal("-20.00"),
                 generated_amount=Decimal("20.00"),
                 available_end_amount=Decimal("100.00"),
-                source_observation_key="303:2025:4T:EXP-2025-4T",
+                source_observation_key=f"303:{PRIOR_YEAR}:4T:EXP-{PRIOR_YEAR}-4T",
             ),
         )
 
         wallet = parse_iva_compensation_wallet_html(
             _wallet_html(
                 total="100,00",
-                rows="<tr><td>2025</td><td>4T</td><td>100,00</td></tr>",
+                rows=f"<tr><td>{PRIOR_YEAR}</td><td>4T</td><td>100,00</td></tr>",
                 target_year=FILING_YEAR,
                 target_period="1T",
             ),
@@ -365,8 +368,8 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(
                 taxpayer_nif=_TAXPAYER_REF,
                 target_year=FILING_YEAR,
                 target_period=Period.from_year_and_code(FILING_YEAR, "1T"),
-                target_registry_snapshot_ref=_snapshot_ref(2026, "1T"),
-                source_registry_snapshot_refs=(_snapshot_ref(2025, "4T"),),
+                target_registry_snapshot_ref=_snapshot_ref(FILING_YEAR, "1T"),
+                source_registry_snapshot_refs=(_snapshot_ref(PRIOR_YEAR, "4T"),),
                 selected_authority="aeat_wallet",
                 selected_amount=Decimal("100.00"),
                 wallet_amount=Decimal("100.00"),
@@ -388,12 +391,12 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(
                     ),
                     IvaCompensationAuthoritySource(
                         source_kind="filed_history_observation",
-                        source_locator="303:2025:4T:EXP-2025-4T",
+                        source_locator=f"303:{PRIOR_YEAR}:4T:EXP-{PRIOR_YEAR}-4T",
                         source_modelo="303",
-                        source_filing_year=FILING_YEAR,
-                        source_periods=(Period.from_year_and_code(FILING_YEAR, "4T"),),
+                        source_filing_year=PRIOR_YEAR,
+                        source_periods=(Period.from_year_and_code(PRIOR_YEAR, "4T"),),
                         amount=Decimal("100.00"),
-                        registry_snapshot_refs=(_snapshot_ref(2025, "4T"),),
+                        registry_snapshot_refs=(_snapshot_ref(PRIOR_YEAR, "4T"),),
                         captured_at=_CAPTURED_AT,
                     ),
                 ),
@@ -403,7 +406,7 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(
         reloaded_wallet = FiledDeclaracionObservationStore(
             tmp_path / "remote-iva-evidence",
         ).load_iva_wallet_observation(wallet_ref)
-        reloaded_history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(FILING_YEAR, "4T"))
+        reloaded_history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(PRIOR_YEAR, "4T"))
         reloaded_decision = IvaWalletDecisionRepository().load_decision(
             _TAXPAYER_REF,
             Period.from_year_and_code(FILING_YEAR, "1T"),
@@ -427,7 +430,7 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(
 
         database_bytes = read_db_at_rest_bytes(profile.paths.database_file)
         assert _TAXPAYER_REF.encode("ascii") not in database_bytes
-        assert b"202530300000004Z" not in database_bytes
+        assert f"{PRIOR_YEAR}30300000004Z".encode() not in database_bytes
 
 
 def _store_prior_compensation(*, amount: Decimal) -> None:
@@ -437,14 +440,14 @@ def _store_prior_compensation(*, amount: Decimal) -> None:
             taxpayer_nif=_TAXPAYER_REF,
             filing_year=FILING_YEAR,
             period=Period.from_year_and_code(FILING_YEAR, "1T"),
-            registry_snapshot_ref=_snapshot_ref(2026, "1T"),
-            expediente_id="202630300000001Z",
+            registry_snapshot_ref=_snapshot_ref(FILING_YEAR, "1T"),
+            expediente_id=f"{FILING_YEAR}30300000001Z",
             status="ALTA",
             presented_at=_CAPTURED_AT,
             generated_amount=amount,
             applied_amount=Decimal("0.00"),
             available_end_amount=amount,
-            source_observation_key="303:2026:1T:EXP-2026-1T",
+            source_observation_key=f"303:{FILING_YEAR}:1T:EXP-{FILING_YEAR}-1T",
         ),
     )
 
