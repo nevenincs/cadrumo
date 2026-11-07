@@ -393,10 +393,10 @@ def prepare_generated_form_bridge(
     return GeneratedFormBridge(
         modelo=modelo,
         revision=revision,
-        old_manifest_sha256=reviewed[2],
+        old_manifest_sha256=reviewed[1],
         source_ref=source_ref,
         source_sha256=source_sha256,
-        old_form_sha256=reviewed[3],
+        old_form_sha256=reviewed[2],
         candidate_form_sha256=sha256(generated_form_bytes).hexdigest(),
         candidate_manifest_sha256=sha(new_manifest),
         other_files=other,

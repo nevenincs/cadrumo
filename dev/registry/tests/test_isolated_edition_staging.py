@@ -42,7 +42,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 #: a test without a migrated chain writes names the last three.
 _FULL_COPY_YEARS = filing_year_envelope().years[-2:]
 _FULL_COPY_REVISION = str(_FULL_COPY_YEARS[-1])
-_ENVELOPE_EDITIONS = tuple(str(year) for year in filing_year_envelope().years[-3:])
+_ENVELOPE_OLDEST, _ENVELOPE_MIDDLE, _ENVELOPE_NEWEST = (str(year) for year in filing_year_envelope().years[-3:])
+_ENVELOPE_EDITIONS = (_ENVELOPE_OLDEST, _ENVELOPE_MIDDLE, _ENVELOPE_NEWEST)
 
 
 class _Chain(NamedTuple):
