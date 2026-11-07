@@ -709,7 +709,7 @@ def classify_projected_target(
     revision = modelo.revisions[revision_id]
     cites_own_design = _NO_OWN_RECORD_DESIGN_MARKER not in render_refusal and any(
         (source := sources.get(ref)) is not None and source.kind is RegistrySourceKind.RECORD_DESIGN
-        for ref in (*revision.source_refs, *revision.casilla_source_refs)
+        for ref in (*revision.source_refs, *(revision.casilla_source_refs or ()))
     )
     if revision_id in tree_revisions or cites_own_design:
         return None
