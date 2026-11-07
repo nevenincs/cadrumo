@@ -34,7 +34,7 @@ import pytest
 from cadrumo.core import logging as core_logging_mod
 from cadrumo.core.config import override_settings
 from cadrumo.core.logging import configure_logging, flush_logging, register_first_party_logger
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -156,7 +156,7 @@ def test_first_party_data_uri_and_raw_bytes_payloads_are_contained(log_file: Pat
 def test_ordinary_first_party_debug_diagnostics_are_untouched(log_file: Path, namespace: str) -> None:
     """Positive control: containment must not cost us our own DEBUG channel."""
     register_first_party_logger(namespace)
-    revision = revision_covering("303", filing_year_envelope().horizon).id
+    revision = open_ended_revision("303").id
     logging.getLogger(f"{namespace}.application.probe").debug(
         "resolved revision %s for period %s across %d casillas",
         revision,

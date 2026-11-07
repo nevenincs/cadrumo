@@ -358,11 +358,10 @@ def test_wheel_excludes_renta_source_pdfs(built_wheel: Path) -> None:
     contract force-shipped.
     """
 
-    renta_pdfs = {
-        f"{_WHEEL_DATA_PREFIX}/corpus/manuals/renta/{year}/part1/source.pdf"
-        for year in _RENTA_EDITIONS
-    }
-    renta_pdfs.add(f"{_WHEEL_DATA_PREFIX}/corpus/manuals/renta/{_RENTA_EDITIONS[-1]}/part2-deducciones-autonomicas/source.pdf")
+    renta_pdfs = {f"{_WHEEL_DATA_PREFIX}/corpus/manuals/renta/{year}/part1/source.pdf" for year in _RENTA_EDITIONS}
+    renta_pdfs.add(
+        f"{_WHEEL_DATA_PREFIX}/corpus/manuals/renta/{_RENTA_EDITIONS[-1]}/part2-deducciones-autonomicas/source.pdf"
+    )
     with zipfile.ZipFile(built_wheel) as archive:
         names = {info.filename for info in archive.infolist()}
     leaked = sorted(renta_pdfs & names)

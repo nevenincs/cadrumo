@@ -95,7 +95,9 @@ def _dispatch_real_m130_calculate(
     seed_m130_income_transaction(amount=Decimal("12000.00"), filing_year=filing_year, source_key="ingresos")
     seed_m130_expense_transaction(amount=Decimal("4000.00"), filing_year=filing_year, source_key="gastos")
 
-    work_unit_id = create_m130_work_unit(filing_year=filing_year, period=period, revision=revision_covering("130", filing_year).id)
+    work_unit_id = create_m130_work_unit(
+        filing_year=filing_year, period=period, revision=revision_covering("130", filing_year).id
+    )
 
     result = invoke_cached_cli(
         [

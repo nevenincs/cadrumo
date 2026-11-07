@@ -573,9 +573,9 @@ def test_legal_refs_drift_is_classified_not_called_unchanged(inventory) -> None:
         for pair in entry.pairs
         if (pair.from_revision, pair.to_revision) == (_PRIOR, _LATEST) and pair.evolution_kind != "retired"
     ]
-    assert crossing, "expected continuing chains spanning the 2024 -> 2025 boundary"
+    assert crossing, f"expected continuing chains spanning the {_PRIOR} -> {_LATEST} boundary"
     assert all(pair.evolution_kind != "unchanged" for pair in crossing), (
-        "the 2025 legal-refs addition must be reflected in the evolution kind"
+        f"the {_LATEST} legal-refs addition must be reflected in the evolution kind"
     )
     assert all("legal_refs_evolved" in pair.evolution_kind for pair in crossing)
 
@@ -605,7 +605,7 @@ def test_rendered_record_carries_the_target_revision_legal_refs(inventory) -> No
     rendered = parse_toml(render_evolution_record(pair, casilla_id="0000"))
     record = rendered["revisions"][_LATEST]["casilla_continuidad_evolutions"][0]
     assert record["legal_refs"] == list(pair.legal_refs)
-    assert len(record["legal_refs"]) > 1, "the 2025 rows carry more than the framework article"
+    assert len(record["legal_refs"]) > 1, f"the {_LATEST} rows carry more than the framework article"
 
     # A retirement instead keeps the refs of the revision that last declared
     # the box, since the target revision declares nothing to cite.
@@ -661,7 +661,7 @@ def test_ungrounded_adjudication_is_refused(tmp_path: Path) -> None:
     """An entry with no stated reason has no audit trail, so it is rejected."""
     path = tmp_path / "adjudications.toml"
     path.write_text(
-        '[[exclusions]]\nrevision = "2020"\ncasilla = "0757"\n',
+        f'[[exclusions]]\nrevision = "{_REVISIONS[0]}"\ncasilla = "0757"\n',
         encoding="utf-8",
     )
     with pytest.raises(RegistryError, match="reason"):

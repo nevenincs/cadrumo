@@ -53,7 +53,12 @@ def test_unchanged_content_keeps_its_identity_and_leaves_the_counter(tmp_path: P
 def test_changed_content_takes_the_next_iteration_and_sequence(tmp_path: Path) -> None:
     stamps = [allocate(tmp_path, "manager", content(n), now=DAY) for n in range(3)]
     stamps.append(allocate(tmp_path, "manager", content(3), now=NEXT_DAY))
-    assert [stamp.build_id for stamp in stamps] == [f"{_YEAR}101901", f"{_YEAR}101902", f"{_YEAR}101903", f"{_YEAR}102001"]
+    assert [stamp.build_id for stamp in stamps] == [
+        f"{_YEAR}101901",
+        f"{_YEAR}101902",
+        f"{_YEAR}101903",
+        f"{_YEAR}102001",
+    ]
     assert [stamp.build_sequence for stamp in stamps] == [1, 2, 3, 4]
 
 
@@ -112,7 +117,9 @@ def test_the_sequence_refuses_to_pass_the_windows_file_version_limit(tmp_path: P
 def test_a_per_invocation_counter_continues_without_repeating_numbers(tmp_path: Path) -> None:
     previous = {"schema": 1, "day": f"{_YEAR}1019", "iteration": 25, "sequence": 25, "build_id": f"{_YEAR}101925"}
     (tmp_path / STAMP_NAME).write_text(json.dumps(previous), encoding="utf-8")
-    assert allocate(tmp_path, "manager", content("a"), now=DAY) == BuildStamp(f"{_YEAR}101926", 26, f"{_YEAR}-10-19T08:30:00Z")
+    assert allocate(tmp_path, "manager", content("a"), now=DAY) == BuildStamp(
+        f"{_YEAR}101926", 26, f"{_YEAR}-10-19T08:30:00Z"
+    )
 
 
 def _allocate(directory: Path, label: str) -> tuple[str, int]:
@@ -156,7 +163,9 @@ def test_display_version_build_type_and_component_variables() -> None:
         "CADRUMO_MANAGER_BUILD_SEQUENCE": "412",
         "CADRUMO_MANAGER_BUILD_DATE": f"{_YEAR}-10-19T08:30:00Z",
     }
-    identity = ComponentIdentity("installer", "0" * 64, "0.6.0", BuildStamp(f"{_YEAR}101904", 4, f"{_YEAR}-10-19T08:30:00Z"))
+    identity = ComponentIdentity(
+        "installer", "0" * 64, "0.6.0", BuildStamp(f"{_YEAR}101904", 4, f"{_YEAR}-10-19T08:30:00Z")
+    )
     assert image_environment(identity) == {
         "CADRUMO_IMAGE_COMPONENT": "installer",
         "CADRUMO_INSTALLER_BUILD_ID": f"{_YEAR}101904",

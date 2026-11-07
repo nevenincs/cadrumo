@@ -49,6 +49,8 @@ from ..lane_verification_core import write_smoke_manifest
 from ..proof_ledger import record_proof, reset_proof_ledger
 from ..release_cohort_support import release_cohort
 
+_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
@@ -357,7 +359,7 @@ def test_passing_evidence_rejects_ambient_or_checkout_execution(tmp_path: Path) 
 def test_checkpoint_copies_manifest_without_traversing_secure_runtime(tmp_path) -> None:
     """The checkpoint reads the known manifest leaf, not protected runtime descendants."""
     smoke_root = tmp_path / "packaging-smoke"
-    work_dir = smoke_root / "docker-core-20260715T214242Z"
+    work_dir = smoke_root / f"docker-core-{_YEAR}0715T214242Z"
     secrets_dir = work_dir / "profile-root" / "secrets"
     secrets_dir.mkdir(parents=True)
     (secrets_dir / "encrypted.bin").write_bytes(b"ciphertext")
@@ -374,7 +376,7 @@ def test_checkpoint_copies_manifest_without_traversing_secure_runtime(tmp_path) 
 
     checkpointed = checkpoint_smoke_evidence(smoke_root, evidence_root, prune_completed=False)
 
-    assert checkpointed == (evidence_root / "docker-core-20260715T214242Z.json",)
+    assert checkpointed == (evidence_root / f"docker-core-{_YEAR}0715T214242Z.json",)
     assert json.loads(checkpointed[0].read_text(encoding="utf-8")) == json.loads(manifest.read_text(encoding="utf-8"))
     assert secrets_dir.is_dir()
 
@@ -382,8 +384,8 @@ def test_checkpoint_copies_manifest_without_traversing_secure_runtime(tmp_path) 
 def test_checkpoint_prunes_only_completed_work_directories(tmp_path) -> None:
     """Successful runtime trees are released while incomplete diagnostic state remains."""
     smoke_root = tmp_path / "packaging-smoke"
-    completed = smoke_root / "browser-20260715T214000Z"
-    incomplete = smoke_root / "docker-browser-20260715T214500Z"
+    completed = smoke_root / f"browser-{_YEAR}0715T214000Z"
+    incomplete = smoke_root / f"docker-browser-{_YEAR}0715T214500Z"
     completed.mkdir(parents=True)
     incomplete.mkdir(parents=True)
     (completed / "large-browser-payload.bin").write_bytes(b"browser-cache")
@@ -400,7 +402,7 @@ def test_checkpoint_prunes_only_completed_work_directories(tmp_path) -> None:
 
     checkpointed = checkpoint_smoke_evidence(smoke_root, evidence_root, prune_completed=True)
 
-    assert checkpointed == (evidence_root / "browser-20260715T214000Z.json",)
+    assert checkpointed == (evidence_root / f"browser-{_YEAR}0715T214000Z.json",)
     assert not completed.exists()
     assert (incomplete / "failure.log").read_text(encoding="utf-8") == "ENOSPC\n"
 
@@ -408,7 +410,7 @@ def test_checkpoint_prunes_only_completed_work_directories(tmp_path) -> None:
 def test_checkpoint_refuses_to_replace_existing_immutable_evidence(tmp_path: Path) -> None:
     """A checkpoint collision preserves both the retained artifact and its smoke work directory."""
     smoke_root = tmp_path / "packaging-smoke"
-    work_dir = smoke_root / "browser-20260715T214000Z"
+    work_dir = smoke_root / f"browser-{_YEAR}0715T214000Z"
     work_dir.mkdir(parents=True)
     reset_proof_ledger()
     record_proof("localhost browser health smoke")
@@ -420,7 +422,7 @@ def test_checkpoint_refuses_to_replace_existing_immutable_evidence(tmp_path: Pat
     )
     evidence_root = tmp_path / "packaging-smoke-evidence"
     evidence_root.mkdir()
-    target = evidence_root / "browser-20260715T214000Z.json"
+    target = evidence_root / f"browser-{_YEAR}0715T214000Z.json"
     sentinel = b'{"retained":"immutable evidence"}\n'
     target.write_bytes(sentinel)
 

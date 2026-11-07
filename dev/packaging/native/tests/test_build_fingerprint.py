@@ -402,7 +402,7 @@ def test_the_cmake_file_api_names_each_targets_defines_and_flags(tmp_path: Path)
 
 
 def test_logical_package_content_ignores_relinked_bytes_but_not_their_component(tmp_path: Path) -> None:
-    stamp = BuildStamp("2026101901", 1, "2026-10-19T08:30:00Z")
+    stamp = BuildStamp(f"{DAY.year}101901", 1, f"{DAY.year}-10-19T08:30:00Z")
     identities = {"manager": ComponentIdentity("manager", "1" * 64, "0.6.0", stamp)}
 
     def stage(binary_digest: str) -> dict[str, str]:
@@ -528,7 +528,7 @@ def test_the_package_identity_moves_only_with_what_the_stage_ships(build: Path, 
         return str(record["build_id"])
 
     def payload(content: str) -> None:
-        stamp = BuildStamp("2026101901", 1, "2026-10-19T08:30:00Z")
+        stamp = BuildStamp(f"{DAY.year}101901", 1, f"{DAY.year}-10-19T08:30:00Z")
         begin_record(build, ComponentIdentity("app-payload", content * 64, "0.6.0", stamp), {"src/x.py": content})
 
     payload("a")

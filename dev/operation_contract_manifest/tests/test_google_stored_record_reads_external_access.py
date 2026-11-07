@@ -312,7 +312,7 @@ def test_the_projector_releases_each_read_only_as_its_own_stored_record() -> Non
         session_present=True,
         account_email="persona@example.invalid",
         granted_scopes=("https://www.googleapis.com/auth/drive.file",),
-        issued_at="2026-10-01T09:00:00+00:00",
+        issued_at=f"{_NOW.year}-10-01T09:00:00+00:00",
     )
     folder = contracts.GoogleFolderViewProjection(
         profile_id=_PROFILE, configured=True, root_folder_id="synthetic-root-folder"
@@ -496,7 +496,7 @@ async def test_the_registered_status_read_stores_its_record_without_opening_a_co
         session_present=True,
         account_email="persona@example.invalid",
         granted_scopes=("https://www.googleapis.com/auth/drive.file",),
-        issued_at="2026-10-01T09:00:00+00:00",
+        issued_at=f"{_NOW.year}-10-01T09:00:00+00:00",
     )
 
     def run(
