@@ -41,6 +41,8 @@ from .register_support import MemoryRepository, memory_register_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_FIRST = build_revision().in_service_date.year
+
 
 @pytest.fixture(autouse=True)
 def _pinned_authority() -> Iterator[None]:
@@ -88,12 +90,12 @@ def _operations_that_cannot_work_out_modelo_130() -> ActivityAssetOperations:
 def test_a_year_alone_projects_the_modelo_100_boxes_and_no_modelo_130_figure() -> None:
     operations = build_operations()
     claim = operations.record_claim(
-        operations.forecast(asset_id="laptop-1", covered_from=date(2025, 1, 1), covered_until=date(2026, 1, 1)),
+        operations.forecast(asset_id="laptop-1", covered_from=date(_FIRST, 1, 1), covered_until=date(_FIRST + 1, 1, 1)),
         creating_operation="test.year",
     ).claim
 
-    bare = operations.filing_handoff(tax_year=2025)
-    framed = operations.filing_handoff(tax_year=2025, m130_period=Period.from_year_and_code(2025, "4T"))
+    bare = operations.filing_handoff(tax_year=_FIRST)
+    framed = operations.filing_handoff(tax_year=_FIRST, m130_period=Period.from_year_and_code(_FIRST, "4T"))
 
     assert bare.material_m130 is None
     assert bare.intangible_m130 is None
@@ -105,7 +107,7 @@ def test_a_year_alone_projects_the_modelo_100_boxes_and_no_modelo_130_figure() -
 
 
 def test_a_year_alone_reads_no_modelo_130_authority_and_a_schedule_it_cannot_read_is_a_stated_gap() -> None:
-    handoff = _operations_that_cannot_work_out_modelo_130().filing_handoff(tax_year=2025)
+    handoff = _operations_that_cannot_work_out_modelo_130().filing_handoff(tax_year=_FIRST)
 
     assert handoff.material_m130 is None
     assert handoff.intangible_m130 is None
@@ -117,25 +119,25 @@ def test_a_year_alone_reads_no_modelo_130_authority_and_a_schedule_it_cannot_rea
 def test_the_handoff_says_what_it_leaves_out_and_keeps_saying_so_across_the_wire() -> None:
     operations = build_operations()
 
-    handoff = operations.filing_handoff(tax_year=2025, m130_period=Period.from_year_and_code(2025, "4T"))
+    handoff = operations.filing_handoff(tax_year=_FIRST, m130_period=Period.from_year_and_code(_FIRST, "4T"))
 
     (gap,) = handoff.m100_gaps
     assert gap.kind is M100GapKind.ACCRUED
     assert gap.accrued is not None
     assert gap.accrued > Decimal("0")
-    assert gap.covered_until == date(2026, 1, 1)
+    assert gap.covered_until == date(_FIRST + 1, 1, 1)
     assert ActivityAssetFilingHandoffSnapshot.from_domain(handoff).to_domain() == handoff
 
 
 def test_a_year_alone_still_refuses_a_foral_residence() -> None:
     with pytest.raises(ActividadAssetValidationError, match="foral_territory"):
-        build_operations(territory=ResidenceTerritory.FORAL).filing_handoff(tax_year=2025)
+        build_operations(territory=ResidenceTerritory.FORAL).filing_handoff(tax_year=_FIRST)
 
 
-@pytest.mark.parametrize("period", ["9T", "2025"])
+@pytest.mark.parametrize("period", ["9T", str(_FIRST)])
 def test_a_stated_period_that_is_not_one_decodes_and_is_refused_with_its_reason(period: str) -> None:
     request = ActivityAssetFilingHandoffRequest.model_validate_json(
-        f'{{"profile_id":"{uuid4()}","tax_year":2025,"m130_period":"{period}"}}'
+        f'{{"profile_id":"{uuid4()}","tax_year":{_FIRST},"m130_period":"{period}"}}'
     )
 
     with pytest.raises(ActividadAssetValidationError, match="m130_period_invalid"):
@@ -145,19 +147,19 @@ def test_a_stated_period_that_is_not_one_decodes_and_is_refused_with_its_reason(
 def test_an_empty_period_does_not_decode() -> None:
     with pytest.raises(ValidationError):
         ActivityAssetFilingHandoffRequest.model_validate_json(
-            f'{{"profile_id":"{uuid4()}","tax_year":2025,"m130_period":""}}'
+            f'{{"profile_id":"{uuid4()}","tax_year":{_FIRST},"m130_period":""}}'
         )
 
 
 def test_the_request_decodes_with_or_without_a_period() -> None:
     profile_id = uuid4()
 
-    bare = ActivityAssetFilingHandoffRequest.model_validate_json(f'{{"profile_id":"{profile_id}","tax_year":2025}}')
+    bare = ActivityAssetFilingHandoffRequest.model_validate_json(f'{{"profile_id":"{profile_id}","tax_year":{_FIRST}}}')
     explicit_null = ActivityAssetFilingHandoffRequest.model_validate_json(
-        f'{{"profile_id":"{profile_id}","tax_year":2025,"m130_period":null}}'
+        f'{{"profile_id":"{profile_id}","tax_year":{_FIRST},"m130_period":null}}'
     )
     framed = ActivityAssetFilingHandoffRequest.model_validate_json(
-        f'{{"profile_id":"{profile_id}","tax_year":2025,"m130_period":"2T"}}'
+        f'{{"profile_id":"{profile_id}","tax_year":{_FIRST},"m130_period":"2T"}}'
     )
 
     assert bare.m130_period is None
@@ -166,7 +168,7 @@ def test_the_request_decodes_with_or_without_a_period() -> None:
 
 
 def test_the_handoff_round_trips_through_its_public_snapshot_with_the_modelo_130_absent() -> None:
-    bare = build_operations().filing_handoff(tax_year=2025)
+    bare = build_operations().filing_handoff(tax_year=_FIRST)
 
     snapshot = ActivityAssetFilingHandoffSnapshot.from_domain(bare)
     restored = ActivityAssetFilingHandoffSnapshot.model_validate_json(snapshot.model_dump_json()).to_domain()
@@ -177,7 +179,7 @@ def test_the_handoff_round_trips_through_its_public_snapshot_with_the_modelo_130
 
 
 def test_a_handoff_states_the_modelo_130_of_both_kinds_or_of_neither() -> None:
-    framed = build_operations().filing_handoff(tax_year=2025, m130_period=Period.from_year_and_code(2025, "4T"))
+    framed = build_operations().filing_handoff(tax_year=_FIRST, m130_period=Period.from_year_and_code(_FIRST, "4T"))
 
     with pytest.raises(ValidationError):
         ActivityAssetFilingHandoff(
@@ -192,8 +194,8 @@ def test_a_handoff_states_the_modelo_130_of_both_kinds_or_of_neither() -> None:
 
 def test_the_result_states_the_modelo_130_exactly_for_a_requested_period() -> None:
     operations = build_operations()
-    bare = operations.filing_handoff(tax_year=2025)
-    framed = operations.filing_handoff(tax_year=2025, m130_period=Period.from_year_and_code(2025, "4T"))
+    bare = operations.filing_handoff(tax_year=_FIRST)
+    framed = operations.filing_handoff(tax_year=_FIRST, m130_period=Period.from_year_and_code(_FIRST, "4T"))
 
     def result(handoff: ActivityAssetFilingHandoff, period: str | None) -> ActivityAssetFilingHandoffResult:
         return ActivityAssetFilingHandoffResult.model_validate(
@@ -201,7 +203,7 @@ def test_the_result_states_the_modelo_130_exactly_for_a_requested_period() -> No
                 "profile_id": uuid4(),
                 "authority": _AUTHORITY,
                 "outcome": "succeeded",
-                "tax_year": 2025,
+                "tax_year": _FIRST,
                 "m130_period": period,
                 "filing_handoff": handoff,
             }
@@ -216,12 +218,12 @@ def test_the_result_states_the_modelo_130_exactly_for_a_requested_period() -> No
 
 
 def test_the_public_projection_decodes_a_handoff_without_a_period() -> None:
-    bare = build_operations().filing_handoff(tax_year=2025)
+    bare = build_operations().filing_handoff(tax_year=_FIRST)
     document = {
         "profile_id": str(uuid4()),
         "authority": _AUTHORITY,
         "outcome": "succeeded",
-        "tax_year": 2025,
+        "tax_year": _FIRST,
         "filing_handoff": ActivityAssetFilingHandoffSnapshot.from_domain(bare).model_dump(mode="json"),
     }
 

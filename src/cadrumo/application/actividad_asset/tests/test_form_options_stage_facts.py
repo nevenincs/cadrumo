@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.application.actividad_asset.activity_asset_read_models import ActivityAssetFormOptionsView
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.renta.actividad_asset.lifecycle import (
     BASIS_STAGE_FACTS,
     OPENING_STATUS_FACTS,
@@ -16,8 +17,10 @@ from .test_register import NAME, register_operations, register_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_YEAR = filing_year_envelope().horizon
 
-def form_options_stage_facts_options(tax_year: int = 2025) -> ActivityAssetFormOptionsView:
+
+def form_options_stage_facts_options(tax_year: int = _YEAR) -> ActivityAssetFormOptionsView:
     operations, _ = register_operations()
     operations.create(register_revision(), NAME)
     return operations.form_options(asset_kind=AssetKind.MATERIAL, tax_year=tax_year)

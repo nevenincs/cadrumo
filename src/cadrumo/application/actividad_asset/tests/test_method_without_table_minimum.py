@@ -17,6 +17,8 @@ from .test_register import ACQUISITION, NAME, register_operations, register_revi
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_FIRST = register_revision().in_service_date.year
+
 KEY = "ledger.actividad_asset.disposal_finding.method_has_no_minimum"
 _UNRESOLVED = "ledger.actividad_asset.disposal_finding.minimum_unresolved"
 
@@ -27,7 +29,7 @@ def test_a_free_method_year_with_an_edition_has_the_no_table_minimum_reason() ->
         ledger=MemoryLedger(ACQUISITION),
         forecast_operation=low_value_forecast,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
-        register_authority=memory_register_authority(today=date(2026, 12, 31)),
+        register_authority=memory_register_authority(today=date(_FIRST + 1, 12, 31)),
     )
     operations.create(low_value_revision(), NAME)
 
