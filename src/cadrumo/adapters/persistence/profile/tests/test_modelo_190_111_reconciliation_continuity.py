@@ -247,10 +247,10 @@ def _withholding_obs(source_id: str, nif: str, clave: str, *, filing_year: int) 
 
 def _year_n_withholding_observations() -> tuple[WithholdingObservation, ...]:
     return (
-        _withholding_obs("yN-a-q1", "11111111H", "A", filing_year=_YEAR_N),
-        _withholding_obs("yN-a-q2", "11111111H", "A", filing_year=_YEAR_N),
-        _withholding_obs("yN-g-q3", "11111111H", "G", filing_year=_YEAR_N),
-        _withholding_obs("yN-a-q4", "22222222J", "A", filing_year=_YEAR_N),
+        _withholding_obs("yN-a-q1", "00001500M", "A", filing_year=_YEAR_N),
+        _withholding_obs("yN-a-q2", "00001500M", "A", filing_year=_YEAR_N),
+        _withholding_obs("yN-g-q3", "00001500M", "G", filing_year=_YEAR_N),
+        _withholding_obs("yN-a-q4", "00001501Y", "A", filing_year=_YEAR_N),
     )
 
 
@@ -259,8 +259,8 @@ _YEAR_N_WITHHOLDING_PERCEPCIONES = Decimal("3")
 
 def _year_n_plus_1_withholding_observations() -> tuple[WithholdingObservation, ...]:
     return (
-        _withholding_obs("yN1-a-q1", "33333333P", "A", filing_year=_YEAR_N_PLUS_1),
-        _withholding_obs("yN1-b-q2", "33333333P", "B", filing_year=_YEAR_N_PLUS_1),
+        _withholding_obs("yN1-a-q1", "00001502F", "A", filing_year=_YEAR_N_PLUS_1),
+        _withholding_obs("yN1-b-q2", "00001502F", "B", filing_year=_YEAR_N_PLUS_1),
     )
 
 

@@ -61,7 +61,7 @@ def build_group_aggregate_plan(
         values["10"] = Decimal("150")
     dominant = "modelo-353.page_01.entidad-dominante-entidad-dominante-"
     bindings: dict[str, Decimal | str] = {
-        dominant + "n-i-f": "B12345674",
+        dominant + "n-i-f": "B00015016",
         dominant + "resultado": Decimal("1800"),
         dominant + "numero-de-justificante": "0000000000001",
         "modelo-353-prev-322-resultado-regimen-general": Decimal("2100"),
@@ -82,7 +82,7 @@ def build_group_aggregate_plan(
     with override_settings(cadrumo_output_language="es"), validating_governed_facts(authority):
         producer = build_filing_producer_snapshot(
             modelo=Modelo("353"),
-            taxpayer_tax_id="B12345674",
+            taxpayer_tax_id="B00015016",
             taxpayer_identity=TaxpayerIdentityFacts(
                 legal_name="Grupo ficticio Ejemplo", full_name="Grupo ficticio Ejemplo", given_name=None, surnames=None
             ),

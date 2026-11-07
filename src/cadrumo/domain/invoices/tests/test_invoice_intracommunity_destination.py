@@ -114,7 +114,7 @@ def test_a_spanish_established_acquirer_identified_abroad_is_accepted() -> None:
     """
     invoice = _invoice(
         counterparty_country="ES",
-        counterparty_tax_id="B12345674",
+        counterparty_tax_id="B00015016",
         counterparty_identification_state=EUMemberState.from_registry("fr"),
     )
 

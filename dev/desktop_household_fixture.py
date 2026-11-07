@@ -20,17 +20,15 @@ from __future__ import annotations
 
 import hashlib
 import json
-import tempfile
 from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
-from dev.fixture_projections.location import family_directory
+from dev.fixture_projections.location import family_directory, scratch_tree
 from dev.fixture_projections.producer_output import emit, producer_arguments
 from dev.prettier_json import dump_json
-from dev.temporary_output import prepare_temp_root
 
 if TYPE_CHECKING:
     from cadrumo.application.user_profile.ascendant_rows import ProfileAscendantRow
@@ -370,7 +368,7 @@ def main() -> None:
     """Write, verify or redirect the synthetic browser fixture."""
     arguments = producer_arguments(__doc__)
     target = family_directory("desktop-household") / "household.json"
-    with tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp:
+    with scratch_tree() as tmp:
         rendered = render_fixture(Path(tmp))
     emit({target: rendered}, arguments, remedy="uv run --no-sync python -m dev.desktop_household_fixture")
 

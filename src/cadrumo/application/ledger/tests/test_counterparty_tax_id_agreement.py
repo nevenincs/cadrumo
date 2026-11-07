@@ -33,7 +33,7 @@ _COUNTRY = "ES"
 
 _EXTRACTED = "12345678Z"
 #: Valid, and a DIFFERENT taxpayer -- the case the checksum cannot catch.
-_OTHER_VALID = "87654321X"
+_OTHER_VALID = "X0001502F"
 
 
 def test_agreement_confirms_the_value() -> None:
@@ -88,7 +88,7 @@ def test_case_and_padding_are_not_a_disagreement(supplied: str) -> None:
     and nothing more. That paragraph is now stale and is corrected rather than
     deleted, because it recorded a real constraint that has since moved: the
     comparison changed to the same-BEARER predicate, which strips separators
-    precisely so a printed ``B-1234567-4`` matches a stored ``B12345674``. The
+    precisely so a printed ``B-1234567-4`` matches a stored ``B00015016``. The
     token's rule is unchanged and still right for KEYING; comparing is a
     different question and now has a different answer. The separator case is
     covered with the prefix cases at the end of this module.
@@ -148,8 +148,8 @@ def test_the_comparison_is_what_causes_the_refusal() -> None:
 # document-direction deriver: a looser rule there would silently change who
 # counts as the taxpayer on every document read.
 
-_NATIONAL = "B12345674"
-_IVA_FORM = "ESB12345674"
+_NATIONAL = "B00015016"
+_IVA_FORM = "ESB00015016"
 
 
 @pytest.mark.parametrize(
@@ -180,7 +180,7 @@ def test_the_separator_and_prefix_axes_hold_together() -> None:
     assert (
         agreed_counterparty_tax_id(
             supplied="B-1234567-4",
-            extracted="ES B12345674",
+            extracted="ES B00015016",
             counterparty_country=_COUNTRY,
         )
         is not None

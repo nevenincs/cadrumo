@@ -626,7 +626,7 @@ def seed_conformance_invoice(profile_id: UUID) -> Invoice:
             "issued_at": date(2025, 5, 1),
             "counterparty_name": "Conformance Supplier",
             "notes": "Conformance note preserved by partial update",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": Decimal("100.00"),
             "iva_total": Decimal("21.00"),

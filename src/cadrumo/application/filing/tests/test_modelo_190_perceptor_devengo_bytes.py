@@ -93,7 +93,7 @@ def test_an_ordinary_row_has_no_devengo_year_and_an_atraso_carries_the_earlier_y
         tmp_path,
         [
             _row("12345678Z", "PERCEPTOR ORDINARIO"),
-            _row("87654321X", "PERCEPTOR ATRASO", **{"ejercicio-devengo": "2024"}),
+            _row("X0001502F", "PERCEPTOR ATRASO", **{"ejercicio-devengo": "2024"}),
         ],
     )
     assert ordinary[147:151] == "0000"

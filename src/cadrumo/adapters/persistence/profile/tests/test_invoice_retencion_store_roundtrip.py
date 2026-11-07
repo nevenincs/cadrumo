@@ -65,7 +65,7 @@ _RETENCION_RATE = Decimal("0.15")
 # Non-default deliberately: this is the observation's only defaultable field,
 # and it only roundtrips if a fixture actually populates it.
 _PERCEPTOR_NAME = "Asesoria Profesional Martinez SL"
-_PERCEPTOR_NIF = "B12345674"
+_PERCEPTOR_NIF = "B00015016"
 
 
 def _received_invoice() -> Invoice:

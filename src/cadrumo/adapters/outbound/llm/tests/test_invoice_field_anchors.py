@@ -81,7 +81,7 @@ _ANNUAL_2026 = Period.from_year_and_code(2026, "0A")
 
 # AEAT-checksum-valid Spanish CIF, so the identifier field survives grounding and
 # its envelope is about a value rather than about a drop.
-_SPANISH_CIF = "B12345674"
+_SPANISH_CIF = "B00015016"
 
 # The BILLED party, deliberately a different checksum-valid identifier from the
 # issuer's. A fixture reusing one id for both parties cannot fail when the two

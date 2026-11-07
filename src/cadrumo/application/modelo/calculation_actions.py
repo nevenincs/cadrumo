@@ -33,7 +33,7 @@ See Also:
     :func:`~application.modelo.calculation_resolution.resolve_calculation_binding_channels`:
         Merges caller, backend, borrador, and date binding channels for the
         registry engine.
-    :func:`~application.modelo._calculation_helpers.build_typed_observations`:
+    :func:`~application.modelo.calculation_helpers.build_typed_observations`:
         Projects engine output into provenance-bearing casilla observations.
     :func:`~application.modelo.revision_persistence.persist_calculation_revision`:
         Stores the content-addressed ``BORRADOR`` revision and emits the bucket
@@ -88,7 +88,7 @@ from ..aggregation.invoice_filing_fingerprint import capture_invoice_fingerprint
 from ..aggregation.renta_imputation import declared_imputation_criteria
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError
-from ..user_profile.projections import profile_fact_index, record_to_path_values
+from ..user_profile.projections import record_to_path_values
 from .action_errors import (
     ModeloClearedCasillaSourceFedError,
 )
@@ -121,7 +121,7 @@ from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_mod
 from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 from .m303_regimen_simplificado_scope import m303_general_regime_claimed
 from .printed_boxes import snapshot_printed_boxes
-from .profile_export_binding import resolve_profile_text_casilla_inputs
+from .profile_export_binding import profile_text_fact_index, resolve_profile_text_casilla_inputs
 from .revision_persistence import persist_calculation_revision
 from .work_missing_input import ModeloWorkMissingInputError
 from .work_profile import ModeloWorkProfile
@@ -473,7 +473,7 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         operator_layer=operator_layer,
         observations=evaluation.typed_observations,
         unresolved_outcomes=evaluation.engine_result.unresolved_outcomes,
-        source_provenance=source_provenance,
+        source_provenance=(*source_provenance, *channels.profile_source_provenance),
         source_issues=revision_source_issues,
         filing_instance_evidence=evaluation.filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=m303_regimen_simplificado_annual_summary_handoff,
@@ -749,7 +749,11 @@ def _evaluate_prepared_calculation(
         text_casilla_inputs=text_casilla_inputs,
         profile_text_casilla_inputs=resolve_profile_text_casilla_inputs(
             snapshot.revision,
-            profile_fact_index(prepared.profile.record, prepared.profile.profile_decode_context.schema),
+            profile_text_fact_index(
+                prepared.profile.record,
+                prepared.profile.profile_decode_context.schema,
+                operation=ports.operation,
+            ),
         ).values,
     )
     resolved_inputs = channel_inputs.casilla_inputs

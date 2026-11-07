@@ -3,13 +3,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { userEvent, waitFor, within } from "storybook/test";
 import { STORY_READER, useLedgerPort } from "@/dev/LedgerStage";
 import { said } from "@/dev/assetsServedWords";
-import { NO_TABLE_MINIMUM_KEY, REMEDY_FIELD_KEYS } from "@/dev/assetsSeed";
 import { ledgerLanguage } from "../../../shell/ledgerLanguage";
 import type { LedgerPort } from "../../../shell/ledger";
 import type {
   ActivityAssetForecast,
   DisposalFacts,
   ListDisposal,
+  PlanRow,
   ReasonFact,
 } from "../../../shell/ledgerSetup";
 import { translator } from "../../../shell/strings";
@@ -18,6 +18,13 @@ import { AmortizationPlan } from "./AmortizationPlan";
 import { AssetTimeline } from "./AssetTimeline";
 import { bajaRequest, type RevisionBase } from "./assetRevision";
 import { ASSET_KEYS } from "./assetsWords";
+import {
+  NO_TABLE_MINIMUM_KEY,
+  REMEDY_FIELD_KEYS,
+  SCENARIO_ELEMENTS,
+  SCENARIO_TODAY,
+} from "@/dev/assetsRegister";
+import { servedSupport } from "@/dev/servedYearAuthority";
 
 // One element's amortization plan and its append-only timeline over the
 // scenario's register. Each story names the element whose plan or history
@@ -30,6 +37,24 @@ import { ASSET_KEYS } from "./assetsWords";
 // a person did, through the scenario's own writes, so the record shows what
 // those writes leave: a baja recorded, changed and removed, and a dotación a
 // later one replaced.
+
+const scenarioYear = Number(SCENARIO_TODAY.slice(0, 4));
+
+/** The year of an element's recorded plan the story opens: the first row the
+ * register planned as the story needs it. */
+const yearWhere = (
+  assetId: string,
+  pick: (row: PlanRow) => boolean,
+): number => {
+  const row = SCENARIO_ELEMENTS.find(
+    (element) => element.id === assetId,
+  )?.rows.find(pick);
+  if (row === undefined)
+    throw new Error(`the recording plans no such year for ${assetId}`);
+  return row.tax_year;
+};
+/** A year past the horizon: the plan reads it on projected tables. */
+const projectedYear = servedSupport.horizon + 1;
 
 type Answer = "register" | "empty" | "refused" | "loading" | "unavailable";
 
@@ -449,13 +474,13 @@ const timeline = (extra: Partial<Story> = {}): Story => ({
 
 export const PlanPartlyClaimed: Story = plan({
   name: "Plan, a partly claimed year, years to come and rates carried forward",
-  args: { assetId: "furgoneta", year: 2026 },
-  play: open(2026),
+  args: { assetId: "furgoneta", year: scenarioYear },
+  play: open(scenarioYear),
 });
 
 export const PlanLongListOfLegalBasis: Story = plan({
   name: "Plan, eleven provisions behind the election, collapsed with their count",
-  args: { assetId: "furgoneta", year: 2026 },
+  args: { assetId: "furgoneta", year: scenarioYear },
   play: async ({ canvasElement }: PlayContext) => {
     const disclosure = await waitFor(() => {
       const found = canvasElement.querySelector(
@@ -470,7 +495,11 @@ export const PlanLongListOfLegalBasis: Story = plan({
 
 export const PlanLongAndPartialLegalBasis: Story = plan({
   name: "Plan, eleven provisions and a list that is also partial",
-  args: { assetId: "furgoneta", year: 2026, tweak: "long_partial_citations" },
+  args: {
+    assetId: "furgoneta",
+    year: scenarioYear,
+    tweak: "long_partial_citations",
+  },
   play: async ({ canvasElement }: PlayContext) => {
     const disclosure = await waitFor(() => {
       const found = canvasElement.querySelector(
@@ -485,7 +514,7 @@ export const PlanLongAndPartialLegalBasis: Story = plan({
 
 export const PlanPartialListOfLegalBasis: Story = plan({
   name: "Plan, a legal basis that could not be resolved whole says it is partial",
-  args: { assetId: "herramienta", year: 2026 },
+  args: { assetId: "herramienta", year: scenarioYear },
 });
 
 export const PlanBeforeTheFirstEdition: Story = plan({
@@ -527,13 +556,13 @@ export const PlanCoveredByOpening: Story = plan({
 
 export const PlanProjectedRates: Story = plan({
   name: "Plan, estimated years carry their own glyph beside the year and each figure",
-  args: { assetId: "licencia", year: 2027 },
-  play: hint(ASSET_KEYS.plan.projected_note, { year: 2027 }),
+  args: { assetId: "licencia", year: projectedYear },
+  play: hint(ASSET_KEYS.plan.projected_note, { year: projectedYear }),
 });
 
 export const PlanMinimumAccumulated: Story = plan({
   name: "Plan, the minimum column is headed as accumulated to year end, with its note",
-  args: { assetId: "furgoneta", year: 2026 },
+  args: { assetId: "furgoneta", year: scenarioYear },
   play: hint(ASSET_KEYS.plan.column.minimum_note),
 });
 
@@ -589,7 +618,9 @@ export const PlanBaja: Story = plan({
 export const PlanMaximumPeriodElapsed: Story = plan({
   name: "Plan, the maximum period has elapsed",
   args: { assetId: "cristaleria", narrow: true },
-  play: open(2024),
+  play: open(
+    yearWhere("cristaleria", (row) => row.absence === "period_elapsed"),
+  ),
 });
 
 export const PlanFreeMethodClaimed: Story = plan({
@@ -616,13 +647,22 @@ export const PlanOpeningHistoryMissing: Story = plan({
 export const PlanOutOfService: Story = plan({
   name: "Plan, an element out of service",
   args: { assetId: "camara" },
-  play: open(2025),
+  play: open(
+    yearWhere(
+      "camara",
+      (row) => row.claims.length > 0 && row.service_days !== row.calendar_days,
+    ),
+  ),
 });
 
 export const PlanStaleClaim: Story = plan({
   name: "Plan, a dotación that no longer matches says why and what to do",
   args: { assetId: "servidor", narrow: true },
-  play: open(2025),
+  play: open(
+    yearWhere("servidor", (row) =>
+      row.claims.some((claim) => claim.stale_reason !== null),
+    ),
+  ),
 });
 
 export const PlanStaleClaimCollapsed: Story = plan({

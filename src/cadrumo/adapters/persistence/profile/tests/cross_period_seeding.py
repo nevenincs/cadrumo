@@ -48,7 +48,7 @@ run to run: a wall-clock stamp would make two identical seedings produce
 different records and turn an idempotency proof into a coin flip.
 """
 
-SEEDED_SOURCE_TAX_ID: Final = "X1234567L"
+SEEDED_SOURCE_TAX_ID: Final = "X0001500M"
 """The taxpayer identity every seeded cross-period source is filed under.
 
 The clean-state gate compares the seeded evidence's ``authenticated_identity``

@@ -23,9 +23,9 @@ source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 
 [[revisions.2022.filing_schedules.profile_conditions]]
 field = "enrollment.large_company"
-op = "not_equals"
-value = true
-explanation = "Large-company taxpayers have a monthly IVA liquidation period under Art. 71 RIVA; this schedule excludes them from the quarterly path."
+op = "equals"
+value = false
+explanation = "Large-company taxpayers have a monthly IVA liquidation period under Art. 71 RIVA; the quarterly path needs the taxpayer to have stated that the Art. 121 LIVA volumen de operaciones threshold was not exceeded, because an unstated condition is neither cadence."
 legal_refs = ["rd-1624-1992:art-71", "ley-37-1992:art-121"]
 source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 

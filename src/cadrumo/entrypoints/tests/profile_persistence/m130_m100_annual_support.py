@@ -268,16 +268,37 @@ def import_official_m130_result_observation(
     ``observed_also`` are further figures of the same return, for a caller whose next
     quarter reads them.
     """
+    # An original autoliquidación: no earlier filing of the quarter, so casilla 18 is zero.
+    import_official_quarter_observation(
+        secure_objects,
+        modelo="130",
+        period=period,
+        casilla_values={
+            M130_RESULTADO_FINAL_CASILLA: c19_value,
+            M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
+            **(observed_also or {}),
+        },
+    )
+
+
+def import_official_quarter_observation(
+    secure_objects: SecureObjectRepository,
+    *,
+    modelo: str,
+    period: str,
+    casilla_values: Mapping[CasillaId, Decimal],
+) -> None:
+    """Persist one filed quarterly return of the ejercicio as AEAT-attested local evidence."""
     wu_repo = WorkUnitCatalogueRepository(bucket_id=BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     filing_repo = ModeloRecordCatalogueRepository(objects=secure_objects)
     bucket_events = BucketEventHistoryRepository(objects=secure_objects)
     observation_repo = CalculationObservationRepository(objects=secure_objects)
-    snapshot = published_authority_operation().snapshot("130", filing_year=YEAR, period=period)
+    snapshot = published_authority_operation().snapshot(modelo, filing_year=YEAR, period=period)
     with bundled_indexed_authority().operation() as operation:
         work_unit = create_work_unit(
             bucket_id=BUCKET_ID,
-            modelo="130",
+            modelo=modelo,
             filing_year=YEAR,
             period=Period.from_year_and_code(YEAR, period),
             revision_id=snapshot.revision.id,
@@ -288,20 +309,14 @@ def import_official_m130_result_observation(
             operation=operation,
             clock=FILE_AT,
         )
-    # An original autoliquidación: no earlier filing of the quarter, so casilla 18 is zero.
-    casilla_values = {
-        M130_RESULTADO_FINAL_CASILLA: c19_value,
-        M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
-        **(observed_also or {}),
-    }
     # The reference id IS the justificante CSV, and a codigo seguro de
     # verificacion is uppercase alphanumeric: the model pins
     # ``^[A-Z0-9]{8,32}$``. The readable hyphenated spelling this replaced
     # was not a shape AEAT ever issues, so it could not survive the pattern.
-    evidence_reference_id = f"JUST130{YEAR}{period}AUTONOMAC19"
+    evidence_reference_id = f"JUST{modelo}{YEAR}{period}AUTONOMA"
     persist_justificante_metadata(
         evidence_reference_id,
-        modelo="130",
+        modelo=modelo,
         filing_year=YEAR,
         period=period,
         captured_at=FILE_AT,
@@ -323,11 +338,11 @@ def import_official_m130_result_observation(
     observation_repo.save(
         observation_repo.prepare_observation_envelope(
             RegistryModeloObservation(
-                modelo="130",
+                modelo=modelo,
                 filing_year=YEAR,
                 period=period,
                 observations=registry_grounded_observations(
-                    modelo="130",
+                    modelo=modelo,
                     filing_year=YEAR,
                     period=period,
                     casilla_values=casilla_values,
@@ -338,7 +353,7 @@ def import_official_m130_result_observation(
             stamped_revision_id=snapshot.revision.id,
             source_metadata={
                 "aeat_register_status": "ALTA",
-                "aeat_expediente_id": f"EXP-130-{YEAR}-{period}",
+                "aeat_expediente_id": f"EXP-{modelo}-{YEAR}-{period}",
                 "aeat_justificante_csv": evidence_reference_id,
                 "authenticated_identity": TAX_ID,
             },

@@ -36,7 +36,7 @@
           "code": "REFUSED_GOOGLE_CLIENT_METADATA_UNAVAILABLE",
           "context": {
             "effect": "none",
-            "operation_id": "ebdc6b4c590122ed9f5f4afd572ef32b31b3fd82a77efd44e59119c747639989",
+            "operation_id": "15c0f8c40e40bf6d3317929d51ac2976d31e3a5f2bc6f49c47cda0d9c35a0da9",
             "profile": "<profile-id>",
             "refusal_code": "REFUSED_GOOGLE_CONFIGURATION",
             "terminal_condition": "refused"

@@ -60,7 +60,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["repository"]
 
 _BUCKET_ID = "36363636-3636-4636-8636-363636363636"
-_SUPPLIER_CIF = "B12345674"
+_SUPPLIER_CIF = "B00015016"
 _OTHER_CIF = "B87654321"
 _ASSERTED_AT = datetime(2026, 4, 17, 11, 5, tzinfo=UTC)
 _DEFAULT_SCOPE = IvaTerritorialScope.from_registry("es_canarias")
@@ -223,7 +223,7 @@ def test_a_prefixed_foreign_identifier_addresses_a_record_without_a_stated_count
 # --------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("printed", ["B12345674", "ESB12345674", "B-1234567-4", "  b12345674 "])
+@pytest.mark.parametrize("printed", ["B00015016", "ESB00015016", "B-1234567-4", "  b00015016 "])
 def test_every_printed_spelling_of_one_identifier_finds_the_one_record(
     repository: CounterpartyEstablishmentRepositoryProtocol,
     printed: str,

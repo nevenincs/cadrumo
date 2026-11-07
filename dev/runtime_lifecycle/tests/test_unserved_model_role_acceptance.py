@@ -80,7 +80,7 @@ class _UnservedAgent(RecordingModelRuns):
 )
 def test_cli_renders_no_selection_in_the_requested_language(tmp_path: Path, language: str, message: str) -> None:
     pdf = tmp_path / "unlabelled.pdf"
-    pdf.write_bytes(text_pdf_bytes(("B1234567X B17283946 766,30",)))
+    pdf.write_bytes(text_pdf_bytes(("B1234567X B00015024 766,30",)))
     added = invoke_cached_cli(
         ["--format", "json", "app", "ledger", "evidence", "add", str(pdf), "--supplier", "Acme SL"]
     )

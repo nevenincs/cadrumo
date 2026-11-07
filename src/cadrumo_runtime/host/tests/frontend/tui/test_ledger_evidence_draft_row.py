@@ -44,7 +44,7 @@ _DEGRADED = LabelReadingFallback(
 
 def _draft() -> InvoiceDraft:
     return InvoiceDraft(
-        supplier_tax_id="B92000082",
+        supplier_tax_id="B00015081",
         invoice_number="T-0042-2026",
         invoice_date="2026-02-14",
         taxable_base=Decimal("60.00"),

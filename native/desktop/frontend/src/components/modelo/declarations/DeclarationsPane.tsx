@@ -7,7 +7,7 @@ import type { ProfileCompanionKit } from "../workspace/ProfileCompanions";
 import { WorkspaceScreen } from "../workspace/WorkspaceScreen";
 import type { ModeloPort } from "../../../shell/modelo";
 import { modeloWritesFor } from "../../../shell/modeloWriteHolds";
-import type { OutputLanguage } from "../../../shell/modeloContract";
+import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
 import { DeclarationsPage, type DeclarationsMemory } from "./DeclarationsPage";
 
 /**

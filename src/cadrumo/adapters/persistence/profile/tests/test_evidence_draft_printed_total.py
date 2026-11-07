@@ -55,7 +55,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_filer_profile"]
 
 # A real Spanish CIF (AEAT checksum-valid).
-_SUPPLIER_CIF = "B12345674"
+_SUPPLIER_CIF = "B00015016"
 
 # base 100,00 + cuota 21,00 = 121,00. The printed total equals the derived one.
 _COHERENT_INVOICE_LINES = (

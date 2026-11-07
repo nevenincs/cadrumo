@@ -4,7 +4,7 @@ import {
   purchaseOf,
 } from "../../src/components/ledger/assets/assetWrites";
 import { exampleInvoices } from "../../src/dev/fixtures/ledgerInvoices";
-import type { CatalogueInvoice } from "../../src/shell/ledger";
+import type { CatalogueInvoice } from "../../src/shell/ledgerInvoiceOperations";
 import type { ActivityAssetRevision } from "../../src/shell/ledgerSetup";
 import { label } from "../support/strings";
 
@@ -66,9 +66,9 @@ test("a supplier picked leaves a tax id already typed", async ({
   page: target,
 }) => {
   await openDescription(target);
-  await input(target, "supplier_tax_id").fill("B12345674");
+  await input(target, "supplier_tax_id").fill("B00015016");
   await pickSupplier(target);
-  await expect(input(target, "supplier_tax_id")).toHaveValue("B12345674");
+  await expect(input(target, "supplier_tax_id")).toHaveValue("B00015016");
 });
 
 test("a tax id picked fills the empty supplier name", async ({

@@ -45,7 +45,7 @@ __all__ = ["bucket"]
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_DECLARED_NIF: Final = "B12345674"
+_DECLARED_NIF: Final = "B00015016"
 
 
 @pytest.mark.usefixtures("bucket")

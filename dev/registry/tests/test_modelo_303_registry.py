@@ -7,6 +7,7 @@ from datetime import date, timedelta
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.temporal import select_revision
@@ -18,6 +19,7 @@ from cadrumo.domain.calculations.registry.tests.modelo_303_registry_constants im
     M303_RECORD_DESIGN_SOURCE_BY_REVISION,
 )
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
+from cadrumo.domain.deadlines.domiciliation_cutoff import DerivedPaymentCutoff, resolve_payment_cutoff
 
 from .authored_edition_support import source_first_exercise, source_with_sha256
 from .modelo_303_registry_support import load_modelo_303
@@ -507,7 +509,9 @@ def test_modelo_303_sii_monthly_deadlines_are_exactly_grounded() -> None:
         f"modelo-303-{year}-09-mensual": (date(year, 10, 1), date(year, 10, 30), date(year, 10, 27)),
         f"modelo-303-{year}-10-mensual": (date(year, 11, 1), date(year, 11, 30), date(year, 11, 25)),
         f"modelo-303-{year}-11-mensual": (date(year, 12, 1), date(year, 12, 30), date(year, 12, 24)),
-        f"modelo-303-{year}-12-mensual": (date(year + 1, 1, 1), date(year + 1, 2, 1), date(year + 1, 1, 27)),
+        # The calendar prints no direct-debit row for December; its cutoff waits on the next
+        # year's calendar, so none is authored on the window.
+        f"modelo-303-{year}-12-mensual": (date(year + 1, 1, 1), date(year + 1, 2, 1), None),
     }
 
     for window_id, (opens_on, closes_on, payment_cutoff_on) in expected.items():
@@ -520,5 +524,13 @@ def test_modelo_303_sii_monthly_deadlines_are_exactly_grounded() -> None:
             if window.id == f"modelo-303-{year}-12-mensual"
             else f"aeat-calendario-contribuyente-{year}-domiciliacion"
         ) in window.source_refs
+
+    # With no authored cutoff, the Orden derives December's: Anexo II's 25 January, extended by
+    # the two days the filing period runs past its Saturday close (art. 3.2.b).
+    with bundled_indexed_authority().operation() as operation:
+        resolved = resolve_payment_cutoff("303", windows[f"modelo-303-{year}-12-mensual"], operation=operation)
+    assert isinstance(resolved, DerivedPaymentCutoff)
+    assert resolved.extension_days == 2
+    assert resolved.cutoff_on == date(year + 1, 1, 27)
 
     assert f"aeat-calendario-contribuyente-{year}-hasta-2-marzo" in windows[f"modelo-303-{year}-01-mensual"].source_refs

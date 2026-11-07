@@ -13,7 +13,10 @@ from cadrumo.core.refund_election import RefundElection
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
-from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_editions
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    newest_authored_edition,
+    newest_authored_editions,
+)
 from cadrumo.domain.contribuyente.entity_type import EntityType
 from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
 from cadrumo.domain.filing.errors import FilingExportValidationError
@@ -22,6 +25,7 @@ from cadrumo.domain.submission.models import ModeloDraftStatus
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.temporal import select_revision
@@ -52,6 +56,7 @@ from ...filing.producer_snapshot import (
     build_filing_producer_snapshot,
 )
 from ...filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
+from .. import revision_replay_inputs
 from ..revision_replay_inputs import revision_filing_replay_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -271,6 +276,61 @@ def test_revision_replay_inputs_keep_applicable_m100_pagos_relation_unresolved()
 
     assert "renta-modelo-130-pagos-fraccionados" not in replay_inputs
     assert replay_inputs["renta-modelo-131-pagos-fraccionados"] == "0"
+
+
+def test_revision_replay_inputs_reuse_the_callers_pinned_operation_for_relation_zero_applicability(
+    operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Relation-zero synthesis must reuse the caller's pinned operation, not reopen a default.
+
+    Before this fix, ``_not_applicable_relation_zero_ids`` called
+    ``derive_modelo_applicability`` without ``operation=``, so it leased a fresh
+    default authority generation instead of reusing the one the caller already
+    pinned -- mixing authority generations within a single operation. This
+    spies on the real applicability function to prove the exact pinned object
+    reaches it unchanged.
+
+    The filing year is the newest Modelo 100 edition the registry authors
+    rather than a written year, because which exercise is replayed states
+    nothing about the pin. It is not the support horizon: the horizon
+    exercise of an annual Renta declaration still awaits its approving
+    Orden, which the export path refuses before any relation is reached.
+    """
+    work_unit = _work_unit(modelo="100", filing_year=newest_authored_edition("100"), period_code="0A")
+    revision = _revision(
+        work_unit,
+        relation_overrides={"renta-modelo-130-pagos-fraccionados": "123.45"},
+    )
+    profile = TaxpayerProfile(
+        tax_id="12345678Z",
+        entity_type=EntityType.from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("trabajo")}),
+        iva_regime=IVARegime("GENERAL"),
+    )
+    observed_operations: list[PinnedAuthorityOperation | None] = []
+    original = revision_replay_inputs.derive_modelo_applicability
+
+    def _spy(
+        profile_arg: TaxpayerProfile,
+        modelo_arg: str,
+        *,
+        operation: PinnedAuthorityOperation | None = None,
+    ) -> object:
+        observed_operations.append(operation)
+        return original(profile_arg, modelo_arg, operation=operation)
+
+    monkeypatch.setattr(revision_replay_inputs, "derive_modelo_applicability", _spy)
+
+    revision_filing_replay_inputs(
+        revision=revision,
+        work_unit=work_unit,
+        workflow_profile=profile,
+        operation=operation,
+    )
+
+    assert observed_operations
+    assert all(observed is operation for observed in observed_operations)
 
 
 @pytest.mark.parametrize("filing_year", _SALARY_CERTIFICATE_EDITIONS)
@@ -531,7 +591,7 @@ def test_persisted_m180_row_bindings_export_two_records_with_control_totals(
 ) -> None:
     """The canonical exporter carries two persisted property rows to disk."""
     rows = {
-        "modelo-180-perceptor-row-nif": {"1": "B12345674", "2": "B12345674"},
+        "modelo-180-perceptor-row-nif": {"1": "B00015016", "2": "B00015016"},
         "modelo-180-perceptor-row-name": {"1": "ARRENDADOR UNO SL", "2": "ARRENDADOR DOS SL"},
         "modelo-180-perceptor-row-recipient-province": {"1": "28", "2": "28"},
         "modelo-180-perceptor-row-modality": {"1": "1", "2": "1"},
@@ -573,7 +633,7 @@ def test_persisted_m180_row_bindings_export_two_records_with_control_totals(
     parsed = parse_export_payload(layout, output_path.read_bytes(), sources=provider.sources)
 
     assert receipt.byte_size == output_path.stat().st_size == 1500
-    assert _parsed_field_values(parsed, "modelo-180-perc-nif") == ("B12345674", "B12345674")
+    assert _parsed_field_values(parsed, "modelo-180-perc-nif") == ("B00015016", "B00015016")
     assert _parsed_field_values(parsed, "modelo-180-decl-total-perceptores") == (Decimal("2"),)
     assert _parsed_field_values(parsed, "modelo-180-decl-base-total") == (Decimal("5000.00"),)
     # Both contiguous components declare one total, so each parsed slot carries
@@ -587,7 +647,7 @@ def test_persisted_m180_row_bindings_export_two_records_with_control_totals(
 def test_persisted_m190_row_bindings_export_optional_zero_filled_rows_with_control_totals(tmp_path: Path) -> None:
     """Optional annual-detail slots remain absent without breaking read-back."""
     rows = {
-        "modelo-190-perceptor-row-nif": {"1": "B12345674", "2": "B12345674"},
+        "modelo-190-perceptor-row-nif": {"1": "B00015016", "2": "B00015016"},
         "modelo-190-perceptor-row-name": {"1": "PERCEPTOR UNO SL", "2": "PERCEPTOR DOS SL"},
         "modelo-190-perceptor-row-provincia": {"1": "28", "2": "28"},
         "modelo-190-perceptor-row-clave": {"1": "G", "2": "G"},
@@ -624,7 +684,7 @@ def test_persisted_m190_row_bindings_export_optional_zero_filled_rows_with_contr
     parsed = parse_export_payload(layout, output_path.read_bytes(), sources=provider.sources)
 
     assert receipt.byte_size == output_path.stat().st_size == 1500
-    assert _parsed_field_values(parsed, "modelo-190-perc-nif") == ("B12345674", "B12345674")
+    assert _parsed_field_values(parsed, "modelo-190-perc-nif") == ("B00015016", "B00015016")
     # This optional unsigned-integer slot uses zero fill, and zero is a valid
     # count. The wire alone cannot distinguish absent input from measured zero.
     assert _parsed_field_values(parsed, "modelo-190-perc-descendientes-menores-3-total") == (
@@ -667,7 +727,7 @@ def _m190_2022_draft(*, text_inputs: dict[CasillaId, str] | None = None):
             "modelo-190-perceptor-rows-incapacidad-ingreso-a-cuenta-total": Decimal("0"),
         },
         row_binding_values={
-            "modelo-190-perceptor-row-nif": {"1": "B12345674"},
+            "modelo-190-perceptor-row-nif": {"1": "B00015016"},
             "modelo-190-perceptor-row-name": {"1": "PERCEPTOR UNO SL"},
             "modelo-190-perceptor-row-provincia": {"1": "28"},
             "modelo-190-perceptor-row-clave": {"1": "G"},
@@ -760,7 +820,7 @@ def test_m180_required_row_binding_refuses_before_any_export_bytes_are_written(
 ) -> None:
     """A required property field cannot become an accepted blank wire slot."""
     rows = {
-        "modelo-180-perceptor-row-nif": {"1": "B12345674"},
+        "modelo-180-perceptor-row-nif": {"1": "B00015016"},
         "modelo-180-perceptor-row-name": {"1": "ARRENDADOR UNO SL"},
         "modelo-180-perceptor-row-recipient-province": {"1": "28"},
         "modelo-180-perceptor-row-modality": {"1": "1"},

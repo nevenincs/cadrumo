@@ -2,13 +2,17 @@
 // models that own them, through scripts/ledger_contract.py, and formats what
 // it writes as the frontend's formatter does. `--check` writes nothing: it
 // fails when src/shell/ledgerContract.ts, or the file `--target` names,
-// differs from fresh output.
+// differs from fresh output. It refuses, writing and comparing nothing, when
+// the formatted module would be longer than the module bound the producer
+// reports.
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { basename, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { format, resolveConfig } from "prettier";
+import { refuseOversizedModules } from "./generated-module-bound.mjs";
+import { producerEnvironment } from "./producer-environment.mjs";
 
 const { values } = parseArgs({
   options: {
@@ -24,8 +28,7 @@ const contract = values.target
   : resolve(frontend, "src/shell/ledgerContract.ts");
 const producer = resolve(frontend, "scripts/ledger_contract.py");
 
-const environment = { ...process.env };
-environment.PYTHONPATH = repository;
+const environment = producerEnvironment(repository);
 
 const run = spawnSync("uv", ["run", "--no-sync", "python", "-B", producer], {
   cwd: repository,
@@ -39,7 +42,13 @@ if (run.error) throw run.error;
 if ((run.status ?? 1) !== 0) process.exit(run.status ?? 1);
 
 const options = (await resolveConfig(contract)) ?? {};
-const fresh = await format(run.stdout, { ...options, filepath: contract });
+const { bound, module } = JSON.parse(run.stdout);
+const fresh = await format(module, { ...options, filepath: contract });
+refuseOversizedModules(
+  [[basename(contract), fresh]],
+  bound,
+  "split what scripts/ledger_contract.py emits",
+);
 
 if (values.check) {
   const stored = existsSync(contract)

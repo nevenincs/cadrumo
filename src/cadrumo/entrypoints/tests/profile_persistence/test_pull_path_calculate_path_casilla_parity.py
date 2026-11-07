@@ -163,7 +163,7 @@ _M115_ANTERIORES_CASILLA: CasillaId = validated_casilla_id("04")
 _M180_TOTAL_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("decl.total-perceptores")
 _M180_BASE_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.base-total")
 _M180_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id("decl.retenciones-total")
-_M180_PERCEPTOR_NIFS: tuple[str, ...] = ("11111111H", "22222222J")
+_M180_PERCEPTOR_NIFS: tuple[str, ...] = ("00001500M", "00001501Y")
 _M303_SOPORTADO_INTERIORES_CASILLA: CasillaId = validated_casilla_id("iva.soportado.interiores")
 _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = validated_casilla_id(
     "iva.compensacion-pendiente-periodos-anteriores"

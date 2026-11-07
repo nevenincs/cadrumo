@@ -991,7 +991,7 @@ class TestAmbientEnvNeutralisation:
         from ..sandbox import sequence_sandbox
 
         with (
-            scoped_env_var("CADRUMO_CLAVE_MOVIL_DNI_NIE", "fake-operator-dni-99999999R"),
+            scoped_env_var("CADRUMO_CLAVE_MOVIL_DNI_NIE", "fake-operator-dni-00001506B"),
             scoped_env_var(_FAKE_SESSION_ENV_NAME, "fake-session-marker-do-not-leak"),
         ):
             observed: dict[str, str | None] = {}
@@ -1005,7 +1005,7 @@ class TestAmbientEnvNeutralisation:
             assert observed["aeat"] is None
             assert observed["pin"] is not None
             # Outside the sandbox scope but still under the export: restored verbatim.
-            assert os.environ["CADRUMO_CLAVE_MOVIL_DNI_NIE"] == "fake-operator-dni-99999999R"
+            assert os.environ["CADRUMO_CLAVE_MOVIL_DNI_NIE"] == "fake-operator-dni-00001506B"
             assert os.environ[_FAKE_SESSION_ENV_NAME] == "fake-session-marker-do-not-leak"
 
     def test_external_tool_probes_are_pinned_to_stable_absence(self, tmp_path: Path) -> None:
@@ -1076,7 +1076,7 @@ class TestAmbientEnvNeutralisation:
         """A real sequence executes normally with fake operator env exported,
         and no frame's captured output carries the operator value — the
         end-to-end proof that docs builds never observe machine state."""
-        operator_marker = "fake-operator-dni-99999999R"
+        operator_marker = "fake-operator-dni-00001506B"
         with scoped_env_var("CADRUMO_CLAVE_MOVIL_DNI_NIE", operator_marker):
             sequence = _result_sequence(
                 "aeat --format json config profile list\n"

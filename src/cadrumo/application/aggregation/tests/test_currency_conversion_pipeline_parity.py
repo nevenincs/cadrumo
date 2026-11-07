@@ -50,12 +50,12 @@ read for a EUR-denominated purpose, not just these five sites -- found two
 more, on the Invoice/InvoiceLine side rather than Transaction:
 
 - ``modelo_bindings.py`` (M303 general IVA screen,
-  ``_screened_invoice_line_observations`` and its dispatch tree) built every
+  ``screened_invoice_line_observations`` and its dispatch tree) built every
   ``IvaLedgerObservation`` straight from ``line.subtotal``/``line.iva_amount``
   -- native to ``invoice.currency`` -- with NO currency check anywhere in the
   file. Fixed here (see
   ``test_modelo_bindings_iva_screen_converts_invoice_line_amounts``).
-- ``_oss_ioss.py`` (M369 OSS/IOSS, ``_candidate_for_invoice_line``) had the
+- ``_oss_ioss.py`` (M369 OSS/IOSS, ``candidate_for_invoice_line``) had the
   identical defect. OSS/IOSS is cross-border EU B2C by definition, where
   invoicing in the destination Member State's own currency is the ORDINARY
   case, making this the highest-probability trigger of the whole class. Fixed
@@ -298,7 +298,7 @@ def test_renta_ledger_m100_expense_linked_invoice_evidence_is_converted(
             "invoice_number": "INV-USD-PARITY-1",
             "issued_at": date(2025, 2, 10),
             "counterparty_name": "Proveedor SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": base_total_native,
             "iva_total": iva_total_native,
@@ -484,7 +484,7 @@ def test_modelo_bindings_iva_screen_converts_invoice_line_amounts() -> None:
     invoice, _line = _converted_usd_invoice(
         kind=InvoiceKind.ISSUED,
         counterparty_country="ES",
-        counterparty_tax_id="B12345674",
+        counterparty_tax_id="B00015016",
         base_total=base_total_native,
         iva_total=iva_total_native,
     )

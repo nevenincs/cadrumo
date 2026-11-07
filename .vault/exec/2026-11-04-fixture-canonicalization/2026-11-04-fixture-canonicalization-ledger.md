@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#fixture-canonicalization'
 date: '2026-11-04'
-modified: '2026-11-05'
+modified: '2026-11-06'
 body_schema: 'body-v2'
-body_hash: 'sha256:92901ab4ad50547d3151b3be458387adfe576ac62438a66058fd33324a1cab80'
+body_hash: 'sha256:0300ebb17063de829e4ea5463c18d7d681fdb6275139de300d14e560299b024e'
 related:
   - "[[2026-11-04-fixture-canonicalization-plan]]"
 ---
@@ -1088,6 +1088,44 @@ related:
 - `S16` `verify:` `converted non-runtime-host modules 567 passed after drift fix; consumers and runtime-host modules 164 passed` -> `pass`
 - `S16` `verify:` `lint-imports 30 kept; dev.quality.types --full 0 diagnostics` -> `pass`
 - `S16` `by:` `sonnet`
+- `S12` `M` `native/desktop/frontend/vite.config.ts`
+- `S12` `A` `native/desktop/frontend/tests/support/windowFixtures.ts`
+- `S12` `M` `native/desktop/CMakeLists.txt`
+- `S12` `verify:` `just check-frontend` -> `pass`
+- `S12` `verify:` `just test-frontend` -> `fail`
+- `S13` `M` `native/application/CMakeLists.txt`
+- `S13` `M` `native/application/src/runtime_client/live_tests.rs`
+- `S13` `A` `native/desktop/src-tauri/src/window_fixtures.rs`
+- `S13` `M` `native/desktop/src-tauri/src/shell/modelo/tests.rs`
+- `S13` `M` `native/desktop/src-tauri/src/agent/person/native.rs`
+- `S13` `verify:` `just test-native` -> `pass`
+- `S14` `M` `.gitignore`
+- `S14` `D` `native/application/tests/data/modelo-303-admitted-baseline.json`
+- `S14` `D` `native/desktop/frontend/src/dev/fixtures`
+- `S14` `verify:` `python -m dev.fixture_projections check` -> `pass`
+- `S18` `M` `src/cadrumo/application/overview/tests`
+- `S18` `M` `dev/fixtures/personas`
+- `S18` `verify:` `just test-product` -> `pass`
+- `S20` `M` `dev/identity/catalogue_gate.py`
+- `S20` `M` `dev/identity/tests/test_catalogue_gate.py`
+- `S20` `M` `dev/fixtures/personas/identities.toml`
+- `S20` `verify:` `just check-identity` -> `pass`
+- `S27` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S27` `M` `dev/fixtures/personas`
+- `S27` `verify:` `just fixtures-seed` -> `pass`
+- `S29` `M` `src/cadrumo/application`
+- `S29` `M` `src/cadrumo/domain`
+- `S29` `M` `src/cadrumo/_data/registry`
+- `S29` `verify:` `just test-product` -> `pass`
+- `S29` `verify:` `just check-registry` -> `pass`
+- `S29` `verify:` `just check-bindings` -> `pass`
+- `S19` `M` `justfile`
+- `S19` `verify:` `just check-registry-gate` -> `pass`
+- `S19` `verify:` `just check-types` -> `pass`
+- `S19` `verify:` `just check-import-boundaries` -> `pass`
+- `S19` `verify:` `just check-locales` -> `pass`
+- `S19` `verify:` `just test-registry` -> `fail`
+- `S19` `verify:` `just test-tooling` -> `fail`
 
 ## Notes
 
@@ -1116,3 +1154,6 @@ related:
 - `S17` no code change: every taxpayer seeder writes through the production repository writers; remaining direct SQL is storage-layer subject or fault injection; hand-built fact tuples restating taxpayer meaning belong to S16
 - `S28` HISTORY replay files 303/115 1T-4T and 180 locally; 130 1T calculated only and 2T-4T refuse by design without a filed 1T; 0168 directa-normal indicator is a product defect; 0604 fold-in unconfirmable without AEAT-captured prior-year evidence; runtime-host edits deferred to the full gates
 - `S16` kept local: non-resident and IRNR shapes (no persona states a non-resident filer), attribution-entity and public-administration counterparties, profiles without an IVA regime, schema-boundary tests, CLI plumbing, and two first-year tests whose child process asserts the wizard is never imported
+- `S12` test-frontend: 96 failures, identical by file and title to the d9949bbd68 baseline; none introduced
+- `S13` native platform `view_stream` `signing_out` test failed once, passed 3 of 3 on ctest repeat; `view_stream.rs` unchanged on the branch
+- `S19` test-registry: the 51 baseline failures of d9949bbd68 by node-id, 0 new; test-tooling: 6 dev/acceptance/iva journeys fail on the baseline too (packaging needs the worktree env/.env); test-cli serial pass selects no tests (rc 5) on the baseline too; 39 branch-introduced product failures fixed in af01dad7ae

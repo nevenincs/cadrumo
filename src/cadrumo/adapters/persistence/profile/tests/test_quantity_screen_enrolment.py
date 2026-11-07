@@ -288,7 +288,7 @@ def _cash_criterion_profile(year: int) -> ModeloWorkProfile:
         record=create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
-            facts=(UserProfileFact(path="identity.tax_id", value="X1234567L"), *cash_criterion_facts(year)),
+            facts=(UserProfileFact(path="identity.tax_id", value="X0001500M"), *cash_criterion_facts(year)),
             context=operation.profile_create_context(),
         ),
         profile_decode_context=operation.profile_decode_context(),

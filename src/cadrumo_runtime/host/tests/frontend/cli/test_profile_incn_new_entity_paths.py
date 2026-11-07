@@ -50,7 +50,7 @@ pytestmark = [
 _LEGAL_ENTITY_FACTS = {
     "taxpayer_type.entity_type": "legal_entity",
     "taxpayer_type.legal_entity_form": "sl",
-    "identity.tax_id": "B66012345",
+    "identity.tax_id": "B00015032",
     "identity.legal_name": "Test SL",
     # Blank drops the natural-person placeholders the shared seeding door
     # applies, which a legal entity has no business carrying.

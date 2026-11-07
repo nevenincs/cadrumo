@@ -676,7 +676,7 @@ class _AccountingObservation:
     expediente_id: str
     presented_at: datetime
     status: str = "ALTA"
-    authenticated_identity: str = "X1234567L"
+    authenticated_identity: str = "X0001500M"
     artefacts: tuple[FiledObservationArtefactProtocol, ...] = ()
     casillas: tuple[FiledObservedCasillaProtocol, ...] = ()
     headers: tuple[ObservedHeaderFact, ...] = ()

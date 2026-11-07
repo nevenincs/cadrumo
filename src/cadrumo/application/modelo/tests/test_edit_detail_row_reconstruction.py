@@ -59,9 +59,9 @@ def _address(natural_key: str) -> ModeloEditDetailRowAddressV1:
 
 
 def test_add_row_appends_to_an_empty_set() -> None:
-    row = _vinculada("11111111H", "5000")
+    row = _vinculada("00001500M", "5000")
     intent = ModeloDetailRowEditIntentV1(
-        address=_address("11111111H"), kind=ModeloEditDetailRowIntentKind.ADD_ROW, row=row
+        address=_address("00001500M"), kind=ModeloEditDetailRowIntentKind.ADD_ROW, row=row
     )
 
     result = reconstruct_detail_rows(current_detail_rows=(), detail_row_intents=(intent,))
@@ -70,11 +70,11 @@ def test_add_row_appends_to_an_empty_set() -> None:
 
 
 def test_update_row_replaces_content_in_place_preserving_position() -> None:
-    first = _vinculada("11111111H", "5000")
-    second = _vinculada("22222222J", "1000")
-    updated_first = _vinculada("11111111H", "9999")
+    first = _vinculada("00001500M", "5000")
+    second = _vinculada("00001501Y", "1000")
+    updated_first = _vinculada("00001500M", "9999")
     intent = ModeloDetailRowEditIntentV1(
-        address=_address("11111111H"), kind=ModeloEditDetailRowIntentKind.UPDATE_ROW, row=updated_first
+        address=_address("00001500M"), kind=ModeloEditDetailRowIntentKind.UPDATE_ROW, row=updated_first
     )
 
     result = reconstruct_detail_rows(current_detail_rows=(first, second), detail_row_intents=(intent,))
@@ -83,7 +83,7 @@ def test_update_row_replaces_content_in_place_preserving_position() -> None:
 
 
 def test_update_row_refuses_an_unknown_natural_key() -> None:
-    existing = _vinculada("11111111H", "5000")
+    existing = _vinculada("00001500M", "5000")
     ghost = _vinculada("99999999Z", "1")
     intent = ModeloDetailRowEditIntentV1(
         address=_address("99999999Z"), kind=ModeloEditDetailRowIntentKind.UPDATE_ROW, row=ghost
@@ -95,9 +95,9 @@ def test_update_row_refuses_an_unknown_natural_key() -> None:
 
 
 def test_delete_row_removes_by_key_leaving_the_rest_untouched() -> None:
-    first = _vinculada("11111111H", "5000")
-    second = _vinculada("22222222J", "1000")
-    intent = ModeloDetailRowEditIntentV1(address=_address("11111111H"), kind=ModeloEditDetailRowIntentKind.DELETE_ROW)
+    first = _vinculada("00001500M", "5000")
+    second = _vinculada("00001501Y", "1000")
+    intent = ModeloDetailRowEditIntentV1(address=_address("00001500M"), kind=ModeloEditDetailRowIntentKind.DELETE_ROW)
 
     result = reconstruct_detail_rows(current_detail_rows=(first, second), detail_row_intents=(intent,))
 
@@ -105,7 +105,7 @@ def test_delete_row_removes_by_key_leaving_the_rest_untouched() -> None:
 
 
 def test_delete_row_refuses_an_unknown_natural_key() -> None:
-    existing = _vinculada("11111111H", "5000")
+    existing = _vinculada("00001500M", "5000")
     intent = ModeloDetailRowEditIntentV1(address=_address("99999999Z"), kind=ModeloEditDetailRowIntentKind.DELETE_ROW)
 
     result = reconstruct_detail_rows(current_detail_rows=(existing,), detail_row_intents=(intent,))
@@ -145,7 +145,7 @@ def test_editing_one_m349_row_kind_never_touches_the_sibling_kind() -> None:
 
 
 def test_no_intents_returns_the_current_set_unchanged() -> None:
-    existing = (_vinculada("11111111H", "5000"),)
+    existing = (_vinculada("00001500M", "5000"),)
 
     result = reconstruct_detail_rows(current_detail_rows=existing, detail_row_intents=())
 

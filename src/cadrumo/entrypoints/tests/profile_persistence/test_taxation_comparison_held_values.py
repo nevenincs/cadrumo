@@ -397,7 +397,7 @@ def _credited(profile: _Profile) -> None:
         operation=profile.operation,
         taxpayer_tax_id=_TAX_ID,
         ejercicio=profile.year,
-        payer_tax_id="B12345674",
+        payer_tax_id="B00015016",
         income_class=RetencionSoportadaClase.TRABAJO,
         retencion=Decimal("1.00"),
     )

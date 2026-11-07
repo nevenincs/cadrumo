@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 from ...core.decimal.coercion import coerce_decimal
 from ...core.parsing.dates import parse_iso8601_date
 from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.form_codes import resolve_form_codes
 from ...domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ...domain.calculations.registry.irpf_regimes import (
     irpf_estimation_regime_directa_normal_token,
@@ -144,24 +145,68 @@ def family_fact_context(
     )
 
 
+_ESTIMATION_MODALITY_DERIVED_PATHS: tuple[str, ...] = (
+    "irpf.estimation_directa",
+    "irpf.estimation_directa_normal",
+    "irpf.estimation_directa_modalidad_clave",
+)
+"""The engine-owned paths :func:`inject_derived_estimation_modality_fact` decides."""
+
+_PROFILE_FORM_CODES_FACT = "modelo-100-profile-form-codes"
+_ECONOMIC_ACTIVITY_INCOME_CATEGORY = "actividad_economica"
+_ESTIMATION_MODALITY_CLAVE_PREFIX = "estimation_directa_modalidad"
+
+_CASH_ELECTION_DERIVED_PATHS: tuple[str, ...] = ("irpf.activity_income_cash_criterion_elected",)
+"""The engine-owned path :func:`inject_derived_cash_election_fact` decides."""
+
+
+def profile_declares_economic_activity(fact_index: Mapping[str, UserProfileFactValue]) -> bool:
+    """Whether the declared IRPF income categories include economic-activity income."""
+    raw_categories = str(fact_index.get("taxpayer_type.irpf_income_categories", ""))
+    categories = {token.strip() for token in raw_categories.split(",") if token.strip()}
+    return _ECONOMIC_ACTIVITY_INCOME_CATEGORY in categories
+
+
 def inject_derived_estimation_modality_fact(
     fact_index: dict[str, UserProfileFactValue],
     *,
     operation: PinnedAuthorityOperation,
-) -> None:
+) -> tuple[str, ...]:
     """State casilla 0168's modality from the declared estimation regime.
 
     Normal and simplified direct estimation are the two values of one box, so the declared
     regime answers it; any other or undeclared regime leaves the box unresolved rather than
-    stating a modality the taxpayer did not choose.
+    stating a modality the taxpayer did not choose. The box itself holds the design's clave
+    for the modality, which the registry's form codes key by the regime that selects it; the
+    yes/no reading feeds the formulas that branch on the modality. The clave is stated only
+    for a filer with economic-activity income, because the estimacion directa block that
+    holds the box exists only for one (LIRPF art. 27).
+
+    The paths are engine-derived, so the regime alone decides them: a value already in
+    the index (a fact stored before the paths were declared derived) is discarded first,
+    and an undeclared regime leaves both absent. Returns the paths this injector owns, so
+    an absence it decided is not reported as a structural gap.
     """
+    for path in _ESTIMATION_MODALITY_DERIVED_PATHS:
+        fact_index.pop(path, None)
     regime = str(fact_index.get("irpf.estimation_regime", ""))
     normal = str(irpf_estimation_regime_directa_normal_token(authority=operation))
     simplified = str(irpf_estimation_regime_directa_simplificada_token(authority=operation))
     if regime in {normal, simplified}:
         fact_index["irpf.estimation_directa_normal"] = regime == normal
+    if regime in {normal, simplified} and profile_declares_economic_activity(fact_index):
+        claves = resolve_form_codes(_PROFILE_FORM_CODES_FACT, authority=operation).under(
+            _ESTIMATION_MODALITY_CLAVE_PREFIX,
+        )
+        clave = claves.get(regime)
+        if clave is None:
+            raise ProfileBindingResolutionError(
+                f"the registry declares no casilla 0168 clave for the estimation regime {regime!r}",
+            )
+        fact_index["irpf.estimation_directa_modalidad_clave"] = clave
     if regime:
         fact_index["irpf.estimation_directa"] = regime in {normal, simplified}
+    return _ESTIMATION_MODALITY_DERIVED_PATHS
 
 
 def inject_derived_cash_election_fact(
@@ -170,25 +215,30 @@ def inject_derived_cash_election_fact(
     filing_year: int,
     *,
     operation: PinnedAuthorityOperation,
-) -> None:
+) -> tuple[str, ...]:
     """State casilla 0169's election for the ejercicio, when the regime is direct estimation and it is declared.
 
     The dated criterion answers one year; an undeclared year stays absent rather than
-    reading as a blank box, which would state accrual on the taxpayer's behalf.
+    reading as a blank box, which would state accrual on the taxpayer's behalf. A value
+    already in the index is discarded first, because the path is engine-derived and only
+    the declared criterion and regime decide it. Returns the path this injector owns.
     """
+    for path in _CASH_ELECTION_DERIVED_PATHS:
+        fact_index.pop(path, None)
     if not isinstance(record, UserProfileRecord):
-        return
+        return _CASH_ELECTION_DERIVED_PATHS
     regime = str(fact_index.get("irpf.estimation_regime", ""))
     if regime not in {
         str(irpf_estimation_regime_directa_normal_token(authority=operation)),
         str(irpf_estimation_regime_directa_simplificada_token(authority=operation)),
     }:
-        return
+        return _CASH_ELECTION_DERIVED_PATHS
     declared = declared_imputation_criteria(record).declared(filing_year)
     if declared is not None:
         fact_index["irpf.activity_income_cash_criterion_elected"] = (
             declared is ActivityImputationCriterion.COBROS_Y_PAGOS
         )
+    return _CASH_ELECTION_DERIVED_PATHS
 
 
 def inject_ordinary_work_maritime_facts(fact_index: dict[str, UserProfileFactValue]) -> None:
@@ -279,7 +329,7 @@ def declared_profile_selectors(revision: ModeloRevision) -> frozenset[str]:
     A year the registry does not cover has no consuming binding, so the
     injector is a no-op rather than a silent wrong answer -- and if a binding
     IS declared and still resolves to nothing, the derived-scope advisory in
-    :func:`_derived_binding_diagnostics` reports it.
+    :func:`derived_binding_diagnostics` reports it.
 
     Takes ``revision`` as a :class:`ModeloRevision`.
     """
@@ -1089,6 +1139,8 @@ def guarderia_cap_anual(snapshot: RegistrySnapshot) -> Decimal | None:
     cannot read, and the per-child proration is computed here. Returns
     ``None`` when the revision declares no such parameter, which leaves the
     aggregate unresolved rather than proceeding against a guessed ceiling.
+
+    ``snapshot`` is a :class:`RegistrySnapshot`.
     """
     parameter_id = f"renta-{_GUARDERIA_CAP_PARAMETER_SUFFIX}"
     for parameter in snapshot.revision.parameters:

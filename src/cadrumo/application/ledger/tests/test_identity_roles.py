@@ -8,7 +8,7 @@ tell. Every assertion about that shape below is written as an outcome -- what
 resolved -- rather than as a call count, because the defect is a wrong answer,
 not a wrong code path.
 
-The identifiers used here are checksum-real: `B17283946` and `A00010017` pass the
+The identifiers used here are checksum-real: `B00015024` and `A00010017` pass the
 AEAT control-character algorithm and `B17283945` fails it. That is verified by a
 control test rather than asserted in a comment, so a change to the validator
 cannot leave these cases silently testing nothing.
@@ -38,13 +38,13 @@ _OWN_NIF = "12345678Z"
 
 #: A valid CIF belonging to an entity that is NOT the supplier -- a bank, a
 #: gestoría, a logo in the footer. This is the identifier the defect returns.
-_UNRELATED_VALID_CIF = "B17283946"
+_UNRELATED_VALID_CIF = "B00015024"
 
 #: A second valid identifier, for the genuine multi-candidate case.
 _OTHER_VALID_CIF = "A00010017"
 
 #: A third, for proving every competitor is surfaced rather than the first two.
-_THIRD_VALID_CIF = "B10000016"
+_THIRD_VALID_CIF = "B00015008"
 
 #: The true supplier's CIF, whose control character does not check out. This is
 #: why a validating scan walks past it and reaches the unrelated one.

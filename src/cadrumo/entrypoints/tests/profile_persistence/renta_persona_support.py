@@ -357,7 +357,7 @@ def _invoice(invoice: ActivityInvoice, receipt_id: str) -> Invoice:
             "invoice_number": invoice.number,
             "issued_at": invoice.issued,
             "counterparty_name": "Cliente SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "bucket_id": BUCKET_ID,
             "base_total": invoice.base,

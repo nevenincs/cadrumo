@@ -34,11 +34,15 @@ as_of = { year = "horizon", month = 2, day = 16 }
 "iva-m303-regime-composition" = "general"
 "iva-roi-enrolled" = false
 "iva-oss-enrolled" = false
+"iva-group-member-enrolled" = false
+"iva-group-dominant-entity-enrolled" = false
 "iva-sii-enrolled" = false
 "iva-redeme-enrolled" = false
 "iva-cash-accounting-regime-enrolled" = false
 "iva-voluntary-sii-enrolled" = false
 "iva-hydrocarbon-deposit-advance-payment-deduction-entitled" = false
+"iva-intracommunity-operations-exceed-50000-eur" = false
+"enrollment-large-company" = false
 "taxation-type" = "1"
 "taxpayer-sex" = "H"
 "taxpayer-marital-status" = "1"

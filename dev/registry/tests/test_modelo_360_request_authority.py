@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 def _profile(entity: str, regime: str) -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=require_entity_type(entity),
         iva_regime=require_iva_regime(regime),
     )
@@ -50,7 +50,7 @@ def test_request_specific_eligibility_is_undetermined(entity: str, regime: str) 
 
 def test_missing_entity_is_incomplete_and_303_still_applies_to_general_company() -> None:
     authority = compiled_bundled_authority()
-    missing = TaxpayerProfile(tax_id="B12345674", iva_regime=require_iva_regime("GENERAL"))
+    missing = TaxpayerProfile(tax_id="B00015016", iva_regime=require_iva_regime("GENERAL"))
     assert derive_modelo_applicability(missing, "360", today=date(2026, 4, 1), authority=authority).verdict is (
         ApplicabilityVerdict.INCOMPLETE
     )
@@ -129,7 +129,7 @@ def test_calendar_advises_and_local_work_does_not_refuse_unknown_request(
             profile_id="36036036-0360-4360-8360-360360360360",
             setup_state=ProfileSetupState.COMPLETE,
             facts=(
-                UserProfileFact(path="identity.tax_id", value="B12345674"),
+                UserProfileFact(path="identity.tax_id", value="B00015016"),
                 UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
             ),
         )

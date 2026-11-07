@@ -31,7 +31,7 @@ def test_historical_322_example_compiles_every_printed_total_without_future_boxe
     assert inputs["20"].address.qualified() in mirrors["20"].formula
     text = "\n".join(str(cell.value) for cell in plan.value_cells)
     assert "Entidad ficticia del grupo Ejemplo" in text
-    assert "B12345674" in text
+    assert "B00015016" in text
     assert source.template_digest not in text
     if year == 2022:
         assert inputs["73"].value is None

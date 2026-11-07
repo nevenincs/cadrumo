@@ -177,7 +177,7 @@ def test_missing_import_file_keeps_the_typed_clean_refusal(tmp_path: Path) -> No
 
 
 _SUPPLIER_CIF = "B00010157"
-_CUSTOMER_NIF = "B12345674"
+_CUSTOMER_NIF = "B00015016"
 _CSV_HEADER = "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
 _PROFILE_FACTS = {
     "taxpayer_type.entity_type": "natural_person",

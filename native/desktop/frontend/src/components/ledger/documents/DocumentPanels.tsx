@@ -20,11 +20,9 @@ import type {
   AttachmentReviewItem,
   EvidenceConsentListResult,
   EvidenceRecord,
-  FilePick,
-  InvoiceKind,
-  LedgerPort,
-  PickedFile,
-} from "../../../shell/ledger";
+} from "../../../shell/ledgerDocumentOperations";
+import type { FilePick, LedgerPort, PickedFile } from "../../../shell/ledger";
+import type { InvoiceKind } from "../../../shell/ledgerInvoiceOperations";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { formatTime } from "../../../shared/dateFormats";
 import { formatSize } from "../../../shared/numbers";

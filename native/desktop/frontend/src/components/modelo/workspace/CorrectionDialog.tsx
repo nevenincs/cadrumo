@@ -18,17 +18,18 @@ import {
 } from "@/components/ui/field";
 import { Alert } from "@/components/ui/alert";
 import { Icon } from "@/components/ui/icon";
+import { Spinner } from "@/components/ui/spinner";
 import {
   SegmentedControl,
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { facts } from "../../../shell/compose";
+import type { FilingDeclarationKind } from "../../../shell/modeloContract/modelo";
+import type { M303RectificativaMotive } from "../../../shell/modeloContract/modeloWork";
 import type {
-  FilingDeclarationKind,
-  M303RectificativaMotive,
   ModeloAmendmentCorrectionContextV1,
   ModeloAmendmentCorrectionRowV1,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloWorkAmendmentContext";
 import { useStrings } from "../../../shell/strings";
 import { BoxNumber } from "../form/BoxNumber";
 import { ScopedWriteHoldNotice } from "../WriteScope";
@@ -86,6 +87,7 @@ export function CorrectionDialog({
   onOpenChange,
   context,
   onCorrect,
+  contextState,
   disabled = false,
 }: {
   open: boolean;
@@ -94,6 +96,7 @@ export function CorrectionDialog({
   context: ModeloAmendmentCorrectionContextV1 | null;
   /** Null while the correction cannot be sent from here. */
   onCorrect: ((answer: CorrectionAnswer) => Promise<CorrectionResult>) | null;
+  contextState?: { kind: "loading" | "unavailable"; words: string } | null;
   disabled?: boolean;
 }) {
   const t = useStrings();
@@ -104,6 +107,8 @@ export function CorrectionDialog({
   const [refusals, setRefusals] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [outcome, setOutcome] = useState<CorrectionResult | null>(null);
+  // Settlement is required before another correction can be submitted.
+  const held = outcome?.kind === "unknown";
   const ids = useId();
   const chosen = kind ?? context?.kinds[0]?.kind ?? null;
   const help = context?.kinds.find((option) => option.kind === chosen)?.help;
@@ -119,7 +124,9 @@ export function CorrectionDialog({
   });
   const ready =
     onCorrect !== null &&
+    !held &&
     chosen !== null &&
+    context?.kinds.some((option) => option.kind === chosen) === true &&
     reason.trim() !== "" &&
     entries.length > 0 &&
     (!asksMotive || motive !== null);
@@ -137,8 +144,6 @@ export function CorrectionDialog({
     else if (result.kind === "entries") setRefusals(result.entries);
     setOutcome(result);
   };
-  // An outcome nobody saw may have committed: the dialog sends nothing more.
-  const held = outcome?.kind === "unknown";
   const said =
     outcome === null
       ? null
@@ -162,6 +167,7 @@ export function CorrectionDialog({
       <DialogContent
         className="w-palette"
         closeLabel={t("workspace.modelo.key.close")}
+        aria-busy={busy}
       >
         <DialogHeader>
           <DialogTitle>{t("workspace.modelo.correction.title")}</DialogTitle>
@@ -169,6 +175,23 @@ export function CorrectionDialog({
             {t("workspace.modelo.correction.lead")}
           </DialogDescription>
         </DialogHeader>
+        {!context &&
+          contextState &&
+          (contextState.kind === "loading" ? (
+            <p role="status" className="flex items-center gap-2 text-sm">
+              <Spinner />
+              {contextState.words}
+            </p>
+          ) : (
+            <Alert tone="warning" role="alert">
+              {contextState.words}
+            </Alert>
+          ))}
+        {context?.kinds.length === 0 && (
+          <Alert tone="warning" role="status">
+            {t("workspace.modelo.correction.unavailable")}
+          </Alert>
+        )}
         {context && (
           <div className="flex flex-col gap-4">
             <p className="text-sm text-muted-foreground">

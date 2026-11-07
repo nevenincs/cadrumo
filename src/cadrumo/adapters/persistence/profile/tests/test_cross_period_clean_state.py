@@ -481,7 +481,7 @@ def test_cross_period_clean_state_blocks_taxpayer_filing_with_wrong_tax_id_justi
             modelo="303",
             period="1T",
             filing_year=M390_YEAR,
-            tax_id="B12345674",
+            tax_id="B00015016",
         )
 
         verdict = evaluate_clean_state(
@@ -562,7 +562,7 @@ def test_cross_period_clean_state_accepts_matching_aeat_register_observation_pro
                 "1T": {
                     "aeat_register_status": "ALTA",
                     "aeat_expediente_id": "EXP-303-2025-1T",
-                    "authenticated_identity": "X1234567L",
+                    "authenticated_identity": "X0001500M",
                     "aeat_justificante_csv": "JUST00001T",
                 },
             },
@@ -587,7 +587,7 @@ def test_cross_period_clean_state_blocks_filed_history_justificante_csv_mismatch
                 "1T": {
                     "aeat_register_status": "ALTA",
                     "aeat_expediente_id": "EXP-303-2025-1T",
-                    "authenticated_identity": "X1234567L",
+                    "authenticated_identity": "X0001500M",
                     "aeat_justificante_csv": "DIFFERENT-JUSTIFICANTE-CSV",
                 },
             },
@@ -741,7 +741,7 @@ def test_first_year_modalidad_cuota_suppresses_m202_dependency_through_evaluator
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         verdict = evaluate_clean_state(
             _snapshot_202(),
-            taxpayer_tax_id="B12345674",
+            taxpayer_tax_id="B00015016",
             activity_start_date=date(2026, 2, 1),
             modelo_202_modality=Modelo202Modality.ART_40_2_OPTIONAL,
         )
@@ -772,7 +772,7 @@ def test_mandatory_modalidad_base_keeps_m202_dependency_in_scope_through_evaluat
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         verdict = evaluate_clean_state(
             _snapshot_202(),
-            taxpayer_tax_id="B12345674",
+            taxpayer_tax_id="B00015016",
             activity_start_date=date(2026, 2, 1),
             modelo_202_modality=Modelo202Modality.ART_40_3_MANDATORY,
         )
@@ -795,7 +795,7 @@ def test_incomplete_modality_keeps_m202_dependency_in_scope_through_evaluator(tm
         for modality in (Modelo202Modality.INCOMPLETE, None):
             verdict = evaluate_clean_state(
                 _snapshot_202(),
-                taxpayer_tax_id="B12345674",
+                taxpayer_tax_id="B00015016",
                 activity_start_date=date(2026, 2, 1),
                 modelo_202_modality=modality,
             )
@@ -815,7 +815,7 @@ def test_non_first_year_keeps_m202_dependency_in_scope_through_evaluator(tmp_pat
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         verdict = evaluate_clean_state(
             _snapshot_202(),
-            taxpayer_tax_id="B12345674",
+            taxpayer_tax_id="B00015016",
             activity_start_date=date(2025, 6, 1),
             modelo_202_modality=Modelo202Modality.ART_40_2_OPTIONAL,
         )

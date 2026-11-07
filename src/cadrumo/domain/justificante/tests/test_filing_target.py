@@ -30,7 +30,7 @@ def _receipt(**updates: object) -> Justificante:
         # below consumes this value as a matching axis.
         "presentation_id": "30320250415ABCD1234EFGH5678",
         "presented_at": _PRESENTED_AT,
-        "tax_id": "X1234567L",
+        "tax_id": "X0001500M",
         "verification_url": TypeAdapter(AnyHttpUrl).validate_python(JUSTIFICANTE_FILING_TARGET_VERIFY_URL_FIXTURE),
         "source_pdf_path": Path("var/justificantes/just-303.pdf"),
         "source_pdf_sha256": "a" * 64,
@@ -47,7 +47,7 @@ def _receipt(**updates: object) -> Justificante:
         ({"modelo": "130"}, False),
         ({"ejercicio": "2024"}, False),
         ({"period": Period.from_year_and_code(2025, "2T")}, False),
-        ({"tax_id": "Y7654321G"}, False),
+        ({"tax_id": "Y0001503E"}, False),
         # The receipt's own presentation identifier is not a matching axis, so
         # neither carrying a different one nor carrying none at all changes the
         # verdict. These two cases previously asserted the opposite.
@@ -66,7 +66,7 @@ def test_matches_filing_target_uses_one_normalised_axis_matrix(
             modelo="303",
             filing_year=2025,
             period=_PERIOD,
-            tax_id=" x1234567l ",
+            tax_id=" x0001500m ",
         )
         is expected
     )
@@ -92,7 +92,7 @@ def test_matches_filing_target_refuses_a_presentation_identifier_argument() -> N
             modelo="303",
             filing_year=2025,
             period=_PERIOD,
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             presentation_id="202530300000101A",  # ty: ignore[unknown-argument]  # reason: passing the removed parameter is the refusal under test
         )
 
@@ -102,5 +102,5 @@ def test_matches_filing_target_refuses_a_presentation_identifier_argument() -> N
         modelo="303",
         filing_year=2025,
         period=_PERIOD,
-        tax_id="X1234567L",
+        tax_id="X0001500M",
     )

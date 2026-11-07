@@ -2,7 +2,7 @@
 
 This thin orchestration layer pairs a text backend selected by
 :class:`~domain.justificante.schema.JustificanteParserBackend` with the regex
-extractor in :mod:`adapters.inbound.justificante._extract`. The extractor
+extractor in :mod:`adapters.inbound.justificante.extract`. The extractor
 turns AEAT receipt text into a strict
 :class:`~domain.justificante.schema.Justificante`; casilla-complete declaration
 PDFs are intentionally out of scope for this adapter.

@@ -29,7 +29,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 __all__ = ["repository"]
 
 _BUCKET = "99999999-9999-4999-8999-999999999999"
-_IDENTIFIER = "B12345674"
+_IDENTIFIER = "B00015016"
 
 
 def test_a_first_confirmation_reports_that_it_recorded(

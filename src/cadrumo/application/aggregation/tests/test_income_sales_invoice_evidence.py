@@ -126,7 +126,7 @@ def _invoice(
             "invoice_number": number,
             "issued_at": date(2024, 3, 15),
             "counterparty_name": "Cliente SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "bucket_id": bucket_id,
             "base_total": Decimal("1000.00"),

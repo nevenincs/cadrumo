@@ -62,7 +62,7 @@ def ledger_evidence_confirm_cli_projection() -> LedgerEvidenceConfirmProjection:
         invoice_number="FAC-2024-0007",
         issued_at=date(2024, 11, 20),
         counterparty_name="Mayorista Ejemplo SL",
-        counterparty_tax_id="B12345674",
+        counterparty_tax_id="B00015016",
         counterparty_country="ES",
         base_total=_public_decimal("100.00"),
         iva_total=_public_decimal("21.00"),

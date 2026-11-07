@@ -263,7 +263,7 @@ def test_import_refuses_a_work_unit_outside_the_repository_bucket(tmp_path: Path
                 filing_repository=fr_repo,
                 bucket_event_repository=bv_repo,
                 observation_repository=CalculationObservationRepository(),
-                expected_tax_id="X1234567L",
+                expected_tax_id="X0001500M",
                 clock=_GUARD_CLOCK,
             )
 

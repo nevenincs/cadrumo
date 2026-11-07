@@ -10,7 +10,7 @@ import type {
   CatalogueInvoice,
   InvoicePreviewRequest,
   InvoicePreviewResult,
-} from "../src/shell/ledger";
+} from "../src/shell/ledgerInvoiceOperations";
 import {
   InvoicePreviewSession,
   type PreviewReply,
@@ -632,10 +632,12 @@ test("the next number follows the highest in its series, class and year", () => 
       invoice_number: "F-2026-500",
     }),
   ];
+  // The numbers are counted within the calendar year the first invoice was issued in.
+  const issuedYear = Number(catalogue[0]!.issued_at!.slice(0, 4));
   const ask = (
     series: string,
     invoiceClass: "ORDINARIA" | "SIMPLIFICADA" | "RECTIFICATIVA" = "ORDINARIA",
-    year = 2026,
+    year = issuedYear,
   ) =>
     suggestNumber(catalogue, {
       kind: "issued",
@@ -656,7 +658,7 @@ test("the next number follows the highest in its series, class and year", () => 
     series: "R",
     number: "R-2026-03",
   });
-  expect(ask("F", "ORDINARIA", 2025)).toEqual({
+  expect(ask("F", "ORDINARIA", issuedYear - 1)).toEqual({
     series: "F",
     number: "F-2025-100",
   });
@@ -668,7 +670,7 @@ test("the next number follows the highest in its series, class and year", () => 
       invoiceClass: "ORDINARIA",
       correctiveClass: CORRECTIVE,
       series: "F",
-      year: 2026,
+      year: issuedYear,
     }),
   ).toBeNull();
 });

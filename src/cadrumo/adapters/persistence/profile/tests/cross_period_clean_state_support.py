@@ -105,7 +105,7 @@ def _store_ready_profile(
     *,
     bucket_id: str = _BUCKET_ID,
     profile_id: str = _PROFILE_ID,
-    tax_id: str = "X1234567L",
+    tax_id: str = "X0001500M",
 ) -> None:
     with bundled_indexed_authority().operation():
         seed_test_profile_record(
@@ -371,7 +371,7 @@ def cross_period_clean_state_persist_justificante_metadata(
     modelo: str,
     period: str,
     filing_year: int,
-    tax_id: str = "X1234567L",
+    tax_id: str = "X0001500M",
     presentation_id: str | None = None,
 ) -> None:
     pdf_bytes = f"%PDF-1.4\n% synthetic justificante {csv}\n%%EOF\n".encode()
@@ -425,7 +425,7 @@ def _live_capture_filing(*, csv: str, kind: ExternalEvidenceKind) -> ModeloRecor
 def _external_evidence_blockers(
     filing: ModeloRecord,
     source_kind: str,
-    expected_tax_id: str | None = "X1234567L",
+    expected_tax_id: str | None = "X0001500M",
     source_metadata: dict[str, str] | None = None,
 ) -> list[CrossPeriodCleanStateBlocker]:
     return filing_external_evidence_blockers(
@@ -515,7 +515,7 @@ def _seed_source_period_filing(
         evidence_reference_id=evidence_reference_id,
         source_headers=source_headers,
         actor="aeat-import-test",
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
         # The M303 source quarters carry operator-selected filing facts
         # the import path cannot infer from casilla values, so they are
         # supplied explicitly rather than defaulted.
@@ -542,7 +542,7 @@ def _source_observation_metadata(
     default_source_metadata = {
         "aeat_register_status": "ALTA",
         "aeat_expediente_id": f"EXP-303-{_M390_YEAR}-{period}",
-        "authenticated_identity": "X1234567L",
+        "authenticated_identity": "X0001500M",
     }
     if _is_justificante_evidence(evidence_kind) and not omitted:
         default_source_metadata["aeat_justificante_csv"] = evidence_reference_id
@@ -752,7 +752,7 @@ def _evaluate_clean_state(
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     verification_repository: VerificationReportCatalogueRepository | None = None,
     bucket_id: str = _BUCKET_ID,
-    taxpayer_tax_id: str | None = "X1234567L",
+    taxpayer_tax_id: str | None = "X0001500M",
     expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     activity_start_date: date | None = None,
     modelo_202_modality: Modelo202Modality | None = None,

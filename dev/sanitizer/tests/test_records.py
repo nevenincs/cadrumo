@@ -46,8 +46,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("p
 
 
 _SHA = "0" * 64
-_REAL_NIE_CANARY = "Y1234567X"
-_REAL_NIF_CANARY = "99999999R"
+_REAL_NIE_CANARY = "Y0001500L"
+_REAL_NIF_CANARY = "00001506B"
 _REAL_NAME_CANARY = "PERSONA PRUEBA UNO"
 _SYNTHETIC_NIE = "Y0001006P"
 _SYNTHETIC_NIF = "12345678Z"

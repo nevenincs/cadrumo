@@ -1,5 +1,5 @@
 import { Icon } from "@/components/ui/icon";
-import type { RecordedCalculationNote } from "../../../shell/modeloContract";
+import type { RecordedCalculationNote } from "../../../shell/modeloContract/modelo";
 import { useStrings } from "../../../shell/strings";
 
 /**

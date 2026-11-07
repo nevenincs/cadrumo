@@ -85,7 +85,7 @@ def _linked_expense() -> tuple[Transaction, Invoice]:
             "invoice_number": "ASE-RET-1",
             "issued_at": date(_YEAR, 2, 5),
             "counterparty_name": "Asesor Profesional",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": _BASE,
             "iva_total": Decimal("0.00"),

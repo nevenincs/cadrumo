@@ -159,6 +159,9 @@ def _full_m100_profile() -> UserProfileRecord:
             UserProfileFact(path="renta_family.situacion_familiar", value="casado"),
             # renta-profile-family-convive-otro-progenitor (Art. 84.2.4º, calculation only)
             UserProfileFact(path="renta_family.convive_con_otro_progenitor", value=False),
+            # 0168 renta-modelo-100-estimacion-directa-modalidad-clave (derived from the regime, for a filer
+            # with economic-activity income)
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
             # 0169 renta-profile-activity-cash-criterion (derived from the dated criterion at bind time)
             *cash_criterion_facts(_YEAR),
         ),

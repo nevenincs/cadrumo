@@ -77,7 +77,7 @@ def _m200_calculation_unit(
         register_minimal_profile(
             profile_id=bucket_id,
             overrides={
-                "identity.tax_id": "B66012345",
+                "identity.tax_id": "B00015032",
                 "identity.legal_name": "Calculate Input SL",
                 "taxpayer_type.entity_type": "legal_entity",
                 "taxpayer_type.legal_entity_form": "sl",
@@ -225,7 +225,7 @@ def _m303_bundle_with_period_override(
         register_minimal_profile(
             profile_id=bucket_id,
             overrides={
-                "identity.tax_id": "B66012345",
+                "identity.tax_id": "B00015032",
                 "identity.legal_name": "Calculate Input SL",
                 "taxpayer_type.entity_type": "legal_entity",
                 "taxpayer_type.legal_entity_form": "sl",

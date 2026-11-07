@@ -62,8 +62,8 @@ _DIGEST_RE = re.compile(r"sha256:([0-9a-f]{8})")
 #: A real Spanish company identity and its printed spellings, plus a real
 #: account. Used across the populations below so one corpus entry cannot drift
 #: from another.
-_IDENTITY = "ESB12345674"
-_SECOND_IDENTITY = "ESX1234567L"
+_IDENTITY = "ESB00015016"
+_SECOND_IDENTITY = "ESX0001500M"
 _ACCOUNT = "ES91 2100 0418 4502 0005 1332"
 
 #: An adversarial corpus spanning all four populations. Entries are short so the
@@ -71,7 +71,7 @@ _ACCOUNT = "ES91 2100 0418 4502 0005 1332"
 #: not depend on length.
 MIXED_POPULATION_CORPUS = [
     # prose with short neighbours
-    "counterparty ESB12345674 is declared",
+    "counterparty ESB00015016 is declared",
     "de SE556677889901 y DE811234567",
     "la B.1234567.4 en el registro",
     "es 12345678Z en",

@@ -204,7 +204,7 @@ def test_native_cli_auth_configure_records_the_clave_movil_route_and_refuses_unk
                 "identity.name": "Synthetic",
                 "identity.surnames": "Auth Route",
                 "identity.tax_id": "12345678Z",
-                "auth.dni_nie": "87654321X",
+                "auth.dni_nie": "X0001502F",
                 "activities.description": "synthetic test profile",
             },
         )
@@ -226,7 +226,7 @@ def test_native_cli_auth_configure_records_the_clave_movil_route_and_refuses_unk
         assert isinstance(precondition_action, dict)
         assert precondition_action["failed_condition_id"] == "auth.clave_movil.identity_aligned"
         assert "12345678Z" not in configured.stdout
-        assert "87654321X" not in configured.stdout
+        assert "X0001502F" not in configured.stdout
 
         status = _invoke(profile, "config", "auth", "status")
         assert status.exit_code == 0, status.output

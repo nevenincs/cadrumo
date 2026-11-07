@@ -104,7 +104,7 @@ def _read() -> bridge.IvaRemoteStateCaptureRead:
         year_to=2024,
         target_year=2025,
         target_period=Period.from_year_and_code(2025, "1T"),
-        taxpayer_nif="X1234567L",
+        taxpayer_nif="X0001500M",
     )
 
 
@@ -134,7 +134,7 @@ def test_registered_combined_capture_uses_exact_profile_scope_and_restores_conte
         year_to=2024,
         target_year=2025,
         target_period="1T",
-        taxpayer_nif="X1234567L",
+        taxpayer_nif="X0001500M",
     )
     assert options["definition_id"] == IVA_REMOTE_STATE_CAPTURE_DEFINITION_ID
     assert options["subject_ref"] == profile_operation_subject(str(_PROFILE))
@@ -221,7 +221,7 @@ def test_combined_capture_command_preserves_payload_lines_and_surface_outcomes(
             year_to=2024,
             target_year=2025,
             target_period="1T",
-            taxpayer_nif="X1234567L",
+            taxpayer_nif="X0001500M",
         ),
     )
     read = bridge.IvaRemoteStateCaptureRead(completion=completion, projection=projection, report=report)
@@ -236,7 +236,7 @@ def test_combined_capture_command_preserves_payload_lines_and_surface_outcomes(
         year_to=2024,
         target_year=2025,
         target_period="1T",
-        taxpayer_nif="X1234567L",
+        taxpayer_nif="X0001500M",
         output_root=_OUTPUT_ROOT,
     )
 

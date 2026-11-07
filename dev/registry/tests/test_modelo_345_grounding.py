@@ -9,8 +9,9 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.facts.payloads import EventFactPayload
 from cadrumo.domain.deadlines.errors import DeadlineValidationError
-from cadrumo.domain.deadlines.festivos import shift_deadline
+from cadrumo.domain.deadlines.festivos import HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID, shift_deadline
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.corpus_catalogue import verify_source_catalogue
@@ -108,9 +109,17 @@ def test_modelo_345_current_registry_uses_current_edition_sources_without_fake_c
             True,
             "sabado",
         )
-        # The bundled holiday calendars stop at the exercise that closes the current
-        # edition's window; the following year has no publication to shift against.
-        unpublished_year = _CURRENT_EDITION + 2
+        # The first year after the newest authored holiday calendar publication has
+        # nothing to shift against.
+        publications = authority.catalogues.facts.facts[HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID].variants
+        unpublished_year = (
+            max(
+                variant.payload.event_date.year
+                for variant in publications
+                if isinstance(variant.payload, EventFactPayload)
+            )
+            + 1
+        )
         with pytest.raises(
             DeadlineValidationError, match=f"holiday calendar publication for {unpublished_year}"
         ) as refusal:

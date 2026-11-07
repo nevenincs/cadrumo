@@ -26,6 +26,7 @@ use super::{
     state::{CheckMode, Observation, Reading},
 };
 use crate::error::Error;
+use loopback::{ExchangeFailure, ExchangePhase};
 use std::{fmt, io, process::ExitStatus, time::Duration};
 
 /// The local AI's one reading from its program's observation and version and each selected
@@ -53,10 +54,45 @@ pub fn reading(
 #[derive(Debug)]
 pub enum LocalAiError {
     Failed(FailureCategory),
-    /// The server did not come up. Its category is always `program_not_running`; the
-    /// cause is for logs and tests, and no surface words it.
-    ServerStart(ServerStartFailure),
+    /// The server did not come up or did not answer. Its category is always
+    /// `program_not_running`; the cause is for logs and tests, and no surface words it.
+    NotRunning(NotRunningCause),
     Engine(Error),
+}
+
+/// Why the local AI reads `program_not_running`: which start, wait or request ran out or
+/// broke. Locale-neutral facts for a diagnostic report or a test, so a host too busy to
+/// answer within a budget is not read as a program that is missing.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum NotRunningCause {
+    /// A start of the server failed.
+    Start(ServerStartFailure),
+    /// No server was running by the end of the setup's wait for the manager to start it.
+    /// `latest_start` is the kind of the manager's latest start when that start failed,
+    /// as its start-failure record keeps it; absent when no start has failed since the
+    /// last one that succeeded.
+    NoServerWithin {
+        budget: Duration,
+        latest_start: Option<StartFailureKind>,
+    },
+    /// A request to the running server failed before it answered.
+    Request {
+        call: ServerCall,
+        failure: ExchangeFailure,
+    },
+    /// The running server answered the model list with an unexpected HTTP status.
+    ListStatus { status: u16 },
+}
+
+/// The request to the running server that a [`NotRunningCause`] names.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ServerCall {
+    /// Listing the models the server holds.
+    ListModels,
+    /// Pulling a model through the server.
+    PullModel,
+    /// Generating one token to check a model loads.
+    Generate,
 }
 
 impl LocalAiError {
@@ -64,7 +100,7 @@ impl LocalAiError {
     pub fn category(&self) -> FailureCategory {
         match self {
             Self::Failed(category) => *category,
-            Self::ServerStart(_) => FailureCategory::ProgramNotRunning,
+            Self::NotRunning(_) => FailureCategory::ProgramNotRunning,
             Self::Engine(Error::Download(failure)) => failure.category,
             Self::Engine(Error::Cancelled) => FailureCategory::Cancelled,
             Self::Engine(Error::Io(error)) => super::transfer::file_failure(error).category,
@@ -92,7 +128,7 @@ impl fmt::Display for LocalAiError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Failed(category) => write!(f, "local AI failed: {category}"),
-            Self::ServerStart(cause) => write!(
+            Self::NotRunning(cause) => write!(
                 f,
                 "local AI failed: {}: {cause}",
                 FailureCategory::ProgramNotRunning
@@ -103,6 +139,56 @@ impl fmt::Display for LocalAiError {
 }
 
 impl std::error::Error for LocalAiError {}
+
+/// The kind of a failed server start without its detail: what the start-failure record
+/// keeps for an engine that waits in another process than the one that started.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum StartFailureKind {
+    Launch,
+    LogUnreadable,
+    Closed,
+    Silent,
+    VersionUnconfirmed,
+}
+
+impl StartFailureKind {
+    const ALL: [Self; 5] = [
+        Self::Launch,
+        Self::LogUnreadable,
+        Self::Closed,
+        Self::Silent,
+        Self::VersionUnconfirmed,
+    ];
+
+    /// A static identifier for this kind, as a diagnostic record keeps it.
+    pub fn reason(self) -> &'static str {
+        match self {
+            Self::Launch => "server_launch_failed",
+            Self::LogUnreadable => "server_log_unreadable",
+            Self::Closed => "server_closed_before_listening",
+            Self::Silent => "server_start_budget_expired",
+            Self::VersionUnconfirmed => "server_version_unconfirmed",
+        }
+    }
+
+    /// The kind a stored identifier names, when this build knows it.
+    pub fn from_reason(reason: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|kind| kind.reason() == reason)
+    }
+}
+
+impl ServerStartFailure {
+    /// This failure's kind, without its detail.
+    pub fn kind(&self) -> StartFailureKind {
+        match self {
+            Self::Launch { .. } => StartFailureKind::Launch,
+            Self::LogUnreadable => StartFailureKind::LogUnreadable,
+            Self::Closed { .. } => StartFailureKind::Closed,
+            Self::Silent { .. } => StartFailureKind::Silent,
+            Self::Version(_) => StartFailureKind::VersionUnconfirmed,
+        }
+    }
+}
 
 /// What a start of the local AI server was doing when it failed, and how. Locale-neutral
 /// facts for a diagnostic report or a test; a surface shows the category alone.
@@ -167,6 +253,87 @@ impl fmt::Display for ServerStartFailure {
             ),
             Self::Version(failure) => write!(f, "its version could not be confirmed: {failure}"),
         }
+    }
+}
+
+impl NotRunningCause {
+    /// A static identifier for this cause, as a diagnostic record keeps it.
+    pub fn reason(&self) -> &'static str {
+        match self {
+            Self::Start(failure) => failure.kind().reason(),
+            Self::NoServerWithin { .. } => "server_wait_expired",
+            Self::Request { call, failure } => match (call, failure.phase) {
+                (ServerCall::ListModels, ExchangePhase::Connect) => "model_list_connect_failed",
+                (ServerCall::ListModels, ExchangePhase::Exchange) => "model_list_request_failed",
+                (ServerCall::PullModel, ExchangePhase::Connect) => "model_pull_connect_failed",
+                (ServerCall::PullModel, ExchangePhase::Exchange) => "model_pull_request_failed",
+                (ServerCall::Generate, ExchangePhase::Connect) => "generate_connect_failed",
+                (ServerCall::Generate, ExchangePhase::Exchange) => "generate_request_failed",
+            },
+            Self::ListStatus { .. } => "model_list_status_unexpected",
+        }
+    }
+
+    /// The I/O error kind behind this cause, `TimedOut` when a request's bound ran out.
+    pub fn io_kind(&self) -> Option<io::ErrorKind> {
+        match self {
+            Self::Start(ServerStartFailure::Launch { kind, .. }) => Some(*kind),
+            Self::Request { failure, .. } => Some(failure.kind),
+            _ => None,
+        }
+    }
+
+    /// The kind of the failed start behind a wait that expired, when one was recorded.
+    pub fn latest_start(&self) -> Option<StartFailureKind> {
+        match self {
+            Self::NoServerWithin { latest_start, .. } => *latest_start,
+            _ => None,
+        }
+    }
+}
+
+impl fmt::Display for NotRunningCause {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Start(failure) => failure.fmt(f),
+            Self::NoServerWithin {
+                budget,
+                latest_start,
+            } => {
+                write!(
+                    f,
+                    "no server was running within the {}s wait",
+                    budget.as_secs()
+                )?;
+                match latest_start {
+                    Some(kind) => write!(f, "; the latest start failed: {}", kind.reason()),
+                    None => Ok(()),
+                }
+            }
+            Self::Request { call, failure } => write!(
+                f,
+                "the {call} request failed while {}: {} (bound {}s)",
+                match failure.phase {
+                    ExchangePhase::Connect => "connecting",
+                    ExchangePhase::Exchange => "exchanging",
+                },
+                failure.kind,
+                failure.bound.as_secs()
+            ),
+            Self::ListStatus { status } => {
+                write!(f, "the model list was answered with status {status}")
+            }
+        }
+    }
+}
+
+impl fmt::Display for ServerCall {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Self::ListModels => "model list",
+            Self::PullModel => "model pull",
+            Self::Generate => "generate",
+        })
     }
 }
 

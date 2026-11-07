@@ -354,7 +354,7 @@ def test_catalogue_create_accepts_every_regime_option_and_holds_the_totals_ident
         result = session.invoke_password(
             "app", "ledger", "invoice", "add",
             "--kind", "issued",
-            "--counterparty-nif", "B12345674",
+            "--counterparty-nif", "B00015016",
             "--counterparty-name", "Minorista Recargo SL",
             "--invoice-number", "2026-REG-001",
             "--invoice-date", "2026-05-04",
@@ -393,7 +393,7 @@ def test_catalogue_create_refuses_an_unknown_invoice_class_naming_the_accepted_s
         result = session.invoke_password(
             "app", "ledger", "invoice", "add",
             "--kind", "issued",
-            "--counterparty-nif", "B12345674",
+            "--counterparty-nif", "B00015016",
             "--counterparty-name", "Cliente SL",
             "--invoice-number", "2026-REG-002",
             "--invoice-date", "2026-05-04",
@@ -419,7 +419,7 @@ def test_catalogue_create_records_a_business_premises_lease(
         result = session.invoke_password(
             "app", "ledger", "invoice", "add",
             "--kind", "issued",
-            "--counterparty-nif", "B87654323",
+            "--counterparty-nif", "B00015057",
             "--counterparty-name", "Inquilino Local SL",
             "--invoice-number", "2026-ALQ-001",
             "--invoice-date", "2026-03-01",
@@ -453,7 +453,7 @@ def test_catalogue_create_refuses_a_situacion_outside_the_record_design(
         result = session.invoke_password(
             "app", "ledger", "invoice", "add",
             "--kind", "issued",
-            "--counterparty-nif", "B87654323",
+            "--counterparty-nif", "B00015057",
             "--counterparty-name", "Inquilino Local SL",
             "--invoice-number", "2026-ALQ-002",
             "--invoice-date", "2026-03-01",

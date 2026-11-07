@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.resolution import (
     ResolvedScalarFact,
     ScalarFactQuery,
@@ -16,6 +15,7 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
+from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
 
 from ..compiler.fact_loader import load_governed_facts
 from ..compiler.fact_validation import governed_fact_catalogue_failures
@@ -136,60 +136,38 @@ def test_equivalence_surcharge_rates_resolve_from_their_exact_boe_legal_window(
 
 
 @pytest.mark.parametrize(
-    ("fact_id", "before_first_window", "first_authored_date", "value", "source_ref"),
+    ("fact_id", "value"),
     (
-        (
-            "liva-art-161:recargo-rate-general",
-            date(1992, 12, 31),
-            date(1993, 1, 1),
-            Decimal("0.04"),
-            "boe-liva-art-161-1993-01-01",
-        ),
-        (
-            "liva-art-161:recargo-rate-reducido",
-            date(1992, 12, 31),
-            date(1993, 1, 1),
-            Decimal("0.01"),
-            "boe-liva-art-161-1993-01-01",
-        ),
-        (
-            "liva-art-161:recargo-rate-super-reducido",
-            date(1992, 12, 31),
-            date(1993, 1, 1),
-            Decimal("0.005"),
-            "boe-liva-art-161-1993-01-01",
-        ),
-        (
-            "liva-art-161:recargo-rate-tabaco",
-            date(1996, 12, 31),
-            date(1997, 1, 1),
-            Decimal("0.0175"),
-            "boe-liva-art-161-1997-01-01",
-        ),
+        ("liva-art-161:recargo-rate-general", Decimal("0.04")),
+        ("liva-art-161:recargo-rate-reducido", Decimal("0.01")),
+        ("liva-art-161:recargo-rate-super-reducido", Decimal("0.005")),
+        ("liva-art-161:recargo-rate-tabaco", Decimal("0.0175")),
     ),
 )
-def test_equivalence_surcharge_rates_do_not_precede_their_first_citable_window(
+def test_equivalence_surcharge_rates_before_their_first_window_read_it_as_a_backward_projection(
     fact_id: str,
-    before_first_window: date,
-    first_authored_date: date,
     value: Decimal,
-    source_ref: str,
 ) -> None:
-    """The first redaction states when it entered into force, and that is a legal boundary.
+    """A date always has a rate: before the first window, the first redaction answers, marked as projected."""
+    first = min(
+        variant.valid_from for variant in _catalogue().facts[fact_id].variants if variant.valid_from is not None
+    )
 
-    A variant declaring an explicit ``valid_from`` is not projected behind it:
-    the surcharge did not exist in that form the day before, so resolution
-    refuses rather than answering with a rate nothing authorises.
-    """
-    with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
-        _resolve(fact_id, before_first_window)
+    before = _resolve(fact_id, first - timedelta(days=1))
+    assert before.variant_id.endswith(first.isoformat())
+    assert before.payload.value == value
+    assert before.projection_direction is TemporalProjectionDirection.BACKWARD
+    assert before.projected_from_date == first
+    assert not before.published_on_date
 
-    resolved = _resolve(fact_id, first_authored_date)
+    resolved = _resolve(fact_id, first)
 
-    assert resolved.variant_id.endswith(first_authored_date.isoformat())
+    assert resolved.projection_direction is TemporalProjectionDirection.AUTHORED
+    assert resolved.published_on_date
+    assert resolved.variant_id.endswith(first.isoformat())
     assert resolved.payload.value == value
     assert resolved.payload.unit == "fraction"
-    assert resolved.source_refs == (source_ref,)
+    assert resolved.source_refs == (f"boe-liva-art-161-{first.isoformat()}",)
 
 
 def test_equivalence_surcharge_rates_are_authored() -> None:

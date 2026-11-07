@@ -165,7 +165,7 @@ async def _refuse_browser_launch(settings: Settings) -> BrowserSessionPort:
 
 @pytest.mark.parametrize(
     ("tax_id", "validity", "support"),
-    [(_TAX_ID, "2030-01-01", None), ("X1234567L", None, SecretStr("E12345678"))],
+    [(_TAX_ID, "2030-01-01", None), ("X0001500M", None, SecretStr("E12345678"))],
     ids=("dni", "nie"),
 )
 def test_the_live_lane_profile_reaches_the_provider_step_on_a_clean_storage_root(

@@ -58,7 +58,7 @@ pytestmark = [
 ]
 
 _PAID_ON = date(2025, 2, 28)
-_EMPLOYEE_NIF = "11111111H"
+_EMPLOYEE_NIF = "00001500M"
 _EMPLOYEE_NAME = "Empleada Sintetica"
 
 # One February 2025 payslip: 2400.00 gross, 15% IRPF (360.00), and the

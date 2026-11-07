@@ -98,7 +98,7 @@ def received_professional_invoice() -> Invoice:
             "invoice_number": "MONTHLY-PRO-001",
             "issued_at": date(YEAR, 3, 31),
             "counterparty_name": "Synthetic Recipient SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": subtotal,
             "iva_total": line.iva_amount,
@@ -199,7 +199,7 @@ def test_ledger_payroll_capture_refuses_a_monthly_111_filer_and_writes_nothing(
     assert stored == ()
 
 
-def test_ledger_capital_capture_refuses_a_large_company_that_no_123_schedule_covers(tmp_path: Path) -> None:
+def test_ledger_capital_capture_refuses_a_large_company_whose_123_is_monthly(tmp_path: Path) -> None:
     transaction = capital_payment()
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         with pytest.raises(WithholdingFilingCadenceError) as raised:
@@ -212,7 +212,7 @@ def test_ledger_capital_capture_refuses_a_large_company_that_no_123_schedule_cov
             )
         stored = _stored(profile.repository, "123", "2T", year=CAPITAL_YEAR)
 
-    _assert_quarter_refused(raised.value, modelo="123", quarter="2T", scheduled="", year=CAPITAL_YEAR)
+    _assert_quarter_refused(raised.value, modelo="123", quarter="2T", scheduled=_MONTHS, year=CAPITAL_YEAR)
     assert stored == ()
 
 
@@ -221,7 +221,7 @@ def test_ledger_capital_capture_refuses_a_large_company_that_no_123_schedule_cov
     [
         ("111", LARGE_COMPANY_FACTS, _MONTHS),
         ("111", PUBLIC_ADMINISTRATION_FACTS, _MONTHS),
-        ("123", LARGE_COMPANY_FACTS, ""),
+        ("123", LARGE_COMPANY_FACTS, _MONTHS),
     ],
     ids=["111-large-company", "111-public-administration", "123-large-company"],
 )

@@ -25,6 +25,7 @@ from ..installed_m303_evidence_journey import run_journey
 from ..installed_tui_capture_reopen import run_installed_tui_capture_reopen
 from ..multirate_cli_journey import run_iva_multirate_cli_journey
 from ..negative_4t_cli_journey import run_iva_negative_4t_cli_journey
+from .journey_year_support import newest_fully_authored_journey_year
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -172,7 +173,11 @@ def test_the_ordinary_journey_refuses_a_record_design_whose_export_header_it_can
     authority_root: Path, operation: PinnedAuthorityOperation, tmp_path: Path
 ) -> None:
     """A year with an authored 303 1T but another record design is refused, since its DP30300 positions are unheld."""
-    checked = require_journey_year(authority_root=authority_root, year=2025, coordinates=(("303", "1T"),))
+    checked = require_journey_year(
+        authority_root=authority_root,
+        year=newest_fully_authored_journey_year(authority_root),
+        coordinates=(("303", "1T"),),
+    )
     year = next(
         (
             candidate
@@ -195,12 +200,13 @@ def test_the_ordinary_journey_refuses_a_record_design_whose_export_header_it_can
 def test_a_supported_year_is_admitted_with_its_own_authored_revisions_and_calendar(
     authority_root: Path, operation: PinnedAuthorityOperation
 ) -> None:
-    """A year other than the default admits the annual coordinates and dates every value inside itself."""
+    """A year other than the installed tests' year admits the annual coordinates and dates every value inside itself."""
+    installed_year = newest_fully_authored_journey_year(authority_root)
     year = next(
         (
             candidate
             for candidate in _candidate_years(operation)
-            if candidate != 2025
+            if candidate != installed_year
             and all(_authored(operation, modelo, candidate, period) for modelo, period in _M390_COORDINATES)
         ),
         None,
@@ -223,8 +229,8 @@ def test_a_supported_year_is_admitted_with_its_own_authored_revisions_and_calend
 def test_the_year_the_installed_tests_run_clears_every_journey_gate(
     journey: str, authority_root: Path, tmp_path: Path
 ) -> None:
-    """2025 is admitted, so each journey goes on to create its roots and stops only at the absent product."""
+    """The installed tests' year is admitted, so each journey creates its roots and stops only at the absent product."""
     with pytest.raises(FileNotFoundError):
-        _JOURNEYS[journey](authority_root, tmp_path, 2025)
+        _JOURNEYS[journey](authority_root, tmp_path, newest_fully_authored_journey_year(authority_root))
 
     assert list(tmp_path.iterdir()) != []

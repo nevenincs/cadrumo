@@ -212,15 +212,25 @@ def _build_imputation_election(
     return choices, answered, cash
 
 
-def _build_residence_choices(
-    operation: PinnedAuthorityOperation,
-) -> tuple[tuple[WizardChoice, ...], str, WizardCondition, tuple[WizardChoice, ...]]:
-    from ...domain.calculations.registry.ccaa_catalogue import ccaa_choices
+def _fiscal_residency_token(operation: PinnedAuthorityOperation, *, requires_country: bool) -> str:
+    """Return the declared residency token selected by whether it needs a country of residence."""
     from ...domain.calculations.registry.renta_codes_catalogue import (
-        default_fiscal_residency,
         fiscal_residency_choices,
         fiscal_residency_requires_country,
     )
+
+    return next(
+        member.value
+        for member in fiscal_residency_choices(authority=operation)
+        if fiscal_residency_requires_country(member) is requires_country
+    )
+
+
+def _build_residence_choices(
+    operation: PinnedAuthorityOperation,
+) -> tuple[tuple[WizardChoice, ...], WizardCondition, WizardCondition, tuple[WizardChoice, ...]]:
+    from ...domain.calculations.registry.ccaa_catalogue import ccaa_choices
+    from ...domain.calculations.registry.renta_codes_catalogue import fiscal_residency_choices
 
     wizard_fiscal_residency_choices = tuple(
         _localized_choice(
@@ -230,20 +240,23 @@ def _build_residence_choices(
         )
         for member in fiscal_residency_choices(authority=operation)
     )
-    _fiscal_residency_default = default_fiscal_residency(authority=operation).value
+    # The CCAA de residencia and the representante-fiscal facts hang off the
+    # two residency categories, each named by whether it needs a country of
+    # residence rather than by which one the registry calls its default: an
+    # unanswered residency must leave both branches closed.
+    _resident_irpf = WizardCondition(
+        question_id="fiscal-residency",
+        equals=_fiscal_residency_token(operation, requires_country=False),
+    )
     _non_resident_irnr = WizardCondition(
         question_id="fiscal-residency",
-        equals=next(
-            member.value
-            for member in fiscal_residency_choices(authority=operation)
-            if fiscal_residency_requires_country(member)
-        ),
+        equals=_fiscal_residency_token(operation, requires_country=True),
     )
     wizard_ccaa_choices = tuple(
         _localized_choice(member.value, f"wizard.setup.residence.ccaa.choices.{member.value}.label")
         for member in ccaa_choices(authority=operation)
     )
-    return wizard_fiscal_residency_choices, _fiscal_residency_default, _non_resident_irnr, wizard_ccaa_choices
+    return wizard_fiscal_residency_choices, _resident_irpf, _non_resident_irnr, wizard_ccaa_choices
 
 
 def _build_profile_and_personal_choices(
@@ -517,7 +530,7 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
     ) = _build_imputation_election(operation)
     (
         wizard_fiscal_residency_choices,
-        _fiscal_residency_default,
+        _resident_irpf,
         _non_resident_irnr,
         wizard_ccaa_choices,
     ) = _build_residence_choices(operation)
@@ -551,7 +564,7 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
     )
 
     _residence_section = build_residence_section(
-        _fiscal_residency_default,
+        _resident_irpf,
         _non_resident_irnr,
         default_ccaa,
         wizard_ccaa_choices,

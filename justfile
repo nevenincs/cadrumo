@@ -399,9 +399,10 @@ check-operation-contract-manifest:
 # Every family is declared once in dev/fixture_projections/registry.py. A digest
 # stamp records the content each family's outputs were produced from, so
 # freshness never reads a modification time. Test processes never seed. The
-# window's Modelo envelopes are generated into build/<preset>/fixtures/window,
-# which the frontend resolves through the @fixtures alias and CMake hands to the
-# Rust tests; they are never committed.
+# window projections are generated into build/<preset>/fixtures/window of the
+# host's own configure preset, the same directory that preset's CMake build
+# seeds, binds to the frontend's @fixtures alias and hands to the Rust tests;
+# they are never committed.
 
 [doc('Produce the fixture projections that are not fresh, adopting unstamped outputs their check proves; FAMILY narrows to one.')]
 [group('generate')]
@@ -806,7 +807,8 @@ check-frontend CONFIGURATION="Debug": setup-desktop-frontend fixtures-seed (_nat
 # do nothing on a current tree.
 [doc('Install the frontend packages, seed the fixture projections, then run the desktop frontend checks and Playwright specs through CMake.')]
 [group('test')]
-test-frontend CONFIGURATION="Debug": setup-desktop-frontend fixtures-seed (_native-configure CONFIGURATION)
+test-frontend CONFIGURATION="Debug": registry-publish-authority-if-authority-stale setup-desktop-frontend fixtures-seed (_native-configure CONFIGURATION)
+    cmake --preset {{native_preset}} -DCADRUMO_DESKTOP_FRONTEND_TEST_WORKERS={{frontend_test_workers}}
     cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target desktop-frontend-check
     cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target desktop-frontend-test
 
@@ -1015,6 +1017,8 @@ tui-harness *ARGS:
 # ── Testing ──────────────────────────────────────────────────────────────────
 
 pytest_workers := env_var_or_default("CADRUMO_PYTEST_WORKERS", "auto")
+# Playwright takes a count, not "auto", and its default saturates a shared host.
+frontend_test_workers := env_var_or_default("CADRUMO_FRONTEND_TEST_WORKERS", "4")
 
 # The dedicated harness verdict's members: the ONE declaration of which proofs
 # own a child verification pool. Each path is written
@@ -1185,7 +1189,7 @@ _test-registry-calculations-parallel:
 # they read first. A current family is left unchanged.
 [private]
 _test-registry-seed:
-    @uv run --no-sync python -m dev.fixture_projections seed assets-served-words
+    @uv run --no-sync python -m dev.fixture_projections seed assets-served-words desktop-year-authority assets-register
 
 [private]
 _test-registry-conformance: _test-registry-seed
@@ -1194,7 +1198,7 @@ _test-registry-conformance: _test-registry-seed
 [doc('Collect and load the registry first, then run calculation and conformance populations as one normalized signal.')]
 [group('test')]
 [no-exit-message]
-test-registry:
+test-registry: registry-publish-authority-if-authority-stale setup-desktop-frontend
     @uv run --no-sync python -m dev.test_runs.command --family test-runs --label test-registry --signal pytest-summary --expected-lane _test-registry-collect --expected-lane _test-registry-load --expected-lane _test-registry-calculations-parallel --expected-lane _test-registry-conformance -- uv run --no-sync python -m dev.test_runs lanes --json-events --no-evidence --preflight-count 2 --lane-kind _test-registry-collect=collection --lane-kind _test-registry-load=load _test-registry-collect _test-registry-load _test-registry-calculations-parallel _test-registry-conformance
 
 [doc('Run the tooling-owned test-policy, repository-contract, and CI-contract populations.')]
@@ -1376,7 +1380,7 @@ test-gate changed_files="":
 # collection and artifact-backed runtime-load preflights before execution.
 [doc('Run the registry conformance suite (slow: walks every bundled revision).')]
 [group('test')]
-test-registry-conformance:
+test-registry-conformance: _test-registry-seed
     @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not resident_service and not external_tool and not os_keychain and not windows_only and not private_ingest_corpus" dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/form_layout/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
 
 [doc('Run the committed cli-sequence goldens gate for supplied changed paths or the full tree; reuses a recorded clean verdict.')]
@@ -1607,6 +1611,11 @@ audit-complexity:
 [group('check')]
 complexity-gate:
     @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label complexity-gate -- uv run --no-sync python -m dev.audit.complexity --gate
+
+[doc('Reject any TypeScript module in the repository over the module bound in physical lines; read-only and blocking.')]
+[group('check')]
+check-module-size:
+    @uv run --no-sync python -m dev.quality.typescript_module_size
 
 [doc('Reject rank E/F callables and modules over the line limit in src test files; dev test files are reported only. Slow: about two minutes.')]
 [group('check')]

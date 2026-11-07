@@ -60,7 +60,7 @@ def _administrador_observation() -> RetencionObservation:
     return RetencionObservation(
         source_kind=BindingSourceKind.LEDGER_TRANSACTION,
         source_object_id="administrador-payment-001",
-        perceptor_nif="87654321X",
+        perceptor_nif="X0001502F",
         perceptor_name="Administrador Ejemplo",
         scheme=RetencionScheme("rendimientos_trabajo_administrador"),
         taxable_base=Decimal("2000.00"),
@@ -74,7 +74,7 @@ def _administrador_wrong_rate_observation() -> RetencionObservation:
     return RetencionObservation(
         source_kind=BindingSourceKind.LEDGER_TRANSACTION,
         source_object_id="administrador-payment-002",
-        perceptor_nif="87654321X",
+        perceptor_nif="X0001502F",
         perceptor_name="Administrador Ejemplo",
         scheme=RetencionScheme("rendimientos_trabajo_administrador"),
         taxable_base=Decimal("2000.00"),
@@ -186,4 +186,4 @@ def test_m111_administrador_wrong_rate_surfaces_calculate_advisory(
     assert values["03"] == Decimal("500.00")
     mismatch = [d for d in result.source_diagnostics if d.reason == "administrador_retencion_rate_mismatch"]
     assert len(mismatch) == 1
-    assert "87654321X" in mismatch[0].message
+    assert "X0001502F" in mismatch[0].message

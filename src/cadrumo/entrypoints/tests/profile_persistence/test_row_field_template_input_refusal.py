@@ -100,7 +100,7 @@ def _seed_lease_withholding(work_unit: WorkUnit) -> None:
             RetencionObservation(
                 source_kind=BindingSourceKind.LEDGER_TRANSACTION,
                 source_object_id="retencion-lease-1t",
-                perceptor_nif="B12345674",
+                perceptor_nif="B00015016",
                 perceptor_name="Arrendador Ejemplo SL",
                 scheme=RetencionScheme("arrendamiento_urbano"),
                 taxable_base=Decimal("1000.00"),

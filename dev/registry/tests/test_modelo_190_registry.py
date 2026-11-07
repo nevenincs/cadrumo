@@ -386,10 +386,10 @@ def test_modelo_190_calculation_aggregates_modelo_111_quarterly_observations() -
     expected_retenciones_total = sum(source_values[_M111_RETENCIONES_TOTAL_CASILLA], Decimal("0"))
     with bundled_indexed_authority().operation() as operation:
         observations = (
-            _withholding_observation("m190-1", "11111111H", "A", authority=operation),
-            _withholding_observation("m190-1-repeat", "11111111H", "A", authority=operation),
-            _withholding_observation("m190-2", "11111111H", "G", authority=operation),
-            _withholding_observation("m190-3", "22222222J", "A", authority=operation),
+            _withholding_observation("m190-1", "00001500M", "A", authority=operation),
+            _withholding_observation("m190-1-repeat", "00001500M", "A", authority=operation),
+            _withholding_observation("m190-2", "00001500M", "G", authority=operation),
+            _withholding_observation("m190-3", "00001501Y", "A", authority=operation),
         )
     withholding_values = resolve_withholding_binding_values(snapshot.revision, observations)
     assert withholding_values[_M190_PERCEPCIONES_BINDING] == Decimal("3")
@@ -488,9 +488,9 @@ def test_modelo_190_totals_sum_the_type_2_records_where_no_relation_is_grounded(
                 )
                 for index, (nif, clave, percibido, retencion) in enumerate(
                     (
-                        ("11111111H", "A", "1000.00", "150.00"),
-                        ("11111111H", "G", "2500.50", "375.08"),
-                        ("22222222J", "A", "730.25", "109.54"),
+                        ("00001500M", "A", "1000.00", "150.00"),
+                        ("00001500M", "G", "2500.50", "375.08"),
+                        ("00001501Y", "A", "730.25", "109.54"),
                     )
                 )
             )

@@ -1892,8 +1892,10 @@ defaults to `ON`.
 | Target | Operation |
 | --- | --- |
 | `desktop-frontend-install` | Validate checkout-owned dependencies against the lockfile without installing, deleting or locking the source tree |
-| `desktop-frontend-check` | Type check, lint and `prettier --check` of the frontend, scripts and tests |
-| `desktop-frontend-build`, `desktop-frontend-test` | Regenerate chrome strings and palette, then build the frontend or run its browser tests |
+| `desktop-window-fixtures` | Seed the generated window projections the frontend imports into this build's `fixtures/window` and record them in its `.window-projections.json`, through `python -m dev.fixture_projections seed --window`; reruns only when a file named in its depfile changes or `desktop-window-inputs` rewrites its listing, and refuses without a published authority or the frontend packages |
+| `desktop-window-inputs` | Run on every build and rewrite `desktop/vite-cache/window-inputs.listing` with the window projections' input files only when that set changes, so a file added beside the inputs reruns the seed without a directory dependency |
+| `desktop-frontend-check` | Seed the window projections, then type check against them, lint and `prettier --check` the frontend, scripts and tests |
+| `desktop-frontend-build`, `desktop-frontend-test` | Regenerate chrome strings and palette and seed the window projections, then build the frontend or run its browser tests |
 | `desktop-frontend-generated` | Write the chrome strings and the palette into the binary directory (`desktop/frontend-generated`), never into the source tree: with `npm ci`, all that developing the frontend in a browser needs (`native/desktop/frontend/README.md`) |
 | `desktop-frontend-dev` | Regenerate chrome strings and palette, then serve the development display from this build until stopped (`just dev`) |
 | `user_docs` | Build and stage the user documentation, as above |

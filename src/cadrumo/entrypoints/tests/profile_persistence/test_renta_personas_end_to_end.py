@@ -431,7 +431,7 @@ def test_a_retention_paid_after_the_year_leaves_the_fourth_quarter_but_credits_0
 _PAYER_SIDE_111 = {"1T": _D("150.00"), "2T": _D("225.00"), "3T": _D("75.00"), "4T": _D("300.00")}
 _PAYER_SIDE_115 = {"1T": _D("190.00"), "2T": _D("190.00"), "3T": _D("190.00"), "4T": _D("190.00")}
 _FREELANCER = "B00010165"
-_LANDLORD = "B12345674"
+_LANDLORD = "B00015016"
 
 
 def _seed_payer_side_store(secure_objects: SecureObjectRepository) -> None:

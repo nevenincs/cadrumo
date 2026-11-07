@@ -52,7 +52,7 @@ def _invoice(
     retention_amount: str | None = "150.00",
     retention_rate: str | None = "0.15",
     country: str = "ES",
-    tax_id: str = "B12345674",
+    tax_id: str = "B00015016",
     currency: str = "EUR",
     fx_rate: str | None = None,
     category: IvaCategory = _DEFAULT_IVA_CATEGORY,

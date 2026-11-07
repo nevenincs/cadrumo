@@ -101,7 +101,7 @@ def _issued(*, linked: tuple[str, ...], status: PaymentStatus) -> Invoice:
             "invoice_number": "F-1",
             "issued_at": _ACCRUED,
             "counterparty_name": "Cliente SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "bucket_id": _BUCKET,
             "base_total": _BASE,

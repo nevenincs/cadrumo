@@ -52,7 +52,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("p
 # clean against the manifest this pipeline emitted. That is the seam no test
 # covered before: every other proof supplies a hand-written sidecar.
 _SANITISED_FIXTURE_PDF = FIXTURES_DIR / "justificantes" / "100" / "2022-0A.pdf"
-_REAL_NIE_CANARY = "Y1234567X"
+_REAL_NIE_CANARY = "Y0001500L"
 _REAL_NAME_CANARY = "PERSONA PRUEBA UNO"
 _SYNTHETIC_NIE = "Y0001006P"
 _SYNTHETIC_NAME = "APELLIDO APELLIDO NOMBRE"
@@ -72,7 +72,7 @@ def _build_real_world_like_pdf() -> bytes:
     pdf = pikepdf.Pdf.new()
     pdf.add_blank_page(page_size=(612, 792))
     pdf.pages[0].contents_add(
-        b"BT /F1 12 Tf 100 700 Td (Y1234567X) Tj ET\nBT /F1 12 Tf 100 680 Td (PERSONA PRUEBA UNO) Tj ET\n",
+        b"BT /F1 12 Tf 100 700 Td (Y0001500L) Tj ET\nBT /F1 12 Tf 100 680 Td (PERSONA PRUEBA UNO) Tj ET\n",
     )
     pdf.docinfo["/Title"] = pikepdf.String(f"Justificante AEAT {_REAL_NIE_CANARY}")
     pdf.docinfo["/Author"] = pikepdf.String(_REAL_NAME_CANARY)

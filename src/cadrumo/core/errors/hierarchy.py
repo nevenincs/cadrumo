@@ -191,7 +191,7 @@ class CadrumoError(Exception):
         renders a zero-length ``args`` and a one-element ``args`` of ``""``
         identically), so this changes only the shape of ``.args``, not any
         rendered text. That shape matters to a subclass such as
-        :class:`~entrypoints.cli._tty.NonTtyRefusedError`, which constructs
+        :class:`~entrypoints.cli.tty.NonTtyRefusedError`, which constructs
         with neither argument specifically so ``args`` stays empty and the CLI
         renderer's ``error.args and error.args[0]`` check
         (:mod:`core.errors.error_codes`) falls through to the registry

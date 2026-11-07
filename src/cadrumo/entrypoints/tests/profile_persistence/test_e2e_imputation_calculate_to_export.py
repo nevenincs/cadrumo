@@ -111,6 +111,7 @@ _M130_NEGATIVE_CARRIED: CasillaId = validated_casilla_id("saldo-negativo-fin-per
 _M130_QUARTER_PAYMENT: CasillaId = validated_casilla_id("07")
 _CASH_ELECTION_CASILLA: CasillaId = validated_casilla_id("0169")
 _CASH_ELECTION_XML_TAG = "E1ITEMP"
+_MODALIDAD_XML_TAG = "E1MED"
 _M100_RESULT_CASILLA: CasillaId = validated_casilla_id("0670")
 # An instant inside the 2024 annual return's filing window, so the window is not what refuses a split.
 _WITHIN_THE_FILING_WINDOW = datetime(2025, 6, 2, 12, 0, tzinfo=UTC)
@@ -128,7 +129,7 @@ def bucket_id() -> str:
     return BUCKET_ID
 
 
-def _seed_profile(criterion: str) -> None:
+def _seed_profile(criterion: str, *stated: UserProfileFact) -> None:
 
     dated = tuple(
         UserProfileFact.model_validate(
@@ -154,6 +155,7 @@ def _seed_profile(criterion: str) -> None:
                     UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
                     *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
                     *dated,
+                    *stated,
                 )
             ),
             created_at=T0,
@@ -280,8 +282,12 @@ def _settlement(payload: bytes) -> dict[str, str | None]:
 
 
 def _election_marks(payload: bytes) -> list[str | None]:
+    return _tag_texts(payload, _CASH_ELECTION_XML_TAG)
+
+
+def _tag_texts(payload: bytes, tag: str) -> list[str | None]:
     root = DefusedElementTree.fromstring(payload)
-    return [element.text for element in root.iter() if element.tag.rsplit("}", 1)[-1] == _CASH_ELECTION_XML_TAG]
+    return [element.text for element in root.iter() if element.tag.rsplit("}", 1)[-1] == tag]
 
 
 @pytest.mark.parametrize(
@@ -424,3 +430,35 @@ def test_a_split_of_an_amount_whose_second_instalment_is_nothing_is_refused_with
     assert split.value.context["reason"] == "second_instalment_nothing", split.value.context["reason"]
     assert not (tmp_path / "split.xml").exists()
     assert _settlement(payload) == {"TIPODECLARACION": "I", "ING_IMPORTE": "0.01"}
+
+
+@pytest.mark.parametrize(
+    ("regime", "clave"),
+    [("directa_normal", "N"), ("directa_simplificada", "S")],
+)
+def test_m100_states_the_direct_estimation_modality_as_its_design_clave_through_export(
+    secure_objects: SecureObjectRepository, tmp_path: Path, regime: str, clave: str
+) -> None:
+    """Casilla 0168 (E1MED, tipo_OpcionesSyN) carries N for normal and S for simplificada.
+
+    The box is a text clave in the official design, not a yes/no flag, so the
+    exported record must hold the letter the design defines for the declared
+    regime. Before the clave was bound, the box reached the record empty.
+    """
+    _seed_profile(DEVENGO, UserProfileFact(path="irpf.estimation_regime", value=regime))
+    persist_ledger(secure_objects)
+    seed_prior_year_m100(secure_objects)
+    for period, result in OFFICIAL_M130_C19.items():
+        import_official_m130_result_observation(secure_objects, period=period, c19_value=result)
+    seed_absence_attestation(
+        operation=published_authority_operation(),
+        ejercicio=YEAR,
+        income_class=RetencionSoportadaClase.ARRENDAMIENTO_INMUEBLE_URBANO_ACTIVIDAD,
+    )
+
+    annual = _annual(secure_objects)
+    register_refund_account(secure_objects)
+    payload = verify_and_export(annual, secure_objects, tmp_path / f"modelo-100-{regime}.xml")
+
+    stated = _tag_texts(payload, _MODALIDAD_XML_TAG)
+    assert stated == [clave], stated

@@ -34,7 +34,7 @@ from .dependency_operation_gating_support import OperationRuntime, operation_run
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 #: Two documents with figures no label rule reads, so each needs the text model.
-_DOCUMENTS = (("first.pdf", ("B1234567X B17283946 766,30",)), ("second.pdf", ("B7654321X B17283946 412,10",)))
+_DOCUMENTS = (("first.pdf", ("B1234567X B00015024 766,30",)), ("second.pdf", ("B7654321X B00015024 412,10",)))
 
 
 def _settle_batch(runtime: OperationRuntime) -> LedgerEvidenceBatchProjection:

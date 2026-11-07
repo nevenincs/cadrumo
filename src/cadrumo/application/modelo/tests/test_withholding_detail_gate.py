@@ -167,7 +167,7 @@ def _professional_invoice(
             "invoice_number": number,
             "issued_at": issued_at,
             "counterparty_name": "Asesoría Profesional SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": subtotal,
             "iva_total": line.iva_amount,

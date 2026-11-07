@@ -347,7 +347,7 @@ def test_a_reader_adapter_storage_failure_surfaces_as_a_persistence_degradation(
         raise failure
 
     with pytest.raises(PersistenceDegradationError) as raised:
-        degrade_storage_failure("aeat_sync_status_synthetic", reader)("B12345674")
+        degrade_storage_failure("aeat_sync_status_synthetic", reader)("B00015016")
 
     assert raised.value.operation == "aeat_sync_status_synthetic"
     assert raised.value.__cause__ is failure
@@ -360,10 +360,10 @@ def test_a_reader_refusal_and_its_value_pass_through_the_storage_translation_unc
         raise refusal
 
     with pytest.raises(RefusalError) as raised:
-        degrade_storage_failure("aeat_sync_status_synthetic", refusing)("B12345674")
+        degrade_storage_failure("aeat_sync_status_synthetic", refusing)("B00015016")
     assert raised.value is refusal
 
-    assert degrade_storage_failure("aeat_sync_status_synthetic", lambda nif: (nif,))("B12345674") == ("B12345674",)
+    assert degrade_storage_failure("aeat_sync_status_synthetic", lambda nif: (nif,))("B00015016") == ("B00015016",)
 
 
 @pytest.mark.parametrize(

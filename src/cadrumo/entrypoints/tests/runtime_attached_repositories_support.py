@@ -258,7 +258,7 @@ def invoice(label: str) -> Invoice:
         kind=InvoiceKind.ISSUED,
         invoice_number=f"INV-{label.upper()}",
         issued_at=date(2026, 4, 1),
-        counterparty_tax_id="B12345674",
+        counterparty_tax_id="B00015016",
         currency="EUR",
         grand_total=Decimal("121.00"),
     )
@@ -268,7 +268,7 @@ def invoice(label: str) -> Invoice:
         invoice_number=f"INV-{label.upper()}",
         issued_at=date(2026, 4, 1),
         counterparty_name="Cliente SL",
-        counterparty_tax_id="B12345674",
+        counterparty_tax_id="B00015016",
         counterparty_country="ES",
         base_total=Decimal("100.00"),
         iva_total=Decimal("21.00"),

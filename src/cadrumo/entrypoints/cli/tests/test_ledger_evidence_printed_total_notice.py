@@ -22,7 +22,7 @@ _MISMATCH_NOTICE_CODE = "ledger.evidence.confirm.printed_total_mismatch"
 
 def _invoice() -> CatalogueInvoiceSnapshot:
     """Build a complete snapshot whose recorded total stays canonical."""
-    return received_invoice_snapshot(counterparty_tax_id="ESB12345674")
+    return received_invoice_snapshot(counterparty_tax_id="ESB00015016")
 
 
 def _confirmation(*, printed_total_discrepancy: bool) -> InvoiceConfirmationProjectionV1:

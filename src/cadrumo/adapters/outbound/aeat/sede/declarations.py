@@ -262,7 +262,7 @@ def filed_register_modelo_options(html: str) -> tuple[str, ...]:
 
     The shape is the one the shipped selection path already matches against the
     live form: a modelo option reads ``"<code> - <description>"``, which is why
-    :func:`_drive_search` selects on the code parsed from it. Requiring the dash is
+    :func:`drive_search` selects on the code parsed from it. Requiring the dash is
     what keeps this disjoint from an ejercicio option, which is a bare year.
 
     Duplicates are collapsed in first-seen order, so the result is what AEAT
@@ -298,7 +298,7 @@ def filed_register_ejercicio_options(html: str) -> tuple[int, ...]:
     """Return the ejercicios the register's ejercicio combobox offers, newest first.
 
     An ejercicio option is a bare four-digit year, which is what
-    :func:`_drive_search` selects on. Unlike the modelo list, an EMPTY result is
+    :func:`drive_search` selects on. Unlike the modelo list, an EMPTY result is
     a legitimate answer: the register genuinely offers no ejercicio for a modelo
     the authenticated taxpayer has nothing under, and that is one of the two
     readings this signal cannot distinguish between. So this returns ``()``
@@ -409,7 +409,7 @@ class DeclaracionesRegisterSession:
 
         Raises:
             SedeParseError: When the grid declares more records than it rendered,
-                per :func:`_register_rows_from_snapshot`.
+                per :func:`register_rows_from_snapshot`.
         """
         if not await drive_search(self._page, modelo=modelo, ejercicio=ejercicio):
             log.info(
@@ -626,7 +626,7 @@ async def walk_declarations_register(
 
     Raises:
         SedeParseError: When the grid declares more records than it rendered,
-            per :func:`_register_rows_from_snapshot`.
+            per :func:`register_rows_from_snapshot`.
     """
     async with _open_register_page(session, settings=settings, playwright=playwright) as (
         page,
@@ -827,7 +827,7 @@ async def _open_combobox(
 ) -> None:
     """Click open the combobox rendered after ``label_text``.
 
-    Extracted from :func:`_select_combobox_value` so the availability reader
+    Extracted from :func:`select_combobox_value` so the availability reader
     opens a combobox through the same locator and the same read-action assertion
     that every selection already uses, rather than growing a parallel one.
 

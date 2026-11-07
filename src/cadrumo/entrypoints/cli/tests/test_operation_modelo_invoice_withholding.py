@@ -310,7 +310,7 @@ def test_aggregate_cli_invoice_route_uses_worker_summary_without_ambient_authori
     result = cast(ModeloAggregateResult, rendered["result"])
     assert result.withholding_window is not None
     assert result.withholding_window.generation == 1
-    assert "B12345674" not in result.model_dump_json()
+    assert "B00015016" not in result.model_dump_json()
     assert "150.00" not in result.model_dump_json()
     assert rendered["lines"] == [
         "operation\tmodelo.aggregate",

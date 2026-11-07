@@ -49,7 +49,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 _DESCENDANT_LIMIT = 15
 _ADULT_NIF = "12345678Z"
 _WRONG_LETTER_NIF = "12345678A"
-_FOREIGN_NIF = "X1234567L"
+_FOREIGN_NIF = "X0001500M"
 _ENTITY_NIF = "B00010157"
 
 

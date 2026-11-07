@@ -11,11 +11,13 @@ ownership = "authored"
 
 [[fact.variants.source_citations]]
 source_ref = "aeat-dr-100-2025-xsd"
-required_text = ["tipo_EstadoCivil", "1 = SOLTERO", "4 = SEPARADO / DIVORCIADO", "H = HOMBRE", "tipo_GradoDiscapacidad", "tipo_CCAA", "2 = DECLARANTE", "TIPOTRIBUTACION"]
+required_text = ["tipo_EstadoCivil", "1 = SOLTERO", "4 = SEPARADO / DIVORCIADO", "H = HOMBRE", "tipo_GradoDiscapacidad", "tipo_CCAA", "2 = DECLARANTE", "TIPOTRIBUTACION", "tipo_OpcionesSyN"]
 [[fact.variants.source_citations]]
 source_ref = "aeat-dr-100-2025-dictionary"
-required_text = ["ECIVIL", "TIPOTRIBUTACION"]
+required_text = ["ECIVIL", "TIPOTRIBUTACION", "E1MED"]
 
+# The estimation_directa_modalidad entries are casilla 0168's clave (E1MED, tipo_OpcionesSyN:
+# N normal, S simplificada), keyed by the estimation-regime token that selects each.
 # The ccaa entries are the tipo_CCAA numbering of the Modelo 100 record design, not a
 # general CCAA numbering: Modelo 763 and the INE comunidad codes differ. Ceuta, Melilla
 # and no residente are declared by the design but carry no common-regime CCAA token, and
@@ -58,4 +60,6 @@ entries = [
   { key = "holder.hijo2", value = "5" },
   { key = "holder.hijo3", value = "6" },
   { key = "holder.hijo4", value = "7" },
+  { key = "estimation_directa_modalidad.directa_normal", value = "N" },
+  { key = "estimation_directa_modalidad.directa_simplificada", value = "S" },
 ]

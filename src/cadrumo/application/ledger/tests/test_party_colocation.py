@@ -58,7 +58,7 @@ _PAGE: Final = "\n".join(
         _SUPPLIER_HEADING,
         "Calle Sin Nombre 0",
         "28901 Getafe",
-        "NIF B12345674",
+        "NIF B00015016",
         "Emitida 2026-06-11",
         _CUSTOMER_HEADING,
         "Nordeste Estudio Creativo, S.L.",
@@ -104,7 +104,7 @@ def _envelope(field: str, anchor: str, *, role_evidence: str | None = None) -> F
 def _draft(*, supplier_postal: str, customer_postal: str) -> InvoiceDraft:
     """Return the draft a reader proposes, role evidence quoted for identities only."""
     return InvoiceDraft(
-        supplier_tax_id="B12345674",
+        supplier_tax_id="B00015016",
         supplier_name=_SUPPLIER_HEADING,
         supplier_postal_code=supplier_postal,
         customer_tax_id="B44444444",
@@ -112,7 +112,7 @@ def _draft(*, supplier_postal: str, customer_postal: str) -> InvoiceDraft:
         customer_postal_code=customer_postal,
         taxable_base=Decimal("766.30"),
         provenance=(
-            _envelope("supplier_tax_id", "B12345674", role_evidence=_SUPPLIER_HEADING),
+            _envelope("supplier_tax_id", "B00015016", role_evidence=_SUPPLIER_HEADING),
             _envelope("customer_tax_id", "B44444444", role_evidence=_CUSTOMER_HEADING),
             _envelope("supplier_postal_code", supplier_postal),
             _envelope("customer_postal_code", customer_postal),
@@ -325,7 +325,7 @@ _TWO_COLUMN_PAGE: Final = "\n".join(
         f"{_SUPPLIER_HEADING}  {_CUSTOMER_HEADING}",
         "Calle Sin Nombre 0  Poligono Industrial Asipo, Nave 27",
         "28901 Getafe  35001 Las Palmas",
-        "NIF B12345674  NIF/CIF B44444444",
+        "NIF B00015016  NIF/CIF B44444444",
         "Base imponible 766,30",
         "TOTAL 890,00 EUR",
     ),

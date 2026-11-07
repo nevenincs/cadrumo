@@ -754,7 +754,10 @@ def _draft_review_fingerprint(draft: ModeloDraft) -> str:
 
 
 def transaction_catalogue_fingerprint(catalogue: TransactionCatalogue) -> str:
-    """Fingerprint the transaction catalogue by hashing its normalized transactions by id."""
+    """Fingerprint the transaction catalogue by hashing its normalized transactions by id.
+
+    ``catalogue`` is a :class:`TransactionCatalogue`.
+    """
     payload = [
         _normalize_transaction(transaction)
         for transaction in sorted(catalogue.values(), key=lambda item: item.transaction_id)
@@ -769,7 +772,9 @@ def invoice_catalogue_fingerprint(catalogue: InvoiceCatalogue) -> str:
     volatile timestamp fields, so a canonical JSON dump of every invoice (sorted
     by ``invoice_id``) captures the full calculation-relevant content and changes
     whenever any invoice is added, removed, or edited. An empty catalogue yields a
-    stable empty-list digest. Mirrors :func:`_transaction_catalogue_fingerprint`.
+    stable empty-list digest. Mirrors :func:`transaction_catalogue_fingerprint`.
+
+    ``catalogue`` is a :class:`InvoiceCatalogue`.
     """
     payload = [
         invoice.model_dump(mode="json") for invoice in sorted(catalogue.values(), key=lambda item: item.invoice_id)

@@ -325,7 +325,7 @@ def test_calculate_modelo_revision_precedence_keeps_caller_above_borrador_and_th
         operation=operation,
         taxpayer_tax_id="12345678Z",
         ejercicio=_YEAR,
-        payer_tax_id="B12345674",
+        payer_tax_id="B00015016",
         income_class=RetencionSoportadaClase.TRABAJO,
         retencion=Decimal("1.00"),
     )

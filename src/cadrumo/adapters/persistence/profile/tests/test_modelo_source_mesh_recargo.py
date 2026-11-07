@@ -101,7 +101,7 @@ def _recargo_invoice(invoice_number: str, *, issued_at: date, taxable_base: Deci
             "invoice_number": invoice_number,
             "issued_at": issued_at,
             "counterparty_name": "Minorista Recargo SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": taxable_base,
             "iva_total": iva_amount,

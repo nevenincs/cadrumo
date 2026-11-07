@@ -95,7 +95,7 @@ def _invoice(*, category: IvaCategory, kind: InvoiceKind) -> Invoice:
             "invoice_number": "F-2024-0122",
             "issued_at": _DEVENGO.isoformat(),
             "counterparty_name": "Constructora Peninsular SL",
-            "counterparty_tax_id": "ESB12345674",
+            "counterparty_tax_id": "ESB00015016",
             "counterparty_country": "ES",
             "counterparty_identification_state": "es",
             "base_total": format(_BASE, "f"),

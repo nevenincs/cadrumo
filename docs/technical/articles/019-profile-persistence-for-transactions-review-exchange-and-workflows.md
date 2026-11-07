@@ -58,6 +58,6 @@ All 19 assigned files were read in full across pages 1–9, including the split 
 - withholding_observation_workflow.py (548 lines) (`src/cadrumo/adapters/persistence/profile/withholding_observation_workflow.py`)
 - workflow_gate.py (93 lines) (`src/cadrumo/adapters/persistence/profile/workflow_gate.py`)
 - __init__.py (51 lines) (`src/cadrumo/adapters/persistence/storage/__init__.py`)
-- _kdf_salt.py (28 lines) (`src/cadrumo/adapters/persistence/storage/kdf_salt.py`)
-- _profile_custody_carry.py (547 lines) (`src/cadrumo/adapters/persistence/storage/profile_custody_carry.py`)
+- kdf_salt.py (28 lines) (`src/cadrumo/adapters/persistence/storage/kdf_salt.py`)
+- profile_custody_carry.py (547 lines) (`src/cadrumo/adapters/persistence/storage/profile_custody_carry.py`)
 <!-- /preserved:article -->

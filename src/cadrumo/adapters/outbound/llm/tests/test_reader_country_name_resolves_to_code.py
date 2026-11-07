@@ -30,7 +30,7 @@ from ..invoice_field_grounding import ground_extracted_fields, parse_invoice_ext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_CIF = "B12345674"
+_CIF = "B00015016"
 _CUSTOMER_NIF = "B00010157"
 
 

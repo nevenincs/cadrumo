@@ -50,8 +50,8 @@ if TYPE_CHECKING:
 
 _REPLY = json.dumps(
     {
-        "supplier_tax_id": "B12345674",
-        "supplier_tax_id_anchor": "B12345674",
+        "supplier_tax_id": "B00015016",
+        "supplier_tax_id_anchor": "B00015016",
         "supplier_tax_id_role_evidence": "Proveedor:",
         "taxable_base": "100,00",
         "taxable_base_anchor": "100,00 EUR",
@@ -61,7 +61,7 @@ _REPLY = json.dumps(
 
 def _transcription(origin: FieldOrigin, *, name: str = "pdfplumber") -> DocumentTranscription:
     return DocumentTranscription(
-        text="FACTURA\nProveedor: EJEMPLO SL B12345674\nBase imponible 100,00 EUR",
+        text="FACTURA\nProveedor: EJEMPLO SL B00015016\nBase imponible 100,00 EUR",
         page_count=1,
         source_content_sha256="e" * 64,
         transcriber=TranscriberIdentity(transport=LOCAL_TRANSPORT_LABEL, origin=origin, name=name, revision="wiring"),

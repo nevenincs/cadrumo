@@ -301,7 +301,7 @@ def test_spanish_tax_id_width_is_the_width_the_identifier_validator_enforces() -
     a canonical identifier of that width validates, and padding or truncating it
     by one character is refused.
     """
-    canonical = validate_runtime_spanish_tax_id("B12345674")
+    canonical = validate_runtime_spanish_tax_id("B00015016")
 
     width = runtime_tax_id_format().width
     assert len(canonical) == width

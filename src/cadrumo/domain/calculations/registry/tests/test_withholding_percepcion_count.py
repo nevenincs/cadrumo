@@ -97,7 +97,7 @@ def test_percepcion_count_counts_two_claves_for_one_perceptor_twice() -> None:
     binding = _percepcion_count_binding()
     resolved = resolve_withholding_binding_values(
         _revision_with(binding),
-        [_obs("11111111H", "A"), _obs("11111111H", "G")],
+        [_obs("00001500M", "A"), _obs("00001500M", "G")],
     )
     assert resolved[binding.id] == Decimal(2)
 
@@ -107,7 +107,7 @@ def test_percepcion_count_counts_recurring_perceptor_clave_once() -> None:
     binding = _percepcion_count_binding()
     resolved = resolve_withholding_binding_values(
         _revision_with(binding),
-        [_obs("22222222J", "A"), _obs("22222222J", "A")],
+        [_obs("00001501Y", "A"), _obs("00001501Y", "A")],
     )
     assert resolved[binding.id] == Decimal(1)
 
@@ -117,7 +117,7 @@ def test_percepcion_count_subclave_distinguishes_percepciones() -> None:
     binding = _percepcion_count_binding()
     resolved = resolve_withholding_binding_values(
         _revision_with(binding),
-        [_obs("33333333P", "B", "01"), _obs("33333333P", "B", "02")],
+        [_obs("00001502F", "B", "01"), _obs("00001502F", "B", "02")],
     )
     assert resolved[binding.id] == Decimal(2)
 
@@ -127,7 +127,7 @@ def test_percepcion_count_exceeds_distinct_perceptor_count() -> None:
     binding = _percepcion_count_binding()
     resolved = resolve_withholding_binding_values(
         _revision_with(binding),
-        [_obs("11111111H", "A"), _obs("11111111H", "G"), _obs("22222222J", "A")],
+        [_obs("00001500M", "A"), _obs("00001500M", "G"), _obs("00001501Y", "A")],
     )
     # Distinct perceptores would be 2; distinct percepciones is 3 — the figure
     # this fact must report for the M190 "numero total de percepciones" box.

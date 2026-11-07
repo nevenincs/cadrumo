@@ -8,7 +8,8 @@ import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.contribuyente.entity_type import EntityType
-from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.contribuyente.renta_codes import FiscalResidency
+from ....domain.deadlines.models import IVARegime, ModeloEnrollment, TaxpayerProfile
 from ..calendar import build_overview_calendar
 from ..calendar_models import OverviewCalendarRange
 
@@ -17,7 +18,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def _legal_entity() -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         iva_regime=IVARegime("GENERAL"),
         has_employees=False,
@@ -27,6 +28,8 @@ def _legal_entity() -> TaxpayerProfile:
         does_intracomunitario=False,
         third_party_transactions_above_347_threshold=False,
         bienes_extranjero_above_threshold=False,
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
+        enrollment=ModeloEnrollment(large_company=False),
     )
 
 

@@ -4,7 +4,8 @@
 // reads lives in this hook's memory and goes with the profile.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { CatalogueInvoice, LedgerPort } from "../../../shell/ledger";
+import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
+import type { LedgerPort } from "../../../shell/ledger";
 import {
   readAnswer,
   readFailure,

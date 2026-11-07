@@ -183,7 +183,7 @@ def _store_nonresident_legal_entity_profile(bucket_id: str) -> None:
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(
-                UserProfileFact(path="identity.tax_id", value="B66012345"),
+                UserProfileFact(path="identity.tax_id", value="B00015032"),
                 UserProfileFact(path="identity.legal_name", value="NordHaus GmbH"),
                 UserProfileFact(path="activities.description", value="Spanish-source services"),
                 UserProfileFact(path="iva.regime", value="GENERAL"),
@@ -218,7 +218,7 @@ def _store_nonresident_natural_person_profile(bucket_id: str) -> None:
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=(
-                UserProfileFact(path="identity.tax_id", value="X1234567L"),
+                UserProfileFact(path="identity.tax_id", value="X0001500M"),
                 UserProfileFact(path="identity.name", value="Olivia"),
                 UserProfileFact(path="identity.surnames", value="Whitfield"),
                 UserProfileFact(path="activities.description", value="UK-source pension"),
@@ -685,7 +685,7 @@ def test_m100_applicability_gate_distinguishes_resident_from_nonresident_natural
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_NONRESIDENT_PROFILE_ID,
             facts=(
-                UserProfileFact(path="identity.tax_id", value="X1234567L"),
+                UserProfileFact(path="identity.tax_id", value="X0001500M"),
                 UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="taxpayer_type.fiscal_residency", value="non_resident_irnr"),

@@ -38,7 +38,7 @@ from dev.acceptance.aeat_request_capture.runner import run_flows
 pytestmark = [pytest.mark.integration, pytest.mark.hex_outbound_adapter]
 
 _PLANTED_NIF: Final = "12345678Z"
-_QUERY_NIF: Final = "87654321X"
+_QUERY_NIF: Final = "X0001502F"
 _PLANTED_QUERY: Final = "plantedquerysecret"
 _PLANTED_BODY: Final = "plantedbodysecret"
 _PLANTED_API_BODY: Final = "plantedapibodysecret"

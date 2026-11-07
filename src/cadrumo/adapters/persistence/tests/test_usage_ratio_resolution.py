@@ -117,7 +117,7 @@ def test_no_declared_area_resolves_to_nothing_rather_than_a_guess(_runtime_profi
     registry cannot know how much of a home is an office.
     """
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
-        _store_profile(**{"identity.tax_id": "X1234567L"})
+        _store_profile(**{"identity.tax_id": "X0001500M"})
 
         ratios = resolve_effective_usage_ratios(
             bucket_id=_BUCKET_ID,

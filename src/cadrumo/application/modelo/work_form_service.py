@@ -39,6 +39,7 @@ from pydantic import BaseModel
 
 from ...core.aggregation import BindingSourceKind
 from ...core.external_constants import OutputLanguage
+from ...core.filing_producer_key import FilingProducerKey
 from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
@@ -46,13 +47,16 @@ from ...core.time.clock import today_madrid
 from ...domain.buckets.event import BucketEventType
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.form_context import resolve_form_context_field
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.iva_wallet_carry_targets import revision_offers_iva_wallet
+from ...domain.calculations.registry.schema_form_layouts import FormContextFieldBlock, FormLayoutDefinition
 from ...domain.modelos.calculation_revision import (
     FILED_REVISION_STATES,
     SEALED_REVISION_STATES,
     CalculationRevision,
     CalculationRevisionCatalogue,
+    CalculationRevisionState,
 )
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.protocols import (
@@ -60,6 +64,7 @@ from ...domain.modelos.protocols import (
     VerificationReportCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ...domain.user_profile.errors import ProfileSchemaValidationError
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..aggregation.renta_imputation import revision_reads_imputation_criterion
 from ..live.borrador_100_import import borrador_pdf_extraction_profile
@@ -75,6 +80,7 @@ from .credit_resolution_repository import CreditResolutionReader
 from .edit_models import ModeloEditAdmissionResultV1, ModeloEditAdmittedV1
 from .effective_deadline import resolve_effective_filing_deadline
 from .profile_binding import resolve_profile_sourced_bindings
+from .profile_export_binding import resolve_profile_identity_producer_values
 from .projection_declaration import modelo_projection_available
 from .taxation_comparison import revision_compares_taxation
 from .work_addressing import law_selected_revision_for_work_target
@@ -229,6 +235,87 @@ def _aeat_data_imported_at(
     return borrador_snapshots.load(snapshot_id).captured_at
 
 
+def _current_profile_context_allowed(
+    layout: FormLayoutDefinition | None,
+    snapshot: RegistrySnapshot,
+    lifecycle_state: CalculationRevisionState | None,
+) -> bool:
+    """Current profile facts cannot attest a historical or unusable form."""
+    return (
+        layout is not None
+        and layout.revision_id == snapshot.revision.id
+        and lifecycle_state not in FILED_REVISION_STATES
+        and lifecycle_state is not CalculationRevisionState.DESCARTADO
+    )
+
+
+def _profile_context_values(
+    layout: FormLayoutDefinition | None,
+    snapshot: RegistrySnapshot,
+    lifecycle_state: CalculationRevisionState | None,
+    *,
+    bucket_id: BucketId,
+    operation: PinnedAuthorityOperation,
+) -> Mapping[FilingProducerKey, ModeloFormScalar]:
+    """Read current identity only for declared producer context on an open form."""
+    if layout is None or not _current_profile_context_allowed(layout, snapshot, lifecycle_state):
+        # These heads have no saved header identity. Today's profile cannot
+        # attest the identity or contact on a filed or abandoned declaration.
+        return dict[FilingProducerKey, ModeloFormScalar]()
+    if not any(
+        isinstance(block, FormContextFieldBlock)
+        and resolve_form_context_field(snapshot.revision, block).producer_key is not None
+        for page in layout.pages
+        for section in page.sections
+        for block in section.blocks
+    ):
+        return dict[FilingProducerKey, ModeloFormScalar]()
+    try:
+        return resolve_profile_identity_producer_values(bucket_id=str(bucket_id), operation=operation)
+    except ProfileSchemaValidationError:
+        # A stored name past a producer's bound cannot be shaped into header
+        # context. The form still opens and the header states no identity; the
+        # export path is what refuses it and names the profile field to shorten.
+        return dict[FilingProducerKey, ModeloFormScalar]()
+
+
+def _profile_binding_context_values(
+    layout: FormLayoutDefinition | None,
+    snapshot: RegistrySnapshot,
+    revision: CalculationRevision | None,
+    lifecycle_state: CalculationRevisionState | None,
+    *,
+    bucket_id: BucketId,
+    operation: PinnedAuthorityOperation,
+) -> Mapping[BindingId, ModeloFormScalar]:
+    """Resolve only declared profile binding context that has no saved answer."""
+    if layout is None or not _current_profile_context_allowed(layout, snapshot, lifecycle_state):
+        return dict[BindingId, ModeloFormScalar]()
+    profiles = {binding.id for binding in snapshot.revision.bindings if binding.source is BindingSourceKind.PROFILE}
+    needed = {
+        field.binding
+        for page in layout.pages
+        for section in page.sections
+        for block in section.blocks
+        if isinstance(block, FormContextFieldBlock)
+        and (field := resolve_form_context_field(snapshot.revision, block)).binding in profiles
+        and (revision is None or field.binding not in revision.binding_overrides)
+    }
+    if not needed:
+        return dict[BindingId, ModeloFormScalar]()
+    try:
+        resolution = resolve_profile_sourced_bindings(snapshot, bucket_id=str(bucket_id), operation=operation)
+    except RegistryValidationError:
+        return dict[BindingId, ModeloFormScalar]()
+    values: dict[BindingId, ModeloFormScalar] = {
+        **resolution.binding_values,
+        **resolution.enum_binding_values,
+        **resolution.date_binding_values,
+        **resolution.boolean_binding_values,
+    }
+    return {binding_id: value for binding_id, value in values.items() if binding_id in needed}
+
+
 def load_modelo_work_form(
     bucket_id: BucketId,
     modelo: ModeloCode,
@@ -323,6 +410,12 @@ def load_modelo_work_form(
         calculation_diagnostics=CALCULATION_NOTES.diagnostics_for(review.work_unit_id, review.calculation_revision_id),
         element_names=read_element_names(activity_assets),
         known_truths=_known_profile_truths(snapshot, bucket_id, operation=operation),
+        producer_values=_profile_context_values(
+            layout, snapshot, review.lifecycle_state, bucket_id=bucket_id, operation=operation
+        ),
+        profile_binding_values=_profile_binding_context_values(
+            layout, snapshot, head, review.lifecycle_state, bucket_id=bucket_id, operation=operation
+        ),
         resolutions=resolutions,
         calculation_screen_outdated=head is not None
         and calculation_screen_outdated(

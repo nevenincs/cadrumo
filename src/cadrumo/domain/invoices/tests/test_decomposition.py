@@ -72,7 +72,7 @@ def _invoice(
     lines: tuple[InvoiceLine, ...] | None = None,
     invoice_number: str = "F-2026-001",
     counterparty_country: str = "ES",
-    counterparty_tax_id: str = "B12345674",
+    counterparty_tax_id: str = "B00015016",
     currency: str = "EUR",
     **extra: object,
 ) -> Invoice:

@@ -72,7 +72,7 @@ _PRINTED_SUPPLIER_NAME = "Nordiska Verkstad AB"
 _PRINTED_SUPPLIER_IVA = "SE556677889901"
 # <cac:AccountingCustomerParty> ... the party billed.
 _PRINTED_CUSTOMER_NAME = "Talleres Peninsulares SL"
-_PRINTED_CUSTOMER_IVA = "ESB12345674"
+_PRINTED_CUSTOMER_IVA = "ESB00015016"
 # <cbc:Note> -- the statutory mention, in the issuer's own language.
 _PRINTED_LEGEND = "Steuerfreie innergemeinschaftliche Lieferung"
 

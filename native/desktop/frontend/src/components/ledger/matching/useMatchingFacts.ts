@@ -9,9 +9,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   CatalogueInvoice,
   LedgerCheckResult,
-  LedgerPort,
-  LedgerStatusResult,
-} from "../../../shell/ledger";
+} from "../../../shell/ledgerInvoiceOperations";
+import type { LedgerPort, LedgerStatusResult } from "../../../shell/ledger";
 import {
   readAnswer,
   readFailure,

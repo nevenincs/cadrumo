@@ -145,7 +145,7 @@ def _purchase_invoice() -> Invoice:
             "invoice_number": "P-2026-001",
             "issued_at": _date(2026, 5, 2),
             "counterparty_name": "Proveedor SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": _Decimal("100.00"),
             "iva_total": _Decimal("21.00"),

@@ -50,7 +50,7 @@ _runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID)
 #: but print no supplier name, so the model was to fill one field.
 _PARTIAL_LABELS = (
     "Estacion de Servicio Albufera SL",
-    "NIF: B92000082",
+    "NIF: B00015081",
     "FACTURA SIMPLIFICADA",
     "No: T-0042-2026",
     "Fecha: 14.02.2026",
@@ -60,7 +60,7 @@ _PARTIAL_LABELS = (
 )
 
 #: Figures with no label the rules read, so nothing can stand without the model.
-_NO_LABELS = ("B1234567X B17283946 766,30",)
+_NO_LABELS = ("B1234567X B00015024 766,30",)
 
 _AGENT_RUN_CONDITION = "llm.agent.model_run_completed"
 
@@ -120,7 +120,7 @@ def test_a_partial_label_reading_stands_and_names_the_missing_selection(operatio
 
     assert service.lookups == [ModelRole.TEXT_EXTRACTION]
     assert service.runs == [], "a role with no selection must not be run"
-    assert draft.supplier_tax_id == "B92000082"
+    assert draft.supplier_tax_id == "B00015081"
     fallback = draft.label_reading_fallback
     assert fallback is not None
     assert fallback.cause is LabelReadingFallbackCause.READER_UNAVAILABLE

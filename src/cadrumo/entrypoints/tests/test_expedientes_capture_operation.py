@@ -151,7 +151,7 @@ def test_single_capture_is_profile_bound_guarded_deduplicated_and_supervised(
             assert kwargs["authority_operation"] is authority
             assert kwargs["operation"] == "live-expedientes-read"
             events.append("authenticated-session")
-            return SimpleNamespace(identity_nif="X1234567L"), object()
+            return SimpleNamespace(identity_nif="X0001500M"), object()
 
         monkeypatch.setattr(expedientes_module, "active_verified_session", active_session)
         monkeypatch.setattr(expedientes_module, "now", lambda: _NOW)
@@ -298,7 +298,7 @@ def test_bulk_capture_projects_isolated_query_failures_after_all_remote_reads(
         assert kwargs["authority_operation"] is authority
         assert kwargs["operation"] == "live-expedientes-read"
         events.append("authenticated-session")
-        return SimpleNamespace(identity_nif="X1234567L"), object()
+        return SimpleNamespace(identity_nif="X0001500M"), object()
 
     monkeypatch.setattr(expedientes_module, "active_verified_session", active_session)
     monkeypatch.setattr(expedientes_module, "now", lambda: _NOW)

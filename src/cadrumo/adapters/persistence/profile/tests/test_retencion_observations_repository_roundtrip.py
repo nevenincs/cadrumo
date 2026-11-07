@@ -60,7 +60,7 @@ def test_retencion_observation_survives_encrypted_storage_roundtrip(tmp_path: Pa
     """A populated RetencionObservation roundtrips byte-for-byte through the encrypted repo."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         original = _observation(
-            nif="11111111H", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("142.48")
+            nif="00001500M", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("142.48")
         )
         captured_at = datetime.now(UTC).replace(microsecond=0)
         repo = RetencionObservationRepositoryAdapter(objects=profile.repository)
@@ -85,10 +85,10 @@ def test_distinct_nifs_and_schemes_persist_as_distinct_rows(tmp_path: Path) -> N
         repo = RetencionObservationRepositoryAdapter(objects=profile.repository)
         period = Period.from_year_and_code(2024, "0A")
         records = (
-            _observation(nif="11111111H", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")),
-            _observation(nif="22222222J", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("200")),
+            _observation(nif="00001500M", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")),
+            _observation(nif="00001501Y", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("200")),
             # Same NIF as the first, different scheme — a distinct row, not an overwrite.
-            _observation(nif="11111111H", scheme=RetencionScheme("rendimientos_trabajo"), retencion=Decimal("300")),
+            _observation(nif="00001500M", scheme=RetencionScheme("rendimientos_trabajo"), retencion=Decimal("300")),
         )
         for record in records:
             save_retencion_observation(
@@ -100,13 +100,13 @@ def test_distinct_nifs_and_schemes_persist_as_distinct_rows(tmp_path: Path) -> N
                 source_kind=AggregationCaptureKind.AGGREGATE_PULL,
             )
         loaded = repo.load_observations("180", period)
-        # All three rows survive (no key collision); the two 11111111H rows are
+        # All three rows survive (no key collision); the two 00001500M rows are
         # distinct because the scheme is part of the key.
         assert len(loaded) == 3
         assert {(o.perceptor_nif, o.scheme) for o in loaded} == {
-            ("11111111H", RetencionScheme("actividades_economicas")),
-            ("22222222J", RetencionScheme("actividades_economicas")),
-            ("11111111H", RetencionScheme("rendimientos_trabajo")),
+            ("00001500M", RetencionScheme("actividades_economicas")),
+            ("00001501Y", RetencionScheme("actividades_economicas")),
+            ("00001500M", RetencionScheme("rendimientos_trabajo")),
         }
         # Distinct-NIF count for the distinct-perceptor primitive is 2, not 3.
         assert len({o.perceptor_nif for o in loaded}) == 2
@@ -118,11 +118,11 @@ def test_object_key_hashes_the_nif_never_cleartext() -> None:
         "180",
         2024,
         Period.from_year_and_code(2024, "0A"),
-        "11111111H",
+        "00001500M",
         RetencionScheme("actividades_economicas"),
     )
-    assert "11111111H" not in key
-    digest = hashlib.sha256("11111111H".encode(UTF_8_ENCODING)).hexdigest()
+    assert "00001500M" not in key
+    digest = hashlib.sha256("00001500M".encode(UTF_8_ENCODING)).hexdigest()
     assert digest in key
     assert key == f"180:2024:0A:{digest}:{RetencionScheme('actividades_economicas').value}"
 
@@ -131,7 +131,7 @@ def test_period_scoping_excludes_other_windows(tmp_path: Path) -> None:
     """load_observations returns only the requested (modelo, year, period)."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repo = RetencionObservationRepositoryAdapter(objects=profile.repository)
-        obs = _observation(nif="33333333P", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("50"))
+        obs = _observation(nif="00001502F", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("50"))
         save_retencion_observation(
             repo,
             modelo="180",
@@ -152,7 +152,7 @@ def test_public_observation_contract_rejects_dropped_field() -> None:
     this test independent of the adapter's private encrypted-envelope model.
     """
     full = _observation(
-        nif="44444444A",
+        nif="00001503P",
         scheme=RetencionScheme("actividades_economicas"),
         retencion=Decimal("10"),
     ).model_dump()
@@ -173,9 +173,9 @@ def test_replace_observations_drops_removed_perceptor_no_stale_row(tmp_path: Pat
         repo = RetencionObservationRepositoryAdapter(objects=profile.repository)
         period = Period.from_year_and_code(2024, "0A")
         full = (
-            _observation(nif="11111111H", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")),
-            _observation(nif="22222222J", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("200")),
-            _observation(nif="33333333P", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("300")),
+            _observation(nif="00001500M", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")),
+            _observation(nif="00001501Y", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("200")),
+            _observation(nif="00001502F", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("300")),
         )
         replace_retencion_observations(
             repo,
@@ -186,7 +186,7 @@ def test_replace_observations_drops_removed_perceptor_no_stale_row(tmp_path: Pat
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         assert len({o.perceptor_nif for o in repo.load_observations("180", period)}) == 3
-        # Re-pull dropped 33333333P.
+        # Re-pull dropped 00001502F.
         replace_retencion_observations(
             repo,
             modelo="180",
@@ -197,7 +197,7 @@ def test_replace_observations_drops_removed_perceptor_no_stale_row(tmp_path: Pat
         )
         loaded = repo.load_observations("180", period)
         assert len(loaded) == 2
-        assert {o.perceptor_nif for o in loaded} == {"11111111H", "22222222J"}
+        assert {o.perceptor_nif for o in loaded} == {"00001500M", "00001501Y"}
 
 
 def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> None:
@@ -214,9 +214,9 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
         repo = RetencionObservationRepositoryAdapter(objects=profile.repository)
         period = Period.from_year_and_code(2024, "0A")
         declared = (
-            _observation(nif="11111111H", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")),
-            _observation(nif="22222222J", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("200")),
-            _observation(nif="33333333P", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("300")),
+            _observation(nif="00001500M", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")),
+            _observation(nif="00001501Y", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("200")),
+            _observation(nif="00001502F", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("300")),
         )
         replace_retencion_observations(
             repo,
@@ -232,7 +232,7 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
             filing_year=2024,
             period=period,
             observation=_observation(
-                nif="44444444A",
+                nif="00001503P",
                 scheme=RetencionScheme("actividades_economicas"),
                 retencion=Decimal("400"),
             ),
@@ -264,16 +264,16 @@ def test_replacement_carries_over_a_row_present_in_both_sets(tmp_path: Path) -> 
             period=period,
             observations=(
                 _observation(
-                    nif="11111111H", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")
+                    nif="00001500M", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")
                 ),
                 _observation(
-                    nif="22222222J", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("200")
+                    nif="00001501Y", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("200")
                 ),
             ),
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         carried = _observation(
-            nif="11111111H", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("175")
+            nif="00001500M", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("175")
         )
         replace_retencion_observations(
             repo,
@@ -294,7 +294,7 @@ def test_replacement_leaves_other_windows_untouched(tmp_path: Path) -> None:
         target = Period.from_year_and_code(2024, "0A")
         neighbour = Period.from_year_and_code(2023, "0A")
         neighbour_row = _observation(
-            nif="99999999R",
+            nif="00001506B",
             scheme=RetencionScheme("actividades_economicas"),
             retencion=Decimal("900"),
         )
@@ -313,7 +313,7 @@ def test_replacement_leaves_other_windows_untouched(tmp_path: Path) -> None:
             period=target,
             observations=(
                 _observation(
-                    nif="11111111H", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")
+                    nif="00001500M", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")
                 ),
             ),
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -398,10 +398,10 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
         repo = RetencionObservationRepositoryAdapter(objects=profile.repository)
         period = Period.from_year_and_code(2024, "0A")
         row_a = _observation(
-            nif="11111111H", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")
+            nif="00001500M", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")
         )
         row_b = _observation(
-            nif="22222222J", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("200")
+            nif="00001501Y", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("200")
         )
         replace_retencion_observations(
             repo,
@@ -473,7 +473,7 @@ def test_repository_refuses_a_capture_instant_without_utc(captured_at: datetime,
             filing_year=2024,
             period=Period.from_year_and_code(2024, "0A"),
             observation=_observation(
-                nif="11111111H", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")
+                nif="00001500M", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")
             ),
             captured_at=captured_at,
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -483,7 +483,7 @@ def test_repository_refuses_a_capture_instant_without_utc(captured_at: datetime,
 def test_repository_accepts_a_utc_capture_instant(tmp_path: Path) -> None:
     """The public repository operation accepts a UTC capture instant."""
     observation = _observation(
-        nif="11111111H",
+        nif="00001500M",
         scheme=RetencionScheme("actividades_economicas"),
         retencion=Decimal("100"),
     )
@@ -510,7 +510,7 @@ def _capture_payload(repo: RetencionObservationRepositoryAdapter, period: Period
         filing_year=2024,
         period=period,
         observation=_observation(
-            nif="11111111H",
+            nif="00001500M",
             scheme=RetencionScheme("actividades_economicas"),
             retencion=Decimal("100"),
         ),

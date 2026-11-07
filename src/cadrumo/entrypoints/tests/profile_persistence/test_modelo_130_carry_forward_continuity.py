@@ -338,14 +338,14 @@ def _import_official_filing_evidence(
         calculation_repository=cr_repo,
         filing_repository=filing_repo,
         bucket_event_repository=bv_repo,
-        expected_tax_id="X1234567L",
+        expected_tax_id="X0001500M",
         clock=_CLOCK,
     )
     return source_snapshot.revision.id, {
         "aeat_register_status": "ALTA",
         "aeat_expediente_id": f"EXP-{modelo}-{filing_year}-{period}",
         "aeat_justificante_csv": evidence_reference_id,
-        "authenticated_identity": "X1234567L",
+        "authenticated_identity": "X0001500M",
     }
 
 
@@ -565,7 +565,7 @@ def _seed_sofia_q1_invoiced_receipt() -> None:
                 "invoice_number": "F-2026-S01",
                 "issued_at": date(2026, 2, 10),
                 "counterparty_name": "Cliente SL",
-                "counterparty_tax_id": "B12345674",
+                "counterparty_tax_id": "B00015016",
                 "counterparty_country": "ES",
                 "bucket_id": _BUCKET_ID,
                 "base_total": _SOFIA_Q1_BASE,
@@ -676,7 +676,7 @@ def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(
         verification_repositories=build_test_verification_repository_bundle(),
         actor="operator-test",
         workflow_profile=general_iva_workflow_profile(),
-        settings=ready_clave_settings("X1234567L"),
+        settings=ready_clave_settings("X0001500M"),
         clock=_CLOCK,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
@@ -730,7 +730,7 @@ def test_sofia_q1_with_activity_withholding_verifies_complete_and_exports(
         verification_repositories=build_test_verification_repository_bundle(),
         actor="operator-test",
         workflow_profile=general_iva_workflow_profile(),
-        settings=ready_clave_settings("X1234567L"),
+        settings=ready_clave_settings("X0001500M"),
         clock=_CLOCK,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )

@@ -36,7 +36,7 @@ def verification_substance_casilla_values(*entries: tuple[CasillaId, str]) -> di
 
 def workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_rent_with_retencion=False,

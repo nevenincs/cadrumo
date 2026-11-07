@@ -93,7 +93,7 @@ class TestModeloPresentado:
             draft_id="draft-1",
             modelo="130",
             period=Period.from_year_and_code(2026, "1T"),
-            profile_tax_id="X1234567L",
+            profile_tax_id="X0001500M",
             status=SubmissionStatus.PRESENTADA,
             # submitted_at is the first attempt's start, not a free field.
             submitted_at=datetime(2026, 4, 12, 10, 0, 0, tzinfo=UTC),
@@ -117,7 +117,7 @@ class TestModeloPresentado:
                     "draft_id": "draft-1",
                     "modelo": "130",
                     "period": Period.from_year_and_code(2026, "1T"),
-                    "profile_tax_id": "X1234567L",
+                    "profile_tax_id": "X0001500M",
                     "status": "SUBMITTED",
                     "submitted_at": datetime(2026, 4, 12, 10, 0, 0, tzinfo=UTC),
                     "attempts": [_attempt().model_dump()],

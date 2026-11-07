@@ -486,7 +486,7 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
             entered=discovery_entered,
             release=release_discovery,
         )
-        taxpayer = TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL"))
+        taxpayer = TaxpayerProfile(tax_id="X0001500M", iva_regime=IVARegime("GENERAL"))
         pull = _local_pull(discovery)
         definition = build_filed_history_operation_definition(
             sync_run_repository_factory=SyncRunRecordRepository,

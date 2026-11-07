@@ -14,7 +14,12 @@ use cadrumo_application::error::application::Cause;
 use cadrumo_application::provisioning::{
     browser::DriverManifest,
     connection::{Network, Resolve},
-    engine::EngineConfig,
+    engine::{EngineConfig, SERVER_WAIT},
+    items::FULL_CHECK_BUDGET,
+    local_ai::{
+        ServerCall, StartFailureKind,
+        loopback::{ExchangeFailure, ExchangePhase},
+    },
     pins::{ComponentPins, Platform},
     test_servers::{Released, Reply, Request, TestCertificate, TlsServer, response},
     transfer::RetryPolicy,
@@ -952,12 +957,98 @@ async fn a_setting_the_engine_cannot_use_fails_the_setup_with_its_category_and_r
 }
 
 #[test]
+fn a_local_ai_check_that_timed_out_is_recorded_with_the_request_and_its_timeout() {
+    let cause = NotRunningCause::Request {
+        call: ServerCall::Generate,
+        failure: ExchangeFailure {
+            phase: ExchangePhase::Exchange,
+            kind: std::io::ErrorKind::TimedOut,
+            bound: FULL_CHECK_BUDGET,
+        },
+    };
+    let error = setup_failed(
+        ItemId::LocalAi,
+        FailureCategory::ProgramNotRunning,
+        Some(&cause),
+    );
+    assert_eq!(error.reason.as_deref(), Some("setup_local_ai_failed"));
+    assert_eq!(error.io_kind, Some(std::io::ErrorKind::TimedOut));
+    assert!(
+        matches!(
+            &error.causes[..],
+            [
+                Cause::Application { reason: Some(category), .. },
+                Cause::Application { reason: Some(why), .. },
+                Cause::Io { io_kind, .. },
+            ] if category == "program_not_running"
+                && why == "generate_request_failed"
+                && io_kind == "TimedOut"
+        ),
+        "{:?}",
+        error.causes
+    );
+}
+
+#[test]
+fn a_local_ai_server_that_never_came_is_recorded_apart_from_a_request_that_timed_out() {
+    let cause = NotRunningCause::NoServerWithin {
+        budget: SERVER_WAIT,
+        latest_start: None,
+    };
+    let error = setup_failed(
+        ItemId::LocalAi,
+        FailureCategory::ProgramNotRunning,
+        Some(&cause),
+    );
+    assert_eq!(error.io_kind, None);
+    assert!(
+        matches!(
+            &error.causes[..],
+            [
+                Cause::Application { reason: Some(category), .. },
+                Cause::Application { reason: Some(why), .. },
+            ] if category == "program_not_running" && why == "server_wait_expired"
+        ),
+        "{:?}",
+        error.causes
+    );
+}
+
+#[test]
+fn a_wait_that_ran_out_after_a_failed_start_is_recorded_with_that_start() {
+    let cause = NotRunningCause::NoServerWithin {
+        budget: SERVER_WAIT,
+        latest_start: Some(StartFailureKind::Closed),
+    };
+    let error = setup_failed(
+        ItemId::LocalAi,
+        FailureCategory::ProgramNotRunning,
+        Some(&cause),
+    );
+    assert_eq!(error.io_kind, None);
+    assert!(
+        matches!(
+            &error.causes[..],
+            [
+                Cause::Application { reason: Some(category), .. },
+                Cause::Application { reason: Some(why), .. },
+                Cause::Application { reason: Some(start), .. },
+            ] if category == "program_not_running"
+                && why == "server_wait_expired"
+                && start == "server_closed_before_listening"
+        ),
+        "{:?}",
+        error.causes
+    );
+}
+
+#[test]
 fn a_failed_setup_is_recorded_as_a_setup_failure_for_either_component_with_its_category() {
     for (item, reason) in [
         (ItemId::Browser, "setup_browser_failed"),
         (ItemId::LocalAi, "setup_local_ai_failed"),
     ] {
-        let error = setup_failed(item, FailureCategory::Offline);
+        let error = setup_failed(item, FailureCategory::Offline, None);
         assert_eq!(error.code, ErrorCode::SetupFailed, "{reason}");
         assert_eq!(error.reason.as_deref(), Some(reason));
         assert_eq!(
@@ -1952,6 +2043,7 @@ fn ended(outcome: Ended, item: Option<ItemId>, failure: Option<FailureCategory>)
         plan: None,
         item,
         failure,
+        failure_cause: None,
         items: Vec::new(),
     }
 }

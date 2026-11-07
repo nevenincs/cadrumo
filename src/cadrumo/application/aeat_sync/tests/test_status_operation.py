@@ -45,7 +45,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 _BUCKET = "5aa00000-0000-4000-8000-0000000000aa"
 _OTHER_BUCKET = "6bb00000-0000-4000-8000-0000000000bb"
 _NOW = datetime(2026, 10, 29, 12, 0, tzinfo=UTC)
-_NIF = "B12345674"
+_NIF = "B00015016"
 
 
 def _notification(*, leida: bool | None) -> RemoteNotification:

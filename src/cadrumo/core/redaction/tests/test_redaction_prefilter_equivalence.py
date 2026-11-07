@@ -30,10 +30,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 #: Shapes every rule arm reacts to, including the spans the identity arms
 #: exempt, so the corpus exercises matches, gated refusals and exemptions.
 _SHAPES = (
-    "B12345674",
+    "B00015016",
     "12345678Z",
     "B.1234567.4",
-    "ESB12345674 y",
+    "ESB00015016 y",
     "de SE556677889901",
     "FR XX 999999999",
     "ES91 2100 0418 4502 0005 1332",
@@ -132,7 +132,7 @@ def test_the_reveal_flag_is_part_of_what_is_reused() -> None:
 
 
 def test_a_long_string_is_redacted_without_reuse() -> None:
-    long_text = "B12345674 " * (CLI_STRING_CACHE_MAX_LENGTH // 5)
+    long_text = "B00015016 " * (CLI_STRING_CACHE_MAX_LENGTH // 5)
     assert len(long_text) > CLI_STRING_CACHE_MAX_LENGTH
 
     assert redact_for_cli_output(long_text) == redact_cli_string_uncached(long_text, False)

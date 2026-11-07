@@ -269,7 +269,7 @@ def test_scripted_walk_visits_joint_taxation_spouse_questions(*, registry_setup_
             "irpf-income-categories": "actividad_economica,trabajo",
             "taxation-type": "2",
             # spouse joint-conditional questions are NOW visible
-            "spouse-tax-id": "87654321X",
+            "spouse-tax-id": "X0001502F",
             "spouse-name": "Spouse",
             "spouse-surnames": "Doe",
             "spouse-birth-date": "",
@@ -283,7 +283,7 @@ def test_scripted_walk_visits_joint_taxation_spouse_questions(*, registry_setup_
     assert "spouse-tax-id" in committed
     assert "spouse-name" in committed
     assert "spouse-eu-eea-resident" not in committed
-    assert answers.spouse_tax_id == "87654321X"
+    assert answers.spouse_tax_id == "X0001502F"
 
 
 def test_iva_regime_has_no_implicit_runtime_default(*, registry_setup_flow: WizardFlow) -> None:
@@ -311,7 +311,7 @@ def _non_interactive_canonical(explicit: dict[str, str], *, registry_setup_flow:
 _LEGAL_ENTITY_FLAGS: dict[str, str] = {
     "entity-type": "legal_entity",
     "legal-entity-form": "sl",
-    "tax-id": "B66012345",
+    "tax-id": "B00015032",
     "activity": "consultoria",
     "tax-residence-jurisdiction-scope": "common_regime",
 }

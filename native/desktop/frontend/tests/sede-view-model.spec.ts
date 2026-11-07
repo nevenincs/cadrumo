@@ -22,7 +22,7 @@ import {
   sedeViewSize,
   type SedeViewEvent,
 } from "../src/shell/sedeView";
-import type { SedeViewMessage } from "../src/ipc/contract";
+import type { SedeViewMessage } from "../src/ipc/sedeViewMessages";
 
 // The Browser page's model: what the view says becomes state, and the
 // person's input becomes the host's events. No page is opened.

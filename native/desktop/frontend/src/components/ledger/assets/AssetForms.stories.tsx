@@ -2,9 +2,11 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { expect, fireEvent, userEvent, waitFor } from "storybook/test";
 import { STORY_READER, useLedgerPort } from "@/dev/LedgerStage";
-import { SEED_ELEMENTS } from "@/dev/assetsSeed";
+import { SCENARIO_ELEMENTS, creationDraft } from "@/dev/assetsRegister";
 import { typeAsAPerson } from "@/dev/personTyping";
 import { ledgerClassOf } from "@/dev/ledgerClassesFixture";
+import { servedSupport } from "@/dev/servedYearAuthority";
+import { SCENARIO_TODAY } from "@/dev/assetsRegister";
 import type { LedgerShape } from "@/dev/ledgerFixture";
 import type { LedgerPort } from "../../../shell/ledger";
 import { PausedBanner, usePagePause, WritePauseContext } from "../WritePause";
@@ -15,6 +17,11 @@ import { CorrectForm } from "./CorrectForm";
 import { DescribeForm } from "./DescribeForm";
 import { ASSET_KEYS } from "./assetsWords";
 import { translator } from "../../../shell/strings";
+
+/** The year of the scenario's date, which the seeded plans are written around. */
+const scenarioYear = Number(SCENARIO_TODAY.slice(0, 4));
+/** The first year past the last one the registry admits, read on projected tables. */
+const projectedYear = servedSupport.horizon + 1;
 
 // The forms of the Assets tab over the scenario ledger: adding an element,
 // describing it, correcting it, recording its dotación and giving it a baja,
@@ -183,20 +190,32 @@ const steps =
 
 const submit = (root: Root) => pressed(root, ".ledger-asset-submit");
 
-/** The add form filled with the first purchase, which states its figures. */
+/** The add form filled with the draft the register answered for: the corpus
+ * under `dev/fixtures/assets-register-scenario/creations.json` commits every
+ * creation the window sends, so the story states no value of its own and the
+ * register holds the plan the form it fills will be answered with. */
+const ADD_ELEMENT = creationDraft("story_add_element");
+/** The fields of the draft that are chosen from what the options serve, in the
+ * order the form draws them; everything else in it is typed. */
+const CHOSEN_FIELDS = [
+  "asset_kind",
+  "method",
+  "amortization.authority_class_key",
+  "acquisition",
+  "acquired_condition",
+  "basis_stage",
+  "opening_status",
+];
 const fillElement = async (root: Root) => {
-  await typed(root, "name", "Sierra de cinta");
-  await typed(root, "serial_number", "SC-0412");
-  await chosenValue(root, "asset_kind", "material");
-  await typed(root, "in_service_date", "2026-06-15");
-  await chosen(root, "method", 0);
-  await chosen(root, "amortization.authority_class_key", 0);
-  await chosen(root, "acquisition", 0);
-  await chosenValue(root, "acquired_condition", "new");
-  await chosenValue(root, "basis_stage", "taxpayer_owned");
-  await chosenValue(root, "opening_status", "missing");
-  await typed(root, "basis_amount", "900.00");
-  await typed(root, "business_use_share", "100");
+  for (const key of CHOSEN_FIELDS) {
+    const stated = ADD_ELEMENT[key];
+    if (stated !== undefined && stated !== "")
+      await chosenValue(root, key, stated);
+  }
+  for (const [key, stated] of Object.entries(ADD_ELEMENT)) {
+    if (CHOSEN_FIELDS.includes(key) || stated === "") continue;
+    await typed(root, key, stated);
+  }
 };
 const sendElement = steps(fillElement, submit);
 
@@ -226,7 +245,7 @@ export const AddElementOutsideLedger: Story = adding({
   name: "Add element, bought outside the ledger: date, activity and document",
   play: steps(
     (root) => chosenValue(root, "asset_kind", "material"),
-    (root) => typed(root, "in_service_date", "2026-06-15"),
+    (root) => typed(root, "in_service_date", `${scenarioYear}-06-15`),
     (root) => chosen(root, "acquisition_shape", 1),
     (root) => typed(root, "declared_acquisition_date", "2024-11-05"),
     (root) => chosen(root, "declared_activity", 0),
@@ -237,7 +256,7 @@ export const AddElementOutsideLedgerLaterPayment: Story = adding({
   name: "Add element, bought outside the ledger, with a later payment from the ledger",
   play: steps(
     (root) => chosenValue(root, "asset_kind", "material"),
-    (root) => typed(root, "in_service_date", "2026-06-15"),
+    (root) => typed(root, "in_service_date", `${scenarioYear}-06-15`),
     (root) => chosen(root, "acquisition_shape", 1),
     (root) => typed(root, "declared_acquisition_date", "2024-11-05"),
     (root) => chosen(root, "declared_activity", 0),
@@ -250,7 +269,7 @@ export const AddElementWholeProperty: Story = adding({
   name: "Add element, whole property: its parts",
   play: steps(
     (root) => chosenValue(root, "asset_kind", "material"),
-    (root) => typed(root, "in_service_date", "2026-06-15"),
+    (root) => typed(root, "in_service_date", `${scenarioYear}-06-15`),
     (root) => chosenValue(root, "basis_stage", "whole_property"),
   ),
 });
@@ -258,7 +277,7 @@ export const AddElementUsedBuilding: Story = adding({
   name: "Add element, bought used: the date the building was built",
   play: steps(
     (root) => chosenValue(root, "asset_kind", "material"),
-    (root) => typed(root, "in_service_date", "2026-06-15"),
+    (root) => typed(root, "in_service_date", `${scenarioYear}-06-15`),
     (root) => chosenValue(root, "acquired_condition", "used"),
     (root) => chosenValue(root, "basis_stage", "whole_property"),
   ),
@@ -267,7 +286,7 @@ export const AddElementOpeningKnown: Story = adding({
   name: "Add element, opening history known: the facts it can state",
   play: steps(
     (root) => chosenValue(root, "asset_kind", "material"),
-    (root) => typed(root, "in_service_date", "2026-06-15"),
+    (root) => typed(root, "in_service_date", `${scenarioYear}-06-15`),
     (root) => chosenValue(root, "opening_status", "known"),
   ),
 });
@@ -289,7 +308,7 @@ export const AddElementEditors: Story = adding({
     const root = context.canvasElement;
     await steps(
       (found) => chosenValue(found, "asset_kind", "material"),
-      (found) => typed(found, "in_service_date", "2026-06-15"),
+      (found) => typed(found, "in_service_date", `${scenarioYear}-06-15`),
       (found) => chosenValue(found, "basis_stage", "taxpayer_owned"),
       (found) => chosenValue(found, "opening_status", "known"),
     )(context);
@@ -331,7 +350,7 @@ export const AddElementUsedOriginalPrice: Story = adding({
   name: "Add element, bought used on the linear method: the originating price beside the building date",
   play: steps(
     (root) => chosenValue(root, "asset_kind", "material"),
-    (root) => typed(root, "in_service_date", "2026-06-15"),
+    (root) => typed(root, "in_service_date", `${scenarioYear}-06-15`),
     (root) => chosenValue(root, "method", "linear"),
     (root) => chosenValue(root, "acquired_condition", "used"),
     (root) =>
@@ -345,7 +364,7 @@ export const AddElementNewHidesUsedFacts: Story = adding({
   name: "Add element, bought new: neither the building date nor the originating price is asked",
   play: steps(
     (root) => chosenValue(root, "asset_kind", "material"),
-    (root) => typed(root, "in_service_date", "2026-06-15"),
+    (root) => typed(root, "in_service_date", `${scenarioYear}-06-15`),
     (root) => chosenValue(root, "method", "linear"),
     (root) => chosenValue(root, "acquired_condition", "new"),
     async (root) => {
@@ -362,7 +381,7 @@ export const AddElementVehicle: Story = adding({
   name: "Add element, a class that requires a vehicle declaration: it opens as required, with no question",
   play: steps(
     (root) => chosenValue(root, "asset_kind", "material"),
-    (root) => typed(root, "in_service_date", "2026-06-15"),
+    (root) => typed(root, "in_service_date", `${scenarioYear}-06-15`),
     (root) => chosen(root, "method", 0),
     (root) =>
       chosenValue(
@@ -381,7 +400,7 @@ export const AddElementClassWithoutVehicle: Story = adding({
   name: "Add element, a class that needs no vehicle declaration: nothing is drawn",
   play: steps(
     (root) => chosenValue(root, "asset_kind", "material"),
-    (root) => typed(root, "in_service_date", "2026-06-15"),
+    (root) => typed(root, "in_service_date", `${scenarioYear}-06-15`),
     (root) => chosen(root, "method", 0),
     (root) =>
       chosenValue(root, "amortization.authority_class_key", "maquinaria"),
@@ -518,7 +537,7 @@ export const CorrectNotSeen: Story = correcting("servidor", {
 
 /** The year the page stands on when a baja is given: one the registry serves
  * options for, whenever the element came into service. */
-const BAJA_YEAR = 2026;
+const BAJA_YEAR = servedSupport.horizon;
 
 const disposing = (assetId: string, extra: Partial<Story> = {}) =>
   form(
@@ -539,7 +558,7 @@ const dispose = (date: string) => steps(fillBaja(date), confirm);
 
 /** The baja an element is given before its form opens, to change or remove. */
 const recorded = {
-  disposal_date: "2026-03-31",
+  disposal_date: `${scenarioYear}-03-31`,
   reason: "sale",
   proceeds: { decimal: "9000.00" },
   transmission_costs: { decimal: "150.00" },
@@ -598,7 +617,7 @@ const changing = (assetId: string, extra: Partial<Story> = {}) =>
 export const Baja: Story = disposing("plotter", { name: "Baja" });
 export const BajaDone: Story = disposing("furgoneta", {
   name: "Baja, done",
-  play: dispose("2026-12-31"),
+  play: dispose(`${scenarioYear}-12-31`),
 });
 export const BajaIncomplete: Story = disposing("plotter", {
   name: "Baja, sent with fields missing: marked and listed",
@@ -606,7 +625,7 @@ export const BajaIncomplete: Story = disposing("plotter", {
 });
 export const BajaConfirmation: Story = disposing("furgoneta", {
   name: "Baja, waiting for the person to confirm: nothing sent yet",
-  play: steps(fillBaja("2026-12-31")),
+  play: steps(fillBaja(`${scenarioYear}-12-31`)),
 });
 export const BajaBeforeService: Story = disposing("plotter", {
   name: "Baja, before the element entered service: refused",
@@ -615,19 +634,23 @@ export const BajaBeforeService: Story = disposing("plotter", {
 export const BajaInFlight: Story = disposing("plotter", {
   name: "Baja, in flight",
   args: { hold: "in_flight" },
-  play: dispose("2026-03-31"),
+  play: dispose(`${scenarioYear}-03-31`),
 });
 export const BajaNotSeen: Story = disposing("plotter", {
   name: "Baja, settlement not seen: held",
   args: { shape: "unknown" },
-  play: dispose("2026-03-31"),
+  play: dispose(`${scenarioYear}-03-31`),
 });
 export const BajaChange: Story = changing("plotter", {
   name: "Baja recorded: change or remove it",
 });
 export const BajaChangeDone: Story = changing("plotter", {
   name: "Baja recorded, changed: done",
-  play: steps((root) => typed(root, "date", "2026-06-30"), submit, confirm),
+  play: steps(
+    (root) => typed(root, "date", `${scenarioYear}-06-30`),
+    submit,
+    confirm,
+  ),
 });
 export const BajaRemoveConfirmation: Story = changing("plotter", {
   name: "Baja recorded, removal waiting for the person to confirm",
@@ -674,7 +697,7 @@ const claiming = (
 
 /** The dotación the plan of an element holds for a year. */
 const claimOf = (assetId: string, year: number) =>
-  SEED_ELEMENTS.find((seed) => seed.id === assetId)!
+  SCENARIO_ELEMENTS.find((seed) => seed.id === assetId)!
     .rows.find((row) => row.tax_year === year)!
     .claims.find((found) => found.effective)!.claim_id;
 
@@ -682,15 +705,21 @@ const forecast = (root: Root) => pressed(root, ".ledger-asset-forecast");
 const claim = (root: Root) => pressed(root, ".ledger-asset-claim");
 /** A span that overlaps the half year already recorded. */
 const overlap = async (root: Root) => {
-  await typed(root, "covered_from", "2026-01-01");
+  await typed(root, "covered_from", `${scenarioYear}-01-01`);
   await forecast(root);
 };
 
-export const Claim: Story = claiming("furgoneta", 2026, {
+export const Claim: Story = claiming("furgoneta", scenarioYear, {
   name: "Record dotación, a year not claimed",
 });
+const cristaleriaClaimYear = SCENARIO_ELEMENTS.find(
+  (seed) => seed.id === "cristaleria",
+)!.list.default_claim_year;
+
 export const ClaimOpensOnTheServedYear: Story = form(
-  (props) => <ClaimFlow {...props} assetId="cristaleria" taxYear={2026} />,
+  (props) => (
+    <ClaimFlow {...props} assetId="cristaleria" taxYear={scenarioYear} />
+  ),
   {
     name: "Record dotación, opens on the year the register names for the element, not the page's",
     play: steps(async (root) => {
@@ -699,27 +728,34 @@ export const ClaimOpensOnTheServedYear: Story = form(
         ".ledger-asset-form-claim select",
       );
       await waitFor(() => {
-        if (select.value !== "2025")
+        if (select.value !== String(cristaleriaClaimYear))
           throw new Error("the form did not open on the served year");
       });
     }),
   },
 );
-export const ClaimForecast: Story = claiming("furgoneta", 2026, {
+export const ClaimForecast: Story = claiming("furgoneta", scenarioYear, {
   name: "Record dotación, forecast shown first",
   play: steps(forecast),
 });
-export const ClaimForecastEarlierEnd: Story = claiming("furgoneta", 2026, {
-  name: "Record dotación, a last day typed before the span's end",
-  play: steps((root) => typed(root, "covered_through", "2026-09-30"), forecast),
-});
-export const ClaimDone: Story = claiming("furgoneta", 2026, {
+export const ClaimForecastEarlierEnd: Story = claiming(
+  "furgoneta",
+  scenarioYear,
+  {
+    name: "Record dotación, a last day typed before the span's end",
+    play: steps(
+      (root) => typed(root, "covered_through", `${scenarioYear}-09-30`),
+      forecast,
+    ),
+  },
+);
+export const ClaimDone: Story = claiming("furgoneta", scenarioYear, {
   name: "Record dotación, done",
   play: steps(forecast, claim),
 });
 // Another window records the same dotación between this form's forecast and
 // its send: the backend answers the send as already recorded.
-export const ClaimAlreadyRecorded: Story = claiming("furgoneta", 2026, {
+export const ClaimAlreadyRecorded: Story = claiming("furgoneta", scenarioYear, {
   name: "Record dotación, recorded by another window meanwhile: already recorded",
   args: { hold: "recorded_elsewhere" },
   play: async (context) => {
@@ -736,40 +772,52 @@ export const ClaimAlreadyRecorded: Story = claiming("furgoneta", 2026, {
     });
   },
 });
-export const ClaimConflict: Story = claiming("furgoneta", 2026, {
+export const ClaimConflict: Story = claiming("furgoneta", scenarioYear, {
   name: "Record dotación, overlaps one recorded: refused, offers to correct it",
   play: steps(overlap),
 });
-export const ClaimConflictCorrectThat: Story = claiming("furgoneta", 2026, {
-  name: "Record dotación, overlaps one recorded: switched to correcting it",
-  play: steps(overlap, (root) => pressed(root, ".ledger-asset-correct-that")),
-});
+export const ClaimConflictCorrectThat: Story = claiming(
+  "furgoneta",
+  scenarioYear,
+  {
+    name: "Record dotación, overlaps one recorded: switched to correcting it",
+    play: steps(overlap, (root) => pressed(root, ".ledger-asset-correct-that")),
+  },
+);
 export const ClaimCorrecting: Story = claiming(
   "furgoneta",
-  2026,
+  scenarioYear,
   { name: "Correct a dotación, opened from the plan" },
-  { initialYear: 2026, supersedes: claimOf("furgoneta", 2026) },
+  { initialYear: scenarioYear, supersedes: claimOf("furgoneta", scenarioYear) },
 );
 export const ClaimCorrectingDone: Story = claiming(
   "furgoneta",
-  2026,
+  scenarioYear,
   {
     name: "Correct a dotación, done",
     play: steps(forecast, claim),
   },
-  { initialYear: 2026, supersedes: claimOf("furgoneta", 2026) },
+  { initialYear: scenarioYear, supersedes: claimOf("furgoneta", scenarioYear) },
 );
 export const ClaimNoPlanForTheYear: Story = claiming(
   "furgoneta",
-  2026,
+  scenarioYear,
   { name: "Record dotación, the element has no plan for the year" },
-  { initialYear: 2040 },
+  {
+    initialYear:
+      SCENARIO_ELEMENTS.find((seed) => seed.id === "furgoneta")!.rows.at(-1)!
+        .tax_year + 1,
+  },
 );
-export const ClaimFreeMethodWithoutAmount: Story = claiming("impresora", 2026, {
-  name: "Record dotación, free method without an amount: incomplete",
-  play: steps(forecast),
-});
-export const ClaimProjectedYear: Story = claiming("furgoneta", 2027, {
+export const ClaimFreeMethodWithoutAmount: Story = claiming(
+  "impresora",
+  scenarioYear,
+  {
+    name: "Record dotación, free method without an amount: incomplete",
+    play: steps(forecast),
+  },
+);
+export const ClaimProjectedYear: Story = claiming("furgoneta", projectedYear, {
   name: "Record dotación, a year on projected tables: marked estimated, forecast offered with the note",
   play: async (context) => {
     await steps(forecast)(context);
@@ -782,36 +830,36 @@ export const ClaimProjectedYear: Story = claiming("furgoneta", 2027, {
     });
   },
 });
-export const ClaimNothingOpen: Story = claiming("cristaleria", 2026, {
+export const ClaimNothingOpen: Story = claiming("cristaleria", scenarioYear, {
   name: "Record dotación, nothing open in the year: the reason is said above the dates",
   play: steps(async (root) => {
     await drawn(root, ".ledger-asset-nothing-open");
   }),
 });
-export const ClaimPeriodElapsed: Story = claiming("cristaleria", 2026, {
+export const ClaimPeriodElapsed: Story = claiming("cristaleria", scenarioYear, {
   name: "Record dotación, maximum period elapsed: refused with its date",
   play: steps(
-    (root) => typed(root, "covered_from", "2026-01-01"),
-    (root) => typed(root, "covered_through", "2026-12-31"),
+    (root) => typed(root, "covered_from", `${scenarioYear}-01-01`),
+    (root) => typed(root, "covered_through", `${scenarioYear}-12-31`),
     forecast,
   ),
 });
-export const ClaimInFlight: Story = claiming("furgoneta", 2026, {
+export const ClaimInFlight: Story = claiming("furgoneta", scenarioYear, {
   name: "Record dotación, in flight",
   args: { hold: "in_flight" },
   play: steps(forecast, claim),
 });
-export const ClaimFailed: Story = claiming("furgoneta", 2026, {
+export const ClaimFailed: Story = claiming("furgoneta", scenarioYear, {
   name: "Record dotación, failed: nothing saved",
   args: { hold: "unavailable" },
   play: steps(forecast, claim),
 });
-export const ClaimNotSeen: Story = claiming("furgoneta", 2026, {
+export const ClaimNotSeen: Story = claiming("furgoneta", scenarioYear, {
   name: "Record dotación, settlement not seen: held",
   args: { shape: "unknown" },
   play: steps(forecast, claim),
 });
-export const ClaimAnswerLost: Story = claiming("furgoneta", 2026, {
+export const ClaimAnswerLost: Story = claiming("furgoneta", scenarioYear, {
   name: "Record dotación, saved but the answer was lost: held",
   play: async (context) => {
     window.__scenarioLedger?.nextWrites(["saved_unread"]);

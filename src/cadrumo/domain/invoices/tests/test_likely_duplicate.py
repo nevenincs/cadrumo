@@ -62,7 +62,7 @@ def test_the_same_total_written_differently_is_the_same_total() -> None:
             "invoice_id": "a",
             "kind": "received",
             "invoice_number": "X-1",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "issued_at": "2026-02-01",
             "grand_total": "121.00",
         }

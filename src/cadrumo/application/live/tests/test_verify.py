@@ -330,7 +330,7 @@ class TestObservationIdentityAndInstantContracts:
         recorded = svc.record(
             bucket_id=_BUCKET_ID,
             surface=VerifySurface.TGVI,
-            nif="ESB12345674",
+            nif="ESB00015016",
             verdict=IdentityCheckVerdict.VALID,
             checked_at=datetime(2025, 3, 15, 10, 0, tzinfo=UTC),
         )

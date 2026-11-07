@@ -181,9 +181,9 @@ class _ProfileWithholdingFields(TypedDict):
     has_employees: bool | None
     colegio_concertado: bool | None
     pays_professionals_with_retencion: bool | None
-    art109_activity_income_withholding_ge_70pct: bool
+    art109_activity_income_withholding_ge_70pct: bool | None
     pays_rent_with_retencion: bool | None
-    pays_capital_income_with_retencion: bool
+    pays_capital_income_with_retencion: bool | None
 
 
 class _ProfileObligationFields(TypedDict):
@@ -314,9 +314,11 @@ def _resolve_profile_withholding_fields(typed: SetupAnswers) -> _ProfileWithhold
         "has_employees": _declared_bool(typed.has_employees),
         "colegio_concertado": colegio_concertado,
         "pays_professionals_with_retencion": _declared_bool(typed.pays_professionals_with_retencion),
-        "art109_activity_income_withholding_ge_70pct": typed.art109_activity_income_withholding_ge_70pct,
+        "art109_activity_income_withholding_ge_70pct": _declared_bool(
+            typed.art109_activity_income_withholding_ge_70pct,
+        ),
         "pays_rent_with_retencion": _declared_bool(typed.pays_rent_with_retencion),
-        "pays_capital_income_with_retencion": typed.pays_capital_income_with_retencion,
+        "pays_capital_income_with_retencion": _declared_bool(typed.pays_capital_income_with_retencion),
     }
 
 
@@ -354,7 +356,7 @@ def _resolve_profile_relationship_fields(
         "iva": _resolve_modelo_iva_profile(canonical, typed),
         "cross_period_group_member_rosters": _parse_cross_period_group_member_rosters(canonical),
         "enrollment": ModeloEnrollment(
-            large_company=typed.enrollment_large_company,
+            large_company=_declared_bool(typed.enrollment_large_company),
             public_administration_budget_gt_6000000=typed.enrollment_public_administration_budget_gt_6000000,
         ),
     }
@@ -459,7 +461,11 @@ MODELO_IVA_BLOCK_CLAIMING_PATHS: frozenset[str] = frozenset(
 #: Undeclared is not the same answer as "no" for these four: each selects a
 #: filing obligation or a deduction entitlement, so defaulting an unanswered
 #: one to ``False`` would file a taxpayer out of a regime they never spoke
-#: about.
+#: about. The other six enrolments carry the same distinction without the
+#: refusal: the projection keeps an unanswered one as ``None`` so the
+#: obligation it gates reports incomplete instead of refusing the whole
+#: block, because those modelos are decided per modelo rather than per
+#: block.
 _MODELO_IVA_REQUIRED_BOOL_PATHS = (
     "iva.redeme_enrolled",
     "iva.cash_accounting_regime_enrolled",
@@ -563,13 +569,15 @@ def _resolve_modelo_iva_profile(canonical: Mapping[str, str], typed: SetupAnswer
     return ModeloIVAProfile(
         tax_territory=_resolve_m303_tax_territory(typed.tax_residence_jurisdiction_scope),
         regime_composition=composition,
-        roi_enrolled=typed.iva_roi_enrolled is True,
-        oss_enrolled=typed.iva_oss_enrolled is True,
-        group_member_enrolled=typed.iva_group_member_enrolled is True,
-        group_dominant_entity_enrolled=typed.iva_group_dominant_entity_enrolled is True,
-        sii_enrolled=typed.iva_sii_enrolled is True,
+        roi_enrolled=_declared_bool(typed.iva_roi_enrolled),
+        oss_enrolled=_declared_bool(typed.iva_oss_enrolled),
+        group_member_enrolled=_declared_bool(typed.iva_group_member_enrolled),
+        group_dominant_entity_enrolled=_declared_bool(typed.iva_group_dominant_entity_enrolled),
+        sii_enrolled=_declared_bool(typed.iva_sii_enrolled),
         redeme_enrolled=_required_iva_bool(typed.iva_redeme_enrolled, path="iva.redeme_enrolled"),
-        intracommunity_operations_exceed_50000_eur=(typed.iva_intracommunity_operations_exceed_50000_eur is True),
+        intracommunity_operations_exceed_50000_eur=_declared_bool(
+            typed.iva_intracommunity_operations_exceed_50000_eur,
+        ),
         cash_accounting_regime_enrolled=_required_iva_bool(
             typed.iva_cash_accounting_regime_enrolled,
             path="iva.cash_accounting_regime_enrolled",
@@ -703,8 +711,10 @@ def _default_iva_regime_for_profile(
 def _resolve_fiscal_residency(raw: FiscalResidency | str) -> FiscalResidency | None:
     """Project the SetupAnswers fiscal-residency field to a typed enum or None.
 
-    A blank string means the operator has not declared fiscal residency
-    (treated as RESIDENT_IRPF by engine consumers); typed ``None`` signals that.
+    A blank string means the operator has not declared fiscal residency, and
+    typed ``None`` carries that forward. No consumer may read it as the
+    resident category: habitual residence in Spain selects the tax itself, so
+    an unanswered residency leaves every residency-gated modelo incomplete.
     """
     if raw == "":
         return None

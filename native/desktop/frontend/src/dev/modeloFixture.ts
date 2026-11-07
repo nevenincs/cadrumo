@@ -1,3 +1,4 @@
+import { requireServed } from "./servedFixtures";
 // The scenario host's modelo family: the modelo port answered from the
 // envelopes in @fixtures/modelo/, which scripts/modelo-fixtures.mjs reads
 // through the application's own read path for a synthetic taxpayer. The
@@ -29,21 +30,26 @@ import {
   type ModeloSaveFormat,
 } from "../shell/modelo";
 import { RELAY_PAYLOAD_LIMIT } from "../shell/relayBounds";
+import { type OutputLanguage } from "../shell/modeloContract/modelo";
+import { type ModeloDeclarationsListProjectionV1 } from "../shell/modeloContract/modeloDeclarations";
+import type { ModeloFilingRecordViewProjection } from "../shell/modeloContract/modeloFilingRecord";
 import {
-  type CreditResolutionListProjection,
-  type ModeloCasillaHelpProjectionV1,
-  type ModeloDeclarationsListProjectionV1,
   type ModeloEditOperatorInputV2,
   type ModeloEditHeldChangeV1,
   type ModeloEditPreflightProjectionV1,
   type ModeloEditRenewalProjectionV1,
-  type ModeloExportPublicResultV3,
-  type ModeloFormIssueLine,
+} from "../shell/modeloContract/modeloEdit";
+import { type ModeloExportPublicResultV3 } from "../shell/modeloContract/modeloExport";
+import {
+  type CreditResolutionListProjection,
   type ModeloWorkCreateProjection,
+} from "../shell/modeloContract/modeloWork";
+import { type ModeloCasillaHelpProjectionV1 } from "../shell/modeloContract/modeloWorkCasillaHelp";
+import {
+  type ModeloFormIssueLine,
   type ModeloWorkbenchFormProjectionV1,
   type PublicModeloFormField,
-  type OutputLanguage,
-} from "../shell/modeloContract";
+} from "../shell/modeloContract/modeloWorkForm";
 import type { Translate } from "../shell/strings";
 import { ASSET_NOTES } from "./modeloAssetNotes";
 import { wholeEnvelopes } from "./modeloEnvelopePatch";
@@ -159,6 +165,7 @@ export const MODELO_SHAPES = [
   "moving",
   "read-only-boxes",
   "list-notes",
+  "related-filings",
   "disagreement",
   "disagreement-raced",
   "disagreement-unknown",
@@ -380,9 +387,12 @@ export type ModeloEnvelopes = Record<string, () => Promise<unknown>>;
 
 /** The envelopes on disk, as the development server serves them. */
 function servedEnvelopes(): ModeloEnvelopes {
-  const found = import.meta.glob<unknown>("@fixtures/modelo/*.json", {
-    import: "default",
-  });
+  const found = requireServed(
+    "modelo/*.json",
+    import.meta.glob<unknown>("@fixtures/modelo/*.json", {
+      import: "default",
+    }),
+  );
   return Object.fromEntries(
     Object.entries(found).map(([path, load]) => [
       path.slice(path.lastIndexOf("/") + 1, -".json".length),
@@ -429,6 +439,22 @@ export function modeloFixture(options: Options): ModeloPort {
   async function envelope<Envelope>(name: string): Promise<Envelope | null> {
     const load = catalogue[name];
     return load ? (structuredClone(await load()) as Envelope) : null;
+  }
+  async function relatedFilingName(
+    id: unknown,
+    language: string,
+  ): Promise<string | null> {
+    for (const name of [
+      "130-original",
+      "130-correction-1",
+      "130-correction-2",
+    ]) {
+      const view = await envelope<ModeloFilingRecordViewProjection>(
+        `filing-view-${name}-${language}`,
+      );
+      if (view?.filing_record_id === id) return name;
+    }
+    return null;
   }
   /** The declarations whose forms were read, by work unit. */
   const forms: Record<string, string> = {};
@@ -496,6 +522,7 @@ export function modeloFixture(options: Options): ModeloPort {
   // How far the answer to the disagreement the applied 130 states has come.
   let answered: "open" | "accepted" | "revoked" = "open";
   let recorded = false;
+  let corrected = false;
   // How far the first quarter's Modelo 130 has come for a filer whose
   // estimate is refused: not created, created, or calculated.
   let quarter: "none" | "drafted" | "calculated" = "none";
@@ -511,8 +538,9 @@ export function modeloFixture(options: Options): ModeloPort {
       case "filed":
       case "stale":
       case "income":
-      case "receipt":
         return `130-1T-${shape}`;
+      case "receipt":
+        return corrected ? "130-1T-correction-1-pending" : "130-1T-receipt";
       case "check-notes":
       case "withholding-link":
         return "130-1T-checked";
@@ -556,17 +584,20 @@ export function modeloFixture(options: Options): ModeloPort {
   /** The language the window last read a form in, which the application
    * words an estimate in. */
   let spoken: OutputLanguage = "en";
+  /** The written form a read of the declaration `name` is answered with
+   * now. */
+  const writtenRead = (name: string | null) =>
+    shape === "wallet" && name === "303-1T"
+      ? `303-1T-wallet-${walletStage}`
+      : name === LATER_STATES
+        ? laterState()
+        : name === RENTA
+          ? rentaForm(shape)
+          : name;
   const readForm = async (workUnitId: string, language: OutputLanguage) => {
     spoken = language;
     const name = await formName(workUnitId);
-    const read =
-      shape === "wallet" && name === "303-1T"
-        ? `303-1T-wallet-${walletStage}`
-        : name === LATER_STATES
-          ? laterState()
-          : name === RENTA
-            ? rentaForm(shape)
-            : name;
+    const read = writtenRead(name);
     const form =
       read &&
       (await envelope<ModeloWorkbenchFormProjectionV1>(
@@ -690,6 +721,8 @@ export function modeloFixture(options: Options): ModeloPort {
   // envelopes are many and some of them megabytes.
   let everyForm: Promise<void> | null = null;
   const readEveryForm = async () => {
+    // Seconds of reading: a check that waits on it can outlast its review.
+    say("modelo scan written forms");
     for (const name of Object.keys(catalogue)) {
       const read = /^modelo-(.+)-(?:en|es|ca|hu)$/.exec(name)?.[1];
       if (!read) continue;
@@ -772,13 +805,15 @@ export function modeloFixture(options: Options): ModeloPort {
       await answer();
       const list = await envelope<ModeloDeclarationsListProjectionV1>(
         `declarations${
-          shape === "wallet"
-            ? "-wallet"
-            : shape === "incomplete"
-              ? "-incomplete"
-              : shape.startsWith("renta")
-                ? "-renta"
-                : ""
+          shape === "related-filings"
+            ? "-corrections"
+            : shape === "wallet"
+              ? "-wallet"
+              : shape === "incomplete"
+                ? "-incomplete"
+                : shape.startsWith("renta")
+                  ? "-renta"
+                  : ""
         }-${language}`,
       );
       if (!list) return reject("unavailable");
@@ -960,6 +995,24 @@ export function modeloFixture(options: Options): ModeloPort {
             );
             if (!renewal) return unserved();
             renewals += 1;
+            // A granted renewal issues the baseline the declaration's next
+            // read admits, and the window may check on it before that read
+            // lands; it names that form now rather than through a scan of
+            // every written form.
+            const renewed = renewal.renewed_baseline;
+            if (renewed) {
+              const next = writtenRead(await formName(renewed.work_unit_id));
+              const read = next
+                ? await envelope<ModeloWorkbenchFormProjectionV1>(
+                    `modelo-${next}-${spoken}`,
+                  )
+                : undefined;
+              if (
+                next &&
+                read?.admitted_baseline?.baseline_id === renewed.baseline_id
+              )
+                admittedBy.set(renewed.baseline_id, next);
+            }
             return renewal;
           }
           case "modelo.edit.apply_prerequisite": {
@@ -1018,9 +1071,40 @@ export function modeloFixture(options: Options): ModeloPort {
               ? written(`disagreements-${laterState()}-${language}`)
               : unserved();
           case "modelo.work.metadata":
-            return receiptShape ? written("metadata-130-receipt") : unserved();
-          case "modelo.work.amendment_context":
-            return receiptShape ? written("amendment-context-130") : unserved();
+            return receiptShape
+              ? written(
+                  corrected
+                    ? "metadata-130-correction-1-pending"
+                    : "metadata-130-receipt",
+                )
+              : unserved();
+          case "modelo.filing_record.view": {
+            const name = await relatedFilingName(
+              request.filing_record_id,
+              language,
+            );
+            return name
+              ? written(`filing-view-${name}-${language}`)
+              : unserved();
+          }
+          case "modelo.work.amendment_context": {
+            if (shape === "related-filings") {
+              const name = await relatedFilingName(
+                request.filing_record_id,
+                language,
+              );
+              return name
+                ? written(`amendment-context-${name}-${language}`)
+                : unserved();
+            }
+            return receiptShape
+              ? written(
+                  corrected
+                    ? `amendment-context-130-correction-1-pending-${language}`
+                    : "amendment-context-130",
+                )
+              : unserved();
+          }
           case "modelo.work.amend":
             if (shape === "correction-unknown")
               reject("unknown", { operation_id: nextOperation() });
@@ -1029,7 +1113,12 @@ export function modeloFixture(options: Options): ModeloPort {
                 operation_id: nextOperation(),
                 reason: "operation_denied",
               });
-            return shape === "receipt" ? written("amend-130") : unserved();
+            if (shape === "receipt") {
+              const amended = await written("amend-130");
+              corrected = true;
+              return amended;
+            }
+            return unserved();
           default:
             return unserved();
         }

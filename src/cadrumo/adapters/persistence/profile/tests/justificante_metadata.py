@@ -21,7 +21,7 @@ def persist_justificante_metadata(
     filing_year: int,
     period: str,
     captured_at: datetime,
-    tax_id: str = "X1234567L",
+    tax_id: str = "X0001500M",
     presentation_id: str | None = None,
 ) -> None:
     """Persist a justificante record through the concrete profile repository."""

@@ -108,7 +108,7 @@ def _capital_capture_request() -> LedgerPaymentWithholdingEvidenceRequest:
         withholding_amount=Decimal("19.00"),
         net_settlement=Decimal("81.00"),
         idempotency_key="capture-1",
-        perceptor_nif="11111111H",
+        perceptor_nif="00001500M",
         perceptor_name="Annual detail subject",
         exigibility_event_id="exigible-2025-01",
         exigibility_occurred_on=date(2025, 1, 10),
@@ -342,7 +342,7 @@ def test_request_rejects_caller_retenciones_and_mixed_capture_before_execution()
     observation = RetencionObservation(
         source_kind=BindingSourceKind.LEDGER_TRANSACTION,
         source_object_id="transaction-1",
-        perceptor_nif="11111111H",
+        perceptor_nif="00001500M",
         perceptor_name="Private subject",
         scheme=RetencionScheme("actividades_profesionales"),
         taxable_base=Decimal("100.00"),
@@ -365,7 +365,7 @@ def test_request_rejects_caller_retenciones_and_mixed_capture_before_execution()
     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
         annual_detail = WithholdingObservation(
             source_id="transaction-1",
-            perceptor_tax_id="11111111H",
+            perceptor_tax_id="00001500M",
             transaction_date=date(2025, 1, 15),
             clave=RetencionClave.from_registry("A"),
             percibido_dinerario=Decimal("100.00"),
@@ -518,9 +518,9 @@ def test_annual_summary_projects_the_per_clave_rows_its_calculation_reads(
     """Modelo 190 composes the year's Modelo 111 detail and reports it per clave without perceptor identities."""
     percepciones = _PercepcionRepository(
         (
-            _percepcion("row-1", "11111111H", "A"),
-            _percepcion("row-2", "22222222J", "A"),
-            _percepcion("row-3", "33333333P", "G"),
+            _percepcion("row-1", "00001500M", "A"),
+            _percepcion("row-2", "00001501Y", "A"),
+            _percepcion("row-3", "00001502F", "G"),
         )
     )
 
@@ -536,7 +536,7 @@ def test_annual_summary_projects_the_per_clave_rows_its_calculation_reads(
         for row in projection.clave_breakdown or ()
     ] == [("A", 2, "2000.00", "300.00"), ("G", 1, "1000.00", "150.00")]
     serialized = projection.model_dump_json()
-    assert "11111111H" not in serialized
+    assert "00001500M" not in serialized
     assert "row-1" not in serialized
 
 
@@ -559,7 +559,7 @@ def _snapshot_observation() -> RetencionObservation:
     return RetencionObservation(
         source_kind=BindingSourceKind.LEDGER_TRANSACTION,
         source_object_id="1" * 64,
-        perceptor_nif="11111111H",
+        perceptor_nif="00001500M",
         perceptor_name="Synthetic recipient",
         scheme=RetencionScheme("actividades_profesionales"),
         taxable_base=Decimal("100.00"),

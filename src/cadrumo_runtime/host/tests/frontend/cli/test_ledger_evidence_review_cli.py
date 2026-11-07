@@ -52,7 +52,7 @@ _GROUNDED_REFERENCE = "ev-grounded-001"
 
 def _clean_draft() -> InvoiceDraft:
     return InvoiceDraft(
-        supplier_tax_id="ESB12345674",
+        supplier_tax_id="ESB00015016",
         supplier_name="Acme Suministros SL",
         invoice_number="2026-0142",
         invoice_date="2026-03-10",
@@ -87,8 +87,8 @@ def _blocked_draft() -> InvoiceDraft:
                     origin=FieldOrigin.TEXT_LAYER,
                     grounding=FieldGroundingOutcome.AMBIGUOUS,
                     candidates=(
-                        FieldAmbiguityCandidate(value="ESB12345674", note="header block"),
-                        FieldAmbiguityCandidate(value="ESX1234567L", note="footer block"),
+                        FieldAmbiguityCandidate(value="ESB00015016", note="header block"),
+                        FieldAmbiguityCandidate(value="ESX0001500M", note="footer block"),
                     ),
                 ),
             ),

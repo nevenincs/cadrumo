@@ -382,7 +382,7 @@ def test_new_entity_override_takes_precedence_over_micro_empresa_lane() -> None:
 
 def _legal_entity_profile(incn: Decimal | None) -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         legal_entity_form=LegalEntityForm.from_registry("sl"),
         iva_regime=IVARegime("GENERAL"),
@@ -461,7 +461,7 @@ def test_modelo_202_modality_is_incomplete_for_non_legal_entity() -> None:
     Modelo 202 modality question.
     """
     natural_person = TaxpayerProfile(
-        tax_id="A45678901",
+        tax_id="A00015024",
         entity_type=EntityType.from_registry("natural_person"),
         iva_regime=IVARegime("GENERAL"),
         incn_prior_12_months=Decimal("9000000"),

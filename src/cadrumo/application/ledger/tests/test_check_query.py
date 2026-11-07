@@ -123,7 +123,7 @@ def _invoice_citing_a_missing_row() -> InvoiceCatalogue:
             "invoice_number": "INV-ONE-SIDED",
             "issued_at": date(2024, 4, 1),
             "counterparty_name": "Cliente SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": Decimal("100.00"),
             "iva_total": Decimal("21.00"),

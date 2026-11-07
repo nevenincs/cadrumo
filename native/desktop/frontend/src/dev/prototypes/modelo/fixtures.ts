@@ -31,6 +31,8 @@ const ENVELOPES: Record<string, Record<"en" | "es", unknown>> = {
 
 /** The day every story is read on, so deadlines read the same everywhere. */
 export const FIXTURE_TODAY = "2026-10-14";
+/** The year of `FIXTURE_TODAY`, which every story files in. */
+export const FIXTURE_FILING_YEAR = Number(FIXTURE_TODAY.slice(0, 4));
 
 const ANNUAL_CLOSES: Record<string, string> = {
   "347": "2027-02-28",
@@ -56,8 +58,8 @@ export function envelope(modelo: string, locale: string): FormEnvelope {
   const closes = annual
     ? (ANNUAL_CLOSES[modelo] ?? "2027-01-30")
     : "2026-10-20";
-  f.period = { filing_year: 2026, code: annual ? "0A" : "3T" };
-  f.filing_year = 2026;
+  f.period = { filing_year: FIXTURE_FILING_YEAR, code: annual ? "0A" : "3T" };
+  f.filing_year = FIXTURE_FILING_YEAR;
   for (const page of f.pages)
     for (const s of page.sections)
       for (const b of s.blocks)
@@ -276,7 +278,10 @@ export type ListRow = {
     | null;
 };
 
-const q = (code: string, year = 2026) => ({ filing_year: year, code });
+const q = (code: string, year = FIXTURE_FILING_YEAR) => ({
+  filing_year: year,
+  code,
+});
 
 function cal(
   closes: string,

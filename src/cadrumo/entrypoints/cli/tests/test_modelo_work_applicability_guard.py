@@ -70,7 +70,7 @@ def _create_legal_entity() -> None:
     register_cli_profile(
         label="company",
         facts={
-            "identity.tax_id": "B12345674",
+            "identity.tax_id": "B00015016",
             "identity.name": "Company",
             "identity.legal_name": "Company SL",
             "activities.description": "consulting",
@@ -87,7 +87,7 @@ def _create_non_resident_irnr_natural_person() -> None:
     register_cli_profile(
         label="nonresident",
         facts={
-            "identity.tax_id": "X1234567L",
+            "identity.tax_id": "X0001500M",
             "identity.name": "Non Resident",
             "identity.surnames": "Guard",
             "activities.description": "design",

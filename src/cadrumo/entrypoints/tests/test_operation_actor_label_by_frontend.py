@@ -190,7 +190,7 @@ def test_counterparty_confirmation_records_the_session_label_for_an_automation(
         request = LedgerCounterpartyRequest(
             profile_id=profile_id,
             action="confirm",
-            tax_identifier="B12345674",
+            tax_identifier="B00015016",
             territorial_scope="es_canarias",
             asserted_by=_TYPED_ACTOR,
             note="synthetic assertion",

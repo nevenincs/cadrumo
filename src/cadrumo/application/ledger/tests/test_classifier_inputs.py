@@ -26,7 +26,7 @@ from ..invoice_draft_records import InvoiceDraft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_SUPPLIER_CIF = "B12345674"
+_SUPPLIER_CIF = "B00015016"
 _CUSTOMER_NIF = "12345678Z"
 
 

@@ -673,7 +673,7 @@ def test_a_foral_period_leaves_registered_assets_out_with_a_finding_and_refuses_
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=BUCKET_ID,
             facts=(
-                UserProfileFact(path="identity.tax_id", value="X1234567L"),
+                UserProfileFact(path="identity.tax_id", value="X0001500M"),
                 UserProfileFact(path="tax_residence.ccaa", value="navarra"),
                 *cash_criterion_facts(2025),
             ),
@@ -703,7 +703,7 @@ def test_an_unreadable_residence_leaves_registered_assets_out_with_a_finding(res
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=BUCKET_ID,
             facts=(
-                UserProfileFact(path="identity.tax_id", value="X1234567L"),
+                UserProfileFact(path="identity.tax_id", value="X0001500M"),
                 UserProfileFact(path="tax_residence.ccaa", value="not-a-region"),
                 *cash_criterion_facts(2025),
             ),

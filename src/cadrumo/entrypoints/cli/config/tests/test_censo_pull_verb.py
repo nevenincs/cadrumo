@@ -215,7 +215,7 @@ def test_a_clear_and_a_value_conflict_raise_separate_notices() -> None:
     message would describe their deletion as an answer they declared.
     """
     cleared = CensoPullDivergencePayload(path="contact.postcode", profile_value=None, aeat_value="28001")
-    contested = CensoPullDivergencePayload(path="identity.tax_id", profile_value="00000000T", aeat_value="99999999R")
+    contested = CensoPullDivergencePayload(path="identity.tax_id", profile_value="00000000T", aeat_value="00001506B")
 
     both = censo_commands.pull_notices(applied=False, adopted=(), divergences=(cleared, contested))
     codes = {notice.code for notice in both}
@@ -259,7 +259,7 @@ def test_a_divergence_whose_values_are_masked_says_so() -> None:
     assert redact_for_cli_output(tax_id) != tax_id, "precondition: the funnel masks a NIF"
     assert redact_for_cli_output(postcode) == postcode, "precondition: the funnel leaves a postcode alone"
 
-    masked = CensoPullDivergencePayload(path="identity.tax_id", profile_value=tax_id, aeat_value="99999999R")
+    masked = CensoPullDivergencePayload(path="identity.tax_id", profile_value=tax_id, aeat_value="00001506B")
     plain = CensoPullDivergencePayload(path="contact.postcode", profile_value=postcode, aeat_value="08001")
 
     assert censo_commands.values_are_withheld(masked)
@@ -318,7 +318,7 @@ def test_a_populated_result_renders_every_outcome_through_the_real_emit_path() -
         profile_value=None,
         aeat_value="9872023VH5797S",
     )
-    contested = CensoPullDivergencePayload(path="identity.tax_id", profile_value="00000000T", aeat_value="99999999R")
+    contested = CensoPullDivergencePayload(path="identity.tax_id", profile_value="00000000T", aeat_value="00001506B")
     result = CensoPullResult(
         applied=True,
         source_url=_CENSAL_CONSULTA_URL,

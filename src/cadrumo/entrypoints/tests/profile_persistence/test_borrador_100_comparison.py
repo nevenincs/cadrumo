@@ -362,7 +362,7 @@ def _compared_credit_and_residence(profile: _Profile) -> _ComparedWorld:
         operation=profile.operation,
         taxpayer_tax_id=_TAX_ID,
         ejercicio=_YEAR,
-        payer_tax_id="B12345674",
+        payer_tax_id="B00015016",
         income_class=RetencionSoportadaClase.TRABAJO,
         retencion=Decimal("1.00"),
     )

@@ -24,6 +24,7 @@ as_of = { year = "horizon", month = 2, day = 16 }
 "name" = { identity = "arrendador.titular", field = "name" }
 "surnames" = { identity = "arrendador.titular", field = "surnames" }
 "fiscal-residency" = "resident_irpf"
+"enrollment-large-company" = false
 "tax-residence-jurisdiction-scope" = "common_regime"
 "tax-residence-ccaa" = "andalucia"
 "address-postcode" = "41010"

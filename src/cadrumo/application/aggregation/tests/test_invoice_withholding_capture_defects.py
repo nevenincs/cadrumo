@@ -43,7 +43,7 @@ def _invoice(
     *,
     kind: InvoiceKind = InvoiceKind.RECEIVED,
     country: str = "ES",
-    tax_id: str = "B12345674",
+    tax_id: str = "B00015016",
     retention_amount: str | None = "190.00",
     retention_rate: str | None = "0.19",
 ) -> Invoice:

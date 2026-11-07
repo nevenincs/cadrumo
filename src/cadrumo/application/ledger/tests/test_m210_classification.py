@@ -113,7 +113,7 @@ def _complete(**overrides: object) -> _Answers:
         # Required by the domain model: a non-35 income code declared under a
         # single payer must name that payer. Omitting it makes the "complete"
         # fixture incomplete and every refusal below untestable.
-        "payer_id": "B12345674",
+        "payer_id": "B00015016",
     }
     # `update` rather than a literal merge: the overrides arrive untyped from
     # `**overrides`, and a TypedDict rejects an unknown key at type level while

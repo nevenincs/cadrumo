@@ -117,7 +117,7 @@ def _correction(*, linked: tuple[str, ...]) -> Invoice:
             "invoice_number": "AB-1",
             "issued_at": date(_YEAR, 5, 1),
             "counterparty_name": "Proveedor SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": base,
             "iva_total": iva,

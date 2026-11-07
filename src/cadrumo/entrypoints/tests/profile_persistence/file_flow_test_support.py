@@ -330,7 +330,7 @@ _VERIFY_PERIOD = "0A"
 _VERIFY_YEAR = 2024
 _READY_PROFILE_FACTS = persona_facts_beneath(
     (
-        UserProfileFact(path="identity.tax_id", value="X1234567L"),
+        UserProfileFact(path="identity.tax_id", value="X0001500M"),
         UserProfileFact(path="identity.name", value="Ready"),
         UserProfileFact(path="identity.surnames", value="Operator"),
         UserProfileFact(path="activities.description", value="file-flow"),

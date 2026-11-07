@@ -137,7 +137,7 @@ def ambiguous_relacion_indices(new_rows: list[DescendantInfo], *, index_offset: 
 
 
 def ambiguous_relacion_notice(ambiguous_indices: tuple[int, ...]) -> Notice:
-    """Advisory notice for :func:`_ambiguous_relacion_indices`.
+    """Advisory notice for :func:`ambiguous_relacion_indices`.
 
     Routed through the locale catalogues, unlike the calculate-time sibling in
     ``_calculate_input.py``: every other operator-facing string this module

@@ -23,8 +23,9 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.tests.published_authority import published_selected_revision_id
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.engine import DeadlineEngine
-from ....domain.deadlines.models import TaxpayerProfile
+from ....domain.deadlines.models import ModeloEnrollment, TaxpayerProfile
 from ....domain.iva_compensation.filed_derivation import M303CompensationBasis
 from ....domain.justificante.schema import Justificante
 from ....domain.modelos.codes import ModeloCode
@@ -289,7 +290,7 @@ def filed_declaration_observation(
         _expediente_id=expediente_id,
         _status="ALTA",
         _presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
-        _authenticated_identity="X1234567L",
+        _authenticated_identity="X0001500M",
         _artefacts=artefacts,
     )
 
@@ -314,7 +315,7 @@ def justificante_metadata(
     modelo: str = "303",
     filing_year: int = 2025,
     period: Period = PERIOD_2025_1T,
-    tax_id: str = "X1234567L",
+    tax_id: str = "X0001500M",
 ) -> Justificante:
     pdf_bytes = f"{csv}-pdf".encode()
     source_pdf_sha256 = hashlib.sha256(pdf_bytes).hexdigest()
@@ -401,7 +402,7 @@ def profile() -> TaxpayerProfile:
     """A declared autónomo en estimación directa."""
 
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
@@ -413,4 +414,9 @@ def profile() -> TaxpayerProfile:
         does_intracomunitario=False,
         third_party_transactions_above_347_threshold=False,
         bienes_extranjero_above_threshold=False,
+        # Habitual residence in Spain selects the IRPF family these rows
+        # belong to, and the large-company condition selects their cadence.
+        # Both are stated so no assertion below turns on an unasked question.
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
+        enrollment=ModeloEnrollment(large_company=False),
     )

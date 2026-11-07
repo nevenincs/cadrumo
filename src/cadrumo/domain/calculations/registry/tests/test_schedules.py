@@ -172,7 +172,7 @@ def test_resolve_profile_fact_taxpayer_entity_type_special_case() -> None:
     from ....deadlines.models import TaxpayerProfile
 
     profile = TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         iva_regime=IVARegime("GENERAL"),
     )

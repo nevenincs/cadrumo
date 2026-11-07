@@ -321,7 +321,7 @@ class TestFailClosedRefusals:
         assert first_catalogue.events
         first_event = next(iter(first_catalogue.events.values()))
 
-        _create_profile("history-second", tax_id="87654321X")
+        _create_profile("history-second", tax_id="X0001502F")
         result = _invoke_with_root_profile_secret(
             [
                 "--format",

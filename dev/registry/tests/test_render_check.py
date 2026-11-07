@@ -441,6 +441,46 @@ def test_one_tree_cannot_be_both_refused_and_drifting(tmp_path: Path) -> None:
         disposition_ledger_from_path(path)
 
 
+def test_one_tree_cannot_be_both_below_the_floor_and_drifting(tmp_path: Path) -> None:
+    """Both rows explain a drifting tree, so whichever came first would decide the verdict."""
+    floor = compiled_bundled_authority().supported_filing_years().floor
+    row = f'''
+[[dispositions]]
+kind = "below_floor"
+modelo = "347"
+revision = "2011-2024"
+source_ref = "aeat-dr-347-2011"
+source_sha256 = "{_VALID_SHA}"
+supported_filing_years_floor = {floor}
+revision_last_filing_year = {floor - 1}
+reason = "Every filing year the revision declares lies below the floor."
+reconsideration_condition = "Remove when the floor admits the revision."
+'''
+    path = tmp_path / "dispositions.toml"
+    path.write_text(_ledger_text(row), encoding="utf-8")
+    assert len(disposition_ledger_from_path(path)) == 1
+    path.write_text(_ledger_text(row + _DRIFT_ROW), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="duplicate subjects for one tree state"):
+        disposition_ledger_from_path(path)
+
+
+def test_a_drifting_tree_may_also_carry_its_type_column_ruling(tmp_path: Path) -> None:
+    """A tree can owe a republish and already need the ruling its new records stand on."""
+    ruling = _CONTRADICTION_ROW.replace('modelo = "390"', 'modelo = "347"').replace(
+        'revision = "2025"', 'revision = "2011-2024"'
+    )
+    path = tmp_path / "dispositions.toml"
+    path.write_text(_ledger_text(_DRIFT_ROW + ruling), encoding="utf-8")
+
+    loaded = disposition_ledger_from_path(path)
+
+    assert {(item.kind, item.subject) for item in loaded} == {
+        ("record_drift", "347/2011-2024"),
+        ("type_column_contradiction", "347/2011-2024"),
+    }
+
+
 def test_the_previous_ledger_version_is_refused(tmp_path: Path) -> None:
     """The bump is not cosmetic: version 2 rows carry no class and cannot be read as one."""
     path = tmp_path / "dispositions.toml"

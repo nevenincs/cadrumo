@@ -55,7 +55,7 @@ def _production_rule(operation: PinnedAuthorityOperation, modelo: str) -> Modelo
 
 def _m720_profile(declaration: bool | None) -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         iva_regime=IVARegime("GENERAL"),
         bienes_extranjero_above_threshold=declaration,
@@ -168,7 +168,7 @@ def test_period_companion_fact_does_not_accept_a_ledger_derivation(
     assert fact.period_companion is not None
 
     profile = TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=EntityType.from_registry("natural_person"),
         iva_regime=IVARegime("EXENTO"),
         premio_loteria_gravamen_especial_sin_retencion=True,
@@ -224,7 +224,7 @@ def test_holding_legal_exclusion_wins_even_after_an_undetermined_exclusion(
     )
     profile = _m347_profile(
         declaration=False,
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         iva_regime=IVARegime("GENERAL"),
         roles=collector_exclusion.declaration_roles,
@@ -247,7 +247,7 @@ def test_undetermined_exclusions_keep_their_authored_order(operation: PinnedAuth
     activity_exclusion = next(exclusion for exclusion in rule.exclusions if exclusion.id == "m347-sin-actividad")
     profile = _m347_profile(
         declaration=True,
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=EntityType.from_registry("natural_person"),
         iva_regime=IVARegime("NO_APLICA"),
         roles=frozenset(),

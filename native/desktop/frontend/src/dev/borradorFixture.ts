@@ -1,3 +1,4 @@
+import { requireServed } from "./servedFixtures";
 import type { BorradorComparison, BorradorPort } from "../shell/borrador";
 
 // The comparison of the AEAT draft with the saved Modelo 100 calculation that
@@ -22,9 +23,11 @@ export type BorradorScenario = (typeof BORRADOR_SCENARIOS)[number];
 export type BorradorEnvelopes = Record<string, () => Promise<unknown>>;
 
 function servedEnvelopes(): BorradorEnvelopes {
-  const found = import.meta.glob<unknown>(
-    "@fixtures/modelo/borrador-100-0A-*.json",
-    { import: "default" },
+  const found = requireServed(
+    "modelo/borrador-100-0A-*.json",
+    import.meta.glob<unknown>("@fixtures/modelo/borrador-100-0A-*.json", {
+      import: "default",
+    }),
   );
   return Object.fromEntries(
     Object.entries(found).map(([path, load]) => [

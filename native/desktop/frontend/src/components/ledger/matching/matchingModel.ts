@@ -10,8 +10,8 @@ import type {
   LedgerCheckResult,
   LedgerInvoiceMatchPair,
   LedgerInvoiceMatchResult,
-  LedgerRow,
-} from "../../../shell/ledger";
+} from "../../../shell/ledgerInvoiceOperations";
+import type { LedgerRow } from "../../../shell/ledger";
 import type { StageEvent, StagedAction } from "../../../shell/ledgerStage";
 
 /** The evidence a pair stands on, shown as chips. */

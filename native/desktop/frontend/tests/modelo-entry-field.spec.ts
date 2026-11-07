@@ -7,8 +7,8 @@ import {
 import type {
   ModeloEditValueGrammarV1,
   ModeloEditWritableScalarSurfaceEntryV1,
-  PublicModeloFormField,
-} from "../src/shell/modeloContract";
+} from "../src/shell/modeloContract/modeloEditWork";
+import type { PublicModeloFormField } from "../src/shell/modeloContract/modeloWorkForm";
 import type { Translate } from "../src/shell/strings";
 
 // Which editor an address takes, from the grammar the application serves. The

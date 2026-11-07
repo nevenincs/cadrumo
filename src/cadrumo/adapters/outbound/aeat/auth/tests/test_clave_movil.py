@@ -78,7 +78,7 @@ def test_auth_browser_action_policy_admits_aeat_sibling_and_refuses_external_hos
 
 @pytest.mark.parametrize(
     ("identity", "expected_kind"),
-    [("12345678Z", "DNI"), ("X1234567L", "NIE"), ("K0001000B", "DNI"), ("M0001002J", "DNI")],
+    [("12345678Z", "DNI"), ("X0001500M", "NIE"), ("K0001000B", "DNI"), ("M0001002J", "DNI")],
 )
 def test_identity_classification_accepts_supported_people(identity: str, expected_kind: str) -> None:
     """Every natural-person document the domain recognises reaches the flow.
@@ -108,13 +108,13 @@ def test_identity_classification_refuses_an_organisation_by_naming_what_it_is() 
     also true of a typo and of an empty string.
     """
     with pytest.raises(ClaveMovilConfigurationError) as excinfo:
-        classify_identity("B66012345")
+        classify_identity("B00015032")
     message = str(excinfo.value)
     assert "CIF" in message
     assert "natural person" in message
 
 
-@pytest.mark.parametrize("identity", ["B12345674", ""])
+@pytest.mark.parametrize("identity", ["B00015016", ""])
 def test_identity_classification_rejects_unsupported_identity(identity: str) -> None:
     with pytest.raises(ClaveMovilConfigurationError, match=r"NIF|NIE|identity|CIF|empty"):
         classify_identity(identity)
@@ -151,10 +151,10 @@ def test_attempt_context_uses_profile_storage_and_redacts_identity_values() -> N
         register_minimal_profile(
             profile_id=bucket_id,
             display_name="Clave Movil Test",
-            overrides={"identity.tax_id": "X1234567L"},
+            overrides={"identity.tax_id": "X0001500M"},
         )
         settings = Settings(
-            cadrumo_clave_movil_dni_nie=SecretStr("X1234567L"),
+            cadrumo_clave_movil_dni_nie=SecretStr("X0001500M"),
             cadrumo_clave_movil_nie_soporte=SecretStr("support-marker"),
             cadrumo_clave_prefer_non_qr=True,
             cadrumo_clave_movil_timeout_ms=120_000,
@@ -166,7 +166,7 @@ def test_attempt_context_uses_profile_storage_and_redacts_identity_values() -> N
     assert context["identity_kind"] == "NIE"
     assert context["identity_alignment"] == "matches"
     assert context["profile_tax_id_present"] is True
-    assert "X1234567L" not in serialized
+    assert "X0001500M" not in serialized
     assert "support-marker" not in serialized
 
 

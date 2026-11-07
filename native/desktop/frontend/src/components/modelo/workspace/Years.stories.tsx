@@ -9,12 +9,12 @@ import {
 } from "@/dev/servedRentaYears";
 import { translator } from "../../../shell/strings";
 import type { ModeloPort } from "../../../shell/modelo";
+import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
+import type { ModeloTaxationComparisonProjection } from "../../../shell/modeloContract/modeloWork";
 import type {
   ModeloFormElection,
-  ModeloTaxationComparisonProjection,
-  OutputLanguage,
   PublicModeloFormExportOffer,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloWorkForm";
 import type { LedgerErrorDetail } from "../../../shell/ledger";
 import { Settlement } from "./Settlement";
 import { WorkspaceScreen } from "./WorkspaceScreen";
@@ -112,7 +112,9 @@ function ByYear({ locale, view }: { locale: OutputLanguage; view: View }) {
           {years.map((served) => (
             <option key={served.shape} value={served.shape}>
               {served.year}
-              {served.projected ? ` (${served.revision})` : ""}
+              {served.projection.direction !== "authored"
+                ? ` (${served.revision})`
+                : ""}
             </option>
           ))}
         </select>
@@ -250,13 +252,14 @@ export const ProjectedYear: Story = {
   render: (_, { globals }) => <ByYear locale={language(globals)} view="form" />,
   play: async ({ canvasElement, globals }) => {
     const years = await servedYears(language(globals));
-    const projected = years.filter((served) => served.projected);
+    const projected = years.filter(
+      (served) => served.projection.direction !== "authored",
+    );
     expect(projected.length).toBeGreaterThan(0);
     for (const served of projected) {
       await choose(canvasElement, served);
-      // Its edition is an earlier year's, never its own.
-      expect(served.revision).not.toBe(String(served.year));
-      expect(Number(served.revision)).toBeLessThan(served.year);
+      // The registry carries the newest edition forward to it.
+      expect(served.projection.direction).toBe("forward");
     }
   },
 };

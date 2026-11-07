@@ -88,7 +88,7 @@ def _content_findings(modelo_code: str, period_code: str) -> list[ModeloVerifica
         findings, _resolved, _missing, failures = collect_revision_verification_findings(
             work_unit=work_unit,
             target=target,
-            profile=TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL")),
+            profile=TaxpayerProfile(tax_id="X0001500M", iva_regime=IVARegime("GENERAL")),
             transaction_repository=EmptyTransactionCatalogueRepository(bucket_id=work_unit.bucket_id),
             invoice_repository=InvoiceCatalogueFake(),
             operation=operation,

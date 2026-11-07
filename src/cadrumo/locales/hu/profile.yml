@@ -260,8 +260,6 @@ profile:
         tax_id:
           label: Adóazonosító (NIF/NIE/CIF)
       irpf:
-        activity_income_cash_criterion_elected:
-          label: A bevallásban megjelölt pénzforgalmi szemlélet
         activity_income_imputation_criterion:
           choices:
             cobros_y_pagos: Pénzforgalom szerint (RIRPF 7.2. cikk)
@@ -276,10 +274,6 @@ profile:
           label: Megfelel a RIRPF 109. cikk 70%-os kivételének
         codigo_comercio_accounting:
           label: A Código de Comercio szerinti könyvvitelt vezetsz
-        estimation_directa:
-          label: A becslési rendszer közvetlen becslés
-        estimation_directa_normal:
-          label: A közvetlen becslés normál módja
         estimation_regime:
           choices:
             directa_normal: Normál közvetlen becslés

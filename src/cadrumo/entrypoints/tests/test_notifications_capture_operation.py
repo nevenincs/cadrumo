@@ -158,9 +158,9 @@ def _snapshot() -> NotificationsSnapshot:
         certificado_id="1234567890",
         tipo=NotificationType.NOTIFICACION,
         concepto="Notificación sintética",
-        titular_nif="X1234567L",
+        titular_nif="X0001500M",
         titular_nombre="Titular sintético",
-        destinatario_nif="X1234567L",
+        destinatario_nif="X0001500M",
         destinatario_nombre="Titular sintético",
         fecha_emision=_NOW.date(),
         fecha_notificacion=None,
@@ -188,7 +188,7 @@ def test_capture_executor_fetches_before_fresh_guard_and_projects_receipt(
     class Query:
         async def fetch(self, session: object, *, settings: object) -> NotificationsSnapshot:
             del settings
-            assert cast(Any, session).identity_nif == "X1234567L"
+            assert cast(Any, session).identity_nif == "X0001500M"
             events.append("remote-fetch")
             return _snapshot()
 
@@ -212,7 +212,7 @@ def test_capture_executor_fetches_before_fresh_guard_and_projects_receipt(
             assert kwargs["authority_operation"] is authority
             assert kwargs["operation"] == "live-notifications-pull"
             events.append("authenticated-session")
-            return SimpleNamespace(identity_nif="X1234567L"), object()
+            return SimpleNamespace(identity_nif="X0001500M"), object()
 
         monkeypatch.setattr(notifications_module, "active_verified_session", active_session)
 
@@ -312,7 +312,7 @@ def _supervised_capture(
         assert kwargs["authority_operation"] is authority
         assert kwargs["operation"] == "live-notifications-pull"
         events.append("authenticated-session")
-        return SimpleNamespace(identity_nif="X1234567L"), object()
+        return SimpleNamespace(identity_nif="X0001500M"), object()
 
     monkeypatch.setattr(notifications_module, "active_verified_session", active_session)
 
@@ -368,7 +368,7 @@ def test_supervisor_settles_capture_with_fresh_commit_and_dedup_receipts(
         class Query:
             async def fetch(self, session: object, *, settings: object) -> NotificationsSnapshot:
                 del settings
-                assert cast(Any, session).identity_nif == "X1234567L"
+                assert cast(Any, session).identity_nif == "X0001500M"
                 events.append("remote-fetch")
                 return _snapshot()
 

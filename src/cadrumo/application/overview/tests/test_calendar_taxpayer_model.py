@@ -11,7 +11,14 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.contribuyente.entity_type import EntityType
-from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
+from ....domain.contribuyente.renta_codes import FiscalResidency
+from ....domain.deadlines.models import (
+    IrpfEstimationRegime,
+    IrpfIncomeCategory,
+    IVARegime,
+    ModeloEnrollment,
+    TaxpayerProfile,
+)
 from ...live.expedientes import PersistedExpedientesSnapshot
 from ...live.expedientes_ports import ExpedientesDeclaration
 from ..calendar import build_overview_calendar
@@ -30,7 +37,7 @@ def _landlord_profile() -> TaxpayerProfile:
     """A pure landlord: rendimientos del capital inmobiliario only."""
 
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("capital_inmobiliario")}),
         iva_regime=IVARegime("EXENTO"),
@@ -40,7 +47,7 @@ def _landlord_profile() -> TaxpayerProfile:
 def _undeclared_profile() -> TaxpayerProfile:
     """A profile with no taxpayer model declared at all."""
 
-    return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL"))
+    return TaxpayerProfile(tax_id="X0001500M", iva_regime=IVARegime("GENERAL"))
 
 
 def test_calendar_landlord_never_shows_modelo_130(authority_operation: PinnedAuthorityOperation) -> None:
@@ -77,10 +84,17 @@ def _autonomo_without_declared_regime() -> TaxpayerProfile:
     """
 
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         iva_regime=IVARegime("GENERAL"),
+        # The RIRPF art. 109.1 coverage fact is three-state, and the subject
+        # here is the estimation-regime axis alone: this autónomo states that
+        # the exception does not hold, so an unanswered coverage fact cannot
+        # be what decides Modelo 130.
+        art109_activity_income_withholding_ge_70pct=False,
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
+        enrollment=ModeloEnrollment(large_company=False),
     )
 
 
@@ -228,7 +242,7 @@ def _fully_enrolled_autonomo() -> TaxpayerProfile:
     """
 
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
@@ -254,11 +268,13 @@ def _objetiva_autonomo() -> TaxpayerProfile:
     """
 
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("objetiva"),
         iva_regime=IVARegime("SIMPLIFICADO"),
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
+        enrollment=ModeloEnrollment(large_company=False),
     )
 
 
@@ -514,7 +530,7 @@ def _legal_entity() -> TaxpayerProfile:
     from ....domain.contribuyente.entity_type import LegalEntityForm
 
     return TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         legal_entity_form=LegalEntityForm.from_registry("sl"),
         iva_regime=IVARegime("GENERAL"),
@@ -525,7 +541,7 @@ def _attribution_entity() -> TaxpayerProfile:
     """An attribution entity — comunidad de bienes / sociedad civil."""
 
     return TaxpayerProfile(
-        tax_id="E12345674",
+        tax_id="E00015008",
         entity_type=EntityType.from_registry("attribution_entity"),
         iva_regime=IVARegime("GENERAL"),
     )
@@ -582,7 +598,7 @@ def test_calendar_suppresses_modelo_721_without_crypto_abroad_threshold(
     rng = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 3, 31))
     for declared, expected_verdict in ((False, "not_applicable"), (None, "incomplete")):
         profile = TaxpayerProfile(
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             entity_type=EntityType.from_registry("natural_person"),
             irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("trabajo")}),
             iva_regime=IVARegime("GENERAL"),

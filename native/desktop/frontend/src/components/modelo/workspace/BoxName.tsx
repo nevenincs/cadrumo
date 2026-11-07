@@ -1,4 +1,4 @@
-import type { PublicModeloFormField } from "../../../shell/modeloContract";
+import type { PublicModeloFormField } from "../../../shell/modeloContract/modeloWorkForm";
 import { BoxNumber } from "../form/BoxNumber";
 import { BoxLabel } from "./BoxLabel";
 

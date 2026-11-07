@@ -13,7 +13,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 def test_taxpayer_profile_projects_objective_estimation_exclusion_volumes() -> None:
     profile = taxpayer_profile_from_mapping(
         {
-            "identity.tax_id": "X1234567L",
+            "identity.tax_id": "X0001500M",
             "tax_residence.jurisdiction_scope": "common_regime",
             "iva.regime": "GENERAL",
             "iva.m303_regime_composition": "general",
@@ -27,7 +27,7 @@ def test_taxpayer_profile_projects_objective_estimation_exclusion_volumes() -> N
             "irpf.objective_estimation_prior_year_agri_livestock_forest_gross_eur": "250000.01",
             "irpf.objective_estimation_prior_year_purchases_eur": "250000.01",
         },
-        tax_id_default="X1234567L",
+        tax_id_default="X0001500M",
     )
 
     assert profile.irpf_estimation_regime == IrpfEstimationRegime.from_registry("objetiva")
@@ -41,7 +41,7 @@ def test_taxpayer_profile_projects_objective_estimation_exclusion_volumes() -> N
 
 def test_taxpayer_profile_round_trips_objective_estimation_exclusion_volumes() -> None:
     original = TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         iva_regime=IVARegime("GENERAL"),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("objetiva"),
         objective_estimation_prior_year_gross_income_eur=Decimal("250000.01"),

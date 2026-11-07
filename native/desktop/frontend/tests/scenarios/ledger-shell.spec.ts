@@ -1,8 +1,14 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { fixtureLedger } from "../../src/dev/fixtures/ledger";
+import {
+  fixtureLedger,
+  LEDGER_FIXTURE_TODAY,
+} from "../../src/dev/fixtures/ledger";
 import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
 import { servedPeriodName, servedYearName } from "../support/servedPeriods";
+
+/** The year of the scenario ledger's date, whose periods the scenarios open. */
+const scenarioYear = Number(LEDGER_FIXTURE_TODAY.slice(0, 4));
 
 // The Ledger page as the shell holds it: reached from the rail, its sections
 // and setup menu, the period selector, the states a read can end in, and what
@@ -189,7 +195,7 @@ test("the period steps across a year's end and its dropdown moves between years"
   page: target,
 }) => {
   await openLedger(target);
-  await choosePeriod(target, 2026, "1T");
+  await choosePeriod(target, scenarioYear, "1T");
   await expect(trigger(target)).toHaveText("2026 · 1T");
   const group = head(target).getByRole("group", {
     name: label("desktop.ledger.period.label"),
@@ -215,7 +221,7 @@ test("the period steps across a year's end and its dropdown moves between years"
   );
 
   // A whole year steps by years.
-  await choosePeriod(target, 2025, "0A");
+  await choosePeriod(target, scenarioYear - 1, "0A");
   await expect(trigger(target)).toHaveText("2025");
   await next.click();
   await expect(trigger(target)).toHaveText("2026");
@@ -226,7 +232,7 @@ test("the period steps across a year's end and its dropdown moves between years"
   await expect(periods.getByRole("textbox")).toHaveCount(0);
   await expect(
     periods.getByRole("button", {
-      name: servedYearName(2025),
+      name: servedYearName(scenarioYear - 1),
       exact: true,
     }),
   ).toBeFocused();
@@ -272,7 +278,7 @@ test("the years with movements come from the ledger and jump the dropdown", asyn
   await expect(menu(target)).toBeVisible();
   await periods
     .getByRole("button", {
-      name: servedYearName(2025),
+      name: servedYearName(scenarioYear - 1),
       exact: true,
     })
     .click();
@@ -349,7 +355,7 @@ test("no taxpayer value reaches storage or the log, and sign-out drops the page'
   target.on("console", (message) => logged.push(message.text()));
   target.on("pageerror", (error) => logged.push(error.message));
   await openLedger(target, "&ledger=documents");
-  await choosePeriod(target, 2026, "1T");
+  await choosePeriod(target, scenarioYear, "1T");
   const movements = page(target).locator(".ledger-movements");
   await expect(movements).toBeVisible();
   await expect(
@@ -403,7 +409,7 @@ test("no taxpayer value reaches storage or the log, and sign-out drops the page'
 
   // Every part of the work: a cell edited, the inspector, a document's draft
   // and the import dialog.
-  await choosePeriod(target, 2026, "4T");
+  await choosePeriod(target, scenarioYear, "4T");
   const grid = page(target).getByRole("grid");
   const first = grid.locator("[data-kind=data]").first();
   await first.locator("[data-column=counterparty]").click();
@@ -551,7 +557,7 @@ test("readiness is a glyph and a count per thing it counts, with the words in it
   page: target,
 }) => {
   await openLedger(target);
-  await choosePeriod(target, 2026, "1T");
+  await choosePeriod(target, scenarioYear, "1T");
   const pills = page(target).locator(".ledger-readiness [data-readiness]");
   await expect(
     page(target).locator(".ledger-readiness [data-readiness=unknown]"),

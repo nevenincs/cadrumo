@@ -311,16 +311,16 @@ def test_a_record_with_no_windows_projects_exactly_as_declared() -> None:
     migration, so it is asserted rather than assumed.
     """
     facts = (
-        UserProfileFact(path="identity.tax_id", value="11111111H"),
-        UserProfileFact(path="identity.tax_id", value="22222222J"),
+        UserProfileFact(path="identity.tax_id", value="00001500M"),
+        UserProfileFact(path="identity.tax_id", value="00001501Y"),
         UserProfileFact(path="contact.postcode", value="08032"),
     )
     record = _record(setup_state=ProfileSetupState.COMPLETE, profile_id=_PROFILE_UUID, facts=facts)
 
-    assert record_to_path_values(record)["identity.tax_id"] == "22222222J", (
+    assert record_to_path_values(record)["identity.tax_id"] == "00001501Y", (
         "declaration order still decides when no window does"
     )
-    assert record_to_effective_facts(record)["identity.tax_id"].value == "22222222J"
+    assert record_to_effective_facts(record)["identity.tax_id"].value == "00001501Y"
 
 
 def test_the_latest_effective_window_wins_at_one_path() -> None:

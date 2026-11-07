@@ -70,6 +70,7 @@ from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
 )
+from ....domain.modelos.calculation_revision import derive_calculation_revision_id_from_revision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from .file_flow_test_support import calculation_ports_for_test
 from .general_iva_profile_facts_support import renta_single_taxpayer_facts
@@ -531,6 +532,44 @@ def test_m100_0604_reads_a_complementaria_as_the_quarter_total_paid(
     # oracle: AEAT-MODELO-130-INSTRUCCIONES casillas 18 y 19; 2T paid 200.00 then 60.00 = 260.00,
     # so 100.00 + 260.00 + 50.00 + 40.00 = 450.00 (casilla 19 alone would give 250.00).
     assert Decimal(result.revision.casilla_values[_M100_PAGOS_CASILLA]) == Decimal("450.00")
+
+
+def test_m100_0604_counts_a_twice_corrected_quarter_once_after_repeated_source_saves(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A quarter paid 100, then 30, then 20; its final effective total is 150."""
+    filings = (
+        ("1T", _original("100.00")),
+        ("1T", {_M130_PRIOR_RESULT_CASILLA_ID: Decimal("100.00"), _M130_SOURCE_CASILLA_ID: Decimal("30.00")}),
+        ("1T", {_M130_PRIOR_RESULT_CASILLA_ID: Decimal("130.00"), _M130_SOURCE_CASILLA_ID: Decimal("20.00")}),
+        ("2T", _original("80.00")),
+        ("3T", _original("50.00")),
+        ("4T", _original("-30.00")),
+    )
+    result = _calculate_0604(secure_objects, filings=filings, operation=operation)
+
+    # Payments are 150 + 80 + 50 + 0 = 280; neither the older snapshots nor
+    # the negative final quarter are extra payments to include in the annual credit.
+    assert Decimal(result.revision.casilla_values[_M100_PAGOS_CASILLA]) == Decimal("280.00")
+    replayed = _calculate_0604(secure_objects, filings=filings, operation=operation)
+    assert Decimal(replayed.revision.casilla_values[_M100_PAGOS_CASILLA]) == Decimal("280.00")
+    stored = (
+        CalculationRevisionCatalogueRepository(objects=secure_objects)
+        .load(operation=operation)
+        .get(result.revision.calculation_revision_id)
+    )
+    assert stored is not None
+    assert derive_calculation_revision_id_from_revision(stored) == result.revision.calculation_revision_id
+    assert stored.casilla_values == result.revision.casilla_values
+    effective = tuple(
+        item.observation
+        for item in CalculationObservationRepository().iter_modelo("130")
+        if item.observation.filing_year == _YEAR
+    )
+    assert len(effective) == 4
+    quarter = next(item for item in effective if item.period == "1T")
+    assert quarter.casilla_values[_M130_PRIOR_RESULT_CASILLA_ID] == Decimal("130.00")
+    assert quarter.casilla_values[_M130_SOURCE_CASILLA_ID] == Decimal("20.00")
 
 
 def test_m100_0604_stays_unresolved_when_the_effective_complementaria_lacks_casilla_18(

@@ -9366,6 +9366,34 @@ workspace:
               the profile's required answers are complete. Complete them in the Profile
               section.
       source: This source is not currently available.
+    related_filings:
+      absent: Not recorded
+      after: Selected filing
+      base: Corrects
+      before: Previous filing
+      change: Change
+      changed: Changed
+      comparison_unavailable: 'A saved-value comparison is unavailable: the preceding
+        filing or its calculation is missing, or the registry revisions differ.'
+      corrections: Later corrections
+      current_labels: Labels and formatting use the available registry revision. This
+        is not a reconstruction of the original form.
+      failed: The saved filing could not be read.
+      field: Field identifier
+      historical_content_missing: The saved calculation for this filing is unavailable.
+      historical_display_unavailable: Saved filing values are preserved, but their
+        original labels and formatting are unavailable here.
+      labels_unavailable: Labeled saved values are unavailable. Exact saved fields
+        remain available below when a comparison can be made.
+      loading: Reading the saved filing…
+      open: View related filings
+      open_work: Open working declaration
+      retry: Read again
+      saved_values: Saved values
+      select: Select a filing
+      technical_values: Saved field values
+      title: Related filings
+      unchanged: Unchanged
     revision_state:
       borrador: Draft
       descartado: Discarded
@@ -9490,7 +9518,9 @@ workspace:
       lead: A filed declaration is never changed in place. Cadrumo prepares a correction
         from it; you change what was wrong, then export its file and file it at the
         AEAT like any other.
+      loading: Reading the correction options…
       title: Prepare a correction
+      unavailable: Correction options are unavailable for this filing.
     details:
       card_unavailable: The explanation of this box could not be read.
       choose_box: Choose a box to see where its value comes from and what it means.

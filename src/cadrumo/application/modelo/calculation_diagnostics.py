@@ -20,17 +20,17 @@ only exists after the revision has been calculated.
 See Also:
     :func:`~application.modelo.calculation_bucket_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
         Calls this coordinator after the calculation revision has been created.
-    :func:`~application.modelo._official_box_advisory.collect_official_box_unpopulated_diagnostics`:
+    :func:`~application.modelo.official_box_advisory.collect_official_box_unpopulated_diagnostics`:
         Mirrors registry-authored ADVISORY predicates as calculate diagnostics.
     :mod:`~application.modelo.prior_payment_advisory`:
         Emits Modelo 130 prior-payment carry degradation advisories.
-    :func:`~application.modelo._settlement_grade_advisory.collect_settlement_not_computed_diagnostics`:
+    :func:`~application.modelo.settlement_grade_advisory.collect_settlement_not_computed_diagnostics`:
         Emits structural settlement-completeness advisories for partially modelled revisions.
-    :func:`~application.modelo._bienes_inversion_advisory.collect_bienes_inversion_regularizacion_diagnostics`:
+    :func:`~application.modelo.bienes_inversion_advisory.collect_bienes_inversion_regularizacion_diagnostics`:
         Emits the Modelo 303 capital-goods IVA regularización proposed-casilla-43 advisory.
     :func:`~application.modelo.prorrata_regularizacion_advisory.collect_prorrata_regularizacion_diagnostics`:
         Emits the Modelo 303 annual prorrata-general regularización proposed-casilla-44 advisory.
-    :func:`~application.modelo._m347_uninvoiced_expense_advisory.collect_m347_uninvoiced_expense_diagnostics`:
+    :func:`~application.modelo.m347_uninvoiced_expense_advisory.collect_m347_uninvoiced_expense_diagnostics`:
         Emits the Modelo 347 advisory for business expenses the ledger holds without an invoice.
 """
 
@@ -202,7 +202,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
     that derives the Art. 58/61 LIRPF aggregate — including the custodia-compartida
     halving — directly from the active profile, so those two checks are structurally
     unreachable and were retired. A new, narrower advisory
-    (:func:`~application.modelo._minimo_descendientes_advisory.collect_minimo_descendientes_undeclared_diagnostics`)
+    (:func:`~application.modelo.minimo_descendientes_advisory_support.collect_minimo_descendientes_undeclared_diagnostics`)
     replaces them: because a genuinely childless profile and a profile that simply
     never declared its descendientes both resolve 0513 to the same zero, this
     collector flags the ambiguous case (0513 = 0 and no descendiente facts declared

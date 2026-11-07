@@ -30,7 +30,7 @@ _TODAY = date(2025, 1, 2)
 def _profile(**facts: object) -> TaxpayerProfile:
     return TaxpayerProfile.model_validate(
         {
-            "tax_id": "X1234567L",
+            "tax_id": "X0001500M",
             "entity_type": require_entity_type("natural_person"),
             "irpf_income_categories": frozenset({require_irpf_income_category("actividad_economica")}),
             "iva_regime": IVARegime("GENERAL"),

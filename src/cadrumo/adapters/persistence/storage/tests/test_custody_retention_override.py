@@ -48,7 +48,7 @@ def _override(*, retained: int = 1) -> ProfileCustodyRetentionOverride:
 
 def _held_profile(root: Path) -> None:
     """Seed one profile carrying a filing, so the retention floor blocks it."""
-    create_profile(_PROFILE_ID, label="Retention held", tax_id="22222222J")
+    create_profile(_PROFILE_ID, label="Retention held", tax_id="00001501Y")
     persist_filing(_PROFILE_ID, filing_year=2025, seed="3")
 
 
@@ -122,7 +122,7 @@ def test_an_override_is_refused_where_no_filing_hold_blocks(tmp_path: Path) -> N
     from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 
     with isolated_reset_root(tmp_path) as root:
-        create_profile(_PROFILE_ID, label="No hold", tax_id="22222222J")
+        create_profile(_PROFILE_ID, label="No hold", tax_id="00001501Y")
 
         with open_test_profile_session(_PROFILE_ID), pytest.raises(ProfileCustodyTransactionRefusalError):
             ProfileCapsuleLifecycle().prepare_delete(

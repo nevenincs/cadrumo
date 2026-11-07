@@ -49,7 +49,7 @@ _WWW6_HOST = aeat_host("www6")
 _AEAT_APEX_HOST = aeat_host("aeat_gob")
 _CLAVE_HOST = aeat_host("clave")
 _PLANNED_OPERATION_EXPECTED_FIXTURES = {
-    GROI_ORACLE_ID: {"A28015865": "valid"},
+    GROI_ORACLE_ID: {"A00015016": "valid"},
     ORACLE_ID: {"DE111222333": "valid"},
     "modelo-100-renta-web-open": {"0180": object()},
 }
@@ -214,7 +214,7 @@ def test_oracle_bound_cross_reference_policy_gets_consult_action_allow_list() ->
     policy = remote_state_policy_from_cross_reference(decision)
 
     assert "check-nif-*" in policy.allowed_browser_action_patterns
-    assert_remote_operation_allowed(policy, RemoteOperation(kind="browser_action", action="check-nif-A28015865"))
+    assert_remote_operation_allowed(policy, RemoteOperation(kind="browser_action", action="check-nif-A00015016"))
     with pytest.raises(RegistryValidationError, match="explicit read-only allow-list"):
         assert_remote_operation_allowed(policy, RemoteOperation(kind="browser_action", action="unreviewed-click"))
 

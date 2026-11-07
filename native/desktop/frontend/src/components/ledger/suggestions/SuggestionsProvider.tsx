@@ -19,8 +19,8 @@ import type { Suggestion } from "@/components/ui/suggestions";
 import { countryName, currencyName } from "../../../shared/codeNames";
 import { formatPercent } from "../../../shared/numbers";
 import { facts } from "../../../shell/compose";
+import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
 import type {
-  CatalogueInvoice,
   LedgerKnownValueKind,
   LedgerKnownValuesResult,
   LedgerPort,
@@ -29,9 +29,9 @@ import type {
 import type { OutputLanguage } from "../../../shell/ledger";
 import type {
   CapitalGood,
-  LedgerEntryOptionsResult,
   ProrrataListedEntry,
-} from "../../../shell/ledgerSetup";
+} from "../../../shell/ledgerRegisterOperations";
+import type { LedgerEntryOptionsResult } from "../../../shell/ledgerSetup";
 import {
   NO_VOCABULARY,
   servedVocabulary,

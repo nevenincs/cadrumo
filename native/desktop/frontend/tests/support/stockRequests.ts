@@ -36,10 +36,12 @@ import {
   type Vocabulary,
 } from "../../src/components/ledger/assets/stockVocabulary";
 import type { FileToken } from "../../src/shell/ledger";
+import { holdLedgerLimits } from "../../src/shell/ledgerLimits";
 import type {
   InventoryEvidenceAddResult,
   InventoryMovement,
   InventoryOptionsResult,
+  LedgerEntryLimits,
 } from "../../src/shell/ledgerSetup";
 
 /** A file the backend kept: what it named it by, and the mark it answered. */
@@ -261,8 +263,11 @@ process.stdin.on("end", () => {
   const given = JSON.parse(chunks.join("")) as {
     /** What the options read serves: every choice, with its role. */
     options: InventoryOptionsResult;
+    /** What the entry options serve: the limits typed text is held to. */
+    limits: LedgerEntryLimits;
     scenarios: Scenario[];
   };
+  holdLedgerLimits(given.limits);
   const vocabulary = vocabularyOf(offersOf(given.options));
   process.stdout.write(
     JSON.stringify(

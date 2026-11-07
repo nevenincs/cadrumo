@@ -39,7 +39,7 @@ def _invoice(
     kind: InvoiceKind = InvoiceKind.ISSUED,
     invoice_number: str = "INV-001",
     counterparty_name: str = "Cliente SL",
-    counterparty_tax_id: str = "B12345674",
+    counterparty_tax_id: str = "B00015016",
     counterparty_country: str = "ES",
     grand_total: Decimal = Decimal("121.00"),
     linked_transaction_ids: tuple[str, ...] = (),

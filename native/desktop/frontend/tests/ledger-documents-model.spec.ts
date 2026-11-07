@@ -5,7 +5,7 @@ import type {
   ConfirmationBlocker,
   EvidenceDraft,
   EvidenceRecord,
-} from "../src/shell/ledger";
+} from "../src/shell/ledgerDocumentOperations";
 import {
   confirmation,
   correctionValues,

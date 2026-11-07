@@ -20,7 +20,7 @@ the filer's :class:`~domain.deadlines.models.TaxpayerProfile`
 ``country_of_fiscal_residence``.
 
 See Also:
-    :func:`~application.modelo._m210_rate.resolve_m210_rate`
+    :func:`~application.modelo.m210_rate.resolve_m210_rate`
         Application-layer replay of the same tipo-de-gravamen resolution path;
         this advisory reads the same governed fact to detect a matched override.
     :func:`~application.modelo.verification_revision_findings.collect_revision_verification_findings`
@@ -76,6 +76,8 @@ def m210_convenio_lob_advisory_finding(
     (``no-silent-under-declaration``). Grounded generically in the OECD Model
     Convention limitation-of-benefits framework plus the matched treaty's own
     beneficial-ownership article when the row carries one.
+
+    ``snapshot`` is a :class:`RegistrySnapshot`; ``profile`` is a :class:`TaxpayerProfile`.
     """
     country = profile.country_of_fiscal_residence
     if not (country is not None and country):

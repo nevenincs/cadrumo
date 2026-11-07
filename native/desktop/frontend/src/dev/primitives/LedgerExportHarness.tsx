@@ -1,7 +1,11 @@
 import { useMemo, useState } from "react";
 import { ExportDialog } from "@/components/ledger/transfer/ExportDialog";
 import type { LedgerExportFormat } from "@/shell/ledger";
+import { SCENARIO_TODAY } from "../assetsRegister";
 import { ledgerFixture } from "../ledgerFixture";
+
+/** The scenario's tax year: the one of its day. */
+const scenarioYear = Number(SCENARIO_TODAY.slice(0, 4));
 
 declare global {
   interface Window {
@@ -34,9 +38,9 @@ export function LedgerExportHarness({ staged }: { staged: number }) {
     <ExportDialog
       port={port}
       locale="en"
-      period={{ year: 2026, code: "4T" }}
-      years={[2026]}
-      fallbackYear={2026}
+      period={{ year: scenarioYear, code: "4T" }}
+      years={[scenarioYear]}
+      fallbackYear={scenarioYear}
       format={format}
       onFormat={setFormat}
       staged={staged}

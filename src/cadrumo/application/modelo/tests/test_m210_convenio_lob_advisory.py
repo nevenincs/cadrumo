@@ -70,7 +70,7 @@ def _m210_convenio_lob_advisory_finding(
 
 def _irnr_profile(country_code: str) -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         iva_regime=IVARegime("GENERAL"),
         fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
         country_of_fiscal_residence=country_code,
@@ -81,7 +81,7 @@ def _irnr_profile(country_code: str) -> TaxpayerProfile:
 
 def _resident_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         iva_regime=IVARegime("GENERAL"),
         fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )

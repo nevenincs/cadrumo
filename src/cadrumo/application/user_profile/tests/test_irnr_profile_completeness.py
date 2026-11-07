@@ -31,7 +31,7 @@ def _governed_facts_in_scope(operation: PinnedAuthorityOperation) -> Iterator[No
 
 
 _BASE_VALUES: dict[str, str] = {
-    "identity.tax_id": "X1234567L",
+    "identity.tax_id": "X0001500M",
     "tax_residence.jurisdiction_scope": "common_regime",
     "iva.regime": "GENERAL",
     "iva.m303_regime_composition": "general",
@@ -96,7 +96,7 @@ def test_profile_key_validation_applies_irnr_conditional_requirements(
 def test_lifecycle_validation_reports_conditional_irnr_profile_errors() -> None:
     schema = published_profile_schema()
     facts = (
-        UserProfileFact(path="identity.tax_id", value="B66012345"),
+        UserProfileFact(path="identity.tax_id", value="B00015032"),
         UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
         UserProfileFact(path="iva.regime", value="GENERAL"),
         UserProfileFact(path="iva.m303_regime_composition", value="general"),
@@ -172,7 +172,7 @@ def test_profile_preflight_reports_irnr_country_as_missing_before_modelo_work(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="88888888-8888-4888-8888-888888888888",
         facts=(
-            UserProfileFact(path="identity.tax_id", value="X1234567L"),
+            UserProfileFact(path="identity.tax_id", value="X0001500M"),
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
             UserProfileFact(path="iva.m303_regime_composition", value="general"),

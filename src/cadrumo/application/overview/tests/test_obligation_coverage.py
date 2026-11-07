@@ -66,7 +66,7 @@ _TODAY = date(2026, 7, 1)
 def _paying_autonomo() -> TaxpayerProfile:
     """An autónomo who pays withholding-subject income (has employees)."""
     return TaxpayerProfile(
-        tax_id="A45678901",
+        tax_id="A00015024",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
@@ -77,7 +77,7 @@ def _paying_autonomo() -> TaxpayerProfile:
 
 def _landlord() -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("capital_inmobiliario")}),
         iva_regime=IVARegime("EXENTO"),
@@ -86,7 +86,7 @@ def _landlord() -> TaxpayerProfile:
 
 def _sociedad_limitada() -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         legal_entity_form=LegalEntityForm.from_registry("sl"),
         iva_regime=IVARegime("GENERAL"),

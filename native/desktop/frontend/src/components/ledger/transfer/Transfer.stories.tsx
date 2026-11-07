@@ -1,7 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { userEvent, waitFor } from "storybook/test";
-import { STORY_PERIOD, useLedgerPort, useLedgerRead } from "@/dev/LedgerStage";
+import {
+  STORY_PERIOD,
+  STORY_YEARS,
+  useLedgerPort,
+  useLedgerRead,
+} from "@/dev/LedgerStage";
 import type { LedgerShape } from "@/dev/ledgerFixture";
 import type { LedgerExportFormat } from "../../../shell/ledger";
 import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
@@ -18,7 +23,7 @@ import type { ImportKind } from "./importModel";
 const noop = () => undefined;
 /** Waits for what a slow machine draws late. */
 const WAIT = { timeout: 5000 };
-const YEARS = [2025, 2026];
+const YEARS = STORY_YEARS.slice(-2);
 
 type ExportArgs = {
   shape?: LedgerShape;

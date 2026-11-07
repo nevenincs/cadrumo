@@ -73,7 +73,7 @@ def _recargo_invoice(*, recargo: str, day: date = _ORDINARY_DAY, slot: IvaRate =
             "invoice_number": "F-2025-0451",
             "issued_at": day.isoformat(),
             "counterparty_name": "Mayorista Ejemplo SL",
-            "counterparty_tax_id": "ESB12345674",
+            "counterparty_tax_id": "ESB00015016",
             "counterparty_country": "ES",
             "base_total": format(_BASE, "f"),
             "iva_total": format(cuota, "f"),

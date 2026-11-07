@@ -301,7 +301,7 @@ def _resident_profile() -> TaxpayerProfile:
     cap_le_when_positive, implies_nonzero) without exercising the
     profile_field_required branch.
     """
-    return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL"))
+    return TaxpayerProfile(tax_id="X0001500M", iva_regime=IVARegime("GENERAL"))
 
 
 def _minimal_work_unit(
@@ -944,7 +944,7 @@ class TestWorkflowInputMismatchError:
 
     def _resident_profile(self) -> TaxpayerProfile:
         """Return a minimal real profile (load_inputs discards it via ``del``)."""
-        return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL"))
+        return TaxpayerProfile(tax_id="X0001500M", iva_regime=IVARegime("GENERAL"))
 
     def test_matching_request_does_not_raise(self) -> None:
         """load_inputs with the correct modelo and workflow period returns inputs."""

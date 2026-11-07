@@ -26,7 +26,7 @@ async function openHost(page: Page) {
     localStorage.setItem(
       "cadrumo-shell-layout",
       JSON.stringify({
-        layout: { tab: "console", page: "docs", tuiShown: true },
+        layout: { tab: "console", page: "docs", tuiShown: false },
         prefs: { appearance: "dark", terminals: "match" },
       }),
     );

@@ -11,7 +11,7 @@ identifier stored compactly -- the shape an on-host extractor really reads off a
 printed invoice.
 
 * :func:`same_tax_identifier` answers "same bearer?" on the separator-stripped
-  form, so ``B-1234567-4`` and ``B12345674`` are one identifier.
+  form, so ``B-1234567-4`` and ``B00015016`` are one identifier.
 * :func:`tax_id_identity_token` stays trim-and-uppercase because it KEYS stored
   objects: merging two characters-differ identifiers would collapse two
   taxpayers into one row.
@@ -33,7 +33,7 @@ from ..tax_id import same_tax_identifier, tax_id_identity_token
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 #: The compact stored form every printed variant below denotes.
-_STORED = "B12345674"
+_STORED = "B00015016"
 
 #: Printed forms carrying each separator :func:`normalise_nif_iva` strips.
 #: These are the shapes a document really prints, not invented variants: the
@@ -73,7 +73,7 @@ def test_the_two_forms_disagree_on_exactly_this_input() -> None:
     (
         pytest.param("B12345675", id="differs-in-control"),
         pytest.param("B12345684", id="differs-in-body"),
-        pytest.param("A12345674", id="differs-in-leader"),
+        pytest.param("A00015008", id="differs-in-leader"),
     ),
 )
 def test_a_genuinely_different_identifier_is_not_the_same_bearer(other: str) -> None:
@@ -129,6 +129,6 @@ def test_two_blanks_are_not_the_same_bearer(left: str, right: str) -> None:
 def test_the_keying_token_is_idempotent() -> None:
     # A normal form that is not idempotent produces a different storage key on
     # re-normalisation, which splits one taxpayer's rows across two keys.
-    once = tax_id_identity_token("  b12345674  ")
+    once = tax_id_identity_token("  b00015016  ")
     assert once == _STORED
     assert tax_id_identity_token(once) == once

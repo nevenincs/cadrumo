@@ -147,7 +147,7 @@ _DECLARED_CROSS_PERIOD_PROFILE_IDS = {
 def _seed_ready_profile(bucket_id: str, objects: SecureObjectRepository | None = None, *, modelo: str = "390") -> None:
     is_legal_entity = modelo in {"200", "202", "353"}
     facts = [
-        UserProfileFact(path="identity.tax_id", value="B12345674" if is_legal_entity else "X1234567L"),
+        UserProfileFact(path="identity.tax_id", value="B00015016" if is_legal_entity else "X0001500M"),
         UserProfileFact(path="identity.name", value="Test"),
         UserProfileFact(path="identity.surnames", value="Operator"),
         UserProfileFact(path="tax_residence.ccaa", value="madrid"),
@@ -200,7 +200,7 @@ def _seed_m100_profile_facts(bucket_id: str, objects: SecureObjectRepository | N
         profile_id=bucket_id,
         facts=persona_facts_beneath(
             (
-                UserProfileFact(path="identity.tax_id", value="X1234567L"),
+                UserProfileFact(path="identity.tax_id", value="X0001500M"),
                 UserProfileFact(path="identity.name", value="Test"),
                 UserProfileFact(path="identity.surnames", value="Salaried"),
                 UserProfileFact(path="activities.description", value="salaried income"),
@@ -548,7 +548,7 @@ def test_verify_modelo_303_reports_clean_state_blocker_for_carry_forward_depende
                 verification_repositories=build_test_verification_repository_bundle(),
                 actor="operator-test",
                 workflow_profile=general_iva_workflow_profile(),
-                settings=ready_clave_settings("X1234567L"),
+                settings=ready_clave_settings("X0001500M"),
                 clock=_CLOCK,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
@@ -592,7 +592,7 @@ def test_verify_salaried_taxpayer_m100_has_no_cross_period_withholding_block(
                 verification_repositories=build_test_verification_repository_bundle(),
                 actor="operator-test",
                 workflow_profile=salaried,
-                settings=ready_clave_settings("X1234567L"),
+                settings=ready_clave_settings("X0001500M"),
                 clock=_CLOCK,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
@@ -623,7 +623,7 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(
         # The employer's certificate; the profile declares only work income, so no other credit class is owed.
         seed_payer_certificate(
             operation=operation,
-            taxpayer_tax_id="X1234567L",
+            taxpayer_tax_id="X0001500M",
             ejercicio=2025,
             payer_tax_id="B00010082",
             income_class=RetencionSoportadaClase.TRABAJO,
@@ -680,7 +680,7 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(
                 verification_repositories=build_test_verification_repository_bundle(),
                 actor="operator-test",
                 workflow_profile=salaried,
-                settings=ready_clave_settings("X1234567L"),
+                settings=ready_clave_settings("X0001500M"),
                 clock=_CLOCK,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=operation,
@@ -842,7 +842,7 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(
                     evidence_reference_id=evidence_reference_id,
                     actor="aeat-import-test",
                     observation_repository=observations,
-                    expected_tax_id="X1234567L",
+                    expected_tax_id="X0001500M",
                     clock=_CLOCK,
                 )
             observations.save(
@@ -861,7 +861,7 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(
                         "aeat_register_status": "ALTA",
                         "aeat_expediente_id": f"EXP-{source_modelo}-{filing_year}-{period}",
                         "aeat_justificante_csv": evidence_reference_id,
-                        "authenticated_identity": "X1234567L",
+                        "authenticated_identity": "X0001500M",
                     },
                 )
             )

@@ -535,7 +535,7 @@ def test_native_quickfile_m115_completes_all_stages_and_exports_valid_local_byte
             "--counterparty-name",
             "Arrendador Ejemplo SL",
             "--counterparty-nif",
-            "B12345674",
+            "B00015016",
             "--invoice-number",
             "M115-RENT-2025-001",
             "--invoice-date",

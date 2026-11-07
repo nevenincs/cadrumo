@@ -13,10 +13,8 @@ import {
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { facts } from "@/shell/compose";
-import type {
-  LedgerHistoryTypedResult,
-  LedgerPort,
-} from "../../../shell/ledger";
+import type { LedgerHistoryTypedResult } from "../../../shell/ledgerMovementOperations";
+import type { LedgerPort } from "../../../shell/ledger";
 import {
   isIvaDerivableReason,
   READINESS_REASON_FIELD,

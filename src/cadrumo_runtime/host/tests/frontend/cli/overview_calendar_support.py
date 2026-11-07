@@ -170,7 +170,7 @@ def modelo_record_with_external_justificante(
     )
 
 
-def justificante_metadata(*, csv: str, tax_id: str = "X1234567L") -> Justificante:
+def justificante_metadata(*, csv: str, tax_id: str = "X0001500M") -> Justificante:
     body = f"{csv}-pdf".encode()
     source_pdf_sha256 = hashlib.sha256(body).hexdigest()
     with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):

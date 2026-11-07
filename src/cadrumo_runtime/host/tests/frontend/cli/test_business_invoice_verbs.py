@@ -88,7 +88,7 @@ def test_invoice_received_add_and_list_round_trip() -> None:
 def test_invoice_issued_add_reports_issued_kind() -> None:
     add_result = _invoke_invoice(
         [
-            *_add_args(kind="issued", nif="87654321X", number="COL-001", base="0"),
+            *_add_args(kind="issued", nif="X0001502F", number="COL-001", base="0"),
             "--arrendamiento-local-negocio",
             "--situacion-inmueble",
             "1",
@@ -375,7 +375,7 @@ def test_invoice_kind_rejects_unknown_value() -> None:
 
 def test_invoice_list_filters_by_kind() -> None:
     _invoke_invoice(_add_args(kind="received", nif="12345678Z", number="PAY-001", base="0"))
-    _invoke_invoice(_add_args(kind="issued", nif="87654321X", number="COL-001", base="0"))
+    _invoke_invoice(_add_args(kind="issued", nif="X0001502F", number="COL-001", base="0"))
     received_list = _invoke_invoice(["list", "--kind", "received"])
     issued_list = _invoke_invoice(["list", "--kind", "issued"])
     assert "PAY-001" in received_list.output
@@ -388,7 +388,7 @@ def test_invoice_list_without_kind_returns_both_kinds() -> None:
     # no-silent-under-declaration guard: bare ``invoice list`` must return BOTH
     # kinds so an operator never silently loses half their records.
     _invoke_invoice(_add_args(kind="received", nif="12345678Z", number="PAY-001", base="0"))
-    _invoke_invoice(_add_args(kind="issued", nif="87654321X", number="COL-001", base="0"))
+    _invoke_invoice(_add_args(kind="issued", nif="X0001502F", number="COL-001", base="0"))
     both = _invoke_invoice(["list"])
     assert both.exit_code == 0, both.output
     assert "count\t2" in both.output

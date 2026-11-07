@@ -14,7 +14,7 @@ import { Kbd } from "@/components/ui/kbd";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Spinner } from "@/components/ui/spinner";
 import { chordText } from "@/shared/chords";
-import type { PasswordChangeResult } from "../../ipc/contract";
+import type { PasswordChangeResult } from "../../ipc/account";
 import { chordLabel } from "../../shell/actions";
 import {
   PASSWORD_MIN,

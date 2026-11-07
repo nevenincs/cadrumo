@@ -130,7 +130,7 @@ def _seed_purchase_invoice_evidence(bucket_id: str) -> str:
             "invoice_number": "P-2026-CLI-001",
             "issued_at": date(2026, 5, 3),
             "counterparty_name": "Proveedor SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": Decimal("100.00"),
             "iva_total": Decimal("21.00"),

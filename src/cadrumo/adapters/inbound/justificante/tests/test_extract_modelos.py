@@ -28,7 +28,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter, pytest.mark.use
 
 
 # Synthetic PDF text shapes derived from live captures with PII
-# token-replaced (Y1234567X -> Y0001006P, real CSVs -> SANITIZED...).
+# token-replaced (Y0001500L -> Y0001006P, real CSVs -> SANITIZED...).
 # Each block ends with a verification URL so the URL extractor
 # always succeeds.
 _SHAPE_M130_QUARTERLY = (

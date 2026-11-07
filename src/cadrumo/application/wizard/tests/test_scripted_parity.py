@@ -74,7 +74,7 @@ _LEGAL_ENTITY_CANONICAL: dict[str, str] = {
     "output-language": "en",
     "entity-type": "legal_entity",
     "legal-entity-form": "sl",
-    "tax-id": "B66012345",
+    "tax-id": "B00015032",
     "legal-name": "Acme SL",
     "activity": "Consultoria",
     "fiscal-residency": "resident_irpf",

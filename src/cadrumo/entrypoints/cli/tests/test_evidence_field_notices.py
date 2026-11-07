@@ -58,7 +58,7 @@ def _ambiguous() -> FieldProvenance:
         field="supplier_tax_id",
         origin=FieldOrigin.TEXT_LAYER,
         grounding=FieldGroundingOutcome.AMBIGUOUS,
-        candidates=(FieldAmbiguityCandidate(value="A00010017"), FieldAmbiguityCandidate(value="B17283946")),
+        candidates=(FieldAmbiguityCandidate(value="A00010017"), FieldAmbiguityCandidate(value="B00015024")),
     )
 
 
@@ -100,7 +100,7 @@ def _uncorroborated_anchor() -> FieldProvenance:
         field="supplier_tax_id",
         origin=FieldOrigin.TEXT_LAYER,
         grounding=FieldGroundingOutcome.UNANCHORED,
-        anchor="B12345674",
+        anchor="B00015016",
         note="one identifier verified but nothing on the document establishes it as the counterparty's",
     )
 
@@ -264,8 +264,8 @@ def test_a_located_anchor_is_never_reported_as_absent_from_the_document() -> Non
 
     # The printed form and the reason both reach the operator: the message can
     # only say the form is not the problem, so the reason is the whole content.
-    assert "B12345674" in located.message
-    assert _context(located)["anchor"] == "B12345674"
+    assert "B00015016" in located.message
+    assert _context(located)["anchor"] == "B00015016"
     assert _context(located)["detail"] == _uncorroborated_anchor().note
     assert _uncorroborated_anchor().note in located.message
 
@@ -405,7 +405,7 @@ def test_the_identity_resolver_really_emits_the_located_but_unroled_shape(
     """
     resolution = resolve_counterparty_identity(
         field="supplier_tax_id",
-        candidates=(IdentityCandidate(value="B12345674", anchor="B-12345674", role_evidence=""),),
+        candidates=(IdentityCandidate(value="B00015016", anchor="B-12345674", role_evidence=""),),
         taxpayer_tax_id="A00010017",
         origin=FieldOrigin.TEXT_LAYER,
         operation=authority_operation,
@@ -432,7 +432,7 @@ def test_each_notice_names_what_was_seen() -> None:
 
     ambiguous = field_degradation_notices([_ambiguous()])[0]
     assert "A00010017" in ambiguous.message
-    assert "B17283946" in ambiguous.message
+    assert "B00015024" in ambiguous.message
     assert _context(ambiguous)["candidate_count"] == "2"
 
 

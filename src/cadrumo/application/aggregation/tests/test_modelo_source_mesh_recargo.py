@@ -39,7 +39,7 @@ def test_a_multi_tier_recargo_is_not_attributed_to_a_guessed_tier() -> None:
             "invoice_number": "RECARGO-MIXED",
             "issued_at": date(2025, 2, 10),
             "counterparty_name": "Minorista Recargo SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": Decimal("1500.00"),
             "iva_total": Decimal("260.00"),

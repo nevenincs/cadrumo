@@ -40,7 +40,7 @@ def consulting_invoice(
             "invoice_number": invoice_number,
             "issued_at": issued_at,
             "counterparty_name": "Cliente SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": Decimal("100.00"),
             "iva_total": Decimal("21.00"),

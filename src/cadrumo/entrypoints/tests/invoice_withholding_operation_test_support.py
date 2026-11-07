@@ -96,7 +96,7 @@ def seed_invoice_withholding_conformance_case(
                 "invoice_number": "CONFORMANCE-WITHHOLDING-2025-001",
                 "issued_at": issued_on,
                 "counterparty_name": "Synthetic Professional",
-                "counterparty_tax_id": "11111111H",
+                "counterparty_tax_id": "00001500M",
                 "counterparty_country": "ES",
                 "base_total": subtotal,
                 "iva_total": line.iva_amount,

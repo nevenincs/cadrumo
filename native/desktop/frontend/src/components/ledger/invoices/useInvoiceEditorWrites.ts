@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  type CatalogueInvoice,
-  type InvoiceAddRequest,
-  type InvoiceAddResult,
-  type InvoiceUpdateRequest,
-  type LedgerPort,
-  servedRefusalWords,
-} from "../../../shell/ledger";
+import type {
+  CatalogueInvoice,
+  InvoiceAddRequest,
+  InvoiceAddResult,
+  InvoiceUpdateRequest,
+} from "../../../shell/ledgerInvoiceOperations";
+import { type LedgerPort, servedRefusalWords } from "../../../shell/ledger";
 import { useStrings } from "../../../shell/strings";
 import { useWritePause } from "../WritePause";
 import { seriesAndNumber } from "./invoiceModel";

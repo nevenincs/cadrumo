@@ -382,7 +382,7 @@ def test_preflight_accepts_legal_entity_legal_name_for_export_headers(
         schema,
         operation,
         facts=(
-            UserProfileFact(path="identity.tax_id", value="B12345674"),
+            UserProfileFact(path="identity.tax_id", value="B00015016"),
             UserProfileFact(path="identity.legal_name", value="Rocio Ferrer Administracion Sociedad Limitada"),
             UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
             UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
@@ -416,7 +416,7 @@ def test_preflight_rejects_legal_entity_export_identity_fragments(
             schema,
             operation,
             facts=(
-                UserProfileFact(path="identity.tax_id", value="B12345674"),
+                UserProfileFact(path="identity.tax_id", value="B00015016"),
                 identity_fact,
                 UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
                 UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),

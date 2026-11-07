@@ -57,12 +57,12 @@ test("a pick fills the empty tax id and country", async ({ page: target }) => {
 
 test("a pick leaves a tax id already typed", async ({ page: target }) => {
   await newIssued(target);
-  await field(target, "counterparty_tax_id").fill("X1234567L");
+  await field(target, "counterparty_tax_id").fill("X0001500M");
   await field(target, "counterparty_name").focus();
   const party = await aParty(target);
   await list(target).getByRole("option").first().click();
   await expect(field(target, "counterparty_name")).toHaveValue(party.name);
-  await expect(field(target, "counterparty_tax_id")).toHaveValue("X1234567L");
+  await expect(field(target, "counterparty_tax_id")).toHaveValue("X0001500M");
   // The press on the option left focus in the field.
   await expect(field(target, "counterparty_name")).toBeFocused();
 });

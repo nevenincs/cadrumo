@@ -75,7 +75,7 @@ def test_reused_catalogue_preserves_complete_verdict_and_standalone_reads(
                         calculation_catalogue=reuse,
                         filing_catalogue=filing_catalogue if reuse is not None else None,
                         verification_catalogue=verification_catalogue if reuse is not None else None,
-                        taxpayer_tax_id="X1234567L",
+                        taxpayer_tax_id="X0001500M",
                     )
                     .model_dump_json()
                     .encode()

@@ -135,14 +135,14 @@ class _Ledger:
         """
         return (
             {
-                "nif": "B12345674",
+                "nif": "B00015016",
                 "clave": "A",
                 "importe": self.supplier_q1.grand_total + self.supplier_q3.grand_total,
                 "importe-q1": self.supplier_q1.grand_total,
                 "importe-q3": self.supplier_q3.grand_total,
             },
             {
-                "nif": "B87654323",
+                "nif": "B00015057",
                 "clave": "B",
                 "importe": self.customer_q4.grand_total,
                 "importe-q4": self.customer_q4.grand_total,
@@ -156,7 +156,7 @@ def _ledger() -> _Ledger:
             kind=InvoiceKind.RECEIVED,
             number="P-001",
             issued_at=date(_FILING_YEAR, 2, 10),
-            counterparty_tax_id="B12345674",
+            counterparty_tax_id="B00015016",
             counterparty_name="PROVEEDOR GRANDE SL",
             base_total=Decimal("2500.00"),
             iva_total=Decimal("525.00"),
@@ -165,7 +165,7 @@ def _ledger() -> _Ledger:
             kind=InvoiceKind.RECEIVED,
             number="P-002",
             issued_at=date(_FILING_YEAR, 8, 10),
-            counterparty_tax_id="B12345674",
+            counterparty_tax_id="B00015016",
             counterparty_name="PROVEEDOR GRANDE SL",
             base_total=Decimal("2500.00"),
             iva_total=Decimal("525.00"),
@@ -174,7 +174,7 @@ def _ledger() -> _Ledger:
             kind=InvoiceKind.ISSUED,
             number="V-001",
             issued_at=date(_FILING_YEAR, 11, 20),
-            counterparty_tax_id="B87654323",
+            counterparty_tax_id="B00015057",
             counterparty_name="CLIENTE GRANDE SL",
             base_total=Decimal("6611.57"),
             iva_total=Decimal("1388.43"),

@@ -51,7 +51,7 @@ function summary(
 const filed: FiledRow[] = [
   {
     form: "303",
-    year: 2025,
+    year: DEMO_BORRADOR_YEARS[0]!,
     period: "3T",
     match: "matched",
     record: { status: "marked_filed", on: ago(40) },
@@ -61,7 +61,7 @@ const filed: FiledRow[] = [
   },
   {
     form: "303",
-    year: 2025,
+    year: DEMO_BORRADOR_YEARS[0]!,
     period: "2T",
     match: "matched",
     record: { status: "marked_filed", on: ago(130) },
@@ -71,7 +71,7 @@ const filed: FiledRow[] = [
   },
   {
     form: "130",
-    year: 2025,
+    year: DEMO_BORRADOR_YEARS[0]!,
     period: "3T",
     match: "differing",
     record: { status: "marked_filed", on: ago(38) },
@@ -81,7 +81,7 @@ const filed: FiledRow[] = [
   },
   {
     form: "390",
-    year: 2024,
+    year: DEMO_BORRADOR_YEARS[1]!,
     period: null,
     match: "aeat_only",
     record: null,
@@ -91,7 +91,7 @@ const filed: FiledRow[] = [
   },
   {
     form: "111",
-    year: 2024,
+    year: DEMO_BORRADOR_YEARS[1]!,
     period: "4T",
     match: "aeat_only",
     record: null,
@@ -101,7 +101,7 @@ const filed: FiledRow[] = [
   },
   {
     form: "115",
-    year: 2025,
+    year: DEMO_BORRADOR_YEARS[0]!,
     period: "3T",
     match: "local_only",
     record: { status: "marked_filed", on: ago(35) },
@@ -111,7 +111,7 @@ const filed: FiledRow[] = [
   },
   {
     form: "130",
-    year: 2025,
+    year: DEMO_BORRADOR_YEARS[0]!,
     period: "4T",
     match: "aeat_only",
     record: { status: "draft", on: ago(5) },
@@ -173,7 +173,9 @@ function served(mode: AeatSyncResultsMode): AeatSyncResults {
           summary("filed", {
             new_count: 2,
             changed_count: 1,
-            failed: [{ part: 2, year: 2023, reason: "unavailable" }],
+            failed: [
+              { part: 2, year: DEMO_BORRADOR_YEARS[2]!, reason: "unavailable" },
+            ],
           }),
           summary("notifications", { new_count: 2 }),
           summary("vat", { outcome: "nothing_found" }),
@@ -226,9 +228,13 @@ function served(mode: AeatSyncResultsMode): AeatSyncResults {
             outcome: "failed",
             new_count: 1,
             failed: [
-              { part: 1, year: 2025, reason: "session_ended" },
-              { part: 2, year: 2024, reason: "refused" },
-              { part: 3, year: 2023, reason: "other" },
+              {
+                part: 1,
+                year: DEMO_BORRADOR_YEARS[0]!,
+                reason: "session_ended",
+              },
+              { part: 2, year: DEMO_BORRADOR_YEARS[1]!, reason: "refused" },
+              { part: 3, year: DEMO_BORRADOR_YEARS[2]!, reason: "other" },
             ],
           }),
           summary("notifications", {
@@ -237,7 +243,9 @@ function served(mode: AeatSyncResultsMode): AeatSyncResults {
           }),
           summary("vat", {
             outcome: "failed",
-            failed: [{ part: 0, year: 2025, reason: "other" }],
+            failed: [
+              { part: 0, year: DEMO_BORRADOR_YEARS[0]!, reason: "other" },
+            ],
           }),
           summary("borrador", { outcome: "nothing_found", at: null }),
           summary("identity", {
@@ -306,7 +314,10 @@ export function aeatSyncResultsFixture(
     pickBorrador() {
       return Promise.resolve(
         picked === "file"
-          ? { token: "synthetic", name: "borrador-2025.pdf" }
+          ? {
+              token: "synthetic",
+              name: `borrador-${DEMO_BORRADOR_YEARS[0]}.pdf`,
+            }
           : null,
       );
     },

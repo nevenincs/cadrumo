@@ -4,20 +4,20 @@
 // tax rule is worked out here: every one comes from the ledger's preview, and
 // an add sends the figures of the answer to the very draft on the page.
 
-import {
-  type CatalogueInvoice,
-  type InvoiceAddLine,
-  type InvoiceAddRequest,
-  type InvoiceKind,
-  type InvoicePreviewFinding,
-  type InvoicePreviewLine,
-  type InvoicePreviewRateSlot,
-  type InvoicePreviewRequest,
-  type InvoicePreviewResult,
-  type InvoiceUpdateRequest,
-  type InvoiceUpdateValues,
-  type PublicDecimal,
-} from "../../../shell/ledger";
+import type {
+  CatalogueInvoice,
+  InvoiceAddLine,
+  InvoiceAddRequest,
+  InvoiceKind,
+  InvoicePreviewFinding,
+  InvoicePreviewLine,
+  InvoicePreviewRateSlot,
+  InvoicePreviewRequest,
+  InvoicePreviewResult,
+  InvoiceUpdateRequest,
+  InvoiceUpdateValues,
+} from "../../../shell/ledgerInvoiceOperations";
+import type { PublicDecimal } from "../../../shell/ledger";
 import {
   INVOICE_UPDATE_FIELDS,
   isCorrectionJudged,

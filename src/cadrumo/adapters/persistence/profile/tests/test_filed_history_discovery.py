@@ -107,7 +107,7 @@ def _autonomo(
 
     with bundled_indexed_authority().operation():
         return TaxpayerProfile(
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             entity_type=EntityType.from_registry("natural_person"),
             irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
             irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
@@ -218,7 +218,7 @@ def test_the_modelo_axis_differs_between_two_different_profiles() -> None:
     natural = expected_filed_declaration_grid(_autonomo(), today=_TODAY)
     company = expected_filed_declaration_grid(
         TaxpayerProfile(
-            tax_id="B12345674",
+            tax_id="B00015016",
             entity_type=EntityType.from_registry("legal_entity"),
             irpf_income_categories=frozenset(),
             iva_regime=IVARegime("GENERAL"),

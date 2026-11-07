@@ -29,7 +29,7 @@ def test_attribution_entity_is_never_asked_for_spouse_facts() -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         result = validate_profile_values(
             {
-                "identity.tax_id": "E66012345",
+                "identity.tax_id": "E00015016",
                 "identity.legal_name": "Comunidad de Bienes",
                 "tax_residence.jurisdiction_scope": "common_regime",
                 "taxpayer_type.entity_type": "attribution_entity",

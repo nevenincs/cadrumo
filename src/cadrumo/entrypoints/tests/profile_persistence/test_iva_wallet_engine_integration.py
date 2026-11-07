@@ -290,7 +290,7 @@ def test_missing_wallet_filed_history_decision_blocks_real_modelo_303_engine(
 def test_prior_calculated_303_cannot_unblock_next_period_without_validated_filed_envelope(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    taxpayer_nif = "X1234567L"
+    taxpayer_nif = "X0001500M"
     decided_1t_at = datetime(2026, 3, 19, 12, 0, 0, tzinfo=UTC)
     with secure_backend(tmp_path):
         store_operator_profile_with_tax_id(taxpayer_nif)

@@ -98,7 +98,7 @@ def _invoice(row: Transaction) -> Invoice:
             "invoice_number": "ASE-FEB-1",
             "issued_at": date(YEAR, 2, 12),
             "counterparty_name": "Asesoria SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": _AMOUNT,
             "iva_total": Decimal("0.00"),

@@ -71,7 +71,7 @@ def test_qr_does_not_require_app_contrast(route: str, ready: bool) -> None:
 def test_nie_requires_support_instead_of_date() -> None:
     result = _read(
         AuthProviderKind.CLAVE_MOVIL,
-        {"identity.tax_id": "X1234567L", "auth.dni_nie": "X1234567L", "auth.numero_soporte": "E12345678"},
+        {"identity.tax_id": "X0001500M", "auth.dni_nie": "X0001500M", "auth.numero_soporte": "E12345678"},
         nie=True,
     )
     assert result.ready

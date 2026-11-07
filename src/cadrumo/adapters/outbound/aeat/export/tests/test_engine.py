@@ -51,7 +51,7 @@ def _historical_filing(draft_label: str = "draft-1", modelo: str = "130") -> Mod
         draft_id="draft-1",
         modelo=modelo,
         period=modelo_draft().period,
-        profile_tax_id="X1234567L",
+        profile_tax_id="X0001500M",
         status=SubmissionStatus.PENDIENTE_DE_PRESENTAR,
         submitted_at=_SUBMITTED_AT,
         attempts=(

@@ -93,7 +93,7 @@ def seed_ready_profile(
 
 
 def workflow_profile(
-    *, tax_id: str = "X1234567L", iva_regime: str = "GENERAL", activity_start_date: date | None = None
+    *, tax_id: str = "X0001500M", iva_regime: str = "GENERAL", activity_start_date: date | None = None
 ) -> TaxpayerProfile:
     """The plain workflow profile: no employees, rent retention, intracommunity trade or foreign assets."""
     return TaxpayerProfile(
@@ -110,7 +110,7 @@ def workflow_profile(
 def general_iva_workflow_profile() -> TaxpayerProfile:
     """The general-regime workflow profile with an explicit common-territory general IVA composition."""
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_rent_with_retencion=False,

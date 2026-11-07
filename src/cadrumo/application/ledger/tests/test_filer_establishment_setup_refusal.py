@@ -52,7 +52,7 @@ _PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 
 def _profile(postcode: str | None) -> UserProfileRecord:
     """A profile carrying an optional fiscal-address postcode fact."""
-    facts = (UserProfileFact(path="identity.tax_id", value="X1234567L"),)
+    facts = (UserProfileFact(path="identity.tax_id", value="X0001500M"),)
     if postcode is not None:
         facts = (*facts, UserProfileFact(path=FILER_POSTCODE_FACT_PATH, value=postcode))
     return create_user_profile_record(

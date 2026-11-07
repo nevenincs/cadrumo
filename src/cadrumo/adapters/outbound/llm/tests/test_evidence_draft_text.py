@@ -48,7 +48,7 @@ from ..models import LLMRequest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 # AEAT-checksum-valid Spanish identifiers: a CIF and a NIF.
-_SPANISH_CIF = "B12345674"
+_SPANISH_CIF = "B00015016"
 _SPANISH_NIF = "00001001N"
 
 

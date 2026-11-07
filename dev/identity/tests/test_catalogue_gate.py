@@ -10,6 +10,7 @@ the live catalogue for the invariants the gate relies on.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -50,16 +51,18 @@ _POOL_PREFIXED_NIF_RANGE = "K0001000B"
 _UNBOUND = _nif(99)
 _LISTED_REFUSAL = _nif(28)
 
+_LAST_INSIDE = 1999
+
 _CATALOGUE: dict[str, object] = {
     "format": 1,
     "convention": {
         "generic_pool": {
             "values": [_POOL_EXPLICIT],
             "ranges": [
-                {"kind": "nif", "first": 1003, "last": 99999999},
-                {"kind": "nie", "letters": ["X", "Y", "Z"], "first": 1000, "last": 9999999},
-                {"kind": "prefixed_nif", "letters": ["K", "L", "M"], "first": 1000, "last": 9999999},
-                {"kind": "cif", "letters": ["B"], "first": 1000, "last": 9999999},
+                {"kind": "nif", "first": 1003, "last": _LAST_INSIDE},
+                {"kind": "nie", "letters": ["X", "Y", "Z"], "first": 1000, "last": _LAST_INSIDE},
+                {"kind": "prefixed_nif", "letters": ["K", "L", "M"], "first": 1000, "last": _LAST_INSIDE},
+                {"kind": "cif", "letters": ["B"], "first": 1000, "last": _LAST_INSIDE},
             ],
         },
         "generated_projections": {"paths": ["docs/_sequences/"]},
@@ -70,6 +73,20 @@ _CATALOGUE: dict[str, object] = {
     ],
     "refusals": [{"value": _LISTED_REFUSAL, "kind": "nif", "reason": "listed on purpose"}],
 }
+
+
+def _nie(letter: str, counter: int) -> str:
+    """A checksum-valid NIE built from the official table, letter replaced by its digit first."""
+    return f"{letter}{counter:07d}{_CONTROL_LETTERS[int(str(' XYZ'.index(letter) - 1) + f'{counter:07d}') % 23]}"
+
+
+def _cif(letter: str, counter: int) -> str:
+    """A checksum-valid CIF of a digit-control kind, from the official odd/even digit sum."""
+    total = 0
+    for position, digit in enumerate(f"{counter:07d}"):
+        value = int(digit) * (2 if position % 2 == 0 else 1)
+        total += value // 10 + value % 10
+    return f"{letter}{counter:07d}{(10 - total % 10) % 10}"
 
 
 def _plant(root: Path, relative: str, text: str) -> None:
@@ -181,3 +198,58 @@ def test_the_live_catalogue_keeps_the_wide_generic_values_out_of_every_role() ->
 
 def test_the_live_catalogue_lies_where_the_gate_reads_it() -> None:
     assert (REPO_ROOT / CATALOGUE_PATH).is_file()
+
+
+def test_a_dni_with_a_valid_check_letter_outside_the_pool_is_refused(tmp_path: Path) -> None:
+    outside = _nif(30_000_000)
+    assert outside[-1] == _CONTROL_LETTERS[30_000_000 % 23]
+    assert _violations(tmp_path, "src/pkg/tests/test_f.py", outside) == [ConventionViolation.OFF_CONVENTION]
+
+
+def test_a_nie_with_a_valid_check_letter_outside_the_pool_is_refused(tmp_path: Path) -> None:
+    assert _violations(tmp_path, "src/pkg/tests/test_g.py", _nie("X", 5_000_000)) == [
+        ConventionViolation.OFF_CONVENTION
+    ]
+
+
+def test_a_cif_with_a_valid_control_outside_the_pool_is_refused(tmp_path: Path) -> None:
+    assert _violations(tmp_path, "src/pkg/tests/test_h.py", _cif("B", 5_000_000)) == [
+        ConventionViolation.OFF_CONVENTION
+    ]
+
+
+@pytest.mark.parametrize(
+    ("make", "first_inside", "last_inside"),
+    [
+        (lambda counter: _nie("Y", counter), 1000, _LAST_INSIDE),
+        (lambda counter: _cif("B", counter), 1000, _LAST_INSIDE),
+    ],
+)
+def test_each_pool_edge_admits_its_last_member_and_refuses_the_next_value(
+    tmp_path: Path, make: Callable[[int], str], first_inside: int, last_inside: int
+) -> None:
+    assert _violations(tmp_path, "src/pkg/tests/test_i.py", make(first_inside)) == []
+    assert _violations(tmp_path, "src/pkg/tests/test_i.py", make(last_inside)) == []
+    assert _violations(tmp_path, "src/pkg/tests/test_i.py", make(first_inside - 1)) == [
+        ConventionViolation.OFF_CONVENTION
+    ]
+    assert _violations(tmp_path, "src/pkg/tests/test_i.py", make(last_inside + 1)) == [
+        ConventionViolation.OFF_CONVENTION
+    ]
+
+
+def test_the_live_catalogue_pool_is_a_bounded_block_for_every_shape() -> None:
+    catalogue = read_catalogue(REPO_ROOT)
+    assert catalogue.pool_ranges
+    for pool_range in catalogue.pool_ranges:
+        assert pool_range.last - pool_range.first < 1000
+        assert pool_range.last < 10_000
+
+
+def test_the_nif_pool_edges_admit_the_last_member_and_refuse_the_next_value(tmp_path: Path) -> None:
+    assert _violations(tmp_path, "src/pkg/tests/test_j.py", _nif(1003)) == []
+    assert _violations(tmp_path, "src/pkg/tests/test_j.py", _nif(_LAST_INSIDE)) == []
+    assert _violations(tmp_path, "src/pkg/tests/test_j.py", _nif(_LAST_INSIDE + 1)) == [
+        ConventionViolation.OFF_CONVENTION
+    ]
+    assert _violations(tmp_path, "src/pkg/tests/test_j.py", _nif(1000)) == [ConventionViolation.OFF_CONVENTION]

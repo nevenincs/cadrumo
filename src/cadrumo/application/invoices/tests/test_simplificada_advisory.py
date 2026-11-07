@@ -80,7 +80,7 @@ def test_a_non_established_issuer_is_evaluated_and_cleared() -> None:
         invoice=_invoice(),
         profile_resolver=lambda: _profile(
             fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             # Required by the domain when residency is NON_RESIDENT_IRNR
             # (TRLIRNR RDLeg 5/2004 art. 2); omitting it makes the profile
             # unconstructable and the negative case untestable.
@@ -117,7 +117,7 @@ def test_an_identified_destinatario_is_answered_without_reading_a_profile() -> N
         return None
 
     outcome = resolve_simplificada_tax_id_advisory(
-        invoice=_invoice(counterparty_tax_id="B12345674"),
+        invoice=_invoice(counterparty_tax_id="B00015016"),
         profile_resolver=resolver,
     )
 

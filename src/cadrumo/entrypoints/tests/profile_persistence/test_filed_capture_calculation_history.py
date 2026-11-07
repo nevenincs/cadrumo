@@ -475,7 +475,7 @@ def test_a_committed_modelo_303_receipt_is_enrolled_from_the_register_path(tmp_p
 #: axis the predicate consults; it now diverges on the csv the artefact's bytes
 #: were fetched under, which is.
 _REFUSED_JUSTIFICANTE_METADATA_CASES = (
-    ("wrong-taxpayer", "X1234567L", MODELO_130_FIXTURE_CSV),
+    ("wrong-taxpayer", "X0001500M", MODELO_130_FIXTURE_CSV),
     ("csv-is-another-filings", "00000000T", "QQQQ7777WWWW3333"),
 )
 
@@ -691,7 +691,7 @@ def test_filed_observation_capture_leaves_a_different_confirmed_filing_untouched
 
 
 def test_filed_observation_capture_does_not_stamp_current_filing_for_wrong_profile_taxpayer(tmp_path: Path) -> None:
-    with profile_backend(tmp_path, tax_id="X1234567L") as bucket_id:
+    with profile_backend(tmp_path, tax_id="X0001500M") as bucket_id:
         store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
         observation = stored_130_justificante_observation(store)
         seed_current_130_filing(bucket_id=bucket_id)

@@ -122,7 +122,7 @@ def _same_facts_invoice(*, with_category: bool):
     kind = InvoiceKind.ISSUED
     number = "PARITY-2026-001"
     issued = date(2026, 4, 2)
-    tax_id = "B12345674"
+    tax_id = "B00015016"
     return Invoice(
         invoice_id=derive_invoice_id(
             kind=kind,
@@ -333,7 +333,7 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
     # Above the 3,005.06 EUR annual threshold below which Modelo 347 declares
     # no counterparty, so the reachable facts are declarable ones.
     declared_facts = {
-        "party_tax_id": "B12345674",
+        "party_tax_id": "B00015016",
         "country_code": "ES",
         "transaction_date": date(2025, 2, 10),
         "base_amount": Decimal("3000.00"),
@@ -348,7 +348,7 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
             kind=InvoiceKind.ISSUED,
             invoice_number="M347-C-2025-001",
             issued_at=date(2025, 2, 10),
-            counterparty_tax_id="B12345674",
+            counterparty_tax_id="B00015016",
             currency="EUR",
             grand_total=Decimal("3630.00"),
         ),
@@ -357,7 +357,7 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
         invoice_number="M347-C-2025-001",
         issued_at=date(2025, 2, 10),
         counterparty_name="Cliente M347 SL",
-        counterparty_tax_id="B12345674",
+        counterparty_tax_id="B00015016",
         counterparty_country="ES",
         base_total=Decimal("3000.00"),
         iva_total=Decimal("630.00"),

@@ -98,7 +98,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 def _test_profile_resolver(operation: PinnedAuthorityOperation) -> TaxpayerProfile:
     del operation
-    return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL"))
+    return TaxpayerProfile(tax_id="X0001500M", iva_regime=IVARegime("GENERAL"))
 
 
 def _definition():

@@ -428,7 +428,7 @@ class ProfileRecordRepository:
         )
         from .lifecycle import ProfileCapsuleLifecycle
 
-        # The lifecycle names this deliberate repository-only collaboration private;
+        # The lifecycle serves this record replacement only to profile commands;
         # this explicit command owner is its sole cross-class caller.
         ProfileCapsuleLifecycle(root=self._root).replace_record_for_profile_command(
             profile_id=identity,
@@ -495,7 +495,7 @@ class ProfileRecordRepository:
         )
         from .lifecycle import ProfileCapsuleLifecycle
 
-        # The lifecycle names this deliberate repository-only collaboration private;
+        # The lifecycle serves this record replacement only to profile commands;
         # this explicit command owner is its sole cross-class caller.
         ProfileCapsuleLifecycle(root=self._root).replace_record_for_profile_command(
             profile_id=identity,

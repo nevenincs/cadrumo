@@ -2,7 +2,7 @@
 // side of a one-sided link is missing, why a link cannot be repaired here,
 // and an invoice in one line. Nothing here decides anything.
 
-import type { CatalogueInvoice } from "../../../shell/ledger";
+import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
 import type { Translate } from "../../../shell/strings";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount } from "../../../shared/numbers";

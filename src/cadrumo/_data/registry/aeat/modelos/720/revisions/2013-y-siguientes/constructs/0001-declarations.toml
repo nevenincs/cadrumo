@@ -13,6 +13,7 @@ legal_refs = [
 source_refs = [
     "aeat-dr-720",
     "aeat-modelo-720-procedure",
+    "boe-modelo-720-2013-contact-guidance",
     "boe-modelo-720-2013-form",
 ]
 casilla_ids = [

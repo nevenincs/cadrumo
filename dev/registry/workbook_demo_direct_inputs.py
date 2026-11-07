@@ -127,7 +127,7 @@ def _inputs_190(snapshot: RegistrySnapshot, case: DemoCase) -> InputResult:
 def _inputs_189(snapshot: RegistrySnapshot, case: DemoCase) -> InputResult:
     securities_values: dict[str, Decimal | str] = {
         "ejercicio-declaracion": Decimal(case.filing_year),
-        "declarante-nif": "B12345674",
+        "declarante-nif": "B00015016",
         "declarante-razon-social": "Entidad depositaria ficticia Ejemplo",
         "tipo-soporte": "T",
         "numero-total-declarados": Decimal("1"),
@@ -148,7 +148,7 @@ def _inputs_189(snapshot: RegistrySnapshot, case: DemoCase) -> InputResult:
 def _inputs_188(snapshot: RegistrySnapshot, case: DemoCase) -> InputResult:
     insurance_values: dict[str, Decimal | str] = {
         "decl.ejercicio": Decimal(case.filing_year),
-        "decl.nif": "B12345674",
+        "decl.nif": "B00015016",
         "decl.nombre": "Aseguradora ficticia Ejemplo",
         "decl.contacto": "Persona de contacto ficticia",
         "01": Decimal("1"),

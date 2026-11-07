@@ -688,7 +688,7 @@ def _received_invoice(bucket_id: str, *, number: str, issued_at: date) -> Invoic
             kind=InvoiceKind.RECEIVED,
             invoice_number=number,
             issued_at=issued_at,
-            counterparty_tax_id="B12345674",
+            counterparty_tax_id="B00015016",
             currency="EUR",
             grand_total=grand_total,
         ),
@@ -697,7 +697,7 @@ def _received_invoice(bucket_id: str, *, number: str, issued_at: date) -> Invoic
         invoice_number=number,
         issued_at=issued_at,
         counterparty_name="PROVEEDOR EJEMPLO SL",
-        counterparty_tax_id="B12345674",
+        counterparty_tax_id="B00015016",
         counterparty_country="ES",
         base_total=base_total,
         iva_total=iva_total,
@@ -741,7 +741,7 @@ def test_verify_takes_modelo_347_counterparty_fields_from_their_rows_real_regist
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             clock=T1,
         ).revision
-    assert revision.row_binding_values["modelo-347-contraparte-row-nif"] == {"1": "B12345674"}
+    assert revision.row_binding_values["modelo-347-contraparte-row-nif"] == {"1": "B00015016"}
     assert Decimal(revision.row_binding_values["modelo-347-contraparte-row-importe"]["1"]) == Decimal("12000.00")
     report = verify_revision(
         revision.calculation_revision_id,

@@ -153,6 +153,9 @@ def _report_session(
             "activities.description": "consulting",
             "censo.activity_start_date": "2026-01-01",
             "withholding.colegio_concertado": "false",
+            # The Modelo 111 report seeds the retención withheld from a professional's invoice,
+            # and Modelo 111 applies only to a payer of income subject to retención.
+            "withholding.pays_professionals_with_retencion": "true",
         }
         facts = complete_profile_facts(
             operation.profile_schema(),
@@ -272,7 +275,7 @@ def _capture_professional_withholding(*, bucket_id: str, operation: PinnedAuthor
                 "invoice_number": "REPORT-PROF-2026-001",
                 "issued_at": paid_on,
                 "counterparty_name": "Synthetic Professional",
-                "counterparty_tax_id": "B12345674",
+                "counterparty_tax_id": "B00015016",
                 "counterparty_country": "ES",
                 "base_total": Decimal("1000"),
                 "iva_total": Decimal("210"),

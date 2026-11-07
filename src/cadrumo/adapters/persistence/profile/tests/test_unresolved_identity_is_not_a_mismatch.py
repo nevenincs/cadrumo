@@ -47,7 +47,7 @@ from cadrumo.domain.modelos.filing_record import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "39039039-0390-4390-8390-390390390391"
-_OWNER_NIF = "X1234567L"
+_OWNER_NIF = "X0001500M"
 _OTHER_NIF = "B12345678"
 _CSV = "JUSTIDENTITY1T"
 _YEAR = 2025

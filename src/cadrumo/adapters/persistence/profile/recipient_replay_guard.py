@@ -22,7 +22,7 @@ The encrypted row's storage policy is governed by
 :class:`~core.classification.policies.SensitivityClass`.
 
 ``mark_consumed`` composes
-:class:`~adapters.persistence.profile._secure_model_document.ProfileBareModelSecurePersistence`'s
+:class:`~adapters.persistence.profile.secure_model_document.ProfileBareModelSecurePersistence`'s
 ``mutate`` for its read-mutate-write-with-retry mechanic, rather than
 hand-rolling the loop: the ledger is stored bare (``ConsumedNonceLedger.model_dump_json()``
 directly, no ``Envelope`` wrapper), matching that kernel's wire shape exactly,

@@ -67,7 +67,7 @@ __all__ = ["isolated_settings", "runtime_profile", "secure_objects"]
 # Two DIFFERENT checksum-valid identifiers. A fixture reusing one for both
 # parties cannot fail when the sides are confused, which is the only failure
 # this module exists to catch.
-_ISSUER_CIF = "B12345674"
+_ISSUER_CIF = "B00015016"
 _BILLED_NIF = "12345678Z"
 
 _BOTH_PARTIES_PRINTED = (

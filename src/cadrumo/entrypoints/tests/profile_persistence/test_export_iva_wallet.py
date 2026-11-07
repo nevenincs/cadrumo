@@ -100,7 +100,7 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_blocked(
 def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_filed_history_only(
     isolated_backend: None, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    taxpayer_nif = "87654321X"
+    taxpayer_nif = "X0001502F"
     bucket_id = seed_profile(tax_id=taxpayer_nif)
     _, calc_rev_id = seed_revision(
         bucket_id=bucket_id,
@@ -181,7 +181,7 @@ def test_export_modelo_303_uses_injected_wallet_decision_repository(
 def test_verify_modelo_303_surfaces_filed_history_only_wallet_decision_as_blocking_readiness(
     isolated_backend: None, *, operation: PinnedAuthorityOperation
 ) -> None:
-    taxpayer_nif = "87654321X"
+    taxpayer_nif = "X0001502F"
     bucket_id = seed_profile(tax_id=taxpayer_nif)
     _, calc_rev_id = seed_revision(
         bucket_id=bucket_id,

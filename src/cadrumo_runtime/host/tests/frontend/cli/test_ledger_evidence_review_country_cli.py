@@ -67,7 +67,7 @@ def seeded_draft(tmp_path: Path, *, operation: PinnedAuthorityOperation) -> Iter
     ever see the other's.
     """
     read = InvoiceDraft(
-        supplier_tax_id="B12345674",
+        supplier_tax_id="B00015016",
         supplier_stated_country_code=an_uncatalogued_alpha2(),
         customer_stated_country_code="XX",
         taxable_base=Decimal("100.00"),

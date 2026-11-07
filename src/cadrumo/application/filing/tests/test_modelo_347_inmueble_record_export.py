@@ -85,7 +85,7 @@ def _resolved_inputs(
 ) -> dict[str, ModeloInputValue]:
     revision = operation.revision_with_export_layouts("347", edition.revision)
     observations = (
-        _observation("inv-cliente", "B12345674", "CLIENTE NACIONAL SL", edition.year, "B"),
+        _observation("inv-cliente", "B00015016", "CLIENTE NACIONAL SL", edition.year, "B"),
         _observation("inv-proveedor", "A00010074", "PROVEEDOR NACIONAL SA", edition.year, "A"),
         *leases,
     )
@@ -152,7 +152,7 @@ def test_a_filer_without_leases_files_no_inmueble_record(operation: PinnedAuthor
 def test_a_recorded_lease_files_one_inmueble_record(operation: PinnedAuthorityOperation) -> None:
     lease = _observation(
         "inv-arrendamiento",
-        "B87654323",
+        "B00015057",
         "ARRENDATARIO LOCAL SL",
         _FILING_EDITION.year,
         "B",
@@ -182,7 +182,7 @@ def test_the_historical_filing_edition_exports_without_inmueble_records(operatio
 def test_nonresident_province_and_country_survive_the_complete_export(
     operation: PinnedAuthorityOperation, edition: _Edition
 ) -> None:
-    foreign = _observation("inv-foreign", "B87654323", "NONRESIDENT PARTY", edition.year, "A").model_copy(
+    foreign = _observation("inv-foreign", "B00015057", "NONRESIDENT PARTY", edition.year, "A").model_copy(
         update={"country_code": "US"}
     )
     lines = _fichero_lines(operation, edition, _resolved_inputs(operation, edition, foreign))
@@ -197,7 +197,7 @@ def test_cash_accounting_and_reverse_charge_marks_survive_the_complete_export(
     operation: PinnedAuthorityOperation,
 ) -> None:
     edition = _FILING_EDITION
-    cash = _observation("inv-cash", "B87654323", "CASH ACCOUNTING PARTY", edition.year, "A").model_copy(
+    cash = _observation("inv-cash", "B00015057", "CASH ACCOUNTING PARTY", edition.year, "A").model_copy(
         update={"cash_accounting_operation": True, "annual_computation_basis": True}
     )
     reverse_charge = _observation("inv-reverse", "B11111112", "REVERSE CHARGE PARTY", edition.year, "A").model_copy(

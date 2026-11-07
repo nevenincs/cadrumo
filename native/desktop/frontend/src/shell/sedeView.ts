@@ -10,7 +10,7 @@ import type {
   SedeViewMessage,
   SedeViewVerb,
   SedeClipboardAction,
-} from "../ipc/contract";
+} from "../ipc/sedeViewMessages";
 
 /** The panel's size in CSS pixels, and the device pixel ratio. */
 export type SedeViewSize = {

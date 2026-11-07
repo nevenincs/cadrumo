@@ -66,7 +66,7 @@ _REFUSALS: dict[LabelReadingFallbackCause, tuple[str, str | None]] = {
 def _draft() -> InvoiceDraft:
     """A draft missing exactly the fields the fallbacks below name as unread."""
     return InvoiceDraft(
-        supplier_tax_id="ESB12345674",
+        supplier_tax_id="ESB00015016",
         invoice_number="2026-0142",
         invoice_date="2026-03-10",
         taxable_base=Decimal("100.00"),

@@ -34,7 +34,7 @@ __all__ = ["offline_guard_fixture"]
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _BUCKET_ID = "60606060-6060-4060-8060-606060606060"
-_NIF = "B12345674"
+_NIF = "B00015016"
 _LEDGER_DEFINITIONS = (LEDGER_CLASSIFY_REVIEW_DEFINITION_ID, LEDGER_SPLIT_REVIEW_DEFINITION_ID)
 
 

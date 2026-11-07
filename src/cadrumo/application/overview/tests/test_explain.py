@@ -50,7 +50,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 def _undeclared_profile() -> TaxpayerProfile:
     """A profile with no taxpayer model declared at all."""
 
-    return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL"))
+    return TaxpayerProfile(tax_id="X0001500M", iva_regime=IVARegime("GENERAL"))
 
 
 def test_explain_returns_typed_envelope_for_applicable_modelo() -> None:
@@ -66,7 +66,7 @@ def test_explain_returns_typed_envelope_for_applicable_modelo() -> None:
     assert result.verdict is ApplicabilityVerdict.APPLICABLE
     assert result.rationale
     assert result.legal_refs  # applicability is registry-grounded.
-    assert result.profile_facts["tax_id"] == "X1234567L"
+    assert result.profile_facts["tax_id"] == "X0001500M"
     assert result.profile_facts["iva_regime"] == "GENERAL"
     assert result.profile_facts["entity_type"] == "natural_person"
 
@@ -250,7 +250,7 @@ def test_explain_applicable_flag_matches_derived_verdict() -> None:
 
 def test_explain_721_depends_on_crypto_abroad_threshold_fact() -> None:
     profile = TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("trabajo")}),
         iva_regime=IVARegime("GENERAL"),
@@ -305,10 +305,23 @@ _SII_PAYER_FACT = PayerFactProjection(
 )
 
 
-def _rule_with(*exclusions: ModeloApplicabilityExclusion) -> ModeloApplicabilityRule:
+_THRESHOLD_PAYER_FACT = PayerFactProjection(
+    "exceeds_third_party_threshold",
+    profile_keys=("third_party_transactions_above_347_threshold",),
+    label="supera el umbral de operaciones con terceros",
+    legal_refs=("rd-1065-2007:art-31",),
+    three_state=True,
+)
+
+
+def _rule_with(
+    *exclusions: ModeloApplicabilityExclusion,
+    required_payer_fact: PayerFactProjection | None = None,
+) -> ModeloApplicabilityRule:
     return ModeloApplicabilityRule(
         modelo="347",
         applicable_entity_types=frozenset({EntityType.from_registry("legal_entity")}),
+        required_payer_fact=required_payer_fact,
         applicable_reason="applies",
         not_applicable_reason="does not apply",
         exclusions=exclusions,
@@ -316,32 +329,56 @@ def _rule_with(*exclusions: ModeloApplicabilityExclusion) -> ModeloApplicability
     )
 
 
+def _sii_exclusion() -> ModeloApplicabilityExclusion:
+    return ModeloApplicabilityExclusion(
+        id="sii",
+        outcome=ApplicabilityVerdict.NOT_APPLICABLE,
+        payer_fact=_SII_PAYER_FACT,
+        reason="excluded",
+        legal_refs=("rd-1065-2007:art-32",),
+    )
+
+
+def _collector_exclusion() -> ModeloApplicabilityExclusion:
+    return ModeloApplicabilityExclusion(
+        id="collector",
+        outcome=ApplicabilityVerdict.INCOMPLETE,
+        declaration_roles=frozenset({ThirdPartyDeclarationRole.from_registry("third_party_fee_collector")}),
+        reason="undetermined",
+        legal_refs=("rd-1065-2007:art-32",),
+    )
+
+
 def test_rule_fact_keys_include_what_only_an_exclusion_reads() -> None:
     """An exclusion's payer-fact keys and its role condition are inputs to the verdict."""
 
-    rule = _rule_with(
-        ModeloApplicabilityExclusion(
-            id="sii",
-            outcome=ApplicabilityVerdict.NOT_APPLICABLE,
-            payer_fact=_SII_PAYER_FACT,
-            reason="excluded",
-            legal_refs=("rd-1065-2007:art-32",),
-        ),
-        ModeloApplicabilityExclusion(
-            id="collector",
-            outcome=ApplicabilityVerdict.INCOMPLETE,
-            declaration_roles=frozenset({ThirdPartyDeclarationRole.from_registry("third_party_fee_collector")}),
-            reason="undetermined",
-            legal_refs=("rd-1065-2007:art-32",),
-        ),
-    )
+    rule = _rule_with(_sii_exclusion(), _collector_exclusion())
 
     assert applicability_profile_fact_keys(rule) == (
         "entity_type",
+        "declaration_roles",
         "iva.sii_enrolled",
         "iva.voluntary_sii_enrolled",
         "enrollment.large_company",
-        "declaration_roles",
+    )
+
+
+def test_rule_fact_keys_name_the_rules_gating_payer_facts_in_order() -> None:
+    """The payer-fact block is the rule's own ``gating_payer_facts``, required first.
+
+    One enumeration decides which facts gate a modelo. The explain payload and
+    the cleared-fact notice both read it, so a fact an exclusion alone consults
+    cannot appear in one surface and be missing from the other.
+    """
+    rule = _rule_with(_sii_exclusion(), required_payer_fact=_THRESHOLD_PAYER_FACT)
+
+    assert rule.gating_payer_facts == (_THRESHOLD_PAYER_FACT, _SII_PAYER_FACT)
+    assert applicability_profile_fact_keys(rule) == (
+        "entity_type",
+        "third_party_transactions_above_347_threshold",
+        "iva.sii_enrolled",
+        "iva.voluntary_sii_enrolled",
+        "enrollment.large_company",
     )
 
 
@@ -354,7 +391,7 @@ def test_rule_fact_keys_without_exclusions_name_no_exclusion_inputs() -> None:
 def _sii_sociedad(**facts: object) -> TaxpayerProfile:
     return TaxpayerProfile.model_validate(
         {
-            "tax_id": "B12345674",
+            "tax_id": "B00015016",
             "entity_type": EntityType.from_registry("legal_entity"),
             "legal_entity_form": LegalEntityForm.from_registry("sl"),
             "iva_regime": IVARegime("GENERAL"),
@@ -368,6 +405,10 @@ def _sii_sociedad(**facts: object) -> TaxpayerProfile:
                 voluntary_sii_enrolled=False,
                 hydrocarbon_deposit_advance_payment_deduction_entitled=False,
             ),
+            # The large-company condition is one of the art. 71.3 triggers the
+            # Modelo 347 exclusion reads, and it is three-state, so this
+            # filer states it; a caller override still wins.
+            "enrollment": ModeloEnrollment(large_company=False),
             **facts,
         },
     )

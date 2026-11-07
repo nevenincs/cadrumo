@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field, model_validator
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.casilla_id import CasillaId
-from ...core.identity.hex_ids import CalculationRevisionId
+from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ...domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
@@ -180,6 +180,109 @@ class ModeloHistoricalFilingContentProjection(BaseModel):
         if row_keys != tuple(sorted(set(row_keys))):
             raise ValueError("historical repeating boxes must be unique and sorted")
         return self
+
+
+class ModeloHistoricalComparisonRowProjection(BaseModel):
+    """Exact saved scalar spellings; a missing side remains absent rather than zero."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    casilla_id: CasillaId
+    base_value: str | None
+    selected_value: str | None
+    base_value_kind: Literal["decimal", "text"] | None
+    selected_value_kind: Literal["decimal", "text"] | None
+    change: Literal["unchanged", "changed", "added", "removed"]
+
+    @model_validator(mode="after")
+    def _change_matches_saved_values(self) -> Self:
+        if (self.base_value is None) != (self.base_value_kind is None) or (
+            (self.selected_value is None) != (self.selected_value_kind is None)
+        ):
+            raise ValueError("a saved comparison value requires its value kind")
+        if self.base_value is None and self.selected_value is None:
+            raise ValueError("a saved comparison row must have at least one value")
+        expected = (
+            "added"
+            if self.base_value is None
+            else "removed"
+            if self.selected_value is None
+            else "unchanged"
+            if (self.base_value_kind, self.base_value) == (self.selected_value_kind, self.selected_value)
+            else "changed"
+        )
+        if self.change != expected:
+            raise ValueError("a saved comparison change must match its values")
+        return self
+
+
+class ModeloHistoricalComparisonProjection(BaseModel):
+    """A technical saved-value comparison, with no inferred labels or tax effects."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    base_filing_record_id: FilingRecordId | None
+    availability: Literal["available", "no_base", "missing_base", "missing_content", "different_registry_revision"]
+    rows: tuple[ModeloHistoricalComparisonRowProjection, ...] = ()
+
+    @model_validator(mode="after")
+    def _availability_matches_comparison(self) -> Self:
+        if (self.availability == "no_base") != (self.base_filing_record_id is None):
+            raise ValueError("saved comparison availability must match its base reference")
+        if self.availability != "available" and self.rows:
+            raise ValueError("unavailable saved comparisons cannot carry paired values")
+        keys = tuple(row.casilla_id for row in self.rows)
+        if keys != tuple(sorted(set(keys))):
+            raise ValueError("saved comparison casillas must be unique and sorted")
+        return self
+
+
+def compare_historical_filing_content(
+    selected: ModeloHistoricalFilingContentProjection,
+    base: ModeloHistoricalFilingContentProjection | None,
+    *,
+    base_filing_record_id: FilingRecordId | None,
+) -> ModeloHistoricalComparisonProjection:
+    """Pair scalar IDs only inside the same saved registry scope and revision."""
+    availability: Literal["no_base", "missing_base", "missing_content", "different_registry_revision"]
+    if base_filing_record_id is None:
+        availability = "no_base"
+    elif base is None:
+        availability = "missing_base"
+    elif selected.availability != "available" or base.availability != "available":
+        availability = "missing_content"
+    elif selected.registry_snapshot_ref != base.registry_snapshot_ref:
+        availability = "different_registry_revision"
+    else:
+        before = {item.casilla_id: item for item in base.observations}
+        after = {item.casilla_id: item for item in selected.observations}
+        rows: list[ModeloHistoricalComparisonRowProjection] = []
+        for key in sorted(before.keys() | after.keys()):
+            old = before.get(key)
+            new = after.get(key)
+            change: Literal["unchanged", "changed", "added", "removed"] = (
+                "added"
+                if old is None
+                else "removed"
+                if new is None
+                else "unchanged"
+                if (old.value_kind, old.value) == (new.value_kind, new.value)
+                else "changed"
+            )
+            rows.append(
+                ModeloHistoricalComparisonRowProjection(
+                    casilla_id=key,
+                    base_value=None if old is None else old.value,
+                    selected_value=None if new is None else new.value,
+                    base_value_kind=None if old is None else old.value_kind,
+                    selected_value_kind=None if new is None else new.value_kind,
+                    change=change,
+                )
+            )
+        return ModeloHistoricalComparisonProjection(
+            base_filing_record_id=base_filing_record_id, availability="available", rows=tuple(rows)
+        )
+    return ModeloHistoricalComparisonProjection(base_filing_record_id=base_filing_record_id, availability=availability)
 
 
 def _require_saved_filing_coordinates(record: ModeloRecord, revision: CalculationRevision) -> None:

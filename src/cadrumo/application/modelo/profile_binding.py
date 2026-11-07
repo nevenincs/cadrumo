@@ -22,7 +22,7 @@ new filing year is registry work rather than a code edit.
 Channel selection is the load-bearing decision. The registry runtime
 resolves profile bindings through four engine channels:
 ``date_binding_values`` for date operands, ``enum_binding_values`` for
-dispatch keys, ``boolean_binding_values`` for truth values, and
+dispatch keys and calculation-only text inputs, ``boolean_binding_values`` for truth values, and
 Decimal-valued ``binding_values`` for numeric operands. The boolean channel
 is selected from the binding's OWN declared value contract
 (``value.channel = "boolean"``), never from the Python type of the fact that
@@ -91,6 +91,7 @@ from .profile_derived_facts import (
     inject_derived_minimo_descendientes_facts,
     inject_derived_state_attribution_facts,
     inject_ordinary_work_maritime_facts,
+    profile_declares_economic_activity,
     snapshot_authored_year,
 )
 from .profile_row_binding import profile_row_bindings, resolve_profile_row_values
@@ -132,7 +133,6 @@ if TYPE_CHECKING:
 # hecho and Art. 82.1.2a is registration-agnostic, so BOTH must count as
 # partnered; treating only the registered form as partnered would over-grant
 # for an unregistered couple.
-_ECONOMIC_ACTIVITY_INCOME_CATEGORY = "actividad_economica"
 _ECONOMIC_ACTIVITY_PREDICATE_BINDING_SUFFIX = "-profile-has-economic-activity"
 
 
@@ -209,6 +209,7 @@ def _route_resolved_binding(
     *,
     is_date_channel: bool,
     is_enum_channel: bool,
+    is_text_input_channel: bool,
     declared_channel: BindingValueChannel,
     channels: _ResolvedBindingChannels,
 ) -> None:
@@ -253,7 +254,7 @@ def _route_resolved_binding(
     if declared_channel is BindingValueChannel.BOOLEAN:
         channels.boolean_values[binding_id] = _boolean_value(binding_id, value)
         return
-    if declared_channel is BindingValueChannel.ENUM or is_enum_channel:
+    if declared_channel is BindingValueChannel.ENUM or is_enum_channel or is_text_input_channel:
         # Boolean-typed facts must never reach the enum dispatch channel --
         # enum dispatch keys are string category codes, not yes/no flags.
         # A bool here signals a mis-wired registry binding; refuse early
@@ -265,6 +266,9 @@ def _route_resolved_binding(
                 translated_message="application.modelo.profile_binding.errors.enum_boolean_invalid",
                 context={"binding_id": binding_id, "value_type": "bool"},
             )
+        # Unaddressed profile TEXT inputs use the existing string channel.
+        # Dictionary/XSD-addressed numeric controls retain their established
+        # calculation shaping; their export text is resolved separately.
         channels.enum_values[binding_id] = str(value)
         return
     if isinstance(value, bool):
@@ -341,6 +345,8 @@ class _ProfileFacts:
 
     fact_index: dict[str, UserProfileFactValue]
     fingerprint: str | None
+    decided_derived_paths: frozenset[str] = frozenset()
+    """Derived paths an injector decided, including those it decided to leave absent."""
 
 
 def _is_calculation_only_profile_binding(binding: BindingDefinition) -> bool:
@@ -430,8 +436,12 @@ def _load_profile_facts(
     family_context = family_fact_context(snapshot, operation=operation)
     inject_derived_marriage_facts(fact_index, snapshot.filing_year)
     inject_ordinary_work_maritime_facts(fact_index)
-    inject_derived_cash_election_fact(fact_index, record, snapshot.filing_year, operation=operation)
-    inject_derived_estimation_modality_fact(fact_index, operation=operation)
+    decided_derived_paths = frozenset(
+        (
+            *inject_derived_cash_election_fact(fact_index, record, snapshot.filing_year, operation=operation),
+            *inject_derived_estimation_modality_fact(fact_index, operation=operation),
+        )
+    )
     declared_selectors = declared_profile_selectors(snapshot.revision)
     inject_derived_anualidades_eligibility_facts(
         fact_index,
@@ -474,7 +484,11 @@ def _load_profile_facts(
             effective_date=date(snapshot.filing_year, 1, 1),
             operation=operation,
         )
-    return _ProfileFacts(fact_index=fact_index, fingerprint=profile_record_fingerprint)
+    return _ProfileFacts(
+        fact_index=fact_index,
+        fingerprint=profile_record_fingerprint,
+        decided_derived_paths=decided_derived_paths,
+    )
 
 
 def resolve_profile_binding_channels(
@@ -507,6 +521,9 @@ def resolve_profile_binding_channels(
             value,
             is_date_channel=binding_id in formula_date_consumed,
             is_enum_channel=binding_id in enum_bindings or binding.value.typed_enum is not None,
+            is_text_input_channel=(
+                binding.value.channel is BindingValueChannel.TEXT and _is_calculation_only_profile_binding(binding)
+            ),
             declared_channel=binding.value.channel,
             channels=channels,
         )
@@ -653,6 +670,7 @@ def resolve_profile_sourced_bindings(
                 facts.fact_index,
                 resolved_schema,
                 bucket_id=bucket_id,
+                decided_derived_paths=facts.decided_derived_paths,
             ),
             *rows.diagnostics,
         ),
@@ -750,6 +768,7 @@ def derived_binding_diagnostics(
     schema: ProfileSchemaDefinition,
     *,
     bucket_id: str,
+    decided_derived_paths: frozenset[str] = frozenset(),
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Advise on a SELECTED derived binding that still resolved to nothing.
 
@@ -765,6 +784,11 @@ def derived_binding_diagnostics(
     be an ordinary absence -- no injector claimed it, which means a structural
     gap (a registry year with no injector coverage, or a pattern whose
     consuming binding drifted). Every fire is real.
+
+    Some derived paths are legitimately absent: the estimation modality and the
+    cash election are left unset when the regime or criterion is undeclared or
+    the block does not apply. Their injectors return the paths they decided, and
+    ``decided_derived_paths`` keeps such a decided absence from reading as a gap.
     """
     diagnostics: list[CalculationSourceDiagnostic] = []
     for binding in bindings:
@@ -772,7 +796,7 @@ def derived_binding_diagnostics(
             continue
         for selector in profile_binding_selectors(binding.provider):
             derived = derived_selector_for_path(selector, schema.derived_selectors)
-            if derived is None:
+            if derived is None or selector in decided_derived_paths:
                 continue
             diagnostics.append(
                 CalculationSourceDiagnostic(
@@ -790,15 +814,6 @@ def derived_binding_diagnostics(
             )
             break
     return tuple(diagnostics)
-
-
-def _economic_activity_binding_value(
-    fact_index: Mapping[str, UserProfileFactValue],
-) -> bool:
-    """Derive the activity predicate from the canonical category fact."""
-    raw_categories = str(fact_index.get("taxpayer_type.irpf_income_categories", ""))
-    categories = {token.strip() for token in raw_categories.split(",") if token.strip()}
-    return _ECONOMIC_ACTIVITY_INCOME_CATEGORY in categories
 
 
 def _profile_selector_value(
@@ -845,7 +860,7 @@ def resolve_profile_binding_value(
     if isinstance(binding.provider, ProfileProvider) and binding.provider.repeating:
         return None
     if binding.id.endswith(_ECONOMIC_ACTIVITY_PREDICATE_BINDING_SUFFIX):
-        return _economic_activity_binding_value(fact_index)
+        return profile_declares_economic_activity(fact_index)
     # ``profile_binding_selectors`` returns the binding's DEPENDENCY set -- every
     # fact it references -- and that includes ``required_when_profile_key``. The
     # gate fact states WHETHER the binding applies, never WHAT it holds, so it

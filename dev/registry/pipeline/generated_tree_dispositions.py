@@ -231,6 +231,9 @@ _GeneratedTreeDisposition = Annotated[
 ]
 
 
+_TREE_STATE_KINDS = frozenset({"render_refusal", "below_floor", "record_drift"})
+
+
 class _GeneratedTreeDispositionLedger(_StrictModel):
     schema_version: Literal[4]
     dispositions: tuple[_GeneratedTreeDisposition, ...]
@@ -251,6 +254,12 @@ def disposition_ledger_from_path(path: Path) -> tuple[_GeneratedTreeDisposition,
     subjects = tuple((item.kind, item.subject) for item in ledger.dispositions)
     if len(subjects) != len(set(subjects)):
         raise ValueError("generated tree disposition ledger contains duplicate subjects")
+    # A refused tree never renders, and a below-floor or drifting tree is
+    # explained by exactly one row, so a second state explanation would make the
+    # gate's verdict depend on row order.
+    explained = tuple(item.subject for item in ledger.dispositions if item.kind in _TREE_STATE_KINDS)
+    if len(explained) != len(set(explained)):
+        raise ValueError("generated tree disposition ledger contains duplicate subjects for one tree state")
     return ledger.dispositions
 
 

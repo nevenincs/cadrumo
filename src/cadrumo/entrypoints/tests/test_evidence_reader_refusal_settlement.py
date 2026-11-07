@@ -68,7 +68,7 @@ _PROFILE = UUID("7d2e4f6a-8b1c-4d3e-9f5a-6b7c8d9e0f1a")
 _REGISTERED = get_registered_error_code(PurchaseInvoiceEvidenceReaderError)
 
 #: Figures with no label the rules read, so the text model is the whole read.
-_NO_LABELS = ("B1234567X B17283946 766,30",)
+_NO_LABELS = ("B1234567X B00015024 766,30",)
 
 
 @pytest.fixture

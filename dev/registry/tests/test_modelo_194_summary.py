@@ -21,7 +21,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def _transaction(index: int, year: int, base: str, retention: str) -> WithholdingObservation:
     return WithholdingObservation(
         source_id=f"fictional-asset-{index}",
-        perceptor_tax_id="11111111H",
+        perceptor_tax_id="00001500M",
         perceptor_legal_name="PERCEPTOR SINTETICO",
         transaction_date=date(year, 6, 1),
         clave=RetencionClave.from_registry("G"),

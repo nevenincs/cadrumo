@@ -59,7 +59,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 def _m184_pair() -> tuple[Modelo184MemberRowWireV1, Modelo184MemberRow]:
     """Build one M184 member row and the wire mirror carrying the same values."""
     mirror = Modelo184MemberRowWireV1(
-        nif="11111111H",
+        nif="00001500M",
         nombre="MIEMBRO UNO",
         pais="ES",
         porcentaje="33.33",
@@ -77,7 +77,7 @@ def _m184_pair() -> tuple[Modelo184MemberRowWireV1, Modelo184MemberRow]:
         rendimiento_neto_minorado_agricola_eo="800.20",
     )
     row = Modelo184MemberRow(
-        nif="11111111H",
+        nif="00001500M",
         nombre="MIEMBRO UNO",
         pais="ES",
         porcentaje=Decimal("33.33"),
@@ -100,7 +100,7 @@ def _m184_pair() -> tuple[Modelo184MemberRowWireV1, Modelo184MemberRow]:
 def _m232_pair() -> tuple[Modelo232VinculadaRowWireV1, Modelo232VinculadaRow]:
     """Build one M232 row whose three codes cross the wire unhydrated."""
     mirror = Modelo232VinculadaRowWireV1(
-        nif="B12345674",
+        nif="B00015016",
         nombre="VINCULADA SL",
         pais="ES",
         tipo_vinculacion="A",
@@ -109,7 +109,7 @@ def _m232_pair() -> tuple[Modelo232VinculadaRowWireV1, Modelo232VinculadaRow]:
         importe="98765.43",
     )
     row = Modelo232VinculadaRow(
-        nif="B12345674",
+        nif="B00015016",
         nombre="VINCULADA SL",
         pais="ES",
         tipo_vinculacion="A",
@@ -172,7 +172,7 @@ def _m210_pair() -> tuple[Modelo210AgrupacionRentaRowWireV1, Modelo210Agrupacion
         importe="7500.00",
         tipo_gravamen="0.19",
         pagador_mode=_SINGLE_PAYER,
-        pagador_id="11111111H",
+        pagador_id="00001500M",
         deriva_de_bien_derecho=True,
         bien_derecho_id="inmueble-1",
     )
@@ -182,7 +182,7 @@ def _m210_pair() -> tuple[Modelo210AgrupacionRentaRowWireV1, Modelo210Agrupacion
         importe=Decimal("7500.00"),
         tipo_gravamen=Decimal("0.19"),
         pagador_mode=_SINGLE_PAYER,
-        pagador_id="11111111H",
+        pagador_id="00001500M",
         deriva_de_bien_derecho=True,
         bien_derecho_id="inmueble-1",
     )
@@ -284,7 +284,7 @@ def test_the_wire_and_direct_paths_refuse_the_same_malformed_registry_code() -> 
 
     with pytest.raises(ValidationError) as direct:
         Modelo232VinculadaRow(
-            nif="B12345674",
+            nif="B00015016",
             nombre="VINCULADA SL",
             pais="ES",
             tipo_vinculacion=malformed,
@@ -294,7 +294,7 @@ def test_the_wire_and_direct_paths_refuse_the_same_malformed_registry_code() -> 
         )
 
     mirror = Modelo232VinculadaRowWireV1(
-        nif="B12345674",
+        nif="B00015016",
         nombre="VINCULADA SL",
         pais="ES",
         tipo_vinculacion=malformed,

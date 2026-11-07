@@ -21,8 +21,7 @@ for it is the value the filed record addresses.
 
 from __future__ import annotations
 
-from collections.abc import Collection, Generator, Mapping, Sequence
-from contextlib import contextmanager
+from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 
@@ -41,11 +40,12 @@ from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevi
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.contribuyente.entity_type import entity_type_natural_person_token
-from ...domain.user_profile.errors import ProfileNotFoundError
+from ...domain.user_profile.errors import ProfileNotFoundError, UserProfileError
 from ...domain.user_profile.registry_contract import profile_binding_selectors
 from ...domain.user_profile.schema import ProfileSchemaDefinition
 from ...domain.user_profile.values import UserProfileFactValue, compose_legal_full_name
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from ..filing.identity_contact_producer import identity_contact_producer_values
 from ..filing.producer_snapshot import DeclarationContactFacts, PresenterIdentity, TaxpayerIdentityFacts
 
 # Reuse the public defining module's canonical fact-index and scalar resolver;
@@ -53,7 +53,7 @@ from ..filing.producer_snapshot import DeclarationContactFacts, PresenterIdentit
 from ..user_profile.projections import profile_fact_index
 from ..user_profile.validation import profile_text_too_long_error
 from .profile_binding import resolve_profile_binding_value
-from .profile_derived_facts import inject_derived_cash_election_fact
+from .profile_derived_facts import inject_derived_cash_election_fact, inject_derived_estimation_modality_fact
 
 _SURNAMES_NAME_FORMAT = "surnames_name"
 
@@ -143,6 +143,22 @@ def _profile_text_casilla_bindings(
 
 def _first_profile_text_value(declared: tuple[UserProfileFactValue, ...]) -> str | None:
     return next((text for fact in declared if (text := _profile_text_spelling(fact)) is not None), None)
+
+
+def profile_text_fact_index(
+    record: object,
+    schema: ProfileSchemaDefinition,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> dict[str, UserProfileFactValue]:
+    """Return the fact index a bound text casilla reads, with its engine-derived claves.
+
+    Casilla 0168's modality clave is derived from the declared estimation regime, so
+    the text channel reads the derived value and never one stored at the path.
+    """
+    fact_index = profile_fact_index(record, schema)
+    inject_derived_estimation_modality_fact(fact_index, operation=operation)
+    return fact_index
 
 
 def resolve_profile_text_casilla_inputs(
@@ -513,11 +529,45 @@ def resolve_declaration_contact(
     if record is None:
         return DeclarationContactFacts()
     resolved_schema = operation.profile_schema() if schema is None else schema
+    return _declaration_contact_from_profile_facts(profile_fact_index(record, resolved_schema), schema=resolved_schema)
+
+
+def resolve_profile_identity_producer_values(
+    *,
+    bucket_id: str,
+    operation: PinnedAuthorityOperation,
+    profile_record: object | None = None,
+    schema: ProfileSchemaDefinition | None = None,
+) -> dict[FilingProducerKey, str | None]:
+    """Read current taxpayer/contact context using the export's canonical shaping.
+
+    Unlike export admission, this read needs neither a complete presenter nor
+    filing elections: a partial profile still answers each fact it declares.
+    It supplies no representative, payment selection or historical evidence.
+    """
+    record = _load_profile_record(bucket_id=bucket_id, operation=operation, profile_record=profile_record)
+    if record is None:
+        return {}
+    resolved_schema = operation.profile_schema() if schema is None else schema
     facts = profile_fact_index(record, resolved_schema)
+    return identity_contact_producer_values(
+        taxpayer_tax_id=str(facts.get(_IDENTITY_TAX_ID_KEY) or "").strip() or None,
+        identity=_taxpayer_identity_from_profile_facts(facts, schema=resolved_schema),
+        contact=_declaration_contact_from_profile_facts(facts, schema=resolved_schema),
+    )
+
+
+def _declaration_contact_from_profile_facts(
+    facts: Mapping[str, UserProfileFactValue], *, schema: ProfileSchemaDefinition
+) -> DeclarationContactFacts:
+    """Shape only the declaration's contact fields, preserving absent components."""
     phone = str(facts.get(_CONTACT_PERSON_PHONE_KEY) or "").strip()
     full_name = str(facts.get(_CONTACT_PERSON_NAME_KEY) or "").strip()
-    with _refusing_overlong_profile_text(_CONTACT_TEXT_PROFILE_FACTS, schema=resolved_schema):
-        return DeclarationContactFacts(phone=phone or None, full_name=full_name or None)
+    return _built_within_profile_text_bounds(
+        lambda: DeclarationContactFacts(phone=phone or None, full_name=full_name or None),
+        _CONTACT_TEXT_PROFILE_FACTS,
+        schema=schema,
+    )
 
 
 def identity_from_profile_facts(
@@ -530,20 +580,23 @@ def identity_from_profile_facts(
     if not tax_id:
         return None
 
-    name = str(facts.get(_IDENTITY_NAME_KEY) or "").strip()
-    surnames = str(facts.get(_IDENTITY_SURNAMES_KEY) or "").strip()
-    legal_name = str(facts.get(_IDENTITY_LEGAL_NAME_KEY) or "").strip()
-    entity_type = str(facts.get(_ENTITY_TYPE_KEY) or "").strip().casefold()
-    identity = _taxpayer_identity_facts(
-        name=name,
-        surnames=surnames,
-        legal_name=legal_name,
-        entity_type=entity_type,
-        schema=schema,
-    )
+    identity = _taxpayer_identity_from_profile_facts(facts, schema=schema)
     if identity.full_name is None:
         return None
     return PresenterIdentity(tax_id=tax_id, full_name=identity.full_name), identity
+
+
+def _taxpayer_identity_from_profile_facts(
+    facts: Mapping[str, UserProfileFactValue], *, schema: ProfileSchemaDefinition
+) -> TaxpayerIdentityFacts:
+    """Shape each declared name component using the export identity rules."""
+    return _taxpayer_identity_facts(
+        name=str(facts.get(_IDENTITY_NAME_KEY) or "").strip(),
+        surnames=str(facts.get(_IDENTITY_SURNAMES_KEY) or "").strip(),
+        legal_name=str(facts.get(_IDENTITY_LEGAL_NAME_KEY) or "").strip(),
+        entity_type=str(facts.get(_ENTITY_TYPE_KEY) or "").strip().casefold(),
+        schema=schema,
+    )
 
 
 def _taxpayer_identity_facts(
@@ -555,7 +608,8 @@ def _taxpayer_identity_facts(
     schema: ProfileSchemaDefinition,
 ) -> TaxpayerIdentityFacts:
     """Shape natural-person and entity names into the producer's four facts."""
-    with _refusing_overlong_profile_text(_IDENTITY_TEXT_PROFILE_FACTS, schema=schema):
+
+    def shape() -> TaxpayerIdentityFacts:
         if entity_type == entity_type_natural_person_token().value:
             full_name = compose_legal_full_name(surnames=surnames, name=name)
             return TaxpayerIdentityFacts(
@@ -572,31 +626,48 @@ def _taxpayer_identity_facts(
             full_name=registered or None,
         )
 
+    return _built_within_profile_text_bounds(shape, _IDENTITY_TEXT_PROFILE_FACTS, schema=schema)
 
-@contextmanager
-def _refusing_overlong_profile_text(
+
+def _built_within_profile_text_bounds[Built](
+    build: Callable[[], Built],
     profile_facts: Mapping[str, str],
     *,
     schema: ProfileSchemaDefinition,
-) -> Generator[None]:
+) -> Built:
     """Report a stored text that overruns a producer's bound as the profile fact to correct.
 
     A profile written before its field declared a bound, or a composed name each of
     whose parts fits, reaches the producer here. The operator declares the profile
     fact and never sees the producer record, so the refusal names the fact.
+
+    The refusal is raised once the handler has closed, so the validation error,
+    which holds the stored text, is neither its cause nor its context.
     """
     try:
-        yield
+        return build()
     except ValidationError as exc:
-        for error in exc.errors(include_input=False, include_url=False):
-            context = error.get("ctx")
-            if error["type"] == "string_too_long" and context is not None:
-                raise profile_text_too_long_error(
-                    profile_facts[str(error["loc"][0])],
-                    limit=context["max_length"],
-                    schema=schema,
-                ) from exc
-        raise
+        refusal = _overlong_profile_text_refusal(exc, profile_facts, schema=schema)
+        if refusal is None:
+            raise
+    raise refusal
+
+
+def _overlong_profile_text_refusal(
+    exc: ValidationError,
+    profile_facts: Mapping[str, str],
+    *,
+    schema: ProfileSchemaDefinition,
+) -> UserProfileError | None:
+    for error in exc.errors(include_input=False, include_url=False):
+        context = error.get("ctx")
+        if error["type"] == "string_too_long" and context is not None:
+            return profile_text_too_long_error(
+                profile_facts[str(error["loc"][0])],
+                limit=context["max_length"],
+                schema=schema,
+            )
+    return None
 
 
 def _profile_export_values_from_facts(
@@ -647,5 +718,6 @@ def _resolve_profile_export_values(
     resolved_schema = operation.profile_schema() if schema is None else schema
     fact_index = profile_fact_index(record, resolved_schema)
     inject_derived_cash_election_fact(fact_index, record, filing_year, operation=operation)
+    inject_derived_estimation_modality_fact(fact_index, operation=operation)
 
     return _profile_export_values_from_facts(bindings, fact_index)

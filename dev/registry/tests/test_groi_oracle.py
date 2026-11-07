@@ -98,7 +98,7 @@ def test_planned_operations_returns_form_open_per_nif_then_discard() -> None:
     oracle = GroiOracle()
     operations = oracle.planned_operations(
         b"",
-        expected={"A28015865": "valid", "B12345678": "invalid"},
+        expected={"A00015016": "valid", "B12345678": "invalid"},
     )
 
     # Five steps: form GET, open-form, two per-NIF checks (sorted), discard.
@@ -108,7 +108,7 @@ def test_planned_operations_returns_form_open_per_nif_then_discard() -> None:
     assert str(operations[0].url) == Settings.external_constants().aeat.oracles.groi_check
     assert operations[1].kind == "browser_action"
     assert operations[1].action == "open-groi-form"
-    assert operations[2].action == "check-nif-A28015865"
+    assert operations[2].action == "check-nif-A00015016"
     assert operations[3].action == "check-nif-B12345678"
     assert operations[4].action == "discard-session"
 
@@ -123,7 +123,7 @@ def test_verify_payload_without_driver_returns_unverifiable_after_guard_prefligh
     oracle = GroiOracle()
     policy = _aeat_policy()
 
-    result = oracle.verify_payload(policy, b"", expected={"A28015865": "valid"})
+    result = oracle.verify_payload(policy, b"", expected={"A00015016": "valid"})
 
     assert result.verdict == "unverifiable"
     assert result.oracle_id == GROI_ORACLE_ID
@@ -143,7 +143,7 @@ def test_verify_payload_reports_guard_block_when_aeat_host_not_in_policy() -> No
     oracle = GroiOracle()
     policy = _wrong_host_policy()
 
-    result = oracle.verify_payload(policy, b"", expected={"A28015865": "valid"})
+    result = oracle.verify_payload(policy, b"", expected={"A00015016": "valid"})
 
     assert result.verdict == "blocked"
     assert result.cross_reference_id == policy.id
@@ -156,20 +156,20 @@ def test_verify_payload_compares_replay_observations_to_expected_verdicts() -> N
     oracle = GroiOracle(driver=_GROI_REPLAY_DRIVER)
     policy = _aeat_policy()
     payload = (
-        b'{"observed": {"A28015865": "valid", "B12345678": "invalid"}, '
-        b'"raw_evidence_locator": "corpus/aeat_official/groi_response_samples/valid_telefonica_a28015865.txt"}'
+        b'{"observed": {"A00015016": "valid", "B12345678": "invalid"}, '
+        b'"raw_evidence_locator": "corpus/aeat_official/groi_response_samples/valid_telefonica_a00015016.txt"}'
     )
 
     result = oracle.verify_payload(
         policy,
         payload,
-        expected={"A28015865": "valid", "B12345678": "valid"},
+        expected={"A00015016": "valid", "B12345678": "valid"},
     )
 
     assert result.verdict == "mismatch"
-    assert result.raw_evidence_locator == ("corpus/aeat_official/groi_response_samples/valid_telefonica_a28015865.txt")
+    assert result.raw_evidence_locator == ("corpus/aeat_official/groi_response_samples/valid_telefonica_a00015016.txt")
     assert [(field.name, field.verdict) for field in result.fields] == [
-        ("A28015865", "match"),
+        ("A00015016", "match"),
         ("B12345678", "mismatch"),
     ]
 
@@ -177,9 +177,9 @@ def test_verify_payload_compares_replay_observations_to_expected_verdicts() -> N
 def test_verify_payload_match_when_all_observations_agree() -> None:
     oracle = GroiOracle(driver=_GROI_REPLAY_DRIVER)
     policy = _aeat_policy()
-    payload = b'{"observed": {"A28015865": "valid"}}'
+    payload = b'{"observed": {"A00015016": "valid"}}'
 
-    result = oracle.verify_payload(policy, payload, expected={"A28015865": "valid"})
+    result = oracle.verify_payload(policy, payload, expected={"A00015016": "valid"})
 
     assert result.verdict == "match"
     assert len(result.fields) == 1
@@ -190,7 +190,7 @@ def test_verify_payload_unverifiable_when_replay_payload_is_malformed() -> None:
     oracle = GroiOracle(driver=_GROI_REPLAY_DRIVER)
     policy = _aeat_policy()
 
-    result = oracle.verify_payload(policy, b"not-json", expected={"A28015865": "valid"})
+    result = oracle.verify_payload(policy, b"not-json", expected={"A00015016": "valid"})
 
     assert result.verdict == "unverifiable"
     assert "could not produce comparable observations" in result.narrative
@@ -209,7 +209,7 @@ def test_replay_driver_rejects_non_string_observed_values() -> None:
     # pydantic ValidationError under strict mode.
     driver = _GROI_REPLAY_DRIVER
     with pytest.raises(ValidationError):
-        driver.collect_observation(b'{"observed": {"A28015865": 1}}', expected={})
+        driver.collect_observation(b'{"observed": {"A00015016": 1}}', expected={})
 
 
 # ---------------------------------------------------------------------------
@@ -225,14 +225,14 @@ def test_replay_payload_roundtrip_via_groi_driver() -> None:
 
     raw = json.dumps(
         {
-            "observed": {"A28015865": "valid", "B12345678": "invalid"},
+            "observed": {"A00015016": "valid", "B12345678": "invalid"},
             "raw_evidence_locator": "corpus/aeat_official/groi/sample.txt",
         },
     ).encode()
 
     # Direct schema validation — strict, frozen, extra=forbid.
     payload = ReplayPayload.model_validate(json.loads(raw))
-    assert payload.observed == {"A28015865": "valid", "B12345678": "invalid"}
+    assert payload.observed == {"A00015016": "valid", "B12345678": "invalid"}
     assert payload.raw_evidence_locator == "corpus/aeat_official/groi/sample.txt"
 
     # Drive through the production reader path.
@@ -240,7 +240,7 @@ def test_replay_payload_roundtrip_via_groi_driver() -> None:
     observation = driver.collect_observation(raw, expected={})
 
     # The driver normalises keys to upper-case.
-    assert observation.values["A28015865"] == "valid"
+    assert observation.values["A00015016"] == "valid"
     assert observation.values["B12345678"] == "invalid"
     assert observation.raw_evidence_locator == payload.raw_evidence_locator
 
@@ -260,12 +260,12 @@ def test_replay_payload_strict_rejects_non_string_value_in_observed() -> None:
     from ..parity.live_parity import ReplayPayload
 
     with pytest.raises(ValidationError):
-        ReplayPayload.model_validate({"observed": {"A28015865": 999}})
+        ReplayPayload.model_validate({"observed": {"A00015016": 999}})
 
 
 def test_observation_model_normalises_nif_uppercase_and_verdict_lowercase() -> None:
-    observation = CheckerObservation(values={"a28015865": "VALID"})
-    assert observation.values == {"A28015865": "valid"}
+    observation = CheckerObservation(values={"a00015016": "VALID"})
+    assert observation.values == {"A00015016": "valid"}
 
 
 def test_observation_model_rejects_blank_keys_or_values() -> None:
@@ -306,7 +306,7 @@ def test_groi_planned_operations_emit_zero_write_class_action_labels() -> None:
     oracle = GroiOracle()
     operations = oracle.planned_operations(
         b"",
-        expected={"A28015865": "valid", "B12345678": "valid"},
+        expected={"A00015016": "valid", "B12345678": "valid"},
     )
     for operation in operations:
         action = (operation.action or "").lower()
@@ -318,7 +318,7 @@ def test_groi_planned_operations_emit_only_read_only_http_methods() -> None:
     """Every kind='http' operation must use GET / HEAD / OPTIONS — never a write method."""
 
     oracle = GroiOracle()
-    operations = oracle.planned_operations(b"", expected={"A28015865": "valid"})
+    operations = oracle.planned_operations(b"", expected={"A00015016": "valid"})
     for operation in operations:
         if operation.kind == "http":
             assert operation.method in {"GET", "HEAD", "OPTIONS"}, operation
@@ -399,7 +399,7 @@ def test_groi_oracle_verify_payload_returns_blocked_on_fabricated_write_intent()
         requires_aeat_authorization=False,
     )
     oracle = GroiOracle()
-    result = oracle.verify_payload(paranoid_policy, b"", expected={"A28015865": "valid"})
+    result = oracle.verify_payload(paranoid_policy, b"", expected={"A00015016": "valid"})
 
     assert result.verdict == "blocked"
     assert "blocked by remote-state guard" in result.narrative

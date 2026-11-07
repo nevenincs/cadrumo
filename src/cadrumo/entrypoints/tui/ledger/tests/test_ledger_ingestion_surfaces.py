@@ -127,7 +127,7 @@ async def test_invoice_entry_records_only_the_reviewed_entry() -> None:
             _fill(
                 screen,
                 counterparty_name="Hardware Profesional Sur SL",
-                counterparty_nif="B92000090",
+                counterparty_nif="B00015099",
                 invoice_number="A-0003",
                 invoice_date="2026-03-27",
                 taxable_base="1200.00",
@@ -147,7 +147,7 @@ async def test_invoice_entry_records_only_the_reviewed_entry() -> None:
         LedgerInvoiceEntryV1(
             kind=InvoiceKind.RECEIVED,
             counterparty_name="Hardware Profesional Sur SL",
-            counterparty_nif="B92000090",
+            counterparty_nif="B00015099",
             country_code="ES",
             invoice_number="A-0003",
             invoice_date=date(2026, 3, 27),
@@ -246,7 +246,7 @@ class EvidenceDoor:
         return LedgerEvidenceDraftV1(
             evidence_id=evidence_id,
             supplier_name="Hardware Profesional Sur SL",
-            supplier_tax_id="B92000090",
+            supplier_tax_id="B00015099",
             invoice_number="A-0003",
             invoice_date="2026-03-27",
             taxable_base=None,

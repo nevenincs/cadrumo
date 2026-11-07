@@ -315,7 +315,7 @@ async def test_aeat_setup_handoff_through_admitted_mcp_measures_calls_and_keeps_
                 _, saved_readiness = await editor.save(
                     AuthProviderKind.CLAVE_MOVIL,
                     ClaveMovilRoute.APP_REQUEST,
-                    {"identity.tax_id": "X1234567L", "auth.dni_nie": "X1234567L", "auth.numero_soporte": "E12345678"},
+                    {"identity.tax_id": "X0001500M", "auth.dni_nie": "X0001500M", "auth.numero_soporte": "E12345678"},
                     "",
                     None,
                 )

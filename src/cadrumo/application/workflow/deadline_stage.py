@@ -92,6 +92,8 @@ def target_obligation_from_schedule(
     deadline engine.  This application boundary only narrows their canonical
     schedule to the work-unit target.  More than one row is therefore an
     upstream integrity failure, never a choice this consumer may arbitrate.
+
+    ``schedule`` is a :class:`Schedule`.
     """
     matches = tuple(
         obligation

@@ -131,7 +131,7 @@ def _seed_runtime_profile_record(bucket_id: str) -> None:
             profile_id=bucket_id,
             facts=persona_facts_beneath(
                 (
-                    UserProfileFact(path="identity.tax_id", value="X1234567L"),
+                    UserProfileFact(path="identity.tax_id", value="X0001500M"),
                     UserProfileFact(path="identity.name", value="Ana"),
                     UserProfileFact(path="identity.surnames", value="Verifier"),
                     UserProfileFact(path="activities.description", value="design services"),
@@ -156,7 +156,7 @@ def _persist_justificante_metadata(csv: str, *, modelo: str, filing_year: int, p
             ejercicio=str(filing_year),
             presentation_id=None,
             presented_at=_T0,
-            tax_id="X1234567L",
+            tax_id="X0001500M",
             total_a_ingresar=None,
             total_a_devolver=None,
             verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
@@ -257,7 +257,7 @@ def _seed_clean_cross_period_sources_for_m130(
             filing_repository=filing_repository,
             bucket_event_repository=bucket_event_repository,
             observation_repository=observation_repository,
-            expected_tax_id="X1234567L",
+            expected_tax_id="X0001500M",
             clock=_T0,
         )
         observation_repository.save(
@@ -282,7 +282,7 @@ def _seed_clean_cross_period_sources_for_m130(
                         f"EXP-{requirement.source_modelo}-{requirement.filing_year}-{requirement.period.registry_token}"
                     ),
                     "aeat_justificante_csv": evidence_reference_id,
-                    "authenticated_identity": "X1234567L",
+                    "authenticated_identity": "X0001500M",
                 },
             )
         )
@@ -350,7 +350,7 @@ def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             actor="operator-test",
             workflow_profile=workflow_profile(),
-            settings=ready_clave_settings("X1234567L"),
+            settings=ready_clave_settings("X0001500M"),
             verification_repositories=_verification_repositories_for_test(repos),
             clock=_T2,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -426,7 +426,7 @@ def test_verify_grants_when_required_casillas_supplied_m130(
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             actor="operator-test",
             workflow_profile=workflow_profile(),
-            settings=ready_clave_settings("X1234567L"),
+            settings=ready_clave_settings("X0001500M"),
             verification_repositories=_verification_repositories_for_test(
                 repos,
                 observation_repository=observation_repo,
@@ -536,7 +536,7 @@ def test_tampered_revision_raises_drift_error(repos: _Repos, *, operation: Pinne
                 actor="operator-test",
                 workflow_profile=workflow_profile(),
                 verification_repositories=build_test_verification_repository_bundle(),
-                settings=ready_clave_settings("X1234567L"),
+                settings=ready_clave_settings("X0001500M"),
                 clock=_T2,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=_authority_operation_for_test,

@@ -3,7 +3,7 @@
 Both kernels read and write through a :class:`SecureObjectRepository` supplied
 at construction; neither opens storage of its own.
 
-Sibling of :class:`~adapters.persistence.profile._secure_model_document.ProfileBareModelSecurePersistence`
+Sibling of :class:`~adapters.persistence.profile.secure_model_document.ProfileBareModelSecurePersistence`
 (``_secure_model_document.py``). The two kernels cover two DIFFERENT on-disk wire
 shapes that both happen to persist "one whole singleton Pydantic document per
 profile bucket" — they are not interchangeable, and a namespace's existing shape

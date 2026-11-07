@@ -189,7 +189,7 @@ def test_workflow_failure_producers_are_locale_keyed_and_verdict_complete() -> N
 def test_workflow_deadline_gate_and_projection_share_the_production_schedule() -> None:
     """Both consumers expose every supported year's exact authority schedule."""
     profile = TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_rent_with_retencion=False,
@@ -218,7 +218,7 @@ def test_workflow_deadline_gate_and_projection_share_the_production_schedule() -
 def test_workflow_target_selection_refuses_duplicate_canonical_schedule_rows() -> None:
     """A consumer must not hide an upstream duplicate by choosing its first row."""
     profile = TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_rent_with_retencion=False,

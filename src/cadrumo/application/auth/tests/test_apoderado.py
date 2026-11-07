@@ -198,13 +198,13 @@ class TestConfigure:
         )
         new_config = svc.configure(
             bucket_id=_APODERADO_BUCKET_ID,
-            represented_nif="87654321X",
+            represented_nif="X0001502F",
             scope_tokens=("RENT",),
         )
-        assert new_config.represented_nif == "87654321X"
+        assert new_config.represented_nif == "X0001502F"
         assert new_config.granted_scopes == ("RENT",)
         status = svc.status(bucket_id=_APODERADO_BUCKET_ID)
-        assert status.represented_nif == "87654321X"
+        assert status.represented_nif == "X0001502F"
 
 
 class TestStatusAfterConfigure:
@@ -280,7 +280,7 @@ class TestBucketIsolation:
         secondary_svc = _service(isolated_settings, repository_factory=repository_factory)
         secondary_svc.configure(
             bucket_id=_SECONDARY_PROFILE_BUCKET_ID,
-            represented_nif="87654321X",
+            represented_nif="X0001502F",
             scope_tokens=("RENT",),
         )
         b = secondary_svc.status(bucket_id=_SECONDARY_PROFILE_BUCKET_ID)
@@ -288,7 +288,7 @@ class TestBucketIsolation:
 
         assert a.represented_nif == "12345678Z"
         assert a.granted_scopes == ("IVA",)
-        assert b.represented_nif == "87654321X"
+        assert b.represented_nif == "X0001502F"
         assert b.granted_scopes == ("RENT",)
 
 
@@ -314,16 +314,16 @@ class TestApoderadoFlowDoor:
             target = order.index(wanted)
             moves += "\x1b[B" * (target - cursor) + " "
             cursor = target
-        keys = f"87654321X\r{moves}\r\r"
+        keys = f"X0001502F\r{moves}\r\r"
         with create_pipe_input() as pipe:
             pipe.send_text(keys)
             result = _run_door(svc, input=pipe, output=PlainTextOutput(output))
 
-        assert result.represented_nif == "87654321X"
+        assert result.represented_nif == "X0001502F"
         assert result.granted_scopes == ("IVA", "RENT")
         status = svc.status(bucket_id=_APODERADO_BUCKET_ID)
         assert status.configured is True
-        assert status.represented_nif == "87654321X"
+        assert status.represented_nif == "X0001502F"
         assert status.granted_scopes == ("IVA", "RENT")
         assert output.getvalue(), "the production line door must render its prompts and review"
 

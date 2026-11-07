@@ -1,12 +1,16 @@
 import { useEffect, useState, type ReactNode } from "react";
-import type { ModeloWorkbenchFormProjectionV1 } from "../shell/modeloContract";
+import type { ModeloWorkbenchFormProjectionV1 } from "../shell/modeloContract/modeloWorkForm";
 import { wholeEnvelopes } from "./modeloEnvelopePatch";
+import { requireServed } from "./servedFixtures";
 
 // A form envelope of @fixtures/modelo/, read when a story asks for it: the
 // largest are over a megabyte, and a story needs one of four languages.
-const found = import.meta.glob<unknown>("@fixtures/modelo/modelo-*.json", {
-  import: "default",
-});
+const found = requireServed(
+  "modelo/modelo-*.json",
+  import.meta.glob<unknown>("@fixtures/modelo/modelo-*.json", {
+    import: "default",
+  }),
+);
 const envelopes = wholeEnvelopes(
   Object.fromEntries(
     Object.entries(found).map(([path, load]) => [

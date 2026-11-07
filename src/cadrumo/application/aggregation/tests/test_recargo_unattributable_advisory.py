@@ -62,7 +62,7 @@ def _issued(number: str, lines: tuple[InvoiceLine, ...], *, recargo: str) -> Inv
             "invoice_number": number,
             "issued_at": _ISSUED,
             "counterparty_name": "Minorista Recargo SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": base,
             "iva_total": cuota,

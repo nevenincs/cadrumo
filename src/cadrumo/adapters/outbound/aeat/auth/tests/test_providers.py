@@ -21,7 +21,7 @@ def _description(
         label="AEAT certificate" if kind is AuthProviderKind.CERTIFICATE else "Cl@ve Móvil",
         configured=configured,
         available=available,
-        identity_nif="X1234567L" if available else None,
+        identity_nif="X0001500M" if available else None,
         subject="CN=operator" if available else None,
         health_severity="OK" if available else None,
         health_summary="OK:200" if available else "credential not loaded",

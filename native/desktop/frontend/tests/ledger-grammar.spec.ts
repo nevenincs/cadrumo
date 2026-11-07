@@ -37,6 +37,10 @@ import {
   type Parsed,
 } from "../src/shell/ledgerGrammar";
 import { label } from "./support/strings";
+import {
+  servedSupport,
+  servedYearBounds,
+} from "../src/dev/servedYearAuthority";
 
 // The ledger's input grammar at its boundaries. No page is opened.
 
@@ -309,13 +313,15 @@ test("the periods held are the ones served, with their neighbours across year en
 test("a period that was not served is unknown, never made up", () => {
   holdRecordedPeriods("en");
   try {
-    expect(servedYear(1975)).toBeNull();
-    expect(periodBounds({ year: 1975, code: "3T" })).toBeNull();
-    expect(neighbourPeriod({ year: 1975, code: "3T" }, 1)).toBeNull();
-    expect(periodWords({ year: 1975, code: "3T" }, "en")).toBeNull();
-    expect(periodsHolding("1975-07-01")).toBeNull();
+    // A year far before any the registry supports, which no recording serves.
+    const unserved = servedSupport.floor - 50;
+    expect(servedYear(unserved)).toBeNull();
+    expect(periodBounds({ year: unserved, code: "3T" })).toBeNull();
+    expect(neighbourPeriod({ year: unserved, code: "3T" }, 1)).toBeNull();
+    expect(periodWords({ year: unserved, code: "3T" }, "en")).toBeNull();
+    expect(periodsHolding(`${unserved}-07-01`)).toBeNull();
     expect(
-      periodHoldingSpan({ from: "1975-07-01", to: "1975-07-31" }),
+      periodHoldingSpan({ from: `${unserved}-07-01`, to: `${unserved}-07-31` }),
     ).toBeNull();
     // Words served in one language are not shown in another.
     expect(periodWords({ year: 2026, code: "3T" }, "es")).toBeNull();
@@ -363,22 +369,27 @@ test("the periods that hold a day and a span are the ones the backend answered",
 });
 
 test("the year field steps by one and by ten and stays on years that can be written", () => {
-  expect(stepYear(2026, 1)).toBe(2027);
-  expect(stepYear(2026, -10)).toBe(2016);
-  expect(stepYear(1985, -10)).toBe(1975);
-  expect(stepYear(2195, 10)).toBe(2205);
-  expect(stepYear(1005, -10)).toBe(1005);
-  expect(stepYear(9995, 10)).toBe(9995);
-  expect(decadeYears(2026)).toEqual([
-    2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029,
-  ]);
-  expect(decadeYears(2003)[0]).toBe(2000);
-  expect(decadeYears(9995).at(-1)).toBe(9999);
-  expect(decadeYears(1000)[0]).toBe(1000);
-  expect(decadeYears(2200)).toHaveLength(10);
-  expect(decadeYears(1985)).toEqual([
-    1980, 1981, 1982, 1983, 1984, 1985, 1986, 1987, 1988, 1989,
-  ]);
+  // Stepping is arithmetic on any written year, inside the support envelope or
+  // far from it; only the four-digit edges hold it.
+  const inside = servedSupport.horizon;
+  const outside = servedSupport.horizon + 169;
+  expect(stepYear(inside, 1)).toBe(inside + 1);
+  expect(stepYear(inside, -10)).toBe(inside - 10);
+  expect(stepYear(servedSupport.floor - 37, -10)).toBe(
+    servedSupport.floor - 47,
+  );
+  expect(stepYear(outside, 10)).toBe(outside + 10);
+  const { first, last } = servedYearBounds;
+  expect(stepYear(first + 5, -10)).toBe(first + 5);
+  expect(stepYear(last - 4, 10)).toBe(last - 4);
+  const decade = inside - (inside % 10);
+  expect(decadeYears(inside)).toEqual(
+    Array.from({ length: 10 }, (_, at) => decade + at),
+  );
+  expect(decadeYears(decade + 3)[0]).toBe(decade);
+  expect(decadeYears(last - 4).at(-1)).toBe(last);
+  expect(decadeYears(first)[0]).toBe(first);
+  expect(decadeYears(outside - (outside % 10))).toHaveLength(10);
 });
 
 test("a period's list clauses are its token and its year", () => {

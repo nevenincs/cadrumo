@@ -11,7 +11,7 @@ from ..invoice_draft_records import FieldProvenance, InvoiceDraft
 
 def clean_invoice_draft() -> InvoiceDraft:
     return InvoiceDraft(
-        supplier_tax_id="ESB12345674",
+        supplier_tax_id="ESB00015016",
         supplier_name="Proveedor Ejemplo SL",
         invoice_number="PROV-2024-0001",
         invoice_date="2024-11-15",
@@ -25,7 +25,7 @@ def clean_invoice_draft() -> InvoiceDraft:
                 field="supplier_tax_id",
                 origin=FieldOrigin.EXACT_STRUCTURED,
                 grounding=FieldGroundingOutcome.ANCHORED,
-                anchor="ESB12345674",
+                anchor="ESB00015016",
             ),
         ),
     )

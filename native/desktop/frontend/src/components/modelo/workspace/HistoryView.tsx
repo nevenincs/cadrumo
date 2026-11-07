@@ -12,10 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { formatTime } from "../../../shared/dateFormats";
-import type {
-  ModeloAmendmentCorrectionContextV1,
-  ModeloWorkHistoryEntryV1,
-} from "../../../shell/modeloContract";
+import type { ModeloAmendmentCorrectionContextV1 } from "../../../shell/modeloContract/modeloWorkAmendmentContext";
+import type { ModeloWorkHistoryEntryV1 } from "../../../shell/modeloContract/modeloWorkHistory";
 import { useStrings } from "../../../shell/strings";
 import { Heading } from "./CheckView";
 import { ScopedWriteHoldNotice } from "../WriteScope";
@@ -188,9 +186,11 @@ export function HistoryView({
   correcting,
   onCorrectingChange,
   correction,
+  correctionState,
   onRename,
   onDiscard,
   onCorrect,
+  onRelated,
   disabled = false,
 }: {
   /** Null while the history has not been read. */
@@ -203,9 +203,11 @@ export function HistoryView({
   correcting: boolean;
   onCorrectingChange(open: boolean): void;
   correction: ModeloAmendmentCorrectionContextV1 | null;
+  correctionState?: { kind: "loading" | "unavailable"; words: string } | null;
   onRename(name: string): Promise<boolean>;
   onDiscard(reason: string): Promise<boolean>;
   onCorrect: ((answer: CorrectionAnswer) => Promise<CorrectionResult>) | null;
+  onRelated?: () => void;
   disabled?: boolean;
 }) {
   const t = useStrings();
@@ -249,6 +251,12 @@ export function HistoryView({
         </ol>
       )}
       <div className="flex gap-2 border-t border-border pt-4">
+        {onRelated && (
+          <Button variant="ghost" size="sm" onClick={onRelated}>
+            <Icon name="page" size="xs" />
+            {t("workspace.declarations.related_filings.open")}
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="sm"
@@ -304,6 +312,7 @@ export function HistoryView({
           open
           onOpenChange={onCorrectingChange}
           context={correction}
+          contextState={correctionState}
           onCorrect={onCorrect}
           disabled={disabled}
         />

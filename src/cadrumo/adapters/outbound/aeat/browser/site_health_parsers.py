@@ -7,7 +7,7 @@ deterministic order and returns the first non-``None``
 :class:`SiteHealthStatus`.
 
 The parsers are deliberately synchronous, side-effect free, and free of any
-Playwright dependency. :func:`adapters.outbound.aeat.browser._site_health_probe.probe_response`
+Playwright dependency. :func:`adapters.outbound.aeat.browser.site_health_probe.probe_response`
 is the adapter boundary used by
 :meth:`adapters.outbound.aeat.browser.session.BrowserSession.navigate`; it turns
 navigation responses into :class:`SiteHealthStatus` records that can be carried
@@ -152,7 +152,7 @@ def body_outside_title(lowered: str) -> str:
     title-only page satisfied a guard written to reject it.
 
     Only the FIRST title element is removed, matching what
-    :func:`_extract_title` reads as the document title. A later ``<title>``
+    :func:`extract_title` reads as the document title. A later ``<title>``
     inside an inline SVG is ordinary body content and is left to be scanned as
     such.
     """
@@ -431,7 +431,7 @@ def evaluate_response(
     """Run the full parser suite and return the first non-OK hit.
 
     This is the public parser entry point consumed by
-    :func:`adapters.outbound.aeat.browser._site_health_probe.probe_response`.
+    :func:`adapters.outbound.aeat.browser.site_health_probe.probe_response`.
     :class:`~adapters.outbound.aeat.browser.session.BrowserSession` then raises
     :class:`core.errors.hierarchy.SiteHealthError` for any returned status.
 

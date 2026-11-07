@@ -131,7 +131,7 @@ _QUARTERS: dict[str, dict[CasillaId, Decimal]] = {
     },
 }
 
-_M180_PERCEPTOR_NIFS: tuple[str, ...] = ("11111111H", "22222222J")
+_M180_PERCEPTOR_NIFS: tuple[str, ...] = ("00001500M", "00001501Y")
 
 
 @pytest.fixture

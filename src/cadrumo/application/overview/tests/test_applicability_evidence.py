@@ -33,12 +33,14 @@ from ....domain.calculations.registry.applicability_models import (
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.third_party_declaration_roles import require_third_party_declaration_role
 from ....domain.contribuyente.entity_type import EntityType
+from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import (
     IrpfEstimationRegime,
     IrpfIncomeCategory,
     IVARegime,
     M303RegimeComposition,
     M303TaxTerritory,
+    ModeloEnrollment,
     ModeloIVAProfile,
     TaxpayerProfile,
 )
@@ -149,7 +151,7 @@ def _derive(
 
 
 # 2.483,53 + 21 % = 3.005,07; 2.483,52 + 21 % = 3.005,06; 1.652,89 + 21 % = 2.000,00.
-def _sale(number: str, *, base: str = "2483.53", iva: str = "521.54", tax_id: str = "B87654323") -> Invoice:
+def _sale(number: str, *, base: str = "2483.53", iva: str = "521.54", tax_id: str = "B00015057") -> Invoice:
     return _invoice(kind=InvoiceKind.ISSUED, number=number, tax_id=tax_id, base=base, iva=iva)
 
 
@@ -168,7 +170,7 @@ def test_entregas_and_adquisiciones_are_judged_apart(operation: PinnedAuthorityO
     purchase = _invoice(
         kind=InvoiceKind.RECEIVED,
         number="P-1",
-        tax_id="B87654323",
+        tax_id="B00015057",
         base="1652.89",
         iva="347.11",
     )
@@ -191,7 +193,7 @@ def test_a_withheld_operation_makes_a_zero_count_unknown(operation: PinnedAuthor
     foreign = _invoice(
         kind=InvoiceKind.ISSUED,
         number="V-USD",
-        tax_id="B12345674",
+        tax_id="B00015016",
         base="100.00",
         iva="21.00",
         currency="USD",
@@ -218,17 +220,25 @@ def _iva_outside_sii() -> ModeloIVAProfile:
         cash_accounting_regime_enrolled=False,
         voluntary_sii_enrolled=False,
         hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+        roi_enrolled=False,
+        oss_enrolled=False,
+        sii_enrolled=False,
+        group_member_enrolled=False,
+        group_dominant_entity_enrolled=False,
+        intracommunity_operations_exceed_50000_eur=False,
     )
 
 
 def _autonomo(*, threshold: bool | None, collector: bool = False, sii: bool = False) -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="X0001500M",
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
         iva_regime=IVARegime("GENERAL"),
         iva=_iva_outside_sii().model_copy(update={"voluntary_sii_enrolled": sii}),
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
+        enrollment=ModeloEnrollment(large_company=False),
         third_party_transactions_above_347_threshold=threshold,
         declaration_roles=(
             frozenset({require_third_party_declaration_role("third_party_fee_collector")}) if collector else frozenset()
@@ -460,7 +470,7 @@ def test_explain_and_the_calendar_decide_a_ledger_yes_alike(
 
 
 _AUTONOMO_FACTS: tuple[UserProfileFact, ...] = persona_facts_beneath(
-    (UserProfileFact(path="identity.tax_id", value="X1234567L"),)
+    (UserProfileFact(path="identity.tax_id", value="X0001500M"),)
 )
 
 

@@ -85,7 +85,7 @@ _SUPPLIER_CIF_BAD_CHECKSUM = "B1234567X"
 
 #: The OTHER identifier on the page -- the recipient's, which is valid. This is
 #: the id the defect returns as ``supplier_tax_id``.
-_RECIPIENT_CIF = "B17283946"
+_RECIPIENT_CIF = "B00015024"
 _TEXT_LAYER_PORTS = text_layer_ports_for_pages((_SUPPLIER_CIF_BAD_CHECKSUM, _RECIPIENT_CIF, "SIN-NUMERO"))
 
 
@@ -175,7 +175,7 @@ def test_the_layout_minimal_document_prints_both_identifiers() -> None:
 def test_layout_minimal_never_yields_a_first_match_identifier(operation: PinnedAuthorityOperation) -> None:
     """THE layout-minimal acceptance criterion, against the real control document.
 
-    The defect returns ``B17283946`` as the supplier. On this document that
+    The defect returns ``B00015024`` as the supplier. On this document that
     identifier belongs to the RECIPIENT -- and on a purchase invoice the
     recipient is the filer, so the defect writes the taxpayer's own identifier
     into the counterparty field. Both guards bite here: the bad checksum removes
@@ -203,7 +203,7 @@ def test_layout_minimal_never_yields_a_first_match_identifier(operation: PinnedA
 def test_layout_minimal_still_refuses_when_the_filer_is_not_the_recipient(operation: PinnedAuthorityOperation) -> None:
     """The refusal must not depend on the own-identifier guard alone.
 
-    With an unrelated filer, ``B17283946`` survives verification -- and must
+    With an unrelated filer, ``B00015024`` survives verification -- and must
     STILL not resolve, because nothing on the page ties it to the supplier role.
     Without this, the case above would pass on the own-NIF exclusion while the
     lone-survivor path stayed broken.

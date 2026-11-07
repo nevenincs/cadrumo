@@ -57,11 +57,11 @@ def test_apoderado_happy_path_uses_exact_encrypted_profile_worker(
     assert "configured\tFalse" in status.output
 
     configure = invoke_diagnostics_cli(
-        ["config", "auth", "apoderado", "configure", "--represented-nif", "87654321X", "--scope", "RENT"],
+        ["config", "auth", "apoderado", "configure", "--represented-nif", "X0001502F", "--scope", "RENT"],
     )
     assert configure.exit_code == 0, f"apoderado configure failed: {configure.output}"
     assert "represented_nif\tsha256:" in configure.output
-    assert "87654321X" not in configure.output, f"raw NIF leaked into CLI output: {configure.output!r}"
+    assert "X0001502F" not in configure.output, f"raw NIF leaked into CLI output: {configure.output!r}"
     assert "RENT" in configure.output
 
     status_after = invoke_diagnostics_cli(["config", "auth", "apoderado", "status"])
@@ -100,7 +100,7 @@ def test_apoderado_configure_without_scope_lists_the_accepted_codes(
 ) -> None:
     """A missing --scope refuses by enumerating the accepted catalogue codes."""
     result = invoke_diagnostics_cli(
-        ["config", "auth", "apoderado", "configure", "--represented-nif", "87654321X"],
+        ["config", "auth", "apoderado", "configure", "--represented-nif", "X0001502F"],
     )
     assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output, result.output
@@ -150,7 +150,7 @@ def test_apoderado_configure_leaves_profile_facts_untouched(
     before_facts = before_document["result"]["facts"]
 
     configure = invoke_diagnostics_cli(
-        ["config", "auth", "apoderado", "configure", "--represented-nif", "87654321X", "--scope", "RENT"],
+        ["config", "auth", "apoderado", "configure", "--represented-nif", "X0001502F", "--scope", "RENT"],
     )
     assert configure.exit_code == 0, f"apoderado configure failed: {configure.output}"
 

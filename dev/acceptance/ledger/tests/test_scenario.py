@@ -38,7 +38,7 @@ def test_structured_import_fixture_retains_row_provenance_and_replay_contract() 
     assert imported.filename == "ledger-received.csv"
     assert row.source_row == 2
     assert imported.row_values(row) == {
-        "counterparty_nif": "B12345674",
+        "counterparty_nif": "B00015016",
         "counterparty_name": "Synthetic supplier SL",
         "invoice_number": "LEDGER-REC-2025-001",
         "invoice_date": "2025-03-20",

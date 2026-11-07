@@ -43,7 +43,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "readiness\tready\tissues=2\nprofile_id\t<profile-id>\ndisplay_name\tdocs-sequence-sandbox\nsetup_state\tcomplete\nschema_version\t7\nvalid\tTrue\nwarning\teffective_window_end_not_enforced\tirpf.activity_income_imputation_criterion\tpath 'irpf.activity_income_imputation_criterion' declares valid_to '2026-12-31' but the value keeps resolving after it; record a later valid_from at 'irpf.activity_income_imputation_criterion' to supersede it\nwarning\teffective_window_end_not_enforced\tirpf.codigo_comercio_accounting\tpath 'irpf.codigo_comercio_accounting' declares valid_to '2026-12-31' but the value keeps resolving after it; record a later valid_from at 'irpf.codigo_comercio_accounting' to supersede it\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "readiness\tready\tissues=2\nprofile_id\t<profile-id>\ndisplay_name\tdocs-sequence-sandbox\nsetup_state\tcomplete\nschema_version\t8\nvalid\tTrue\nwarning\teffective_window_end_not_enforced\tirpf.activity_income_imputation_criterion\tpath 'irpf.activity_income_imputation_criterion' declares valid_to '2026-12-31' but the value keeps resolving after it; record a later valid_from at 'irpf.activity_income_imputation_criterion' to supersede it\nwarning\teffective_window_end_not_enforced\tirpf.codigo_comercio_accounting\tpath 'irpf.codigo_comercio_accounting' declares valid_to '2026-12-31' but the value keeps resolving after it; record a later valid_from at 'irpf.codigo_comercio_accounting' to supersede it\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -95,7 +95,7 @@
           }
         ],
         "result": {
-          "authority_generation": "aa42bfb7e3089208e79e066d18e34de9fcd58811c657562e6c3d963788ac5ace",
+          "authority_generation": "7d08cf2b585a2bcc73f39cae25e01ab0fa6502e1594bba5aa3466f68caf0203e",
           "binding_ready": false,
           "filing_year": 2026,
           "ledger_checked_transaction_count": 0,

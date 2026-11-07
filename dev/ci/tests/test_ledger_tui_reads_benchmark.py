@@ -302,7 +302,7 @@ def _synthetic_invoice(idx: int, *, bucket_id: str) -> Invoice:
             "invoice_number": f"TUI-READS-{year}-{idx:05d}",
             "issued_at": issued_at,
             "counterparty_name": f"Contraparte Escala {idx % 53:02d} SL",
-            "counterparty_tax_id": "B12345674",
+            "counterparty_tax_id": "B00015016",
             "counterparty_country": "ES",
             "base_total": base,
             "iva_total": iva,

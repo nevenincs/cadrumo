@@ -25,7 +25,7 @@ import type {
   OwnAccount,
   OwnAccountDesignation,
   OwnAccountRole,
-} from "../../../shell/ledgerSetup";
+} from "../../../shell/ledgerRegisterOperations";
 import { useTextLimit } from "../../../shell/ledgerLimits";
 import { useStrings } from "../../../shell/strings";
 import { useWritePause, WriteHold, type Landing } from "../WritePause";

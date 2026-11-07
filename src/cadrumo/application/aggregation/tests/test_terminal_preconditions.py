@@ -338,7 +338,7 @@ def test_invoice_ledger_refusals_have_exact_application_state_operator_decision_
                 "invoice_number": "INV-UNLINKED",
                 "issued_at": date(2025, 4, 1),
                 "counterparty_name": "Proveedor SL",
-                "counterparty_tax_id": "B12345674",
+                "counterparty_tax_id": "B00015016",
                 "counterparty_country": "ES",
                 "base_total": Decimal("100.00"),
                 "iva_total": Decimal("21.00"),

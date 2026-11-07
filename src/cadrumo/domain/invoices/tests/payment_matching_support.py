@@ -31,7 +31,7 @@ def build_invoice(
     kind: str = "received",
     issued: str = "2026-10-01",
     party: str = PARTY,
-    tax_id: str | None = "B92000025",
+    tax_id: str | None = "B00015073",
     base: str = "30.00",
     retention: str | None = None,
     currency: str = "EUR",

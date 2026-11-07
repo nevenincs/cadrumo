@@ -54,6 +54,9 @@ def _create_profile() -> None:
             "tax_residence.jurisdiction_scope": "common_regime",
             # Modelo 111 readiness asks whether the filer is a colegio concertado.
             "withholding.colegio_concertado": "false",
+            # Modelo 111 applies only to a payer of income subject to retención, and these
+            # suites capture the retención the operator withheld from a professional's invoice.
+            "withholding.pays_professionals_with_retencion": "true",
         },
         log_in=False,
     )

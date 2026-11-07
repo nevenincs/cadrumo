@@ -209,7 +209,7 @@ def _capture_m115_invoice_withholding(profile: RegisteredCliProfile) -> None:
         "app", "ledger", "invoice", "add",
         "--kind", "received",
         "--counterparty-name", "Arrendador Ejemplo SL",
-        "--counterparty-nif", "B12345674",
+        "--counterparty-nif", "B00015016",
         "--invoice-number", "M115-RENT-2025-001",
         "--invoice-date", paid_on.isoformat(),
         "--country-code", "ES",

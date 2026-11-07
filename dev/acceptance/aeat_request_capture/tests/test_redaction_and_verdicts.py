@@ -23,8 +23,8 @@ DECLARATIONS_READ_POLICY = declarations_read_policy()
     [
         ("12345678Z", "tax-id"),
         ("12345678z", "tax-id"),
-        ("X1234567L", "tax-id"),
-        ("A28015865", "tax-id"),
+        ("X0001500M", "tax-id"),
+        ("A00015016", "tax-id"),
         ("recibo-12345678Z.pdf", "tax-id"),
         ("2024123456", "digits"),
         ("1980-02-29", "digits"),
@@ -115,7 +115,7 @@ def test_the_recorder_deduplicates_and_names_the_declaration_a_refused_request_n
     recorder = CaptureRecorder((declared, other))
     recorder.register_flow("login", (declared.id,))
     recorder.begin_flow("login")
-    for nif in ("12345678Z", "87654321X"):
+    for nif in ("12345678Z", "X0001502F"):
         recorder.observe("browser", "GET", f"{_SEDE}/wlpl/OVCT-CXEW/DialogoRepresentacion?nif={nif}")
     recorder.observe("browser", "POST", f"{_SEDE}/wlpl/OVCT-CXEW/DialogoRepresentacion")
     recorder.end_flow("login", "completed")
@@ -130,7 +130,7 @@ def test_the_recorder_deduplicates_and_names_the_declaration_a_refused_request_n
     ]
     assert needed[0]["refusals"] == {declared.id: {"refuse:token:presentacion@path": 2}}
     assert b"12345678Z" not in report_bytes(report)
-    assert b"87654321X" not in report_bytes(report)
+    assert b"X0001502F" not in report_bytes(report)
 
 
 def test_a_request_allowed_by_another_flows_policy_still_needs_a_declaration_here() -> None:

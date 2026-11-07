@@ -279,6 +279,8 @@ def economic_activity_conditional_source_modelos(snapshot: RegistrySnapshot) -> 
     taxpayer suffered is a real credit that must be declared. Their relations
     stay unresolved and operator-supplied; folding them in as zero would strip
     the credit from the declaration.
+
+    ``snapshot`` is a :class:`RegistrySnapshot`.
     """
     return frozenset(
         classification.source_modelo
@@ -308,6 +310,8 @@ def not_applicable_source_modelos_for_bucket(
     an economic activity whose estimation regime is undeclared all return the
     empty set, leaving every source enforced and its relation unresolved rather
     than folding in a zero the operator never declared.
+
+    ``snapshot`` is a :class:`RegistrySnapshot`.
     """
     candidates = economic_activity_conditional_source_modelos(snapshot)
     if not candidates:

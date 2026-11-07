@@ -59,7 +59,7 @@ def test_the_confirmation_record_survives_the_real_encrypted_boundary(profile: T
     assert stored.assertions[0].prior_origin is FieldOrigin.VISION
     assert stored.assertions[0].asserted_value == "150.00"
     assert stored.resolutions[0].resolution.action is FindingResolutionAction.CHOOSE_CANDIDATE
-    assert stored.resolutions[0].blocker.candidate_values == ("ESB12345674", "ESX1234567L")
+    assert stored.resolutions[0].blocker.candidate_values == ("ESB00015016", "ESX0001500M")
 
 
 def test_a_retried_confirmation_addresses_the_stored_record_rather_than_appending(

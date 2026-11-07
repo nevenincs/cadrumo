@@ -841,6 +841,8 @@ def build_overview_calendar(
     and applicability decisions. Years without registered deadline windows
     contribute no entries. An undeclared taxpayer model yields an incomplete
     calendar with obligation coverage rather than guessed obligations.
+
+    ``profile`` is a :class:`TaxpayerProfile`.
     """
     if not taxpayer_model_is_declared(profile):
         # An undeclared taxpayer model yields an explicit

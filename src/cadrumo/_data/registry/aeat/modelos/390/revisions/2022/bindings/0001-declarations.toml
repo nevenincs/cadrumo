@@ -601,14 +601,15 @@ required_text = ["modelo 390"]
 # selectors exactly, which is what lets the annual return and the summed
 # quarters state the same population.
 #
-# Box [103] is "Entregas intracomunitarias de bienes y servicios": the exempt
-# intra-Community supplies of goods under LIVA art. 25 and the intra-Community
-# supplies of services, located in another Member State under art. 69.Uno.1 and
-# reported in Modelo 349 with clave S. The bundled Modelo 322 instructions word the
-# annual box the same way ("el importe de las prestaciones de servicios
-# intracomunitarias del ejercicio"); no copy of the Modelo 390 instructions is
-# bundled. It carries the same population as the Modelo 303 casilla 59 binding, so
-# the annual return and the summed quarters agree.
+# Box [103] is "Entregas intracomunitarias de bienes y servicios". The Modelo 390
+# instructions (aeat-modelo-390-2025-instructions, apartado 10, box 103; bundled for
+# the 2025 exercise only, so it is not cited from this edition) define it as "el importe de las entregas intracomunitarias de bienes exentas segun lo
+# dispuesto en el articulo 25 [...] y el importe de las prestaciones de servicios
+# intracomunitarias del ejercicio", and box 110 takes the not-subject services
+# "excepto las prestaciones de servicios intracomunitarias, incluidas en la
+# casilla 103". The Modelo 303 instructions word casilla 59 the same way for the
+# period, so both returns draw one population with one selector, rate kinds
+# included: zero and exempt, because neither leg carries a Spanish tier.
 #
 # Box [104] is "Exportaciones y otras operaciones exentas con derecho a
 # deduccion", so its selector accepts both zero-rated export members: art. 21
@@ -623,14 +624,17 @@ required_text = ["modelo 390"]
 
 [[revisions."2022".bindings]]
 id = "modelo-390-volumen-entregas-intracomunitarias-base"
-provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_supply", "intra_community_service_supply"], rate_kinds = ["general", "reduced", "super_reduced", "zero", "exempt"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_supply", "intra_community_service_supply"], rate_kinds = ["zero", "exempt"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
-legal_refs = ["ley-37-1992:art-25", "ley-37-1992:art-121", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+legal_refs = ["ley-37-1992:art-25", "ley-37-1992:art-69", "ley-37-1992:art-121", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-303-instructions-20261106", "boe-modelo-390-2009-form"]
 
 [[revisions."2022".bindings.source_citations]]
-source_ref = "aeat-modelo-390-procedure"
-required_text = ["modelo 390"]
+source_ref = "aeat-modelo-303-instructions-20261106"
+required_text = [
+    "el importe de las prestaciones de servicios intracomunitarias del ejercicio",
+    "excepto las prestaciones de servicios intracomunitarias, incluidas en la casilla 59",
+]
 
 [revisions."2022".bindings.aggregation]
 op = "sum"

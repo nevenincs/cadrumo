@@ -50,7 +50,7 @@ from ...aggregation.tests.ledger_source_mesh_support import (
     resolve_m100,
 )
 from .. import filed_register_reader as reader_module
-from ..calculation_bucket_actions import source_provenance_refs
+from ..calculation_resolution import calculation_source_provenance_refs
 from ..filed_register_reader import filed_register_reader
 from ..work_profile import ModeloWorkProfile
 from .empty_borrador_revision_support import empty_borrador_revision
@@ -123,7 +123,7 @@ def _seal(operation: PinnedAuthorityOperation, history: ActivityAssetHistory, ro
             created_at=_AT,
             updated_at=_AT,
         )
-        provenance = source_provenance_refs(resolve_m100(history, rows=rows, year=year))
+        provenance = calculation_source_provenance_refs(resolve_m100(history, rows=rows, year=year).provenance)
         draft = empty_borrador_revision(unit, snapshot.snapshot_ref, provenance, at=_AT)
         units[unit.work_unit_id] = unit
         filed = draft.model_copy(update={"state": CalculationRevisionState.PRESENTADO})
@@ -164,7 +164,7 @@ def world(operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch):
         record=create_user_profile_record(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=BUCKET_ID,
-            facts=(UserProfileFact(path="identity.tax_id", value="X1234567L"),),
+            facts=(UserProfileFact(path="identity.tax_id", value="X0001500M"),),
             context=leased_profile_create_context(),
         ),
         profile_decode_context=operation.profile_decode_context(),

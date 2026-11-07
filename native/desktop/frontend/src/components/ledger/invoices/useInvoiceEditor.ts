@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { CatalogueInvoice } from "../../../shell/ledger";
+import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
 import { useNavigationGuard } from "../../../shell/navigation/hooks";
 import { useStrings } from "../../../shell/strings";
 import { useVocabulary } from "../suggestions/SuggestionsProvider";

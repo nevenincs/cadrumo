@@ -103,7 +103,10 @@ def refusal_requirements(
     taxpayer_model_declared: bool,
     warning_codes: tuple[str, ...],
 ) -> tuple[str, ...]:
-    """Render the existing selector guidance with the worker's retained authority."""
+    """Render the existing selector guidance with the worker's retained authority.
+
+    ``taxpayer`` is a :class:`TaxpayerProfile`.
+    """
     from ..application.user_profile.preflight import (
         deferred_profile_grounding_index,
         format_profile_selector_requirements,

@@ -259,8 +259,6 @@ profile:
         tax_id:
           label: NIF/NIE/CIF d'identificació
       irpf:
-        activity_income_cash_criterion_elected:
-          label: Criteri de cobraments i pagaments consignat a la declaració
         activity_income_imputation_criterion:
           choices:
             cobros_y_pagos: Cobraments i pagaments (art. 7.2 RIRPF)
@@ -275,10 +273,6 @@ profile:
           label: Compleix l'excepció del 70 % de l'art. 109 RIRPF
         codigo_comercio_accounting:
           label: Portes comptabilitat ajustada al Código de Comercio
-        estimation_directa:
-          label: El règim d'estimació és l'estimació directa
-        estimation_directa_normal:
-          label: Modalitat normal de l'estimació directa
         estimation_regime:
           choices:
             directa_normal: Estimació directa normal

@@ -55,7 +55,7 @@ def _received_invoice() -> Invoice:
             "invoice_number": "F-2026-0101",
             "issued_at": _DAY.isoformat(),
             "counterparty_name": "Proveedor Ejemplo SL",
-            "counterparty_tax_id": "ESB12345674",
+            "counterparty_tax_id": "ESB00015016",
             "counterparty_country": "ES",
             "base_total": "100.00",
             "iva_total": "21.00",

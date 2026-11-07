@@ -66,9 +66,9 @@ def _evidence(*, blockers: tuple[CrossPeriodCleanStateBlocker, ...] = ()) -> Cro
         filing_record_id="a" * 64,
         calculation_revision_id="b" * 64,
         external_evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-        expected_member_nifs=("11111111H", "22222222J"),
-        observed_member_nifs=("11111111H",),
-        missing_member_nifs=("22222222J",),
+        expected_member_nifs=("00001500M", "00001501Y"),
+        observed_member_nifs=("00001500M",),
+        missing_member_nifs=("00001501Y",),
         unexpected_member_nifs=(),
         blockers=blockers,
     )

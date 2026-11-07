@@ -100,7 +100,7 @@ _DECLARANTE = (
 _SPOUSE = (
     _fact("renta_spouse.surnames", "PEREZ RUIZ"),
     _fact("renta_spouse.name", "JUAN"),
-    _fact("renta_spouse.tax_id", "87654321X"),
+    _fact("renta_spouse.tax_id", "X0001502F"),
 )
 
 
@@ -173,7 +173,7 @@ def test_a_conjunta_filing_writes_the_spouse_rows(*, operation: PinnedAuthorityO
     )
 
     assert values["DP_APENOM_C"] == "PEREZ RUIZ JUAN"
-    assert values["DPNIF_C"] == "87654321X"
+    assert values["DPNIF_C"] == "X0001502F"
     assert values["SEXO_C"] == "H"
 
 
@@ -210,7 +210,7 @@ def test_the_precondition_fact_is_never_used_as_the_value(*, operation: PinnedAu
     )
 
     assert "DPFNAC_C" not in values
-    assert values["DPNIF_C"] == "87654321X"
+    assert values["DPNIF_C"] == "X0001502F"
 
 
 def test_a_multi_part_name_is_composed_rather_than_truncated(*, operation: PinnedAuthorityOperation) -> None:

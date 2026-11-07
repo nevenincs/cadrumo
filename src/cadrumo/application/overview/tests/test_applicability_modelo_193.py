@@ -14,7 +14,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 
 def test_modelo_193_tracks_modelo_123_capital_income_payer_fact() -> None:
     profile = TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         legal_entity_form=LegalEntityForm.from_registry("sl"),
         iva_regime=IVARegime("GENERAL"),
@@ -39,7 +39,7 @@ def test_modelo_193_tracks_modelo_123_capital_income_payer_fact() -> None:
 
 def test_modelo_193_is_incomplete_when_capital_income_payer_fact_is_undeclared() -> None:
     profile = TaxpayerProfile(
-        tax_id="B12345674",
+        tax_id="B00015016",
         entity_type=EntityType.from_registry("legal_entity"),
         legal_entity_form=LegalEntityForm.from_registry("sl"),
         iva_regime=IVARegime("GENERAL"),

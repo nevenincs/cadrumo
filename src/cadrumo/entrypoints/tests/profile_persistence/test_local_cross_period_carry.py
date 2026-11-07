@@ -312,7 +312,7 @@ def _seed_existing_303_activity_profile(repos_: FileFlowRepos) -> None:
         profile_id=_BUCKET_ID,
         facts=persona_facts_beneath(
             (
-                UserProfileFact(path="identity.tax_id", value="B12345674"),
+                UserProfileFact(path="identity.tax_id", value="B00015016"),
                 UserProfileFact(path="identity.legal_name", value="Test Company SL"),
                 UserProfileFact(path="identity.name", value="Test"),
                 UserProfileFact(path="identity.surnames", value="Company"),
@@ -335,7 +335,7 @@ def _seed_first_303_activity_profile(repos_: FileFlowRepos, *, activity_start_da
         profile_id=_BUCKET_ID,
         facts=persona_facts_beneath(
             (
-                UserProfileFact(path="identity.tax_id", value="B12345674"),
+                UserProfileFact(path="identity.tax_id", value="B00015016"),
                 UserProfileFact(path="identity.legal_name", value="Test Company SL"),
                 UserProfileFact(path="identity.name", value="Test"),
                 UserProfileFact(path="identity.surnames", value="Company"),

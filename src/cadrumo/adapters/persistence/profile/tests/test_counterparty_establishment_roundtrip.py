@@ -72,7 +72,7 @@ def _fully_populated_fact() -> ConfirmedCounterpartyFacts:
     payload carries it.
     """
     return ConfirmedCounterpartyFacts.create(
-        tax_identifier="B12345674",
+        tax_identifier="B00015016",
         territorial_scope=IvaTerritorialScope.from_registry("es_canarias"),
         asserted_by="operator@example.test",
         identification_state=require_eu_member_state("FR"),
@@ -102,7 +102,7 @@ def test_establishment_fact_roundtrips_through_encrypted_storage(
     assert loaded.territorial_scope != IvaTerritorialScope.from_registry("eu_member")
     assert loaded.note == "supplier confirmed established in Las Palmas by telephone on 2026-04-17"
     assert loaded.asserted_at == _ASSERTED_AT
-    assert loaded.canonical_tax_identifier == "B12345674"
+    assert loaded.canonical_tax_identifier == "B00015016"
 
 
 def test_persisted_fact_answering_neither_question_is_refused_at_load(
