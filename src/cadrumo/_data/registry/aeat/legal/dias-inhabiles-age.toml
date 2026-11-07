@@ -11,6 +11,50 @@
 # relación de fiestas laborales (RD 2001/1983 art. 45.4) supplies the dates: a
 # day festive in every territory is inhábil nationally (Ley 39/2015 art. 30.2).
 
+[legal."resolucion-sefp-2021-11-24-dias-inhabiles-2022:anexo"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "resolucion"
+corpus_ref = "corpus/normatives/html/boe-a-2021-19799-dias-inhabiles-2022.html#anexo"
+document_id = "BOE-A-2021-19799"
+article = "anexo"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+published_at = 2021-12-01
+effective_from = 2021-12-01
+effective_to = 2022-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-07
+reviewed_by = "agent-authored from BOE-A-2021-19799 downloaded from boe.es; operator to re-stamp"
+notes = "Resolución de 24 de noviembre de 2021 de la Secretaría de Estado de Función Pública: calendario de días inhábiles de la Administración General del Estado para 2022, a efectos de cómputo de plazos, fijado con sujeción a la relación de fiestas laborales (BOE-A-2021-17113)."
+required_text = [
+    "2022-Calendario de días inhábiles",
+    "Día 6: Inhábil en todo el territorio nacional.",
+    "Día 2: Inhábil en las Comunidades Autónomas de Andalucía, de Aragón, del Principado de Asturias, de Extremadura, de la Región de Murcia, así como en la Comunidad de Castilla y León y en la Comunidad de Madrid.",
+    "Día 8: Inhábil en todo el territorio nacional.",
+]
+
+[legal."resolucion-sefp-2022-12-01-dias-inhabiles-2023:anexo"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "resolucion"
+corpus_ref = "corpus/normatives/html/boe-a-2022-21309-dias-inhabiles-2023.html#anexo"
+document_id = "BOE-A-2022-21309"
+article = "anexo"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+published_at = 2022-12-16
+effective_from = 2022-12-16
+effective_to = 2023-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-07
+reviewed_by = "agent-authored from BOE-A-2022-21309 downloaded from boe.es; operator to re-stamp"
+notes = "Resolución de 1 de diciembre de 2022 de la Secretaría de Estado de Función Pública: calendario de días inhábiles de la Administración General del Estado para 2023, a efectos de cómputo de plazos, fijado con sujeción a la relación de fiestas laborales (BOE-A-2022-16755)."
+required_text = [
+    "2023 - Calendario de días inhábiles",
+    "Día 6: Inhábil en todo el territorio nacional.",
+    "Día 2: Inhábil en las Comunidades Autónomas de Andalucía, de Aragón, del Principado de Asturias, de la Región de Murcia, así como en la Comunidad de Castilla y León.",
+    "Día 25: Inhábil en todo el territorio nacional.",
+]
+
 [legal."resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -98,6 +142,34 @@ required_text = [
     "26 Viernes Santo.",
     "25 Natividad del Señor.",
 ]
+
+[sources."boe-dias-inhabiles-age-2022"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2021-19799-dias-inhabiles-2022.html"
+sha256 = "3ab2ab7185151fa7e3f62f7b25d72902ab9fde4edb134d7a5e63e8ac10a95077"
+bytes = 33240
+retrieved_at = 2026-11-07
+published_at = 2021-12-01
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19799"
+review_status = "pending_review"
+
+[sources."boe-dias-inhabiles-age-2023"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2022-21309-dias-inhabiles-2023.html"
+sha256 = "031cc43f0468477dbc5ecb8ad8f5d2e7112ff5adc185c756c105efb81508d7bb"
+bytes = 33942
+retrieved_at = 2026-11-07
+published_at = 2022-12-16
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-21309"
+review_status = "pending_review"
 
 [sources."boe-dias-inhabiles-age-2024"]
 evidence_tier = "official_source_guidance"
