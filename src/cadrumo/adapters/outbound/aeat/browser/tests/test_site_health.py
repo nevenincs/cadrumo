@@ -26,6 +26,7 @@ from pydantic import ValidationError
 from ......core.config import Settings
 from ......core.directory_scan import scan_directory
 from ......core.errors.hierarchy import SiteHealthState
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......tests.inventory import FIXTURES_DIR
 from ..site_health_parsers import (
     evaluate_response,
@@ -36,6 +37,7 @@ from ..site_health_parsers import (
 from ..site_health_records import SiteHealthEvidence, SiteHealthStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_YEAR = filing_year_envelope().horizon
 
 _FIXTURES_ROOT = FIXTURES_DIR / "site_health"
 _PROBE_URL = f"{Settings.external_constants().aeat.domains.sede}/"
@@ -45,7 +47,7 @@ _JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aaaaaaaaaaaa.bbbbbbbbbbbb"
 # query dropped. Asserting the origin under its own key (rather than as a bare
 # substring of the whole rendering) is what proves the path and query went.
 _REDACTED_URL_ORIGIN = "https://example.test"
-_OBSERVED_AT = datetime(2026, 5, 28, 14, 45, 0, tzinfo=UTC)
+_OBSERVED_AT = datetime(_YEAR, 5, 28, 14, 45, 0, tzinfo=UTC)
 
 
 def _load_case(path: Path, *, default_status: int) -> tuple[int, dict[str, str], str]:
@@ -403,7 +405,7 @@ class TestRateLimitRetryAfter:
 
     def test_http_date_retry_after_computes_delta(self) -> None:
         """An RFC 9110 HTTP-date ``Retry-After`` yields a positive delta."""
-        now = datetime(2026, 4, 13, 12, 0, 0, tzinfo=UTC)
+        now = datetime(_YEAR, 4, 13, 12, 0, 0, tzinfo=UTC)
         future = now + timedelta(seconds=180)
         http_date = format_datetime(future, usegmt=True)
         body = "<html><body>slow down</body></html>"
@@ -421,7 +423,7 @@ class TestRateLimitRetryAfter:
 
     def test_http_date_retry_after_in_past_falls_back_to_default(self) -> None:
         """A past HTTP-date clamps to zero and falls back to the default."""
-        now = datetime(2026, 4, 13, 12, 0, 0, tzinfo=UTC)
+        now = datetime(_YEAR, 4, 13, 12, 0, 0, tzinfo=UTC)
         past = now - timedelta(seconds=600)
         http_date = format_datetime(past, usegmt=True)
         body = "<html><body>slow down</body></html>"

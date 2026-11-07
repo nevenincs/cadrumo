@@ -15,9 +15,11 @@ import pytest
 from pydantic import ValidationError
 
 from ......core.period import Period
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
+_YEAR = filing_year_envelope().horizon
 
 # The attempt coordinate is `<submission_id>.<ordinal>`, so the fixture derives
 # both from one content-addressed id rather than naming them independently.
@@ -32,8 +34,8 @@ def _attempt(
     """Build a deterministic :class:`SubmissionAttempt` for fixture reuse."""
     return SubmissionAttempt(
         attempt_id=_ATTEMPT_ID,
-        started_at=datetime(2026, 4, 12, 10, 0, 0, tzinfo=UTC),
-        ended_at=datetime(2026, 4, 12, 10, 1, 0, tzinfo=UTC),
+        started_at=datetime(_YEAR, 4, 12, 10, 0, 0, tzinfo=UTC),
+        ended_at=datetime(_YEAR, 4, 12, 10, 1, 0, tzinfo=UTC),
         status=status,
     )
 
@@ -47,8 +49,8 @@ class TestSubmissionAttempt:
             SubmissionAttempt.model_validate(
                 {
                     "attempt_id": _ATTEMPT_ID,
-                    "started_at": datetime(2026, 4, 12, 10, 0, 0, tzinfo=UTC),
-                    "ended_at": datetime(2026, 4, 12, 10, 0, 1, tzinfo=UTC),
+                    "started_at": datetime(_YEAR, 4, 12, 10, 0, 0, tzinfo=UTC),
+                    "ended_at": datetime(_YEAR, 4, 12, 10, 0, 1, tzinfo=UTC),
                     "status": "SUBMITTED",
                     "extra": "nope",
                 },
@@ -65,8 +67,8 @@ class TestSubmissionAttempt:
         with pytest.raises(ValidationError, match=r"ended_at|started_at"):
             SubmissionAttempt(
                 attempt_id=_ATTEMPT_ID,
-                started_at=datetime(2026, 4, 12, 10, 1, 0, tzinfo=UTC),
-                ended_at=datetime(2026, 4, 12, 10, 0, 0, tzinfo=UTC),
+                started_at=datetime(_YEAR, 4, 12, 10, 1, 0, tzinfo=UTC),
+                ended_at=datetime(_YEAR, 4, 12, 10, 0, 0, tzinfo=UTC),
                 status=SubmissionStatus.PRESENTADA,
             )
 
@@ -76,8 +78,8 @@ class TestSubmissionAttempt:
             SubmissionAttempt.model_validate(
                 {
                     "attempt_id": _ATTEMPT_ID,
-                    "started_at": datetime(2026, 4, 12, 10, 0, 0, tzinfo=UTC),
-                    "ended_at": datetime(2026, 4, 12, 10, 0, 1, tzinfo=UTC),
+                    "started_at": datetime(_YEAR, 4, 12, 10, 0, 0, tzinfo=UTC),
+                    "ended_at": datetime(_YEAR, 4, 12, 10, 0, 1, tzinfo=UTC),
                     "status": "WHATEVER",
                 },
             )
@@ -92,11 +94,11 @@ class TestModeloPresentado:
             submission_id=_SUBMISSION_ID,
             draft_id="draft-1",
             modelo="130",
-            period=Period.from_year_and_code(2026, "1T"),
+            period=Period.from_year_and_code(_YEAR, "1T"),
             profile_tax_id="X0001500M",
             status=SubmissionStatus.PRESENTADA,
             # submitted_at is the first attempt's start, not a free field.
-            submitted_at=datetime(2026, 4, 12, 10, 0, 0, tzinfo=UTC),
+            submitted_at=datetime(_YEAR, 4, 12, 10, 0, 0, tzinfo=UTC),
             attempts=(_attempt(),),
         )
         base.update(overrides)
@@ -116,10 +118,10 @@ class TestModeloPresentado:
                     "submission_id": _SUBMISSION_ID,
                     "draft_id": "draft-1",
                     "modelo": "130",
-                    "period": Period.from_year_and_code(2026, "1T"),
+                    "period": Period.from_year_and_code(_YEAR, "1T"),
                     "profile_tax_id": "X0001500M",
                     "status": "SUBMITTED",
-                    "submitted_at": datetime(2026, 4, 12, 10, 0, 0, tzinfo=UTC),
+                    "submitted_at": datetime(_YEAR, 4, 12, 10, 0, 0, tzinfo=UTC),
                     "attempts": [_attempt().model_dump()],
                     "extra": "nope",
                 },
@@ -135,7 +137,7 @@ class TestModeloPresentado:
         with pytest.raises(ValidationError, match=r"justificante|ACKNOWLEDGED"):
             self._filing(
                 status=SubmissionStatus.ACEPTADA,
-                acknowledged_at=datetime(2026, 4, 12, 10, 5, 0, tzinfo=UTC),
+                acknowledged_at=datetime(_YEAR, 4, 12, 10, 5, 0, tzinfo=UTC),
             )
 
     def test_acknowledged_requires_acknowledged_at(self) -> None:
@@ -151,7 +153,7 @@ class TestModeloPresentado:
         """Assert ``acknowledged_at < submitted_at`` is rejected."""
         with pytest.raises(ValidationError, match=r"acknowledged_at|submitted_at"):
             self._filing(
-                acknowledged_at=datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC),
+                acknowledged_at=datetime(_YEAR, 4, 12, 9, 0, 0, tzinfo=UTC),
             )
 
     def test_round_trip(self) -> None:
@@ -160,7 +162,7 @@ class TestModeloPresentado:
             status=SubmissionStatus.ACEPTADA,
             justificante_csv="FIXTURECSVACK001",
             justificante_pdf_path=Path("var/submissions/j1.pdf"),
-            acknowledged_at=datetime(2026, 4, 12, 10, 5, 0, tzinfo=UTC),
+            acknowledged_at=datetime(_YEAR, 4, 12, 10, 5, 0, tzinfo=UTC),
         )
         restored = ModeloPresentado.model_validate_json(filing.model_dump_json())
         assert restored == filing

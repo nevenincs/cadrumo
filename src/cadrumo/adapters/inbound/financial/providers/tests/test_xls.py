@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 from openpyxl import load_workbook
 
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from ......domain.transactions.enums import TransactionDirection
 from ......domain.transactions.raw_transaction import SourceFormat
 from ......tests.inventory import FIXTURES_DIR
@@ -25,6 +26,7 @@ from ..xls import XlsProvider
 from ..xlsx import XlsxProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+_YEAR = filing_year_envelope().horizon
 
 _XLSX_FIXTURE = FIXTURES_DIR / "financial" / "synthetic-transactions.xlsx"
 _N26_HEADER = ["Date", "Payee", "Payment reference", "Amount (EUR)", "Currency", "Transaction ID"]
@@ -79,9 +81,9 @@ def test_xls_statement_reads_typed_date_and_number_cells_with_worksheet_row_prov
                     [
                         ["Synthetic bank statement"],
                         _N26_HEADER,
-                        [date(2025, 3, 11), "Synthetic payee", "first", -12.5, "EUR", "xls-1"],
+                        [date(_YEAR, 3, 11), "Synthetic payee", "first", -12.5, "EUR", "xls-1"],
                         [None],
-                        [date(2025, 3, 12), "Synthetic payer", "second", 30, "EUR", "xls-2"],
+                        [date(_YEAR, 3, 12), "Synthetic payer", "second", 30, "EUR", "xls-2"],
                     ],
                 ),
             ]
@@ -95,8 +97,8 @@ def test_xls_statement_reads_typed_date_and_number_cells_with_worksheet_row_prov
     assert validation.is_valid, validation.warnings
     assert validation.detected_dialect == "worksheet=Statement,header_row=2"
     assert [(row.raw.booked_date, row.raw.amount, row.direction) for row in rows] == [
-        (date(2025, 3, 11), Decimal("12.5"), TransactionDirection.OUTGOING),
-        (date(2025, 3, 12), Decimal("30"), TransactionDirection.INCOMING),
+        (date(_YEAR, 3, 11), Decimal("12.5"), TransactionDirection.OUTGOING),
+        (date(_YEAR, 3, 12), Decimal("30"), TransactionDirection.INCOMING),
     ]
     assert [row.raw.provenance.source_row_index for row in rows] == [3, 5]
 
@@ -105,7 +107,7 @@ def test_xls_formula_cell_below_the_header_refuses_the_source(tmp_path: Path) ->
     source = tmp_path / "formula.xls"
     source.write_bytes(
         xls_workbook_bytes(
-            [("Statement", [_N26_HEADER, ["2025-03-11", "Synthetic payee", "first", XlsFormula(9000), "EUR", "x"]])]
+            [("Statement", [_N26_HEADER, [f"{_YEAR}-03-11", "Synthetic payee", "first", XlsFormula(9000), "EUR", "x"]])]
         )
     )
 
@@ -124,7 +126,7 @@ def test_xls_formula_cell_above_the_header_is_outside_the_statement(tmp_path: Pa
             [
                 (
                     "Statement",
-                    [[XlsFormula(1)], _N26_HEADER, ["2025-03-11", "Synthetic payee", "first", "10.00", "EUR", "x"]],
+                    [[XlsFormula(1)], _N26_HEADER, [f"{_YEAR}-03-11", "Synthetic payee", "first", "10.00", "EUR", "x"]],
                 )
             ]
         )
@@ -146,7 +148,9 @@ def test_xls_without_a_bank_layout_or_readable_workbook_is_invalid(tmp_path: Pat
 
 
 def test_auto_detection_reads_an_xls_statement_by_suffix_and_by_signature(tmp_path: Path) -> None:
-    workbook = xls_workbook_bytes([("Statement", [_N26_HEADER, ["2025-03-11", "Payee", "ref", "10.00", "EUR", "a"]])])
+    workbook = xls_workbook_bytes(
+        [("Statement", [_N26_HEADER, [f"{_YEAR}-03-11", "Payee", "ref", "10.00", "EUR", "a"]])]
+    )
     named = tmp_path / "statement.xls"
     unnamed = tmp_path / "statement.download"
     named.write_bytes(workbook)
