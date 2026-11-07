@@ -11,7 +11,14 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.contribuyente.entity_type import EntityType
-from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
+from ....domain.contribuyente.renta_codes import FiscalResidency
+from ....domain.deadlines.models import (
+    IrpfEstimationRegime,
+    IrpfIncomeCategory,
+    IVARegime,
+    ModeloEnrollment,
+    TaxpayerProfile,
+)
 from ...live.expedientes import PersistedExpedientesSnapshot
 from ...live.expedientes_ports import ExpedientesDeclaration
 from ..calendar import build_overview_calendar
@@ -86,6 +93,8 @@ def _autonomo_without_declared_regime() -> TaxpayerProfile:
         # the exception does not hold, so an unanswered coverage fact cannot
         # be what decides Modelo 130.
         art109_activity_income_withholding_ge_70pct=False,
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
+        enrollment=ModeloEnrollment(large_company=False),
     )
 
 
@@ -264,6 +273,8 @@ def _objetiva_autonomo() -> TaxpayerProfile:
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("objetiva"),
         iva_regime=IVARegime("SIMPLIFICADO"),
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
+        enrollment=ModeloEnrollment(large_company=False),
     )
 
 

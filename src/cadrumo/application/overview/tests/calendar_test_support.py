@@ -23,8 +23,9 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.tests.published_authority import published_selected_revision_id
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.engine import DeadlineEngine
-from ....domain.deadlines.models import TaxpayerProfile
+from ....domain.deadlines.models import ModeloEnrollment, TaxpayerProfile
 from ....domain.iva_compensation.filed_derivation import M303CompensationBasis
 from ....domain.justificante.schema import Justificante
 from ....domain.modelos.codes import ModeloCode
@@ -413,4 +414,9 @@ def profile() -> TaxpayerProfile:
         does_intracomunitario=False,
         third_party_transactions_above_347_threshold=False,
         bienes_extranjero_above_threshold=False,
+        # Habitual residence in Spain selects the IRPF family these rows
+        # belong to, and the large-company condition selects their cadence.
+        # Both are stated so no assertion below turns on an unasked question.
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
+        enrollment=ModeloEnrollment(large_company=False),
     )

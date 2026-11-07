@@ -21,6 +21,7 @@ from ....domain.calculations.registry.tests.published_authority import (
     published_supported_filing_years,
 )
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
+from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.engine import DeadlineEngine
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.deadlines.filing_window_projection import AuthoredFilingWindow
@@ -290,6 +291,10 @@ def _corporate_profile() -> TaxpayerProfile:
         legal_entity_form=LegalEntityForm.from_registry("SL"),
         iva_regime=IVARegime("GENERAL"),
         incn_prior_12_months=Decimal("7500000.00"),
+        # Modelo 202 names the residencies it applies to, so the entity
+        # states its own: unanswered, the pago fraccionado is incomplete and
+        # the censo axes under test never get a row to be judged against.
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
 
 

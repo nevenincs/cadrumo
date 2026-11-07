@@ -35,6 +35,12 @@ def test_saved_false_and_unknown_are_distinct_on_calendar_agenda_and_backlog_row
         "iva.cash_accounting_regime_enrolled": False,
         "iva.voluntary_sii_enrolled": False,
         "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": False,
+        # The large-company condition decides the Modelo 303 cadence and the
+        # residency category decides which tax Modelo 130 belongs to. Both are
+        # three-state, so both are answered here: the Art. 109 coverage fact
+        # below is the one variable this test turns on.
+        "enrollment.large_company": False,
+        "taxpayer.fiscal_residency": "resident_irpf",
         "irpf.estimation_regime": "directa_normal",
         "has_employees": False,
         "pays_professionals_with_retencion": False,

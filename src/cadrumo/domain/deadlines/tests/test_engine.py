@@ -17,6 +17,7 @@ from ...calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
     published_supported_filing_years,
 )
+from ...contribuyente.renta_codes import FiscalResidency
 from ..engine import DeadlineEngine, applies_to, explain, next_deadline
 from ..errors import DeadlineValidationError, NoDeadlineWindowsError, ScheduleComputationError
 from ..models import (
@@ -90,8 +91,22 @@ def _profile(**overrides: object) -> TaxpayerProfile:
             cash_accounting_regime_enrolled=False,
             voluntary_sii_enrolled=False,
             hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+            # The enrolments and the Modelo 349 threshold are three-state;
+            # a case that turns on one of them overrides it.
+            roi_enrolled=False,
+            oss_enrolled=False,
+            sii_enrolled=False,
+            group_member_enrolled=False,
+            group_dominant_entity_enrolled=False,
+            intracommunity_operations_exceed_50000_eur=False,
         ),
         "art109_activity_income_withholding_ge_70pct": False,
+        # The residency category selects the tax and the large-company
+        # condition selects the cadence, so both are stated: an unanswered
+        # one would leave every window under test out for a reason that has
+        # nothing to do with the schedule being asserted.
+        "fiscal_residency": FiscalResidency.from_registry("resident_irpf"),
+        "enrollment": ModeloEnrollment(large_company=False),
     }
     base.update(overrides)
     return TaxpayerProfile.model_validate(base)

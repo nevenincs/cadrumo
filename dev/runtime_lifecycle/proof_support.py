@@ -25,6 +25,9 @@ _TAXPAYER_FACTS = (
     *("--iva-m303-regime-composition", "general", "--no-iva-redeme-enrolled"),
     *("--no-iva-cash-accounting-regime-enrolled", "--no-iva-voluntary-sii-enrolled"),
     "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
+    *("--no-iva-roi-enrolled", "--no-iva-oss-enrolled", "--no-iva-sii-enrolled"),
+    *("--no-iva-group-member-enrolled", "--no-iva-group-dominant-entity-enrolled"),
+    *("--no-iva-intracommunity-operations-exceed-50000-eur", "--no-enrollment-large-company"),
     *("--fiscal-residency", "resident_irpf", "--tax-residence-ccaa", "madrid"),
 )
 """Synthetic taxpayer facts for these disposable development proofs."""

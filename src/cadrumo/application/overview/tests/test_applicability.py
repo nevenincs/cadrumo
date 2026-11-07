@@ -45,9 +45,11 @@ from ....domain.calculations.registry.applicability_models import ApplicabilityV
 from ....domain.calculations.registry.applicability_routes import TaxRoute
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import RegistryFailureClassification, RegistryFailureCondition
+from ....domain.contribuyente.renta_codes import FiscalResidency
 from ....domain.deadlines.models import (
     M303RegimeComposition,
     M303TaxTerritory,
+    ModeloEnrollment,
     ModeloIVAProfile,
     TaxpayerProfile,
 )
@@ -71,6 +73,7 @@ def _landlord() -> TaxpayerProfile:
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("capital_inmobiliario")}),
         iva_regime=IVARegime("EXENTO"),
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
 
 
@@ -82,6 +85,7 @@ def _salaried_only() -> TaxpayerProfile:
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("trabajo")}),
         iva_regime=IVARegime("EXENTO"),
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
 
 
@@ -93,6 +97,7 @@ def _pensioner() -> TaxpayerProfile:
         entity_type=EntityType.from_registry("natural_person"),
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("pension")}),
         iva_regime=IVARegime("EXENTO"),
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
 
 
@@ -104,6 +109,7 @@ def _sociedad_limitada() -> TaxpayerProfile:
         entity_type=EntityType.from_registry("legal_entity"),
         legal_entity_form=LegalEntityForm.from_registry("sl"),
         iva_regime=IVARegime("GENERAL"),
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
 
 
@@ -123,7 +129,23 @@ def _iva_block_without_sii() -> ModeloIVAProfile:
         cash_accounting_regime_enrolled=False,
         voluntary_sii_enrolled=False,
         hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+        roi_enrolled=False,
+        oss_enrolled=False,
+        sii_enrolled=False,
+        group_member_enrolled=False,
+        group_dominant_entity_enrolled=False,
+        intracommunity_operations_exceed_50000_eur=False,
     )
+
+
+_OUTSIDE_SII_ENROLLMENT = ModeloEnrollment(large_company=False)
+"""The censo half of the answer Modelo 347's SII exclusion reads.
+
+RIVA art. 71.3.1 makes the volumen de operaciones one of the triggers that
+puts a taxpayer on the mandatory SII, so a profile declared outside the SII
+has to state it: unanswered, the derived fact stays undeclared and the
+exclusion cannot be settled either way.
+"""
 
 
 def _attribution_entity() -> TaxpayerProfile:
@@ -137,6 +159,7 @@ def _attribution_entity() -> TaxpayerProfile:
         tax_id="E00015008",
         entity_type=EntityType.from_registry("attribution_entity"),
         iva_regime=IVARegime("GENERAL"),
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
 
 
@@ -448,6 +471,7 @@ def _autonomo_objetiva() -> TaxpayerProfile:
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("objetiva"),
         iva_regime=IVARegime("SIMPLIFICADO"),
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
 
 
@@ -464,6 +488,7 @@ def _autonomo_simplificada() -> TaxpayerProfile:
         # 70 per cent coverage exception does not hold, which is what leaves the
         # pago fraccionado due. Unanswered, Modelo 130 is INCOMPLETE, not due.
         art109_activity_income_withholding_ge_70pct=False,
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
 
 
@@ -476,6 +501,7 @@ def test_pago_fraccionado_regime_matrix_routes_modelos_130_and_131() -> None:
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         iva_regime=IVARegime("GENERAL"),
         art109_activity_income_withholding_ge_70pct=False,
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
     modulos_general_profile = TaxpayerProfile(
         tax_id="A00015024",
@@ -483,6 +509,7 @@ def test_pago_fraccionado_regime_matrix_routes_modelos_130_and_131() -> None:
         irpf_income_categories=frozenset({IrpfIncomeCategory.from_registry("actividad_economica")}),
         iva_regime=IVARegime("GENERAL"),
         irpf_estimation_regime=IrpfEstimationRegime.from_registry("objetiva"),
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
     )
     assert default_directa_profile.irpf_estimation_regime is None
     assert modulos_general_profile.irpf_estimation_regime == IrpfEstimationRegime.from_registry("objetiva")
@@ -583,6 +610,7 @@ def test_payer_fact_modelos_apply_when_required_fact_is_declared() -> None:
         iva_regime=IVARegime("GENERAL"),
         third_party_transactions_above_347_threshold=True,
         iva=_iva_block_without_sii(),
+        enrollment=_OUTSIDE_SII_ENROLLMENT,
     )
     legal_entity_pays_professionals = TaxpayerProfile(
         tax_id="B00015016",
@@ -743,7 +771,14 @@ def test_attribution_entity_with_required_fact_owes_fact_gated_modelos() -> None
         ("180", {"pays_rent_with_retencion": True}),
         ("123", {"pays_capital_income_with_retencion": True}),
         ("349", {"does_intracomunitario": True}),
-        ("347", {"third_party_transactions_above_347_threshold": True, "iva": _iva_block_without_sii()}),
+        (
+            "347",
+            {
+                "third_party_transactions_above_347_threshold": True,
+                "iva": _iva_block_without_sii(),
+                "enrollment": _OUTSIDE_SII_ENROLLMENT,
+            },
+        ),
     )
 
     for modelo, payer_fact_update in cases:

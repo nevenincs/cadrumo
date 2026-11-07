@@ -405,6 +405,10 @@ def _sii_sociedad(**facts: object) -> TaxpayerProfile:
                 voluntary_sii_enrolled=False,
                 hydrocarbon_deposit_advance_payment_deduction_entitled=False,
             ),
+            # The large-company condition is one of the art. 71.3 triggers the
+            # Modelo 347 exclusion reads, and it is three-state, so this
+            # filer states it; a caller override still wins.
+            "enrollment": ModeloEnrollment(large_company=False),
             **facts,
         },
     )
