@@ -211,7 +211,7 @@ class TestEveryCapturePathRoutesThroughTheContract:
     def test_the_capture_path_calls_the_canonical_validator(self, module: object, function: str) -> None:
         """Each owning path delegates to ``assert_pdf_response``."""
         source = inspect.getsource(getattr(module, function))
-        assert "_assert_pdf_response(" in source, (
+        assert "assert_pdf_response(" in source, (
             f"{function} does not route its PDF response through the canonical validator"
         )
 
