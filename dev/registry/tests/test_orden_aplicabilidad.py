@@ -30,12 +30,15 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Modelo
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, PeriodSelector
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..conformance.registry_schema_support import committed_registry_tree
 from .authored_edition_support import legal_text_match
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
 
 
 # ---------------------------------------------------------------------------
@@ -54,9 +57,9 @@ _VALID_LEGAL_REF = LegalReference(
     corpus_ref="corpus/normatives/html/orden-test-0001.html#a1",
     document_id="BOE-A-2000-00001",
     permalink="https://www.boe.es/eli/es/o/2000/01/01/test-0001",
-    effective_from=date(2000, 1, 1),
+    effective_from=date(_YEAR - 26, 1, 1),
     review_status="operator_reviewed",
-    reviewed_at=date(2026, 7, 1),
+    reviewed_at=date(_YEAR, 7, 1),
     reviewed_by="codex test fixture",
     required_text=("Artículo 1",),
 )
@@ -116,9 +119,9 @@ def test_missing_orden_aplicabilidad_is_hard_failure() -> None:
     """Any revision without orden_aplicabilidad is a hard failure."""
     revision = _make_revision(
         revision_id="test-unstamped",
-        valid_from=date(2019, 1, 1),
-        valid_to=date(2019, 12, 31),
-        years=(2019,),
+        valid_from=date(_YEAR, 1, 1),
+        valid_to=date(_YEAR, 12, 31),
+        years=(_YEAR,),
         periods=("1T",),
         # legal_refs defaults to a non-orden legal entry (min_length=1 satisfied)
         orden_aplicabilidad=(),
@@ -146,9 +149,9 @@ def test_valid_orden_aplicabilidad_passes_all_checks() -> None:
     """
     revision = _make_revision(
         revision_id="test-stamped-valid",
-        valid_from=date(2020, 1, 1),
-        valid_to=date(2020, 12, 31),
-        years=(2020,),
+        valid_from=date(_YEAR, 1, 1),
+        valid_to=date(_YEAR, 12, 31),
+        years=(_YEAR,),
         periods=("1T",),
         # Must include the orden in legal_refs to pass check (iii).
         legal_refs=("orden-test-0001:art-1",),
@@ -278,9 +281,9 @@ def test_dangling_orden_aplicabilidad_entry_is_hard_failure() -> None:
     """
     revision = _make_revision(
         revision_id="test-dangling",
-        valid_from=date(2020, 1, 1),
-        valid_to=date(2020, 12, 31),
-        years=(2020,),
+        valid_from=date(_YEAR, 1, 1),
+        valid_to=date(_YEAR, 12, 31),
+        years=(_YEAR,),
         periods=("1T",),
         legal_refs=("orden-test-0001:art-1", "orden-nonexistent-9999:art-1"),
         # This entry does not exist in _VALID_CATALOGUE:
@@ -308,9 +311,9 @@ def test_orden_aplicabilidad_absent_from_legal_refs_is_hard_failure() -> None:
     """
     revision = _make_revision(
         revision_id="test-missing-from-legal-refs",
-        valid_from=date(2020, 1, 1),
-        valid_to=date(2020, 12, 31),
-        years=(2020,),
+        valid_from=date(_YEAR, 1, 1),
+        valid_to=date(_YEAR, 12, 31),
+        years=(_YEAR,),
         periods=("1T",),
         # orden-test-0001:art-1 is intentionally NOT in legal_refs (only the
         # non-orden legal ref is present), but IS in the catalogue — triggers
@@ -337,9 +340,9 @@ def test_s24_open_ended_revision_without_orden_is_hard_failure() -> None:
     """An open-ended revision without orden_aplicabilidad is a hard failure."""
     revision = _make_revision(
         revision_id="test-open-ended-unstamped",
-        valid_from=date(2019, 1, 1),
+        valid_from=date(_YEAR, 1, 1),
         valid_to=None,  # open-ended
-        year_from=2019,
+        year_from=_YEAR,
         periods=("1T",),
         # legal_refs defaults to a non-orden legal entry (min_length=1 satisfied)
         orden_aplicabilidad=(),

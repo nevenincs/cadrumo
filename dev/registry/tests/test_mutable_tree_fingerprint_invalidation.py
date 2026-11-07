@@ -29,6 +29,7 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.env_scope import scoped_env_var
 from dev.packaging.command_execution import run_command
 
@@ -67,9 +68,14 @@ def _walked_identity(fingerprints: tuple[tuple[str, int, int, str], ...]) -> Reg
 
 
 _CASILLA_NUMBER_SENTINEL = "@@CASILLA_NUMBER@@"
+_YEAR_SENTINEL = "@@YEAR@@"
+# The one exercise the synthetic tree authors; it is also its whole support envelope.
+_YEAR = filing_year_envelope().horizon
+_REVISION_ID = str(_YEAR)
 _CHILD_REGISTRY_ROOT_ENV_VAR = "CADRUMO_TEST_MUTABLE_TREE_ROOT"
 _CHILD_EDITED_TEXT_ENV_VAR = "CADRUMO_TEST_MUTABLE_TREE_EDITED_TEXT"
 _CHILD_CASILLA_FRAGMENT_ENV_VAR = "CADRUMO_TEST_MUTABLE_TREE_CASILLA_FRAGMENT"
+_CHILD_REVISION_ENV_VAR = "CADRUMO_TEST_MUTABLE_TREE_REVISION"
 
 # The child's coordinates ride the environment rather than argv so the spawned
 # command line stays a fixed literal.
@@ -88,7 +94,7 @@ fragment = Path(os.environ["CADRUMO_TEST_MUTABLE_TREE_CASILLA_FRAGMENT"])
 def observed() -> str:
     modelos, _catalogues = load_registry_tree(root)
     modelo = next(candidate for candidate in modelos if candidate.id == "999")
-    return modelo.revisions["2025"].casillas[0].number
+    return modelo.revisions[os.environ["CADRUMO_TEST_MUTABLE_TREE_REVISION"]].casillas[0].number
 
 
 print("before=" + observed())
@@ -108,13 +114,13 @@ source_refs = ["aeat-manual"]
 """.lstrip()
 
 _REVISION_TEXT = """
-[revisions."2025"]
-valid_from = 2025-01-01
-period_selector = { years = [2025], periods = ["0A"] }
+[revisions."@@YEAR@@"]
+valid_from = @@YEAR@@-01-01
+period_selector = { years = [@@YEAR@@], periods = ["0A"] }
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
 
-[[revisions."2025".casillas]]
+[[revisions."@@YEAR@@".casillas]]
 id = "01"
 number = "@@CASILLA_NUMBER@@"
 section = ["section"]
@@ -126,12 +132,12 @@ source_refs = ["aeat-manual"]
 
 
 def _revision_text(number: str) -> str:
-    return _REVISION_TEXT.replace(_CASILLA_NUMBER_SENTINEL, number)
+    return _REVISION_TEXT.replace(_CASILLA_NUMBER_SENTINEL, number).replace(_YEAR_SENTINEL, _REVISION_ID)
 
 
 def _casilla_fragment_path(registry_root: Path) -> Path:
     """The one file an edit moves: the revision's casillas fragment."""
-    return registry_root / "modelos" / "999" / "revisions" / "2025" / "casillas" / "0001-casillas.toml"
+    return registry_root / "modelos" / "999" / "revisions" / _REVISION_ID / "casillas" / "0001-casillas.toml"
 
 
 def _rendered_casilla_fragment(scratch_dir: Path, *, number: str) -> Path:
@@ -141,8 +147,8 @@ def _rendered_casilla_fragment(scratch_dir: Path, *, number: str) -> Path:
     be the exact text the fragment writer would have produced, so it is rendered
     through that same writer rather than hand-assembled here.
     """
-    write_fragmented_revision(scratch_dir / "revisions" / "2025", _revision_text(number))
-    return scratch_dir / "revisions" / "2025" / "casillas" / "0001-casillas.toml"
+    write_fragmented_revision(scratch_dir / "revisions" / _REVISION_ID, _revision_text(number))
+    return scratch_dir / "revisions" / _REVISION_ID / "casillas" / "0001-casillas.toml"
 
 
 def _write_registry_tree(tmp_path: Path, *, number: str) -> Path:
@@ -151,18 +157,18 @@ def _write_registry_tree(tmp_path: Path, *, number: str) -> Path:
     # The loader requires every authoring tree to declare its supported
     # filing years, so a synthetic tree omitting it fails to load before
     # this test can observe anything about fingerprint caching.
-    write_minimal_shared_catalogues(registry_root / "legal", floor=2025, horizon=2025)
+    write_minimal_shared_catalogues(registry_root / "legal", floor=_YEAR, horizon=_YEAR)
     modelo_dir = registry_root / "modelos" / "999"
     modelo_dir.mkdir(parents=True, exist_ok=True)
     (modelo_dir / "manifest.toml").write_text(_MANIFEST_TEXT, encoding="utf-8", newline="\n")
-    write_fragmented_revision(modelo_dir / "revisions" / "2025", _revision_text(number))
+    write_fragmented_revision(modelo_dir / "revisions" / _REVISION_ID, _revision_text(number))
     return registry_root
 
 
 def _casilla_number(modelos: tuple[ModeloDefinition, ...]) -> str:
     """Read the one observable field back out of the compiled registry."""
     modelo = next(candidate for candidate in modelos if candidate.id == "999")
-    return modelo.revisions["2025"].casillas[0].number
+    return modelo.revisions[_REVISION_ID].casillas[0].number
 
 
 def test_a_mutable_authoring_tree_is_reloaded_after_an_edit(tmp_path: Path) -> None:
@@ -270,6 +276,7 @@ def test_a_mutable_tree_is_never_disk_cached_outside_pytest_and_still_serves_the
         _CHILD_REGISTRY_ROOT_ENV_VAR: str(registry_root),
         _CHILD_EDITED_TEXT_ENV_VAR: str(edited_text_path),
         _CHILD_CASILLA_FRAGMENT_ENV_VAR: str(_casilla_fragment_path(registry_root)),
+        _CHILD_REVISION_ENV_VAR: _REVISION_ID,
     }
     for marker in ("PYTEST_CURRENT_TEST", "PYTEST_XDIST_WORKER", "PYTEST_VERSION"):
         env.pop(marker, None)

@@ -11,12 +11,13 @@ from openpyxl import load_workbook
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.registry.compiler.record_design_schema import (
     RecordDesignCompositeRelativeClosing,
     RecordDesignRelativeSuffixMarker,
 )
 
-from ..compiler.loader import load_catalogue_file
+from ..compiler.loader import load_catalogue_file, load_shared_catalogues
 from ..compiler.record_design import extract_record_design
 from ..maintenance_support import resolve_record_design_binary
 from ..pipeline import record_design_intermediate
@@ -30,24 +31,32 @@ from ..pipeline.record_design_intermediate import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_MODELO_303_DESIGNS = (
-    ("aeat-dr-303-2023", 2023, "2023"),
-    ("aeat-dr-303-2024-early", 2024, "2024-early"),
-    ("aeat-dr-303-2024-late", 2024, "2024-late"),
-    ("aeat-dr-303-2025", 2025, "2025"),
-    ("aeat-dr-303-2026", 2026, "2026"),
-)
-_MODELO_220_DESIGNS = (
-    ("aeat-dr-220-2023", 2023, "2023"),
-    ("aeat-dr-220-2024", 2024, "2024"),
-    ("aeat-dr-220-2025", 2025, "2025"),
-)
-_MODELO_390_DESIGNS = (
-    ("aeat-dr-390-2022", 2022, "2022"),
-    ("aeat-dr-390-2023", 2023, "2023"),
-    ("aeat-dr-390-2024", 2024, "2024"),
-    ("aeat-dr-390-2025", 2025, "2025"),
-)
+
+def _epoch_designs(modelo_id: str, *, supported_only: bool = True) -> tuple[tuple[str, int, str], ...]:
+    """Return ``(source id, first filing year, design epoch)`` for each epoch-stamped record design of one modelo.
+
+    With ``supported_only`` the designs that start before the support floor are left out.
+    """
+    sources = load_shared_catalogues(bundled_path("registry", "aeat")).sources
+    floor = filing_year_envelope().floor if supported_only else 0
+    designs = [
+        (str(source_id), source.applies_from.year, source.record_design_epoch)
+        for source_id, source in sources.items()
+        if str(source_id).startswith(f"aeat-dr-{modelo_id}-")
+        and source.kind == "record_design"
+        and source.applies_from is not None
+        and source.record_design_epoch is not None
+        and source.applies_from.year >= floor
+    ]
+    return tuple(sorted(designs, key=lambda design: (design[1], design[0])))
+
+
+_MODELO_303_DESIGNS = _epoch_designs("303")
+_MODELO_220_DESIGNS = _epoch_designs("220")
+_MODELO_390_DESIGNS = _epoch_designs("390")
+# The newest Modelo 200 design is the one the whole-workbook cases parse; the one before it is out of its window.
+_M200_SOURCE_REF, _M200_FILING_YEAR, _M200_EPOCH = _epoch_designs("200")[-1]
+_M200_PRIOR_SOURCE_REF, _M200_PRIOR_YEAR, _M200_PRIOR_EPOCH = _epoch_designs("200")[-2]
 
 
 #: Floors for the modelo 200 workbook parse this projection test equates against
@@ -173,7 +182,7 @@ def _assert_envelope_closing_is_preserved(envelope, parser_envelope) -> None:
     assert envelope.closing.aeat_type == "An"
     assert envelope.closing.normalized_description.startswith("Constante. </T")
     assert envelope.closing.validation is None
-    assert envelope.closing.content == '"</T200020250A0000>"'
+    assert envelope.closing.content == f'"</T2000{_M200_FILING_YEAR}0A0000>"'
 
 
 def _assert_envelope_total_is_preserved(envelope, parser_envelope) -> None:
@@ -202,18 +211,18 @@ def test_intermediate_is_a_complete_total_preserving_projection_of_the_verified_
     resolved = resolve_record_design_binary(
         source_root,
         catalogues.sources,
-        source_ref="aeat-dr-200-2025",
-        filing_year=2025,
-        design_epoch="2025",
+        source_ref=_M200_SOURCE_REF,
+        filing_year=_M200_FILING_YEAR,
+        design_epoch=_M200_EPOCH,
     )
     parsed_sheets = extract_record_design(resolved.path).accept_partial()
 
     intermediate = load_record_design_intermediate(
         source_root,
         catalogues.sources,
-        source_ref="aeat-dr-200-2025",
-        filing_year=2025,
-        design_epoch="2025",
+        source_ref=_M200_SOURCE_REF,
+        filing_year=_M200_FILING_YEAR,
+        design_epoch=_M200_EPOCH,
     )
 
     assert intermediate.source.source_ref == resolved.source.id
@@ -317,16 +326,16 @@ def test_intermediate_recovers_every_official_total_colon_without_fixing_the_var
     resolved = resolve_record_design_binary(
         source_root,
         catalogues.sources,
-        source_ref="aeat-dr-200-2025",
-        filing_year=2025,
-        design_epoch="2025",
+        source_ref=_M200_SOURCE_REF,
+        filing_year=_M200_FILING_YEAR,
+        design_epoch=_M200_EPOCH,
     )
     intermediate = load_record_design_intermediate(
         source_root,
         catalogues.sources,
-        source_ref="aeat-dr-200-2025",
-        filing_year=2025,
-        design_epoch="2025",
+        source_ref=_M200_SOURCE_REF,
+        filing_year=_M200_FILING_YEAR,
+        design_epoch=_M200_EPOCH,
     )
     official_totals = _official_totals(resolved.path)
 
@@ -367,7 +376,8 @@ def test_intermediate_preserves_each_modelo_303_variable_envelope(
     )
 
     parser_envelopes = tuple(sheet.variable_envelope for sheet in parsed if sheet.variable_envelope is not None)
-    assert len(intermediate.sheets) == 6
+    # The workbook parse owns the sheet count: the IR keeps every fixed sheet and sets the envelope sheet apart.
+    assert len(intermediate.sheets) == len(parsed) - len(parser_envelopes)
     assert all(sheet.record_identity != "DP30300" for sheet in intermediate.sheets)
     assert len(parser_envelopes) == len(intermediate.variable_envelopes) == 1
     parser_envelope = parser_envelopes[0]
@@ -535,8 +545,18 @@ def test_intermediate_classifies_each_modelo_390_page_zero_as_a_variable_envelop
 @pytest.mark.parametrize(
     ("source_ref", "filing_year", "design_epoch", "message"),
     (
-        ("aeat-dr-200-2024", 2025, "2024", "does not apply to filing year 2025"),
-        ("aeat-dr-200-2025", 2025, "2024", "declares design epoch '2025', not requested '2024'"),
+        (
+            _M200_PRIOR_SOURCE_REF,
+            _M200_FILING_YEAR,
+            _M200_PRIOR_EPOCH,
+            f"does not apply to filing year {_M200_FILING_YEAR}",
+        ),
+        (
+            _M200_SOURCE_REF,
+            _M200_FILING_YEAR,
+            _M200_PRIOR_EPOCH,
+            f"declares design epoch '{_M200_EPOCH}', not requested '{_M200_PRIOR_EPOCH}'",
+        ),
     ),
 )
 def test_intermediate_refuses_an_inapplicable_or_wrong_epoch_source_before_parsing(
@@ -563,16 +583,16 @@ def test_intermediate_refuses_a_hash_drifting_source_before_parser_projection() 
     """A changed catalogue digest blocks the real workbook before parser output exists."""
     source_root = bundled_path()
     catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml"))
-    source = catalogues.sources["aeat-dr-200-2025"]
+    source = catalogues.sources[_M200_SOURCE_REF]
     drifting_source = source.model_copy(update={"sha256": "0" * 64})
 
     with pytest.raises(RegistryValidationError, match="sha256 mismatch"):
         load_record_design_intermediate(
             source_root,
             {str(drifting_source.id): drifting_source},
-            source_ref="aeat-dr-200-2025",
-            filing_year=2025,
-            design_epoch="2025",
+            source_ref=_M200_SOURCE_REF,
+            filing_year=_M200_FILING_YEAR,
+            design_epoch=_M200_EPOCH,
         )
 
 

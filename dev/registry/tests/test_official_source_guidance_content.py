@@ -28,6 +28,7 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, revision_covering
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from dev.registry.compiler.corpus_catalogue import verify_source_file
 from dev.registry.compiler.loader import load_shared_catalogues
@@ -50,13 +51,13 @@ _SUPPRESSION_ANCHOR_SOURCE_ID = "boe-modelo-037-historical-suppression"
 #: modelo 115's quarterly windows cite two sources that ground WHO must
 #: withhold on rental income, never WHEN the resulting declaration is due.
 _DEADLINE_ANCHOR_MODELO_ID = "115"
-_DEADLINE_ANCHOR_REVISION_ID = "2019-y-siguientes"
-_DEADLINE_ANCHOR_WINDOW_ID = "modelo-115-2026-1t"
-_DEADLINE_ANCHOR_SOURCE_ID = "aeat-calendario-contribuyente-2026"
+_ANCHOR_YEAR = filing_year_envelope().horizon
+_DEADLINE_ANCHOR_REVISION_ID = str(revision_covering(_DEADLINE_ANCHOR_MODELO_ID, _ANCHOR_YEAR).id)
+_DEADLINE_ANCHOR_WINDOW_ID = f"modelo-{_DEADLINE_ANCHOR_MODELO_ID}-{_ANCHOR_YEAR}-1t"
+_DEADLINE_ANCHOR_SOURCE_ID = f"aeat-calendario-contribuyente-{_ANCHOR_YEAR}"
 
 #: A window whose own cited source genuinely states its filing deadline.
 _DEADLINE_HONEST_MODELO_ID = "180"
-_DEADLINE_HONEST_WINDOW_ID = "modelo-180-2024-0a"
 
 
 def _authored_catalogues():
@@ -78,6 +79,16 @@ def _find_window(modelo_id: str, window_id: str):
             if window.id == window_id:
                 return window
     raise AssertionError(f"deadline window {window_id!r} not found under modelo {modelo_id!r}")
+
+
+def _latest_window(modelo_id: str):
+    """The newest authored deadline window of one modelo: a window whose own cited source states its deadline."""
+    modelos, _catalogues = bundled_registry_tree()
+    modelo = next(m for m in modelos if m.id == modelo_id)
+    return max(
+        (window for revision in modelo.revisions.values() for window in revision.deadline_windows),
+        key=lambda window: window.opens_on,
+    )
 
 
 def _evidence_validator(*, source_root) -> EvidenceValidator:
@@ -249,10 +260,10 @@ def test_the_deadline_gate_still_refuses_a_window_citing_only_who_must_file_sour
 
 
 def test_an_honest_deadline_window_is_not_reported() -> None:
-    window = _find_window(_DEADLINE_HONEST_MODELO_ID, _DEADLINE_HONEST_WINDOW_ID)
+    window = _latest_window(_DEADLINE_HONEST_MODELO_ID)
     evidence = _evidence_validator(source_root=bundled_path())
     failures = deadline_window_content_failures(
-        "modelo 180 revision 2023-y-siguientes",
+        f"modelo {_DEADLINE_HONEST_MODELO_ID} window {window.id}",
         window,
         source_refs=_bundled_sources(),
         evidence=evidence,
@@ -286,7 +297,7 @@ def test_a_window_with_no_official_source_guidance_ref_is_not_this_checks_concer
     nothing and reports nothing, rather than duplicating that failure under a
     different message.
     """
-    window = _find_window(_DEADLINE_HONEST_MODELO_ID, _DEADLINE_HONEST_WINDOW_ID)
+    window = _latest_window(_DEADLINE_HONEST_MODELO_ID)
     non_osg_source_refs = {
         ref: source.model_copy(update={"evidence_tier": "layout_authority"})
         for ref, source in _bundled_sources().items()

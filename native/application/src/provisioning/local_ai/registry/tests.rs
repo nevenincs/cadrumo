@@ -333,7 +333,7 @@ fn progress_counts_the_whole_model_against_the_manifest_sizes_and_never_goes_bac
     ));
     let network = network_to(certificate.roots(), server.address(), None);
     let run = pull(&network, directory.path());
-    run.result.unwrap();
+    run.result.as_ref().unwrap();
     let completed = progress(&run, served.total());
     assert_eq!(completed.first(), Some(&0));
     assert_eq!(completed.last(), Some(&served.total()));
@@ -423,7 +423,7 @@ fn a_blob_already_stored_whole_is_kept_and_a_wrong_one_is_fetched_again() {
     wrong[0] ^= 0xff;
     fs::write(served.stored(root, 2), &wrong).unwrap();
     let run = pull(&network, root);
-    run.result.unwrap();
+    run.result.as_ref().unwrap();
     assert!(store_requests(&server, &served, 1).is_empty());
     assert_eq!(store_requests(&server, &served, 2).len(), 1);
     assert_eq!(fs::read(served.stored(root, 2)).unwrap(), served.blobs[2].1);

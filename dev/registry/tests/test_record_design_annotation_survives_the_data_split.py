@@ -45,6 +45,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..compiler.record_design import extract_record_design
 from ..compiler.record_design_sources import load_corrections, load_declared_non_record_sheet_reasons
+from .revision_span_design_support import design_sources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -53,17 +54,14 @@ _DESIGNS = "corpus/aeat_official/disenos_registro"
 #: A design whose completeness depends on a MODELO-level declaration living one
 #: directory above it: Modelo 232 reads every record sheet and skips only its
 #: adjudicated ``TABLAS`` lookup tab.
-_MODELO_232 = (
-    f"{_DESIGNS}/modelo_232/files"
-    "/01-232-orden-hfp-816-2017-ejercicio-2016-y-siguientes-actualizado-15-01-2020-145-kb-xlsx.xlsx"
-)
+_MODELO_232 = design_sources("232")[0].relative_to(bundled_path()).as_posix()
 _MODELO_232_DECLARATION = f"{_DESIGNS}/modelo_232/declared-non-record-sheets.json"
 
 #: A design whose completeness depends on a SIBLING correction sidecar. The two
 #: annotation shapes are exercised separately because they navigate differently
 #: from the binary, and a fix that spanned the roots for only one of them would
 #: leave the other silently broken.
-_MODELO_280 = f"{_DESIGNS}/modelo_280/files/DR_280_2022.pdf"
+_MODELO_280 = design_sources("280")[0].relative_to(bundled_path()).as_posix()
 _MODELO_280_CORRECTION = f"{_MODELO_280}.record-design-correction.json"
 
 

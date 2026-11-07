@@ -19,7 +19,8 @@ record_identity = "Anexo"
 
 [[entries]]
 export_field_id = "m840-2003.anexo.f002"
-kind = "filler"
+kind = "casilla"
+casilla_id = "declarante.indicador-pagina-complementaria"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -1875,8 +1876,7 @@ record_identity = "Anexo"
 
 [[entries]]
 export_field_id = "m840-2003.anexo.f159"
-kind = "casilla"
-casilla_id = "notificacion.lugar"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -1887,8 +1887,7 @@ record_identity = "Anexo"
 
 [[entries]]
 export_field_id = "m840-2003.anexo.f160"
-kind = "casilla"
-casilla_id = "notificacion.lugar"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -1899,8 +1898,7 @@ record_identity = "Anexo"
 
 [[entries]]
 export_field_id = "m840-2003.anexo.f161"
-kind = "casilla"
-casilla_id = "notificacion.lugar"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -1911,8 +1909,7 @@ record_identity = "Anexo"
 
 [[entries]]
 export_field_id = "m840-2003.anexo.f162"
-kind = "casilla"
-casilla_id = "notificacion.lugar"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]
@@ -1923,8 +1920,7 @@ record_identity = "Anexo"
 
 [[entries]]
 export_field_id = "m840-2003.anexo.f163"
-kind = "casilla"
-casilla_id = "notificacion.lugar"
+kind = "filler"
 legal_refs = ["orden-hac-2572-2003:apartado-1"]
 source_refs = ["aeat-dr-840"]
 [entries.anchor]

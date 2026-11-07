@@ -9,12 +9,20 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ..compiler.authority import compile_structural_authority
 from ..compiler.validate_evidence import EvidenceValidator
 from ..compiler.validate_registry_surfaces import validate_deadline_window_section
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+#: Modelo 136's two authored editions: the older one is closed, the newer one open.
+_M136_EARLY, _M136_LATE = authored_revisions("136")
+_M136_EARLY_LAST = _M136_EARLY.valid_to
+if _M136_EARLY_LAST is None:
+    raise LookupError("modelo 136's older edition must be closed by its successor")
+_YEAR_BEFORE_EARLY_END = date(_M136_EARLY_LAST.year - 1, 12, 31)
 
 
 @cache
@@ -42,8 +50,8 @@ def _require(
     source_refs: tuple[str, ...],
     legal_refs: tuple[str, ...],
     *,
-    valid_from: date = date(2022, 1, 1),
-    valid_to: date = date(2025, 12, 31),
+    valid_from: date = _M136_EARLY.valid_from,
+    valid_to: date = _M136_EARLY_LAST,
 ) -> list[str]:
     return validator.require_procedural_evidence(
         "revision",
@@ -67,13 +75,15 @@ def test_matching_boe_clause_in_cited_form_spec_passes() -> None:
 
 
 def test_clause_can_explicitly_govern_the_prior_information_year() -> None:
+    governed_from = _catalogues().legal["orden-hfp-823-2022:art-4"].governs_periods_from
+    assert governed_from is not None, "the clause declares the information year it governs"
     assert (
         _require(
             _validator(),
             ("boe-modelo-345-base-order",),
             ("orden-hfp-823-2022:art-4",),
-            valid_from=date(2022, 1, 1),
-            valid_to=date(2022, 12, 31),
+            valid_from=governed_from,
+            valid_to=date(governed_from.year, 12, 31),
         )
         == []
     )
@@ -100,10 +110,10 @@ def test_out_of_window_boe_source_or_clause_fails(expired: str) -> None:
     source = catalogues.sources["boe-modelo-136-base-order"]
     legal = catalogues.legal["orden-hap-70-2013:art-7"]
     source_updates = (
-        {source.id: source.model_copy(update={"applies_to": date(2024, 12, 31)})} if expired == "source" else None
+        {source.id: source.model_copy(update={"applies_to": _YEAR_BEFORE_EARLY_END})} if expired == "source" else None
     )
     legal_updates = (
-        {legal.id: legal.model_copy(update={"effective_to": date(2024, 12, 31)})} if expired == "legal" else None
+        {legal.id: legal.model_copy(update={"effective_to": _YEAR_BEFORE_EARLY_END})} if expired == "legal" else None
     )
 
     assert _require(
@@ -119,8 +129,8 @@ def test_existing_official_guidance_route_still_passes() -> None:
             _validator(),
             ("aeat-modelo-136-procedure",),
             (),
-            valid_from=date(2026, 1, 1),
-            valid_to=date(2026, 12, 31),
+            valid_from=_M136_LATE.valid_from,
+            valid_to=date(_M136_LATE.valid_from.year, 12, 31),
         )
         == []
     )
@@ -129,13 +139,13 @@ def test_existing_official_guidance_route_still_passes() -> None:
 def test_deadline_section_accepts_matching_boe_deadline_clause() -> None:
     authority = _authority()
     modelo = next(item for item in authority.modelos if item.id == "136")
-    revision = modelo.revisions["2022-2025"]
+    revision = modelo.revisions[str(_M136_EARLY.id)]
     catalogues = authority.catalogues
     evidence = _validator()
 
     assert (
         validate_deadline_window_section(
-            prefix="modelo 136 revision 2022-2025",
+            prefix=f"modelo 136 revision {_M136_EARLY.id}",
             revision=revision,
             legal_refs=catalogues.legal,
             source_refs=catalogues.sources,
@@ -148,7 +158,7 @@ def test_deadline_section_accepts_matching_boe_deadline_clause() -> None:
 def test_deadline_section_rejects_matching_boe_clause_without_deadline_text() -> None:
     authority = _authority()
     modelo = next(item for item in authority.modelos if item.id == "136")
-    revision = modelo.revisions["2022-2025"]
+    revision = modelo.revisions[str(_M136_EARLY.id)]
     catalogues = authority.catalogues
     legal = dict(catalogues.legal)
     anchor = legal["orden-hap-70-2013:art-7"]
@@ -156,7 +166,7 @@ def test_deadline_section_rejects_matching_boe_clause_without_deadline_text() ->
     evidence = EvidenceValidator(legal_refs=legal, source_refs=catalogues.sources, source_root=bundled_path())
 
     failures = validate_deadline_window_section(
-        prefix="modelo 136 revision 2022-2025",
+        prefix=f"modelo 136 revision {_M136_EARLY.id}",
         revision=revision,
         legal_refs=legal,
         source_refs=catalogues.sources,

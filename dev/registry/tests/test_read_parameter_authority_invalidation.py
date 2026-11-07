@@ -25,6 +25,7 @@ from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import 
     minimal_revision,
     synthetic_legal_identity,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.user_profile.schema import (
     ProfileFieldDefinition,
     ProfileFieldType,
@@ -40,6 +41,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MODELO_ID = "130"
 _REVISION_ID = "test-revision"
+_YEAR = filing_year_envelope().horizon
+_QUERY_DATE = date(_YEAR, 6, 30)
 _PARAMETER_ID = "synthetic-rate"
 
 
@@ -82,8 +85,8 @@ def _artifact(value: str) -> AuthorityArtifact:
             DatedValue(
                 value=Decimal(value),
                 date_axis="filing_period",
-                valid_from=date(2025, 1, 1),
-                valid_to=date(2025, 12, 31),
+                valid_from=date(_YEAR, 1, 1),
+                valid_to=date(_YEAR, 12, 31),
             ),
         ),
         legal_refs=(legal_id,),
@@ -115,7 +118,7 @@ def test_read_parameter_sees_a_registry_edit_under_a_new_generation(tmp_path: Pa
                 _MODELO_ID,
                 _REVISION_ID,
                 _PARAMETER_ID,
-                date_context={"filing_period": date(2025, 6, 30)},
+                date_context={"filing_period": _QUERY_DATE},
                 operation=first_operation,
             )
             assert before == Decimal("0.05")
@@ -136,7 +139,7 @@ def test_read_parameter_sees_a_registry_edit_under_a_new_generation(tmp_path: Pa
                 _MODELO_ID,
                 _REVISION_ID,
                 _PARAMETER_ID,
-                date_context={"filing_period": date(2025, 6, 30)},
+                date_context={"filing_period": _QUERY_DATE},
                 operation=first_operation,
             )
             assert held == Decimal("0.05")
@@ -146,7 +149,7 @@ def test_read_parameter_sees_a_registry_edit_under_a_new_generation(tmp_path: Pa
                     _MODELO_ID,
                     _REVISION_ID,
                     _PARAMETER_ID,
-                    date_context={"filing_period": date(2025, 6, 30)},
+                    date_context={"filing_period": _QUERY_DATE},
                     operation=current_operation,
                 )
                 assert after == Decimal("0.06")
