@@ -201,3 +201,23 @@ Basis: the operator's first-hand ruling of 2026-11-07 recorded above, the coordi
 - **D2, backend.** CUDA stays optional and later. The bundled Vulkan build is sufficient for the default.
 - **D3, lane reasoning requirement.** The llama.cpp lane suppresses reasoning for structured extraction, with `--reasoning-budget 0` or per-request reasoning control, whichever the pinned build supports. It refuses a think-only reply with a typed refusal. On b12184, `qwen3:4b` (Qwen3 4B Thinking 2507, from the Ollama blob) ignored `chat_template_kwargs` `enable_thinking:false`, spent 400 tokens thinking and returned only empty answers (schema-valid 0/5). The lane re-runs that measurement cell as acceptance.
 - **Known gap.** On the bundled Vulkan build `qwen3-vl:2b` generates at about 128 tok/s, against 261 to 267 tok/s on Ollama and on CUDA, about half. The remedy is the optional CUDA build, later. The gap does not block the 4b vision default.
+
+## Amendment 2026-11-07: Linux source build and the Windows runtime libraries
+
+Basis: the P03.S11 staging findings, approved by the coordinating session on 2026-11-07 under the operator's first-hand ruling recorded above. This amendment is a rollout gap under that ruling, not a reversal of it. llama.cpp stays the default engine, and only the Linux path to it changes. It amends D2 and D1 for Linux and adds one D2 requirement for Windows. It changes no other constraint.
+
+- **Finding.** The pinned b12184 Linux archives (`ubuntu-vulkan`) require `GLIBC_2.34` on x86-64 and `GLIBC_2.38` on arm64, along with `GLIBCXX_3.4.30` / `3.4.32` and `CXXABI_1.3.13` / `1.3.15`. Both also load `libssl.so.3`, `libcrypto.so.3`, `libgomp.so.1` and `libvulkan.so.1` from the host. The package floor is glibc 2.28. Package assembly therefore refuses both archives with a typed glibc-floor error.
+- **D2, Linux.** The glibc 2.28 floor stays.
+  - On Linux, the native build compiles llama-server from the pinned upstream b12184 source tarball, pinned by size and SHA-256, inside the Linux native build at the 2.28 floor.
+  - The build uses the CPU backend, with no OpenSSL and no curl, and links `libgomp` statically. Cadrumo applies no patch and authors no runtime code.
+  - The binary stays an upstream program run as its own process, an external program under `2026-10-17-single-binary-process-tree-adr` constraint 7.
+  - D2's sentence "Cadrumo does not build llama.cpp" and its "Linux x64 ships the Vulkan build" now apply to Windows and macOS only.
+  - Package assembly keeps refusing a Linux binary that exceeds the floor.
+- **D1, Linux default.** Until the Linux source build lands and passes the packaged smoke, the Linux package carries no llama-server and Linux keeps `ollama` as its default engine. Windows and macOS bundle llama.cpp as decided. The P05 default flip applies per platform, and on Linux it follows the source-build Step.
+- **D2, Windows runtime libraries.** `llama-server.exe` imports `msvcp140.dll` and `vcruntime140_1.dll`, while Cadrumo's own Rust binaries link the C runtime statically.
+  - The Windows package stages app-local `msvcp140.dll`, `vcruntime140.dll` and `vcruntime140_1.dll` from the pinned MSVC toolchain's Redist folder into the llama-server directory, hashed in the package manifest.
+  - A staging check reads each PE file's import table there. It refuses any import that is neither an operating-system DLL nor present beside the binary. A fixture with a missing DLL proves the refusal.
+- **Reconciliation.** Building an unmodified, pinned upstream source tarball on Linux narrows two accepted sentences of `2026-10-18-dependency-provisioning-unified-setup-adr`: the rejected option "Let Cadrumo build its own model runtime binary" and D14's "a Cadrumo-built model runtime". Both are amended there by a dated note.
+  - The note says that, since this amendment, Cadrumo compiles the pinned upstream llama-server source on Linux without modification, and builds no runtime of its own.
+  - It also records that Ollama is still never built.
+  - This record's earlier reconciliation line, "Cadrumo stages a pinned upstream release and builds nothing", is superseded for Linux by this amendment.

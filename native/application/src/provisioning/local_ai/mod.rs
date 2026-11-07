@@ -6,13 +6,15 @@
 //! is, and reports a copy installed outside Cadrumo without touching it. `supervision`
 //! is the runtime manager's part: it keeps the server running while the program is set
 //! up. `lease` keeps that server and a change of the program apart across processes.
-//! `models` pulls and checks each selected model through the running server, and
-//! `registry` fetches a model from its registry into the models folder without one.
+//! `models` pulls and checks each selected model through the running server.
+//! `registry` fetches a model from its registry into the models folder without one, and
+//! `huggingface` fetches a model's declared files from Hugging Face into the same store.
 //! `hardware` decides whether this computer can hold a model of a given size. `loopback` is the
 //! client for the program's own API on this computer. [`reading`] folds the parts into
 //! the item's one reading.
 
 pub mod hardware;
+pub mod huggingface;
 pub mod lease;
 pub mod loopback;
 pub mod models;

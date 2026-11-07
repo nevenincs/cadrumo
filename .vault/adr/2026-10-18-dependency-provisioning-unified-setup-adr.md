@@ -200,3 +200,9 @@ Basis: the operator's first-hand ruling to the orchestrating session on 2026-11-
 - **D1, second bullet.** `local_ai` is the selected local engine's program, not the Ollama program, and the packaged llama-server is never downloaded. Without this change the D11 hard requirement would require the Ollama program under the default engine. The changed sentence carries its earlier text inline.
 - **Considerations, context note.** A dated note records that the llama-server runtime is package data. It is not binding text.
 - **Unchanged.** The rejected options on bundling model weights and on a Cadrumo-built model runtime, and D14's matching exclusions, stand: llama-server is a pinned upstream release, not a model and not a Cadrumo build. D14's Linux runtime instruction still governs Ollama.
+
+## Amendment 2026-11-07: Linux compiles the pinned llama-server source
+
+Basis: the Linux amendment of 2026-11-07 in `2026-11-07-local-inference-engine-adr`, which the coordinating session approved that day under the same operator ruling. The pinned Linux release archives need glibc 2.34 or later, above the package floor of 2.28. On Linux, therefore, the native build compiles the pinned upstream llama-server source tarball, unmodified, at that floor. The status of this record is unchanged.
+
+- **Rejected option "Let Cadrumo build its own model runtime binary", and D14's "a Cadrumo-built model runtime".** Both still stand for any runtime Cadrumo authors and for Ollama, which Cadrumo never builds. Compiling the unmodified, size- and SHA-256-pinned upstream llama-server source on Linux is not a Cadrumo-built runtime in that sense, and is admitted. The amendment of the same day above stated "not a Cadrumo build". That sentence now holds for Windows and macOS, which stage the upstream release binaries.

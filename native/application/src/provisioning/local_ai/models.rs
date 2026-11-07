@@ -27,8 +27,12 @@
 //! is the consumer's admission check.
 
 use super::{
-    LocalAiError, NotRunningCause, ServerCall, hardware::Hardware, loopback::Loopback,
+    LocalAiError, NotRunningCause, ServerCall,
+    hardware::Hardware,
+    huggingface::{self, HuggingFaceFile, HuggingFaceModel},
+    loopback::Loopback,
     program::Server,
+    registry,
 };
 use crate::{
     component::Cancellation,
@@ -207,6 +211,92 @@ impl SelectedModel {
             role: role.to_owned(),
             name: ModelName::parse(name)?,
             size_bytes,
+        })
+    }
+}
+
+/// What a catalogue model is fetched as: a name its registry serves, whose manifest
+/// states the layers and their digests, or files declared on Hugging Face with the
+/// digests and sizes the catalogue pins.
+///
+/// The catalogue states it in one of two JSON forms:
+/// `{"source": "registry", "name": "<name>"}`, or `{"source": "huggingface",
+/// "repository": "<owner>/<repo>", "revision": "<commit>", "model": <file>,
+/// "projector": <file>}`, each `<file>` being `{"file": "<name>.gguf", "sha256": "<hex>",
+/// "size_bytes": <bytes>}` and the projector left out for a model without one.
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize)]
+#[serde(try_from = "ArtefactDocument")]
+pub enum ModelArtefact {
+    Registry(ModelName),
+    HuggingFace(HuggingFaceModel),
+}
+
+impl ModelArtefact {
+    /// The name the models folder keeps the model under.
+    pub fn name(&self) -> &ModelName {
+        match self {
+            Self::Registry(name) => name,
+            Self::HuggingFace(model) => model.name(),
+        }
+    }
+
+    /// The hosts fetching the model may reach, which a plan names as its sources.
+    pub fn source_hosts(&self) -> BTreeSet<HostName> {
+        match self {
+            Self::Registry(name) => registry::source_hosts(name),
+            Self::HuggingFace(_) => huggingface::source_hosts(),
+        }
+    }
+}
+
+#[derive(Deserialize)]
+#[serde(tag = "source", deny_unknown_fields)]
+enum ArtefactDocument {
+    #[serde(rename = "registry")]
+    Registry { name: String },
+    #[serde(rename = "huggingface")]
+    HuggingFace {
+        repository: String,
+        revision: String,
+        model: FileDocument,
+        #[serde(default)]
+        projector: Option<FileDocument>,
+    },
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct FileDocument {
+    file: String,
+    sha256: String,
+    size_bytes: u64,
+}
+
+impl TryFrom<FileDocument> for HuggingFaceFile {
+    type Error = Error;
+
+    fn try_from(document: FileDocument) -> Result<Self, Error> {
+        Self::new(&document.file, &document.sha256, document.size_bytes)
+    }
+}
+
+impl TryFrom<ArtefactDocument> for ModelArtefact {
+    type Error = Error;
+
+    fn try_from(document: ArtefactDocument) -> Result<Self, Error> {
+        Ok(match document {
+            ArtefactDocument::Registry { name } => Self::Registry(ModelName::parse(&name)?),
+            ArtefactDocument::HuggingFace {
+                repository,
+                revision,
+                model,
+                projector,
+            } => Self::HuggingFace(HuggingFaceModel::new(
+                &repository,
+                &revision,
+                model.try_into()?,
+                projector.map(HuggingFaceFile::try_from).transpose()?,
+            )?),
         })
     }
 }
