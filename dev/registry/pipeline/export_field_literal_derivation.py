@@ -13,7 +13,7 @@ from .export_field_derivation import (
     OFFICIAL_BARE_RECORD_TAG_RE,
     OFFICIAL_LABELLED_LITERAL_RE,
     OFFICIAL_LITERAL_RE,
-    OFFICIAL_QUOTED_RECORD_TAG_RE,
+    OFFICIAL_QUOTED_TOKEN_RE,
     OFFICIAL_UNQUOTED_LITERAL_RE,
 )
 from .export_field_literal_source_pins import (
@@ -218,9 +218,9 @@ def _parse_official_literal(joined_field: JoinedRecordDesignField, official_cont
         return str(match.group("literal")), False
     if OFFICIAL_BARE_RECORD_TAG_RE.fullmatch(folded_content) is not None:
         return folded_content, False
-    quoted_tag = OFFICIAL_QUOTED_RECORD_TAG_RE.fullmatch(folded_content)
-    if quoted_tag is not None:
-        return str(quoted_tag.group("literal")), False
+    quoted_token = OFFICIAL_QUOTED_TOKEN_RE.fullmatch(folded_content)
+    if quoted_token is not None:
+        return str(quoted_token.group("literal")), False
     unquoted = OFFICIAL_UNQUOTED_LITERAL_RE.fullmatch(folded_content)
     if unquoted is not None:
         return str(unquoted.group("literal")), False

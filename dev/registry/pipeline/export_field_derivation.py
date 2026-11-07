@@ -192,13 +192,12 @@ OFFICIAL_LABELLED_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
 OFFICIAL_BARE_RECORD_TAG_RE: Final[re.Pattern[str]] = re.compile(r"</?T[0-9A-Z]+>")
 
 
-#: The same record identifier printed QUOTED but without the `Constante` label.
-#: Modelo 840 opens each page with `"<T840010>"` in that form while its closing
-#: tag carries the label. Only the tag shape is admitted, so quotes around any
-#: other unlabelled text still leave the cell unreadable as a constant.
-OFFICIAL_QUOTED_RECORD_TAG_RE: Final[re.Pattern[str]] = re.compile(
-    r"(?P<quote>['\"])(?P<literal></?T[0-9A-Z]+>)(?P=quote)"
-)
+#: A constant printed QUOTED but without the `Constante` label, as the whole of
+#: the cell. Modelo 840 opens each page with `"<T840010>"` and modelo 576 prints
+#: `"576"` that way. The cell must be exactly one quoted token, so prose,
+#: alternatives and truncated quotes stay unreadable, and the map's declared
+#: literal must still equal the token byte for byte.
+OFFICIAL_QUOTED_TOKEN_RE: Final[re.Pattern[str]] = re.compile(r"(?P<quote>['\"])(?P<literal>[^\s'\"]+)(?P=quote)")
 
 
 #: A LABELLED constant whose value AEAT left unquoted. Modelo 200 writes
