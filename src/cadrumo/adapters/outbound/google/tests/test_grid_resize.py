@@ -29,13 +29,16 @@ from .....application.storage.calc_sheets.records import (
 )
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
+from .....domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from .....domain.calculations.registry.tests.published_authority import published_selected_revision_id
 from ..calc_sheets_apply_formatting import build_grid_resize_requests
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_YEAR = filing_year_envelope().horizon
 
 _TEST_LEGAL_REFS = ("ley-58-2003:art-119",)
 _TEST_SOURCE_REFS = ("aeat-dr-190-2025",)
-_EXPORTED_AT = datetime(2026, 5, 28, 12, 50, 0, tzinfo=UTC)
+_EXPORTED_AT = datetime(_YEAR, 5, 28, 12, 50, 0, tzinfo=UTC)
 
 _TEST_CASILLA: CasillaId = validated_casilla_id("test.casilla", surface="_TEST_CASILLA")
 
@@ -50,9 +53,9 @@ def _plan(
     return SheetExportPlan(
         metadata=SheetExportMetadata(
             modelo_id="100",
-            revision_id="2025",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "0A"),
+            revision_id=published_selected_revision_id("100", filing_year=_YEAR, period="0A"),
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, "0A"),
             engine_version="test/0.1",
             registry_sha="abcdef1234567890",
             exported_at=_EXPORTED_AT,
