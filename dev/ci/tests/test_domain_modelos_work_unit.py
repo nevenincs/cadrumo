@@ -44,7 +44,7 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import RevisionId
-from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
@@ -56,6 +56,8 @@ from cadrumo.domain.modelos.work_unit import (
 )
 
 FILING_YEAR = filing_year_envelope().horizon
+REVISION_303 = open_ended_revision("303").id
+REVISION_130 = open_ended_revision("130").id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -66,8 +68,8 @@ _ACTION_BUCKET_ID = "30330300-0000-4000-8000-000000000301"
 _WORK_UNIT_BUCKET_A_ID = "30330300-0000-4000-8000-0000000000a1"
 _WORK_UNIT_BUCKET_B_ID = "30330300-0000-4000-8000-0000000000b2"
 _WORK_UNIT_EVENT_BUCKET_ID = "30330300-0000-4000-8000-000000000303"
-_P_2026_1T = Period.from_year_and_code(FILING_YEAR, "1T")
-_P_2026_2T = Period.from_year_and_code(FILING_YEAR, "2T")
+_PERIOD_1T = Period.from_year_and_code(FILING_YEAR, "1T")
+_PERIOD_2T = Period.from_year_and_code(FILING_YEAR, "2T")
 
 
 @pytest.fixture
@@ -101,7 +103,7 @@ def test_derive_work_unit_id_is_64_char_lowercase_hex() -> None:
         modelo="303",
         filing_year=FILING_YEAR,
         period=Period.from_year_and_code(FILING_YEAR, "1T"),
-        revision_id="2026-y-siguientes",
+        revision_id=REVISION_303,
     )
     assert len(wid) == 64
     assert all(ch in "0123456789abcdef" for ch in wid)
@@ -113,9 +115,9 @@ def test_derive_work_unit_id_is_deterministic() -> None:
     args: dict[str, Any] = {
         "bucket_id": _DERIVATION_BUCKET_ID,
         "modelo": "303",
-        "filing_year": 2026,
+        "filing_year": FILING_YEAR,
         "period": Period.from_year_and_code(FILING_YEAR, "1T"),
-        "revision_id": "2026-y-siguientes",
+        "revision_id": REVISION_303,
     }
     assert derive_work_unit_id(**args) == derive_work_unit_id(**args)
 
@@ -127,9 +129,9 @@ def test_derive_work_unit_id_distinguishes_buckets() -> None:
 
     base: dict[str, Any] = {
         "modelo": "303",
-        "filing_year": 2026,
+        "filing_year": FILING_YEAR,
         "period": Period.from_year_and_code(FILING_YEAR, "1T"),
-        "revision_id": "2026-y-siguientes",
+        "revision_id": REVISION_303,
     }
     a = derive_work_unit_id(bucket_id=_WORK_UNIT_BUCKET_A_ID, **base)
     b = derive_work_unit_id(bucket_id=_WORK_UNIT_BUCKET_B_ID, **base)
@@ -146,14 +148,14 @@ def test_derive_work_unit_id_normalises_case_on_modelo_and_period() -> None:
         modelo="303",
         filing_year=FILING_YEAR,
         period=Period.from_year_and_code(FILING_YEAR, "1T"),
-        revision_id="2026-y-siguientes",
+        revision_id=REVISION_303,
     )
     lower_period = derive_work_unit_id(
         bucket_id=_DERIVATION_BUCKET_ID,
         modelo="303",
         filing_year=FILING_YEAR,
         period=Period.from_year_and_code(FILING_YEAR, "1t"),
-        revision_id="2026-y-siguientes",
+        revision_id=REVISION_303,
     )
     assert canonical == lower_period
 
@@ -166,9 +168,9 @@ def test_derive_work_unit_id_normalises_case_on_modelo_and_period() -> None:
 def _build_unit(**overrides: Any) -> WorkUnit:
     bucket_id = overrides.pop("bucket_id", _DERIVATION_BUCKET_ID)
     modelo = overrides.pop("modelo", "303")
-    filing_year = overrides.pop("filing_year", 2026)
+    filing_year = overrides.pop("filing_year", FILING_YEAR)
     period = overrides.pop("period", Period.from_year_and_code(filing_year, "1T"))
-    revision_id = overrides.pop("revision_id", "2026-y-siguientes")
+    revision_id = overrides.pop("revision_id", REVISION_303)
     wid = overrides.pop(
         "work_unit_id",
         derive_work_unit_id(
@@ -186,7 +188,7 @@ def _build_unit(**overrides: Any) -> WorkUnit:
         "filing_year": filing_year,
         "period": period,
         "revision_id": revision_id,
-        "name": overrides.pop("name", f"303-2026-{period.registry_token}"),
+        "name": overrides.pop("name", f"303-{FILING_YEAR}-{period.registry_token}"),
         "created_at": overrides.pop("created_at", _T0),
         "updated_at": overrides.pop("updated_at", _T0),
     }
@@ -202,7 +204,7 @@ def _create_action_work_unit(
     repo: WorkUnitCatalogueRepository,
     *,
     modelo: str = "303",
-    period: Period = _P_2026_1T,
+    period: Period = _PERIOD_1T,
     revision_id: RevisionId | None = None,
     name: str | None = None,
     causante_ccaa: Any | None = None,
@@ -249,10 +251,10 @@ def test_work_unit_is_strict_frozen_and_rejects_extras() -> None:
                 "work_unit_id": unit.work_unit_id,
                 "bucket_id": unit.bucket_id,
                 "modelo": "303",
-                "filing_year": 2026,
+                "filing_year": FILING_YEAR,
                 "period": Period.from_year_and_code(FILING_YEAR, "1T"),
-                "revision_id": "2026-y-siguientes",
-                "name": "303-2026-1T",
+                "revision_id": REVISION_303,
+                "name": f"303-{FILING_YEAR}-1T",
                 "created_at": _T0,
                 "updated_at": _T0,
                 "unknown_axis": "extra-value",
@@ -325,9 +327,9 @@ def test_create_work_unit_is_idempotent_on_the_four_axis_key(repo: WorkUnitCatal
 
 def test_create_work_unit_applies_default_or_explicit_name(repo: WorkUnitCatalogueRepository) -> None:
     default_named = _create_action_work_unit(repo)
-    explicit_named = _create_action_work_unit(repo, period=_P_2026_2T, name="renta-2t-2026-draft")
+    explicit_named = _create_action_work_unit(repo, period=_PERIOD_2T, name="renta-2t-2026-draft")
 
-    assert default_named.name == "303-2026-1T"
+    assert default_named.name == f"303-{FILING_YEAR}-1T"
     assert explicit_named.name == "renta-2t-2026-draft"
 
 
@@ -348,9 +350,9 @@ def test_list_work_units_sorts_by_bucket_year_modelo_period(repo: WorkUnitCatalo
                     revision_id=revision_id,
                 )
                 for bucket, modelo, year, period, revision_id in (
-                    (_WORK_UNIT_BUCKET_B_ID, "303", 2026, "1T", "2026-y-siguientes"),
-                    (_WORK_UNIT_BUCKET_A_ID, "303", 2026, "2T", "2026-y-siguientes"),
-                    (_WORK_UNIT_BUCKET_A_ID, "130", 2026, "1T", "2019-y-siguientes"),
+                    (_WORK_UNIT_BUCKET_B_ID, "303", FILING_YEAR, "1T", REVISION_303),
+                    (_WORK_UNIT_BUCKET_A_ID, "303", FILING_YEAR, "2T", REVISION_303),
+                    (_WORK_UNIT_BUCKET_A_ID, "130", FILING_YEAR, "1T", REVISION_130),
                 )
             ),
         ),
@@ -372,15 +374,15 @@ def test_list_work_units_filters_by_bucket_id(repo: WorkUnitCatalogueRepository)
                     bucket_id=_WORK_UNIT_BUCKET_A_ID,
                     modelo="303",
                     filing_year=FILING_YEAR,
-                    period=_P_2026_1T,
-                    revision_id="2026-y-siguientes",
+                    period=_PERIOD_1T,
+                    revision_id=REVISION_303,
                 ),
                 _build_unit(
                     bucket_id=_WORK_UNIT_BUCKET_B_ID,
                     modelo="303",
                     filing_year=FILING_YEAR,
-                    period=_P_2026_2T,
-                    revision_id="2026-y-siguientes",
+                    period=_PERIOD_2T,
+                    revision_id=REVISION_303,
                 ),
             ),
         ),
@@ -452,7 +454,7 @@ def test_discard_work_unit_transitions_and_allows_omitted_reason(repo: WorkUnitC
     assert discarded.discard_reason == "wrong-profile"
     assert discarded.updated_at == discard_time
 
-    omitted_reason_unit = _create_action_work_unit(repo, modelo="130", revision_id="2019-y-siguientes")
+    omitted_reason_unit = _create_action_work_unit(repo, modelo="130", revision_id=REVISION_130)
     omitted_reason_discard = discard_work_unit(
         omitted_reason_unit.work_unit_id,
         actor="operator-A",
@@ -501,7 +503,7 @@ def test_rename_refuses_to_mutate_a_discarded_work_unit(repo: WorkUnitCatalogueR
 
 def test_list_work_units_respects_discarded_visibility_flag(repo: WorkUnitCatalogueRepository) -> None:
     unit_draft = _create_action_work_unit(repo)
-    unit_to_discard = _create_action_work_unit(repo, modelo="130", revision_id="2019-y-siguientes")
+    unit_to_discard = _create_action_work_unit(repo, modelo="130", revision_id=REVISION_130)
     discard_work_unit(
         unit_to_discard.work_unit_id,
         actor="operator-A",
@@ -637,7 +639,7 @@ def test_rename_work_unit_emits_renamed_bucket_event_with_actor_and_names(
         bv_repo = BucketEventHistoryRepository(objects=profile.repository)
         ports = WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo)
         with bundled_indexed_authority().operation() as operation:
-            period = _P_2026_1T
+            period = _PERIOD_1T
             unit = create_work_unit(
                 bucket_id=profile.bucket_id,
                 modelo="303",
@@ -687,7 +689,7 @@ def test_causante_ccaa_roundtrips_and_defaults_through_repository(repo: WorkUnit
 
     with bundled_indexed_authority().operation():
         default_unit = _create_action_work_unit(repo)
-        annotated_unit = _create_action_work_unit(repo, period=_P_2026_2T, causante_ccaa=CCAA.MADRID)
+        annotated_unit = _create_action_work_unit(repo, period=_PERIOD_2T, causante_ccaa=CCAA.MADRID)
 
         assert default_unit.causante_ccaa is None
         assert annotated_unit.causante_ccaa == CCAA.MADRID
@@ -742,15 +744,15 @@ def test_work_unit_accepts_a_real_registry_revision_id() -> None:
     Without it every refusal above could hold because the constraint rejects
     everything, which would break every real work unit.
     """
-    unit = _work_unit_with_revision("2019-y-siguientes")
+    unit = _work_unit_with_revision(REVISION_130)
 
-    assert unit.revision_id == "2019-y-siguientes"
+    assert unit.revision_id == REVISION_130
     assert unit.work_unit_id == derive_work_unit_id(
         bucket_id=unit.bucket_id,
         modelo=unit.modelo,
         filing_year=unit.filing_year,
         period=unit.period,
-        revision_id="2019-y-siguientes",
+        revision_id=REVISION_130,
     )
 
 
@@ -767,7 +769,7 @@ def _work_unit_with_revision(revision_id: str) -> WorkUnit:
             revision_id=revision_id,
         ),
         bucket_id=bucket_id,
-        name="130-2026-1T",
+        name=f"130-{FILING_YEAR}-1T",
         modelo=ModeloCode("130"),
         filing_year=FILING_YEAR,
         period=period,
