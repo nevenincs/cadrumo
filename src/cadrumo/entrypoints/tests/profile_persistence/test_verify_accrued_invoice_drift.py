@@ -171,6 +171,8 @@ def _facts(criterion: str, regime: str) -> tuple[UserProfileFact, ...]:
             UserProfileFact(path="censo.activity_start_date", value=date(_YEAR - 5, 1, 1)),
             UserProfileFact(path="withholding.colegio_concertado", value=False),
             UserProfileFact(path="irpf.estimation_regime", value=regime),
+            # Modelo 369 applies only to a filer enrolled in the OSS/IOSS special regime.
+            UserProfileFact(path="iva.oss_enrolled", value=True),
             dated(_ACCOUNTING, False),
             dated(_CRITERION, criterion),
         ),

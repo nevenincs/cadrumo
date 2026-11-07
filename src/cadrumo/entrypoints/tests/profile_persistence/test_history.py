@@ -35,6 +35,7 @@ from cadrumo.domain.modelos.verification_report import (
     derive_verification_report_id,
 )
 from cadrumo.domain.modelos.verification_repository import upsert_verification_report
+from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
@@ -66,7 +67,11 @@ def _history_ports(repos: _Repos) -> ModeloHistoryPorts:
 def repos(tmp_path: Path) -> Iterator[_Repos]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
-        seed_ready_profile(bucket_id=_BUCKET_ID, at=datetime.now(UTC))
+        seed_ready_profile(
+            bucket_id=_BUCKET_ID,
+            at=datetime.now(UTC),
+            facts=(UserProfileFact(path="withholding.pays_capital_income_with_retencion", value=True),),
+        )
         yield (
             WorkUnitCatalogueRepository(objects=objects),
             CalculationRevisionCatalogueRepository(objects=objects),
