@@ -12,7 +12,7 @@ mainland, so a default introduced at any member is caught.
 
 **One entity, one record, however the page spells the identifier.** The
 confirmation is remembered against the canonical identifier, so the same
-supplier printing ``ESB-1234567-4`` next month is answered rather than asked
+supplier printing ``ESB-0001501-6`` next month is answered rather than asked
 again -- which is the whole reason an honest refusal on the domestic population
 is affordable.
 
@@ -223,7 +223,7 @@ def test_a_prefixed_foreign_identifier_addresses_a_record_without_a_stated_count
 # --------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("printed", ["B00015016", "ESB00015016", "B-1234567-4", "  b00015016 "])
+@pytest.mark.parametrize("printed", ["B00015016", "ESB00015016", "B-0001501-6", "  b00015016 "])
 def test_every_printed_spelling_of_one_identifier_finds_the_one_record(
     repository: CounterpartyEstablishmentRepositoryProtocol,
     printed: str,
@@ -365,7 +365,7 @@ def test_reconfirming_the_same_territory_is_a_no_op(
     first = _confirm(repository, note="confirmed by telephone")
     again = record_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
-        tax_identifier="ESB-1234567-4",
+        tax_identifier="ESB-0001501-6",
         territorial_scope=IvaTerritorialScope.from_registry("es_canarias"),
         asserted_by="someone-else@example.test",
         note="confirmed by telephone",

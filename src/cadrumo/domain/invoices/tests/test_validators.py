@@ -145,8 +145,8 @@ def test_validate_spanish_tax_id_strips_common_separators() -> None:
     cases = (
         ("12.345.678-Z", "12345678Z"),
         (" 12-345-678-Z ", "12345678Z"),
-        ("B-12345674", "B00015016"),
-        ("X.1234567.L", "X0001500M"),
+        ("B-00015016", "B00015016"),
+        ("X.0001500.M", "X0001500M"),
     )
 
     for value, expected in cases:
@@ -157,7 +157,7 @@ def test_validate_spanish_tax_id_strips_es_iva_prefix() -> None:
     """Spanish IDs carrying the intra-EU ES prefix must validate equivalently."""
     cases = (
         ("ESB00015016", "B00015016"),
-        ("es-b-12345674", "B00015016"),
+        ("es-b-00015016", "B00015016"),
         ("ES 12345678Z", "12345678Z"),
     )
 

@@ -71,7 +71,7 @@ def test_the_same_total_written_differently_is_the_same_total() -> None:
         (stored,),
         kind=InvoiceKind.RECEIVED,
         invoice_number="OTHER",
-        counterparty_tax_id="b-12345674",
+        counterparty_tax_id="b-00015016",
         invoice_date=date(2026, 2, 1),
         grand_total=Decimal("121"),
     )
