@@ -6,6 +6,8 @@ from functools import lru_cache
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import single_exercise_editions
+
 from .authored_edition_support import newest_authored_edition
 from .modelo_100_registry_support import (
     ANUALIDADES_ALIMENTOS_TOTAL_CASILLA,
@@ -39,44 +41,31 @@ _REVIEWED_EDITION = newest_authored_edition("100")
 # carries the 0500-0546 run checked below, and the horizon only projects the newest one.
 _CONTIGUOUS_CUOTA_CHAIN_YEARS = tuple(year for year in _SUPPORT.years if _SUPPORT.floor < year < _SUPPORT.horizon)
 
-_LIVE_M100_YEARS = tuple(range(2020, 2026))
-_ANUALIDADES_FORMULA_YEARS = tuple(range(2022, 2026))
-_ANUALIDADES_MANUAL_INPUT_YEARS = (2020, 2021)
-_EXTRACTION_PROFILE_YEARS = tuple(range(2021, 2024))
+_LIVE_M100_YEARS = single_exercise_editions("100")
+# The two oldest editions carry the anualidades total as a manual scalar; the per-child block and its sum
+# formula exist in every later one.
+_ANUALIDADES_MANUAL_INPUT_YEARS = _LIVE_M100_YEARS[:2]
+_ANUALIDADES_FORMULA_YEARS = _LIVE_M100_YEARS[2:]
+# The declaración-PDF extraction profiles this pins are the second to fourth authored editions.
+_EXTRACTION_PROFILE_YEARS = _LIVE_M100_YEARS[1:4]
 
-#: Each pre-2025 filing year's applicability window predates art. 75's current
-#: catalogue redaction (effective_from 2025-04-03, Ley 1/2025), so it cites the
-#: version-scoped redaction actually in force for that filing year instead of
-#: the bare current id. art-75-2015 covers 2015-01-01 to 2025-04-02 (unchanged
-#: text through 2020-2023 and still unchanged for the 2024 devengo, which closes
-#: 2024-12-31 -- entirely inside that window).
-_AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF_BY_YEAR = {
-    2020: "ley-35-2006:art-75-2015",
-    2021: "ley-35-2006:art-75-2015",
-    2022: "ley-35-2006:art-75-2015",
-    2023: "ley-35-2006:art-75-2015",
-    2024: "ley-35-2006:art-75-2015",
-    2025: "ley-35-2006:art-75",
-}
-#: art-63's current redaction takes effect 2021-01-01 (Ley 11/2020's sixth
-#: bracket); 2020's devengo (closes 2020-12-31) falls entirely inside the
-#: pre-amendment art-63-2015 window (2015-01-01 to 2020-12-31).
-_GENERAL_SCALE_ART_63_REF_BY_YEAR = {
-    2020: "ley-35-2006:art-63-2015",
-    2021: GENERAL_SCALE_ART_63_REF,
-    2022: GENERAL_SCALE_ART_63_REF,
-    2023: GENERAL_SCALE_ART_63_REF,
-    2024: GENERAL_SCALE_ART_63_REF,
-    2025: GENERAL_SCALE_ART_63_REF,
-}
-_AUTONOMIC_SAVINGS_SCALE_ART_76_REF_BY_YEAR = {
-    2020: "ley-35-2006:art-76-2015",
-    2021: "ley-35-2006:art-76-2021",
-    2022: "ley-35-2006:art-76-2021",
-    2023: "ley-35-2006:art-76-2023",
-    2024: "ley-35-2006:art-76",
-    2025: "ley-35-2006:art-76",
-}
+#: Each edition's applicability window cites the redaction of an article actually in force at its devengo
+#: (the catalogue records an amended article as one row per redaction), resolved from the catalogue's own
+#: effective windows rather than named per year.
+_AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF = "ley-35-2006:art-75"
+_AUTONOMIC_SAVINGS_SCALE_ART_76_REF = "ley-35-2006:art-76"
+
+
+def _art_75_ref(filing_year: int) -> str:
+    return governing_redaction(_AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF, modelo_100_revision(filing_year))
+
+
+def _art_76_ref(filing_year: int) -> str:
+    return governing_redaction(_AUTONOMIC_SAVINGS_SCALE_ART_76_REF, modelo_100_revision(filing_year))
+
+
+def _art_63_ref(filing_year: int) -> str:
+    return governing_redaction(GENERAL_SCALE_ART_63_REF, modelo_100_revision(filing_year))
 
 
 @lru_cache
@@ -87,7 +76,7 @@ def _revision_for(filing_year: int):
 def test_modelo_100_general_liquidable_and_cuota_chain_exclude_unrelated_articles() -> None:
     for filing_year in _LIVE_M100_YEARS:
         revision = _revision_for(filing_year)
-        general_scale_art_63_ref = _GENERAL_SCALE_ART_63_REF_BY_YEAR[filing_year]
+        general_scale_art_63_ref = _art_63_ref(filing_year)
         checked_casilla_ids = {BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA, *GENERAL_BASE_CUOTA_CASILLAS}
         casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in checked_casilla_ids}
 
@@ -157,7 +146,7 @@ def test_modelo_100_anualidades_formula_uses_child_support_articles() -> None:
     for filing_year in _ANUALIDADES_FORMULA_YEARS:
         expected_refs = {
             STATE_CHILD_SUPPORT_ANNUITIES_ART_64_REF,
-            _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF_BY_YEAR[filing_year],
+            _art_75_ref(filing_year),
         }
         revision = _revision_for(filing_year)
         formula_id = "renta-anualidades-alimentos-hijos-suma"
@@ -180,7 +169,7 @@ def test_modelo_100_anualidades_casilla_is_manual_input_before_the_per_child_blo
     for filing_year in _ANUALIDADES_MANUAL_INPUT_YEARS:
         expected_refs = {
             STATE_CHILD_SUPPORT_ANNUITIES_ART_64_REF,
-            _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF_BY_YEAR[filing_year],
+            _art_75_ref(filing_year),
         }
         revision = _revision_for(filing_year)
         formula_id = "renta-anualidades-alimentos-hijos-suma"
@@ -214,7 +203,7 @@ def test_modelo_100_cuota_chain_casillas_do_not_cite_fractional_payment_article(
 # a legitimate legal_ref on the autonomic escala/cuota formulas ONLY for the
 # revisions where the separate-escala régimen is modelled. It stays absent on
 # the tipo-medio and cuota-íntegra formulas, which do not carry the régimen.
-_SEPARATE_ESCALA_MODELLED_YEARS = frozenset({2020, 2021, 2022, 2023, 2024, 2025})
+_SEPARATE_ESCALA_MODELLED_YEARS = frozenset(_LIVE_M100_YEARS)
 
 
 def _autonomic_separate_escala_formula_ids(filing_year: int) -> frozenset[str]:
@@ -231,11 +220,11 @@ def test_modelo_100_autonomic_quota_formula_refs_match_lirpf_articles() -> None:
     for filing_year in _LIVE_M100_YEARS:
         revision = _revision_for(filing_year)
         formulas_by_id = {formula.id: formula for formula in revision.formulas}
-        form_order_refs = {MODELO_100_2025_FORM_ORDER_REF} if filing_year == 2025 else set()
+        form_order_refs = {MODELO_100_2025_FORM_ORDER_REF} if filing_year == _REVIEWED_EDITION else set()
         separate_escala_ids = _autonomic_separate_escala_formula_ids(filing_year)
         regime_modelled = filing_year in _SEPARATE_ESCALA_MODELLED_YEARS
-        art_75_ref = _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF_BY_YEAR[filing_year]
-        art_76_ref = _AUTONOMIC_SAVINGS_SCALE_ART_76_REF_BY_YEAR[filing_year]
+        art_75_ref = _art_75_ref(filing_year)
+        art_76_ref = _art_76_ref(filing_year)
         regime_refs = {art_75_ref} if regime_modelled else set()
         expected_refs_by_formula = {
             "renta-tipo-medio-gravamen-autonomico-base-liquidable-general": {

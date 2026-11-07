@@ -7,8 +7,9 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.domain.calculations.registry.tests.authored_editions import single_exercise_editions
 
-from .authored_edition_support import newest_authored_edition, oldest_authored_edition
+from .authored_edition_support import authored_revisions, newest_authored_edition, oldest_authored_edition
 from .modelo_100_registry_support import (
     ANEXO_C_ENERGY_EXCESS_ROLE_PREFIX,
     ANEXO_C_ENERGY_EXCESS_ROLES,
@@ -47,6 +48,7 @@ from .modelo_100_registry_support import (
     SAVINGS_BASE_ART_49_ONLY_ROLES,
     SAVINGS_BASE_ART_49_REF,
     SAVINGS_BASE_GYP_LIMIT_CASILLA,
+    governing_redaction,
     loaded_registry,
     modelo_100_revision,
     modelo_100_snapshot,
@@ -54,6 +56,10 @@ from .modelo_100_registry_support import (
 from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+#: Every exercise the registry authors a Modelo 100 edition for, oldest first.
+_ALL_EXERCISES = single_exercise_editions("100")
+_NEWEST_EXERCISE = _ALL_EXERCISES[-1]
 
 _SUPPORT = committed_supported_filing_years()
 # The newest Modelo 100 edition the registry authors; edition-specific declarations below are asserted against it.
@@ -70,7 +76,7 @@ def test_modelo_100_trabajo_otros_gastos_role_is_decimal_across_revisions() -> N
     modelos_by_id, _catalogues = loaded_registry()
     modelo = modelos_by_id["100"]
     role = "irpf_rendimiento_trabajo_gasto_otros"
-    expected_years = {str(year) for year in range(2020, 2026)}
+    expected_years = {str(revision.id) for revision in authored_revisions("100")}
     found_years: set[str] = set()
 
     for revision_id, revision in modelo.revisions.items():
@@ -158,7 +164,7 @@ def _assert_attribution_regime_is_grounded_in_art_86(revision, filing_year: int)
 
 
 def test_modelo_100_base_and_attribution_roles_are_legally_grounded_across_revisions() -> None:
-    for filing_year in range(2020, 2026):
+    for filing_year in _ALL_EXERCISES:
         revision = modelo_100_revision(filing_year)
         _assert_base_roles_are_grounded_in_their_own_articles(revision, filing_year)
         _assert_attribution_regime_is_grounded_in_art_86(revision, filing_year)
@@ -168,14 +174,20 @@ def test_modelo_100_annual_order_refs_are_declared_and_cited() -> None:
     modelos_by_id, catalogues = loaded_registry()
     modelo = modelos_by_id["100"]
     detail_roles = {"irpf_re_tfi_entidad_denominacion", "irpf_re_tfi_imputacion_importe"}
-    expected_refs = {
-        2020: ("orden-hac-248-2021:art-3", "orden-hac-248-2021:art-10"),
-        2021: ("orden-hfp-207-2022:art-3", "orden-hfp-207-2022:art-10"),
-        2022: ("orden-hfp-310-2023:art-3", "orden-hfp-310-2023:art-11"),
-        2023: ("orden-hac-265-2024:art-3", "orden-hac-265-2024:art-11"),
-        2024: ("orden-hac-242-2025:art-3", "orden-hac-242-2025:art-11"),
-        2025: ("orden-hac-277-2026:art-3", "orden-hac-277-2026:art-10"),
-    }
+    expected_refs = dict(
+        zip(
+            _ALL_EXERCISES,
+            (
+                ("orden-hac-248-2021:art-3", "orden-hac-248-2021:art-10"),
+                ("orden-hfp-207-2022:art-3", "orden-hfp-207-2022:art-10"),
+                ("orden-hfp-310-2023:art-3", "orden-hfp-310-2023:art-11"),
+                ("orden-hac-265-2024:art-3", "orden-hac-265-2024:art-11"),
+                ("orden-hac-242-2025:art-3", "orden-hac-242-2025:art-11"),
+                ("orden-hac-277-2026:art-3", "orden-hac-277-2026:art-10"),
+            ),
+            strict=True,
+        )
+    )
 
     for filing_year, (annual_order_ref, tfi_order_ref) in expected_refs.items():
         revision = modelo.revisions[str(filing_year)]
@@ -185,11 +197,10 @@ def test_modelo_100_annual_order_refs_are_declared_and_cited() -> None:
         assert annual_order_ref in revision.legal_refs, filing_year
         assert revision.orden_aplicabilidad == (annual_order_ref,), filing_year
 
-        # The 2020 revision's applicability window (closes_on 2021-06-30) predates
-        # art. 91's current redaction (effective_from 2021-07-11, Ley 11/2021 art.
-        # 3.4); it cites the version-scoped 2015-2021-07-10 redaction instead. Every
-        # later revision cites the current bare id.
-        art_91_ref = "ley-35-2006:art-91-2015" if filing_year == 2020 else "ley-35-2006:art-91"
+        # An applicability window that closes before art. 91's current redaction takes effect
+        # cites the version-scoped earlier redaction instead; every later revision cites the
+        # current bare id.
+        art_91_ref = governing_redaction("ley-35-2006:art-91", revision)
 
         casillas_by_role = {
             casilla.semantic_role: casilla for casilla in revision.casillas if casilla.semantic_role in detail_roles
@@ -499,7 +510,7 @@ def test_modelo_100_reserva_inversiones_split_axes_use_regime_specific_roles() -
 
 
 def test_modelo_100_ev_charging_point_deduction_keeps_da_58_grounding() -> None:
-    for filing_year in range(2023, 2026):
+    for filing_year in _ALL_EXERCISES[3:]:
         revision = modelo_100_revision(filing_year)
         casilla = next(
             casilla
@@ -533,7 +544,7 @@ def test_modelo_100_housing_energy_result_role_stays_in_housing_energy_section()
 
 
 def test_modelo_100_anexo_c_energy_excess_roles_are_spelled_and_grounded() -> None:
-    for filing_year in range(2022, 2026):
+    for filing_year in _ALL_EXERCISES[2:]:
         revision = modelo_100_revision(filing_year)
         offences: list[str] = []
         roles_by_casilla: dict[CasillaId, str] = {}
@@ -565,7 +576,7 @@ def test_modelo_100_anexo_c_protected_patrimony_current_year_excess_role_is_grou
     old_role = "irpf_anexo_c_exceso_patrim_protegido_generado"
     expected_section = ("resultados", "anexo_c_res", "excesos_patrim_protegidos_res")
 
-    for filing_year in range(2020, 2026):
+    for filing_year in _ALL_EXERCISES:
         revision = modelo.revisions[str(filing_year)]
         casilla = next(
             casilla
@@ -595,20 +606,26 @@ def test_modelo_100_anexo_c_protected_patrimony_current_year_excess_role_is_grou
 def test_modelo_100_prevision_social_0383_splits_income_threshold_polarity() -> None:
     modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
-    expected_by_year = {
-        2023: (
-            "irpf_red_prevision_social_rendimientos_trabajo_igual_inferior_60000_flag",
-            "iguales o inferiores a 60.000",
-        ),
-        2024: (
-            "irpf_red_prevision_social_rendimientos_trabajo_igual_inferior_60000_flag",
-            "iguales o inferiores a 60.000",
-        ),
-        2025: (
-            "irpf_red_prevision_social_rendimientos_trabajo_superior_60000_flag",
-            "superiores a 60.000",
-        ),
-    }
+    expected_by_year = dict(
+        zip(
+            _ALL_EXERCISES[3:],
+            (
+                (
+                    "irpf_red_prevision_social_rendimientos_trabajo_igual_inferior_60000_flag",
+                    "iguales o inferiores a 60.000",
+                ),
+                (
+                    "irpf_red_prevision_social_rendimientos_trabajo_igual_inferior_60000_flag",
+                    "iguales o inferiores a 60.000",
+                ),
+                (
+                    "irpf_red_prevision_social_rendimientos_trabajo_superior_60000_flag",
+                    "superiores a 60.000",
+                ),
+            ),
+            strict=True,
+        )
+    )
 
     for filing_year, (expected_role, label_fragment) in expected_by_year.items():
         revision = modelo.revisions[str(filing_year)]
@@ -621,7 +638,7 @@ def test_modelo_100_prevision_social_0383_splits_income_threshold_polarity() -> 
         assert tuple(casilla.section) == ("toma_datos_ampliada", "red_base_imponible", "red_prevision_social")
         assert casilla.semantic_role == expected_role
         assert label_fragment in casilla.label
-        if filing_year == 2025:
+        if filing_year == _NEWEST_EXERCISE:
             assert casilla.semantic_role_cardinality == "intentional_singleton"
             assert casilla.semantic_role_cardinality_reason is not None and casilla.semantic_role_cardinality_reason
             assert "flips casilla 0383" in casilla.semantic_role_cardinality_reason
@@ -644,7 +661,7 @@ def test_modelo_100_derechos_transmission_global_role_spans_revisions() -> None:
     modelo = modelos_by_id["100"]
     expected_role = "irpf_ganancia_derechos_valor_transmision_global"
 
-    for filing_year in range(2020, 2026):
+    for filing_year in _ALL_EXERCISES:
         revision = modelo.revisions[str(filing_year)]
         casilla = next(
             casilla
@@ -670,14 +687,20 @@ def test_modelo_100_derechos_transmission_global_role_spans_revisions() -> None:
 def test_modelo_100_premios_0303_splits_historical_emancipation_grant_from_rental_aid() -> None:
     modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
-    expected_by_year = {
-        2020: ("irpf_ganancia_premios_renta_basica_emancipacion", "emancipaci"),
-        2021: ("irpf_ganancia_premios_renta_basica_emancipacion", "emancipaci"),
-        2022: ("irpf_ganancia_premios_ayuda_alquiler", "al alquiler"),
-        2023: ("irpf_ganancia_premios_ayuda_alquiler", "al alquiler"),
-        2024: ("irpf_ganancia_premios_ayuda_alquiler", "al alquiler"),
-        2025: ("irpf_ganancia_premios_ayuda_alquiler", "al alquiler"),
-    }
+    expected_by_year = dict(
+        zip(
+            _ALL_EXERCISES,
+            (
+                ("irpf_ganancia_premios_renta_basica_emancipacion", "emancipaci"),
+                ("irpf_ganancia_premios_renta_basica_emancipacion", "emancipaci"),
+                ("irpf_ganancia_premios_ayuda_alquiler", "al alquiler"),
+                ("irpf_ganancia_premios_ayuda_alquiler", "al alquiler"),
+                ("irpf_ganancia_premios_ayuda_alquiler", "al alquiler"),
+                ("irpf_ganancia_premios_ayuda_alquiler", "al alquiler"),
+            ),
+            strict=True,
+        )
+    )
 
     for filing_year, (expected_role, label_fragment) in expected_by_year.items():
         revision = modelo.revisions[str(filing_year)]
@@ -748,7 +771,7 @@ def test_modelo_100_tfi_operation_counts_are_integer_until_restructure() -> None
         ): "irpf_re_especial_tfi_conyuge_num_operaciones",
     }
 
-    for filing_year in range(2020, 2023):
+    for filing_year in _ALL_EXERCISES[:3]:
         revision = modelo.revisions[str(filing_year)]
         casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_roles}
 
@@ -765,15 +788,15 @@ def test_modelo_100_tfi_operation_counts_are_integer_until_restructure() -> None
                 casilla.source_refs,
             )
 
-    revision_2025 = modelo.revisions["2025"]
-    casilla_0414_2025 = next(
+    newest_revision = modelo.revisions[str(authored_revisions("100")[-1].id)]
+    casilla_0414_newest = next(
         casilla
-        for casilla in revision_2025.casillas
+        for casilla in newest_revision.casillas
         if casilla.id == validated_casilla_id("0414", surface="test_modelo_100_registry.casilla")
     )
 
-    assert casilla_0414_2025.semantic_role == "irpf_deduccion_obtencion_rendimientos_trabajo"
-    assert tuple(casilla_0414_2025.section) == ("resultado_declaracion",)
+    assert casilla_0414_newest.semantic_role == "irpf_deduccion_obtencion_rendimientos_trabajo"
+    assert tuple(casilla_0414_newest.section) == ("resultado_declaracion",)
 
 
 def test_modelo_100_coti_fund_loss_role_matches_loss_label() -> None:
@@ -817,7 +840,7 @@ def test_modelo_100_inmueble_0080_activity_use_days_are_integer() -> None:
     modelo = modelos_by_id["100"]
     expected_role = "irpf_inmueble_dias_afecto_actividades_economicas"
 
-    for filing_year in range(2020, 2026):
+    for filing_year in _ALL_EXERCISES:
         revision = modelo.revisions[str(filing_year)]
         casilla = next(
             casilla
@@ -854,7 +877,7 @@ def test_modelo_100_spouse_disability_marriage_months_are_integer_months() -> No
     }
     expected_section = ("resultados", "calculo_impuesto_res", "deduc_conyuge_disc_res")
 
-    for filing_year in range(2020, 2026):
+    for filing_year in _ALL_EXERCISES:
         revision = modelo.revisions[str(filing_year)]
         casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_rows}
 
@@ -919,7 +942,7 @@ def test_modelo_100_disability_minimum_headcounts_are_integer_counts() -> None:
         ),
     }
 
-    for filing_year in range(2020, 2026):
+    for filing_year in _ALL_EXERCISES:
         revision = modelo.revisions[str(filing_year)]
         casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in expected_rows}
 
@@ -958,7 +981,7 @@ def test_modelo_100_family_numerosa_ascendant_count_is_integer_count() -> None:
     modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
 
-    for filing_year in range(2020, 2026):
+    for filing_year in _ALL_EXERCISES:
         revision = modelo.revisions[str(filing_year)]
         casilla = next(
             casilla
@@ -991,7 +1014,7 @@ def test_modelo_100_inmueble_0076_habitual_residence_days_are_integer() -> None:
     modelo = modelos_by_id["100"]
     expected_role = "irpf_inmueble_dias_vivienda_habitual"
 
-    for filing_year in range(2020, 2026):
+    for filing_year in _ALL_EXERCISES:
         revision = modelo.revisions[str(filing_year)]
         casilla = next(
             casilla
@@ -1014,7 +1037,7 @@ def test_modelo_100_inmueble_0079_use_days_are_integer() -> None:
     modelo = modelos_by_id["100"]
     expected_role = "irpf_inmueble_dias_uso"
 
-    for filing_year in range(2020, 2026):
+    for filing_year in _ALL_EXERCISES:
         revision = modelo.revisions[str(filing_year)]
         casilla = next(
             casilla
@@ -1037,7 +1060,7 @@ def test_modelo_100_inmueble_0085_disposal_days_are_integer() -> None:
     modelo = modelos_by_id["100"]
     expected_role = "irpf_inmueble_dias_a_disposicion"
 
-    for filing_year in range(2020, 2026):
+    for filing_year in _ALL_EXERCISES:
         revision = modelo.revisions[str(filing_year)]
         casilla = next(
             casilla
@@ -1060,7 +1083,7 @@ def test_modelo_100_inmueble_0088_mixed_use_days_are_integer() -> None:
     modelo = modelos_by_id["100"]
     expected_role = "irpf_inmueble_dias_otros_usos"
 
-    for filing_year in range(2020, 2026):
+    for filing_year in _ALL_EXERCISES:
         revision = modelo.revisions[str(filing_year)]
         casilla = next(
             casilla
@@ -1116,7 +1139,7 @@ def test_modelo_100_re_attribution_inmueble_days_are_integer() -> None:
     modelos_by_id, _ = loaded_registry()
     modelo = modelos_by_id["100"]
 
-    for filing_year in range(2020, 2026):
+    for filing_year in _ALL_EXERCISES:
         revision = modelo.revisions[str(filing_year)]
         casilla = next(
             casilla
@@ -1171,10 +1194,10 @@ def test_modelo_100_la_rioja_municipality_codes_are_integer() -> None:
         "1205": "irpf_deduccion_la_rioja_municipio_pequeno_codigo_3",
     }
 
-    for filing_year in range(2020, 2026):
+    for filing_year in _ALL_EXERCISES:
         revision = modelo.revisions[str(filing_year)]
         expected_roles = dict(common_expected_roles)
-        if filing_year >= 2021:
+        if filing_year > _ALL_EXERCISES[0]:
             expected_roles["1071"] = "irpf_deduccion_la_rioja_guarderia_municipio_codigo"
 
         casillas_by_id = {
@@ -1214,7 +1237,7 @@ def test_modelo_100_retrib_especie_no_exenta_total_role_names_aggregate() -> Non
         "ley-35-2006:art-14.2.m",
     }
 
-    for filing_year in range(2023, 2026):
+    for filing_year in _ALL_EXERCISES[3:]:
         revision = modelo.revisions[str(filing_year)]
         casilla = next(
             casilla

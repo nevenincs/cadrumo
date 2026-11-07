@@ -16,6 +16,11 @@ import pytest
 
 from cadrumo.domain.calculations.registry.binding_borrador_participation import BorradorParticipation
 from cadrumo.domain.calculations.registry.retencion_soportada_bindings import credit_casilla_ids
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    revision_covering,
+)
 
 from ..compiler.loader import load_modelo_directory
 from ..compiler.validate_bindings import validate_binding_registration_section
@@ -23,8 +28,8 @@ from ..compiler.validate_bindings import validate_binding_registration_section
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _MODELOS_ROOT = Path(__file__).resolve().parents[3] / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
-_BASELINE = "2022"
-_INHERITING = "2025"
+_BASELINE = str(revision_covering("100", filing_year_envelope().floor).id)
+_INHERITING = str(authored_revisions("100")[-1].id)
 _CREDIT_BINDING = "renta-retencion-soportada-trabajo"
 _CROSS_CHECK_LINE = 'borrador_participation = "cross_check_only"'
 

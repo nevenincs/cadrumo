@@ -15,6 +15,7 @@ from functools import cache
 from itertools import pairwise
 from pathlib import PurePosixPath
 
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.resources.bundled_data import bundled_path
 from .....core.text_fold import normalise_corpus_text
 from ..authority import bundled_indexed_authority
@@ -88,6 +89,26 @@ def supported_authored_exercises(modelo_id: str) -> tuple[int, ...]:
 def supported_exercises_with_projection(modelo_id: str) -> tuple[int, ...]:
     """Return every authored exercise from the support floor up, then the first projected one."""
     return (*supported_authored_exercises(modelo_id), projected_exercise(modelo_id))
+
+
+def filing_grade_exercises(modelo_id: str) -> tuple[int, ...]:
+    """Return the supported authored exercises whose governing revision reaches filing grade.
+
+    An edition authored at applicability grade only is left out: a snapshot asked
+    for filing grade over it is refused, so a test that needs a calculable
+    filing-grade edition iterates these instead of every authored exercise.
+    """
+    filing = {
+        str(revision.id)
+        for revision in authored_revisions_where(
+            modelo_id, lambda revision: revision.authority_grade is RegistryAuthorityGrade.FILING
+        )
+    }
+    return tuple(
+        exercise
+        for exercise in supported_authored_exercises(modelo_id)
+        if str(revision_covering(modelo_id, exercise).id) in filing
+    )
 
 
 def single_exercise_editions(modelo_id: str) -> tuple[int, ...]:
