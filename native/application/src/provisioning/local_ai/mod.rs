@@ -7,6 +7,7 @@
 //! is the runtime manager's part: it keeps the server running while the program is set
 //! up. `lease` keeps that server and a change of the program apart across processes.
 //! `models` pulls and checks each selected model through the running server, and
+//! `registry` fetches a model from its registry into the models folder without one.
 //! `hardware` decides whether this computer can hold a model of a given size. `loopback` is the
 //! client for the program's own API on this computer. [`reading`] folds the parts into
 //! the item's one reading.
@@ -16,6 +17,7 @@ pub mod lease;
 pub mod loopback;
 pub mod models;
 pub mod program;
+pub mod registry;
 pub mod supervision;
 
 #[cfg(test)]

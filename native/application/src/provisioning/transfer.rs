@@ -475,7 +475,7 @@ pub(crate) fn file_failure(error: &io::Error) -> TransferFailure {
 }
 
 /// A failure on an open connection: a broken, stalled, truncated or garbled answer.
-fn network_failure(error: &io::Error) -> TransferFailure {
+pub(crate) fn network_failure(error: &io::Error) -> TransferFailure {
     if error.kind() == io::ErrorKind::InvalidData
         && error
             .get_ref()
@@ -487,7 +487,7 @@ fn network_failure(error: &io::Error) -> TransferFailure {
 }
 
 /// A failure before the session was established, classified by the stage it stopped at.
-fn connect_failure(failure: &ConnectFailure) -> TransferFailure {
+pub(crate) fn connect_failure(failure: &ConnectFailure) -> TransferFailure {
     match failure.stage {
         Stage::Tls => TransferFailure::final_(FailureCategory::SecureConnectionFailed),
         Stage::Tunnel(Some(status)) => match status {

@@ -6,6 +6,7 @@ date: '2026-11-07'
 modified: '2026-11-07'
 body_schema: 'body-v2'
 body_hash: 'sha256:7d4cdbda87201a9e118289722864913f832b42add4bb94170376438b70a07b90'
+body_hash: 'sha256:999ab90d2b6afa03331c80d87930a90a6fbb46807ece09f9e19448a1e1de3238'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -47,3 +48,15 @@ related:
 ## Notes
 
 - `S12` Rust not compiled in this worktree; cargo test and clippy for cadrumo-application and the manager are owed in a root build slot
+- `S14` `A` `native/application/src/provisioning/local_ai/registry.rs`
+- `S14` `A` `native/application/src/provisioning/local_ai/registry/tests.rs`
+- `S14` `M` `native/application/src/provisioning/local_ai/mod.rs`
+- `S14` `M` `native/application/src/provisioning/local_ai/models.rs`
+- `S14` `M` `native/application/src/provisioning/http.rs`
+- `S14` `M` `native/application/src/provisioning/transfer.rs`
+- `S14` `verify:` `rustfmt --edition 2024 --check` -> `pass`
+- `S14` `by:` `vaultspec-high-executor`
+
+## Notes
+
+- `S14` cargo clippy and the registry tests are pending the root build slot; no cargo ran in the worktree

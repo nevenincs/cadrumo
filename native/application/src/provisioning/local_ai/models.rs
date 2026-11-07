@@ -51,14 +51,15 @@ use std::{
 };
 
 /// The registry, namespace and tag the program reads a name without them as.
-const DEFAULT_REGISTRY: &str = "registry.ollama.ai";
+pub(super) const DEFAULT_REGISTRY: &str = "registry.ollama.ai";
 const DEFAULT_NAMESPACE: &str = "library";
 const DEFAULT_TAG: &str = "latest";
 /// The longest name, and the longest part of one, the engine accepts.
 const NAME_LIMIT: usize = 512;
 const PART_LIMIT: usize = 128;
 const ROLE_LIMIT: usize = 64;
-const MANIFEST_BYTES_LIMIT: u64 = 1024 * 1024;
+/// The longest manifest the models folder holds.
+pub(super) const MANIFEST_BYTES_LIMIT: u64 = 1024 * 1024;
 /// What the one-token check asks.
 const CHECK_PROMPT: &str = "Reply with one word.";
 
@@ -141,7 +142,23 @@ impl ModelName {
             && self.tag.eq_ignore_ascii_case(&other.tag)
     }
 
-    fn manifest_path(&self, root: &Path) -> PathBuf {
+    /// The namespace the model is published under in its registry.
+    pub fn namespace(&self) -> &str {
+        &self.namespace
+    }
+
+    /// The model's own name within its namespace.
+    pub fn model(&self) -> &str {
+        &self.model
+    }
+
+    /// The tag naming one edition of the model.
+    pub fn tag(&self) -> &str {
+        &self.tag
+    }
+
+    /// Where the models folder under `root` keeps this model's manifest.
+    pub(super) fn manifest_path(&self, root: &Path) -> PathBuf {
         root.join("manifests")
             .join(self.host.as_str())
             .join(&self.namespace)
