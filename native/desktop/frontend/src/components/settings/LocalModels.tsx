@@ -214,10 +214,18 @@ export function LocalModels({
   // offers setup, and a download waits while the local AI sets up.
   const localAi = store.localAiRow;
   const settingUp = localAi !== null && store.liveRunOf(localAi.item) !== null;
+  // A start that no snapshot shows yet is as much a setup under way as one
+  // that does, and a second click would send it again.
+  const starting = localAi !== null && store.control.busy(localAi.item);
+  // The model whose download was asked for last: the start's refusal, which
+  // the control holds once for the window, is said on its row.
+  const [asked, setAsked] = useState<string | null>(null);
   const onSetUp =
     store.offered && localAi !== null
       ? (model: string) => {
-          if (lane) store.downloadModel(lane.id, model);
+          if (!lane) return;
+          setAsked(model);
+          store.downloadModel(lane.id, model);
         }
       : undefined;
   const onRemove = store.offered ? store.removeModel : undefined;
@@ -348,14 +356,19 @@ export function LocalModels({
                     model={model}
                     added={added}
                     locale={locale}
-                    busy={working || (settingUp && model.installed !== true)}
+                    busy={
+                      working ||
+                      ((settingUp || starting) && model.installed !== true)
+                    }
                     progress={progressOf(model)}
                     refusal={
                       removals[key]
                         ? removalWords(t, removals[key])
                         : outcome?.kind === "refused"
                           ? listRefusalWords(t, outcome.code)
-                          : null
+                          : asked === model.id && store.control.refusal
+                            ? refusalWords(t, store.control.refusal)
+                            : null
                     }
                     onDownload={onSetUp ? () => onSetUp(model.id) : undefined}
                     onRemove={

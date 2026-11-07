@@ -316,6 +316,57 @@ test("Download plans that model's setup in the lane, sized by the catalog where 
   await expect(target.getByRole("dialog")).toHaveCount(0);
 });
 
+test("while the local AI sets up, no model offers its download again", async ({
+  page: target,
+}) => {
+  await open(target);
+  const lane = await openLane(target);
+  const downloads = lane.getByRole("button", {
+    name: label("desktop.providers.local_model_download"),
+  });
+  const vision = lane.locator('li[data-model="synthetic-vision:1"]');
+  await expect(
+    vision.getByRole("button", {
+      name: label("desktop.providers.local_model_download"),
+    }),
+  ).toBeEnabled();
+  await vision
+    .getByRole("button", {
+      name: label("desktop.providers.local_model_download"),
+    })
+    .click();
+  await expect(laneReview(lane)).toBeVisible();
+  // The plan awaits its approval: the setup is live, so another click would
+  // start nothing and say nothing.
+  for (const button of await downloads.all())
+    await expect(button).toBeDisabled();
+  expect(
+    (await calls(target)).filter((call) => call.startsWith("setup.start")),
+  ).toHaveLength(1);
+});
+
+test("a download the setup refuses says why on that model's row alone", async ({
+  page: target,
+}) => {
+  await open(target, "busy");
+  const lane = await openLane(target);
+  const vision = lane.locator('li[data-model="synthetic-vision:1"]');
+  await vision
+    .getByRole("button", {
+      name: label("desktop.providers.local_model_download"),
+    })
+    .click();
+  await expect(vision.getByRole("alert")).toHaveText(
+    label("desktop.setup.refused_busy"),
+  );
+  expect(await calls(target)).toContain("setup.start local_ai");
+  await expect(
+    lane
+      .locator("li[data-model]:not([data-model='synthetic-vision:1'])")
+      .getByRole("alert"),
+  ).toHaveCount(0);
+});
+
 test("a model whose download succeeds is on this computer, as the catalog then reports it", async ({
   page: target,
 }) => {
