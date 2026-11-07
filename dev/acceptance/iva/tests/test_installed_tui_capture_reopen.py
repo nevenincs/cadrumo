@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ..installed_tui_capture_reopen import run_installed_tui_capture_reopen
 
 pytestmark = [pytest.mark.integration, pytest.mark.serial, pytest.mark.hex_entrypoint]
@@ -14,16 +16,17 @@ pytestmark = [pytest.mark.integration, pytest.mark.serial, pytest.mark.hex_entry
 
 def test_installed_tui_captures_classifies_and_reopens_ordinary_iva_rows(tmp_path: Path) -> None:
     """Exercise the real installed Ledger TUI and stop before Modelo 303 work."""
+    year = filing_year_envelope().horizon
     workspace_root = Path(__file__).resolve().parents[4]
     receipt = run_installed_tui_capture_reopen(
         workspace_root=workspace_root,
         authority_root=workspace_root / ".authority",
         output_root=tmp_path,
-        year=2025,
+        year=year,
     )
 
     assert receipt.status == "proven"
-    assert receipt.filing_year == 2025
+    assert receipt.filing_year == year
     assert receipt.partial_acceptance_ids == ("V1", "V2", "V10")
     assert receipt.acceptance_scope == "partial_ledger_capture_classification_reopen"
     assert receipt.product_origin == "site-packages"

@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.acceptance.installed_cli import CommandEvidence, InstalledCli
 
 from .. import cli_journey
@@ -114,7 +115,7 @@ def test_bootstrap_prefix_survives_both_reopens_without_accepting_incomplete_ver
             authority_root=authority_root,
             storage_root=tmp_path / "storage",
             artifact_root=tmp_path / "artifacts",
-            year=2025,
+            year=filing_year_envelope().horizon,
             cli_argument_prefix=prefix,
         )
 

@@ -9,6 +9,7 @@ from typing import Any
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.acceptance.installed_cli import CommandEvidence
 
 from .. import cli_journey as journey_module
@@ -110,7 +111,7 @@ def test_cli_lifecycle_receipt_proves_clear_remove_reopen_and_retired_id_without
         storage_root=tmp_path / "storage",
         artifact_dir=tmp_path / "artifacts",
         passphrase=secret,
-        year=2025,
+        year=filing_year_envelope().horizon,
         scenario=build_profile_row_lifecycle_scenario(),
     )
 
@@ -138,7 +139,7 @@ def test_cli_driver_refuses_a_nonempty_caller_owned_store(tmp_path: Path) -> Non
             storage_root=store,
             artifact_dir=tmp_path / "artifacts",
             passphrase=secrets.token_urlsafe(24),
-            year=2025,
+            year=filing_year_envelope().horizon,
             scenario=build_profile_row_lifecycle_scenario(),
         )
 

@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.acceptance.income_tax.installed_tui_child import InstalledTuiChildProcessEvidence
 
 from ..tui_journey import (
@@ -98,7 +99,7 @@ def test_top_level_receipt_makes_no_op_observation_auditable() -> None:
         brief_id="PROFILE-01",
         brief_revision="0.1",
         scenario="fixture",
-        year=2026,
+        year=filing_year_envelope().horizon,
         source_identity="fixture-source",
         package_identity="fixture-package",
         cli_executable="fixture-cli",

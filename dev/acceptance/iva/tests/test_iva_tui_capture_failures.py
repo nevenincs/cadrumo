@@ -14,6 +14,7 @@ from rich.console import RenderableType
 from textual.app import App, ComposeResult
 from textual.widgets import Static
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.acceptance.income_tax.installed_tui_child import InstalledTuiChildError
 
 from .. import installed_tui_capture_reopen as child
@@ -100,7 +101,7 @@ def test_capture_failure_exits_and_writes_failed_receipt_even_when_launcher_retu
             "--receipt",
             str(receipt_path),
             "--year",
-            "2025",
+            str(filing_year_envelope().horizon),
             "--scratch",
             str(tmp_path / "transient"),
             "--source-manifest-sha256",

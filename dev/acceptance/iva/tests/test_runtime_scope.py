@@ -9,6 +9,8 @@ from types import TracebackType
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from .. import cli_journey
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -92,7 +94,7 @@ def test_scope_enters_after_fresh_store_validation_and_retains_both_reopens_on_r
             authority_root=authority,
             storage_root=root,
             artifact_root=tmp_path / "artifacts",
-            year=2025,
+            year=filing_year_envelope().horizon,
             runtime_scope=scope,
         )
     assert (scope.entered, scope.exited, scope.active) == (1, 1, False)
@@ -115,7 +117,7 @@ def test_dirty_store_refuses_before_runtime_scope_entry(tmp_path: Path) -> None:
             authority_root=authority,
             storage_root=root,
             artifact_root=tmp_path / "artifacts",
-            year=2025,
+            year=filing_year_envelope().horizon,
             runtime_scope=scope,
         )
     assert (scope.entered, scope.exited, scope.active) == (0, 0, False)
