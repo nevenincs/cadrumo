@@ -6,6 +6,7 @@ import { HistoryList } from "./HistoryList";
 import { conversationGroups } from "../../shell/agentViews";
 import type { AgentConversationRecord } from "../../shell/agentViews";
 import type { ConversationGroup } from "./types";
+import { fixtureInstant } from "@/dev/fixtureDates";
 
 // Appearance only: fixed conversations under fixed headings. Archive,
 // Restore and Delete do nothing here; the confirmation is opened by the
@@ -14,7 +15,7 @@ import type { ConversationGroup } from "./types";
 // The conversations as the service lists them, grouped and worded by the same
 // function the column uses, so headings and "ago" labels follow the language
 // shown. The clock is fixed: the specimen never moves.
-const NOW = new Date("2026-10-30T12:00:00");
+const NOW = new Date(fixtureInstant(10, 30, "12:00:00"));
 const HOURS = 3_600_000;
 const DAYS = 24 * HOURS;
 const conversation = (

@@ -4,6 +4,7 @@ import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
 import type { ModeloWorkHistoryEntryV1 } from "../../../shell/modeloContract/modeloWorkHistory";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { HistoryView } from "./HistoryView";
+import { fixtureInstant, fixtureYear } from "@/dev/fixtureDates";
 
 // Synthetic timeline entries exercise presentation only. Correction behavior
 // is covered by the canonical application envelopes in Corrections.stories.
@@ -32,8 +33,8 @@ function entries(t: Translate): ModeloWorkHistoryEntryV1[] {
     event_id: `synthetic-${kind}`,
     kind,
     words: t(`workspace.declarations.lifecycle.${kind}`),
-    detail: kind === "renamed" ? "130 1T → Modelo 130 1T 2026" : null,
-    occurred_at: `2026-04-${String(day).padStart(2, "0")}T10:00:00Z`,
+    detail: kind === "renamed" ? `130 1T → Modelo 130 1T ${fixtureYear}` : null,
+    occurred_at: fixtureInstant(4, day, "10:00:00Z"),
   }));
 }
 
@@ -51,7 +52,10 @@ function History({
   return (
     <HistoryView
       entries={entries(t)}
-      unit={{ name: "Modelo 130 1T 2026", updated_at: "2026-04-18T10:00:00Z" }}
+      unit={{
+        name: "Modelo 130 1T 2026",
+        updated_at: fixtureInstant(4, 18, "10:00:00Z"),
+      }}
       recorded={recorded}
       locale={locale}
       notice={null}

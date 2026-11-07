@@ -24,6 +24,7 @@ import {
 } from "./ledgerFileFixture";
 import { compare, periodSpan, Stopped } from "./ledgerQueryFixture";
 import { invalid, text } from "./ledgerRequestFixture";
+import { fixtureDay } from "@/dev/fixtureDates";
 
 /** The scenario ledger's import answers over its movements. */
 export function importOperations(
@@ -66,7 +67,7 @@ export function importOperations(
       const dayOfMonth = spec.gap && at > 3 ? 18 + (at % 9) : 1 + (at % 9);
       const date = target
         ? target.transaction.date
-        : `2026-10-${String(dayOfMonth).padStart(2, "0")}`;
+        : fixtureDay(10, dayOfMonth);
       const amount = target
         ? target.transaction.amount
         : money(1500 + at * 731 + stem.length * 13);

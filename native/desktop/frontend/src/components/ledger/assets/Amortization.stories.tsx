@@ -25,6 +25,7 @@ import {
   SCENARIO_TODAY,
 } from "@/dev/assetsRegister";
 import { servedSupport } from "@/dev/servedYearAuthority";
+import { fixtureDay } from "@/dev/fixtureDates";
 
 // One element's amortization plan and its append-only timeline over the
 // scenario's register. Each story names the element whose plan or history
@@ -298,10 +299,10 @@ async function prepared(port: LedgerPort, assetId: string, prepare: Prepare) {
     await setupCall(
       port,
       "ledger.actividad-asset.dispose",
-      { asset_id: assetId, disposal: sale("2026-09-30") },
+      { asset_id: assetId, disposal: sale(fixtureDay(9, 30)) },
       true,
     );
-    for (const disposal of [sale("2026-06-30"), null]) {
+    for (const disposal of [sale(fixtureDay(6, 30)), null]) {
       const request = bajaRequest(await lastRevision(), disposal);
       if (request !== null)
         await setupCall(port, "ledger.actividad-asset.correct", request, true);

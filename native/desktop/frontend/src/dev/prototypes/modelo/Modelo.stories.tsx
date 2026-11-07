@@ -13,6 +13,7 @@ import {
 import { editKey, heldValue, intentFor, type Staged } from "./FormView";
 import type { FormEnvelope } from "./types";
 import { ModeloWorkspace } from "./Workspace";
+import { fixtureInstant } from "@/dev/fixtureDates";
 
 // Design prototypes for the Modelo workspace, round by round. Every form is
 // an envelope of the registered read `modelo.work.form` for a synthetic
@@ -147,7 +148,10 @@ export const RecordedHistory: Story = {
     <ModeloWorkspace
       envelope={recorded130(lang(globals))}
       locale={lang(globals)}
-      aeat={{ state: "justificante_verified", on: "2026-10-15T09:40:00" }}
+      aeat={{
+        state: "justificante_verified",
+        on: fixtureInstant(10, 15, "09:40:00"),
+      }}
       initialView="history"
       initialCorrecting
     />

@@ -35,6 +35,7 @@ import {
   type Tone,
 } from "./vocabulary";
 import { w } from "./words";
+import { fixtureDay } from "@/dev/fixtureDates";
 
 /** The supported filing years, as the registry serves them. */
 const FILING_YEARS = Array.from(
@@ -438,10 +439,10 @@ export function DeclarationsHub({
 const EXPECTED = ["303", "130", "111", "115"];
 const OTHERS = ["347", "349", "390", "100"];
 const QUARTERS = [
-  { code: "1T", closes: "2026-04-20" },
-  { code: "2T", closes: "2026-07-20" },
-  { code: "3T", closes: "2026-10-20" },
-  { code: "4T", closes: "2027-01-30" },
+  { code: "1T", closes: fixtureDay(4, 20) },
+  { code: "2T", closes: fixtureDay(7, 20) },
+  { code: "3T", closes: fixtureDay(10, 20) },
+  { code: "4T", closes: fixtureDay(1, 30, 1) },
 ];
 
 /** Choose a modelo, then a period. The period due next is chosen first; a
@@ -507,7 +508,13 @@ export function NewDeclarationDialog({
     );
   const annual = modelo === "347" || modelo === "390" || modelo === "100";
   const periods = annual
-    ? [{ code: "0A", closes: modelo === "347" ? "2027-02-28" : "2027-01-30" }]
+    ? [
+        {
+          code: "0A",
+          closes:
+            modelo === "347" ? fixtureDay(2, 28, 1) : fixtureDay(1, 30, 1),
+        },
+      ]
     : QUARTERS;
   const chosen = existing(modelo ?? "", annual ? "0A" : period);
   return (
