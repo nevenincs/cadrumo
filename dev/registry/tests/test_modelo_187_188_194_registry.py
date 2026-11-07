@@ -26,6 +26,7 @@ from cadrumo.core.hashing import hash_file
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError, RegistryValidationError
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 
 from ..conformance.registry_schema_support import committed_modelo
 from ..maintenance_support import resolve_record_design_binary
@@ -35,40 +36,59 @@ from .profile_schema_support import committed_registry_validator
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _MODELOS = ("187", "188", "194")
-_REVISION_BY_MODELO = {"187": "2022-y-siguientes", "188": "2023-y-siguientes", "194": "2024"}
+_REVISION_BY_MODELO = {modelo_id: str(open_ended_revision(modelo_id).id) for modelo_id in _MODELOS}
 # The first exercise each hash-pinned official design evidences, read from its
-# applicability, and the Modelo 194 edition that Orden HAC/1504/2024 supersedes: the
-# one before the exercise the Orden first applies to.
+# applicability.
 _M187_DESIGN_EXERCISE = source_first_exercise(
     source_with_sha256("c7a21c1feb9619380bb0da3e73066fa3c58c628f430bf85ed9dbea15b1308eb1")
 )
 _M188_DESIGN_EXERCISE = source_first_exercise(
     source_with_sha256("30ced236b558de21383c3eba6339cb720fc9a704d38eaa574dd9be55cf90f9e3")
 )
-_M194_SUPERSEDED_EDITION = (
-    int(
-        legal_text_match(
-            "orden-hac-1504-2024:df-unica",
-            r"aplicable, por primera vez, a las declaraciones informativas correspondientes al ejercicio (\d{4})",
-        ).group(1)
-    )
-    - 1
-)
 _SOURCE_CASILLA: CasillaId = validated_casilla_id("04", surface="_SOURCE_CASILLA")
 _TARGET_CASILLA: CasillaId = validated_casilla_id("05", surface="_TARGET_CASILLA")
 
-# (first ejercicio, LAST ejercicio or None for an open era, design, amending art, df unica).
-# The end dates are NOT "first year again": each amending orden's df unica applies its
-# edition "por primera vez" to its first ejercicio, which OPENS a continuing window, and
-# BOE's consolidated Referencias posteriores for BOE-A-1999-22309 (read 2026-08-30) is
-# what closes each one -- anexo X is amended in 2019, 2023 and 2024 and NOWHERE between
-# 2020 and 2022, and not at all after 2024. So 2019 runs to 2022, 2023 is a single year
-# because 2024 amends it, and 2024 is open.
-_M194_DESIGN_ERAS = (
-    (2019, 2022, "aeat-dr-194-2019", "orden-hac-1276-2019:art-primero", "orden-hac-1276-2019:df-unica"),
-    (2023, 2023, "aeat-dr-194-2023", "orden-hfp-1284-2023:art-6", "orden-hfp-1284-2023:df-unica"),
-    (2024, None, "aeat-dr-194-2024", "orden-hac-1504-2024:art-primero", "orden-hac-1504-2024:df-unica"),
+# (design, amending art, df unica, pattern naming the first ejercicio the df unica applies the edition to).
+# Each amending orden's df unica applies its edition "por primera vez" to its first ejercicio, which
+# OPENS a continuing window, and BOE's consolidated Referencias posteriores for BOE-A-1999-22309
+# (read 2026-08-30) is what closes each one -- anexo X is amended three times and NOWHERE between
+# those amendments or after the last. So an era runs to the exercise before the next era's first,
+# and the last is open.
+_M194_ERA_COMMENCEMENTS = (
+    (
+        "aeat-dr-194-2019",
+        "orden-hac-1276-2019:art-primero",
+        "orden-hac-1276-2019:df-unica",
+        r"declaraciones correspondientes a (\d{4}) que se presenten",
+    ),
+    (
+        "aeat-dr-194-2023",
+        "orden-hfp-1284-2023:art-6",
+        "orden-hfp-1284-2023:df-unica",
+        r"declaraciones informativas correspondientes al ejercicio (\d{4})",
+    ),
+    (
+        "aeat-dr-194-2024",
+        "orden-hac-1504-2024:art-primero",
+        "orden-hac-1504-2024:df-unica",
+        r"aplicable, por primera vez, a las declaraciones informativas correspondientes al ejercicio (\d{4})",
+    ),
 )
+_M194_FIRST_EXERCISES = tuple(
+    int(legal_text_match(commencement_ref, pattern).group(1))
+    for _, _, commencement_ref, pattern in _M194_ERA_COMMENCEMENTS
+)
+_M194_DESIGN_ERAS = tuple(
+    (first, next_first - 1 if next_first is not None else None, source_ref, amendment_ref, commencement_ref)
+    for (first, next_first), (source_ref, amendment_ref, commencement_ref, _) in zip(
+        zip(_M194_FIRST_EXERCISES, (*_M194_FIRST_EXERCISES[1:], None), strict=True),
+        _M194_ERA_COMMENCEMENTS,
+        strict=True,
+    )
+)
+_M194_LATEST_ERA_FIRST, _, _M194_LATEST_ERA_SOURCE, _, _ = _M194_DESIGN_ERAS[-1]
+# The edition the latest Orden supersedes: the one before the exercise it first applies to.
+_M194_SUPERSEDED_EDITION = _M194_LATEST_ERA_FIRST - 1
 
 
 @pytest.mark.parametrize("modelo_id", _MODELOS)
@@ -111,7 +131,7 @@ def test_modelo_187_188_194_declare_no_formula(modelo_id: str) -> None:
 def test_modelo_187_preserves_both_article_2_filer_population_limbs() -> None:
     """The retained withholding selector must not erase Article 42 RGAT filers."""
     modelo, catalogues = committed_modelo("187")
-    revision = modelo.revisions["2022-y-siguientes"]
+    revision = modelo.revisions[_REVISION_BY_MODELO["187"]]
     (rule,) = revision.applicability
 
     assert rule.required_payer_fact == "pays_capital_income_with_retencion"
@@ -171,7 +191,7 @@ def test_modelo_194_selects_only_its_three_hash_pinned_design_eras() -> None:
     """Each declared Modelo 194 year resolves to its own official binary."""
     modelo, catalogues = committed_modelo("194")
 
-    assert set(modelo.revisions) == {"2019", "2023", "2024"}
+    assert set(modelo.revisions) == {str(first) for first in _M194_FIRST_EXERCISES}
     for filing_year, last_year, source_ref, amendment_ref, commencement_ref in _M194_DESIGN_ERAS:
         revision = modelo.revisions[str(filing_year)]
         source = catalogues.sources[source_ref]
@@ -217,12 +237,12 @@ def test_modelo_194_selects_only_its_three_hash_pinned_design_eras() -> None:
     # here; both refusals were holes, not conservatism -- BOE's amendment list for
     # BOE-A-1999-22309 puts no amendment between 2020 and 2022 and none after 2024, so
     # those years are governed by the 2019 and 2024 editions respectively.
-    for filing_year in (2016, 2017, 2018):
+    for filing_year in range(_M194_FIRST_EXERCISES[0] - 3, _M194_FIRST_EXERCISES[0]):
         with pytest.raises(NoRevisionForPeriodError):
             select_revision(modelo, filing_year=filing_year, period="0A", on=date(filing_year, 12, 31))
-    for filing_year in (2025, 2026):
+    for filing_year in range(_M194_LATEST_ERA_FIRST + 1, filing_year_envelope().horizon + 1):
         carried = select_revision(modelo, filing_year=filing_year, period="0A", on=date(filing_year, 12, 31))
-        assert carried.id == "2024"
+        assert carried.id == _REVISION_BY_MODELO["194"]
 
 
 def test_modelo_194_refuses_a_mutated_superseded_selector_past_its_source_window() -> None:
@@ -264,7 +284,7 @@ def test_modelo_194_refuses_a_mutated_superseded_selector_past_its_source_window
 def test_modelo_194_refuses_a_mutated_record_design_hash() -> None:
     """The exact era selector also verifies the bytes of its named source."""
     _modelo, catalogues = committed_modelo("194")
-    source_ref = "aeat-dr-194-2024"
+    source_ref = _M194_LATEST_ERA_SOURCE
     sources = dict(catalogues.sources)
     sources[source_ref] = sources[source_ref].model_copy(update={"sha256": "0" * 64})
     mutated_catalogues = catalogues.model_copy(update={"sources": sources})
@@ -274,8 +294,8 @@ def test_modelo_194_refuses_a_mutated_record_design_hash() -> None:
             bundled_path(),
             mutated_catalogues.sources,
             source_ref=source_ref,
-            filing_year=2024,
-            design_epoch="2024",
+            filing_year=_M194_LATEST_ERA_FIRST,
+            design_epoch=str(_M194_LATEST_ERA_FIRST),
         )
 
 

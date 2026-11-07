@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .authored_edition_support import newest_authored_edition
+from .authored_edition_support import authored_revisions, newest_authored_edition
 from .modelo_100_registry_support import (
     AUTONOMIC_DEDUCTION_ART_77_REF,
     modelo_100_revision,
@@ -15,6 +15,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 # The newest Modelo 100 edition the registry authors; its printed labels name its own exercise and the one before it.
 _REVIEWED_EDITION = newest_authored_edition("100")
+_M100_EDITIONS = tuple(revision.valid_from.year for revision in authored_revisions("100"))
 
 _CANTABRIA_DEDUCTION_SECTION = ("resultados", "deduccion_autonomica_res", "cantabria_res")
 _CANTABRIA_DESPLAZAMIENTO_NUEVOS_RESIDENTES_ROLE = "irpf_deduccion_cantabria_desplazamiento_nuevos_residentes"
@@ -62,26 +63,43 @@ _LEGACY_CANTABRIA_OBRAS_MEJORA_ROLES = frozenset(
         "irpf_deduccion_cantabria_ayuda_domestica_pendiente_ejercicio_anterior",
     }
 )
-_EXPECTED_CANTABRIA_OBRAS_MEJORA_HISTORICAL_LABELS = {
-    2020: "Por obras de mejora: importes generados en 2017 y/o 2018 pendientes de aplicación",
-    2021: "Por obras de mejora en viviendas: importes generados en 2019 y/o 2020 pendientes de aplicación",
-    2022: "Por obras de mejora en viviendas: importes generados en 2020 y/o 2021 pendientes de aplicación",
-    2023: "Por obras de mejora en viviendas: importes generados en 2021 y/o 2022 pendientes de aplicación",
-}
-_EXPECTED_CANTABRIA_OBRAS_MEJORA_CURRENT_LABELS = {
-    2024: {
+# Printed labels in authoring order: the oldest four editions print the historical shape,
+# the two that follow print the current one. Pairing by position makes a newly authored
+# edition fail here until its official labels are recorded.
+_CANTABRIA_OBRAS_MEJORA_HISTORICAL_LABELS = (
+    "Por obras de mejora: importes generados en 2017 y/o 2018 pendientes de aplicación",
+    "Por obras de mejora en viviendas: importes generados en 2019 y/o 2020 pendientes de aplicación",
+    "Por obras de mejora en viviendas: importes generados en 2020 y/o 2021 pendientes de aplicación",
+    "Por obras de mejora en viviendas: importes generados en 2021 y/o 2022 pendientes de aplicación",
+)
+_CANTABRIA_OBRAS_MEJORA_CURRENT_LABELS = (
+    {
         "0997": "Importe generado en 2022 pendiente de aplicación",
         "0998": "Importe generado en 2023 pendiente de aplicación",
         "0956": "Importe generado en 2024 pendiente de aplicación",
         "1713": "Importe generado en 2023 pendiente de aplicación",
     },
-    2025: {
+    {
         "0997": "Importe generado en 2023 pendiente de aplicación",
         "0998": "Importe generado en 2024 pendiente de aplicación",
         "0956": "Importe generado en 2025 pendiente de aplicación",
         "1713": "Importe generado en 2024 pendiente de aplicación",
     },
-}
+)
+_EXPECTED_CANTABRIA_OBRAS_MEJORA_HISTORICAL_LABELS = dict(
+    zip(
+        _M100_EDITIONS[: len(_CANTABRIA_OBRAS_MEJORA_HISTORICAL_LABELS)],
+        _CANTABRIA_OBRAS_MEJORA_HISTORICAL_LABELS,
+        strict=True,
+    )
+)
+_EXPECTED_CANTABRIA_OBRAS_MEJORA_CURRENT_LABELS = dict(
+    zip(
+        _M100_EDITIONS[len(_CANTABRIA_OBRAS_MEJORA_HISTORICAL_LABELS) :],
+        _CANTABRIA_OBRAS_MEJORA_CURRENT_LABELS,
+        strict=True,
+    )
+)
 
 
 def test_modelo_100_cantabria_desplazamiento_nuevos_residentes_roles_follow_cant20_family() -> None:

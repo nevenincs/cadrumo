@@ -8,6 +8,7 @@ import pytest
 
 from cadrumo.application.modelo.semantic_role_resolution import casilla_id_for_unique_revision_semantic_role
 
+from .authored_edition_support import authored_revisions
 from .modelo_100_registry_support import modelo_100_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -20,23 +21,19 @@ _INMUEBLE_COLLECTION_YEARS_ROLE = "irpf_ganancia_inmueble_anios_cobro_pendiente"
 _OTHER_COLLECTION_YEARS_ROLE = "irpf_ganancia_otros_anios_cobro_pendiente"
 _STALE_CRYPTO_PENDING_YEARS_ROLE = "irpf_ganancia_cripto_anios_cobro_pendiente"
 _CAPITAL_GAIN_REFS = {"ley-35-2006:art-33", "ley-35-2006:art-34"}
-_LIVE_M100_YEARS = tuple(range(2020, 2026))
-_SPECIAL_ASSET_YEARS = tuple(range(2022, 2026))
-_COLLECTION_YEAR_COUNT_CASES = (
-    (2020, "0358", _OTHER_COLLECTION_YEARS_ROLE, _OTHER_ELEMENTS_SECTION, False),
-    (2021, "0358", _OTHER_COLLECTION_YEARS_ROLE, _OTHER_ELEMENTS_SECTION, False),
-    (2022, "0358", _OTHER_COLLECTION_YEARS_ROLE, _OTHER_ELEMENTS_SECTION, False),
-    (2023, "0358", _OTHER_COLLECTION_YEARS_ROLE, _OTHER_ELEMENTS_SECTION, False),
-    (2024, "0358", _OTHER_COLLECTION_YEARS_ROLE, _OTHER_ELEMENTS_SECTION, True),
-    (2025, "0358", _OTHER_COLLECTION_YEARS_ROLE, _OTHER_ELEMENTS_SECTION, True),
-    (2022, "1859", _CRYPTO_COLLECTION_YEARS_ROLE, _CRYPTO_SECTION, False),
-    (2023, "1859", _CRYPTO_COLLECTION_YEARS_ROLE, _CRYPTO_SECTION, False),
-    (2024, "1859", _CRYPTO_COLLECTION_YEARS_ROLE, _CRYPTO_SECTION, True),
-    (2025, "1859", _CRYPTO_COLLECTION_YEARS_ROLE, _CRYPTO_SECTION, True),
-    (2022, "1881", _INMUEBLE_COLLECTION_YEARS_ROLE, _INMUEBLE_SECTION, False),
-    (2023, "1881", _INMUEBLE_COLLECTION_YEARS_ROLE, _INMUEBLE_SECTION, False),
-    (2024, "1881", _INMUEBLE_COLLECTION_YEARS_ROLE, _INMUEBLE_SECTION, True),
-    (2025, "1881", _INMUEBLE_COLLECTION_YEARS_ROLE, _INMUEBLE_SECTION, True),
+# Every authored Modelo 100 edition, oldest first. The special-asset casillas (crypto, immovables) exist from the
+# third edition on, and the instalment label names the pending balance from the fifth.
+_LIVE_M100_YEARS = tuple(revision.valid_from.year for revision in authored_revisions("100"))
+_SPECIAL_ASSET_YEARS = _LIVE_M100_YEARS[2:]
+_PENDING_LABEL_FROM = _LIVE_M100_YEARS[4]
+_COLLECTION_YEAR_COUNT_CASES = tuple(
+    (year, casilla_id, role, section, year >= _PENDING_LABEL_FROM)
+    for casilla_id, role, section, years in (
+        ("0358", _OTHER_COLLECTION_YEARS_ROLE, _OTHER_ELEMENTS_SECTION, _LIVE_M100_YEARS),
+        ("1859", _CRYPTO_COLLECTION_YEARS_ROLE, _CRYPTO_SECTION, _SPECIAL_ASSET_YEARS),
+        ("1881", _INMUEBLE_COLLECTION_YEARS_ROLE, _INMUEBLE_SECTION, _SPECIAL_ASSET_YEARS),
+    )
+    for year in years
 )
 _OTHER_ELEMENT_IMPUTATION_ROLES = {
     "0363": "irpf_ganancia_otros_anio_imputacion_1",

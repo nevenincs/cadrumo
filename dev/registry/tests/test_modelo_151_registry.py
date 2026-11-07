@@ -7,6 +7,7 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, open_ended_revision
 
 from ..compiler.legal_grounding import verify_legal_catalogue
 from ..conformance.registry_schema_support import committed_modelo
@@ -19,8 +20,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 # revision whose design Orden HFP/1338/2023 (disposicion final segunda) applies from
 # its first exercise. Revision ids are the cited identities; each design is found by
 # its pinned bytes and its applicability names its first exercise.
-_FIRST_ERA_REVISION = "2015-2022"
-_CURRENT_ERA_REVISION = "2025-y-siguientes"
+_FIRST_ERA_REVISION = str(authored_revisions("151")[0].id)
+_CURRENT_ERA_REVISION = str(open_ended_revision("151").id)
 _FIRST_ERA_SOURCE = source_with_sha256("997dc9cf5230a374716d04a5ae9aed0e9c659ee9352451843dbc5232d3f2137a")
 _CURRENT_ERA_SOURCE = source_with_sha256("7680e5a21935c22f4b63deb0c96956d63fbcb287c5eb67a552daa7768ca0fcb9")
 _FIRST_ERA_DESIGN_EXERCISE = source_first_exercise(_FIRST_ERA_SOURCE)
@@ -65,7 +66,7 @@ def test_modelo_151_first_era_revision_formula_targets_resolve() -> None:
 def test_modelo_151_legal_authority_is_ley_35_2006_art_93() -> None:
     """M151 is the Beckham regime (Ley 35/2006 art. 93 LIRPF)."""
     modelo, catalogues = _load_modelo_151()
-    revision = modelo.revisions["2015-2022"]
+    revision = modelo.revisions[_FIRST_ERA_REVISION]
     impatriado = next(c for c in revision.constructs if c.id == "m151-impatriado-calculation")
     assert "ley-35-2006:art-93" in impatriado.legal_refs
     assert "ley-35-2006:art-93" in catalogues.legal
@@ -73,7 +74,7 @@ def test_modelo_151_legal_authority_is_ley_35_2006_art_93() -> None:
 
 def test_modelo_151_form_order_is_boe_corpus_backed() -> None:
     modelo, catalogues = _load_modelo_151()
-    revision = modelo.revisions["2015-2022"]
+    revision = modelo.revisions[_FIRST_ERA_REVISION]
     legal = {_M151_FORM_ORDER_REF: catalogues.legal[_M151_FORM_ORDER_REF]}
 
     verify_legal_catalogue(legal, source_root=bundled_path())
@@ -145,7 +146,7 @@ def test_modelo_151_carries_base_liquidable_under_declaration_advisory() -> None
     00501->DP200014:00552 worked-pattern guards.
     """
     modelo, _ = _load_modelo_151()
-    revision = modelo.revisions["2015-2022"]
+    revision = modelo.revisions[_FIRST_ERA_REVISION]
 
     predicates = {p.predicate_id: p for p in revision.verification_predicates}
     predicate_id = "modelo-151-base-liquidable-implica-cuota-integra"
