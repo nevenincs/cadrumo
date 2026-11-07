@@ -76,6 +76,10 @@ from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.tests.published_authority import (
+    published_selected_revision_id,
+    published_supported_filing_years,
+)
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.deadlines.effective_close import resolve_effective_filing_deadline
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
@@ -125,11 +129,22 @@ type _Repos = tuple[
     BucketEventHistoryRepository,
 ]
 
-_T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
-_T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
-_T2 = datetime(2026, 1, 15, 14, 0, 0, tzinfo=UTC)
-_T3 = datetime(2026, 4, 15, 15, 0, 0, tzinfo=UTC)
-_T4 = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
+
+def _supported_years() -> tuple[int, int, int]:
+    """Return the envelope horizon and the two filing years beneath it, all inside the envelope."""
+    envelope = published_supported_filing_years()
+    assert envelope is not None
+    horizon = envelope.horizon
+    assert envelope.floor <= horizon - 2, "the module needs two supported filing years beneath the horizon"
+    return horizon, horizon - 1, horizon - 2
+
+
+_YEAR, _PRIOR_YEAR, _EARLIER_YEAR = _supported_years()
+_T0 = datetime(_YEAR, 1, 15, 12, 0, 0, tzinfo=UTC)
+_T1 = datetime(_YEAR, 1, 15, 13, 0, 0, tzinfo=UTC)
+_T2 = datetime(_YEAR, 1, 15, 14, 0, 0, tzinfo=UTC)
+_T3 = datetime(_YEAR, 4, 15, 15, 0, 0, tzinfo=UTC)
+_T4 = datetime(_YEAR, 4, 16, 12, 0, 0, tzinfo=UTC)
 _PROFILE_ID = "10000000-0000-4000-8000-000000000130"
 _PROFILE_LABEL = "Test runtime profile"
 _READY_PROFILE_FACTS = persona_facts_beneath(
@@ -214,13 +229,15 @@ def _seed_work_unit(
     wu_repo: WorkUnitCatalogueRepository,
     *,
     modelo: str = "130",
-    filing_year: int = 2026,
+    filing_year: int = _YEAR,
     period_code: str = "1T",
-    revision_id: str = "2019-y-siguientes",
+    revision_id: str | None = None,
     operation: PinnedAuthorityOperation,
 ) -> WorkUnit:
-    """Modelo 130 1T 2026 — registry-resolvable so the formula engine
+    """Modelo 130 1T of the envelope horizon -- registry-resolvable so the formula engine
     in ``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` has a snapshot to operate on."""
+    if revision_id is None:
+        revision_id = published_selected_revision_id(modelo, filing_year=filing_year, period=period_code)
 
     return create_work_unit(
         ports=build_work_lifecycle_ports(bucket_id=_PROFILE_ID),
@@ -244,9 +261,9 @@ def _seed_external_baseline(
     *,
     casilla_values: dict[CasillaId, Decimal],
     modelo: str = "130",
-    filing_year: int = 2026,
+    filing_year: int = _YEAR,
     period_code: str = "1T",
-    revision_id_value: str = "2019-y-siguientes",
+    revision_id_value: str | None = None,
     member_nif: str | None = None,
     filing_instance_evidence: FilingInstanceEvidence | None = None,
     input_values_by_casilla_id: dict[CasillaId, str] | None = None,
@@ -341,7 +358,7 @@ def _seed_external_baseline(
         status=ModeloRecordStatus.VIGENTE,
         external_evidence=ExternalEvidence(
             kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-            reference_id="JUST2024303ABC123",
+            reference_id="JUSTM303ABC123",
             imported_at=_T1,
         ),
     )
@@ -395,7 +412,7 @@ def _seed_local_filing_record(
 def test_amend_refuses_evidence_less_m303_external_baseline(
     repos: _Repos, *, operation: PinnedAuthorityOperation
 ) -> None:
-    m303_year = operation.supported_filing_years().horizon
+    m303_year = _YEAR
     snapshot = operation.snapshot("303", filing_year=m303_year, period="1T")
     _, _, baseline = _seed_external_baseline(
         repos,
@@ -544,7 +561,7 @@ def _seed_engine_computed_baseline(
     """Seed a confirmed 130 baseline whose values the real engine computed from its inputs."""
     _wu_repo, _cr_repo, _fr_repo, _evidence_repo, _bv_repo = repos
     work_unit = _seed_work_unit(_wu_repo, operation=operation)
-    snapshot = operation.snapshot("130", filing_year=2026, period="1T")
+    snapshot = operation.snapshot("130", filing_year=_YEAR, period="1T")
     engine_inputs = {
         _AMEND_INCOME_CASILLA: Decimal("1000"),
         _AMEND_WITHHELD_CASILLA: Decimal("0"),
@@ -614,12 +631,11 @@ def test_operation_backed_130_successive_confirmed_corrections_recompute_and_gua
     wu_repo, cr_repo, fr_repo, _, _ = repos
     work_unit = _seed_work_unit(
         wu_repo,
-        filing_year=2025,
+        filing_year=_PRIOR_YEAR,
         period_code="1T",
-        revision_id="2019-y-siguientes",
         operation=operation,
     )
-    snapshot = operation.snapshot("130", filing_year=2025, period="1T")
+    snapshot = operation.snapshot("130", filing_year=_PRIOR_YEAR, period="1T")
     engine_inputs = {
         _AMEND_INCOME_CASILLA: Decimal("8840"),
         validated_casilla_id("gastos-deducibles-previos"): Decimal("4982"),
@@ -655,7 +671,7 @@ def test_operation_backed_130_successive_confirmed_corrections_recompute_and_gua
     _, original_revision, original = _seed_external_baseline(
         repos,
         casilla_values=original_result.values,
-        filing_year=2025,
+        filing_year=_PRIOR_YEAR,
         input_values_by_casilla_id=serialized_inputs,
         binding_overrides=serialized_bindings,
         observations=original_result.observations,
@@ -1061,12 +1077,11 @@ def test_amend_refuses_printed_number_metadata_token(repos: _Repos, *, operation
     _, _, baseline = _seed_external_baseline(
         repos,
         modelo="303",
-        filing_year=2025,
+        filing_year=_PRIOR_YEAR,
         period_code="1T",
-        revision_id_value="2025",
         casilla_values={_M303_RESULT_CASILLA: Decimal("100")},
         filing_instance_evidence=general_m303_filing_evidence(
-            Period.from_year_and_code(2025, "1T"),
+            Period.from_year_and_code(_PRIOR_YEAR, "1T"),
             reference="test:amend:printed-token",
             operation=operation,
         ),
@@ -1396,9 +1411,8 @@ def test_amend_refuses_a_baseline_saved_with_a_scalar_row_field_input(
         repos,
         casilla_values={validated_casilla_id("decl.total-perceptores"): Decimal("1")},
         modelo="180",
-        filing_year=2024,
+        filing_year=_EARLIER_YEAR,
         period_code="0A",
-        revision_id_value="2023-y-siguientes",
         input_values_by_casilla_id={row_field: "150"},
         operation=operation,
     )
@@ -1438,9 +1452,8 @@ def test_amend_does_not_demand_row_field_casillas_as_scalars(
         repos,
         casilla_values={validated_casilla_id("decl.total-perceptores"): Decimal("1")},
         modelo="180",
-        filing_year=2024,
+        filing_year=_EARLIER_YEAR,
         period_code="0A",
-        revision_id_value="2023-y-siguientes",
         operation=operation,
     )
 
