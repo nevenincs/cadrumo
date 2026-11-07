@@ -30,16 +30,8 @@ modelo:
             x-c5hn8bj3dhgn6p9dcdqmut31:
               label: Kvóta típusa (M önkormányzati, N országos, P tartományi, vagy
                 üres)
-            x-c5hn8bj3dti6iprf5lmnarj9cdkn0qbf:
-              label: A tevékenység településkódja (az adóhatóság tölti ki)
-            x-c5hn8bj3dti6iprf5lo74rrmd5n66qb1:
-              label: A tevékenység tartománykódja (az adóhatóság tölti ki)
-            x-c5hn8bj4clpm6sj9e1hmirre:
-              label: A tevékenység leírása (az adóhatóság tölti ki)
             x-c5hn8bj4dtmmior9dhkmubb3dti6iprf5lo6usrkc5m0:
               label: 'A tevékenység címe: irányítószám'
-            x-c5hn8bj4dtmmior9dhkmubb3dti6iprf5lr6io8:
-              label: 'A tevékenység címe: közterületkód (az adóhatóság tölti ki)'
             x-c5hn8bj4dtmmior9dhkmubb5edhm2r35e9gg:
               label: 'A tevékenység címe: lépcsőház'
             x-c5hn8bj4dtmmior9dhkmubbbd5m6urb5ehp6u:
@@ -99,52 +91,17 @@ modelo:
               label: Lottó- és fogadási átvétel történik
             x-c5hn8bjicljmoo9d6gmj4bb6:
               label: 'Alkalmazandó szabály: 4. szabály, 2. F) bekezdés'
-            x-c5hn8bjjclhm6qbfdo:
-              label: Az IAE tarifák szakasza (az adóhatóság tölti ki)
             x-c5hn8bjkd5o6ubb1cdq6itj9chgm8:
               label: Tevékenység típusa (E üzleti, P szakmai, A művészeti)
-            x-cdqmut315pgmst35ecmm4rred5j6ior1cdkmurj5ecmmirj3e9imqpbeehnn6:
-              label: Kvóta a kedvezmények és növelések előtt (az adóhatóság tölti
-                ki)
-            x-cdqmut315ph6urj9cpkm6ob3d5nmsbb3dhgncp8:
-              label: Az alkalmazott kedvezmény kódja (az adóhatóság tölti ki)
-            x-cdqmut315ph6urj9cpkm6ob3d5nmsbb9dlo6usjkck:
-              label: A kedvezmény összege (az adóhatóság tölti ki)
-            x-cdqmut315ph6urj9cpkm6ob3d5nmsbbgdtp66pbeehgmkp8:
-              label: Az a százalék, amelyre a kedvezmény vonatkozik (az adóhatóság
-                tölti ki)
-            x-cdqmut315pi6asrgelin6bb2dtn6ipj9cdgm6qbfdpin6bb9dphn4pbdcln78rrj:
-              label: Kvóta a kedvezmények és növelések után (az adóhatóság tölti ki)
-            x-cdqmut315pkmsoriclmmarjkdsmm6r31epig:
-              label: Az alkalmazott növelés kódja (az adóhatóság tölti ki)
-            x-cdqmut315pkmsoriclmmarjkdsmmirbgdtp78p8:
-              label: A növelés összege (az adóhatóság tölti ki)
-            x-cdqmut315pkmsoriclmmarjkdsmn0rricdimst31d9ig:
-              label: Az a százalék, amelyre a növelés vonatkozik (az adóhatóság tölti
-                ki)
             x-cdqmut315pmm2sbld5n62spde9im6sj5c5q6itj1ecmm2tbkdtr6arjkc4:
               label: Játékgépek vagy automata értékesítés kvótája (az adóhatóság tölti
                 ki)
-            x-cdqmut315pq62sj9cpgiqrpdd5mn0rriehiiqrb9dpkmqro:
-              label: Tarifakvóta vagy minimális összeg (az adóhatóság tölti ki)
             x-chim6r1ecll6asj3d5hmiro:
               label: A bevallás vonatkozási adóéve
-            x-chim6r1edpqmqpbidsmn4pb6clp6arj3d5gg:
-              label: A bevallás hivatkozási száma (az adóhatóság tölti ki)
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               label: Bevallás típusa (bejegyzés / módosítás / törlés)
-            x-clm6ar9dehp6iohecdqmut315lhmurjjd5jmsob4c4mn8obid5j62so:
-              label: A tarifákban közvetlenül feltüntetett összeg (az adóhatóság tölti
-                ki)
-            x-clm6ar9dehp6iohectp7as3f5lin0qb7e9gmcp9dedqmqo8:
-              label: A csoport vagy tétel adózási elemeinek összege (az adóhatóság
-                tölti ki)
-            x-clm6ar9dehp6iohedlqmsqb3d5o62r1dcdnmapj9cdkmarjkckmm6rrie9im6t3fe8:
-              label: 'Önkormányzati kvóta: korrekciós együttható (az adóhatóság tölti
-                ki)'
-            x-clm6ar9dehp6iohedlqmsqb3d5o62r1dcdqmut315limopbdcln78ro:
-              label: 'Önkormányzati kvóta: az adózási elem kvótája (az adóhatóság
-                tölti ki)'
+            x-chim6r31e9gmst355pkmsp39cdgm8rri5lo62pr9dpgiqorfdlo6opbdcln78obid5gg:
+              label: Pótoldal jelölése (hagyd üresen, ha nem pótoldal, „C”, ha pótoldal)
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9dcdnmqs3lehgm4r35:
               label: 'Önkormányzati kvóta: a helyiségek beszámítható alapterületének
                 összege'
@@ -157,31 +114,16 @@ modelo:
               label: 'Önkormányzati kvóta: beszámítható alapterület'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqn0pbicpkm6qb55li6ap3lcdkm4r35:
               label: 'Önkormányzati kvóta: levonható alapterület'
-            x-clm6ar9dehp6iohedlqmsqb3d5o62r1depgmorri5limopbdcln78ro:
-              label: 'Önkormányzati kvóta: az adózási elem értéke (az adóhatóság tölti
-                ki)'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dcdnmqs3lehgm4r35:
               label: 'Tartományi vagy országos kvóta: a helyiségek beszámítható alapterülete'
-            x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dcdqmut315limopbdcln78ro:
-              label: 'Tartományi vagy országos kvóta: az adózási elem kvótája (az
-                adóhatóság tölti ki)'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1ddpqmqpbids:
               label: 'Tartományi vagy országos kvóta: helyiségek száma'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1de9im6t39cpkm6ob4c4:
               label: 'Tartományi vagy országos kvóta: a helyiségek helyesbített alapterülete'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dehnn8obc:
               label: 'Tartományi vagy országos kvóta: a helyiségek teljes alapterülete'
-            x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqrbldpkm6qbgd5ng:
-              label: a tevékenységhez közvetve kapcsolódó helyiség településkódja
-                (az adóhatóság tölti ki)
             x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqs3fedq62r0:
               label: a tevékenységhez közvetve kapcsolódó helyiség irányítószáma
-            x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqs3idtr6irj3d5gg:
-              label: a tevékenységhez közvetve kapcsolódó helyiség tartománykódja
-                (az adóhatóság tölti ki)
-            x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqtj9c4:
-              label: a tevékenységhez közvetve kapcsolódó helyiség közterületkódja
-                (az adóhatóság tölti ki)
             x-dhnm6obc5lkmsp39e9im6t3f5pin6or1dhin4o8:
               label: a tevékenységhez közvetve kapcsolódó helyiség lépcsőháza
             x-dhnm6obc5lkmsp39e9im6t3f5plmir3fdlin8sjf:
@@ -209,9 +151,6 @@ modelo:
                 rendeltetése
             x-dhnm6obc5lkmsp39e9im6t3f5pr6io9de1qm4r39cdgg:
               label: a tevékenységhez közvetve kapcsolódó helyiség közterületneve
-            x-dlgn2tb9dpgn6bjjelmm2:
-              label: Játékgépek vagy automata értékesítés összege (az adóhatóság tölti
-                ki)
             x-dpnn8qb6d5hm2or9dtn2sor1dhkm8ob4:
               label: 'Milyen minőségben írja alá: tulajdonos vagy képviselő'
             x-dpnn8qb6d5hm2or9dtn2spj5cdk62:
@@ -220,14 +159,8 @@ modelo:
               label: Az értesítés helye
             x-e9in0sj5edimst31dpq6abj1e1imor39chnn6bbic5t6urhdednm6qb1dg:
               label: A képviselő vezeték- és keresztneve vagy cégneve
-            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lmnarj9cdkn0qbf:
-              label: A képviselő településkódja (az adóhatóság tölti ki)
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lo6usrkc5m0:
               label: A képviselő címének irányítószáma
-            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lo74rrmd5n66qb1:
-              label: A képviselő tartománykódja (az adóhatóság tölti ki)
-            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lr6io8:
-              label: A képviselő címének közterületkódja (az adóhatóság tölti ki)
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb5edhm2r35e9gg:
               label: A képviselő címének lépcsőháza
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbbd5m6urb5ehp6u:

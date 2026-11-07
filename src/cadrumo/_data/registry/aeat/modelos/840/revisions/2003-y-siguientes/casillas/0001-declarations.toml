@@ -77,16 +77,6 @@ data_type = "text"
 semantic_role = "act_local_afecto_indirectamente"
 input_kind = "informational"
 
-# @537+40, type_code An. Descripcion de la actividad. [36].
-# Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "act.descripcion"
-number = "36"
-section = ["actividad"]
-data_type = "text"
-semantic_role = "act_descripcion"
-input_kind = "informational"
-
 # @577+4, type_code An. Grupo o epigrafe. [37].
 [[revisions."2003-y-siguientes".casillas]]
 id = "act.grupo-epigrafe"
@@ -105,16 +95,6 @@ data_type = "text"
 semantic_role = "act_municipio"
 input_kind = "informational"
 
-# @618+6, type_code Num. C. Mun. (codigo de municipio). [39].
-# Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "act.codigo-municipio"
-number = "39"
-section = ["actividad"]
-data_type = "text"
-semantic_role = "act_codigo_municipio"
-input_kind = "informational"
-
 # @581+2, type_code An. Provincia (codigo). [40].
 [[revisions."2003-y-siguientes".casillas]]
 id = "act.provincia"
@@ -122,16 +102,6 @@ number = "40"
 section = ["actividad"]
 data_type = "text"
 semantic_role = "act_provincia"
-input_kind = "informational"
-
-# @624+2, type_code An. C. Prov. (codigo de provincia). [41].
-# Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "act.codigo-provincia"
-number = "41"
-section = ["actividad"]
-data_type = "text"
-semantic_role = "act_codigo_provincia"
 input_kind = "informational"
 
 # @626+2, type_code An. Domicilio de la actividad. SG (sigla de la via publica). [42].
@@ -159,16 +129,6 @@ number = "44"
 section = ["actividad"]
 data_type = "text"
 semantic_role = "act_domicilio_codigo_postal"
-input_kind = "informational"
-
-# @658+2, type_code An. Domicilio de la actividad. C. Via. [45].
-# Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "act.domicilio-codigo-via"
-number = "45"
-section = ["actividad"]
-data_type = "text"
-semantic_role = "act_domicilio_codigo_via"
 input_kind = "informational"
 
 # @660+5, type_code Num. Domicilio de la actividad. Num.. [46].
@@ -351,16 +311,6 @@ data_type = "text"
 semantic_role = "act_regla_cuarta_2_f"
 input_kind = "informational"
 
-# @701+3, type_code An. Seccion. [58].
-# Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "act.seccion"
-number = "58"
-section = ["actividad"]
-data_type = "text"
-semantic_role = "act_seccion"
-input_kind = "informational"
-
 # @704+4, type_code An. Actividad principal. [59].
 [[revisions."2003-y-siguientes".casillas]]
 id = "act.actividad-principal"
@@ -475,15 +425,6 @@ input_kind = "informational"
 # The whole apartado is optional: a declaration filed without a representante
 # leaves every one of these blank, so none is `required`.
 
-# @275+13. Numero de referencia. [16].  Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "decl.numero-referencia"
-number = "16"
-section = ["declarante"]
-data_type = "text"
-semantic_role = "declaracion_numero_referencia"
-input_kind = "informational"
-
 # @288+9. NIF. [17].
 [[revisions."2003-y-siguientes".casillas]]
 id = "representante.nif"
@@ -518,15 +459,6 @@ number = "20"
 section = ["representante"]
 data_type = "text"
 semantic_role = "representante_domicilio_via_publica"
-input_kind = "informational"
-
-# @449+6. C. Via (codigo de via). [21].  Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "representante.domicilio-codigo-via"
-number = "21"
-section = ["representante"]
-data_type = "text"
-semantic_role = "representante_domicilio_codigo_via"
 input_kind = "informational"
 
 # @455+5. Num.. [22].
@@ -601,15 +533,6 @@ data_type = "text"
 semantic_role = "representante_domicilio_municipio"
 input_kind = "informational"
 
-# @522+6. C. Mun. (codigo de municipio). [30].  Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "representante.domicilio-codigo-municipio"
-number = "30"
-section = ["representante"]
-data_type = "text"
-semantic_role = "representante_domicilio_codigo_municipio"
-input_kind = "informational"
-
 # @485+2. Provincia (codigo). [31].
 [[revisions."2003-y-siguientes".casillas]]
 id = "representante.domicilio-provincia"
@@ -619,14 +542,6 @@ data_type = "text"
 semantic_role = "representante_domicilio_provincia"
 input_kind = "informational"
 
-# @528+2. C. Prov. (codigo de provincia). [32].  Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "representante.domicilio-codigo-provincia"
-number = "32"
-section = ["representante"]
-data_type = "text"
-semantic_role = "representante_domicilio_codigo_provincia"
-input_kind = "informational"
 # `number` re-grounded 2026-08-22 from slug values to AEAT's own bracket numbers,
 # read off the bundled aeat-dr-840 design: Ejercicio is [14] at @270+4 and
 # "Declaracion de:" is [15] at @274+1. Before this the coverage report read 0 of
@@ -678,26 +593,6 @@ input_kind = "informational"
 # five real positions stay unmodelled. They need the distinguishing convention that
 # Apartado IV is waiting on.
 
-# @11+13, type_code An. Cuota consignada directamente en las tarifas. [84].
-# Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "elem-trib.cuota-consignada-tarifas"
-number = "84"
-section = ["elementos_tributarios"]
-data_type = "text"
-semantic_role = "elem_trib_cuota_consignada_tarifas"
-input_kind = "informational"
-
-# @560+13, type_code An. A) Suma de elementos tributarios del grupo o epigrafe. [85].
-# Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "elem-trib.grupo-epigrafe-suma"
-number = "85"
-section = ["elementos_tributarios"]
-data_type = "text"
-semantic_role = "elem_trib_grupo_epigrafe_suma"
-input_kind = "informational"
-
 # @850+7, type_code Num. C) Suma de Total. [87].
 [[revisions."2003-y-siguientes".casillas]]
 id = "elem-trib.municipal-suma-total"
@@ -743,36 +638,6 @@ data_type = "integer"
 semantic_role = "elem_trib_municipal_superficie_computable"
 input_kind = "informational"
 
-# @883+13, type_code An. C) Valor elemento tributario. [92].
-# Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "elem-trib.municipal-valor-elemento"
-number = "92"
-section = ["elementos_tributarios"]
-data_type = "text"
-semantic_role = "elem_trib_municipal_valor_elemento"
-input_kind = "informational"
-
-# @896+5, type_code An. C) Coeficiente corrector. [93].
-# Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "elem-trib.municipal-coeficiente-corrector"
-number = "93"
-section = ["elementos_tributarios"]
-data_type = "text"
-semantic_role = "elem_trib_municipal_coeficiente_corrector"
-input_kind = "informational"
-
-# @901+13, type_code An. C) Cuota elemento tributario. [94].
-# Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "elem-trib.municipal-cuota-elemento"
-number = "94"
-section = ["elementos_tributarios"]
-data_type = "text"
-semantic_role = "elem_trib_municipal_cuota_elemento"
-input_kind = "informational"
-
 # @914+5, type_code Num. D) Locales, numero de locales. [95].
 [[revisions."2003-y-siguientes".casillas]]
 id = "elem-trib.provincial-nacional-numero"
@@ -809,130 +674,6 @@ data_type = "integer"
 semantic_role = "elem_trib_provincial_nacional_computable"
 input_kind = "informational"
 
-# @943+13, type_code An. D) Locales, Cuota elemento tributario. [99].
-# Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "elem-trib.provincial-nacional-cuota-elemento"
-number = "99"
-section = ["elementos_tributarios"]
-data_type = "text"
-semantic_role = "elem_trib_provincial_nacional_cuota_elemento"
-input_kind = "informational"
-
-# @956+13, type_code An. Cuota antes de bonificaciones o incrementos. [100].
-# Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "cuota.antes-bonificaciones-incrementos"
-number = "100"
-section = ["cuota"]
-data_type = "text"
-semantic_role = "cuota_antes_bonificaciones_incrementos"
-input_kind = "informational"
-
-# @969+5, type_code An. Bonificacion. [101].
-# Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "cuota.bonificacion-clave"
-number = "101"
-section = ["cuota"]
-data_type = "text"
-semantic_role = "cuota_bonificacion_clave"
-input_kind = "informational"
-
-# @974+13, type_code An. Bonificacion, porcentaje sobre. [102].
-# Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "cuota.bonificacion-porcentaje"
-number = "102"
-section = ["cuota"]
-data_type = "text"
-semantic_role = "cuota_bonificacion_porcentaje"
-input_kind = "informational"
-
-# @987+13, type_code An. Bonificacion, cuota. [103].
-# Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "cuota.bonificacion-importe"
-number = "103"
-section = ["cuota"]
-data_type = "text"
-semantic_role = "cuota_bonificacion_importe"
-input_kind = "informational"
-
-# @1000+5, type_code An. Incremento. [104].
-# Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "cuota.incremento-clave"
-number = "104"
-section = ["cuota"]
-data_type = "text"
-semantic_role = "cuota_incremento_clave"
-input_kind = "informational"
-
-# @1005+13, type_code An. Incremento, porcentaje sobre. [105].
-# Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "cuota.incremento-porcentaje"
-number = "105"
-section = ["cuota"]
-data_type = "text"
-semantic_role = "cuota_incremento_porcentaje"
-input_kind = "informational"
-
-# @1018+13, type_code An. Incremento, cuota. [106].
-# Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "cuota.incremento-importe"
-number = "106"
-section = ["cuota"]
-data_type = "text"
-semantic_role = "cuota_incremento_importe"
-input_kind = "informational"
-
-# @1031+13, type_code An. Cuota despues de bonificaciones o incrementos. [107].
-# Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "cuota.despues-bonificaciones-incrementos"
-number = "107"
-section = ["cuota"]
-data_type = "text"
-semantic_role = "cuota_despues_bonificaciones_incrementos"
-input_kind = "informational"
-
-# @1057+13, type_code An. Cuota de tarifa o importe minimo. [108].
-# Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "cuota.tarifa-o-importe-minimo"
-number = "108"
-section = ["cuota"]
-data_type = "text"
-semantic_role = "cuota_tarifa_o_importe_minimo"
-input_kind = "informational"
-# Modelo 840 Apartado V -- local afecto indirectamente a la actividad, boxes [68]
-# to [83]. Transcribed position-by-position from the bundled aeat-dr-840 design
-# (Pag. 1, re-verified to tile 1..1132 exactly once with no gap and no overlap).
-#
-# Non-monotonic numbering again, and in a new place: [72] Provincia sits at @1018,
-# [70] Municipio at @1020, then [71] C. Mun. at @1055 and [73] C. Prov. at @1061.
-# Sorting by number would mis-assign four of these sixteen.
-#
-# RESERVADO BOXES ARE DECLARED, as in Apartado III: [71], [73] and [76] are filled
-# by the administration rather than the filer, but AEAT numbers them and the
-# coverage report derives them, so they are casillas with `required = false`. The
-# UNNUMBERED Municipio description run at @1025+30 is a table expansion, carries no
-# box number, is not derived, and is correctly not a casilla.
-#
-# [79] IS "Pto." AND ITS LABEL KEEPS THAT ABBREVIATION. The diseno never expands
-# it, and it sits three boxes away from [82] "Pta." -- Puerta. In AEAT address
-# blocks Pto. is ordinarily Portal, but "ordinarily" is not the standard for a
-# filing-grade label, and guessing between Portal and Puerto would put an invented
-# word in four locales. The label carries AEAT's own abbreviation until the
-# expansion is confirmed from an official source.
-#
-# Every field is text: each is a fixed-width code or free text where a leading zero
-# is significant. The whole apartado is optional -- a declaration with no
-# indirectly-affected local leaves all sixteen blank.
-
 # @961+52. Apart. V: Local afecto indirectamente a la act. Uso o destino. [68].
 [[revisions."2003-y-siguientes".casillas]]
 id = "local-indirecto.uso-destino"
@@ -960,15 +701,6 @@ data_type = "text"
 semantic_role = "local_indirecto_municipio"
 input_kind = "informational"
 
-# @1055+6. Apart. V: Local afecto indirectamente a la act. C. Mun. (codigo de municipio). [71].  Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "local-indirecto.codigo-municipio"
-number = "71"
-section = ["local_afecto_indirectamente"]
-data_type = "text"
-semantic_role = "local_indirecto_codigo_municipio"
-input_kind = "informational"
-
 # @1018+2. Apart. V: Local afecto indirectamente a la act. Provincia (codigo). [72].
 [[revisions."2003-y-siguientes".casillas]]
 id = "local-indirecto.provincia"
@@ -976,15 +708,6 @@ number = "72"
 section = ["local_afecto_indirectamente"]
 data_type = "text"
 semantic_role = "local_indirecto_provincia"
-input_kind = "informational"
-
-# @1061+2. Apart. V: Local afecto indirectamente a la act. C. Prov. (codigo de provincia). [73].  Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "local-indirecto.codigo-provincia"
-number = "73"
-section = ["local_afecto_indirectamente"]
-data_type = "text"
-semantic_role = "local_indirecto_codigo_provincia"
 input_kind = "informational"
 
 # @1063+2. Apart. V: Local afecto indirectamente a la act. SG (sigla de la via publica). [74].
@@ -1003,15 +726,6 @@ number = "75"
 section = ["local_afecto_indirectamente"]
 data_type = "text"
 semantic_role = "local_indirecto_via_publica"
-input_kind = "informational"
-
-# @1090+2. Apart. V: Local afecto indirectamente a la act. C. Via (codigo de via). [76].  Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "local-indirecto.codigo-via"
-number = "76"
-section = ["local_afecto_indirectamente"]
-data_type = "text"
-semantic_role = "local_indirecto_codigo_via"
 input_kind = "informational"
 
 # @1092+5. Apart. V: Local afecto indirectamente a la act. Num.. [77].
@@ -1114,17 +828,6 @@ input_kind = "informational"
 # casilla of its own -- so they are ONE `date` casilla rather than three integers.
 # That yields three casillas for five positions, which is the honest count: two
 # independent facts plus one date.
-
-# @672+13, type_code An. Apartado VI: Maquinas recreativas o autoventa. B) Suma. [86].
-# Carries AEAT's number: this is where the box is defined.
-# Reservado: cumplimentado por la Administracion.
-[[revisions."2003-y-siguientes".casillas]]
-id = "maquinas.suma"
-number = "86"
-section = ["elementos_tributarios"]
-data_type = "text"
-semantic_role = "maquinas_recreativas_autoventa_suma"
-input_kind = "informational"
 
 # @1044+13, type_code An. Apartado VII: Cuota maquinas recreativas o autoventa. [86].
 # Slug number: the printed [86] already belongs to the Apartado VI sub-total above,

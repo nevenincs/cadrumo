@@ -7,7 +7,7 @@ revision_id = "2003-y-siguientes"
 seed_source = "casilla_number"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "d654dbae58894fbe578d498e5ae91f85b7190faffacd990dad868d7d26750126"
+source_state_digest = "1ba96b7d704c32a2f5950600718218ff8931679912fe7ea2feaad37a16f115c8"
 placements = [
     { casilla_id = "act.actividad-principal", kind = "on_form", box_number = "59" },
     { casilla_id = "act.ano-inicio-primera-vez", kind = "on_form", box_number = "65" },
@@ -17,11 +17,7 @@ placements = [
     { casilla_id = "act.causa-declaracion-complementaria", kind = "on_form", box_number = "64" },
     { casilla_id = "act.causa-variacion", kind = "working_figure" },
     { casilla_id = "act.clase-cuota", kind = "on_form", box_number = "33" },
-    { casilla_id = "act.codigo-municipio", kind = "on_form", box_number = "39" },
-    { casilla_id = "act.codigo-provincia", kind = "on_form", box_number = "41" },
-    { casilla_id = "act.descripcion", kind = "on_form", box_number = "36" },
     { casilla_id = "act.domicilio-codigo-postal", kind = "on_form", box_number = "44" },
-    { casilla_id = "act.domicilio-codigo-via", kind = "on_form", box_number = "45" },
     { casilla_id = "act.domicilio-escalera", kind = "on_form", box_number = "49" },
     { casilla_id = "act.domicilio-kilometro", kind = "on_form", box_number = "47" },
     { casilla_id = "act.domicilio-numero", kind = "on_form", box_number = "46" },
@@ -51,41 +47,21 @@ placements = [
     { casilla_id = "act.provincia-cuota-provincial", kind = "working_figure" },
     { casilla_id = "act.recepcion-loterias", kind = "on_form" },
     { casilla_id = "act.regla-4-2-f", kind = "on_form", box_number = "57" },
-    { casilla_id = "act.seccion", kind = "on_form", box_number = "58" },
     { casilla_id = "act.tipo-actividad", kind = "on_form", box_number = "34" },
-    { casilla_id = "cuota.antes-bonificaciones-incrementos", kind = "on_form", box_number = "100" },
-    { casilla_id = "cuota.bonificacion-clave", kind = "on_form", box_number = "101" },
-    { casilla_id = "cuota.bonificacion-importe", kind = "on_form", box_number = "103" },
-    { casilla_id = "cuota.bonificacion-porcentaje", kind = "on_form", box_number = "102" },
-    { casilla_id = "cuota.despues-bonificaciones-incrementos", kind = "on_form", box_number = "107" },
-    { casilla_id = "cuota.incremento-clave", kind = "on_form", box_number = "104" },
-    { casilla_id = "cuota.incremento-importe", kind = "on_form", box_number = "106" },
-    { casilla_id = "cuota.incremento-porcentaje", kind = "on_form", box_number = "105" },
     { casilla_id = "cuota.maquinas-recreativas-autoventa", kind = "working_figure" },
-    { casilla_id = "cuota.tarifa-o-importe-minimo", kind = "on_form", box_number = "108" },
     { casilla_id = "decl.ejercicio", kind = "on_form", box_number = "14" },
-    { casilla_id = "decl.numero-referencia", kind = "on_form", box_number = "16" },
     { casilla_id = "decl.tipo-declaracion", kind = "on_form", box_number = "15" },
     { casilla_id = "declarante.indicador-pagina-complementaria", kind = "on_form" },
-    { casilla_id = "elem-trib.cuota-consignada-tarifas", kind = "on_form", box_number = "84" },
-    { casilla_id = "elem-trib.grupo-epigrafe-suma", kind = "on_form", box_number = "85" },
-    { casilla_id = "elem-trib.municipal-coeficiente-corrector", kind = "on_form", box_number = "93" },
-    { casilla_id = "elem-trib.municipal-cuota-elemento", kind = "on_form", box_number = "94" },
     { casilla_id = "elem-trib.municipal-suma-computable", kind = "on_form", box_number = "89" },
     { casilla_id = "elem-trib.municipal-suma-rectificada", kind = "on_form", box_number = "88" },
     { casilla_id = "elem-trib.municipal-suma-total", kind = "on_form", box_number = "87" },
     { casilla_id = "elem-trib.municipal-superficie-computable", kind = "on_form", box_number = "91" },
     { casilla_id = "elem-trib.municipal-superficie-deducible", kind = "on_form", box_number = "90" },
-    { casilla_id = "elem-trib.municipal-valor-elemento", kind = "on_form", box_number = "92" },
     { casilla_id = "elem-trib.provincial-nacional-computable", kind = "on_form", box_number = "98", aliases = [{ page_id = "m840-anexo", section_id = "general", official_ref = "m840-anexo" }] },
-    { casilla_id = "elem-trib.provincial-nacional-cuota-elemento", kind = "on_form", box_number = "99" },
     { casilla_id = "elem-trib.provincial-nacional-numero", kind = "on_form", box_number = "95" },
     { casilla_id = "elem-trib.provincial-nacional-rectificada", kind = "on_form", box_number = "97", aliases = [{ page_id = "m840-anexo", section_id = "general", official_ref = "m840-anexo" }] },
     { casilla_id = "elem-trib.provincial-nacional-total", kind = "on_form", box_number = "96", aliases = [{ page_id = "m840-anexo", section_id = "general", official_ref = "m840-anexo" }] },
-    { casilla_id = "local-indirecto.codigo-municipio", kind = "on_form", box_number = "71" },
     { casilla_id = "local-indirecto.codigo-postal", kind = "on_form", box_number = "69" },
-    { casilla_id = "local-indirecto.codigo-provincia", kind = "on_form", box_number = "73" },
-    { casilla_id = "local-indirecto.codigo-via", kind = "on_form", box_number = "76" },
     { casilla_id = "local-indirecto.escalera", kind = "on_form", box_number = "80" },
     { casilla_id = "local-indirecto.kilometro", kind = "on_form", box_number = "78" },
     { casilla_id = "local-indirecto.municipio", kind = "on_form", box_number = "70" },
@@ -98,15 +74,11 @@ placements = [
     { casilla_id = "local-indirecto.telefono", kind = "on_form", box_number = "83" },
     { casilla_id = "local-indirecto.uso-destino", kind = "on_form", box_number = "68" },
     { casilla_id = "local-indirecto.via-publica", kind = "on_form", box_number = "75" },
-    { casilla_id = "maquinas.suma", kind = "on_form", box_number = "86" },
     { casilla_id = "notificacion.calidad", kind = "working_figure" },
     { casilla_id = "notificacion.fecha", kind = "working_figure" },
     { casilla_id = "notificacion.lugar", kind = "on_form", box_number = "109" },
     { casilla_id = "representante.apellidos-razon-social", kind = "on_form", box_number = "18" },
-    { casilla_id = "representante.domicilio-codigo-municipio", kind = "on_form", box_number = "30" },
     { casilla_id = "representante.domicilio-codigo-postal", kind = "on_form", box_number = "28" },
-    { casilla_id = "representante.domicilio-codigo-provincia", kind = "on_form", box_number = "32" },
-    { casilla_id = "representante.domicilio-codigo-via", kind = "on_form", box_number = "21" },
     { casilla_id = "representante.domicilio-escalera", kind = "on_form", box_number = "24" },
     { casilla_id = "representante.domicilio-kilometro", kind = "on_form", box_number = "23" },
     { casilla_id = "representante.domicilio-municipio", kind = "on_form", box_number = "29" },
@@ -247,72 +219,4 @@ id = "general"
 heading_key = "modelo.schema.840.form.section.general.heading"
 blocks = [
     { kind = "field", id = "field", casilla_id = "declarante.indicador-pagina-complementaria" },
-]
-
-[[revisions.2003-y-siguientes.form_layouts.pages]]
-id = "numbered-boxes"
-heading_key = "modelo.schema.840.form.page.numbered-boxes.heading"
-
-[[revisions.2003-y-siguientes.form_layouts.pages.sections]]
-id = "declarante"
-heading_key = "modelo.schema.840.form.section.declarante.heading"
-blocks = [
-    { kind = "field", id = "field-1", casilla_id = "decl.numero-referencia" },
-]
-
-[[revisions.2003-y-siguientes.form_layouts.pages.sections]]
-id = "representante"
-heading_key = "modelo.schema.840.form.section.representante.heading"
-blocks = [
-    { kind = "field", id = "field-1", casilla_id = "representante.domicilio-codigo-via" },
-    { kind = "field", id = "field-2", casilla_id = "representante.domicilio-codigo-municipio" },
-    { kind = "field", id = "field-3", casilla_id = "representante.domicilio-codigo-provincia" },
-]
-
-[[revisions.2003-y-siguientes.form_layouts.pages.sections]]
-id = "actividad"
-heading_key = "modelo.schema.840.form.section.actividad.heading"
-blocks = [
-    { kind = "field", id = "field-1", casilla_id = "act.descripcion" },
-    { kind = "field", id = "field-2", casilla_id = "act.codigo-municipio" },
-    { kind = "field", id = "field-3", casilla_id = "act.codigo-provincia" },
-    { kind = "field", id = "field-4", casilla_id = "act.domicilio-codigo-via" },
-    { kind = "field", id = "field-5", casilla_id = "act.seccion" },
-]
-
-[[revisions.2003-y-siguientes.form_layouts.pages.sections]]
-id = "local-afecto-indirectamente"
-heading_key = "modelo.schema.840.form.section.local-afecto-indirectamente.heading"
-blocks = [
-    { kind = "field", id = "field-1", casilla_id = "local-indirecto.codigo-municipio" },
-    { kind = "field", id = "field-2", casilla_id = "local-indirecto.codigo-provincia" },
-    { kind = "field", id = "field-3", casilla_id = "local-indirecto.codigo-via" },
-]
-
-[[revisions.2003-y-siguientes.form_layouts.pages.sections]]
-id = "elementos-tributarios"
-heading_key = "modelo.schema.840.form.section.elementos-tributarios.heading"
-blocks = [
-    { kind = "field", id = "field-1", casilla_id = "elem-trib.cuota-consignada-tarifas" },
-    { kind = "field", id = "field-2", casilla_id = "elem-trib.grupo-epigrafe-suma" },
-    { kind = "field", id = "field-3", casilla_id = "maquinas.suma" },
-    { kind = "field", id = "field-4", casilla_id = "elem-trib.municipal-valor-elemento" },
-    { kind = "field", id = "field-5", casilla_id = "elem-trib.municipal-coeficiente-corrector" },
-    { kind = "field", id = "field-6", casilla_id = "elem-trib.municipal-cuota-elemento" },
-    { kind = "field", id = "field-7", casilla_id = "elem-trib.provincial-nacional-cuota-elemento" },
-]
-
-[[revisions.2003-y-siguientes.form_layouts.pages.sections]]
-id = "cuota"
-heading_key = "modelo.schema.840.form.section.cuota.heading"
-blocks = [
-    { kind = "field", id = "field-1", casilla_id = "cuota.antes-bonificaciones-incrementos" },
-    { kind = "field", id = "field-2", casilla_id = "cuota.bonificacion-clave" },
-    { kind = "field", id = "field-3", casilla_id = "cuota.bonificacion-porcentaje" },
-    { kind = "field", id = "field-4", casilla_id = "cuota.bonificacion-importe" },
-    { kind = "field", id = "field-5", casilla_id = "cuota.incremento-clave" },
-    { kind = "field", id = "field-6", casilla_id = "cuota.incremento-porcentaje" },
-    { kind = "field", id = "field-7", casilla_id = "cuota.incremento-importe" },
-    { kind = "field", id = "field-8", casilla_id = "cuota.despues-bonificaciones-incrementos" },
-    { kind = "field", id = "field-9", casilla_id = "cuota.tarifa-o-importe-minimo" },
 ]

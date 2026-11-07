@@ -29,16 +29,8 @@ modelo:
             x-c5hn8bj3dhgn6p9dcdqmut31:
               label: Classe de quota (M municipal, N nacional, P provincial, o en
                 blanc)
-            x-c5hn8bj3dti6iprf5lmnarj9cdkn0qbf:
-              label: Codi de municipi de l'activitat (reservat a l'Administració)
-            x-c5hn8bj3dti6iprf5lo74rrmd5n66qb1:
-              label: Codi de província de l'activitat (reservat a l'Administració)
-            x-c5hn8bj4clpm6sj9e1hmirre:
-              label: Descripció de l'activitat (reservat a l'Administració)
             x-c5hn8bj4dtmmior9dhkmubb3dti6iprf5lo6usrkc5m0:
               label: 'Domicili de l''activitat: codi postal'
-            x-c5hn8bj4dtmmior9dhkmubb3dti6iprf5lr6io8:
-              label: 'Domicili de l''activitat: codi de via (reservat a l''Administració)'
             x-c5hn8bj4dtmmior9dhkmubb5edhm2r35e9gg:
               label: 'Domicili de l''activitat: escala'
             x-c5hn8bj4dtmmior9dhkmubbbd5m6urb5ehp6u:
@@ -98,46 +90,17 @@ modelo:
               label: Es realitza la recepció de loteries i apostes
             x-c5hn8bjicljmoo9d6gmj4bb6:
               label: 'Regla que és d''aplicació: Regla 4a apartat 2 F)'
-            x-c5hn8bjjclhm6qbfdo:
-              label: Secció de les tarifes de l'IAE (reservat a l'Administració)
             x-c5hn8bjkd5o6ubb1cdq6itj9chgm8:
               label: Tipus d'activitat (E empresarial, P professional, A artística)
-            x-cdqmut315pgmst35ecmm4rred5j6ior1cdkmurj5ecmmirj3e9imqpbeehnn6:
-              label: Quota abans de bonificacions o increments (reservat a l'Administració)
-            x-cdqmut315ph6urj9cpkm6ob3d5nmsbb3dhgncp8:
-              label: Clau de bonificació aplicada (reservat a l'Administració)
-            x-cdqmut315ph6urj9cpkm6ob3d5nmsbb9dlo6usjkck:
-              label: Import de la bonificació (reservat a l'Administració)
-            x-cdqmut315ph6urj9cpkm6ob3d5nmsbbgdtp66pbeehgmkp8:
-              label: Percentatge sobre el qual s'aplica la bonificació (reservat a
-                l'Administració)
-            x-cdqmut315pi6asrgelin6bb2dtn6ipj9cdgm6qbfdpin6bb9dphn4pbdcln78rrj:
-              label: Quota després de bonificacions o increments (reservat a l'Administració)
-            x-cdqmut315pkmsoriclmmarjkdsmm6r31epig:
-              label: Clau d'increment aplicat (reservat a l'Administració)
-            x-cdqmut315pkmsoriclmmarjkdsmmirbgdtp78p8:
-              label: Import de l'increment (reservat a l'Administració)
-            x-cdqmut315pkmsoriclmmarjkdsmn0rricdimst31d9ig:
-              label: Percentatge sobre el qual s'aplica l'increment (reservat a l'Administració)
             x-cdqmut315pmm2sbld5n62spde9im6sj5c5q6itj1ecmm2tbkdtr6arjkc4:
               label: Quota de maquines recreatives o d'autovenda (reservat a l'Administració)
-            x-cdqmut315pq62sj9cpgiqrpdd5mn0rriehiiqrb9dpkmqro:
-              label: Quota de tarifa o import minim (reservat a l'Administració)
             x-chim6r1ecll6asj3d5hmiro:
               label: Exercici fiscal a què es refereix la declaració
-            x-chim6r1edpqmqpbidsmn4pb6clp6arj3d5gg:
-              label: Número de referència de la declaració (reservat a l'Administració)
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               label: Tipus de declaració (alta / variació / baixa)
-            x-clm6ar9dehp6iohecdqmut315lhmurjjd5jmsob4c4mn8obid5j62so:
-              label: Quota consignada directament a les tarifes (reservat a l'Administració)
-            x-clm6ar9dehp6iohectp7as3f5lin0qb7e9gmcp9dedqmqo8:
-              label: Suma dels elements tributaris del grup o epígraf (reservat a
-                l'Administració)
-            x-clm6ar9dehp6iohedlqmsqb3d5o62r1dcdnmapj9cdkmarjkckmm6rrie9im6t3fe8:
-              label: 'Quota municipal: coeficient corrector (reservat a l''Administració)'
-            x-clm6ar9dehp6iohedlqmsqb3d5o62r1dcdqmut315limopbdcln78ro:
-              label: 'Quota municipal: quota de l''element tributari (reservat a l''Administració)'
+            x-chim6r31e9gmst355pkmsp39cdgm8rri5lo62pr9dpgiqorfdlo6opbdcln78obid5gg:
+              label: Indicador de pàgina complementària (deixa'l en blanc si no ho
+                és, «C» si ho és)
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9dcdnmqs3lehgm4r35:
               label: 'Quota municipal: suma de la superfície computable dels locals'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9de9im6t39cpkm6ob4c4:
@@ -148,30 +111,16 @@ modelo:
               label: 'Quota municipal: superfície computable'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqn0pbicpkm6qb55li6ap3lcdkm4r35:
               label: 'Quota municipal: superfície deduïble'
-            x-clm6ar9dehp6iohedlqmsqb3d5o62r1depgmorri5limopbdcln78ro:
-              label: 'Quota municipal: valor de l''element tributari (reservat a l''Administració)'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dcdnmqs3lehgm4r35:
               label: 'Quota provincial o nacional: superfície computable dels locals'
-            x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dcdqmut315limopbdcln78ro:
-              label: 'Quota provincial o nacional: quota de l''element tributari (reservat
-                a l''Administració)'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1ddpqmqpbids:
               label: 'Quota provincial o nacional: nombre de locals'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1de9im6t39cpkm6ob4c4:
               label: 'Quota provincial o nacional: superfície rectificada dels locals'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dehnn8obc:
               label: 'Quota provincial o nacional: superfície total dels locals'
-            x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqrbldpkm6qbgd5ng:
-              label: Codi de municipi del local afecte indirectament a l'activitat
-                (reservat a l'Administració)
             x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqs3fedq62r0:
               label: Codi postal del local afecte indirectament a l'activitat
-            x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqs3idtr6irj3d5gg:
-              label: Codi de província del local afecte indirectament a l'activitat
-                (reservat a l'Administració)
-            x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqtj9c4:
-              label: Codi de via del local afecte indirectament a l'activitat (reservat
-                a l'Administració)
             x-dhnm6obc5lkmsp39e9im6t3f5pin6or1dhin4o8:
               label: Escala del local afecte indirectament a l'activitat
             x-dhnm6obc5lkmsp39e9im6t3f5plmir3fdlin8sjf:
@@ -197,8 +146,6 @@ modelo:
               label: Ús o destinació del local afecte indirectament a l'activitat
             x-dhnm6obc5lkmsp39e9im6t3f5pr6io9de1qm4r39cdgg:
               label: Nom de la via pública del local afecte indirectament a l'activitat
-            x-dlgn2tb9dpgn6bjjelmm2:
-              label: Suma de maquines recreatives o d'autovenda (reservat a l'Administració)
             x-dpnn8qb6d5hm2or9dtn2sor1dhkm8ob4:
               label: 'Qualitat en que signa: titular o representant'
             x-dpnn8qb6d5hm2or9dtn2spj5cdk62:
@@ -207,14 +154,8 @@ modelo:
               label: Lloc de la notificació
             x-e9in0sj5edimst31dpq6abj1e1imor39chnn6bbic5t6urhdednm6qb1dg:
               label: Cognoms i nom o raó social del representant
-            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lmnarj9cdkn0qbf:
-              label: Codi de municipi del representant (reservat a l'Administració)
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lo6usrkc5m0:
               label: Codi postal del domicili del representant
-            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lo74rrmd5n66qb1:
-              label: Codi de província del representant (reservat a l'Administració)
-            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lr6io8:
-              label: Codi de via del domicili del representant (reservat a l'Administració)
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb5edhm2r35e9gg:
               label: Escala del domicili del representant
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbbd5m6urb5ehp6u:

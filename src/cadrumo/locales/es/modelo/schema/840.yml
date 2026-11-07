@@ -28,16 +28,8 @@ modelo:
               label: Causa de la variación
             x-c5hn8bj3dhgn6p9dcdqmut31:
               label: Clase de cuota (M municipal, N nacional, P provincial, o blanco)
-            x-c5hn8bj3dti6iprf5lmnarj9cdkn0qbf:
-              label: Código de municipio de la actividad (reservado a la Administración)
-            x-c5hn8bj3dti6iprf5lo74rrmd5n66qb1:
-              label: Código de provincia de la actividad (reservado a la Administración)
-            x-c5hn8bj4clpm6sj9e1hmirre:
-              label: Descripción de la actividad (reservado a la Administración)
             x-c5hn8bj4dtmmior9dhkmubb3dti6iprf5lo6usrkc5m0:
               label: 'Domicilio de la actividad: código postal'
-            x-c5hn8bj4dtmmior9dhkmubb3dti6iprf5lr6io8:
-              label: 'Domicilio de la actividad: código de vía (reservado a la Administración)'
             x-c5hn8bj4dtmmior9dhkmubb5edhm2r35e9gg:
               label: 'Domicilio de la actividad: escalera'
             x-c5hn8bj4dtmmior9dhkmubbbd5m6urb5ehp6u:
@@ -97,51 +89,18 @@ modelo:
               label: Se realiza la recepción de loterías y apuestas
             x-c5hn8bjicljmoo9d6gmj4bb6:
               label: 'Regla que es de aplicación: Regla 4a apartado 2 F)'
-            x-c5hn8bjjclhm6qbfdo:
-              label: Sección de las tarifas del IAE (reservado a la Administración)
             x-c5hn8bjkd5o6ubb1cdq6itj9chgm8:
               label: Tipo de actividad (E empresarial, P profesional, A artística)
-            x-cdqmut315pgmst35ecmm4rred5j6ior1cdkmurj5ecmmirj3e9imqpbeehnn6:
-              label: Cuota antes de bonificaciones o incrementos (reservado a la Administración)
-            x-cdqmut315ph6urj9cpkm6ob3d5nmsbb3dhgncp8:
-              label: Clave de bonificación aplicada (reservado a la Administración)
-            x-cdqmut315ph6urj9cpkm6ob3d5nmsbb9dlo6usjkck:
-              label: Importe de la bonificación (reservado a la Administración)
-            x-cdqmut315ph6urj9cpkm6ob3d5nmsbbgdtp66pbeehgmkp8:
-              label: Porcentaje sobre el que se aplica la bonificación (reservado
-                a la Administración)
-            x-cdqmut315pi6asrgelin6bb2dtn6ipj9cdgm6qbfdpin6bb9dphn4pbdcln78rrj:
-              label: Cuota después de bonificaciones o incrementos (reservado a la
-                Administración)
-            x-cdqmut315pkmsoriclmmarjkdsmm6r31epig:
-              label: Clave de incremento aplicado (reservado a la Administración)
-            x-cdqmut315pkmsoriclmmarjkdsmmirbgdtp78p8:
-              label: Importe del incremento (reservado a la Administración)
-            x-cdqmut315pkmsoriclmmarjkdsmn0rricdimst31d9ig:
-              label: Porcentaje sobre el que se aplica el incremento (reservado a
-                la Administración)
             x-cdqmut315pmm2sbld5n62spde9im6sj5c5q6itj1ecmm2tbkdtr6arjkc4:
               label: Cuota de maquinas recreativas o de autoventa (reservado a la
                 Administración)
-            x-cdqmut315pq62sj9cpgiqrpdd5mn0rriehiiqrb9dpkmqro:
-              label: Cuota de tarifa o importe mínimo (reservado a la Administración)
             x-chim6r1ecll6asj3d5hmiro:
               label: Ejercicio fiscal al que se refiere la declaración
-            x-chim6r1edpqmqpbidsmn4pb6clp6arj3d5gg:
-              label: Número de referencia de la declaración (reservado a la Administración)
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               label: Tipo de declaración (alta / variación / baja)
-            x-clm6ar9dehp6iohecdqmut315lhmurjjd5jmsob4c4mn8obid5j62so:
-              label: Cuota consignada directamente en las tarifas (reservado a la
-                Administración)
-            x-clm6ar9dehp6iohectp7as3f5lin0qb7e9gmcp9dedqmqo8:
-              label: Suma de los elementos tributarios del grupo o epígrafe (reservado
-                a la Administración)
-            x-clm6ar9dehp6iohedlqmsqb3d5o62r1dcdnmapj9cdkmarjkckmm6rrie9im6t3fe8:
-              label: 'Cuota municipal: coeficiente corrector (reservado a la Administración)'
-            x-clm6ar9dehp6iohedlqmsqb3d5o62r1dcdqmut315limopbdcln78ro:
-              label: 'Cuota municipal: cuota del elemento tributario (reservado a
-                la Administración)'
+            x-chim6r31e9gmst355pkmsp39cdgm8rri5lo62pr9dpgiqorfdlo6opbdcln78obid5gg:
+              label: Indicador de página complementaria (déjalo en blanco si no es
+                complementaria, «C» si lo es)
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9dcdnmqs3lehgm4r35:
               label: 'Cuota municipal: suma de la superficie computable de los locales'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9de9im6t39cpkm6ob4c4:
@@ -152,31 +111,16 @@ modelo:
               label: 'Cuota municipal: superficie computable'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqn0pbicpkm6qb55li6ap3lcdkm4r35:
               label: 'Cuota municipal: superficie deducible'
-            x-clm6ar9dehp6iohedlqmsqb3d5o62r1depgmorri5limopbdcln78ro:
-              label: 'Cuota municipal: valor del elemento tributario (reservado a
-                la Administración)'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dcdnmqs3lehgm4r35:
               label: 'Cuota provincial o nacional: superficie computable de los locales'
-            x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dcdqmut315limopbdcln78ro:
-              label: 'Cuota provincial o nacional: cuota del elemento tributario (reservado
-                a la Administración)'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1ddpqmqpbids:
               label: 'Cuota provincial o nacional: número de locales'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1de9im6t39cpkm6ob4c4:
               label: 'Cuota provincial o nacional: superficie rectificada de los locales'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dehnn8obc:
               label: 'Cuota provincial o nacional: superficie total de los locales'
-            x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqrbldpkm6qbgd5ng:
-              label: Código de municipio del local afecto indirectamente a la actividad
-                (reservado a la Administración)
             x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqs3fedq62r0:
               label: Código postal del local afecto indirectamente a la actividad
-            x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqs3idtr6irj3d5gg:
-              label: Código de provincia del local afecto indirectamente a la actividad
-                (reservado a la Administración)
-            x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqtj9c4:
-              label: Código de vía del local afecto indirectamente a la actividad
-                (reservado a la Administración)
             x-dhnm6obc5lkmsp39e9im6t3f5pin6or1dhin4o8:
               label: Escalera del local afecto indirectamente a la actividad
             x-dhnm6obc5lkmsp39e9im6t3f5plmir3fdlin8sjf:
@@ -204,8 +148,6 @@ modelo:
             x-dhnm6obc5lkmsp39e9im6t3f5pr6io9de1qm4r39cdgg:
               label: Nombre de la vía pública del local afecto indirectamente a la
                 actividad
-            x-dlgn2tb9dpgn6bjjelmm2:
-              label: Suma de maquinas recreativas o de autoventa (reservado a la Administración)
             x-dpnn8qb6d5hm2or9dtn2sor1dhkm8ob4:
               label: 'Calidad en la que firma: titular o representante'
             x-dpnn8qb6d5hm2or9dtn2spj5cdk62:
@@ -214,15 +156,8 @@ modelo:
               label: Lugar de la notificación
             x-e9in0sj5edimst31dpq6abj1e1imor39chnn6bbic5t6urhdednm6qb1dg:
               label: Apellidos y nombre o razón social del representante
-            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lmnarj9cdkn0qbf:
-              label: Código de municipio del representante (reservado a la Administración)
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lo6usrkc5m0:
               label: Código postal del domicilio del representante
-            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lo74rrmd5n66qb1:
-              label: Código de provincia del representante (reservado a la Administración)
-            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lr6io8:
-              label: Código de vía del domicilio del representante (reservado a la
-                Administración)
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb5edhm2r35e9gg:
               label: Escalera del domicilio del representante
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbbd5m6urb5ehp6u:

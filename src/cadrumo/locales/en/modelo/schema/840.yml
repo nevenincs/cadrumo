@@ -29,16 +29,8 @@ modelo:
               label: Reason for the variation
             x-c5hn8bj3dhgn6p9dcdqmut31:
               label: Quota class (M municipal, N national, P provincial, or blank)
-            x-c5hn8bj3dti6iprf5lmnarj9cdkn0qbf:
-              label: Municipality code of the activity (reserved for the tax administration)
-            x-c5hn8bj3dti6iprf5lo74rrmd5n66qb1:
-              label: Province code of the activity (reserved for the tax administration)
-            x-c5hn8bj4clpm6sj9e1hmirre:
-              label: Description of the activity (reserved for the tax administration)
             x-c5hn8bj4dtmmior9dhkmubb3dti6iprf5lo6usrkc5m0:
               label: 'Address of the activity: postal code'
-            x-c5hn8bj4dtmmior9dhkmubb3dti6iprf5lr6io8:
-              label: 'Address of the activity: street code (reserved for the tax administration)'
             x-c5hn8bj4dtmmior9dhkmubb5edhm2r35e9gg:
               label: 'Address of the activity: stairwell'
             x-c5hn8bj4dtmmior9dhkmubbbd5m6urb5ehp6u:
@@ -98,50 +90,18 @@ modelo:
               label: Lottery and betting reception is carried out
             x-c5hn8bjicljmoo9d6gmj4bb6:
               label: 'Applicable rule: Rule 4, paragraph 2 F)'
-            x-c5hn8bjjclhm6qbfdo:
-              label: Section of the IAE tariffs (reserved for the tax administration)
             x-c5hn8bjkd5o6ubb1cdq6itj9chgm8:
               label: Type of activity (E business, P professional, A artistic)
-            x-cdqmut315pgmst35ecmm4rred5j6ior1cdkmurj5ecmmirj3e9imqpbeehnn6:
-              label: Quota before reductions or increases (reserved for the tax administration)
-            x-cdqmut315ph6urj9cpkm6ob3d5nmsbb3dhgncp8:
-              label: Code of the reduction applied (reserved for the tax administration)
-            x-cdqmut315ph6urj9cpkm6ob3d5nmsbb9dlo6usjkck:
-              label: Amount of the reduction (reserved for the tax administration)
-            x-cdqmut315ph6urj9cpkm6ob3d5nmsbbgdtp66pbeehgmkp8:
-              label: Percentage to which the reduction applies (reserved for the tax
-                administration)
-            x-cdqmut315pi6asrgelin6bb2dtn6ipj9cdgm6qbfdpin6bb9dphn4pbdcln78rrj:
-              label: Quota after reductions or increases (reserved for the tax administration)
-            x-cdqmut315pkmsoriclmmarjkdsmm6r31epig:
-              label: Code of the increase applied (reserved for the tax administration)
-            x-cdqmut315pkmsoriclmmarjkdsmmirbgdtp78p8:
-              label: Amount of the increase (reserved for the tax administration)
-            x-cdqmut315pkmsoriclmmarjkdsmn0rricdimst31d9ig:
-              label: Percentage to which the increase applies (reserved for the tax
-                administration)
             x-cdqmut315pmm2sbld5n62spde9im6sj5c5q6itj1ecmm2tbkdtr6arjkc4:
               label: Quota for gaming machines or vending activity (reserved for the
                 tax administration)
-            x-cdqmut315pq62sj9cpgiqrpdd5mn0rriehiiqrb9dpkmqro:
-              label: Tariff quota or minimum amount (reserved for the tax administration)
             x-chim6r1ecll6asj3d5hmiro:
               label: Tax year to which the return relates
-            x-chim6r1edpqmqpbidsmn4pb6clp6arj3d5gg:
-              label: Reference number of the return (reserved for the tax administration)
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               label: Return type (registration / change / deregistration)
-            x-clm6ar9dehp6iohecdqmut315lhmurjjd5jmsob4c4mn8obid5j62so:
-              label: Quota stated directly in the tariffs (reserved for the tax administration)
-            x-clm6ar9dehp6iohectp7as3f5lin0qb7e9gmcp9dedqmqo8:
-              label: Sum of the taxable elements of the group or heading (reserved
-                for the tax administration)
-            x-clm6ar9dehp6iohedlqmsqb3d5o62r1dcdnmapj9cdkmarjkckmm6rrie9im6t3fe8:
-              label: 'Municipal quota: correcting coefficient (reserved for the tax
-                administration)'
-            x-clm6ar9dehp6iohedlqmsqb3d5o62r1dcdqmut315limopbdcln78ro:
-              label: 'Municipal quota: quota of the taxable element (reserved for
-                the tax administration)'
+            x-chim6r31e9gmst355pkmsp39cdgm8rri5lo62pr9dpgiqorfdlo6opbdcln78obid5gg:
+              label: Supplementary page indicator (blank for an original page, C for
+                a supplementary page)
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9dcdnmqs3lehgm4r35:
               label: 'Municipal quota: sum of the countable floor area of the premises'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9de9im6t39cpkm6ob4c4:
@@ -152,31 +112,16 @@ modelo:
               label: 'Municipal quota: countable floor area'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqn0pbicpkm6qb55li6ap3lcdkm4r35:
               label: 'Municipal quota: deductible floor area'
-            x-clm6ar9dehp6iohedlqmsqb3d5o62r1depgmorri5limopbdcln78ro:
-              label: 'Municipal quota: value of the taxable element (reserved for
-                the tax administration)'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dcdnmqs3lehgm4r35:
               label: 'Provincial or national quota: countable floor area of the premises'
-            x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dcdqmut315limopbdcln78ro:
-              label: 'Provincial or national quota: quota of the taxable element (reserved
-                for the tax administration)'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1ddpqmqpbids:
               label: 'Provincial or national quota: number of premises'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1de9im6t39cpkm6ob4c4:
               label: 'Provincial or national quota: adjusted floor area of the premises'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dehnn8obc:
               label: 'Provincial or national quota: total floor area of the premises'
-            x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqrbldpkm6qbgd5ng:
-              label: Municipality code of the premises indirectly used for the activity
-                (reserved for the tax administration)
             x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqs3fedq62r0:
               label: Postal code of the premises indirectly used for the activity
-            x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqs3idtr6irj3d5gg:
-              label: Province code of the premises indirectly used for the activity
-                (reserved for the tax administration)
-            x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqtj9c4:
-              label: Street code of the premises indirectly used for the activity
-                (reserved for the tax administration)
             x-dhnm6obc5lkmsp39e9im6t3f5pin6or1dhin4o8:
               label: Stairwell of the premises indirectly used for the activity
             x-dhnm6obc5lkmsp39e9im6t3f5plmir3fdlin8sjf:
@@ -203,9 +148,6 @@ modelo:
               label: Use or purpose of the premises indirectly used for the activity
             x-dhnm6obc5lkmsp39e9im6t3f5pr6io9de1qm4r39cdgg:
               label: Street name of the premises indirectly used for the activity
-            x-dlgn2tb9dpgn6bjjelmm2:
-              label: Sum for gaming machines or vending activity (reserved for the
-                tax administration)
             x-dpnn8qb6d5hm2or9dtn2sor1dhkm8ob4:
               label: 'Capacity in which the return is signed: holder or representative'
             x-dpnn8qb6d5hm2or9dtn2spj5cdk62:
@@ -214,16 +156,8 @@ modelo:
               label: Place of the notification
             x-e9in0sj5edimst31dpq6abj1e1imor39chnn6bbic5t6urhdednm6qb1dg:
               label: Surnames and forename, or legal name, of the representative
-            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lmnarj9cdkn0qbf:
-              label: Municipality code of the representative (reserved for the tax
-                administration)
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lo6usrkc5m0:
               label: Postal code of the representative's address
-            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lo74rrmd5n66qb1:
-              label: Province code of the representative (reserved for the tax administration)
-            x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lr6io8:
-              label: Street code of the representative's address (reserved for the
-                tax administration)
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb5edhm2r35e9gg:
               label: Stairwell of the representative's address
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbbd5m6urb5ehp6u:
