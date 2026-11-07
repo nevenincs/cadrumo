@@ -8,7 +8,7 @@ trivial: this module MUST NOT import anything from
 :mod:`domain.transactions`.
 
 See Also:
-    :func:`adapters.outbound.aeat.browser._site_health_parsers.evaluate_response`
+    :func:`adapters.outbound.aeat.browser.site_health_parsers.evaluate_response`
         Pure parser suite delegated to by :func:`probe_response`.
     :class:`adapters.outbound.aeat.browser.site_health_records.SiteHealthStatus`
         Concrete status record returned for maintenance, WAF, rate-limit, and

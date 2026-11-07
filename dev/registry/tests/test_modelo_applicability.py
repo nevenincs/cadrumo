@@ -32,6 +32,7 @@ from cadrumo.domain.calculations.registry.renta_codes_catalogue import require_f
 from cadrumo.domain.contribuyente.entity_type import require_entity_type, require_legal_entity_form
 from cadrumo.domain.deadlines.models import (
     IVARegime,
+    ModeloEnrollment,
     ModeloIVAProfile,
     TaxpayerProfile,
 )
@@ -64,6 +65,7 @@ with validating_governed_facts(compiled_bundled_authority()):
     _OBJETIVA = irpf_estimation_regime_objetiva_token()
     _SPECIAL_GENERAL = require_irpf_special_regime("general")
     _IMPATRIADO = irpf_special_regime_impatriado_token()
+    _RESIDENT_IRPF = require_fiscal_residency("resident_irpf")
     _NON_RESIDENT_IRNR = require_fiscal_residency("non_resident_irnr")
     _NON_PERIODIC_IVA_REGIMES = (require_iva_regime("EXENTO"), require_iva_regime("RECARGO_EQUIVALENCIA"))
 _FACT_GATED_MODELO_CASES: tuple[tuple[str, _FactUpdateParams], ...] = (
@@ -226,18 +228,38 @@ def _attribution_entity_profile(
         pays_rent_with_retencion=pays_rent_with_retencion,
         does_intracomunitario=does_intracomunitario,
         third_party_transactions_above_347_threshold=third_party_transactions_above_347_threshold,
+        enrollment=_NOT_A_LARGE_COMPANY,
         iva=_iva_block_without_sii() if declares_iva_block else None,
     )
 
 
+_NOT_A_LARGE_COMPANY = ModeloEnrollment(large_company=False)
+"""The volumen de operaciones condition answered as a no.
+
+It is three-state and it is one of the six keys the derived
+``iva_books_kept_through_sii`` fact reads, so a profile that never states it
+leaves the Modelo 347 SII exclusion undetermined whatever its IVA block says.
+"""
+
+
 def _iva_block_without_sii() -> ModeloIVAProfile:
+    """An IVA block enrolled in no books-keeping regime, every enrolment answered.
+
+    Each enrolment is three-state, so leaving one out states nothing about it
+    and keeps the fact derived over the block unanswered. The five block keys
+    the SII derivation reads are answered here as a no, which is what makes
+    this block a declared absence of SII rather than an unasked question.
+    """
     return ModeloIVAProfile.model_validate(
         {
             "tax_territory": "common_regime",
             "regime_composition": "general",
             "redeme_enrolled": False,
             "cash_accounting_regime_enrolled": False,
+            "sii_enrolled": False,
             "voluntary_sii_enrolled": False,
+            "group_member_enrolled": False,
+            "group_dominant_entity_enrolled": False,
             "hydrocarbon_deposit_advance_payment_deduction_entitled": False,
         },
     )
@@ -387,11 +409,15 @@ def test_non_resident_irnr_natural_person_does_not_owe_modelo_100() -> None:
 def test_non_resident_irnr_legal_entity_without_pe_does_not_owe_modelo_200() -> None:
     """Declared IRNR non-residency must not be treated as resident-company M200."""
 
+    # The resident counterpart states its residency: Modelo 200 applies to the
+    # resident category alone, so an unstated residency leaves the verdict
+    # incomplete and the comparison would prove nothing about non-residency.
     resident_company = TaxpayerProfile(
         tax_id="B00015032",
         entity_type=_LEGAL_ENTITY,
         legal_entity_form=_LEGAL_FORM_SL,
         iva_regime=_IVA_GENERAL,
+        fiscal_residency=_RESIDENT_IRPF,
     )
     non_resident_company = TaxpayerProfile(
         tax_id="B00015032",
@@ -418,12 +444,16 @@ def test_non_resident_irnr_legal_entity_without_pe_does_not_owe_modelo_200() -> 
 def test_objective_estimation_regime_routes_to_m131() -> None:
     """An autónomo who explicitly elects módulos owes M131, not M130."""
 
+    # Modelo 130 applies to the resident category alone, so the residency is
+    # stated: the regime gate is the axis under test, and an unstated residency
+    # would stop the M130 verdict short of it.
     autonomo_modulos = TaxpayerProfile(
         tax_id="A00015024",
         entity_type=_NATURAL_PERSON,
         irpf_income_categories=frozenset({_ACTIVIDAD_ECONOMICA}),
         iva_regime=_IVA_GENERAL,
         irpf_estimation_regime=_OBJETIVA,
+        fiscal_residency=_RESIDENT_IRPF,
     )
     assert autonomo_modulos.irpf_estimation_regime == _OBJETIVA
     assert derive_modelo_applicability(autonomo_modulos, "131").verdict is ApplicabilityVerdict.APPLICABLE
@@ -441,11 +471,15 @@ def test_pure_landlord_without_actividad_economica_owes_no_m130() -> None:
     does not spuriously add M130 for a taxpayer who does not owe it.
     """
 
+    # The residency is stated for the same reason: the income-category gate is
+    # the axis under test, and an unstated residency would stop the M130 verdict
+    # before it, so the exclusion this test asserts would never be reached.
     landlord = TaxpayerProfile(
         tax_id="A00015024",
         entity_type=_NATURAL_PERSON,
         irpf_income_categories=frozenset({_CAPITAL_INMOBILIARIO}),
         iva_regime=_IVA_GENERAL,
+        fiscal_residency=_RESIDENT_IRPF,
     )
     assert derive_modelo_applicability(landlord, "130").verdict is ApplicabilityVerdict.NOT_APPLICABLE
     assert derive_modelo_applicability(landlord, "131").verdict is ApplicabilityVerdict.NOT_APPLICABLE
@@ -456,11 +490,20 @@ def _beckham_profile(
     start_date: date = date(2023, 1, 1),
     bienes_extranjero_above_threshold: bool = False,
 ) -> TaxpayerProfile:
+    """An art. 93 impatriado, resident in Spain and electing the special regime.
+
+    The regime is an election by a taxpayer who acquires habitual residence in
+    Spain (LIRPF art. 93.1), so the residency category is ``resident_irpf`` and
+    the election is carried separately by ``irpf_special_regime``. The category
+    is stated because Modelos 100 and 151 apply to it alone, and leaving it
+    unanswered would stop their verdicts before the art. 93 routing under test.
+    """
     return TaxpayerProfile(
         tax_id="X0001500M",
         entity_type=_NATURAL_PERSON,
         irpf_income_categories=frozenset({_TRABAJO}),
         iva_regime=_IVA_GENERAL,
+        fiscal_residency=_RESIDENT_IRPF,
         irpf_special_regime=_IMPATRIADO,
         special_regime_start_date=start_date,
         bienes_extranjero_above_threshold=bienes_extranjero_above_threshold,

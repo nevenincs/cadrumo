@@ -1,6 +1,6 @@
 [schema]
 id = "cadrumo.user_profile"
-version = 7
+version = 8
 title = "Cadrumo user profile schema"
 snapshot_policy = "immutable_secure_snapshot_hash"
 remove_policy = "live_profile_tombstone_retain_snapshots"
@@ -1357,6 +1357,7 @@ required = false
 sensitivity = "financial"
 effective_dated = true
 description = "Modelo 720 eligibility: foreign assets/rights declared above the legal threshold."
+model_selectors = ["bienes_extranjero_above_threshold"]
 schedule_predicates = ["bienes_extranjero_above_threshold"]
 
 [[sections.fields]]
@@ -1817,6 +1818,7 @@ sensitivity = "financial"
 effective_dated = true
 description = "Clasificación como trabajador del mar. Puede dar acceso a la exención por trabajos en el extranjero del art. 7.p LIRPF, a la exención REBECA del 50 % o, cuando llegue a estar vigente, a la prevista en la disposición adicional 41. Si no se indica, se aplica el tratamiento ordinario del trabajo."
 enum_values = ["trabajador_del_mar"]
+model_selectors = ["maritime_worker.worker_class"]
 schedule_predicates = ["maritime_worker.worker_class"]
 legal_refs = [
   "ley-35-2006:art-7",
@@ -1908,6 +1910,7 @@ required = false
 sensitivity = "financial"
 effective_dated = true
 description = "Whether the taxpayer is registered in RETMAR/RETM (Regimen Especial de la Seguridad Social de los Trabajadores del Mar). Since 2023 workers registered in this maritime special Social Security regime must file an IRPF declaration regardless of income level under LIRPF art. 96. This field drives a mandatory-filing profile completeness warning; it does not alter casilla values or formula paths."
+model_selectors = ["maritime_worker.retmar_registered"]
 schedule_predicates = ["maritime_worker.retmar_registered"]
 legal_refs = ["ley-35-2006:art-96"]
 

@@ -506,7 +506,10 @@ def require_regimen_snapshot_matches_registry(
     registry_snapshot: RegistrySnapshot,
     producer_snapshot: FilingProducerSnapshot,
 ) -> None:
-    """Require the producer snapshot's M303 regimen facts to match the registry snapshot."""
+    """Require the producer snapshot's M303 regimen facts to match the registry snapshot.
+
+    ``registry_snapshot`` is a :class:`RegistrySnapshot`.
+    """
     facts = producer_snapshot.m303_filing_facts
     if facts is None:
         raise FilingExportValidationError("M303 projection requires complete filing facts")

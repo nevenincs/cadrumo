@@ -135,6 +135,7 @@ def revision_filing_replay_inputs(
             snapshot=snapshot,
             workflow_profile=workflow_profile,
             existing_relation_ids=frozenset(revision.relation_overrides),
+            operation=operation,
         ),
         **dict(revision.relation_overrides),
     }
@@ -389,6 +390,8 @@ def informational_casilla_replay_inputs(
     Only numeric casillas are read from ``casilla_values``. Text and date
     values replay from their persisted inputs. A numeric placeholder for an
     absent text or date is omitted rather than becoming a filed ``0``.
+
+    ``revision`` is a :class:`CalculationRevision`; ``snapshot`` is a :class:`RegistrySnapshot`.
     """
     if snapshot is None:
         return {}
@@ -408,6 +411,7 @@ def _not_applicable_relation_zero_inputs(
     snapshot: RegistrySnapshot | None,
     workflow_profile: TaxpayerProfile | None,
     existing_relation_ids: frozenset[RelationId],
+    operation: PinnedAuthorityOperation,
 ) -> dict[RelationId, str]:
     """Return explicit zeroes for profile-proven not-applicable relation slots.
 
@@ -431,6 +435,7 @@ def _not_applicable_relation_zero_inputs(
             workflow_profile=workflow_profile,
             active_relation_ids=active_relation_ids,
             existing_relation_ids=existing_relation_ids,
+            operation=operation,
         )
     }
     return dict(sorted(values.items()))
@@ -450,11 +455,12 @@ def _not_applicable_relation_zero_ids(
     workflow_profile: TaxpayerProfile,
     active_relation_ids: frozenset[RelationId],
     existing_relation_ids: frozenset[RelationId],
+    operation: PinnedAuthorityOperation,
 ) -> tuple[RelationId, ...]:
     if not conditional_on_economic_activity:
         return ()
     try:
-        applicability = derive_modelo_applicability(workflow_profile, source_modelo)
+        applicability = derive_modelo_applicability(workflow_profile, source_modelo, operation=operation)
     except (TypeError, ValueError):
         return ()
     if applicability.verdict is not ApplicabilityVerdict.NOT_APPLICABLE:

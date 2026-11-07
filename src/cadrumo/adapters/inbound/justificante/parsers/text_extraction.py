@@ -3,7 +3,7 @@
 Callers outside :mod:`adapters.inbound.justificante` must never import
 from here. Backends expose a common ``extract_text`` entry point that
 returns the raw concatenated text of a justificante PDF; all field-level
-extraction happens in :mod:`adapters.inbound.justificante._extract`.
+extraction happens in :mod:`adapters.inbound.justificante.extract`.
 
 The dispatch is keyed on
 :class:`domain.justificante.schema.JustificanteParserBackend`, and parse

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
@@ -120,7 +120,6 @@ class PayerFactProjection:
 
 
 type PayerFactValue = PayerFact | PayerFactProjection
-type _PayerFactEvaluator = Callable[[TaxpayerProfile], bool]
 
 
 _FACT_ID = "modelo-payer-applicability-facts"
@@ -128,35 +127,21 @@ _ORDER_KEY = "payer_fact.order"
 _PREFIX = "payer_fact."
 
 
-_PAYER_FACT_EVALUATORS: Mapping[PayerFact, _PayerFactEvaluator] = MappingProxyType(
-    {
-        PayerFact.IVA_GROUP_MEMBER: (lambda profile: profile.iva is not None and profile.iva.group_member_enrolled),
-        PayerFact.IVA_GROUP_DOMINANT_ENTITY: (
-            lambda profile: profile.iva is not None and profile.iva.group_dominant_entity_enrolled
-        ),
-        PayerFact.OSS_ENROLLED: lambda profile: profile.iva is not None and profile.iva.oss_enrolled,
-    },
-)
-
-
-#: Coded facts a profile answers yes, no or not at all: each reads optional
-#: boolean profile fields, so an unanswered question is ``None`` and a stored
-#: ``False`` is a declared no. A derived fact holds when any of its keys is yes.
+#: Every coded fact, with the optional boolean profile fields that answer it.
+#:
+#: Each key is a three-state field, so an unanswered question reads ``None``
+#: and a stored ``False`` is the taxpayer's own no. A fact with several keys
+#: holds when any of them is yes. A key inside the optional Modelo IVA block
+#: reads ``None`` for a profile that declares no IVA fact at all, which is the
+#: same unanswered state as an undeclared enrolment inside a claimed block.
 _THREE_STATE_PAYER_FACTS: Mapping[PayerFact, tuple[str, ...]] = MappingProxyType(
     {
         PayerFact.PAYS_WITHHELD_INCOME: ("has_employees", "pays_professionals_with_retencion"),
         PayerFact.PAYS_RENT_WITH_RETENCION: ("pays_rent_with_retencion",),
         PayerFact.TRADES_INTRACOMMUNITY: ("does_intracomunitario",),
-    },
-)
-
-
-_PAYER_FACT_PROFILE_KEYS: Mapping[PayerFact, tuple[str, ...]] = MappingProxyType(
-    {
-        **_THREE_STATE_PAYER_FACTS,
-        PayerFact.IVA_GROUP_MEMBER: ("iva",),
-        PayerFact.IVA_GROUP_DOMINANT_ENTITY: ("iva",),
-        PayerFact.OSS_ENROLLED: ("iva",),
+        PayerFact.IVA_GROUP_MEMBER: ("iva.group_member_enrolled",),
+        PayerFact.IVA_GROUP_DOMINANT_ENTITY: ("iva.group_dominant_entity_enrolled",),
+        PayerFact.OSS_ENROLLED: ("iva.oss_enrolled",),
     },
 )
 
@@ -444,23 +429,22 @@ def _three_state_declaration(answers: tuple[object, ...]) -> PayerFactDeclaratio
 def payer_fact_declaration(profile: TaxpayerProfile, fact: PayerFactValue) -> PayerFactDeclaration:
     """Return what ``profile`` declares about the supplied payer fact.
 
-    A coded enrolment fact is two-state: its evaluator can prove a yes, and
-    anything else stays undeclared. A coded payer fact over optional boolean
-    profile fields is three-state: a stated no is a declared no.
+    Every coded fact reads optional boolean profile fields, so it is
+    three-state: a stated no is a declared no and an absent answer stays
+    undeclared. A dated projection over a plain boolean field keeps the
+    two-state reading, because that field's ``False`` cannot be told apart
+    from a question nobody asked.
 
     Core types:
     :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
     """
     if isinstance(fact, PayerFactProjection):
         return _projection_declaration(profile, fact)
-    answered_keys = _THREE_STATE_PAYER_FACTS.get(fact)
-    if answered_keys is not None:
-        return _three_state_declaration(tuple(profile_path_value(profile, key) for key in answered_keys))
     try:
-        holds = _PAYER_FACT_EVALUATORS[fact](profile)
+        answered_keys = _THREE_STATE_PAYER_FACTS[fact]
     except KeyError as exc:
-        raise RegistryValidationError(f"payer applicability fact {fact!r} has no evaluator") from exc
-    return PayerFactDeclaration.DECLARED_YES if holds else PayerFactDeclaration.UNDECLARED
+        raise RegistryValidationError(f"payer applicability fact {fact!r} has no declared profile keys") from exc
+    return _three_state_declaration(tuple(profile_path_value(profile, key) for key in answered_keys))
 
 
 def payer_fact_profile_keys(fact: PayerFactValue) -> tuple[str, ...]:
@@ -469,4 +453,4 @@ def payer_fact_profile_keys(fact: PayerFactValue) -> tuple[str, ...]:
         if fact.period_companion is not None:
             return (*fact.profile_keys, fact.period_companion.profile_key)
         return fact.profile_keys
-    return _PAYER_FACT_PROFILE_KEYS.get(fact, ())
+    return _THREE_STATE_PAYER_FACTS.get(fact, ())

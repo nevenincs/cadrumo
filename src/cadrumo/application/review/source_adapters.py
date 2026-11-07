@@ -521,6 +521,8 @@ def to_stale_approval_item(
     approval is stale because the transaction catalogue changed" ask the
     operator for different next actions, and only the projection that renders
     a row may turn the second into words.
+
+    ``draft`` is a :class:`ModeloDraft`.
     """
     summary = tr("review.filing.stale_approval_summary")
     return FindingReviewItem(

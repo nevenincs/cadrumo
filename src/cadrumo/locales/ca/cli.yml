@@ -2795,6 +2795,11 @@ cli:
           pregunta sense resposta i s''ha esborrat. Les obligacions que en depenen
           queden sense determinar fins que responguis amb l''opció {yes_flag} o {no_flag}
           de l''ordre d''edició del perfil.'
+        payer_fact_cleared_select: '{fact}: aquest perfil desava el valor que l’assistent
+          de configuració va escriure per defecte, de manera que no es distingia d’una
+          pregunta sense resposta i s’ha esborrat. Les obligacions que en depenen
+          queden sense determinar fins que responguis amb l’opció {flag} de l’ordre
+          d’edició del perfil.'
       plantilla_media:
         average_workforce_help: Plantilla mitjana total de l'any, en equivalents a
           jornada completa i amb dos decimals com a màxim.
@@ -4138,6 +4143,9 @@ cli:
       el perfil o torna a executar amb l'anul·lació de perfil incomplet.
     verbose_help: Mostrar detalls i la següent acció quan existeixi
     warning:
+      administracion_publica_unset: Al teu perfil encara no consta si ets una Administració
+        pública amb un pressupost anual que supera el llindar que fa mensuals les
+        autoliquidacions de retencions.
       aeat_evidence_conflict: Els registres de l'AEAT no coincideixen sobre una declaració
         presentada
       applicability_evidence_disagreement: La teva resposta al perfil i les teves
@@ -4146,10 +4154,21 @@ cli:
       art109_activity_income_withholding_ge_70pct_unset: Al teu perfil encara no consta
         si almenys el 70% dels ingressos de la teva activitat empresarial o professional
         estan subjectes a retenció.
+      bienes_extranjero_unset: Al teu perfil encara no consta si els teus béns i drets
+        situats a l’estranger superen el llindar de declaració.
       censo_enrolment_unverified: No s'ha verificat l'alta al cens
       estimacion_objetiva_unset: Al teu perfil encara no consta quin règim d’estimació
         de l’IRPF s’aplica a la teva activitat.
+      gran_empresa_unset: Al teu perfil encara no consta si el teu volum d’operacions
+        de l’any natural anterior va superar el llindar de gran empresa, cosa que
+        decideix si presentes amb periodicitat mensual o trimestral.
+      grupo_entidades_dependiente_unset: Al teu perfil encara no consta si ets entitat
+        dependent d’un grup d’entitats de l’IVA.
+      grupo_entidades_dominante_unset: Al teu perfil encara no consta si ets l’entitat
+        dominant d’un grup d’entitats de l’IVA.
       has_employees_unset: Al teu perfil encara no consta si tens empleats.
+      intracomunitario_umbral_unset: Al teu perfil encara no consta si les teves operacions
+        intracomunitàries superen el llindar que fa mensual la declaració recapitulativa.
       intracomunitario_unset: Al teu perfil encara no consta si compres o vens béns
         o serveis entre països de la UE.
       iva_regime_unset: Al teu perfil encara no consta quin règim d’IVA s’aplica a
@@ -4159,15 +4178,34 @@ cli:
       m303_simplificado_forfait_unavailable: El Model 303 és aplicable, però encara
         no està disponible el càlcul per mòduls de la quota del règim simplificat
         de l’IVA; revisa les caselles del règim simplificat abans de presentar.
+      monedas_virtuales_extranjero_unset: Al teu perfil encara no consta si les teves
+        monedes virtuals situades a l’estranger superen el llindar de declaració.
+      oss_unset: Al teu perfil encara no consta si estàs donat d’alta al règim de
+        finestreta única (OSS/IOSS).
+      premio_loteria_trimestres_unset: Al teu perfil encara no consta en quins trimestres
+        vas cobrar un premi de loteria subjecte al gravamen especial sense retenció.
+      premio_loteria_unset: Al teu perfil encara no consta si has cobrat un premi
+        de loteria subjecte al gravamen especial sense retenció.
+      redeme_unset: Al teu perfil encara no consta si estàs inscrit al Registre de
+        Devolució Mensual de l’IVA (REDEME).
+      residencia_fiscal_unset: Al teu perfil encara no consta si tens la residència
+        habitual a Espanya, cosa que decideix si tributes per l’IRPF o per l’IRNR.
       retencion_arrendamientos_unset: Al teu perfil encara no consta si pagues lloguers
         i hi practiques retencions.
       retencion_capital_unset: Al teu perfil encara no consta si pagues rendiments
         del capital subjectes a retenció.
       retencion_profesionales_unset: Al teu perfil encara no consta si pagues honoraris
         a professionals i hi practiques retencions.
+      sii_unset: Al teu perfil encara no consta si portes els llibres registre de
+        l’IVA a través del Subministrament Immediat d’Informació (SII).
+      sii_voluntario_unset: Al teu perfil encara no consta si has optat per portar
+        els llibres registre de l’IVA a través del Subministrament Immediat d’Informació
+        (SII).
       terceros_threshold_unset: Al teu perfil encara no consta si les operacions amb
         algun client o proveïdor superen el llindar anual de declaració del Model
         347.
+      tipo_entidad_unset: Al teu perfil encara no consta quin tipus de contribuent
+        ets.
     year_help: Any de declaració per a --period (p. ex. 2024).
   review:
     app_help: 'La teva cua de revisió: classifica moviments dels teus registres, justificants

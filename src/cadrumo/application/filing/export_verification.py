@@ -410,7 +410,10 @@ def _export_fields_by_identity(layout: ExportLayoutDefinition) -> dict[tuple[str
 def mismatched_casilla_ids(
     layout: ExportLayoutDefinition, *, draft: ModeloDraft, payload: bytes, schema_provider: RegistrySchemaAccessor
 ) -> tuple[tuple[CasillaId, ...], tuple[CasillaId, ...]]:
-    """Return the casilla ids whose export payload values differ from the draft."""
+    """Return the casilla ids whose export payload values differ from the draft.
+
+    ``draft`` is a :class:`ModeloDraft`.
+    """
     if layout.format is ExportLayoutFormat.XML_DICTIONARY:
         return _mismatched_xml_dictionary_casilla_ids(
             layout,

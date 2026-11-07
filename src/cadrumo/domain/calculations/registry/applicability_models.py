@@ -326,10 +326,10 @@ class ModeloApplicabilityRule(BaseModel):
             regime.
         applicable_fiscal_residencies: The fiscal residency categories
             the modelo applies to. Empty means the modelo does not gate
-            on fiscal residency. An undeclared residency is kept on the
-            resident-IRPF default path described by ``TaxpayerProfile``;
-            a declared residency outside this set is a positive
-            exclusion.
+            on fiscal residency. An undeclared residency is
+            ``INCOMPLETE``, never the resident reading, because habitual
+            residence in Spain is what selects the tax; a declared
+            residency outside this set is a positive exclusion.
         applicable_iva_regimes: The IVA regimes that positively keep a
             modelo in scope. Empty means the modelo does not gate on IVA
             regime. Non-empty means a profile outside those regimes gets
@@ -339,11 +339,11 @@ class ModeloApplicabilityRule(BaseModel):
             entities.
         required_payer_fact: The :class:`PayerFactValue` the modelo's
             applicability depends on, or ``None`` when the modelo does
-            not gate on a payer fact. When set, a profile that
-            positively declares the fact gets ``APPLICABLE``; a profile
-            that does not gets ``INCOMPLETE`` — the underlying boolean
-            has no tri-state, so the engine cannot positively justify a
-            ``NOT_APPLICABLE`` (see :class:`PayerFactValue`).
+            not gate on a payer fact. When set, a declared yes gets
+            ``APPLICABLE`` and a declared no ``NOT_APPLICABLE``. An
+            unanswered fact gets ``INCOMPLETE``, as does a declared
+            ``False`` the fact's own field cannot tell apart from
+            silence (see :class:`PayerFactValue`).
         applicable_reason: Operator-facing prose for the
             ``APPLICABLE`` verdict.
         not_applicable_reason: Operator-facing prose for the
@@ -386,6 +386,27 @@ class ModeloApplicabilityRule(BaseModel):
     cuota_bearing: bool = False
     exclusions: tuple[ModeloApplicabilityExclusion, ...] = ()
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+
+    @property
+    def gating_payer_facts(self) -> tuple[PayerFactValue, ...]:
+        """Return every payer fact this rule's verdict can turn on, in authored order.
+
+        ``required_payer_fact`` gates the positive verdict, and an exclusion's
+        ``payer_fact`` decides ``NOT_APPLICABLE`` or keeps the modelo
+        ``INCOMPLETE``; both are facts the operator has to answer before the
+        modelo's verdict is settled. Callers that report unanswered gating
+        facts, or that name the profile fields behind one modelo, read this
+        accessor rather than ``required_payer_fact`` alone, so an
+        exclusion-only fact is not silently ungated.
+        """
+        facts: list[PayerFactValue] = []
+        seen: set[PayerFactValue] = set()
+        for fact in (self.required_payer_fact, *(exclusion.payer_fact for exclusion in self.exclusions)):
+            if fact is None or fact in seen:
+                continue
+            seen.add(fact)
+            facts.append(fact)
+        return tuple(facts)
 
     def _exclusion_finding(
         self,
@@ -430,17 +451,42 @@ class ModeloApplicabilityRule(BaseModel):
                 return finding
         return next((finding for finding in findings if finding.answered), findings[0] if findings else None)
 
-    def _entity_type_result(self, profile: TaxpayerProfile) -> ModeloApplicability | None:
+    def _entity_type_result(
+        self,
+        profile: TaxpayerProfile,
+        operation: PinnedAuthorityOperation | None,
+    ) -> ModeloApplicability | None:
         if profile.entity_type in self.applicable_entity_types:
             return None
         if self.cuota_bearing and profile.entity_type == entity_type_attribution_entity_token():
             return ModeloApplicability(
                 modelo=self.modelo,
                 verdict=ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH,
-                reason=registry_applicability_reason("attribution_pass_through.reason"),
+                reason=registry_applicability_reason("attribution_pass_through.reason", operation=operation),
                 legal_refs=_ATTRIBUTION_PASS_THROUGH_LEGAL_REFS,
             )
         return self._not_applicable()
+
+    def _fiscal_residency_result(self, profile: TaxpayerProfile) -> ModeloApplicability | None:
+        """Decide the residency axis, or return ``None`` to leave it open.
+
+        Habitual residence in Spain is what selects the tax: a resident
+        tributa por el IRPF (LIRPF art. 9) and a non-resident por el IRNR
+        (TRLIRNR art. 2), so a rule that names its residencies decides
+        nothing until the taxpayer has stated theirs. An unanswered residency
+        is ``INCOMPLETE``, never the resident reading, because assuming
+        residence both refuses the non-resident their Modelo 210 and asks the
+        non-resident for the resident declarations.
+        """
+        if not self.applicable_fiscal_residencies:
+            return None
+        if profile.fiscal_residency is None:
+            # Reached only once the caller's own `profile.entity_type is None`
+            # guard has returned, so the entity type is always declared here.
+            return incomplete_applicability(self.modelo, entity_type_declared=True)
+        if profile.fiscal_residency not in self.applicable_fiscal_residencies:
+            return self._not_applicable()
+        return None
 
     def _natural_person_axes_result(self, profile: TaxpayerProfile) -> ModeloApplicability | None:
         if profile.entity_type != entity_type_natural_person_token():
@@ -581,18 +627,18 @@ class ModeloApplicabilityRule(BaseModel):
             },
         )
 
-    def _positive_rule_gates_result(self, profile: TaxpayerProfile) -> ModeloApplicability | None:
+    def _positive_rule_gates_result(
+        self,
+        profile: TaxpayerProfile,
+        operation: PinnedAuthorityOperation | None,
+    ) -> ModeloApplicability | None:
         """Resolve the entity, residency, IVA, and natural-person gates in order."""
         if profile.entity_type is None:
             return incomplete_applicability(self.modelo, entity_type_declared=False)
-        if (result := self._entity_type_result(profile)) is not None:
+        if (result := self._entity_type_result(profile, operation)) is not None:
             return result
-        if (
-            self.applicable_fiscal_residencies
-            and profile.fiscal_residency is not None
-            and profile.fiscal_residency not in self.applicable_fiscal_residencies
-        ):
-            return self._not_applicable()
+        if (result := self._fiscal_residency_result(profile)) is not None:
+            return result
         if self.applicable_iva_regimes and profile.iva_regime not in self.applicable_iva_regimes:
             return self._not_applicable()
         return self._natural_person_axes_result(profile)
@@ -602,6 +648,7 @@ class ModeloApplicabilityRule(BaseModel):
         profile: TaxpayerProfile,
         *,
         ledger_payer_facts: Mapping[str, LedgerPayerFactDerivation] = NO_LEDGER_PAYER_FACTS,
+        operation: PinnedAuthorityOperation | None = None,
     ) -> ModeloApplicability:
         """Derive the :class:`ModeloApplicability` for ``profile``.
 
@@ -618,8 +665,14 @@ class ModeloApplicabilityRule(BaseModel):
             ledger_payer_facts: What the taxpayer's own records show about
                 payer facts for the filing year being decided, keyed by payer
                 fact token. Empty when no derivation is available.
+            operation: The caller's pinned authority operation, used for the
+                one verdict reason this rule resolves from the registry, the
+                attribution pass-through answer. Leaving it ``None`` makes
+                that resolution lease a fresh bundled authority of its own,
+                so a caller that holds a pin passes it to keep the whole
+                verdict on one generation.
         """
-        if (result := self._positive_rule_gates_result(profile)) is not None:
+        if (result := self._positive_rule_gates_result(profile, operation)) is not None:
             return result
         # The exclusion axis runs once the positive gates pass. A holding
         # exclusion decides the verdict outright; an undetermined one is held

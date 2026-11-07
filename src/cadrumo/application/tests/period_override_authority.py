@@ -39,8 +39,13 @@ OVERRIDE_REVISION: Final = "2024-y-siguientes"
 OVERRIDE_YEAR: Final = 2024
 """The filing year whose surface the override replaces."""
 
-DROPPED_PERIOD: Final = "1T"
-"""The first flat token the override removes -- what a flat read still returns."""
+DROPPED_PERIOD: Final = "01"
+"""The first flat token the override removes -- what a flat read still returns.
+
+The modelo declares both cadences, and its selector lists the twelve monthly
+tokens before the four quarterly ones, so the first token a flat read returns is
+the first month. The token only has to be one the override's own surface below
+omits; which one it is comes from the registry's declared order."""
 
 OVERRIDE_PERIODS: Final = ("2T", "3T", "4T")
 """The surface the overridden year actually serves."""

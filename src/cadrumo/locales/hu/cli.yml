@@ -2787,6 +2787,11 @@ cli:
           a megválaszolatlan kérdéstől, és törlésre került. Az ettől függő kötelezettségek
           meghatározatlanok maradnak, amíg a profilszerkesztő parancs {yes_flag} vagy
           {no_flag} kapcsolójával nem válaszolsz.'
+        payer_fact_cleared_select: '{fact}: ez a profil azt az értéket tárolta, amelyet
+          a beállítási varázsló alapértelmezésként írt be, ezért nem volt megkülönböztethető
+          a megválaszolatlan kérdéstől, és törlésre került. Az ettől függő kötelezettségek
+          meghatározatlanok maradnak, amíg a profilszerkesztő parancs {flag} kapcsolójával
+          nem válaszolsz.'
       plantilla_media:
         average_workforce_help: Az év teljes átlagos állományi létszáma teljes munkaidős
           egyenértékben, legfeljebb két tizedesjeggyel.
@@ -4101,6 +4106,9 @@ cli:
       a profilt, vagy futtasd újra a hiányos profil felülbírálásával.
     verbose_help: Részletek és következő lépés megjelenítése, ha elérhető.
     warning:
+      administracion_publica_unset: A profilodban még nem szerepel, hogy olyan közigazgatási
+        szerv vagy-e, amelynek éves költségvetése meghaladja a levonási bevallásokat
+        havivá tevő értékhatárt.
       aeat_evidence_conflict: Az AEAT nyilvántartásai eltérnek egy benyújtott bevallásnál
       applicability_evidence_disagreement: A profilban adott válaszod és a rögzített
         számláid eltérnek abban, hogy ezek a kötelezettségek vonatkoznak-e rád; a
@@ -4108,10 +4116,21 @@ cli:
       art109_activity_income_withholding_ge_70pct_unset: A profilodban még nem szerepel,
         hogy vállalkozói vagy szakmai tevékenységed bevételének legalább 70%-ából
         vonnak-e le adóelőleget.
+      bienes_extranjero_unset: A profilodban még nem szerepel, hogy a külföldön lévő
+        vagyonod és jogaid meghaladják-e a bejelentési értékhatárt.
       censo_enrolment_unverified: A nyilvántartásba vételt még nem ellenőrizték
       estimacion_objetiva_unset: A profilodban még nem szerepel, hogy tevékenységedre
         melyik személyi jövedelemadózási rendszer vonatkozik.
+      gran_empresa_unset: A profilodban még nem szerepel, hogy az előző naptári évi
+        forgalmad meghaladta-e a nagyvállalati értékhatárt, ami eldönti, hogy havonta
+        vagy negyedévente nyújtasz be bevallást.
+      grupo_entidades_dependiente_unset: A profilodban még nem szerepel, hogy áfacsoport
+        tagvállalata vagy-e.
+      grupo_entidades_dominante_unset: A profilodban még nem szerepel, hogy áfacsoport
+        domináns vállalata vagy-e.
       has_employees_unset: A profilodban még nem szerepel, hogy foglalkoztatsz-e alkalmazottakat.
+      intracomunitario_umbral_unset: A profilodban még nem szerepel, hogy a Közösségen
+        belüli ügyleteid meghaladják-e az összesítő nyilatkozatot havivá tevő értékhatárt.
       intracomunitario_unset: A profilodban még nem szerepel, hogy vásárolsz vagy
         értékesítesz-e árut vagy szolgáltatást uniós országok között.
       iva_regime_unset: A profilodban még nem szerepel, hogy tevékenységedre melyik
@@ -4120,15 +4139,34 @@ cli:
       m303_simplificado_forfait_unavailable: A Modelo 303 alkalmazandó, de az egyszerűsített
         áfarendszer modulok szerinti adóösszegének kiszámítása még nem érhető el;
         benyújtás előtt ellenőrizd az egyszerűsített áfarendszer rovatait.
+      monedas_virtuales_extranjero_unset: A profilodban még nem szerepel, hogy a külföldön
+        tartott virtuális valutáid meghaladják-e a bejelentési értékhatárt.
+      oss_unset: A profilodban még nem szerepel, hogy be vagy-e jelentkezve az egyablakos
+        áfaszabályozásba.
+      premio_loteria_trimestres_unset: A profilodban még nem szerepel, hogy mely negyedévekben
+        vettél fel levonás nélkül a különadó alá tartozó lottónyereményt.
+      premio_loteria_unset: A profilodban még nem szerepel, hogy felvettél-e olyan
+        lottónyereményt, amely levonás nélkül a különadó alá tartozik.
+      redeme_unset: A profilodban még nem szerepel, hogy szerepelsz-e a havi áfavisszatérítési
+        nyilvántartásban.
+      residencia_fiscal_unset: A profilodban még nem szerepel, hogy Spanyolországban
+        van-e a szokásos tartózkodási helyed, ami eldönti, hogy belföldi vagy külföldi
+        illetőségűként adózol.
       retencion_arrendamientos_unset: A profilodban még nem szerepel, hogy fizetsz-e
         olyan bérleti díjat, amelyből adóelőleget vonsz le.
       retencion_capital_unset: A profilodban még nem szerepel, hogy fizetsz-e adólevonással
         járó tőkejövedelmet.
       retencion_profesionales_unset: A profilodban még nem szerepel, hogy fizetsz-e
         szakembereknek olyan díjat, amelyből adóelőleget vonsz le.
+      sii_unset: A profilodban még nem szerepel, hogy az áfanyilvántartásaidat az
+        azonnali adatszolgáltatáson keresztül vezeted-e.
+      sii_voluntario_unset: A profilodban még nem szerepel, hogy önként választottad-e
+        az áfanyilvántartások azonnali adatszolgáltatáson keresztüli vezetését.
       terceros_threshold_unset: A profilodban még nem szerepel, hogy valamely ügyfeleddel
         vagy beszállítóddal folytatott ügyleteid meghaladják-e a Modelo 347 éves adatszolgáltatási
         értékhatárát.
+      tipo_entidad_unset: A profilodban még nem szerepel, hogy milyen típusú adózó
+        vagy.
     year_help: Bevallási év a --period kapcsolóhoz (pl. 2024).
   review:
     app_help: 'A felülvizsgálati sorod: a nyilvántartás tranzakcióinak, a beérkezett

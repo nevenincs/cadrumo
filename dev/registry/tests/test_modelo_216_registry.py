@@ -1,10 +1,12 @@
 """Tests for the committed Modelo 216 IRNR retención registry foundation.
 
-Modelo 216 is the quarterly IRNR withholding autoliquidación (retenciones e
-ingresos a cuenta) approved by Orden EHA/3290/2008 (BOE-A-2008-18497), with the
-current form layout carried by Orden HAC/56/2024. The trimestral filing plazo is
-grounded in Orden EHA/3290/2008 art 4: the first twenty natural days of April,
-July, October and January for the immediately preceding natural quarter.
+Modelo 216 is the IRNR withholding autoliquidación (retenciones e ingresos a
+cuenta) approved by Orden EHA/3290/2008 (BOE-A-2008-18497), with the current
+form layout carried by Orden HAC/56/2024. Both filing plazos are grounded in
+Orden EHA/3290/2008 art 4: the first twenty natural days of April, July, October
+and January for the immediately preceding natural quarter, and the first twenty
+natural days of each month for the immediately preceding month when the
+retenedor is a gran empresa under RIVA art. 71.3 numbers 1 and 2.
 
 See Also:
     :func:`~domain.calculations.registry.tests._registry_schema_support._committed_modelo`
@@ -85,6 +87,82 @@ _EXPECTED_DEADLINES = {
     (2026, "3T"): (date(2026, 10, 1), date(2026, 10, 20), date(2026, 10, 15)),
     (2026, "4T"): (date(2027, 1, 1), date(2027, 1, 20), None),
 }
+"""The trimestral census, read from the calendario of the year each window closes in."""
+
+_EXPECTED_MONTHLY_DEADLINES = {
+    (2022, "01"): (date(2022, 2, 1), date(2022, 2, 21), date(2022, 2, 16)),
+    (2022, "02"): (date(2022, 3, 1), date(2022, 3, 21), date(2022, 3, 16)),
+    (2022, "03"): (date(2022, 4, 1), date(2022, 4, 20), date(2022, 4, 15)),
+    (2022, "04"): (date(2022, 5, 1), date(2022, 5, 20), date(2022, 5, 15)),
+    (2022, "05"): (date(2022, 6, 1), date(2022, 6, 20), date(2022, 6, 15)),
+    (2022, "06"): (date(2022, 7, 1), date(2022, 7, 20), date(2022, 7, 15)),
+    (2022, "07"): (date(2022, 8, 1), date(2022, 8, 22), date(2022, 8, 17)),
+    (2022, "08"): (date(2022, 9, 1), date(2022, 9, 20), date(2022, 9, 15)),
+    (2022, "09"): (date(2022, 10, 1), date(2022, 10, 20), date(2022, 10, 15)),
+    (2022, "10"): (date(2022, 11, 1), date(2022, 11, 21), date(2022, 11, 16)),
+    (2022, "11"): (date(2022, 12, 1), date(2022, 12, 20), date(2022, 12, 15)),
+    (2022, "12"): (date(2023, 1, 1), date(2023, 1, 20), date(2023, 1, 15)),
+    (2023, "01"): (date(2023, 2, 1), date(2023, 2, 20), date(2023, 2, 15)),
+    (2023, "02"): (date(2023, 3, 1), date(2023, 3, 20), date(2023, 3, 15)),
+    (2023, "03"): (date(2023, 4, 1), date(2023, 4, 20), date(2023, 4, 15)),
+    (2023, "04"): (date(2023, 5, 1), date(2023, 5, 22), date(2023, 5, 17)),
+    (2023, "05"): (date(2023, 6, 1), date(2023, 6, 20), date(2023, 6, 15)),
+    (2023, "06"): (date(2023, 7, 1), date(2023, 7, 20), date(2023, 7, 15)),
+    (2023, "07"): (date(2023, 8, 1), date(2023, 8, 21), date(2023, 8, 16)),
+    (2023, "08"): (date(2023, 9, 1), date(2023, 9, 20), date(2023, 9, 15)),
+    (2023, "09"): (date(2023, 10, 1), date(2023, 10, 20), date(2023, 10, 15)),
+    (2023, "10"): (date(2023, 11, 1), date(2023, 11, 20), date(2023, 11, 15)),
+    (2023, "11"): (date(2023, 12, 1), date(2023, 12, 20), date(2023, 12, 15)),
+    (2023, "12"): (date(2024, 1, 1), date(2024, 1, 22), date(2024, 1, 17)),
+    (2024, "01"): (date(2024, 2, 1), date(2024, 2, 20), date(2024, 2, 15)),
+    (2024, "02"): (date(2024, 3, 1), date(2024, 3, 20), date(2024, 3, 15)),
+    (2024, "03"): (date(2024, 4, 1), date(2024, 4, 22), date(2024, 4, 17)),
+    (2024, "04"): (date(2024, 5, 1), date(2024, 5, 20), date(2024, 5, 15)),
+    (2024, "05"): (date(2024, 6, 1), date(2024, 6, 20), date(2024, 6, 17)),
+    (2024, "06"): (date(2024, 7, 1), date(2024, 7, 22), date(2024, 7, 17)),
+    (2024, "07"): (date(2024, 8, 1), date(2024, 8, 20), date(2024, 8, 15)),
+    (2024, "08"): (date(2024, 9, 1), date(2024, 9, 20), date(2024, 9, 17)),
+    (2024, "09"): (date(2024, 10, 1), date(2024, 10, 21), date(2024, 10, 16)),
+    (2024, "10"): (date(2024, 11, 1), date(2024, 11, 20), date(2024, 11, 15)),
+    (2024, "11"): (date(2024, 12, 1), date(2024, 12, 20), date(2024, 12, 17)),
+    (2024, "12"): (date(2025, 1, 1), date(2025, 1, 20), date(2025, 1, 15)),
+    (2025, "01"): (date(2025, 2, 1), date(2025, 2, 20), date(2025, 2, 17)),
+    (2025, "02"): (date(2025, 3, 1), date(2025, 3, 20), date(2025, 3, 17)),
+    (2025, "03"): (date(2025, 4, 1), date(2025, 4, 21), date(2025, 4, 15)),
+    (2025, "04"): (date(2025, 5, 1), date(2025, 5, 20), date(2025, 5, 15)),
+    (2025, "05"): (date(2025, 6, 1), date(2025, 6, 20), date(2025, 6, 17)),
+    (2025, "06"): (date(2025, 7, 1), date(2025, 7, 21), date(2025, 7, 16)),
+    (2025, "07"): (date(2025, 8, 1), date(2025, 8, 20), date(2025, 8, 15)),
+    (2025, "08"): (date(2025, 9, 1), date(2025, 9, 22), date(2025, 9, 17)),
+    (2025, "09"): (date(2025, 10, 1), date(2025, 10, 20), date(2025, 10, 15)),
+    (2025, "10"): (date(2025, 11, 1), date(2025, 11, 20), date(2025, 11, 17)),
+    (2025, "11"): (date(2025, 12, 1), date(2025, 12, 22), date(2025, 12, 17)),
+    (2025, "12"): (date(2026, 1, 1), date(2026, 1, 20), date(2026, 1, 15)),
+    (2026, "01"): (date(2026, 2, 1), date(2026, 2, 20), date(2026, 2, 17)),
+    (2026, "02"): (date(2026, 3, 1), date(2026, 3, 20), date(2026, 3, 16)),
+    (2026, "03"): (date(2026, 4, 1), date(2026, 4, 20), date(2026, 4, 15)),
+    (2026, "04"): (date(2026, 5, 1), date(2026, 5, 20), date(2026, 5, 15)),
+    (2026, "05"): (date(2026, 6, 1), date(2026, 6, 22), date(2026, 6, 17)),
+    (2026, "06"): (date(2026, 7, 1), date(2026, 7, 20), date(2026, 7, 15)),
+    (2026, "07"): (date(2026, 8, 1), date(2026, 8, 20), date(2026, 8, 17)),
+    (2026, "08"): (date(2026, 9, 1), date(2026, 9, 21), date(2026, 9, 16)),
+    (2026, "09"): (date(2026, 10, 1), date(2026, 10, 20), date(2026, 10, 15)),
+    (2026, "10"): (date(2026, 11, 1), date(2026, 11, 20), date(2026, 11, 17)),
+    (2026, "11"): (date(2026, 12, 1), date(2026, 12, 21), date(2026, 12, 16)),
+    (2026, "12"): (date(2027, 1, 1), date(2027, 1, 20), None),
+}
+"""The gran-empresa mensual census of Orden EHA/3290/2008 art. 4, paragraph two.
+
+Each row is read from the bundled Calendario del Contribuyente of the year it
+closes in, from the monthly entry that names Modelo 216 by number alongside
+Modelos 111, 115, 117, 123, 124, 126, 128 and 230. The December period of the
+horizon year closes in a January no bundled calendar covers and takes the
+statutory twentieth day with no cutoff, as the fourth quarter above does.
+"""
+
+
+_EXPECTED_MONTHLY_PERIODS = frozenset(period for _year, period in _EXPECTED_MONTHLY_DEADLINES)
+"""The twelve monthly registry tokens, taken from the census above rather than relisted."""
 
 
 def _load_modelo_216():
@@ -106,13 +184,18 @@ def test_modelo_216_formulas_owned_by_construct() -> None:
 
 
 def test_modelo_216_deadline_provision_is_orden_eha_3290_2008_art_4() -> None:
-    """Every trimestral window cites the binding Orden EHA/3290/2008 art 4 plazo."""
+    """Every window of both cadences cites the binding Orden EHA/3290/2008 art 4 plazo.
+
+    The one article declares both: paragraph one the trimestral plazo and
+    paragraph two the mensual one for the gran-empresa retenedor.
+    """
     modelo, catalogues = _load_modelo_216()
     revision = modelo.revisions["2024-y-siguientes"]
-    assert revision.deadline_windows, "216 must declare quarterly deadline windows"
+    assert revision.deadline_windows, "216 must declare deadline windows"
     for window in revision.deadline_windows:
-        assert window.period_kind == "quarterly"
+        assert window.period_kind in {"quarterly", "monthly"}
         assert "orden-eha-3290-2008:art-4" in window.legal_refs
+    assert {window.period_kind for window in revision.deadline_windows} == {"quarterly", "monthly"}
     # The plazo article resolves in the shared legal catalogue as legal authority,
     # cross-checked against the bundled BOE corpus at build.
     plazo = catalogues.legal["orden-eha-3290-2008:art-4"]
@@ -132,25 +215,26 @@ def test_modelo_216_has_exact_supported_deadline_census_and_dates() -> None:
         for window in revision.deadline_windows
         if 2022 <= window.period.filing_year <= 2026
     }
-    assert observed == _EXPECTED_DEADLINES
+    assert observed == _EXPECTED_DEADLINES | _EXPECTED_MONTHLY_DEADLINES
 
 
 def test_modelo_216_windows_use_canonical_periods_sources_and_owner() -> None:
     modelo, catalogues = _load_modelo_216()
     owned = [(revision, window) for revision in modelo.revisions.values() for window in revision.deadline_windows]
-    assert len(owned) == len(_EXPECTED_DEADLINES)
+    assert len(owned) == len(_EXPECTED_DEADLINES) + len(_EXPECTED_MONTHLY_DEADLINES)
 
     for revision, window in owned:
         filing_year = window.period.filing_year
         period = window.period.registry_token
         physical_calendar_year = window.closes_on.year
         calendar_ref = f"aeat-calendario-contribuyente-{physical_calendar_year}"
+        expected_kind = PeriodKind.MONTHLY if period in _EXPECTED_MONTHLY_PERIODS else PeriodKind.QUARTERLY
 
         assert window.id == f"modelo-216-{filing_year}-{period.lower()}"
         assert window.filing_year == filing_year
-        assert registry_period_kind(period) is PeriodKind.QUARTERLY
-        assert window.period.kind is PeriodKind.QUARTERLY
-        assert window.period_kind == "quarterly"
+        assert registry_period_kind(period) is expected_kind
+        assert window.period.kind is expected_kind
+        assert window.period_kind == expected_kind.value
         assert select_revision(modelo, filing_year=filing_year, period=period) is revision
 
         if physical_calendar_year <= 2026:

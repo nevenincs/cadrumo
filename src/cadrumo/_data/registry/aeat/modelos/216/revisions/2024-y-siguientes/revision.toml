@@ -19,7 +19,7 @@ authority_grade = "filing"
 # coefficient table, so a new revision is authored only on a statutory or
 # form-structure change.
 valid_from = 2024-01-01
-period_selector = { year_from = 2024, periods = ["1T", "2T", "3T", "4T"] }
+period_selector = { year_from = 2024, periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "1T", "2T", "3T", "4T"] }
 orden_aplicabilidad = ["orden-eha-3290-2008:art-1"]
 legal_refs = [
     "orden-eha-3290-2008:art-1",
@@ -98,6 +98,15 @@ selector = {revision = "2020-2023", id = "modelo-216-liquidacion"}
 family = "filing_schedules"
 selector = {revision = "2020-2023", id = "modelo-216-trimestral"}
 sequence_additions = {profile_conditions = [{field = "enrollment.large_company", op = "equals", value = false, explanation = "Modelo 216 trimestral para retenedores no sujetos a autoliquidacion mensual por gran empresa; el plazo es de los veinte primeros dias naturales de abril, julio, octubre y enero.", legal_refs = ["orden-eha-3290-2008:art-4"], source_refs = ["aeat-modelo-216-procedure"]}], source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]}
+sequence_removals = {profile_conditions = [0], source_refs = [0, 1]}
+
+# The monthly cadence is inherited with its era's sources replaced, exactly as
+# the quarterly one above: the 2020-2023 edition cites the calendars of its own
+# two years, which do not reach this edition.
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "filing_schedules"
+selector = {revision = "2020-2023", id = "modelo-216-mensual"}
+sequence_additions = {profile_conditions = [{field = "enrollment.large_company", op = "equals", value = true, explanation = "Modelo 216 mensual para grandes empresas: el retenedor en las circunstancias de los numeros 1 y 2 del articulo 71.3 del Reglamento del IVA declara por el mes inmediato anterior.", legal_refs = ["orden-eha-3290-2008:art-4"], source_refs = ["aeat-modelo-216-procedure"]}], source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]}
 sequence_removals = {profile_conditions = [0], source_refs = [0, 1]}
 
 [[revisions."2024-y-siguientes".family_overrides]]

@@ -781,7 +781,10 @@ def snapshot_for_provider(
     filing_year: int,
     period: Period,
 ) -> RegistrySnapshot:
-    """Return the registry snapshot for a modelo, year and period from an authority."""
+    """Return the registry snapshot for a modelo, year and period from an authority.
+
+    ``modelo`` is a :class:`ModeloDefinition`; ``authority`` is a :class:`ValidatedRegistryAuthority`.
+    """
     return authority.snapshot(modelo.id, filing_year=filing_year, period=period.registry_token)
 
 

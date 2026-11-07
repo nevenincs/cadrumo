@@ -187,7 +187,7 @@ class TestObjectiveEstimationRegimeAxis:
 class TestTaxpayerModelAntiTautology:
     """Mutating or dropping a new field in the payload surfaces on reload."""
 
-    def test_dropped_enrolment_field_re_defaults_and_surfaces_inequality(self) -> None:
+    def test_dropped_enrolment_field_re_reads_as_unanswered_and_surfaces_inequality(self) -> None:
         """Deleting sii_enrolled from the payload makes the reload differ.
 
         If this test passed with the field deleted, the roundtrip would
@@ -199,10 +199,11 @@ class TestTaxpayerModelAntiTautology:
         payload = json.loads(original.model_dump_json())
         del payload["iva"]["sii_enrolled"]
         reloaded = TaxpayerProfile.model_validate_json(json.dumps(payload))
-        # The dropped field silently re-defaults to False.
+        # The enrolment is three-state, so the dropped field re-reads as
+        # unanswered rather than as the taxpayer's own no.
         iva = reloaded.iva
         assert iva is not None
-        assert iva.sii_enrolled is False
+        assert iva.sii_enrolled is None
         # Strict equality therefore breaks — the proof the roundtrip bites.
         assert reloaded != original
 

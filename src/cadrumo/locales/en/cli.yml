@@ -2621,6 +2621,10 @@ cli:
           and has been cleared. Obligations that depend on it stay undetermined until
           you answer it with the {yes_flag} or {no_flag} option of the profile edit
           command.'
+        payer_fact_cleared_select: '{fact}: this profile stored the value the setup
+          wizard wrote as its default, so it could not be told apart from an unanswered
+          question and has been cleared. Obligations that depend on it stay undetermined
+          until you answer it with the {flag} option of the profile edit command.'
       plantilla_media:
         average_workforce_help: Average total workforce for the year, as full-time
           equivalents with at most two decimal places.
@@ -3876,6 +3880,9 @@ cli:
       update the profile or rerun with the incomplete-profile override.
     verbose_help: Show details and next action when available
     warning:
+      administracion_publica_unset: Your profile does not yet record whether you are
+        a public administration whose annual budget exceeds the threshold that makes
+        withholding returns monthly.
       aeat_evidence_conflict: AEAT records disagree about a filed declaration
       applicability_evidence_disagreement: Your profile answer and your recorded invoices
         disagree on whether these obligations apply; the rows stay visible until you
@@ -3883,10 +3890,22 @@ cli:
       art109_activity_income_withholding_ge_70pct_unset: Your profile does not yet
         record whether at least 70% of your business or professional income is subject
         to withholding.
+      bienes_extranjero_unset: Your profile does not yet record whether your assets
+        and rights abroad exceed the reporting threshold.
       censo_enrolment_unverified: Census enrolment has not been verified
       estimacion_objetiva_unset: Your profile does not yet record which income-tax
         assessment regime applies to your activity.
+      gran_empresa_unset: Your profile does not yet record whether your turnover in
+        the previous calendar year exceeded the large-company threshold, which decides
+        whether you file monthly or quarterly.
+      grupo_entidades_dependiente_unset: Your profile does not yet record whether
+        you are a member entity of a VAT group.
+      grupo_entidades_dominante_unset: Your profile does not yet record whether you
+        are the dominant entity of a VAT group.
       has_employees_unset: Your profile does not yet record whether you employ staff.
+      intracomunitario_umbral_unset: Your profile does not yet record whether your
+        cross-border EU transactions exceed the threshold that makes the recapitulative
+        return monthly.
       intracomunitario_unset: Your profile does not yet record whether you buy or
         sell goods or services across EU borders.
       iva_regime_unset: Your profile does not yet record which VAT regime applies
@@ -3896,15 +3915,34 @@ cli:
       m303_simplificado_forfait_unavailable: Modelo 303 is applicable, but the module-based
         quota calculation for the simplified VAT regime is not yet available; review
         the simplified-regime boxes before filing.
+      monedas_virtuales_extranjero_unset: Your profile does not yet record whether
+        your virtual currencies held abroad exceed the reporting threshold.
+      oss_unset: Your profile does not yet record whether you are registered for the
+        one-stop-shop VAT regime.
+      premio_loteria_trimestres_unset: Your profile does not yet record in which quarters
+        you collected a lottery prize taxed by the special levy without withholding.
+      premio_loteria_unset: Your profile does not yet record whether you collected
+        a lottery prize taxed by the special levy without withholding.
+      redeme_unset: Your profile does not yet record whether you are registered in
+        the monthly VAT refund register.
+      residencia_fiscal_unset: Your profile does not yet record whether you have your
+        habitual residence in Spain, which decides whether you pay income tax as a
+        resident or as a non-resident.
       retencion_arrendamientos_unset: Your profile does not yet record whether you
         pay rent and withhold tax from the rent.
       retencion_capital_unset: Your profile does not yet record whether you pay investment
         income subject to withholding.
       retencion_profesionales_unset: Your profile does not yet record whether you
         pay professionals and withhold tax from their fees.
+      sii_unset: Your profile does not yet record whether you keep your VAT ledgers
+        through the immediate supply of information.
+      sii_voluntario_unset: Your profile does not yet record whether you chose to
+        keep your VAT ledgers through the immediate supply of information.
       terceros_threshold_unset: Your profile does not yet record whether transactions
         with any one customer or supplier exceed the annual reporting threshold for
         Modelo 347.
+      tipo_entidad_unset: Your profile does not yet record which kind of taxpayer
+        you are.
     year_help: Filing year for --period (e.g. 2024).
   review:
     app_help: 'Your review queue: triage transactions in your records, supporting

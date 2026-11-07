@@ -22,7 +22,7 @@ Composition order:
    rooted at ``cadrumo_storage_root / profile``; ``GOOGLE_DRIVE`` calls
    :func:`build_google_credentials`, which hydrates the profile's desktop
    sign-in, then instantiates
-   :class:`adapters.outbound.storage._google_drive.GoogleDriveProvider`
+   :class:`adapters.outbound.storage.google_drive.GoogleDriveProvider`
    under the profile's root folder, once that folder has been read back as
    one this application created.
 4. Refuse unknown kinds with :class:`OutboundStorageValidationError`.
