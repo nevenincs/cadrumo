@@ -4,7 +4,8 @@
 // decides nothing: a pattern not recorded answers null, which the page takes as
 // a ledger that did not answer. A test in the owning Python package holds every
 // recorded answer equal to the live one.
-import type { LedgerRuleTrialResult, LedgerRow } from "../shell/ledger";
+import type { LedgerRuleTrialResult } from "../shell/ledgerMovementOperations";
+import type { LedgerRow } from "../shell/ledger";
 import recorded from "@fixtures/ledger-recordings/ledgerRuleTrial.json" with { type: "json" };
 
 export function answerRuleTrial(

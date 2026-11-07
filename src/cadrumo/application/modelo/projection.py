@@ -663,6 +663,8 @@ def verb_baseline_projection_bindings(
     profile-sourced binding belongs to the profile channel: a baseline copy
     would put a stand-in value on a second channel beside the profile's typed
     one, and would turn an absent profile fact into a supplied zero or false.
+
+    ``revision`` is a :class:`ModeloRevision`.
     """
     declared = {binding.id for binding in revision.bindings}
     profile_sourced = {binding.id for binding in revision.bindings if binding.source is BindingSourceKind.PROFILE}

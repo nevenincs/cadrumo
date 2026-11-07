@@ -538,7 +538,7 @@ def test_rd_1007_verifactu_refs_are_article_level_and_current() -> None:
         ),
     }.issubset(set(art3.required_text))
 
-    assert df4.article == "disposicion final cuarta"
+    assert df4.article == "disposición final cuarta"
     assert df4.corpus_ref == "corpus/normatives/html/rd-1007-2023.html#df-4"
     assert "antes del 1 de enero de 2027" in df4.required_text
     assert "antes del 1 de julio de 2027" in df4.required_text

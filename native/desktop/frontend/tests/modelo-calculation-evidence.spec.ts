@@ -12,10 +12,8 @@ import {
   declarationWriteKey,
 } from "../src/shell/modeloWriteHolds";
 import type { ModeloPort } from "../src/shell/modelo";
-import type {
-  ModeloWorkbenchFormProjectionV1,
-  ModeloWorkM303AttestationPublicResultV2,
-} from "../src/shell/modeloContract";
+import type { ModeloWorkM303AttestationPublicResultV2 } from "../src/shell/modeloContract/modeloWork";
+import type { ModeloWorkbenchFormProjectionV1 } from "../src/shell/modeloContract/modeloWorkForm";
 import type { LedgerOutcome } from "../src/shell/ledger";
 import { MODELO_FIXTURES } from "./support/windowFixtures";
 

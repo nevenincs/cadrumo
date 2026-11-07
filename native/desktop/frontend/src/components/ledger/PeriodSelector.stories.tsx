@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { STORY_PERIOD } from "@/dev/LedgerStage";
+import { STORY_PERIOD, STORY_YEARS } from "@/dev/LedgerStage";
 import type { LedgerPeriod } from "../../shell/ledgerGrammar";
 import { useStrings } from "../../shell/strings";
 import { PeriodSelector } from "./PeriodSelector";
@@ -19,7 +19,7 @@ type Args = {
 
 function Selector({
   period,
-  years = [2024, 2025, 2026],
+  years = [...STORY_YEARS],
   mode,
   allowAll,
   open,
@@ -74,10 +74,14 @@ export default meta;
 type Story = StoryObj<typeof Selector>;
 
 export const Quarter: Story = {};
-export const Month: Story = { args: { period: { year: 2026, code: "10" } } };
+export const Month: Story = {
+  args: { period: { year: STORY_PERIOD.year, code: "10" } },
+};
 export const WholeYear: Story = {
   name: "Whole year",
-  args: { period: { year: 2025, code: "0A" } },
+  args: {
+    period: { year: STORY_YEARS.at(-2) ?? STORY_PERIOD.year, code: "0A" },
+  },
 };
 export const EveryPeriod: Story = {
   name: "Every period",
@@ -98,6 +102,6 @@ export const YearOnly: Story = {
     mode: "year",
     allowAll: false,
     open: true,
-    period: { year: 2026, code: "0A" },
+    period: { year: STORY_PERIOD.year, code: "0A" },
   },
 };

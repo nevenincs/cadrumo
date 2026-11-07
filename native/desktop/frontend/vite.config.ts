@@ -1,6 +1,5 @@
 import { buildPath, requireBuildOutput } from "../scripts/build-paths.mjs";
 import { identity as readIdentity, server } from "../scripts/configuration.mjs";
-import { windowFixtures } from "./scripts/fixture-paths.mjs";
 import { docsFixture } from "./dev/docs-fixture/plugin.ts";
 import { chromeCatalogueModule } from "./dev/chrome-catalogue.ts";
 import { productBoundary } from "./dev/product-boundary.ts";
@@ -21,10 +20,10 @@ const source = fileURLToPath(new URL("./src", import.meta.url));
 const docsStatic = fileURLToPath(
   new URL("../../../docs/_static", import.meta.url),
 );
-// The generated window projections, which `just fixtures-seed` writes into the
-// host's build tree and which tsconfig.json resolves by the same alias. A
-// missing directory is reported by the file that imports from it.
-const fixtures = windowFixtures();
+// The generated window projections, which the desktop-window-fixtures target
+// seeds into this build's tree and which scripts/typecheck.mjs binds to the
+// same alias. A missing directory is reported by the file that imports from it.
+const fixtures = buildPath("window_fixtures");
 
 // The shell's generated inputs, by the names the shell imports them
 // under. They are outputs of the build directory in use, so one build's are

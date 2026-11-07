@@ -3,7 +3,7 @@
 Protocols, records, factories, mirror-manifest helpers, pagination guards, and
 errors are imported from their defining modules. Concrete backends live in
 :mod:`adapters.outbound.storage.local` and
-:mod:`adapters.outbound.storage._google_drive`. The package initializer owns
+:mod:`adapters.outbound.storage.google_drive`. The package initializer owns
 and exports no symbols.
 """
 

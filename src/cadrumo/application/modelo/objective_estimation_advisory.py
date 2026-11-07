@@ -114,6 +114,8 @@ def objective_estimation_exclusion_advisory_findings(
     helper therefore emits :class:`ModeloVerificationFinding` rows with
     ``kind=ADVISORY`` and ``severity=WARNING`` rather than blocking verification.
 
+    ``authority`` is a :class:`ValidatedRegistryAuthority`.
+
     Args:
         work_unit: The :class:`WorkUnit` whose modelo and filing year determine
             whether the settled official-source advisory applies.

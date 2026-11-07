@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { fixtureLedger } from "../src/dev/fixtures/ledger";
 import type { FileToken } from "../src/shell/ledger";
+import type { LedgerServedPeriod } from "../src/shell/ledgerSetup";
+import recorded from "@fixtures/ledger-entry-options/ledgerEntryOptions.json" with { type: "json" };
 import {
   RELAY_PAYLOAD_LIMIT,
   RELAY_REQUEST_LIMIT,
@@ -84,11 +86,28 @@ test("the scenario's readiness check asks what the product's does: a usage ratio
     signedIn: () => true,
     shape: "fixture",
   });
-  // A quarter of its own, which no seeded movement reaches.
-  const period = { filing_year: 2031, code: "1T" };
+  // A quarter of its own, which no seeded movement reaches, taken from the
+  // periods the backend served.
+  const seeded = fixtureLedger().movements.map(
+    (movement) => movement.transaction.date,
+  );
+  const quarter = Object.values(
+    recorded.periods.years.en as unknown as Record<
+      string,
+      LedgerServedPeriod[]
+    >,
+  )
+    .flat()
+    .find(
+      (row) =>
+        row.kind === "quarterly" &&
+        !seeded.some((day) => row.first_day <= day && day <= row.last_day),
+    );
+  if (!quarter) throw new Error("every served quarter holds a seeded movement");
+  const period = quarter.period;
   const added = async (key: string, facts: Record<string, string>) => {
     const outcome = await port.submit("ledger.add", {
-      booked_date: "2031-02-03",
+      booked_date: quarter.first_day,
       amount: "36.30",
       currency: "EUR",
       description: `MOVEMENT ${key}`,

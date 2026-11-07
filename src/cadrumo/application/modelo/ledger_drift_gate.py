@@ -20,7 +20,7 @@ across time. Keeping it separate also lets the comparison be exercised without
 standing up the whole verify path.
 
 See Also:
-    :mod:`~application.modelo._ledger_evidence_gate`:
+    :mod:`~application.modelo.ledger_evidence_gate`:
         The sibling filing-grade gate over the frozen evidence bundle.
     :func:`~application.aggregation.ledger_filing_snapshot.evaluate_ledger_filing_staleness`:
         The shared comparison, which also guards finalized revisions;

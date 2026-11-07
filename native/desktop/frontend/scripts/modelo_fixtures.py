@@ -1,8 +1,14 @@
 """Produce the desktop's Modelo wire types and its scenario envelopes from the Python models.
 
-``src/shell/modeloContract.ts`` is generated from the JSON schema of every
-request and result the desktop's admitted ``modelo.*`` definitions register,
-plus the edit operator input the financial body carries.
+The modules under ``src/shell/modeloContract/`` are generated from the JSON
+schema of every request and result the desktop's admitted ``modelo.*``
+definitions register, plus the edit operator input the financial body carries.
+Each type is written once, in the module of the definitions that reach it (see
+``contract_modules``). A module larger than ``_MODULE_LINE_BUDGET``, derived
+from the repository's TypeScript module bound, hands groups of its types to
+modules of their own and is finally cut into consecutive parts; only a single
+type larger than the budget is refused, and then nothing is written. The
+definition-keyed map lives in ``contracts.ts``.
 ``src/shell/relayBounds.ts`` is generated from the host's relay bounds, as the
 Rust sources state them. The envelopes under
 ``build/<preset>/fixtures/window/modelo/`` are read through the application's own read path
@@ -11,8 +17,11 @@ published authority, with each scenario's own state stated over it through the
 profile operations.
 
 ``scripts/modelo-fixtures.mjs`` drives this module and formats what it writes;
-run that, not this. ``contract`` writes the unformatted module to standard
-output; ``bounds`` writes the unformatted relay bounds module; ``envelopes``
+run that, not this. ``contract`` writes one JSON object to standard output:
+the repository's module bound as ``bound`` and the unformatted modules as
+``modules``, keyed by file name. The driver refuses, writing nothing, when any
+formatted module it generates would be longer than that bound. ``bounds``
+writes the unformatted relay bounds module; ``envelopes``
 writes the envelopes, stored compactly and the Modelo 100 forms as patches;
 ``pack`` stores the envelopes already on disk that way; ``validate`` fails when the host's admitted list differs
 from the registered family or a stored envelope no longer validates against
@@ -30,7 +39,6 @@ import hashlib
 import json
 import re
 import sys
-import tempfile
 import textwrap
 from collections.abc import AsyncGenerator, Generator, Iterable, Iterator, Mapping
 from contextlib import asynccontextmanager, contextmanager
@@ -42,8 +50,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
 
-from dev.fixture_projections.location import family_directory
-from dev.temporary_output import prepare_temp_root
+from dev.fixture_projections.location import family_directory, scratch_tree
+from dev.quality.typescript_module_size import MAX_PHYSICAL_LINES
 from pydantic import BaseModel
 from pydantic.json_schema import models_json_schema
 
@@ -57,8 +65,8 @@ if TYPE_CHECKING:
     from cadrumo.tests.personas import Persona, WithholdingCertificate, YearEnvelope
 
 FRONTEND = Path(__file__).resolve().parents[1]
-#: The scenario envelopes are build output in the host's build tree, never committed.
-FIXTURES = family_directory("modelo")
+#: The scenario envelopes' folder in the window projections, build output that is never committed.
+ENVELOPE_FAMILY = "modelo"
 
 #: The host's closed list of admitted definitions, which the generated mirror is pinned to.
 ADMITTED = FRONTEND.parent / "src-tauri" / "src" / "shell" / "modelo" / "admitted.rs"
@@ -121,7 +129,7 @@ UNREGIMED: tuple[tuple[str, object], ...] = (("irpf.estimation_regime", None),)
 #: The value the edit scenarios type over a Modelo 130 box, as the desktop stages it.
 EDIT_130: tuple[tuple[str, str], ...] = (("06", "1234.56"),)
 #: The box and figure the correction of the recorded 130 states, as the filer types it.
-CORRECTED_130 = ("06", "150.00")
+CORRECTED_130 = ("01", "10000.00")
 #: The Modelo 303 box the edit scenarios type over, as the filer types it and as the desktop stages it.
 TYPED_303: tuple[tuple[str, str], ...] = (("42", "1234.56"),)
 EDIT_303: tuple[tuple[str, str], ...] = (("42", "1234.56"),)
@@ -155,7 +163,7 @@ UNVERIFIED_EXPORT = ("165", "0A")
 #: An entry the typed-entry path cannot read as a figure.
 UNREADABLE_ENTRY = "doce"
 #: Why the correction is made, as the filer says it.
-CORRECTION_REASON = "A deductible expense was left out."
+CORRECTION_REASON = "Income was understated in the recorded declaration."
 #: A synthetic AEAT justificante specimen for a Modelo 130 of a first quarter.
 JUSTIFICANTE_130 = ("tests", "fixtures", "justificantes", "modelo_130_2026Q1.pdf")
 HELP_BOXES: Mapping[str, tuple[str, ...]] = {
@@ -392,6 +400,8 @@ class _Writer:
     def __init__(self, defs: Mapping[str, Any], *, sent_only: set[str]) -> None:
         self._defs = defs
         self._sent_only = sent_only
+        #: The definitions named by what was written since the last ``definition`` call began.
+        self.named: set[str] = set()
 
     def inlined(self, name: str) -> bool:
         """A private constrained scalar is written where it is used."""
@@ -401,7 +411,10 @@ class _Writer:
     def type_of(self, node: Mapping[str, Any]) -> str:
         if "$ref" in node:
             name = node["$ref"].rsplit("/", 1)[-1]
-            return self.type_of(self._defs[name]) if self.inlined(name) else _ts_name(name)
+            if self.inlined(name):
+                return self.type_of(self._defs[name])
+            self.named.add(name)
+            return _ts_name(name)
         if "const" in node:
             return _literal(node["const"])
         if "enum" in node:
@@ -431,6 +444,7 @@ class _Writer:
         )
 
     def definition(self, name: str) -> str:
+        self.named = set()
         node = self._defs[name]
         lines = _doc(node.get("description"), indent="")
         if "properties" not in node:
@@ -478,8 +492,173 @@ _HEADER = """\
 """
 
 
-def render_contract() -> str:
-    """The generated TypeScript module, before the frontend's formatter writes it."""
+#: The definition id segments that name an operation family: ``modelo`` and the family, as in ``modelo.work``.
+_FAMILY_DEPTH = 2
+#: The most lines a module may take before the formatter writes it, counting a line for each type it imports.
+#: The formatter lengthens a module, so this keeps a fifth of the repository's module bound, which the driver
+#: holds the formatted module to, free for it.
+_MODULE_LINE_BUDGET = MAX_PHYSICAL_LINES * 4 // 5
+#: The module holding the definition-keyed map and the admitted lists.
+CONTRACTS_MODULE = "contracts"
+
+_Key = tuple[str, ...]
+
+
+def _shared_prefix(definition_ids: Iterable[str]) -> _Key:
+    """The id segments every one of ``definition_ids`` begins with."""
+    shared: list[str] = []
+    for segments in zip(*(definition_id.split(".") for definition_id in definition_ids), strict=False):
+        if len(set(segments)) != 1:
+            break
+        shared.append(segments[0])
+    return tuple(shared)
+
+
+def _module_name(key: _Key) -> str:
+    """A module's file stem: its key's words in camel case, ``modelo.iva-wallet`` as ``modeloIvaWallet``."""
+    words: list[str] = [word for segment in key for word in re.split(r"[^A-Za-z0-9]+", segment) if word]
+    return words[0] + "".join(word[:1].upper() + word[1:] for word in words[1:])
+
+
+def _family_map_name(family: str) -> str:
+    """The name of one family's slice of the definition-keyed map, ``modelo.work``'s as ``ModeloWorkContracts``."""
+    stem = _module_name(("modelo", family))
+    return stem[:1].upper() + stem[1:] + "Contracts"
+
+
+@dataclass(slots=True)
+class ContractModule:
+    """One generated module: the key it is named by and the definitions it writes."""
+
+    key: _Key
+    names: list[str]
+
+
+def _owners(
+    defs: Mapping[str, Any], roots: list[tuple[str, str, type[BaseModel]]], sent: list[type[BaseModel]]
+) -> dict[str, frozenset[str]]:
+    """Each definition's owners: the admitted definitions whose request, result or review reaches it.
+
+    A model the window sends that no definition registers, the edit operator input, is owned by the
+    definitions whose request is the financial body that carries it.
+    """
+    owners: dict[str, set[str]] = {name: set() for name in defs}
+    for definition_id, _, model in roots:
+        for name in _reach(defs, (model.__name__,)):
+            owners[name].add(definition_id)
+    registered = {model for _, _, model in roots}
+    financial = {key for key, facts in host_operations().items() if facts["financial"]}
+    for model in sent:
+        if model not in registered:
+            for name in _reach(defs, (model.__name__,)):
+                owners[name].update(financial)
+    unowned = sorted(name for name, found in owners.items() if not found)
+    if unowned:
+        raise SystemExit(f"no admitted definition reaches {unowned[0]}, so no module owns it")
+    return {name: frozenset(found) for name, found in owners.items()}
+
+
+@dataclass(frozen=True, slots=True)
+class WrittenDefinition:
+    """What a definition takes in a module: its lines and the definitions it names."""
+
+    lines: int
+    named: frozenset[str]
+
+
+def _module_lines(names: Iterable[str], written: Mapping[str, WrittenDefinition]) -> int:
+    """The lines a module of ``names`` takes: one more per type it imports."""
+    own = set(names)
+    parts = [written[name] for name in own]
+    imported = {named for part in parts for named in part.named} - own
+    return sum(part.lines for part in parts) + len(imported)
+
+
+def contract_modules(
+    names: Iterable[str],
+    owners: Mapping[str, frozenset[str]],
+    written: Mapping[str, WrittenDefinition],
+) -> list[ContractModule]:
+    """Group the written definitions into modules, each within the line budget.
+
+    A definition goes to the module of the id prefix its owners share, cut at the operation family:
+    ``modelo.work`` holds what several work definitions reach and ``modelo`` what several families reach. A
+    module over the budget hands its largest deeper prefixes, such as ``modelo.work.form``, to modules of their
+    own until it fits; where that is not enough, it hands out its largest groups of definitions reached from the
+    same next-level owners, each named by them, such as ``modelo+edit+work``. What still does not fit is cut,
+    in name order, into consecutive parts that each fit, named after the module, such as ``modelo.work+part2``,
+    so a group's growth never stops generation. Only a single definition larger than the budget is refused.
+    """
+    grouped: dict[_Key, list[str]] = {}
+    for name in names:
+        grouped.setdefault(_shared_prefix(owners[name])[:_FAMILY_DEPTH], []).append(name)
+    pending = [ContractModule(key, found) for key, found in sorted(grouped.items())]
+    modules: list[ContractModule] = []
+    while pending:
+        module = pending.pop(0)
+        depth = len(module.key)
+        deeper: dict[_Key, list[str]] = {}
+        alike: dict[_Key, list[str]] = {}
+        for name in module.names:
+            prefix = _shared_prefix(owners[name])
+            if len(prefix) > depth:
+                deeper.setdefault(prefix[: depth + 1], []).append(name)
+            else:
+                reached_from = sorted({owner.split(".")[depth] for owner in owners[name] if owner.count(".") >= depth})
+                alike.setdefault((*module.key[:-1], "+".join((module.key[-1], *reached_from))), []).append(name)
+        size = _module_lines(module.names, written)
+        for key, part in (
+            *sorted(deeper.items(), key=lambda item: (-_module_lines(item[1], written), item[0])),
+            *sorted(alike.items(), key=lambda item: (-_module_lines(item[1], written), item[0])),
+        ):
+            if size <= _MODULE_LINE_BUDGET:
+                break
+            if len(part) == len(module.names):
+                continue
+            module.names = [name for name in module.names if name not in part]
+            size = _module_lines(module.names, written)
+            pending.append(ContractModule(key, part))
+        if size > _MODULE_LINE_BUDGET:
+            first, *rest = _parts(module.names, written)
+            module.names = first
+            modules.extend(
+                ContractModule((*module.key[:-1], f"{module.key[-1]}+part{index}"), part)
+                for index, part in enumerate(rest, start=2)
+            )
+        modules.append(module)
+    stems = [_module_name(module.key) for module in modules]
+    if len(set(stems)) != len(stems) or CONTRACTS_MODULE in stems:
+        raise SystemExit(f"two contract modules would share a file name: {sorted(stems)}")
+    return sorted(modules, key=lambda module: _module_name(module.key))
+
+
+def _parts(names: list[str], written: Mapping[str, WrittenDefinition]) -> list[list[str]]:
+    """``names`` cut, in their order, into consecutive parts that each fit the budget.
+
+    Raises:
+        SystemExit: When one definition alone is larger than the budget, which no split can fix.
+    """
+    parts: list[list[str]] = [[]]
+    for name in names:
+        if parts[-1] and _module_lines([*parts[-1], name], written) > _MODULE_LINE_BUDGET:
+            parts.append([])
+        parts[-1].append(name)
+        if (size := _module_lines(parts[-1], written)) > _MODULE_LINE_BUDGET:
+            raise SystemExit(f"the {name} type takes {size} lines alone and cannot be split further")
+    return parts
+
+
+def _imports(named: Mapping[str, set[str]], stem: str) -> list[str]:
+    """The type imports of module ``stem``: each type it names, from the module that defines it."""
+    return [
+        f'import type {{ {", ".join(sorted(types))} }} from "./{module}";'
+        for module, types in sorted(named.items())
+        if module != stem
+    ]
+
+
+def render_contract() -> dict[str, str]:
+    """The generated TypeScript modules, by file name, before the frontend's formatter writes them."""
     roots, sent = _model_roots()
     models = [(model, "serialization") for _, _, model in roots] + [(model, "validation") for model in sent]
     _, schema = models_json_schema(cast(Any, list(dict.fromkeys(models))), ref_template="#/$defs/{model}")
@@ -488,40 +667,78 @@ def render_contract() -> str:
     sent_reach = _reach(defs, (model.__name__ for model in sent))
     writer = _Writer(defs, sent_only=sent_reach - received)
     names = sorted((name for name in defs if not writer.inlined(name)), key=_ts_name)
-    blocks = [_HEADER, *(writer.definition(name) for name in names)]
-    blocks.append(
-        _constant_list(
-            "The definitions the host admits, mirroring its closed list.", "MODELO_DEFINITIONS", definitions()
-        )
-    )
-    operations = host_operations()
-    blocks.append(
-        _constant_list(
-            "The definitions whose request is the edit's financial body: they are sent\n"
-            " * through the raw edit commands, never as a payload.",
-            "MODELO_EDIT_DEFINITIONS",
-            sorted(key for key, facts in operations.items() if facts["financial"]),
-        )
-    )
-    blocks.append(
-        _constant_list(
-            "The definitions whose subject is the work unit owning the stored record\n"
-            " * their request names; only the store knows it, so the page names it from\n"
-            " * the form it read. Every other definition takes no work unit.",
-            "MODELO_STORED_SUBJECT_DEFINITIONS",
-            sorted(key for key, facts in operations.items() if facts["subject"]["kind"] == "stored_work_unit"),
-        )
-    )
-    by_definition: dict[str, list[str]] = {}
+    rendered: dict[str, str] = {}
+    sized: dict[str, WrittenDefinition] = {}
+    for name in names:
+        rendered[name] = writer.definition(name)
+        sized[name] = WrittenDefinition(rendered[name].count("\n") + 2, frozenset(writer.named))
+    by_family: dict[str, dict[str, list[tuple[str, str]]]] = {}
     for definition_id, role, model in roots:
-        by_definition.setdefault(definition_id, []).append(f"{role}: {_ts_name(model.__name__)};")
-    entries = "\n".join(f"  {_literal(key)}: {{ {' '.join(parts)} }};" for key, parts in by_definition.items())
-    blocks.append(
-        "/** Each admitted definition's registered request, result and review, as the\n"
-        " * runtime's contract names them; a request names the profile the host fills. */\n"
-        f"export type ModeloContracts = {{\n{entries}\n}};"
+        family = by_family.setdefault(definition_id.split(".")[1], {})
+        family.setdefault(definition_id, []).append((role, model.__name__))
+    families = sorted(by_family)
+    modules = contract_modules(names, _owners(defs, roots, sent), sized)
+    home = {name: _module_name(module.key) for module in modules for name in module.names}
+    written: dict[str, str] = {}
+    for module in modules:
+        stem = _module_name(module.key)
+        blocks = [rendered[name] for name in module.names]
+        used = {named for name in module.names for named in sized[name].named}
+        named: dict[str, set[str]] = {}
+        for name in used:
+            named.setdefault(home[name], set()).add(_ts_name(name))
+        imports = _imports(named, stem)
+        written[f"{stem}.ts"] = "\n\n".join([_HEADER, *(["\n".join(imports)] if imports else []), *blocks]) + "\n"
+    # The definition-keyed map names types from every module, so it lives in a module of its own: kept beside
+    # a family's types, it made that module and the modules it names import each other.
+    family_maps = [
+        f"/** The `modelo.{family}` definitions' share of `ModeloContracts`. */\n"
+        f"type {_family_map_name(family)} = {{\n"
+        + "\n".join(
+            f"  {_literal(definition_id)}: {{ "
+            + " ".join(f"{role}: {_ts_name(model_name)};" for role, model_name in parts)
+            + " };"
+            for definition_id, parts in sorted(by_family[family].items())
+        )
+        + "\n};"
+        for family in families
+    ]
+    mapped: dict[str, set[str]] = {}
+    for entries in by_family.values():
+        for parts in entries.values():
+            for _, model_name in parts:
+                mapped.setdefault(home[model_name], set()).add(_ts_name(model_name))
+    operations = host_operations()
+    written[f"{CONTRACTS_MODULE}.ts"] = (
+        "\n\n".join(
+            [
+                _HEADER,
+                "\n".join(_imports(mapped, CONTRACTS_MODULE)),
+                _constant_list(
+                    "The definitions the host admits, mirroring its closed list.", "MODELO_DEFINITIONS", definitions()
+                ),
+                _constant_list(
+                    "The definitions whose request is the edit's financial body: they are sent\n"
+                    " * through the raw edit commands, never as a payload.",
+                    "MODELO_EDIT_DEFINITIONS",
+                    sorted(key for key, facts in operations.items() if facts["financial"]),
+                ),
+                _constant_list(
+                    "The definitions whose subject is the work unit owning the stored record\n"
+                    " * their request names; only the store knows it, so the page names it from\n"
+                    " * the form it read. Every other definition takes no work unit.",
+                    "MODELO_STORED_SUBJECT_DEFINITIONS",
+                    sorted(key for key, facts in operations.items() if facts["subject"]["kind"] == "stored_work_unit"),
+                ),
+                *family_maps,
+                "/** Each admitted definition's registered request, result and review, as the\n"
+                " * runtime's contract names them; a request names the profile the host fills. */\n"
+                f"export type ModeloContracts = {' & '.join(_family_map_name(family) for family in families)};",
+            ]
+        )
+        + "\n"
     )
-    return "\n\n".join(blocks) + "\n"
+    return dict(sorted(written.items()))
 
 
 # -- envelopes ----------------------------------------------------------------
@@ -676,10 +893,11 @@ def _write(directory: Path, name: str, model: BaseModel) -> None:
 
     The written envelope is what the host hands the window. Once every envelope is written, the opaque ids a run
     mints afresh are named stably across them (see ``_name_minted_ids``); the calculations an envelope names are
-    read for that here, while their profile is open.
+    read for that here, while their profile is open, and the profile it was written in is recorded.
     """
     shown = _host_view(json.loads(model.model_dump_json()), _result_path_keys(), _FILE_FOLDERS)
     _name_calculations(shown)
+    _ENVELOPE_PROFILES[name] = _open_profile()
     text = json.dumps(shown, ensure_ascii=False, separators=(",", ":"))
     (directory / name).write_text(text, "utf-8", newline="\n")
     sys.stdout.write(f"{name}\n")
@@ -697,6 +915,45 @@ _MINTED_IDS: dict[str, str] = {}
 
 #: What each name was stated by, so two ids stated alike can be told apart in the refusal.
 _STATED: dict[str, Any] = {}
+#: The profile each envelope was written in, by its file name; one written outside every profile has none.
+_ENVELOPE_PROFILES: dict[str, str | None] = {}
+
+
+def _open_profile() -> str | None:
+    """The profile open now, as its own storage root, or ``None`` outside every profile.
+
+    Each scenario opens its own copy of a persona's profile, and every copy carries the same profile id; the
+    storage root the copy was opened in is what tells two scenarios' profiles apart.
+    """
+    from cadrumo.adapters.persistence.storage.master_key.active_session import current_active_bucket_session
+    from cadrumo.core.config import load_settings
+
+    if current_active_bucket_session() is None:
+        return None
+    return str(load_settings().cadrumo_storage_root)
+
+
+def _profiles_holding(envelopes: Mapping[str, Any], raws: Iterable[str]) -> dict[str, set[str | None]]:
+    """The profiles whose envelopes hold each of ``raws``; ``None`` stands for an envelope of no known profile."""
+    wanted = set(raws)
+    holding: dict[str, set[str | None]] = {raw: set() for raw in wanted}
+    for name, envelope in envelopes.items():
+        for found in wanted.intersection(_all_strings(envelope)):
+            holding[found].add(_ENVELOPE_PROFILES.get(name))
+    return {raw: profiles or {None} for raw, profiles in holding.items()}
+
+
+def _all_strings(value: Any) -> Generator[str]:
+    """Every string ``value`` holds as a key or a value, at any depth."""
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, list):
+        for item in value:
+            yield from _all_strings(item)
+    elif isinstance(value, dict):
+        for key, item in value.items():
+            yield str(key)
+            yield from _all_strings(item)
 
 
 def _token(kind: str, stated: Any) -> str:
@@ -887,6 +1144,11 @@ def _name_minted_ids(directory: Path, names: Iterable[str]) -> None:
     A name is a digest of what its own row states, never of where the id was met first, so each id is named the
     same wherever it recurs and whatever order the envelopes are read in; an id another row cites, or the window
     hands back as the one it read, is replaced by the same name.
+
+    Two ids may share a name only where no one profile holds both. Each scenario reads its own copy of a persona's
+    profile, whose keyed references differ, so one calculation read alike in two scenarios mints two ids that state
+    the same row; no envelope of either profile can tell them apart, so they share its name. Within one profile, or
+    where an envelope's profile is not known, two ids stated alike would merge under one name, and are refused.
     """
     envelopes = {name: json.loads((directory / name).read_text("utf-8")) for name in names}
     for envelope in envelopes.values():
@@ -896,12 +1158,21 @@ def _name_minted_ids(directory: Path, names: Iterable[str]) -> None:
     derived: dict[str, str] = {}
     for envelope in envelopes.values():
         _derived_names(envelope, derived)
-    named: dict[str, str] = {}
+    named: dict[str, list[str]] = {}
     for raw, token in [*_MINTED_IDS.items(), *derived.items()]:
-        if named.setdefault(token, raw) != raw:
-            raise SystemExit(
-                f"{named[token]} and {raw} state the same row, so their names would merge them: {_STATED.get(token)}"
-            )
+        if raw not in named.setdefault(token, []):
+            named[token].append(raw)
+    shared = [raw for raws in named.values() if len(raws) > 1 for raw in raws]
+    profiles = _profiles_holding(envelopes, shared)
+    for token, raws in named.items():
+        for position, raw in enumerate(raws):
+            for other in raws[:position]:
+                common = profiles[other] & profiles[raw]
+                if common or None in profiles[other] | profiles[raw]:
+                    raise SystemExit(
+                        f"{other} and {raw} state the same row in one profile, so their names would merge them: "
+                        f"{_STATED.get(token)}"
+                    )
     _MINTED_IDS.update(derived)
     for name, envelope in envelopes.items():
         text = json.dumps(_with_minted_names(envelope), ensure_ascii=False, separators=(",", ":"))
@@ -1891,7 +2162,7 @@ def _write_projection_steps(directory: Path) -> None:
     projected = next(filer for filer in RENTA_FILERS if filer.envelope == "projected")
     filer = replace(projected, quarter_130=False)
     with (
-        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
+        scratch_tree() as tmp,
         _renta_seeded(Path(tmp), filer) as (_, work),
     ):
         created = _operate(
@@ -1929,7 +2200,7 @@ def _write_renta_filer(directory: Path, filer: RentaFiler, *, first: bool) -> No
     The first filer is also the one whose declarations list, help cards and refused projection are read.
     """
     with (
-        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
+        scratch_tree() as tmp,
         _renta_seeded(Path(tmp), filer, read_on=filer.read_on) as (persona, work),
     ):
         _record_certificate(persona, filer)
@@ -2101,7 +2372,7 @@ def _borrador_chain(directory: Path | None, results: Mapping[str, Decimal]) -> d
     """
     # Read within the filing period, after the drafts were imported.
     with (
-        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
+        scratch_tree() as tmp,
         _renta_seeded(Path(tmp), BORRADOR_FILER, read_on=RENTA_FILING_PERIOD_DAY) as (persona, work),
     ):
         _record_certificate(persona, BORRADOR_FILER)
@@ -2854,15 +3125,24 @@ def _write_receipt_import(directory: Path, work: Any) -> None:
     _write(directory, f"reconcile-{work.work_unit.modelo}.json", imported)
 
 
-def _write_correction(directory: Path, work: Any, filing_record_id: str) -> None:
+def _write_correction(
+    directory: Path,
+    work: Any,
+    filing_record_id: str,
+    *,
+    name: str | None = None,
+    form: str = "130-1T-receipt",
+    corrected: tuple[str, str] = CORRECTED_130,
+) -> str:
     """Read what correcting the recorded, receipt-confirmed 130 offers, check a corrected figure, and correct it.
 
     The corrected figure is checked through the canonical typed-entry path as
     the desktop sends it, once as a figure and once as words it cannot read.
     """
+    from cadrumo.application.modelo.amendment_projection import ModeloWorkAmendPublicResultV2
     from cadrumo.application.modelo.workbench_operations import MODELO_EDIT_PREFLIGHT_OPERATION_DEFINITION_ID
 
-    modelo = str(work.work_unit.modelo)
+    name = str(work.work_unit.modelo) if name is None else name
     definition_id = "modelo.work.amendment_context"
     context = _operate(
         work,
@@ -2873,16 +3153,17 @@ def _write_correction(directory: Path, work: Any, filing_record_id: str) -> None
         ),
         subject_ref=_profile_subject(work),
     )
-    _write(directory, f"amendment-context-{modelo}.json", context)
+    _write(directory, f"amendment-context-{name}.json", context)
     if not isinstance(context, ModeloWorkAmendmentContextProjection):
         raise SystemExit("the amendment context read did not publish its projection")
     correction = context.correction
     if correction is None or not correction.rows or not correction.kinds:
         raise SystemExit("the recorded 130 offers no correction")
-    row = next((row for row in correction.rows if row.casilla_id == CORRECTED_130[0]), correction.rows[0])
-    form = "130-1T-receipt"
+    row = next((row for row in correction.rows if row.casilla_id == corrected[0]), None)
+    if row is None:
+        raise SystemExit(f"the recorded 130 offers no correction of box {corrected[0]}")
     baseline = _form_baseline(directory, form).model_dump(mode="json")
-    for suffix, lexeme in (("", CORRECTED_130[1]), ("-refused", UNREADABLE_ENTRY)):
+    for suffix, lexeme in (("", corrected[1]), ("-refused", UNREADABLE_ENTRY)):
         document = {
             "input_version": 2,
             "output_language": "en",
@@ -2913,7 +3194,164 @@ def _write_correction(directory: Path, work: Any, filing_record_id: str) -> None
             },
         ),
     )
-    _write(directory, f"amend-{modelo}.json", amended)
+    if not isinstance(amended, ModeloWorkAmendPublicResultV2):
+        raise SystemExit("the amendment did not publish its saved filing")
+    _write(directory, f"amend-{name}.json", amended)
+    return amended.filing_record_id
+
+
+def _correction_filing_view(work: Any, filing_record_id: str, language: str) -> Any:
+    """Read an exact saved filing through the registered profile operation."""
+    definition_id = "modelo.filing_record.view"
+    return _operate(
+        work,
+        definition_id,
+        _request(
+            definition_id,
+            {
+                "profile_id": work.work_unit.bucket_id,
+                "filing_record_id": filing_record_id,
+                "output_language": language,
+            },
+        ),
+        subject_ref=_profile_subject(work),
+        effect=OperationEffect.NONE,
+    )
+
+
+def _write_related_correction(directory: Path, work: Any, filing_record_id: str, name: str) -> Any:
+    """Save each language's exact receipt, saved comparison and labeled correction context."""
+    first = None
+    for language in LANGUAGES:
+        view = _correction_filing_view(work, filing_record_id, language)
+        _write(directory, f"filing-view-{name}-{language}.json", view)
+        definition_id = "modelo.work.amendment_context"
+        context = _operate(
+            work,
+            definition_id,
+            _request(
+                definition_id,
+                {
+                    "profile_id": work.work_unit.bucket_id,
+                    "filing_record_id": filing_record_id,
+                    "output_language": language,
+                },
+            ),
+            subject_ref=_profile_subject(work),
+            effect=OperationEffect.NONE,
+        )
+        _write(directory, f"amendment-context-{name}-{language}.json", context)
+        if first is None:
+            first = view
+    return first
+
+
+def _confirm_correction_receipt(work: Any, filing_record_id: str) -> None:
+    """Confirm the pending correction through the same synthetic receipt door as the original."""
+    from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+    from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
+    from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
+    from cadrumo.core.time.clock import now
+    from cadrumo.domain.modelos.filing_record import AeatConfirmationState, ExternalEvidenceKind
+    from cadrumo.entrypoints.adapter_composition_work_ports import build_filing_action_ports
+
+    unit = work.work_unit
+    ports = build_filing_action_ports(bucket_id=unit.bucket_id, operation=work.operation)
+    record = ports.filing_repository.load().get(filing_record_id)
+    if record is None:
+        raise SystemExit("the pending correction has no saved filing")
+    revision = ports.calculation_repository.load().get(record.calculation_revision_id)
+    if revision is None:
+        raise SystemExit("the pending correction has no saved calculation")
+    received = now()
+    tax_id = _taxpayer_tax_id(ACTIVITY_PERSONA)
+    reference = f"CSV{unit.modelo}{unit.filing_year}{unit.period.registry_token}CORRECTION1"
+    persist_justificante_metadata(
+        reference,
+        modelo=str(unit.modelo),
+        filing_year=unit.filing_year,
+        period=unit.period.registry_token,
+        captured_at=received,
+        tax_id=tax_id,
+    )
+    imported = import_external_filing_evidence(
+        work_unit_id=work.work_unit_id,
+        casilla_values=revision.casilla_values,
+        evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+        evidence_reference_id=reference,
+        declared_kind=record.declaration_kind,
+        actor=ACTOR,
+        work_unit_repository=ports.work_unit_repository,
+        calculation_repository=ports.calculation_repository,
+        filing_repository=ports.filing_repository,
+        bucket_event_repository=ports.bucket_event_repository,
+        observation_repository=CalculationObservationRepository(),
+        expected_tax_id=tax_id,
+        clock=received,
+        operation=work.operation,
+    )
+    confirmed = imported.filing_record
+    if confirmed.filing_record_id != filing_record_id or confirmed.confirmation is not AeatConfirmationState.CONFIRMADA:
+        raise SystemExit("the correction receipt did not confirm the exact pending filing")
+
+
+def _write_correction_chain(directory: Path, work: Any, original_id: str) -> None:
+    """Produce a saved original and two successive corrections, with one awaiting confirmation."""
+    from cadrumo.core.time.clock import frozen_clock, now
+    from cadrumo.domain.modelos.filing_record import AeatConfirmationState
+
+    original = _correction_filing_view(work, original_id, "en")
+    started = max(now(), _in_declarations_year(RECEIPT_ON)) + timedelta(minutes=1)
+    with frozen_clock(started):
+        _write_form(directory, work, "modelo-130-1T-receipt")
+        first_id = _write_correction(directory, work, original_id)
+        pending = _write_related_correction(directory, work, first_id, "130-correction-1-pending")
+        _write_form(directory, work, "modelo-130-1T-correction-1-pending")
+        _write_filing_reads(directory, work, "130-correction-1-pending")
+        _write_list(directory, work, "declarations-correction-pending")
+    with frozen_clock(started + timedelta(minutes=1)):
+        _confirm_correction_receipt(work, first_id)
+        _write_form(directory, work, "modelo-130-1T-correction-1")
+    with frozen_clock(started + timedelta(minutes=2)):
+        second_id = _write_correction(
+            directory,
+            work,
+            first_id,
+            name="130-correction-2",
+            form="130-1T-correction-1",
+            corrected=(CORRECTED_130[0], "11000.00"),
+        )
+        saved_original = _write_related_correction(directory, work, original_id, "130-original")
+        first = _write_related_correction(directory, work, first_id, "130-correction-1")
+        second = _write_related_correction(directory, work, second_id, "130-correction-2")
+        _write_list(directory, work, "declarations-corrections")
+    if saved_original.historical_content != original.historical_content:
+        raise SystemExit("correcting the 130 changed the original's saved content")
+    if first.historical_content != pending.historical_content:
+        raise SystemExit("the successive correction changed the first correction's saved content")
+    # Independent hand calculation from the pinned 130 rules: expenses4982,
+    # simplified provision5%, payment20%, minor deduction100. Confirmed prior
+    # payments are deducted once; the newest pending correction is not paid.
+    for view, expected in (
+        (saved_original, {"01": "8840", "17": "633.02", "18": "0", "19": "633.02"}),
+        (first, {"01": "10000", "02": "5232.90", "07": "953.42", "17": "853.42", "18": "633.02", "19": "220.40"}),
+        (second, {"01": "11000", "02": "5282.90", "07": "1143.42", "17": "1043.42", "18": "853.42", "19": "190.00"}),
+    ):
+        saved = {row.casilla_id: row.value for row in view.historical_content.observations}
+        if any(key not in saved or Decimal(saved[key]) != Decimal(value) for key, value in expected.items()):
+            raise SystemExit("the saved 130 correction did not recompute the grounded liability and prior payment")
+    if len({item.record.calculation_revision_id for item in (saved_original, first, second)}) != 3:
+        raise SystemExit("the correction chain did not save three distinct calculations")
+    if (
+        saved_original.record.superseded_by_filing_record_id != first_id
+        or first.record.amends_filing_record_id != original_id
+        or first.record.superseded_by_filing_record_id != second_id
+        or second.record.amends_filing_record_id != first_id
+        or saved_original.record.confirmation is not AeatConfirmationState.CONFIRMADA
+        or first.record.confirmation is not AeatConfirmationState.CONFIRMADA
+        or second.record.confirmation is not AeatConfirmationState.PENDIENTE
+    ):
+        raise SystemExit("the saved correction chain lost its exact links or confirmation states")
 
 
 def checked_entries(directory: Path, form: str) -> list[dict[str, Any]]:
@@ -3098,7 +3536,7 @@ def _write_iva_wallet(directory: Path) -> None:
     )
     from cadrumo.application.operations.public_period import PublicPeriod
 
-    with tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp, _seeded(Path(tmp)) as work:
+    with scratch_tree() as tmp, _seeded(Path(tmp)) as work:
         iva = _other_declaration(work, "303", "1T")
         _write_list(directory, work, "declarations-wallet")
         profile_id = UUID(work.work_unit.bucket_id)
@@ -3172,7 +3610,7 @@ def _write_scenarios(directory: Path) -> None:
     write_refusals(directory)
     _write_iva_wallet(directory)
     with (
-        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
+        scratch_tree() as tmp,
         _seeded(Path(tmp)) as first,
     ):
         works = {DECLARATIONS[0][0]: first}
@@ -3201,7 +3639,7 @@ def _write_scenarios(directory: Path) -> None:
         _write_unverified_export(directory, first, Path(tmp) / "modelo-165.txt")
     # Its own profile: recording needs the earlier Renta filed under the persona's tax id.
     with (
-        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
+        scratch_tree() as tmp,
         _seeded(Path(tmp)) as filed,
     ):
         _write(directory, "file-130.json", _record_filed(filed))
@@ -3212,11 +3650,11 @@ def _write_scenarios(directory: Path) -> None:
         _import_receipt(filed)
         _write_form(directory, filed, "modelo-130-1T-receipt")
         unit = _write_filing_reads(directory, filed, "130-receipt")
-        _write_correction(directory, filed, unit.current_filing_record_id)
+        _write_correction_chain(directory, filed, unit.current_filing_record_id)
     # Its own profile: the persona's ledger carries the quarter's income and the declaration is calculated, never
     # checked or filed. It records no estimation regime, so its form shows what that leaves it waiting on.
     with (
-        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
+        scratch_tree() as tmp,
         _seeded(Path(tmp), stated=UNREGIMED) as booked,
     ):
         booked.recalculate()
@@ -3224,7 +3662,7 @@ def _write_scenarios(directory: Path) -> None:
     # Its own profile, on a frozen timeline: calculated now, a review half an hour after the form was read, and its
     # renewal, forty minutes on.
     with (
-        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
+        scratch_tree() as tmp,
         _seeded(Path(tmp)) as renewing,
     ):
         started = now() + timedelta(minutes=40)
@@ -3233,7 +3671,7 @@ def _write_scenarios(directory: Path) -> None:
         _write_renewal_flow(directory, renewing, started)
     # Its own profile: the file is written, then a conflicting edit makes it stale and blocks verification.
     with (
-        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
+        scratch_tree() as tmp,
         _seeded(Path(tmp)) as stale,
     ):
         _check_clean(stale)
@@ -3412,6 +3850,7 @@ _WRITE_ENVELOPES: tuple[tuple[str, str], ...] = (
     ("file-*.json", "modelo.work.file"),
     ("reconcile-*.json", "modelo.reconcile.import"),
     ("metadata-*.json", "modelo.work.metadata"),
+    ("filing-view-*.json", "modelo.filing_record.view"),
     ("amendment-context-*.json", "modelo.work.amendment_context"),
     ("amend-[0-9]*.json", "modelo.work.amend"),
     ("disagreements-*.json", "modelo.work.disagreements"),
@@ -3429,8 +3868,10 @@ def _result_model(definition_id: str) -> type[BaseModel]:
     return registry.lookup_public_schema_binding(schema).model_type
 
 
-def validate(*, envelopes: bool = True) -> int:
+def validate(directory: Path | None, *, envelopes: bool = True) -> int:
     """Whether the host's admitted list and, unless ``envelopes`` is false, every stored envelope match the models.
+
+    The envelopes are read from ``directory``, or from the window projections when it is ``None``.
 
     Raises:
         SystemExit: When envelopes are asked for and none has been seeded, naming the command that seeds them.
@@ -3443,10 +3884,11 @@ def validate(*, envelopes: bool = True) -> int:
             f"unadmitted {sorted(set(registered) - set(admitted))}, "
             f"unregistered {sorted(set(admitted) - set(registered))}"
         )
-    if envelopes and not any(FIXTURES.glob("*.json")):
-        raise SystemExit(f"No modelo envelope is seeded in {FIXTURES}; run `just fixtures-seed modelo-envelopes`")
+    stored = directory if directory is not None else family_directory(ENVELOPE_FAMILY)
+    if envelopes and not any(stored.glob("*.json")):
+        raise SystemExit(f"No modelo envelope is seeded in {stored}; run `just fixtures-seed modelo-envelopes`")
     for pattern, model in _fixture_models() if envelopes else ():
-        paths = sorted(FIXTURES.glob(pattern))
+        paths = sorted(stored.glob(pattern))
         if not paths:
             failures.append(f"no fixture matches {pattern}")
         for path in paths:
@@ -3465,25 +3907,29 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("step", choices=("contract", "bounds", "envelopes", "pack", "validate"))
     parser.add_argument(
-        "directory", nargs="?", type=Path, default=FIXTURES, help="Where `envelopes` writes and `pack` stores."
+        "directory",
+        nargs="?",
+        type=Path,
+        help="Where `envelopes` writes, `pack` stores and `validate` reads; by default the window projections.",
     )
     parser.add_argument(
         "--definitions", action="store_true", help="With `validate`, check the host's admitted list and no envelope."
     )
     args = parser.parse_args()
     if args.step == "contract":
-        sys.stdout.write(render_contract())
+        sys.stdout.write(json.dumps({"bound": MAX_PHYSICAL_LINES, "modules": render_contract()}, ensure_ascii=False))
         return 0
     if args.step == "bounds":
         sys.stdout.write(render_bounds())
         return 0
+    if args.step == "validate":
+        return validate(None if args.definitions else args.directory, envelopes=not args.definitions)
+    directory = args.directory if args.directory is not None else family_directory(ENVELOPE_FAMILY)
     if args.step == "envelopes":
-        write_envelopes(args.directory)
+        write_envelopes(directory)
         return 0
-    if args.step == "pack":
-        pack_envelopes(args.directory)
-        return 0
-    return validate(envelopes=not args.definitions)
+    pack_envelopes(directory)
+    return 0
 
 
 if __name__ == "__main__":

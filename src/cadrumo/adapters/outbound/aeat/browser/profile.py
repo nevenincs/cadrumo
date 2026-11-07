@@ -43,7 +43,7 @@ def browser_locale_default() -> str | None:
 
 
 def browser_timezone_default() -> str | None:
-    """Resolve the default browser timezone lazily (see :func:`_browser_locale_default`)."""
+    """Resolve the default browser timezone lazily (see :func:`browser_locale_default`)."""
     return Settings().cadrumo_browser_timezone
 
 

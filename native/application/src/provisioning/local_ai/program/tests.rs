@@ -3,7 +3,7 @@ use crate::{
     component::Cancellation,
     provisioning::{
         items::ItemId,
-        local_ai::fake_ollama::{HELPER_ARGUMENTS, HELPER_MODE, HELPER_VERSION},
+        local_ai::fake_ollama::{HELPER_ARGUMENTS, HELPER_GATE, HELPER_MODE, HELPER_VERSION},
         pins::ComponentPins,
         plan::PlanEntry,
         receipts::ReceiptReading,
@@ -189,6 +189,89 @@ pub(crate) fn stand_in(program: &mut Program, version: &str) {
             (OsString::from(HELPER_VERSION), OsString::from(version)),
         ],
     });
+}
+
+/// Writes a start-failure record as an earlier start, in any process, left it.
+fn earlier_failure(programs: &Path) {
+    fs::create_dir_all(programs).unwrap();
+    fs::write(
+        programs.join(START_FAILURE_RECORD),
+        br#"{"schema":1,"reason":"server_launch_failed"}"#,
+    )
+    .unwrap();
+}
+
+#[test]
+fn an_earlier_failed_start_is_not_read_as_the_cause_of_a_later_one() {
+    let bytes = archive(b"only");
+    let (certificate, publisher) = publisher(vec![("9.8.7".into(), bytes.clone())]);
+    let network = network_to(certificate.roots(), publisher.address(), None);
+    let hosts: BTreeSet<HostName> = [HostName::new("github.com").unwrap()].into();
+    let mut pacing = SystemPacing::default();
+    let cancellation = Cancellation::default();
+    let mut events = |_| {};
+    let mut transfer = Transfer {
+        network: &network,
+        hosts: &hosts,
+        policy: RetryPolicy::default(),
+        pacing: &mut pacing,
+        events: &mut events,
+        cancellation: &cancellation,
+    };
+    let root = tempfile::tempdir().unwrap();
+    let locations = Locations::under(root.path());
+    let pins = pins_for(&bytes, "9.8.7", EXECUTABLE);
+    let new_program = || {
+        Program::new(&pins, Platform::current().unwrap(), locations.clone())
+            .unwrap()
+            .unwrap()
+    };
+    let mut program = new_program();
+    let observer = new_program();
+
+    // Installing changes the program: a failure under the earlier one is forgotten.
+    earlier_failure(&locations.programs);
+    program.install(&mut transfer).unwrap();
+    assert_eq!(observer.latest_start_failure(), None);
+
+    // A new attempt that has begun and not finished has not failed.
+    earlier_failure(&locations.programs);
+    let gate = root.path().join("announce");
+    stand_in(&mut program, "9.8.7");
+    if let Some(stand_in) = program.serve_override.as_mut() {
+        stand_in
+            .environment
+            .push((OsString::from(HELPER_GATE), gate.clone().into_os_string()));
+    }
+    std::thread::scope(|scope| {
+        let starting = scope.spawn(|| {
+            program
+                .start(free_address(), &Uncontained, &ambient, None)
+                .map(|server| server.address())
+        });
+        let deadline = std::time::Instant::now() + Duration::from_secs(20);
+        while observer.latest_start_failure().is_some() && std::time::Instant::now() < deadline {
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        assert_eq!(
+            observer.latest_start_failure(),
+            None,
+            "the earlier failure is not this attempt's"
+        );
+        assert!(
+            observer.running_server().is_none(),
+            "the attempt has not finished"
+        );
+        fs::write(&gate, b"").unwrap();
+        starting.join().unwrap().expect("the gated start finishes");
+    });
+    assert_eq!(observer.latest_start_failure(), None);
+
+    // Removing the program forgets a failure under it too.
+    program.stop();
+    earlier_failure(&locations.programs);
+    program.remove().unwrap();
+    assert_eq!(observer.latest_start_failure(), None);
 }
 
 pub(crate) fn answers(address: SocketAddr) -> bool {
@@ -492,10 +575,10 @@ fn a_group_that_cannot_be_opened_starts_no_server() {
     );
     assert!(matches!(
         refused,
-        LocalAiError::ServerStart(ServerStartFailure::Launch {
+        LocalAiError::NotRunning(NotRunningCause::Start(ServerStartFailure::Launch {
             step: LaunchStep::OpenGroup,
             kind: io::ErrorKind::Unsupported,
-        })
+        }))
     ));
     assert_eq!(refused.category(), FailureCategory::ProgramNotRunning);
     assert!(program.server().is_none());
@@ -557,10 +640,10 @@ fn a_server_the_system_cannot_create_says_which_step_failed_and_why() {
     );
     assert!(matches!(
         error,
-        LocalAiError::ServerStart(ServerStartFailure::Launch {
+        LocalAiError::NotRunning(NotRunningCause::Start(ServerStartFailure::Launch {
             step: LaunchStep::Create,
             kind: io::ErrorKind::NotFound,
-        })
+        }))
     ));
     assert_eq!(error.category(), FailureCategory::ProgramNotRunning);
 }
@@ -586,10 +669,10 @@ fn a_server_that_cannot_be_contained_says_so_and_does_not_run() {
     );
     assert!(matches!(
         error,
-        LocalAiError::ServerStart(ServerStartFailure::Launch {
+        LocalAiError::NotRunning(NotRunningCause::Start(ServerStartFailure::Launch {
             step: LaunchStep::Contain,
             kind: io::ErrorKind::PermissionDenied,
-        })
+        }))
     ));
     assert_eq!(error.category(), FailureCategory::ProgramNotRunning);
 }
@@ -640,9 +723,14 @@ fn a_program_that_never_listens_or_answers_otherwise_is_ended_and_not_running() 
     assert!(
         matches!(
             exited,
-            LocalAiError::ServerStart(ServerStartFailure::Closed { .. })
+            LocalAiError::NotRunning(NotRunningCause::Start(ServerStartFailure::Closed { .. }))
         ),
         "{exited}"
+    );
+    assert_eq!(
+        program.latest_start_failure(),
+        Some(StartFailureKind::Closed),
+        "the failed start is recorded for an engine waiting elsewhere"
     );
     assert_eq!(exited.category(), FailureCategory::ProgramNotRunning);
     // A program that listens but reports another version is ended.
@@ -656,10 +744,15 @@ fn a_program_that_never_listens_or_answers_otherwise_is_ended_and_not_running() 
     assert!(
         matches!(
             &other,
-            LocalAiError::ServerStart(ServerStartFailure::Version(VersionFailure::Different { found }))
+            LocalAiError::NotRunning(NotRunningCause::Start(ServerStartFailure::Version(VersionFailure::Different { found })))
                 if found == "0.0.1"
         ),
         "{other}"
+    );
+    assert_eq!(
+        program.latest_start_failure(),
+        Some(StartFailureKind::VersionUnconfirmed),
+        "the record holds the latest failed start"
     );
     assert_eq!(other.category(), FailureCategory::ProgramNotRunning);
     assert_eq!(
@@ -701,6 +794,11 @@ fn a_program_that_never_listens_or_answers_otherwise_is_ended_and_not_running() 
         second.running_server().map(|server| server.address()),
         Some(address),
         "another engine observes the one running server"
+    );
+    assert_eq!(
+        second.latest_start_failure(),
+        None,
+        "a start that succeeded clears the failed one, and a refused start records none"
     );
     drop(second);
     assert!(

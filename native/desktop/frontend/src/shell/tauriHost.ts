@@ -1,12 +1,7 @@
 import { Channel } from "@tauri-apps/api/core";
-import type {
-  DesktopSetup,
-  LogBatch,
-  ManagerSignal,
-  ShellToken,
-  SignInSignal,
-  WindowPresentation,
-} from "../ipc/contract";
+import type { DesktopSetup } from "../ipc/componentSetup";
+import type { LogBatch, ShellToken, WindowPresentation } from "../ipc/contract";
+import type { ManagerSignal, SignInSignal } from "../ipc/account";
 import type { AgentAccess } from "./agentAccess";
 import type {
   AgentServiceStatus,
@@ -312,7 +307,7 @@ export function tauriHost(): Host {
       set: (language) => call("desktop_language_set", { language }),
       async observe(listener) {
         const updates = new Channel<
-          import("../ipc/contract").DesktopLanguage
+          import("../ipc/environment").DesktopLanguage
         >();
         updates.onmessage = listener;
         const subscription = await call("desktop_language_observe", {

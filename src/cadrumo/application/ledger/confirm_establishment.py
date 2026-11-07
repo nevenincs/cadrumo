@@ -177,6 +177,8 @@ def confirm_establishment_filer_scope(
     incomplete profile is a setup gap. Its typed refusal propagates unchanged so
     the shared boundary retains the failed condition, evidence, and closed
     outcome rather than recasting a profile precondition as document-review text.
+
+    ``profile_record`` is a :class:`UserProfileRecord`.
     """
     if profile_record is None:
         return None, _review_item(

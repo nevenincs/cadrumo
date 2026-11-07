@@ -5,6 +5,11 @@ import type { TerminalStatus } from "../components/TerminalPane";
 export const WORKSPACE_COLUMNS = ["agent", "tui", "docs"] as const;
 type Column = (typeof WORKSPACE_COLUMNS)[number];
 type FocusTarget = RefObject<{ focus(): void } | null>;
+const PANEL_VIEWS: ReadonlySet<string> = new Set<PanelTab>([
+  "console",
+  "python",
+  "logs",
+]);
 
 /** Keeps keyboard focus in an available pane as workspace visibility changes. */
 export function useWorkspaceFocus({
@@ -122,18 +127,21 @@ export function useWorkspaceFocus({
     }
   }, [agentVisible, wantsAgent, agentBody]);
   // The bottom panel maximized over the panes above it: focus held in one
-  // of them goes into the panel, to the view its tab shows.
+  // of them goes into the panel, to the view its tab shows. Every docked
+  // pane outside the panel is covered, the TUI's as much as the page's.
   const panelMaximized = maximized === "panel";
   const panelWasMaximized = useRef(panelMaximized);
   useEffect(() => {
     const covered = !panelWasMaximized.current && panelMaximized;
     panelWasMaximized.current = panelMaximized;
     const held = document.activeElement;
+    const heldPane =
+      held?.closest<HTMLElement>("[data-dock-pane]")?.dataset.dockPane;
     if (
       !covered ||
       (held !== null &&
         held !== document.body &&
-        held.closest(".main-area, .pane-agent") === null)
+        (heldPane === undefined || PANEL_VIEWS.has(heldPane)))
     )
       return;
     focusView(tab);

@@ -514,7 +514,10 @@ def canonical_casilla_values[CasillaKey](
     revision: ModeloRevision,
     casilla_values: Mapping[CasillaKey, object],
 ) -> dict[CasillaId, Decimal]:
-    """Validate and return registry-canonical numeric local observation values."""
+    """Validate and return registry-canonical numeric local observation values.
+
+    ``revision`` is a :class:`ModeloRevision`.
+    """
     _require_local_observation_values(casilla_values)
     canonical, malformed, non_decimal = _canonicalize_local_observation_values(casilla_values)
     _raise_local_observation_input_errors(

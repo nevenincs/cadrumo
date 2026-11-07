@@ -182,7 +182,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "8060759d3f206647648ecc2f9121a30482797df81e19971542ad8fde5c9ecb3f"
+          "value": "c950874c1ed1137bddb117ca8ccd6772b648216e7116c79ef0f93ec28a416744"
         }
       ],
       "envelope": {
@@ -384,7 +384,7 @@
             "renta-retencion-soportada-ganancia-patrimonial": "0",
             "renta-retencion-soportada-trabajo": "2400"
           },
-          "calculation_revision_id": "8060759d3f206647648ecc2f9121a30482797df81e19971542ad8fde5c9ecb3f",
+          "calculation_revision_id": "c950874c1ed1137bddb117ca8ccd6772b648216e7116c79ef0f93ec28a416744",
           "casilla_values": {
             "0002": "0",
             "0003": "24000",
@@ -4340,7 +4340,7 @@
             {"casilla_id":"0586","label":"Increased net regional tax liability","role":"key_figure","value":"1616.62"}
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 8060759d3f206647648ecc2f9121a30482797df81e19971542ad8fde5c9ecb3f (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision c950874c1ed1137bddb117ca8ccd6772b648216e7116c79ef0f93ec28a416744 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "retencion_soportada",
@@ -4481,7 +4481,7 @@
         "modelo",
         "work",
         "verify",
-        "8060759d3f206647648ecc2f9121a30482797df81e19971542ad8fde5c9ecb3f"
+        "c950874c1ed1137bddb117ca8ccd6772b648216e7116c79ef0f93ec28a416744"
       ],
       "captures": [],
       "envelope": {
@@ -4614,7 +4614,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "8060759d3f206647648ecc2f9121a30482797df81e19971542ad8fde5c9ecb3f",
+          "calculation_revision_id": "c950874c1ed1137bddb117ca8ccd6772b648216e7116c79ef0f93ec28a416744",
           "completeness_status": "complete",
           "findings": [
             {
@@ -4682,7 +4682,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "06a3ddd9e7299a523b839408df6bd2df29b80eb6fb5e683b5a958a0254b4d46a",
+          "verification_report_id": "c6c6899d171d49ffcbd0a7ce3eee21f0f2303bafbccb2279af324ec9876abaf5",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

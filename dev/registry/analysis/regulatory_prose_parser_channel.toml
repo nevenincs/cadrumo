@@ -173,3 +173,8 @@ reason = "Recognises the generated cadrumo-casilla-section-identifier marker to 
 module = "dev/locales/signal_syntax.py"
 corpus = "Locale catalogue and documentation syntax"
 reason = "Recognises translation syntax and Spanish tax terminology for language-aware spelling checks. The detector matches casilla in the terminology pattern; these matches route prose to its language dictionary and establish no regulatory value."
+
+[[parser]]
+module = "dev/locales/signal_tokens.py"
+corpus = "Locale catalogue command and file syntax"
+reason = "Recognises the casilla_code, value observation-file header quoted in translated CLI help so the spelling audit treats it as file syntax rather than translated words. The detector matches casilla in that header; this module reads no official prose and derives no regulatory value."

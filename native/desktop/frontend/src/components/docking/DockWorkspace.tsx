@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -65,6 +66,8 @@ export function DockWorkspace({
   fullscreen,
   panes,
   minimumWidths,
+  besideWidths,
+  minimumHeights,
   onChange,
   onActivate,
   onFocusPane,
@@ -72,6 +75,7 @@ export function DockWorkspace({
   onClose,
   onExpand,
   onFullscreen,
+  onNarrowed,
   empty,
 }: {
   layout: DockLayout;
@@ -81,6 +85,12 @@ export function DockWorkspace({
   panes: DockContent[];
   /** Content widths in CSS pixels; fitting never rewrites the saved layout. */
   minimumWidths?: Partial<Record<DockPane, number>>;
+  /** The widths in CSS pixels panes need to stand side by side; narrower,
+   * their split is drawn stacked, and the saved layout is left as it is. */
+  besideWidths?: Partial<Record<DockPane, number>>;
+  /** Whole-pane heights in CSS pixels a stacked split keeps for each side
+   * where both fit; the saved ratios are left as they are. */
+  minimumHeights?: Partial<Record<DockPane, number>>;
   onChange: (update: (layout: DockLayout) => DockLayout) => void;
   onActivate: (pane: DockPane) => void;
   onFocusPane: (pane: DockPane) => void;
@@ -88,6 +98,9 @@ export function DockWorkspace({
   onClose: (pane: DockPane) => void;
   onExpand: (pane: DockPane) => void;
   onFullscreen: (pane: DockPane) => void;
+  /** The panes whose saved side-by-side split the window is too narrow to
+   * draw, so it is drawn stacked; an arrangement choice there does nothing. */
+  onNarrowed?: (panes: readonly DockPane[]) => void;
   empty: ReactNode;
 }) {
   const t = useStrings();
@@ -95,10 +108,13 @@ export function DockWorkspace({
   const [fit, setFit] = useState<{
     width: number;
     minimumWidths: Partial<Record<DockPane, number>>;
+    besideWidths?: Partial<Record<DockPane, number>>;
+    height: number;
+    minimumHeights?: Partial<Record<DockPane, number>>;
   }>();
   useLayoutEffect(() => {
     const element = surface.current;
-    if (!element || !minimumWidths) {
+    if (!element || (!minimumWidths && !besideWidths && !minimumHeights)) {
       setFit(undefined);
       return;
     }
@@ -108,7 +124,7 @@ export function DockWorkspace({
         "[data-dock-pane]",
       )) {
         const id = pane.dataset.dockPane;
-        if (!isDockPane(id) || minimumWidths[id] === undefined) continue;
+        if (!isDockPane(id) || minimumWidths?.[id] === undefined) continue;
         const style = getComputedStyle(pane);
         minimum[id] =
           minimumWidths[id]! +
@@ -118,18 +134,28 @@ export function DockWorkspace({
           parseFloat(style.paddingRight);
       }
       const width = element.clientWidth;
+      const height = element.clientHeight;
       setFit((before) =>
         before?.width === width &&
-        JSON.stringify(before.minimumWidths) === JSON.stringify(minimum)
+        before.height === height &&
+        JSON.stringify(before.minimumWidths) === JSON.stringify(minimum) &&
+        before.besideWidths === besideWidths &&
+        before.minimumHeights === minimumHeights
           ? before
-          : { width, minimumWidths: minimum },
+          : {
+              width,
+              minimumWidths: minimum,
+              besideWidths,
+              height,
+              minimumHeights,
+            },
       );
     };
     const observer = new ResizeObserver(measure);
     observer.observe(element);
     measure();
     return () => observer.disconnect();
-  }, [minimumWidths]);
+  }, [minimumWidths, besideWidths, minimumHeights]);
   const [dragged, setDragged] = useState<DockPane | null>(null);
   const [externalDrag, setExternalDrag] = useState(false);
   const [drop, setDrop] = useState<{
@@ -137,6 +163,14 @@ export function DockWorkspace({
     side: DockSide | "tab";
   } | null>(null);
   const { groups, dividers } = dockGeometry(layout, visible, fit);
+  const narrowed = dividers
+    .filter((divider) => divider.narrowed)
+    .flatMap((divider) => divider.panes)
+    .sort()
+    .join(" ");
+  useEffect(() => {
+    onNarrowed?.(narrowed ? (narrowed.split(" ") as DockPane[]) : []);
+  }, [narrowed, onNarrowed]);
   const resize = (divider: DockDivider, requested: number) => {
     const ratio = Math.max(
       divider.minRatio,
@@ -146,6 +180,78 @@ export function DockWorkspace({
     if (Math.abs(ratio - divider.ratio) < 1e-9) return;
     onChange((current) => resizeDockSplit(current, divider.path, ratio));
   };
+  // Headers too narrow for their active title give up, in turn, the expand
+  // and close buttons the arrangement menu repeats and then the page actions
+  // their shortcuts and the palette reach, before they cut the title. Each
+  // step remembers, for that title, the width at which it fits again.
+  const [compact, setCompact] = useState<ReadonlyMap<DockPane, 1 | 2>>(
+    () => new Map(),
+  );
+  const roomy = useRef(
+    new Map<DockPane, { title: string; widths: number[] }>(),
+  );
+  const fitTitles = () => {
+    const element = surface.current;
+    if (!element) return;
+    setCompact((before) => {
+      const after = new Map<DockPane, 1 | 2>();
+      for (const header of element.querySelectorAll<HTMLElement>(
+        "[data-dock-header]",
+      )) {
+        const pane = header.dataset.dockHeader;
+        if (!isDockPane(pane)) continue;
+        const label = header.querySelector<HTMLElement>(
+          '[aria-selected="true"] [data-dock-title]',
+        );
+        const words = label?.textContent ?? "";
+        let memory = roomy.current.get(pane);
+        let level = before.get(pane) ?? 0;
+        if (memory?.title !== words) {
+          // Another title needs its own measure, taken from the full header.
+          memory = { title: words, widths: [] };
+          roomy.current.set(pane, memory);
+          if (level > 0) continue;
+        }
+        if (level > 0 && header.clientWidth >= memory.widths[level - 1]!) {
+          level -= 1;
+        } else {
+          // Cut by its own ellipsis, or scrolled past the edge of the tab row.
+          const row = label
+            ?.closest("[data-dock-tabs]")
+            ?.getBoundingClientRect();
+          const box = label?.getBoundingClientRect();
+          const cut =
+            label && row && box
+              ? Math.max(
+                  label.scrollWidth - label.clientWidth,
+                  box.right - row.right,
+                  row.left - box.left,
+                )
+              : 0;
+          const deepest = header.querySelector("[data-dock-page-actions]")
+            ? 2
+            : 1;
+          if (cut > 0.5 && level < deepest) {
+            memory.widths[level] = header.clientWidth + cut;
+            level += 1;
+          }
+        }
+        if (level > 0) after.set(pane, level as 1 | 2);
+      }
+      return after.size === before.size &&
+        [...after].every(([pane, level]) => before.get(pane) === level)
+        ? before
+        : after;
+    });
+  };
+  useLayoutEffect(fitTitles);
+  useEffect(() => {
+    const element = surface.current;
+    if (!element) return;
+    const observer = new ResizeObserver(fitTitles);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
   const title = (pane: DockPane) =>
     panes.find((item) => item.id === pane)?.title ?? pane;
   const status = (pane: DockPane) =>
@@ -440,6 +546,7 @@ export function DockWorkspace({
                 }
               }}
               className="min-w-0 flex-1 overflow-x-auto"
+              data-dock-tabs=""
             >
               <TabsList
                 aria-label={t("desktop.dock.tabs")}
@@ -456,6 +563,8 @@ export function DockWorkspace({
                         : `dock-content-${pane}`
                     }
                     draggable
+                    // The active title keeps its width; the others give way.
+                    className="data-[state=active]:shrink-0"
                     title={[title(pane), status(pane)?.note]
                       .filter(Boolean)
                       .join(" · ")}
@@ -493,31 +602,43 @@ export function DockWorkspace({
                     }}
                   >
                     {status(pane) && <SessionDot phase={status(pane)!.phase} />}
-                    <span className="truncate">{title(pane)}</span>
+                    <span className="truncate" data-dock-title="">
+                      {title(pane)}
+                    </span>
                   </TabsTrigger>
                 ))}
               </TabsList>
             </Tabs>
             {panes.find((pane) => pane.id === item.active)?.pageActions && (
-              <div className="flex shrink-0 items-center">
+              <div
+                className={cn(
+                  "flex shrink-0 items-center",
+                  compact.get(item.active) === 2 && "hidden",
+                )}
+                data-dock-page-actions=""
+              >
                 {panes.find((pane) => pane.id === item.active)?.pageActions}
               </div>
             )}
             {menus(item.active, item.floating)}
-            <IconButton
-              label={t(
-                expanded ? "desktop.dock.restore" : "desktop.dock.expand",
-              )}
-              onClick={() => onExpand(item.active)}
-            >
-              <Icon name={expanded ? "restore" : "maximize"} />
-            </IconButton>
-            <IconButton
-              label={t("desktop.dock.close")}
-              onClick={() => onClose(item.active)}
-            >
-              <Icon name="close" />
-            </IconButton>
+            {!compact.has(item.active) && (
+              <>
+                <IconButton
+                  label={t(
+                    expanded ? "desktop.dock.restore" : "desktop.dock.expand",
+                  )}
+                  onClick={() => onExpand(item.active)}
+                >
+                  <Icon name={expanded ? "restore" : "maximize"} />
+                </IconButton>
+                <IconButton
+                  label={t("desktop.dock.close")}
+                  onClick={() => onClose(item.active)}
+                >
+                  <Icon name="close" />
+                </IconButton>
+              </>
+            )}
           </div>
           {!item.floating && !expanded && (
             <div
@@ -620,58 +741,65 @@ export function DockWorkspace({
         </div>
       ))}
       {!expanded &&
-        dividers.map((divider) => {
-          const row = divider.axis === "row";
-          const rect = {
-            ...divider.rect,
-            x: divider.rect.x + (row ? divider.rect.width * divider.ratio : 0),
-            y: divider.rect.y + (row ? 0 : divider.rect.height * divider.ratio),
-          };
-          return (
-            <ResizeHandle
-              key={divider.path}
-              data-dock-divider={divider.path}
-              className="absolute"
-              style={{
-                left: `${rect.x * 100}%`,
-                top: `${rect.y * 100}%`,
-                ...(row
-                  ? { height: `${rect.height * 100}%` }
-                  : { width: `${rect.width * 100}%` }),
-              }}
-              orientation={row ? "vertical" : "horizontal"}
-              aria-label={`${t("desktop.split.resize")}: ${divider.panes.map(title).join(" / ")}`}
-              value={divider.ratio * 100}
-              aria-valuenow={divider.ratio * 100}
-              aria-valuemin={divider.minRatio * 100}
-              aria-valuemax={divider.maxRatio * 100}
-              onDrag={({ x, y }) => {
-                const bounds = surface.current?.getBoundingClientRect();
-                if (!bounds) return;
-                const ratio = row
-                  ? ((x - bounds.left) / bounds.width - divider.rect.x) /
-                    divider.rect.width
-                  : ((y - bounds.top) / bounds.height - divider.rect.y) /
-                    divider.rect.height;
-                resize(divider, ratio);
-              }}
-              onStep={(direction) =>
-                resize(divider, divider.ratio + direction * 0.03)
-              }
-              onLimit={(limit) =>
-                resize(
-                  divider,
-                  limit === "min" ? divider.minRatio : divider.maxRatio,
-                )
-              }
-              onReset={() =>
-                onChange((current) =>
-                  resizeDockSplit(current, divider.path, 0.5),
-                )
-              }
-            />
-          );
-        })}
+        // A split stacked for want of width has no saved height share to
+        // move, so it offers no handle that would write one.
+        dividers
+          .filter((divider) => !divider.narrowed)
+          .map((divider) => {
+            const row = divider.axis === "row";
+            const rect = {
+              ...divider.rect,
+              x:
+                divider.rect.x + (row ? divider.rect.width * divider.ratio : 0),
+              y:
+                divider.rect.y +
+                (row ? 0 : divider.rect.height * divider.ratio),
+            };
+            return (
+              <ResizeHandle
+                key={divider.path}
+                data-dock-divider={divider.path}
+                className="absolute"
+                style={{
+                  left: `${rect.x * 100}%`,
+                  top: `${rect.y * 100}%`,
+                  ...(row
+                    ? { height: `${rect.height * 100}%` }
+                    : { width: `${rect.width * 100}%` }),
+                }}
+                orientation={row ? "vertical" : "horizontal"}
+                aria-label={`${t("desktop.split.resize")}: ${divider.panes.map(title).join(" / ")}`}
+                value={divider.ratio * 100}
+                aria-valuenow={divider.ratio * 100}
+                aria-valuemin={divider.minRatio * 100}
+                aria-valuemax={divider.maxRatio * 100}
+                onDrag={({ x, y }) => {
+                  const bounds = surface.current?.getBoundingClientRect();
+                  if (!bounds) return;
+                  const ratio = row
+                    ? ((x - bounds.left) / bounds.width - divider.rect.x) /
+                      divider.rect.width
+                    : ((y - bounds.top) / bounds.height - divider.rect.y) /
+                      divider.rect.height;
+                  resize(divider, ratio);
+                }}
+                onStep={(direction) =>
+                  resize(divider, divider.ratio + direction * 0.03)
+                }
+                onLimit={(limit) =>
+                  resize(
+                    divider,
+                    limit === "min" ? divider.minRatio : divider.maxRatio,
+                  )
+                }
+                onReset={() =>
+                  onChange((current) =>
+                    resizeDockSplit(current, divider.path, 0.5),
+                  )
+                }
+              />
+            );
+          })}
     </div>
   );
 }

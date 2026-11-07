@@ -9,7 +9,7 @@ re-hashing the payload.
 
 Bytes-in / bytes-out: encryption + classification stay above this
 layer. The provider treats every payload as opaque bytes and uses
-:func:`adapters.outbound.storage._integrity.verify_content_hash` to
+:func:`adapters.outbound.storage.integrity.verify_content_hash` to
 enforce the stored digest on read.
 """
 

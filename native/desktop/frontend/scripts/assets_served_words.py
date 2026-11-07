@@ -18,14 +18,16 @@ from dev.prettier_json import dump_json
 
 from cadrumo.application.actividad_asset.tests.served_words_recording_support import committed_questions, recording
 
-RECORDING = family_directory("assets-served-words") / "assetsServedWords.json"
-
 
 def main() -> None:
     """Write, check or redirect the register-words recording."""
     arguments = producer_arguments(__doc__)
     emit(
-        {RECORDING: dump_json(recording(committed_questions()))},
+        {
+            family_directory("assets-served-words") / "assetsServedWords.json": dump_json(
+                recording(committed_questions())
+            )
+        },
         arguments,
         remedy="just fixtures-seed assets-served-words",
     )

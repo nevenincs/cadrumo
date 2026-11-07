@@ -33,8 +33,9 @@ from cadrumo.entrypoints.tui.account import AccountSessionExpiredError, AccountS
 from cadrumo.entrypoints.tui.aeat_sync.routes import aeat_sync_screen_factory
 from cadrumo.entrypoints.tui.declarations.models import DeclarationsWorkspaceWiringV1
 from cadrumo.entrypoints.tui.declarations.routes import declarations_screen_factory
+from cadrumo.entrypoints.tui.declarations.saved_filing import SavedFilingScreen
 from cadrumo.entrypoints.tui.google_saved_review import GoogleSavedReviewScreen
-from cadrumo.entrypoints.tui.historical_export import HistoricalFilingExportScreen
+from cadrumo.entrypoints.tui.historical_export import HistoricalFilingExportScreen, read_filing_view
 from cadrumo.entrypoints.tui.home import HomeScreen
 from cadrumo.entrypoints.tui.installation.destination import installation_screen_factory
 from cadrumo.entrypoints.tui.ledger.routes import ledger_screen_factory
@@ -190,6 +191,9 @@ class _DeclarationDestination:
                 revisions_action=_action("operator.modelo.work.revisions"),
                 filing_action=_action("operator.modelo.filing_record.list"),
                 modelo_workspace_factory=self.workspace_factory,
+                filing_view_factory=lambda filing: SavedFilingScreen(
+                    filing.filing_record_id, lambda filing_id: read_filing_view(self._root._client, filing_id)
+                ),
                 filing_export_factory=lambda filing: HistoricalFilingExportScreen(
                     self._root._client, filing.filing_record_id
                 ),

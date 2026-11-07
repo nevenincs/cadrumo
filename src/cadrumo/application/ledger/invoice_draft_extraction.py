@@ -41,7 +41,7 @@ with no text layer genuinely needs a reader that works on pixels, so it escalate
 A readable document whose semantic reader is absent or unreachable is an
 ENVIRONMENT failure, so it REFUSES in the operator's face rather than silently
 running a heavier engine they did not ask for -- see
-:func:`_refuse_a_text_read_with_no_reader`. A profile that has opted out of vision
+:func:`refuse_a_text_read_with_no_reader`. A profile that has opted out of vision
 reading likewise gets a typed, instructive refusal, never a silent empty draft.
 
 Everything here runs in memory. The evidence bytes, the transcription and the
@@ -594,7 +594,7 @@ def read_transcription_semantically(
     Raises:
         PurchaseInvoiceEvidenceInputError: When the semantic reader cannot be
             run. Deliberately OUTSIDE the caller's fallback ``try`` -- see
-            :func:`_refuse_a_text_read_with_no_reader`.
+            :func:`refuse_a_text_read_with_no_reader`.
         Exception: Admission control's own headroom or occupancy refusal,
             unchanged, when the model read is the whole read rather than a fill
             over a partial label reading.
@@ -871,7 +871,7 @@ def _extract_invoice_fields_via_vision(
     The vision model produces a :class:`DocumentTranscription` and interprets
     nothing; the same semantic reader and the same anchor check the text lane
     uses then run over that text
-    (:func:`_read_transcription_semantically`). Because the transcription is
+    (:func:`read_transcription_semantically`). Because the transcription is
     produced by a different call than the one that proposes values, the anchor
     check is an external check here exactly as it is on the text lane -- which
     it structurally could not be while one call went image-to-fields and the

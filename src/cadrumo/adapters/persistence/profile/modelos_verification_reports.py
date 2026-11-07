@@ -66,7 +66,7 @@ class VerificationReportCatalogueRepository:
 
     The write path (``to_secure_object_write`` / ``save`` / ``exists``)
     composes
-    :class:`~adapters.persistence.profile._secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
+    :class:`~adapters.persistence.profile.secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
     for the shared Envelope-construction mechanic; ``load`` stays hand-rolled
     here because it translates a classification or schema-version mismatch
     into :class:`VerificationReportPersistenceError` via

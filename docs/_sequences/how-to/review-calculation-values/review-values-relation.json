@@ -419,7 +419,7 @@
             "renta-retencion-soportada-ganancia-patrimonial": "0",
             "renta-retencion-soportada-trabajo": "2400"
           },
-          "calculation_revision_id": "44271f2fe71960d9ebb3671e4ee32ec7aff8523e0eb0ca6078feb4b9ccba4b5b",
+          "calculation_revision_id": "fcf67a874725b4ccdfe64c66f55fac235df24cdf809bb7525810a436ef23e730",
           "casilla_values": {
             "0002": "0",
             "0003": "24000",
@@ -2188,6 +2188,7 @@
           "filed_by": null,
           "input_values_by_casilla_id": {
             "0003": "24000",
+            "0168": "S",
             "0171": "0",
             "0179": "0",
             "0183": "0",
@@ -2369,6 +2370,7 @@
             {"absent_by_design":false,"casilla_id":"0162","formula_id":null,"legal_refs":["ley-35-2006:art-86","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0163","formula_id":null,"legal_refs":["ley-35-2006:art-31","ley-35-2006:art-86","rd-439-2007:art-39","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0164","formula_id":null,"legal_refs":["ley-35-2006:art-86","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"0168","formula_id":null,"legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"S"},
             {"absent_by_design":true,"casilla_id":"0169","formula_id":null,"legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0170","formula_id":null,"legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32","orden-hac-277-2026:art-3"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-dr-100-2025-input-dictionary","aeat-dr-100-2025-xsd","aeat-renta-2025-manual-parte1","aeat-renta-2025-manual-deducciones-autonomicas","boe-modelo-100-2025-form","aeat-modelo-100-procedure","aeat-renta-web-open"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"0171","formula_id":null,"legal_refs":["ley-35-2006:art-27","ley-35-2006:art-28","ley-35-2006:art-30","ley-35-2006:art-31","ley-35-2006:art-32"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"],"value":"0"},
@@ -4246,7 +4248,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 44271f2fe71960d9ebb3671e4ee32ec7aff8523e0eb0ca6078feb4b9ccba4b5b (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision fcf67a874725b4ccdfe64c66f55fac235df24cdf809bb7525810a436ef23e730 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "retencion_soportada",

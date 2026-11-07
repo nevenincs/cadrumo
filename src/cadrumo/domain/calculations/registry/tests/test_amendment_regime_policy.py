@@ -6,6 +6,8 @@ from datetime import date
 
 import pytest
 
+from .....core.amendment_kind_regime import resolve_amendment_kind_regime
+from .....core.period import Period
 from ..amendment_regime_policy import amendment_regime_policy
 from ..errors import RegistryValidationError
 
@@ -91,3 +93,87 @@ def test_source_path_alone_is_not_source_evidence() -> None:
     entries["boundary.200.source_path"] = "facts/synthetic-source.toml"
     with pytest.raises(RegistryValidationError, match="lacks source evidence"):
         amendment_regime_policy(entries)
+
+
+def _restricted_entries() -> dict[str, str]:
+    return _entries(("100", "200")) | {
+        "restriction.order": "130",
+        "restriction.130.date": "2020-04-01",
+        "restriction.130.kinds": "prior",
+        "restriction.130.source": "synthetic-restriction-evidence",
+    }
+
+
+def test_optional_restriction_projects_a_dated_closed_intersection() -> None:
+    assert not amendment_regime_policy(_entries(("100", "200"))).kind_restrictions
+    restriction = amendment_regime_policy(_restricted_entries()).kind_restrictions["130"]
+    assert restriction.effective_from == date(2020, 4, 1)
+    assert restriction.permitted_kinds == frozenset({"prior"})
+
+
+@pytest.mark.parametrize(
+    ("year", "code", "expected", "effective"),
+    [
+        (2030, "08", {"prior", "replacement"}, False),
+        (2030, "2T", {"prior", "replacement"}, False),
+        (2030, "09", {"current"}, True),
+        (2030, "3T", {"current"}, True),
+        (2031, "0A", {"current"}, True),
+    ],
+)
+def test_parsed_restriction_intersects_the_selected_regime_at_its_period_end_boundary(
+    year: int, code: str, expected: set[str], effective: bool
+) -> None:
+    entries = _entries(("100",)) | {
+        "procedure.order": "prior,current,replacement",
+        "procedure.replacement.value": "replacement",
+        "regime.pre_order": "prior,replacement",
+        "regime.post_order": "current,replacement",
+        "boundary.100.date": "2030-09-30",
+        "restriction.order": "100",
+        "restriction.100.date": "2030-09-30",
+        "restriction.100.kinds": "current",
+        "restriction.100.source": "synthetic-procedure-guidance",
+    }
+    policy = amendment_regime_policy(entries)
+    regime = resolve_amendment_kind_regime("100", Period.from_year_and_code(year, code), policy=policy)
+    assert regime.permitted_kinds == frozenset(expected)
+    assert regime.rectificativa_effective is effective
+    assert policy.post_rectificativa_kinds == frozenset({"current", "replacement"})
+
+
+@pytest.mark.parametrize(
+    "missing", ["restriction.order", "restriction.130.date", "restriction.130.kinds", "restriction.130.source"]
+)
+def test_restrictions_require_the_complete_declared_row(missing: str) -> None:
+    entries = _restricted_entries()
+    del entries[missing]
+    with pytest.raises(RegistryValidationError):
+        amendment_regime_policy(entries)
+
+
+@pytest.mark.parametrize(
+    ("key", "value"),
+    [
+        ("restriction.order", "130,130"),
+        ("restriction.order", "130,bad"),
+        ("restriction.order", "130,\uff11\uff13\uff11"),
+        ("restriction.order", "130,"),
+        ("restriction.order", " "),
+        ("restriction.130.date", "invalid"),
+        ("restriction.130.date", "2020-02-30"),
+        ("restriction.130.date", "20200401"),
+        ("restriction.130.date", " "),
+        ("restriction.130.kinds", "unknown"),
+        ("restriction.130.kinds", "prior,prior"),
+        ("restriction.130.kinds", "prior,,current"),
+        ("restriction.130.kinds", " "),
+        ("restriction.130.source", " "),
+        ("restriction.131.source", "undeclared-row"),
+        ("restriction.130.unknown", "unknown-field"),
+        ("restriction.130.date.extra", "2020-04-01"),
+    ],
+)
+def test_malformed_restriction_fields_fail_closed(key: str, value: str) -> None:
+    with pytest.raises(RegistryValidationError):
+        amendment_regime_policy(_restricted_entries() | {key: value})

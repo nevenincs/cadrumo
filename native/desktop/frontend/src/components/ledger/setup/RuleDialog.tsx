@@ -28,7 +28,7 @@ import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
 import type { RuleSeed } from "../../../shell/ledgerCommands";
 import { useLedgerLimits } from "../../../shell/ledgerLimits";
 import { useRuleTrial } from "../../../shell/ledgerRuleTrial";
-import type { LedgerRuleRow } from "../../../shell/ledgerSetup";
+import type { LedgerRuleRow } from "../../../shell/ledgerClassificationSetup";
 import type { StageEvent } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
 import { useVocabulary } from "../suggestions/SuggestionsProvider";

@@ -18,7 +18,7 @@ import type {
   WithholdingAbsence,
   WithholdingMutationResult,
   WithholdingRow,
-} from "../../../shell/ledgerSetup";
+} from "../../../shell/ledgerRegisterOperations";
 import { formatAmount } from "../../../shared/numbers";
 import { formatInstantDay } from "../../../shared/dateFormats";
 import { useStrings } from "../../../shell/strings";

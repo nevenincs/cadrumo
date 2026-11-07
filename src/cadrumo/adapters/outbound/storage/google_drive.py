@@ -15,7 +15,7 @@ the Drive API:
   :class:`adapters.outbound.storage.records.ProviderObjectMetadata`.
 - Downloads use ``files().get_media(fileId=...)`` and validate full SHA-256
   payload hashes through
-  :func:`adapters.outbound.storage._integrity.verify_content_hash`.
+  :func:`adapters.outbound.storage.integrity.verify_content_hash`.
 - HttpError status codes are mapped onto the typed
   :class:`adapters.outbound.storage.errors.OutboundStorageError` hierarchy:
   401/403 -> :class:`adapters.outbound.storage.errors.OutboundStoragePermissionError`,

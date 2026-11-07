@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import type { ProfileDeleteReview, ProfileList } from "@/ipc/contract";
+import type { ProfileDeleteReview, ProfileList } from "@/ipc/account";
 import { nameable, type ProfileAccounts } from "@/shell/profiles";
 import type { SignInController } from "@/shell/signIn";
 import { useStrings } from "@/shell/strings";

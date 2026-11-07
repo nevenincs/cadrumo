@@ -11,10 +11,12 @@ import {
 import {
   MODELO_EDIT_DEFINITIONS,
   MODELO_STORED_SUBJECT_DEFINITIONS,
+} from "../src/shell/modeloContract/contracts";
+import {
   type ModeloEditOperatorInputV2,
   type ModeloEditPreflightProjectionV1,
-  type ModeloWorkbenchFormProjectionV1,
-} from "../src/shell/modeloContract";
+} from "../src/shell/modeloContract/modeloEdit";
+import { type ModeloWorkbenchFormProjectionV1 } from "../src/shell/modeloContract/modeloWorkForm";
 import { tauriModelo } from "../src/shell/tauriModelo";
 import {
   modeloFixture,

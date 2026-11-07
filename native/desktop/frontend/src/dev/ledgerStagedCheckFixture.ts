@@ -5,16 +5,15 @@
 // as a ledger that did not answer. A test in the owning Python package holds
 // every recorded answer equal to the live one and records new questions.
 
+import type { LedgerRow, OutputLanguage } from "../shell/ledger";
 import type {
-  LedgerRow,
   LedgerStagedCheckRequest,
   LedgerStagedCheckResult,
   LedgerStagedDraft,
   LedgerStagedRow,
   LedgerStagedBlocker,
   LedgerStagedRowAnswer,
-  OutputLanguage,
-} from "../shell/ledger";
+} from "../shell/ledgerMovementOperations";
 import { STAGE_FIELDS, storedFieldValue } from "../shell/ledgerStage";
 import entryOptions from "@fixtures/ledger-entry-options/ledgerEntryOptions.json" with { type: "json" };
 import recorded from "@fixtures/ledger-staged-check/ledgerStagedCheck.json" with { type: "json" };

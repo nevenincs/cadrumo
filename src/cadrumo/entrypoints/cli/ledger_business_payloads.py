@@ -5,7 +5,7 @@ module under its size budget (`aeat-architecture-boundaries`,
 `aeat-architecture-boundaries`); follows the same split pattern the
 module's own docstring documents for
 :mod:`~entrypoints.cli.ledger_rule_results`,
-:mod:`~entrypoints.cli._ledger_llm_payloads`, and
+:mod:`~entrypoints.cli.ledger_llm_payloads`, and
 :mod:`~entrypoints.cli.ledger_catalogue_invoice_results`.
 Covers two CLI sub-app payload families:
 

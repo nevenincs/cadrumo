@@ -6,11 +6,8 @@
 // is retried.
 
 import { useCallback, useRef, useState } from "react";
-import type {
-  CatalogueInvoice,
-  LedgerPort,
-  LedgerRow,
-} from "../../../shell/ledger";
+import type { CatalogueInvoice } from "../../../shell/ledgerInvoiceOperations";
+import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
 import {
   changedSinceRead,
   resolveUnknown,

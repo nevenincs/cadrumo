@@ -45,7 +45,11 @@ async def read_filing_view(client: FrontendClient, filing_record_id: str) -> Mod
         client,
         definition_id=MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(client.profile_id)),
-        payload=ModeloFilingRecordViewRequest(profile_id=client.profile_id, filing_record_id=filing_record_id),
+        payload=ModeloFilingRecordViewRequest(
+            profile_id=client.profile_id,
+            filing_record_id=filing_record_id,
+            output_language=OutputLanguage(output_language()),
+        ),
         result_type=ModeloFilingRecordViewProjection,
         session_id=client.session_id,
         result_version=MODELO_FILING_RECORD_VIEW_RESULT_VERSION,

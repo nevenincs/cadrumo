@@ -46,6 +46,25 @@ nothing. `desktop-frontend-dev` (what `just dev` builds), `desktop-frontend-buil
 and `desktop-frontend-test` depend on it; `npm run dev` only reads the build and
 never configures or builds it.
 
+The stories, specs and development tools import the generated window
+projections through the `@fixtures` alias. They are build output of the
+selected build's own tree, the `window_fixtures` directory of its build-path
+manifest (`build/<preset>/fixtures/window`), never committed. The
+`desktop-window-fixtures` target seeds them through
+`python -m dev.fixture_projections seed --window` and reruns only when an input
+of theirs changes; `desktop-frontend-build`, `desktop-frontend-check` and
+`desktop-frontend-test` depend on it. `just fixtures-seed` seeds the host
+preset's tree. The seed records the projections and their digests in
+`.window-projections.json` beside them. The type check,
+`node scripts/typecheck.mjs`, which `npm run check` and `npm run build` run,
+binds the alias to the selected build's directory through
+`scripts/fixture-alias.mjs`, as Vite does, and refuses to start unless that
+directory holds the recorded set. Playwright reads the alias from a project file
+that module writes into the build's `desktop/testing` directory. The
+`@fixtures` list in `tsconfig.json`, one entry per configure preset, serves only
+tools that run outside a build, such as an editor or a bare `tsc`, which take
+the first tree that exists.
+
 The servers bind the address in `../development-server.json`. Another address
 is a configure option of the repository build, for example
 `cmake --preset windows-x64 -DCADRUMO_DESKTOP_BIND_ADDRESS=127.0.0.1`. Ports
@@ -555,7 +574,7 @@ runs three Playwright projects, each on a server of its own that the run starts
 and that must not already be running:
 
 - `product` drives the production build through `vite preview`, with no host or
-  with a faked Tauri transport (`tests/desktop.spec.ts`), under the window's
+  with a faked Tauri transport (`tests/desktop-*.spec.ts`), under the window's
   own content security policy, and checks the built output
   (`tests/bundle.spec.ts`).
 - `scenarios` drives `/scenarios.html` (`tests/scenarios/`) from
@@ -576,7 +595,9 @@ and that must not already be running:
 
 | File in `tests/scenarios/` | Holds the shell to                                                                         |
 | -------------------------- | ------------------------------------------------------------------------------------------ |
-| `scenarios.spec.ts`        | What each scenario presents, and the sign-in rules: one submission, no retry               |
+| `sign-in.spec.ts`          | The sign-in rules: one submission, no retry                                                |
+| `sign-in-focus.spec.ts`    | Where the keyboard goes around the sign-in dialog                                          |
+| `account-states.spec.ts`   | What each account scenario presents, the same in every element of the window               |
 | `accessibility.spec.ts`    | An axe audit of every major surface in both schemes                                        |
 | `keyboard.spec.ts`         | Tab stops, arrow-key patterns, chords, and where focus goes when a surface opens or closes |
 | `touch.spec.ts`            | A phone-sized touch screen: finger-sized controls, no overflow, taps and touch drags       |

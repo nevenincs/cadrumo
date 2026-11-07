@@ -23,7 +23,7 @@ declaration one -- so a screen that fired in only one direction would inherit
 that blind spot rather than close it.
 
 See Also:
-    :mod:`application.modelo._rate_box_advisory`
+    :mod:`application.modelo.rate_box_advisory`
         The sibling advisory this one mirrors in shape and wiring.
 """
 

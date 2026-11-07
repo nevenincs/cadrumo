@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
+import { showTui } from "../support/tui";
 
 // The window's columns: the agent beside the rail, then the TUI and the
 // documentation. Each is shown and put away on its own, and with none of
@@ -29,10 +30,11 @@ test.beforeEach(async ({ page: target }) => {
   await target.addInitScript(() => {
     if (sessionStorage.getItem("layout-cleared")) return;
     localStorage.clear();
-    // Column tests arrange an explicit workspace beside the agent.
+    // Column tests arrange an explicit workspace beside the agent; the TUI
+    // in it is opened by each test, since no launch starts a terminal.
     localStorage.setItem(
       "cadrumo-shell-layout",
-      JSON.stringify({ layout: { page: "docs", tuiShown: true } }),
+      JSON.stringify({ layout: { page: "docs" } }),
     );
     sessionStorage.setItem("layout-cleared", "1");
   });
@@ -43,7 +45,8 @@ test("an explicitly saved workspace opens beside the agent with documentation pu
 }) => {
   await open(target);
   await expect(target.locator(".pane-agent")).toBeVisible();
-  await expect(target.locator(".pane-tui")).toBeVisible();
+  await expect(target.locator(".pane-tui")).toBeHidden();
+  await showTui(target);
   await expect(target.locator(".pane-docs")).toBeHidden();
   expect(await left(target, ".pane-agent")).toBeLessThan(
     await left(target, ".pane-tui"),
@@ -72,6 +75,7 @@ test("each column closes on its own, and with none left the main area offers the
   page: target,
 }) => {
   await open(target);
+  await showTui(target);
   const canvas = target.locator(".canvas");
   await railButton(target, "desktop.rail.docs").click();
   await expect(target.locator(".docs-frame")).toBeVisible();
@@ -117,6 +121,7 @@ test("a maximized column fills the window and its close restores the rest", asyn
   page: target,
 }) => {
   await open(target);
+  await showTui(target);
   await target
     .locator('[data-dock-header="agent"]')
     .getByRole("button", { name: label("desktop.dock.expand"), exact: true })
@@ -130,12 +135,15 @@ test("a maximized column fills the window and its close restores the rest", asyn
 test("a layout stored before the documentation could be put away opens in today's order", async ({
   page: target,
 }) => {
+  // An older shell stored the TUI's visibility and nothing of the
+  // documentation's; the TUI it stored comes back as stored.
   await seedLayout(target, {
     prefs: { order: "docs" },
     layout: { tuiShown: true },
   });
   await open(target);
   await expect(target.locator(".pane-docs")).toBeHidden();
+  await expect(target.locator(".pane-tui")).toBeVisible();
   await railButton(target, "desktop.rail.docs").click();
   await expect(target.locator(".docs-frame")).toBeVisible();
   expect(await left(target, ".pane-tui")).toBeLessThan(
@@ -147,6 +155,7 @@ test("F6 goes through the columns in the order they are laid out", async ({
   page: target,
 }) => {
   await open(target);
+  await showTui(target);
   await railButton(target, "desktop.rail.docs").click();
   await expect(target.locator(".docs-frame")).toBeVisible();
   // The panel takes the keyboard as it opens; the walk starts after that.
@@ -175,6 +184,7 @@ test("the agent's splitter moves by the arrow keys within its bounds", async ({
   page: target,
 }) => {
   await open(target);
+  await showTui(target);
   const handle = target.locator('[data-dock-divider=""]');
   const width = async () =>
     (await target.locator(".agent-column").boundingBox())?.width ?? 0;
@@ -197,6 +207,7 @@ test("a window too narrow for the agent beside the rest shows it on its own", as
 }) => {
   await target.setViewportSize({ width: 520, height: 600 });
   await open(target);
+  await showTui(target);
   await expect(target.locator(".pane-agent")).toBeHidden();
   await expect(target.locator(".pane-tui")).toBeVisible();
   await railButton(target, "desktop.rail.agent").click();
@@ -214,6 +225,7 @@ test("double-clicking the agent's bar maximizes and restores it, its buttons do 
   page: target,
 }) => {
   await open(target);
+  await showTui(target);
   const title = target.locator("#tab-agent");
   await title.dblclick();
   await expect(target.locator(".pane-tui")).toBeHidden();

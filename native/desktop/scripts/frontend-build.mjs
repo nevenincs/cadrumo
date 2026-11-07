@@ -73,6 +73,8 @@ inputs.push(
   resolve(desktop, "../../docs/_static/cadrumo-icon.svg"),
   resolve(desktop, "development-server.json"),
   buildPath("desktop_frontend_generated"),
+  // The type check reads the window projections, so a reseed reruns it.
+  buildPath("window_fixtures"),
   resolve(buildPath("generated"), "identity.json"),
   resolve(buildPath("generated"), "desktop-server.json"),
 );

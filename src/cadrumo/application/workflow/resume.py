@@ -31,7 +31,7 @@ See Also:
     :mod:`application.modelo`
         Owns visible modelo work addressing, revision selection, and conversion
         from registry filing periods to workflow periods.
-    :mod:`entrypoints.cli._modelo_work_runs_cli`
+    :mod:`entrypoints.cli.modelo_work_runs_cli`
         CLI surface that resolves operator resume selectors and emits
         :class:`application.workflow.resume.WorkflowResumeTargetResolution`
         metadata.

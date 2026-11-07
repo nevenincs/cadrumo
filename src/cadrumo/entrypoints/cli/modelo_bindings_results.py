@@ -4,8 +4,8 @@ Extracted from :mod:`~entrypoints.cli.modelo_results` to keep that
 module under its size budget (`aeat-architecture-boundaries`,
 `aeat-architecture-boundaries`), following the split pattern already
 established by :mod:`~entrypoints.cli.modelo_aux_payloads`,
-:mod:`~entrypoints.cli._modelo_revision_payload_parts`, and
-:mod:`~entrypoints.cli._modelo_work_revision_payloads`. Covers the
+:mod:`~entrypoints.cli.modelo_revision_payload_parts`, and
+:mod:`~entrypoints.cli.modelo_work_revision_payloads`. Covers the
 ``modelo bindings list`` and ``modelo bindings resolve`` (preview) command
 envelopes. Every class declared here is a strict
 :class:`OutputSchema` subclass referenced by

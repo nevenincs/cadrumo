@@ -263,6 +263,8 @@ test("saved workspace choices are respected and malformed settings fall back", a
     layout: { page: "docs", tuiShown: true, agentShown: false },
   });
   await open(page);
+  // The saved choices are kept, the TUI's visibility among them.
+  await expect(page.locator(".pane-agent")).toBeHidden();
   await expect(page.locator(".pane-tui")).toBeVisible();
   await page.goto("about:blank");
   await page.addInitScript(() =>

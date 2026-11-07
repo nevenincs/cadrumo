@@ -18,7 +18,7 @@ See Also:
     :class:`adapters.outbound.aeat.browser.errors.BrowserError`
         Browser-layer envelope raised when the optional extra or Playwright
         startup fails.
-    :func:`adapters.outbound.aeat.sede._browser_stage.run_playwright_stage`
+    :func:`adapters.outbound.aeat.sede.browser_stage.run_playwright_stage`
         Sede stage wrapper that catches these aliases for timeout and transport
         mapping.
 """

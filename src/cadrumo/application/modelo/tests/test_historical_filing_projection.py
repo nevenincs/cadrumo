@@ -30,6 +30,7 @@ from ..historical_filing_projection import (
     ModeloHistoricalContextEntryProjection,
     ModeloHistoricalFilingContentProjection,
     ModeloHistoricalUnresolvedProjection,
+    compare_historical_filing_content,
     project_historical_filing_content,
 )
 from .test_filing_record_view_operation import PROFILE, Repository, filing_record_view_operation_bundle, source
@@ -283,3 +284,74 @@ def test_an_unresolved_outcome_context_that_repeats_or_misorders_a_name_is_refus
         ModeloHistoricalUnresolvedProjection.model_validate(
             {**outcome.model_dump(), "context": tuple(reversed(outcome.model_dump()["context"]))}
         )
+
+
+def _saved_content(values: dict[str, str], *, registry_revision: str = "saved-2026"):
+    revision = _revision()
+    amounts = {validated_casilla_id(key): Decimal(value) for key, value in values.items()}
+    candidate = revision.model_copy(
+        update={
+            "casilla_values": amounts,
+            "observations": tuple(
+                CasillaObservation(
+                    casilla_id=key, value=value, legal_refs=("saved-law",), source_refs=("saved-source",)
+                )
+                for key, value in amounts.items()
+            ),
+            "registry_snapshot_ref": revision.registry_snapshot_ref.model_copy(
+                update={"revision_id": registry_revision}
+            ),
+        }
+    )
+    candidate = candidate.model_copy(
+        update={"calculation_revision_id": derive_calculation_revision_id_from_revision(candidate)}
+    )
+    _unit, record = source()
+    record = record.model_copy(
+        update={
+            "calculation_revision_id": candidate.calculation_revision_id,
+            "filing_record_id": derive_filing_record_id(
+                work_unit_id=candidate.work_unit_id,
+                calculation_revision_id=candidate.calculation_revision_id,
+                filed_by=record.filed_by,
+            ),
+        }
+    )
+    return project_historical_filing_content(record, candidate)
+
+
+def test_saved_scalar_comparison_preserves_zero_absence_and_exact_values_without_arithmetic() -> None:
+    base = _saved_content({"01": "100", "02": "0", "03": "3"})
+    selected = _saved_content({"01": "150", "02": "0", "04": "0"})
+
+    result = compare_historical_filing_content(selected, base, base_filing_record_id="a" * 64)
+
+    assert result.availability == "available"
+    assert tuple((row.casilla_id, row.base_value, row.selected_value, row.change) for row in result.rows) == (
+        ("01", "100", "150", "changed"),
+        ("02", "0", "0", "unchanged"),
+        ("03", "3", None, "removed"),
+        ("04", None, "0", "added"),
+    )
+    assert base.observations[0].value == "100"
+    assert selected.observations[0].value == "150"
+
+
+@pytest.mark.parametrize("unavailable", ("no_base", "missing_base", "missing_content", "different_registry_revision"))
+def test_saved_comparison_never_pairs_unavailable_or_cross_revision_content(unavailable: str) -> None:
+    selected = _saved_content({"01": "150"})
+    base = _saved_content({"01": "100"})
+    base_id = "a" * 64
+    if unavailable == "no_base":
+        base_id = None
+    elif unavailable == "missing_base":
+        base = None
+    elif unavailable == "missing_content":
+        base = ModeloHistoricalFilingContentProjection(calculation_revision_id="b" * 64, availability="missing")
+    else:
+        base = _saved_content({"01": "100"}, registry_revision="different-2026")
+
+    result = compare_historical_filing_content(selected, base, base_filing_record_id=base_id)
+
+    assert result.availability == unavailable
+    assert result.rows == ()

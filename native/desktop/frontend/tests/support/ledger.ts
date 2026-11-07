@@ -1,5 +1,5 @@
+import type { CatalogueInvoice } from "../../src/shell/ledgerInvoiceOperations";
 import type {
-  CatalogueInvoice,
   JsonObject,
   LedgerDecision,
   LedgerDefinitionId,

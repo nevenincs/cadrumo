@@ -38,7 +38,8 @@
 //! measured ratio, and hold 1024 members, over twelve times the most measured.
 
 use super::{
-    LaunchStep, LocalAiError, ServerStartFailure, VersionFailure,
+    LaunchStep, LocalAiError, NotRunningCause, ServerStartFailure, StartFailureKind,
+    VersionFailure,
     lease::{Leases, PROGRAM_CHANGE_BUDGET, ProgramChange, ServerLease},
     loopback::Loopback,
 };
@@ -93,6 +94,10 @@ pub const MODELS_PATH: &str = "models";
 /// The receipt location's fact naming the fixed `host:port` the server answers on.
 pub const ADDRESS_FACT: &str = "address";
 const SERVER_RECORD_LIMIT: u64 = 64 * 1024;
+/// The kind of the latest failed server start beside the versions, until a start
+/// succeeds: an engine waiting for the server in another process reads why none came.
+pub const START_FAILURE_RECORD: &str = "server-start-failure.json";
+const START_FAILURE_RECORD_SCHEMA: u32 = 1;
 /// Windows `CREATE_NO_WINDOW`: the server gets no console window of its own.
 #[cfg(windows)]
 const CREATE_NO_WINDOW: u32 = 0x0800_0000;
@@ -203,6 +208,41 @@ impl ServerRecord {
     fn loopback(&self) -> Option<Loopback> {
         Loopback::new(self.address.parse().ok()?).ok()
     }
+}
+
+/// The start-failure record: a static kind identifier and nothing else.
+#[derive(Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+struct StartFailureRecord {
+    schema: u32,
+    reason: String,
+}
+
+/// The kind of the latest failed server start recorded under `programs`, when one is
+/// there and readable; none once a start has succeeded since.
+pub fn latest_start_failure(programs: &Path) -> Option<StartFailureKind> {
+    let bytes =
+        filesystem::bounded_bytes(&programs.join(START_FAILURE_RECORD), SERVER_RECORD_LIMIT)
+            .ok()?;
+    serde_json::from_slice::<StartFailureRecord>(&bytes)
+        .ok()
+        .filter(|record| record.schema == START_FAILURE_RECORD_SCHEMA)
+        .and_then(|record| StartFailureKind::from_reason(&record.reason))
+}
+
+// The record is diagnostic: a start's outcome stands whether or not it could be written.
+fn record_start_failure(programs: &Path, kind: StartFailureKind) {
+    let _ = filesystem::replace_json(
+        &programs.join(START_FAILURE_RECORD),
+        &StartFailureRecord {
+            schema: START_FAILURE_RECORD_SCHEMA,
+            reason: kind.reason().to_owned(),
+        },
+    );
+}
+
+fn clear_start_failure(programs: &Path) {
+    let _ = fs::remove_file(programs.join(START_FAILURE_RECORD));
 }
 
 /// Everything one server start runs: the program, its arguments and its whole
@@ -395,7 +435,7 @@ impl Server {
         });
         if let Err(cause) = answered {
             server.halt();
-            return Err(LocalAiError::ServerStart(cause));
+            return Err(LocalAiError::NotRunning(NotRunningCause::Start(cause)));
         }
         Ok(server)
     }
@@ -511,10 +551,10 @@ impl Drop for Server {
 
 /// The failure of one step of launching the server, which the operating system refused.
 fn launch_failure(step: LaunchStep, error: &io::Error) -> LocalAiError {
-    LocalAiError::ServerStart(ServerStartFailure::Launch {
+    LocalAiError::NotRunning(NotRunningCause::Start(ServerStartFailure::Launch {
         step,
         kind: error.kind(),
-    })
+    }))
 }
 
 /// Unloads every model a server reports loaded; a server that does not answer is left
@@ -680,6 +720,12 @@ impl Program {
         Server::observed(&self.locations.programs, &self.version)
     }
 
+    /// The kind of the latest failed start of the server, whoever started it, until a
+    /// start succeeds.
+    pub fn latest_start_failure(&self) -> Option<StartFailureKind> {
+        latest_start_failure(&self.locations.programs)
+    }
+
     /// Records the verified program in the local AI's receipt: the active version's
     /// files, and where a consumer finds the program, the models folder and the fixed
     /// `address` the supervisor's server answers on. The location's folder is the nearest
@@ -784,6 +830,8 @@ impl Program {
             }
             remove_record(&self.locations.programs)?;
         }
+        // A start that failed under the program now changed says nothing of the next.
+        clear_start_failure(&self.locations.programs);
         Ok(change)
     }
 
@@ -822,6 +870,8 @@ impl Program {
         let Some(lease) = self.leases.try_serve()? else {
             return Err(LocalAiError::Engine(Error::Busy));
         };
+        // A new attempt begins: an earlier failure no longer says why no server runs.
+        clear_start_failure(&self.locations.programs);
         let fingerprint = proxy.map(ProxySettings::fingerprint);
         let command = self.serve_command(&active, address, ambient, proxy)?;
         self.start_with(command, containment, lease, fingerprint)
@@ -911,14 +961,22 @@ impl Program {
             fs::create_dir_all(&folder)?;
         }
         let record = self.locations.programs.join(SERVER_RECORD);
-        let server = Server::spawn(
+        let server = match Server::spawn(
             command,
             &self.version,
             record.clone(),
             containment,
             lease,
             proxy.clone(),
-        )?;
+        ) {
+            Ok(server) => server,
+            Err(error) => {
+                if let LocalAiError::NotRunning(NotRunningCause::Start(failure)) = &error {
+                    record_start_failure(&self.locations.programs, failure.kind());
+                }
+                return Err(error);
+            }
+        };
         filesystem::replace_json(
             &record,
             &ServerRecord {
@@ -931,6 +989,7 @@ impl Program {
                 proxy: proxy.map(|digest| digest.as_str().to_owned()),
             },
         )?;
+        clear_start_failure(&self.locations.programs);
         Ok(self.server.insert(server))
     }
 

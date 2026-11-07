@@ -55,7 +55,7 @@ class UnresolvedFormulaDependencyError(RegistrySnapshotError):
 
     Shared between :mod:`~domain.calculations.registry.formula_runtime`
     and its per-family op-evaluator siblings (e.g.
-    :mod:`~domain.calculations.registry._formula_runtime_irnr`) so a
+    :mod:`~domain.calculations.registry.formula_runtime_irnr`) so a
     family module can signal a deferred dependency without importing back
     into the dispatcher module.
     """

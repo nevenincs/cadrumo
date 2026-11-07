@@ -17,6 +17,7 @@ import type { PaneControl } from "@/components/PaneHeader";
 import { DEFAULT_LAYOUT, type LedgerView } from "../shell/layout";
 import type { LedgerPort, LedgerRow } from "../shell/ledger";
 import type { LedgerPeriod } from "../shell/ledgerGrammar";
+import { REGISTER_YEARS, SCENARIO_TODAY } from "./assetsRegister";
 import {
   readinessSnapshot,
   shownRows,
@@ -46,8 +47,15 @@ const noop = () => undefined;
 /** Whose ledger the stories show. */
 export const STORY_READER = "synthetic";
 
-/** The quarter the synthetic ledger's movements fall in. */
-export const STORY_PERIOD: LedgerPeriod = { year: 2026, code: "4T" };
+/** The quarter the synthetic ledger's movements fall in: the one of the
+ * scenario's day. */
+export const STORY_PERIOD: LedgerPeriod = {
+  year: Number(SCENARIO_TODAY.slice(0, 4)),
+  code: "4T",
+};
+
+/** The tax years the scenario's register lists, oldest first. */
+export const STORY_YEARS: readonly number[] = REGISTER_YEARS;
 
 /** The scenario's ledger port for one story, made on its first render. */
 export function useLedgerPort(

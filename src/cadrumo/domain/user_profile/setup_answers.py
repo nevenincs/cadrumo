@@ -242,7 +242,8 @@ class SetupAnswers(BaseModel):
     iva_hydrocarbon_deposit_advance_payment_deduction_entitled: OptionalWizardBool = ""
 
     # ── enrollment ───────────────────────────────────────────────────────
-    enrollment_large_company: bool = False
+    enrollment_large_company: OptionalWizardBool = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
     enrollment_public_administration_budget_gt_6000000: bool = False
 
     # ── retencion / modelo obligation booleans ───────────────────────────
@@ -251,10 +252,12 @@ class SetupAnswers(BaseModel):
     colegio_concertado: OptionalWizardBool = ""
     pays_professionals_with_retencion: OptionalWizardBool = ""
     """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
-    art109_activity_income_withholding_ge_70pct: bool = False
+    art109_activity_income_withholding_ge_70pct: OptionalWizardBool = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
     pays_rent_with_retencion: OptionalWizardBool = ""
     """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
-    pays_capital_income_with_retencion: bool = False
+    pays_capital_income_with_retencion: OptionalWizardBool = ""
+    """Three-state payer fact: ``True``, ``False`` or blank when unanswered."""
     modelo_111_no_retenciones_periods: str = ""
     modelo_115_no_relevant_payment_periods: str = ""
     irpf_estimation_regime: OptionalIrpfEstimationRegime = ""
@@ -345,10 +348,17 @@ class SetupAnswers(BaseModel):
         return _parse_optional_bool_token(value, field_name="Modelo IVA boolean")
 
     @field_validator(
+        "has_employees",
+        "pays_professionals_with_retencion",
+        "pays_rent_with_retencion",
+        "pays_capital_income_with_retencion",
+        "art109_activity_income_withholding_ge_70pct",
+        "does_intracomunitario",
         "third_party_transactions_above_347_threshold",
         "bienes_extranjero_above_threshold",
         "monedas_virtuales_extranjero_above_threshold",
         "premio_loteria_gravamen_especial_sin_retencion",
+        "enrollment_large_company",
         mode="before",
     )
     @classmethod

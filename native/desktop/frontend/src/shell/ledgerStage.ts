@@ -4,13 +4,11 @@
 // apply. The page draws stored values; the effective row here exists to
 // check a staged change against the others before anything is sent.
 
+import type { FileToken, LedgerDecision, LedgerRow } from "./ledger";
 import type {
-  FileToken,
   LedgerAddRequest,
   LedgerClassifyRequest,
-  LedgerDecision,
-  LedgerRow,
-} from "./ledger";
+} from "./ledgerMovementOperations";
 import { isTransactionPrefix, sameDecimal } from "./ledgerGrammar";
 
 /** Every movement field the page can stage a change to. */

@@ -7,7 +7,7 @@
 import type {
   LedgerSplitCheckRequest,
   LedgerSplitCheckResult,
-} from "../shell/ledger";
+} from "../shell/ledgerMovementOperations";
 
 const MOST_PARTS = 128;
 const LONGEST_DESCRIPTION = 1024;

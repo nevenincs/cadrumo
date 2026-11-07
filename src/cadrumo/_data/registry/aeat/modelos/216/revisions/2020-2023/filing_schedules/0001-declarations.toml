@@ -1,5 +1,7 @@
-# Quarterly only, as the period selector admits; the monthly grandes-empresas
-# modality the calendars list beside it is outside this edition's periods.
+# Both cadences of Orden EHA/3290/2008 art. 4: the quarterly one of paragraph
+# one and the monthly gran-empresa one of paragraph two. Each is keyed on the
+# large-company condition stated one way, so a taxpayer who has not answered it
+# selects neither schedule and the engine guesses no cadence.
 [[revisions."2020-2023".filing_schedules]]
 id = "modelo-216-trimestral"
 period_kind = "quarterly"
@@ -12,5 +14,26 @@ field = "enrollment.large_company"
 op = "equals"
 value = false
 explanation = "Modelo 216 trimestral para retenedores no sujetos a autoliquidacion mensual por gran empresa; el plazo es de los veinte primeros dias naturales de abril, julio, octubre y enero."
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2022"]
+
+# The gran-empresa modality of art. 4, paragraph two. The condition is the
+# volumen de operaciones of RIVA art. 71.3 numbers 1 and 2, which is exactly
+# what enrollment.large_company carries, and AEAT's own Calendario del
+# Contribuyente names this modelo in that monthly population every month:
+# "<mes> <ejercicio>. Grandes empresas: 111, 115, 117, 123, 124, 126, 128, 216,
+# 230".
+[[revisions."2020-2023".filing_schedules]]
+id = "modelo-216-mensual"
+period_kind = "monthly"
+periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+legal_refs = ["orden-eha-3290-2008:art-4", "orden-eha-3290-2008:art-1", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-calendario-contribuyente-2022", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-2023".filing_schedules.profile_conditions]]
+field = "enrollment.large_company"
+op = "equals"
+value = true
+explanation = "Modelo 216 mensual para grandes empresas: el retenedor en las circunstancias de los numeros 1 y 2 del articulo 71.3 del Reglamento del IVA declara por el mes inmediato anterior."
 legal_refs = ["orden-eha-3290-2008:art-4"]
 source_refs = ["aeat-calendario-contribuyente-2022"]

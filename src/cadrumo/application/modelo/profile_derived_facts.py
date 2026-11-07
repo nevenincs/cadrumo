@@ -329,7 +329,7 @@ def declared_profile_selectors(revision: ModeloRevision) -> frozenset[str]:
     A year the registry does not cover has no consuming binding, so the
     injector is a no-op rather than a silent wrong answer -- and if a binding
     IS declared and still resolves to nothing, the derived-scope advisory in
-    :func:`_derived_binding_diagnostics` reports it.
+    :func:`derived_binding_diagnostics` reports it.
 
     Takes ``revision`` as a :class:`ModeloRevision`.
     """
@@ -1139,6 +1139,8 @@ def guarderia_cap_anual(snapshot: RegistrySnapshot) -> Decimal | None:
     cannot read, and the per-child proration is computed here. Returns
     ``None`` when the revision declares no such parameter, which leaves the
     aggregate unresolved rather than proceeding against a guessed ceiling.
+
+    ``snapshot`` is a :class:`RegistrySnapshot`.
     """
     parameter_id = f"renta-{_GUARDERIA_CAP_PARAMETER_SUFFIX}"
     for parameter in snapshot.revision.parameters:

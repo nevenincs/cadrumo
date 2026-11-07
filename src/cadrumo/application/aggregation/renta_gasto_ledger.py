@@ -576,6 +576,8 @@ def classify_gasto_transaction(
     expense pipeline simply does not own (it is the income pipeline's concern,
     never a gasto issue). A supplier's refund is an expense row with its sign
     reversed, read as the annual pipeline reads it.
+
+    ``invoices`` is a :class:`InvoiceCatalogue`.
     """
     transaction_id = transaction.transaction_id
 

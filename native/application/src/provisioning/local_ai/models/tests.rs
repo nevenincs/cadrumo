@@ -1,7 +1,12 @@
 use super::*;
 use crate::provisioning::{
     items::ItemId,
-    local_ai::{fake_ollama::FakeOllama, program::Server, reading},
+    local_ai::{
+        fake_ollama::FakeOllama,
+        loopback::{ExchangeFailure, ExchangePhase},
+        program::Server,
+        reading,
+    },
     plan::PlanEntry,
     state::{CheckMode, StaleReason},
 };
@@ -651,6 +656,27 @@ fn the_full_check_looks_the_model_up_in_the_servers_list_and_generates_one_token
     assert_eq!(
         fixture.models.observe_full(&server, model, &ROOMY),
         Observation::Failed(FailureCategory::ProgramNotRunning)
+    );
+    // The setup's check keeps which request failed, so a server that went away reads
+    // apart from one too busy to answer within a budget.
+    let gone = fixture
+        .models
+        .check_full(&server, model, &ROOMY)
+        .expect_err("a server that went away fails the full check");
+    assert_eq!(gone.category(), FailureCategory::ProgramNotRunning);
+    assert!(
+        matches!(
+            &gone,
+            LocalAiError::NotRunning(NotRunningCause::Request {
+                call: ServerCall::ListModels,
+                failure: ExchangeFailure {
+                    phase: ExchangePhase::Connect,
+                    bound,
+                    ..
+                },
+            }) if *bound == server.loopback().connect_timeout
+        ),
+        "the connect failed, under the connect bound: {gone:?}"
     );
 }
 

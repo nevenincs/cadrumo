@@ -29,6 +29,7 @@ _PROFILE_ID = "3f2a1b4c-5d6e-4f70-8a9b-0c1d2e3f4a5c"
 _DERIVED_PATHS = (
     "irpf.estimation_directa",
     "irpf.estimation_directa_normal",
+    "irpf.estimation_directa_modalidad_clave",
     "irpf.activity_income_cash_criterion_elected",
 )
 

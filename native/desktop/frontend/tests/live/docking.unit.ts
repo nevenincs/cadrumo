@@ -227,3 +227,115 @@ test("infeasible widths retain the arrangement and exact fits keep valid divider
   assert.ok(exact.minRatio <= exact.ratio && exact.ratio <= exact.maxRatio);
   assert.ok(Math.abs(exact.ratio - 0.323) < 1e-9);
 });
+
+const sideBySide = (
+  ratio: number,
+  axis: "row" | "column" = "row",
+): DockNode => ({
+  kind: "split",
+  axis,
+  ratio,
+  first: { kind: "tabs", tabs: ["docs"], active: "docs" },
+  second: { kind: "tabs", tabs: ["tui"], active: "tui" },
+});
+const only = (root: DockNode): DockLayout => ({
+  version: 1,
+  floating: [],
+  closed: [],
+  root,
+});
+const beside = { docs: 500, tui: 400 };
+
+test("a side-by-side split too narrow for both sides is drawn stacked without saving a height share", () => {
+  const layout = only(sideBySide(0.7));
+  const wide = dockGeometry(layout, ["docs", "tui"], {
+    width: 900,
+    minimumWidths: {},
+    besideWidths: beside,
+  }).dividers[0]!;
+  assert.equal(wide.axis, "row");
+  assert.equal(wide.narrowed, false);
+  assert.equal(wide.ratio, 0.7);
+
+  const narrow = dockGeometry(layout, ["docs", "tui"], {
+    width: 899,
+    minimumWidths: {},
+    besideWidths: beside,
+  });
+  const divider = narrow.dividers[0]!;
+  assert.equal(divider.axis, "column");
+  assert.equal(divider.narrowed, true);
+  // The saved ratio divides a width; stacked for want of one, the panes
+  // share the height evenly and the layout keeps its own ratio.
+  assert.equal(divider.ratio, 0.5);
+  assert.equal((layout.root as { ratio: number }).ratio, 0.7);
+  const [top, bottom] = ["docs", "tui"].map(
+    (pane) => narrow.groups.find((item) => item.group.active === pane)!.rect,
+  );
+  assert.equal(top!.width, 1);
+  assert.equal(bottom!.width, 1);
+  assert.ok(top!.y + top!.height <= bottom!.y + 1e-9);
+
+  // A split the person chose to stack is not one the window narrowed.
+  const chosen = dockGeometry(
+    only(sideBySide(0.7, "column")),
+    ["docs", "tui"],
+    { width: 300, minimumWidths: {}, besideWidths: beside },
+  ).dividers[0]!;
+  assert.equal(chosen.narrowed, false);
+  assert.equal(chosen.ratio, 0.7);
+});
+
+test("a stacked split keeps each side's height floor where both fit and shares the height where they do not", () => {
+  const layout = only(sideBySide(0.7));
+  const floors = { docs: 200, tui: 300 };
+  const roomy = dockGeometry(layout, ["docs", "tui"], {
+    width: 600,
+    minimumWidths: {},
+    besideWidths: beside,
+    height: 1000,
+    minimumHeights: floors,
+  }).dividers[0]!;
+  assert.equal(roomy.axis, "column");
+  assert.equal(roomy.minRatio, 0.2);
+  assert.equal(roomy.maxRatio, 0.7);
+  assert.equal(roomy.ratio, 0.5);
+
+  const short = dockGeometry(layout, ["docs", "tui"], {
+    width: 600,
+    minimumWidths: {},
+    besideWidths: beside,
+    height: 400,
+    minimumHeights: floors,
+  }).dividers[0]!;
+  // Neither floor fits: the two keep their proportion of the height.
+  assert.equal(short.minRatio, 0.4);
+  assert.equal(short.maxRatio, 0.4);
+  assert.equal(short.ratio, 0.4);
+});
+
+test("a split that stacks where it is narrow needs only its wider side's width from its ancestors", () => {
+  const layout = only({
+    kind: "split",
+    axis: "row",
+    ratio: 0.3,
+    first: { kind: "tabs", tabs: ["agent"], active: "agent" },
+    second: sideBySide(0.5),
+  });
+  const visible: DockPane[] = ["agent", "docs", "tui"];
+  const minimumWidths = { agent: 200, docs: 500, tui: 400 };
+  const stackable = dockGeometry(layout, visible, {
+    width: 1000,
+    minimumWidths,
+    besideWidths: beside,
+  }).dividers.find((divider) => divider.path === "")!;
+  assert.equal(stackable.minRatio, 0.2);
+  assert.equal(stackable.maxRatio, 0.5);
+
+  // Without beside widths the pair never stacks, so it needs both sides.
+  const fixed = dockGeometry(layout, visible, {
+    width: 1200,
+    minimumWidths,
+  }).dividers.find((divider) => divider.path === "")!;
+  assert.ok(Math.abs(fixed.maxRatio - 0.25) < 1e-9);
+});

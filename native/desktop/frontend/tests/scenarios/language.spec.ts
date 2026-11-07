@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
+import { showTui } from "../support/tui";
 
 async function settings(page: Page) {
   await page
@@ -255,6 +256,8 @@ test("settings, palette and docs share the language without restarting terminals
   });
   await page.goto("/scenarios.html?scenario=signed-in&latency=0&bar=off");
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  // No launch starts a terminal: the TUI is opened, once.
+  await showTui(page);
   const tuiStarts = () =>
     page.evaluate(
       () =>

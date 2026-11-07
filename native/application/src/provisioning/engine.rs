@@ -54,7 +54,7 @@ use super::{
     follow::{self, Changes},
     items::{Destination, ItemId, Locations, PROGRAM_PART},
     local_ai::{
-        self, LocalAiError,
+        self, LocalAiError, NotRunningCause,
         hardware::Hardware,
         models::{LocalModels, ModelName, Models, Pull},
         program::{Program, START_BUDGET, Server},
@@ -185,8 +185,9 @@ impl Outcome {
 
 /// What one command found and did. `rows` is every item's state after the command;
 /// `plan` is the plan a setup reports; `item` and `failure` name the item and the
-/// category a refusal or failure is for; `items` are the items a removal removed, or the
-/// items another engine is changing.
+/// category a refusal or failure is for, and `failure_cause` what ran out or broke when
+/// that category is `program_not_running`, for diagnostics only; `items` are the items a
+/// removal removed, or the items another engine is changing.
 #[derive(Clone, Debug)]
 pub struct Report {
     pub outcome: Outcome,
@@ -195,6 +196,7 @@ pub struct Report {
     pub plan: Option<SetupPlan>,
     pub item: Option<ItemId>,
     pub failure: Option<FailureCategory>,
+    pub failure_cause: Option<Box<NotRunningCause>>,
     pub items: Vec<ItemId>,
 }
 
@@ -207,6 +209,7 @@ impl Report {
             plan: None,
             item: None,
             failure: None,
+            failure_cause: None,
             items: Vec::new(),
         }
     }
@@ -214,6 +217,11 @@ impl Report {
     fn for_item(mut self, item: ItemId, failure: Option<FailureCategory>) -> Self {
         self.item = Some(item);
         self.failure = failure;
+        self
+    }
+
+    fn with_cause(mut self, cause: Option<NotRunningCause>) -> Self {
+        self.failure_cause = cause.map(Box::new);
         self
     }
 
@@ -305,6 +313,19 @@ struct Survey {
 enum Stop {
     Busy,
     Failed(FailureCategory),
+    /// Failed as `program_not_running`, for the cause it keeps.
+    NotRunning(NotRunningCause),
+}
+
+impl Stop {
+    /// The category this stop fails with, and the cause it keeps for diagnostics.
+    fn failure(self) -> Option<(FailureCategory, Option<NotRunningCause>)> {
+        match self {
+            Self::Busy => None,
+            Self::Failed(category) => Some((category, None)),
+            Self::NotRunning(cause) => Some((FailureCategory::ProgramNotRunning, Some(cause))),
+        }
+    }
 }
 
 /// How following another engine's setup of one item ended.
@@ -340,6 +361,7 @@ impl From<LocalAiError> for Stop {
     fn from(error: LocalAiError) -> Self {
         match error {
             LocalAiError::Engine(Error::Busy) => Self::Busy,
+            LocalAiError::NotRunning(cause) => Self::NotRunning(cause),
             error => Self::Failed(error.category()),
         }
     }
@@ -722,8 +744,12 @@ impl Engine {
                     removed.push(item);
                     continue;
                 }
-                Err(Stop::Busy) => report(Outcome::Busy, None),
-                Err(Stop::Failed(category)) => report(Outcome::Failed, Some(category)),
+                Err(stop) => match stop.failure() {
+                    None => report(Outcome::Busy, None),
+                    Some((category, cause)) => {
+                        report(Outcome::Failed, Some(category)).with_cause(cause)
+                    }
+                },
             };
             return Report {
                 rows: self.quick_rows(&ItemId::ALL),
@@ -761,10 +787,12 @@ impl Engine {
                 items: vec![item],
                 ..Report::new(Outcome::Removed, rows)
             },
-            Err(Stop::Busy) => Report::new(Outcome::Busy, rows).for_item(item, None),
-            Err(Stop::Failed(category)) => {
-                Report::new(Outcome::Failed, rows).for_item(item, Some(category))
-            }
+            Err(stop) => match stop.failure() {
+                None => Report::new(Outcome::Busy, rows).for_item(item, None),
+                Some((category, cause)) => Report::new(Outcome::Failed, rows)
+                    .for_item(item, Some(category))
+                    .with_cause(cause),
+            },
         }
     }
 
@@ -1280,6 +1308,7 @@ impl Engine {
         drop(reservation);
         let mut slots = slots.into_iter();
         let mut stopped = None;
+        let mut failure_cause = None;
         for (entry, slot) in plan.entries.iter().zip(&mut slots) {
             let item = entry.item;
             let done = match slot {
@@ -1303,13 +1332,16 @@ impl Engine {
                 },
                 Slot::Failed(category) => Err(Stop::Failed(category)),
             };
-            let (outcome, failure) = match done {
+            let (outcome, failure) = match done.map_err(Stop::failure) {
                 Ok(()) => continue,
-                Err(Stop::Busy) => (Outcome::Busy, None),
-                Err(Stop::Failed(FailureCategory::Cancelled)) => {
+                Err(None) => (Outcome::Busy, None),
+                Err(Some((FailureCategory::Cancelled, _))) => {
                     (Outcome::Cancelled, Some(FailureCategory::Cancelled))
                 }
-                Err(Stop::Failed(category)) => (Outcome::Failed, Some(category)),
+                Err(Some((category, cause))) => {
+                    failure_cause = cause;
+                    (Outcome::Failed, Some(category))
+                }
             };
             stopped = Some(RunStop {
                 outcome: match outcome {
@@ -1330,7 +1362,11 @@ impl Engine {
                 let _ = writer.not_reached(stop);
             }
         }
-        Some(Report::new(ended_outcome(stop.outcome), Vec::new()).for_item(stop.item, stop.failure))
+        Some(
+            Report::new(ended_outcome(stop.outcome), Vec::new())
+                .for_item(stop.item, stop.failure)
+                .with_cause(failure_cause),
+        )
     }
 
     /// A setup that found `items` being set up by other engines follows each of them in
@@ -1622,7 +1658,7 @@ impl Engine {
             reporter.part = None;
             writer.step(SetupStep::Verify)?;
             for model in models.selection().as_slice() {
-                let observation = models.observe_full(&server, model, &hardware);
+                let observation = models.check_full(&server, model, &hardware)?;
                 if !observation.usable() {
                     return Err(Stop::Failed(failure_of(observation)));
                 }
@@ -1713,7 +1749,7 @@ fn wait_for_server(
             return Ok(server);
         }
         if started.elapsed() >= SERVER_WAIT {
-            return Err(Stop::Failed(FailureCategory::ProgramNotRunning));
+            return Err(no_server_within(program));
         }
         if delay == SERVER_LOOK_FIRST {
             // Best effort, as the progress figure.
@@ -1723,6 +1759,16 @@ fn wait_for_server(
         pacing.wait(delay, cancellation)?;
         delay = delay.saturating_mul(2).min(SERVER_LOOK_LONGEST);
     }
+}
+
+/// The stop of a wait that ran out with no server: with the kind of the manager's latest
+/// start when that start failed, so a missing or broken program reads apart from one that
+/// is slow to start.
+fn no_server_within(program: &Program) -> Stop {
+    Stop::NotRunning(NotRunningCause::NoServerWithin {
+        budget: SERVER_WAIT,
+        latest_start: program.latest_start_failure(),
+    })
 }
 
 /// Re-observes one activity access failure only after its known run has published an end
@@ -1774,6 +1820,10 @@ fn finish(writer: ItemWriter<'_>, outcome: Result<(), Stop>) -> Result<(), Stop>
         Err(Stop::Failed(category)) => {
             writer.failed(category)?;
             Err(Stop::Failed(category))
+        }
+        Err(Stop::NotRunning(cause)) => {
+            writer.failed(FailureCategory::ProgramNotRunning)?;
+            Err(Stop::NotRunning(cause))
         }
         Err(Stop::Busy) => {
             writer.held()?;

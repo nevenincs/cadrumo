@@ -49,7 +49,7 @@ msgstr ""
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Platform"
-msgstr "Platform"
+msgstr "Rendszer"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Default storage root"

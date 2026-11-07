@@ -7,6 +7,7 @@ import servedWords from "@fixtures/ledger-served-words/ledgerServedWords.json" w
 import {
   STORY_PERIOD,
   STORY_READER,
+  STORY_YEARS,
   useLedgerPort,
   useStoryStage,
 } from "@/dev/LedgerStage";
@@ -248,7 +249,7 @@ function Stage({
     rows: null,
     stage: stage.content,
     onStage,
-    years: [2025, 2026],
+    years: STORY_YEARS.slice(-2),
     fallbackYear: STORY_PERIOD.year,
     period: STORY_PERIOD,
   };

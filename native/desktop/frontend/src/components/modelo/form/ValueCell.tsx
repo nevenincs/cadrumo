@@ -16,11 +16,9 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
-import type {
-  ModeloEditValueGrammarV1,
-  PublicModeloFormField,
-  SourceSurface,
-} from "../../../shell/modeloContract";
+import type { ModeloEditValueGrammarV1 } from "../../../shell/modeloContract/modeloEditWork";
+import type { SourceSurface } from "../../../shell/modeloContract/modeloWork";
+import type { PublicModeloFormField } from "../../../shell/modeloContract/modeloWorkForm";
 import { factsGap } from "../../../shell/compose";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { entryField } from "./entryField";

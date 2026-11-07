@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { ModeloDeclarationListRowV1 } from "../../../shell/modeloContract";
+import type { ModeloDeclarationListRowV1 } from "../../../shell/modeloContract/modeloDeclarations";
 import { useStrings } from "../../../shell/strings";
 import { aeatWords } from "./declarationsWords";
 

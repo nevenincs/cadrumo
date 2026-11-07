@@ -10,6 +10,7 @@ import pytest
 
 from cadrumo.core.tipos_actividad import TipoActividad
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.facts.payloads import ScalarFactPayload
 from cadrumo.domain.transactions.errors import TransactionValidationError
 from cadrumo.domain.transactions.retencion_facts import (
     load_retencion_actividades_rates,
@@ -25,6 +26,7 @@ from ..compiler.authority import compiled_bundled_authority
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _PROFESSIONAL_SELECTOR = "rirpf-art-95:selector-m036-actividades-profesionales"
+_GENERAL_RATE_FACT_ID = "rirpf-art-95:retencion-actividades-profesionales-general"
 
 
 @cache
@@ -34,14 +36,13 @@ def _authority() -> ValidatedRegistryAuthority:
 
 
 def test_retencion_rates_select_the_supplied_coordinate_not_the_wall_clock() -> None:
-    """The rate set is selected from the supplied coordinate, inside the product's envelope.
+    """The rate set is selected from the supplied coordinate.
 
-    The coordinates are read off the registry's own support declaration rather
-    than pinned here: the floor is a hard gate, so a year below it is refused
-    however well the corpus authors it, and a test naming a fixed historical
-    year would break every time the envelope moved. The refusal is the proof
-    that selection is input-driven -- today's date is inside the envelope, so an
-    implementation reading the wall clock would resolve happily instead.
+    The coordinates are read off the registry rather than pinned here: the
+    general rate's own variants name a redaction whose value differs from the
+    one in force at the floor, and reading that redaction's first day returns
+    its value. An implementation reading the wall clock would return the
+    floor's rate there instead, because today shares it.
     """
     authority = _authority()
     support = authority.supported_filing_years()
@@ -49,10 +50,16 @@ def test_retencion_rates_select_the_supplied_coordinate_not_the_wall_clock() -> 
     floor_rates = load_retencion_actividades_rates(effective_date=date(support.floor, 6, 30), authority=authority)
     assert floor_rates.general_rate > Decimal("0")
 
-    below_floor = support.floor - 1
-    assert not support.admits_filing_year(below_floor)
-    with pytest.raises(TransactionValidationError, match=str(below_floor)):
-        load_retencion_actividades_rates(effective_date=date(below_floor, 6, 30), authority=authority)
+    redactions = [
+        (variant.valid_from, Decimal(str(variant.payload.value)))
+        for variant in authority.catalogues.facts.facts[_GENERAL_RATE_FACT_ID].variants
+        if isinstance(variant.payload, ScalarFactPayload) and isinstance(variant.valid_from, date)
+    ]
+    differing = [(starts, rate) for starts, rate in redactions if rate != floor_rates.general_rate]
+    assert differing, "no redaction of the general rate differs from the floor's, so the coordinate proves nothing"
+    for starts, rate in differing:
+        selected = load_retencion_actividades_rates(effective_date=starts, authority=authority)
+        assert selected.general_rate == rate, starts
 
     assert retencion_effective_date(value_date=date(2015, 7, 12), booked_date=date(2015, 7, 11)) == date(2015, 7, 12)
     with pytest.raises(TransactionValidationError, match="requires a transaction value or booked date"):

@@ -5,6 +5,7 @@ import {
 } from "../../src/shell/navigation/windowViews";
 import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
+import { showTui } from "../support/tui";
 import { windowToast } from "../support/toast";
 
 // The palette's views come from the navigation register: each is found by
@@ -221,12 +222,12 @@ test("the views keep their action ids, and their chords still toggle", async ({
     layout: {
       agentShown: true,
       docsShown: true,
-      tuiShown: true,
       panelOpen: false,
       page: "docs",
     },
   });
   await open(target);
+  await showTui(target);
   await target.keyboard.press("ControlOrMeta+Shift+KeyK");
   for (const id of [
     "agent.toggle",

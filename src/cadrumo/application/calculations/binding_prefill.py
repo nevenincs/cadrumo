@@ -752,6 +752,8 @@ def prefilled_bindings(
     requirement the resolver already matched and falls back to the binding's own
     selector, so a binding resolved outside a requirement still names where its
     value came from.
+
+    ``snapshot`` is a :class:`RegistrySnapshot`.
     """
     binding_index = revision_bindings_by_id(snapshot.revision)
     requirement_index = _requirements_by_binding(snapshot)

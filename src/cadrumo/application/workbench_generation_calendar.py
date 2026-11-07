@@ -109,6 +109,8 @@ def scope_filing_records(
     The local source remains observed and available even when none of its
     profile-wide filing records belongs to the requested window. That is a
     measured empty query result, not an invented empty authority.
+
+    ``filing_records`` is a :class:`ModeloRecord`.
     """
     addresses = {
         (entry.modelo, entry.period.filing_year, entry.period.registry_token) for entry in schedule_calendar.entries

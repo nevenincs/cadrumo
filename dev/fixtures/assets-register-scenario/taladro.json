@@ -1,0 +1,90 @@
+{
+  "asset_id": "taladro",
+  "purchase": {
+    "booked_date": "2026-03-10",
+    "taxable_base": "280.00",
+    "iva_amount": "58.80"
+  },
+  "steps": [
+    {
+      "recorded_at": "2026-01-15T09:30:00Z",
+      "revision": {
+        "revision_number": 1,
+        "acquisition": {
+          "observed_lineage_event_id": null,
+          "invoice_evidence_id": "a17dbfcb09c1269f2598835b1b4288aeafd05785916dfb18d6deb58c8da73a5d",
+          "evidence_fingerprint": "1e8a8e0ef9ad7d0607101b04870a2606911c9c5bb26e13c82b3fbe8fbf0070d8"
+        },
+        "acquisition_shape": "primary_purchase",
+        "asset_kind": "material",
+        "basis": {
+          "stage": "business_allocated",
+          "basis_amount": {
+            "decimal": "280.00"
+          },
+          "non_deductible_iva": {
+            "decimal": "0.00"
+          },
+          "is_property": false,
+          "construction_cost": null,
+          "land_cost": null,
+          "ownership_mode": null,
+          "ownership_share": null,
+          "office_area": null,
+          "total_area": null,
+          "business_use_share": null,
+          "prior_allocation_provenance": "Asignación contabilizada en el libro"
+        },
+        "residual_value": {
+          "decimal": "0"
+        },
+        "in_service_date": "2026-03-10",
+        "out_of_service_date": null,
+        "disposal": null,
+        "opening_history": {
+          "status": "known",
+          "accumulated_amount": {
+            "decimal": "0.00"
+          },
+          "amortization_method": null,
+          "covered_through_tax_year": null
+        },
+        "acquired_condition": "new",
+        "building_construction_date": null,
+        "amortization": {
+          "regime": "normal",
+          "method": "low_value_free",
+          "authority_class_key": null,
+          "linear_coefficient": null,
+          "shift_hours_per_day": null,
+          "sum_of_digits_period_years": null,
+          "digit_order": null,
+          "approved_plan": null,
+          "useful_life": null,
+          "small_enterprise": null,
+          "low_value": {
+            "election_reference": "election recorded with the purchase",
+            "new_material_evidence_reference": "purchase invoice"
+          },
+          "research_development_evidence_reference": null,
+          "charging_infrastructure": null,
+          "renewable_self_consumption": null,
+          "used_original_price": null
+        },
+        "vehicle_affectation": null
+      },
+      "create": {
+        "name": "Taladro percutor",
+        "serial_number": "TP-5521"
+      }
+    },
+    {
+      "recorded_at": "2026-07-02T08:15:00Z",
+      "claim": {
+        "covered_from": "2026-03-10",
+        "covered_through": "2026-12-31",
+        "requested_free_amount": "280.00"
+      }
+    }
+  ]
+}

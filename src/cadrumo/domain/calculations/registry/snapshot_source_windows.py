@@ -107,7 +107,10 @@ def revision_scoped_source_window_failures(
     catalogues: RegistryCatalogues,
     revision_directory: ModeloRevisionDirectory | None = None,
 ) -> list[str]:
-    """Report the revision-scoped source window failures for a modelo and its sources."""
+    """Report the revision-scoped source window failures for a modelo and its sources.
+
+    ``modelo`` is a :class:`ModeloDefinition`; ``revision`` is a :class:`ModeloRevision`.
+    """
     _revision_legal_ids, revision_source_ids = collect_snapshot_ref_ids(
         modelo,
         revision,

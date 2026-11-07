@@ -34,7 +34,6 @@ from ...domain.modelos.calculation_revision_m303_handoff import (
 from ...domain.modelos.calculation_revision_operator_layer import CalculationOperatorLayer
 from ...domain.modelos.calculation_revision_sources import (
     CalculationSourceIssue,
-    CalculationSourceRef,
 )
 from ...domain.modelos.row_models import Modelo210AgrupacionRentaRow, ModeloDetailRow
 from ...domain.modelos.work_unit import WorkUnit
@@ -61,6 +60,7 @@ from .calculation_notes import (
 )
 from .calculation_preparation import raise_if_ledger_preflight_blocks_calculation
 from .calculation_publication import CalculationRevisionPublication
+from .calculation_resolution import calculation_source_provenance_refs
 from .calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES, CALLER_OVERRIDABLE_CARRY_SOURCES
 from .calculation_source_staging import settled_binding_ids
 from .m349_ledger_guard import (
@@ -168,48 +168,6 @@ class _BucketAggregationChannels:
     reconciliation: _CallerOverrideReconciliation
 
 
-def source_provenance_refs(
-    source_resolution: CalculationSourceResolution,
-) -> tuple[CalculationSourceRef, ...]:
-    """Project the mesh resolution's application provenance into persisted domain refs.
-
-    Maps each :class:`~application.aggregation.source_mesh.CalculationSourceProvenance`
-    row (the resolver→source-object→fingerprint trace) into the domain-side
-    :class:`~CalculationSourceRef` that
-    :func:`~application.modelo.revision_persistence.persist_calculation_revision`
-    persists on the :class:`~CalculationRevision`. This is the
-    application→domain boundary map: the domain never imports the application
-    provenance model, and the compact ref deliberately drops the per-casilla
-    ``legal_refs`` / ``source_refs`` (carried by the revision's ``observations``)
-    to avoid duplicating that grounding. ``dependency_treatment`` is NOT dropped:
-    unlike the per-casilla refs, nothing else on the revision carries it, so it
-    survives onto the persisted ref unchanged. ``source_casilla_ids`` is also NOT
-    dropped: it is a subject identity, not grounding, and the anti-
-    duplication rationale for ``legal_refs``/``source_refs`` does not extend to
-    it -- nothing else on the revision recovers which casilla a general
-    (non-row-materialized) source object explains. ``source_filing_year`` is
-    kept for the same reason: it is the only persisted trace of a Modelo 193
-    disclosure phase row's accrual year, which tells a settled prior-accrual
-    row from a pending one.
-    """
-    return tuple(
-        CalculationSourceRef(
-            resolver_id=provenance.resolver_id,
-            resolved_binding_source=provenance.resolved_binding_source,
-            contributor_source_kind=provenance.contributor_source_kind,
-            contributor_binding_source=provenance.contributor_binding_source,
-            lineage_role=provenance.lineage_role,
-            source_ref=provenance.source_ref,
-            parent_source_ref=provenance.parent_source_ref,
-            fingerprint=provenance.fingerprint,
-            source_casilla_ids=provenance.source_casilla_ids,
-            dependency_treatment=provenance.dependency_treatment,
-            source_filing_year=provenance.source_filing_year,
-        )
-        for provenance in source_resolution.provenance
-    )
-
-
 @dataclass(frozen=True, slots=True)
 class _CallerOverrideReconciliation:
     """Reconciliation of caller overrides against the merged source resolution.
@@ -269,6 +227,8 @@ def orphaned_override_diagnostics(
     longer declares its key -- a stored fact, not a fresh mistake, and refusing
     it would make an old catalogue entry uncalculable rather than merely
     explicable.
+
+    ``revision`` is a :class:`ModeloRevision`.
     """
     declared_binding_ids = {binding.id for binding in revision.bindings}
     return tuple(
@@ -809,7 +769,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         unresolved_binding_ids=channels.reconciliation.unresolved_binding_ids,
         settled_binding_ids=settled_binding_ids(channels.source_resolution),
         source_transaction_ids=tuple(channels.source_resolution.source_transaction_ids),
-        source_provenance=source_provenance_refs(channels.source_resolution),
+        source_provenance=calculation_source_provenance_refs(channels.source_resolution.provenance),
         source_issues=unrouted_source_issues(
             channels.reconciliation.source_diagnostics,
             snapshot_printed_boxes(ports.operation, preparation.snapshot),
@@ -925,7 +885,7 @@ def evaluate_modelo_revision_from_bucket_aggregation(
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         filing_period_date=filing_period_date,
         detail_rows=channels.detail_rows,
-        source_provenance=source_provenance_refs(channels.source_resolution),
+        source_provenance=calculation_source_provenance_refs(channels.source_resolution.provenance),
         filing_instance_evidence=filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=(
             channels.source_resolution.m303_regimen_simplificado_annual_summary_handoff

@@ -9,10 +9,15 @@ use crate::provisioning::{
         Archives, BROWSER_VERSION, HOST, driver_package, fake_environment, fake_leading,
         launchable_archives,
     },
+    items::FULL_CHECK_BUDGET,
     local_ai::{
+        ServerCall, StartFailureKind,
         fake_ollama::FakeOllama,
+        loopback::{ExchangeFailure, ExchangePhase},
         models::SelectedModel,
-        program::{SERVER_RECORD, SERVER_RECORD_SCHEMA, ServerRecord},
+        program::{
+            Program, SERVER_RECORD, SERVER_RECORD_SCHEMA, START_FAILURE_RECORD, ServerRecord,
+        },
     },
     state::RecoveryAction,
     test_servers::{Released, Reply, Request, TestCertificate, TlsServer, network_to, response},
@@ -809,6 +814,107 @@ fn a_tag_the_registry_moved_is_the_model_the_program_verified() {
             .count(),
         2,
         "each model is pulled once: {requests:?}"
+    );
+}
+
+#[test]
+fn a_wait_that_runs_out_reports_the_latest_failed_start_of_the_server() {
+    let text = StoredModel::new(1);
+    let vision = StoredModel::new(9);
+    let world = World::local_ai(&text, &vision);
+    let pins = ComponentPins::load(&world.directory.path().join("pins")).unwrap();
+    let program = Program::new(
+        pins.program.as_ref().unwrap(),
+        Platform::current().unwrap(),
+        Locations::under(&world.root()),
+    )
+    .unwrap()
+    .unwrap();
+    let cause = |program: &Program| {
+        let Stop::NotRunning(cause) = no_server_within(program) else {
+            panic!("a wait that runs out stops as not running");
+        };
+        cause
+    };
+
+    // A host too slow to start the server within the wait: no start has failed.
+    assert_eq!(
+        cause(&program),
+        NotRunningCause::NoServerWithin {
+            budget: SERVER_WAIT,
+            latest_start: None,
+        }
+    );
+
+    // The manager, in its own process, recorded that its latest start failed.
+    fs::create_dir_all(world.programs()).unwrap();
+    fs::write(
+        world.programs().join(START_FAILURE_RECORD),
+        br#"{"schema":1,"reason":"server_launch_failed"}"#,
+    )
+    .unwrap();
+    assert_eq!(
+        cause(&program),
+        NotRunningCause::NoServerWithin {
+            budget: SERVER_WAIT,
+            latest_start: Some(StartFailureKind::Launch),
+        },
+        "a program that could not be launched reads apart from a slow start"
+    );
+
+    // A record this build cannot read names no start.
+    fs::write(
+        world.programs().join(START_FAILURE_RECORD),
+        br#"{"schema":1,"reason":"server_on_fire"}"#,
+    )
+    .unwrap();
+    assert_eq!(cause(&program).latest_start(), None);
+}
+
+#[test]
+fn a_setup_whose_check_the_server_drops_reports_the_request_that_failed() {
+    let text = StoredModel::new(1);
+    let vision = StoredModel::new(9);
+    let world = World::local_ai(&text, &vision);
+    world
+        .ollama
+        .as_ref()
+        .unwrap()
+        .state
+        .lock()
+        .unwrap()
+        .generation_hangs_up = true;
+
+    let done = world.set_up_local_ai_serving(None);
+
+    assert_eq!(done.report.outcome, Outcome::Failed, "{:?}", done.report);
+    assert_eq!(done.report.item, Some(ItemId::LocalAi));
+    assert_eq!(
+        done.report.failure,
+        Some(FailureCategory::ProgramNotRunning),
+        "the window still words the one category"
+    );
+    assert!(
+        matches!(
+            done.report.failure_cause.as_deref(),
+            Some(NotRunningCause::Request {
+                call: ServerCall::Generate,
+                failure: ExchangeFailure {
+                    phase: ExchangePhase::Exchange,
+                    bound,
+                    ..
+                },
+            }) if *bound == FULL_CHECK_BUDGET
+        ),
+        "the report keeps which request failed: {:?}",
+        done.report.failure_cause
+    );
+    assert!(
+        world
+            .ollama_requests()
+            .iter()
+            .any(|line| line.starts_with("POST /api/pull")),
+        "the models were pulled before the check failed"
     );
 }
 

@@ -11,7 +11,7 @@
     {"argv":["aeat","app","ledger","attach","c866d7043d518f43f8d261b5c7d6437f1363d6dc16be0d68184bc64e5b0a9860","--purchase-invoice-evidence-id","0021fb5b1e7a777c"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {"argv":["aeat","--format","json","app","modelo","work","create","--modelo","303","--year","2026","--period","1T"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {"argv":["aeat","app","ledger","add","--date","2026-03-20","--amount","121","--direction","INCOMING","--description","Selector transition sale","--classification","BUSINESS","--taxable-base","100","--iva-rate","0.21","--iva-amount","21","--iva-category","domestic_general","--idempotency-key","filing-spine-selector-transition"],"captures":[],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
-    {"argv":["aeat","--format","json","app","modelo","work","calculate","--modelo","303","--year","2026","--period","1T","--no-joint-return-elected"],"captures":[{"json_path":"result.calculation_revision_id","name":"selected_revision_id","value":"4ddd247aecdfe3ed9d07f7c90998a8eb7062ebf7282091fadc4eee5e8d9c5800"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
+    {"argv":["aeat","--format","json","app","modelo","work","calculate","--modelo","303","--year","2026","--period","1T","--no-joint-return-elected"],"captures":[{"json_path":"result.calculation_revision_id","name":"selected_revision_id","value":"0d4da498a4fe624464df5f1fbcdfd463f6650e0000632d84361d9cb230387cb0"}],"envelope":null,"envelope_source":null,"exit_code":0,"kind":"setup","stderr_text":null,"text":null},
     {
       "argv": [
         "aeat",
@@ -96,7 +96,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "4ddd247aecdfe3ed9d07f7c90998a8eb7062ebf7282091fadc4eee5e8d9c5800",
+          "calculation_revision_id": "0d4da498a4fe624464df5f1fbcdfd463f6650e0000632d84361d9cb230387cb0",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -412,7 +412,7 @@
             {"absent_by_design":false,"casilla_id":"56","formula_id":null,"legal_refs":["ley-37-1992:art-122","ley-37-1992:art-123","ley-37-1992:art-124","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"57","formula_id":null,"legal_refs":["ley-37-1992:art-122","ley-37-1992:art-123","ley-37-1992:art-124","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"58","formula_id":null,"legal_refs":["ley-37-1992:art-122","ley-37-1992:art-123","ley-37-1992:art-124","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"59","formula_id":null,"legal_refs":["ley-37-1992:art-25","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"59","formula_id":null,"legal_refs":["ley-37-1992:art-25","ley-37-1992:art-69","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"60","formula_id":null,"legal_refs":["ley-37-1992:art-21","ley-37-1992:art-22","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"62","formula_id":null,"legal_refs":["ley-37-1992:art-75","ley-37-1992:art-163-decies","ley-37-1992:art-163-undecies","ley-37-1992:art-163-duodecies","ley-37-1992:art-163-terdecies","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"63","formula_id":null,"legal_refs":["ley-37-1992:art-75","ley-37-1992:art-163-decies","ley-37-1992:art-163-undecies","ley-37-1992:art-163-duodecies","ley-37-1992:art-163-terdecies","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
@@ -801,7 +801,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "4ddd247aecdfe3ed9d07f7c90998a8eb7062ebf7282091fadc4eee5e8d9c5800",
+          "calculation_revision_id": "0d4da498a4fe624464df5f1fbcdfd463f6650e0000632d84361d9cb230387cb0",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -1117,7 +1117,7 @@
             {"absent_by_design":false,"casilla_id":"56","formula_id":null,"legal_refs":["ley-37-1992:art-122","ley-37-1992:art-123","ley-37-1992:art-124","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"57","formula_id":null,"legal_refs":["ley-37-1992:art-122","ley-37-1992:art-123","ley-37-1992:art-124","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"58","formula_id":null,"legal_refs":["ley-37-1992:art-122","ley-37-1992:art-123","ley-37-1992:art-124","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"59","formula_id":null,"legal_refs":["ley-37-1992:art-25","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"59","formula_id":null,"legal_refs":["ley-37-1992:art-25","ley-37-1992:art-69","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"60","formula_id":null,"legal_refs":["ley-37-1992:art-21","ley-37-1992:art-22","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"62","formula_id":null,"legal_refs":["ley-37-1992:art-75","ley-37-1992:art-163-decies","ley-37-1992:art-163-undecies","ley-37-1992:art-163-duodecies","ley-37-1992:art-163-terdecies","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"63","formula_id":null,"legal_refs":["ley-37-1992:art-75","ley-37-1992:art-163-decies","ley-37-1992:art-163-undecies","ley-37-1992:art-163-duodecies","ley-37-1992:art-163-terdecies","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
@@ -1431,7 +1431,7 @@
         "modelo",
         "work",
         "revision",
-        "4ddd247aecdfe3ed9d07f7c90998a8eb7062ebf7282091fadc4eee5e8d9c5800"
+        "0d4da498a4fe624464df5f1fbcdfd463f6650e0000632d84361d9cb230387cb0"
       ],
       "captures": [],
       "envelope": {
@@ -1499,7 +1499,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "4ddd247aecdfe3ed9d07f7c90998a8eb7062ebf7282091fadc4eee5e8d9c5800",
+          "calculation_revision_id": "0d4da498a4fe624464df5f1fbcdfd463f6650e0000632d84361d9cb230387cb0",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -1815,7 +1815,7 @@
             {"absent_by_design":false,"casilla_id":"56","formula_id":null,"legal_refs":["ley-37-1992:art-122","ley-37-1992:art-123","ley-37-1992:art-124","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"57","formula_id":null,"legal_refs":["ley-37-1992:art-122","ley-37-1992:art-123","ley-37-1992:art-124","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"58","formula_id":null,"legal_refs":["ley-37-1992:art-122","ley-37-1992:art-123","ley-37-1992:art-124","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"59","formula_id":null,"legal_refs":["ley-37-1992:art-25","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"59","formula_id":null,"legal_refs":["ley-37-1992:art-25","ley-37-1992:art-69","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"60","formula_id":null,"legal_refs":["ley-37-1992:art-21","ley-37-1992:art-22","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"62","formula_id":null,"legal_refs":["ley-37-1992:art-75","ley-37-1992:art-163-decies","ley-37-1992:art-163-undecies","ley-37-1992:art-163-duodecies","ley-37-1992:art-163-terdecies","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"63","formula_id":null,"legal_refs":["ley-37-1992:art-75","ley-37-1992:art-163-decies","ley-37-1992:art-163-undecies","ley-37-1992:art-163-duodecies","ley-37-1992:art-163-terdecies","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
@@ -2203,7 +2203,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "4ddd247aecdfe3ed9d07f7c90998a8eb7062ebf7282091fadc4eee5e8d9c5800",
+          "calculation_revision_id": "0d4da498a4fe624464df5f1fbcdfd463f6650e0000632d84361d9cb230387cb0",
           "casilla_values": {
             "01": "0.00",
             "02": "0",
@@ -2519,7 +2519,7 @@
             {"absent_by_design":false,"casilla_id":"56","formula_id":null,"legal_refs":["ley-37-1992:art-122","ley-37-1992:art-123","ley-37-1992:art-124","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"57","formula_id":null,"legal_refs":["ley-37-1992:art-122","ley-37-1992:art-123","ley-37-1992:art-124","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"58","formula_id":null,"legal_refs":["ley-37-1992:art-122","ley-37-1992:art-123","ley-37-1992:art-124","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
-            {"absent_by_design":false,"casilla_id":"59","formula_id":null,"legal_refs":["ley-37-1992:art-25","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
+            {"absent_by_design":false,"casilla_id":"59","formula_id":null,"legal_refs":["ley-37-1992:art-25","ley-37-1992:art-69","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"60","formula_id":null,"legal_refs":["ley-37-1992:art-21","ley-37-1992:art-22","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"62","formula_id":null,"legal_refs":["ley-37-1992:art-75","ley-37-1992:art-163-decies","ley-37-1992:art-163-undecies","ley-37-1992:art-163-duodecies","ley-37-1992:art-163-terdecies","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},
             {"absent_by_design":false,"casilla_id":"63","formula_id":null,"legal_refs":["ley-37-1992:art-75","ley-37-1992:art-163-decies","ley-37-1992:art-163-undecies","ley-37-1992:art-163-duodecies","ley-37-1992:art-163-terdecies","rd-1624-1992:art-71","orden-eha-3786-2008:art-1"],"op":null,"operand_casilla_refs":[],"operand_refs":[],"operand_values":[],"source_refs":["aeat-dr-303-2026"],"value":"0"},

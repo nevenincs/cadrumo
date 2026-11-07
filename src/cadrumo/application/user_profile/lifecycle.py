@@ -166,7 +166,10 @@ class ProfileCapsuleLifecycle:
         expected_revision: int,
         expected_content_digest: str,
     ) -> UserProfileRecord:
-        """Replace the profile record by compare-and-swap for an explicit ``ProfileRecordRepository`` command."""
+        """Replace the profile record by compare-and-swap for an explicit ``ProfileRecordRepository`` command.
+
+        ``replacement`` is a :class:`UserProfileRecord`.
+        """
         if record_session.profile_id != profile_id:
             raise ValueError("profile lifecycle record session must bind the replacement UUID")
         with profile_custody_transaction_lock(self.root, profile_id):

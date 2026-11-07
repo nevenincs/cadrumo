@@ -25,6 +25,7 @@ import {
   type StagedRowChanges,
 } from "../src/shell/ledgerStage";
 import { hexId, movement } from "./support/ledger";
+import { servedFilingYears } from "../src/dev/servedYearAuthority";
 import {
   planRecorded,
   recordedCheck,
@@ -982,19 +983,29 @@ test("the bound counts bytes, and a row too large to send alone is held", () => 
 });
 
 test("Mixed names the category's configured usage ratio, through the bulk, and says where none is configured", () => {
-  const phone = movement(hexId("r201"), { date: "2026-03-02" });
-  const old = movement(hexId("r202"), { date: "2025-11-20" });
-  const unread = movement(hexId("r203"), { date: "2024-06-01" });
+  // Three filing years, newest first: one with a ratio for fixed lines, one
+  // with none, one not read.
+  const [configured, unconfigured, notRead] = servedFilingYears
+    .slice(-3)
+    .reverse();
+  if (
+    configured === undefined ||
+    unconfigured === undefined ||
+    notRead === undefined
+  )
+    throw new Error("the recording serves fewer than three filing years");
+  const phone = movement(hexId("r201"), { date: `${configured}-03-02` });
+  const old = movement(hexId("r202"), { date: `${unconfigured}-11-20` });
+  const unread = movement(hexId("r203"), { date: `${notRead}-06-01` });
   const income = movement(hexId("r204"), { direction: "INCOMING" });
   const rows = contextOf(phone, old, unread, income);
   const ids = [phone, old, unread, income].map(
     (row) => row.transaction.transaction_id,
   );
-  // 2026 has a ratio for fixed lines, 2025 has none, 2024 was not read.
   const ratios = new Map<number, ReadonlySet<string> | null>([
-    [2026, new Set(["telefonia_fija"])],
-    [2025, new Set(["suministros_home_office_luz"])],
-    [2024, null],
+    [configured, new Set(["telefonia_fija"])],
+    [unconfigured, new Set(["suministros_home_office_luz"])],
+    [notRead, null],
   ]);
   const check = recordedCheck(EMPTY_CONTENT, rows.rows, {
     ids,

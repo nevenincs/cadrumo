@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useMemo } from "react";
 import { userEvent, within } from "storybook/test";
-import type { DocsSearchResult } from "../ipc/contract";
+import type { DocsSearchResult } from "../ipc/docsBridge";
 import type { Action } from "../shell/actions";
 import { useStrings, type Translate } from "../shell/strings";
 import { CommandPalette, type DocsSearch } from "./CommandPalette";

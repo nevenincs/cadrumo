@@ -63,3 +63,34 @@ def test_maritime_worker_selectors_match_runtime_facts(schema: ProfileSchemaDefi
         assert field.type.value == "boolean"
         assert field.model_selectors == (field_path,)
         assert field.schedule_predicates == (field_path,)
+
+
+@pytest.mark.parametrize(
+    "field_path",
+    [
+        "maritime_worker.worker_class",
+        "maritime_worker.retmar_registered",
+        "maritime_worker.tuna_fleet",
+        "maritime_worker.pending_eu_clearance",
+    ],
+)
+def test_every_maritime_predicate_is_addressable_by_its_own_selector(
+    field_path: str,
+    schema: ProfileSchemaDefinition,
+) -> None:
+    """A field that gates something must declare the selector that resolves its path back.
+
+    ``path_for_model_selector`` is the only inverse of a selector token, so a
+    field declaring ``schedule_predicates`` without the matching
+    ``model_selectors`` cannot be resolved from the token a warning or a
+    cleared-fact notice holds, and the operator is told nothing about the
+    answer that is missing. Both maritime fields below gate the Modelo 100
+    route: ``worker_class`` selects the art. 7.p), REBECA (Ley 19/1994 art. 75)
+    or DA 41 pathway, and ``retmar_registered`` carries the LIRPF art. 96
+    obligation to file whatever the income.
+    """
+    field = schema.field(field_path)
+
+    assert field.schedule_predicates == (field_path,)
+    assert field.model_selectors == (field_path,)
+    assert schema.path_for_model_selector(field_path) == field_path

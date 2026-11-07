@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
-import type { SetupRow } from "../../ipc/contract";
+import type { SetupRow } from "../../ipc/componentSetup";
 import { useLocalAiLanes, type LocalAiSource } from "../../shell/localAiLanes";
 import { useProvisioning } from "../../shell/provisioning";
 import { useStrings } from "../../shell/strings";

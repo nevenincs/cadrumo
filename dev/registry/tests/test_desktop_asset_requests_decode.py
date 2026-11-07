@@ -13,9 +13,6 @@ that a form cannot state fails here.
 from __future__ import annotations
 
 import json
-import shutil
-import subprocess
-import sys
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -65,10 +62,11 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
 from cadrumo.domain.renta.actividad_asset.vehicle_affectation import VehicleCategory, VehiclePrivateUse
 from dev.paths import REPO_ROOT
 
+from .desktop_asset_payments import CANDIDATE, LATER_PAYMENT
+from .desktop_request_support import bundle, run
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_FRONTEND = REPO_ROOT / "native" / "desktop" / "frontend"
-_ENTRY = _FRONTEND / "tests" / "support" / "assetRequests.ts"
 _REGISTRY_PARAMETERS = (
     REPO_ROOT
     / "src"
@@ -83,20 +81,6 @@ _REGISTRY_PARAMETERS = (
     / "parameters"
     / "0001-declarations.toml"
 )
-_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0
-
-_BUNDLE_SCRIPT = """
-const esbuild = require(process.argv[1]);
-esbuild.buildSync({
-  entryPoints: [process.argv[2]],
-  outfile: process.argv[3],
-  bundle: true,
-  platform: "node",
-  format: "cjs",
-  tsconfig: process.argv[4],
-  logLevel: "error",
-});
-"""
 
 _NEW = {
     "asset_kind": "material",
@@ -200,12 +184,9 @@ _OUTSIDE = {
     "acquisition_reference": "Factura 2024-118",
 }
 
-#: The ledger payment the form's test double offers as the later payment, as `assetRequests.ts` names it.
-_LATER_PAYMENT = "e" * 64
-
 _OUTSIDE_WITH_LATER_PAYMENT = {
     **_OUTSIDE,
-    "further_purchase": _LATER_PAYMENT,
+    "further_purchase": LATER_PAYMENT["transaction_id"],
     "further_shape": "split_payment",
 }
 
@@ -262,35 +243,6 @@ _CORRECT: dict[str, dict[str, str]] = {
 }
 
 
-def _node() -> str:
-    node = shutil.which("node")
-    if node is None:
-        raise AssertionError("node is needed to run the desktop request builders, and was not found")
-    return node
-
-
-def _bundle(tmp_path: Path) -> Path:
-    esbuild = _FRONTEND / "node_modules" / "esbuild"
-    assert esbuild.is_dir(), f"the desktop frontend's dependencies are not installed under {_FRONTEND}"
-    out = tmp_path / "assetRequests.cjs"
-    subprocess.run(  # noqa: S603 - fixed node program on repository files
-        [
-            _node(),
-            "-e",
-            _BUNDLE_SCRIPT,
-            str(esbuild),
-            str(_ENTRY),
-            str(out),
-            str(_FRONTEND / "tsconfig.json"),
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-        creationflags=_NO_WINDOW,
-    )
-    return out
-
-
 def _served() -> dict[str, Any]:
     """What the backend serves with the options of a form: the shapes, activities and each method's facts."""
     methods = _offered_methods()
@@ -329,22 +281,13 @@ def _served() -> dict[str, Any]:
 
 
 def _run(bundle: Path, scenarios: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
-    done = subprocess.run(  # noqa: S603 - fixed node program on a bundle built above
-        [_node(), str(bundle)],
-        input=json.dumps(
-            {
-                "served": _served(),
-                "limits": json.loads(ledger_entry_limits().model_dump_json()),
-                "scenarios": scenarios,
-            }
-        ),
-        check=True,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        creationflags=_NO_WINDOW,
+    return run(
+        bundle,
+        scenarios,
+        served=_served(),
+        limits=json.loads(ledger_entry_limits().model_dump_json()),
+        candidates=[CANDIDATE, LATER_PAYMENT],
     )
-    return {item["id"]: item for item in json.loads(done.stdout)}
 
 
 def _decode_create(made: dict[str, Any]) -> ActivityAssetCreateRequest:
@@ -355,10 +298,10 @@ def _decode_create(made: dict[str, Any]) -> ActivityAssetCreateRequest:
 
 @pytest.fixture(scope="module")
 def created(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, dict[str, dict[str, Any]]]:
-    bundle = _bundle(tmp_path_factory.mktemp("asset-requests"))
+    built = bundle(tmp_path_factory.mktemp("asset-requests"))
     drafts = {**_CREATE, **_METHODS, **_STATED}
     scenarios = [{"id": name, "kind": "create", "draft": {**_NEW, **changes}} for name, changes in drafts.items()]
-    return bundle, _run(bundle, scenarios)
+    return built, _run(built, scenarios)
 
 
 @pytest.mark.parametrize("name", sorted({**_CREATE, **_METHODS, **_STATED}))
@@ -502,10 +445,10 @@ def test_an_element_bought_outside_the_ledger_can_own_a_later_ledger_payment(
     assert revision.acquisition.observed_transaction_id is None
     (later,) = revision.further_acquisitions
     assert later.shape is AcquisitionShape.SPLIT_PAYMENT
-    assert later.lineage.observed_transaction_id == _LATER_PAYMENT
+    assert later.lineage.observed_transaction_id == LATER_PAYMENT["transaction_id"]
     assert later.lineage.invoice_evidence_id == ""
     assert later.lineage.evidence_fingerprint is None
-    assert revision.acquisition_transaction_ids == (_LATER_PAYMENT,)
+    assert revision.acquisition_transaction_ids == (LATER_PAYMENT["transaction_id"],)
 
 
 def test_a_whole_property_and_a_vehicle_and_the_hours_of_a_shift_reach_the_revision(
@@ -630,9 +573,18 @@ def test_the_fixture_the_forms_are_drawn_against_serves_what_the_backend_serves(
     created: tuple[Path, dict[str, dict[str, Any]]],
 ) -> None:
     fixture = _run(created[0], [{"id": "fixture", "kind": "fixture"}])["fixture"]
+    # The fixture is drawn against the options the backend serves for a kind and
+    # a year, so it holds the facts of the methods those options offer. A method
+    # no form can state, or one the options enrol for no kind, is never drawn.
+    drawn = {item["method"] for item in fixture["facts"]}
     backend = {
-        method.value: json.loads(method_facts_view(method).model_dump_json())["facts"] for method in AmortizationMethod
+        method.value: json.loads(method_facts_view(method).model_dump_json())["facts"]
+        for method in _offered_methods()
+        if method.value in drawn
     }
+
+    assert drawn, "the fixture draws no method"
+    assert drawn <= {method.value for method in _offered_methods()}
 
     assert {item["method"]: item["facts"] for item in fixture["facts"]} == backend
     assert fixture["shapes"] == [shape.value for shape in REGISTERABLE_ACQUISITION_SHAPES]

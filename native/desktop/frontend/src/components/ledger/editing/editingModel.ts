@@ -5,10 +5,8 @@
 // values; this decides what would be staged and what is refused, in the
 // product's one grammar.
 
-import type {
-  LedgerInvoiceMatchMismatch,
-  LedgerRow,
-} from "../../../shell/ledger";
+import type { LedgerInvoiceMatchMismatch } from "../../../shell/ledgerInvoiceOperations";
+import type { LedgerRow } from "../../../shell/ledger";
 import {
   AMOUNT_RULE,
   TAX_AMOUNT_RULE,

@@ -9547,6 +9547,34 @@ workspace:
               que es completin les respostes obligatòries del perfil. Completa-les
               a la secció Perfil.
       source: Aquest origen no està disponible actualment.
+    related_filings:
+      absent: No registrat
+      after: Declaració seleccionada
+      base: Corregeix
+      before: Declaració anterior
+      change: Canvi
+      changed: Modificat
+      comparison_unavailable: 'No es poden comparar els valors desats: falta la declaració
+        anterior o el seu càlcul, o les revisions del registre són diferents.'
+      corrections: Correccions posteriors
+      current_labels: Les etiquetes i el format fan servir la revisió disponible del
+        registre. No es reconstrueix el formulari original.
+      failed: No s'ha pogut llegir la declaració desada.
+      field: Identificador del camp
+      historical_content_missing: El càlcul desat d'aquesta declaració no està disponible.
+      historical_display_unavailable: Els valors de la declaració es conserven, però
+        aquí no estan disponibles les etiquetes i el format originals.
+      labels_unavailable: Els valors desats amb etiquetes no estan disponibles. Pots
+        consultar els camps exactes més avall quan sigui possible comparar-los.
+      loading: Llegint la declaració desada…
+      open: Veure declaracions relacionades
+      open_work: Obrir la declaració de treball
+      retry: Tornar a llegir
+      saved_values: Valors desats
+      select: Selecciona una declaració
+      technical_values: Valors desats dels camps
+      title: Declaracions relacionades
+      unchanged: Sense canvis
     revision_state:
       borrador: Esborrany
       descartado: Descartat
@@ -9673,7 +9701,9 @@ workspace:
       lead: Una declaració presentada no es canvia mai directament. Cadrumo en prepara
         una correcció; canvies el que estava malament, n'exportes el fitxer i el presentes
         a l'AEAT com qualsevol altre.
+      loading: Llegint les opcions de correcció…
       title: Preparar una correcció
+      unavailable: Les opcions de correcció no estan disponibles per a aquesta declaració.
     details:
       card_unavailable: No s'ha pogut llegir l'explicació d'aquesta casella.
       choose_box: Tria una casella per veure d'on surt el valor i què significa.

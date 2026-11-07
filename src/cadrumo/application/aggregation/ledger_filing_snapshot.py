@@ -1,6 +1,6 @@
 """Capture and staleness for the modelo filing ledger snapshot.
 
-Used by: :mod:`application.modelo._ledger_drift_gate` for the calculate-time
+Used by: :mod:`application.modelo.ledger_drift_gate` for the calculate-time
 staleness refusal, :mod:`entrypoints.cli.ledger_read_commands` for the stale-revision
 listing, and :mod:`application.modelo.verification_actions` for the Modelo 303
 deductible-evidence verify gate.

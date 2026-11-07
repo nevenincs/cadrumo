@@ -8,7 +8,7 @@ import type {
   FieldGrounding,
   FieldOrigin,
   FieldProvenance,
-} from "../../../shell/ledger";
+} from "../../../shell/ledgerDocumentOperations";
 import type { Translate } from "../../../shell/strings";
 import type {
   ConfirmHold,

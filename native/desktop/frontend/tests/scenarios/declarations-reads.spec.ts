@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { ModeloPort } from "../../src/shell/modelo";
-import type { ModeloDeclarationsListProjectionV1 } from "../../src/shell/modeloContract";
+import type { ModeloDeclarationsListProjectionV1 } from "../../src/shell/modeloContract/modeloDeclarations";
 import type { ListMemory } from "../../src/components/modelo/declarations/useDeclarationsList";
 
 for (const outcome of ["success", "failure"] as const) {

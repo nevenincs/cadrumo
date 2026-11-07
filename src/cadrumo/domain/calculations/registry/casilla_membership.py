@@ -11,7 +11,7 @@ See Also:
     :mod:`domain.calculations.registry.formula_runtime_ops`
         Runtime input canonicalisation that rejects undeclared casillas through
         these helpers.
-    :mod:`application.modelo._registry_helpers`
+    :mod:`application.modelo.registry_helpers`
         Application boundary that refuses non-canonical casilla metadata tokens.
 """
 

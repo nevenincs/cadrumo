@@ -493,7 +493,7 @@ def unrouted_ledger_renta_income_quantities(
     is precisely the silent under-declaration the screens exist to prevent.
 
     Alternative MEASURES of one quantity are excluded
-    (:data:`_RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS`): a revision picks one
+    (:data:`RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS`): a revision picks one
     income measure and omitting the other two is correct, so demanding all three
     would fire on every revision and train the operator to ignore the advisory.
     Only a genuinely independent quantity is screened.

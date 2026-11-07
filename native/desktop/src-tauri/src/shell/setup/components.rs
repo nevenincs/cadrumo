@@ -60,6 +60,7 @@ use cadrumo_application::{
         installation::installation_config,
         items::{Destination, ItemId, Locations, PROGRAM_PART},
         local_ai::{
+            NotRunningCause,
             hardware::Hardware,
             models::{LocalModels, ModelName},
         },
@@ -1085,7 +1086,11 @@ fn run_setup(
         // No command returns how a setup ended, so a setup that failed, in its planning
         // or later, records why here, once.
         if let Some((item, category)) = failed {
-            shared.reports.error(&setup_failed(item, category));
+            shared.reports.error(&setup_failed(
+                item,
+                category,
+                report.failure_cause.as_deref(),
+            ));
         }
         return;
     }
@@ -1155,19 +1160,37 @@ fn take_event(track: &mut SetupTrack, event: Event) {
     }
 }
 
-/// What diagnostics keep of a setup that ended failed: the item, and the category the
-/// window words.
-fn setup_failed(item: ItemId, category: FailureCategory) -> ApplicationError {
+/// What diagnostics keep of a setup that ended failed: the item, the category the
+/// window words and, for `program_not_running`, which start, wait or request ran out or
+/// broke, so a host too busy to answer in time reads apart from a missing program.
+fn setup_failed(
+    item: ItemId,
+    category: FailureCategory,
+    cause: Option<&NotRunningCause>,
+) -> ApplicationError {
     let reason = match item {
         ItemId::Browser => "setup_browser_failed",
         ItemId::LocalAi => "setup_local_ai_failed",
     };
+    let mut worded = ApplicationError::new(ErrorCode::SetupFailed, Operation::Cli)
+        .with_reason(category.as_str());
+    if let Some(cause) = cause {
+        let mut why = ApplicationError::new(ErrorCode::SetupFailed, Operation::Cli)
+            .with_reason(cause.reason());
+        if let Some(start) = cause.latest_start() {
+            why = why.caused_by(
+                ApplicationError::new(ErrorCode::SetupFailed, Operation::Cli)
+                    .with_reason(start.reason()),
+            );
+        }
+        if let Some(kind) = cause.io_kind() {
+            why = why.caused_by(std::io::Error::from(kind));
+        }
+        worded = worded.caused_by(why);
+    }
     ApplicationError::new(ErrorCode::SetupFailed, Operation::Cli)
         .with_reason(reason)
-        .caused_by(
-            ApplicationError::new(ErrorCode::SetupFailed, Operation::Cli)
-                .with_reason(category.as_str()),
-        )
+        .caused_by(worded)
 }
 
 /// Ends a setup the person cancelled before approving anything.

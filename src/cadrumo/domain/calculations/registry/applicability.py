@@ -556,7 +556,7 @@ def derive_modelo_applicability(
     rule = _modelo_applicability_rule(modelo, authority=authority, operation=operation)
     if rule is None:
         return incomplete_applicability(modelo, unruled=True)
-    return rule.evaluate(profile, ledger_payer_facts=ledger_payer_facts)
+    return rule.evaluate(profile, ledger_payer_facts=ledger_payer_facts, operation=operation)
 
 
 def derive_taxpayer_files_economic_activity(profile: TaxpayerProfile) -> bool | None:

@@ -1,13 +1,14 @@
 """Every generated fixture family, declared once: producer, inputs, outputs and check.
 
-A family's output root is data. A generated family writes into the host's build
-tree and is removable; a family whose outputs were committed in place would name
+A family's output root is data. A generated window family writes into the
+window projections of the selected CMake build tree, named by ``{window}``, and
+is removable; a family whose outputs were committed in place would name
 its source directory and set ``committed``, and the code that seeds, stamps or
 checks them would not change.
 
 Commands are argument vectors. ``{python}`` stands for the interpreter running
-this tooling, and ``{output}`` for the scratch directory a determinism run
-writes into. Every command runs from the repository root.
+this tooling, ``{output}`` for the scratch directory a determinism run
+writes into, and ``{window}`` for the window projections' directory. Every command runs from the repository root.
 """
 
 from __future__ import annotations
@@ -16,7 +17,7 @@ from dataclasses import dataclass
 from typing import Final
 
 from ..first_party_source import PRODUCT_SOURCE_ROOTS
-from .location import window_projections
+from .location import WINDOW_ROOT
 
 PYTHON: Final[str] = "{python}"
 OUTPUT: Final[str] = "{output}"
@@ -136,7 +137,7 @@ def _python_producer(
         inputs=inputs,
         producer=Command(entry),
         check=(Command((*entry, "--check")),),
-        output_root=window_projections(),
+        output_root=WINDOW_ROOT,
         outputs=tuple(f"{name}/{output}" for output in outputs),
         committed=False,
         determinism=Command((*entry, "--output", OUTPUT)),
@@ -170,9 +171,12 @@ def _script(
 
 _MODELO_PRODUCER: Final = f"{_SCRIPTS}/modelo_fixtures.py"
 _MODELO_DRIVER: Final = f"{_SCRIPTS}/modelo-fixtures.mjs"
+#: The module bound's one definition, which the producer sizes its modules within and reports, and the driver's
+#: refusal of a generated module past it.
+_MODULE_BOUND: Final = ("dev/quality/typescript_module_size.py", f"{_SCRIPTS}/generated-module-bound.mjs")
 #: The Modelo wire types and the envelopes read the same application, host sources and personas.
 _MODELO_INPUTS: Final = (
-    *_common(_MODELO_PRODUCER, _MODELO_DRIVER),
+    *_common(_MODELO_PRODUCER, _MODELO_DRIVER, *_MODULE_BOUND),
     InputGroup(
         "host-source",
         (
@@ -193,11 +197,11 @@ FAMILIES: Final[tuple[FixtureFamily, ...]] = (
         name="modelo-envelopes",
         summary="The window's Modelo scenario envelopes, read through the application for the catalogue's personas.",
         inputs=_MODELO_INPUTS,
-        producer=Command(("node", _MODELO_DRIVER, "--envelopes")),
+        producer=Command(("node", _MODELO_DRIVER, "--envelopes", "--fixtures", WINDOW_ROOT)),
         # Its check validates a seeded envelope against its model, and has nothing to check while none is seeded;
         # it does not prove the stored bytes, which the determinism build and the tests that read them do.
-        check=(Command(("node", _MODELO_DRIVER, "--envelopes", "--check")),),
-        output_root=window_projections(),
+        check=(Command(("node", _MODELO_DRIVER, "--envelopes", "--check", "--fixtures", WINDOW_ROOT)),),
+        output_root=WINDOW_ROOT,
         outputs=("modelo/*.json",),
         committed=False,
         determinism=Command(_python_script(_MODELO_PRODUCER, "envelopes", OUTPUT)),
@@ -210,7 +214,7 @@ FAMILIES: Final[tuple[FixtureFamily, ...]] = (
         producer=Command(("node", _MODELO_DRIVER, "--contract")),
         check=(Command(("node", _MODELO_DRIVER, "--contract", "--check")),),
         output_root=f"{FRONTEND}/src",
-        outputs=("shell/modeloContract.ts", "shell/relayBounds.ts"),
+        outputs=("shell/modeloContract/*.ts", "shell/relayBounds.ts", "shell/moduleBound.json"),
         determinism=Command(("node", _MODELO_DRIVER, "--contract", "--output", OUTPUT)),
         prerequisites=(_FRONTEND_PACKAGES,),
         check_proves_outputs=True,
@@ -281,6 +285,18 @@ FAMILIES: Final[tuple[FixtureFamily, ...]] = (
         support=(f"{_ASSET_TESTS}/served_words_recording_support.py",),
     ),
     _script(
+        "assets-register",
+        "assets_register.py",
+        ("assetsRegister.json",),
+        "What the register answers for the Assets fixtures' scenario register, replayed from its steps.",
+        questions="dev/fixtures/assets-register-scenario",
+        support=(
+            f"{_ASSET_TESTS}/register_recording_support.py",
+            f"{_ASSET_TESTS}/register_support.py",
+            f"{_ASSET_TESTS}/ledger_support.py",
+        ),
+    ),
+    _script(
         "ledger-entry-options",
         "ledger_entry_options.py",
         ("ledgerEntryOptions.json",),
@@ -295,6 +311,15 @@ FAMILIES: Final[tuple[FixtureFamily, ...]] = (
         check=(Command(_python_module("dev.docs.sequences", "seeds", "--check")),),
     ),
 )
+
+
+def window_families(families: tuple[FixtureFamily, ...] = FAMILIES) -> tuple[FixtureFamily, ...]:
+    """The generated families whose outputs are the window projections the desktop frontend imports."""
+    return tuple(
+        family
+        for family in families
+        if family.producer is not None and not family.committed and family.output_root == WINDOW_ROOT
+    )
 
 
 def family_named(name: str, families: tuple[FixtureFamily, ...] = FAMILIES) -> FixtureFamily:

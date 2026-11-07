@@ -26,13 +26,13 @@ import {
   MODELO_DEFINITIONS,
   MODELO_EDIT_DEFINITIONS,
   MODELO_STORED_SUBJECT_DEFINITIONS,
-  type ModeloCasillaHelpProjectionV1,
   type ModeloContracts,
-  type ModeloDeclarationsListProjectionV1,
-  type ModeloEditOperatorInputV2,
-  type ModeloWorkbenchFormProjectionV1,
-  type OutputLanguage,
-} from "./modeloContract";
+} from "./modeloContract/contracts";
+import { type OutputLanguage } from "./modeloContract/modelo";
+import { type ModeloDeclarationsListProjectionV1 } from "./modeloContract/modeloDeclarations";
+import { type ModeloEditOperatorInputV2 } from "./modeloContract/modeloEdit";
+import { type ModeloCasillaHelpProjectionV1 } from "./modeloContract/modeloWorkCasillaHelp";
+import { type ModeloWorkbenchFormProjectionV1 } from "./modeloContract/modeloWorkForm";
 
 export type ModeloDefinitionId = (typeof MODELO_DEFINITIONS)[number];
 export function isModeloDefinition(id: string): id is ModeloDefinitionId {

@@ -5,12 +5,12 @@ import {
   type LedgerErrorDetail,
 } from "../../../shell/ledger";
 import type { ModeloPort } from "../../../shell/modelo";
+import type { OutputLanguage } from "../../../shell/modeloContract/modelo";
+import type { CreditResolutionRowProjection } from "../../../shell/modeloContract/modeloWork";
 import type {
-  CreditResolutionRowProjection,
   ModeloFormIssueLine,
   ModeloWorkbenchFormProjectionV1,
-  OutputLanguage,
-} from "../../../shell/modeloContract";
+} from "../../../shell/modeloContract/modeloWorkForm";
 
 // The operator's answers to the source disagreements one calculation holds,
 // as the application lists them. Which line offers to accept or to revoke,

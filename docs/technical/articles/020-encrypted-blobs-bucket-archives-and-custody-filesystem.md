@@ -63,8 +63,8 @@ All 24 assigned files were read in full across pages 1–9.
 - aes_gcm.py (71 lines) (`src/cadrumo/adapters/persistence/storage/crypto/aes_gcm.py`)
 - encrypted_columns.py (192 lines) (`src/cadrumo/adapters/persistence/storage/crypto/encrypted_columns.py`)
 - custody/__init__.py (6 lines) (`src/cadrumo/adapters/persistence/storage/custody/__init__.py`)
-- _capsule_data.py (235 lines) (`src/cadrumo/adapters/persistence/storage/custody/capsule_data.py`)
-- _capsule_filesystem.py (319 lines) (`src/cadrumo/adapters/persistence/storage/custody/capsule_filesystem.py`)
-- _filesystem_records.py (498 lines) (`src/cadrumo/adapters/persistence/storage/custody/filesystem_records.py`)
-- _inventory.py (400 lines) (`src/cadrumo/adapters/persistence/storage/custody/inventory.py`)
+- capsule_data.py (235 lines) (`src/cadrumo/adapters/persistence/storage/custody/capsule_data.py`)
+- capsule_filesystem.py (319 lines) (`src/cadrumo/adapters/persistence/storage/custody/capsule_filesystem.py`)
+- filesystem_records.py (498 lines) (`src/cadrumo/adapters/persistence/storage/custody/filesystem_records.py`)
+- inventory.py (400 lines) (`src/cadrumo/adapters/persistence/storage/custody/inventory.py`)
 <!-- /preserved:article -->

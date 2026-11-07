@@ -302,6 +302,8 @@ def evaluate_applicability_filter(filter_name: str, profile: TaxpayerProfile) ->
 
     Each filter name a registry predicate may cite has one entry here; any other
     name is refused rather than silently treated as applicable or not.
+
+    ``profile`` is a :class:`TaxpayerProfile`.
     """
     if not filter_name:
         return True

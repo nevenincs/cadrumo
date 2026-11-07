@@ -24,6 +24,7 @@ as_of = { year = "horizon", month = 2, day = 16 }
 "name" = { identity = "asalariada.titular", field = "name" }
 "surnames" = { identity = "asalariada.titular", field = "surnames" }
 "fiscal-residency" = "resident_irpf"
+"enrollment-large-company" = false
 "tax-residence-jurisdiction-scope" = "common_regime"
 "tax-residence-ccaa" = "madrid"
 "address-postcode" = "28039"

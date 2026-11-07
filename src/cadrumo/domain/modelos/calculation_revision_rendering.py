@@ -121,7 +121,10 @@ REGISTRY_SERIALIZER = RegistrySerializerMemo()
 
 
 def registry_payload(snapshot: RegistrySnapshot) -> dict[str, object]:
-    """Serialize a registry snapshot to a JSON-mode mapping."""
+    """Serialize a registry snapshot to a JSON-mode mapping.
+
+    ``snapshot`` is a :class:`RegistrySnapshot`.
+    """
     return _STRING_MAPPING_ADAPTER.validate_python(
         REGISTRY_SERIALIZER.serializer().to_python(snapshot, mode="json", by_alias=False, exclude_computed_fields=True)
     )
