@@ -17,6 +17,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     ExportRecordDefinition,
 )
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..conformance.registry_schema_support import committed_registry_tree
@@ -67,7 +68,9 @@ def test_binding_derived_export_fields_preserve_enum_kind() -> None:
 
 def test_m720_binding_fields_remain_visible_when_a_resolved_revision_is_derived_again() -> None:
     """Every casilla-keyed consumer may safely derive the real M720 layout first."""
-    revision = compiled_bundled_authority().snapshot("720", filing_year=2025, period="0A").revision
+    revision = (
+        compiled_bundled_authority().snapshot("720", filing_year=filing_year_envelope().horizon, period="0A").revision
+    )
     binding_fields = tuple(
         field
         for layout in revision.export_layouts
@@ -192,8 +195,8 @@ def _minimal_revision(
     return ModeloRevision(
         id="test-revision",
         localization_key="test.schema.revision.test-revision.label",
-        valid_from=date(2026, 1, 1),
-        period_selector=PeriodSelector(years=(2026,), periods=("1T",)),
+        valid_from=date(filing_year_envelope().horizon, 1, 1),
+        period_selector=PeriodSelector(years=(filing_year_envelope().horizon,), periods=("1T",)),
         legal_refs=(_LEGAL_REF,),
         source_refs=(_SOURCE_REF,),
         bindings=bindings,

@@ -6,6 +6,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ..casilla_order_review import (
     CasillaOrderReport,
     RevisionCasillaOrder,
@@ -19,6 +21,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _LEGAL_REF = "ley-58-2003:art-29"
 _SOURCE_REF = "aeat-manual"
+# Two consecutive edition labels for the planted modelos.
+_FIRST = str(filing_year_envelope().horizon - 1)
+_SECOND = str(filing_year_envelope().horizon)
 
 
 def _casilla_fragment(revision_id: str, rows: tuple[tuple[str, str], ...]) -> str:
@@ -108,22 +113,22 @@ def test_additions_removals_and_content_changes_do_not_hide_retained_order(tmp_p
     reference = _modelo(
         tmp_path / "accepted",
         (
-            _revision("2024", (("0001", "1"), ("0002", "2"), ("0003", "3"))),
-            _revision("2025", None, baseline="2024"),
+            _revision(_FIRST, (("0001", "1"), ("0002", "2"), ("0003", "3"))),
+            _revision(_SECOND, None, baseline=_FIRST),
         ),
     )
     candidate = _modelo(
         tmp_path / "candidate",
         (
-            _revision("2024", (("0002", "20"), ("0003", "3"), ("0004", "4"))),
-            _revision("2025", None, baseline="2024"),
+            _revision(_FIRST, (("0002", "20"), ("0003", "3"), ("0004", "4"))),
+            _revision(_SECOND, None, baseline=_FIRST),
         ),
     )
 
     report = review_casilla_order(reference, candidate)
 
     assert report.passed
-    assert report.common_revisions == ("2024", "2025")
+    assert report.common_revisions == (_FIRST, _SECOND)
     for comparison in report.comparisons:
         assert comparison.retained_reference_ids == ("0002", "0003")
         assert comparison.retained_candidate_ids == ("0002", "0003")
@@ -134,11 +139,11 @@ def test_additions_removals_and_content_changes_do_not_hide_retained_order(tmp_p
 def test_explicit_id_rename_keeps_the_retained_order_and_is_reported(tmp_path: Path) -> None:
     reference = _modelo(
         tmp_path / "accepted",
-        (_revision("2024", (("0001", "1"), ("0002", "2"))),),
+        (_revision(_FIRST, (("0001", "1"), ("0002", "2"))),),
     )
     candidate = _modelo(
         tmp_path / "candidate",
-        (_revision("2024", (("0004", "1"), ("0002", "2"))),),
+        (_revision(_FIRST, (("0004", "1"), ("0002", "2"))),),
     )
 
     report = review_casilla_order(reference, candidate, renames=(("0001", "0004"),))
@@ -154,15 +159,15 @@ def test_baseline_addition_can_expose_successor_position_drift(tmp_path: Path) -
     reference = _modelo(
         tmp_path / "accepted",
         (
-            _revision("2024", (("0001", "1"), ("0002", "2"), ("0003", "3"))),
-            _revision("2025", None, baseline="2024", positions=positions),
+            _revision(_FIRST, (("0001", "1"), ("0002", "2"), ("0003", "3"))),
+            _revision(_SECOND, None, baseline=_FIRST, positions=positions),
         ),
     )
     candidate = _modelo(
         tmp_path / "candidate",
         (
-            _revision("2024", (("0004", "4"), ("0001", "1"), ("0002", "2"), ("0003", "3"))),
-            _revision("2025", None, baseline="2024", positions=positions),
+            _revision(_FIRST, (("0004", "4"), ("0001", "1"), ("0002", "2"), ("0003", "3"))),
+            _revision(_SECOND, None, baseline=_FIRST, positions=positions),
         ),
     )
 
@@ -188,11 +193,11 @@ def test_baseline_addition_can_expose_successor_position_drift(tmp_path: Path) -
 def test_unknown_or_ambiguous_rename_maps_are_refused(tmp_path: Path, renames: tuple[tuple[str, str], ...]) -> None:
     reference = _modelo(
         tmp_path / "accepted",
-        (_revision("2024", (("0001", "1"), ("0002", "2"))),),
+        (_revision(_FIRST, (("0001", "1"), ("0002", "2"))),),
     )
     candidate = _modelo(
         tmp_path / "candidate",
-        (_revision("2024", (("0003", "3"), ("0004", "4"))),),
+        (_revision(_FIRST, (("0003", "3"), ("0004", "4"))),),
     )
 
     with pytest.raises(ValueError):
@@ -202,11 +207,11 @@ def test_unknown_or_ambiguous_rename_maps_are_refused(tmp_path: Path, renames: t
 def test_rename_that_collides_with_a_member_in_the_same_revision_is_refused(tmp_path: Path) -> None:
     reference = _modelo(
         tmp_path / "accepted",
-        (_revision("2024", (("0001", "1"), ("0004", "4"))),),
+        (_revision(_FIRST, (("0001", "1"), ("0004", "4"))),),
     )
     candidate = _modelo(
         tmp_path / "candidate",
-        (_revision("2024", (("0004", "4"), ("0002", "2"))),),
+        (_revision(_FIRST, (("0004", "4"), ("0002", "2"))),),
     )
 
     with pytest.raises(ValueError, match="collides in reference revision"):
@@ -217,20 +222,20 @@ def test_missing_reference_revision_makes_coverage_incomplete(tmp_path: Path) ->
     reference = _modelo(
         tmp_path / "accepted",
         (
-            _revision("2024", (("0001", "1"),)),
-            _revision("2025", (("0002", "2"),)),
+            _revision(_FIRST, (("0001", "1"),)),
+            _revision(_SECOND, (("0002", "2"),)),
         ),
     )
     candidate = _modelo(
         tmp_path / "candidate",
-        (_revision("2024", (("0001", "1"),)),),
+        (_revision(_FIRST, (("0001", "1"),)),),
     )
 
     report = review_casilla_order(reference, candidate)
 
     assert report.status == "incomplete"
     assert not report.passed
-    assert report.missing_candidate_revisions == ("2025",)
+    assert report.missing_candidate_revisions == (_SECOND,)
 
 
 def test_nonempty_revision_with_no_retained_members_is_incomplete_even_with_a_later_rename(
@@ -239,15 +244,15 @@ def test_nonempty_revision_with_no_retained_members_is_incomplete_even_with_a_la
     reference = _modelo(
         tmp_path / "accepted",
         (
-            _revision("2024", (("0001", "1"),)),
-            _revision("2025", (("0001", "1"),)),
+            _revision(_FIRST, (("0001", "1"),)),
+            _revision(_SECOND, (("0001", "1"),)),
         ),
     )
     candidate = _modelo(
         tmp_path / "candidate",
         (
-            _revision("2024", (("0003", "3"),)),
-            _revision("2025", (("0004", "4"),)),
+            _revision(_FIRST, (("0003", "3"),)),
+            _revision(_SECOND, (("0004", "4"),)),
         ),
     )
 
@@ -262,12 +267,12 @@ def test_nonempty_revision_with_no_retained_members_is_incomplete_even_with_a_la
 def test_modelo_identity_mismatch_is_refused(tmp_path: Path) -> None:
     reference = _modelo(
         tmp_path / "accepted",
-        (_revision("2024", (("0001", "1"),)),),
+        (_revision(_FIRST, (("0001", "1"),)),),
         modelo_id="999",
     )
     candidate = _modelo(
         tmp_path / "candidate",
-        (_revision("2024", (("0001", "1"),)),),
+        (_revision(_FIRST, (("0001", "1"),)),),
         modelo_id="998",
     )
 
@@ -278,11 +283,11 @@ def test_modelo_identity_mismatch_is_refused(tmp_path: Path) -> None:
 def test_cli_accepts_repeatable_rename_syntax(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     reference = _modelo(
         tmp_path / "accepted",
-        (_revision("2024", (("0001", "1"),)),),
+        (_revision(_FIRST, (("0001", "1"),)),),
     )
     candidate = _modelo(
         tmp_path / "candidate",
-        (_revision("2024", (("0004", "4"),)),),
+        (_revision(_FIRST, (("0004", "4"),)),),
     )
 
     result = main(["--reference", str(reference), "--candidate", str(candidate), "--rename", "0001=0004"])
@@ -292,10 +297,10 @@ def test_cli_accepts_repeatable_rename_syntax(tmp_path: Path, capsys: pytest.Cap
 
 
 def test_cli_report_bounds_large_drift_details() -> None:
-    reference_ids = tuple(f"{index:04d}" for index in range(2000))
+    reference_ids = tuple(f"{index:04d}" for index in range(2_000))
     candidate_ids = (reference_ids[1], reference_ids[0], *reference_ids[2:])
     comparison = RevisionCasillaOrder(
-        revision_id="2025",
+        revision_id=_SECOND,
         reference_ids=reference_ids,
         mapped_reference_ids=reference_ids,
         candidate_ids=candidate_ids,
@@ -315,7 +320,7 @@ def test_cli_report_bounds_large_drift_details() -> None:
         candidate_directory="candidate",
         scope="casilla-id-order-only",
         renames=(),
-        common_revisions=("2025",),
+        common_revisions=(_SECOND,),
         missing_candidate_revisions=(),
         candidate_only_revisions=(),
         comparisons=(comparison,),
