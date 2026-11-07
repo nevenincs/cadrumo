@@ -13,7 +13,7 @@ related:
   - '[[2026-10-25-agent-owned-models-adr]]'
 modified: '2026-11-07'
 body_schema: body-v2
-body_hash: 'sha256:73999edb41f81a299df8ad8c490995ec2f86f7f65d38884143614df049901846'
+body_hash: 'sha256:7af024ea91a92626c24c5373535629e4bdf86dbde7ffbb757d1cbc41da302303'
 ---
 
 # `local-inference-engine` plan
@@ -102,6 +102,7 @@ Persist one local engine setting with placement, pass the llama.cpp base URL to 
 - [ ] `P04.S22` - Add the local engine and placement words in en, es, ca and hu through the dev.locales workflow with informal singular address, registered as desktop interface keys (repo cadrumo, executor vaultspec-standard-executor, Opus review before the Step closes, lands in feature/tui once verified with tui compiling, the desktop app working and a root build slot from the coordinator); `src/cadrumo_agent_service/locales, dev/locales/desktop_interface_keys.py`.
 - [ ] `P04.S23` - Add one engine selector and a placement switch rendered through t(), filtering catalogLanes by the selected engine, with every other local model surface unchanged (repo cadrumo, executor vaultspec-standard-executor, Opus review before the Step closes, lands in feature/tui once verified with tui compiling, the desktop app working and a root build slot from the coordinator); `native/desktop/frontend/src/components/settings/LocalModels.tsx, native/desktop/frontend/src/components/setup/LocalAi.tsx, native/desktop/frontend/src/shell/localModelLanes.ts`.
 - [ ] `P04.S32` - Make the agent service accept declared catalogue schema 6 and its per-model artefacts field, typed and refusing unknown fields, together with the P02.S03 agent landing, because the service pins schema 5 and refuses unknown model fields, so the bundled agent's v6 catalogue would read as CATALOG_MALFORMED and break provider settings (repo cadrumo, executor vaultspec-standard-executor, lands in feature/tui in the same slot as P02.S03 lands in the cadrumo-agent main, with tui compiling and the desktop app working); `src/cadrumo_agent_service/providers/domain/catalog.py, src/cadrumo_agent_service/providers/domain/tests/test_catalog.py, src/cadrumo_agent_service/adapters/agent_provider_catalog.py`.
+- [x] `P04.S33` - Serve a provider catalog read that outlived its request to the requests that follow, keying the kept read by the lease's value instead of the lease object, and wait 3.0 s rather than 1.5 s, because every claim replaces the client's lease object (the catalog read's own store claim among them), so a cold read past its bound was kept under a lease no request matched and each retry started over and answered busy, which kept the packaged window's provider list from loading (repo cadrumo, executor orchestrator, lands in feature/tui with P03.S16 and P03.S17); `src/cadrumo_agent_service/service_administration.py, src/cadrumo_agent_service/service_support.py, src/cadrumo_agent_service/host/tests/test_catalog_read_lease_refresh.py`.
 
 ### Phase `P05` - Verification and acceptance (repo cadrumo)
 

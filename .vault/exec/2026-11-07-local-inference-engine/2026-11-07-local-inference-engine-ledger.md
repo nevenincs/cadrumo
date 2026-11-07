@@ -5,7 +5,7 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:ca880e983c9504276110158037f8c75ff090b7681c80d9b443c12724dac72aa3'
+body_hash: 'sha256:a95ad669eff609779e65425875220d1e5dbf543695590f260773ca09edc35aa8'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -171,6 +171,12 @@ related:
 - `S17` `M` `native/desktop/src-tauri/src/logs/severity.rs`
 - `S17` `M` `native/manager/src/diagnostics.rs`
 - `S17` `verify:` `rustfmt --edition 2024 --check on every touched Rust file` -> `pass`
+- `S33` `M` `src/cadrumo_agent_service/service_administration.py`
+- `S33` `M` `src/cadrumo_agent_service/service_support.py`
+- `S33` `A` `src/cadrumo_agent_service/host/tests/test_catalog_read_lease_refresh.py`
+- `S33` `verify:` `pytest src/cadrumo_agent_service (706)` -> `pass`
+- `S33` `verify:` `test_catalog_read_lease_refresh fails on the object-identity key` -> `pass`
+- `S33` `verify:` `ruff check, ruff format --check, ty` -> `pass`
 
 ## Notes
 
