@@ -54,7 +54,9 @@ def scaffold(
     modelo_id: Annotated[str, typer.Argument(help="Three-digit AEAT modelo identifier, e.g. '410'.")],
     revision_id: Annotated[
         str,
-        typer.Argument(help="Revision identifier, e.g. '2026-y-siguientes'."),
+        typer.Argument(
+            help="Revision identifier: the first filing year it selects and its scope, e.g. '<year>-y-siguientes'."
+        ),
     ],
     valid_from: Annotated[str, typer.Option("--valid-from", help="Grounded applicability start date (YYYY-MM-DD).")],
     year_from: Annotated[int, typer.Option("--year-from", help="First filing year selected by this revision.")],

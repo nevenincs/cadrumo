@@ -200,7 +200,6 @@ def _signed_component_derivation(
         modelo=str(transport_profile.modelo),
         source_ref=str(transport_profile.source_ref),
         source_sha256=transport_profile.source_sha256,
-        epoch=transport_profile.design_epoch,
     )
     if component_policy is None:
         return None
@@ -227,7 +226,6 @@ def _signed_triple_derivation(
     triple_policy = signed_triple_policy_for(
         joined_field,
         modelo=str(transport_profile.modelo),
-        epoch=transport_profile.design_epoch,
         source_ref=str(transport_profile.source_ref),
         source_sha256=transport_profile.source_sha256,
     )
@@ -259,7 +257,6 @@ def _text_date_component_derivation(
     date_policy = text_date_component_policy_for(
         joined_field,
         modelo=str(transport_profile.modelo),
-        epoch=transport_profile.design_epoch,
         source_ref=str(transport_profile.source_ref),
         source_sha256=transport_profile.source_sha256,
     )

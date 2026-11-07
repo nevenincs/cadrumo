@@ -202,6 +202,7 @@ from typing import Final
 from pydantic import ValidationError as PydanticValidationError
 
 from cadrumo.core.external_constants import UTF_8_ENCODING
+from cadrumo.core.filing_year import FOUR_DIGIT_YEAR_FIRST
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.core.toml import TomlDecodeError, parse_toml, to_str_keyed_dict
@@ -264,7 +265,7 @@ _SAFE_SEGMENT: Final = re.compile(r"\A[A-Za-z0-9][A-Za-z0-9._-]*\Z")
 #: governance combination is legal. Built at import so a schema change that
 #: breaks the probe fails loudly here rather than surfacing later disguised as a
 #: refused governance stamp.
-_PROBE_PERIOD_SELECTOR: Final = PeriodSelector(year_from=2000, periods=("1T",))
+_PROBE_PERIOD_SELECTOR: Final = PeriodSelector(year_from=FOUR_DIGIT_YEAR_FIRST, periods=("1T",))
 
 #: Minimal localization key for the same probe revision. Never written and never
 #: resolved against a catalogue: the probe asks only whether a GOVERNANCE
@@ -993,7 +994,7 @@ def assert_schema_accepts(
         ModeloRevision(
             id=revision,
             localization_key=_PROBE_LOCALIZATION_KEY,
-            valid_from=date(2000, 1, 1),
+            valid_from=date(FOUR_DIGIT_YEAR_FIRST, 1, 1),
             period_selector=_PROBE_PERIOD_SELECTOR,
             legal_refs=("probe:art-1",),
             source_refs=("probe-source",),

@@ -23,7 +23,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.core.toml import read_toml
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import (
     ModeloId,
@@ -57,6 +57,9 @@ __all__ = [
 ]
 
 
+_MODELO: Final[str] = "303"
+
+
 @dataclass(frozen=True, slots=True)
 class DP30302EpochCoordinate:
     """One M303 filing coordinate whose selected snapshot admits one DP30302 design."""
@@ -67,13 +70,50 @@ class DP30302EpochCoordinate:
     epoch: str
 
 
-DP30302_EPOCH_COORDINATES: Final[tuple[DP30302EpochCoordinate, ...]] = (
-    DP30302EpochCoordinate("aeat-dr-303-2023", 2023, "4T", "2023"),
-    DP30302EpochCoordinate("aeat-dr-303-2024-early", 2024, "2T", "2024-early"),
-    DP30302EpochCoordinate("aeat-dr-303-2024-late", 2024, "3T", "2024-late"),
-    DP30302EpochCoordinate("aeat-dr-303-2025", 2025, "4T", "2025"),
-    DP30302EpochCoordinate("aeat-dr-303-2026", 2026, "4T", "2026"),
+#: The official M303 record designs whose DP30302 page this reviewed matrix covers, oldest first.
+_REVIEWED_DESIGNS: Final[tuple[SourceRefId, ...]] = (
+    "aeat-dr-303-2023",
+    "aeat-dr-303-2024-early",
+    "aeat-dr-303-2024-late",
+    "aeat-dr-303-2025",
+    "aeat-dr-303-2026",
 )
+_QUARTER_SUFFIX: Final[str] = "T"
+
+
+def _epoch_coordinates() -> tuple[DP30302EpochCoordinate, ...]:
+    """Place each reviewed design at a filing coordinate the published authority selects it for.
+
+    The coordinate is the newest authored M303 revision adopting the design, at
+    the first year its period selector spans and the last quarter it selects
+    there; the epoch is the design's own catalogued record-design epoch. A new
+    or re-cut edition adopting a reviewed design therefore needs no code edit.
+    """
+    coordinates: list[DP30302EpochCoordinate] = []
+    with bundled_indexed_authority().operation() as operation:
+        revisions = sorted(operation.modelo_directory(_MODELO).revisions, key=lambda revision: revision.valid_from)
+        adopted = {revision.id: operation.revision(_MODELO, revision.id).source_refs for revision in revisions}
+        for source_ref in _REVIEWED_DESIGNS:
+            adopting = [revision for revision in revisions if source_ref in adopted[revision.id]]
+            epoch = operation.source_reference(source_ref).record_design_epoch
+            if not adopting or epoch is None:
+                raise RegistryValidationError(
+                    f"DP30302 reviewed design {source_ref!r} is not an epoch-bearing design of an authored revision"
+                )
+            revision = adopting[-1]
+            filing_year = revision.valid_from.year
+            quarters = [
+                period
+                for period in revision.period_selector.periods_for_year(filing_year)
+                if period.endswith(_QUARTER_SUFFIX)
+            ]
+            if not quarters:
+                raise RegistryValidationError(f"DP30302 reviewed design {source_ref!r} has no selected quarter")
+            coordinates.append(DP30302EpochCoordinate(source_ref, filing_year, quarters[-1], epoch))
+    return tuple(coordinates)
+
+
+DP30302_EPOCH_COORDINATES: Final[tuple[DP30302EpochCoordinate, ...]] = _epoch_coordinates()
 DP30302_EPOCHS: Final[tuple[str, ...]] = tuple(coordinate.epoch for coordinate in DP30302_EPOCH_COORDINATES)
 
 _RESERVE_DESCRIPTION: Final[str] = "Reservado para la AEAT"
@@ -284,7 +324,7 @@ def load_dp30302_epoch_intermediates(
     intermediates: list[RecordDesignIntermediate] = []
     for coordinate in DP30302_EPOCH_COORDINATES:
         inspection = authority.inspect_revision(
-            "303",
+            _MODELO,
             filing_year=coordinate.filing_year,
             period=coordinate.period,
         )

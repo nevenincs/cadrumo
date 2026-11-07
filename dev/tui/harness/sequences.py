@@ -51,6 +51,7 @@ from cadrumo.core.config_support import TuiAppearance
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import output_language
 from cadrumo.core.operations import OperationFrontendProjection
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tui.components.dialogs import ConfirmScreen
@@ -99,10 +100,9 @@ _TYPED_SAMPLES: Final[Mapping[str, str]] = {
     "decimal": "100",
     "integer": "1",
     "ratio": "50",
-    "year": "2026",
     "text": "SINTETICO",
 }
-"""What the review walk types, by the box's value kind; a kind not listed is passed over."""
+"""What the review walk types, by the box's value kind; a kind not listed (except year) is passed over."""
 
 type _Walk = Callable[["SequenceScenario", Pilot[object]], Awaitable[None]]
 
@@ -364,12 +364,20 @@ async def _press_f8_with_nothing_to_confirm(scenario: SequenceScenario, pilot: P
     await _settle(pilot)
 
 
+def _typed_sample(data_type: str) -> str | None:
+    """Return what the review walk types into a box of this value kind; a year box takes the support horizon."""
+    if data_type == "year":
+        with bundled_indexed_authority().operation() as operation:
+            return str(operation.supported_filing_years().horizon)
+    return _TYPED_SAMPLES.get(data_type)
+
+
 async def _stage(
     scenario: SequenceScenario, pilot: Pilot[object], casilla_list: CasillaList, entry: CasillaListEntry
 ) -> bool:
     """Put a sample into one box's panel and keep it, or close the panel when the box or the value is refused."""
     field = entry.field
-    sample = _TYPED_SAMPLES.get(field.data_type)
+    sample = _typed_sample(field.data_type)
     if sample is None or field.editability not in TYPED_EDITABILITIES:
         return False
     editor = await _open_panel(pilot, casilla_list, entry)

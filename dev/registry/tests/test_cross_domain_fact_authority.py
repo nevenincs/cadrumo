@@ -26,17 +26,18 @@ from cadrumo.domain.iva.recargo_equivalencia import (
 from cadrumo.domain.transactions.volumen_ingresos import counts_toward_volumen_de_ingresos
 
 from ..analysis.cross_domain_fact_authority import (
-    CROSS_DOMAIN_FACT_PROBES,
     CrossDomainFactFindingKind,
     cross_domain_fact_findings,
+    cross_domain_fact_probes,
 )
+from ..compiler.authority import compiled_bundled_authority
 from ..compiler.convenio import convenio_authority_from_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _probe(domain: str):
-    return next(probe for probe in CROSS_DOMAIN_FACT_PROBES if probe.domain == domain)
+    return next(probe for probe in cross_domain_fact_probes(compiled_bundled_authority()) if probe.domain == domain)
 
 
 def test_live_cross_domain_facts_resolve_with_grounded_evidence_and_refuse_unsupported_applicability(
@@ -79,12 +80,13 @@ def test_cross_domain_consumers_preserve_the_authority_result_without_parallel_r
     assert projected_rate.source_refs == iva_rate.source_refs
 
     with bundled_indexed_authority().operation() as operation:
+        recargo_query = _probe("iva-recargo").query
         recargo = resolve_recargo_rate_for_applied_rate(
             Decimal("0.05"),
-            _probe("iva-recargo").query.effective_date,
+            recargo_query.effective_date,
             operation=operation,
         )
-        assert recargo == operation.resolve_governed_fact(_probe("iva-recargo").query)
+        assert recargo == operation.resolve_governed_fact(recargo_query)
         assert recargo_rate_record_from_fact(recargo).recargo_rate == Decimal("0.0062")
 
     income_exclusion = registry_authority.resolve_governed_fact(_probe("modelo-131-income-exclusion").query)
