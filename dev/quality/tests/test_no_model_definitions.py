@@ -142,6 +142,7 @@ _PRODUCT_ROOTS: Final = (
 )
 _TEST_SUPPORT: Final = REPO_ROOT / "src" / "cadrumo" / "tests"
 _DATA_ROOT: Final = REPO_ROOT / "native" / "component-pins"
+_PYTHON_FILES_FLOOR: Final = 2000
 _RUST_ROOTS: Final = (REPO_ROOT / "native" / "application", REPO_ROOT / "native" / "desktop")
 _TYPESCRIPT_ROOTS: Final = (REPO_ROOT / "native" / "desktop",)
 _TYPESCRIPT_SUFFIXES: Final = frozenset({".ts", ".tsx", ".mts", ".mjs", ".js"})
@@ -863,7 +864,7 @@ def test_a_python_licence_text_in_a_docstring_passes_but_the_same_literal_does_n
 
 def test_the_census_reads_every_kind_of_shipped_source() -> None:
     scanned, _ = _census()
-    assert scanned[Kind.PYTHON] > 2000, f"the census read only {scanned[Kind.PYTHON]} Python files"
+    assert scanned[Kind.PYTHON] > _PYTHON_FILES_FLOOR, f"the census read only {scanned[Kind.PYTHON]} Python files"
     assert (_DATA_ROOT / "local_ai_program.toml").is_file(), "the census missed the program pin data"
     assert scanned[Kind.TOML] >= 1
     assert scanned[Kind.RUST] > 100, f"the census read only {scanned[Kind.RUST]} Rust files"

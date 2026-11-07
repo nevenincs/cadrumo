@@ -27,6 +27,7 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
     casilla_continuity_locale_key,
     casilla_occurrence_locale_key,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 from dev.paths import REPO_ROOT
 
 from ..adjudications import (
@@ -57,6 +58,11 @@ _CHAIN_ID_ADAPTER = TypeAdapter(ContinuidadId)
 # exactly, or the scheme supersedes a landed stamp without saying so.
 _LANDED_CHAIN_ID = "irpf-aeip-centenario-del-hockey-1923-2023-aplicado"
 
+
+# Revisions of the family are the authored modelo 100 revisions; the newest pair is
+# the transition the legal-reference drift assertions look at.
+_REVISIONS = tuple(revision.id for revision in authored_revisions("100"))
+_PRIOR, _LATEST = _REVISIONS[-2:]
 
 _MODELOS_ROOT = REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
 _SHIPPED_ADJUDICATIONS = Path(__file__).resolve().parents[1] / "adjudications.toml"
@@ -108,7 +114,7 @@ def adjudicated(corpus):
 
 def test_extraction_reads_every_revision_of_the_family(inventory) -> None:
     """Every M100 revision carrying the family is read."""
-    assert inventory.revisions == ("2020", "2021", "2022", "2023", "2024", "2025")
+    assert inventory.revisions == _REVISIONS
     assert inventory.occurrences, "the anexo-A AEIP family must not be empty"
     assert len(inventory.events) > 1
     # Category rows are counted but never enrolled as programmes.
@@ -283,7 +289,7 @@ def test_a_stale_split_is_detected(inventory, corpus) -> None:
     ghost_slug_adjudications = AdjudicationSet(
         splits=(
             Split(
-                slug="ghost-programme", from_revision="2023", chain_id="irpf-aeip-ghost-aplicado", reason="synthetic"
+                slug="ghost-programme", from_revision=_PRIOR, chain_id="irpf-aeip-ghost-aplicado", reason="synthetic"
             ),
         ),
     )
@@ -565,7 +571,7 @@ def test_legal_refs_drift_is_classified_not_called_unchanged(inventory) -> None:
         pair
         for entry in plan.entries
         for pair in entry.pairs
-        if (pair.from_revision, pair.to_revision) == ("2024", "2025") and pair.evolution_kind != "retired"
+        if (pair.from_revision, pair.to_revision) == (_PRIOR, _LATEST) and pair.evolution_kind != "retired"
     ]
     assert crossing, "expected continuing chains spanning the 2024 -> 2025 boundary"
     assert all(pair.evolution_kind != "unchanged" for pair in crossing), (
@@ -594,10 +600,10 @@ def test_rendered_record_carries_the_target_revision_legal_refs(inventory) -> No
         pair
         for entry in plan.entries
         for pair in entry.pairs
-        if (pair.from_revision, pair.to_revision) == ("2024", "2025") and pair.evolution_kind != "retired"
+        if (pair.from_revision, pair.to_revision) == (_PRIOR, _LATEST) and pair.evolution_kind != "retired"
     )
     rendered = parse_toml(render_evolution_record(pair, casilla_id="0000"))
-    record = rendered["revisions"]["2025"]["casilla_continuidad_evolutions"][0]
+    record = rendered["revisions"][_LATEST]["casilla_continuidad_evolutions"][0]
     assert record["legal_refs"] == list(pair.legal_refs)
     assert len(record["legal_refs"]) > 1, "the 2025 rows carry more than the framework article"
 
@@ -627,15 +633,15 @@ def test_rendered_evolution_record_parses_as_toml() -> None:
     plan_pair = render_evolution_record(
         EvolutionPair(
             chain_id="irpf-aeip-example-aplicado",
-            from_revision="2023",
-            to_revision="2024",
+            from_revision=_PRIOR,
+            to_revision=_LATEST,
             evolution_kind="unchanged",
         ),
         casilla_id="1945",
         source_refs=("aeat-dr-100-2024-dictionary",),
     )
     parsed = parse_toml(plan_pair)
-    record = parsed["revisions"]["2024"]["casilla_continuidad_evolutions"][0]
+    record = parsed["revisions"][_LATEST]["casilla_continuidad_evolutions"][0]
     assert record["continuidad_id"] == "irpf-aeip-example-aplicado"
     assert record["from_revision"] != record["to_revision"]
     assert record["source_refs"] == ["aeat-dr-100-2024-dictionary"]
