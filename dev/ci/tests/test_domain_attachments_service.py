@@ -23,10 +23,13 @@ from cadrumo.domain.attachments.service import (
     link_attachment_invoice,
     link_attachment_transaction,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
+FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_CAPTURED_AT = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
+_CAPTURED_AT = datetime(FILING_YEAR, 6, 30, 9, 0, 0, tzinfo=UTC)
 # The store refuses a manifest from another profile bucket, so the fixture
 # names the same bucket the runtime profile provisions.
 _SERVICE_BUCKET_ID = "5c2d1e0a-7b8c-4d9e-8f01-2a3b4c5d6e7f"
@@ -241,8 +244,8 @@ def test_same_byte_reingestion_accumulates_links_and_keeps_the_first_capture(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SERVICE_BUCKET_ID):
         store = AttachmentStore()
         data = b"%PDF-1.4\nsame-byte evidence observed twice\n%%EOF"
-        first_capture = datetime(2026, 3, 1, 9, 0, tzinfo=UTC)
-        second_capture = datetime(2026, 4, 1, 9, 0, tzinfo=UTC)
+        first_capture = datetime(FILING_YEAR, 3, 1, 9, 0, tzinfo=UTC)
+        second_capture = datetime(FILING_YEAR, 4, 1, 9, 0, tzinfo=UTC)
 
         first = add_attachment(
             store,
@@ -309,7 +312,7 @@ def test_same_byte_merge_is_independent_of_ingestion_order(tmp_path: Path) -> No
                         source=AttachmentSource.LOCAL_FILE,
                         source_reference=f"source-{transaction_id}",
                         mime_type="application/pdf",
-                        captured_at=datetime(2026, 3, 1 + index, 9, 0, tzinfo=UTC),
+                        captured_at=datetime(FILING_YEAR, 3, 1 + index, 9, 0, tzinfo=UTC),
                         bucket_id=_SERVICE_BUCKET_ID,
                         link_transaction_ids=(transaction_id,),
                     ),
@@ -336,7 +339,7 @@ def test_repeated_identical_ingestion_is_a_stable_no_op(tmp_path: Path) -> None:
                 source=AttachmentSource.LOCAL_FILE,
                 source_reference="source-A",
                 mime_type="application/pdf",
-                captured_at=datetime(2026, 3, 1, 9, 0, tzinfo=UTC),
+                captured_at=datetime(FILING_YEAR, 3, 1, 9, 0, tzinfo=UTC),
                 bucket_id=_SERVICE_BUCKET_ID,
                 link_transaction_ids=("tx-A",),
             ),
@@ -350,7 +353,7 @@ def test_repeated_identical_ingestion_is_a_stable_no_op(tmp_path: Path) -> None:
                 source=AttachmentSource.LOCAL_FILE,
                 source_reference="source-A",
                 mime_type="application/pdf",
-                captured_at=datetime(2026, 3, 1, 9, 0, tzinfo=UTC),
+                captured_at=datetime(FILING_YEAR, 3, 1, 9, 0, tzinfo=UTC),
                 bucket_id=_SERVICE_BUCKET_ID,
                 link_transaction_ids=("tx-A",),
             ),

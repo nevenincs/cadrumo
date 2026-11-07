@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 BUCKET_ID = "30330300-0000-4000-8000-000000000700"
 # The catalogue is one encrypted object per bucket and the repository refuses
 # records from another bucket, so the fixture's records carry the same bucket
 # the repository is bound to.
 RECORD_BUCKET_ID = BUCKET_ID
-P_2024_2T = Period.from_year_and_code(2024, "2T")
+FILING_YEAR = filing_year_envelope().horizon
+PERIOD_2T = Period.from_year_and_code(FILING_YEAR, "2T")
 
 
 def hex_blob(seed: str) -> str:

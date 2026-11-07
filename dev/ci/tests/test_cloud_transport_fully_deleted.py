@@ -57,7 +57,10 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.tests.inventory import SRC_CADRUMO, non_test_package_python_files, repo_relative
+
+FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -357,7 +360,7 @@ def _agent_text_classifier_transport() -> str:
     from cadrumo.domain.transactions.llm import prompt_spec_with_every_spending_category
 
     with bundled_indexed_authority().operation() as operation:
-        spec = prompt_spec_with_every_spending_category(year=2025, operation=operation)
+        spec = prompt_spec_with_every_spending_category(year=FILING_YEAR, operation=operation)
         return _transport_of(TextLLMClassifier(spec=spec).decided_by)
 
 
@@ -389,7 +392,7 @@ def _agent_vision_classifier_transport() -> str:
     from cadrumo.domain.transactions.llm import prompt_spec_with_every_spending_category
 
     with bundled_indexed_authority().operation() as operation:
-        spec = prompt_spec_with_every_spending_category(year=2025, operation=operation)
+        spec = prompt_spec_with_every_spending_category(year=FILING_YEAR, operation=operation)
         return _transport_of(VisionLLMClassifier(spec=spec).decided_by)
 
 

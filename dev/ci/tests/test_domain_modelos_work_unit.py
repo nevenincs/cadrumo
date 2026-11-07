@@ -44,6 +44,7 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import RevisionId
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
@@ -54,17 +55,19 @@ from cadrumo.domain.modelos.work_unit import (
     derive_work_unit_id,
 )
 
+FILING_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-_T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
+_T0 = datetime(FILING_YEAR, 1, 15, 12, 0, 0, tzinfo=UTC)
 _DERIVATION_BUCKET_ID = "30330300-0000-4000-8000-000000000300"
 _ACTION_BUCKET_ID = "30330300-0000-4000-8000-000000000301"
 _WORK_UNIT_BUCKET_A_ID = "30330300-0000-4000-8000-0000000000a1"
 _WORK_UNIT_BUCKET_B_ID = "30330300-0000-4000-8000-0000000000b2"
 _WORK_UNIT_EVENT_BUCKET_ID = "30330300-0000-4000-8000-000000000303"
-_P_2026_1T = Period.from_year_and_code(2026, "1T")
-_P_2026_2T = Period.from_year_and_code(2026, "2T")
+_P_2026_1T = Period.from_year_and_code(FILING_YEAR, "1T")
+_P_2026_2T = Period.from_year_and_code(FILING_YEAR, "2T")
 
 
 @pytest.fixture
@@ -96,8 +99,8 @@ def test_derive_work_unit_id_is_64_char_lowercase_hex() -> None:
     wid = derive_work_unit_id(
         bucket_id=_DERIVATION_BUCKET_ID,
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=FILING_YEAR,
+        period=Period.from_year_and_code(FILING_YEAR, "1T"),
         revision_id="2026-y-siguientes",
     )
     assert len(wid) == 64
@@ -111,7 +114,7 @@ def test_derive_work_unit_id_is_deterministic() -> None:
         "bucket_id": _DERIVATION_BUCKET_ID,
         "modelo": "303",
         "filing_year": 2026,
-        "period": Period.from_year_and_code(2026, "1T"),
+        "period": Period.from_year_and_code(FILING_YEAR, "1T"),
         "revision_id": "2026-y-siguientes",
     }
     assert derive_work_unit_id(**args) == derive_work_unit_id(**args)
@@ -125,7 +128,7 @@ def test_derive_work_unit_id_distinguishes_buckets() -> None:
     base: dict[str, Any] = {
         "modelo": "303",
         "filing_year": 2026,
-        "period": Period.from_year_and_code(2026, "1T"),
+        "period": Period.from_year_and_code(FILING_YEAR, "1T"),
         "revision_id": "2026-y-siguientes",
     }
     a = derive_work_unit_id(bucket_id=_WORK_UNIT_BUCKET_A_ID, **base)
@@ -141,15 +144,15 @@ def test_derive_work_unit_id_normalises_case_on_modelo_and_period() -> None:
     canonical = derive_work_unit_id(
         bucket_id=_DERIVATION_BUCKET_ID,
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=FILING_YEAR,
+        period=Period.from_year_and_code(FILING_YEAR, "1T"),
         revision_id="2026-y-siguientes",
     )
     lower_period = derive_work_unit_id(
         bucket_id=_DERIVATION_BUCKET_ID,
         modelo="303",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1t"),
+        filing_year=FILING_YEAR,
+        period=Period.from_year_and_code(FILING_YEAR, "1t"),
         revision_id="2026-y-siguientes",
     )
     assert canonical == lower_period
@@ -247,7 +250,7 @@ def test_work_unit_is_strict_frozen_and_rejects_extras() -> None:
                 "bucket_id": unit.bucket_id,
                 "modelo": "303",
                 "filing_year": 2026,
-                "period": Period.from_year_and_code(2026, "1T"),
+                "period": Period.from_year_and_code(FILING_YEAR, "1T"),
                 "revision_id": "2026-y-siguientes",
                 "name": "303-2026-1T",
                 "created_at": _T0,
@@ -273,7 +276,7 @@ def test_work_unit_rejects_updated_before_created() -> None:
     """``updated_at`` must not precede ``created_at``."""
 
     earlier = _T0
-    later = datetime(2026, 1, 16, 12, 0, 0, tzinfo=UTC)
+    later = datetime(FILING_YEAR, 1, 16, 12, 0, 0, tzinfo=UTC)
     with pytest.raises(ValidationError, match=r"updated_at|created_at|precedes"):
         _build_unit(created_at=later, updated_at=earlier)
 
@@ -368,14 +371,14 @@ def test_list_work_units_filters_by_bucket_id(repo: WorkUnitCatalogueRepository)
                 _build_unit(
                     bucket_id=_WORK_UNIT_BUCKET_A_ID,
                     modelo="303",
-                    filing_year=2026,
+                    filing_year=FILING_YEAR,
                     period=_P_2026_1T,
                     revision_id="2026-y-siguientes",
                 ),
                 _build_unit(
                     bucket_id=_WORK_UNIT_BUCKET_B_ID,
                     modelo="303",
-                    filing_year=2026,
+                    filing_year=FILING_YEAR,
                     period=_P_2026_2T,
                     revision_id="2026-y-siguientes",
                 ),
@@ -409,7 +412,7 @@ def test_missing_work_unit_actions_raise_not_found(repo: WorkUnitCatalogueReposi
 
 def test_rename_work_unit_preserves_work_unit_id_and_bumps_updated_at(repo: WorkUnitCatalogueRepository) -> None:
     original = _create_action_work_unit(repo)
-    later = datetime(2026, 2, 1, 12, 0, 0, tzinfo=UTC)
+    later = datetime(FILING_YEAR, 2, 1, 12, 0, 0, tzinfo=UTC)
     renamed = rename_work_unit(
         original.work_unit_id,
         "renta-q1-2026-final",
@@ -434,7 +437,7 @@ def test_discard_work_unit_transitions_and_allows_omitted_reason(repo: WorkUnitC
     reasons remain ``None`` instead of being synthesised."""
 
     original = _create_action_work_unit(repo)
-    discard_time = datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC)
+    discard_time = datetime(FILING_YEAR, 3, 1, 12, 0, 0, tzinfo=UTC)
     discarded = discard_work_unit(
         original.work_unit_id,
         actor="operator-A",
@@ -454,7 +457,7 @@ def test_discard_work_unit_transitions_and_allows_omitted_reason(repo: WorkUnitC
         omitted_reason_unit.work_unit_id,
         actor="operator-A",
         ports=_lifecycle_ports(repo),
-        clock=datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC),
+        clock=datetime(FILING_YEAR, 3, 1, 12, 0, 0, tzinfo=UTC),
     )
     assert omitted_reason_discard.discard_reason is None
 
@@ -469,14 +472,14 @@ def test_discard_work_unit_raises_when_already_discarded(repo: WorkUnitCatalogue
         unit.work_unit_id,
         actor="operator-A",
         ports=_lifecycle_ports(repo),
-        clock=datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC),
+        clock=datetime(FILING_YEAR, 3, 1, 12, 0, 0, tzinfo=UTC),
     )
     with pytest.raises(WorkUnitAlreadyDiscardedError, match=r"work|unit|already|discarded"):
         discard_work_unit(
             unit.work_unit_id,
             actor="operator-B",
             ports=_lifecycle_ports(repo),
-            clock=datetime(2026, 3, 2, 12, 0, 0, tzinfo=UTC),
+            clock=datetime(FILING_YEAR, 3, 2, 12, 0, 0, tzinfo=UTC),
         )
 
 
@@ -490,7 +493,7 @@ def test_rename_refuses_to_mutate_a_discarded_work_unit(repo: WorkUnitCatalogueR
         unit.work_unit_id,
         actor="operator-A",
         ports=_lifecycle_ports(repo),
-        clock=datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC),
+        clock=datetime(FILING_YEAR, 3, 1, 12, 0, 0, tzinfo=UTC),
     )
     with pytest.raises(WorkUnitMutationRefusedError, match=r"discard|DISCARDED|state|mutation"):
         rename_work_unit(unit.work_unit_id, "new-name", actor="test-operator", ports=_lifecycle_ports(repo))
@@ -503,7 +506,7 @@ def test_list_work_units_respects_discarded_visibility_flag(repo: WorkUnitCatalo
         unit_to_discard.work_unit_id,
         actor="operator-A",
         ports=_lifecycle_ports(repo),
-        clock=datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC),
+        clock=datetime(FILING_YEAR, 3, 1, 12, 0, 0, tzinfo=UTC),
     )
     visible = list_work_units(ports=_lifecycle_ports(repo))
     assert {u.work_unit_id for u in visible} == {unit_draft.work_unit_id}
@@ -655,7 +658,7 @@ def test_rename_work_unit_emits_renamed_bucket_event_with_actor_and_names(
             "renta-q1-renamed",
             actor="auditor-B",
             ports=ports,
-            clock=datetime(2026, 2, 5, 12, 0, 0, tzinfo=UTC),
+            clock=datetime(FILING_YEAR, 2, 5, 12, 0, 0, tzinfo=UTC),
         )
         events = bv_repo.load().for_bucket(renamed.bucket_id)
         rename_events = [event for event in events if event.event_type is BucketEventType.MODELO_WORK_UNIT_RENAMED]
@@ -754,21 +757,21 @@ def test_work_unit_accepts_a_real_registry_revision_id() -> None:
 def _work_unit_with_revision(revision_id: str) -> WorkUnit:
     """Build a genuine 130/2026/1T work unit carrying ``revision_id``."""
     bucket_id = "7cc00000-0000-4000-8000-0000000000cc"
-    period = Period.from_year_and_code(2026, "1T")
+    period = Period.from_year_and_code(FILING_YEAR, "1T")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=bucket_id,
             modelo="130",
-            filing_year=2026,
+            filing_year=FILING_YEAR,
             period=period,
             revision_id=revision_id,
         ),
         bucket_id=bucket_id,
         name="130-2026-1T",
         modelo=ModeloCode("130"),
-        filing_year=2026,
+        filing_year=FILING_YEAR,
         period=period,
         revision_id=revision_id,
-        created_at=datetime(2026, 1, 1, tzinfo=UTC),
-        updated_at=datetime(2026, 1, 1, tzinfo=UTC),
+        created_at=datetime(FILING_YEAR, 1, 1, tzinfo=UTC),
+        updated_at=datetime(FILING_YEAR, 1, 1, tzinfo=UTC),
     )

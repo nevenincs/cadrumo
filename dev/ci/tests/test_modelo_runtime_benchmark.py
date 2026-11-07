@@ -15,6 +15,7 @@ from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from cadrumo.adapters.persistence.storage.envelope.contract import Envelope
 from cadrumo.core.classification.policies import SensitivityClass
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from cadrumo.entrypoints.cli.tests import cli_runner
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -30,6 +31,8 @@ from ..modelo_runtime_benchmark import (
     observe_worker_composition,
     record_runtime_tree,
 )
+
+FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -199,7 +202,7 @@ def test_actual_catalogue_envelope_decode_is_unchanged_and_hooks_restore(tmp_pat
     catalogue = CalculationRevisionCatalogue()
     original = Envelope[CalculationRevisionCatalogue](
         schema_version=1,
-        written_at=datetime(2026, 4, 1, tzinfo=UTC),
+        written_at=datetime(FILING_YEAR, 4, 1, tzinfo=UTC),
         classification=SensitivityClass.FINANCIAL,
         payload=catalogue,
     )

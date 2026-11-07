@@ -13,6 +13,7 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.adapters.persistence.storage.bucket.directory_layout import bucket_paths
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
@@ -21,16 +22,18 @@ from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
+FILING_YEAR = filing_year_envelope().horizon
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
-_NOW = datetime(2026, 5, 26, 10, 0, tzinfo=UTC)
+_NOW = datetime(FILING_YEAR, 5, 26, 10, 0, tzinfo=UTC)
 
 
 def _transaction(source_path: Path) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id="runtime-row-1",
-        booked_date=date(2026, 4, 5),
-        value_date=date(2026, 4, 5),
+        booked_date=date(FILING_YEAR, 4, 5),
+        value_date=date(FILING_YEAR, 4, 5),
         amount=Decimal("121.00"),
         currency="EUR",
         counterparty="Proveedor SL",
@@ -65,7 +68,7 @@ def _invoice(bucket_id: str) -> Invoice:
                 "bucket_id": bucket_id,
                 "kind": InvoiceKind.RECEIVED,
                 "invoice_number": "RUNTIME-001",
-                "issued_at": date(2026, 4, 1),
+                "issued_at": date(FILING_YEAR, 4, 1),
                 "counterparty_name": "Proveedor SL",
                 "counterparty_tax_id": "B00015016",
                 "counterparty_country": "ES",

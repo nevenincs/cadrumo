@@ -112,6 +112,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
@@ -129,6 +130,8 @@ from cadrumo.tests.log_records import delivered_records
 
 from ..perf_measurement import wall_advisory_message
 from .ledger_benchmark_support import classified_business_transaction, dates_across_year, p95
+
+FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -169,7 +172,7 @@ _P95_WEDGE_WALL_TO_CPU_RATIO = 4.0
 #: ``src/cadrumo/_data/registry/aeat/facts/0064-categories-profile.toml``); the renta-ledger
 #: aggregation benchmark pins its category-profile lookup to this registered
 #: year regardless of the synthetic filing years it aggregates over.
-_CATEGORY_PROFILE_YEAR = 2025
+_CATEGORY_PROFILE_YEAR = FILING_YEAR
 
 #: Total synthetic transaction volume: 30k transactions over 10 filing years.
 #: This is the ledger's own scale axis (read / aggregation-filter benchmarks);
@@ -178,13 +181,13 @@ _CATEGORY_PROFILE_YEAR = 2025
 _TOTAL_TRANSACTIONS = 30_000
 _FILING_YEARS = 10
 _TRANSACTIONS_PER_YEAR = _TOTAL_TRANSACTIONS // _FILING_YEARS
-_FIRST_YEAR = 2021
-_LAST_YEAR = _FIRST_YEAR + _FILING_YEARS - 1  # 2030, inclusive
+_LAST_YEAR = FILING_YEAR
+_FIRST_YEAR = _LAST_YEAR - _FILING_YEARS + 1
 
 #: Filing year used by the M130 modelo-calculate diagnostic. The minoracion
 #: carry reads a prior-year M100 observation, so the diagnostic uses the latest
 #: filing year whose prior year is represented by the bundled M100 registry.
-_M130_DIAGNOSTIC_YEAR = 2026
+_M130_DIAGNOSTIC_YEAR = FILING_YEAR
 _M130_DIAGNOSTIC_YEARS = (_M130_DIAGNOSTIC_YEAR,)
 
 #: Repeat count for budgeted period-scoped operations; enough samples for a real P95.
@@ -195,7 +198,7 @@ _BUDGET_SAMPLE_COUNT = 20
 #: the integration runtime.
 _DIAGNOSTIC_SAMPLE_COUNT = 3
 
-_M130_REVISION = "2019-y-siguientes"
+_M130_REVISION = open_ended_revision("130").id
 _M130_MANUAL_INPUTS: dict[CasillaId, Decimal] = {
     validated_casilla_id("06", surface="bench M130 retenciones"): Decimal("0"),
     validated_casilla_id("08", surface="bench M130 agrarian volume"): Decimal("0"),
@@ -337,7 +340,7 @@ def _save_benchmark_update(transaction: Transaction, sample_index: int) -> Trans
     """Return a same-id transaction update for write-path timing."""
     payload = transaction.model_dump(mode="python")
     payload["group_label"] = f"write-bench-{sample_index}"
-    payload["modified_at"] = datetime(2031, 1, 1, 12, 0, tzinfo=UTC) + timedelta(seconds=sample_index)
+    payload["modified_at"] = datetime(FILING_YEAR, 1, 1, 12, 0, tzinfo=UTC) + timedelta(seconds=sample_index)
     return Transaction.model_validate(payload)
 
 

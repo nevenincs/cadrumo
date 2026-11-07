@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from cadrumo.domain.filing.schema import (
     ModeloApprovalBasis,
     ModeloCasillaProvenance,
@@ -17,8 +18,10 @@ from cadrumo.domain.filing.schema import (
 )
 from cadrumo.domain.submission.models import ModeloDraftStatus
 
-DRAFT_TIMESTAMP = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
-APPROVED_AT = datetime(2026, 5, 25, 14, 30, tzinfo=UTC)
+FILING_YEAR = filing_year_envelope().horizon
+MODELO_303_REVISION_ID = open_ended_revision("303").id
+DRAFT_TIMESTAMP = datetime(FILING_YEAR, 5, 25, 13, 45, 0, tzinfo=UTC)
+APPROVED_AT = datetime(FILING_YEAR, 5, 25, 14, 30, tzinfo=UTC)
 IVA_DEVENGADO_CASILLA: CasillaId = validated_casilla_id("iva.devengado")
 IVA_DEDUCIBLE_CASILLA: CasillaId = validated_casilla_id("iva.deducible")
 IVA_RESULTADO_OPERANDS = (IVA_DEVENGADO_CASILLA, IVA_DEDUCIBLE_CASILLA)
@@ -26,11 +29,11 @@ IVA_RESULTADO_OPERANDS = (IVA_DEVENGADO_CASILLA, IVA_DEDUCIBLE_CASILLA)
 
 def approved_modelo_303_draft(values: tuple[ModeloValue, ...]) -> ModeloDraft:
     """Build a reviewed, approved 303 draft with every optional field populated around ``values``."""
-    period = Period.from_year_and_code(2025, "1T")
+    period = Period.from_year_and_code(FILING_YEAR, "1T")
     snapshot_ref = RegistrySnapshotRef(
         modelo="303",
-        revision_id="2025-y-siguientes",
-        modelo_year=2025,
+        revision_id=MODELO_303_REVISION_ID,
+        modelo_year=FILING_YEAR,
         period="1T",
     )
     return ModeloDraft(
@@ -60,7 +63,7 @@ def approved_modelo_303_draft(values: tuple[ModeloValue, ...]) -> ModeloDraft:
         findings=(),
         created_at=DRAFT_TIMESTAMP,
         updated_at=DRAFT_TIMESTAMP,
-        schema_version=registry_schema_version(modelo="303", revision_id="2025-y-siguientes"),
+        schema_version=registry_schema_version(modelo="303", revision_id=MODELO_303_REVISION_ID),
         notes="Draft pending operator review",
         approved_at=APPROVED_AT,
         approved_by="operator-reviewer-1",

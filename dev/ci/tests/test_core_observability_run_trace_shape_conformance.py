@@ -26,6 +26,9 @@ from cadrumo.core.observability.models import (
     RunTrace,
 )
 from cadrumo.core.observability.store import save_envelope, save_events_append, save_trace
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
+FILING_YEAR = filing_year_envelope().horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -36,8 +39,8 @@ _RUN_ID = "0123456789abcdef"
 def _trace() -> RunTrace:
     return RunTrace(
         run_id=_RUN_ID,
-        started_at=datetime(2026, 4, 14, tzinfo=UTC),
-        finished_at=datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC),
+        started_at=datetime(FILING_YEAR, 4, 14, tzinfo=UTC),
+        finished_at=datetime(FILING_YEAR, 4, 14, 0, 0, 1, tzinfo=UTC),
         entrypoint="cadrumo hello",
         arguments=(),
         corpus_sha256="a" * 64,
@@ -53,7 +56,7 @@ def _event() -> RunEvent:
         step_id="s0",
         kind=RunEventKind.NAVIGATION,
         payload=RunEventPayload(navigation=NavigationPayload(url="https://example.test/")),
-        timestamp=datetime(2026, 4, 14, tzinfo=UTC),
+        timestamp=datetime(FILING_YEAR, 4, 14, tzinfo=UTC),
         module="cadrumo.core.observability.test_run_trace_shape_conformance",
     )
 
