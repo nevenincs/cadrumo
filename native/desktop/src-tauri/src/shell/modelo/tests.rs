@@ -399,7 +399,10 @@ fn an_edits_amounts_come_only_as_a_raw_input_for_this_profiles_baseline() {
 
 #[test]
 fn a_real_baseline_is_admitted_whole_for_preflight_renewal_and_apply() {
-    for name in ["modelo/modelo-303-1T-en.json", "modelo/modelo-347-0A-en.json"] {
+    for name in [
+        "modelo/modelo-303-1T-en.json",
+        "modelo/modelo-347-0A-en.json",
+    ] {
         let read: Value = serde_json::from_str(&window_fixture(name)).unwrap();
         let baseline = read["admitted_baseline"].clone();
         let unit = baseline["work_unit_id"].as_str().unwrap().to_owned();
