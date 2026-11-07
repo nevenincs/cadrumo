@@ -10,6 +10,7 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_base import ZERO_PADDED_EXPORT_DATA_TYPES
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ..note_absent_fill import NOTE_ABSENT_FILLS, note_absent_fill_for
@@ -50,7 +51,9 @@ def test_a_reading_refuses_a_design_other_than_the_reviewed_bytes() -> None:
 
 @pytest.mark.parametrize(("revision", "period"), _REVISIONS)
 def test_every_valued_numeric_slot_of_the_design_declares_the_stated_fill(revision: str, period: str) -> None:
-    snapshot = published_snapshot("369", filing_year=2026, period=period, revision_id=revision)
+    snapshot = published_snapshot(
+        "369", filing_year=filing_year_envelope().horizon, period=period, revision_id=revision
+    )
     fields = [
         field for layout in snapshot.revision.export_layouts for record in layout.records for field in record.fields
     ]
@@ -66,7 +69,9 @@ def test_every_valued_numeric_slot_of_the_design_declares_the_stated_fill(revisi
 
 @pytest.mark.parametrize(("revision", "period"), _REVISIONS)
 def test_the_design_row_gives_the_marker_and_the_closer_gives_the_bare_quarter(revision: str, period: str) -> None:
-    snapshot = published_snapshot("369", filing_year=2026, period=period, revision_id=revision)
+    snapshot = published_snapshot(
+        "369", filing_year=filing_year_envelope().horizon, period=period, revision_id=revision
+    )
     [layout] = snapshot.revision.export_layouts
     markers = {field.presence_marker for record in layout.records for field in record.fields} - {None}
     assert markers == {"C"}

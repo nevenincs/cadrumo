@@ -321,6 +321,8 @@ class PublicDeclarationsWorkspaceFilingRefV1(BaseModel):
     confirmation: AeatConfirmationState
     declaration_kind: FilingDeclarationKind
     amends_filing_record_id: str | None
+    superseded_by_filing_record_id: str | None
+    member_nif: str | None
     evidence_kind: ExternalEvidenceKind | None
 
 

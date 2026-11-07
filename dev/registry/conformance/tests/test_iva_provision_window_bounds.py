@@ -28,11 +28,15 @@ import pytest
 from cadrumo.core.validity_window import ValidityWindow
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.published_authority import published_legal_references
 from cadrumo.domain.iva.place_of_supply import load_place_of_supply_table
 from dev.registry.conformance.iva_regulation_catalogue import bundled_iva_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_FLOOR = filing_year_envelope().floor
+_HORIZON = filing_year_envelope().horizon
 
 
 def _legal_catalogue(reference_ids: Iterable[str]) -> dict[str, LegalReference]:
@@ -121,23 +125,23 @@ def test_every_grounded_iva_row_stays_inside_its_provisions_effective_span() -> 
 
 def test_a_window_opening_before_its_provision_took_effect_is_a_violation() -> None:
     """DISCRIMINATING: the shape a future author produces by widening backwards."""
-    permitted_start, permitted_end = date(2021, 7, 1), None
-    window = ValidityWindow(valid_from=date(2020, 1, 1), valid_to=date(2026, 12, 31))
+    permitted_start, permitted_end = date(_FLOOR - 1, 7, 1), None
+    window = ValidityWindow(valid_from=date(_FLOOR - 2, 1, 1), valid_to=date(_HORIZON, 12, 31))
 
     assert "before the provision took effect" in _violation(window, permitted_start, permitted_end)
 
 
 def test_a_window_closing_after_its_provision_was_repealed_is_a_violation() -> None:
     """DISCRIMINATING: fails closed on a repeal, which a coverage count cannot see."""
-    permitted_start, permitted_end = date(1993, 1, 1), date(2023, 12, 31)
-    window = ValidityWindow(valid_from=date(2022, 1, 1), valid_to=date(2026, 12, 31))
+    permitted_start, permitted_end = date(1993, 1, 1), date(_FLOOR + 1, 12, 31)
+    window = ValidityWindow(valid_from=date(_FLOOR, 1, 1), valid_to=date(_HORIZON, 12, 31))
 
     assert "after the provision was repealed" in _violation(window, permitted_start, permitted_end)
 
 
 def test_a_window_inside_the_span_is_not_a_violation() -> None:
     assert not _violation(
-        ValidityWindow(valid_from=date(2022, 1, 1), valid_to=date(2026, 12, 31)),
+        ValidityWindow(valid_from=date(_FLOOR, 1, 1), valid_to=date(_HORIZON, 12, 31)),
         date(1993, 1, 1),
         None,
     )

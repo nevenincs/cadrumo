@@ -25,6 +25,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormPlacementKind,
 )
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 from dev.docs.preprocess.sidecar import load_sidecar, write_sidecar
 
 from ...compiler.loader import load_registry_tree
@@ -46,6 +47,21 @@ _PAGE_HEADING = re.compile(r"^# Pag\. \d+$", re.MULTILINE)
 def _registry() -> tuple[Mapping[str, ModeloDefinition], Mapping[str, SourceReference]]:
     modelos, catalogues = load_registry_tree(REGISTRY_ROOT)
     return {str(modelo.id): modelo for modelo in modelos}, catalogues.sources
+
+
+@cache
+def _editions() -> tuple[str, str, str]:
+    """The ids of the revision before the predecessor, the predecessor, and the candidate that cites the form.
+
+    The candidate is the authored revision of Modelo 390 that has the official form and no
+    record design; the two revisions before it are the oldest-first neighbours the tests compare.
+    """
+    ids = [str(revision.id) for revision in authored_revisions("390")]
+    revisions = _registry()[0]["390"].revisions
+    candidate = next(
+        position for position, revision_id in enumerate(ids) if _FORM in revisions[revision_id].source_refs
+    )
+    return ids[candidate - 2], ids[candidate - 1], ids[candidate]
 
 
 def _layout(revision: str) -> FormLayoutDefinition:
@@ -75,7 +91,7 @@ def _on_form(layout: FormLayoutDefinition) -> dict[str, tuple[str, str]]:
     return layout.casilla_sections()
 
 
-def test_390_2026_keeps_each_continuing_box_where_its_own_form_prints_it() -> None:
+def test_the_candidate_keeps_each_continuing_box_where_its_own_form_prints_it() -> None:
     layout = _candidate_layout()
     assert layout.seed_source is FormLayoutSeedSource.PREDECESSOR_LAYOUT
     assert {_FORM, _PREDECESSOR_DESIGN} <= {source.source_ref for source in layout.design_sources}
@@ -93,10 +109,11 @@ def test_390_2026_keeps_each_continuing_box_where_its_own_form_prints_it() -> No
     assert unprinted == []
 
 
-def test_390_2026_is_paginated_like_2025_for_every_box_it_declares() -> None:
-    before, after = _layout("2025"), _candidate_layout()
-    revision = _registry()[0]["390"].revisions["2026"]
-    keys_before = continuity_keys(_registry()[0]["390"].revisions["2025"])
+def test_the_candidate_is_paginated_like_its_predecessor_for_every_box_it_declares() -> None:
+    _, predecessor, candidate = _editions()
+    before, after = _layout(predecessor), _candidate_layout()
+    revision = _registry()[0]["390"].revisions[candidate]
+    keys_before = continuity_keys(_registry()[0]["390"].revisions[predecessor])
     keys_after = continuity_keys(revision)
     positions_before = {keys_before[casilla_id]: position for casilla_id, position in _on_form(before).items()}
     positions_after = {keys_after[casilla_id]: position for casilla_id, position in _on_form(after).items()}
@@ -115,7 +132,7 @@ def test_390_2026_is_paginated_like_2025_for_every_box_it_declares() -> None:
 
 def test_the_form_reader_sets_aside_running_heads_and_arithmetic_captions() -> None:
     modelos, sources = _registry()
-    form = read_official_form_pages(modelos["390"].revisions["2026"].source_refs, sources, DATA_ROOT)
+    form = read_official_form_pages(modelos["390"].revisions[_editions()[2]].source_refs, sources, DATA_ROOT)
     labels = {"Pág. 2", "Pág. 2 bis", "Pág. 3"}
     second = form.page_labelled("Pág. 2", labels=labels)
     second_bis = form.page_labelled("Pág. 2 bis", labels=labels)
@@ -140,9 +157,12 @@ def test_authored_citation_matches_the_form_label_without_confusing_the_boe_page
 def _generate_from(data_root: Path) -> tuple[FormLayoutDefinition, tuple[str, ...]]:
     modelos, sources = _registry()
     modelo = modelos["390"]
-    predecessor = PredecessorLayout(revision=modelo.revisions["2025"], layout=modelo.revisions["2025"].form_layouts[0])
+    _, predecessor_id, candidate_id = _editions()
+    predecessor = PredecessorLayout(
+        revision=modelo.revisions[predecessor_id], layout=modelo.revisions[predecessor_id].form_layouts[0]
+    )
     outcome = generate_revision_layout(
-        "390", modelo.revisions["2026"], sources=sources, data_root=data_root, predecessor=predecessor
+        "390", modelo.revisions[candidate_id], sources=sources, data_root=data_root, predecessor=predecessor
     )
     assert outcome.layout is not None
     return outcome.layout, outcome.notes
@@ -156,9 +176,9 @@ def _candidate_layout() -> FormLayoutDefinition:
 
 
 def _scratch_form(tmp_path: Path, edit: Callable[[str, str], str] | None) -> Path:
-    """Copy the forms 390/2026 cites into a scratch data root, rewriting the PDF's extracted pages."""
+    """Copy the forms the candidate revision cites into a scratch data root, rewriting the PDF's extracted pages."""
     modelos, sources = _registry()
-    for ref in modelos["390"].revisions["2026"].source_refs:
+    for ref in modelos["390"].revisions[_editions()[2]].source_refs:
         relative = sources[str(ref)].corpus_path
         target = tmp_path / relative
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -220,11 +240,14 @@ def test_an_apartado_its_page_no_longer_prints_drops_its_sections(tmp_path: Path
 def test_a_revision_with_its_own_record_design_never_follows_its_predecessor() -> None:
     modelos, sources = _registry()
     modelo = modelos["390"]
-    predecessor = PredecessorLayout(revision=modelo.revisions["2024"], layout=modelo.revisions["2024"].form_layouts[0])
-    followed = generate_revision_layout(
-        "390", modelo.revisions["2025"], sources=sources, data_root=DATA_ROOT, predecessor=predecessor
+    earlier_id, own_design_id, _ = _editions()
+    predecessor = PredecessorLayout(
+        revision=modelo.revisions[earlier_id], layout=modelo.revisions[earlier_id].form_layouts[0]
     )
-    independent = generate_revision_layout("390", modelo.revisions["2025"], sources=sources, data_root=DATA_ROOT)
+    followed = generate_revision_layout(
+        "390", modelo.revisions[own_design_id], sources=sources, data_root=DATA_ROOT, predecessor=predecessor
+    )
+    independent = generate_revision_layout("390", modelo.revisions[own_design_id], sources=sources, data_root=DATA_ROOT)
     assert followed.layout == independent.layout
     assert followed.layout is not None and followed.layout.seed_source is FormLayoutSeedSource.EXPORT_RECORD_DESIGN
 

@@ -48,6 +48,7 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.ids import BindingId
+from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -91,7 +92,11 @@ def test_the_settled_row_advisory_reaches_the_collection_year_modelo_193_calcula
     )
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
-        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=datetime.now(UTC))
+        seed_modelo_ready_profile(
+            bucket_id=_BUCKET_ID,
+            at=datetime.now(UTC),
+            facts=(UserProfileFact(path="withholding.pays_capital_income_with_retencion", value=True),),
+        )
         assert (
             withholding_producer(objects).capture(capture.command, cadence=quarterly_filer_cadence_for(capture.command))
             is not None

@@ -10,6 +10,7 @@ from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ...compiler.authority import compiled_bundled_authority
 from ..export_field_numeric_derivation import numbered_line_enumeration_values, numeric_derivation
@@ -25,7 +26,7 @@ def inputs():
     return revision_render_inputs(
         compiled_bundled_authority(),
         modelo="309",
-        revision="2023-y-siguientes",
+        revision=str(open_ended_revision("309").id),
         source_ref="aeat-dr-309-2023",
         bootstrap_transport=GeneratedExportBootstrapTransport(
             layout_id="modelo-309-fichero-boe",
@@ -34,7 +35,7 @@ def inputs():
             source_sha256="a84c6347a87ac4c4db8610010e100cb8632518a9d20e54e79ffbc713d770beb5",
             supersedes_layout_id="modelo-309-fichero-boe",
         ),
-        filing_year=2023,
+        filing_year=open_ended_revision("309").valid_from.year,
         period="0A",
         source_root=bundled_path(),
     )

@@ -42,6 +42,7 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
 )
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.contribuyente.entity_type import EntityType
+from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
 from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -405,6 +406,9 @@ def autonomaworkflow_profile() -> TaxpayerProfile:
         iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_professionals_with_retencion=False,
+        # Modelo 130 applicability turns on this art. 109 fact; stated, so the verdict is positive.
+        art109_activity_income_withholding_ge_70pct=False,
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
         pays_rent_with_retencion=False,
         pays_capital_income_with_retencion=False,
         does_intracomunitario=False,

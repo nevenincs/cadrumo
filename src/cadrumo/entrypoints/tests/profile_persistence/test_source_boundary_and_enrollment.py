@@ -156,6 +156,14 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 
 @pytest.fixture
+def oss_enrolled_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
+    """The repository of a profile enrolled in the OSS/IOSS special regime, so Modelo 369 applies."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        seed_ready_profile(bucket_id=_BUCKET_ID, at=_T0, facts=(UserProfileFact(path="iva.oss_enrolled", value=True),))
+        yield profile.repository
+
+
+@pytest.fixture
 def intracommunity_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     """The repository of a profile whose taxpayer trades with other Member States, so Modelo 349 applies."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
@@ -509,14 +517,14 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
 
 
 def test_s09_oss_ioss_resolver_enrolled_fires_on_m369(
-    secure_objects: SecureObjectRepository,
+    oss_enrolled_objects: SecureObjectRepository,
 ) -> None:
     """OssIossLedgerSourceResolver is enrolled and fires on M369 (esquema-union).
 
     With empty candidates the resolver returns an empty resolution but claims its
     owned source so the binding does not appear as unhandled on source_diagnostics.
     """
-    wu_repo, cr_repo, tx_repo, invoice_repo = _repos(secure_objects)
+    wu_repo, cr_repo, tx_repo, invoice_repo = _repos(oss_enrolled_objects)
     work_unit = _seed(wu_repo, modelo="369", filing_year=2026, period="1T", revision_id="esquema-union")
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,

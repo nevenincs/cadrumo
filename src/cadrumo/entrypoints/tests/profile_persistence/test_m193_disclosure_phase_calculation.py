@@ -108,6 +108,7 @@ from cadrumo.domain.calculations.registry.formula_runtime import calculate_regis
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.identifiers import canonical_decimal_string
+from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
 from ....adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
@@ -147,7 +148,11 @@ def _m193_bucket(tmp_path: Path, *, filing_year: int, operation: PinnedAuthority
     """Open an isolated bucket with a quarterly filer's profile and one Modelo 193 work unit."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects: SecureObjectRepository = profile.repository
-        seed_modelo_ready_profile(bucket_id=_BUCKET_ID, at=_T0)
+        seed_modelo_ready_profile(
+            bucket_id=_BUCKET_ID,
+            at=_T0,
+            facts=(UserProfileFact(path="withholding.pays_capital_income_with_retencion", value=True),),
+        )
         snapshot = operation.snapshot("193", filing_year=filing_year, period="0A")
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,

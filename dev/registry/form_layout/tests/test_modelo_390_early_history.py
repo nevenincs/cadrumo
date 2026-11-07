@@ -6,11 +6,24 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.form_context import resolve_form_context_field
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    revision_last_exercise,
+)
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_modelo_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_EDITIONS = tuple(str(revision.id) for revision in authored_revisions("390"))
+_EARLY = _EDITIONS[1:3]
+_EARLY_A, _EARLY_B = _EARLY
+# Source keys embed the printed year, so the editions after the early ones are found by their years.
+_LATER_YEARS = tuple(
+    str(exercise) for exercise in range(revision_last_exercise("390", _EARLY_B) + 1, filing_year_envelope().horizon + 1)
+)
 
 
 @cache
@@ -18,7 +31,7 @@ def _model():
     return load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/390"))
 
 
-@pytest.mark.parametrize("year", ("2022", "2023"))
+@pytest.mark.parametrize("year", _EARLY)
 def test_historical_sources_pages_and_context_owners(year):
     revision = _model().revisions[year]
     form = revision.form_layouts[0]
@@ -27,13 +40,13 @@ def test_historical_sources_pages_and_context_owners(year):
     assert [p.id for p in form.pages] == [f"pag-{n}" for n in range(1, 9)]
     for number, page in enumerate(form.pages, 1):
         expected = f"BOE-A-2022-19290 Annex III, page {number}, printed {159001 + number}"
-        if year == "2023" and number == 2:
+        if year == _EARLY_B and number == 2:
             expected = "BOE-A-2023-26632 Annex IV, page 2, printed 176085"
         assert page.official_ref == expected
     sources = {s.source_ref for s in form.design_sources}
     assert "boe-modelo-390-2022-form-pdf" in sources
-    assert ("boe-modelo-390-2023-form-pdf" in sources) == (year == "2023")
-    assert not any("2024" in s or "2025" in s or "2026" in s for s in sources)
+    assert ("boe-modelo-390-2023-form-pdf" in sources) == (year == _EARLY_B)
+    assert not any(later in source for later in _LATER_YEARS for source in sources)
     contexts = {b.id: b for s in form.pages[0].sections for b in s.blocks if b.kind == "context_field"}
     assert set(contexts) == {"nif", "surname", "given-name", "year", "prior-receipt"}
     for name, producer in {
@@ -47,7 +60,7 @@ def test_historical_sources_pages_and_context_owners(year):
     assert resolve_form_context_field(revision, contexts["year"]).draft_attribute == "filing_year"
 
 
-@pytest.mark.parametrize("year", ("2022", "2023"))
+@pytest.mark.parametrize("year", _EARLY)
 def test_nine_four_rate_deduction_tables_follow_the_printed_page(year):
     form = _model().revisions[year].form_layouts[0]
     page = form.pages[2]
@@ -87,14 +100,14 @@ def test_nine_four_rate_deduction_tables_follow_the_printed_page(year):
     assert [numbers[b.casilla_id] for b in continuation.sections[1].blocks] == ["63", "522", "64", "65"]
 
 
-@pytest.mark.parametrize("year", ("2022", "2023"))
+@pytest.mark.parametrize("year", _EARLY)
 def test_surcharge_uses_revision_specific_rate_owners_not_aggregate_values(year):
     form = _model().revisions[year].form_layouts[0]
     numbers = {p.casilla_id: p.box_number for p in form.placements}
     section = next(s for s in form.pages[1].sections if s.id.endswith("fef341"))
-    rates = ("0-5", "1-4", "5-2", "1-75") if year == "2022" else ("0", "0-5", "0-62", "1-4", "5-2", "1-75")
+    rates = ("0-5", "1-4", "5-2", "1-75") if year == _EARLY_A else ("0", "0-5", "0-62", "1-4", "5-2", "1-75")
     boxes = ("35 36", "599 600", "601 602", "41 42")
-    if year == "2023":
+    if year == _EARLY_B:
         boxes = ("663 664", "35 36", "665 666", "599 600", "601 602", "41 42")
     for row, rate, printed in zip(section.blocks[0].rows, rates, boxes, strict=True):
         assert [numbers[c.casilla_id] for c in row.cells] == printed.split()
@@ -107,7 +120,7 @@ def test_surcharge_uses_revision_specific_rate_owners_not_aggregate_values(year)
         assert placement.kind == "working_figure" and placement.box_number is None
 
 
-@pytest.mark.parametrize("year", ("2022", "2023"))
+@pytest.mark.parametrize("year", _EARLY)
 def test_settlement_restores_printed_repetitions_without_future_fuel_payment(year):
     revision = _model().revisions[year]
     form = revision.form_layouts[0]

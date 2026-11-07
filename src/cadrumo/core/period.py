@@ -24,7 +24,7 @@ widening one to admit a registry coordinate must not widen the other.
 :class:`PeriodKind` classifies the resulting cadence.
 
 This module is the runtime counterpart to the registry
-:data:`domain.calculations.registry.schema_scalars.PeriodCode` alias and
+:func:`domain.calculations.registry.schema_scalars.validate_period_code` validator and
 :class:`domain.calculations.registry.schema_references.PeriodSelector` schema. Registry
 objects carry bare period tokens; application services that need a concrete
 filing window compose those tokens with a year into :class:`Period`.
@@ -464,7 +464,7 @@ class Period(BaseModel):
         """Return the bare registry period code as a string (e.g. ``"1T"``).
 
         Use this when calling registry APIs that expect the bare
-        :data:`domain.calculations.registry.schema_scalars.PeriodCode` token
+        :func:`domain.calculations.registry.schema_scalars.validate_period_code` token
         rather than a
         structured :class:`Period`.
         """

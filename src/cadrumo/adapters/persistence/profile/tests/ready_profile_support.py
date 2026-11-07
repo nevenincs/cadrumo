@@ -126,18 +126,19 @@ def seed_persona_profile(
     seed_test_profile_record(record, root=root, label=label)
 
 
-def seed_ready_profile(*, bucket_id: str, at: datetime) -> None:
+def seed_ready_profile(*, bucket_id: str, at: datetime, facts: tuple[UserProfileFact, ...] = ()) -> None:
     """Seed the shared ready profile: the autonomo-fontanero persona, with the colegio-concertado attestation.
 
     Modelo 111 refuses a defaulted colegio-concertado declaration; the persona
     leaves this header attestation outside its answers, and a natural-person
-    filer truthfully states False.
+    filer truthfully states False. ``facts`` adds the enrolment a modelo's
+    applicability gate asks of the filer.
     """
     seed_persona_profile(
         _PERSONA_ID,
         bucket_id=bucket_id,
         at=at,
-        facts=(UserProfileFact(path="withholding.colegio_concertado", value=False),),
+        facts=(UserProfileFact(path="withholding.colegio_concertado", value=False), *facts),
     )
 
 

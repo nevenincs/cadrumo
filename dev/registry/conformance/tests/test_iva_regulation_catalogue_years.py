@@ -7,6 +7,7 @@ from datetime import date
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.iva.errors import IvaCatalogueError
 from dev.registry.conformance.iva_regulation_catalogue import (
     bundled_iva_catalogue,
@@ -15,6 +16,9 @@ from dev.registry.conformance.iva_regulation_catalogue import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_YEAR = filing_year_envelope().horizon
+_UNSUPPORTED_YEAR = filing_year_envelope().floor - 1
 
 
 def test_the_grounded_years_are_derived_from_the_citation_windows() -> None:
@@ -58,14 +62,14 @@ def test_a_resolved_catalogue_carries_only_citations_asserted_over_that_year() -
 def test_resolving_the_same_year_twice_uses_one_authority_without_a_projection_cache() -> None:
     with bundled_indexed_authority().operation() as _authority_operation_for_test:
         first = resolve_catalogue(
-            on=date(2025, 6, 15),
+            on=date(_YEAR, 6, 15),
             operation=_authority_operation_for_test,
-            projected_year=2025,
+            projected_year=_YEAR,
         )
         second = resolve_catalogue(
-            on=date(2025, 1, 1),
+            on=date(_YEAR, 1, 1),
             operation=_authority_operation_for_test,
-            projected_year=2025,
+            projected_year=_YEAR,
         )
 
         assert first == second
@@ -97,10 +101,10 @@ def test_resolve_catalogue_requires_a_grounded_year() -> None:
     # the contract and reddening the moment that year is correctly added.
     with (
         bundled_indexed_authority().operation() as _authority_operation_for_test,
-        pytest.raises(IvaCatalogueError, match="year=1990"),
+        pytest.raises(IvaCatalogueError, match=f"year={_UNSUPPORTED_YEAR}"),
     ):
         resolve_catalogue(
-            on=date(1990, 6, 15),
+            on=date(_UNSUPPORTED_YEAR, 6, 15),
             operation=_authority_operation_for_test,
-            projected_year=1990,
+            projected_year=_UNSUPPORTED_YEAR,
         )

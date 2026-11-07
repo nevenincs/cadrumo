@@ -19,6 +19,7 @@ from cadrumo.domain.calculations.registry.export_value_policy import (
     project_export_value,
     validate_export_wire_value,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from .. import export_field_render_profile_derivation
 from ..joined_record_design import (
@@ -45,6 +46,9 @@ from ..semantic_map import SemanticMap
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+_DESIGN_EPOCH = str(filing_year_envelope().horizon)
+_SOURCE_REF = f"aeat-dr-200-{_DESIGN_EPOCH}"
+
 
 def render_profile_anchor(row: int) -> RenderProfileAnchor:
     return RenderProfileAnchor(
@@ -59,8 +63,8 @@ def render_profile_anchor(row: int) -> RenderProfileAnchor:
 def design_identity(*, sha256: str = "a" * 64) -> RenderProfileDesignIdentity:
     return RenderProfileDesignIdentity(
         modelo="200",
-        design_epoch="2025",
-        source_ref="aeat-dr-200-2025",
+        design_epoch=_DESIGN_EPOCH,
+        source_ref=_SOURCE_REF,
         source_sha256=sha256,
     )
 
@@ -69,10 +73,10 @@ def _intermediate(*, smaller_content: str | None = None, smaller_length: int = 2
     return RecordDesignIntermediate.model_validate(
         {
             "source": {
-                "source_ref": "aeat-dr-200-2025",
+                "source_ref": _SOURCE_REF,
                 "source_sha256": "a" * 64,
                 "workbook_format": RecordDesignWorkbookFormat.XLSX,
-                "design_epoch": "2025",
+                "design_epoch": _DESIGN_EPOCH,
             },
             "sheets": (
                 {
@@ -120,7 +124,7 @@ def _joined(intermediate: RecordDesignIntermediate | None = None) -> JoinedRecor
     semantic_map = SemanticMap.model_validate(
         {
             "modelo": "200",
-            "design_epoch": "2025",
+            "design_epoch": _DESIGN_EPOCH,
             "source_ref": parsed.source.source_ref,
             "source_sha256": parsed.source.source_sha256,
             "records": (
@@ -143,7 +147,7 @@ def _joined(intermediate: RecordDesignIntermediate | None = None) -> JoinedRecor
                     "export_field_id": f"reviewed.field-{field.ordinal}",
                     "kind": "filler",
                     "legal_refs": ("ley-27-2014:art-40",),
-                    "source_refs": ("aeat-dr-200-2025",),
+                    "source_refs": (_SOURCE_REF,),
                 }
                 for field in sheet.fields
             ),
@@ -364,8 +368,8 @@ def test_empty_rules_fragment_refusal_never_carries_a_sibling_fields_value(tmp_p
             "schema_version = 1\n"
             "width_17_rules = []\n"
             "singleton_rules = []\n"
-            'design_identity = { modelo = "200", design_epoch = "2025", '
-            f'source_ref = "aeat-dr-200-2025", source_sha256 = "{"a" * 64}" }}\n'
+            f'design_identity = {{ modelo = "200", design_epoch = "{_DESIGN_EPOCH}", '
+            f'source_ref = "{_SOURCE_REF}", source_sha256 = "{"a" * 64}" }}\n'
             # Inserted last so pydantic's length-truncated repr of the whole
             # payload keeps this field in its surviving tail rather than
             # eliding it -- measured against this exact field ordering, not

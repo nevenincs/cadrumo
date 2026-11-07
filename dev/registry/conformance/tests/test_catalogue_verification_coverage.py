@@ -27,6 +27,11 @@ from cadrumo.domain.calculations.registry.schema_base import EvidenceTier, filin
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.calculations.registry.snapshot import check_snapshot_filing_review_tier
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    open_ended_revision,
+)
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.tests.aeat_literal_fixtures import RECORD_DESIGN_ROUTE_BASE_FIXTURE
 from cadrumo.tests.inventory import REPO_ROOT
@@ -58,8 +63,13 @@ from ..registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_LAST_YEAR = filing_year_envelope().horizon
+_FIRST_YEAR = _LAST_YEAR - 1
+_SYNTHETIC_REVISION = f"{_FIRST_YEAR}-{_LAST_YEAR}"
+_SYNTHETIC_REVIEWED_AT = date(_LAST_YEAR, 8, 25).isoformat()
+_SYNTHETIC_OBSERVED_AT = date(_LAST_YEAR, 9, 10).isoformat()
 _PUBLICATION_BOUND_RECORD_DESIGN_EXCEPTIONS = {
-    ("184", "2025-y-siguientes", 2026): "aeat-dr-184-2025",
+    ("184", str(open_ended_revision("184").id), _LAST_YEAR): f"aeat-dr-184-{newest_authored_edition('184')}",
 }
 _M038_SOURCE_ERA_LEGAL_REFS = {
     "orden-hac-646-2024:art-1",
@@ -334,9 +344,9 @@ def _assert_m038_design_eras_split_at_the_amendment(
 ) -> None:
     # The 2012 design closes the day before the amendment's first declaration,
     # and only the edition it governs cites it.
-    assert historical_source.record_design_epoch == "2012"
-    assert historical_source.applies_to == date(2024, 5, 31)
-    assert current_source.applies_from == date(2024, 6, 1)
+    assert historical_source.record_design_epoch == historical_source.id.rsplit("-", 1)[-1]
+    assert historical_source.applies_to == pre_june.valid_to
+    assert current_source.applies_from == june_2024.valid_from
     assert current_source.applies_to is None
     verify_source_file(REPO_ROOT, historical_source)
     assert {revision.id for revision in modelo.revisions.values() if historical_source.id in revision.source_refs} == {
@@ -360,7 +370,7 @@ def _assert_m038_historical_design_resolves_only_its_years(catalogues, historica
             catalogues.sources,
             source_ref=historical_source.id,
             filing_year=filing_year,
-            design_epoch="2012",
+            design_epoch=historical_source.record_design_epoch,
         )
         assert resolved.source.id == historical_source.id
     first_year_after = june_2024.valid_from.year + 1
@@ -370,7 +380,7 @@ def _assert_m038_historical_design_resolves_only_its_years(catalogues, historica
             catalogues.sources,
             source_ref=historical_source.id,
             filing_year=first_year_after,
-            design_epoch="2012",
+            design_epoch=historical_source.record_design_epoch,
         )
 
 
@@ -398,8 +408,9 @@ def test_modelo_038_selects_the_2012_design_until_the_irus_amendment() -> None:
     # only the sources its revisions cite.
     modelos, catalogues = committed_registry_tree()
     modelo = next(candidate for candidate in modelos if candidate.id == "038")
-    pre_june = modelo.revisions["2022-hasta-2024-05"]
-    june_2024 = modelo.revisions["2024-desde-06"]
+    pre_june_id, june_2024_id, *_ = (str(revision.id) for revision in authored_revisions("038"))
+    pre_june = modelo.revisions[pre_june_id]
+    june_2024 = modelo.revisions[june_2024_id]
     current_source = catalogues.sources["aeat-dr-038-2024"]
     historical_source = catalogues.sources["aeat-dr-038-2012"]
 
@@ -414,12 +425,15 @@ def test_committed_registry_tree_has_required_model_law_coverage() -> None:
     authority = compiled_bundled_authority()
     audit = audit_registry_model_law_coverage(authority)
 
+    june_2024 = authored_revisions("038")[1]
+    june_2024_period = f"{june_2024.valid_from.month:02d}"
     modelo_038 = next(
         ledger
         for ledger in audit.ledgers
-        if (ledger.modelo, ledger.revision, ledger.filing_year, ledger.period) == ("038", "2024-desde-06", 2024, "06")
+        if (ledger.modelo, ledger.revision, ledger.filing_year, ledger.period)
+        == ("038", str(june_2024.id), june_2024.valid_from.year, june_2024_period)
     )
-    assert modelo_038.revision == "2024-desde-06"
+    assert modelo_038.revision == str(june_2024.id)
     assert modelo_038.authority_scope == "inspection_only"
     assert not modelo_038.filing_eligible
     gates = {gate.tier: gate for gate in modelo_038.gates}
@@ -476,7 +490,7 @@ def _synthetic_reviewed_coverage_authority(tmp_path: Path) -> ValidatedRegistryA
     )
     legal_dir = registry_root / "legal"
     shutil.copytree(bundled_registry_root / "legal", legal_dir)
-    revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025-2026"
+    revision_dir = registry_root / "modelos" / "999" / "revisions" / _SYNTHETIC_REVISION
     legal_dir.joinpath("supported-filing-years.toml").unlink()
     legal_dir.joinpath("sociedades-annual-manual-coverage.toml").unlink()
     revision_dir.mkdir(parents=True)
@@ -499,15 +513,15 @@ def _synthetic_reviewed_coverage_authority(tmp_path: Path) -> ValidatedRegistryA
         "\n".join(
             (
                 "[supported_filing_years]",
-                "floor = 2025",
-                "horizon = 2026",
+                f"floor = {_FIRST_YEAR}",
+                f"horizon = {_LAST_YEAR}",
                 "",
                 "[sociedades_annual_manual_coverage]",
-                'dispositions = [{ year = 2025, status = "unpublished", '
-                'official_locator = "https://example.com/manuals", observed_at = 2026-09-10, '
+                f'dispositions = [{{ year = {_FIRST_YEAR}, status = "unpublished", '
+                f'official_locator = "https://example.com/manuals", observed_at = {_SYNTHETIC_OBSERVED_AT}, '
                 'acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }, '
-                '{ year = 2026, status = "unpublished", official_locator = "https://example.com/manuals", '
-                "observed_at = 2026-09-10, "
+                f'{{ year = {_LAST_YEAR}, status = "unpublished", official_locator = "https://example.com/manuals", '
+                f"observed_at = {_SYNTHETIC_OBSERVED_AT}, "
                 'acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }]',
                 "",
                 '[legal."orden-test-0001:art-1"]',
@@ -518,9 +532,9 @@ def _synthetic_reviewed_coverage_authority(tmp_path: Path) -> ValidatedRegistryA
                 'document_id = "BOE-A-2025-00001"',
                 'article = "1"',
                 'permalink = "https://example.com/synthetic-orden"',
-                "effective_from = 2025-01-01",
+                f"effective_from = {date(_FIRST_YEAR, 1, 1).isoformat()}",
                 'review_status = "operator_reviewed"',
-                "reviewed_at = 2026-08-25",
+                f"reviewed_at = {_SYNTHETIC_REVIEWED_AT}",
                 'reviewed_by = "synthetic corpus reviewer"',
                 'required_text = ["synthetic provision text"]',
                 "",
@@ -531,7 +545,7 @@ def _synthetic_reviewed_coverage_authority(tmp_path: Path) -> ValidatedRegistryA
                 'corpus_path = "corpus/test/synthetic-guidance.pdf"',
                 f'sha256 = "{hashlib.sha256(guidance_bytes).hexdigest()}"',
                 f"bytes = {len(guidance_bytes)}",
-                "retrieved_at = 2026-08-25",
+                f"retrieved_at = {_SYNTHETIC_REVIEWED_AT}",
                 'source_url = "https://example.com/synthetic-guidance"',
                 'review_status = "pending_review"',
                 "",
@@ -542,7 +556,7 @@ def _synthetic_reviewed_coverage_authority(tmp_path: Path) -> ValidatedRegistryA
                 'corpus_path = "corpus/test/synthetic-parity.pdf"',
                 f'sha256 = "{hashlib.sha256(parity_bytes).hexdigest()}"',
                 f"bytes = {len(parity_bytes)}",
-                "retrieved_at = 2026-08-25",
+                f"retrieved_at = {_SYNTHETIC_REVIEWED_AT}",
                 'source_url = "https://example.com/synthetic-parity"',
                 'review_status = "pending_review"',
                 "",
@@ -568,18 +582,18 @@ def _synthetic_reviewed_coverage_authority(tmp_path: Path) -> ValidatedRegistryA
     write_fragmented_revision(
         revision_dir,
         """\
-[revisions."2025-2026"]
-valid_from = 2025-01-01
-period_selector = { years = [2025, 2026], periods = ["0A"] }
+[revisions."@REVISION@"]
+valid_from = @FIRST_START@
+period_selector = { years = [@FIRST@, @LAST@], periods = ["0A"] }
 authority_grade = "applicability"
 review_status = "agent_reviewed"
 reviewed_by = "synthetic corpus reviewer"
-reviewed_at = 2026-08-25
+reviewed_at = @REVIEWED@
 legal_refs = ["orden-test-0001:art-1"]
 source_refs = ["test-source-guidance"]
 orden_aplicabilidad = ["orden-test-0001:art-1"]
 
-[[revisions."2025-2026".application_links]]
+[[revisions."@REVISION@".application_links]]
 id = "synthetic-coverage-filing"
 surface = "filing"
 consumer = "synthetic.coverage"
@@ -587,7 +601,7 @@ requires_snapshot = true
 legal_refs = ["orden-test-0001:art-1"]
 source_refs = ["test-source-guidance"]
 
-[[revisions."2025-2026".casillas]]
+[[revisions."@REVISION@".casillas]]
 id = "01"
 number = "01"
 section = ["synthetic"]
@@ -595,7 +609,7 @@ data_type = "integer"
 legal_refs = ["orden-test-0001:art-1"]
 source_refs = ["test-source-guidance"]
 
-[[revisions."2025-2026".workbook_parity_refs]]
+[[revisions."@REVISION@".workbook_parity_refs]]
 id = "synthetic-coverage-parity"
 workbook_source = "test-source-parity"
 fixture_id = "synthetic-coverage-fixture"
@@ -605,7 +619,11 @@ output_cells = { result = "Synthetic!A1" }
 tolerance = "0.00"
 legal_refs = ["orden-test-0001:art-1"]
 source_refs = ["test-source-parity"]
-""",
+""".replace("@REVISION@", _SYNTHETIC_REVISION)
+        .replace("@FIRST_START@", date(_FIRST_YEAR, 1, 1).isoformat())
+        .replace("@FIRST@", str(_FIRST_YEAR))
+        .replace("@LAST@", str(_LAST_YEAR))
+        .replace("@REVIEWED@", _SYNTHETIC_REVIEWED_AT),
     )
     clear_fingerprint_cache()
     return compile_validated_authority(registry_root, tmp_path)
@@ -630,8 +648,8 @@ def test_model_law_matrix_reports_a_non_vacuous_gap_from_a_synthetic_reviewed_co
     """A validator-backed reviewed corpus produces each derived missing-layout cell."""
     authority = synthetic_reviewed_coverage
     modelo = authority.modelo("999")
-    revision = modelo.revisions["2025-2026"]
-    inspection = authority.inspect_revision("999", filing_year=2025, period="0A")
+    revision = modelo.revisions[_SYNTHETIC_REVISION]
+    inspection = authority.inspect_revision("999", filing_year=_FIRST_YEAR, period="0A")
     assert {source.evidence_tier for source in inspection.sources.values()} == {
         "official_source_guidance",
         "executable_parity_evidence",
@@ -666,8 +684,8 @@ def test_coverage_filing_review_proof_delegates_to_snapshot_owned_check(
     """Coverage classification obtains review status from the snapshot boundary."""
     authority = synthetic_reviewed_coverage
     modelo = authority.modelo("999")
-    revision = modelo.revisions["2025-2026"]
-    inspection = authority.inspect_revision(modelo.id, filing_year=2025, period="0A")
+    revision = modelo.revisions[_SYNTHETIC_REVISION]
+    inspection = authority.inspect_revision(modelo.id, filing_year=_FIRST_YEAR, period="0A")
 
     with validating_governed_facts(authority):
         snapshot_tier = check_snapshot_filing_review_tier(
@@ -675,14 +693,14 @@ def test_coverage_filing_review_proof_delegates_to_snapshot_owned_check(
             revision,
             authority.catalogues,
             set(inspection.legal_ref_ids),
-            filing_date=date(2025, 12, 31),
+            filing_date=date(_FIRST_YEAR, 12, 31),
         )
     proof = snapshot_filing_review_proof(
         modelo,
         revision,
         authority,
         inspection,
-        filing_date=date(2025, 12, 31),
+        filing_date=date(_FIRST_YEAR, 12, 31),
     )
 
     assert "check_snapshot_filing_review_tier(" in inspect.getsource(snapshot_filing_review_proof)
@@ -707,12 +725,12 @@ def test_public_model_law_ledger_keeps_unproven_snapshot_inspection_only() -> No
     # filing-grade build in order to prove the ledger reports NOT filing-eligible
     # is self-contradictory: the build refuses first, and the assertion below --
     # the actual subject -- never runs.
-    revision = select_revision(modelo, filing_year=2025, period="0A")
+    revision = select_revision(modelo, filing_year=_LAST_YEAR, period="0A")
     snapshot = build_snapshot(
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=_LAST_YEAR,
         period="0A",
         grade=revision.effective_authority_grade,
     )

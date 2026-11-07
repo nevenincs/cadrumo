@@ -5,10 +5,9 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from pydantic import TypeAdapter, ValidationError
 
-from cadrumo.core.identity.documents import TAX_ID_FORMAT_CONTEXT
-from cadrumo.domain.calculations.registry.schema_scalars import NifString
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema_scalars import validate_registry_text_scalar
 from cadrumo.domain.calculations.registry.tax_id_format import tax_id_format_from_catalogue
 from dev.registry.compiler.fact_providers import compile_authored_fact_catalogue
 
@@ -71,12 +70,10 @@ def test_candidate_fact_0102_governs_nif_validation_without_installed_authority(
         "bundled_indexed_authority",
         lambda: (_ for _ in ()).throw(AssertionError("candidate validation consulted the installed artifact")),
     )
-    adapter: TypeAdapter[str] = TypeAdapter(NifString)
-    context = {TAX_ID_FORMAT_CONTEXT: candidate_format}
 
-    assert adapter.validate_python("ZZ000000E", context=context) == "000000E"
-    with pytest.raises(ValidationError):
-        adapter.validate_python("00000000T", context=context)
+    assert validate_registry_text_scalar("nif", "ZZ000000E", tax_id_format=candidate_format) == "000000E"
+    with pytest.raises(RegistryValidationError):
+        validate_registry_text_scalar("nif", "00000000T", tax_id_format=candidate_format)
 
 
 @pytest.mark.parametrize(

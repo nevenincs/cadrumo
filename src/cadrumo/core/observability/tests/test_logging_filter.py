@@ -5,8 +5,7 @@ Two related concerns:
 * :class:`TestRunContextLoggingFilter` verifies that the
   :func:`cadrumo.core.logging.get_logger` factory stamps ``run_id`` and
   ``step_id`` attributes onto every :class:`logging.LogRecord`, both
-  inside and outside an active
-  :func:`cadrumo.core.observability.run_context`.
+  inside and outside an active run context.
 * :class:`TestStderrRunEventFilter` verifies that the default stderr
   handler installed by :mod:`cadrumo.core.logging` drops records that
   carry a ``run_event`` extra — without this, every observability event
@@ -28,7 +27,7 @@ from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 
 from ...config import override_settings
 from ...logging import DropOperatorDocumentEchoFilter, flush_logging, get_logger, operator_document_output
-from .run_scope import run_context
+from ..context import RUN_CONTEXT_VAR, STEP_CONTEXT_VAR, RunContextInfo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -76,9 +75,14 @@ class TestRunContextLoggingFilter:
             logging.getLogger().addHandler(capture)
             try:
                 logger.info("outside")
-                with run_context(entrypoint="cadrumo test", arguments=()) as info:
+                inside_run_id = "a1b2c3d4e5f60001"
+                run_token = RUN_CONTEXT_VAR.set(RunContextInfo(run_id=inside_run_id))
+                step_token = STEP_CONTEXT_VAR.set("step-1")
+                try:
                     logger.info("inside")
-                    inside_run_id = info.run_id
+                finally:
+                    STEP_CONTEXT_VAR.reset(step_token)
+                    RUN_CONTEXT_VAR.reset(run_token)
             finally:
                 assert flush_logging(timeout=HANG_GUARD_SECONDS)
                 logging.getLogger().removeHandler(capture)
@@ -98,11 +102,9 @@ class TestRunContextLoggingFilter:
 class TestStderrRunEventFilter:
     """The default stderr handler must drop records carrying ``run_event``.
 
-    :func:`cadrumo.core.observability.record_event` logs at INFO through
-    ``cadrumo.core.observability``, which propagates to the root stderr
-    handler. Without the filter, every event would print on stderr —
-    spamming long workflows. The filter drops only records that carry a
-    ``run_event`` extra; plain log lines still reach stderr.
+    A record that carries a ``run_event`` extra is structured diagnostics for a
+    run, not operator output. The filter drops only those records; plain log
+    lines still reach stderr.
     """
 
     def test_filter_drops_run_event_records(self) -> None:
@@ -116,27 +118,6 @@ class TestStderrRunEventFilter:
 
         for record, expected in cases:
             assert filt.filter(record) is expected
-
-    def test_events_still_reach_jsonl_sink_end_to_end(
-        self,
-        tmp_path: Path,
-    ) -> None:
-        """The filter must NOT accidentally drop events from the sink."""
-        from ..models import GenericPayload, RunEventKind, RunEventPayload
-        from ..store import iter_events
-        from .recorder import record_event
-
-        with override_settings(cadrumo_storage_root=tmp_path):
-            with run_context(entrypoint="cadrumo test stderr-filter", arguments=()) as info:
-                record_event(
-                    RunEventKind.NAVIGATION,
-                    payload=RunEventPayload(generic=GenericPayload(fields=(("k", "v"),))),
-                )
-            events = tuple(iter_events(info.run_id))
-            # STEP_START + NAVIGATION + STEP_END = 3 events.
-            assert len(events) == 3
-            kinds = {e.kind for e in events}
-            assert RunEventKind.NAVIGATION in kinds
 
 
 def test_document_diagnostics_keep_file_evidence_and_restore_stderr_after_failure(tmp_path: Path) -> None:

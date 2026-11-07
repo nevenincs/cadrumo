@@ -27,7 +27,6 @@ _RETENTION_WIRING: dict[str, tuple[str, str]] = {
     "llm-cache": ("adapters/outbound/llm/client.py", "self.cache.prune"),
     "llm-usage": ("adapters/outbound/llm/client.py", "self.usage_recorder.prune"),
     "llm-run-telemetry": ("adapters/outbound/llm/client.py", "self.run_record_recorder.prune"),
-    "runs": ("core/observability/store.py", "prune_run_traces("),
     "cadrumo_wallet_diagnostic_dump_dir": (
         "adapters/outbound/aeat/sede/iva_compensation_wallet.py",
         "prune_wallet_diagnostic_dumps(",

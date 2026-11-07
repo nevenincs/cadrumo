@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.acceptance.installed_cli import build_installed_cli_environment
 from dev.packaging.installed_runtime import installed_cli_runtime
 
@@ -17,6 +18,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 def test_installed_multirate_cli_journey(tmp_path: Path, installed_wheel_aeat: Path) -> None:
     """One issued invoice preserves 21% and 10% IVA through verification."""
+    year = filing_year_envelope().horizon
     repository_root = Path(__file__).resolve().parents[4]
     authority_root = repository_root / ".authority"
     assert (authority_root / "authority.current.json").is_file(), authority_root
@@ -26,7 +28,7 @@ def test_installed_multirate_cli_journey(tmp_path: Path, installed_wheel_aeat: P
         authority_root=authority_root,
         storage_root=tmp_path / "secure-store",
         artifact_root=tmp_path / "private-source-artifacts",
-        year=2025,
+        year=year,
         runtime_scope=installed_cli_runtime(
             installed_wheel_aeat,
             build_installed_cli_environment(storage_root=tmp_path / "secure-store", authority_root=authority_root),
@@ -34,8 +36,8 @@ def test_installed_multirate_cli_journey(tmp_path: Path, installed_wheel_aeat: P
         ),
     )
 
-    assert receipt.acceptance_ids == ("IVA-CLI-MULTIRATE-2025-1T",)
-    assert receipt.filing_year == 2025
+    assert receipt.acceptance_ids == (f"IVA-CLI-MULTIRATE-{year}-1T",)
+    assert receipt.filing_year == year
     assert Decimal(receipt.iva_resultado) == Decimal("21.00") + Decimal("5.00") - Decimal("10.50")
     assert len(receipt.transaction_ids) == 3
     assert receipt.issued_invoice_line_rates == ("RATE_21", "RATE_10")

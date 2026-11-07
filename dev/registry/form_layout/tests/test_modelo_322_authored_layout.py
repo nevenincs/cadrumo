@@ -14,6 +14,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormFieldBlock,
     FormGridBlock,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_modelo_directory
@@ -21,9 +22,14 @@ from ...compiler.loader import load_modelo_directory
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+def _edition(position: int) -> str:
+    """The id of the authored Modelo 322 revision at ``position`` in its oldest-first order."""
+    return str(authored_revisions("322")[position].id)
+
+
 @cache
 def _revision() -> ModeloRevision:
-    return load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/322")).revisions["2026-y-siguientes"]
+    return load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/322")).revisions[_edition(3)]
 
 
 def _grids() -> dict[str, FormGridBlock]:
@@ -166,7 +172,7 @@ def test_322_note_five_boxes_refuse_nonzero_amounts(box: str) -> None:
     assert owner.constraints.violates(Decimal("0.01")) is not None
     assert owner.constraints.violates(Decimal("-0.01")) is not None
     assert "aeat-dr-322-2026" in owner.constraints.source_refs
-    previous = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/322")).revisions["2024-2025"]
+    previous = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/322")).revisions[_edition(2)]
     assert next(c for c in previous.casillas if c.id == box).constraints is None
 
 

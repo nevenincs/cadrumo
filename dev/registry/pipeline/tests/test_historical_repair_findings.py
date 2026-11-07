@@ -10,17 +10,16 @@ from ..historical_static_repair import REVIEWED_TARGETS, validate_repair_finding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_M720_TARGET = (
-    "720",
-    "2013-y-siguientes",
-    "aeat-dr-720",
-    2024,
-    "0A",
-    "83c26f2c7c2848ec9544889d070b071d69d24608f48bd52782a6d608039d23b9",
+# Each reviewed target is addressed by its manifest digest; the edition and filing year are the reviewed table's own.
+_M720_TARGET = next(
+    key
+    for key in REVIEWED_TARGETS
+    if key[0] == "720" and key[-1] == "83c26f2c7c2848ec9544889d070b071d69d24608f48bd52782a6d608039d23b9"
 )
-_M720_PRODUCER_TARGET = (
-    *_M720_TARGET[:-1],
-    "1217b488e839465f1499fba090eeab3faa1e39e83068d7447de68467427f398d",
+_M720_PRODUCER_TARGET = next(
+    key
+    for key in REVIEWED_TARGETS
+    if key[0] == "720" and key[-1] == "1217b488e839465f1499fba090eeab3faa1e39e83068d7447de68467427f398d"
 )
 
 
@@ -75,9 +74,9 @@ def test_m720_repair_refuses_unreviewed_manifest_before_source_access(digest: st
     with pytest.raises(RegistryValidationError, match="exact reviewed"):
         validated_historical_repair_source(
             modelo="720",
-            revision="2013-y-siguientes",
-            source_ref="aeat-dr-720",
-            filing_year=2024,
+            revision=_M720_TARGET[1],
+            source_ref=_M720_TARGET[2],
+            filing_year=_M720_TARGET[3],
             period="0A",
             expected_manifest_sha256=digest,
         )

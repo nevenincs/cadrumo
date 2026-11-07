@@ -3,7 +3,7 @@
 Covers the capture sink, the canonicalise/mask/compare primitive, the
 typed re-validation boundary, and — the central honesty gate — the
 anti-tautology proof that the declared mask
-(:data:`cadrumo.core.observability.GOLDEN_MASK_FIELDS`) is exactly the
+(:data:`cadrumo.tests.golden_comparison.GOLDEN_MASK_FIELDS`) is exactly the
 residual non-deterministic field set once the clock seam is frozen and
 ``profile_id`` is injected, no broader.
 
@@ -28,6 +28,8 @@ from ....tests.golden_comparison import (
     GOLDEN_MASK_FIELDS,
     GOLDEN_MASK_PATHS,
     MASK_SENTINEL,
+    GoldenCaptureError,
+    GoldenReplayMismatchError,
     assert_golden_match,
     canonicalise,
     differing_field_names,
@@ -38,9 +40,7 @@ from ....tests.golden_comparison import (
 from ...json_contract import OutputSchema, emit_json_success
 from ...time.clock import frozen_clock, now
 from ..capture import record_emitted_envelope
-from ..errors import GoldenCaptureError, GoldenReplayMismatchError
 from .envelope_capture import capture_envelopes
-from .run_scope import mint_run_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -80,7 +80,7 @@ def _capture_scenario() -> dict[str, object]:
             # unique so the mask is exercised without importing the domain
             # profile model into the core test package.
             snapshot_id=f"{_PROFILE_ID}:{now().strftime('%Y%m%dT%H%M%S%fZ')}:{uuid4().hex}",
-            run_id=mint_run_id(),
+            run_id=uuid4().hex[:16],
         )
         stream = io.StringIO()
         with capture_envelopes() as sink:

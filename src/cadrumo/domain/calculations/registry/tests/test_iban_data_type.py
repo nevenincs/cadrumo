@@ -1,4 +1,4 @@
-"""Roundtrip tests for the `iban` data_type and `IbanString` alias.
+"""Roundtrip tests for the `iban` data_type.
 
 The validator enforces ISO 13616 shape (country code + check digits
 + BBAN, total 15-34 chars) and the mod-97 residue check. Inputs are
@@ -7,17 +7,19 @@ normalised by stripping whitespace and hyphens and uppercasing.
 
 from __future__ import annotations
 
+from typing import Annotated
+
 import pytest
-from pydantic import TypeAdapter, ValidationError
+from pydantic import BeforeValidator, TypeAdapter, ValidationError
 
 from ..errors import RegistryValidationError
-from ..schema_scalars import IbanString, validate_iban_string, validate_registry_text_scalar
+from ..schema_scalars import validate_iban_string, validate_registry_text_scalar
 from ..schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-_IBAN_ADAPTER: TypeAdapter[str] = TypeAdapter(IbanString)
+_IBAN_ADAPTER: TypeAdapter[str] = TypeAdapter(Annotated[str, BeforeValidator(validate_iban_string)])
 
 
 def _casilla_with(data_type: str) -> CasillaDefinition:

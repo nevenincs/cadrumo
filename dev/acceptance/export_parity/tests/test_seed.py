@@ -14,6 +14,7 @@ import pytest
 
 from dev.acceptance.installed_cli import InstalledCli
 
+from ..scenario import YEARS
 from ..seed import carried_years
 from ..seed_campaign import Seeder
 from ..seed_contracts import SeedReceipt
@@ -21,6 +22,7 @@ from ..seed_contracts import SeedReceipt
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _ALL_STAGES = ("ledger", "amortization", "withholding", "modelos")
+_PRIOR_YEAR, _SEEDED_YEAR = YEARS[-2], YEARS[-1]
 
 
 class _RecordingCli(InstalledCli):
@@ -48,24 +50,30 @@ def _seeder(cli: InstalledCli, tmp_path: Path) -> Seeder:
     receipt = SeedReceipt.load(receipt_path) or SeedReceipt(
         scenario="test", authority_generation="test", executable_sha256="test", carry_evidence="synthetic_csv_register"
     )
-    return Seeder(cli, receipt=receipt, receipt_path=receipt_path, artifact_dir=tmp_path / "evidence", first_year=2025)
+    return Seeder(
+        cli, receipt=receipt, receipt_path=receipt_path, artifact_dir=tmp_path / "evidence", first_year=_SEEDED_YEAR
+    )
 
 
 def test_the_honest_lane_carries_no_prior_year_evidence() -> None:
-    assert carried_years((2025,), stages=_ALL_STAGES, carry_evidence="none") == ()
+    assert carried_years((_SEEDED_YEAR,), stages=_ALL_STAGES, carry_evidence="none") == ()
 
 
 def test_the_synthetic_lane_carries_only_into_a_year_whose_predecessor_is_not_seeded() -> None:
-    assert carried_years((2025,), stages=_ALL_STAGES, carry_evidence="synthetic_csv_register") == (2025,)
-    assert carried_years((2024, 2025), stages=_ALL_STAGES, carry_evidence="synthetic_csv_register") == (2024,)
-    assert carried_years((2025,), stages=("ledger",), carry_evidence="synthetic_csv_register") == ()
+    assert carried_years((_SEEDED_YEAR,), stages=_ALL_STAGES, carry_evidence="synthetic_csv_register") == (
+        _SEEDED_YEAR,
+    )
+    assert carried_years((_PRIOR_YEAR, _SEEDED_YEAR), stages=_ALL_STAGES, carry_evidence="synthetic_csv_register") == (
+        _PRIOR_YEAR,
+    )
+    assert carried_years((_SEEDED_YEAR,), stages=("ledger",), carry_evidence="synthetic_csv_register") == ()
 
 
 def test_the_prior_fourth_quarter_compensation_is_declared_as_a_proven_zero(tmp_path: Path) -> None:
-    # 2024 4T is 879.90 a ingresar, so it leaves nothing to compensate: 0.00, not an absent value.
+    # The prior year's 4T is 879.90 a ingresar, so it leaves nothing to compensate: 0.00, not an absent value.
     cli = _RecordingCli()
 
-    _seeder(cli, tmp_path).carry_m303_compensation(2025)
+    _seeder(cli, tmp_path).carry_m303_compensation(_SEEDED_YEAR)
 
     assert cli.calls == [
         (
@@ -74,7 +82,7 @@ def test_the_prior_fourth_quarter_compensation_is_declared_as_a_proven_zero(tmp_
             "iva-wallet",
             "seed",
             "--filing-year",
-            "2024",
+            str(_PRIOR_YEAR),
             "--period",
             "4T",
             "--amount",
@@ -86,9 +94,9 @@ def test_the_prior_fourth_quarter_compensation_is_declared_as_a_proven_zero(tmp_
 
 def test_a_resumed_seed_does_not_declare_the_opening_balance_twice(tmp_path: Path) -> None:
     first, resumed = _RecordingCli(), _RecordingCli()
-    _seeder(first, tmp_path).carry_m303_compensation(2025)
+    _seeder(first, tmp_path).carry_m303_compensation(_SEEDED_YEAR)
 
-    _seeder(resumed, tmp_path).carry_m303_compensation(2025)
+    _seeder(resumed, tmp_path).carry_m303_compensation(_SEEDED_YEAR)
 
     assert len(first.calls) == 1
     assert resumed.calls == []

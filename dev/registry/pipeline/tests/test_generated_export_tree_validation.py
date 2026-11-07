@@ -11,6 +11,7 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import load_toml, render_toml
 from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryValidationError
+from cadrumo.domain.calculations.registry.tests.authored_editions import revision_covering
 
 from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ...compiler.loader import load_modelo_directory
@@ -193,14 +194,16 @@ def test_generated_tree_validation_refuses_wrong_period_and_provenance_drift(tmp
             rendered,
         )
 
+    other_revision = str(revision_covering(ISOLATED_TREE.modelo, ISOLATED_TREE.filing_year - 1).id)
     with pytest.raises(
         RegistryValidationError,
         match=re.escape(
-            f"generated modelo revisions directory must contain exactly ['2026'], got ['{ISOLATED_TREE.revision}']",
+            "generated modelo revisions directory must contain exactly "
+            f"['{other_revision}'], got ['{ISOLATED_TREE.revision}']",
         ),
     ):
         _validate(
-            replace(context, target=context.target.model_copy(update={"revision_id": "2026"})),
+            replace(context, target=context.target.model_copy(update={"revision_id": other_revision})),
             joined,
             semantic_map,
             rendered,

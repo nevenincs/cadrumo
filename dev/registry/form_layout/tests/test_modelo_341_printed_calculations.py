@@ -7,10 +7,13 @@ import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_expression import evaluate_expression
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ...compiler.loader import load_modelo_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_EDITIONS = tuple(str(revision.id) for revision in authored_revisions("341"))
 
 
 def _evaluate(revision_id: str, target: str, values: dict[str, Decimal]) -> Decimal:
@@ -31,7 +34,7 @@ def _evaluate(revision_id: str, target: str, values: dict[str, Decimal]) -> Deci
     )
 
 
-@pytest.mark.parametrize("revision_id", ["2005-2015", "2016-y-siguientes"])
+@pytest.mark.parametrize("revision_id", _EDITIONS)
 @pytest.mark.parametrize("row", [1, 2, 3])
 @pytest.mark.parametrize("base,rate,expected", [("1000", "8", "80"), ("1500", "12", "180"), ("0", "10.5", "0")])
 def test_each_row_uses_its_own_base_and_explicit_percentage(
@@ -41,14 +44,14 @@ def test_each_row_uses_its_own_base_and_explicit_percentage(
     assert _evaluate(revision_id, f"{row + 6:02}", values) == Decimal(expected)
 
 
-@pytest.mark.parametrize("revision_id", ["2005-2015", "2016-y-siguientes"])
+@pytest.mark.parametrize("revision_id", _EDITIONS)
 def test_total_uses_all_three_compensations(revision_id: str) -> None:
     assert _evaluate(revision_id, "10", {"07": Decimal("180"), "08": Decimal("52.5"), "09": Decimal("0")}) == Decimal(
         "232.5"
     )
 
 
-@pytest.mark.parametrize("revision_id", ["2005-2015", "2016-y-siguientes"])
+@pytest.mark.parametrize("revision_id", _EDITIONS)
 @pytest.mark.parametrize(
     "target,values", [("07", {"01": Decimal("1000")}), ("10", {"07": Decimal("80"), "08": Decimal("0")})]
 )

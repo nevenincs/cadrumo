@@ -16,6 +16,7 @@ from ......core.auth_provider import AuthProviderKind
 from ......core.config import Settings
 from ......core.period import Period
 from ......domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ......domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 from ......domain.contribuyente.entity_type import EntityType
 from ......domain.contribuyente.renta_codes import FiscalResidency
 from ......domain.deadlines.engine import DeadlineEngine
@@ -26,11 +27,13 @@ from ......domain.deadlines.models import (
     ModeloEnrollment,
     TaxpayerProfile,
 )
-from ......domain.filing.schema import ModeloDraft, ModeloValidationFinding
+from ......domain.filing.schema import ModeloDraft, ModeloValidationFinding, registry_schema_version
 from ......domain.submission.models import ModeloDraftStatus
 from ......domain.submission.protocols import DeadlineWindowChecker
 
-_DRAFT_TIME = datetime(2026, 4, 10, 12, 0, tzinfo=UTC)
+_FILING_YEAR = filing_year_envelope().horizon
+_REVISION_ID = open_ended_revision("130").id
+_DRAFT_TIME = datetime(_FILING_YEAR, 4, 10, 12, 0, tzinfo=UTC)
 
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -45,13 +48,13 @@ def modelo_draft(
     return ModeloDraft(
         draft_id="submission-preflight-draft",
         modelo="130",
-        period=Period.from_year_and_code(2026, "1T"),
+        period=Period.from_year_and_code(_FILING_YEAR, "1T"),
         profile_tax_id="X0001500M",
         subject_tax_id="X0001500M",
         snapshot_ref=RegistrySnapshotRef(
             modelo="130",
-            revision_id="2025",
-            modelo_year=2026,
+            revision_id=_REVISION_ID,
+            modelo_year=_FILING_YEAR,
             period="1T",
         ),
         status=status,
@@ -59,7 +62,7 @@ def modelo_draft(
         findings=findings,
         created_at=_DRAFT_TIME,
         updated_at=_DRAFT_TIME,
-        schema_version="registry:130:2025",
+        schema_version=registry_schema_version(modelo="130", revision_id=_REVISION_ID),
     )
 
 

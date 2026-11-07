@@ -6,6 +6,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.form_context import resolve_form_context_field
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormContextFieldBlock, FormRepeatingGroupBlock
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_modelo_directory
@@ -13,10 +14,9 @@ from ...compiler.loader import load_modelo_directory
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-@pytest.mark.parametrize(
-    "revision_id,source", [("2019-2022", "aeat-dr-180-2014"), ("2023-y-siguientes", "aeat-dr-180-2023")]
-)
-def test_180_printed_boxes_do_not_confuse_record_offsets(revision_id: str, source: str) -> None:
+@pytest.mark.parametrize("position,source", [(0, "aeat-dr-180-2014"), (1, "aeat-dr-180-2023")])
+def test_180_printed_boxes_do_not_confuse_record_offsets(position: int, source: str) -> None:
+    revision_id = str(authored_revisions("180")[position].id)
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/180")).revisions[revision_id]
     layout = revision.form_layouts[0]
     assert form_layout_failures(revision) == ()

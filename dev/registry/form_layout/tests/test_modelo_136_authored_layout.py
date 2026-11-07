@@ -9,6 +9,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormLayoutSeedSource,
     FormPlacementKind,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions
 
 from ...compiler.form_layout_integrity import form_layout_failures
 from ...compiler.loader import load_modelo_directory
@@ -16,7 +17,7 @@ from ...compiler.loader import load_modelo_directory
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-@pytest.mark.parametrize("revision_id", ["2022-2025", "2026"])
+@pytest.mark.parametrize("revision_id", [str(revision.id) for revision in authored_revisions("136")])
 def test_annex_iii_places_all_twenty_four_declared_fields(revision_id):
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/136")).revisions[revision_id]
     layout = revision.form_layouts[0]

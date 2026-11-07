@@ -26,6 +26,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.edition_materialisation import MaterialisedEdition, materialise_edition
@@ -47,9 +48,10 @@ from ..tree_validation import GeneratedExportTreeValidationContext
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _MODELO = "210"
-_REVISION = "2026-y-siguientes"
+_OPEN_ENDED = open_ended_revision(_MODELO)
+_REVISION = str(_OPEN_ENDED.id)
 _SOURCE_REF = "aeat-dr-210-2026"
-_FILING_YEAR = 2026
+_FILING_YEAR = _OPEN_ENDED.valid_from.year
 _PERIOD = "EVENT-1"
 
 

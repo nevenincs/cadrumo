@@ -19,6 +19,7 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import parse_toml
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope, open_ended_revision
 
 from ..stamp import stamp_revision
 
@@ -26,7 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 _MODELO = "232"
-_REVISION = "2018-y-siguientes"
+_REVISION = str(open_ended_revision(_MODELO).id)
 _REVIEWED_BY_LINE = 'reviewed_by = "agent-prepared-pending-operator"\n'
 
 
@@ -72,7 +73,7 @@ def _stamp_replacement(tmp_path: Path, reviewed_by_block: str, *, suffix: str = 
         _REVISION,
         review_status="agent_reviewed",
         reviewed_by="agent: replacement",
-        reviewed_at=date(2026, 8, 20),
+        reviewed_at=date(filing_year_envelope().horizon, 8, 20),
         registry_root=registry_root,
     )
     return result.manifest

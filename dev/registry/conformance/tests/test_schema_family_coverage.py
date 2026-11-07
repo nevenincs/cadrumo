@@ -35,6 +35,7 @@ from cadrumo.domain.calculations.registry.schema_base import (
     RegistryModel,
 )
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from dev.registry.compiler.schema_family_coverage import (
     RevisionCoverageManifest,
@@ -49,7 +50,8 @@ from ..schema_family_support import schema_family_enrollment_failures
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REVISION_ID = "2025"
+_YEAR = filing_year_envelope().horizon
+_REVISION_ID = str(_YEAR)
 _LEGAL_REF = "ley-58-2003:art-29"
 _MANIFEST_HOME_REFUSAL = "must be declared in the revision's revision.toml"
 
@@ -70,12 +72,23 @@ source_refs = ["aeat-manual"]
 """
 
 
+def _revision_preamble() -> str:
+    """The scalar preamble of the one fixture revision, which opens and closes in the derived year."""
+    return (
+        f'[revisions."{_REVISION_ID}"]\n'
+        f"valid_from = {datetime.date(_YEAR, 1, 1).isoformat()}\n"
+        f'period_selector = {{ years = [{_YEAR}], periods = ["0A"] }}\n'
+        f'legal_refs = ["{_LEGAL_REF}"]\n'
+        'source_refs = ["aeat-manual"]\n'
+    )
+
+
 def _write_modelo(root: Path, *, manifest_extra: str = "", fragment_extra: str = "") -> Path:
     return write_modelo(
         root,
         casilla_fragment=_CASILLA_FRAGMENT,
         revision_id=_REVISION_ID,
-        manifest_extra=manifest_extra,
+        manifest_text=_revision_preamble() + manifest_extra,
         fragment_extra=fragment_extra,
     )
 
@@ -89,9 +102,9 @@ def _revision(**overrides: object) -> ModeloRevision:
     return ModeloRevision.model_validate(
         {
             "id": _REVISION_ID,
-            "localization_key": "modelo.schema.999.revision.2025",
-            "valid_from": datetime.date(2025, 1, 1),
-            "period_selector": {"years": (2025,), "periods": ("0A",)},
+            "localization_key": f"modelo.schema.999.revision.{_REVISION_ID}",
+            "valid_from": datetime.date(_YEAR, 1, 1),
+            "period_selector": {"years": (_YEAR,), "periods": ("0A",)},
             "legal_refs": (_LEGAL_REF,),
             "source_refs": ("aeat-manual",),
             **overrides,
