@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.paths import REPO_ROOT
 from dev.registry import edition_delta_assessment as delta_assessment
 from dev.registry import edition_delta_assessment_lineage as assessment_lineage
@@ -15,9 +16,14 @@ from dev.registry import edition_delta_row_delta_common as delta_row_delta_commo
 from dev.registry import edition_delta_source as delta_source
 from dev.registry.compiler.loader import load_modelo_directory
 from dev.registry.conformance.loader_directory_mode_support import write_standard_manifest
+from dev.registry.tests.synthetic_delta_edition_support import PREDECESSOR_EDITION, SUCCESSOR_EDITION
 from dev.registry.tests.test_restated_family_merge import build_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_SUCCESSOR_YEAR = filing_year_envelope().horizon
+_PREDECESSOR_YEAR = _SUCCESSOR_YEAR - 1
+_PREDECESSOR, _SUCCESSOR = str(_PREDECESSOR_YEAR), str(_SUCCESSOR_YEAR)
 _MODELO_100 = REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos" / "100"
 
 
@@ -143,10 +149,14 @@ def test_real_loader_assessment_distinguishes_restatement_from_inheritance(tmp_p
     assessment = delta_assessment.assess_migration_state(modelo)
 
     formulas = next(
-        row for row in assessment.by_revision_family if row["revision"] == "2025" and row["family"] == "formulas"
+        row
+        for row in assessment.by_revision_family
+        if row["revision"] == SUCCESSOR_EDITION and row["family"] == "formulas"
     )
     loaded = load_modelo_directory(modelo)
-    inherited_formula = next(item for item in loaded.revisions["2024"].formulas if item.id == "modelo-999-cuota")
+    inherited_formula = next(
+        item for item in loaded.revisions[PREDECESSOR_EDITION].formulas if item.id == "modelo-999-cuota"
+    )
     inherited_fields = sum(
         1
         for path in delta_payload.leaf_values(delta_payload.model_value(inherited_formula))
@@ -155,7 +165,9 @@ def test_real_loader_assessment_distinguishes_restatement_from_inheritance(tmp_p
     exact = [
         item
         for item in assessment.unresolved_duplication
-        if item["revision"] == "2025" and item["family"] == "formulas" and item["member"] == "modelo-999-base"
+        if item["revision"] == SUCCESSOR_EDITION
+        and item["family"] == "formulas"
+        and item["member"] == "modelo-999-base"
     ]
     assert _positive(formulas["authored_payload_fields"])
     assert formulas["inherited_payload_fields"] == inherited_fields
@@ -168,9 +180,9 @@ def test_nested_family_override_detector_is_independent_and_exact(
     tmp_path: Path, literal: str, redundant: bool
 ) -> None:
     declaration = (
-        '[[revisions."2025".family_overrides]]\n'
+        f'[[revisions."{SUCCESSOR_EDITION}".family_overrides]]\n'
         'family = "formulas"\n'
-        'selector = { revision = "2024", id = "modelo-999-cuota" }\n'
+        f'selector = {{ revision = "{PREDECESSOR_EDITION}", id = "modelo-999-cuota" }}\n'
         f'fields = {{ expression = {{ literal = "{literal}" }} }}\n'
     )
     assessment = delta_assessment.assess_migration_state(build_modelo(tmp_path, successor_extra=declaration))
@@ -182,7 +194,9 @@ def test_nested_family_override_detector_is_independent_and_exact(
 
     assert bool(matches) is redundant
     formula_row = next(
-        row for row in assessment.by_revision_family if row["revision"] == "2025" and row["family"] == "formulas"
+        row
+        for row in assessment.by_revision_family
+        if row["revision"] == SUCCESSOR_EDITION and row["family"] == "formulas"
     )
     measured = formula_row["redundant_overrides"] if redundant else formula_row["genuine_overrides"]
     assert _positive(measured)
@@ -193,16 +207,16 @@ def test_removal_clearing_ordering_and_source_defaults_are_separate_operations(t
         'formula_source_refs = ["successor-source"]\n'
         'cleared_families = [{ family = "constructs", cause = "official_structure_withdraws", '
         'reason = "The document governing this edition lays out no construct, so the earlier one is withdrawn." }]\n'
-        '[[revisions."2025".family_removals]]\n'
+        f'[[revisions."{SUCCESSOR_EDITION}".family_removals]]\n'
         'family = "formulas"\n'
-        'selector = { revision = "2024", id = "modelo-999-cuota" }\n'
-        '[[revisions."2025".family_positions]]\n'
+        f'selector = {{ revision = "{PREDECESSOR_EDITION}", id = "modelo-999-cuota" }}\n'
+        f'[[revisions."{SUCCESSOR_EDITION}".family_positions]]\n'
         'family = "formulas"\n'
         'id = "modelo-999-recargo"\n'
         "position = 0\n"
     )
     modelo = build_modelo(tmp_path, successor_extra=declaration)
-    successor_constructs = modelo / "revisions" / "2025" / "constructs"
+    successor_constructs = modelo / "revisions" / SUCCESSOR_EDITION / "constructs"
     for path in successor_constructs.glob("*.toml"):
         path.unlink()
     successor_constructs.rmdir()
@@ -210,13 +224,19 @@ def test_removal_clearing_ordering_and_source_defaults_are_separate_operations(t
     assessment = delta_assessment.assess_migration_state(modelo)
 
     formulas = next(
-        row for row in assessment.by_revision_family if row["revision"] == "2025" and row["family"] == "formulas"
+        row
+        for row in assessment.by_revision_family
+        if row["revision"] == SUCCESSOR_EDITION and row["family"] == "formulas"
     )
     constructs = next(
-        row for row in assessment.by_revision_family if row["revision"] == "2025" and row["family"] == "constructs"
+        row
+        for row in assessment.by_revision_family
+        if row["revision"] == SUCCESSOR_EDITION and row["family"] == "constructs"
     )
     scalars = next(
-        row for row in assessment.by_revision_family if row["revision"] == "2025" and row["family"] == "$scalars"
+        row
+        for row in assessment.by_revision_family
+        if row["revision"] == SUCCESSOR_EDITION and row["family"] == "$scalars"
     )
     assert formulas["removals"] == 1
     assert _positive(formulas["structural_overhead"])
@@ -226,7 +246,7 @@ def test_removal_clearing_ordering_and_source_defaults_are_separate_operations(t
 
 def test_evidence_difference_is_genuine_while_surrounding_restatement_remains_visible(tmp_path: Path) -> None:
     modelo = build_modelo(tmp_path)
-    formulas = modelo / "revisions" / "2025" / "formulas" / "0001-formulas.toml"
+    formulas = modelo / "revisions" / SUCCESSOR_EDITION / "formulas" / "0001-formulas.toml"
     formulas.write_text(
         formulas.read_text(encoding="utf-8").replace(
             'source_refs = ["aeat-manual"]', 'source_refs = ["changed-evidence"]', 1
@@ -239,7 +259,7 @@ def test_evidence_difference_is_genuine_while_surrounding_restatement_remains_vi
     recargo = next(
         item
         for item in assessment.unresolved_duplication
-        if item.get("revision") == "2025"
+        if item.get("revision") == SUCCESSOR_EDITION
         and item.get("family") == "formulas"
         and item.get("member") == "modelo-999-recargo"
     )
@@ -247,16 +267,18 @@ def test_evidence_difference_is_genuine_while_surrounding_restatement_remains_vi
     assert "source_refs" not in _fields(recargo)
     assert "expression.literal" in _fields(recargo)
     row = next(
-        item for item in assessment.by_revision_family if item["revision"] == "2025" and item["family"] == "formulas"
+        item
+        for item in assessment.by_revision_family
+        if item["revision"] == SUCCESSOR_EDITION and item["family"] == "formulas"
     )
     assert _positive(row["genuine_overrides"])
 
 
 def test_unsupported_collection_shape_reports_incomplete_coverage_before_hydration(tmp_path: Path) -> None:
     modelo = build_modelo(tmp_path)
-    formulas = modelo / "revisions" / "2025" / "formulas" / "0001-formulas.toml"
+    formulas = modelo / "revisions" / SUCCESSOR_EDITION / "formulas" / "0001-formulas.toml"
     formulas.write_text(
-        '[revisions."2025".formulas]\nid = "unsupported-mapping-shape"\n',
+        f'[revisions."{SUCCESSOR_EDITION}".formulas]\nid = "unsupported-mapping-shape"\n',
         encoding="utf-8",
         newline="\n",
     )
@@ -266,7 +288,9 @@ def test_unsupported_collection_shape_reports_incomplete_coverage_before_hydrati
     assert not assessment.minimal
     assert assessment.by_revision_family == ()
     assert any(
-        item["revision"] == "2025" and item["family"] == "formulas" and item["reason"] == "authored_shape_unsupported"
+        item["revision"] == SUCCESSOR_EDITION
+        and item["family"] == "formulas"
+        and item["reason"] == "authored_shape_unsupported"
         for item in assessment.blocked_work
     )
 
@@ -274,8 +298,10 @@ def test_unsupported_collection_shape_reports_incomplete_coverage_before_hydrati
 def test_a_predecessor_row_an_authored_operation_claims_is_not_free_to_rename() -> None:
     """An authored override patches its row and an authored removal relocates it; neither is free."""
     manifest = {
-        "casilla_overrides": [{"selector": {"revision": "2021", "id": "0800"}, "fields": {"section": ["x"]}}],
-        "casilla_removals": [{"selector": {"revision": "2021", "id": "0786"}}],
+        "casilla_overrides": [
+            {"selector": {"revision": PREDECESSOR_EDITION, "id": "0800"}, "fields": {"section": ["x"]}}
+        ],
+        "casilla_removals": [{"selector": {"revision": PREDECESSOR_EDITION, "id": "0786"}}],
     }
 
     assert delta_row_delta_common.authored_override_selectors(manifest) == frozenset({"0800", "0786"})
@@ -329,10 +355,10 @@ def _root_fixture(
     *,
     successor_root: str,
     successor_number: str = "1",
-    successor_formula: str = "modelo-999-2025-cuota",
-    successor_window: tuple[str, str] = ("2025-01-01", "2025-12-31"),
+    successor_formula: str = f"modelo-999-{_SUCCESSOR}-cuota",
+    successor_window: tuple[str, str] = (f"{_SUCCESSOR}-01-01", f"{_SUCCESSOR}-12-31"),
 ) -> Path:
-    """A 2024 edition and a 2025 edition declaring ``successor_root`` as its predecessor.
+    """A predecessor edition and its successor declaring ``successor_root`` as its predecessor.
 
     Each edition names its own formula through its own edition key, as the
     corpus does, so a row referencing it restates the earlier row only once the
@@ -342,8 +368,15 @@ def _root_fixture(
     modelo_dir.mkdir(parents=True)
     write_standard_manifest(modelo_dir, "Root fixture")
     for revision_id, year, predecessor, number, formula, (valid_from, valid_to) in (
-        ("2024", 2024, "", "1", "modelo-999-2024-cuota", ("2024-01-01", "2024-12-31")),
-        ("2025", 2025, successor_root, successor_number, successor_formula, successor_window),
+        (
+            _PREDECESSOR,
+            _PREDECESSOR_YEAR,
+            "",
+            "1",
+            f"modelo-999-{_PREDECESSOR}-cuota",
+            (f"{_PREDECESSOR}-01-01", f"{_PREDECESSOR}-12-31"),
+        ),
+        (_SUCCESSOR, _SUCCESSOR_YEAR, successor_root, successor_number, successor_formula, successor_window),
     ):
         revision_dir = modelo_dir / "revisions" / revision_id
         for section in ("casillas", "formulas"):
@@ -385,7 +418,7 @@ def _root_restatement(assessment: delta_assessment.MigrationAssessment) -> list[
     return [
         field
         for item in assessment.unresolved_duplication
-        if item.get("revision") == "2025"
+        if item.get("revision") == _SUCCESSOR
         and item.get("family") == "casillas"
         and str(item.get("reason", "")).startswith("explicit root restates")
         for field in _fields(item)
@@ -411,7 +444,10 @@ def test_an_explicit_root_restating_the_edition_before_it_is_not_minimal(tmp_pat
 def test_a_reference_to_another_lineage_is_a_genuine_difference_net_of_edition_tokens(tmp_path: Path) -> None:
     """Detector teeth for the normalisation: only the edition's own key is set aside."""
     modelo_dir = _root_fixture(
-        tmp_path, successor_root=_UNCAUSED_ROOT, successor_number="7", successor_formula="modelo-999-2025-recargo"
+        tmp_path,
+        successor_root=_UNCAUSED_ROOT,
+        successor_number="7",
+        successor_formula=f"modelo-999-{_SUCCESSOR}-recargo",
     )
 
     restated = _root_restatement(delta_assessment.assess_migration_state(modelo_dir))
@@ -424,15 +460,15 @@ def test_a_reference_to_another_lineage_is_a_genuine_difference_net_of_edition_t
 def test_a_root_whose_every_statement_differs_stays_minimal(tmp_path: Path) -> None:
     """The normal path: a root with nothing to reuse from the edition before it reports clean."""
     modelo_dir = _root_fixture(tmp_path, successor_root=_UNCAUSED_ROOT)
-    casillas = modelo_dir / "revisions" / "2025" / "casillas" / "0001-casillas.toml"
+    casillas = modelo_dir / "revisions" / _SUCCESSOR / "casillas" / "0001-casillas.toml"
     casillas.write_text(
-        '[[revisions."2025".casillas]]\nid = "0009"\nnumber = "9"\nsection = ["resultado"]\n'
-        'data_type = "money"\ninput_kind = "computed"\nformula = "modelo-999-2025-cuota"\n'
+        f'[[revisions."{_SUCCESSOR}".casillas]]\nid = "0009"\nnumber = "9"\nsection = ["resultado"]\n'
+        f'data_type = "money"\ninput_kind = "computed"\nformula = "modelo-999-{_SUCCESSOR}-cuota"\n'
         f'legal_refs = ["{_ROOT_REF}"]\nsource_refs = ["aeat-manual"]\n',
         encoding="utf-8",
         newline="\n",
     )
-    formulas = modelo_dir / "revisions" / "2025" / "formulas" / "0001-formulas.toml"
+    formulas = modelo_dir / "revisions" / _SUCCESSOR / "formulas" / "0001-formulas.toml"
     formulas.write_text(
         formulas.read_text(encoding="utf-8").replace('target_casilla_id = "0001"', 'target_casilla_id = "0009"'),
         encoding="utf-8",
@@ -447,6 +483,8 @@ def test_a_root_whose_every_statement_differs_stays_minimal(tmp_path: Path) -> N
 
 def test_a_parallel_root_in_force_beside_the_edition_before_it_is_not_measured_against_it(tmp_path: Path) -> None:
     """A variant whose validity window meets its neighbour's is not the edition after it."""
-    modelo_dir = _root_fixture(tmp_path, successor_root=_UNCAUSED_ROOT, successor_window=("2024-01-01", "2025-12-31"))
+    modelo_dir = _root_fixture(
+        tmp_path, successor_root=_UNCAUSED_ROOT, successor_window=(f"{_PREDECESSOR}-01-01", f"{_SUCCESSOR}-12-31")
+    )
 
     assert _root_restatement(delta_assessment.assess_migration_state(modelo_dir)) == []

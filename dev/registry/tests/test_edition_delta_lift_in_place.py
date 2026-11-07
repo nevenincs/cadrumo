@@ -98,8 +98,8 @@ def _write_revision(
 
 
 def _successor_formulas() -> str:
-    return delta_formula(SUCCESSOR_EDITION, "modelo-999-2025-cuota", target="0002") + delta_formula(
-        SUCCESSOR_EDITION, "modelo-999-2025-total", target="0003"
+    return delta_formula(SUCCESSOR_EDITION, f"modelo-999-{SUCCESSOR_EDITION}-cuota", target="0002") + delta_formula(
+        SUCCESSOR_EDITION, f"modelo-999-{SUCCESSOR_EDITION}-total", target="0003"
     )
 
 
@@ -112,7 +112,7 @@ def _delta_successor_fragments() -> dict[str, str]:
 
 
 def _full_copy_successor_fragments() -> dict[str, str]:
-    """The same edition stated in full: the two inheritable rows restated verbatim from 2024."""
+    """The same edition stated in full: the two inheritable rows restated verbatim from the predecessor."""
     return {
         "c0001__c0003.toml": delta_casilla(SUCCESSOR_EDITION, "0001", number="1", lineage="base")
         + delta_casilla(SUCCESSOR_EDITION, "0002", number="22", lineage="cuota")
@@ -124,9 +124,9 @@ def _full_copy_successor_fragments() -> dict[str, str]:
 def _build_modelo(root: Path, *, names_predecessor: bool) -> Path:
     """A two-edition modelo whose rows all restate one shared ``source_refs`` run.
 
-    The 2025 edition holds one new row, one row superseding its predecessor's,
+    The successor edition holds one new row, one row superseding its predecessor's,
     and two rows identical to the predecessor's. ``names_predecessor`` chooses
-    the shape it is authored in: a delta naming 2024 and stating only the first
+    the shape it is authored in: a delta naming the predecessor and stating only the first
     two, or the full copy of the same four rows naming nothing.
     """
     modelo_dir = root / MODELO_ID
@@ -135,19 +135,19 @@ def _build_modelo(root: Path, *, names_predecessor: bool) -> Path:
     _write_revision(
         modelo_dir,
         PREDECESSOR_EDITION,
-        year=2024,
+        year=int(PREDECESSOR_EDITION),
         casilla_fragments={
             "c0001__c0002.toml": delta_casilla(PREDECESSOR_EDITION, "0001", number="1", lineage="base")
             + delta_casilla(PREDECESSOR_EDITION, "0002", number="2", lineage="cuota"),
             "c0003.toml": delta_casilla(PREDECESSOR_EDITION, "0003", number="3", lineage="deduccion"),
         },
-        formulas=delta_formula(PREDECESSOR_EDITION, "modelo-999-2024-cuota", target="0002")
-        + delta_formula(PREDECESSOR_EDITION, "modelo-999-2024-total", target="0003"),
+        formulas=delta_formula(PREDECESSOR_EDITION, f"modelo-999-{PREDECESSOR_EDITION}-cuota", target="0002")
+        + delta_formula(PREDECESSOR_EDITION, f"modelo-999-{PREDECESSOR_EDITION}-total", target="0003"),
     )
     _write_revision(
         modelo_dir,
         SUCCESSOR_EDITION,
-        year=2025,
+        year=int(SUCCESSOR_EDITION),
         predecessor=PREDECESSOR_EDITION if names_predecessor else None,
         casilla_fragments=_delta_successor_fragments() if names_predecessor else _full_copy_successor_fragments(),
         formulas=_successor_formulas(),
@@ -241,12 +241,12 @@ def test_a_written_lift_proves_identical_and_a_rerun_changes_nothing(tmp_path: P
     )
     assert f'casilla_source_refs = ["{SOURCE_REF}"]\n' in manifest
     assert f'formula_source_refs = ["{SOURCE_REF}"]\n' in manifest
-    assert 'predecessor = "2024"\n' in manifest
+    assert f'predecessor = "{PREDECESSOR_EDITION}"\n' in manifest
     assert "reviewed_against" not in manifest
     assert "source_refs" not in fragment
     assert 'id = "0005"' in fragment
     assert 'id = "0002"' not in fragment
-    assert 'selector = { revision = "2024", id = "0002" }' in manifest
+    assert f'selector = {{ revision = "{PREDECESSOR_EDITION}", id = "0002" }}' in manifest
     assert 'fields = { number = "22" }' in manifest
 
     assert _prove(reference_dir, staged_dir) == _CLEAN_REPORT
@@ -289,16 +289,16 @@ def test_a_lift_that_reordered_a_reference_family_is_refused(tmp_path: Path) -> 
     assert _prove(reference_dir, staged_dir) == _CLEAN_REPORT
 
     formulas = staged_dir / "revisions" / SUCCESSOR_EDITION / "formulas" / _FORMULA_FRAGMENT
-    cuota = delta_formula(SUCCESSOR_EDITION, "modelo-999-2025-cuota", target="0002")
-    total = delta_formula(SUCCESSOR_EDITION, "modelo-999-2025-total", target="0003")
+    cuota = delta_formula(SUCCESSOR_EDITION, f"modelo-999-{SUCCESSOR_EDITION}-cuota", target="0002")
+    total = delta_formula(SUCCESSOR_EDITION, f"modelo-999-{SUCCESSOR_EDITION}-total", target="0003")
     assert formulas.read_text(encoding="utf-8") == cuota + total
     # The successor's chain carries its predecessor's two formulas ahead of its
     # own two, so the swap first shows at position two.
     assert _materialised_formula_ids(reference_dir, SUCCESSOR_EDITION) == (
-        "modelo-999-2024-cuota",
-        "modelo-999-2024-total",
-        "modelo-999-2025-cuota",
-        "modelo-999-2025-total",
+        f"modelo-999-{PREDECESSOR_EDITION}-cuota",
+        f"modelo-999-{PREDECESSOR_EDITION}-total",
+        f"modelo-999-{SUCCESSOR_EDITION}-cuota",
+        f"modelo-999-{SUCCESSOR_EDITION}-total",
     )
     formulas.write_text(total + cuota, encoding="utf-8", newline="\n")
 
@@ -307,8 +307,8 @@ def test_a_lift_that_reordered_a_reference_family_is_refused(tmp_path: Path) -> 
 
     assert str(refusal.value) == (
         f"edition '{SUCCESSOR_EDITION}': lifting changed the formulas members, which a lift may never do: "
-        "4 before, 4 after, first difference at position 2: 'modelo-999-2025-cuota' became "
-        "'modelo-999-2025-total'"
+        f"4 before, 4 after, first difference at position 2: 'modelo-999-{SUCCESSOR_EDITION}-cuota' became "
+        f"'modelo-999-{SUCCESSOR_EDITION}-total'"
     )
 
 
@@ -389,8 +389,8 @@ def test_a_date_and_the_text_that_reads_like_it_do_not_materialise_alike(tmp_pat
     modelo_dir = _build_modelo(tmp_path / "input", names_predecessor=True)
     source = read_edition(modelo_dir, SUCCESSOR_EDITION)
 
-    dated = dataclasses.replace(source, table={**source.table, "stamp": datetime.date(2025, 1, 1)})
-    as_text = dataclasses.replace(source, table={**source.table, "stamp": "2025-01-01"})
+    dated = dataclasses.replace(source, table={**source.table, "stamp": datetime.date(int(SUCCESSOR_EDITION), 1, 1)})
+    as_text = dataclasses.replace(source, table={**source.table, "stamp": f"{SUCCESSOR_EDITION}-01-01"})
 
     # A date is permitted: the corpus declares `valid_from` and its kin as bare
     # TOML dates, so refusing them would refuse every edition.
@@ -398,7 +398,7 @@ def test_a_date_and_the_text_that_reads_like_it_do_not_materialise_alike(tmp_pat
     assert chain_materialisation(dated) != chain_materialisation(as_text)
     # And two editions holding the same date still prove identical.
     assert chain_materialisation(dated) == chain_materialisation(
-        dataclasses.replace(source, table={**source.table, "stamp": datetime.date(2025, 1, 1)}),
+        dataclasses.replace(source, table={**source.table, "stamp": datetime.date(int(SUCCESSOR_EDITION), 1, 1)}),
     )
 
 
@@ -413,15 +413,15 @@ def test_a_family_only_the_staged_tree_holds_is_reported_as_a_member_change() ->
     shared: dict[str, tuple[str, ...]] = {"casillas": ("0001|base",)}
 
     assert member_difference(shared, shared) is None
-    assert member_difference(shared, {**shared, "bindings": ("modelo-999-2025-iva",)}) == (
+    assert member_difference(shared, {**shared, "bindings": (f"modelo-999-{SUCCESSOR_EDITION}-iva",)}) == (
         "lifting changed the bindings members, which a lift may never do: 0 before, 1 after, first difference at "
-        "position 0: ['modelo-999-2025-iva'] on the staged side only"
+        f"position 0: ['modelo-999-{SUCCESSOR_EDITION}-iva'] on the staged side only"
     )
     # The reference-only direction, which the asymmetric read already caught,
     # keeps reporting on the side that still holds the member.
-    assert member_difference({**shared, "bindings": ("modelo-999-2025-iva",)}, shared) == (
+    assert member_difference({**shared, "bindings": (f"modelo-999-{SUCCESSOR_EDITION}-iva",)}, shared) == (
         "lifting changed the bindings members, which a lift may never do: 1 before, 0 after, first difference at "
-        "position 0: ['modelo-999-2025-iva'] on the reference side only"
+        f"position 0: ['modelo-999-{SUCCESSOR_EDITION}-iva'] on the reference side only"
     )
 
 
@@ -430,17 +430,19 @@ def _build_forward_storage_modelo(root: Path, *, names_predecessor: bool = True)
     modelo_dir = _build_modelo(root, names_predecessor=names_predecessor)
     successor_manifest = modelo_dir / "revisions" / SUCCESSOR_EDITION / "revision.toml"
     text = successor_manifest.read_text(encoding="utf-8")
-    assert text.count("valid_from = 2025-01-01") == 1
+    assert text.count(f"valid_from = {SUCCESSOR_EDITION}-01-01") == 1
     successor_manifest.write_text(
-        text.replace("valid_from = 2025-01-01", "valid_from = 2025-02-01"), encoding="utf-8", newline="\n"
+        text.replace(f"valid_from = {SUCCESSOR_EDITION}-01-01", f"valid_from = {SUCCESSOR_EDITION}-02-01"),
+        encoding="utf-8",
+        newline="\n",
     )
-    branch_dir = modelo_dir / "revisions" / "2025-early"
+    branch_dir = modelo_dir / "revisions" / f"{SUCCESSOR_EDITION}-early"
     branch_dir.mkdir()
     (branch_dir / "revision.toml").write_text(
-        '[revisions."2025-early"]\n'
-        "valid_from = 2025-01-01\n"
-        "valid_to = 2025-01-31\n"
-        'period_selector = { years = [2025], periods = ["0A"] }\n'
+        f'[revisions."{SUCCESSOR_EDITION}-early"]\n'
+        f"valid_from = {SUCCESSOR_EDITION}-01-01\n"
+        f"valid_to = {SUCCESSOR_EDITION}-01-31\n"
+        f'period_selector = {{ years = [{SUCCESSOR_EDITION}], periods = ["0A"] }}\n'
         f'legal_refs = ["{LEGAL_REF}"]\n'
         f'source_refs = ["{SOURCE_REF}"]\n'
         f'casilla_storage_baseline = "{SUCCESSOR_EDITION}"\n'
@@ -465,17 +467,24 @@ def test_forward_storage_dependencies_preserve_chronological_reports_and_existin
 
     plan, works = edition_delta_planning_plan(modelo_dir, definition)
 
-    assert [edition.revision_id for edition in plan.editions] == [PREDECESSOR_EDITION, "2025-early", SUCCESSOR_EDITION]
+    assert [edition.revision_id for edition in plan.editions] == [
+        PREDECESSOR_EDITION,
+        f"{SUCCESSOR_EDITION}-early",
+        SUCCESSOR_EDITION,
+    ]
     assert [work.plan for work in works] == list(plan.editions)
-    assert tuple(edition for edition in plan.editions if edition.revision_id != "2025-early") == control.editions
+    assert (
+        tuple(edition for edition in plan.editions if edition.revision_id != f"{SUCCESSOR_EDITION}-early")
+        == control.editions
+    )
     early = plan.editions[1]
     assert early.predecessor == SUCCESSOR_EDITION
     assert early.dependencies == (SUCCESSOR_EDITION,)
     assert early.blocked == ()
     assert early.stated_ids == ()
     assert early.inherited_ids == _MATERIALISED_ORDER
-    assert definition.revisions["2025-early"].predecessor is None
-    assert str(definition.revisions["2025-early"].casilla_storage_baseline) == SUCCESSOR_EDITION
+    assert definition.revisions[f"{SUCCESSOR_EDITION}-early"].predecessor is None
+    assert str(definition.revisions[f"{SUCCESSOR_EDITION}-early"].casilla_storage_baseline) == SUCCESSOR_EDITION
     assert _source_bytes(modelo_dir) == before
 
 
@@ -483,7 +492,7 @@ def test_forward_storage_lift_proves_all_members_and_bytes_and_is_a_fixed_point(
     """Dependency scheduling changes neither materialisation nor the second conversion."""
     reference_dir = _build_forward_storage_modelo(tmp_path / "input")
     staged_dir = _stage_lift(reference_dir, tmp_path / "staged")
-    revision_ids = (PREDECESSOR_EDITION, "2025-early", SUCCESSOR_EDITION)
+    revision_ids = (PREDECESSOR_EDITION, f"{SUCCESSOR_EDITION}-early", SUCCESSOR_EDITION)
 
     assert (
         prove_chain(
@@ -498,8 +507,8 @@ def test_forward_storage_lift_proves_all_members_and_bytes_and_is_a_fixed_point(
         assert chain_materialisation(read_edition(staged_dir, revision_id)) == chain_materialisation(
             read_edition(reference_dir, revision_id)
         )
-    assert _materialised_ids(staged_dir, "2025-early") == _MATERIALISED_ORDER
-    assert _materialised_formula_ids(staged_dir, "2025-early") == _materialised_formula_ids(
+    assert _materialised_ids(staged_dir, f"{SUCCESSOR_EDITION}-early") == _MATERIALISED_ORDER
+    assert _materialised_formula_ids(staged_dir, f"{SUCCESSOR_EDITION}-early") == _materialised_formula_ids(
         reference_dir, SUCCESSOR_EDITION
     )
     before = _source_bytes(staged_dir)
@@ -516,7 +525,7 @@ def test_a_missing_forward_storage_baseline_is_still_refused_without_writing(tmp
     modelo_dir = _build_forward_storage_modelo(tmp_path / "input")
     definition = _definition(modelo_dir)
     assert plan_migration(modelo_dir, definition).blocked_roots() == ()
-    manifest = modelo_dir / "revisions" / "2025-early" / "revision.toml"
+    manifest = modelo_dir / "revisions" / f"{SUCCESSOR_EDITION}-early" / "revision.toml"
     text = manifest.read_text(encoding="utf-8")
     manifest.write_text(
         text.replace(f'casilla_storage_baseline = "{SUCCESSOR_EDITION}"', 'casilla_storage_baseline = "missing"'),
@@ -528,7 +537,9 @@ def test_a_missing_forward_storage_baseline_is_still_refused_without_writing(tmp
     with pytest.raises(RegistryError) as refusal:
         edition_delta_planning_plan(modelo_dir, definition)
 
-    assert str(refusal.value).endswith("revision '2025-early' has invalid casilla storage baseline 'missing'")
+    assert str(refusal.value).endswith(
+        f"revision '{SUCCESSOR_EDITION}-early' has invalid casilla storage baseline 'missing'"
+    )
     assert _source_bytes(modelo_dir) == before
 
 
@@ -546,7 +557,8 @@ def test_an_authored_predecessor_cycle_is_still_refused_before_planning(tmp_path
         edition_delta_planning_plan(modelo_dir, definition)
 
     assert str(refusal.value).endswith(
-        "modelo '999' predecessor declarations form a cycle '2024' -> '2025' -> '2024'; "
+        f"modelo '999' predecessor declarations form a cycle '{PREDECESSOR_EDITION}' -> '{SUCCESSOR_EDITION}' "
+        f"-> '{PREDECESSOR_EDITION}'; "
         "no edition on it is reachable from a root"
     )
     assert _source_bytes(modelo_dir) == before
@@ -556,12 +568,13 @@ def test_a_cyclic_inferred_planning_baseline_is_refused_without_guessing(tmp_pat
     """A valid authored DAG cannot justify changing an inferred chronological baseline."""
     modelo_dir = _build_forward_storage_modelo(tmp_path / "input", names_predecessor=False)
     definition = _definition(modelo_dir)
-    assert _materialised_ids(modelo_dir, "2025-early") == _MATERIALISED_ORDER
+    assert _materialised_ids(modelo_dir, f"{SUCCESSOR_EDITION}-early") == _MATERIALISED_ORDER
     assert definition.revisions[SUCCESSOR_EDITION].predecessor is None
     before = _source_bytes(modelo_dir)
 
     with pytest.raises(RegistryError) as refusal:
         edition_delta_planning_plan(modelo_dir, definition)
 
-    assert str(refusal.value) == "cyclic edition planning dependency: '2025-early' -> '2025' -> '2025-early'"
+    early = f"{SUCCESSOR_EDITION}-early"
+    assert str(refusal.value) == f"cyclic edition planning dependency: '{early}' -> '{SUCCESSOR_EDITION}' -> '{early}'"
     assert _source_bytes(modelo_dir) == before

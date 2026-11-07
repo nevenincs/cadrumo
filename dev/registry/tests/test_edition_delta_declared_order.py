@@ -23,6 +23,7 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest
@@ -46,8 +47,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _MODELO_ID: Final = "999"
 _LEGAL_REF: Final = "ley-58-2003:art-29"
 _SOURCE_REF: Final = "aeat-manual"
-_BASELINE: Final = "2024"
-_EDITION: Final = "2025"
+_EDITION_YEAR: Final = filing_year_envelope().horizon
+_BASELINE_YEAR: Final = _EDITION_YEAR - 1
+_BASELINE: Final = str(_BASELINE_YEAR)
+_EDITION: Final = str(_EDITION_YEAR)
 _CLEAN_REPORT: Final = RoundTripReport(findings=(), byte_compared_revisions=())
 #: The baseline's rows and their lineages, in its record order.
 _BASELINE_ROWS: Final = (("0001", "base"), ("0002", "cuota"), ("0003", "deduccion"))
@@ -134,14 +137,14 @@ def _build_modelo(
     _write_revision(
         modelo_dir,
         _BASELINE,
-        year=2024,
+        year=_BASELINE_YEAR,
         casillas=_casillas(_BASELINE, _BASELINE_ROWS),
         formulas=_formulas(_BASELINE, _BASELINE_FORMULAS),
     )
     _write_revision(
         modelo_dir,
         _EDITION,
-        year=2025,
+        year=_EDITION_YEAR,
         casillas=_casillas(_EDITION, edition_rows),
         formulas=_formulas(_EDITION, edition_formulas),
         manifest_extra=(

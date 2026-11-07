@@ -45,6 +45,7 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision, split_exercise_revisions
 from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.maintenance_support import (
     coverage_assessment_floor,
@@ -200,11 +201,13 @@ def test_the_scan_reaches_the_real_registry() -> None:
     assert scanned >= _MINIMUM_REVISIONS_SCANNED, (
         f"only {scanned} revisions scanned; the snapshot walk collapsed and every assertion in this module is vacuous"
     )
+    early, late = split_exercise_revisions("131", early_period="2T", late_period="3T")
+    exercise = early.valid_from.year
     assert {
-        ("131", "2026", 2026, "1T"),
-        ("131", "2026", 2026, "2T"),
-        ("131", "2026-3t-4t", 2026, "3T"),
-        ("131", "2026-3t-4t", 2026, "4T"),
+        ("131", str(early.id), exercise, "1T"),
+        ("131", str(early.id), exercise, "2T"),
+        ("131", str(late.id), exercise, "3T"),
+        ("131", str(late.id), exercise, "4T"),
     } <= frames
 
 
@@ -274,6 +277,6 @@ def test_no_inventory_entry_is_an_auxiliary_envelope_header() -> None:
 
 def test_a_single_record_fallback_does_not_claim_a_loss_of_record_coverage() -> None:
     measured, _, record_counts, _, _ = _scan()
-    key = ("576", "2008-y-siguientes", "Pág 1")
+    key = ("576", str(open_ended_revision("576").id), "Pág 1")
     assert record_counts[key] == 1
     assert key not in measured
