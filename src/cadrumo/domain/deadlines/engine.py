@@ -7,8 +7,10 @@ read from validated calculation registry data supplied by
 selection metadata of its owning revision paired with its deadline window
 definition. A scheduled coordinate no revision authors a window for is
 projected from the governed filing-window rule
-(:mod:`cadrumo.domain.deadlines.filing_window_projection`); a projection
-whose close is unknown is kept apart from the dated windows.
+(:mod:`cadrumo.domain.deadlines.filing_window_projection`) and is a dated
+window like any authored one. Every obligation's status is the posture
+:meth:`~cadrumo.domain.deadlines.effective_close.EffectiveFilingDeadline.posture_on`
+gives its effective close, whatever the filing year.
 """
 
 from __future__ import annotations
@@ -41,24 +43,18 @@ if TYPE_CHECKING:
     type DeadlineWindowProjection = tuple[str, RevisionSelectionMetadata, DeadlineWindowDefinition]
     """One projected window: modelo code, its owning revision's selection metadata, and the window."""
 
-    type CloseUnknownWindowProjection = tuple[str, RevisionSelectionMetadata, ProjectedFilingWindowCloseUnavailable]
-    """One close-unknown projection: modelo code, its owning revision's selection metadata, and the projection."""
-
 from .domiciliation_cutoff import resolve_payment_cutoff
-from .effective_close import EffectiveFilingDeadline, effective_filing_deadline
+from .effective_close import DEFAULT_DUE_SOON_DAYS, effective_filing_deadline
 from .errors import (
     DeadlineValidationError,
     NoDeadlineWindowsError,
     ScheduleComputationError,
 )
-from .festivos import DeadlineHolidayCoverage
 from .filing_window_projection import (
     ProjectedFilingWindow,
-    ProjectedFilingWindowCloseUnavailable,
     project_unauthored_filing_windows,
 )
 from .models import (
-    CloseUnknownModeloDeadline,
     ModeloDeadline,
     ObligationStatus,
     Recovery,
@@ -69,8 +65,6 @@ from .recargo import build_recovery_for_overdue
 
 _logger = get_logger(__name__)
 
-_DEFAULT_DUE_SOON_DAYS = 14
-
 #: Locale keys for the two engine refusals, stated here so a reader sees which
 #: catalogue entry each raise site resolves through. They are the registered
 #: keys of :class:`NoDeadlineWindowsError` and
@@ -79,41 +73,6 @@ _DEFAULT_DUE_SOON_DAYS = 14
 #: gate holds the two spellings equal.
 MISSING_WINDOWS_MESSAGE_KEY: Final[str] = "errors.error.error_deadlines_missing_windows"
 SCHEDULE_COMPUTATION_MESSAGE_KEY: Final[str] = "errors.error.error_deadlines_schedule_computation"
-
-
-def classify_obligation_status(closes_on: date, today: date, due_soon_days: int) -> ObligationStatus:
-    """Map a filing window's EFFECTIVE close date to an :class:`ObligationStatus`.
-
-    This is the single owner of the OVERDUE / DUE_TODAY / DUE_SOON / UPCOMING
-    boundary rules. The deadline engine applies it to every registry-scheduled
-    obligation, and the overview calendar applies it to a locally-created work
-    unit after its own filing-pointer gate has run — that gate is the only
-    intentional difference between the two callers, and it decides whether to
-    call this function at all, never how the boundaries fall.
-
-    The date passed must be the effective close, after the business-day shift
-    (Ley 39/2015 art. 30.5 through Ley 58/2003 art. 7.2). An obligation whose
-    window ends on a Sunday is not overdue on the Monday a filer may still
-    file; classifying against the nominal date said it was.
-
-    Args:
-        closes_on: The effective day the filer has, from
-            :attr:`~cadrumo.domain.deadlines.models.ModeloDeadline.adjusted_closes_on`.
-        today: The reference date the engine evaluates against.
-        due_soon_days: Window (in days) before ``closes_on`` for which
-            the obligation is flagged ``DUE_SOON``.
-
-    Returns:
-        The :class:`ObligationStatus` for the window.
-    """
-    if today > closes_on:
-        return ObligationStatus.OVERDUE
-    if today == closes_on:
-        return ObligationStatus.DUE_TODAY
-    delta = (closes_on - today).days
-    if 1 <= delta <= due_soon_days:
-        return ObligationStatus.DUE_SOON
-    return ObligationStatus.UPCOMING
 
 
 def window_outside_activity_period(
@@ -149,16 +108,14 @@ def window_outside_activity_period(
 class DeadlineWindowYearIndex:
     """One filing year's windows from one generation.
 
-    ``dated`` holds every window with a known close: the authored ones and the
-    rule projections of unauthored scheduled coordinates. ``projected`` maps the
-    identity of each projected dated window to its provenance-bearing
-    projection, so a reader can tell it from an authored one. ``close_unknown``
-    holds the projections whose close is unknown; they are never dated windows.
+    ``dated`` holds every window: the authored ones and the rule projections of
+    unauthored scheduled coordinates. ``projected`` maps the identity of each
+    projected window to its provenance-bearing projection, so a reader can tell
+    it from an authored one; nothing else about it is judged differently.
     """
 
     dated: tuple[DeadlineWindowProjection, ...]
     projected: Mapping[str, ProjectedFilingWindow]
-    close_unknown: tuple[CloseUnknownWindowProjection, ...]
 
 
 #: One year's projection, keyed by the generation it was read from. An admitted
@@ -284,18 +241,13 @@ def project_deadline_windows(
                 )
             projected.append((modelo_id, metadata, metadata_window))
     rule_projected: dict[str, ProjectedFilingWindow] = {}
-    close_unknown: list[CloseUnknownWindowProjection] = []
     for row in project_unauthored_filing_windows(
         operation,
         year,
         authored=_authored_period_tokens(projected),
     ):
-        if isinstance(row.resolution, ProjectedFilingWindow):
-            projected.append((row.modelo, row.revision, row.resolution.window))
-            rule_projected[row.resolution.window_id] = row.resolution
-        else:
-            close_unknown.append((row.modelo, row.revision, row.resolution))
-    close_unknown.sort(key=lambda item: (item[2].nominal_closes_on, item[0], item[2].period.registry_token))
+        projected.append((row.modelo, row.revision, row.resolution.window))
+        rule_projected[row.resolution.window_id] = row.resolution
     projected.sort(
         key=lambda item: (
             item[2].closes_on,
@@ -306,7 +258,7 @@ def project_deadline_windows(
             () if item[2].tipo_renta_scope is None else tuple(sorted(item[2].tipo_renta_scope)),
         ),
     )
-    return DeadlineWindowYearIndex(dated=tuple(projected), projected=rule_projected, close_unknown=tuple(close_unknown))
+    return DeadlineWindowYearIndex(dated=tuple(projected), projected=rule_projected)
 
 
 class DeadlineEngine:
@@ -322,7 +274,7 @@ class DeadlineEngine:
     def __init__(
         self,
         *,
-        due_soon_days: int = _DEFAULT_DUE_SOON_DAYS,
+        due_soon_days: int = DEFAULT_DUE_SOON_DAYS,
         authority: PinnedAuthorityOperation | None = None,
     ) -> None:
         """Construct an engine.
@@ -382,9 +334,8 @@ class DeadlineEngine:
                 reference_today=reference_today,
                 operation=operation,
             )
-            close_unknown_obligations = _close_unknown_obligations(profile, year_index.close_unknown)
         obligations.sort(key=lambda o: (o.closes_on, o.modelo, o.period.filing_year, o.period.registry_token))
-        if not obligations and not close_unknown_obligations and not windows and not year_index.close_unknown:
+        if not obligations and not windows:
             raise NoDeadlineWindowsError(
                 translated_message=MISSING_WINDOWS_MESSAGE_KEY,
                 context={"filing_year": year},
@@ -397,7 +348,6 @@ class DeadlineEngine:
             profile=profile,
             year=year,
             obligations=tuple(obligations),
-            close_unknown_obligations=tuple(close_unknown_obligations),
             generated_at=now(),
         )
 
@@ -481,14 +431,10 @@ class DeadlineEngine:
         ):
             return None
         effective = effective_filing_deadline(window.closes_on, modelo=modelo, operation=operation)
-        obligation_status = _classified_window_status(
-            effective=effective,
-            reference_today=reference_today,
-            due_soon_days=self.due_soon_days,
-        )
+        obligation_status = effective.posture_on(reference_today, due_soon_days=self.due_soon_days).status
         # An unknown effective close judges nothing after the nominal date: no
         # lateness, no recargo and no payment cutoff.
-        close_known = obligation_status is not ObligationStatus.UNKNOWN
+        close_known = effective.close_known
         return ModeloDeadline(
             modelo=Modelo(modelo),
             period=window.period,
@@ -692,24 +638,6 @@ class DeadlineEngine:
         return self._evaluate_conditions(profile, conditions, mode=mode)
 
 
-def _classified_window_status(
-    *,
-    effective: EffectiveFilingDeadline,
-    reference_today: date,
-    due_soon_days: int,
-) -> ObligationStatus:
-    """Classify one window against the close its filer actually has.
-
-    A shift calendar the pinned authority cannot resolve leaves the effective
-    close unknown. Such an obligation is ``UNKNOWN``: it is never called due or
-    overdue against the nominal date, because the nominal date is only a lower
-    bound on the day the filer has.
-    """
-    if effective.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE:
-        return ObligationStatus.UNKNOWN
-    return classify_obligation_status(effective.closes_on, reference_today, due_soon_days)
-
-
 def _overdue_recovery_or_none(
     *,
     obligation_status: ObligationStatus,
@@ -752,57 +680,6 @@ def _overdue_recovery_or_none(
         return None
 
 
-def _close_unknown_obligations(
-    profile: TaxpayerProfile,
-    close_unknown: tuple[CloseUnknownWindowProjection, ...],
-) -> list[CloseUnknownModeloDeadline]:
-    """Project every applicable close-unknown window, in index order."""
-    obligations: list[CloseUnknownModeloDeadline] = []
-    for _modelo, revision, projection in close_unknown:
-        obligation = _close_unknown_obligation(profile=profile, revision=revision, projection=projection)
-        if obligation is not None:
-            obligations.append(obligation)
-    return obligations
-
-
-def _close_unknown_obligation(
-    *,
-    profile: TaxpayerProfile,
-    revision: RevisionSelectionMetadata,
-    projection: ProjectedFilingWindowCloseUnavailable,
-) -> CloseUnknownModeloDeadline | None:
-    """Project one close-unknown window into an obligation, or ``None`` when it does not apply.
-
-    The filters are those of a dated window: the owning revision's filing
-    schedule must apply to the profile for the period, and the tax period must
-    overlap the activity period. A projection carries no applicability
-    conditions or result qualifiers of its own.
-    """
-    from ..calculations.registry.schedules import applicable_filing_schedules
-
-    period = projection.period
-    if revision.filing_schedules and not applicable_filing_schedules(revision, profile, period=period.registry_token):
-        return None
-    if window_outside_activity_period(
-        period=period,
-        entity_type=profile.entity_type,
-        opens_on=projection.opens_on,
-        closes_on=projection.nominal_closes_on,
-        activity_start_date=profile.activity_start_date,
-        activity_end_date=profile.activity_end_date,
-        legal_entity_token=entity_type_legal_entity_token(effective_date=period.end_date),
-    ):
-        return None
-    return CloseUnknownModeloDeadline(
-        modelo=Modelo(projection.modelo),
-        period=period,
-        opens_on=projection.opens_on,
-        nominal_closes_on=projection.nominal_closes_on,
-        close_unavailable_reason=projection.reason.value,
-        boe_references=projection.legal_refs,
-    )
-
-
 def _window_registry_period(window: DeadlineWindowDefinition) -> str:
     """Return the bare registry period token for the deadline window."""
     return window.period.registry_token
@@ -812,7 +689,10 @@ def next_deadline(schedule: Schedule, today: date | None = None) -> ModeloDeadli
     """Return the next obligation in ``schedule`` that has not yet closed.
 
     Pure function. Returns ``None`` if every obligation in the schedule
-    is already overdue (or the schedule is empty).
+    is already overdue (or the schedule is empty). A window stays open
+    through its effective close, the day the filer actually has, so a window
+    whose nominal close fell on a non-business day is still next on the
+    following business day.
 
     Args:
         schedule: The :class:`Schedule` to scan for upcoming obligations.
@@ -824,10 +704,10 @@ def next_deadline(schedule: Schedule, today: date | None = None) -> ModeloDeadli
         if no such obligation exists.
     """
     reference_today = today or today_madrid()
-    upcoming = [o for o in schedule.obligations if o.closes_on >= reference_today]
+    upcoming = [o for o in schedule.obligations if o.adjusted_closes_on >= reference_today]
     if not upcoming:
         return None
-    upcoming.sort(key=lambda o: (o.closes_on, o.modelo, o.period.filing_year, o.period.registry_token))
+    upcoming.sort(key=lambda o: (o.adjusted_closes_on, o.modelo, o.period.filing_year, o.period.registry_token))
     return upcoming[0]
 
 

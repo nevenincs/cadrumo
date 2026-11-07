@@ -28,8 +28,8 @@ if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
     from ..calculations.registry.deadline_coordinate import DeadlineSemanticCoordinate
     from ..calculations.registry.schema_deadlines import DeadlineWindowDefinition
-    from .engine import CloseUnknownWindowProjection, DeadlineWindowProjection
-    from .filing_window_projection import FilingWindowResolution, ProjectedFilingWindowCloseUnavailable
+    from .engine import DeadlineWindowProjection
+    from .filing_window_projection import FilingWindowResolution
 
 
 def resolve_filing_window(
@@ -51,12 +51,11 @@ def resolve_filing_window(
 
     The resolution says where the window comes from. An authored window always
     wins. A scheduled coordinate no revision authors is projected from the
-    governed filing-window rule: with a known close it is a
-    :class:`~cadrumo.domain.deadlines.filing_window_projection.ProjectedFilingWindow`;
-    when a holiday calendar its close needs is unpublished it is a
-    :class:`~cadrumo.domain.deadlines.filing_window_projection.ProjectedFilingWindowCloseUnavailable`,
-    whose close is unknown. That state is never reported as ``None``: an
-    unknown close is not an absent window.
+    governed filing-window rule into a
+    :class:`~cadrumo.domain.deadlines.filing_window_projection.ProjectedFilingWindow`,
+    a dated window like an authored one. A close whose holiday calendar is
+    unpublished is never reported as ``None``: an unknown close is not an
+    absent window.
 
     Matching uses the registry's canonical atomic deadline coordinate. The
     filing year and bare period token must be exact; a window's absent qualifier
@@ -93,7 +92,7 @@ def resolve_filing_window(
         authority: Optional generation-pinned authority operation.
 
     Returns:
-        The authored, projected or close-unavailable resolution, or ``None``
+        The authored or projected resolution, or ``None``
         when the registry neither authors nor can project a window for the
         combination.
 
@@ -167,50 +166,10 @@ def _resolve_filing_window_with_operation(
         resultado=resultado,
         tipo_renta_code=tipo_renta_code,
     )
-    if window is not None:
-        projected = year_index.projected.get(window.id)
-        return AuthoredFilingWindow(window=window) if projected is None else projected
-    return _resolve_close_unknown_window(
-        year_index.close_unknown,
-        modelo=modelo,
-        filing_year=filing_year,
-        period=period,
-        resultado=resultado,
-        tipo_renta_code=tipo_renta_code,
-    )
-
-
-def _resolve_close_unknown_window(
-    projections: tuple[CloseUnknownWindowProjection, ...],
-    *,
-    modelo: str,
-    filing_year: int,
-    period: Period,
-    resultado: ResultDisposition | None,
-    tipo_renta_code: str | None,
-) -> ProjectedFilingWindowCloseUnavailable | None:
-    """Match a close-unknown projection by its exact coordinate.
-
-    A projection carries no result or tipo-renta scope, so it matches exactly
-    as an authored window with absent scope does: the requested qualifiers are
-    wildcards against it, while the filing year and period are exact.
-    """
-    from ..calculations.registry.deadline_coordinate import deadline_semantic_coordinate
-
-    requested = deadline_semantic_coordinate(modelo, period, resultado, tipo_renta_code)
-    if requested.filing_year != filing_year:
+    if window is None:
         return None
-    matches = tuple(
-        projection
-        for projected_modelo, _revision, projection in projections
-        if projected_modelo == modelo and projection.period == period
-    )
-    if len(matches) > 1:
-        raise DeadlineValidationError(
-            f"filing window resolution is ambiguous for {requested!r}: "
-            f"matched projections {[projection.window_id for projection in matches]!r}",
-        )
-    return next(iter(matches), None)
+    projected = year_index.projected.get(window.id)
+    return AuthoredFilingWindow(window=window) if projected is None else projected
 
 
 def resolve_projected_filing_window(

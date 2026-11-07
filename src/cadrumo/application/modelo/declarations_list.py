@@ -27,7 +27,9 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.schema_base import CasillaDataType
+from ...domain.deadlines.effective_close import EffectiveFilingDeadline
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage
+from ...domain.deadlines.models import ObligationStatus
 from ..overview.calendar import holiday_coverage_statement
 from ..overview.calendar_models import OverviewAeatSubmissionState, OverviewLocalFilingState
 from ..overview.coverage import CoverageAdviceReason
@@ -424,20 +426,33 @@ def group_words(group: DeclarationListGroup, language: OutputLanguage) -> str:
     return tr(DECLARATION_GROUP_LOCALE_KEYS[group], locale=language.value)
 
 
+def _has_deadline_to_meet(row: DeclarationListRow) -> bool:
+    return row.calendar is not None and row.state != "aeat_unlinked" and row.state not in _CLOSED_STATES
+
+
 def row_days(row: DeclarationListRow) -> tuple[int | None, int | None]:
     """The days left until the row's deadline and the days it is overdue; ``None`` for what does not apply.
 
     Counted from the day the calendar was evaluated, so every frontend and the
-    calendar agree whatever its own clock says. A declaration recorded,
-    replaced or discarded, and a return the AEAT holds with no local work
-    linked, have no deadline left to meet.
+    calendar agree whatever its own clock says, and judged by the canonical
+    deadline posture of the row's close, so an unknown close past its nominal
+    date shows neither. A declaration recorded, replaced or discarded, and a
+    return the AEAT holds with no local work linked, have no deadline left to
+    meet.
     """
     calendar = row.calendar
-    if calendar is None or row.state == "aeat_unlinked" or row.state in _CLOSED_STATES:
+    if calendar is None or not _has_deadline_to_meet(row):
         return None, None
-    if calendar.days_overdue is not None and calendar.days_overdue != 0:
-        return None, calendar.days_overdue
-    return max((calendar.adjusted_closes_on - calendar.evaluated_on).days, 0), None
+    if calendar.legal_status is ObligationStatus.FILED:
+        # Official evidence shows it filed, so it is never counted overdue.
+        return max((calendar.adjusted_closes_on - calendar.evaluated_on).days, 0), None
+    posture = EffectiveFilingDeadline(
+        nominal_closes_on=calendar.closes_on,
+        closes_on=calendar.adjusted_closes_on,
+        holiday_coverage=calendar.holiday_coverage,
+        shift_reason=calendar.shift_reason,
+    ).posture_on(calendar.evaluated_on)
+    return posture.days_remaining, posture.days_overdue
 
 
 def opens_aeat_filing(row: DeclarationListRow) -> bool:
@@ -623,9 +638,7 @@ def deadline_note_words(rows: tuple[DeclarationListRow, ...], language: OutputLa
     """Say that an open deadline is not final when its holiday calendar was not checked; ``None`` otherwise."""
     for row in rows:
         calendar = row.calendar
-        remaining, overdue = row_days(row)
-        open_deadline = remaining is not None or overdue is not None
-        if calendar is not None and open_deadline and calendar.holiday_coverage in _UNSETTLED_COVERAGE:
+        if calendar is not None and _has_deadline_to_meet(row) and calendar.holiday_coverage in _UNSETTLED_COVERAGE:
             return holiday_coverage_statement(calendar.holiday_coverage, language)
     return None
 

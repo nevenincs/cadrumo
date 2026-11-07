@@ -148,6 +148,10 @@ class DeadlineHolidayCoverage(StrEnum):
     CALENDAR_UNAVAILABLE = "calendar_unavailable"
 
 
+#: Shift reason recorded when the holiday calendar a close needs could not be resolved.
+CALENDAR_UNAVAILABLE_SHIFT_REASON: Final = "calendar_unavailable"
+
+
 # ---------------------------------------------------------------------------
 # Holiday + Calendar value types.
 # ---------------------------------------------------------------------------
@@ -676,6 +680,7 @@ def shift_deadline(
 
 
 __all__ = (
+    "CALENDAR_UNAVAILABLE_SHIFT_REASON",
     "HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID",
     "HOLIDAY_EVENT_FACT_ID",
     "CalendarCCAA",
