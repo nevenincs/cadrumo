@@ -83,6 +83,7 @@ if TYPE_CHECKING:
     from .authority import PinnedAuthorityOperation, ValidatedRegistryAuthority
     from .schema import ModeloRevision
 
+from ....core.errors.hierarchy import InternalInvariantError
 from ....core.i18n.render import tr
 from ....core.modelo import Modelo
 from ....core.time.clock import today_madrid
@@ -113,6 +114,7 @@ from .applicability_payer_facts import (
 from .applicability_routes import TaxRoute, tax_route_for_entity_type
 from .errors import RegistryValidationError
 from .form_codes import resolve_form_codes
+from .governed_fact_scope import cache_governed_projection, governed_facts_in_scope
 from .ids import LegalRefId
 from .irpf_income_categories import (
     irpf_income_category_actividad_economica_token,
@@ -306,7 +308,33 @@ def _declared_applicability_rule(
     operation: PinnedAuthorityOperation,
     modelo: Modelo,
 ) -> ModeloApplicabilityRule | None:
-    """Return the rule a pinned revision of ``modelo`` declares, or ``None`` when none does."""
+    """Return the rule a pinned revision of ``modelo`` declares, or ``None`` when none does.
+
+    Reading the rule decodes whole revisions, the largest components a
+    generation holds, and a calendar asks for the same few modelos hundreds of
+    times. When ``operation`` is the governed-fact scope the rule is hydrated
+    against, the hydrated rule is shared under that operation's generation
+    incarnation; any other pairing hydrates afresh.
+    """
+    if governed_facts_in_scope() is operation:
+        return _scoped_declared_applicability_rule(modelo)
+    return _hydrate_declared_applicability_rule(operation, modelo)
+
+
+@cache_governed_projection(maxsize=256)
+def _scoped_declared_applicability_rule(modelo: Modelo) -> ModeloApplicabilityRule | None:
+    from .authority import PinnedAuthorityOperation
+
+    operation = governed_facts_in_scope()
+    if not isinstance(operation, PinnedAuthorityOperation):
+        raise InternalInvariantError("a shared applicability rule requires a pinned authority operation scope")
+    return _hydrate_declared_applicability_rule(operation, modelo)
+
+
+def _hydrate_declared_applicability_rule(
+    operation: PinnedAuthorityOperation,
+    modelo: Modelo,
+) -> ModeloApplicabilityRule | None:
     if modelo.value not in operation.modelo_ids():
         return None
     for metadata in operation.modelo_directory(modelo.value).revisions:
@@ -340,10 +368,11 @@ def _resolve_registry_applicability_rule(
     used by the shared-catalogue compiler -- module-body evaluation is the
     hazard, first-call resolution is not.
 
-    No local cache sits in front of this call: the indexed operation already
-    owns generation pinning and storage validation. Caching here would bypass
-    the caller's generation boundary and re-introduce a path-only registry
-    cache, exactly the defect that consolidation removed.
+    No path-keyed cache sits in front of this call: the indexed operation
+    already owns generation pinning and storage validation, and a cache keyed
+    by path would bypass the caller's generation boundary, exactly the defect
+    that consolidation removed. The only sharing is per generation
+    incarnation, in :func:`_declared_applicability_rule`.
     """
     if authority is not None:
         if not any(revision.applicability for _id, revision in _authority_revisions(authority, modelo)):
