@@ -2,6 +2,7 @@ import type { ComponentProps, Dispatch, SetStateAction } from "react";
 import { Toast } from "@/components/ui/toast";
 import type { AboutState } from "../shell/about";
 import type { Action } from "../shell/actions";
+import { orientDockPane, swapDockPane } from "../shell/docking";
 import type { Host } from "../shell/host";
 import {
   DEFAULT_LAYOUT,
@@ -99,7 +100,30 @@ export function WindowOverlays({
       {settingsOpen && (
         <Settings
           prefs={prefs}
-          setPrefs={setPrefs}
+          setPrefs={(next) => {
+            setPrefs(next);
+            // The dock is the arrangement the window draws; a preference
+            // that differs from it is carried into the dock as the
+            // arrangement actions do.
+            if (next.orientation !== prefs.orientation)
+              setLayout((current) =>
+                current.docking
+                  ? {
+                      ...current,
+                      docking: orientDockPane(current.docking, "docs"),
+                    }
+                  : current,
+              );
+            if (next.order !== prefs.order)
+              setLayout((current) =>
+                current.docking
+                  ? {
+                      ...current,
+                      docking: swapDockPane(current.docking, "docs"),
+                    }
+                  : current,
+              );
+          }}
           language={languageControl}
           close={() => setSettingsOpen(false)}
           about={
