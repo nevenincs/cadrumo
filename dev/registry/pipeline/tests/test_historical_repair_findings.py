@@ -12,10 +12,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _M720_TARGET = (
     "720",
-    "2013-y-siguientes",
     "aeat-dr-720",
-    2024,
-    "0A",
     "83c26f2c7c2848ec9544889d070b071d69d24608f48bd52782a6d608039d23b9",
 )
 _M720_PRODUCER_TARGET = (
@@ -49,9 +46,7 @@ def test_m720_producer_findings_cover_only_the_five_duplicate_inputs_and_form() 
 
 @pytest.mark.parametrize("target_key", [_M720_TARGET, _M720_PRODUCER_TARGET])
 @pytest.mark.parametrize("change", ["missing", "extra", "duplicate", "wrong_record", "another_modelo"])
-def test_m720_findings_refuse_every_unreviewed_change(
-    change: str, target_key: tuple[str, str, str, int, str, str]
-) -> None:
+def test_m720_findings_refuse_every_unreviewed_change(change: str, target_key: tuple[str, str, str]) -> None:
     target = REVIEWED_TARGETS[target_key]
     assert target.exact_findings is not None
     findings = list(sorted(target.exact_findings))

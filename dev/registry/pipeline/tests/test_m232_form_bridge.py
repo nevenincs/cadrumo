@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 def test_historical_repair_refuses_another_target_or_old_manifest() -> None:
     for changed in ("modelo", "source", "year", "period", "manifest"):
-        with pytest.raises(RegistryValidationError, match="exact reviewed M232/2016"):
+        with pytest.raises(RegistryValidationError, match="exact reviewed target"):
             validated_historical_repair_source(
                 modelo="233" if changed == "modelo" else "232",
                 revision="2016-2017",
@@ -235,7 +235,7 @@ def test_only_active_journal_bound_old_backup_is_excluded_from_cutover_census(
         sha256(old_bytes).hexdigest(),
         sha256(b"old form").hexdigest(),
     )
-    monkeypatch.setattr(generated_form_bridge, "REVIEWED", {("232", "2016-2017"): reviewed})
+    monkeypatch.setattr(generated_form_bridge, "REVIEWED", {("232", reviewed[0]): reviewed[1:]})
     monkeypatch.setattr(generated_form_bridge, "bundled_path", lambda: source_root)
     monkeypatch.setattr(generated_form_bridge, "generated_form_interpreting_input_digest", lambda _modelo: "same")
     monkeypatch.setattr(generated_form_bridge, "registry_evidence_content_digest", lambda _source_root: "same")
