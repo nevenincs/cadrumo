@@ -1039,6 +1039,25 @@ def _numbers_rows_inside(sheet: RecordDesignSheet, start: int, end: int) -> bool
 #: ``Inicio del identificador de modelo y pagina. "<T840010>". OBLIGATORIO``.
 _INLINE_CONSTANT_RE = re.compile(r'"([^"]{1,40})"')
 
+#: A line-terminator row that names its constant by word instead of quoting it:
+#: ``Salto de linea. Constante CRLF.`` The two bytes are CR LF, so the row reads
+#: as that constant. Nothing wider is admitted: the row must open with the
+#: terminator caption, name the constant CRLF and end there.
+_INLINE_CRLF_CONSTANT_RE = re.compile(r"(?i)^salto de l[íi]nea\.\s*constante\s+CRLF\.?$")
+_CRLF_CONSTANT_CONTENT = "Constante CRLF"
+_CRLF_CONSTANT_LENGTH = 2
+
+
+def _with_crlf_constant(design_field: RecordDesignField) -> RecordDesignField:
+    """Give a CRLF terminator row without a quoted constant its two-byte content."""
+    if (
+        (design_field.content is not None and design_field.content != "")
+        or design_field.length != _CRLF_CONSTANT_LENGTH
+        or _INLINE_CRLF_CONSTANT_RE.fullmatch((design_field.description or "").strip()) is None
+    ):
+        return design_field
+    return design_field.model_copy(update={"content": _CRLF_CONSTANT_CONTENT})
+
 
 def _recover_inline_constants(sheets: tuple[RecordDesignSheet, ...]) -> tuple[RecordDesignSheet, ...]:
     """Return ``sheets`` with inline-stated constants surfaced as field content.
@@ -1074,7 +1093,7 @@ def _recover_inline_constants(sheets: tuple[RecordDesignSheet, ...]) -> tuple[Re
                 else _INLINE_CONSTANT_RE.search(design_field.description or "")
             )
             if match is None:
-                fields.append(design_field)
+                fields.append(_with_crlf_constant(design_field))
                 continue
             fields.append(design_field.model_copy(update={"content": match.group(0)}))
         recovered.append(sheet.model_copy(update={"fields": tuple(fields)}))

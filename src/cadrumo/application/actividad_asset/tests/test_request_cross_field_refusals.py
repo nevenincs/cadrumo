@@ -42,7 +42,7 @@ from cadrumo.domain.renta.actividad_asset.register_records import (
     ActivityAssetDescriptorFacts,
 )
 
-from .test_register import NAME, register_operations, register_revision
+from .test_register import FIRST_YEAR, NAME, register_operations, register_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -72,7 +72,7 @@ def _election(**changes: object) -> ActivityAssetRevision:
 
 _CASES: dict[str, Callable[[], ActivityAssetRevision]] = {
     "opening_covered_year_requires_amount": lambda: _opening(
-        status=OpeningHistoryStatus.KNOWN, accumulated_amount=Decimal("0"), covered_through_tax_year=2022
+        status=OpeningHistoryStatus.KNOWN, accumulated_amount=Decimal("0"), covered_through_tax_year=FIRST_YEAR - 3
     ),
     "opening_amount_requires_covered_year": lambda: _opening(
         status=OpeningHistoryStatus.KNOWN, accumulated_amount=Decimal("3000"), covered_through_tax_year=None
@@ -89,10 +89,10 @@ _CASES: dict[str, Callable[[], ActivityAssetRevision]] = {
     "revision_first_cannot_supersede": lambda: _broken(supersedes_revision_id="a" * 64),
     "revision_requires_superseded": lambda: _broken(revision_number=2),
     "building_construction_date_requires_used_asset": lambda: _broken(
-        acquired_condition=AcquiredCondition.NEW, building_construction_date=date(2000, 1, 1)
+        acquired_condition=AcquiredCondition.NEW, building_construction_date=date(FIRST_YEAR - 25, 1, 1)
     ),
     "building_construction_date_after_service": lambda: _broken(
-        acquired_condition=AcquiredCondition.USED, building_construction_date=date(2090, 1, 1)
+        acquired_condition=AcquiredCondition.USED, building_construction_date=date(FIRST_YEAR + 1, 1, 1)
     ),
     "residual_value_not_below_basis": lambda: _broken(residual_value=Decimal("999999")),
     "acquisition_shape_not_registerable": lambda: _broken(acquisition_shape=AcquisitionShape.SPLIT_PAYMENT),
@@ -162,13 +162,22 @@ def test_a_document_kind_without_its_number_is_refused_when_the_descriptor_is_wr
 def test_a_forecast_interval_that_cannot_be_settled_is_refused_with_its_own_reason() -> None:
     def interval(**ends: str | None) -> ActivityAssetForecastRequest:
         return ActivityAssetForecastRequest.model_validate_json(
-            json.dumps({"profile_id": str(_PROFILE), "asset_id": "laptop-1", "covered_from": "2025-01-01", **ends})
+            json.dumps(
+                {
+                    "profile_id": str(_PROFILE),
+                    "asset_id": "laptop-1",
+                    "covered_from": date(FIRST_YEAR, 1, 1).isoformat(),
+                    **ends,
+                }
+            )
         )
 
     expected = {
         "forecast_interval_end_required": interval(),
         "covered_through_has_no_boundary": interval(covered_through="9999-12-31"),
-        "covered_through_not_day_before_until": interval(covered_until="2025-07-01", covered_through="2025-06-29"),
+        "covered_through_not_day_before_until": interval(
+            covered_until=date(FIRST_YEAR, 7, 1).isoformat(), covered_through=date(FIRST_YEAR, 6, 29).isoformat()
+        ),
     }
     for key, request in expected.items():
         with pytest.raises(ActividadAssetValidationError, match=key) as refused:
@@ -180,7 +189,7 @@ def test_a_forecast_interval_that_cannot_be_settled_is_refused_with_its_own_reas
 
 def test_a_period_that_is_not_one_of_the_tax_year_is_refused_with_its_reason() -> None:
     request = ActivityAssetFilingHandoffRequest.model_validate_json(
-        json.dumps({"profile_id": str(_PROFILE), "tax_year": 2025, "m130_period": "9T"})
+        json.dumps({"profile_id": str(_PROFILE), "tax_year": FIRST_YEAR, "m130_period": "9T"})
     )
 
     with pytest.raises(ActividadAssetValidationError, match="m130_period_invalid") as refused:

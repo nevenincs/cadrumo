@@ -176,10 +176,11 @@ def test_the_same_instalment_with_no_owner_is_still_named() -> None:
 def _outside_the_ledger_with(*rows: Transaction) -> ActivityAssetRevision:
     template = register_asset("press", transaction_id="c" * 64)
     facts = {name: getattr(template, name) for name in type(template).model_fields}
+    acquired_on = date(template.in_service_date.year - 11, 3, 1)
     facts.update(
-        acquisition=AcquisitionLineageReference(invoice_evidence_id="Factura 2014/118"),
+        acquisition=AcquisitionLineageReference(invoice_evidence_id=f"Factura {acquired_on.year}/118"),
         acquisition_shape=AcquisitionShape.ACQUIRED_OUTSIDE_LEDGER,
-        declared_acquisition_date=date(2014, 3, 1),
+        declared_acquisition_date=acquired_on,
         declared_activity=next(iter(TipoActividad)),
         further_acquisitions=tuple(_further(row, AcquisitionShape.ANCILLARY_COST) for row in rows),
     )

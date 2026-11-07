@@ -27,7 +27,7 @@ import {
   sampleRows,
   type SampleRow,
 } from "./gridSample";
-import { fixtureDay } from "@/dev/fixtureDates";
+import { fixtureDay, fixtureYear } from "@/dev/fixtureDates";
 
 declare global {
   interface Window {
@@ -342,7 +342,7 @@ export function DataGridHarness({
           const row = byId.get(key);
           if (!row) return undefined;
           const parts = [
-            row.locked && "Sealed: Modelo 303 2026 1T",
+            row.locked && `Sealed: Modelo 303 ${fixtureYear} 1T`,
             row.changed && "Staged change",
             row.refused && "Refused",
           ].filter(Boolean);
@@ -389,9 +389,24 @@ const annual = (id: string, model: string, due: string): Declaration => ({
 });
 
 const DECLARATIONS: Declaration[] = [
-  { id: "303-1T", model: "303", period: "2026 1T", due: fixtureDay(4, 20) },
-  { id: "130-1T", model: "130", period: "2026 1T", due: fixtureDay(4, 20) },
-  { id: "111-03", model: "111", period: "2026 03", due: fixtureDay(4, 20) },
+  {
+    id: "303-1T",
+    model: "303",
+    period: `${fixtureYear} 1T`,
+    due: fixtureDay(4, 20),
+  },
+  {
+    id: "130-1T",
+    model: "130",
+    period: `${fixtureYear} 1T`,
+    due: fixtureDay(4, 20),
+  },
+  {
+    id: "111-03",
+    model: "111",
+    period: `${fixtureYear} 03`,
+    due: fixtureDay(4, 20),
+  },
   annual("390-0A", "390", fixtureDay(1, 30)),
   annual("347-0A", "347", fixtureDay(2, 28)),
 ];

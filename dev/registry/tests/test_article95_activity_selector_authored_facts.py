@@ -15,6 +15,7 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 
 from ..compiler.fact_validation import governed_fact_catalogue_failures
 from ..compiler.loader import load_shared_catalogues
@@ -35,7 +36,7 @@ _ARTICLE_95_SOURCE = "boe-rirpf-art-95-2023-01-26"
 
 
 @cache
-def _shared():
+def _shared() -> RegistryCatalogues:
     return load_shared_catalogues(bundled_path() / "registry" / "aeat")
 
 

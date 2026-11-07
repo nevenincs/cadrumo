@@ -7,6 +7,7 @@ import pytest
 from cadrumo.application.actividad_asset.activity_asset_read_models import ActivityAssetFormOptionsView
 from cadrumo.domain.calculations.registry.actividad_asset_bindings import resolve_activity_asset_schedule_authority
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetIncompleteError
 from cadrumo.domain.renta.actividad_asset.lifecycle import AssetKind
 
@@ -14,7 +15,7 @@ from .operations_support import build_operations, build_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_YEAR = 2025
+_YEAR = filing_year_envelope().horizon
 
 
 def _options(asset_kind: AssetKind) -> ActivityAssetFormOptionsView:

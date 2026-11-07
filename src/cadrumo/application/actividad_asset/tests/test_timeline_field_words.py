@@ -26,6 +26,8 @@ from .operations_support import ACQUISITION, build_operations, build_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_FIRST_YEAR = build_revision().in_service_date.year
+
 _INTERNAL = frozenset(
     {
         "asset_id",
@@ -112,8 +114,8 @@ def test_a_claim_states_the_key_of_its_amount() -> None:
     operations.record_claim(
         operations.forecast(
             asset_id="laptop-1",
-            covered_from=date(2025, 1, 1),
-            covered_until=date(2026, 1, 1),
+            covered_from=date(_FIRST_YEAR, 1, 1),
+            covered_until=date(_FIRST_YEAR + 1, 1, 1),
         ),
         creating_operation="test.words",
     )

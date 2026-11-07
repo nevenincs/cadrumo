@@ -1,7 +1,7 @@
 """A schedule fingerprint moves with what a charge rests on, and with nothing else.
 
-Figures use the register tests' element: 2,000.00 at 26% linear from 1 January 2025.
-A full year charges 520.00.  With 1,800.00 claimed before 2028 only 200.00 remains.
+Figures use the register tests' element: 2,000.00 at 26% linear from 1 January of the year before the support horizon.
+A full year charges 520.00.  With 1,800.00 claimed before the fourth year only 200.00 remains.
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ from cadrumo.domain.renta.actividad_asset.schedule import (
 
 from .ledger_support import MemoryLedger
 from .register_support import MemoryRepository, memory_register_authority
-from .test_register import ACQUISITION, NAME, full_year, register_operations, register_revision
+from .test_register import ACQUISITION, FIRST_YEAR, NAME, full_year, register_operations, register_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -35,7 +35,7 @@ _ASSET = "laptop-1"
 
 
 def _authority(
-    tax_year: int = 2025,
+    tax_year: int = FIRST_YEAR,
     *,
     generation: str = "generation-1",
     source: str = "table entry",
@@ -52,8 +52,8 @@ def _authority(
         annual_rate=Decimal(rate),
         authority_generation=generation,
         source_reference=source,
-        useful_life_ends_on=date(2035, 1, 1) if constant else None,
-        maximum_period_ends_on=None if constant else date(2035, 1, 1),
+        useful_life_ends_on=date(FIRST_YEAR + 10, 1, 1) if constant else None,
+        maximum_period_ends_on=None if constant else date(FIRST_YEAR + 10, 1, 1),
     )
 
 
@@ -93,7 +93,7 @@ def test_a_changed_coefficient_moves_the_fingerprint() -> None:
 
 def test_a_prior_claim_moves_a_constant_percentage_fingerprint_with_its_figure() -> None:
     method = AmortizationMethod.CONSTANT_PERCENTAGE
-    authority = _authority(2026, method=method)
+    authority = _authority(FIRST_YEAR + 1, method=method)
 
     untouched = _charge(authority, method=method)
     after_prior_claim = _charge(authority, before="520.00", method=method)
@@ -104,7 +104,7 @@ def test_a_prior_claim_moves_a_constant_percentage_fingerprint_with_its_figure()
 
 
 def test_a_prior_claim_leaves_a_linear_fingerprint_until_the_cap_reaches_the_charge() -> None:
-    authority = _authority(2028)
+    authority = _authority(FIRST_YEAR + 3)
 
     untouched = _charge(authority)
     still_within = _charge(authority, before="1000.00")
@@ -184,7 +184,7 @@ def _operations_under_generation(
         ledger=MemoryLedger(ACQUISITION),
         forecast_operation=forecast,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
-        register_authority=replace(memory_register_authority(today=date(2026, 12, 31))),
+        register_authority=replace(memory_register_authority(today=date(FIRST_YEAR + 1, 12, 31))),
     )
 
 
@@ -192,7 +192,7 @@ def test_a_claim_stays_current_under_a_new_generation_of_identical_law() -> None
     repository = MemoryRepository()
     operations = _operations_under_generation(repository, "generation-1")
     operations.create(register_revision(), NAME)
-    operations.record_claim(full_year(operations, 2025), creating_operation="test.claim")
+    operations.record_claim(full_year(operations, FIRST_YEAR), creating_operation="test.claim")
 
     reread = _operations_under_generation(repository, "generation-2")
 
@@ -203,23 +203,23 @@ def test_a_claim_stays_current_under_a_new_generation_of_identical_law() -> None
 
 
 def test_a_claim_whose_later_interval_rests_on_earlier_claims_reads_current() -> None:
-    operations, _ = register_operations(today=date(2026, 12, 31))
+    operations, _ = register_operations(today=date(FIRST_YEAR + 1, 12, 31))
     operations.create(register_revision(method=AmortizationMethod.LINEAR), NAME)
-    operations.record_claim(full_year(operations, 2025), creating_operation="test.2025")
-    operations.record_claim(full_year(operations, 2026), creating_operation="test.2026")
+    operations.record_claim(full_year(operations, FIRST_YEAR), creating_operation="test.first")
+    operations.record_claim(full_year(operations, FIRST_YEAR + 1), creating_operation="test.second")
 
     assert operations.list_elements()[0].findings.stale == 0
 
 
 def test_a_disposal_only_revision_leaves_earlier_claims_current() -> None:
-    operations, _ = register_operations(today=date(2026, 12, 31))
+    operations, _ = register_operations(today=date(FIRST_YEAR + 1, 12, 31))
     operations.create(register_revision(), NAME)
-    operations.record_claim(full_year(operations, 2025), creating_operation="test.claim")
+    operations.record_claim(full_year(operations, FIRST_YEAR), creating_operation="test.claim")
 
     operations.dispose(
         _ASSET,
         ActivityAssetDisposal(
-            disposal_date=date(2026, 6, 30),
+            disposal_date=date(FIRST_YEAR + 1, 6, 30),
             reason=ActivityAssetDisposalReason.SALE,
             proceeds=Decimal("1000.00"),
             transmission_costs=Decimal("0.00"),
@@ -233,10 +233,10 @@ def test_a_disposal_only_revision_leaves_earlier_claims_current() -> None:
 
 
 def test_a_correction_changing_a_tax_fact_still_reads_as_a_changed_revision() -> None:
-    operations, _ = register_operations(today=date(2026, 12, 31))
+    operations, _ = register_operations(today=date(FIRST_YEAR + 1, 12, 31))
     first = register_revision()
     operations.create(first, NAME)
-    operations.record_claim(full_year(operations, 2025), creating_operation="test.claim")
+    operations.record_claim(full_year(operations, FIRST_YEAR), creating_operation="test.claim")
 
     operations.correct(register_revision(number=2, supersedes=first.revision_id, basis="1000"))
 

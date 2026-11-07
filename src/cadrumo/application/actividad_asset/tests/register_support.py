@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import calendar
 from collections.abc import Callable, Iterable, Mapping
 from datetime import date, datetime
+from decimal import ROUND_HALF_UP, Decimal
 from functools import cache
 
 from cadrumo.application.actividad_asset.activity_asset_read_models import ActivityAssetEdition
@@ -33,6 +35,7 @@ from cadrumo.domain.calculations.registry.ledger_renta_gastos_pago_fraccionado_b
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
 from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.contribuyente.tax_residence import ResidenceTerritory
 from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim
 from cadrumo.domain.renta.actividad_asset.election import DirectEstimationRegime
@@ -83,7 +86,7 @@ class MemoryRepository:
 @cache
 def _published_modelo_100() -> ModeloRevision:
     with bundled_indexed_authority().operation() as operation:
-        return operation.revision_for_context("100", filing_year=2025, period="0A")
+        return operation.revision_for_context("100", filing_year=filing_year_envelope().horizon, period="0A")
 
 
 def _published_m130_box(period: Period) -> CasillaId:
@@ -146,7 +149,7 @@ def _published_disposal_bounds(revision: ActivityAssetRevision, tax_year: int) -
 
 def memory_register_authority(
     *,
-    today: date = date(2025, 12, 31),
+    today: date | None = None,
     consumers: Mapping[str, tuple[str, ...]] | None = None,
     territory: ResidenceTerritory = ResidenceTerritory.COMMON,
     last_admitted_year: int | None = None,
@@ -169,11 +172,24 @@ def memory_register_authority(
         agrarian_activities=lambda _on: frozenset(),
         residence_territory=lambda _on: territory,
         claim_consumers=claim_consumers,
-        today=lambda: today,
+        today=lambda: date(filing_year_envelope().horizon, 12, 31) if today is None else today,
         schedule_authority=published_authority,
         disposal_bounds=_published_disposal_bounds,
         class_labels=published_class_labels,
         legal_reference=_published_legal_reference,
+    )
+
+
+def accrued_through(annual: Decimal, before: date) -> Decimal:
+    """Return the linear charge accrued from 1 January of ``before.year`` up to ``before``, to the cent.
+
+    The expectation the schedule's day-count rule gives independently of the engine: the annual charge times the
+    elapsed days over the days of that calendar year, half-up, so a leap year spreads over 366.
+    """
+    first_day = date(before.year, 1, 1)
+    year_days = 366 if calendar.isleap(before.year) else 365
+    return (annual * Decimal((before - first_day).days) / Decimal(year_days)).quantize(
+        Decimal("0.01"), rounding=ROUND_HALF_UP
     )
 
 

@@ -13,7 +13,7 @@ related:
   - '[[2026-10-25-agent-owned-models-adr]]'
 modified: '2026-11-07'
 body_schema: body-v2
-body_hash: 'sha256:ecc86bfd90a7842b2de78181763eff8353204d4a946286c19c31260f5986f737'
+body_hash: 'sha256:8ab2cb549d1dc340a6f56751f212b632e1f4fddefdd0e5c64888a747efe2ab56'
 ---
 
 # `local-inference-engine` plan
@@ -106,6 +106,12 @@ Prove the integrated change in the coordinator's root build slot, settle the def
 - [x] `P05.S25` - Run the GPU measurement pass after the coordinator GO, then record the default vision route as an ADR amendment and the GPU results in the research record (repo cadrumo, executor vaultspec-high-executor); `.tmp/2026-11-07-ollama-eval-llamacpp/scripts/gpu_pass.py, .vault/adr/2026-11-07-local-inference-engine-adr.md, .vault/research/2026-11-07-local-inference-engine-research.md`.
 - [ ] `P05.S26` - Smoke the packaged desktop: with the llama.cpp default and no Ollama installed read a synthetic invoice end to end, then select Ollama, set it up and confirm the identical experience (repo cadrumo, executor vaultspec-high-executor); `packaged desktop built in the root build tree`.
 - [ ] `P05.S27` - Flip the default local engine to the bundled llama.cpp after the P05 packaged smoke passes, changing the default engine of the engine record and the setup and settings defaults (repo cadrumo, plus a cadrumo-agent catalogue default if needed, executor vaultspec-standard-executor, Opus review before the Step closes); `src/cadrumo_agent_service/providers/domain/record.py, src/cadrumo_agent_service/admin.py, native/desktop/frontend/src/shell/localModelLanes.ts, cadrumo-agent:src/cadrumo_agent/providers/provider_metadata.json, their tests`.
+
+### Phase `P06` - Live no_answer refusal surfacing
+
+Surface the agent's typed no_answer refusal as a correct tax-side refusal and a desktop condition, independent of the engine work, landing right after the ollama_api thinking fix lands in cadrumo-agent main without waiting for P03.
+
+- [ ] `P06.S28` - Map the agent's no_answer condition to OUTPUT_INVALID instead of RUN_FAILED and show a no_answer condition on the desktop, with the condition words served by the backend locale catalogues through the canonical dev.locales workflow in ca, en, es and hu and the frontend only mapping the served token to its rendering (repo cadrumo, executor vaultspec-standard-executor, lands in feature/tui right after the ollama_api fix lands in cadrumo-agent main, independent of P03, with a root build slot from the coordinator for the desktop typecheck and tests); `src/cadrumo_agent_service/adapters/agent_background_runs.py, src/cadrumo_agent_service/locales/{ca,en,es,hu}.yml, dev/locales/desktop_interface_keys.py, native/desktop/frontend/src/shell/agentViews.ts, native/desktop/frontend/src/shell/agentWords.ts, their tests`.
 
 ## Parallelization
 

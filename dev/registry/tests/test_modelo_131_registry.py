@@ -13,6 +13,7 @@ from cadrumo.domain.calculations.registry.ids import LegalRefId
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import revision_last_exercise
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from dev.registry.compiler.authority import compiled_bundled_authority
 
@@ -56,7 +57,7 @@ _M131_REVISION_ORDER_REFS: dict[str, LegalRefId] = {
 }
 # The last exercise of the base edition, then each single-exercise edition's own.
 _M131_SNAPSHOT_YEARS = (
-    _M131_REVISIONS[0].valid_to.year,
+    revision_last_exercise("131", str(_M131_REVISIONS[0].id)),
     *(revision.valid_from.year for revision in _M131_SINGLE_EXERCISE_REVISIONS),
 )
 _M100_NEWEST_REVISIONS = authored_revisions("100")[-2:]

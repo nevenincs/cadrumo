@@ -85,35 +85,41 @@ export const FIXTURE_CALENDAR: FilingCalendar = {
   range: { from_date: fixtureDay(7, 1), to_date: fixtureDay(6, 30, 1) },
   generated_at: `${FIXTURE_TODAY}T09:14:05Z`,
   entries: [
-    entry("303", "2026-2T", fixtureDay(7, 1), fixtureDay(7, 20), {
+    entry("303", `${FIXTURE_YEAR}-2T`, fixtureDay(7, 1), fixtureDay(7, 20), {
       user_state: "filed",
       local_filing_state: "ready_to_file",
       aeat_submission_state: "justificante_verified",
       justificante_verified: true,
     }),
-    entry("130", "2026-2T", fixtureDay(7, 1), fixtureDay(7, 20), {
+    entry("130", `${FIXTURE_YEAR}-2T`, fixtureDay(7, 1), fixtureDay(7, 20), {
       user_state: "late",
       days_overdue: 78,
       local_filing_state: "ready_to_file",
     }),
-    entry("303", "2026-3T", fixtureDay(10, 1), fixtureDay(10, 20), {
+    entry("303", `${FIXTURE_YEAR}-3T`, fixtureDay(10, 1), fixtureDay(10, 20), {
       payment_cutoff_on: fixtureDay(10, 15),
       local_filing_state: "ready_to_file",
     }),
-    entry("130", "2026-3T", fixtureDay(10, 1), fixtureDay(10, 20)),
-    entry("111", "2026-3T", fixtureDay(10, 1), fixtureDay(10, 20), {
+    entry("130", `${FIXTURE_YEAR}-3T`, fixtureDay(10, 1), fixtureDay(10, 20)),
+    entry("111", `${FIXTURE_YEAR}-3T`, fixtureDay(10, 1), fixtureDay(10, 20), {
       aeat_submission_state: "submitted_observed",
       user_state: "filed",
       local_filing_state: "external_baseline_imported",
     }),
     // A host that could not say when this window opens: only its close.
-    entry("349", "2026-3T", null, fixtureDay(10, 20), {
+    entry("349", `${FIXTURE_YEAR}-3T`, null, fixtureDay(10, 20), {
       user_state: "unknown",
     }),
-    entry("303", "2026-4T", fixtureDay(1, 1, 1), fixtureDay(1, 30, 1), {
-      adjusted_closes_on: fixtureDay(2, 1, 1),
-      shift_reason: "weekend",
-    }),
+    entry(
+      "303",
+      `${FIXTURE_YEAR}-4T`,
+      fixtureDay(1, 1, 1),
+      fixtureDay(1, 30, 1),
+      {
+        adjusted_closes_on: fixtureDay(2, 1, 1),
+        shift_reason: "weekend",
+      },
+    ),
     entry("390", FIXTURE_YEAR, fixtureDay(1, 1, 1), fixtureDay(1, 30, 1), {
       adjusted_closes_on: fixtureDay(2, 1, 1),
       shift_reason: "weekend",
@@ -123,23 +129,33 @@ export const FIXTURE_CALENDAR: FilingCalendar = {
     }),
   ],
   events: [
-    observed("filing", fixtureDay(7, 17), "Modelo 303 2026-2T filed", {
-      status: "presentado",
-      aeat_submission_state: "justificante_verified",
-      aeat_submitted_at: fixtureInstant(7, 17, "10:42:00Z"),
-      justificante_verified: true,
-    }),
+    observed(
+      "filing",
+      fixtureDay(7, 17),
+      `Modelo 303 ${FIXTURE_YEAR}-2T filed`,
+      {
+        status: "presentado",
+        aeat_submission_state: "justificante_verified",
+        aeat_submitted_at: fixtureInstant(7, 17, "10:42:00Z"),
+        justificante_verified: true,
+      },
+    ),
     observed(
       "message",
       fixtureDay(9, 3),
       "Notification received from the agency",
     ),
-    observed("filing", fixtureDay(10, 2), "Modelo 111 2026-3T filed", {
-      status: "presentado",
-      aeat_submission_state: "submitted_observed",
-      aeat_submitted_at: fixtureInstant(10, 2, "08:15:00Z"),
-      justificante_verified: false,
-    }),
+    observed(
+      "filing",
+      fixtureDay(10, 2),
+      `Modelo 111 ${FIXTURE_YEAR}-3T filed`,
+      {
+        status: "presentado",
+        aeat_submission_state: "submitted_observed",
+        aeat_submitted_at: fixtureInstant(10, 2, "08:15:00Z"),
+        justificante_verified: false,
+      },
+    ),
   ],
   warnings: [
     {
@@ -209,11 +225,11 @@ export const CLOSE_UNKNOWN_CALENDAR: FilingCalendar = {
   warnings: [],
   entries: [
     ...FIXTURE_CALENDAR.entries,
-    entry("115", "2026-2T", fixtureDay(7, 1), fixtureDay(7, 20), {
+    entry("115", `${FIXTURE_YEAR}-2T`, fixtureDay(7, 1), fixtureDay(7, 20), {
       status: "UNKNOWN",
       user_state: "unknown",
     }),
-    entry("123", "2026-3T", fixtureDay(10, 1), fixtureDay(10, 20), {
+    entry("123", `${FIXTURE_YEAR}-3T`, fixtureDay(10, 1), fixtureDay(10, 20), {
       status: "UNKNOWN",
       user_state: "unknown",
     }),

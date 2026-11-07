@@ -12,9 +12,11 @@ from cadrumo.core.period import Period
 from cadrumo.domain.renta.actividad_asset.lifecycle import AssetKind
 
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from .operations_support import build_operations
+from .operations_support import build_operations, build_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_FIRST = build_revision().in_service_date.year
 
 
 @pytest.fixture(autouse=True)
@@ -24,11 +26,11 @@ def _pinned_authority() -> Iterator[None]:
         yield
 
 
-_PERIOD = Period.from_year_and_code(2025, "4T")
+_PERIOD = Period.from_year_and_code(_FIRST, "4T")
 
 
 def test_the_two_modelo_130_rows_share_a_box_and_are_named_apart_by_their_asset_kind() -> None:
-    handoff = build_operations().filing_handoff(tax_year=2025, m130_period=_PERIOD, language=OutputLanguage.ES)
+    handoff = build_operations().filing_handoff(tax_year=_FIRST, m130_period=_PERIOD, language=OutputLanguage.ES)
 
     material, intangible = handoff.material_m130, handoff.intangible_m130
     assert material is not None
@@ -48,8 +50,8 @@ def test_the_two_modelo_130_rows_share_a_box_and_are_named_apart_by_their_asset_
 def test_the_modelo_100_boxes_are_named_by_the_registry_layout_in_the_language_asked() -> None:
     operations = build_operations()
 
-    spanish = operations.filing_handoff(tax_year=2025, language=OutputLanguage.ES)
-    english = operations.filing_handoff(tax_year=2025, language=OutputLanguage.EN)
+    spanish = operations.filing_handoff(tax_year=_FIRST, language=OutputLanguage.ES)
+    english = operations.filing_handoff(tax_year=_FIRST, language=OutputLanguage.EN)
 
     assert spanish.material_m100_box_name == "Amortización del inmovilizado material"
     assert spanish.intangible_m100_box_name == "Amortización del inmovilizado inmaterial"
@@ -58,7 +60,7 @@ def test_the_modelo_100_boxes_are_named_by_the_registry_layout_in_the_language_a
 
 
 def test_the_names_reach_the_wire_beside_their_box_and_restore_from_it() -> None:
-    handoff = build_operations().filing_handoff(tax_year=2025, m130_period=_PERIOD, language=OutputLanguage.EN)
+    handoff = build_operations().filing_handoff(tax_year=_FIRST, m130_period=_PERIOD, language=OutputLanguage.EN)
 
     wire = ActivityAssetFilingHandoffSnapshot.from_domain(handoff)
 

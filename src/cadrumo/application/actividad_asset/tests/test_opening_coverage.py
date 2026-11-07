@@ -1,7 +1,8 @@
 """The schedule walk reads a non-zero opening amount as covering years through its stated tax year.
 
 Figures are hand-worked from a 10,000.00 basis at 10% linear, in service from
-1 January 2020, with an opening amount of 3,000.00: each uncovered full year charges 1,000.00.
+1 January five years before the filing year, with an opening amount of 3,000.00: each uncovered
+full year charges 1,000.00.
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ from cadrumo.application.actividad_asset.activity_asset_read_models import (
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory
 from cadrumo.application.actividad_asset.operations import ActivityAssetOperations
 from cadrumo.application.actividad_asset.schedule_walk import PlanFigureAbsence, WalkedYear, walk_element
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.renta.actividad_asset.election import (
     AcquiredCondition,
     ActivityAssetAmortizationElection,
@@ -51,6 +53,7 @@ _ACQUISITION = acquisition_transaction(
     taxable_base=Decimal("10000.00"),
     iva_amount=Decimal("2100.00"),
 )
+_FILING_YEAR = filing_year_envelope().horizon
 
 
 def _revision(*, opening_through: int) -> ActivityAssetRevision:
@@ -70,7 +73,7 @@ def _revision(*, opening_through: int) -> ActivityAssetRevision:
             non_deductible_iva=Decimal("0"),
             prior_allocation_provenance="ledger allocation allocation-1",
         ),
-        in_service_date=date(2020, 1, 1),
+        in_service_date=date(_FILING_YEAR - 5, 1, 1),
         opening_history=OpeningAmortizationHistory(
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal("3000"),
@@ -103,7 +106,7 @@ def _forecast(
             annual_rate=Decimal("0.10"),
             authority_generation="walk-test-v1",
             source_reference="walk test table",
-            maximum_period_ends_on=date(2040, 1, 1),
+            maximum_period_ends_on=date(_FILING_YEAR + 15, 1, 1),
         ),
         covered_from=covered_from,
         covered_until=covered_until,
@@ -118,23 +121,23 @@ def _walk(opening_through: int) -> dict[int, WalkedYear]:
         revision,
         ActivityAssetHistory().append_revision(revision),
         forecast=_forecast,
-        through_year=2025,
+        through_year=_FILING_YEAR,
     )
     return {row.tax_year: row for row in rows}
 
 
 def test_years_after_the_opening_year_are_missing_gaps_that_consume_nothing() -> None:
-    rows = _walk(2022)
+    rows = _walk(_FILING_YEAR - 3)
 
     covered = [year for year, row in rows.items() if row.absence is PlanFigureAbsence.COVERED_BY_OPENING]
-    assert covered == [2020, 2021, 2022]
-    for year in (2023, 2024):
+    assert covered == list(range(_FILING_YEAR - 5, _FILING_YEAR - 2))
+    for year in range(_FILING_YEAR - 2, _FILING_YEAR):
         charge = rows[year].charge
         assert charge is not None
         assert charge.amount == Decimal("1000.00")
         assert len(rows[year].gaps) == 1
-    assert rows[2024].consumed_before == Decimal("0")
-    assert rows[2025].consumed_before == Decimal("0")
+    assert rows[_FILING_YEAR - 1].consumed_before == Decimal("0")
+    assert rows[_FILING_YEAR].consumed_before == Decimal("0")
 
 
 def _register(opening_through: int, *, today: date) -> tuple[ActivityAssetOperations, ActivityAssetRevision]:
@@ -151,11 +154,11 @@ def _register(opening_through: int, *, today: date) -> tuple[ActivityAssetOperat
 
 
 def test_the_read_model_shows_the_basis_less_the_opening_as_pending_whatever_years_are_missing() -> None:
-    operations, _ = _register(2022, today=date(2025, 12, 31))
+    operations, _ = _register(_FILING_YEAR - 3, today=date(_FILING_YEAR, 12, 31))
 
     (row,) = operations.list_elements()
 
-    # 10,000.00 basis less the 3,000.00 opening; 2023 to 2025 are missing and take nothing.
+    # 10,000.00 basis less the 3,000.00 opening; the three years after the opening are missing and take nothing.
     assert row.pending is not None
     assert Decimal(row.pending.decimal) == Decimal("7000.00")
     assert row.accumulated is not None
@@ -164,21 +167,21 @@ def test_the_read_model_shows_the_basis_less_the_opening_as_pending_whatever_yea
 
 
 def test_a_later_year_charges_its_full_figure_after_missing_years_and_a_claim_lowers_pending() -> None:
-    operations, _ = _register(2022, today=date(2025, 12, 31))
+    operations, _ = _register(_FILING_YEAR - 3, today=date(_FILING_YEAR, 12, 31))
 
     plan = {item.tax_year: item for item in operations.plan("machine-1")}
-    for year in (2023, 2024, 2025, 2026):
+    for year in range(_FILING_YEAR - 2, _FILING_YEAR + 2):
         figure = plan[year].planned
         assert figure is not None
         assert Decimal(figure.decimal) == Decimal("1000.00")
 
     charge = operations.forecast(
         asset_id="machine-1",
-        covered_from=date(2025, 1, 1),
-        covered_until=date(2026, 1, 1),
+        covered_from=date(_FILING_YEAR, 1, 1),
+        covered_until=date(_FILING_YEAR + 1, 1, 1),
     )
     assert charge.amount == Decimal("1000.00")
-    operations.record_claim(charge, creating_operation="test.2025")
+    operations.record_claim(charge, creating_operation="test.claim")
 
     (row,) = operations.list_elements()
     assert row.pending is not None
@@ -186,16 +189,16 @@ def test_a_later_year_charges_its_full_figure_after_missing_years_and_a_claim_lo
 
 
 def test_the_maximum_period_stops_the_plan_with_the_unclaimed_value_still_pending() -> None:
-    operations, _ = _register(2022, today=date(2041, 6, 30))
+    operations, _ = _register(_FILING_YEAR - 3, today=date(_FILING_YEAR + 16, 6, 30))
 
     plan = {item.tax_year: item for item in operations.plan("machine-1")}
 
-    # The table period ends on 1 January 2040, so 2039 is the last charge and 2040 has none.
-    figure = plan[2039].planned
+    # The table period ends on 1 January fifteen years after the filing year, so the year before it is the last charge and that year has none.
+    figure = plan[_FILING_YEAR + 14].planned
     assert figure is not None
     assert Decimal(figure.decimal) == Decimal("1000.00")
-    assert plan[2040].planned is None
-    assert plan[2040].absence is PlanFigureAbsence.PERIOD_ELAPSED
+    assert plan[_FILING_YEAR + 15].planned is None
+    assert plan[_FILING_YEAR + 15].absence is PlanFigureAbsence.PERIOD_ELAPSED
     (row,) = operations.list_elements()
     assert row.pending is not None
     assert Decimal(row.pending.decimal) == Decimal("7000.00")
@@ -203,34 +206,34 @@ def test_the_maximum_period_stops_the_plan_with_the_unclaimed_value_still_pendin
 
 
 def test_an_opening_through_the_last_walked_year_leaves_no_gap_year() -> None:
-    rows = _walk(2024)
+    rows = _walk(_FILING_YEAR - 1)
 
     covered = [year for year, row in rows.items() if row.absence is PlanFigureAbsence.COVERED_BY_OPENING]
-    assert covered == [2020, 2021, 2022, 2023, 2024]
-    assert all(row.gaps == () and row.charge is None for year, row in rows.items() if year <= 2024)
-    assert rows[2025].consumed_before == Decimal("0")
+    assert covered == list(range(_FILING_YEAR - 5, _FILING_YEAR))
+    assert all(row.gaps == () and row.charge is None for year, row in rows.items() if year < _FILING_YEAR)
+    assert rows[_FILING_YEAR].consumed_before == Decimal("0")
 
 
 def test_the_years_an_opening_covers_offer_nothing_to_claim_and_the_first_uncovered_year_is_claimable() -> None:
-    operations, _ = _register(2022, today=date(2025, 12, 31))
+    operations, _ = _register(_FILING_YEAR - 3, today=date(_FILING_YEAR, 12, 31))
 
     plan = {item.tax_year: item for item in operations.plan("machine-1")}
 
-    for year in (2020, 2021, 2022):
+    for year in range(_FILING_YEAR - 5, _FILING_YEAR - 2):
         assert plan[year].absence is PlanFigureAbsence.COVERED_BY_OPENING
         assert plan[year].planned is None
         assert plan[year].claim_state is ActivityAssetClaimState.NOT_DUE
         assert plan[year].claimable_intervals == ()
-    assert plan[2023].absence is None
-    assert plan[2023].claim_state is ActivityAssetClaimState.MISSING
-    assert [(item.covered_from, item.covered_until) for item in plan[2023].claimable_intervals] == [
-        (date(2023, 1, 1), date(2024, 1, 1)),
+    assert plan[_FILING_YEAR - 2].absence is None
+    assert plan[_FILING_YEAR - 2].claim_state is ActivityAssetClaimState.MISSING
+    assert [(item.covered_from, item.covered_until) for item in plan[_FILING_YEAR - 2].claimable_intervals] == [
+        (date(_FILING_YEAR - 2, 1, 1), date(_FILING_YEAR - 1, 1, 1)),
     ]
 
 
 def test_once_the_missing_years_are_claimed_the_plan_charges_exactly_the_value_still_pending() -> None:
-    operations, _ = _register(2022, today=date(2025, 12, 31))
-    for year in (2023, 2024, 2025):
+    operations, _ = _register(_FILING_YEAR - 3, today=date(_FILING_YEAR, 12, 31))
+    for year in range(_FILING_YEAR - 2, _FILING_YEAR + 1):
         charge = operations.forecast(
             asset_id="machine-1", covered_from=date(year, 1, 1), covered_until=date(year + 1, 1, 1)
         )
@@ -239,9 +242,9 @@ def test_once_the_missing_years_are_claimed_the_plan_charges_exactly_the_value_s
     plan = operations.plan("machine-1")
     (listed,) = operations.list_elements()
 
-    # 10,000.00 less the 3,000.00 opening and the 3,000.00 claimed leaves 4,000.00 for 2026 onward.
+    # 10,000.00 less the 3,000.00 opening and the 3,000.00 claimed leaves 4,000.00 for the following years.
     assert listed.pending is not None
     assert Decimal(listed.pending.decimal) == Decimal("4000.00")
-    ahead = [row for row in plan if row.tax_year >= 2026 and row.planned is not None]
-    assert [row.tax_year for row in ahead] == [2026, 2027, 2028, 2029]
+    ahead = [row for row in plan if row.tax_year > _FILING_YEAR and row.planned is not None]
+    assert [row.tax_year for row in ahead] == list(range(_FILING_YEAR + 1, _FILING_YEAR + 5))
     assert sum((Decimal(row.planned.decimal) for row in ahead if row.planned), Decimal("0")) == Decimal("4000.00")

@@ -35,7 +35,7 @@ def _revision() -> ModeloRevision:
     ]
 
 
-def test_the_oldest_form_keeps_single_record_and_historical_bank_owners() -> None:
+def test_the_oldest_form_repeats_activities_to_the_design_limit_and_keeps_historical_bank_owners() -> None:
     revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/303")).revisions[_edition(0)]
     layout = revision.form_layouts[0]
     assert form_layout_failures(revision) == ()
@@ -46,7 +46,7 @@ def test_the_oldest_form_keeps_single_record_and_historical_bank_owners() -> Non
     activities = [block for block in blocks if isinstance(block, FormRepeatingGroupBlock)]
     assert len(activities) == 4
     assert sum(len(block.columns) for block in activities) == 70
-    assert all(block.max_rows == 1 for block in activities)
+    assert all(block.max_rows == 3 for block in activities)
     for page in (layout.pages[2], layout.pages[5]):
         bank_fields = [
             resolve_form_context_field(revision, block)

@@ -1113,7 +1113,6 @@ def test_committed_m100_continuity_surface_for_0063_legal_refs_is_loaded(committ
         (_M100_B, _M100_C): "unchanged",
         (_M100_C, _M100_D): "unchanged",
         (_M100_D, _M100_E): "unchanged",
-        (_M100_E, _M100_F): "legal_refs_evolved",
     }
 
 
@@ -1143,7 +1142,7 @@ def test_committed_m100_continuity_surface_for_0070_label_and_legal_refs_is_load
         (_M100_B, _M100_C): "label_evolved",
         (_M100_C, _M100_D): "label_evolved",
         (_M100_D, _M100_E): "label_evolved",
-        (_M100_E, _M100_F): "label_and_legal_refs_evolved",
+        (_M100_E, _M100_F): "label_evolved",
     }
 
 

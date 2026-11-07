@@ -19,6 +19,7 @@ from cadrumo.application.actividad_asset.activity_asset_read_models import (
 from cadrumo.application.actividad_asset.operations import ActivityAssetOperations
 from cadrumo.application.actividad_asset.ports import ActivityAssetForecastOperation
 from cadrumo.core.i18n.render import tr
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.renta.actividad_asset.election import AmortizationMethod, DirectEstimationRegime
 from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetUnsupportedError, PercentFact
 from cadrumo.domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
@@ -27,7 +28,15 @@ from cadrumo.domain.renta.actividad_asset.schedule import AssetScheduleHistory, 
 from .ledger_support import MemoryLedger
 from .register_support import MemoryRepository, memory_register_authority
 from .test_claim_years_and_replay import constant_forecast
-from .test_register import ACQUISITION, NAME, full_year, register_forecast, register_operations, register_revision
+from .test_register import (
+    ACQUISITION,
+    FIRST_YEAR,
+    NAME,
+    full_year,
+    register_forecast,
+    register_operations,
+    register_revision,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -40,16 +49,17 @@ def _stated(facts: tuple[ActivityAssetReasonFact, ...]) -> dict[str, str]:
 
 
 def test_the_election_limits_of_a_year_no_edition_covers_state_the_year_that_words_the_reason() -> None:
-    operations, _ = register_operations(today=date(2021, 6, 30))
-    operations.create(register_revision(in_service=date(2020, 1, 1)), NAME)
+    uncovered_year = filing_year_envelope().floor - 1
+    operations, _ = register_operations(today=date(uncovered_year, 6, 30))
+    operations.create(register_revision(in_service=date(uncovered_year - 1, 1, 1)), NAME)
 
     limits = operations.plan_limits(_ASSET)
 
     key = limits.unavailable_reason_key
     assert key == _NO_EDITION
-    assert _stated(limits.unavailable_reason_facts) == {"tax_year": "2021"}
+    assert _stated(limits.unavailable_reason_facts) == {"tax_year": str(uncovered_year)}
     rendered = tr(key, **_stated(limits.unavailable_reason_facts))
-    assert "2021" in rendered
+    assert str(uncovered_year) in rendered
     assert "{" not in rendered
 
 
@@ -63,7 +73,7 @@ def test_the_election_limits_of_a_year_with_an_edition_state_no_reason() -> None
     assert limits.unavailable_reason_facts == ()
 
 
-def _without_edition_after_2026(
+def _without_edition_after_second_year(
     revision: ActivityAssetRevision,
     *,
     covered_from: date,
@@ -71,7 +81,7 @@ def _without_edition_after_2026(
     history: AssetScheduleHistory,
     requested_free_amount: Decimal | None = None,
 ) -> ScheduledAmortizationCharge:
-    if covered_from.year > 2026:
+    if covered_from.year > FIRST_YEAR + 1:
         raise ActividadAssetUnsupportedError(
             context={"tax_year": covered_from.year},
             translated_message=_NO_EDITION,
@@ -91,29 +101,33 @@ def _register(forecast: ActivityAssetForecastOperation, revision: ActivityAssetR
         ledger=MemoryLedger(ACQUISITION),
         forecast_operation=forecast,
         taxpayer_modality=lambda: DirectEstimationRegime.SIMPLIFIED,
-        register_authority=memory_register_authority(today=date(2028, 12, 31), last_admitted_year=2028),
+        register_authority=memory_register_authority(
+            today=date(FIRST_YEAR + 3, 12, 31), last_admitted_year=FIRST_YEAR + 3
+        ),
     )
     operations.create(revision, NAME)
     return operations
 
 
 def test_a_year_the_plan_cannot_figure_serves_its_refusal_with_the_facts_the_absence_carries() -> None:
-    operations = _register(_without_edition_after_2026, register_revision())
+    operations = _register(_without_edition_after_second_year, register_revision())
 
-    row = {item.tax_year: item for item in operations.plan(_ASSET)}[2027]
+    row = {item.tax_year: item for item in operations.plan(_ASSET)}[FIRST_YEAR + 2]
 
     assert row.claimable_refusal_key == row.absence_reason_key == _NO_EDITION
     key = row.claimable_refusal_key
     assert key is not None
-    assert _stated(row.claimable_refusal_facts) == _stated(row.absence_reason_facts) == {"tax_year": "2027"}
-    assert "2027" in tr(key, **_stated(row.claimable_refusal_facts))
+    assert (
+        _stated(row.claimable_refusal_facts) == _stated(row.absence_reason_facts) == {"tax_year": str(FIRST_YEAR + 2)}
+    )
+    assert str(FIRST_YEAR + 2) in tr(key, **_stated(row.claimable_refusal_facts))
 
 
 def test_a_method_refusal_for_a_missing_year_serves_the_method_that_words_it() -> None:
     operations = _register(constant_forecast, register_revision(method=AmortizationMethod.CONSTANT_PERCENTAGE))
-    operations.record_claim(full_year(operations, 2027), creating_operation="test.2027")
+    operations.record_claim(full_year(operations, FIRST_YEAR + 2), creating_operation="test.later")
 
-    row = {item.tax_year: item for item in operations.plan(_ASSET)}[2025]
+    row = {item.tax_year: item for item in operations.plan(_ASSET)}[FIRST_YEAR]
 
     assert row.claim_state is ActivityAssetClaimState.MISSING
     assert row.claimable_intervals == ()
@@ -126,7 +140,7 @@ def test_a_method_refusal_for_a_missing_year_serves_the_method_that_words_it() -
 def test_each_fact_states_the_kind_it_was_raised_with() -> None:
     facts = project_reason_facts(
         {
-            "on": date(2026, 6, 30),
+            "on": date(FIRST_YEAR + 1, 6, 30),
             "paid": Decimal("1234.50"),
             "elected": PercentFact("0.16"),
             "months": 7,
@@ -138,14 +152,14 @@ def test_each_fact_states_the_kind_it_was_raised_with() -> None:
         ("elected", "0.16", "percent"),
         ("method", "linear", "text"),
         ("months", "7", "count"),
-        ("on", "2026-06-30", "date"),
+        ("on", f"{FIRST_YEAR + 1}-06-30", "date"),
         ("paid", "1234.50", "amount"),
     ]
 
 
 def test_a_refusal_projects_the_kinds_its_context_was_raised_with() -> None:
-    operations = _register(_without_edition_after_2026, register_revision())
+    operations = _register(_without_edition_after_second_year, register_revision())
 
-    row = {item.tax_year: item for item in operations.plan(_ASSET)}[2027]
+    row = {item.tax_year: item for item in operations.plan(_ASSET)}[FIRST_YEAR + 2]
 
     assert [(fact.key, fact.kind.value) for fact in row.claimable_refusal_facts] == [("tax_year", "count")]
