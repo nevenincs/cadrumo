@@ -35,6 +35,8 @@ from ..export_tree import render_complete_export_tree
 from ..joined_record_design import JoinedRecordDesignField, join_record_design_semantics
 from ..render_profile_rules import Width17MembershipRule
 from .export_tree_support import (
+    DESIGN_EPOCH,
+    SHELL_REVISION,
     blank_integer_profile,
     export_tree_intermediate,
     export_tree_joined,
@@ -58,21 +60,21 @@ def test_direct_manifest_emission_and_real_loader_verification(tmp_path) -> None
     joined = export_tree_joined(m130_inspection())
     rendered = render_complete_export_tree(
         revision_dir / "export",
-        revision_id="2025",
+        revision_id=SHELL_REVISION,
         joined=joined,
         semantic_map=semantic_map,
         transport_profile=export_tree_profile(),
         render_profile=wire_profile(),
         render_profile_source_evidence=wire_evidence(),
     )
-    layout = load_modelo_directory(tmp_path / "modelos" / "130").revisions["2025"].export_layouts[0]
+    layout = load_modelo_directory(tmp_path / "modelos" / "130").revisions[SHELL_REVISION].export_layouts[0]
     manifest_path = revision_dir / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME
     manifest_path.unlink()
 
     emitted = emit_export_fragment_provenance_manifest(
         joined=joined,
         semantic_map=semantic_map,
-        target=ExportFragmentTarget(modelo="130", revision_id="2025", design_epoch="2019"),
+        target=ExportFragmentTarget(modelo="130", revision_id=SHELL_REVISION, design_epoch=DESIGN_EPOCH),
         loaded_layout=layout,
         export_root=revision_dir / "export",
         field_derivations=rendered.field_derivations,
@@ -86,7 +88,7 @@ def test_direct_manifest_emission_and_real_loader_verification(tmp_path) -> None
             export_root=revision_dir / "export",
             joined=joined,
             semantic_map=semantic_map,
-            target=ExportFragmentTarget(modelo="130", revision_id="2025", design_epoch="2019"),
+            target=ExportFragmentTarget(modelo="130", revision_id=SHELL_REVISION, design_epoch=DESIGN_EPOCH),
             loaded_layout=layout,
             field_derivations=rendered.field_derivations,
             render_profile=wire_profile(),
@@ -134,7 +136,7 @@ def test_renderer_refuses_mismatched_map_without_emitting_a_manifest(tmp_path) -
     with pytest.raises(RegistryValidationError, match="joined fields do not attest"):
         render_complete_export_tree(
             revision_dir / "export",
-            revision_id="2025",
+            revision_id=SHELL_REVISION,
             joined=export_tree_joined(m130_inspection()),
             semantic_map=mismatched_map,
             transport_profile=export_tree_profile(),
@@ -145,7 +147,7 @@ def test_renderer_refuses_mismatched_map_without_emitting_a_manifest(tmp_path) -
     with pytest.raises(RegistryValidationError, match="semantic-map SHA-256 does not match joined official source"):
         render_complete_export_tree(
             revision_dir / "export",
-            revision_id="2025",
+            revision_id=SHELL_REVISION,
             joined=export_tree_joined(m130_inspection()),
             semantic_map=semantic_map.model_copy(update={"source_sha256": "b" * 64}),
             transport_profile=export_tree_profile(),
@@ -169,7 +171,7 @@ def test_renderer_refuses_semantic_map_source_and_incomplete_entries_without_emi
     with pytest.raises(RegistryValidationError, match=r"semantic-map source .+ does not match joined source"):
         render_complete_export_tree(
             revision_dir / "export",
-            revision_id="2025",
+            revision_id=SHELL_REVISION,
             joined=export_tree_joined(m130_inspection()),
             semantic_map=semantic_map.model_copy(update={"source_ref": "aeat-dr-130-2019-v13"}),
             transport_profile=export_tree_profile(),
@@ -192,7 +194,7 @@ def test_renderer_refuses_semantic_map_source_and_incomplete_entries_without_emi
     ):
         render_complete_export_tree(
             revision_dir / "export",
-            revision_id="2025",
+            revision_id=SHELL_REVISION,
             joined=joined_with_duplicated_field,
             semantic_map=semantic_map,
             transport_profile=export_tree_profile(),
@@ -217,7 +219,7 @@ def test_renderer_tolerates_reordered_joined_fields_without_tripping_the_entries
 
     rendered = render_complete_export_tree(
         tmp_path / "export",
-        revision_id="2025",
+        revision_id=SHELL_REVISION,
         joined=reordered_joined,
         semantic_map=export_tree_semantic_map(),
         transport_profile=export_tree_profile(),
@@ -249,7 +251,7 @@ def test_renderer_refuses_incomplete_joined_records_without_emitting_a_manifest(
     ):
         render_complete_export_tree(
             revision_dir / "export",
-            revision_id="2025",
+            revision_id=SHELL_REVISION,
             joined=joined_missing_a_record,
             semantic_map=export_tree_semantic_map(),
             transport_profile=export_tree_profile(),
@@ -272,7 +274,7 @@ def test_renderer_tolerates_reordered_joined_records_without_tripping_the_record
 
     rendered = render_complete_export_tree(
         tmp_path / "export",
-        revision_id="2025",
+        revision_id=SHELL_REVISION,
         joined=reordered_joined,
         semantic_map=export_tree_semantic_map(),
         transport_profile=export_tree_profile(),
@@ -297,7 +299,7 @@ def test_renderer_refuses_transport_profile_identity_axes_without_emitting_a_man
     with pytest.raises(RegistryValidationError, match="export tree transport profile modelo"):
         render_complete_export_tree(
             revision_dir / "export",
-            revision_id="2025",
+            revision_id=SHELL_REVISION,
             joined=export_tree_joined(m130_inspection()),
             semantic_map=export_tree_semantic_map(),
             transport_profile=profile.model_copy(update={"modelo": "184"}),
@@ -308,10 +310,10 @@ def test_renderer_refuses_transport_profile_identity_axes_without_emitting_a_man
     with pytest.raises(RegistryValidationError, match="export tree transport profile design epoch"):
         render_complete_export_tree(
             revision_dir / "export",
-            revision_id="2025",
+            revision_id=SHELL_REVISION,
             joined=export_tree_joined(m130_inspection()),
             semantic_map=export_tree_semantic_map(),
-            transport_profile=profile.model_copy(update={"design_epoch": "2020"}),
+            transport_profile=profile.model_copy(update={"design_epoch": str(int(DESIGN_EPOCH) + 1)}),
             render_profile=wire_profile(),
             render_profile_source_evidence=wire_evidence(),
         )
@@ -319,7 +321,7 @@ def test_renderer_refuses_transport_profile_identity_axes_without_emitting_a_man
     with pytest.raises(RegistryValidationError, match="export tree transport profile source "):
         render_complete_export_tree(
             revision_dir / "export",
-            revision_id="2025",
+            revision_id=SHELL_REVISION,
             joined=export_tree_joined(m130_inspection()),
             semantic_map=export_tree_semantic_map(),
             transport_profile=profile.model_copy(update={"source_ref": "aeat-dr-130-2019-v13"}),
@@ -330,7 +332,7 @@ def test_renderer_refuses_transport_profile_identity_axes_without_emitting_a_man
     with pytest.raises(RegistryValidationError, match="export tree transport profile serializer"):
         render_complete_export_tree(
             revision_dir / "export",
-            revision_id="2025",
+            revision_id=SHELL_REVISION,
             joined=export_tree_joined(m130_inspection()),
             semantic_map=export_tree_semantic_map(),
             transport_profile=profile.model_copy(update={"serializer_convention": "unsupported-convention"}),
@@ -348,7 +350,7 @@ def test_renderer_tolerates_transport_profile_line_ending_drift(tmp_path) -> Non
     normal render rather than tripping any of the four gates just pinned."""
     rendered = render_complete_export_tree(
         tmp_path / "export",
-        revision_id="2025",
+        revision_id=SHELL_REVISION,
         joined=export_tree_joined(m130_inspection()),
         semantic_map=export_tree_semantic_map(),
         transport_profile=export_tree_profile().model_copy(update={"line_ending": "lf"}),
@@ -368,7 +370,7 @@ def test_renderer_refuses_uncovered_blank_numeric_anchor_without_emitting_a_part
     with pytest.raises(RegistryValidationError, match="must cover exactly the eligible blank numeric fields"):
         render_complete_export_tree(
             target,
-            revision_id="2025",
+            revision_id=SHELL_REVISION,
             joined=export_tree_joined(m130_inspection(), numeric_content=None),
             semantic_map=export_tree_semantic_map(),
             transport_profile=export_tree_profile(),
@@ -388,14 +390,14 @@ def test_renderer_resolves_one_blank_numeric_field_only_through_its_exact_profil
 
     rendered = render_complete_export_tree(
         revision_dir / "export",
-        revision_id="2025",
+        revision_id=SHELL_REVISION,
         joined=joined,
         semantic_map=export_tree_semantic_map(),
         transport_profile=export_tree_profile(),
         render_profile=profile,
         render_profile_source_evidence=wire_evidence(),
     )
-    loaded = load_modelo_directory(tmp_path / "modelos" / "130").revisions["2025"].export_layouts[0]
+    loaded = load_modelo_directory(tmp_path / "modelos" / "130").revisions[SHELL_REVISION].export_layouts[0]
     derived = rendered.field_derivations[-1]
 
     assert loaded == rendered.layout
@@ -439,7 +441,7 @@ def test_renderer_refuses_missing_or_noncontiguous_official_record_geometry(
     with pytest.raises(RegistryValidationError, match=error):
         render_complete_export_tree(
             target,
-            revision_id="2025",
+            revision_id=SHELL_REVISION,
             joined=joined,
             semantic_map=export_tree_semantic_map(),
             transport_profile=export_tree_profile(),
@@ -463,7 +465,7 @@ def test_renderer_refuses_unstructured_quoted_numeric_prose(tmp_path) -> None:
     with pytest.raises(RegistryValidationError, match="ambiguous content"):
         render_complete_export_tree(
             target,
-            revision_id="2025",
+            revision_id=SHELL_REVISION,
             joined=joined,
             semantic_map=export_tree_semantic_map(),
             transport_profile=export_tree_profile(),
@@ -533,7 +535,7 @@ def test_renderer_refuses_profile_hash_drift_literal_extent_and_nonempty_target(
     with pytest.raises(RegistryValidationError, match="SHA-256"):
         render_complete_export_tree(
             tmp_path / "export",
-            revision_id="2025",
+            revision_id=SHELL_REVISION,
             joined=joined,
             semantic_map=export_tree_semantic_map(),
             transport_profile=export_tree_profile().model_copy(update={"source_sha256": "b" * 64}),
@@ -563,7 +565,7 @@ def test_renderer_refuses_profile_hash_drift_literal_extent_and_nonempty_target(
     with pytest.raises(RegistryValidationError, match="encoded bytes"):
         render_complete_export_tree(
             tmp_path / "second" / "export",
-            revision_id="2025",
+            revision_id=SHELL_REVISION,
             joined=join_record_design_semantics(literal_map, intermediate, m130_inspection()),
             semantic_map=literal_map,
             transport_profile=export_tree_profile(),
@@ -578,7 +580,7 @@ def test_renderer_refuses_profile_hash_drift_literal_extent_and_nonempty_target(
     with pytest.raises(RegistryValidationError, match="not empty"):
         render_complete_export_tree(
             occupied,
-            revision_id="2025",
+            revision_id=SHELL_REVISION,
             joined=joined,
             semantic_map=export_tree_semantic_map(),
             transport_profile=export_tree_profile(),
@@ -620,7 +622,7 @@ def test_renderer_refuses_missing_or_ambiguous_official_literal_without_output(
     with pytest.raises(RegistryValidationError, match="official constant"):
         render_complete_export_tree(
             target,
-            revision_id="2025",
+            revision_id=SHELL_REVISION,
             joined=join_record_design_semantics(semantic_map, intermediate, m130_inspection()),
             semantic_map=semantic_map,
             transport_profile=export_tree_profile(),
@@ -652,7 +654,7 @@ def test_bare_constant_is_the_literal_only_when_it_fills_the_printed_contenido_c
     semantic_map = export_tree_semantic_map()
     tree = render_complete_export_tree(
         write_modelo_shell(tmp_path / "modelos" / "130") / "export",
-        revision_id="2025",
+        revision_id=SHELL_REVISION,
         joined=join_record_design_semantics(
             semantic_map,
             _intermediate_with_first_content("<T", in_contenido_column=True),
@@ -677,7 +679,7 @@ def test_bare_constant_not_proven_in_the_contenido_column_is_refused(tmp_path, o
     with pytest.raises(RegistryValidationError, match="ambiguous official constant"):
         render_complete_export_tree(
             target,
-            revision_id="2025",
+            revision_id=SHELL_REVISION,
             joined=join_record_design_semantics(
                 semantic_map,
                 _intermediate_with_first_content(official_content, in_contenido_column=in_column),
@@ -737,7 +739,7 @@ def test_renderer_refuses_wrong_same_width_literal_without_output(tmp_path) -> N
     with pytest.raises(RegistryValidationError, match="byte-for-byte"):
         render_complete_export_tree(
             target,
-            revision_id="2025",
+            revision_id=SHELL_REVISION,
             joined=join_record_design_semantics(semantic_map, export_tree_intermediate(), m130_inspection()),
             semantic_map=semantic_map,
             transport_profile=export_tree_profile(),
@@ -757,7 +759,7 @@ def test_renderer_partitions_oversized_record_deterministically_and_loader_merge
     second_revision = write_modelo_shell(tmp_path / "second" / "modelos" / "130")
     first = render_complete_export_tree(
         first_revision / "export",
-        revision_id="2025",
+        revision_id=SHELL_REVISION,
         joined=joined,
         semantic_map=semantic_map,
         transport_profile=export_tree_profile(),
@@ -766,7 +768,7 @@ def test_renderer_partitions_oversized_record_deterministically_and_loader_merge
     )
     second = render_complete_export_tree(
         second_revision / "export",
-        revision_id="2025",
+        revision_id=SHELL_REVISION,
         joined=joined,
         semantic_map=semantic_map,
         transport_profile=export_tree_profile(),
@@ -777,7 +779,7 @@ def test_renderer_partitions_oversized_record_deterministically_and_loader_merge
     compact_revision = write_modelo_shell(tmp_path / "compact" / "modelos" / "130")
     compact = render_complete_export_tree(
         compact_revision / "export",
-        revision_id="2025",
+        revision_id=SHELL_REVISION,
         joined=compact_joined,
         semantic_map=compact_map,
         transport_profile=export_tree_profile(),
@@ -817,7 +819,9 @@ def test_renderer_partitions_oversized_record_deterministically_and_loader_merge
         assert len(lines) < 1_400
         assert max(map(len, lines), default=0) < 520
 
-    loaded_layout = load_modelo_directory(tmp_path / "first" / "modelos" / "130").revisions["2025"].export_layouts[0]
+    loaded_layout = (
+        load_modelo_directory(tmp_path / "first" / "modelos" / "130").revisions[SHELL_REVISION].export_layouts[0]
+    )
     assert loaded_layout == first.layout
     emitted_ids = tuple(str(field.id) for field in loaded_layout.records[0].fields)
     assert emitted_ids == tuple(f"generated.oversized.field-{index:03d}" for index in range(1, 246))
@@ -989,7 +993,7 @@ def test_every_spelling_of_a_text_naturaleza_reaches_its_own_derivation_code(
     revision_dir = write_modelo_shell(tmp_path / "modelos" / "130")
     rendered = render_complete_export_tree(
         revision_dir / "export",
-        revision_id="2025",
+        revision_id=SHELL_REVISION,
         joined=export_tree_joined(m130_inspection(), second_field_aeat_type=aeat_type),
         semantic_map=export_tree_semantic_map(),
         transport_profile=export_tree_profile(),
@@ -1018,7 +1022,7 @@ def test_a_blank_run_naturaleza_the_semantic_map_calls_value_bearing_is_refused(
     with pytest.raises(RegistryValidationError, match="blank-run naturaleza"):
         render_complete_export_tree(
             revision_dir / "export",
-            revision_id="2025",
+            revision_id=SHELL_REVISION,
             joined=export_tree_joined(m130_inspection(), second_field_aeat_type="Blancos"),
             semantic_map=export_tree_semantic_map(),
             transport_profile=export_tree_profile(),
