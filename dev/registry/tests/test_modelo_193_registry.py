@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
 
 from cadrumo.core.aggregation import BindingAggregationOp, BindingSourceKind, RetencionClave
+from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
@@ -15,6 +16,7 @@ from cadrumo.domain.calculations.registry.formula_runtime import calculate_regis
 from cadrumo.domain.calculations.registry.relations import (
     relation_prefill_bindings_for_period,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.calculations.registry.tests.synthetic_quarterly_relations import (
     relation_values_from_synthetic_quarters,
@@ -27,7 +29,7 @@ from cadrumo.domain.deadlines.errors import DeadlineValidationError
 from cadrumo.domain.deadlines.festivos import shift_deadline
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from .authored_edition_support import newest_authored_editions
+from .authored_edition_support import newest_authored_editions, revision_covering, source_first_exercise
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -35,6 +37,21 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # and sum the type 2 records; the edition before it aggregates the quarterly
 # Modelo 123 filings instead.
 _QUARTERLY_AGGREGATE_EDITION, _RECORD_TOTALS_EDITION = newest_authored_editions("193", 2)
+_QUARTERLY_AGGREGATE_REVISION = revision_covering("193", _QUARTERLY_AGGREGATE_EDITION).id
+_RECORD_TOTALS_REVISION = revision_covering("193", _RECORD_TOTALS_EDITION).id
+# The calendar publication each of those two editions' annual window is read from is that of the
+# year it closes in: the earlier closes on the month-end its calendar prints, the later on the
+# month-end that calendar moves to the following Monday, which that publication names.
+_CALENDAR_REF_SUFFIXES = ("", "-hasta-2-febrero")
+
+
+def _published_shift(closes_on: date) -> tuple[date, bool, str]:
+    """Return the working-day shift AEAT's calendar applies to a close that falls on a weekend."""
+    weekend = {5: ("sabado", 2), 6: ("domingo", 1)}.get(closes_on.weekday())
+    if weekend is None:
+        return closes_on, False, "business_day"
+    reason, days = weekend
+    return closes_on + timedelta(days=days), True, reason
 
 
 def test_modelo_193_guidance_and_layout_sources_are_separated() -> None:
@@ -49,13 +66,13 @@ def test_modelo_193_guidance_and_layout_sources_are_separated() -> None:
     assert (bundled_path() / note.corpus_path).is_file()
     record_design = catalogues.sources["aeat-dr-193-2025"]
     assert record_design.evidence_tier == "layout_authority"
-    assert "2025" in record_design.source_url
+    assert str(source_first_exercise(record_design)) in record_design.source_url
     assert catalogues.sources["boe-modelo-193-2011-form"].evidence_tier == "layout_authority"
     # The revision whose workbook parity ref names the 2025 design, which is what
     # the assertions below check. The id was stale -- modelo 193 declares "2024"
     # and "2025-y-siguientes", never "2024-y-siguientes" -- so this raised a
     # KeyError on the lookup and no assertion past this line had ever run.
-    revision = modelo.revisions["2025-y-siguientes"]
+    revision = modelo.revisions[_RECORD_TOTALS_REVISION]
     assert revision.workbook_parity_refs[0].id == "modelo-193-dr-pdf"
     assert revision.workbook_parity_refs[0].workbook_source == "aeat-dr-193-2025"
     for formula in revision.formulas:
@@ -74,7 +91,7 @@ def test_modelo_193_validates_and_gates_workflow_surfaces_through_snapshot() -> 
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=_RECORD_TOTALS_EDITION,
         period="0A",
     )
 
@@ -95,7 +112,7 @@ def test_modelo_193_validates_and_gates_workflow_surfaces_through_snapshot() -> 
     } <= linked_surfaces
 
 
-@pytest.mark.parametrize("revision_id", ["2024", "2025-y-siguientes"])
+@pytest.mark.parametrize("revision_id", [_QUARTERLY_AGGREGATE_REVISION, _RECORD_TOTALS_REVISION])
 def test_modelo_193_gastos_total_is_explicit_while_rows_keep_their_own_source(revision_id: str) -> None:
     """No scalar source claim exists without a secure contributor observation owner."""
     authority = compiled_bundled_authority()
@@ -123,7 +140,7 @@ def test_modelo_193_annual_deadline_is_grounded_to_current_revision() -> None:
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2026,
+        filing_year=filing_year_envelope().horizon,
         period="0A",
     )
     revision = snapshot.revision
@@ -150,7 +167,8 @@ def test_modelo_193_annual_deadline_is_grounded_to_current_revision() -> None:
     # A window belongs to the revision covering its PERIOD year, not its
     # filing_year: "2025 0A" is filed in January 2026 and is still the 2025
     # ejercicio.
-    assert "modelo-193-2025-0a" in construct.deadline_windows
+    window_id = f"modelo-193-{_RECORD_TOTALS_EDITION}-0a"
+    assert window_id in construct.deadline_windows
     assert construct.filing_schedules == ("modelo-193-anual",)
     assert schedule.period_kind == "annual"
     assert schedule.periods == ("0A",)
@@ -169,7 +187,12 @@ def test_modelo_193_annual_deadline_is_grounded_to_current_revision() -> None:
         # that no shift occurred and discards the statutory date; the two forms
         # are indistinguishable on the operator-facing date alone, which is why
         # both halves are asserted.
-        "modelo-193-2025-0a": (2025, "2025 0A", date(2026, 1, 1), date(2026, 1, 31)),
+        window_id: (
+            _RECORD_TOTALS_EDITION,
+            str(Period.from_year_and_code(_RECORD_TOTALS_EDITION, "0A")),
+            date(_RECORD_TOTALS_EDITION + 1, 1, 1),
+            date(_RECORD_TOTALS_EDITION + 1, 1, 31),
+        ),
     }
     # The edition spans 2025 onward and declares one window per year, so the
     # 2025 window is asserted among them rather than as the only one, and no
@@ -193,26 +216,27 @@ def test_modelo_193_annual_deadline_is_grounded_to_current_revision() -> None:
         # calendar still refuses rather than guessing.
         with bundled_indexed_authority().operation() as operation:
             shift = shift_deadline(window.closes_on, modelo="193", operation=operation)
-            assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == (date(2026, 2, 2), True, "sabado")
+            assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == _published_shift(closes_on)
+            unpublished = filing_year_envelope().horizon + 2
             with pytest.raises(
-                DeadlineValidationError, match="holiday calendar publication for 2028 could not be resolved"
+                DeadlineValidationError, match=f"holiday calendar publication for {unpublished} could not be resolved"
             ):
-                shift_deadline(date(2028, 1, 28), modelo="193", operation=operation)
+                shift_deadline(date(unpublished, 1, 28), modelo="193", operation=operation)
 
 
 @pytest.mark.parametrize(
-    ("revision_id", "filing_year", "opens_on", "closes_on"),
+    ("revision_id", "filing_year", "calendar_ref_suffix"),
     [
-        ("2024", 2024, date(2025, 1, 1), date(2025, 1, 31)),
-        ("2025-y-siguientes", 2025, date(2026, 1, 1), date(2026, 1, 31)),
+        (_QUARTERLY_AGGREGATE_REVISION, _QUARTERLY_AGGREGATE_EDITION, _CALENDAR_REF_SUFFIXES[0]),
+        (_RECORD_TOTALS_REVISION, _RECORD_TOTALS_EDITION, _CALENDAR_REF_SUFFIXES[1]),
     ],
 )
 def test_modelo_193_deadline_identity_is_the_tax_year(
     revision_id: str,
     filing_year: int,
-    opens_on: date,
-    closes_on: date,
+    calendar_ref_suffix: str,
 ) -> None:
+    opens_on, closes_on = date(filing_year + 1, 1, 1), date(filing_year + 1, 1, 31)
     authority = compiled_bundled_authority()
     modelo = authority.modelo("193")
     window = next(
@@ -222,22 +246,17 @@ def test_modelo_193_deadline_identity_is_the_tax_year(
     )
 
     assert window.filing_year == window.period.filing_year == filing_year
-    assert str(window.period) == f"{filing_year} 0A"
+    assert str(window.period) == str(Period.from_year_and_code(filing_year, "0A"))
     assert window.opens_on == opens_on
     assert window.closes_on == closes_on
     assert window.legal_refs == ("orden-eha-3377-2011:art-5",)
-    expected_calendar_ref = (
-        "aeat-calendario-contribuyente-2025"
-        if filing_year == 2024
-        else "aeat-calendario-contribuyente-2026-hasta-2-febrero"
-    )
-    assert expected_calendar_ref in window.source_refs
+    assert f"aeat-calendario-contribuyente-{closes_on.year}{calendar_ref_suffix}" in window.source_refs
 
 
 def test_modelo_193_relations_resolve_against_modelo_123_registry() -> None:
     authority = compiled_bundled_authority()
-    snapshot = authority.snapshot("193", filing_year=2025, period="0A")
-    snapshot_123 = authority.snapshot("123", filing_year=2025, period="1T")
+    snapshot = authority.snapshot("193", filing_year=_RECORD_TOTALS_EDITION, period="0A")
+    snapshot_123 = authority.snapshot("123", filing_year=_RECORD_TOTALS_EDITION, period="1T")
 
     modelo_123_outputs = {casilla.id for casilla in snapshot_123.revision.casillas}
     relation_source_casilla_ids = {

@@ -43,6 +43,7 @@ from cadrumo.domain.calculations.registry.m303_differentiated_deduction_projecti
     project_m303_differentiated_deduction_rows,
 )
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.tests.authored_editions import open_ended_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.flow import IvaFlowDirection
@@ -55,8 +56,13 @@ from ..compiler.loader import load_catalogue_file
 from ..compiler.record_design import extract_record_design
 from ..conformance.registry_schema_support import committed_modelo
 from ..maintenance_support import resolve_record_design_binary
+from .authored_edition_support import source_first_exercise, source_reference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_REVISION = open_ended_revision("303")
+_REVISION_ID = str(_REVISION.id)
+_EXERCISE = _REVISION.valid_from.year
 
 
 #: Provenance stamped onto directly-constructed projections in this module. A
@@ -64,7 +70,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: build results by hand rather than by projection, so they state it explicitly.
 _PROVENANCE = BienesInversionParameterProvenance(
     modelo_id="303",
-    revision_id="2025",
+    revision_id=_REVISION_ID,
     parameter_ids=(
         "m303-bien-inversion-ventana-anos-mueble",
         "m303-bien-inversion-ventana-anos-inmueble",
@@ -72,25 +78,30 @@ _PROVENANCE = BienesInversionParameterProvenance(
         "m303-bien-inversion-divisor-inmueble",
         "m303-bien-inversion-regularizacion-umbral-puntos",
     ),
-    resolved_on=_prov_date(2025, 6, 1),
+    resolved_on=_prov_date(_EXERCISE, 6, 1),
 )
 
-_DESIGNS = (
-    ("aeat-dr-303-2023", 2023, "2023", 228),
-    ("aeat-dr-303-2024-early", 2024, "2024-early", 228),
-    ("aeat-dr-303-2024-late", 2024, "2024-late", 228),
-    ("aeat-dr-303-2025", 2025, "2025", 228),
-    ("aeat-dr-303-2026", 2026, "2026", 233),
+# Each official design with the number of fields its DP30301 sheet prints; the filing year is the one the
+# design opens and the epoch is the design's own suffix.
+_DESIGNS = tuple(
+    (source_ref, source_first_exercise(source_reference(source_ref)), source_ref.removeprefix("aeat-dr-303-"), fields)
+    for source_ref, fields in (
+        ("aeat-dr-303-2023", 228),
+        ("aeat-dr-303-2024-early", 228),
+        ("aeat-dr-303-2024-late", 228),
+        ("aeat-dr-303-2025", 228),
+        ("aeat-dr-303-2026", 233),
+    )
 )
 
 
 def _revision():
     modelo, catalogues = committed_modelo("303")
-    return build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="4T").revision
+    return build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=_EXERCISE, period="4T").revision
 
 
 def _prior_m303_snapshot_ref():
-    return compiled_bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref
+    return compiled_bundled_authority().snapshot("303", filing_year=_EXERCISE, period="4T").snapshot_ref
 
 
 def _projection_refs() -> tuple[M303DifferentiatedDeductionProjectionRef, ...]:
@@ -117,7 +128,7 @@ def _register(*, percentage_b: Decimal = Decimal("60")) -> ProrrataRegister:
     )
     entries = tuple(
         ProrrataRegisterEntry(
-            ejercicio=2025,
+            ejercicio=_EXERCISE,
             sector_id=sector_id,
             regime=ProrrataRegisterRegime.from_registry("general"),
             especial_transition=None,
@@ -162,7 +173,7 @@ def _observation(
 ) -> IvaLedgerObservation:
     return IvaLedgerObservation(
         ledger_id=ledger_id,
-        transaction_date=date(2025, 10, 1),
+        transaction_date=date(_EXERCISE, 10, 1),
         category=IvaCategory("domestic_general"),
         rate_kind=IvaRateKind("general"),
         flow_direction=IvaFlowDirection.from_registry("soportado"),
@@ -226,7 +237,7 @@ def test_apportioned_contributions_and_regularisation_project_once(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
     regularisation = RegistroRegularizacionResult(
-        regularizacion_year=2025,
+        regularizacion_year=_EXERCISE,
         rows=(
             RegistroRegularizacionRow(
                 identifier="asset-a",
@@ -255,7 +266,7 @@ def test_apportioned_contributions_and_regularisation_project_once(
     projection = project_m303_differentiated_deduction_rows(
         projection_refs=_projection_refs(),
         register=_register(),
-        ejercicio=2025,
+        ejercicio=_EXERCISE,
         contributions=_contributions(authority=registry_authority),
         regularisation_result=regularisation,
     )
@@ -280,13 +291,16 @@ def test_projection_refuses_incomplete_or_double_consumed_sources(
     contributions = _contributions(authority=registry_authority)
     with pytest.raises(RegistryValidationError, match="incomplete apportioned source"):
         project_m303_differentiated_deduction_rows(
-            projection_refs=_projection_refs(), register=_register(), ejercicio=2025, contributions=contributions[:-1]
+            projection_refs=_projection_refs(),
+            register=_register(),
+            ejercicio=_EXERCISE,
+            contributions=contributions[:-1],
         )
     with pytest.raises(RegistryValidationError, match="double-consumed"):
         project_m303_differentiated_deduction_rows(
             projection_refs=_projection_refs(),
             register=_register(),
-            ejercicio=2025,
+            ejercicio=_EXERCISE,
             contributions=(*contributions, contributions[0]),
         )
 
@@ -301,7 +315,7 @@ def test_canonical_aggregation_emits_apportioned_sector_kind_contributions() -> 
         observations = tuple(
             IvaLedgerObservation(
                 ledger_id=f"input-{index}",
-                transaction_date=date(2025, 10, index),
+                transaction_date=date(_EXERCISE, 10, index),
                 category=IvaCategory("domestic_general"),
                 rate_kind=IvaRateKind("general"),
                 flow_direction=IvaFlowDirection.from_registry("soportado"),
@@ -393,7 +407,7 @@ def test_projector_refuses_reused_source_ledger_across_kinds(
     contributions[1] = contributions[1].model_copy(update={"source_ledger_ids": contributions[0].source_ledger_ids})
     with pytest.raises(RegistryValidationError, match="source ledgers are double-consumed"):
         project_m303_differentiated_deduction_rows(
-            projection_refs=_projection_refs(), register=_register(), ejercicio=2025, contributions=contributions
+            projection_refs=_projection_refs(), register=_register(), ejercicio=_EXERCISE, contributions=contributions
         )
 
 
@@ -407,7 +421,7 @@ def test_projector_refuses_wrong_owner_contribution_even_when_structurally_forge
     )
     with pytest.raises(RegistryValidationError, match="cannot enter the ordinary deduction contribution channel"):
         project_m303_differentiated_deduction_rows(
-            projection_refs=_projection_refs(), register=_register(), ejercicio=2025, contributions=contributions
+            projection_refs=_projection_refs(), register=_register(), ejercicio=_EXERCISE, contributions=contributions
         )
 
 
@@ -425,7 +439,7 @@ def test_projector_refuses_inactive_or_percentage_less_active_sector(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
     entry = ProrrataRegisterEntry(
-        ejercicio=2025,
+        ejercicio=_EXERCISE,
         sector_id="a",
         regime=ProrrataRegisterRegime.from_registry(regime),
         especial_transition=None,
@@ -436,7 +450,7 @@ def test_projector_refuses_inactive_or_percentage_less_active_sector(
         project_m303_differentiated_deduction_rows(
             projection_refs=_projection_refs(),
             register=register,
-            ejercicio=2025,
+            ejercicio=_EXERCISE,
             contributions=_contributions(authority=registry_authority),
         )
 
@@ -453,7 +467,7 @@ def test_projector_refuses_unlinked_and_duplicate_regularisation_assets(
         result=None,
     )
     unlinked = RegistroRegularizacionResult(
-        regularizacion_year=2025,
+        regularizacion_year=_EXERCISE,
         rows=(row,),
         proposed_casilla_43=Decimal("1"),
         computed_count=1,
@@ -467,12 +481,12 @@ def test_projector_refuses_unlinked_and_duplicate_regularisation_assets(
         project_m303_differentiated_deduction_rows(
             projection_refs=_projection_refs(),
             register=_register(),
-            ejercicio=2025,
+            ejercicio=_EXERCISE,
             contributions=_contributions(authority=registry_authority),
             regularisation_result=unlinked,
         )
     duplicated = RegistroRegularizacionResult(
-        regularizacion_year=2025,
+        regularizacion_year=_EXERCISE,
         rows=(row,),
         proposed_casilla_43=Decimal("2"),
         computed_count=2,
@@ -487,7 +501,7 @@ def test_projector_refuses_unlinked_and_duplicate_regularisation_assets(
         project_m303_differentiated_deduction_rows(
             projection_refs=_projection_refs(),
             register=_register(),
-            ejercicio=2025,
+            ejercicio=_EXERCISE,
             contributions=_contributions(authority=registry_authority),
             regularisation_result=duplicated,
         )
@@ -498,7 +512,7 @@ def test_projector_refuses_regularisation_asset_sector_mismatch(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
     result = RegistroRegularizacionResult(
-        regularizacion_year=2025,
+        regularizacion_year=_EXERCISE,
         rows=(
             RegistroRegularizacionRow(
                 identifier="asset-a",
@@ -520,7 +534,7 @@ def test_projector_refuses_regularisation_asset_sector_mismatch(
         project_m303_differentiated_deduction_rows(
             projection_refs=_projection_refs(),
             register=_register(),
-            ejercicio=2025,
+            ejercicio=_EXERCISE,
             contributions=_contributions(authority=registry_authority),
             regularisation_result=result,
         )

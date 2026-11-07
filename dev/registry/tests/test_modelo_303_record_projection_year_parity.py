@@ -47,6 +47,11 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     resolve_ledger_iva_aggregation_binding_values,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    authored_revisions,
+    filing_year_envelope,
+    revision_covering,
+)
 from cadrumo.domain.calculations.registry.tests.modelo_303_registry_constants import (
     M303_RECORD_DESIGN_SOURCE_BY_REVISION,
 )
@@ -63,6 +68,15 @@ pytestmark = [
 ]
 
 _REVISIONS = tuple(M303_RECORD_DESIGN_SOURCE_BY_REVISION)
+# The edition covering the support floor leaves the recargo tier free; the edition after it enumerates the tiers.
+_FLOOR_REVISION = str(revision_covering("303", filing_year_envelope().floor).id)
+_SECOND_REVISION = _REVISIONS[_REVISIONS.index(_FLOOR_REVISION) + 1]
+#: A filing coordinate that selects each edition by its annual period: its first exercise and "4T".
+_ANNUAL_COORDINATES = [
+    (revision.valid_from.year, str(revision.id))
+    for revision in authored_revisions("303")
+    if str(revision.id) in _REVISIONS and "4T" in revision.period_selector.periods_for_year(revision.valid_from.year)
+]
 
 #: The boxes this module requires every edition to derive, and the carrier or
 #: binding each one restates.
@@ -155,14 +169,14 @@ def test_box_18_follows_design_constraints_and_the_2022_statutory_population() -
     }
     assert enumerated, "no design enumerates the recargo tiers; the premise of this test is gone"
     for revision_id in _REVISIONS:
-        expected = "bound" if revision_id == "2022" or revision_id in enumerated else "manual"
+        expected = "bound" if revision_id == _FLOOR_REVISION or revision_id in enumerated else "manual"
         assert observed[revision_id] == expected, (
             f"{revision_id}: [18] is {observed[revision_id]} while its design "
             f"{'enumerates' if revision_id in enumerated else 'does not enumerate'} the tiers"
         )
 
 
-@pytest.mark.parametrize(("filing_year", "revision_id"), [(2022, "2022"), (2023, "2023"), (2025, "2025")])
+@pytest.mark.parametrize(("filing_year", "revision_id"), _ANNUAL_COORDINATES)
 def test_the_derived_boxes_carry_the_same_value_in_every_year(filing_year: int, revision_id: str) -> None:
     """One ledger-free input set computes one value for each derived box, every year."""
     authority = compiled_bundled_authority()
@@ -208,7 +222,7 @@ def test_dropping_box_11_from_the_baseline_reds_the_gate_in_every_edition(tmp_pa
     scratch_root = scratch_registry_tree(tmp_path, "303")
     mutate_declaration(
         scratch_root / "modelos" / "303",
-        revision_id="2022",
+        revision_id=_FLOOR_REVISION,
         section="casillas",
         member='id = "11"',
         find='input_kind = "computed"\nformula = "modelo-303-dr303-11-projection"\n',
@@ -226,23 +240,23 @@ def test_reintroducing_the_per_year_override_reds_the_cross_edition_gate(tmp_pat
     modelo_dir = scratch_root / "modelos" / "303"
     mutate_declaration(
         modelo_dir,
-        revision_id="2022",
+        revision_id=_FLOOR_REVISION,
         section="casillas",
         member='id = "11"',
         find='input_kind = "computed"\nformula = "modelo-303-dr303-11-projection"\n',
         replace="",
     )
-    manifest = modelo_dir / "revisions" / "2023" / "revision.toml"
+    manifest = modelo_dir / "revisions" / _SECOND_REVISION / "revision.toml"
     manifest.write_text(
         manifest.read_text(encoding="utf-8")
-        + "\n[[revisions.2023.casilla_overrides]]\n"
-        + 'selector = { revision = "2022", id = "11" }\n'
+        + f"\n[[revisions.{_SECOND_REVISION}.casilla_overrides]]\n"
+        + f'selector = {{ revision = "{_FLOOR_REVISION}", id = "11" }}\n'
         + 'fields = { formula = "modelo-303-dr303-11-projection", input_kind = "computed" }\n'
         + "removed_fields = []\n",
         encoding="utf-8",
     )
 
     kinds = _m303_kinds(scratch_root, "11")
-    assert kinds["2022"] == "manual", kinds
-    assert kinds["2023"] == "computed", kinds
+    assert kinds[_FLOOR_REVISION] == "manual", kinds
+    assert kinds[_SECOND_REVISION] == "computed", kinds
     assert len(set(kinds.values())) > 1, "the mutation did not split the editions"

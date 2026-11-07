@@ -113,7 +113,10 @@ def test_the_deduction_row_closes_only_where_the_newest_annual_orden_stops_apply
     }
 
     assert _CURRENT_ANNUAL_ORDEN in newest_source_refs
-    assert current_orden_end == date(2026, 12, 31)
-    assert current_orden_revisions == {"2026-hasta-01-y-1t", "2026-y-siguientes"}
+    newest_exercise = newest.valid_from.year
+    assert current_orden_end == date(newest_exercise, 12, 31)
+    assert current_orden_revisions == {
+        str(revision.id) for revision in editions if revision.valid_from.year == newest_exercise
+    }
     assert all(ends[revision_id] == {current_orden_end} for revision_id in current_orden_revisions)
     assert all(ends[revision_id] == {None} for revision_id in ends.keys() - current_orden_revisions)

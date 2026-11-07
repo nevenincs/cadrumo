@@ -30,6 +30,7 @@ See Also:
 from __future__ import annotations
 
 import re
+from collections.abc import Callable, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 
@@ -43,9 +44,18 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.temporal import select_revision
+from cadrumo.domain.calculations.registry.tests.authored_editions import (
+    filing_year_envelope,
+    open_ended_revision,
+    revision_covering,
+    revision_last_exercise,
+)
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.compiler.loader import load_shared_catalogues
+
+from .monthly_deadline_support import MONTHLY_RETENCION_DEADLINES
+from .quarterly_deadline_support import QUARTERLY_RETENCION_DEADLINES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -58,6 +68,13 @@ _RET_TOTAL: CasillaId = validated_casilla_id("13", surface="_RET_TOTAL")
 _ANTERIORES: CasillaId = validated_casilla_id("20", surface="_ANTERIORES")
 _RESULTADO: CasillaId = validated_casilla_id("21", surface="_RESULTADO")
 
+_HISTORICAL_REVISION = revision_covering("216", filing_year_envelope().floor)
+_CURRENT_REVISION = open_ended_revision("216")
+_HISTORICAL_REVISION_ID = str(_HISTORICAL_REVISION.id)
+_CURRENT_REVISION_ID = str(_CURRENT_REVISION.id)
+_HISTORICAL_YEARS = tuple(year for year in filing_year_envelope().years if year < _CURRENT_REVISION.valid_from.year)
+_CURRENT_YEARS = tuple(year for year in filing_year_envelope().years if year >= _CURRENT_REVISION.valid_from.year)
+
 _CURRENT_LIFECYCLE_LINK_IDS = (
     "modelo-216-snapshot-review",
     "modelo-216-snapshot-approval",
@@ -65,92 +82,24 @@ _CURRENT_LIFECYCLE_LINK_IDS = (
     "modelo-216-snapshot-workflow",
 )
 
-_EXPECTED_DEADLINES = {
-    (2022, "1T"): (date(2022, 4, 1), date(2022, 4, 20), date(2022, 4, 15)),
-    (2022, "2T"): (date(2022, 7, 1), date(2022, 7, 20), date(2022, 7, 15)),
-    (2022, "3T"): (date(2022, 10, 1), date(2022, 10, 20), date(2022, 10, 15)),
-    (2022, "4T"): (date(2023, 1, 1), date(2023, 1, 20), date(2023, 1, 15)),
-    (2023, "1T"): (date(2023, 4, 1), date(2023, 4, 20), date(2023, 4, 15)),
-    (2023, "2T"): (date(2023, 7, 1), date(2023, 7, 20), date(2023, 7, 15)),
-    (2023, "3T"): (date(2023, 10, 1), date(2023, 10, 20), date(2023, 10, 15)),
-    (2023, "4T"): (date(2024, 1, 1), date(2024, 1, 22), date(2024, 1, 17)),
-    (2024, "1T"): (date(2024, 4, 1), date(2024, 4, 22), date(2024, 4, 17)),
-    (2024, "2T"): (date(2024, 7, 1), date(2024, 7, 22), date(2024, 7, 17)),
-    (2024, "3T"): (date(2024, 10, 1), date(2024, 10, 21), date(2024, 10, 16)),
-    (2024, "4T"): (date(2025, 1, 1), date(2025, 1, 20), date(2025, 1, 15)),
-    (2025, "1T"): (date(2025, 4, 1), date(2025, 4, 21), date(2025, 4, 15)),
-    (2025, "2T"): (date(2025, 7, 1), date(2025, 7, 21), date(2025, 7, 16)),
-    (2025, "3T"): (date(2025, 10, 1), date(2025, 10, 20), date(2025, 10, 15)),
-    (2025, "4T"): (date(2026, 1, 1), date(2026, 1, 20), date(2026, 1, 15)),
-    (2026, "1T"): (date(2026, 4, 1), date(2026, 4, 20), date(2026, 4, 15)),
-    (2026, "2T"): (date(2026, 7, 1), date(2026, 7, 20), date(2026, 7, 15)),
-    (2026, "3T"): (date(2026, 10, 1), date(2026, 10, 20), date(2026, 10, 15)),
-    (2026, "4T"): (date(2027, 1, 1), date(2027, 1, 20), None),
-}
-"""The trimestral census, read from the calendario of the year each window closes in."""
 
-_EXPECTED_MONTHLY_DEADLINES = {
-    (2022, "01"): (date(2022, 2, 1), date(2022, 2, 21), date(2022, 2, 16)),
-    (2022, "02"): (date(2022, 3, 1), date(2022, 3, 21), date(2022, 3, 16)),
-    (2022, "03"): (date(2022, 4, 1), date(2022, 4, 20), date(2022, 4, 15)),
-    (2022, "04"): (date(2022, 5, 1), date(2022, 5, 20), date(2022, 5, 15)),
-    (2022, "05"): (date(2022, 6, 1), date(2022, 6, 20), date(2022, 6, 15)),
-    (2022, "06"): (date(2022, 7, 1), date(2022, 7, 20), date(2022, 7, 15)),
-    (2022, "07"): (date(2022, 8, 1), date(2022, 8, 22), date(2022, 8, 17)),
-    (2022, "08"): (date(2022, 9, 1), date(2022, 9, 20), date(2022, 9, 15)),
-    (2022, "09"): (date(2022, 10, 1), date(2022, 10, 20), date(2022, 10, 15)),
-    (2022, "10"): (date(2022, 11, 1), date(2022, 11, 21), date(2022, 11, 16)),
-    (2022, "11"): (date(2022, 12, 1), date(2022, 12, 20), date(2022, 12, 15)),
-    (2022, "12"): (date(2023, 1, 1), date(2023, 1, 20), date(2023, 1, 15)),
-    (2023, "01"): (date(2023, 2, 1), date(2023, 2, 20), date(2023, 2, 15)),
-    (2023, "02"): (date(2023, 3, 1), date(2023, 3, 20), date(2023, 3, 15)),
-    (2023, "03"): (date(2023, 4, 1), date(2023, 4, 20), date(2023, 4, 15)),
-    (2023, "04"): (date(2023, 5, 1), date(2023, 5, 22), date(2023, 5, 17)),
-    (2023, "05"): (date(2023, 6, 1), date(2023, 6, 20), date(2023, 6, 15)),
-    (2023, "06"): (date(2023, 7, 1), date(2023, 7, 20), date(2023, 7, 15)),
-    (2023, "07"): (date(2023, 8, 1), date(2023, 8, 21), date(2023, 8, 16)),
-    (2023, "08"): (date(2023, 9, 1), date(2023, 9, 20), date(2023, 9, 15)),
-    (2023, "09"): (date(2023, 10, 1), date(2023, 10, 20), date(2023, 10, 15)),
-    (2023, "10"): (date(2023, 11, 1), date(2023, 11, 20), date(2023, 11, 15)),
-    (2023, "11"): (date(2023, 12, 1), date(2023, 12, 20), date(2023, 12, 15)),
-    (2023, "12"): (date(2024, 1, 1), date(2024, 1, 22), date(2024, 1, 17)),
-    (2024, "01"): (date(2024, 2, 1), date(2024, 2, 20), date(2024, 2, 15)),
-    (2024, "02"): (date(2024, 3, 1), date(2024, 3, 20), date(2024, 3, 15)),
-    (2024, "03"): (date(2024, 4, 1), date(2024, 4, 22), date(2024, 4, 17)),
-    (2024, "04"): (date(2024, 5, 1), date(2024, 5, 20), date(2024, 5, 15)),
-    (2024, "05"): (date(2024, 6, 1), date(2024, 6, 20), date(2024, 6, 17)),
-    (2024, "06"): (date(2024, 7, 1), date(2024, 7, 22), date(2024, 7, 17)),
-    (2024, "07"): (date(2024, 8, 1), date(2024, 8, 20), date(2024, 8, 15)),
-    (2024, "08"): (date(2024, 9, 1), date(2024, 9, 20), date(2024, 9, 17)),
-    (2024, "09"): (date(2024, 10, 1), date(2024, 10, 21), date(2024, 10, 16)),
-    (2024, "10"): (date(2024, 11, 1), date(2024, 11, 20), date(2024, 11, 15)),
-    (2024, "11"): (date(2024, 12, 1), date(2024, 12, 20), date(2024, 12, 17)),
-    (2024, "12"): (date(2025, 1, 1), date(2025, 1, 20), date(2025, 1, 15)),
-    (2025, "01"): (date(2025, 2, 1), date(2025, 2, 20), date(2025, 2, 17)),
-    (2025, "02"): (date(2025, 3, 1), date(2025, 3, 20), date(2025, 3, 17)),
-    (2025, "03"): (date(2025, 4, 1), date(2025, 4, 21), date(2025, 4, 15)),
-    (2025, "04"): (date(2025, 5, 1), date(2025, 5, 20), date(2025, 5, 15)),
-    (2025, "05"): (date(2025, 6, 1), date(2025, 6, 20), date(2025, 6, 17)),
-    (2025, "06"): (date(2025, 7, 1), date(2025, 7, 21), date(2025, 7, 16)),
-    (2025, "07"): (date(2025, 8, 1), date(2025, 8, 20), date(2025, 8, 15)),
-    (2025, "08"): (date(2025, 9, 1), date(2025, 9, 22), date(2025, 9, 17)),
-    (2025, "09"): (date(2025, 10, 1), date(2025, 10, 20), date(2025, 10, 15)),
-    (2025, "10"): (date(2025, 11, 1), date(2025, 11, 20), date(2025, 11, 17)),
-    (2025, "11"): (date(2025, 12, 1), date(2025, 12, 22), date(2025, 12, 17)),
-    (2025, "12"): (date(2026, 1, 1), date(2026, 1, 20), date(2026, 1, 15)),
-    (2026, "01"): (date(2026, 2, 1), date(2026, 2, 20), date(2026, 2, 17)),
-    (2026, "02"): (date(2026, 3, 1), date(2026, 3, 20), date(2026, 3, 16)),
-    (2026, "03"): (date(2026, 4, 1), date(2026, 4, 20), date(2026, 4, 15)),
-    (2026, "04"): (date(2026, 5, 1), date(2026, 5, 20), date(2026, 5, 15)),
-    (2026, "05"): (date(2026, 6, 1), date(2026, 6, 22), date(2026, 6, 17)),
-    (2026, "06"): (date(2026, 7, 1), date(2026, 7, 20), date(2026, 7, 15)),
-    (2026, "07"): (date(2026, 8, 1), date(2026, 8, 20), date(2026, 8, 17)),
-    (2026, "08"): (date(2026, 9, 1), date(2026, 9, 21), date(2026, 9, 16)),
-    (2026, "09"): (date(2026, 10, 1), date(2026, 10, 20), date(2026, 10, 15)),
-    (2026, "10"): (date(2026, 11, 1), date(2026, 11, 20), date(2026, 11, 17)),
-    (2026, "11"): (date(2026, 12, 1), date(2026, 12, 21), date(2026, 12, 16)),
-    (2026, "12"): (date(2027, 1, 1), date(2027, 1, 20), None),
-}
+def _census_windows(
+    census: Mapping[int, Sequence[tuple[str, str | None]]], period_token: Callable[[int], str]
+) -> dict[tuple[int, str], tuple[date, date, date | None]]:
+    """Return (opens, closes, domiciled-payment cutoff) per exercise and period, read off one published census row."""
+    windows: dict[tuple[int, str], tuple[date, date, date | None]] = {}
+    for exercise, rows in census.items():
+        for ordinal, (close_text, cutoff_text) in enumerate(rows, start=1):
+            closes_on = date.fromisoformat(close_text)
+            cutoff = None if cutoff_text is None else date.fromisoformat(cutoff_text)
+            windows[(exercise, period_token(ordinal))] = (date(closes_on.year, closes_on.month, 1), closes_on, cutoff)
+    return windows
+
+
+_EXPECTED_DEADLINES = _census_windows(QUARTERLY_RETENCION_DEADLINES, lambda quarter: f"{quarter}T")
+"""The trimestral census of Orden EHA/3290/2008 art. 4, paragraph one, read from the year each window closes in."""
+
+_EXPECTED_MONTHLY_DEADLINES = _census_windows(MONTHLY_RETENCION_DEADLINES, lambda month: f"{month:02d}")
 """The gran-empresa mensual census of Orden EHA/3290/2008 art. 4, paragraph two.
 
 Each row is read from the bundled Calendario del Contribuyente of the year it
@@ -178,7 +127,7 @@ def test_modelo_216_validator_accepts_committed_definition() -> None:
 
 def test_modelo_216_formulas_owned_by_construct() -> None:
     modelo, _ = _load_modelo_216()
-    revision = modelo.revisions["2024-y-siguientes"]
+    revision = modelo.revisions[_CURRENT_REVISION_ID]
     owned = set().union(*(set(c.formulas) for c in revision.constructs))
     assert {"modelo-216-base-total", "modelo-216-retenciones-total", "modelo-216-resultado"} <= owned
 
@@ -190,7 +139,7 @@ def test_modelo_216_deadline_provision_is_orden_eha_3290_2008_art_4() -> None:
     paragraph two the mensual one for the gran-empresa retenedor.
     """
     modelo, catalogues = _load_modelo_216()
-    revision = modelo.revisions["2024-y-siguientes"]
+    revision = modelo.revisions[_CURRENT_REVISION_ID]
     assert revision.deadline_windows, "216 must declare deadline windows"
     for window in revision.deadline_windows:
         assert window.period_kind in {"quarterly", "monthly"}
@@ -213,7 +162,7 @@ def test_modelo_216_has_exact_supported_deadline_census_and_dates() -> None:
         )
         for revision in modelo.revisions.values()
         for window in revision.deadline_windows
-        if 2022 <= window.period.filing_year <= 2026
+        if window.period.filing_year in filing_year_envelope().years
     }
     assert observed == _EXPECTED_DEADLINES | _EXPECTED_MONTHLY_DEADLINES
 
@@ -237,7 +186,7 @@ def test_modelo_216_windows_use_canonical_periods_sources_and_owner() -> None:
         assert window.period_kind == expected_kind.value
         assert select_revision(modelo, filing_year=filing_year, period=period) is revision
 
-        if physical_calendar_year <= 2026:
+        if physical_calendar_year <= filing_year_envelope().horizon:
             assert calendar_ref in window.source_refs
             assert calendar_ref in revision.constructs[0].source_refs
             # A window closing after the edition's own validity -- a fourth
@@ -263,7 +212,8 @@ def test_modelo_216_resultado_is_retenciones_total_minus_anteriores() -> None:
     total rows.
     """
     modelo, catalogues = _load_modelo_216()
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="1T")
+    exercise = filing_year_envelope().horizon
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=exercise, period="1T")
     result = calculate_registry_snapshot(
         snapshot,
         inputs={
@@ -273,7 +223,7 @@ def test_modelo_216_resultado_is_retenciones_total_minus_anteriores() -> None:
             _RET_ESPECIE: Decimal("95.00"),
             _ANTERIORES: Decimal("40.00"),
         },
-        date_context={"filing_period": date(2025, 3, 31)},
+        date_context={"filing_period": date(exercise, 3, 31)},
     )
     assert result.values[_BASE_TOTAL] == Decimal("1500.00")
     assert result.values[_RET_TOTAL] == Decimal("285.00")
@@ -327,26 +277,26 @@ def test_modelo_216_pre_redesign_edition_declares_only_the_partidas_its_design_p
     assert revision.effective_authority_grade is RegistryAuthorityGrade.CALCULATION
 
 
-@pytest.mark.parametrize("filing_year", (2024, 2025, 2026))
+@pytest.mark.parametrize("filing_year", _CURRENT_YEARS)
 def test_modelo_216_current_lifecycle_links_use_current_guidance(filing_year: int) -> None:
     """Current filing snapshots retain link semantics with applicable current instructions."""
     modelo, catalogues = _load_modelo_216()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period="1T")
-    historical_links = {link.id: link for link in modelo.revisions["2020-2023"].application_links}
+    historical_links = {link.id: link for link in modelo.revisions[_HISTORICAL_REVISION_ID].application_links}
     current_links = {link.id: link for link in snapshot.revision.application_links}
 
-    assert snapshot.revision.id == "2024-y-siguientes"
+    assert snapshot.revision.id == _CURRENT_REVISION_ID
     for link_id in _CURRENT_LIFECYCLE_LINK_IDS:
         current = current_links[link_id]
         historical = historical_links[link_id]
         assert current.source_refs == ("aeat-modelo-216-procedure",)
         assert current.model_dump(exclude={"source_refs"}) == historical.model_dump(exclude={"source_refs"})
     source = snapshot.sources["aeat-modelo-216-procedure"]
-    assert source.applies_from == date(2024, 1, 1)
+    assert source.applies_from == date(_CURRENT_REVISION.valid_from.year, 1, 1)
     assert source.applies_across(snapshot.revision.valid_from, snapshot.revision.valid_to)
 
 
-@pytest.mark.parametrize("filing_year", (2022, 2023))
+@pytest.mark.parametrize("filing_year", _HISTORICAL_YEARS)
 def test_modelo_216_historical_lifecycle_links_retain_historical_guidance(filing_year: int) -> None:
     """The pre-redesign calculation snapshot still owns its historical source and bounds."""
     modelo, catalogues = _load_modelo_216()
@@ -361,11 +311,11 @@ def test_modelo_216_historical_lifecycle_links_retain_historical_guidance(filing
     historical_source = "boe-2008-18497-modelo-216-calculation-guidance"
     links = {link.id: link for link in snapshot.revision.application_links}
 
-    assert snapshot.revision.id == "2020-2023"
+    assert snapshot.revision.id == _HISTORICAL_REVISION_ID
     for link_id in _CURRENT_LIFECYCLE_LINK_IDS:
         assert links[link_id].source_refs == (historical_source,)
     source = snapshot.sources[historical_source]
-    assert source.applies_to == date(2023, 12, 31)
+    assert source.applies_to == date(revision_last_exercise("216", _HISTORICAL_REVISION_ID), 12, 31)
     assert source.applies_across(snapshot.revision.valid_from, snapshot.revision.valid_to)
 
 
@@ -373,7 +323,7 @@ def test_modelo_216_historical_lifecycle_links_retain_historical_guidance(filing
 def test_modelo_216_current_snapshot_refuses_historical_lifecycle_guidance(link_id: str) -> None:
     """Restoring each expired citation still fails at the real snapshot source-window guard."""
     modelo, catalogues = _load_modelo_216()
-    revision = modelo.revisions["2024-y-siguientes"]
+    revision = modelo.revisions[_CURRENT_REVISION_ID]
     historical_source = "boe-2008-18497-modelo-216-calculation-guidance"
     changed_links = tuple(
         link.model_copy(update={"source_refs": (historical_source,)}) if link.id == link_id else link
@@ -383,4 +333,10 @@ def test_modelo_216_current_snapshot_refuses_historical_lifecycle_guidance(link_
     changed_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: changed_revision}})
 
     with pytest.raises(RegistryValidationError, match=historical_source):
-        build_snapshot(changed_modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="1T")
+        build_snapshot(
+            changed_modelo,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=filing_year_envelope().horizon,
+            period="1T",
+        )
