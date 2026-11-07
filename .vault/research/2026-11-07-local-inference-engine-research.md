@@ -5,13 +5,13 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:5440869413f2d629372ab205bb09a5ed43771ffa6abf5902318f4c2fea5450b1'
+body_hash: 'sha256:46f26e9d67ed83381d491f204a8a3b70a7abd87cc9a2ce99a3dc036a575f43d5'
 related: []
 ---
 
 # `local-inference-engine` research: `Local inference engine comparison: Ollama, llama.cpp, vLLM`
 
-The question is which local inference engines Cadrumo can run beside the Ollama program it already provisions, and what each costs in native provisioning and in cadrumo-agent. Ollama is coupled to a bounded set of native modules and to one agent lane. Most of the native provisioning machinery is engine-neutral. llama.cpp's `llama-server` is MIT-licensed, ships small per-backend archives, and serves an OpenAI-compatible API with router-mode residency. vLLM has no native Windows build and depends on Python and PyTorch, so it does not fit a desktop product with Rust-only provisioning. Model compatibility between Ollama's store and llama-server is not yet measured, and neither are size, speed and quality on real hardware.
+The question is which local inference engines Cadrumo can run beside the Ollama program it already provisions, and what each costs in native provisioning and in cadrumo-agent. Ollama is coupled to a bounded set of native modules and to one agent lane. Most of the native provisioning machinery is engine-neutral. llama.cpp's `llama-server` is MIT-licensed, ships small per-backend archives, and serves an OpenAI-compatible API with router-mode residency. vLLM has no native Windows build and depends on Python and PyTorch, so it does not fit a desktop product with Rust-only provisioning. A CPU pass on 2026-11-07 showed that an Ollama text blob loads in llama-server in place, while Ollama's single-GGUF vision blob does not. A GPU pass is pending.
 
 ## Findings
 
@@ -71,7 +71,7 @@ The question is which local inference engines Cadrumo can run beside the Ollama 
   - `--no-models-autoload` disables autoload.
 - Router models are discovered from `--models-dir`, or configured in a `--models-preset` INI file with one section per model and keys such as `model` and `ctx-size`.
 - The sources read describe only a `model` field in the `/models/load` body. They do not document per-load arguments such as context size.
-- Not established: whether llama-server loads a GGUF file without a `.gguf` extension, such as an Ollama blob named `sha256-<digest>`. Every README example uses a `.gguf` name.
+- Every README example uses a `.gguf` name. The CPU pass showed that llama-server also loads an extensionless Ollama blob named `sha256-<digest>` (Measurement evidence, CPU pass).
 
 ### vLLM: not a desktop engine
 
@@ -92,9 +92,80 @@ Not investigated:
 - The licence terms of individual GGUF repositories.
 - llama.cpp's macOS code-signing state.
 
-## Measurement evidence (pending)
+## Measurement evidence (CPU pass, 2026-11-07)
 
-A CPU measurement pass is running. Its size, performance and quality tables will be appended here. The pass also answers whether Ollama's text and vision blobs load in llama-server. A GPU pass on an RTX 4080 SUPER follows later.
+The pass ran Ollama 0.40.13 and llama-server b12184 (Windows CPU build) side by side on one Windows host. Both ran CPU-only, with 8 threads and a 4096-token context. Requests alternated between the engines, and each figure is the median of 3 repetitions. All documents were synthetic.
+
+The host was contended: a concurrent vaultspec-rag index rebuild ran throughout, at 34-99% host CPU. The performance figures therefore compare the two engines relative to each other only. They are not absolute throughput.
+
+### Archive size
+
+| Asset (b12184 unless named) | Zipped bytes | Unzipped bytes |
+|---|---|---|
+| `llama-b12184-bin-win-cpu-x64.zip` | 24,749,741 | 63,767,837 |
+| `llama-b12184-bin-win-vulkan-x64.zip` | 37,709,845 | 105,770,269 |
+| `llama-b12184-bin-win-cuda-12.4-x64.zip` | 288,724,926 | 677,717,789 |
+| `cudart-llama-bin-win-cuda-12.4-x64.zip` | 391,443,627 | 574,138,880 |
+| `llama-b12184-bin-win-cuda-13.5-x64.zip` | 170,769,237 | 224,471,837 |
+| `cudart-llama-bin-win-cuda-13.5-x64.zip` | 426,314,199 | 554,866,512 |
+| `ollama-windows-amd64.zip` (pinned v0.40.10) | 1,586,229,413 | 2,230,768,655 |
+| `ollama-windows-amd64.zip` (newer release) | 1,601,969,847 | 2,249,796,111 |
+
+### Model storage
+
+These are the layer sizes from the registry manifests the pass fetched.
+
+| Tag | Model layer bytes | Projector layer bytes | Other layers |
+|---|---|---|---|
+| `qwen3:1.7b` | 1,359,279,776 | none | template, licence, params |
+| `qwen3:4b` | 2,497,280,480 | none | template, licence, params |
+| `qwen3-vl:2b` | 1,889,496,384 | none (single GGUF) | licence, params |
+| `qwen3-vl:4b-instruct` | 2,497,888,288 | 839,325,760 (`application/vnd.ollama.image.projector`) | licence, params |
+
+The Hugging Face vision pair was `Qwen3VL-2B-Instruct-Q4_K_M.gguf` plus `mmproj-Qwen3VL-2B-Instruct-Q8_0.gguf`. The pass did not keep the sizes of those files.
+
+### Performance (relative only, contended host)
+
+| Engine | Model | Cold load s | TTFT s | Prompt tok/s | Gen tok/s | Peak RSS tree MB |
+|---|---|---|---|---|---|---|
+| Ollama | `qwen3:1.7b` | 3.179 | 0.274 | 181.19 | 12.54 | 1865 |
+| llama-server | `qwen3:1.7b`, same Ollama blob | 2.688 | 0.251 | 150.09 | 12.96 | 2283 |
+| Ollama | `qwen3-vl:2b` | 3.347 | 0.242 | 152.42 | 18.04 | 2624 |
+| llama-server | Qwen3-VL-2B-Instruct Q4_K_M + mmproj Q8_0 (HF) | 2.736 | 0.156 | 195.64 | 15.23 | 2658 |
+
+TTFT is the time to the first streamed token.
+
+### Extraction quality
+
+Each engine extracted eight fields from five synthetic Spanish invoices and receipts under a JSON schema, with up to 2048 output tokens. Text runs read the document text. Vision runs read a PNG.
+
+| Engine | Model | Input | Schema-valid | Field accuracy | Misses |
+|---|---|---|---|---|---|
+| Ollama | `qwen3:1.7b` | text | 1.0 | 0.875 | one each of issuer_name, date, base, iva_amount, total |
+| llama-server | `qwen3:1.7b`, same Ollama blob | text | 1.0 | 0.925 | one each of base, iva_amount, total |
+| Ollama | `qwen3-vl:2b` | png | 0.4 | 0.375 | three empty replies; one base wrong |
+| llama-server | Qwen3-VL-2B-Instruct Q4_K_M + mmproj Q8_0 (HF) | png | 1.0 | 0.95 | two dates in DD/MM/YYYY form |
+
+The Ollama `qwen3-vl:2b` row is a lane defect, not a model ceiling. Three of the five requests returned empty content after 170-217 s. The two valid replies took 131 s and 57 s. The defect and its repro are in `2026-11-07-local-inference-engine-audit`.
+
+### Blob compatibility with llama-server b12184
+
+- `qwen3:1.7b` loads. llama-server reads the extensionless blob `blobs/sha256-3d0b7905...` in place through `-m`, so a `.gguf` name is not required.
+- `qwen3-vl:2b` is refused with `error loading model hyperparameters: key not found in model: qwen3vl.rope.dimension_sections`. The tag is Ollama's single-GGUF vision format. Ollama 0.40.13's own server log shows it translating that blob internally ("detected Ollama-format qwen3vl GGUF used as mmproj; translating", projector type `qwen3vl_merger`). Upstream llama-server has no such translation.
+- `qwen3-vl:4b-instruct` ships a separate projector layer. Loading it in llama-server is deferred to the GPU pass.
+
+### Context and router probes
+
+- Started with no `-c`, llama-server sized `qwen3:1.7b` at `n_ctx` 40960 over 4 slots, which is the model's full training context.
+- In router mode with a `--models-preset` entry carrying `ctx-size = 4096` and `n-gpu-layers = 0`, `/models/load` succeeded in 3.51 s. The loaded model reported `n_ctx` 4096. A chat turn answered, and `/models/unload` succeeded.
+
+### Harness
+
+The harness scripts are `bench.py`, `interleave.py`, `extra_probes.py` and `probe_ollama_vl.py`, in the pass's temporary workspace. That workspace is not retained. This section is the durable record.
+
+## Measurement evidence (GPU pass, pending)
+
+An RTX 4080 SUPER pass follows, once it is coordinated with the desktop build. It settles the default vision route (registry projector layer or Hugging Face GGUF plus mmproj), measures `auto` placement on Vulkan, and repeats the performance tables on an uncontended host.
 
 ## Sources
 
@@ -126,4 +197,5 @@ A CPU measurement pass is running. Its size, performance and quality tables will
 - https://huggingface.co/blog/ggml-org/model-management-in-llamacpp
 - https://docs.vllm.ai/en/latest/getting_started/installation/gpu/
 - https://docs.vllm.ai/en/latest/configuration/optimization/
+- CPU measurement pass, 2026-11-07: harness `bench.py`, `interleave.py`, `extra_probes.py` and `probe_ollama_vl.py`, with results in `results.md` and `results.json`, in a temporary workspace that is not retained.
 - Verification status: the external release versions and archive sizes are as supplied on 2026-11-07 and were not re-downloaded. The README and router facts were read on 2026-11-07. These locators were spot-checked: `pins.rs:252`, `supervision.rs:45-53`, `launch_environment.py:70-72`, `ollama_residency.py:68-81`, `declared_catalog.py:103` and `lane_admission.py:330-341`.

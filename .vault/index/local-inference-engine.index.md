@@ -6,9 +6,10 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:8dfef1d8ecb8d903c39430ad5c5fca537789d25f9ff7519e7b85d7ec476257d9'
+body_hash: 'sha256:f9aad0b1dd11abffead1fe83e538a1939893a1e40b5f4c4ccdedf894af300ccd'
 related:
   - '[[2026-11-07-local-inference-engine-adr]]'
+  - '[[2026-11-07-local-inference-engine-audit]]'
   - '[[2026-11-07-local-inference-engine-research]]'
 ---
 
@@ -20,7 +21,11 @@ Auto-generated index of all documents tagged with `#local-inference-engine`.
 
 ### adr
 
-- `2026-11-07-local-inference-engine-adr` - `local-inference-engine` adr: `Add llama.cpp as a second local inference engine` | (**status:** `proposed`)
+- `2026-11-07-local-inference-engine-adr` - `local-inference-engine` adr: `Bundle llama.cpp as the default local inference engine and keep Ollama as a selectable second engine` | (**status:** `proposed`)
+
+### audit
+
+- `2026-11-07-local-inference-engine-audit` - `local-inference-engine` audit: `Ollama qwen3-vl thinking defect in the ollama_api lane`
 
 ### research
 
