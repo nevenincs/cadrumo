@@ -340,7 +340,7 @@ msgstr "S'escriu com"
 
 #: ../../reference/registry-legal-api.md
 msgid "Decimal"
-msgstr "Decimal"
+msgstr "Nombre decimal"
 
 #: ../../reference/registry-legal-api.md
 #, python-brace-format
@@ -376,7 +376,7 @@ msgstr "`{\"$bool\": true}`"
 
 #: ../../reference/registry-legal-api.md
 msgid "Text"
-msgstr "Text"
+msgstr "Cadena de text"
 
 #: ../../reference/registry-legal-api.md
 msgid "The bare JSON string, for example `\"0.40\"`"

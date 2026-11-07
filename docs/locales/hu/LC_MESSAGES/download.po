@@ -180,7 +180,7 @@ msgstr ""
 
 #: ../../download.md:82
 msgid "Platform"
-msgstr "Platform"
+msgstr "Rendszer"
 
 #: ../../download.md:83
 msgid "Channel"
