@@ -23,6 +23,7 @@ from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor, SQLiteAuthorityReader
 from cadrumo.domain.calculations.registry.snapshot_proof import SNAPSHOT_PROOF_TABLES
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..conformance.cli import app as conformance_app
 from ..pipeline.authority_publication import (
@@ -36,14 +37,16 @@ from .authority_generation_support import synthetic_authority_artifact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_REVISION_TOML = 'id = "2025"\nvalid_from = 2025-01-01\n'
+_YEAR = filing_year_envelope().horizon
+_REVISION = str(_YEAR)
+_REVISION_TOML = f'id = "{_REVISION}"\nvalid_from = {_REVISION}-01-01\n'
 _STALE_IDENTITY = sha256_hex(b"stale fixture authority sources")
 
 
 def _stage_inputs(root: Path) -> tuple[Path, Path]:
     """Lay out a small registry and source-evidence tree with LF line endings."""
     registry_root = root / "registry" / "aeat"
-    revision_dir = registry_root / "modelos" / "999" / "revisions" / "2025"
+    revision_dir = registry_root / "modelos" / "999" / "revisions" / _REVISION
     revision_dir.mkdir(parents=True)
     (registry_root / "modelos" / "999" / "manifest.toml").write_bytes(b'[modelo]\nid = "999"\n')
     (revision_dir / "revision.toml").write_bytes(_REVISION_TOML.encode())
@@ -149,8 +152,8 @@ def test_unchanged_inputs_reproduce_the_same_source_identity(tmp_path: Path) -> 
 
 def test_a_registry_edit_after_publication_makes_the_artifact_stale(tmp_path: Path) -> None:
     publication = _fresh_publication(tmp_path)
-    revision = publication.registry_root / "modelos" / "999" / "revisions" / "2025" / "revision.toml"
-    revision.write_bytes(revision.read_bytes().replace(b"2025-01-01", b"2025-01-02"))
+    revision = publication.registry_root / "modelos" / "999" / "revisions" / _REVISION / "revision.toml"
+    revision.write_bytes(revision.read_bytes().replace(f"{_REVISION}-01-01".encode(), f"{_REVISION}-01-02".encode()))
 
     currency = publication.currency()
 
@@ -162,9 +165,9 @@ def test_a_registry_edit_after_publication_makes_the_artifact_stale(tmp_path: Pa
 def test_a_same_size_registry_edit_with_its_timestamp_restored_is_still_stale(tmp_path: Path) -> None:
     """The identity is content-addressed, so a stat-preserving edit cannot hide."""
     publication = _fresh_publication(tmp_path)
-    revision = publication.registry_root / "modelos" / "999" / "revisions" / "2025" / "revision.toml"
+    revision = publication.registry_root / "modelos" / "999" / "revisions" / _REVISION / "revision.toml"
     before = revision.stat()
-    revision.write_bytes(revision.read_bytes().replace(b'"2025"', b'"2026"'))
+    revision.write_bytes(revision.read_bytes().replace(f'"{_YEAR}"'.encode(), f'"{_YEAR + 1}"'.encode()))
     os.utime(revision, ns=(before.st_atime_ns, before.st_mtime_ns))
 
     assert revision.stat().st_size == before.st_size
@@ -215,9 +218,9 @@ def test_registry_line_endings_and_working_tree_byproducts_do_not_change_the_ide
     """A CRLF working copy of the LF registry, a lock sidecar and bytecode are not candidate changes."""
     publication = _fresh_publication(tmp_path)
     registry_root, source_root = publication.registry_root, publication.source_root
-    revision = registry_root / "modelos" / "999" / "revisions" / "2025" / "revision.toml"
+    revision = registry_root / "modelos" / "999" / "revisions" / _REVISION / "revision.toml"
     revision.write_bytes(revision.read_bytes().replace(b"\n", b"\r\n"))
-    (registry_root / ".generated-export-transaction-999-2025.lock").write_bytes(b"")
+    (registry_root / f".generated-export-transaction-999-{_REVISION}.lock").write_bytes(b"")
     (registry_root / "modelos" / "999" / "__pycache__").mkdir()
     (registry_root / "modelos" / "999" / "__pycache__" / "x.cpython-313.pyc").write_bytes(b"\x00")
     (source_root / "corpus" / "test" / "ley.html.lock").write_bytes(b"")

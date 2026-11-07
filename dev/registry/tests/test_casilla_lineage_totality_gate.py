@@ -33,6 +33,7 @@ from cadrumo.domain.calculations.registry.casilla_lineage_totality import (
     unresolved_successor_rows,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..analysis.casilla_lineage_ledger import LedgerRefusal, load_ledger_refusals
 from ..analysis.casilla_lineage_partition import (
@@ -227,7 +228,10 @@ def test_the_report_names_every_unjudged_modelo_whatever_its_state(
     assert collections.Counter(report.unjudged) == collections.Counter(sorted(unjudged))
 
 
-_ENTRY = 'modelo = "123"\nrevision = "2024"\ncasilla = "07"\ncategory = "role_absent"\nreason = "{reason}"\n'
+_REVISION = str(filing_year_envelope().horizon)
+_ENTRY = (
+    'modelo = "123"\nrevision = "{revision}"\ncasilla = "07"\ncategory = "role_absent"\nreason = "{reason}"\n'
+).replace("{revision}", _REVISION)
 _CARRIED = 'carried_from_previous_run = true\ncarried_reason = "modelo 123 did not compile"\ncarried_runs = 3\n'
 
 
@@ -235,7 +239,7 @@ def test_the_ledger_reader_admits_a_well_formed_refusal(tmp_path: Path) -> None:
     path = tmp_path / "ledger.toml"
     path.write_text("[[refusal]]\n" + _ENTRY.format(reason="no role"), encoding="utf-8")
     entries = load_ledger_refusals(path)
-    assert set(entries) == {CasillaRowKey(modelo="123", revision="2024", casilla="07")}
+    assert set(entries) == {CasillaRowKey(modelo="123", revision=_REVISION, casilla="07")}
     only = next(iter(entries.values()))
     assert not only.carried_from_previous_run
     assert only.last_judged is None
@@ -253,8 +257,8 @@ def test_a_carried_refusal_is_distinguishable_from_a_freshly_judged_one(tmp_path
     )
     path.write_text(fresh + "\n" + carried, encoding="utf-8")
     entries = load_ledger_refusals(path)
-    judged = entries[CasillaRowKey(modelo="123", revision="2024", casilla="07")]
-    borne = entries[CasillaRowKey(modelo="123", revision="2024", casilla="08")]
+    judged = entries[CasillaRowKey(modelo="123", revision=_REVISION, casilla="07")]
+    borne = entries[CasillaRowKey(modelo="123", revision=_REVISION, casilla="08")]
     assert (judged.carried_from_previous_run, judged.last_judged, judged.carried_runs) == (False, None, 0)
     assert borne.carried_from_previous_run
     assert borne.last_judged == "2026-09-01T08:00:00Z"

@@ -17,6 +17,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageOrigin
 from cadrumo.domain.calculations.registry.casilla_lineage_totality import CasillaRowKey, lineage_totality
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.lineage_totality import is_total
 
 from ..analysis.casilla_lineage_ledger import load_ledger_refusals
@@ -31,7 +32,9 @@ from ..conformance.loader_directory_mode_support import write_standard_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_KEY = CasillaRowKey("999", "2025", "0001")
+_SUCCESSOR = filing_year_envelope().horizon
+_PREDECESSOR = _SUCCESSOR - 1
+_KEY = CasillaRowKey("999", str(_SUCCESSOR), "0001")
 _REFS = 'legal_refs = ["ley-58-2003:art-29"]\nsource_refs = ["aeat-manual"]\n'
 
 
@@ -93,23 +96,23 @@ def _modelo(
     directory = root / "999"
     directory.mkdir()
     write_standard_manifest(directory, "Canonical lineage detector fixture")
-    for year in (2024, 2025):
+    for year in (_PREDECESSOR, _SUCCESSOR):
         edition = directory / "revisions" / str(year)
         edition.mkdir(parents=True)
         manifest = (
             f'[revisions."{year}"]\nvalid_from = {year}-01-01\nvalid_to = {year}-12-31\n'
             f'period_selector = {{ years = [{year}], periods = ["0A"] }}\n' + _REFS
         )
-        if year == 2025 and delta:
-            manifest += 'predecessor = "2024"\n'
-        if year == 2025 and attestation:
+        if year == _SUCCESSOR and delta:
+            manifest += f'predecessor = "{_PREDECESSOR}"\n'
+        if year == _SUCCESSOR and attestation:
             manifest += (
-                '[[revisions."2025".lineage_attestations]]\nfamily = "casillas"\n'
-                'continuidad_id = "base-general"\nfrom_revision = "2024"\nto_revision = "2025"\n'
+                f'[[revisions."{_SUCCESSOR}".lineage_attestations]]\nfamily = "casillas"\n'
+                f'continuidad_id = "base-general"\nfrom_revision = "{_PREDECESSOR}"\nto_revision = "{_SUCCESSOR}"\n'
                 'origin = "grounded"\nevidence = "Official fixture continuation at the exact edge."\n' + _REFS
             )
         (edition / "revision.toml").write_text(manifest, encoding="utf-8")
-        rows = _row(2024, chain=predecessor_chain) if year == 2024 else successor
+        rows = _row(_PREDECESSOR, chain=predecessor_chain) if year == _PREDECESSOR else successor
         if rows:
             section = edition / "casillas"
             section.mkdir()
@@ -118,7 +121,7 @@ def _modelo(
 
 
 def test_unclassified_reused_number_requires_a_named_exception(tmp_path: Path) -> None:
-    modelo = _modelo(tmp_path, successor=_row(2025, chain=None))
+    modelo = _modelo(tmp_path, successor=_row(_SUCCESSOR, chain=None))
     assert lineage_totality((modelo,), ()).uncovered == (_KEY,)
     assert is_total(lineage_totality((modelo,), {_KEY}))
     assert not _origin_failures({"999": modelo})
@@ -126,14 +129,14 @@ def test_unclassified_reused_number_requires_a_named_exception(tmp_path: Path) -
 
 @pytest.mark.parametrize("origin", ["new_on_form", "predecessor_edition_silent", "not_on_form"])
 def test_adjudicated_absence_is_not_a_partially_stamped_numeric_chain(tmp_path: Path, origin: str) -> None:
-    modelo = _modelo(tmp_path, successor=_row(2025, chain=None, origin=origin))
+    modelo = _modelo(tmp_path, successor=_row(_SUCCESSOR, chain=None, origin=origin))
     assert is_total(lineage_totality((modelo,), ()))
     assert not _origin_failures({"999": modelo})
     assert lineage_totality((modelo,), {_KEY}).stale == (_KEY,)
 
 
 def test_grounded_claim_cannot_cover_a_nonexistent_predecessor(tmp_path: Path) -> None:
-    modelo = _modelo(tmp_path, successor=_row(2025, chain="different-concept", origin="grounded"))
+    modelo = _modelo(tmp_path, successor=_row(_SUCCESSOR, chain="different-concept", origin="grounded"))
     # Totality sees the claim; the independently required origin validator refuses it.
     assert is_total(lineage_totality((modelo,), ()))
     assert any("does not carry continuidad_id" in failure for failure in _origin_failures({"999": modelo}))
@@ -145,7 +148,7 @@ def test_inherited_rows_and_target_attestations_are_materialized_before_judgemen
     attestation: bool,
 ) -> None:
     modelo = _modelo(tmp_path, successor="", delta=True, attestation=attestation)
-    successor = modelo.revisions["2025"].casillas
+    successor = modelo.revisions[str(_SUCCESSOR)].casillas
     assert len(successor) == 1
     expected = CasillaLineageOrigin.GROUNDED if attestation else None
     assert successor[0].continuidad_origin is expected
@@ -154,8 +157,8 @@ def test_inherited_rows_and_target_attestations_are_materialized_before_judgemen
 
 
 def test_seeded_is_admissible_inference_not_grounding(tmp_path: Path) -> None:
-    modelo = _modelo(tmp_path, successor=_row(2025, chain="base-general", origin="seeded"))
-    assert modelo.revisions["2025"].casillas[0].continuidad_origin is CasillaLineageOrigin.SEEDED
+    modelo = _modelo(tmp_path, successor=_row(_SUCCESSOR, chain="base-general", origin="seeded"))
+    assert modelo.revisions[str(_SUCCESSOR)].casillas[0].continuidad_origin is CasillaLineageOrigin.SEEDED
     assert is_total(lineage_totality((modelo,), ()))
     assert not _origin_failures({"999": modelo})
 
@@ -163,23 +166,25 @@ def test_seeded_is_admissible_inference_not_grounding(tmp_path: Path) -> None:
 def test_role_exemption_requires_every_link_touching_an_occurrence_to_be_grounded(tmp_path: Path) -> None:
     grounded_root = tmp_path / "grounded"
     grounded_root.mkdir()
-    grounded = _modelo(grounded_root, successor=_row(2025, chain="base-general", origin="grounded"))
-    assert role_exempt_occurrences(grounded) == frozenset({("2024", "0001"), ("2025", "0001")})
+    grounded = _modelo(grounded_root, successor=_row(_SUCCESSOR, chain="base-general", origin="grounded"))
+    assert role_exempt_occurrences(grounded) == frozenset({(str(_PREDECESSOR), "0001"), (str(_SUCCESSOR), "0001")})
 
     seeded_root = tmp_path / "seeded"
     seeded_root.mkdir()
-    seeded = _modelo(seeded_root, successor=_row(2025, chain="base-general", origin="seeded"))
+    seeded = _modelo(seeded_root, successor=_row(_SUCCESSOR, chain="base-general", origin="seeded"))
     assert role_exempt_occurrences(seeded) == frozenset()
 
 
 def test_seeded_role_drift_is_refused(tmp_path: Path) -> None:
-    modelo = _modelo(tmp_path, successor=_row(2025, chain="base-general", origin="seeded", role="iva_cuota_general"))
+    modelo = _modelo(
+        tmp_path, successor=_row(_SUCCESSOR, chain="base-general", origin="seeded", role="iva_cuota_general")
+    )
     assert any("semantic_role moved" in failure for failure in _origin_failures({"999": modelo}))
 
 
 def test_missing_or_stale_exception_moves_the_exact_row(tmp_path: Path) -> None:
-    modelo = _modelo(tmp_path, successor=_row(2025, chain=None))
-    stale = CasillaRowKey("999", "2024", "0001")
+    modelo = _modelo(tmp_path, successor=_row(_SUCCESSOR, chain=None))
+    stale = CasillaRowKey("999", str(_PREDECESSOR), "0001")
     uncovered = partitioned_lineage_totality({"999": modelo}, {}, ())
     assert uncovered.uncovered == (_KEY,)
     assert not uncovered.is_green

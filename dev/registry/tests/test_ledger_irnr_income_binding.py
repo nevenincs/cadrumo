@@ -30,6 +30,7 @@ from cadrumo.domain.calculations.registry.irnr_ledger_bindings import (
     unsupported_ledger_irnr_income_observations,
     validate_ledger_irnr_income_aggregation_binding_definition,
 )
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..conformance.registry_schema_support import committed_modelo
@@ -58,7 +59,7 @@ def _modelo_210_snapshot():
         modelo,
         catalogues,
         source_root=bundled_path(),
-        filing_year=2025,
+        filing_year=filing_year_envelope().horizon,
         period="0A",
     )
 

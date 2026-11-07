@@ -1,184 +1,148 @@
-"""Filing periods used to render each export-bearing edition."""
+"""Filing periods used to render each export-bearing edition.
+
+Each Modelo's table maps an edition (revision id) to the period it is rendered
+for. The table is read from the registry, never written out: an edition is
+rendered at the first supported ``(year, period)`` that the canonical revision
+selection resolves to that very edition, so the support envelope and each
+edition's own period selector decide the year and the period token. An edition
+that serves no supported year has no renderable export and no entry.
+"""
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Final
+from collections.abc import Iterator, Mapping
+from functools import cache
+from typing import Final, override
 
-from cadrumo.core.period import Period
+from cadrumo.core.period import Period, PeriodError
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import RegistryError
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.temporal import select_revision
 
-#: The quarter each Modelo 303 edition is rendered for; each selects exactly that edition.
-M303_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2023": Period.from_year_and_code(2023, "1T"),
-    "2024-hasta-08-y-2t": Period.from_year_and_code(2024, "1T"),
-    "2024-desde-09-y-3t": Period.from_year_and_code(2024, "3T"),
-    "2025": Period.from_year_and_code(2025, "1T"),
-    "2026-hasta-01-y-1t": Period.from_year_and_code(2026, "1T"),
-    "2026-y-siguientes": Period.from_year_and_code(2026, "2T"),
-}
-#: The annual period each Modelo 189 edition is rendered for.
-M189_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2025": Period.from_year_and_code(2025, "0A"),
-}
-#: The annual period each Modelo 190 edition is rendered for.
-M190_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2022": Period.from_year_and_code(2022, "0A"),
-    "2023": Period.from_year_and_code(2023, "0A"),
-    "2024": Period.from_year_and_code(2024, "0A"),
-    "2025-y-siguientes": Period.from_year_and_code(2025, "0A"),
-}
-#: The annual period each Modelo 193 edition is rendered for.
-M193_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2022": Period.from_year_and_code(2022, "0A"),
-    "2023": Period.from_year_and_code(2023, "0A"),
-    "2024": Period.from_year_and_code(2024, "0A"),
-    "2025-y-siguientes": Period.from_year_and_code(2025, "0A"),
-}
-#: The annual period each Modelo 232 edition is rendered for.
-M232_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    # 2016-2017 is deliberately absent. It was declared here and then withdrawn
-    # on evidence: 140 of that edition's generated export fields reference
-    # binding ids carrying an offset segment
-    # (``modelo-232.page_02.2968-2968.paraiso-valor-12-tipo``) while every
-    # binding it declares is offset-free. All 140 resolve once the segment is
-    # stripped, and every embedded span agrees exactly with the binding's own
-    # declared offset and length, so the segment is pure redundancy -- and the
-    # sibling edition settles which spelling is canonical, carrying the same 140
-    # fields with none of them. The edition therefore cannot compile, so it
-    # cannot render, and its export tree is not regenerated because the edition
-    # sits below the supported-filing-years floor. Declaring it would name a
-    # render that will not happen.
-    "2018-y-siguientes": Period.from_year_and_code(2018, "0A"),
-}
-#: The annual period each Modelo 345 edition is rendered for.
-M345_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2025": Period.from_year_and_code(2025, "0A"),
-}
-M347_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2011-2024": Period.from_year_and_code(2024, "0A"),
-    "2025-y-siguientes": Period.from_year_and_code(2025, "0A"),
-}
-#: The annual period each Modelo 390 edition is rendered for; 390 files only ``0A``.
-M390_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2022": Period.from_year_and_code(2022, "0A"),
-    "2023": Period.from_year_and_code(2023, "0A"),
-    "2024": Period.from_year_and_code(2024, "0A"),
-    "2025": Period.from_year_and_code(2025, "0A"),
-}
-#: The quarter each Modelo 131 edition is rendered for.
-M131_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2019-2023": Period.from_year_and_code(2023, "1T"),
-    "2024": Period.from_year_and_code(2024, "1T"),
-    "2025": Period.from_year_and_code(2025, "1T"),
-    "2026": Period.from_year_and_code(2026, "1T"),
-}
-#: The annual period each Modelo 714 edition is rendered for; 714 files only ``0A``.
-M714_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2021": Period.from_year_and_code(2021, "0A"),
-    "2022": Period.from_year_and_code(2022, "0A"),
-    "2023": Period.from_year_and_code(2023, "0A"),
-    "2024": Period.from_year_and_code(2024, "0A"),
-    "2025": Period.from_year_and_code(2025, "0A"),
-}
-#: The month each Modelo 322 edition is rendered for; 322 is a monthly group filer.
-M322_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2008-2022": Period.from_year_and_code(2022, "01"),
-    "2023": Period.from_year_and_code(2023, "01"),
-    "2024-2025": Period.from_year_and_code(2024, "01"),
-    "2026-y-siguientes": Period.from_year_and_code(2026, "01"),
-}
-#: The quarter each Modelo 490 edition is rendered for; the 2022 editions split at 2T.
-M490_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2021": Period.from_year_and_code(2021, "1T"),
-    "2022-1t": Period.from_year_and_code(2022, "1T"),
-    "2022-2t-4t": Period.from_year_and_code(2022, "2T"),
-    "2023-y-siguientes": Period.from_year_and_code(2023, "1T"),
-}
-#: The period each Modelo 309 edition is rendered for: 0A wherever the design
-#: admits it, and a quarter for the 2004 design, which admits only quarters.
-M309_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2004-2015": Period.from_year_and_code(2004, "3T"),
-    "2016-2017": Period.from_year_and_code(2016, "0A"),
-    "2018-2022": Period.from_year_and_code(2022, "0A"),
-    "2023-y-siguientes": Period.from_year_and_code(2023, "0A"),
-}
-#: The period Modelo 308's one export-bearing edition is rendered for.
-M308_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2019-y-siguientes": Period.from_year_and_code(2022, "0A"),
-}
-#: The quarter each Modelo 123 edition is rendered for.
-M123_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2019-2023": Period.from_year_and_code(2022, "1T"),
-    "2024-y-siguientes": Period.from_year_and_code(2024, "1T"),
-}
-#: The month each Modelo 604 edition is rendered for.
-M604_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2021-2023": Period.from_year_and_code(2022, "01"),
-    "2024-y-siguientes": Period.from_year_and_code(2024, "01"),
-}
-#: The annual period each Modelo 151 edition is rendered for.
-M151_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2015-2022": Period.from_year_and_code(2015, "0A"),
-    "2025-y-siguientes": Period.from_year_and_code(2025, "0A"),
-}
-#: The annual period each Modelo 165 edition is rendered for.
-M165_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2016-2022": Period.from_year_and_code(2016, "0A"),
-    "2026-y-siguientes": Period.from_year_and_code(2026, "0A"),
-}
-#: The annual period each Modelo 184 edition is rendered for.
-M184_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2023-2024": Period.from_year_and_code(2023, "0A"),
-    "2025-y-siguientes": Period.from_year_and_code(2025, "0A"),
-}
-#: The annual period of Modelo 200's export-bearing successor.
-M200_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2025-y-siguientes": Period.from_year_and_code(2025, "0A"),
-}
-#: The payment period each Modelo 202 edition is rendered for; 202 files ``1P``-``3P``.
-M202_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2019-2022": Period.from_year_and_code(2019, "1P"),
-    "2023-2024": Period.from_year_and_code(2023, "1P"),
-    "2025-y-siguientes": Period.from_year_and_code(2025, "1P"),
-}
-#: The first payment period of Modelo 222's export-bearing edition.
-M222_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2025-y-siguientes": Period.from_year_and_code(2025, "1P"),
-}
-#: The annual period of Modelo 296's five-record successor design.
-M296_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2024-2025": Period.from_year_and_code(2024, "0A"),
-}
-#: The annual period each Modelo 180 edition is rendered for.
-M180_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2019-2022": Period.from_year_and_code(2019, "0A"),
-    "2023-y-siguientes": Period.from_year_and_code(2023, "0A"),
-}
-#: The month Modelo 185's one export-bearing edition is rendered for.
-M185_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2025-y-siguientes": Period.from_year_and_code(2026, "01"),
-}
-#: The annual period each Modelo 210 edition is rendered for.
-M210_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2025": Period.from_year_and_code(2025, "0A"),
-    "2026-y-siguientes": Period.from_year_and_code(2026, "0A"),
-}
-#: The annual period each Modelo 270 edition is rendered for.
-M270_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2013-2022": Period.from_year_and_code(2013, "0A"),
-    "2023-y-siguientes": Period.from_year_and_code(2023, "0A"),
-}
-#: The quarter each Modelo 341 edition is rendered for.
-M341_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2005-2015": Period.from_year_and_code(2005, "1T"),
-    "2016-y-siguientes": Period.from_year_and_code(2016, "1T"),
-}
-#: The month each Modelo 353 edition is rendered for; the 2026 edition starts at ``02``.
-M353_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2021-hasta-2026-01": Period.from_year_and_code(2021, "01"),
-    "2026-desde-02": Period.from_year_and_code(2026, "02"),
-}
-#: The annual period Modelo 576's one export-bearing edition is rendered for.
-M576_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
-    "2008-y-siguientes": Period.from_year_and_code(2008, "0A"),
-}
+from .compiler.loader import load_modelo_directory, load_shared_catalogues
+
+#: The annual period, then the quarters, then the payment periods: the natural renderings of an edition that
+#: serves them. Any other token (the months) is used only when an edition serves nothing else.
+_PREFERRED_TOKENS: Final = ("0A", "1T", "2T", "3T", "4T", "1P", "2P", "3P")
+
+
+def _token_preference(token: str) -> int:
+    return _PREFERRED_TOKENS.index(token) if token in _PREFERRED_TOKENS else len(_PREFERRED_TOKENS)
+
+
+def _first_supported_period(
+    modelo: ModeloDefinition, revision: ModeloRevision, support: SupportedFilingYearsCatalogue
+) -> Period | None:
+    """The first supported ``(year, period)`` the canonical selection resolves to ``revision``, if any."""
+    for year in support.years:
+        if not revision.period_selector.includes_year(year):
+            continue
+        served = tuple(str(token) for token in revision.period_selector.periods_for_year(year))
+        for token in sorted(served, key=_token_preference):
+            try:
+                selected = select_revision(modelo, filing_year=year, period=token, support=support)
+                candidate = Period.from_year_and_code(year, token)
+            except (RegistryError, PeriodError, ValueError):
+                continue
+            if str(selected.id) == str(revision.id):
+                return candidate
+    return None
+
+
+@cache
+def _edition_periods(modelo_id: str) -> Mapping[str, Period]:
+    """Every export-bearing edition of ``modelo_id`` that serves a supported year, with its rendering period."""
+    registry_root = bundled_path("registry", "aeat")
+    support = load_shared_catalogues(registry_root).require_supported_filing_years()
+    modelo = load_modelo_directory(registry_root / "modelos" / modelo_id)
+    periods: dict[str, Period] = {}
+    for revision_id, revision in modelo.revisions.items():
+        if not revision.export_layouts:
+            continue
+        period = _first_supported_period(modelo, revision, support)
+        if period is not None:
+            periods[str(revision_id)] = period
+    return periods
+
+
+class _EditionPeriods(Mapping[str, Period]):
+    """One Modelo's edition-to-period table, read from the registry on first use."""
+
+    def __init__(self, modelo_id: str) -> None:
+        self._modelo_id = modelo_id
+
+    @override
+    def __getitem__(self, revision_id: str) -> Period:
+        return _edition_periods(self._modelo_id)[revision_id]
+
+    @override
+    def __iter__(self) -> Iterator[str]:
+        return iter(_edition_periods(self._modelo_id))
+
+    @override
+    def __len__(self) -> int:
+        return len(_edition_periods(self._modelo_id))
+
+
+#: The period each Modelo 303 edition is rendered for.
+M303_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("303")
+#: The period each Modelo 189 edition is rendered for.
+M189_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("189")
+#: The period each Modelo 190 edition is rendered for.
+M190_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("190")
+#: The period each Modelo 193 edition is rendered for.
+M193_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("193")
+#: The period each Modelo 232 edition is rendered for.
+M232_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("232")
+#: The period each Modelo 345 edition is rendered for.
+M345_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("345")
+#: The period each Modelo 347 edition is rendered for.
+M347_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("347")
+#: The period each Modelo 390 edition is rendered for.
+M390_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("390")
+#: The period each Modelo 131 edition is rendered for.
+M131_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("131")
+#: The period each Modelo 714 edition is rendered for.
+M714_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("714")
+#: The period each Modelo 322 edition is rendered for.
+M322_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("322")
+#: The period each Modelo 490 edition is rendered for.
+M490_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("490")
+#: The period each Modelo 309 edition is rendered for.
+M309_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("309")
+#: The period each Modelo 308 edition is rendered for.
+M308_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("308")
+#: The period each Modelo 123 edition is rendered for.
+M123_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("123")
+#: The period each Modelo 604 edition is rendered for.
+M604_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("604")
+#: The period each Modelo 151 edition is rendered for.
+M151_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("151")
+#: The period each Modelo 165 edition is rendered for.
+M165_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("165")
+#: The period each Modelo 184 edition is rendered for.
+M184_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("184")
+#: The period each Modelo 200 edition is rendered for.
+M200_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("200")
+#: The period each Modelo 202 edition is rendered for.
+M202_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("202")
+#: The period each Modelo 222 edition is rendered for.
+M222_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("222")
+#: The period each Modelo 296 edition is rendered for.
+M296_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("296")
+#: The period each Modelo 180 edition is rendered for.
+M180_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("180")
+#: The period each Modelo 185 edition is rendered for.
+M185_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("185")
+#: The period each Modelo 210 edition is rendered for.
+M210_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("210")
+#: The period each Modelo 270 edition is rendered for.
+M270_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("270")
+#: The period each Modelo 341 edition is rendered for.
+M341_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("341")
+#: The period each Modelo 353 edition is rendered for.
+M353_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("353")
+#: The period each Modelo 576 edition is rendered for.
+M576_SCENARIO_PERIODS: Final[Mapping[str, Period]] = _EditionPeriods("576")

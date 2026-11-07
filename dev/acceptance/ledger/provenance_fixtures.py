@@ -20,11 +20,12 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Literal
 
+from .installed_tui_contracts import YEAR
+
 type RecordKind = Literal["transaction", "invoice"]
 type ImportFrontend = Literal["cli", "tui"]
 type LocatorKind = Literal["physical_row", "transaction_ordinal"]
 
-_YEAR = 2025
 _STATEMENT_CSV_HEADER = ("Date", "Payee", "Payment reference", "Amount (EUR)", "Currency", "Transaction ID")
 _INVOICE_COLUMNS = (
     "counterparty_nif",
@@ -65,7 +66,7 @@ class InvoiceRow:
             _INVOICE_NIF,
             "Synthetic supplier SL",
             self.invoice_number,
-            f"{_YEAR}-03-{self.day:02d}",
+            f"{YEAR}-03-{self.day:02d}",
             format(self.taxable_base, "f"),
             "21",
             "ES",
@@ -169,7 +170,7 @@ def _invoice_rows(case_id: str, *, target_position: int, count: int, base: Decim
 
 def _statement_cells(row: StatementRow) -> tuple[str, ...]:
     return (
-        f"{_YEAR}-03-{row.day:02d}",
+        f"{YEAR}-03-{row.day:02d}",
         row.payee,
         row.description,
         format(row.amount, "f"),
@@ -212,7 +213,7 @@ def _ofx_document(rows: tuple[StatementRow, ...]) -> str:
     transactions = "".join(
         "          <STMTTRN>\n"
         f"            <TRNTYPE>{'CREDIT' if row.amount > 0 else 'DEBIT'}\n"
-        f"            <DTPOSTED>{_YEAR}03{row.day:02d}000000\n"
+        f"            <DTPOSTED>{YEAR}03{row.day:02d}000000\n"
         f"            <TRNAMT>{format(row.amount, 'f')}\n"
         f"            <FITID>{row.external_id}\n"
         f"            <NAME>{row.payee}\n"
@@ -224,15 +225,15 @@ def _ofx_document(rows: tuple[StatementRow, ...]) -> str:
         "OFXHEADER:100\nDATA:OFXSGML\nVERSION:102\nSECURITY:NONE\nENCODING:USASCII\nCHARSET:1252\n"
         "COMPRESSION:NONE\nOLDFILEUID:NONE\nNEWFILEUID:NONE\n\n"
         "<OFX>\n  <SIGNONMSGSRSV1>\n    <SONRS>\n      <STATUS>\n        <CODE>0\n        <SEVERITY>INFO\n"
-        f"      </STATUS>\n      <DTSERVER>{_YEAR}0331090000\n      <LANGUAGE>ENG\n    </SONRS>\n"
+        f"      </STATUS>\n      <DTSERVER>{YEAR}0331090000\n      <LANGUAGE>ENG\n    </SONRS>\n"
         "  </SIGNONMSGSRSV1>\n  <BANKMSGSRSV1>\n    <STMTTRNRS>\n      <TRNUID>1\n      <STATUS>\n"
         "        <CODE>0\n        <SEVERITY>INFO\n      </STATUS>\n      <STMTRS>\n        <CURDEF>EUR\n"
         "        <BANKACCTFROM>\n          <BANKID>0000\n          <ACCTID>SYNTHETIC-LEDGER\n"
         "          <ACCTTYPE>CHECKING\n        </BANKACCTFROM>\n        <BANKTRANLIST>\n"
-        f"          <DTSTART>{_YEAR}0301000000\n          <DTEND>{_YEAR}0331235959\n"
+        f"          <DTSTART>{YEAR}0301000000\n          <DTEND>{YEAR}0331235959\n"
         f"{transactions}"
         "        </BANKTRANLIST>\n        <LEDGERBAL>\n          <BALAMT>0.00\n"
-        f"          <DTASOF>{_YEAR}0331235959\n        </LEDGERBAL>\n      </STMTRS>\n    </STMTTRNRS>\n"
+        f"          <DTASOF>{YEAR}0331235959\n        </LEDGERBAL>\n      </STMTRS>\n    </STMTTRNRS>\n"
         "  </BANKMSGSRSV1>\n</OFX>\n"
     )
 
@@ -250,13 +251,13 @@ def _statement_pdf_lines(rows: tuple[StatementRow, ...]) -> tuple[str, ...]:
     """Print one dated, signed movement per line, its text first, so a reader copies it whole."""
     lines = [
         "Account statement",
-        f"01.03.{_YEAR} to 31.03.{_YEAR}",
+        f"01.03.{YEAR} to 31.03.{YEAR}",
         "Description Date Amount",
     ]
     for row in rows:
         amount = format(row.amount, "f").replace(".", ",")
         sign = "+" if row.amount > 0 else ""
-        lines.append(f"{row.description} {row.day:02d}.03.{_YEAR} {sign}{amount} EUR")
+        lines.append(f"{row.description} {row.day:02d}.03.{YEAR} {sign}{amount} EUR")
     return tuple(lines)
 
 
@@ -285,7 +286,7 @@ def statement_xls_workbook_writer(rows: tuple[StatementRow, ...]) -> Callable[[P
     """Write a generic-header Excel 97-2003 statement with typed date and amount cells."""
 
     def cells(row: StatementRow) -> tuple[object, ...]:
-        return (date(_YEAR, 3, row.day), row.payee, row.description, float(row.amount), "EUR", row.external_id)
+        return (date(YEAR, 3, row.day), row.payee, row.description, float(row.amount), "EUR", row.external_id)
 
     return lambda path: _write_xls_workbook(path, _STATEMENT_CSV_HEADER, [cells(row) for row in rows])
 

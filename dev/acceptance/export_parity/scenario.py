@@ -20,11 +20,25 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
+from typing import Final
+
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 SCENARIO_VERSION = "export-parity-multiyear-v1"
-YEARS = (2022, 2023, 2024, 2025)
+#: The scenario's narrative has this many consecutive years: the start year, a loss year, and two ordinary ones.
+_SCENARIO_YEAR_COUNT: Final = 4
+
+
+def _scenario_years() -> tuple[int, ...]:
+    """The consecutive years the scenario spans, starting at the pinned authority's first supported filing year."""
+    with bundled_indexed_authority().operation() as operation:
+        first = operation.supported_filing_years().floor
+    return tuple(first + offset for offset in range(_SCENARIO_YEAR_COUNT))
+
+
+YEARS: Final = _scenario_years()
 QUARTERS = ("1T", "2T", "3T", "4T")
-ACTIVITY_START = date(2022, 1, 1)
+ACTIVITY_START = date(YEARS[0], 1, 1)
 TAXPAYER_TAX_ID = "12345678Z"
 CENT = Decimal("0.01")
 IVA_GENERAL = Decimal("0.21")
@@ -184,46 +198,60 @@ class ActivityAsset:
         return money(self.basis * self.coefficient * Decimal(service_days) / Decimal(year_days))
 
 
+_START_YEAR, _LOSS_YEAR, _SOFTWARE_YEAR, _MACHINE_YEAR = YEARS
+
 ASSETS = (
     ActivityAsset(
-        "laptop-2022",
+        f"laptop-{_START_YEAR}",
         "material",
         "linear",
         "equipo-proceso-informacion",
         Decimal("0.25"),
-        date(2022, 3, 1),
+        date(_START_YEAR, 3, 1),
         Decimal("1500.00"),
     ),
     ActivityAsset(
-        "furniture-2023", "material", "linear", "mobiliario", Decimal("0.10"), date(2023, 6, 1), Decimal("3600.00")
+        f"furniture-{_LOSS_YEAR}",
+        "material",
+        "linear",
+        "mobiliario",
+        Decimal("0.10"),
+        date(_LOSS_YEAR, 6, 1),
+        Decimal("3600.00"),
     ),
     ActivityAsset(
-        "software-2024",
+        f"software-{_SOFTWARE_YEAR}",
         "intangible",
         "linear",
         "intangible-software",
         Decimal("0.33"),
-        date(2024, 2, 1),
+        date(_SOFTWARE_YEAR, 2, 1),
         Decimal("900.00"),
     ),
     ActivityAsset(
-        "machine-2025",
+        f"machine-{_MACHINE_YEAR}",
         "material",
         "constant_percentage",
         "maquinaria",
         Decimal("0.30"),
-        date(2025, 1, 1),
+        date(_MACHINE_YEAR, 1, 1),
         Decimal("1000.00"),
     ),
 )
 
-#: Issued taxable bases per year and quarter; 2023 is a loss year.
-_ISSUED_BASES: dict[int, tuple[Decimal, ...]] = {
-    2022: (Decimal("3000"), Decimal("3500"), Decimal("4000"), Decimal("4500")),
-    2023: (Decimal("1500"), Decimal("1000"), Decimal("4400"), Decimal("4500")),
-    2024: (Decimal("5000"), Decimal("5200"), Decimal("5400"), Decimal("5600")),
-    2025: (Decimal("6000"), Decimal("6200"), Decimal("6400"), Decimal("6600")),
-}
+
+def _issued_bases(year: int) -> tuple[Decimal, ...]:
+    """Issued taxable bases per quarter; the scenario's second year is a loss year.
+
+    The start year runs 3000 rising 500 a quarter; the loss year is fixed; each later year
+    opens 1000 above the one before, from 5000, rising 200 a quarter.
+    """
+    position = YEARS.index(year)
+    if position == 0:
+        return tuple(Decimal(3000 + 500 * quarter) for quarter in range(4))
+    if position == 1:
+        return (Decimal("1500"), Decimal("1000"), Decimal("4400"), Decimal("4500"))
+    return tuple(Decimal(5000 + 1000 * (position - 2) + 200 * quarter) for quarter in range(4))
 
 
 def _withholding_rate(year: int) -> Decimal:
@@ -266,7 +294,7 @@ def build_year(year: int) -> YearScenario:
             base=base,
             withholding_rate=_withholding_rate(year),
         )
-        for period, base in zip(QUARTERS, _ISSUED_BASES[year], strict=True)
+        for period, base in zip(QUARTERS, _issued_bases(year), strict=True)
     )
     received: list[ReceivedInvoice] = []
     for period in QUARTERS:
@@ -303,15 +331,15 @@ def build_year(year: int) -> YearScenario:
             iva_rate=Decimal("0"),
         )
     )
-    if year == 2023:
+    if year == _LOSS_YEAR:
         received.append(
             ReceivedInvoice(
-                key="training-2023",
+                key=f"training-{year}",
                 period="2T",
                 counterparty=SUPPLIER,
                 category="formacion_profesional",
-                invoice_date=date(2023, 5, 12),
-                payment_date=date(2023, 5, 14),
+                invoice_date=date(year, 5, 12),
+                payment_date=date(year, 5, 14),
                 base=Decimal("2000.00"),
                 iva_rate=IVA_GENERAL,
             )

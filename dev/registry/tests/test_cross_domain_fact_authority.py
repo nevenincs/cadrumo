@@ -14,6 +14,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.calculations.registry.facts.resolution import ResolvedEventFact, ResolvedMappingFact
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from cadrumo.domain.calculations.registry.tests.m347_fixture import resolve_m347_counterparty_annual_threshold
 from cadrumo.domain.contribuyente.family_fact_context import FamilyFactResolutionContext
 from cadrumo.domain.deadlines.festivos import holiday_calendar_from_authority
@@ -106,20 +107,19 @@ def test_cross_domain_consumers_preserve_the_authority_result_without_parallel_r
     assert projected_convenio == registry_authority.catalogues.convenio
     convenio = registry_authority.resolve_governed_fact(_probe("irnr-convenio").query)
     dividend = resolve_tipo_renta_irnr_catalogue(
-        effective_date=date(2025, 1, 1),
+        effective_date=date(filing_year_envelope().horizon, 1, 1),
         authority=registry_authority,
     ).require("dividend")
-    convenio_row = registry_authority.catalogues.convenio.resolve("DE", dividend, 2025)
+    convenio_row = registry_authority.catalogues.convenio.resolve("DE", dividend, filing_year_envelope().horizon)
     assert convenio_row is not None
     assert convenio_row.kind.value == convenio.payload.override_code
     assert convenio_row.rate == Decimal(convenio.payload.value)
     assert convenio_row.legal_refs == convenio.legal_refs
 
     with bundled_indexed_authority().operation() as operation:
-        holiday_query = _probe("deadline-holiday").query
-        calendar = holiday_calendar_from_authority(holiday_query.effective_date.year, operation=operation)
-        deadline_event = operation.resolve_governed_fact(holiday_query)
+        deadline_event = operation.resolve_governed_fact(_probe("deadline-holiday").query)
         assert isinstance(deadline_event, ResolvedEventFact)
+        calendar = holiday_calendar_from_authority(deadline_event.payload.event_date.year, operation=operation)
     assert deadline_event.payload.event_date in {holiday.holiday_date for holiday in calendar.national}
 
 

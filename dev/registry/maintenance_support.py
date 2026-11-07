@@ -17,7 +17,7 @@ from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING
-from cadrumo.core.filing_year import FilingYear
+from cadrumo.core.filing_year import FilingYear, is_four_digit_year
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.package_version import PACKAGE_VERSION
 from cadrumo.core.period import RegistrySelectorPeriodCode
@@ -1082,8 +1082,8 @@ def revision_selection_coordinates(
     period grammar.  The canonical selector remains responsible for matching a
     request to that token.
     """
-    if not 2000 <= assessment_horizon <= 2099:
-        raise ValueError("assessment_horizon must be between 2000 and 2099")
+    if not is_four_digit_year(assessment_horizon):
+        raise ValueError("assessment_horizon must be a four-digit year")
     declared = _declared_selection_years(revision, assessment_horizon)
     if not declared:
         raise RegistryValidationError(

@@ -13,16 +13,20 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
+
 from ..binding_signal.report import summary as build_summary
 from ..binding_signal.semantics import structural_binding_mentions, unconsumed_binding_report
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_REVISION = str(filing_year_envelope().horizon)
+
 
 def _binding(*, applicability: Mapping[str, object] | None = None) -> dict[str, object]:
     return {
         "modelo": "303",
-        "revision": "2024",
+        "revision": _REVISION,
         "binding_id": "modelo-303-synthetic-binding",
         "provider_kind": "ledger_iva_aggregation",
         "applicability": applicability,
@@ -138,7 +142,7 @@ def test_summary_names_each_blocking_finding(tmp_path: Path) -> None:
         {
             "code": "UNCONSUMED_FILING_GRADE_BINDING",
             "modelo": "303",
-            "revision": "2024",
+            "revision": _REVISION,
             "binding": "modelo-303-synthetic-binding",
         }
     ]

@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
-from typing import NotRequired, TypedDict
+import json
+from pathlib import Path
+from typing import Final, NotRequired, TypedDict
+
+#: The bundled record-design corpus: one directory per modelo, each holding its manifest and payloads.
+DESIGN_CORPUS: Final = Path(__file__).resolve().parents[2] / "src/cadrumo/_data/corpus/aeat_official/disenos_registro"
 
 
 class Artifact(TypedDict):
@@ -59,6 +64,30 @@ class HistoricalExclusions(TypedDict):
     disposition: str
     source_pages: list[str]
     urls: list[str]
+
+
+def recorded_artifact(modelo: str, *, relative_url: str | None = None, sha256: str | None = None) -> Artifact:
+    """Return the bundled manifest's record of one artefact, selected by its URL tail or its payload digest.
+
+    AEAT names its design files, and the titles of their index links, after the exercises they
+    apply to. Those names are external identifiers the manifests already record, so a caller that
+    needs one reads it here instead of writing it a second time.
+    """
+    if (relative_url is None) == (sha256 is None):
+        raise ValueError("select a recorded artefact by exactly one of its URL tail or its digest")
+    manifest: Manifest = json.loads((DESIGN_CORPUS / f"modelo_{modelo}" / "manifest.json").read_text(encoding="utf-8"))
+    matches = [
+        artifact
+        for artifact in manifest["artefacts"]
+        if (
+            str(artifact["url"]).endswith(f"/{relative_url}")
+            if relative_url is not None
+            else artifact["sha256"] == sha256
+        )
+    ]
+    if len(matches) != 1:
+        raise LookupError(f"modelo {modelo} manifest records {len(matches)} artefacts for {relative_url or sha256}")
+    return matches[0]
 
 
 def artifact_urls(artifact: Artifact) -> set[str]:

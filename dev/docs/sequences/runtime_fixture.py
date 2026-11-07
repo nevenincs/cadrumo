@@ -34,7 +34,7 @@ from cadrumo.application.user_profile.automation_custody_port import NativeSecre
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.time.clock import frozen_clock
-from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority
+from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DESCRIPTOR_FILENAME
 from cadrumo.domain.filing import software_identity
@@ -61,7 +61,14 @@ if __name__ == "__main__":
 
 from dev.docs.sequences.receipt_fixture import RECEIPT_FIXTURE_DIRECTORY, SequenceReceiptKeyring
 
-SANDBOX_INSTANT: datetime = datetime(2026, 4, 1, 9, 0, 0, tzinfo=UTC)
+
+def _sandbox_instant() -> datetime:
+    """The frozen instant: 1 April, 09:00 UTC, of the newest filing year the pinned authority supports."""
+    with bundled_indexed_authority().operation() as operation:
+        return datetime(operation.supported_filing_years().horizon, 4, 1, 9, 0, 0, tzinfo=UTC)
+
+
+SANDBOX_INSTANT: datetime = _sandbox_instant()
 """The canonical frozen instant for docs sequences and their profile workers."""
 
 

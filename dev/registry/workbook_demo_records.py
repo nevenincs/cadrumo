@@ -161,7 +161,7 @@ def annual_capital_records(snapshot: RegistrySnapshot) -> CalculationRevision:
         }
         for nif, name, province, amount, withheld in (
             ("12345678Z", "Perceptor ficticio A", "28", "1000", "190"),
-            ("X0001502F", "Perceptor ficticio B", "08", "2000", "380"),
+            ("X0001502F", "Perceptor ficticio B", "08", str(Decimal("2000")), "380"),
         )
     )
     expenses = ({"gasto.nif": "12345678Z", "gasto.nombre": "Perceptor ficticio A", "gasto.importe": "25"},)

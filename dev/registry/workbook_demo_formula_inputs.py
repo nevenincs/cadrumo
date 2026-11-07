@@ -10,7 +10,7 @@ from cadrumo.application.storage.calc_sheets.records import (
 )
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
-from .workbook_demo_cases import DemoCase
+from .workbook_demo_cases import DemoCase, has_differentiated_sectors, newest_edition_id, oldest_edition_id
 from .workbook_demo_formula_graph import scenario_leaves
 
 InputValues = dict[str, Decimal | str | bool | None]
@@ -59,7 +59,7 @@ def _seed_303(
 def _seed_390(
     snapshot: RegistrySnapshot, case: DemoCase, values: InputValues, bindings: dict[str, Decimal], binding_ids: set[str]
 ) -> None:
-    if case.revision in {"2024", "2025"}:
+    if has_differentiated_sectors(case.modelo, case.revision):
         for group in range(1, 4):
             target = f"iva.anual.sector-diferenciado-{group}.suma-deducciones"
             group_leaves, group_bindings = scenario_leaves(snapshot, target)
@@ -105,13 +105,13 @@ def _seed_222(
     )
     if case.modelo == "222":
         values["decl.ejercicio"] = Decimal(case.filing_year)
-        if case.revision != "2025-y-siguientes":
+        if case.revision != newest_edition_id(case.modelo):
             # Historical 222 derives both the total base and second tier.
             # Supply their upstream accounting result, not computed boxes.
             values.pop("19")
             values.pop("23")
             values["04"] = Decimal("30000")
-    if case.revision == "2025-y-siguientes":
+    if case.revision == newest_edition_id(case.modelo):
         values.update(
             {
                 "19": Decimal("100000"),
@@ -173,7 +173,7 @@ def _seed_131(
 def _seed_123(
     snapshot: RegistrySnapshot, case: DemoCase, values: InputValues, bindings: dict[str, Decimal], binding_ids: set[str]
 ) -> None:
-    if case.revision == "2019-2023":
+    if case.revision == oldest_edition_id("123"):
         values.update({"01": Decimal("3"), "02": Decimal("10000"), "03": Decimal("1900"), "04": Decimal("0")})
     else:
         values.update(
@@ -192,7 +192,7 @@ def _seed_123(
 def _seed_216(
     snapshot: RegistrySnapshot, case: DemoCase, values: InputValues, bindings: dict[str, Decimal], binding_ids: set[str]
 ) -> None:
-    if case.revision == "2020-2023":
+    if case.revision == oldest_edition_id("216"):
         values.update(
             {
                 "1": Decimal("3"),

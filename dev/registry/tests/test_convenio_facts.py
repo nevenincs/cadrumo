@@ -20,6 +20,7 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFa
 from cadrumo.domain.calculations.registry.irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 
 from ..compiler.convenio import convenio_authority_from_facts
 from ..compiler.fact_loader import load_governed_facts
@@ -27,29 +28,7 @@ from ..compiler.loader import load_registry_tree, load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_EXPECTED_ROWS = {
-    ("AR", "pension", "2025-01-01", "allocation_domestic_tariff", None, "convenio-es-ar-1992:art-19"),
-    ("BE", "dividend", "2003-06-25", "ceiling", "0.15", "convenio-es-be-1995:art-10"),
-    ("BE", "interest", "2003-06-25", "ceiling", "0.10", "convenio-es-be-1995:art-11"),
-    ("BE", "canones", "2025-01-01", "ceiling", "0.05", "convenio-es-be-1995:art-12"),
-    ("DE", "dividend", "2025-01-01", "ceiling", "0.15", "convenio-es-de-2011:art-10"),
-    ("DE", "interest", "2025-01-01", "exempt", None, "convenio-es-de-2011:art-11"),
-    ("DE", "canones", "2025-01-01", "exempt", None, "convenio-es-de-2011:art-12"),
-    ("FR", "dividend", "2025-01-01", "ceiling", "0.15", "convenio-es-fr-1995:art-10"),
-    ("FR", "interest", "2025-01-01", "ceiling", "0.10", "convenio-es-fr-1995:art-11"),
-    ("FR", "canones", "2025-01-01", "ceiling", "0.05", "convenio-es-fr-1995:art-12"),
-    ("GB", "general", "2025-01-01", "flat", "0.24", "convenio-es-gb-2013:art-6"),
-    ("MA", "interest", "2025-01-01", "ceiling", "0.10", "convenio-es-ma-1978:art-11"),
-    ("NL", "dividend", "1972-09-20", "ceiling", "0.15", "convenio-es-nl-1971:art-10"),
-    ("NL", "interest", "1972-09-20", "ceiling", "0.10", "convenio-es-nl-1971:art-11"),
-    ("NL", "canones", "2025-01-01", "ceiling", "0.06", "convenio-es-nl-1971:art-12"),
-    ("PT", "dividend", "1995-06-28", "ceiling", "0.15", "convenio-es-pt-1993:art-10"),
-    ("PT", "interest", "1995-06-28", "ceiling", "0.15", "convenio-es-pt-1993:art-11"),
-    ("PT", "canones", "2025-01-01", "ceiling", "0.05", "convenio-es-pt-1993:art-12"),
-    ("US", "dividend", "2019-11-27", "ceiling", "0.15", "convenio-es-us-1990:art-10"),
-    ("US", "interest", "2019-11-27", "exempt", None, "convenio-es-us-1990:art-11"),
-    ("US", "canones", "2019-11-27", "exempt", None, "convenio-es-us-1990:art-12"),
-}
+_YEAR = filing_year_envelope().horizon
 
 
 def _bundled_support() -> SupportedFilingYearsCatalogue:
@@ -64,7 +43,7 @@ def _bundled_fact_catalogue() -> GovernedFactCatalogue:
 def _bundled_tipo_renta_catalogue(facts: GovernedFactCatalogue):
     """Resolve income tokens through the candidate fact authority under test."""
     return resolve_tipo_renta_irnr_catalogue(
-        effective_date=date(2025, 6, 30),
+        effective_date=date(_YEAR, 6, 30),
         authority=CandidateFactAuthority(facts, _bundled_support()),
     )
 
@@ -86,7 +65,29 @@ def test_authored_convenio_fact_preserves_every_row_and_its_legal_anchor() -> No
             )
         )
 
-    assert actual_rows == _EXPECTED_ROWS
+    assert actual_rows == {
+        ("AR", "pension", "2025-01-01", "allocation_domestic_tariff", None, "convenio-es-ar-1992:art-19"),
+        ("BE", "dividend", "2003-06-25", "ceiling", "0.15", "convenio-es-be-1995:art-10"),
+        ("BE", "interest", "2003-06-25", "ceiling", "0.10", "convenio-es-be-1995:art-11"),
+        ("BE", "canones", "2025-01-01", "ceiling", "0.05", "convenio-es-be-1995:art-12"),
+        ("DE", "dividend", "2025-01-01", "ceiling", "0.15", "convenio-es-de-2011:art-10"),
+        ("DE", "interest", "2025-01-01", "exempt", None, "convenio-es-de-2011:art-11"),
+        ("DE", "canones", "2025-01-01", "exempt", None, "convenio-es-de-2011:art-12"),
+        ("FR", "dividend", "2025-01-01", "ceiling", "0.15", "convenio-es-fr-1995:art-10"),
+        ("FR", "interest", "2025-01-01", "ceiling", "0.10", "convenio-es-fr-1995:art-11"),
+        ("FR", "canones", "2025-01-01", "ceiling", "0.05", "convenio-es-fr-1995:art-12"),
+        ("GB", "general", "2025-01-01", "flat", "0.24", "convenio-es-gb-2013:art-6"),
+        ("MA", "interest", "2025-01-01", "ceiling", "0.10", "convenio-es-ma-1978:art-11"),
+        ("NL", "dividend", "1972-09-20", "ceiling", "0.15", "convenio-es-nl-1971:art-10"),
+        ("NL", "interest", "1972-09-20", "ceiling", "0.10", "convenio-es-nl-1971:art-11"),
+        ("NL", "canones", "2025-01-01", "ceiling", "0.06", "convenio-es-nl-1971:art-12"),
+        ("PT", "dividend", "1995-06-28", "ceiling", "0.15", "convenio-es-pt-1993:art-10"),
+        ("PT", "interest", "1995-06-28", "ceiling", "0.15", "convenio-es-pt-1993:art-11"),
+        ("PT", "canones", "2025-01-01", "ceiling", "0.05", "convenio-es-pt-1993:art-12"),
+        ("US", "dividend", "2019-11-27", "ceiling", "0.15", "convenio-es-us-1990:art-10"),
+        ("US", "interest", "2019-11-27", "exempt", None, "convenio-es-us-1990:art-11"),
+        ("US", "canones", "2019-11-27", "exempt", None, "convenio-es-us-1990:art-12"),
+    }
     assert len(fact.variants) == 21
     for variant in fact.variants:
         assert variant.source_refs == (f"boe-{variant.legal_refs[0].replace(':', '-')}",)
@@ -101,7 +102,7 @@ def test_direct_fact_resolves_and_projects_the_existing_runtime_catalogue() -> N
         OverrideFactQuery(
             fact_id=CONVENIO_OVERRIDE_FACT_ID,
             date_axis=DateAxis.DEVENGO_DATE,
-            effective_date=date(2025, 6, 30),
+            effective_date=date(_YEAR, 6, 30),
             selectors=(
                 FactSelector(name="country_code", value="GB"),
                 FactSelector(name="tipo_renta", value="general"),
@@ -123,8 +124,8 @@ def test_direct_fact_resolves_and_projects_the_existing_runtime_catalogue() -> N
     assert isinstance(resolved, ResolvedOverrideFact)
     assert resolved.payload.override_code == gb_row.kind.value
     assert resolved.payload.value == "0.24"
-    assert convenio.resolve("GB", general, 2025) is not None
-    de_override = convenio.resolve("DE", interest, 2025)
+    assert convenio.resolve("GB", general, _YEAR) is not None
+    de_override = convenio.resolve("DE", interest, _YEAR)
     assert de_override is not None
     assert de_override.kind == de_row.kind
 

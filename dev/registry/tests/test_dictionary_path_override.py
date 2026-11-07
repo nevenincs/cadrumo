@@ -27,17 +27,20 @@ from pydantic import ValidationError
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_xml_dictionary import XmlDictionaryEntry, xml_dictionary_entries
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition, XmlDictionaryPathOverride
+from cadrumo.domain.calculations.registry.tests.authored_editions import authored_revisions, revision_covering
 
 from .modelo_100_registry_support import loaded_registry, source_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _PH18_ATTRIBUTE_PATH = "/DatosIdentificativos/Hijos/@PH18"
+_EXTRA_MISPLACED_ROW = "EXTRA=[/OtraDeclaracion/EXTRA]"
+_MODELO_100_EXERCISES = tuple(revision.valid_from.year for revision in authored_revisions("100"))
 
 
 def _modelo_100_layout(filing_year: int) -> ExportLayoutDefinition:
     modelos_by_id, _catalogues = loaded_registry()
-    return modelos_by_id["100"].revisions[str(filing_year)].export_layouts[0]
+    return modelos_by_id["100"].revisions[str(revision_covering("100", filing_year).id)].export_layouts[0]
 
 
 def _modelo_100_entries(filing_year: int) -> tuple[XmlDictionaryEntry, ...]:
@@ -57,7 +60,7 @@ def _ph18(filing_year: int) -> XmlDictionaryEntry:
     return entry
 
 
-@pytest.mark.parametrize("filing_year", range(2020, 2026))
+@pytest.mark.parametrize("filing_year", _MODELO_100_EXERCISES)
 def test_ph18_resolves_to_the_attribute_form_the_xsd_declares(filing_year: int) -> None:
     """Every revision addresses PH18 as an attribute, as AEAT's schema declares."""
     entry = _ph18(filing_year)
@@ -66,7 +69,7 @@ def test_ph18_resolves_to_the_attribute_form_the_xsd_declares(filing_year: int) 
     assert entry.path.rsplit("/", 1)[-1].startswith("@"), "the writer keys attribute rendering off the @ leaf"
 
 
-@pytest.mark.parametrize("filing_year", range(2020, 2026))
+@pytest.mark.parametrize("filing_year", _MODELO_100_EXERCISES)
 def test_the_published_dictionary_still_says_element(filing_year: int) -> None:
     """The override is still needed, and the corpus is still untouched.
 
@@ -84,7 +87,7 @@ def test_the_published_dictionary_still_says_element(filing_year: int) -> None:
     assert "PH18=[/DatosIdentificativos/Hijos/PH18]" in published
 
 
-@pytest.mark.parametrize("filing_year", range(2020, 2026))
+@pytest.mark.parametrize("filing_year", _MODELO_100_EXERCISES)
 def test_the_value_rendering_was_never_the_defect(filing_year: int) -> None:
     """Placement was wrong; the declared type was always right.
 
@@ -103,9 +106,13 @@ def test_no_other_row_is_overridden() -> None:
     presence of PH18. EXTRA belongs to 2024 alone: the 2025 dictionary already
     places that row where the XSD does.
     """
-    for filing_year in range(2020, 2026):
+    for filing_year in _MODELO_100_EXERCISES:
         layout = _modelo_100_layout(filing_year)
-        expected = ["PH18", "EXTRA"] if filing_year == 2024 else ["PH18"]
+        _modelos_by_id, catalogues = loaded_registry()
+        published = (source_root() / catalogues.sources[str(layout.dictionary_source_ref)].corpus_path).read_text(
+            encoding="iso-8859-1"
+        )
+        expected = ["PH18", "EXTRA"] if _EXTRA_MISPLACED_ROW in published else ["PH18"]
 
         assert [override.field_id for override in layout.dictionary_path_overrides] == expected, filing_year
 
@@ -118,7 +125,7 @@ def test_every_override_records_why_it_overrules_aeat() -> None:
     is a reviewed judgement about a specific row. The evidence therefore has to
     travel with the override rather than live in a commit message.
     """
-    for filing_year in range(2020, 2026):
+    for filing_year in _MODELO_100_EXERCISES:
         for override in _modelo_100_layout(filing_year).dictionary_path_overrides:
             assert len(override.reason) > 80, (filing_year, override.field_id)
             assert "XSD" in override.reason
@@ -131,7 +138,7 @@ def test_an_override_naming_an_absent_field_is_refused() -> None:
     declaration that looks like the fix.
     """
     _modelos_by_id, catalogues = loaded_registry()
-    typo = _modelo_100_layout(2024).model_copy(
+    typo = _modelo_100_layout(_MODELO_100_EXERCISES[-1]).model_copy(
         update={
             "dictionary_path_overrides": (
                 XmlDictionaryPathOverride(

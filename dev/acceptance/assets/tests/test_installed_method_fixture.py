@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import filing_year_envelope
 from dev.acceptance.assets.installed_method_fixture import (
     method_correction_json,
     method_revision_json,
@@ -17,14 +18,21 @@ from dev.acceptance.assets.installed_method_fixture import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _PAYMENT = "0123456789abcdef" * 4
+_YEAR = filing_year_envelope().horizon
 
 
 def test_revision_and_correction_name_the_given_payment() -> None:
-    first = json.loads(method_revision_json(acquisition_transaction_id=_PAYMENT))
-    corrected = json.loads(method_correction_json(supersedes_revision_id="f" * 64, acquisition_transaction_id=_PAYMENT))
+    first = json.loads(method_revision_json(acquisition_transaction_id=_PAYMENT, in_service_year=_YEAR))
+    corrected = json.loads(
+        method_correction_json(
+            supersedes_revision_id="f" * 64, acquisition_transaction_id=_PAYMENT, in_service_year=_YEAR
+        )
+    )
 
     assert first["acquisition"]["observed_transaction_id"] == _PAYMENT
     assert corrected["acquisition"]["observed_transaction_id"] == _PAYMENT
+    assert first["in_service_date"] == f"{_YEAR}-01-01"
+    assert corrected["in_service_date"] == first["in_service_date"]
     assert corrected["basis"]["basis_amount"] == "1800.00"
 
 

@@ -86,6 +86,7 @@ from ....domain.deadlines.models import (
     IVARegime,
     M303RegimeComposition,
     M303TaxTerritory,
+    ModeloEnrollment,
     ModeloIVAProfile,
     TaxpayerProfile,
 )
@@ -177,6 +178,7 @@ def workflow_profile(*, redeme_enrolled: bool, period_token: str) -> TaxpayerPro
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
+        enrollment=ModeloEnrollment(large_company=False),
         activity_start_date=_activity_start_date_for_period(period_token),
         iva=ModeloIVAProfile(
             tax_territory=M303TaxTerritory.from_registry("common_regime"),

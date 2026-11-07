@@ -6,6 +6,11 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
+from functools import cache
+from typing import Final
+
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from dev.acceptance.iva.filing_year import newest_journey_year
 
 BRIEF_ID = "RETENCIONES-01"
 BRIEF_REVISION = "0.2"
@@ -14,8 +19,27 @@ PATTERN_REVISION = "1.6"
 SCENARIO_VERSION = "retenciones-resident-common-regime-v1"
 INSTALLED_CLI_SCENARIO_VERSION = "retenciones-installed-periodic-cli-v1"
 INSTALLED_ANNUAL_CLI_SCENARIO_VERSION = "retenciones-installed-annual-cli-v1"
-SUPPORTED_YEAR = 2025
 CENT = Decimal("0.01")
+
+# Every (modelo, period) coordinate the withholding scenario files or reads.
+_SCENARIO_COORDINATES: Final = (
+    ("111", "2T"),
+    ("115", "1T"),
+    ("115", "2T"),
+    ("123", "1T"),
+    ("180", "0A"),
+    ("190", "0A"),
+    ("193", "0A"),
+)
+# The newest filing year the pinned authority authors for every coordinate above.
+SUPPORTED_YEAR: Final = newest_journey_year(coordinates=_SCENARIO_COORDINATES).year
+
+
+@cache
+def _revision(modelo: str, year: int, period: str) -> str:
+    """The revision the pinned authority selects for the coordinate."""
+    with bundled_indexed_authority().operation() as operation:
+        return str(operation.revision_for_context(modelo, filing_year=year, period=period).id)
 
 
 class EvidenceState(StrEnum):
@@ -261,10 +285,10 @@ def build_installed_periodic_cli_slices(
     professional = InstalledPeriodicCliSlice(
         slice_id="professional-111-q2-partial-payments",
         modelo="111",
-        revision="2019-y-siguientes",
+        revision=_revision("111", year, "2T"),
         layout_id="modelo-111-fichero-boe",
         period="2T",
-        invoice_number="RET-PROF-2025-001",
+        invoice_number=f"RET-PROF-{year}-001",
         invoice_date=date(year, 3, 31),
         counterparty_name="Synthetic Professional",
         counterparty_nif="B12345674",
@@ -277,7 +301,7 @@ def build_installed_periodic_cli_slices(
         allocations=(
             PaymentAllocation(
                 allocation_id="professional-q2-payment-a",
-                payment_event_id="professional-payment-2025-04-02",
+                payment_event_id=f"professional-payment-{year}-04-02",
                 paid_on=date(year, 4, 2),
                 allocated_base=Decimal("300.00"),
                 allocated_withholding=Decimal("57.00"),
@@ -285,7 +309,7 @@ def build_installed_periodic_cli_slices(
             ),
             PaymentAllocation(
                 allocation_id="professional-q2-payment-b",
-                payment_event_id="professional-payment-2025-06-30",
+                payment_event_id=f"professional-payment-{year}-06-30",
                 paid_on=date(year, 6, 30),
                 allocated_base=Decimal("200.00"),
                 allocated_withholding=Decimal("38.00"),
@@ -309,10 +333,10 @@ def build_installed_periodic_cli_slices(
     rent = InstalledPeriodicCliSlice(
         slice_id="urban-rent-115-q2-invoice",
         modelo="115",
-        revision="2019-y-siguientes",
+        revision=_revision("115", year, "2T"),
         layout_id="modelo-115-fichero-boe",
         period="2T",
-        invoice_number="RET-RENT-2025-001",
+        invoice_number=f"RET-RENT-{year}-001",
         invoice_date=date(year, 6, 1),
         counterparty_name="Synthetic Urban Landlord",
         counterparty_nif="B12345674",
@@ -325,7 +349,7 @@ def build_installed_periodic_cli_slices(
         allocations=(
             PaymentAllocation(
                 allocation_id="urban-rent-q2-payment-a",
-                payment_event_id="urban-rent-payment-2025-06-05",
+                payment_event_id=f"urban-rent-payment-{year}-06-05",
                 paid_on=date(year, 6, 5),
                 allocated_base=Decimal("3000.00"),
                 allocated_withholding=Decimal("570.00"),
@@ -519,12 +543,12 @@ def build_scenario(year: int = SUPPORTED_YEAR) -> RetencionesScenario:
         periodic_oracle=_periodic_oracle(payments),
         annual_oracle=_annual_oracle(payments),
         revisions=(
-            ("111", "2019-y-siguientes"),
-            ("115", "2019-y-siguientes"),
-            ("123", "2024-y-siguientes"),
-            ("180", "2023-y-siguientes"),
-            ("190", "2025-y-siguientes"),
-            ("193", "2025-y-siguientes"),
+            ("111", _revision("111", year, "2T")),
+            ("115", _revision("115", year, "2T")),
+            ("123", _revision("123", year, "1T")),
+            ("180", _revision("180", year, "0A")),
+            ("190", _revision("190", year, "0A")),
+            ("193", _revision("193", year, "0A")),
         ),
     )
 
@@ -534,10 +558,10 @@ def _scenario_professional_second(year: int) -> InstalledPeriodicCliSlice:
     return InstalledPeriodicCliSlice(
         slice_id="professional-111-q2-distinct-subclave",
         modelo="111",
-        revision="2019-y-siguientes",
+        revision=_revision("111", year, "2T"),
         layout_id="modelo-111-fichero-boe",
         period="2T",
-        invoice_number="RET-PROF-2025-002",
+        invoice_number=f"RET-PROF-{year}-002",
         invoice_date=date(year, 5, 20),
         counterparty_name="Synthetic Professional",
         counterparty_nif="B12345674",
@@ -550,7 +574,7 @@ def _scenario_professional_second(year: int) -> InstalledPeriodicCliSlice:
         allocations=(
             PaymentAllocation(
                 allocation_id="professional-q2-subclave-02",
-                payment_event_id="professional-payment-2025-06-15",
+                payment_event_id=f"professional-payment-{year}-06-15",
                 paid_on=date(year, 6, 15),
                 allocated_base=Decimal("100.00"),
                 allocated_withholding=Decimal("15.00"),
@@ -578,10 +602,10 @@ def _scenario_rent_a_q1(year: int, property_a: Modelo180PropertyInput) -> Instal
     return InstalledPeriodicCliSlice(
         slice_id="urban-rent-115-q1-property-a",
         modelo="115",
-        revision="2019-y-siguientes",
+        revision=_revision("115", year, "1T"),
         layout_id="modelo-115-fichero-boe",
         period="1T",
-        invoice_number="RET-RENT-2025-101",
+        invoice_number=f"RET-RENT-{year}-101",
         invoice_date=date(year, 3, 1),
         counterparty_name="Synthetic Urban Landlord",
         counterparty_nif="B12345674",
@@ -594,7 +618,7 @@ def _scenario_rent_a_q1(year: int, property_a: Modelo180PropertyInput) -> Instal
         allocations=(
             PaymentAllocation(
                 allocation_id="urban-rent-property-a-q1",
-                payment_event_id="urban-rent-property-a-payment-2025-03-05",
+                payment_event_id=f"urban-rent-property-a-payment-{year}-03-05",
                 paid_on=date(year, 3, 5),
                 allocated_base=Decimal("1000.00"),
                 allocated_withholding=Decimal("190.00"),
@@ -618,10 +642,10 @@ def _scenario_rent_a_q2(year: int, property_a: Modelo180PropertyInput) -> Instal
     return InstalledPeriodicCliSlice(
         slice_id="urban-rent-115-q2-property-a",
         modelo="115",
-        revision="2019-y-siguientes",
+        revision=_revision("115", year, "2T"),
         layout_id="modelo-115-fichero-boe",
         period="2T",
-        invoice_number="RET-RENT-2025-102",
+        invoice_number=f"RET-RENT-{year}-102",
         invoice_date=date(year, 6, 1),
         counterparty_name="Synthetic Urban Landlord",
         counterparty_nif="B12345674",
@@ -634,7 +658,7 @@ def _scenario_rent_a_q2(year: int, property_a: Modelo180PropertyInput) -> Instal
         allocations=(
             PaymentAllocation(
                 allocation_id="urban-rent-property-a-q2",
-                payment_event_id="urban-rent-property-a-payment-2025-06-05",
+                payment_event_id=f"urban-rent-property-a-payment-{year}-06-05",
                 paid_on=date(year, 6, 5),
                 allocated_base=Decimal("2000.00"),
                 allocated_withholding=Decimal("380.00"),
@@ -658,10 +682,10 @@ def _scenario_rent_b_q2(year: int, property_b: Modelo180PropertyInput) -> Instal
     return InstalledPeriodicCliSlice(
         slice_id="urban-rent-115-q2-property-b",
         modelo="115",
-        revision="2019-y-siguientes",
+        revision=_revision("115", year, "2T"),
         layout_id="modelo-115-fichero-boe",
         period="2T",
-        invoice_number="RET-RENT-2025-103",
+        invoice_number=f"RET-RENT-{year}-103",
         invoice_date=date(year, 6, 10),
         counterparty_name="Synthetic Urban Landlord",
         counterparty_nif="B12345674",
@@ -674,7 +698,7 @@ def _scenario_rent_b_q2(year: int, property_b: Modelo180PropertyInput) -> Instal
         allocations=(
             PaymentAllocation(
                 allocation_id="urban-rent-property-b-q2",
-                payment_event_id="urban-rent-property-b-payment-2025-06-12",
+                payment_event_id=f"urban-rent-property-b-payment-{year}-06-12",
                 paid_on=date(year, 6, 12),
                 allocated_base=Decimal("2000.00"),
                 allocated_withholding=Decimal("380.00"),
@@ -705,7 +729,7 @@ def _scenario_modelo_180(
     return InstalledAnnualCliSlice(
         slice_id="urban-rent-180-annual-properties",
         modelo="180",
-        revision="2023-y-siguientes",
+        revision=_revision("180", year, "0A"),
         layout_id="modelo-180-fichero-boe",
         source_modelo="115",
         captures=(rent_a_q1, rent_a_q2, rent_b_q2),
@@ -781,7 +805,7 @@ def _scenario_modelo_180(
                     ("modelo-180-perc-nombre", "Synthetic Urban Landlord"),
                     ("modelo-180-perc-provincia", "28"),
                     ("modelo-180-perc-modalidad", "1"),
-                    ("modelo-180-perc-base", "2000"),
+                    ("modelo-180-perc-base", str(int(rent_b_q2.invoice_base))),
                     ("modelo-180-perc-porcentaje-retencion", "19"),
                     ("modelo-180-perc-retenciones", "380"),
                     ("modelo-180-perc-ejercicio-devengo", str(year)),
@@ -800,7 +824,7 @@ def _scenario_modelo_190(
     return InstalledAnnualCliSlice(
         slice_id="professional-190-annual-detail",
         modelo="190",
-        revision="2025-y-siguientes",
+        revision=_revision("190", year, "0A"),
         layout_id="modelo-190-fichero-boe",
         source_modelo="111",
         captures=(professional_primary, professional_second),
