@@ -5,7 +5,7 @@ tags:
 date: '2026-11-07'
 modified: '2026-11-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:8154158b6713f983dd1be0ea2956faa4e50a0f66db3d4069ec96bf90cd447d7c'
+body_hash: 'sha256:2efecd273bb0f3a262a956d94375b9ff909e9b0949c03f713e8a3159a3ed6b35'
 related:
   - "[[2026-11-07-local-inference-engine-plan]]"
 ---
@@ -126,6 +126,23 @@ related:
 - `S16` `M` `native/application/src/provisioning/local_ai/fake_ollama.rs`
 - `S16` `verify:` `rustfmt --edition 2024 --check` -> `pass`
 - `S16` `by:` `vaultspec-high-executor`
+- `S16` `M` `dev/locales/desktop_chrome.py`
+- `S16` `M` `dev/locales/desktop_interface_keys.py`
+- `S16` `M` `dev/locales/tests/test_audit.py`
+- `S16` `M` `native/application/src/provisioning/failure.rs`
+- `S16` `M` `native/desktop/frontend/src/dev/setupFixture.ts`
+- `S16` `M` `native/desktop/frontend/src/ipc/componentSetup.ts`
+- `S16` `M` `native/desktop/src-tauri/src/shell/setup/components.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/setup/wire.rs`
+- `S16` `M` `src/cadrumo/locales/ca/common.yml`
+- `S16` `M` `src/cadrumo/locales/en/common.yml`
+- `S16` `M` `src/cadrumo/locales/es/common.yml`
+- `S16` `M` `src/cadrumo/locales/hu/common.yml`
+- `S16` `M` `src/cadrumo_client/contracts/failure_categories.py`
+- `S16` `verify:` `rustfmt --edition 2024 --check` -> `pass`
+- `S16` `verify:` `ruff check and ruff format --check` -> `pass`
+- `S16` `verify:` `ty check` -> `pass`
+- `S16` `verify:` `pytest test_sign_in_failures.py` -> `pass`
 
 ## Notes
 
@@ -146,6 +163,7 @@ related:
 - `S15` cargo test and clippy for native/application are pending the root build slot; not run in the worktree
 - `S11` configure, bundle and test-native-bundle owed in the DESKTOP proving cycle; Step stays open until it passes
 - `S16` cargo build, clippy and tests not run here; Rust verification is deferred to a root slot
+- `S16` `program_proxy_differs` retired; dev/locales audit, parity, chrome and signal tests need a published authority, absent in this worktree, and are owed in a root slot with cargo and the frontend typecheck
 
 ## Notes
 
