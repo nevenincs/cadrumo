@@ -21,7 +21,7 @@ asked about again. Both constraints the module cites for admitting the space
 number) are gate-time and cannot prevent this.
 
 **The dotted bare form.** The CIF scan admits a dot between body characters
-while ``validate_identity`` strips only spaces and hyphens, so ``B.1234567.4``
+while ``validate_identity`` strips only spaces and hyphens, so ``B.0001501.6``
 matched the scan and was refused by the gate. The codebase already had the
 answer: ``same_tax_identifier`` compares on ``normalise_nif_iva`` and reports
 the dotted and the compact spelling as one bearer. The canonical same-bearer
@@ -54,8 +54,8 @@ IDENTITY_BESIDE_A_SHORT_WORD = [
     ("es ESB00015016 la contraparte", "ESB00015016", ["es ", " la contraparte"]),
     ("de SE556677889901 y otros", "SE556677889901", ["de ", " y otros"]),
     ("en DE811234567 es", "DE811234567", ["en ", " es"]),
-    ("la B.1234567.4 en el registro", "B.1234567.4", ["la ", " en el registro"]),
-    ("de B-1234567-4 y", "B-1234567-4", ["de ", " y"]),
+    ("la B.0001501.6 en el registro", "B.0001501.6", ["la ", " en el registro"]),
+    ("de B-0001501-6 y", "B-0001501-6", ["de ", " y"]),
     ("es 12345678Z en", "12345678Z", ["es ", " en"]),
     # A digit-bearing profile label beside a real number: the label is the
     # operator's own text and must survive while the number is still masked.
@@ -70,9 +70,9 @@ TWO_IDENTITIES_IN_ONE_LINE = "de SE556677889901 y DE811234567 en la factura"
 #: entries are the leak: ``same_tax_identifier`` folds them onto the compact
 #: form, and the funnel did not.
 SAME_BEARER_SPELLINGS = [
-    ("B00015016", "B.1234567.4"),
-    ("B00015016", "B-1234567-4"),
-    ("ESB00015016", "ESB.1234567.4"),
+    ("B00015016", "B.0001501.6"),
+    ("B00015016", "B-0001501-6"),
+    ("ESB00015016", "ESB.0001501.6"),
     ("12345678Z", "12.345.678.Z"),
 ]
 

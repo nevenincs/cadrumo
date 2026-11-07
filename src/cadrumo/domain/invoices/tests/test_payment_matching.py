@@ -146,7 +146,10 @@ def test_equal_candidates_are_ambiguous_tied_invoices_for_one_movement_and_tied_
     right = build_invoice("AA-119", party="Arroyo Asesores")
     found = suggest_payments([row], [left, right])
     assert [one.ambiguous for one in found] == [True]
-    assert sorted(tie.invoice.invoice_number for tie in found[0].ties) == ["AA-119"]
+    # Equal ranks fall to the lower invoice_id; the other candidate is the tie.
+    lower, higher = sorted((left, right), key=lambda invoice: invoice.invoice_id)
+    assert found[0].pair.invoice.invoice_number == lower.invoice_number
+    assert [tie.invoice.invoice_number for tie in found[0].ties] == [higher.invoice_number]
 
     a = build_movement("a", on="2026-10-12", direction="INCOMING")
     b = build_movement("b", on="2026-10-12", direction="INCOMING")
@@ -419,6 +422,11 @@ def test_a_link_counts_the_other_movements_holding_the_invoice_and_not_itself() 
 
 _ASKED: Final = json.loads(_QUESTIONS.read_text(encoding="utf-8"))
 
+#: Equal ranks fall to the lower invoice_id, so the tied pair's suggestion is whichever of the two sorts first.
+def _lower_tied_invoice() -> str:
+    tied = (build_invoice(number, party="Arroyo Asesores") for number in ("AA-118", "AA-119"))
+    return min(tied, key=lambda invoice: invoice.invoice_id).invoice_number
+
 #: The (movement, invoice) pairs each committed scenario must suggest, in order, worked from the rule its name states.
 _SUGGESTED: Final[dict[str, list[tuple[str, str]]]] = {
     "a retencion invoice is settled by the net transfer within a cent, on its flow and currency": [("paid", "F-1")],
@@ -429,7 +437,7 @@ _SUGGESTED: Final[dict[str, list[tuple[str, str]]]] = {
     "a payment three days before the invoice still ranks by its gap": [("p", "E-3")],
     "the nearer amount wins among otherwise equal candidates": [("c", "D-2")],
     "each invoice is offered to one movement": [("first", "ONE-1")],
-    "tied invoices for one movement are ambiguous": [("row", "AA-118")],
+    "tied invoices for one movement are ambiguous": [("row", "")],  # resolved from the invoice ids in the test
     "tied movements for one invoice point at each other": [("a", "N-5"), ("b", "N-5")],
     "a staged link withdraws every suggestion that uses its invoice or movement": [("b", "N-6")],
     "a movement is offered the invoices of its flow, those that settle it first by day": [("row", "S-1")],
@@ -464,7 +472,10 @@ def test_the_committed_scenarios_are_the_ones_the_expectations_state() -> None:
 def test_every_committed_scenario_is_answered_as_its_rule_says(scenario: dict[str, Any]) -> None:
     answer = recorded_scenario(scenario)["answer"]
 
-    assert [(found["movement"], found["invoice"]) for found in answer["suggestions"]] == _SUGGESTED[scenario["name"]]
+    expected = [
+        (movement, _lower_tied_invoice() if not invoice else invoice) for movement, invoice in _SUGGESTED[scenario["name"]]
+    ]
+    assert [(found["movement"], found["invoice"]) for found in answer["suggestions"]] == expected
 
 
 @pytest.mark.parametrize("at", sorted(_MOVEMENT_CHOICES))
