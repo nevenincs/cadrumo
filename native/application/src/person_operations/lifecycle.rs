@@ -8,8 +8,9 @@ use super::protocol::{
     schema_identity, succeeded, text, version_one,
 };
 use super::sensitive::sent_then_wiped;
-use super::transport::{Held, MAXIMUM_FRAME_BYTES, remaining};
+use super::transport::{Held, remaining};
 use crate::canonical_json::canonical_json;
+use crate::runtime_client::framing::MAXIMUM_FRAME_BYTES;
 use crate::runtime_client::{
     events::{Event, Pushed},
     framing::base64_decode,

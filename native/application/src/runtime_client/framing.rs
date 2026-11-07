@@ -7,7 +7,9 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::thread;
 use std::time::{Duration, Instant, SystemTime};
 
-pub(super) const MAXIMUM_FRAME_BYTES: usize = 64 * 1024;
+/// The largest frame the runtime connection reads or writes in one piece; a
+/// larger document travels streamed.
+pub const MAXIMUM_FRAME_BYTES: usize = 64 * 1024;
 
 /// The longest secret one secret frame carries, and so the longest the runtime takes.
 pub const MAXIMUM_SECRET_BYTES: usize = 64 * 1024;

@@ -725,7 +725,9 @@ mod tests {
     use super::super::{Person, PersonEvent};
     use super::*;
     use crate::agent::recovery::{Custody, Reconnecting, is_recovering, rebind::Proof};
-    use cadrumo_application::runtime_client::stored_proof::ResumeRefusal;
+    use cadrumo_application::runtime_client::{
+        framing::MAXIMUM_FRAME_BYTES, stored_proof::ResumeRefusal,
+    };
     use std::{collections::VecDeque, sync::Mutex};
     use tokio::sync::broadcast::{self, error::TryRecvError};
 
@@ -1482,20 +1484,25 @@ mod tests {
             baseline
         };
         [
-            (
-                "303",
-                baseline("modelo/modelo-303-1T-en.json"),
-            ),
-            (
-                "347",
-                baseline("modelo/modelo-347-0A-en.json"),
-            ),
+            ("303", baseline("modelo/modelo-303-1T-en.json")),
+            ("347", baseline("modelo/modelo-347-0A-en.json")),
         ]
+    }
+
+    /// The admitted baselines, and a 303 one widened past the runtime frame:
+    /// no served form need be that large for a renewal of one to be covered.
+    fn edit_baselines() -> Vec<(&'static str, Value)> {
+        let mut baselines = admitted_baselines().to_vec();
+        let mut wide = baselines[0].1.clone();
+        wide["synthetic_padding"] = json!("a".repeat(MAXIMUM_FRAME_BYTES));
+        baselines.push(("303 widened", wide));
+        baselines
     }
 
     #[test]
     fn an_edit_of_a_real_baseline_reaches_the_runtime_whole_in_preflight_renewal_and_apply() {
-        for (modelo, baseline) in admitted_baselines() {
+        let mut renewal_actions = std::collections::BTreeSet::new();
+        for (modelo, baseline) in edit_baselines() {
             let unit = baseline["work_unit_id"].as_str().unwrap().to_owned();
             let input = json!({"input_version": 2, "submission": {"edit_contract_version": 1,
                 "baseline": baseline, "mutation_family": "scalar",
@@ -1552,17 +1559,39 @@ mod tests {
                     .or_else(|| sent["payload_json"].as_str())
                     .unwrap();
                 assert_eq!(&serde_json::from_str::<Value>(text).unwrap(), *body);
-                if *member == "input" || modelo == "303" {
-                    // An operand always, and a 303 renewal too large for one
-                    // frame, reach the runtime's staging streamed.
+                if *member == "input" {
+                    // An operand always reaches the runtime's staging streamed.
                     assert_eq!(
                         sent["action"], "operation_submit_payload",
                         "{modelo} {definition}"
                     );
+                } else {
+                    // A document goes in one frame while that frame fits and
+                    // streamed once it would not: a baseline's size, not its
+                    // modelo, decides which.
+                    let mut framed = sent.clone();
+                    let framed_fields = framed.as_object_mut().unwrap();
+                    framed_fields.remove("streamed");
+                    framed_fields.remove("descriptor");
+                    framed_fields.insert("action".into(), json!("operation_submit"));
+                    framed_fields.insert("payload_json".into(), json!(text));
+                    let fits = serde_json::to_vec(&framed).unwrap().len() <= MAXIMUM_FRAME_BYTES;
+                    let expected = if fits {
+                        "operation_submit"
+                    } else {
+                        "operation_submit_payload"
+                    };
+                    assert_eq!(sent["action"], expected, "{modelo} {definition}");
+                    renewal_actions.insert(expected);
                 }
                 assert_eq!(asked[2 * index + 1]["action"], "operation_start");
             }
         }
+        // A renewal that fits one frame and one that does not were both sent.
+        assert_eq!(
+            renewal_actions.into_iter().collect::<Vec<_>>(),
+            ["operation_submit", "operation_submit_payload"]
+        );
     }
 
     #[test]

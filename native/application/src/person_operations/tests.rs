@@ -11,8 +11,8 @@ use super::protocol::{
 use super::relay::{MAX_WATCHED, OperationRelay};
 use super::sensitive::{sent_then_wiped, wipe};
 use super::timestamps::{utc_isoformat, utc_text};
-use super::transport::MAXIMUM_FRAME_BYTES;
 use crate::canonical_json::{canonical_json, compact_json};
+use crate::runtime_client::framing::MAXIMUM_FRAME_BYTES;
 use crate::runtime_client::{
     connection::SessionExchange,
     events::{Event, Pushed},
